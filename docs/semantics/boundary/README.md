@@ -27,6 +27,23 @@ Each `.eadl` file opens with a metadata comment block and then the declaration i
 ; other-side: <what the other side owns>
 ```
 
+**A wrapped value stays one value.** A line opens a header only when it is *unindented* — the
+ordinary `; key: value` spacing — **and** the text before its first colon is a bare kebab-case
+key. Continuation lines are indented further:
+
+```text
+; rationale: the test that settles it is
+;   implementation-independence: a different timer with the same width and rate
+;   is interchangeable here
+```
+
+Both conditions are needed, and each was added after the other alone failed on a real case in
+this directory. Indentation alone fails because every comment begins with a space after the
+`;`. The key shape alone fails because a rationale can wrap onto a line that *is* exactly a key
+followed by a colon — which is precisely what
+[`counter-width-and-rate`](accept/counter-width-and-rate.eadl) does. An empty `;` line closes
+the block.
+
 The three tests are the ones in the boundary decision:
 
 | Test | Asks |

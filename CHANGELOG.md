@@ -4,6 +4,35 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the eADL reader
+
+`ARCHOGEN-M1-0010` (leaf `M1.1`).
+
+- New crate `crates/eadl-front`: S-expressions, byte spans with **character** columns, and
+  caret diagnostics that carry a repair direction, as §5.5 requires of every diagnostic.
+- Measured on the real corpus rather than on toys: all 21 boundary-corpus files read with zero
+  diagnostics, round-trip semantically through canonical form, and yield their exact metadata
+  key set. Those files were written for a different purpose before the reader existed, which is
+  what makes the suite evidence rather than confirmation.
+- **No float anywhere.** §7.4 requires exact integer or checked rational arithmetic, so a
+  decimal literal is kept as an integer and a scale — `0.1` survives a round trip exactly — and
+  an out-of-range literal is refused rather than wrapped.
+- `3ms` is refused, not read as a symbol: it is a typo for `3 ms`, and accepting it would lose
+  the magnitude and surface much later as a mysteriously missing field. Reading does not stop at
+  the first error, so three malformed numbers cost one edit cycle.
+- New diagnostic tool `cargo run -q -p eadl-front --example diagnose -- <file>`, registered in
+  `TOOLBOX.md`.
+- ⭐ **That tool immediately found a real defect.** The header parser silently truncated a
+  corpus rationale that wrapped onto a line beginning `implementation-independence:` — exactly a
+  bare key plus a colon. Two green suites were blind to it, because both asserted only that the
+  keys they *wanted* were present, and a presence check cannot see an extra key. The rule now
+  requires two independent discriminators, each of which had already been tried alone and failed
+  on a real file; the corpus test asserts the exact key set for every case. Promoted to
+  `docs/knowledge/presence-checks-cannot-see-an-extra-key.md`.
+- New book chapter `docs/book/src/reading.md`.
+- Validation: 52 tests in the new crate, 119 across the workspace, 0 failed; fmt and clippy
+  clean; all doctrines green; `mdbook build` OK.
+
 ## archogen — the emulator pinned, and the board recorded as absent
 
 `ARCHOGEN-M0-0009` (leaf `M0.5`).

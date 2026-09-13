@@ -9,6 +9,11 @@
 Responsibility boundaries follow `ROADMAP.md` §4.2. A crate is created when a real consumer
 justifies the split — the rows below appear as that happens.
 
+- `crates/eadl-front/` — the reader (§4.2): S-expressions, byte spans with character columns,
+  and caret diagnostics carrying a repair direction. Purely syntactic and float-free; comments
+  are kept because the boundary corpus carries its metadata in them.
+  `cargo run -q -p eadl-front --example diagnose -- <file>` is the tool that answers "where did
+  it stop?".
 - `crates/eadl-model/` — the typed eADL model (§4.2): declarations, units, contract IDs and
   profile definitions. `src/profile.rs` holds `rt-static-up-v1` as data — 13 decisions, 18
   named exclusions — and its test fails if `docs/profiles/rt-static-up-v1.md` drifts from it.

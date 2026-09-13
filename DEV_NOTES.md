@@ -19,6 +19,18 @@
 Detailed technical notes — root cause, implementation, validation — per slice. The
 engineering-continuity surface (not the public docs; that's `docs/book/`). Newest first.
 
+## _(2026-09-13)_ — a presence check cannot see an extra key
+
+- The eADL reader silently truncated a boundary-corpus rationale: it wrapped onto
+  `;   implementation-independence: a different timer …`, which is exactly a bare key plus a
+  colon, so a spurious seventh header opened. Two green suites were blind to it — the unit
+  tests never wrapped onto a key-shaped line, and the corpus suite asserted the five keys it
+  wanted were present, which they were. Found by running `examples/diagnose` over a real file
+  and reading the output.
+- The fix needs TWO discriminators, unindented AND bare-key, and each had already been tried
+  alone and failed on a real corpus file. Tests now assert the exact key set per case.
+- Promoted to `docs/knowledge/presence-checks-cannot-see-an-extra-key.md`.
+
 ## _(2026-09-13)_ — a commit carries one owning leaf
 
 - `TASK-ACCEPTANCE` requires a complete checklist from EVERY staged `docs/tasks/*.md`, not

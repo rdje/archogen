@@ -1,0 +1,743 @@
+//! The reader: bytes in, [`Document`] out, or diagnostics that say exactly where it stopped.
+//!
+//! One pass, no lookahead beyond a byte, no backtracking. The grammar is small enough that a
+//! hand-written reader is shorter than a specification of one, and owning it means owning the
+//! wording of every refusal — which §5.5 makes part of the user contract.
+//!
+//! **It does not stop at the first error.** A description with three malformed numbers should
+//! report three, not one per edit-compile cycle. Recovery is deliberately crude: skip the
+//! offending token and continue. Crude recovery that reports real errors beats clever recovery
+//! that invents cascading ones.
+
+use crate::diagnostic::{Diagnostic, Diagnostics, Label};
+use crate::form::{Comment, Document, Form};
+use crate::source::{SourceId, SourceMap, Span};
+
+/// Read one source into a document.
+///
+/// Returns the document and every diagnostic produced. A document is returned even when there
+/// are errors: the forms that *did* parse are still useful to later passes and to editors, and
+/// the caller decides what an error means by asking [`Diagnostics::has_errors`].
+///
+/// # Panics
+///
+/// Panics if `source` is not present in `sources`. That is a programming error — the id can
+/// only have come from `SourceMap::add`.
+#[must_use]
+pub fn read(sources: &SourceMap, source: SourceId) -> (Document, Diagnostics) {
+    let text = sources
+        .get(source)
+        .expect("read called with an id not in this SourceMap")
+        .text
+        .clone();
+    Reader::new(&text, source).run()
+}
+
+struct Reader<'a> {
+    text: &'a [u8],
+    raw: &'a str,
+    source: SourceId,
+    at: usize,
+    diagnostics: Diagnostics,
+    comments: Vec<Comment>,
+}
+
+/// What closed a list-reading loop.
+enum Closed {
+    /// A `)` was found at this offset.
+    Paren(u32),
+    /// End of input arrived first.
+    Eof,
+}
+
+impl<'a> Reader<'a> {
+    fn new(raw: &'a str, source: SourceId) -> Self {
+        Self {
+            text: raw.as_bytes(),
+            raw,
+            source,
+            at: 0,
+            diagnostics: Diagnostics::new(),
+            comments: Vec::new(),
+        }
+    }
+
+    fn run(mut self) -> (Document, Diagnostics) {
+        let mut forms = Vec::new();
+        loop {
+            self.skip_trivia();
+            let Some(byte) = self.peek() else { break };
+            if byte == b')' {
+                let start = self.offset();
+                self.at += 1;
+                self.diagnostics.push(Diagnostic::error(
+                    "read-unexpected-close",
+                    "a closing parenthesis with nothing open",
+                    Label::new(self.span(start, self.offset()), "no list is open here"),
+                    "remove it, or add the matching `(` that was meant to open a list",
+                ));
+                continue;
+            }
+            match self.read_form() {
+                Some(form) => forms.push(form),
+                None => continue,
+            }
+        }
+        (
+            Document {
+                forms,
+                comments: self.comments,
+            },
+            self.diagnostics,
+        )
+    }
+
+    // ── position helpers ─────────────────────────────────────────────────────────────────────
+
+    fn offset(&self) -> u32 {
+        u32::try_from(self.at).unwrap_or(u32::MAX)
+    }
+
+    fn span(&self, start: u32, end: u32) -> Span {
+        Span::new(self.source, start, end)
+    }
+
+    fn peek(&self) -> Option<u8> {
+        self.text.get(self.at).copied()
+    }
+
+    fn peek_at(&self, ahead: usize) -> Option<u8> {
+        self.text.get(self.at + ahead).copied()
+    }
+
+    /// Whitespace and comments. Comments are collected, not discarded.
+    fn skip_trivia(&mut self) {
+        loop {
+            match self.peek() {
+                Some(b) if b.is_ascii_whitespace() => self.at += 1,
+                Some(b';') => {
+                    let start = self.offset();
+                    self.at += 1;
+                    let text_start = self.at;
+                    while let Some(b) = self.peek() {
+                        if b == b'\n' {
+                            break;
+                        }
+                        self.at += 1;
+                    }
+                    let text = self.raw[text_start..self.at].trim_end().to_string();
+                    let span = self.span(start, self.offset());
+                    self.comments.push(Comment { text, span });
+                }
+                _ => return,
+            }
+        }
+    }
+
+    // ── forms ────────────────────────────────────────────────────────────────────────────────
+
+    /// Read one form. `None` means an error was recorded and the offending input consumed.
+    fn read_form(&mut self) -> Option<Form> {
+        self.skip_trivia();
+        let byte = self.peek()?;
+        match byte {
+            b'(' => self.read_list(),
+            b'"' => self.read_string(),
+            b')' => None,
+            b if b.is_ascii_digit() => self.read_number(),
+            b'-' | b'+' if self.peek_at(1).is_some_and(|b| b.is_ascii_digit()) => {
+                self.read_number()
+            }
+            _ => self.read_symbol(),
+        }
+    }
+
+    fn read_list(&mut self) -> Option<Form> {
+        let open = self.offset();
+        self.at += 1; // consume '('
+        let mut items = Vec::new();
+
+        let closed = loop {
+            self.skip_trivia();
+            match self.peek() {
+                None => break Closed::Eof,
+                Some(b')') => {
+                    let close = self.offset();
+                    self.at += 1;
+                    break Closed::Paren(close);
+                }
+                Some(_) => {
+                    let before = self.at;
+                    match self.read_form() {
+                        Some(form) => items.push(form),
+                        None => {
+                            // Recovery: if the failing read consumed nothing we would spin
+                            // forever, so force progress by a byte.
+                            if self.at == before {
+                                self.at += 1;
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        match closed {
+            Closed::Paren(close) => Some(Form::List {
+                items,
+                span: self.span(open, close + 1),
+            }),
+            Closed::Eof => {
+                let end = self.offset();
+                self.diagnostics.push(
+                    Diagnostic::error(
+                        "read-unclosed-list",
+                        "this list is never closed",
+                        Label::new(self.span(end, end), "input ends here, still inside a list"),
+                        "add the matching `)`",
+                    )
+                    .with_secondary(Label::new(self.span(open, open + 1), "opened here")),
+                );
+                // Still return what was read: a truncated list is more useful to a caller
+                // than nothing, and the error is already recorded.
+                Some(Form::List {
+                    items,
+                    span: self.span(open, end),
+                })
+            }
+        }
+    }
+
+    fn read_string(&mut self) -> Option<Form> {
+        let open = self.offset();
+        self.at += 1; // consume '"'
+        let mut value = String::new();
+        loop {
+            let Some(byte) = self.peek() else {
+                let end = self.offset();
+                self.diagnostics.push(
+                    Diagnostic::error(
+                        "read-unterminated-string",
+                        "this string is never closed",
+                        Label::new(
+                            self.span(end, end),
+                            "input ends here, still inside a string",
+                        ),
+                        "add the closing `\"`",
+                    )
+                    .with_secondary(Label::new(self.span(open, open + 1), "opened here")),
+                );
+                return None;
+            };
+            match byte {
+                b'"' => {
+                    self.at += 1;
+                    return Some(Form::Str {
+                        value,
+                        span: self.span(open, self.offset()),
+                    });
+                }
+                b'\n' => {
+                    let at = self.offset();
+                    self.diagnostics.push(
+                        Diagnostic::error(
+                            "read-unterminated-string",
+                            "this string is not closed before the end of the line",
+                            Label::new(self.span(at, at), "the line ends here"),
+                            "close the string on its own line, or escape the newline as `\\n`",
+                        )
+                        .with_secondary(Label::new(self.span(open, open + 1), "opened here")),
+                    );
+                    return None;
+                }
+                b'\\' => {
+                    let escape_start = self.offset();
+                    self.at += 1;
+                    let Some(escape) = self.peek() else { continue };
+                    self.at += 1;
+                    match escape {
+                        b'n' => value.push('\n'),
+                        b't' => value.push('\t'),
+                        b'r' => value.push('\r'),
+                        b'"' => value.push('"'),
+                        b'\\' => value.push('\\'),
+                        other => {
+                            let end = self.offset();
+                            self.diagnostics.push(Diagnostic::error(
+                                "read-bad-escape",
+                                format!("`\\{}` is not an escape sequence", other as char),
+                                Label::new(self.span(escape_start, end), "unknown escape"),
+                                "the supported escapes are \\n, \\t, \\r, \\\" and \\\\",
+                            ));
+                            // Keep the characters literally so one typo does not cascade.
+                            value.push('\\');
+                            value.push(other as char);
+                        }
+                    }
+                }
+                _ => {
+                    // Copy one whole character, so multi-byte text survives intact.
+                    let char_start = self.at;
+                    let ch = self.raw[char_start..].chars().next().unwrap_or('\u{FFFD}');
+                    self.at += ch.len_utf8();
+                    value.push(ch);
+                }
+            }
+        }
+    }
+
+    fn read_number(&mut self) -> Option<Form> {
+        let start = self.offset();
+        let negative = matches!(self.peek(), Some(b'-'));
+        if matches!(self.peek(), Some(b'-' | b'+')) {
+            self.at += 1;
+        }
+
+        // Hexadecimal.
+        if self.peek() == Some(b'0') && matches!(self.peek_at(1), Some(b'x' | b'X')) {
+            self.at += 2;
+            let digits_start = self.at;
+            while self
+                .peek()
+                .is_some_and(|b| b.is_ascii_hexdigit() || b == b'_')
+            {
+                self.at += 1;
+            }
+            let raw: String = self.raw[digits_start..self.at].replace('_', "");
+            let end = self.offset();
+            if raw.is_empty() {
+                self.diagnostics.push(Diagnostic::error(
+                    "read-malformed-number",
+                    "`0x` with no hexadecimal digits after it",
+                    Label::new(self.span(start, end), "expected hexadecimal digits"),
+                    "write the digits, e.g. `0x1000_0000`",
+                ));
+                return None;
+            }
+            return match i64::from_str_radix(&raw, 16) {
+                Ok(value) => Some(Form::Integer {
+                    value: if negative { -value } else { value },
+                    span: self.span(start, end),
+                }),
+                Err(_) => {
+                    self.diagnostics.push(Diagnostic::error(
+                        "read-number-overflow",
+                        "this hexadecimal literal does not fit in a 64-bit signed integer",
+                        Label::new(self.span(start, end), "too large"),
+                        "eADL integers are exact 64-bit signed values; split the quantity or change its units",
+                    ));
+                    None
+                }
+            };
+        }
+
+        // Decimal, with an optional fractional part. No exponent form: `1e9` invites a float,
+        // and §7.4 requires exact arithmetic.
+        let int_start = self.at;
+        while self.peek().is_some_and(|b| b.is_ascii_digit() || b == b'_') {
+            self.at += 1;
+        }
+        let int_digits: String = self.raw[int_start..self.at].replace('_', "");
+
+        let mut frac_digits = String::new();
+        if self.peek() == Some(b'.') && self.peek_at(1).is_some_and(|b| b.is_ascii_digit()) {
+            self.at += 1;
+            let frac_start = self.at;
+            while self.peek().is_some_and(|b| b.is_ascii_digit() || b == b'_') {
+                self.at += 1;
+            }
+            frac_digits = self.raw[frac_start..self.at].replace('_', "");
+        }
+
+        // A second point, or a digit-leading atom like `3abc`, is a malformed number rather
+        // than a symbol: reading it as a symbol would silently accept a typo.
+        if self.peek().is_some_and(|b| b == b'.' || is_symbol_byte(b)) {
+            while self.peek().is_some_and(|b| b == b'.' || is_symbol_byte(b)) {
+                self.at += 1;
+            }
+            let end = self.offset();
+            self.diagnostics.push(Diagnostic::error(
+                "read-malformed-number",
+                format!("`{}` is not a number", &self.raw[start as usize..end as usize]),
+                Label::new(self.span(start, end), "a number cannot continue like this"),
+                "write an integer or a decimal such as `10` or `1.5`; units go in a following atom, e.g. `10 ms`",
+            ));
+            return None;
+        }
+
+        let end = self.offset();
+        let combined = format!("{int_digits}{frac_digits}");
+        let scale = u32::try_from(frac_digits.len()).unwrap_or(u32::MAX);
+        match combined.parse::<i64>() {
+            Ok(magnitude) => {
+                let value = if negative { -magnitude } else { magnitude };
+                Some(if scale == 0 {
+                    Form::Integer {
+                        value,
+                        span: self.span(start, end),
+                    }
+                } else {
+                    Form::Decimal {
+                        value,
+                        scale,
+                        span: self.span(start, end),
+                    }
+                })
+            }
+            Err(_) => {
+                self.diagnostics.push(Diagnostic::error(
+                    "read-number-overflow",
+                    "this literal does not fit in a 64-bit signed integer",
+                    Label::new(self.span(start, end), "too large"),
+                    "eADL numbers are exact 64-bit signed values; reduce the digits or change the units",
+                ));
+                None
+            }
+        }
+    }
+
+    fn read_symbol(&mut self) -> Option<Form> {
+        let start = self.offset();
+        while self.peek().is_some_and(is_symbol_byte) {
+            self.at += 1;
+        }
+        let end = self.offset();
+        if end == start {
+            // A byte that can start nothing: a stray control character or a lone delimiter.
+            let ch = self.raw[start as usize..]
+                .chars()
+                .next()
+                .unwrap_or('\u{FFFD}');
+            self.at += ch.len_utf8();
+            self.diagnostics.push(Diagnostic::error(
+                "read-unexpected-character",
+                format!("`{}` cannot start a form", ch.escape_debug()),
+                Label::new(self.span(start, self.offset()), "unexpected here"),
+                "forms are lists `(…)`, symbols, numbers or strings",
+            ));
+            return None;
+        }
+        Some(Form::Symbol {
+            name: self.raw[start as usize..end as usize].to_string(),
+            span: self.span(start, end),
+        })
+    }
+}
+
+/// Bytes a symbol may contain.
+///
+/// Deliberately permissive: `time.monotonic`, `at-least`, `rt-static-up-v1`, `KiB`, `>=`. It
+/// excludes whitespace, parentheses, quotes, and `;` — the characters that structure the text —
+/// so a missing delimiter is a read error rather than a symbol that quietly swallows the rest
+/// of the line.
+fn is_symbol_byte(byte: u8) -> bool {
+    !byte.is_ascii_whitespace()
+        && !matches!(byte, b'(' | b')' | b'"' | b';')
+        && !byte.is_ascii_control()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::read;
+    use crate::form::Form;
+    use crate::source::SourceMap;
+
+    fn parse(
+        text: &str,
+    ) -> (
+        crate::form::Document,
+        crate::diagnostic::Diagnostics,
+        SourceMap,
+    ) {
+        let mut sources = SourceMap::new();
+        let id = sources.add("t.eadl", text).expect("small");
+        let (document, diagnostics) = read(&sources, id);
+        (document, diagnostics, sources)
+    }
+
+    fn parse_ok(text: &str) -> crate::form::Document {
+        let (document, diagnostics, sources) = parse(text);
+        assert!(
+            !diagnostics.has_errors(),
+            "unexpected errors:\n{}",
+            diagnostics.render(&sources)
+        );
+        document
+    }
+
+    #[test]
+    fn a_nested_list_parses_to_the_right_shape() {
+        let document = parse_ok(
+            "(defservice time.monotonic\n  (requires (unambiguous-horizon (at-least 60 s))))\n",
+        );
+        assert_eq!(document.forms.len(), 1);
+        assert_eq!(document.forms[0].head(), Some("defservice"));
+        assert_eq!(
+            document.to_canonical().trim(),
+            "(defservice time.monotonic (requires (unambiguous-horizon (at-least 60 s))))"
+        );
+    }
+
+    #[test]
+    fn numbers_are_exact_and_never_floats() {
+        let document = parse_ok("(x 10 1.5 0.1 -3 0x1000_0000 1_000)");
+        let items = document.forms[0].items();
+        assert!(matches!(items[1], Form::Integer { value: 10, .. }));
+        assert!(matches!(
+            items[2],
+            Form::Decimal {
+                value: 15,
+                scale: 1,
+                ..
+            }
+        ));
+        assert!(matches!(
+            items[3],
+            Form::Decimal {
+                value: 1,
+                scale: 1,
+                ..
+            }
+        ));
+        assert!(matches!(items[4], Form::Integer { value: -3, .. }));
+        assert!(matches!(
+            items[5],
+            Form::Integer {
+                value: 0x1000_0000,
+                ..
+            }
+        ));
+        assert!(matches!(items[6], Form::Integer { value: 1000, .. }));
+        // The canonical text is the input's meaning, not its spelling.
+        assert_eq!(
+            document.to_canonical().trim(),
+            "(x 10 1.5 0.1 -3 268435456 1000)"
+        );
+    }
+
+    #[test]
+    fn a_unit_is_just_the_next_symbol() {
+        // Units are the model layer's business. The reader stays syntactic, which is why the
+        // same reader serves the boundary corpus and the S0 fixture unchanged.
+        let document = parse_ok("(tick-rate 10 MHz)");
+        let items = document.forms[0].items();
+        assert!(matches!(items[1], Form::Integer { value: 10, .. }));
+        assert_eq!(items[2].as_symbol(), Some("MHz"));
+    }
+
+    #[test]
+    fn an_unclosed_list_points_at_both_ends() {
+        let (_, diagnostics, sources) = parse("(defservice time\n  (requires x)\n");
+        assert!(diagnostics.has_errors());
+        let rendered = diagnostics.render(&sources);
+        assert!(rendered.contains("read-unclosed-list"), "{rendered}");
+        assert!(rendered.contains("opened here"), "{rendered}");
+        assert!(
+            rendered.contains("t.eadl:1:1"),
+            "the opener's location:\n{rendered}"
+        );
+    }
+
+    #[test]
+    fn an_unexpected_close_paren_is_reported_where_it_is() {
+        let (_, diagnostics, sources) = parse("(a))\n");
+        let rendered = diagnostics.render(&sources);
+        assert!(rendered.contains("read-unexpected-close"), "{rendered}");
+        assert!(rendered.contains("t.eadl:1:4"), "{rendered}");
+    }
+
+    #[test]
+    fn an_unterminated_string_is_reported_at_the_line_end() {
+        let (_, diagnostics, sources) = parse("(provider \"device-clint)\n");
+        let rendered = diagnostics.render(&sources);
+        assert!(rendered.contains("read-unterminated-string"), "{rendered}");
+    }
+
+    #[test]
+    fn a_bad_escape_names_the_supported_ones() {
+        let (_, diagnostics, sources) = parse("(x \"a\\qb\")");
+        let rendered = diagnostics.render(&sources);
+        assert!(rendered.contains("read-bad-escape"), "{rendered}");
+        assert!(rendered.contains("\\n, \\t, \\r"), "{rendered}");
+    }
+
+    #[test]
+    fn a_malformed_number_is_not_silently_read_as_a_symbol() {
+        // ⭐ `3ms` is a typo for `3 ms`. Reading it as a symbol would accept it and lose the
+        // magnitude, and the failure would surface much later as a missing field.
+        let (_, diagnostics, sources) = parse("(period 3ms)");
+        let rendered = diagnostics.render(&sources);
+        assert!(rendered.contains("read-malformed-number"), "{rendered}");
+        assert!(
+            rendered.contains("units go in a following atom"),
+            "{rendered}"
+        );
+    }
+
+    #[test]
+    fn a_second_decimal_point_is_refused() {
+        let (_, diagnostics, _) = parse("(x 1.2.3)");
+        assert!(diagnostics.has_errors());
+    }
+
+    #[test]
+    fn an_overflowing_literal_is_refused_rather_than_wrapping() {
+        let (_, diagnostics, sources) = parse("(x 99999999999999999999)");
+        let rendered = diagnostics.render(&sources);
+        assert!(rendered.contains("read-number-overflow"), "{rendered}");
+    }
+
+    #[test]
+    fn reading_does_not_stop_at_the_first_error() {
+        // Three malformed numbers should cost one edit cycle, not three.
+        let (_, diagnostics, _) = parse("(a 1.2.3)\n(b 4.5.6)\n(c 7.8.9)\n");
+        assert_eq!(diagnostics.len(), 3, "the reader stopped early");
+    }
+
+    #[test]
+    fn comments_are_kept_with_their_spans() {
+        let document = parse_ok("; case: time-horizon\n; verdict: accept\n(x)\n");
+        assert_eq!(document.comments.len(), 2);
+        assert_eq!(document.comments[0].text, " case: time-horizon");
+        assert_eq!(document.forms.len(), 1);
+    }
+
+    #[test]
+    fn comment_headers_parse_keys_and_continuations() {
+        let document = parse_ok(
+            "; case: x\n; rationale: the first line\n;   and its continuation\n; verdict: accept\n(y)\n",
+        );
+        let headers = document.comment_headers();
+        assert_eq!(headers[0], ("case".into(), "x".into()));
+        assert_eq!(
+            headers[1],
+            (
+                "rationale".into(),
+                "the first line and its continuation".into()
+            )
+        );
+        assert_eq!(headers[2], ("verdict".into(), "accept".into()));
+        assert_eq!(headers.len(), 3, "{headers:?}");
+    }
+
+    #[test]
+    fn prose_containing_a_colon_continues_a_value_and_does_not_open_a_header() {
+        // ⭐ The rule that actually works. Every corpus comment reads `; key: value`, so every
+        // line begins with a space after the `;` — indentation cannot distinguish a
+        // continuation. A key has no spaces, so prose with a colon in it never looks like one.
+        let document = parse_ok(
+            "; rationale: AMBIGUOUS, resolved REJECT.\n;   §7.3 is precise about the split: evidence is not a field.\n; verdict: reject\n(y)\n",
+        );
+        let headers = document.comment_headers();
+        assert_eq!(headers.len(), 2, "{headers:?}");
+        assert_eq!(headers[0].0, "rationale");
+        assert!(
+            headers[0].1.contains("precise about the split:"),
+            "{headers:?}"
+        );
+        assert_eq!(headers[1], ("verdict".into(), "reject".into()));
+    }
+
+    #[test]
+    fn a_wrapped_line_that_begins_with_a_key_shaped_word_does_not_open_a_header() {
+        // ⭐ Found by running `examples/diagnose` over the real corpus, not by imagining it.
+        // A rationale wrapped onto `;   implementation-independence: a different timer …`,
+        // which is exactly a bare key followed by a colon. The key-shape test alone accepted
+        // it and silently truncated the rationale; the indentation test alone had already
+        // failed on the ordinary `; key: value` spacing. Both are required.
+        let document = parse_ok(
+            "; rationale: the test that settles it is\n;   implementation-independence: a different timer works\n; verdict: accept\n(y)\n",
+        );
+        let headers = document.comment_headers();
+        let keys: Vec<&str> = headers.iter().map(|(k, _)| k.as_str()).collect();
+        assert_eq!(keys, vec!["rationale", "verdict"], "{headers:?}");
+        assert!(
+            headers[0]
+                .1
+                .contains("implementation-independence: a different timer works"),
+            "{headers:?}"
+        );
+    }
+
+    #[test]
+    fn an_unindented_key_shaped_line_still_opens_a_header() {
+        // The other direction: the fix must not make headers unreachable.
+        let document = parse_ok("; rationale: one\n; other-side: two\n(y)\n");
+        let keys: Vec<String> = document
+            .comment_headers()
+            .into_iter()
+            .map(|(k, _)| k)
+            .collect();
+        assert_eq!(keys, vec!["rationale", "other-side"]);
+    }
+
+    #[test]
+    fn an_empty_comment_closes_the_header_block() {
+        let document = parse_ok("; case: x\n;\n; a trailing remark about nothing\n(y)\n");
+        let headers = document.comment_headers();
+        assert_eq!(headers.len(), 1);
+        assert_eq!(headers[0], ("case".into(), "x".into()));
+    }
+
+    #[test]
+    fn a_continuation_before_any_header_is_dropped_rather_than_inventing_one() {
+        let document = parse_ok("; a preamble line\n; case: x\n(y)\n");
+        let headers = document.comment_headers();
+        assert_eq!(headers, vec![("case".to_string(), "x".to_string())]);
+    }
+
+    #[test]
+    fn a_semicolon_inside_a_string_is_not_a_comment() {
+        let document = parse_ok("(x \"a ; not a comment\")");
+        assert!(document.comments.is_empty());
+        assert_eq!(
+            document.forms[0].items()[1].to_canonical(),
+            "\"a ; not a comment\""
+        );
+    }
+
+    #[test]
+    fn a_stray_control_character_is_reported_and_skipped() {
+        let (_, diagnostics, sources) = parse("(a \u{7} b)");
+        let rendered = diagnostics.render(&sources);
+        assert!(rendered.contains("read-unexpected-character"), "{rendered}");
+    }
+
+    #[test]
+    fn empty_input_is_an_empty_document_not_an_error() {
+        let document = parse_ok("");
+        assert!(document.forms.is_empty());
+        let only_trivia = parse_ok("\n  ; just a comment\n\n");
+        assert!(only_trivia.forms.is_empty());
+        assert_eq!(only_trivia.comments.len(), 1);
+    }
+
+    #[test]
+    fn an_empty_list_is_a_list() {
+        let document = parse_ok("()");
+        assert_eq!(document.forms[0].items().len(), 0);
+        assert_eq!(document.to_canonical().trim(), "()");
+    }
+
+    #[test]
+    fn canonical_text_round_trips_semantically() {
+        // §12 M1's exit gate: "examples parse, type-check, and round-trip semantically".
+        let source = "(defblock timer.counter\n  ; inert\n  (offers (counter-width 32 bit)\n          (tick-rate 10.5 MHz)\n          (name \"clint\")))\n";
+        let first = parse_ok(source);
+        let second = parse_ok(&first.to_canonical());
+        assert!(
+            first.structurally_eq(&second),
+            "round trip changed the structure:\n{}\n{}",
+            first.to_canonical(),
+            second.to_canonical()
+        );
+        assert_eq!(first.to_canonical(), second.to_canonical());
+    }
+
+    #[test]
+    fn whitespace_differences_canonicalize_away() {
+        let a = parse_ok("(a   b\n\n   c)");
+        let b = parse_ok("(a b c)");
+        assert_eq!(a.to_canonical(), b.to_canonical());
+    }
+}
