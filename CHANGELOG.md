@@ -4,6 +4,35 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — a runtime that decides and does not act
+
+`ARCHOGEN-M2-0034` (leaf `M2.1`).
+
+⚠️ *This entry was written after the fact: the `M2.1` commit's lockstep script aborted on an
+assertion before reaching `CHANGELOG.md`, and the failure was not noticed because the rest of the
+batch reported green. Restored in its own commit rather than folded into a later one.*
+
+- `crates/rt-core` is the shared runtime state machine: task lifecycle, fixed-priority ready
+  structure, nested interrupt masking, and the bounded fault path. `no_std` outside its own tests,
+  and allocation-free — the task set is a fixed-capacity array sized by a const parameter.
+- ⭐ **It never performs a context switch.** Every operation returns a `Decision`; saving
+  registers and returning from an interrupt belong to the architecture port. That is §8's
+  "separate policy state transitions from the execution substrate", and two things follow: the
+  policy is testable on a host, which is the leaf's acceptance, and a scheduling bug stops being
+  the same bug as a context-save bug.
+- Masking **nests**, and a release arriving while masked is **latched**, delivered on the
+  outermost unmask in priority order. ⛔ A second release while one is pending is an **overrun**,
+  not a second pending job: there is nowhere to put it, and inventing somewhere would be a queue
+  in a profile that excludes queues.
+- The fault path is a **value, not a panic**, so a hosted test can observe it and the target port
+  can route it to a defined fatal handler. Faults split by whether the runtime's own state is
+  still trustworthy — only an overrun is. There is no "ignore" overrun policy.
+- ⚠️ `#![no_std]` is **verified**, not asserted — using `String` outside `cfg(test)` fails to
+  compile. The integration tier gained a `no-std-build` step for the stronger claim, which the
+  installed `riscv64imac-unknown-none-elf` target now makes pass.
+- Validation: `cargo test -p rt-core` → **3 + 14 passed, 0 failed**. `cargo test --all` → **374**
+  passed (357 before, `+17`); `make focused` → `passed`; all doctrines green; `mdbook build` OK.
+
 ## archogen — the book gets a shape, and its citations get checked
 
 `ARCHOGEN-PROGRAM-0033` (leaf `PROGRAM.4`).
