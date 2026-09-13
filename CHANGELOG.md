@@ -4,6 +4,33 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — exact quantities, and F03
+
+`ARCHOGEN-M1-0014` (leaf `M1.3`).
+
+- `src/rational.rs`: exact `i128/i128` rationals, normalized on construction so equality and
+  ordering are structural, with **every** operation checked. §7.4 requires overflow detection,
+  and a wrapped numerator turns an unschedulable system into a schedulable-looking one with
+  nothing in the output to say so. `ceil` rounds up, because that is the direction response-time
+  analysis needs — rounding the other way understates interference and turns a missed deadline
+  into a reported pass.
+- No floating point anywhere. `1/3 + 1/3 + 1/3` is exactly `1`; `1 ns` in milliseconds is
+  exactly `1/1000000`, not zero; values with no short decimal form print as fractions rather
+  than being rounded into something that reads like a measurement.
+- `src/quantity.rs`: 13 units over four dimensions, exact conversion, and declared comparison
+  directions with **no default** — §5.2 warns that "more bits or a faster clock is not
+  universally better", and an undeclared direction is a bug waiting for a substitution to expose
+  it. The unit table is small on purpose: one accepting arbitrary SI prefixes accepts `Ps` too,
+  and a typo that parses is worse than one that does not.
+- **F03 green, 15 arms.** ⭐ The "before arithmetic" property is *demonstrated*, not asserted:
+  the fixture compares two quantities whose magnitudes would overflow if touched — asserting
+  first that they would — and the comparison still returns the dimension error, which is only
+  possible if the dimension check precedes any read. A zero clock frequency is refused at
+  construction, so no such quantity exists for anything to divide by later.
+- New book chapter `docs/book/src/quantities.md`.
+- Validation: 15 new arms, 176 tests across the workspace, 0 failed; fmt and clippy clean; all
+  doctrines green; `mdbook build` OK.
+
 ## archogen — kinds and schemas, with exactly one trusted primitive
 
 `ARCHOGEN-M1-0013` (leaf `M1.2`).
