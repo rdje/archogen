@@ -4,6 +4,27 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the emulator pinned, and the board recorded as absent
+
+`ARCHOGEN-M0-0009` (leaf `M0.5`).
+
+- `targets/riscv-virt-up.env` pins the emulator configuration as data, and
+  `scripts/target_emulator.sh` is the only thing that renders it — so no two callers can type
+  it slightly differently. §3.2: "Pin the emulator configuration … do not rely on changing
+  defaults." `--dump-dtb` writes QEMU's generated device tree for the agreement check against
+  the eADL platform fixture, which is the difference between describing a platform and
+  describing *this* platform.
+- Absence is reported, never skipped: with QEMU not installed, `--check` exits `20` saying
+  `do NOT record an emulator result without it`. §14.3 requires exactly that. The configuration
+  also carries `TARGET_VERIFIED=no` until an installed QEMU confirms it.
+- 🔎 **No physical board has been selected or procured.** All seven facts §3.2 requires are
+  recorded as `unrecorded`, with the selection criteria written out. Naming a plausible board
+  from memory would be worse than naming none — each row is a fact a later timing claim would
+  rest on. Tree `M5` is blocked at the root; S0–M4 are not. This is a director decision.
+- New book chapter `docs/book/src/targets.md`; `TOOLBOX.md` gains the emulator tool row.
+- Validation: `bash -n` clean; docpath clean; all doctrines green; 67 tests pass;
+  `mdbook build` OK.
+
 ## archogen — a report that cannot say "verified"
 
 `ARCHOGEN-M0-0008` (leaf `M0.7`).

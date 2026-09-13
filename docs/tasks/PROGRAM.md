@@ -37,7 +37,7 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM`
   Status: `active`
   Goal: own the program spine
-  Children: `PROGRAM.1` (+ `PROGRAM.1.1`) … `PROGRAM.7`
+  Children: `PROGRAM.1` (+ `PROGRAM.1.1`) … `PROGRAM.8`
 
 - ID: `PROGRAM.1`
   Status: `done`
@@ -155,6 +155,39 @@ mdBook that is the director's window into the project.
   home.
   Verification: `pending`
   Commit: `pending`
+
+- ID: `PROGRAM.8`
+  Status: `pending`
+  Goal: resolve the cross-tree lockstep friction in `TASK-ACCEPTANCE` — the check requires a
+  complete acceptance checklist from **every** staged `docs/tasks/*.md`, not from the leaf that
+  owns the staged code, so propagating a blocker into a second tree in the same commit as code
+  is refused.
+  Acceptance: either a declared seam that lets a commit name its owning leaf, or a documented
+  convention with a gate that enforces it; the fix must not reopen the cross-file evidence
+  leakage the check was hardened against, and must not be a local edit to the portable check.
+  Verification: `pending`
+  Commit: `pending`
+
+  ### ROUTING EVIDENCE
+
+  - **Does it reproduce outside this project?** Yes. Nothing in the refusal is
+    archogen-specific: it fires for any repository using this spine whenever one commit lands
+    code owned by tree A and a documentation edit in tree B. Measured here on
+    `ARCHOGEN-M0-0009`: `docs/tasks/M5.md` was staged carrying only a blocker note, and the
+    check reported `docs/tasks/M5.md has no 'ROOT CAUSE' box in its acceptance checklist`
+    ×3 with `=== 1 doctrine breach(es) — commit blocked ===`, while `docs/tasks/M0.md` — the
+    tree that actually owns the change — carried a complete, evidenced checklist.
+  - **What was measured:** the refusal is a property of the check's *file scope*, not of the
+    content. Unstaging `docs/tasks/M5.md` and changing nothing else returns
+    `=== all doctrines green ===`.
+  - **What would make this routing wrong:** if the strictness is deliberate — i.e. if requiring
+    every touched tree to justify itself is the intended cost of the cross-file hardening
+    described in the check's own header. That is plausible, and it is why the acceptance above
+    forbids any fix that reopens the leakage. The correct first output of this leaf may be an
+    upstream report rather than a change.
+  - **Interim convention, in use from 2026-09-13:** split the commit. Code and its owning tree
+    land together; a documentation edit to another tree lands as its own docs-only commit. See
+    `docs/knowledge/cross-tree-lockstep-and-commit-scope.md`.
 
 - ID: `PROGRAM.7`
   Status: `pending`

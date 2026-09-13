@@ -38,6 +38,7 @@ before forming a theory about any failure.
 | the doctrine enforcer | which repository invariant is broken, and where? | `make gate` (= `scripts/check_doctrines.sh`) |
 | the seal checker | has the frozen evaluation set been modified, extended, or named outside its directory? | `bash scripts/check_frozen_evaluation.sh` |
 | the profile drift test | has the published profile page diverged from the profile data the engine consults? | `cargo test -p eadl-model` |
+| the emulator tool | what exactly does the pinned target run, and is its toolchain present? (exit 20 = required tool unavailable, never a skipped pass) | `scripts/target_emulator.sh --print <img>` / `--check` / `--dump-dtb <out>` |
 | the code-path seam | is this staged file classified as a code change here? | `git diff --cached --name-only \| grep -Ef <(grep -vE '^\s*(#\|$)' .doctrine/code_paths.txt)` |
 | `cargo test --all` | does any contract test fail, and with which assertion diff? | `make test` |
 

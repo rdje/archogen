@@ -11,9 +11,10 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M0` → frontier leaf `M0.5` (`pending`).
-- **Next action:** record target selection (`ROADMAP.md` §3.2) — the pinned emulator
-  configuration and the board decision or its recorded unavailability (`M0.5`).
-- **Latest commit:** `ARCHOGEN-M0-0008 (leaf M0.7)` — the evidence vocabulary, encoded.
+- **Active tree:** `M1` → frontier leaf `M1.1` (`pending`). `M0` is done but for `M0.3`.
+- **Next action:** build the reader — S-expressions, source spans, caret diagnostics
+  (`docs/tasks/M1.md`, leaf `M1.1`). It unblocks `M0.3` (F27) and `S0.2`.
+- **Latest commit:** `ARCHOGEN-M0-0009 (leaf M0.5)` — emulator pinned; no board procured.
 - **In-flight uncommitted work:** none.
-- **Blockers:** none. Absent tooling: QEMU RISC-V (needed by `M4.9`, `M2.8`).
+- **Blockers:** no physical board procured → tree `M5` blocked (director decision;
+  `docs/targets/first-target.md`). QEMU RISC-V not installed → `M2.8` emulator half, `M4.9`.

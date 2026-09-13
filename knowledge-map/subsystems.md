@@ -26,5 +26,9 @@ justifies the split — the rows below appear as that happens.
   the input fixture F27 mechanizes. Its README fixes the case format.
 - `docs/usecases/` — the four systems the toolchain must build or refuse; `docs/evaluation/` —
   the sealed reuse-measurement set and the check that keeps it sealed and unseen.
+- `targets/riscv-virt-up.env` + `scripts/target_emulator.sh` — the pinned emulator
+  configuration and the only tool that renders it. `--check` exits 20 when QEMU is absent
+  rather than reporting a skipped check as a pass. `docs/targets/first-target.md` records the
+  board decision: none procured.
 - `scripts/check_doctrines.sh` — the doctrine enforcer (git hook + CI). `make gate`.
   Project doctrines live in `scripts/check_doctrines.project.sh`.
