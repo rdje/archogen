@@ -91,6 +91,42 @@ the oracle a one-line edit that looks like a fix. Reading the specification make
 and the requirement the same object, so changing the answer means changing a requirement — in a
 diff a reviewer recognises as one.
 
+## How time is charged
+
+The idealized baseline charges **nothing** for overhead, which is its declared assumption. Any
+analysis that does charge overhead has to say how, and §7.4.1 requires that to be a **versioned
+contract** rather than an implementation detail: `cost-accounting/1`, published in
+`docs/analysis/cost-accounting-v1.md` and declared as data beside the code, with a test that
+fails if the two ever diverge.
+
+The rule at its centre is one sentence:
+
+> Every physical execution interval in a fixed trace has **one primary ledger category**. […]
+> Charge only mutually disjoint intervals when asserting exact totals.
+
+⭐ **That is enforced by construction, not by review.** A ledger is a set of half-open intervals,
+and sealing one as an *exact trace* refuses two things:
+
+- an **overlap** — time charged twice. This is §7.4.1's own example: counting the same interrupt
+  entry once in an ISR term and again inside a context-switch term.
+- a **gap** — time charged to nothing. An omitted cost *is* a hole; the trace says the processor
+  was busy and the ledger says nothing was spent.
+
+Both matter for the same reason: when they happen, **the total still looks plausible**. Nothing
+about the number invites suspicion, so a check that depends on suspicion never fires.
+
+### Three kinds of total, deliberately not interchangeable
+
+| Kind | May over-count | Supports |
+| --- | --- | --- |
+| `exact-trace` | no | an exact statement about one fixed trace |
+| `safe-envelope` | **yes, declared** | an analytical upper bound |
+| `observed-maximum` | n/a | an empirical observation, and nothing more |
+
+§7.4.1 permits deliberate pessimism and forbids hiding it — "the requirement is no *undocumented*
+omission or duplicate charge, not a ban on sound pessimism" — so an envelope is allowed to charge
+the same interval twice, and has to say that is what it is.
+
 ## What is still owed
 
 ⚠️ **Nothing here may be cited for a claim about a running system.** §7.4 requires a

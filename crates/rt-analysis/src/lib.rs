@@ -22,8 +22,10 @@
 //! accepted. That is leaf `M2.6`, and F29 (§13.4) is its control. Nothing in this crate may be
 //! cited for a runtime claim until it lands.
 
+pub mod cost;
 pub mod model;
 pub mod response;
 
+pub use cost::{Accounting, Category, Contract, Interval, Ledger, LedgerError, COST_ACCOUNTING_V1};
 pub use model::{Inadmissible, Task, TaskSet};
 pub use response::{analyze, conclusion, response_time, Bound, Limit, Outcome, Witness};

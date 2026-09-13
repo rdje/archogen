@@ -18,3 +18,4 @@ dated lesson in `DEV_NOTES.md` to be promoted here (or explicitly declined in it
 | [`prose-beside-data-goes-unenforced.md`](prose-beside-data-goes-unenforced.md) | Half my config is enforced and half is prose — how do I stop the prose rotting? |
 | [`verify-the-mutation-applied.md`](verify-the-mutation-applied.md) | I broke the code to prove the test catches it and it still passed — what now? |
 | [`a-gate-is-only-as-sharp-as-its-fixtures.md`](a-gate-is-only-as-sharp-as-its-fixtures.md) | My acceptance gate is green — what class of error could it still be blind to? |
+| [`make-the-rule-a-constructor-precondition.md`](make-the-rule-a-constructor-precondition.md) | A specification says "must not do X" — where does that belong in the code? |

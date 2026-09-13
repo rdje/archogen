@@ -4,6 +4,34 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — an accounting rule you cannot construct a violation of
+
+`ARCHOGEN-M2-0031` (leaf `M2.4`).
+
+- `cost-accounting/1` is published (`docs/analysis/cost-accounting-v1.md`) and declared as data
+  beside the code, with a drift test holding the two together. §7.4.1 requires a **versioned**
+  contract because a total is only meaningful under the rules it was computed with, and §15
+  versions evidence formats separately for that reason.
+- ⭐ **"One interval, one category" is a constructor precondition, not a review instruction.** An
+  exact-trace ledger with an **overlap** (time charged twice — §7.4.1's own example, and F29's
+  fourth control) or a **gap** (time charged to nothing — which is what an omission *is*) does not
+  seal. Both matter for the same reason: when they happen the total still looks plausible, so a
+  check that depends on someone noticing never fires.
+- §7.4.1's permitted pessimism is preserved rather than legislated away. A `safe-envelope` may
+  over-count — that is what makes it safe — and the kind of total is named, so the conservatism is
+  declared instead of implied. An `observed-maximum` is neither, whatever it is multiplied by.
+- The drift test **caught a real mismatch on its first run** — a code span around `C` — and was
+  then taught to compare meaning rather than markup, because a drift test that forces the page to
+  be worse in order to stay green is one people work around instead of satisfying.
+- This is the third time the project has answered a "must not" with a type rather than a review
+  step (`Conclusion` for §7.1, `TaskSet::admit` for §7.4, `Ledger::seal` here), so the pattern is
+  now `docs/knowledge/make-the-rule-a-constructor-precondition.md`.
+- Validation: `cargo test -p rt-analysis` → **27 + 5 passed, 0 failed**; proven able to fail by
+  disabling overlap detection (`25 passed; 2 failed`) and by editing the published contract away
+  from the declared one (`26 passed; 1 failed`), each restored and re-run green.
+  `cargo test --all` → **349** passed (336 before, `+13`); `make focused` → `passed`; all
+  doctrines green; `mdbook build` OK.
+
 ## archogen — the first analysis, and it establishes less than it looks like it does
 
 `ARCHOGEN-M2-0030` (leaf `M2.3`). **F18 is green.**

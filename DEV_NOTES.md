@@ -19,6 +19,27 @@
 Detailed technical notes — root cause, implementation, validation — per slice. The
 engineering-continuity surface (not the public docs; that's `docs/book/`). Newest first.
 
+## _(2026-09-13)_ — when the wrong answer looks plausible, the rule has to be a type
+
+- §7.4.1's rule is "every physical execution interval has one primary ledger category … charge
+  only mutually disjoint intervals". The failure it prevents is specific: a ledger that charges
+  an interrupt twice **still totals a plausible number**, and an omitted cost leaves a number
+  that is merely smaller. Nothing about either invites suspicion, so a review step never fires.
+- So the ledger refuses to close. `Ledger::seal` rejects an overlap and a gap, with the
+  specification's own words in the message. F29's four controls stop being four careful
+  comparisons and become two that the type already covers.
+- Third instance of the same move in this repository — `Conclusion` for §7.1, `TaskSet::admit`
+  for §7.4, `Ledger::seal` for §7.4.1 — which is what made it worth promoting rather than
+  repeating.
+- ⚠️ The escape hatch had to stay explicit. §7.4.1 *permits* conservative over-counting in an
+  analytical envelope, so disjointness is required only for `exact-trace`. A rule enforced where
+  it does not apply gets disabled wherever it does.
+- ⛔ The drift test between the published contract and the declared one failed on its **first**
+  run — on a backtick. Comparing raw text would have forced the published page to be worse (no
+  code spans in a table) to keep the test green, which is how a drift test starts being worked
+  around. It compares with code spans stripped, and says why in the code.
+- Promoted to `docs/knowledge/make-the-rule-a-constructor-precondition.md`.
+
 ## _(2026-09-13)_ — read the oracle out of the specification, not into the test
 
 - §13.2 publishes the response bounds the scheduling checker must produce. Copying them into the

@@ -54,7 +54,10 @@ justifies the split — the rows below appear as that happens.
   deadlines are met" detached from "no overhead" is not constructible. ⚠️ Nothing here may be
   cited for a runtime claim until `M2.6`. Its F18 suite **parses §13.2's table out of
   `ROADMAP.md`** rather than copying it, which is §14.1's "cannot silently adjust expected oracle
-  results" made mechanical.
+  results" made mechanical. `cost.rs` + `docs/analysis/cost-accounting-v1.md` are §7.4.1's
+  versioned accounting contract, held together by a drift test; ⭐ its "one interval, one
+  category" rule is a **constructor precondition** — an exact-trace ledger with an overlap or a
+  hole does not seal — because a double-charged total still looks plausible.
 - `ROADMAP.md` — the program's direction, milestone exit gates, and the F01–F30 acceptance
   matrix. The single source of what "done" means.
 - `docs/tasks/PROGRAM.md` — the roadmap-unit → tree map and the fixture-ownership map.

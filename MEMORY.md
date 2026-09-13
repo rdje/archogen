@@ -11,17 +11,19 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M2` → frontier `M2.4`. `S0` **closed** (F28 green) and `M2.3` closed (**F18
-  green**); `M0` done; `M1` done except the non-gate leaf `M1.10`; `PROGRAM` frontier `PROGRAM.4`.
-- **Next action:** **`M2.4`** — the §7.4.1 cost-accounting contract: a versioned record of the
-  timing observation boundary, what task bounds include, which operations are preemptible, the
-  number and kind of context transitions, interrupt assumptions, and dispatch/critical-section
-  costs. It must exist before `M2.5` (F29) can mean anything, and §13.4 already specifies F29's
-  trace and its ledger total of 23 in full — the same "read the oracle from the specification"
-  move F18 used. Also open and non-blocking: `M1.10`, `PROGRAM.4`, `.5`, `.8`, `.9`, `.10`.
+- **Active tree:** `M2` → frontier `M2.5`. `S0` **closed** (F28 green) and `M2.3` closed (**F18
+  green**) and `M2.4` closed; `M0` done; `M1` done except the non-gate leaf `M1.10`; `PROGRAM` frontier `PROGRAM.4`.
+- **Next action:** **`M2.5`** — **F29**. §13.4 specifies the whole fixture: a twelve-interval
+  trace over `[0, 23)`, a ledger totalling 23, H finishing at 9 and 19, L at 23 (missing a
+  deadline of 22 by one), and four required controls. Build the trace as a
+  `rt_analysis::cost::Ledger` — the disjointness rule is already structural, so the
+  duplicate-charge control is close to free — and read the expected numbers out of §13.4 rather
+  than copying them, as F18 does with §13.2. Also open and non-blocking: `M1.10`, `PROGRAM.4`,
+  `.5`, `.8`, `.9`, `.10`.
 - **Run checks as tiers now:** `make focused` per commit, `make integration` before a push.
   Exit **20 = incomplete** is not a pass.
-- **Latest commit:** `ARCHOGEN-M2-0030 (leaf M2.3)` — `crates/rt-analysis`, F18 green.
+- **Latest commit:** `ARCHOGEN-M2-0031 (leaf M2.4)` — §7.4.1's accounting contract, published and
+  enforced by construction (`Ledger::seal`).
   ⚠️ Nothing in it may be cited for a **runtime** claim until `M2.6` supplies the variant that
   charges overhead; the crate says so in its own module docs. ⛔ Carry the habit that found the last three defects: **mutate the subject
   at every gate**, and assert the mutation applied
