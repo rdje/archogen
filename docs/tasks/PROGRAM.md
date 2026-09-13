@@ -122,14 +122,15 @@ mdBook that is the director's window into the project.
   Status: `done`
   Goal: rename the toolchain's command and crate family from `archogen` to `archogen`, across the
   roadmap, the mdBook, the task-trees, the examples and the code.
-  Acceptance: the old name survives **only** in the two places that record the rename — this
-  leaf and `ROADMAP.md`'s migration note — and nowhere else in tracked files; `archogen check`
+  Acceptance: the old name survives **only** in the documents that record the rename — this
+  leaf, `ROADMAP.md`'s migration note, the `CHANGELOG.md` entry and `MEMORY.md`'s latest-commit
+  line — and nowhere else in tracked files; `archogen check`
   behaves exactly as the old command did; every test, gate and book build stays green.
 
   ⛔ The first draft of this criterion said "`git grep -ci osgen` returns nothing on tracked
   files", which is **self-defeating**: the record of a rename necessarily names the old thing,
   so writing the evidence down would have broken the criterion it was evidence for. The
-  criterion is scoped to exclude the two records instead, and the exclusion is verified rather
+  criterion is scoped to exclude those records instead, and the exclusion is verified rather
   than assumed.
   Verification: see the acceptance checklist below.
   Commit: `ARCHOGEN-PROGRAM-0021`
@@ -144,10 +145,20 @@ mdBook that is the director's window into the project.
     `osgen-plan`/`osgen-emit`/`osgen-check` 3 each). WHERE: `crates/osgen-cli/Cargo.toml`'s
     `[[bin]] name = "osgen"` was the source, and `ROADMAP.md` §4.2 and §10.2 propagated it.
   - [x] **ADDRESSED (verified)** — after the change, the scoped census
-    `git grep -c -i 'osgen' -- . ':(exclude)Cargo.lock' ':(exclude)docs/tasks/PROGRAM.md' ':(exclude)ROADMAP.md'`
-    returns **no output**, `rc=1`, and the two excluded files are exactly the two that record the
-    rename (this leaf and the §15 migration note). `Cargo.lock` was regenerated rather than
-    edited: `grep -c 'osgen' Cargo.lock` → `0`.
+
+    ```
+    git grep -c -i 'osgen' -- . ':(exclude)Cargo.lock' ':(exclude)docs/tasks/PROGRAM.md' \
+      ':(exclude)ROADMAP.md' ':(exclude)CHANGELOG.md' ':(exclude)MEMORY.md'
+    ```
+
+    returns **no output**, `rc=1`. The four excluded documents are exactly the four that *record*
+    the rename: this leaf, the §15 migration note, the changelog entry, and the resume pointer's
+    "latest commit" line. `Cargo.lock` is excluded because it was regenerated rather than edited:
+    `grep -c 'osgen' Cargo.lock` → `0`, `rc=1`.
+    ⛔ An earlier version of this box pasted the same command with only **three** exclusions,
+    which does not reproduce — it returns `MEMORY.md:1`. A pasted command that does not reproduce
+    is the failure `TOOLBOX.md` exists to prevent, so it was corrected rather than left as a
+    near-miss.
     `crates/archogen-cli/Cargo.toml` now carries `[[bin]] name = "archogen"`, and the command
     behaves identically: `archogen check examples/periodic-three/system.eadl` →
     `accepted against profile \`rt-static-up-v1\` (8 declaration(s))`, `exit=0`;
