@@ -79,6 +79,12 @@ justifies the split — the rows below appear as that happens.
   matrix. The single source of what "done" means.
 - `docs/tasks/PROGRAM.md` — the roadmap-unit → tree map and the fixture-ownership map.
   Start here to find which tree owns a given roadmap item.
+- `docs/semantics/grammar.md` — ⭐ **the normative surface grammar**, and the answer to "what is
+  eADL?" that used to be a 743-line parser. `crates/eadl-front/tests/conformance.rs` derives a
+  recognizer from the EBNF block in that file and requires it and the reader to accept the same
+  language **and produce the same token spans** over all 62 corpus descriptions, plus 23 probes
+  covering every production. ⛔ Acceptance alone was measured too weak: dropping `_` from hex
+  literals turned `(base 0x1000_0000)` into `4096` and `_0000` with every acceptance test green.
 - `docs/semantics/kinds/` — the language declared in itself: `core.eadl` (the five surface
   kinds) and `os-rt.eadl` (the `task` kind of the workload module). Only `defkind` is Rust.
 - `examples/` — the three M0 use cases as real descriptions, checked by

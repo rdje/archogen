@@ -19,6 +19,31 @@
 Detailed technical notes — root cause, implementation, validation — per slice. The
 engineering-continuity surface (not the public docs; that's `docs/book/`). Newest first.
 
+## _(2026-09-13)_ — a parser is not a specification, and "both accept it" is not conformance
+
+- eADL's surface syntax was defined only by `reader.rs`, and every test validated against it,
+  which made it unfalsifiable: there was no input that could show the reader wrong. Writing the
+  grammar down would have changed nothing — prose drifts. So the normative document is **read by
+  the test** and a recognizer is built from it.
+- ⭐ The real lesson is the second one. Comparing **acceptance** looked like conformance and was
+  not: with `_` dropped from hex literals, `(base 0x1000_0000)` became the two forms `4096` and
+  `_0000` and every test stayed green — a base address of `0x10000000` read as `4096`. Two
+  implementations can agree on the *language* and disagree on the *tokens*, and the token
+  disagreement is the one that changes what a system means. Segmentation is now compared.
+- ⛔ Two defects in my own mechanism, both found by red arms rather than review: productions split
+  on `;` cut the `comment` rule in half (`;` is a literal in the language being described), and
+  the recognizer could not backtrack out of an alternative, so it rejected `10ms` for the wrong
+  reason and the red arm that should have caught *that* did not fire. A red arm that does not fire
+  is a finding, not a pass.
+- And a coverage finding that needed no mutation: the corpus contains exactly **one** number with
+  a digit separator, hexadecimal. A regression set is not a conformance suite; the 23 per-production
+  probes are.
+- promotion: declined (the transferable rules are already recorded — a grammar that only exists as
+  prose is `docs/knowledge/prose-beside-data-goes-unenforced.md`, a suite blind to a class of error
+  is `docs/knowledge/a-gate-is-only-as-sharp-as-its-fixtures.md`, and a red arm that fails to fire
+  is `docs/knowledge/verify-the-mutation-applied.md`; this leaf is those three applied to a
+  language, and a fourth entry for the same questions makes the retrievable layer harder to search)
+
 ## _(2026-09-13)_ — a specification gap is invisible while one person implements it
 
 - `rt-core` and an independently derived `rt-reference` agree over 16 000 randomised events and

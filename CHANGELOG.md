@@ -4,6 +4,45 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the eADL surface syntax becomes normative
+
+`ARCHOGEN-M1-0036` (leaf `M1.11`).
+
+- ⛔ **Before this, eADL's format had no definition other than its implementation.** A 743-line
+  hand-written reader was the sole authority on what the language *is*, and every test in the
+  repository validated against it — so no input could show it wrong, because whatever it did was
+  correct by definition. §4.1 assigns the project ownership of *syntax*; §12 M1 anticipates the
+  syntax freezing at a compatibility baseline; §4.4 requires an independently derived checker
+  whose parser is a declared trust dependency. None is possible against an implementation.
+- `docs/semantics/grammar.md` now states the lexical and phrase structure as productions, and it
+  is **executed**: `crates/eadl-front/tests/conformance.rs` reads the EBNF block out of that
+  document, builds a recognizer from it, and requires the recognizer and the reader to agree
+  across all **62** corpus descriptions, six malformed fixtures, and **23 probes** covering every
+  production. The document is the source; there are not two definitions to drift apart.
+- ⭐ **Acceptance agreement turned out to be too weak a claim, and that was measured.** Dropping
+  `_` from hexadecimal literals in the reader left every acceptance test green while
+  `(base 0x1000_0000)` silently became the two forms `4096` and `_0000` — a memory-mapped base
+  address of `0x10000000` read as `4096`. Conformance now compares **token segmentation**, and the
+  same mutation fails naming byte offsets: `grammar sees "0x1000_0000" at 953..964, reader sees
+  "0x1000" at 953..959`.
+- ⛔ Two defects in the mechanism itself, both found by red-arming it. Splitting productions on
+  `;` cut the `comment` rule in half, because `;` is a literal *in* the language being described.
+  And the recognizer originally returned one end position per expression, so it could not
+  backtrack out of an alternative — on `10ms` it matched `number`, failed the delimiter lookahead,
+  and never tried `symbol`. It gave the right verdict for the wrong reason, and the red arm that
+  should have caught it **did not fire**. Rewritten continuation-passing.
+- ⭐ **The corpus is not a conformance suite**, which is why the probes exist: it contains exactly
+  one number with a digit separator and that one is hexadecimal, so nothing in it reached decimal
+  separators, signs, escapes or CRLF.
+- ⚠️ What this establishes: the grammar and the reader accept the same language and agree on every
+  token boundary. What it does not: that the reader builds the right *tree*, or assigns the right
+  *value* — a reader that read `1.5` as three halves would still pass. That is leaf `M1.12`.
+- `reader.rs` is unchanged. The grammar documents the language the reader already implemented,
+  which is itself a result worth stating.
+- Validation: `cargo test -p eadl-front --test conformance` → **6 passed, 0 failed**;
+  `cargo test --all` → **421** passed (415 before, `+6`); fmt and clippy clean; all doctrines
+  green.
+
 ## archogen — checked against a model that never saw it, and the disagreements are the finding
 
 `ARCHOGEN-M2-0035` (leaf `M2.2`).

@@ -43,6 +43,7 @@ before forming a theory about any failure.
 | the profile drift test | has the published profile page diverged from the profile data the engine consults? | `cargo test -p eadl-model` |
 | the emulator tool | what exactly does the pinned target run, and is its toolchain present? (exit 20 = required tool unavailable, never a skipped pass) | `scripts/target_emulator.sh --print <img>` / `--check` / `--dump-dtb <out>` |
 | the code-path seam | is this staged file classified as a code change here? | `git diff --cached --name-only \| grep -Ef <(grep -vE '^\s*(#\|$)' .doctrine/code_paths.txt)` |
+| the grammar conformance check | does the reader still implement the normative grammar — same language, same token boundaries? | `cargo test -p eadl-front --test conformance` |
 | `diagnose` | does this eADL file read, WHERE does it stop, what did it parse to, and what headers does it carry? (exit 0 clean · 1 diagnostics · 2 usage/IO) | `cargo run -q -p eadl-front --example diagnose -- <file.eadl>` |
 | `cargo test --all` | does any contract test fail, and with which assertion diff? | `make test` |
 

@@ -1,5 +1,12 @@
 # Reading a description
 
+> **The normative definition of the surface syntax is `docs/semantics/grammar.md`.** This chapter
+> explains what the reader *produces* and why; the grammar says what a well-formed description
+> *is*. A recognizer derived from that grammar and the reader are checked against each other over
+> the whole corpus — they must accept the same language and agree on where every token begins and
+> ends, or the build fails.
+
+
 Before anything can be checked, resolved or generated, it has to be read — and when it cannot
 be read, the message has to say where and what to do. `ROADMAP.md` §5.5 makes that part of the
 user contract: every diagnostic carries source spans and a concrete repair direction.

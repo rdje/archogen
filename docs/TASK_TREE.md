@@ -54,7 +54,7 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 | --- | --- | --- | --- |
 | [`S0`](tasks/S0.md) | `done` | — all six leaves closed; **F28 green**; the prototype carries an enforced expiry | repo-local |
 | [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.5` — the §15/§19 source ledger; `.3` and `.4` closed | repo-local |
-| [`M1`](tasks/M1.md) | `active` | `M1.10` — classify the twelve profile decisions that are still prose (not blocking `S0`) | repo-local |
+| [`M1`](tasks/M1.md) | `active` | `M1.12` — the language reference; the grammar is normative and token-checked, values are not | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |
 | [`M2`](tasks/M2.md) | `active` | `M2.8` — pin the installed QEMU; the integration tier now fails on an unverified proposal | repo-local |
 | [`M3`](tasks/M3.md) | `pending` | `M3.1` — candidate enumeration and substitutability | repo-local |
