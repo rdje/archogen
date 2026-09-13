@@ -58,6 +58,12 @@ pub struct Generated {
 ///
 /// Any filesystem error, with the path that failed.
 pub fn emit(plan: &Plan, sources: &SourceMap, dir: &Path) -> io::Result<Generated> {
+    // S0-ASSUMPTION: single-fixed-realization — one realization is selected unconditionally;
+    // there is no candidate enumeration and no provider search. `M3.1` supplies both.
+    // S0-ASSUMPTION: plan-is-not-independently-checked — the plan consumed here is the one the
+    // interpreter produced, and nothing re-validates it against the description. `M3.5` does.
+    // S0-ASSUMPTION: no-assurance-report — no per-property report is produced, so the build
+    // makes no claim of any kind. `M4.8` produces one.
     let package = package_name(&plan.name);
     let src = dir.join("src");
     std::fs::create_dir_all(&src)?;

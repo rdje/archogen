@@ -78,7 +78,10 @@ justifies the split — the rows below appear as that happens.
   rather than reporting a skipped check as a pass. `docs/targets/first-target.md` records the
   board decision: none procured.
 - `scripts/check_doctrines.sh` — the doctrine enforcer (git hook + CI). `make gate`.
-  Project doctrines live in `scripts/check_doctrines.project.sh`.
+  Project doctrines live in `scripts/check_doctrines.project.sh`: `check_frozen_evaluation.sh`
+  keeps the reuse measurement sealed and unseen, and `check_s0_retirement.sh` keeps the S0
+  prototype from quietly becoming permanent — every `S0-ASSUMPTION:` marker listed with an owning
+  leaf, and no new consumers of the crate. Both carry `--self-test` RED arms.
 
 ## Active task-trees
 
@@ -99,4 +102,5 @@ justifies the split — the rows below appear as that happens.
 - [`decision_eadl-engine-boundary.md`](docs/decisions/decision_eadl-engine-boundary.md)
 - [`decision_findings-for-director-review.md`](docs/decisions/decision_findings-for-director-review.md)
 - [`decision_priority-comparison-direction.md`](docs/decisions/decision_priority-comparison-direction.md)
+- [`decision_s0-retirement.md`](docs/decisions/decision_s0-retirement.md)
 - [`decision_zero-dependency-engine-core.md`](docs/decisions/decision_zero-dependency-engine-core.md)

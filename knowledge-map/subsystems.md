@@ -75,4 +75,7 @@ justifies the split — the rows below appear as that happens.
   rather than reporting a skipped check as a pass. `docs/targets/first-target.md` records the
   board decision: none procured.
 - `scripts/check_doctrines.sh` — the doctrine enforcer (git hook + CI). `make gate`.
-  Project doctrines live in `scripts/check_doctrines.project.sh`.
+  Project doctrines live in `scripts/check_doctrines.project.sh`: `check_frozen_evaluation.sh`
+  keeps the reuse measurement sealed and unseen, and `check_s0_retirement.sh` keeps the S0
+  prototype from quietly becoming permanent — every `S0-ASSUMPTION:` marker listed with an owning
+  leaf, and no new consumers of the crate. Both carry `--self-test` RED arms.

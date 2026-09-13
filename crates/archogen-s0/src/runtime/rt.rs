@@ -41,6 +41,8 @@ pub trait Output {
 /// its plan must stop rather than print a plausible trace: a silently dropped task would produce
 /// an observation that looks exactly like a correct one for a smaller system.
 pub fn run(system: &str, tasks: &[Task], horizon_ms: u64, out: &mut dyn Output) -> usize {
+    // S0-ASSUMPTION: fixed-observation-format — these three line shapes are fixed inside the
+    // engine and are not the §6.3 observation event set. `M4.3` replaces them.
     out.line(&format!("system {system}"));
 
     let mut releases: Vec<(u64, i64, &'static str)> = Vec::new();

@@ -4,6 +4,35 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the S0 prototype gets an enforced expiry — **S0 complete**
+
+`ARCHOGEN-S0-0028` (leaf `S0.6`). The `S0` tree is closed and **F28 is green end to end**.
+
+- `docs/decisions/decision_s0-retirement.md` lists the **ten** hard-coded assumptions the S0 path
+  rests on, each with the task-tree leaf that removes it, plus what survives retirement and what
+  does not.
+- ⭐ **The list is enforced, not maintained.** §12 S0 names a slow failure — nobody *decides* to
+  grandfather a prototype, it just stops being noticed — and a document kept by memory drifts from
+  the code it describes. So each assumption is marked `S0-ASSUMPTION: <id>` **at the line that
+  makes it**, and the new `S0-RETIREMENT` project doctrine checks three things on every commit:
+  every marker is listed; every listed assumption names a leaf some tree actually declares
+  ("removed later" is not an owner); and the prototype has acquired **no consumers** beyond its
+  declared ones. The third is what grandfathering actually looks like in practice — `M4` building
+  on the prototype rather than replacing it.
+- ⛔ The check's **first run was a false positive**: it flagged `crates/archogen-cli/src/lib.rs`,
+  whose module documentation names `archogen_s0` in a sentence. Matching a mention rather than a
+  `use` would have made documenting the prototype cost a doctrine breach, which is how a gate
+  teaches people to route around it. The consumer test now matches `use`, `::` and
+  `extern crate`, and the reason is written into the check.
+- ⚠️ Honest limit, stated in the check itself: nothing forces an author to *write* a marker for
+  something new. It makes an unmarked assumption a thing someone chose not to record, rather than
+  a thing nobody noticed.
+- Validation: `scripts/check_s0_retirement.sh` →
+  `OK (10 assumption(s), each marked, listed and owned)`; `--self-test` → `3 pass / 0 fail`
+  across three RED arms (an unlisted marker, a leaf no tree declares, a listed assumption with no
+  marker), each restoring the record afterwards. `cargo test --all` → **309** passed, unchanged —
+  the markers are comments. Fmt and clippy clean; all doctrines green; `mdbook build` OK.
+
 ## archogen — generated output that says where it came from
 
 `ARCHOGEN-S0-0027` (leaf `S0.5`).

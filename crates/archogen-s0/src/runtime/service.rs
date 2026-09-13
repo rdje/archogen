@@ -24,6 +24,8 @@ impl Default for Console {
 }
 
 impl Output for Console {
+    // S0-ASSUMPTION: stdout-is-observable-output — `observable-output` is realized by writing to
+    // standard output, with no device model behind it. `M4.3` supplies the modeled device.
     fn line(&mut self, text: &str) {
         println!("{text}");
     }

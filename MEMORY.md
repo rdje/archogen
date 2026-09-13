@@ -11,15 +11,18 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `S0` → frontier leaf `S0.6`, the last in the tree. `M0` done; `M1` reopened for
-  the non-gate leaf `M1.10` and is otherwise done; `S0.1`–`S0.5` done — **every F28 clause green**.
-- **Next action:** `S0.6` — the **retirement note**: a decision record listing every hard-coded S0
-  assumption with the leaf that removes it, so no special-case generator can be grandfathered
-  (§12 S0). The list is already drafted in `examples/s0-heartbeat/README.md`; the leaf turns it
-  into a tracked record and checks nothing is missing from it.
-- **Latest commit:** `ARCHOGEN-S0-0027 (leaf S0.5)` — `provenance.json`, resolved from both ends.
-  ⛔ Carry the habit that found the last two defects: **mutate the subject at every gate**, and
-  assert the mutation applied (`docs/knowledge/a-gate-is-only-as-sharp-as-its-fixtures.md`,
+- **Active tree:** none — `S0` **closed** (all six leaves, F28 green). `M0` done; `M1` done except
+  the non-gate leaf `M1.10`. `PROGRAM` is the substrate tree and `M2` is the next milestone.
+- **Next action:** pick the next tree. Two candidates, and the choice is a judgement call:
+  **`PROGRAM.3`** (the §14.3 tiered verification runner — `make check` is informal today, and the
+  CI policy of running the full gate only before a push wants named tiers), or **`M2.3`** (the
+  §7.4 idealized response-time analysis, F18 — the first real engine knowledge, with the §13.2
+  numerical baseline already written down to check it against). `M2.3` is the milestone frontier;
+  `PROGRAM.3` is substrate that every later tree uses. Also open: `M1.10`, non-blocking.
+- **Latest commit:** `ARCHOGEN-S0-0028 (leaf S0.6)` — the S0 retirement contract, enforced by a
+  new project doctrine. ⛔ Carry the habit that found the last three defects: **mutate the subject
+  at every gate**, and assert the mutation applied
+  (`docs/knowledge/a-gate-is-only-as-sharp-as-its-fixtures.md`,
   `docs/knowledge/verify-the-mutation-applied.md`).
 - **In-flight uncommitted work:** none.
 - **Blockers:** no physical board procured → tree `M5` blocked (director decision;

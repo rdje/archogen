@@ -148,6 +148,8 @@ fn task(form: &Form) -> Result<Task, Box<Diagnostic>> {
         // A sporadic task. The description is valid eADL and inside the profile — §3.1 admits
         // "periodic or sporadic releases with declared minimum separation" — so this is a gap in
         // the engine, and §5.4 requires it to be reported as one.
+        // S0-ASSUMPTION: periodic-releases-only — a sporadic task has no derivable schedule
+        // because nothing models the event that triggers it. `M4.3` supplies the event source.
         let separation = clause(form, "min-separation").unwrap_or(form);
         return Err(Box::new(Diagnostic::error(
             "unsupported-profile",
@@ -193,6 +195,8 @@ fn task(form: &Form) -> Result<Task, Box<Diagnostic>> {
 /// `ms` would refuse the first, which is a restriction on *spelling* rather than on anything the
 /// realization actually cannot do.
 fn whole_milliseconds(clause: &Form, task_name: &str) -> Result<i64, Box<Diagnostic>> {
+    // S0-ASSUMPTION: whole-millisecond-periods — S0's modeled clock has no finer tick. `M4.1`
+    // carries exact rational time in the plan.
     let quantity = Quantity::read(clause.items().get(1), clause.items().get(2))?;
     let millisecond = unit("ms").expect("`ms` is in the unit table");
     let Ok(converted) = quantity.convert_to(millisecond) else {
@@ -236,6 +240,9 @@ fn whole_milliseconds(clause: &Form, task_name: &str) -> Result<i64, Box<Diagnos
 }
 
 /// The observation horizon: the least common multiple of every declared period.
+///
+/// S0-ASSUMPTION: horizon-is-one-hyperperiod — one hyperperiod is the whole run, because any
+/// other run length would be arbitrary. `M4.3` gives the harness its own observation policy.
 fn horizon(tasks: &[Task]) -> Result<i64, Box<Diagnostic>> {
     let mut horizon: i64 = 1;
     for task in tasks {

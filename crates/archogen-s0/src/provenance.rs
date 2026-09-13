@@ -89,6 +89,8 @@ pub fn render(plan: &Plan, records: &[Record], sources: &SourceMap) -> String {
     let _ = writeln!(out, "  \"description\": {},", quote(&source.name));
     let _ = writeln!(out, "  \"system\": {},", quote(&plan.name));
     let _ = writeln!(out, "  \"hyperperiod_ms\": {},", plan.horizon_ms);
+    // S0-ASSUMPTION: catalog-record-is-a-stub — four of §9's fourteen catalog fields. `M2.7`
+    // supplies the real catalog slice records.
     out.push_str("  \"realization\": {\n");
     let _ = writeln!(out, "    \"id\": {},", quote(REALIZATION_ID));
     let _ = writeln!(out, "    \"version\": {},", quote(REALIZATION_VERSION));

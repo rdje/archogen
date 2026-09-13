@@ -61,6 +61,8 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
     // so honoring it is impossible and *appearing* to honor it is the worse outcome: a user who
     // asked for a reproducible build would get an ordinary one that claimed to be locked. §10.3
     // makes lock data a build output, and leaf `M4.1` owns producing it.
+    // S0-ASSUMPTION: no-lock-data — the S0 path emits none, so `--locked` cannot be honored and
+    // is refused rather than accepted and ignored. `M4.1` produces the lock data.
     if parsed.flag("locked") {
         let _ = writeln!(
             err,
