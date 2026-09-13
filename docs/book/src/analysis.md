@@ -127,6 +127,51 @@ about the number invites suspicion, so a check that depends on suspicion never f
 omission or duplicate charge, not a ban on sound pessimism" — so an envelope is allowed to charge
 the same interval twice, and has to say that is what it is.
 
+## F29: the fixture built so an omission cannot hide
+
+§13.4 specifies a repeated-preemption scenario completely — costs, transitions, preemptibility,
+and the instant-by-instant trace it must produce — and says why:
+
+> It deliberately creates two preemptions of one low-priority job, so **omitted interrupt or
+> resume costs can turn a real miss in the fixture into a false pass**.
+
+The correct trace runs from 0 to 23, in twelve intervals, and its ledger totals
+`8 (L) + 4 (H) + 1 (initial dispatch) + 2 (ISRs) + 8 (four switches) = 23`. `H`'s two jobs finish
+at 9 and 19 — five units after their *nominal* releases, because the release interrupt's delay is
+inside the response time. `L` finishes at 23 and misses a deadline of 22 by one unit.
+
+It is checked **two ways that are not derived from each other**: the roadmap's own expected-trace
+table, parsed out of `ROADMAP.md`, and a simulator written from the operational rules in the prose
+above it. They agree interval for interval.
+
+### The controls, and why they re-simulate
+
+| Control | Correct answer | What it exposes |
+| --- | ---: | --- |
+| the specified model | `L` at 23 | the exact ledger, every unit charged once |
+| omit the timer ISR cost | `L` at **21** | a false pass at deadline 22 |
+| omit the `H`→`L` resume switch | `L` at **14** | a whole interfering job disappears |
+| charge the ISR intervals again inside task cost | total **25** | duplicate interval ownership |
+
+⛔ **The first three re-run the model; they do not do arithmetic on the answer.** §13.4:
+
+> Re-simulate mutations that change execution timing: they can change the number of interfering
+> releases, so subtracting a fixed number from the original response is not generally valid.
+
+The third control is the proof. Deleting four units of resume cost does not give `19`. It lets
+`L` finish at exactly 14 — the instant of the second nominal release — and the rule "record
+completion before processing the new release" then removes that release's interference
+altogether. One interfering job vanishes. A control implemented by subtraction would have agreed
+with the roadmap on the second row by luck and been wrong here.
+
+The fourth control is the odd one out, and deliberately: it works on the *original* fixed trace,
+because the mistake it models is an accounting error rather than a timing one. It needs no
+detection logic at all — the ledger simply will not seal.
+
+⚠️ F29 is a **synthetic accounting fixture**. It establishes concrete cost coverage and detects
+three known mistakes. It is not a benchmark, not a claim about any board, and not a substitute
+for reviewing the runtime accounting model and its theorem conditions.
+
 ## What is still owed
 
 ⚠️ **Nothing here may be cited for a claim about a running system.** §7.4 requires a

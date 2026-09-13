@@ -19,6 +19,30 @@
 Detailed technical notes — root cause, implementation, validation — per slice. The
 engineering-continuity surface (not the public docs; that's `docs/book/`). Newest first.
 
+## _(2026-09-13)_ — a negative control that subtracts is not a control
+
+- F29's second control omits the timer ISR cost and the answer moves 23 → 21, which is exactly
+  two units and looks like subtraction. The third control omits the resume switch — four units —
+  and the answer is **14, not 19**. `L` lands on the second nominal release instant, and "record
+  completion before processing the new release" then removes that release's interference
+  entirely: one interfering job disappears.
+- So the control has to **re-run the model**, which means the model has to be a function rather
+  than a table. That is why `trace.rs` exists instead of a hand-written fixture, and why the two
+  switch directions are separate cost fields — a single `switch` field would make the third
+  control inexpressible without editing the simulator, which is not a control.
+- ⭐ The strongest result so far in the analysis story: the simulator, written from §13.4's
+  operational prose, reproduced the roadmap's published twelve-interval table **interval for
+  interval on the first run**. Two sources, neither derived from the other, agreeing.
+- The fourth control needed no detection logic at all. `M2.4`'s ledger already refuses a trace
+  that charges an interval twice, so "charge the ISR intervals again inside task cost" is caught
+  by a constructor. That is the payoff from making the rule a type rather than a checklist.
+- Red arms, both against the subject: observation boundary moved past the switch away →
+  `[11, 21]` instead of `[9, 19]`; a coincident release processed before the completion → `19`
+  instead of `14`. The second is the more interesting one — it shows a rule that reads like a
+  tie-break convention is load-bearing arithmetic.
+- Promoted: `docs/knowledge/a-gate-is-only-as-sharp-as-its-fixtures.md` gains the re-simulation
+  rule, rather than a seventh note answering an adjacent question.
+
 ## _(2026-09-13)_ — when the wrong answer looks plausible, the rule has to be a type
 
 - §7.4.1's rule is "every physical execution interval has one primary ledger category … charge

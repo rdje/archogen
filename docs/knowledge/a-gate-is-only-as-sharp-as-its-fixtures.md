@@ -61,3 +61,12 @@ act on. Mutation testing is what turns it into a measurement.
   ([[an-oracle-is-independent-by-construction]]).
 - **Record the blind spot where the fixtures live**, not only in a commit message. The next person
   to choose a fixture is the one who needs it.
+- ⛔ **Build a negative control by re-running the model, never by arithmetic on the answer.** A
+  control that "omits the interrupt cost" by subtracting two units from the result agrees with
+  the specification by luck: removing a cost changes *when* later events happen, and can change
+  how many of them happen at all. Measured here — deleting the resume-switch cost from a
+  repeated-preemption fixture does not shorten the response by four, it lets the low-priority job
+  finish at exactly the next release instant, and one interfering job disappears entirely (23 →
+  14, not 23 → 19). The specification this came from says it outright: *"subtracting a fixed
+  number from the original response is not generally valid."* The corollary is that the model
+  must be a **function you can re-run**, not a table you edit.

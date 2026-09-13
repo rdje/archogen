@@ -11,19 +11,20 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M2` → frontier `M2.5`. `S0` **closed** (F28 green) and `M2.3` closed (**F18
-  green**) and `M2.4` closed; `M0` done; `M1` done except the non-gate leaf `M1.10`; `PROGRAM` frontier `PROGRAM.4`.
-- **Next action:** **`M2.5`** — **F29**. §13.4 specifies the whole fixture: a twelve-interval
-  trace over `[0, 23)`, a ledger totalling 23, H finishing at 9 and 19, L at 23 (missing a
-  deadline of 22 by one), and four required controls. Build the trace as a
-  `rt_analysis::cost::Ledger` — the disjointness rule is already structural, so the
-  duplicate-charge control is close to free — and read the expected numbers out of §13.4 rather
-  than copying them, as F18 does with §13.2. Also open and non-blocking: `M1.10`, `PROGRAM.4`,
-  `.5`, `.8`, `.9`, `.10`.
+- **Active tree:** `M2` → frontier `M2.1`. `S0` **closed** (F28 green) and `M2.3` closed (**F18
+  green**), `M2.4` and `M2.5` closed (**F29 green**); `M0` done; `M1` done except the non-gate leaf `M1.10`; `PROGRAM` frontier `PROGRAM.4`.
+- **Next action:** **`M2.1`** — `rt-core`: the shared runtime state machine (static task
+  creation, fixed-priority ready structure, release/timer management, interrupt dispatch, the
+  context-switch boundary, a bounded fault path), usable in hosted tests and target builds.
+  ⛔ Order matters here: `M2.2` is an **independent** reference model of the same semantics and
+  §12 M2 says "a checker sharing the same erroneous recurrence with its reference does not qualify
+  as independent" — so `M2.2` must be derived from the contract, not from `M2.1`'s code. Also open
+  and non-blocking: `M1.10`, `PROGRAM.4`, `.5`, `.8`, `.9`, `.10`.
 - **Run checks as tiers now:** `make focused` per commit, `make integration` before a push.
   Exit **20 = incomplete** is not a pass.
-- **Latest commit:** `ARCHOGEN-M2-0031 (leaf M2.4)` — §7.4.1's accounting contract, published and
-  enforced by construction (`Ledger::seal`).
+- **Latest commit:** `ARCHOGEN-M2-0032 (leaf M2.5)` — **F29 green**. The simulator written from
+  §13.4's prose reproduces the roadmap's published trace interval for interval, and all four
+  controls behave as specified.
   ⚠️ Nothing in it may be cited for a **runtime** claim until `M2.6` supplies the variant that
   charges overhead; the crate says so in its own module docs. ⛔ Carry the habit that found the last three defects: **mutate the subject
   at every gate**, and assert the mutation applied

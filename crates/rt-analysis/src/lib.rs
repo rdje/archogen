@@ -25,6 +25,7 @@
 pub mod cost;
 pub mod model;
 pub mod response;
+pub mod trace;
 
 pub use cost::{Accounting, Category, Contract, Interval, Ledger, LedgerError, COST_ACCOUNTING_V1};
 pub use model::{Inadmissible, Task, TaskSet};

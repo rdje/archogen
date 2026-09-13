@@ -57,7 +57,11 @@ justifies the split — the rows below appear as that happens.
   results" made mechanical. `cost.rs` + `docs/analysis/cost-accounting-v1.md` are §7.4.1's
   versioned accounting contract, held together by a drift test; ⭐ its "one interval, one
   category" rule is a **constructor precondition** — an exact-trace ledger with an overlap or a
-  hole does not seal — because a double-charged total still looks plausible.
+  hole does not seal — because a double-charged total still looks plausible. `trace.rs` simulates
+  §13.4's operational model for **F29** and `tests/f29_preemption.rs` compares it against the
+  roadmap's own expected-trace table, parsed — two sources neither derived from the other. ⛔ Its
+  controls **re-simulate**: deleting the resume switch does not shorten the response by four, it
+  makes a whole interfering job disappear (23 → 14, not 23 → 19).
 - `ROADMAP.md` — the program's direction, milestone exit gates, and the F01–F30 acceptance
   matrix. The single source of what "done" means.
 - `docs/tasks/PROGRAM.md` — the roadmap-unit → tree map and the fixture-ownership map.

@@ -4,6 +4,37 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — F29 is green, and the two independent sources agree interval for interval
+
+`ARCHOGEN-M2-0032` (leaf `M2.5`).
+
+- §13.4's repeated-preemption fixture is checked **two ways that are not derived from each
+  other**: the roadmap's own expected-trace table, parsed out of `ROADMAP.md`, and a simulator
+  written from the operational rules in the prose above it. They agree on all twelve intervals of
+  `[0, 23)` — per-category totals `L 8`, `H 4`, dispatch `1`, ISRs `2`, switches `8`, total **23**
+  — with `H` completing at 9 and 19 (response 5 from *nominal* release) and `L` at 23.
+- All four controls behave as §13.4 states. Omit the timer ISR cost → `L` at **21**, the false
+  pass at deadline 22. Omit the `H`→`L` resume switch → `L` at **14**. Charge the two ISR
+  intervals again inside task cost → a would-be total of **25** that cannot seal as an exact
+  trace — no detection logic needed, the ledger from `M2.4` simply refuses.
+- ⛔ **The controls re-simulate, and the third one proves why that matters.** Deleting four units
+  of resume cost does not give `19`: `L` finishes at exactly 14, the instant of the second nominal
+  release, and "record completion before processing the new release" then removes that release's
+  interference altogether — one interfering job vanishes. §13.4 warns about this directly
+  ("subtracting a fixed number from the original response is not generally valid"), and a control
+  built by arithmetic would have agreed on the second row by luck and been wrong here.
+- The two switch directions are separate cost fields precisely because one control deletes one of
+  them. A single `switch` field would make that control inexpressible without editing the
+  simulator, which is not a control at all.
+- ⚠️ F29 remains a **synthetic accounting fixture**: concrete cost coverage and three known
+  mistakes detected. Not a benchmark, not a claim about any board, and not a substitute for
+  `M2.6`'s review of the runtime accounting model and its theorem conditions.
+- Validation: `cargo test -p rt-analysis --test f29_preemption` → **8 passed, 0 failed**; proven
+  able to fail by mutating the simulator — moving the observation boundary past the switch away
+  (`[11, 21]` instead of `[9, 19]`) and processing a coincident release before the completion
+  (`19` instead of `14`), each restored and re-run green. `cargo test --all` → **357** passed
+  (349 before, `+8`); `make focused` → `passed`; all doctrines green; `mdbook build` OK.
+
 ## archogen — an accounting rule you cannot construct a violation of
 
 `ARCHOGEN-M2-0031` (leaf `M2.4`).
