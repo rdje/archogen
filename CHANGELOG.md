@@ -4,6 +4,34 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — presence, relevance, and the closure: F04, F05, F06
+
+`ARCHOGEN-M1-0016` (leaf `M1.5`).
+
+- `crates/eadl-model/src/presence.rs`: offered / explicitly absent / undescribed, and the
+  transitive dependency closure that decides which unknowns matter.
+- ⭐ **F04 and F05 are run against the same description**, deliberately. They are two halves of
+  one decision: §2's correction table revised "unknown capability anywhere blocks generation"
+  into "required facts in the selected dependency closure must be known", so that "irrelevant
+  unknown facts do not invalidate unrelated systems". A checker that always blocks passes F04
+  and fails F05; one that never blocks passes F05 and fails F04. Two separate descriptions could
+  have been passed by two different bugs.
+- **Absent is not undescribed.** A required absent fact is `infeasible-configuration` — "a
+  definite answer, not a gap to be filled in" — while a required undescribed one is
+  `missing-fact`. Collapsing them would send an author to describe something the platform has
+  already said it does not have.
+- A contradiction is `invalid-description` whether or not it is reachable, and names **both**
+  sites: §5.3 qualifies the unknown-fact rule by relevance and states the contradiction rule
+  without a qualifier. It is never resolved by preferring one side, because only the author knows
+  which half was meant.
+- A `needs` edge nested inside a `requires` clause is still followed. A closure that only read
+  top-level clauses would miss most real descriptions and would fail **open**.
+- `offered` remains a claim, not evidence: nothing in this analysis says a platform really has a
+  capability.
+- New book chapter `docs/book/src/presence.md`.
+- Validation: 14 new arms, 208 tests across the workspace, 0 failed; fmt and clippy clean; all
+  doctrines green; `mdbook build` OK.
+
 ## archogen — modules and instances, F01 and F02
 
 `ARCHOGEN-M1-0015` (leaf `M1.4`).

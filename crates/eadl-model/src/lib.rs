@@ -7,6 +7,7 @@
 
 pub mod boundary;
 pub mod kind;
+pub mod presence;
 pub mod profile;
 pub mod quantity;
 pub mod rational;
@@ -15,6 +16,7 @@ pub use boundary::{check, classify, BoundaryTest, Classification, ForbiddenConst
 pub use kind::{
     read_kind, validate, Cardinality, ClauseDef, Holds, KindDef, NameRule, Registry, ValueType,
 };
+pub use presence::{FactMap, Presence, PresenceReport};
 pub use profile::{Exclusion, Profile, ProfileDecision, RT_STATIC_UP_V1};
 pub use quantity::{Dimension, Quantity, QuantityError, Unit};
 pub use rational::Rational;
