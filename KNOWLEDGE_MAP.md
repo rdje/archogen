@@ -6,12 +6,30 @@
 
 ## Key subsystems
 
-- _(no subsystems documented yet — add rows as the project grows)_
-  - Example: `crates/<name>/` — _what it does, its entry point, its owner._
+Responsibility boundaries follow `ROADMAP.md` §4.2. A crate is created when a real consumer
+justifies the split — the rows below appear as that happens.
+
+- `crates/app/` — the starter binary inherited from the template (package `archogen`).
+  Replaced by the `osgen` CLI shell in leaf `PROGRAM.2`.
+- `ROADMAP.md` — the program's direction, milestone exit gates, and the F01–F30 acceptance
+  matrix. The single source of what "done" means.
+- `docs/tasks/PROGRAM.md` — the roadmap-unit → tree map and the fixture-ownership map.
+  Start here to find which tree owns a given roadmap item.
+- `scripts/check_doctrines.sh` — the doctrine enforcer (git hook + CI). `make gate`.
 
 ## Active task-trees
 
 - [`BOOTSTRAP.md`](docs/tasks/BOOTSTRAP.md)
+- [`M0.md`](docs/tasks/M0.md)
+- [`M1.md`](docs/tasks/M1.md)
+- [`M2.md`](docs/tasks/M2.md)
+- [`M3.md`](docs/tasks/M3.md)
+- [`M4.md`](docs/tasks/M4.md)
+- [`M5.md`](docs/tasks/M5.md)
+- [`M6.md`](docs/tasks/M6.md)
+- [`M7.md`](docs/tasks/M7.md)
+- [`PROGRAM.md`](docs/tasks/PROGRAM.md)
+- [`S0.md`](docs/tasks/S0.md)
 
 ## Decision records
 

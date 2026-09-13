@@ -7,5 +7,14 @@ summarize the snapshot in every commit-workflow completion message.
 | Area | Status | Notes |
 | --- | --- | --- |
 | Discipline spine (`bedrock`) | Done | memory architecture · task-trees · commit workflow · doctrine enforcement · mdBook skeleton |
-| Roadmap seeded into task-trees | Not Started | drop your roadmap in `ROADMAP.md`, run `scripts/bootstrap.sh` |
-| _(your first milestone)_ | Not Started | — |
+| Roadmap seeded into task-trees | Done | ten trees: `PROGRAM`, `M0`, `S0`, `M1`–`M7`; F01–F30 each owned |
+| `PROGRAM` — workspace, tiers, book, ledger | In Progress | `PROGRAM.1` done; frontier `PROGRAM.2` |
+| `M0` — charter, boundary, profile, target | Not Started | frontier `M0.1` |
+| `S0` — early executable generation (F28) | Not Started | frontier `S0.1` |
+| `M1` — eADL description foundation | Not Started | frontier `M1.1` |
+| `M2` — one engine realization + controls | Not Started | frontier `M2.3` |
+| `M3` — joint resolver + checked plan | Not Started | frontier `M3.1` |
+| `M4` — generated system + simulator | Not Started | frontier `M4.1` |
+| `M5` — physical execution evidence | Not Started | gated on `M0.5` board access |
+| `M6` — reuse and extension | Not Started | gated on `M4` |
+| `M7` — first supported release | Not Started | gated on `M5`, `M6` |

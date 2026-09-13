@@ -1,0 +1,25 @@
+# .doctrine/code_paths.txt — what counts as a CODE change in archogen.
+# One extended regular expression per line, matched against staged paths.
+# Consumed by scripts/check_task_acceptance.sh (see .doctrine/README.md).
+#
+# ⛔ WHY THIS FILE EXISTS — measured, not anticipated. The built-in neutral default is
+#   (^|/)(crates|src|scripts)/|\.(rs|sh)$|(^|/)Makefile$
+# whose `(^|/)src/` arm matches ANY path segment named `src` at ANY depth. This repository's
+# mdBook sources live at `docs/book/src/`, so editing a book page was classified as a CODE
+# change and demanded a ticked ROOT CAUSE / ADDRESSED / NO REGRESSION checklist on every
+# staged task tree. Verified on the ARCHOGEN-PROGRAM-0002 staging set:
+#   git diff --cached --name-only | grep -E '(^|/)(crates|src|scripts)/|\.(rs|sh)$'
+#   -> docs/book/src/introduction.md
+# The neutral check is correct to ship that default; the seam is where a project says what
+# its own shape is. Editing the check instead would fork a portable standard.
+#
+# Rust sources are covered by the `\.rs$` arm wherever they live, so no bare `src/` arm is
+# needed. Add a line here when a new tree genuinely holds behavior-altering inputs.
+(^|/)crates/
+(^|/)xtask/
+(^|/)scripts/
+(^|/)catalog/
+\.(rs|sh)$
+(^|/)Makefile$
+(^|/)Cargo\.(toml|lock)$
+(^|/)rust-toolchain\.toml$

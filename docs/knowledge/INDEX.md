@@ -1,0 +1,13 @@
+# Knowledge — the retrievable layer, keyed by question
+
+A lesson learned is only worth the effort if a future reader can *find* it. `DEV_NOTES.md`
+is chronological and unsearchable by question; this directory is the promoted form: one
+file per durable lesson, whose front matter names the **questions it answers**.
+
+New entry: create `docs/knowledge/<slug>.md` with front matter at line 1 carrying an
+`answers:` list, then add its row below. The `LESSON-PROMOTION` doctrine requires every new
+dated lesson in `DEV_NOTES.md` to be promoted here (or explicitly declined in its leaf).
+
+| Entry | Answers |
+| --- | --- |
+| [`doctrine-seams-vs-forking-a-check.md`](doctrine-seams-vs-forking-a-check.md) | A portable gate misfires on this repo's layout — do I edit the gate? |

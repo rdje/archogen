@@ -1,7 +1,7 @@
 [book]
-title = "Project Book"
-description = "The public-facing documentation surface. Keep it in lockstep with the code (see COMMIT.md)."
-authors = ["<your name>"]
+title = "archogen"
+description = "Generating a specialized operating system from a functional eADL description — what the toolchain does, and what its reports do and do not claim."
+authors = ["archogen contributors"]
 language = "en"
 src = "src"
 

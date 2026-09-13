@@ -1,74 +1,77 @@
-# bedrock — a Rust project discipline-spine template
+# archogen — generate a specialized operating system from a functional description
 
-**bedrock** is a starting point for a new Rust project that ships with a battle-tested
-*discipline spine* already wired in: durable memory, task-tree tracking, a strict commit
-workflow, mechanical doctrine enforcement, a knowledge map, and an mdBook — all
-project-neutral. Copy it, drop in your roadmap, and grow the project with that spine as its
-backbone.
+**archogen** is a deterministic toolchain that turns **eADL** descriptions of a platform, a
+workload, services, and policy into a complete specialized operating system, a matching
+development simulator, and a report stating what has been checked and under which
+assumptions.
 
-## Why a spine
+The controlling boundary: **eADL describes functionality — what a platform offers and what a
+system requires. It contains no implementation.** Algorithms, device implementations,
+register sequences, simulator models, provider selection, lowering rules, and code
+generation belong to the engine and its versioned knowledge bases.
 
-Discipline that lives in an agent's head evaporates on session loss, a model switch, or a
-new contributor. bedrock puts the discipline **in the repo** and enforces it at the **git
-level** (pre-commit hook + CI), so it holds for any agent — Claude Code, Codex, Gemini,
-Cursor, a custom runner — or a human, identically.
+The first supported family is `rt-static-up-v1`: a small, single-core, statically configured
+real-time executive. Broader OS functionality is admitted later through additional profiles
+with their own contracts and acceptance evidence.
 
-## What's inside (the spine)
+## Status
 
-| File / dir | What it gives you |
+Early. The roadmap is seeded into task-trees and the discipline spine is enforced; the
+engine is being built one milestone gate at a time. Nothing here claims a verified OS —
+see the assurance model in the roadmap before reading any result as a guarantee.
+
+Current progress: [`LIVE_STATUS.md`](LIVE_STATUS.md). Next action:
+[`MEMORY.md`](MEMORY.md).
+
+## Quick start
+
+```bash
+git config core.hooksPath .githooks   # once per clone — activates the doctrine gate
+make check                            # cargo fmt --check + clippy -D warnings + tests
+make gate                             # the doctrine enforcer
+make book                             # build the mdBook (requires mdbook)
+```
+
+## Architecture at a glance
+
+```text
+eADL description ─┐
+                  ├─► elaboration ─► joint resolution ─► specialization ─► generated OS
+target facts   ───┘        │              │                    │            + simulator
+   + catalogs              └──────────────┴─► independent checker ─► assurance report
+```
+
+Responsibility names (crates appear when a consumer needs them): `eadl-front`,
+`eadl-model`, `eadl-resolve`, `osgen-plan`, `osgen-emit`, `osgen-check`, `rt-analysis`,
+`rt-core`, `arch-*`, `device-*`, `sim-*`, `xtask`.
+
+## Where things live
+
+| Topic | Canonical home |
 | --- | --- |
-| `CLAUDE.md` / `AGENTS.md` | harness-neutral agent bootstrap (read this first) |
-| `MEMORY_ARCHITECTURE.md` | the durable 4-layer memory model (A resume pointer · B task-trees · C decisions · D git) |
-| `docs/TASK_TREE.md` + `docs/tasks/` | task-tree tracking — nothing changes without a leaf |
-| `COMMIT.md` | the strict, repeatable commit workflow |
-| `DOCTRINE_ENFORCEMENT.md` + `scripts/check_doctrines.sh` | the mechanical enforcer (registry + universal checks + a project slot) |
-| `TOOLBOX.md` | the tools-first diagnostic doctrine |
-| `KNOWLEDGE_MAP.md` + `knowledge-map/` | a derived, drift-proof orientation map |
-| `docs/book/` | an mdBook skeleton — the public docs surface |
-| `.githooks/` + `.github/workflows/` | the E3 (hook) + E4 (CI) enforcement layers |
-| `MEMORY.md` · `CHANGELOG.md` · `DEV_NOTES.md` · `LIVE_STATUS.md` | the seeded live-docs |
-| `ROADMAP.md` | **the one file you replace** — your project's roadmap |
-| `Cargo.toml` · `crates/` · `Makefile` | a minimal Rust workspace + `make check`/`make gate` |
+| Direction, milestones, exit gates, acceptance matrix | [`ROADMAP.md`](ROADMAP.md) |
+| Execution tracking (every change is owned by a leaf) | [`docs/TASK_TREE.md`](docs/TASK_TREE.md) |
+| Durable decisions and facts | [`docs/decisions/`](docs/decisions/) |
+| User-facing documentation | [`docs/book/`](docs/book/) |
+| Release history | [`CHANGELOG.md`](CHANGELOG.md) |
+| Engineering notes | [`DEV_NOTES.md`](DEV_NOTES.md) |
 
-## Use it
+## Working in this repository
 
-**Option A — `cargo generate` (Rust-native):**
+This project runs on a portable discipline spine, enforced at the git level (hooks + CI) so
+it holds for any agent or human identically:
 
-```bash
-cargo generate --git <this-repo-url> --name <project>
-```
+- Nothing changes without a **task-tree leaf** first ([`docs/TASK_TREE.md`](docs/TASK_TREE.md)).
+- Durable facts go to [`docs/decisions/`](docs/decisions/); the resume pointer is
+  [`MEMORY.md`](MEMORY.md) ([`MEMORY_ARCHITECTURE.md`](MEMORY_ARCHITECTURE.md)).
+- Commit per [`COMMIT.md`](COMMIT.md); for any unknown, reach for a tool first
+  ([`TOOLBOX.md`](TOOLBOX.md)). The enforced doctrines are listed in
+  [`DOCTRINE_ENFORCEMENT.md`](DOCTRINE_ENFORCEMENT.md).
+- Agent bootstrap: [`CLAUDE.md`](CLAUDE.md) / [`AGENTS.md`](AGENTS.md).
 
-**Option B — GitHub "Use this template"** (enable the *Template repository* setting).
+This README is a landing page, governed by [`README_POLICY.md`](README_POLICY.md) and
+mechanically capped. Route changing detail to its canonical home above.
 
-Then, either way, `cd <project>` and finalize with one command:
+## License
 
-1. `./scripts/bootstrap.sh <project>` — installs the git hooks, sets the crate + roadmap name,
-   generates the Knowledge Map, verifies the enforcer, and seeds the leaf that owns this step —
-   then **commit with the command it prints**. The canonical post-copy step for both paths
-   (option A needs `cargo install cargo-generate`).
-2. Replace `ROADMAP.md` with your project's roadmap, then create your first task-tree
-   (`cp docs/tasks/TEMPLATE.md docs/tasks/<TREE-ID>.md`) and register it in `docs/TASK_TREE.md`.
-3. Grow the project one task-tree leaf at a time, committed via `COMMIT.md`.
-
-## Keep the spine current
-
-bedrock improves over time. To pull the latest **project-neutral** spine (doctrine docs,
-hooks, universal checks) into a project you already created — without touching your
-roadmap, task-trees, decisions, or code — run:
-
-```bash
-./scripts/update_scaffold.sh <bedrock-repo-url>
-```
-
-The scaffold version is recorded in `DOCTRINE_VERSION`.
-
-This README is deliberately a **landing page**, governed by [`README_POLICY.md`](README_POLICY.md)
-and mechanically capped (line **and** byte) by the `README-STABILITY` doctrine. Route changing
-detail to its canonical home rather than growing this file.
-
-## The non-negotiables (full detail in `CLAUDE.md`)
-
-- Nothing changes without a **task-tree leaf** first.
-- Record durable facts/decisions in `docs/decisions/`.
-- Commit per `COMMIT.md`; the hooks + CI enforce the doctrines.
-- Keep **roadmap ↔ code ↔ docs** in lockstep, always.
+MIT OR Apache-2.0.

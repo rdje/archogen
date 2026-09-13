@@ -1,5 +1,32 @@
 # CHANGELOG.md
 
+Changelog-style summary of completed work and its validation. Newest first. The
+`bedrock-scaffold` entries below the separator are the provenance of the discipline spine
+this repository was created from, not archogen's own history.
+
+## archogen — roadmap seeded into task-trees
+
+`ARCHOGEN-PROGRAM-0002` (leaf `PROGRAM.1`).
+
+- `ROADMAP.md` revision 2.0 (eADL and OS Generation — Consolidated Roadmap) adopted as the
+  project's direction and converted, in full, into ten task-trees: `PROGRAM` for the
+  cross-cutting engineering substrate and one tree per roadmap milestone (`M0`, `S0`,
+  `M1`–`M7`).
+- Every roadmap unit (§11–§20) and every mandatory fixture F01–F30 now names an owning tree
+  and leaf; the two coverage maps live in `docs/tasks/PROGRAM.md` so "where does roadmap
+  item X live?" has a single mechanical answer.
+- `README.md` rewritten from the template landing page to archogen's, within the
+  `README-STABILITY` caps (77/300 lines, 3 637/16 384 bytes).
+- Live docs brought into lockstep: `MEMORY.md` resume pointer, `LIVE_STATUS.md` (twelve
+  rows, one per tree plus the spine), `docs/TASK_TREE.md` index, the derived Knowledge Map,
+  and the book introduction.
+- Validation: `scripts/check_doctrines.sh` → `=== all doctrines green ===`, 13/13.
+
+---
+
+## Provenance — the `bedrock` discipline spine
+
+
 ## bedrock-scaffold 0.6.1 — creating a project is foolproof through its first commit
 
 `BEDROCK-MAINTENANCE.2.7`.

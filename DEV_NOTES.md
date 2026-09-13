@@ -19,8 +19,23 @@
 Detailed technical notes — root cause, implementation, validation — per slice. The
 engineering-continuity surface (not the public docs; that's `docs/book/`). Newest first.
 
-## _(YYYY-MM-DD)_ — bootstrap
+## _(2026-09-13)_ — a portable gate that misfires is a seam question, not a fork question
+
+- `TASK-ACCEPTANCE` blocked this project's first real commit with thirty refusal lines,
+  because its neutral `(^|/)src/` arm matches `docs/book/src/introduction.md` — an mdBook
+  page, not Rust. Measured, not guessed:
+  `git diff --cached --name-only | grep -E '(^|/)(crates|src|scripts)/|\.(rs|sh)$'` →
+  `docs/book/src/introduction.md`.
+- The fix was `.doctrine/code_paths.txt`, the seam `.doctrine/README.md` already documents —
+  not an edit to the check. Rust sources stay covered by the `\.rs$` arm wherever they live,
+  so dropping the bare `src/` arm narrows nothing real.
+- Promoted to `docs/knowledge/doctrine-seams-vs-forking-a-check.md`.
+
+## _(2026-09-13)_ — bootstrap
 
 Repo created from the `bedrock` template: durable 4-layer memory, task-tree tracking, the
 strict commit workflow, and the mechanical doctrine enforcer are in place and enforced by
-git hooks + CI. No project code yet.
+git hooks + CI. `ROADMAP.md` revision 2.0 adopted and seeded into ten task-trees. No engine
+code yet.
+
+- Promoted: nothing to promote; this entry records a state, not a lesson.

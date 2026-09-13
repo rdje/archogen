@@ -46,6 +46,20 @@ on the same commit. One commit per completed leaf.
 
 ## Active Task Trees
 
+The roadmap (`ROADMAP.md`, revision 2.0) is represented in full by the trees below. The
+roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
+[`tasks/PROGRAM.md`](tasks/PROGRAM.md).
+
 | Tree | Status | Frontier (next leaf) | Owner |
 | --- | --- | --- | --- |
-| [`BOOTSTRAP`](tasks/BOOTSTRAP.md) | `done` | `.1` — bootstrapped from bedrock; seed your first real tree from `ROADMAP.md` | repo-local |
+| [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.2` — workspace skeleton and the `osgen` CLI shell | repo-local |
+| [`M0`](tasks/M0.md) | `pending` | `M0.1` — record the controlling eADL/engine boundary | repo-local |
+| [`S0`](tasks/S0.md) | `pending` | `S0.1` — tiny description, variants, and the independent oracle | repo-local |
+| [`M1`](tasks/M1.md) | `pending` | `M1.1` — the reader, source spans, diagnostic rendering | repo-local |
+| [`M2`](tasks/M2.md) | `pending` | `M2.3` — the idealized response-time analysis (F18) | repo-local |
+| [`M3`](tasks/M3.md) | `pending` | `M3.1` — candidate enumeration and substitutability | repo-local |
+| [`M4`](tasks/M4.md) | `pending` | `M4.1` — the typed runtime/build plan | repo-local |
+| [`M5`](tasks/M5.md) | `pending` | `M5.1` — board platform description and engine knowledge | repo-local |
+| [`M6`](tasks/M6.md) | `pending` | `M6.1` — three materially different systems | repo-local |
+| [`M7`](tasks/M7.md) | `pending` | `M7.4` — the F01–F30 mandatory-case audit | repo-local |
+| [`BOOTSTRAP`](tasks/BOOTSTRAP.md) | `done` | — | repo-local |
