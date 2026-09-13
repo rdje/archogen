@@ -30,9 +30,21 @@ justifies the split — the rows below appear as that happens.
   deadlines, exactly one declared release model — and its census test counts how many of the
   profile's thirteen `decisions` rows are still prose that nothing consults (twelve).
 - `crates/archogen-cli/` — the `archogen` binary and its library. `src/spec.rs` declares the
-  `ROADMAP.md` §10.2 command surface as data (help and parsing both derive from it);
-  `src/status.rs` is the §5.5 outcome vocabulary and the stable exit-code contract;
-  `src/cli.rs` is the dependency-free parser and help renderer.
+  `ROADMAP.md` §10.2 command surface as data (help and parsing both derive from it), including
+  each command's `Maturity` — built, **experimental**, or unimplemented, the third state existing
+  because `build` runs over a narrower path than its §10.2 contract; `src/status.rs` is the §5.5
+  outcome vocabulary and the stable exit-code contract; `src/cli.rs` is the dependency-free
+  parser and help renderer. `src/check_cmd.rs` and `src/build_cmd.rs` are thin translations onto
+  the crates that do the work.
+- `crates/archogen-s0/` — ⛔ **the temporary S0 realization, and everything in it is meant to be
+  deleted** (§12 S0: "no hidden special-case generator is grandfathered into the release"). It is
+  deliberately not named `archogen-plan`/`archogen-emit`, the §4.2 names `M4` builds under.
+  `interpret.rs` turns a checked description into a `Plan` and refuses in two families — inputs
+  that describe no buildable system, and requests the engine cannot realize, the second naming
+  the missing capability and its leaf per §5.4. `runtime/rt.rs` and `runtime/service.rs` are the
+  engine-owned Rust every generated crate contains: compiled and tested here, copied there
+  verbatim, with a test asserting the two are identical. `emit.rs` writes a manifest, one
+  specialized table, and that copy — it generates no behavior.
 - `ROADMAP.md` — the program's direction, milestone exit gates, and the F01–F30 acceptance
   matrix. The single source of what "done" means.
 - `docs/tasks/PROGRAM.md` — the roadmap-unit → tree map and the fixture-ownership map.

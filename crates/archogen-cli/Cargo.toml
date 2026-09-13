@@ -19,5 +19,6 @@ path = "src/main.rs"
 workspace = true
 
 [dependencies]
+archogen-s0 = { path = "../archogen-s0" }
 eadl-front = { path = "../eadl-front" }
 eadl-model = { path = "../eadl-model" }

@@ -21,11 +21,17 @@
 //! | each frozen observation follows from its description | now |
 //! | the unsupported fixture has no derivable observation | now |
 //! | the changed case observes something materially different | now |
-//! | the generated executable actually prints it | leaf `S0.4` |
+//! | `archogen build` reaches each case's frozen exit code | now (leaf `S0.3`) |
+//! | the generated executable actually prints the observation | leaf `S0.4` |
 //!
-//! The last row is not silently skipped — [`build_is_not_yet_assertable`] pins the *current*
-//! behavior of `archogen build` and fails the moment it becomes real, which is what forces
-//! `S0.4` to wire the real comparison instead of quietly inheriting a green test.
+//! Until `S0.3`, the last two rows were held by a tripwire that pinned `archogen build` at
+//! `unimplemented` and failed the moment it became real — which is how the fifth row came to be
+//! written rather than quietly inherited. The sixth is the current frontier.
+//!
+//! ⛔ **Note what this file never does: read the generated Rust.** Every assertion here is about
+//! the *observable* — an exit code, and soon the bytes the program prints. An assertion like
+//! "the generated file contains `HORIZON_MS = 30`" would be written in the generator's own
+//! vocabulary and would survive any change that kept the spelling and broke the meaning.
 //!
 //! # Disclosed shared dependency (§4.4)
 //!
@@ -504,20 +510,42 @@ fn the_priority_rank_decides_the_order_of_coincident_releases() {
 }
 
 #[test]
-fn build_is_not_yet_assertable() {
-    // ⛔ TRIPWIRE, not a skip. §14.3: "a required tool skipped or unavailable is reported as
-    // such, not a passed check." The frozen `build-exit:` codes cannot be asserted until leaf
-    // `S0.3` builds the emitter, so this pins what `archogen build` does *today* and fails the
-    // moment that changes — which is what forces `S0.4` to replace it with the real end-to-end
-    // comparison instead of inheriting a green test that checks nothing.
+fn every_fixture_builds_to_its_frozen_exit_code() {
+    // The `build-exit:` half of each frozen expectation, asserted from the outside: what the
+    // command *concluded*, not what it wrote. The `observation:` half needs the generated
+    // program to run, which is leaf `S0.4`.
+    //
+    // Output goes under `CARGO_TARGET_TMPDIR` — inside `target/`, on the repository's own volume
+    // and derived from it — and each case starts from a removed directory, because §12 S0's exit
+    // gate is written "from a clean local build directory".
     for (description, expected) in CASES {
-        let (status, output) = invoke(&["build", &absolute(description), "--out", "build/s0"]);
+        let expectation = load_expectation(expected);
+        let dir = std::path::Path::new(env!("CARGO_TARGET_TMPDIR"))
+            .join("s0-oracle")
+            .join(expectation.header("case"));
+        let _ = std::fs::remove_dir_all(&dir);
+        let (status, output) = invoke(&[
+            "build",
+            &absolute(description),
+            "--out",
+            &dir.display().to_string(),
+        ]);
         assert_eq!(
-            status,
-            Status::Unimplemented,
-            "`archogen build` is real now — leaf S0.4 must replace this tripwire with the \
-             end-to-end comparison against {expected}\n{output}"
+            status.code(),
+            expectation.exit("build-exit"),
+            "{description}: `archogen build` disagreed with `build-exit:`\n{output}"
         );
-        let _ = description;
+        if expectation.header("observation") == "refusal" {
+            assert!(
+                output.contains(expectation.header("names")),
+                "{description}: the refusal must name `{}`\n{output}",
+                expectation.header("names")
+            );
+            assert!(
+                output.contains(expectation.header("owner")),
+                "{description}: the refusal must name the leaf that supplies the missing \
+                 capability\n{output}"
+            );
+        }
     }
 }

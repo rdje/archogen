@@ -52,7 +52,7 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 
 | Tree | Status | Frontier (next leaf) | Owner |
 | --- | --- | --- | --- |
-| [`S0`](tasks/S0.md) | `active` | `S0.3` — the emitter: one fixed engine-owned realization, and the Rust it writes | repo-local |
+| [`S0`](tasks/S0.md) | `active` | `S0.4` — F28: generate, compile, run, compare against the frozen observations | repo-local |
 | [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.3` — the tiered verification runner | repo-local |
 | [`M1`](tasks/M1.md) | `active` | `M1.10` — classify the twelve profile decisions that are still prose (not blocking `S0`) | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |

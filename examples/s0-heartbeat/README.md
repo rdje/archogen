@@ -11,7 +11,9 @@ the early executable generation path. Owned by task-tree [`S0`](../../docs/tasks
 
 Every number in the right-hand column is **frozen**, and was written before any emitter existed.
 That ordering is the whole point of the corpus, so it is a fact of the commit history rather
-than a claim: this directory lands in leaf `S0.1`, and the emitter lands in `S0.3`.
+than a claim: this directory landed in leaf `S0.1` and the emitter in `S0.3`, two commits later.
+When the emitter was finished, both runnable fixtures produced output **byte-identical** to what
+had been frozen — compared with `diff`, not by eye.
 
 ## The observation contract
 
@@ -66,7 +68,7 @@ description fails.
 
 Independence is **structural**, not promised:
 
-- The emitter does not exist yet, so the frozen observations cannot have been read off it.
+- The frozen observations predate the emitter in `git log`, so they cannot have been read off it.
 - The oracle lives in `tests/`, which Rust cannot link into a library — so no future emitter can
   call it, however convenient that would be. The emitter must be written from the contract
   above.

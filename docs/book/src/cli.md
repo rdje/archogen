@@ -16,7 +16,7 @@ USAGE:
 COMMANDS:
     check    elaborate and type-check a description against a profile
     resolve  resolve providers and resources into an independently checked build plan   [unimplemented — tracked by leaf M3.4]
-    build    generate, assemble and build a complete system and its simulator   [unimplemented — tracked by leaf M4.2]
+    build    generate, assemble and build a complete system and its simulator   [experimental — the S0 path: one fixed realization, periodic releases, hosted playground; completed by leaf M4.2]
     analyze  run an analysis for one named property over a build   [unimplemented — tracked by leaf M2.6]
     verify   run a verification tier over a build   [unimplemented — tracked by leaf PROGRAM.3]
     explain  explain how one requirement was realized, or why it could not be   [unimplemented — tracked by leaf M3.4]
@@ -29,13 +29,30 @@ COMMANDS:
 | --- | --- | --- |
 | `archogen check <DESCRIPTION> [--profile <PROFILE>]` | elaborate and type-check a description against a profile | **built** — see [Checking a description](checking.md) |
 | `archogen resolve <DESCRIPTION> [--profile <P>] [--locked] --out <PLAN>` | resolve providers and resources into an independently checked build plan | leaf `M3.4` |
-| `archogen build <DESCRIPTION> [--profile <P>] [--locked] --out <DIR>` | generate, assemble and build a complete system and its simulator | leaf `M4.2` |
+| `archogen build <DESCRIPTION> [--profile <P>] --out <DIR>` | generate, assemble and build a complete system and its simulator | **experimental** — the S0 path only, see [The S0 early generation path](s0.md); leaf `M4.2` completes it |
 | `archogen analyze <BUILD> --property <PROPERTY>` | run an analysis for one named property | leaf `M2.6` |
 | `archogen verify <BUILD> --tier <TIER>` | run a verification tier | leaf `PROGRAM.3` |
 | `archogen explain <BUILD> --requirement <REQUIREMENT>` | explain how one requirement was realized, or why it could not be | leaf `M3.4` |
 | `archogen replay <MANIFEST>` | replay a recorded failure manifest and check its identity | leaf `M4.7` |
 
-`check` is built. The other six are not, and they say so precisely:
+`check` is built. `build` **runs, but over a narrower path than its §10.2 contract**, and the
+surface has a third state to say so rather than lying in either direction:
+
+```console
+$ archogen help build | tail -5
+STATUS: EXPERIMENTAL
+    This command runs, but only over the S0 path: one fixed realization, periodic releases, hosted playground.
+    Its output carries no timing, assurance, or OS-completeness claim. Completing it
+    to the ROADMAP.md §10.2 contract is task-tree leaf M4.2
+    (see docs/TASK_TREE.md).
+```
+
+Two states would have forced a choice between two false statements. Marking it *built* promises
+"a complete system and its simulator"; marking it *unimplemented* denies a command that works,
+and a help text that lies about a gap teaches users to stop reading it. `ROADMAP.md` §12 S0
+settles it by requiring the early generation path's output to be marked experimental.
+
+The remaining five commands are not built, and they say so precisely:
 
 ```console
 $ archogen resolve examples/periodic-three/system.eadl --out plan.json

@@ -123,7 +123,10 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
     status
 }
 
-fn embedded_modules() -> Vec<(String, String)> {
+/// The shipped kind modules, owned so a `SourceMap` can take them.
+///
+/// Shared with `build`, which runs the same frontend: one language definition, loaded one way.
+pub fn embedded_modules() -> Vec<(String, String)> {
     KIND_MODULES
         .iter()
         .map(|(name, text)| ((*name).to_string(), (*text).to_string()))

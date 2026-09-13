@@ -1,0 +1,278 @@
+//! The Rust emitter: an S0 plan in, a compilable crate on disk out.
+//!
+//! `ROADMAP.md` §12 S0 fixes the boundary this module lives on: *"all templates, service code,
+//! and dispatch choices stay inside the engine."* So what is written here is exactly three
+//! things — a manifest, a **table** specialized from the plan, and a verbatim copy of the
+//! engine-owned runtime in [`crate::runtime`]. No behavior is generated; behavior is *copied*
+//! from source that is compiled and tested inside this crate.
+//!
+//! That split is what §1.1 permits — "Generation may emit bindings, specialized code, tables,
+//! layouts, and copied or linked components" — and it is why `rt.rs` is not a string literal. A
+//! template held as a string is Rust that nothing type-checks until a user compiles the output;
+//! held as a module and read with `include_str!`, the same bytes are compiled here, tested here,
+//! and shipped. [`runtime_files`] and its test keep the two copies identical.
+//!
+//! # Determinism
+//!
+//! §10.3 requires "deterministic generated sources from locked inputs". Nothing written here
+//! depends on the clock, the filesystem order, the output path, or the host: the same plan
+//! produces the same bytes. A timestamp in a header comment would quietly cost that, so there
+//! is none.
+
+use std::fmt::Write as _;
+use std::io;
+use std::path::{Path, PathBuf};
+
+use crate::interpret::Plan;
+
+/// The engine-owned sources, as `(file name in the generated crate, contents)`.
+///
+/// Byte-identical to the modules of [`crate::runtime`], which are compiled and tested as part of
+/// this crate — see `emitted_runtime_is_the_reviewed_runtime`.
+#[must_use]
+pub fn runtime_files() -> [(&'static str, &'static str); 2] {
+    [
+        ("rt.rs", include_str!("runtime/rt.rs")),
+        ("service.rs", include_str!("runtime/service.rs")),
+    ]
+}
+
+/// What was written, for the command to report.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Generated {
+    /// The output directory.
+    pub dir: PathBuf,
+    /// Every file written, relative to `dir`, in write order.
+    pub files: Vec<String>,
+    /// The generated package's name.
+    pub package: String,
+}
+
+/// Write the generated crate for `plan` into `dir`, creating it if needed.
+///
+/// # Errors
+///
+/// Any filesystem error, with the path that failed.
+pub fn emit(plan: &Plan, dir: &Path) -> io::Result<Generated> {
+    let package = package_name(&plan.name);
+    let src = dir.join("src");
+    std::fs::create_dir_all(&src)?;
+
+    let mut files = Vec::new();
+    write(dir, "Cargo.toml", &manifest(&package), &mut files)?;
+    write(dir, "src/main.rs", &main_rs(plan), &mut files)?;
+    for (name, contents) in runtime_files() {
+        write(dir, &format!("src/{name}"), contents, &mut files)?;
+    }
+
+    Ok(Generated {
+        dir: dir.to_path_buf(),
+        files,
+        package,
+    })
+}
+
+fn write(dir: &Path, relative: &str, contents: &str, files: &mut Vec<String>) -> io::Result<()> {
+    std::fs::write(dir.join(relative), contents)?;
+    files.push(relative.to_string());
+    Ok(())
+}
+
+/// A Cargo package name for a system name.
+///
+/// eADL names are dotted (`app.heartbeat`); Cargo's are not. The mapping is total and
+/// deterministic, and it is prefixed so a generated package can never be mistaken for a
+/// hand-written one in a build log. Runs of separators collapse, which makes the mapping
+/// non-injective — `a.b` and `a..b` both land on `s0-a-b`. That is deliberate: the package name
+/// is a label in a build log, and the thing that identifies a build is the description it came
+/// from, not the name Cargo prints.
+#[must_use]
+pub fn package_name(system: &str) -> String {
+    let mut body = String::with_capacity(system.len());
+    for ch in system.chars() {
+        if ch.is_ascii_alphanumeric() {
+            body.push(ch.to_ascii_lowercase());
+        } else if !body.ends_with('-') {
+            body.push('-');
+        }
+    }
+    format!("s0-{}", body.trim_matches('-'))
+}
+
+/// The generated manifest.
+///
+/// `[workspace]` is not decoration: without it, Cargo walks up from the output directory, finds
+/// whatever workspace the user generated into, and refuses to build a package that is not one of
+/// its members. An empty table makes the generated crate its own workspace root, so it builds
+/// wherever it is written — which is what "from a clean local build directory" in F28 requires.
+fn manifest(package: &str) -> String {
+    format!(
+        "{HEADER}\
+         [package]\n\
+         name = \"{package}\"\n\
+         version = \"0.0.0\"\n\
+         edition = \"2021\"\n\
+         publish = false\n\n\
+         # Its own workspace root: the generated crate builds wherever it is written.\n\
+         [workspace]\n\n\
+         # The S0 path generates nothing that needs a dependency.\n\
+         [dependencies]\n"
+    )
+}
+
+const HEADER: &str = "\
+# GENERATED by archogen — the experimental S0 path. Do not edit.\n\
+#\n\
+# Re-generate with `archogen build <description> --out <dir>`; an edit here is lost on the next\n\
+# build and makes the output stop corresponding to any description.\n\
+#\n\
+# EXPERIMENTAL. This carries no timing, assurance, or OS-completeness claim whatsoever. It is\n\
+# the ROADMAP.md §12 S0 prototype, which exists to find pipeline mistakes early, and M4 replaces\n\
+# it entirely.\n\n";
+
+const RUST_HEADER: &str = "\
+//! GENERATED by archogen — the experimental S0 path. Do not edit.\n\
+//!\n\
+//! Re-generate with `archogen build <description> --out <dir>`; an edit here is lost on the next\n\
+//! build and makes the output stop corresponding to any description.\n\
+//!\n\
+//! EXPERIMENTAL. This carries no timing, assurance, or OS-completeness claim whatsoever. It is\n\
+//! the ROADMAP.md §12 S0 prototype, which exists to find pipeline mistakes early, and M4\n\
+//! replaces it entirely.\n";
+
+/// The one specialized file: the plan as a table, and the call that runs it.
+fn main_rs(plan: &Plan) -> String {
+    let mut out = String::new();
+    out.push_str(RUST_HEADER);
+    let _ = write!(
+        out,
+        "//!\n\
+         //! System `{}`: {} task(s), hyperperiod {} ms.\n\n\
+         mod rt;\n\
+         mod service;\n\n\
+         /// The system's declared name.\n\
+         const SYSTEM: &str = \"{}\";\n\n\
+         /// The observation horizon: the least common multiple of the declared periods.\n\
+         const HORIZON_MS: u64 = {};\n\n\
+         /// The workload, as the plan fixed it. Ordering here is declaration order; the runtime\n\
+         /// orders releases by time and then by priority rank.\n\
+         static TASKS: &[rt::Task] = &[\n",
+        plan.name,
+        plan.tasks.len(),
+        plan.horizon_ms,
+        plan.name,
+        plan.horizon_ms,
+    );
+    for task in &plan.tasks {
+        let _ = writeln!(
+            out,
+            "    rt::Task {{ name: \"{}\", period_ms: {}, priority: {} }},",
+            task.name, task.period_ms, task.priority
+        );
+    }
+    out.push_str(
+        "];\n\n\
+         fn main() {\n\
+         \x20   // `console.write` was realized by the hosted-playground console.\n\
+         \x20   let mut console = service::Console::new();\n\
+         \x20   rt::run(SYSTEM, TASKS, HORIZON_MS, &mut console);\n\
+         }\n",
+    );
+    out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{main_rs, manifest, package_name, runtime_files};
+    use crate::interpret::{Plan, Task};
+    use eadl_front::{SourceId, Span};
+
+    fn plan() -> Plan {
+        let span = Span::new(SourceId(0), 0, 1);
+        Plan {
+            name: "heartbeat".into(),
+            tasks: vec![
+                Task {
+                    name: "beat".into(),
+                    period_ms: 10,
+                    priority: 1,
+                    span,
+                },
+                Task {
+                    name: "chime".into(),
+                    period_ms: 30,
+                    priority: 2,
+                    span,
+                },
+            ],
+            horizon_ms: 30,
+            span,
+        }
+    }
+
+    #[test]
+    fn emitted_runtime_is_the_reviewed_runtime() {
+        // ⭐ The property that makes "reviewed reusable Rust" mean something. The bytes written
+        // into the generated crate are the same bytes this crate compiles and tests, so a change
+        // to the runtime cannot reach users without going through review here.
+        let emitted: Vec<&str> = runtime_files().iter().map(|(_, text)| *text).collect();
+        assert_eq!(emitted[0], include_str!("runtime/rt.rs"));
+        assert_eq!(emitted[1], include_str!("runtime/service.rs"));
+        assert!(
+            emitted.iter().all(|text| !text.contains("crate::")),
+            "the emitted runtime must not reference `crate::`: in the generated crate these are \
+             sibling modules at the root, so only `super::` resolves in both layouts"
+        );
+    }
+
+    #[test]
+    fn generation_is_deterministic() {
+        // §10.3: "deterministic generated sources from locked inputs". A timestamp or a path in
+        // a header would quietly cost this.
+        assert_eq!(main_rs(&plan()), main_rs(&plan()));
+        assert!(!main_rs(&plan()).contains("2026"), "no date may be emitted");
+    }
+
+    #[test]
+    fn the_specialized_file_carries_the_plan_and_nothing_invented() {
+        let text = main_rs(&plan());
+        assert!(
+            text.contains("const SYSTEM: &str = \"heartbeat\";"),
+            "{text}"
+        );
+        assert!(text.contains("const HORIZON_MS: u64 = 30;"), "{text}");
+        assert!(
+            text.contains("rt::Task { name: \"beat\", period_ms: 10, priority: 1 },"),
+            "{text}"
+        );
+        assert!(
+            text.contains("rt::Task { name: \"chime\", period_ms: 30, priority: 2 },"),
+            "{text}"
+        );
+    }
+
+    #[test]
+    fn every_generated_file_says_it_is_generated_and_experimental() {
+        // §12 S0: "Mark the output experimental, with no claim of OS completeness or real-time
+        // assurance." A file that does not say so is one someone will later quote as evidence.
+        for text in [manifest("s0-heartbeat"), main_rs(&plan())] {
+            assert!(text.contains("GENERATED by archogen"), "{text}");
+            assert!(text.contains("Do not edit"), "{text}");
+            assert!(text.contains("EXPERIMENTAL"), "{text}");
+        }
+    }
+
+    #[test]
+    fn the_manifest_makes_the_generated_crate_its_own_workspace() {
+        // Without this, generating into a directory inside any Cargo workspace produces a crate
+        // that refuses to build — "current package believes it's in a workspace when it's not".
+        assert!(manifest("s0-x").contains("\n[workspace]\n"));
+    }
+
+    #[test]
+    fn package_names_are_total_and_prefixed() {
+        assert_eq!(package_name("heartbeat"), "s0-heartbeat");
+        assert_eq!(package_name("app.heart_beat"), "s0-app-heart-beat");
+        assert_eq!(package_name("Weird..Name."), "s0-weird-name");
+    }
+}

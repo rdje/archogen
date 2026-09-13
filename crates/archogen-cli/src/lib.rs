@@ -1,14 +1,17 @@
 //! `archogen` — the command-line entry point of the archogen toolchain.
 //!
-//! This crate currently owns the *shape* of the user contract and nothing else: the command
-//! surface of `ROADMAP.md` §10.2, the outcome vocabulary of §5.5 with stable exit codes, and
-//! the refusal wording that every future command inherits. Each command is routed to the
-//! task-tree leaf that will implement it, so an unbuilt command is a signpost rather than a
-//! dead end.
+//! This crate owns the *shape* of the user contract: the command surface of `ROADMAP.md` §10.2,
+//! the outcome vocabulary of §5.5 with stable exit codes, and the refusal wording every command
+//! inherits. Each command that is not yet built to its §10.2 contract names the task-tree leaf
+//! that will complete it, so a gap is a signpost rather than a dead end.
 //!
-//! Nothing here elaborates, resolves, generates, or analyzes. `run` returns a [`Status`] and
-//! writes to the caller's streams, so the whole surface is testable without a process.
+//! No semantics live here. Each command arm is a thin translation between the command line and
+//! the crate that does the work — [`check_cmd`] runs `eadl_model::check`, [`build_cmd`] runs the
+//! experimental S0 realization in `archogen_s0` — and its job is to map a result onto the exit
+//! code contract without adding a judgement of its own. `run` returns a [`Status`] and writes to
+//! the caller's streams, so the whole surface is testable without a process.
 
+pub mod build_cmd;
 pub mod check_cmd;
 pub mod cli;
 pub mod spec;
@@ -66,17 +69,20 @@ fn report(err: &mut dyn Write, refusal: &Refusal) -> Status {
 
 /// Route a well-formed invocation to its implementation.
 ///
-/// Every command is currently unbuilt. As each lands, its arm replaces the routing line with
-/// a real call and its [`spec::CommandSpec::owner`] becomes `None`, which removes it from the
-/// `[unimplemented]` column of `archogen --help` in the same change.
+/// As each command lands, it gains an arm here and its [`spec::Maturity`] changes in the same
+/// edit — which is what keeps `archogen --help` from advertising a gap that is closed, or a
+/// completeness that is not there.
 fn dispatch(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status {
     let spec = parsed.spec();
-    if spec.name == "check" {
-        return check_cmd::run(parsed, out, err);
+    match spec.name {
+        "check" => return check_cmd::run(parsed, out, err),
+        "build" => return build_cmd::run(parsed, out, err),
+        _ => {}
     }
-    let Some(owner) = spec.owner else {
-        // Unreachable while every command is unbuilt; a command whose `owner` is cleared
-        // without an implementation arm would reach here, and must not look like success.
+    let Some(owner) = spec.maturity.owner() else {
+        // Unreachable: a command marked `Built` without an arm above would land here. It must
+        // not look like success — silently exiting 0 for a command that did nothing is the one
+        // outcome worse than refusing.
         let _ = writeln!(
             err,
             "archogen: {}: `{}` is marked implemented but has no implementation",

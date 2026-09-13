@@ -7,9 +7,17 @@
 //! *validates against* this table, so a new option cannot be documented without being
 //! accepted, or accepted without being documented. A unit test asserts that property.
 //!
-//! Every command carries `owner`: the task-tree leaf that implements it. An `unimplemented`
-//! result quotes it, so a user who hits an unbuilt command learns where the work is tracked
-//! instead of filing a bug against a known gap.
+//! Every command carries a [`Maturity`], and it has three states rather than two. A command can
+//! be **built** to the §10.2 contract, **unimplemented**, or — the state `build` is in —
+//! **experimental**: it runs, over a deliberately narrow path, and says so. `ROADMAP.md` §12 S0
+//! requires exactly that of the early generation path ("Mark the output experimental, with no
+//! claim of OS completeness or real-time assurance"), and two states cannot express it. Marking
+//! it built would promise the §10.2 command; marking it unimplemented would deny a command that
+//! works. Both are false, and the second is the more corrosive kind: a help text that lies about
+//! a gap teaches users to stop reading it.
+//!
+//! Every non-built state names the task-tree leaf that changes it, so a user who hits a gap
+//! learns where the work is tracked instead of filing a bug against a known limitation.
 
 /// One option a command accepts.
 pub struct OptionSpec {
@@ -31,6 +39,52 @@ pub struct PositionalSpec {
     pub help: &'static str,
 }
 
+/// How much of the §10.2 contract a command actually delivers.
+pub enum Maturity {
+    /// Built to the §10.2 contract.
+    Built,
+    /// It runs, over a deliberately narrow path, and both the help text and the command's own
+    /// output say so.
+    Experimental {
+        /// One line: what it actually does today.
+        scope: &'static str,
+        /// The task-tree leaf that completes it to the §10.2 contract.
+        completed_by: &'static str,
+    },
+    /// Part of the §10.2 interface target, not built.
+    Unimplemented {
+        /// The task-tree leaf that owns building it.
+        owner: &'static str,
+    },
+}
+
+impl Maturity {
+    /// The task-tree leaf that changes this state, or `None` for a built command.
+    #[must_use]
+    pub const fn owner(&self) -> Option<&'static str> {
+        match self {
+            Self::Built => None,
+            Self::Experimental { completed_by, .. } => Some(completed_by),
+            Self::Unimplemented { owner } => Some(owner),
+        }
+    }
+
+    /// The tag shown beside the command in `archogen --help`.
+    #[must_use]
+    pub fn tag(&self) -> String {
+        match self {
+            Self::Built => String::new(),
+            Self::Experimental {
+                scope,
+                completed_by,
+            } => format!("   [experimental — {scope}; completed by leaf {completed_by}]"),
+            Self::Unimplemented { owner } => {
+                format!("   [unimplemented — tracked by leaf {owner}]")
+            }
+        }
+    }
+}
+
 /// One command of the §10.2 surface.
 pub struct CommandSpec {
     /// The subcommand word.
@@ -41,8 +95,8 @@ pub struct CommandSpec {
     pub positionals: &'static [PositionalSpec],
     /// The options, in display order.
     pub options: &'static [OptionSpec],
-    /// The task-tree leaf that owns implementing this command, or `None` once it is built.
-    pub owner: Option<&'static str>,
+    /// How much of the §10.2 contract this command delivers today.
+    pub maturity: Maturity,
 }
 
 impl CommandSpec {
@@ -100,10 +154,10 @@ pub const COMMANDS: &[CommandSpec] = &[
             help: "path to the eADL system description",
         }],
         options: &[PROFILE],
-        // Built by leaf M1.8. `None` removes it from the `[unimplemented]` column of
-        // `archogen --help` in the same change that makes it real — the help text is rendered
+        // Built by leaf M1.8. Changing this row is what removes the command's tag from
+        // `archogen --help`, in the same change that makes it real — the help text is rendered
         // from this table, so the two cannot disagree.
-        owner: None,
+        maturity: Maturity::Built,
     },
     CommandSpec {
         name: "resolve",
@@ -122,7 +176,7 @@ pub const COMMANDS: &[CommandSpec] = &[
                 required: true,
             },
         ],
-        owner: Some("M3.4"),
+        maturity: Maturity::Unimplemented { owner: "M3.4" },
     },
     CommandSpec {
         name: "build",
@@ -141,7 +195,13 @@ pub const COMMANDS: &[CommandSpec] = &[
                 required: true,
             },
         ],
-        owner: Some("M4.2"),
+        // ⚠️ Runs today over the S0 path only (leaf `S0.3`): one fixed engine-owned realization,
+        // periodic releases, the hosted playground. §12 S0 requires that output to be marked
+        // experimental, so the surface marks the command.
+        maturity: Maturity::Experimental {
+            scope: "the S0 path: one fixed realization, periodic releases, hosted playground",
+            completed_by: "M4.2",
+        },
     },
     CommandSpec {
         name: "analyze",
@@ -156,7 +216,7 @@ pub const COMMANDS: &[CommandSpec] = &[
             help: "the named property to analyze, e.g. deadlines",
             required: true,
         }],
-        owner: Some("M2.6"),
+        maturity: Maturity::Unimplemented { owner: "M2.6" },
     },
     CommandSpec {
         name: "verify",
@@ -171,7 +231,7 @@ pub const COMMANDS: &[CommandSpec] = &[
             help: "focused | integration | extended | hardware | assurance",
             required: true,
         }],
-        owner: Some("PROGRAM.3"),
+        maturity: Maturity::Unimplemented { owner: "PROGRAM.3" },
     },
     CommandSpec {
         name: "explain",
@@ -186,7 +246,7 @@ pub const COMMANDS: &[CommandSpec] = &[
             help: "the requirement ID to explain, e.g. timer.deadline",
             required: true,
         }],
-        owner: Some("M3.4"),
+        maturity: Maturity::Unimplemented { owner: "M3.4" },
     },
     CommandSpec {
         name: "replay",
@@ -196,7 +256,7 @@ pub const COMMANDS: &[CommandSpec] = &[
             help: "path to a replay manifest recorded by a failing run",
         }],
         options: &[],
-        owner: Some("M4.7"),
+        maturity: Maturity::Unimplemented { owner: "M4.7" },
     },
 ];
 
@@ -245,17 +305,41 @@ mod tests {
     }
 
     #[test]
-    fn every_unbuilt_command_names_the_leaf_that_owns_it() {
-        // An `unimplemented` result must route the user to tracked work, never to a dead end.
+    fn every_incomplete_command_names_the_leaf_that_completes_it() {
+        // A gap must route the user to tracked work, never to a dead end — and that holds for
+        // the experimental state too, where the temptation to leave it unsaid is strongest.
         for spec in COMMANDS {
-            if let Some(owner) = spec.owner {
+            if let Some(owner) = spec.maturity.owner() {
                 assert!(
                     owner.contains('.') && owner.chars().next().is_some_and(char::is_uppercase),
-                    "`{}` owner `{owner}` is not a task-tree leaf id",
+                    "`{}` names `{owner}`, which is not a task-tree leaf id",
                     spec.name
                 );
             }
         }
+    }
+
+    #[test]
+    fn only_a_built_command_carries_no_tag() {
+        // The tag is the whole mechanism: a command that runs but is narrower than its §10.2
+        // contract must not render as if it were finished.
+        for spec in COMMANDS {
+            assert_eq!(
+                spec.maturity.tag().is_empty(),
+                matches!(spec.maturity, super::Maturity::Built),
+                "`{}` renders the wrong tag for its maturity",
+                spec.name
+            );
+        }
+    }
+
+    #[test]
+    fn the_experimental_tag_says_both_what_it_does_and_what_completes_it() {
+        let build = command("build").expect("build exists");
+        let tag = build.maturity.tag();
+        assert!(tag.contains("experimental"), "{tag}");
+        assert!(tag.contains("S0"), "{tag}");
+        assert!(tag.contains("M4.2"), "{tag}");
     }
 
     #[test]

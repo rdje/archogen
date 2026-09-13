@@ -5,7 +5,7 @@
 //! `ROADMAP.md` §10.2, and every diagnostic it emits is part of the user contract — which is
 //! exactly the case where owning the code costs less than owning a dependency's wording.
 
-use crate::spec::{command, CommandSpec, COMMANDS};
+use crate::spec::{command, CommandSpec, Maturity, COMMANDS};
 use crate::status::Status;
 
 /// What one command line asked for.
@@ -293,15 +293,11 @@ pub fn help_overview() -> String {
         "USAGE:\n    archogen <COMMAND> [OPTIONS]\n    archogen help <COMMAND>\n\nCOMMANDS:\n",
     );
     for spec in COMMANDS {
-        let tag = match spec.owner {
-            Some(owner) => format!("   [unimplemented — tracked by leaf {owner}]"),
-            None => String::new(),
-        };
         out.push_str(&format!(
             "    {:width$}  {}{}\n",
             spec.name,
             spec.summary,
-            tag,
+            spec.maturity.tag(),
             width = width
         ));
     }
@@ -345,11 +341,22 @@ pub fn help_command(name: &str) -> String {
             out.push_str(&format!("    {rendered}  {}{required}\n", option.help));
         }
     }
-    if let Some(owner) = spec.owner {
-        out.push_str(&format!(
-            "\nSTATUS:\n    Not implemented yet. This command is part of the interface target in\n    ROADMAP.md §10.2; the work is tracked by task-tree leaf {owner}\n    (see docs/TASK_TREE.md). Invoking it exits {}.\n",
-            Status::Unimplemented.code()
-        ));
+    match &spec.maturity {
+        Maturity::Built => {}
+        Maturity::Experimental {
+            scope,
+            completed_by,
+        } => {
+            out.push_str(&format!(
+                "\nSTATUS: EXPERIMENTAL\n    This command runs, but only over {scope}.\n    Its output carries no timing, assurance, or OS-completeness claim. Completing it\n    to the ROADMAP.md §10.2 contract is task-tree leaf {completed_by}\n    (see docs/TASK_TREE.md).\n"
+            ));
+        }
+        Maturity::Unimplemented { owner } => {
+            out.push_str(&format!(
+                "\nSTATUS:\n    Not implemented yet. This command is part of the interface target in\n    ROADMAP.md §10.2; the work is tracked by task-tree leaf {owner}\n    (see docs/TASK_TREE.md). Invoking it exits {}.\n",
+                Status::Unimplemented.code()
+            ));
+        }
     }
     out
 }

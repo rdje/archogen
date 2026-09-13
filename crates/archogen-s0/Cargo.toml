@@ -1,0 +1,22 @@
+# The S0 prototype realization: description -> generated hosted Rust crate.
+#
+# ⛔ EVERYTHING IN THIS CRATE IS TEMPORARY. `ROADMAP.md` §12 S0: "the prototype implementation
+# can be discarded or replaced as semantics settle … By M4, the supported path replaces any
+# temporary hard-coded assumptions with checked engine plans; no hidden special-case generator is
+# grandfathered into the release." It is deliberately NOT named `archogen-plan` or
+# `archogen-emit` — those are the §4.2 responsibility names M4 will build under, and a prototype
+# squatting on them is exactly how a special-case generator gets grandfathered. Retiring S0 is
+# then one visible operation: delete this crate.
+[package]
+name = "archogen-s0"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "The temporary S0 realization: one fixed engine-owned path from an eADL description to a running hosted artifact"
+
+[lints]
+workspace = true
+
+[dependencies]
+eadl-front = { path = "../eadl-front" }
+eadl-model = { path = "../eadl-model" }

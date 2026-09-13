@@ -4,6 +4,42 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — `archogen build` becomes real, and prints exactly what was frozen before it existed
+
+`ARCHOGEN-S0-0025` (leaf `S0.3`).
+
+- `crates/archogen-s0` interprets a checked description into a plan and emits a Rust crate;
+  `archogen build` runs it. The generated crate compiles and runs, and its output is
+  **byte-identical** to the observations leaf `S0.1` froze two commits earlier, before any
+  emitter existed — compared with `diff`, not by eye, for both runnable fixtures.
+- ⛔ The crate is deliberately **not** named `archogen-plan` or `archogen-emit`. Those are the
+  §4.2 responsibility names `M4` builds under, and a prototype squatting on them is precisely how
+  §12 S0's "no hidden special-case generator is grandfathered into the release" gets violated —
+  it stops looking like a prototype. Retiring S0 is then one visible operation: delete the crate.
+- ⭐ The engine-owned runtime (`rt.rs`, `service.rs`) is a **module of the engine**, read into the
+  output with `include_str!`, not a string template — and a test asserts the emitted bytes equal
+  the reviewed source. A template held as a string is Rust that nothing type-checks until a user
+  compiles the output. Generation emits a **table**; behavior is copied from code that is
+  compiled, linted and tested here.
+- The unsupported fixture is refused by *generation*, after `check` accepted it: the diagnostic
+  names `min-separation`, the missing capability (a modeled event source) and the leaf that
+  supplies it (`M4.3`), per §5.4's "explain the missing engine capability; do not declare the
+  requested function logically impossible". Nothing is written — a refusal that had already
+  created a directory would leave a half-built artifact for someone to mistake for output.
+- `--locked` is **refused**, not accepted and ignored: the S0 path emits no lock data, so a build
+  that took the flag silently would be an unlocked build wearing a locked build's label.
+- The command surface gained a third maturity state. `build` runs, but over a narrower path than
+  its §10.2 contract, and both other states would have been false: *built* promises a complete
+  system and its simulator, *unimplemented* denies a command that works. `archogen --help`,
+  `archogen help build`, the command's own output and every generated file all say
+  **experimental**, which §12 S0 requires.
+- Validation: `cargo test -p archogen-cli --test s0_build` → **7 passed, 0 failed**, including
+  the generated crate actually compiling; proven able to fail by removing one semicolon from the
+  emitted `main` → `error: expected \`;\`, found \`rt\``. ⛔ The *first* attempt at that control
+  was a false green — the replacement searched for a spelling the escaped source does not contain
+  — which is now its own lesson. `cargo test --all` → **287** passed (272 before, `+15`); fmt and
+  clippy clean; all doctrines green; `mdbook build` OK.
+
 ## archogen — the profile's admitted task model stops being prose
 
 `ARCHOGEN-M1-0024` (leaf `M1.9`).

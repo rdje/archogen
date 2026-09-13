@@ -19,6 +19,36 @@
 Detailed technical notes — root cause, implementation, validation — per slice. The
 engineering-continuity surface (not the public docs; that's `docs/book/`). Newest first.
 
+## _(2026-09-13)_ — a mutation that did not apply is a false green
+
+- A red arm for the S0 emitter removed a semicolon from the emitted `main` and the suite stayed
+  green. Two explanations fit and they call for opposite actions: the compile check is worthless,
+  or the mutation never landed.
+- It never landed. The replacement searched for `    let mut console = …;` with four leading
+  spaces; the source holds that line inside a continued string literal as
+  `\x20   let mut console = …;\n\`. `grep -c` settled it in one command — `1` for the real
+  spelling, `0` for the one searched for. With the mutation corrected the test failed with
+  `the generated crate did not compile: error: expected \`;\`, found \`rt\``.
+- ⭐ The trap is specific to generated and escaped code: the string you see in the *output* is
+  not the string in the *source*. Every mutation now asserts its own application
+  (`assert s.count(old) == 1`) before the suite runs, and the subject is restored from a copy and
+  proven identical with `git diff --stat`.
+- Promoted to `docs/knowledge/verify-the-mutation-applied.md`.
+
+## _(2026-09-13)_ — built/unbuilt cannot describe a command that runs over a narrow path
+
+- Making `build` real forced a third state onto `CommandSpec`. Marking it **built** promises the
+  §10.2 command ("a complete system and its simulator"); marking it **unimplemented** denies a
+  command that works, and a help text that lies about a gap teaches users to stop reading it.
+- §12 S0 settles it — "Mark the output experimental" — so `Maturity` has three variants and the
+  tag, the `STATUS:` block, the command's own output and every generated file all carry it.
+- The same instinct decided `--locked`: refuse it rather than accept and ignore. The S0 path
+  emits no lock data, so honoring it is impossible and appearing to honor it hands someone who
+  asked for a reproducible build an ordinary one that claims to be reproducible.
+- No promotion of its own: this is the third state of the same lesson already recorded in
+  `docs/knowledge/prose-beside-data-goes-unenforced.md` — a surface that cannot express the truth
+  will be made to say something false. Recorded here, not promoted again.
+
 ## _(2026-09-13)_ — prose sitting beside enforced data goes unenforced
 
 - `Profile` carries `exclusions` (read by the admission pass) and `decisions` (thirteen rows of
