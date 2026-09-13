@@ -4,6 +4,28 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the `osgen` command-line shell
+
+`ARCHOGEN-PROGRAM-0003` (leaf `PROGRAM.2`).
+
+- Replaced the bedrock starter crate with `crates/osgen-cli` — library `osgen_cli` plus the
+  `osgen` binary. The workspace now has a real entry point.
+- The `ROADMAP.md` §10.2 command surface (`check`, `resolve`, `build`, `analyze`, `verify`,
+  `explain`, `replay`) is declared **once, as data**; `--help` renders from that table and the
+  parser validates against it, so a documented option is always an accepted option.
+- The §5.5 outcome vocabulary is implemented as a stable exit-code contract, with diagnostic
+  results (`invalid-description` … `tool-failure`) kept separate from process-level statuses
+  (`ok`, `usage`, `unimplemented`). Every refusal carries a concrete repair direction, as §5.5
+  requires.
+- Every command is unimplemented and says so precisely, naming the task-tree leaf that owns
+  building it and exiting 20 — a gap in this toolchain is tracked work, not an unknown.
+- Zero external dependencies, recorded as a decision
+  (`docs/decisions/decision_zero-dependency-engine-core.md`): §4.4 trust inventories, §10.3
+  locked offline builds, §5.5 diagnostic wording.
+- New book chapter: `docs/book/src/cli.md`.
+- Validation: `cargo fmt --check` clean; `clippy -D warnings` clean; `cargo test --all` →
+  28 passed, 0 failed; `scripts/check_doctrines.sh` → all doctrines green; `mdbook build` OK.
+
 ## archogen — roadmap seeded into task-trees
 
 `ARCHOGEN-PROGRAM-0002` (leaf `PROGRAM.1`).

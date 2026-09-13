@@ -80,13 +80,43 @@ mdBook that is the director's window into the project.
     measured rationale so the next reader does not have to rediscover it.
 
 - ID: `PROGRAM.2`
-  Status: `pending`
+  Status: `done`
   Goal: establish the workspace skeleton and crate boundaries actually needed by S0/M1,
   replacing the bedrock starter crate with the `osgen` CLI shell.
   Acceptance: `cargo test --all` green; `osgen --help` lists the §10.2 command surface as
   implemented-or-unimplemented, with unimplemented commands exiting with a clear diagnostic.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the acceptance checklist below.
+  Commit: `ARCHOGEN-PROGRAM-0003`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **ROOT CAUSE (WHY + WHERE)** — the workspace still held only the template's starter
+    crate, so the project had no entry point and the §10.2 interface target existed nowhere in
+    code. Measured at the parent commit: `git ls-tree --name-only HEAD crates/` → `crates/app`
+    (one crate); `git grep -c 'bin name = "osgen"' HEAD -- crates/` → no match, `grep rc=1`;
+    `git show HEAD:crates/app/src/main.rs | grep -n 'println!'` →
+    `7:    println!("bedrock: replace this crate with your project — start from ROADMAP.md.");`.
+    WHERE: `crates/app/src/main.rs:7` — the only executable behavior in the repository was a
+    template placeholder.
+  - [x] **ADDRESSED (verified)** — after: `cargo run --quiet --bin osgen -- --help` prints all
+    seven §10.2 commands with their owning leaves and the eleven-row exit-code table,
+    `exit=0`; `cargo run --quiet --bin osgen -- check examples/periodic-three/system.eadl
+    --profile rt-static-up-v1` prints
+    `osgen: unimplemented: \`osgen check\` is not implemented yet` with
+    `hint: … tracked by task-tree leaf M1.8`, `exit=20`. Before, the same binary name did not
+    resolve at all (evidence B above, `grep rc=1`).
+  - [x] **NO REGRESSION** — `cargo fmt --all -- --check` → `fmt rc=0`; `cargo clippy
+    --all-targets --all-features -- -D warnings` → `Finished \`dev\` profile`, no warnings;
+    `cargo test --all` → `test result: ok. 28 passed; 0 failed; 0 ignored; 0 measured; 0
+    filtered out`; `scripts/check_doctrines.sh` → `=== all doctrines green ===`, `rc=0`;
+    `mdbook build docs/book` → `INFO HTML book written to`.
+  - [x] **FIX** — removed `crates/app`; added `crates/osgen-cli` (lib `osgen_cli` + bin
+    `osgen`) with the §10.2 surface declared once as data in `src/spec.rs`, a hand-written
+    parser in `src/cli.rs`, and the §5.5 outcome vocabulary with stable exit codes in
+    `src/status.rs`. Zero external dependencies.
+  - [x] **LOCKSTEP** — `docs/book/src/cli.md` (new chapter) and `SUMMARY.md`;
+    `docs/decisions/decision_zero-dependency-engine-core.md` + its index row;
+    `knowledge-map/subsystems.md`; `MEMORY.md`; `LIVE_STATUS.md`; `CHANGELOG.md`.
 
 - ID: `PROGRAM.3`
   Status: `pending`
@@ -198,15 +228,26 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.2` | `pending` | S0 and M0 both need the workspace shell and the `osgen` entry point |
-| 2 | `PROGRAM.4` | `pending` | the book must exist before milestone chapters can land in lockstep |
-| 3 | `PROGRAM.3` | `pending` | tiers formalize what `make check` already does informally |
+| 1 | `M0.1` | `pending` | the boundary decision is what `M0.2`, F27, and every schema cite |
+| 2 | `M0.4` | `pending` | the profile bounds what S0 and M1 may accept |
+| 3 | `PROGRAM.3` | `pending` | the tier runner formalizes what `make check` does informally |
+
+`PROGRAM` yields the frontier to `M0` here: the CLI shell is the last thing the milestone
+trees needed from the substrate, and `PROGRAM.3`–`PROGRAM.7` all describe machinery whose
+shape depends on decisions `M0` has not made yet.
 
 ## Decisions
 
 - `2026-09-13`: one tree per roadmap milestone, plus this `PROGRAM` tree for the
   cross-cutting substrate. Rationale: a milestone is the roadmap's own unit of exit-gate
   evidence, so a tree per milestone makes the frontier and the gate the same object.
+- `2026-09-13`: the engine carries no external Rust dependencies
+  (`docs/decisions/decision_zero-dependency-engine-core.md`). §4.4 makes every dependency
+  shared between generator and checker a reviewable trust event, §10.3 requires locked
+  offline builds, and §5.5 makes diagnostic wording part of the user contract.
+- `2026-09-13`: the §10.2 command surface is declared **once, as data**
+  (`crates/osgen-cli/src/spec.rs`); help text is rendered from it and the parser validates
+  against it, so documented and accepted options cannot diverge.
 - `2026-09-13`: `docs/book/src/` is NOT a code path here. The neutral `TASK-ACCEPTANCE`
   default treats any `src/` segment as Rust source; the project seam
   `.doctrine/code_paths.txt` states this repository's real shape instead of editing the
@@ -229,6 +270,7 @@ roadmap item X live?".
 | --- | --- | --- | --- |
 | `2026-09-13` | `PROGRAM.1` | `scripts/check_doctrines.sh` | `13/13 green` |
 | `2026-09-13` | `PROGRAM.1.1` | `scripts/check_doctrines.sh` staged | `red → green` |
+| `2026-09-13` | `PROGRAM.2` | `make check` + `make gate` + `mdbook build` | `28 tests pass; 13/13 green` |
 
 ## Commit Log
 
@@ -236,6 +278,7 @@ roadmap item X live?".
 | --- | --- | --- |
 | `PROGRAM.1` | `ARCHOGEN-PROGRAM-0002 (leaf PROGRAM.1)` | roadmap seeded into ten trees |
 | `PROGRAM.1.1` | `ARCHOGEN-PROGRAM-0002 (leaf PROGRAM.1)` | code-path seam, same commit |
+| `PROGRAM.2` | `ARCHOGEN-PROGRAM-0003 (leaf PROGRAM.2)` | `osgen` CLI shell, §5.5 exit codes |
 
 ## Changelog
 

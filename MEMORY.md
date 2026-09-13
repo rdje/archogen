@@ -11,9 +11,9 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `PROGRAM` → frontier leaf `PROGRAM.2` (`pending`).
-- **Next action:** replace the bedrock starter crate with the `osgen` CLI shell and the
-  crate boundaries S0/M1 need (`docs/tasks/PROGRAM.md`, leaf `PROGRAM.2`).
-- **Latest commit:** `ARCHOGEN-PROGRAM-0002 (leaf PROGRAM.1)` — roadmap seeded into ten trees.
+- **Active tree:** `M0` → frontier leaf `M0.1` (`pending`). `PROGRAM` yielded the frontier.
+- **Next action:** record the controlling eADL/engine boundary (`ROADMAP.md` §4, §4.3) as
+  `docs/decisions/decision_eadl-engine-boundary.md` (`docs/tasks/M0.md`, leaf `M0.1`).
+- **Latest commit:** `ARCHOGEN-PROGRAM-0003 (leaf PROGRAM.2)` — the `osgen` CLI shell.
 - **In-flight uncommitted work:** none.
 - **Blockers:** none. Absent tooling: QEMU RISC-V (needed by `M4.9`, `M2.8`).

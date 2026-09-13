@@ -9,8 +9,10 @@
 Responsibility boundaries follow `ROADMAP.md` §4.2. A crate is created when a real consumer
 justifies the split — the rows below appear as that happens.
 
-- `crates/app/` — the starter binary inherited from the template (package `archogen`).
-  Replaced by the `osgen` CLI shell in leaf `PROGRAM.2`.
+- `crates/osgen-cli/` — the `osgen` binary and its library. `src/spec.rs` declares the
+  `ROADMAP.md` §10.2 command surface as data (help and parsing both derive from it);
+  `src/status.rs` is the §5.5 outcome vocabulary and the stable exit-code contract;
+  `src/cli.rs` is the dependency-free parser and help renderer.
 - `ROADMAP.md` — the program's direction, milestone exit gates, and the F01–F30 acceptance
   matrix. The single source of what "done" means.
 - `docs/tasks/PROGRAM.md` — the roadmap-unit → tree map and the fixture-ownership map.
@@ -33,4 +35,4 @@ justifies the split — the rows below appear as that happens.
 
 ## Decision records
 
-- _none yet_
+- [`decision_zero-dependency-engine-core.md`](docs/decisions/decision_zero-dependency-engine-core.md)
