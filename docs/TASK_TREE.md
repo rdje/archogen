@@ -52,7 +52,7 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 
 | Tree | Status | Frontier (next leaf) | Owner |
 | --- | --- | --- | --- |
-| [`S0`](tasks/S0.md) | `active` | `S0.5` — source provenance, the last unmet F28 clause (the rest of F28 is green) | repo-local |
+| [`S0`](tasks/S0.md) | `active` | `S0.6` — the retirement note; **every F28 clause is green** | repo-local |
 | [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.3` — the tiered verification runner | repo-local |
 | [`M1`](tasks/M1.md) | `active` | `M1.10` — classify the twelve profile decisions that are still prose (not blocking `S0`) | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |

@@ -31,6 +31,9 @@
 //! * [`runtime`] — the engine-owned Rust that every generated crate contains, compiled and
 //!   tested *here* and copied there byte for byte.
 //! * [`emit`] — the manifest, the specialized table, and that copy. It generates no behavior.
+//! * [`provenance`] — the §10.1 mapping from each generated declaration back to the source form
+//!   and the engine rule that produced it, written as `provenance.json` and checkable from both
+//!   ends.
 //!
 //! # What it is not
 //!
@@ -44,7 +47,9 @@
 
 pub mod emit;
 pub mod interpret;
+pub mod provenance;
 pub mod runtime;
 
 pub use emit::{emit, Generated};
 pub use interpret::{interpret, Plan, Task};
+pub use provenance::Record;

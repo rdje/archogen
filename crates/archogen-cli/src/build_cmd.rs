@@ -145,7 +145,7 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
     };
 
     let dir = Path::new(out_dir);
-    let generated = match emit(&plan, dir) {
+    let generated = match emit(&plan, &sources, dir) {
         Ok(generated) => generated,
         Err(error) => {
             let _ = writeln!(

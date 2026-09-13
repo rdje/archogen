@@ -41,7 +41,11 @@ justifies the split — the rows below appear as that happens.
   the missing capability and its leaf per §5.4. `runtime/rt.rs` and `runtime/service.rs` are the
   engine-owned Rust every generated crate contains: compiled and tested here, copied there
   verbatim, with a test asserting the two are identical. `emit.rs` writes a manifest, one
-  specialized table, and that copy — it generates no behavior.
+  specialized table, and that copy — it generates no behavior. `provenance.rs` writes
+  `provenance.json`, the §10.1 mapping from each generated declaration to its source span and the
+  engine rule that produced it; every record is resolved from **both** ends by
+  `crates/archogen-cli/tests/s0_provenance.rs`, because a record pointing at the wrong line is
+  worse than none.
 - `ROADMAP.md` — the program's direction, milestone exit gates, and the F01–F30 acceptance
   matrix. The single source of what "done" means.
 - `docs/tasks/PROGRAM.md` — the roadmap-unit → tree map and the fixture-ownership map.

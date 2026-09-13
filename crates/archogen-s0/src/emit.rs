@@ -19,11 +19,13 @@
 //! produces the same bytes. A timestamp in a header comment would quietly cost that, so there
 //! is none.
 
-use std::fmt::Write as _;
 use std::io;
 use std::path::{Path, PathBuf};
 
+use eadl_front::SourceMap;
+
 use crate::interpret::Plan;
+use crate::provenance::{self, Record};
 
 /// The engine-owned sources, as `(file name in the generated crate, contents)`.
 ///
@@ -46,6 +48,8 @@ pub struct Generated {
     pub files: Vec<String>,
     /// The generated package's name.
     pub package: String,
+    /// The provenance records, also written to `provenance.json`.
+    pub provenance: Vec<Record>,
 }
 
 /// Write the generated crate for `plan` into `dir`, creating it if needed.
@@ -53,22 +57,31 @@ pub struct Generated {
 /// # Errors
 ///
 /// Any filesystem error, with the path that failed.
-pub fn emit(plan: &Plan, dir: &Path) -> io::Result<Generated> {
+pub fn emit(plan: &Plan, sources: &SourceMap, dir: &Path) -> io::Result<Generated> {
     let package = package_name(&plan.name);
     let src = dir.join("src");
     std::fs::create_dir_all(&src)?;
 
+    let (main, records) = main_rs(plan);
+
     let mut files = Vec::new();
     write(dir, "Cargo.toml", &manifest(&package), &mut files)?;
-    write(dir, "src/main.rs", &main_rs(plan), &mut files)?;
+    write(dir, "src/main.rs", &main, &mut files)?;
     for (name, contents) in runtime_files() {
         write(dir, &format!("src/{name}"), contents, &mut files)?;
     }
+    write(
+        dir,
+        "provenance.json",
+        &provenance::render(plan, &records, sources),
+        &mut files,
+    )?;
 
     Ok(Generated {
         dir: dir.to_path_buf(),
         files,
         package,
+        provenance: records,
     })
 }
 
@@ -141,44 +154,88 @@ const RUST_HEADER: &str = "\
 //! replaces it entirely.\n";
 
 /// The one specialized file: the plan as a table, and the call that runs it.
-fn main_rs(plan: &Plan) -> String {
-    let mut out = String::new();
-    out.push_str(RUST_HEADER);
-    let _ = write!(
-        out,
-        "//!\n\
-         //! System `{}`: {} task(s), hyperperiod {} ms.\n\n\
-         mod rt;\n\
-         mod service;\n\n\
-         /// The system's declared name.\n\
-         const SYSTEM: &str = \"{}\";\n\n\
-         /// The observation horizon: the least common multiple of the declared periods.\n\
-         const HORIZON_MS: u64 = {};\n\n\
-         /// The workload, as the plan fixed it. Ordering here is declaration order; the runtime\n\
-         /// orders releases by time and then by priority rank.\n\
-         static TASKS: &[rt::Task] = &[\n",
+///
+/// Returns the text **and** a provenance record for every declaration it writes. Building the
+/// file as a line vector rather than a string is what makes those line numbers exact: a record
+/// that names a line which does not contain what it claims is worse than no record, because it
+/// sends a reader somewhere confidently wrong.
+fn main_rs(plan: &Plan) -> (String, Vec<Record>) {
+    let mut lines: Vec<String> = Vec::new();
+    let mut records: Vec<Record> = Vec::new();
+
+    for line in RUST_HEADER.lines() {
+        lines.push(line.to_string());
+    }
+    lines.push("//!".into());
+    lines.push(format!(
+        "//! System `{}`: {} task(s), hyperperiod {} ms.",
         plan.name,
         plan.tasks.len(),
-        plan.horizon_ms,
-        plan.name,
-        plan.horizon_ms,
+        plan.horizon_ms
+    ));
+    lines.push(String::new());
+    lines.push("mod rt;".into());
+    lines.push("mod service;".into());
+    lines.push(String::new());
+
+    lines.push("/// The system's declared name.".into());
+    lines.push(format!("const SYSTEM: &str = \"{}\";", plan.name));
+    records.push(Record {
+        declaration: "system",
+        name: plan.name.clone(),
+        generated_file: "src/main.rs",
+        generated_line: lines.len(),
+        span: plan.span,
+        via: "interpret: the name of the single `defsystem`",
+    });
+    lines.push(String::new());
+
+    lines.push(
+        "/// The observation horizon: the least common multiple of the declared periods.".into(),
     );
+    lines.push(format!("const HORIZON_MS: u64 = {};", plan.horizon_ms));
+    records.push(Record {
+        declaration: "hyperperiod",
+        name: format!("{} ms", plan.horizon_ms),
+        generated_file: "src/main.rs",
+        generated_line: lines.len(),
+        span: plan.span,
+        via: "interpret: lcm of every declared period, in whole milliseconds",
+    });
+    lines.push(String::new());
+
+    lines.push(
+        "/// The workload, as the plan fixed it. Ordering here is declaration order; the runtime"
+            .into(),
+    );
+    lines.push("/// orders releases by time and then by priority rank.".into());
+    lines.push("static TASKS: &[rt::Task] = &[".into());
     for task in &plan.tasks {
-        let _ = writeln!(
-            out,
+        lines.push(format!(
             "    rt::Task {{ name: \"{}\", period_ms: {}, priority: {} }},",
             task.name, task.period_ms, task.priority
-        );
+        ));
+        records.push(Record {
+            declaration: "task",
+            name: task.name.clone(),
+            generated_file: "src/main.rs",
+            generated_line: lines.len(),
+            span: task.span,
+            via: "interpret: a `(task …)` clause of the system, period converted to whole milliseconds",
+        });
     }
-    out.push_str(
-        "];\n\n\
-         fn main() {\n\
-         \x20   // `console.write` was realized by the hosted-playground console.\n\
-         \x20   let mut console = service::Console::new();\n\
-         \x20   rt::run(SYSTEM, TASKS, HORIZON_MS, &mut console);\n\
-         }\n",
-    );
-    out
+    lines.push("];".into());
+    lines.push(String::new());
+
+    lines.push("fn main() {".into());
+    lines.push("    // `console.write` was realized by the hosted-playground console.".into());
+    lines.push("    let mut console = service::Console::new();".into());
+    lines.push("    rt::run(SYSTEM, TASKS, HORIZON_MS, &mut console);".into());
+    lines.push("}".into());
+
+    let mut text = lines.join("\n");
+    text.push('\n');
+    (text, records)
 }
 
 #[cfg(test)]
@@ -229,13 +286,42 @@ mod tests {
     fn generation_is_deterministic() {
         // §10.3: "deterministic generated sources from locked inputs". A timestamp or a path in
         // a header would quietly cost this.
-        assert_eq!(main_rs(&plan()), main_rs(&plan()));
-        assert!(!main_rs(&plan()).contains("2026"), "no date may be emitted");
+        assert_eq!(main_rs(&plan()).0, main_rs(&plan()).0);
+        assert!(
+            !main_rs(&plan()).0.contains("2026"),
+            "no date may be emitted"
+        );
+    }
+
+    #[test]
+    fn every_provenance_record_names_a_line_that_contains_it() {
+        // ⭐ The property that makes a provenance record worth having. A record pointing at a
+        // line which does not contain what it claims is worse than no record at all: it sends a
+        // reader somewhere confidently wrong. Checked here against the generated side; the test
+        // suite checks the source side against the description.
+        let (text, records) = main_rs(&plan());
+        let lines: Vec<&str> = text.lines().collect();
+        assert_eq!(records.len(), 4, "system, hyperperiod, and one per task");
+        for record in &records {
+            let line = lines
+                .get(record.generated_line - 1)
+                .unwrap_or_else(|| panic!("line {} is past the end", record.generated_line));
+            let needle = match record.declaration {
+                "hyperperiod" => "HORIZON_MS".to_string(),
+                _ => record.name.clone(),
+            };
+            assert!(
+                line.contains(&needle),
+                "record {:?} points at line {} — `{line}` — which does not contain `{needle}`",
+                record.declaration,
+                record.generated_line
+            );
+        }
     }
 
     #[test]
     fn the_specialized_file_carries_the_plan_and_nothing_invented() {
-        let text = main_rs(&plan());
+        let (text, _) = main_rs(&plan());
         assert!(
             text.contains("const SYSTEM: &str = \"heartbeat\";"),
             "{text}"
@@ -255,7 +341,7 @@ mod tests {
     fn every_generated_file_says_it_is_generated_and_experimental() {
         // §12 S0: "Mark the output experimental, with no claim of OS completeness or real-time
         // assurance." A file that does not say so is one someone will later quote as evidence.
-        for text in [manifest("s0-heartbeat"), main_rs(&plan())] {
+        for text in [manifest("s0-heartbeat"), main_rs(&plan()).0] {
             assert!(text.contains("GENERATED by archogen"), "{text}");
             assert!(text.contains("Do not edit"), "{text}");
             assert!(text.contains("EXPERIMENTAL"), "{text}");

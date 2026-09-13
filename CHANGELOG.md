@@ -4,6 +4,34 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — generated output that says where it came from
+
+`ARCHOGEN-S0-0027` (leaf `S0.5`).
+
+- `archogen build` now writes `provenance.json` beside the generated crate: for each generated
+  declaration, the line it was written to, the byte span of the source form it came from, and the
+  engine rule that produced it. That closes F28's last clause — "failure points have useful
+  diagnostics **and basic source provenance**".
+- ⭐ **The failure mode is not an absent record; it is a record that points somewhere wrong.** A
+  line number that does not contain the declaration it claims sends a reader somewhere
+  confidently wrong. So every record is resolved from **both ends** by the suite — the named line
+  of `src/main.rs` must carry that declaration, and the named byte span of the description must
+  cover it — and both checks are mutation-tested. Pointing every task at the first task's span,
+  and shifting one line number by one, each turn them red.
+- `main.rs` is now built as a **line vector** rather than a string, which is what makes the
+  recorded line numbers exact rather than approximately right.
+- ⚠️ `realization` is a **stub** of a §9 catalog entry, carrying four of the fourteen fields §9
+  requires — and the artifact names what it is missing, in its own text. A record that looks like
+  a catalog entry is one somebody will eventually cite as if it were one, and the citation will
+  be made by someone who never read the task tree.
+- The JSON writer is deliberately small — flat records, one escaping routine, unit tests for the
+  control characters naive escapers miss. It is a writer, not a serialization library.
+- Validation: `cargo test -p archogen-cli --test s0_provenance` → **4 passed, 0 failed**; the
+  artifact parses under a real JSON parser (`python3 -c "import json; json.load(...)"` →
+  `records = 4`); record `beat` resolves by hand to `src/main.rs:24` and to source bytes
+  `1511..1639`. `cargo test --all` → **309** passed (301 before, `+8`); fmt and clippy clean;
+  all doctrines green; `mdbook build` OK.
+
 ## archogen — F28 is green, and mutation testing found what it could not see
 
 `ARCHOGEN-S0-0026` (leaf `S0.4`).

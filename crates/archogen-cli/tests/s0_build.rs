@@ -64,7 +64,13 @@ fn the_base_fixture_generates_a_crate() {
         &dir.display().to_string(),
     ]);
     assert_eq!(status, Status::Ok, "{err}");
-    for file in ["Cargo.toml", "src/main.rs", "src/rt.rs", "src/service.rs"] {
+    for file in [
+        "Cargo.toml",
+        "src/main.rs",
+        "src/rt.rs",
+        "src/service.rs",
+        "provenance.json",
+    ] {
         assert!(dir.join(file).is_file(), "{file} was not written");
     }
     assert!(out.contains("experimental"), "{out}");
@@ -140,7 +146,13 @@ fn generation_is_reproducible_from_a_clean_directory() {
         let (status, _, err) = build(&["build", &source, "--out", &dir.display().to_string()]);
         assert_eq!(status, Status::Ok, "{err}");
     }
-    for file in ["Cargo.toml", "src/main.rs", "src/rt.rs", "src/service.rs"] {
+    for file in [
+        "Cargo.toml",
+        "src/main.rs",
+        "src/rt.rs",
+        "src/service.rs",
+        "provenance.json",
+    ] {
         assert_eq!(
             std::fs::read(first.join(file)).expect("written"),
             std::fs::read(second.join(file)).expect("written"),

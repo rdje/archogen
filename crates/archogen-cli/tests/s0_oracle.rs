@@ -569,16 +569,22 @@ fn clean_build_dir(case: &str, attempt: u32) -> PathBuf {
 /// Every generated file's bytes, so "no generated file is edited" can be checked rather than
 /// promised.
 fn snapshot(dir: &Path) -> Vec<(String, Vec<u8>)> {
-    ["Cargo.toml", "src/main.rs", "src/rt.rs", "src/service.rs"]
-        .iter()
-        .map(|name| {
-            (
-                (*name).to_string(),
-                std::fs::read(dir.join(name))
-                    .unwrap_or_else(|e| panic!("{name} was not generated: {e}")),
-            )
-        })
-        .collect()
+    [
+        "Cargo.toml",
+        "src/main.rs",
+        "src/rt.rs",
+        "src/service.rs",
+        "provenance.json",
+    ]
+    .iter()
+    .map(|name| {
+        (
+            (*name).to_string(),
+            std::fs::read(dir.join(name))
+                .unwrap_or_else(|e| panic!("{name} was not generated: {e}")),
+        )
+    })
+    .collect()
 }
 
 /// Generate, compile and run one description; return what it printed to standard output.
