@@ -11,7 +11,7 @@ summarize the snapshot in every commit-workflow completion message.
 | `PROGRAM` — workspace, tiers, book, ledger | In Progress | `.1` `.1.1` `.2` `.2.1` done; CLI is `archogen`; `.3`–`.8` pending |
 | `M0` — charter, boundary, profile, target | Done | all seven leaves closed; F27 green. The board remains a recorded blocker, not a passed gate |
 | `S0` — early executable generation (F28) | In Progress | active tree; `S0.1`, `S0.2` done — corpus + oracle frozen before the emitter, diagnostics localized. Frontier `S0.3`, the emitter; F28 itself lands at `S0.4` |
-| `M1` — eADL description foundation | Done | all eight leaves; F01–F07 green; `archogen check` real; 25 semantic cases |
+| `M1` — eADL description foundation | Mostly Done | §12 M1's exit gate is met — F01–F07 green, `archogen check` real, 29 semantic cases, the §3.1 task model enforced. One non-gate follow-up open: `M1.10` |
 | `M2` — one engine realization + controls | Not Started | frontier `M2.3` |
 | `M3` — joint resolver + checked plan | Not Started | frontier `M3.1` |
 | `M4` — generated system + simulator | Not Started | frontier `M4.1` |

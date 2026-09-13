@@ -74,14 +74,55 @@ A registry that has not loaded `os-rt.eadl` **says so** rather than silently acc
 is inside a task. Silently accepting an unvalidatable clause is the failure mode that let the
 gap exist in the first place.
 
+## The admitted task model, enforced
+
+The profile does not only *refuse* capabilities; it also *admits* a particular shape of task
+set, and that shape is checked:
+
+| Rule | §3.1 wording | Refused as |
+| --- | --- | --- |
+| a release model is declared | "periodic or sporadic releases with declared minimum separation" | `missing-fact` |
+| one release model, not two | — (§5.3: contradictions are rejected, not resolved) | `invalid-description` |
+| priorities are unique | "static **unique** task priorities" | `unsupported-profile` |
+| deadlines are constrained | "constrained deadlines" — `D ≤ T` | `unsupported-profile` |
+
+```console
+$ archogen check system.eadl
+error[unsupported-profile]: tasks `beat` and `chime` share priority 1
+  --> system.eadl:38:15
+   |
+38 |     (priority 1) (uses console.write) (on-overrun fault))
+   |               ^ this priority is already taken
+  --> system.eadl:35:15
+   |
+35 |     (priority 1) (uses console.write) (on-overrun fault))
+   |               - first declared here
+  = hint: `rt-static-up-v1` admits **static unique** task priorities. Give one of them a
+          different number. Equal priorities need a documented tie-break — FIFO, round-robin —
+          which is a different scheduling policy with its own analysis, so it belongs to a
+          different profile rather than to a looser reading of this one
+```
+
+The last two are `unsupported-profile` and not `invalid-description`, and the distinction is not
+cosmetic. Neither description is *wrong* about anything — both describe a system a different
+profile could analyze. §3.1 requires such a request to be refused "rather than silently reducing
+the requested guarantee", so the refusal says what admitting it would cost: equal priorities need
+a tie-break policy, and `D > T` needs a busy-period analysis rather than the response-time
+recurrence.
+
+⚠️ **These four rules are the profile's *Workload* row, and that row is one of thirteen.** The
+other twelve are still prose that nothing consults. That is not twelve defects — "Rust `no_std`
+core" is a property of the engine, not of a description — but it was twelve rows nobody had
+counted, and a test now counts them so the number cannot drift quietly. Classifying each by the
+stage that can enforce it is tracked as leaf `M1.10`.
+
 ## The examples
 
 `examples/` holds the three use cases as real descriptions, and they are checked, not just
 stored:
 
 - every declaration validates against the shipped kinds;
-- every task has an arrival model, a deadline with its reference event, and a priority;
-- priorities are unique within a system;
+- every task has a deadline with its reference event;
 - and **no example carries an execution bound, a code reference, or an allocation** — asserted
   by running the boundary classifier over each one, with all three constructs registered and all
   three exercised by worked corpus cases. That is what stops someone adding a WCET to an example

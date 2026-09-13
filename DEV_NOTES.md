@@ -19,6 +19,26 @@
 Detailed technical notes — root cause, implementation, validation — per slice. The
 engineering-continuity surface (not the public docs; that's `docs/book/`). Newest first.
 
+## _(2026-09-13)_ — prose sitting beside enforced data goes unenforced
+
+- `Profile` carries `exclusions` (read by the admission pass) and `decisions` (thirteen rows of
+  concern/decision). Both are `&'static [..]`, both look equally authoritative, both are
+  published on the same page. `git grep -n '\.decisions' -- crates/` → **one** hit, and it is the
+  drift test comparing the table to the documentation. So the table tracked the docs perfectly
+  and meant nothing to the checker.
+- ⭐ The trap is that the row had a guard that made it look guarded. A prose-to-prose drift test
+  reads like enforcement. Consequence: `archogen check` accepted two tasks at priority 1 —
+  `exit=0` — under a profile that admits unique priorities only.
+- Fixed for the Workload row (`crates/eadl-model/src/workload.rs`, `0 → 12` on the same input).
+  The other twelve rows are now **counted** by a test that fails if the number moves, with the
+  classifying leaf named in the assertion message. Counting is not enforcing, and it is what
+  stops the gap being invisible.
+- Verdict choice matters as much as detection: duplicate priorities and `D > T` are
+  `unsupported-profile`, not `invalid-description`. Neither description is wrong about anything;
+  both describe systems a different profile could analyze, and §3.1 requires the refusal to name
+  what admitting them would cost rather than silently weakening the guarantee.
+- Promoted to `docs/knowledge/prose-beside-data-goes-unenforced.md`.
+
 ## _(2026-09-13)_ — a leaf is closed by its acceptance, not by its implementation existing
 
 - `S0.2` described a reader `M1` had already built better. Three tempting answers — delete the

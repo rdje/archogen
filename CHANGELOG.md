@@ -4,6 +4,36 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the profile's admitted task model stops being prose
+
+`ARCHOGEN-M1-0024` (leaf `M1.9`).
+
+- ⛔ **`archogen check` accepted two tasks at the same priority**, against a profile whose own
+  table says "static **unique** task priorities". Found from outside M1, by `S0.3` needing to
+  order two coincident releases by priority rank — which is a total order only if that rule
+  holds.
+- Root cause: `Profile` carries two lists and only one was ever consulted.
+  `git grep -n '.decisions' -- crates/` returned a single hit — the drift **test** that compares
+  the table to the published documentation page. So all thirteen decision rows were kept
+  scrupulously in sync with the docs while meaning nothing to the checker. A guard that makes a
+  rule *look* guarded is why nobody noticed.
+- `crates/eadl-model/src/workload.rs` enforces the §3.1 **Workload** row as four rules, each with
+  the §5.5 verdict its kind of failure deserves: an undeclared release model is a `missing-fact`,
+  two release models is `invalid-description`, and duplicate priorities and `D > T` are
+  `unsupported-profile` — refused with the cost of admitting them named, never silently reduced.
+- One mistake produces one message: a task with no release model is not also reported for a
+  deadline it has nothing to compare against, and a missing `priority` is left to the schema.
+  The deadline comparison crosses units, so `1 s` against a `100 ms` period is caught.
+- The remaining twelve decision rows are **counted** by a census test that fails if the number
+  moves, and classifying them by the stage that can enforce each is tracked as leaf `M1.10`.
+  Twelve unenforced rows is not twelve defects — "Rust `no_std` core" is a property of the
+  engine — but twelve rows nobody had counted was the state worth leaving behind.
+- Validation: `0 → 12` on the identical duplicate-priority description; four new semantic corpus
+  cases each produce the verdict they declare (corpus now **29**); every existing example keeps
+  the exact verdict `examples/README.md` publishes (`0`, `0`, `13`, `12`); `cargo test --all` →
+  **272** passed (259 before, `+13`); fmt and clippy clean; all doctrines green; `mdbook build`
+  OK.
+
 ## archogen — a leaf closed by its acceptance, not by its implementation
 
 `ARCHOGEN-S0-0023` (leaf `S0.2`).

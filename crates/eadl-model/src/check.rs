@@ -9,7 +9,8 @@
 //! | read | syntax and spans (`M1.1`) | `invalid-description` |
 //! | boundary | implementation content (`M0.3`, F27) | `invalid-description` |
 //! | schema | the declaration frame (`M1.2`) | `invalid-description` |
-//! | profile | what the profile admits (`M0.4`) | `unsupported-profile` |
+//! | profile | the capabilities the profile refuses (`M0.4`) | `unsupported-profile` |
+//! | workload | the task model the profile admits (`M1.9`) | `unsupported-profile`, `missing-fact`, `invalid-description` |
 //! | presence | offered / absent / undescribed (`M1.5`) | `missing-fact`, `infeasible-configuration`, `invalid-description` |
 //! | refinement | the three obligations (`M1.6`) | `infeasible-configuration` |
 //!
@@ -33,6 +34,7 @@ use crate::kind::{read_kind, validate, Registry};
 use crate::presence::FactMap;
 use crate::profile::{self, Profile};
 use crate::refinement::{self, Facets};
+use crate::workload;
 
 /// What a check concluded.
 #[derive(Debug, Clone)]
@@ -171,6 +173,16 @@ pub fn check(
     // ── profile admission ────────────────────────────────────────────────────────────────────
     let (admission_errors, out_of_profile) = admission(&forms, active_profile);
     push(&mut findings, Verdict::UnsupportedProfile, admission_errors);
+
+    // ── workload admission (§3.1) ────────────────────────────────────────────────────────────
+    //
+    // The profile's admitted *task model*, as opposed to the capabilities it refuses. Runs after
+    // exclusion admission and before presence: a task set the profile does not admit should be
+    // reported before the author is sent to describe facts for it.
+    for diagnostic in workload::check(&forms) {
+        let verdict = Verdict::parse(diagnostic.code).unwrap_or(Verdict::InvalidDescription);
+        push(&mut findings, verdict, vec![diagnostic]);
+    }
 
     // ── presence and relevance ───────────────────────────────────────────────────────────────
     let mut facts = FactMap::new();

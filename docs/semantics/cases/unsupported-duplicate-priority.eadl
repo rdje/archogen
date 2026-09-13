@@ -1,0 +1,14 @@
+; case: unsupported-duplicate-priority
+; expect: unsupported-profile
+; why: Two tasks declare priority 1. §3.1 admits "static unique task priorities", so this task
+;   set is outside the profile — equal priorities need a documented tie-break, which is a
+;   different scheduling policy with its own analysis rather than a looser reading of this one.
+;
+(defblock console.uart (offers (observable-output true)))
+(defplatform soc.p (offers (core-count 1 tick)) (requires (uses console.uart)))
+(defservice console.write (requires (needs observable-output)))
+(defsystem s
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses console.write))
+  (task b (period 30 ms) (deadline 30 ms) (deadline-from release) (priority 1) (uses console.write))
+  (requires (uses console.write))
+  (platform (uses soc.p)))

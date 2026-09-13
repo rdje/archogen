@@ -13,6 +13,7 @@ pub mod profile;
 pub mod quantity;
 pub mod rational;
 pub mod refinement;
+pub mod workload;
 
 pub use boundary::{classify, BoundaryTest, Classification, ForbiddenConstruct};
 pub use check::{default_profile, shipped_registry, Outcome};
@@ -24,3 +25,4 @@ pub use profile::{Exclusion, Profile, ProfileDecision, RT_STATIC_UP_V1};
 pub use quantity::{Dimension, Quantity, QuantityError, Unit};
 pub use rational::Rational;
 pub use refinement::{Facets, Obligation, RefinementReport};
+pub use workload::check as check_workload;

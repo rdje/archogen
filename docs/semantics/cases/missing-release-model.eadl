@@ -1,0 +1,16 @@
+; case: missing-release-model
+; expect: missing-fact
+; why: Task `a` declares neither a period nor a minimum separation, so it has no arrival model.
+;   §3.1 admits periodic or sporadic releases and the analysis needs one of them: without an
+;   arrival model there is no interval over which interference can be bounded. The fact is
+;   undescribed rather than refused, which is why this is `missing-fact` and not a profile
+;   rejection.
+;
+(defblock console.uart (offers (observable-output true)))
+(defplatform soc.p (offers (core-count 1 tick)) (requires (uses console.uart)))
+(defservice console.write (requires (needs observable-output)))
+(defsystem s
+  (task a (deadline 10 ms) (deadline-from release) (priority 1) (uses console.write))
+  (task b (period 30 ms) (deadline 30 ms) (deadline-from release) (priority 2) (uses console.write))
+  (requires (uses console.write))
+  (platform (uses soc.p)))

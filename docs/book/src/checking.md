@@ -17,12 +17,20 @@ built from it will behave — the evidence categories start after this point.
 | read | syntax and spans | `invalid-description` |
 | boundary | implementation content (F27) | `invalid-description` |
 | schema | the declaration frame | `invalid-description` |
-| profile | what the profile admits | `unsupported-profile` |
+| profile | the capabilities the profile refuses | `unsupported-profile` |
+| workload | the task model the profile admits | `unsupported-profile`, `missing-fact`, `invalid-description` |
 | presence | offered / absent / undescribed | `missing-fact`, `infeasible-configuration`, `invalid-description` |
 | refinement | the three obligations | `infeasible-configuration` |
 
 Every pass runs. Every diagnostic is collected. A description with three problems costs one edit
 cycle, not three.
+
+The `profile` and `workload` passes are two halves of one contract and it is worth keeping them
+apart. `profile` consults the capabilities `rt-static-up-v1` **refuses** — `general-ipc`,
+`runtime-heap`, `dma`. `workload` consults the task model it **admits** — unique priorities,
+constrained deadlines, a declared release model. The second half was prose in the profile table
+and enforced nowhere until leaf `M1.9`, which is why a description with two tasks at priority 1
+used to be accepted. See [Describing a workload](workload.md).
 
 ## The verdict is what to fix first
 

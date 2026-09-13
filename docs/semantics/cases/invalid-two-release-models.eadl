@@ -1,0 +1,16 @@
+; case: invalid-two-release-models
+; expect: invalid-description
+; why: Task `a` declares both a 10 ms period and a 30 ms minimum separation. A periodic task's
+;   period IS its minimum separation, so two different values leave it ambiguous which one the
+;   analysis should use — and §5.3 requires contradictory declarations to be rejected rather
+;   than one of them silently chosen.
+;
+(defblock console.uart (offers (observable-output true)))
+(defplatform soc.p (offers (core-count 1 tick)) (requires (uses console.uart)))
+(defservice console.write (requires (needs observable-output)))
+(defsystem s
+  (task a (period 10 ms) (min-separation 30 ms) (deadline 10 ms) (deadline-from release)
+          (priority 1) (uses console.write))
+  (task b (period 30 ms) (deadline 30 ms) (deadline-from release) (priority 2) (uses console.write))
+  (requires (uses console.write))
+  (platform (uses soc.p)))

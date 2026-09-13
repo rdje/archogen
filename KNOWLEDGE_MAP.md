@@ -24,8 +24,11 @@ justifies the split — the rows below appear as that happens.
   conclusion constructible without its qualifier. `bound.rs` keeps an observation an
   observation whatever the safety factor. `trust.rs` is the §4.4 root/role/drift vocabulary.
 - `crates/eadl-model/src/check.rs` — the frontend pipeline `archogen check` runs: read → boundary
-  → schema → profile admission → presence → refinement, returning a §5.5 verdict chosen by
-  what-to-fix-first precedence. `docs/semantics/cases/` is its 25-case corpus.
+  → schema → profile admission → workload admission → presence → refinement, returning a §5.5
+  verdict chosen by what-to-fix-first precedence. `docs/semantics/cases/` is its 29-case corpus.
+  `src/workload.rs` is the §3.1 *Workload* row made mechanical — unique priorities, constrained
+  deadlines, exactly one declared release model — and its census test counts how many of the
+  profile's thirteen `decisions` rows are still prose that nothing consults (twelve).
 - `crates/archogen-cli/` — the `archogen` binary and its library. `src/spec.rs` declares the
   `ROADMAP.md` §10.2 command surface as data (help and parsing both derive from it);
   `src/status.rs` is the §5.5 outcome vocabulary and the stable exit-code contract;

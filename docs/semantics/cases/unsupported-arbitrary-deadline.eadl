@@ -1,0 +1,14 @@
+; case: unsupported-arbitrary-deadline
+; expect: unsupported-profile
+; why: Task `a` has a 20 ms deadline and a 10 ms period. §3.1 admits constrained deadlines
+;   (D ≤ T) only; with D > T more than one job of a task can be alive at once, so the
+;   response-time recurrence no longer applies and a busy-period analysis is required instead.
+;
+(defblock console.uart (offers (observable-output true)))
+(defplatform soc.p (offers (core-count 1 tick)) (requires (uses console.uart)))
+(defservice console.write (requires (needs observable-output)))
+(defsystem s
+  (task a (period 10 ms) (deadline 20 ms) (deadline-from release) (priority 1) (uses console.write))
+  (task b (period 30 ms) (deadline 30 ms) (deadline-from release) (priority 2) (uses console.write))
+  (requires (uses console.write))
+  (platform (uses soc.p)))

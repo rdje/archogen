@@ -15,3 +15,4 @@ dated lesson in `DEV_NOTES.md` to be promoted here (or explicitly declined in it
 | [`presence-checks-cannot-see-an-extra-key.md`](presence-checks-cannot-see-an-extra-key.md) | The suite is green and the output is wrong — what kind of assertion did I write? |
 | [`an-oracle-is-independent-by-construction.md`](an-oracle-is-independent-by-construction.md) | How do I write an expected-output oracle that is actually independent of what it judges? |
 | [`closing-a-leaf-whose-work-landed-elsewhere.md`](closing-a-leaf-whose-work-landed-elsewhere.md) | Another tree already built what my leaf describes — do I just delete the leaf? |
+| [`prose-beside-data-goes-unenforced.md`](prose-beside-data-goes-unenforced.md) | Half my config is enforced and half is prose — how do I stop the prose rotting? |

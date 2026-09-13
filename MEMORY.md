@@ -11,12 +11,14 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `S0` → frontier leaf `S0.3`. `M0` and `M1` are **done**; `S0.1`, `S0.2` done.
+- **Active tree:** `S0` → frontier leaf `S0.3`. `M0` done; `M1` reopened for the non-gate leaf
+  `M1.10` and is otherwise done; `S0.1`, `S0.2` done.
 - **Next action:** `S0.3` — the emitter. One fixed engine-owned realization of the S0 observation
   contract (`examples/s0-heartbeat/README.md`), emitting a Rust crate that compiles, wired behind
   `archogen build`. ⛔ Write it from the **contract**, never from
   `crates/archogen-cli/tests/s0_oracle.rs`, which is the thing that judges it.
-- **Latest commit:** `ARCHOGEN-S0-0023 (leaf S0.2)`. The F28 corpus and its oracle
+- **Latest commit:** `ARCHOGEN-M1-0024 (leaf M1.9)` — the §3.1 admitted task model is enforced;
+  `archogen check` used to accept two tasks at one priority. The F28 corpus and its oracle
   (`ARCHOGEN-S0-0022`) landed **before** any emitter exists, which is what makes §12 S0's
   independence claim a fact of the commit order.
 - **In-flight uncommitted work:** none.
