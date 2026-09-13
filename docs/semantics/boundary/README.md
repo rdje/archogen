@@ -108,6 +108,19 @@ Two neighbouring pairs are worth reading together, because the boundary runs *be
 | [`addressable-region`](accept/addressable-region.eadl) | [`register-programming-sequence`](reject/register-programming-sequence.eadl) | where the device is versus how it is driven |
 | [`required-ordering-guarantee`](accept/required-ordering-guarantee.eadl) | [`initialization-order`](reject/initialization-order.eadl) | a required ordering property versus a chosen boot sequence |
 
+## The cases that do not announce themselves
+
+Two rejected cases — [`atomic-read-retry-loop`](reject/atomic-read-retry-loop.eadl) and
+[`context-save-layout`](reject/context-save-layout.eadl) — deliberately carry their procedure as
+an **ordinary clause**, with no `implementation` wrapper around it. That is the realistic shape:
+an author who believes a retry loop or a register save order belongs in the description does not
+label it "implementation" first.
+
+They exist because a classifier that only refuses labelled blocks would accept both, and the
+gap was found mechanically rather than by inspection: F27's coverage arm reported that two
+registered constructs were never reached, because an outer `implementation` block was always
+blamed before them. A registry entry nothing exercises is an assertion, not a rule.
+
 ## Adding a case
 
 1. Apply the three tests and write the answers down. If the verdict is not immediate, it is an

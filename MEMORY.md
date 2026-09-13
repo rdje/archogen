@@ -11,10 +11,10 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M0` → frontier leaf `M0.3` (F27). `M1.1` (the reader) is done.
-- **Next action:** implement F27 — the mechanical classifier over the 21-case boundary
-  corpus, which the reader now parses (`docs/tasks/M0.md`, leaf `M0.3`). Then `M1.2`.
-- **Latest commit:** `ARCHOGEN-M1-0010 (leaf M1.1)` — the eADL reader and its diagnostics.
+- **Active tree:** `M1` → frontier leaf `M1.2` (kinds and schemas). `M0` is **done**.
+- **Next action:** the kind registry and schema facility (`defkind`) — field types,
+  cardinality, well-formedness (`docs/tasks/M1.md`, leaf `M1.2`).
+- **Latest commit:** `ARCHOGEN-M0-0011 (leaf M0.3)` — F27, the mechanical boundary floor.
 - **In-flight uncommitted work:** none.
 - **Blockers:** no physical board procured → tree `M5` blocked (director decision;
   `docs/targets/first-target.md`). QEMU RISC-V not installed → `M2.8` emulator half, `M4.9`.

@@ -5,13 +5,15 @@
 ; failing-test: non-prescription
 ; rationale: A retry sequence is one way to obtain a coherent observation. Writing it here
 ;   freezes that choice into the description, and a platform with a native wide read would
-;   still have to carry it.
+;   still have to carry it. Note that this case does NOT announce itself with an
+;   `implementation` block — the procedure sits directly among the clauses, which is how it
+;   would actually be written by an author who believed it belonged there. A classifier that
+;   only refuses labelled implementation blocks would accept this.
 ; other-side: belongs in engine knowledge: the access strategy chosen per platform against the
 ;   `atomic-observation` contract
 ;
 (defservice time.monotonic
   (requires (observation-coherent true))
-  (implementation
-    (read-sequence
-      (loop (read high) (read low) (read high-again)
-            (until (= high high-again))))))
+  (read-sequence
+    (loop (read high) (read low) (read high-again)
+          (until (= high high-again)))))

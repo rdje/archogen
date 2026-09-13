@@ -73,10 +73,59 @@ Adding implementation syntax as an escape hatch for missing engine support. If a
 description cannot be realized, the defect is in engine knowledge, and the fix is tracked
 engine work — not a new eADL field that smuggles the procedure in.
 
-This is enforced, not merely believed: fixture **F27** checks that schemas reject forbidden
-implementation fields and interpret the accepted ones correctly. The mechanical check is a
-floor — human review still checks intent, because a field can hide an algorithm behind an
-innocent name.
+## How much of this a machine can check
+
+Fixture **F27** enforces the part a machine can. It refuses the constructs that are
+implementation *by definition* — an `implementation` or `model` body, a `provider` selection, an
+`emit` instruction, a `permits` strategy, a `wcet` bound, an `init-order` sequence, a
+`save-order` layout, a `read-sequence` protocol — and each refusal names the test that failed,
+the question that test asks, and where the content belongs:
+
+```text
+error[boundary-implementation-in-description]: `wcet` is implementation, and eADL contains no implementation
+  --> examples/sensor.eadl:4:5
+  |
+4 |     (wcet 850 us)
+  |     ^^^^^^^^^^^^^ this is an execution bound — evidence about a binary, not a property of the system described
+  = hint: it fails the `externality` test — does it state an offered feature, required functionality,
+          architectural connection, operating condition, or externally testable guarantee?
+          It belongs to the engine build manifest: §7.3 keeps bounds, their origin, and their target
+          and binary identity outside eADL.
+```
+
+### Why a construct registry and not a keyword scan
+
+The tempting implementation looks for imperative-sounding words. The corpus disproves it in one
+case. This declaration is **accepted** and contains `write` twice:
+
+```text
+(defplatform soc.bus
+  (requires (ordering (before (write device.control))
+                      (after  (write memory.buffer)))))
+```
+
+Here `write` names an *observable effect* that an ordering requirement is stated over, not a
+step to perform. What separates the two is the **construct** the content sits inside: everything
+under an `implementation`, `model`, `provider` or `emit` block is a procedure; the same word
+elsewhere is a reference.
+
+### What F27 proves, and what it does not
+
+It runs three arms, and the third is what makes the first two mean anything:
+
+- **agreement** — the classifier's verdict matches every corpus case's recorded verdict, and its
+  named failing test matches the recorded one;
+- **coverage** — every registered construct is exercised by a worked case;
+- **mutation** — seeding a forbidden field into an accepted case flips it to rejected with the
+  right test, and removing the offending construct from a rejected case flips it to accepted.
+
+Without mutation, a classifier that accepted everything would still pass the accept half of the
+agreement arm.
+
+⚠️ It does **not** establish that an accepted declaration is sound. §4.3 requires human review
+for intent, because a field can hide an algorithm behind an innocent name. Acceptance means
+"contains no construct the registry knows to be implementation" — and the gap between those two
+sentences is where the interesting mistakes live.
 
 The full decision, including the direction of every obligation and the review procedure for
 new kinds, is `docs/decisions/decision_eadl-engine-boundary.md`.

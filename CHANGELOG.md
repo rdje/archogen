@@ -4,6 +4,35 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — F27: the boundary gets a machine
+
+`ARCHOGEN-M0-0011` (leaf `M0.3`). **M0 is complete.**
+
+- `crates/eadl-model/src/boundary.rs` registers nine constructs that are implementation by
+  definition — `implementation`, `model`, `provider`, `emit`, `permits`, `wcet`, `init-order`,
+  `save-order`, `read-sequence` — each with the boundary test it fails, what it actually is, and
+  where it belongs instead. A refusal that does not say where the content belongs is an obstacle
+  rather than guidance.
+- **A construct registry, not a keyword scan**, and the corpus is why: the *accepted*
+  `required-ordering-guarantee` declaration contains `write` twice, naming observable effects an
+  ordering requirement is stated over. A word-based classifier refuses a contract the roadmap
+  explicitly permits. What separates a step from a reference is the construct it sits inside.
+- F27 runs six arms over all 21 cases, `6 passed 0 failed`. The load-bearing one is **mutation**:
+  seeding each of the nine constructs into each of the ten accepted cases — 90 mutations — must
+  flip every one to rejected with the matching test, and stripping the offending construct from
+  each rejected case must flip it back. Agreement alone is passed by a classifier that accepts
+  everything.
+- ⭐ **The coverage arm found a real gap in the corpus, and it was fixed at the corpus**:
+  `save-order` and `read-sequence` were registered but never reached, because both cases wrapped
+  their procedure in an `implementation` block that was blamed first. Both now carry the
+  procedure as an ordinary clause — the realistic shape, since an author who believes a retry
+  loop belongs in the description does not label it "implementation" beforehand.
+- The honest limit is in the module, the book and the corpus README: acceptance means "contains
+  no construct the registry knows to be implementation", not "is sound". §4.3 requires human
+  review for intent, because a field can hide an algorithm behind an innocent name.
+- Book: `docs/book/src/boundary.md` gains "How much of this a machine can check".
+- Validation: 137 tests across 11 suites, 0 failed; fmt and clippy clean; all doctrines green.
+
 ## archogen — the eADL reader
 
 `ARCHOGEN-M1-0010` (leaf `M1.1`).

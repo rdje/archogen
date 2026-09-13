@@ -11,3 +11,4 @@ description = "Typed eADL declarations, units, contract identities, and supporte
 workspace = true
 
 [dependencies]
+eadl-front = { path = "../eadl-front" }

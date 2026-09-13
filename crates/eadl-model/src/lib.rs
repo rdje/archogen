@@ -5,6 +5,8 @@
 //! description means* once it has been read; `eadl-front` owns turning bytes into forms, and
 //! the engine crates own deciding what to build from it.
 
+pub mod boundary;
 pub mod profile;
 
+pub use boundary::{check, classify, BoundaryTest, Classification, ForbiddenConstruct};
 pub use profile::{Exclusion, Profile, ProfileDecision, RT_STATIC_UP_V1};

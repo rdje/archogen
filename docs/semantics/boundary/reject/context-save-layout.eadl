@@ -5,11 +5,12 @@
 ; failing-test: non-prescription
 ; rationale: Prescribes the register save order and frame shape. §8.2 generates context
 ;   layouts "from explicit contracts" inside the engine; the ABI, stack policy and nesting
-;   rules are engine inputs, not description content.
+;   rules are engine inputs, not description content. Like `atomic-read-retry-loop`, this case
+;   is written WITHOUT an `implementation` wrapper: a layout smuggled in as an ordinary clause
+;   is the realistic shape, and the one a classifier has to catch on its own merits.
 ; other-side: belongs in engine knowledge: the architecture substrate's context layout,
 ;   derived from the selected ABI and privilege rules
 ;
 (defpolicy task.context
-  (implementation
-    (save-order (ra sp gp tp t0 t1 t2 s0 s1))
-    (frame-align 16 byte)))
+  (save-order (ra sp gp tp t0 t1 t2 s0 s1))
+  (frame-align 16 byte))
