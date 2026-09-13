@@ -1,0 +1,18 @@
+# The evidence, claim and trust vocabulary (ROADMAP.md §7.1, §7.3, §4.4).
+#
+# This is a separate crate ON PURPOSE. It is shared between the generator and the independent
+# configuration checker, and §4.4 requires such sharing to be visible: "shared logic must not
+# be hidden". A vocabulary buried inside a larger crate is a shared trust dependency that the
+# dependency graph does not show. Here it is one node, with one name, that the trust inventory
+# can classify.
+[package]
+name = "osgen-evidence"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "Evidence categories, permitted conclusions, bound provenance, and the trust-dependency vocabulary"
+
+[lints]
+workspace = true
+
+[dependencies]

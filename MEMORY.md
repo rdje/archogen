@@ -11,9 +11,9 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M0` → frontier leaf `M0.7` (`pending`).
-- **Next action:** establish the evidence and trust vocabulary (`ROADMAP.md` §7.1, §7.3,
-  §4.4) as a schema later report code consumes (`docs/tasks/M0.md`, leaf `M0.7`).
-- **Latest commit:** `ARCHOGEN-M0-0007 (leaf M0.6)` — use cases + the sealed evaluation set.
+- **Active tree:** `M0` → frontier leaf `M0.5` (`pending`).
+- **Next action:** record target selection (`ROADMAP.md` §3.2) — the pinned emulator
+  configuration and the board decision or its recorded unavailability (`M0.5`).
+- **Latest commit:** `ARCHOGEN-M0-0008 (leaf M0.7)` — the evidence vocabulary, encoded.
 - **In-flight uncommitted work:** none.
 - **Blockers:** none. Absent tooling: QEMU RISC-V (needed by `M4.9`, `M2.8`).

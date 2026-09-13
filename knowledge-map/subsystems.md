@@ -9,6 +9,11 @@ justifies the split — the rows below appear as that happens.
 - `crates/eadl-model/` — the typed eADL model (§4.2): declarations, units, contract IDs and
   profile definitions. `src/profile.rs` holds `rt-static-up-v1` as data — 13 decisions, 18
   named exclusions — and its test fails if `docs/profiles/rt-static-up-v1.md` drifts from it.
+- `crates/osgen-evidence/` — the evidence, claim and trust vocabulary (§7.1, §7.3, §4.4).
+  `claim.rs` makes §7.1's "one global verified flag is prohibited" structural: no aggregate
+  verdict type, a report that refuses to render while a property is unanswered, and no
+  conclusion constructible without its qualifier. `bound.rs` keeps an observation an
+  observation whatever the safety factor. `trust.rs` is the §4.4 root/role/drift vocabulary.
 - `crates/osgen-cli/` — the `osgen` binary and its library. `src/spec.rs` declares the
   `ROADMAP.md` §10.2 command surface as data (help and parsing both derive from it);
   `src/status.rs` is the §5.5 outcome vocabulary and the stable exit-code contract;

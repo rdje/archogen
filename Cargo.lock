@@ -9,3 +9,7 @@ version = "0.1.0"
 [[package]]
 name = "osgen-cli"
 version = "0.1.0"
+
+[[package]]
+name = "osgen-evidence"
+version = "0.1.0"

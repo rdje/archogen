@@ -4,6 +4,34 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — a report that cannot say "verified"
+
+`ARCHOGEN-M0-0008` (leaf `M0.7`).
+
+- New crate `crates/osgen-evidence` — the evidence, claim and trust vocabulary of §7.1, §7.3
+  and §4.4. A separate crate on purpose: it is shared between the generator and the independent
+  checker, and §4.4 requires such sharing to be visible rather than buried.
+- §7.1's "one global verified flag is prohibited" is encoded **three ways**, not documented
+  once: there is no aggregate verdict type; a report refuses to render while any property is
+  unanswered (`a property with no claim is not a pass`); and every positive conclusion carries
+  its qualifier by construction — a conditional analysis with an empty assumption list is
+  refused as `an unconditional claim`.
+- Bounds remember where they came from. An observed maximum stays an observation whatever the
+  safety factor — tested at 1/1, 3/2, 10/1 and 1000/1 — because §7.3 says so and because
+  multiplying a measurement by 1.5 and calling it a bound is the most common way a timing claim
+  becomes untrue while looking like diligence. A bound with no binary identity is refused.
+- ⭐ The compiler caught a design defect: `f64` is not `Eq`, so a float safety factor would
+  have cost the whole vocabulary comparability — and a bound that cannot be compared to its
+  baseline cannot be checked for drift. Replaced with an exact rational, which §7.4's "exact
+  integer or checked rational arithmetic" wanted anyway. The type error was a semantic error.
+- §4.4 trust vocabulary: roots, roles, and drift. Shared infrastructure is recorded but costs
+  no independence; a shared semantic helper does. An unrelated change produces no warning
+  (§14.4 case 5) — a gate that cries wolf is a gate that gets disabled. The honest limit is
+  carried in the module: this enforces disclosure, not semantic independence.
+- New book chapter `docs/book/src/evidence.md`.
+- Validation: 33 new contract tests, 67 in the workspace, 0 failed; fmt and clippy clean; all
+  doctrines green; `mdbook build` OK.
+
 ## archogen — four use cases, and a seal that is a check rather than a promise
 
 `ARCHOGEN-M0-0007` (leaf `M0.6`).
