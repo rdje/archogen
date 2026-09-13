@@ -67,4 +67,5 @@ justifies the split — the rows below appear as that happens.
 ## Decision records
 
 - [`decision_eadl-engine-boundary.md`](docs/decisions/decision_eadl-engine-boundary.md)
+- [`decision_findings-for-director-review.md`](docs/decisions/decision_findings-for-director-review.md)
 - [`decision_zero-dependency-engine-core.md`](docs/decisions/decision_zero-dependency-engine-core.md)
