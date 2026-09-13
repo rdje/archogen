@@ -260,6 +260,15 @@ mdBook that is the director's window into the project.
     described in the check's own header. That is plausible, and it is why the acceptance above
     forbids any fix that reopens the leakage. The correct first output of this leaf may be an
     upstream report rather than a change.
+  - **A third occurrence, and the one that changes the shape of the problem
+    (`ARCHOGEN-PROGRAM-0021`):** a *rename* touches every tree that mentions the old name — here
+    `M0`, `M1`, `M3`, `M4` and `S0`, none of which owned the change. In the earlier two cases the
+    cross-tree edit was incidental and could plausibly have been deferred; for a rename it is
+    **unavoidable**, because leaving the old name in five trees is the drift the change exists to
+    remove. That also exposed a second-order trap: `M0` and `M1` happen to carry ticked
+    checklists from their own earlier leaves, so staging them alongside code would have passed
+    the gate on evidence belonging to unrelated work — precisely the incidental pass the
+    box-scoping was hardened against. They were unstaged deliberately rather than relied upon.
   - **Interim convention, in use from 2026-09-13:** split the commit. Code and its owning tree
     land together; a documentation edit to another tree lands as its own docs-only commit. See
     `docs/knowledge/cross-tree-lockstep-and-commit-scope.md`.
