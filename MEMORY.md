@@ -11,10 +11,10 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M1` → frontier leaf `M1.2` (kinds and schemas). `M0` is **done**.
-- **Next action:** the kind registry and schema facility (`defkind`) — field types,
-  cardinality, well-formedness (`docs/tasks/M1.md`, leaf `M1.2`).
-- **Latest commit:** `ARCHOGEN-M0-0011 (leaf M0.3)` — F27, the mechanical boundary floor.
+- **Active tree:** `M1` → frontier leaf `M1.3` (quantities and units). `M0` is **done**.
+- **Next action:** quantities, units and ranges — dimensioned arithmetic with checked
+  conversion and comparison directions; fixture F03 (`docs/tasks/M1.md`, leaf `M1.3`).
+- **Latest commit:** `ARCHOGEN-M1-0013 (leaf M1.2)` — kinds, schemas, one trusted primitive.
 - **In-flight uncommitted work:** none.
 - **Blockers:** no physical board procured → tree `M5` blocked (director decision;
   `docs/targets/first-target.md`). QEMU RISC-V not installed → `M2.8` emulator half, `M4.9`.

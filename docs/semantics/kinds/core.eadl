@@ -1,0 +1,51 @@
+; docs/semantics/kinds/core.eadl — the core surface kinds of eADL.
+;
+; ROADMAP.md §5.1 retains `defblock`, `defplatform`, `defservice`, `defpolicy` and `defsystem`
+; as functional declarations, and §5.1 adds that their "exact surface spelling is settled by M1
+; fixtures". This file is that spelling, in draft.
+;
+; ⭐ WHY THIS FILE IS IN eADL AND NOT IN RUST. §2's correction table settles it: "Surface kinds
+; can share the registry; a small trusted semantic foundation remains explicit. The registry
+; cannot silently introduce new trusted axioms." Exactly one primitive is trusted — `defkind`
+; itself, whose meaning is `crates/eadl-model/src/kind.rs`. Every kind below is declared with
+; that primitive and is therefore no more privileged than a kind a user adds tomorrow. If a
+; future change needs a second trusted primitive, it has to be written in Rust, where it is
+; visible.
+;
+; ⛔ A kind defines WELL-FORMEDNESS, never behavior (§5.6). A kind definition holds `doc`,
+; `name` and `clause`, and nothing else; the boundary classifier runs over these definitions
+; too, so there is no back door through the facility that declares the language.
+;
+; What a clause `(holds forms)` contains is NOT interpreted here. `(at-least 60 s)` is nested
+; forms at this layer and becomes a checked quantity at M1.3. Saying otherwise would be the
+; more dangerous kind of green.
+
+(defkind defblock
+  (doc "a hardware block and the functionality it offers")
+  (name required)
+  (clause offers (cardinality one-or-more) (holds forms))
+  (clause requires (cardinality any) (holds forms)))
+
+(defkind defplatform
+  (doc "a platform: the blocks it is built from, their connectivity, and its constraints")
+  (name required)
+  (clause offers (cardinality any) (holds forms))
+  (clause requires (cardinality any) (holds forms)))
+
+(defkind defservice
+  (doc "a required OS service and its externally observable contract")
+  (name required)
+  (clause requires (cardinality one-or-more) (holds forms))
+  (clause offers (cardinality any) (holds forms)))
+
+(defkind defpolicy
+  (doc "required policy behavior, such as priority or isolation rules, with no algorithm")
+  (name required)
+  (clause requires (cardinality one-or-more) (holds forms)))
+
+(defkind defsystem
+  (doc "a system: its workload, the services it requires, and its platform binding")
+  (name required)
+  (clause task (cardinality any) (holds forms))
+  (clause requires (cardinality any) (holds forms))
+  (clause platform (cardinality at-most-one) (holds forms)))

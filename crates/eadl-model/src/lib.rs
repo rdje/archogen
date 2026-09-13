@@ -6,7 +6,11 @@
 //! the engine crates own deciding what to build from it.
 
 pub mod boundary;
+pub mod kind;
 pub mod profile;
 
 pub use boundary::{check, classify, BoundaryTest, Classification, ForbiddenConstruct};
+pub use kind::{
+    read_kind, validate, Cardinality, ClauseDef, Holds, KindDef, NameRule, Registry, ValueType,
+};
 pub use profile::{Exclusion, Profile, ProfileDecision, RT_STATIC_UP_V1};

@@ -4,6 +4,35 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — kinds and schemas, with exactly one trusted primitive
+
+`ARCHOGEN-M1-0013` (leaf `M1.2`).
+
+- `crates/eadl-model/src/kind.rs` implements the kind registry, the `defkind` facility, and
+  schema validation of the declaration frame: known kind, name when required, known clauses,
+  cardinality, value shapes.
+- ⭐ **Exactly one declaration is a trusted primitive.** §2 requires that "a small trusted
+  semantic foundation remains explicit" and that "the registry cannot silently introduce new
+  trusted axioms". So `defkind` is Rust, and all five surface kinds are declared *in eADL* in
+  `docs/semantics/kinds/core.eadl` — no more privileged than a kind added tomorrow. A test
+  asserts both halves, including that `defkind` is **not** a registry entry.
+- §5.6's prohibition has no back door: the boundary classifier runs over kind definitions too,
+  so `(defkind deftimer … (implementation …))` is refused by the same machine that refuses it in
+  an ordinary declaration. A kind must also carry a `doc` — a kind nobody can explain is a kind
+  nobody should be adding.
+- A forbidden construct gets the **boundary's** wording, not "unknown clause", which is true and
+  useless. A typo gets an edit-distance-bounded suggestion; the bound exists so that
+  `implementation` is never "corrected" to `defsystem`, which would send an author to rename
+  rather than to reconsider.
+- ⭐ **A claimed equivalence was refused by its own test and replaced with a measurement.** The
+  first version asserted that the schema refuses every rejected boundary case too;
+  `execution-bound` broke it, because `wcet` hides inside `(task …)`, which is opaque at this
+  layer. The honest result — schema 10 of 11, classifier 11 of 11 — is now pinned in both
+  directions, with `M1.7` named as the leaf that closes the gap.
+- New book chapter `docs/book/src/kinds.md`.
+- Validation: 13 new arms, 150 tests across the workspace, 0 failed; fmt and clippy clean; all
+  doctrines green; `mdbook build` OK.
+
 ## archogen — F27: the boundary gets a machine
 
 `ARCHOGEN-M0-0011` (leaf `M0.3`). **M0 is complete.**
