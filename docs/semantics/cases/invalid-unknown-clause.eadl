@@ -1,0 +1,5 @@
+; case: invalid-unknown-clause
+; expect: invalid-description
+; why: A typo in a clause name. The suggestion is part of the contract, not decoration.
+;
+(defservice time.monotonic (requries (needs counter-width)))

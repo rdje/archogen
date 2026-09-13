@@ -1,0 +1,6 @@
+; case: infeasible-refinement-drops-guarantee
+; expect: infeasible-configuration
+; why: A refinement that drops a guarantee the abstract description offers.
+;
+(defplatform soc.abstract (offers counter-width wrap-behavior))
+(defplatform soc.concrete (refines soc.abstract) (offers counter-width))

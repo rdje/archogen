@@ -1,0 +1,5 @@
+; case: invalid-unknown-kind
+; expect: invalid-description
+; why: A declaration whose head is not a registered kind.
+;
+(deftimer x (offers counter-width))

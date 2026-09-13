@@ -11,6 +11,7 @@
 - [Presence, absence, and relevance](presence.md)
 - [Refinement](refinement.md)
 - [Describing a workload](workload.md)
+- [Checking a description](checking.md)
 - [What a report may claim](evidence.md)
 - [Where generated systems run](targets.md)
 - [The `osgen` command line](cli.md)

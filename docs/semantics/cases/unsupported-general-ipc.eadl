@@ -1,0 +1,12 @@
+; case: unsupported-general-ipc
+; expect: unsupported-profile
+; why: Inter-task queues, which `rt-static-up-v1` excludes. This is use case uc4.
+;
+(defblock timer.counter (offers counter-width))
+(defplatform soc.p (offers (core-count 1 tick)) (requires (uses timer.counter)))
+(defservice queue.bounded (requires (queue-capacity 8 tick) (needs general-ipc)))
+(defsystem s
+  (task producer (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses queue.bounded))
+  (task consumer (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 2) (uses queue.bounded))
+  (requires (uses queue.bounded))
+  (platform (uses soc.p)))

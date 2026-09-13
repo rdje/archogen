@@ -1,0 +1,11 @@
+; case: missing-relevant-fact
+; expect: missing-fact
+; why: A required fact nothing describes, inside the dependency closure.
+;
+(defblock timer.counter (offers counter-width))
+(defplatform soc.p (offers (core-count 1 tick)) (requires (uses timer.counter)))
+(defservice time.monotonic (requires (needs counter-width wrap-behavior)))
+(defsystem s
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses time.monotonic))
+  (requires (uses time.monotonic))
+  (platform (uses soc.p)))

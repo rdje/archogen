@@ -96,6 +96,27 @@ impl Status {
         )
     }
 
+    /// The exit code for a `ROADMAP.md` §5.5 verdict.
+    ///
+    /// `Verdict` is the single source of truth for what a check concluded; this maps it to the
+    /// process contract. `verdict_mapping_is_total` asserts every verdict has a code, so the
+    /// two cannot drift apart.
+    #[must_use]
+    pub const fn from_verdict(verdict: eadl_front::Verdict) -> Self {
+        use eadl_front::Verdict;
+        match verdict {
+            Verdict::Ok => Self::Ok,
+            Verdict::InvalidDescription => Self::InvalidDescription,
+            Verdict::MissingFact => Self::MissingFact,
+            Verdict::UnsupportedProfile => Self::UnsupportedProfile,
+            Verdict::InfeasibleConfiguration => Self::InfeasibleConfiguration,
+            Verdict::AnalysisInconclusive => Self::AnalysisInconclusive,
+            Verdict::NotEstablished => Self::NotEstablished,
+            Verdict::Counterexample => Self::Counterexample,
+            Verdict::ToolFailure => Self::ToolFailure,
+        }
+    }
+
     /// Every status, in exit-code order. The single source for the contract table.
     pub const ALL: &'static [Self] = &[
         Self::Ok,
@@ -156,6 +177,33 @@ mod tests {
         // result, but it must not share a code with any other outcome, and it must not be Ok.
         assert!(Status::ToolFailure.is_diagnostic_result());
         assert_ne!(Status::ToolFailure.code(), Status::Ok.code());
+    }
+
+    #[test]
+    fn verdict_mapping_is_total_and_slugs_agree() {
+        // ⭐ The check that keeps two vocabularies from becoming two vocabularies. Every §5.5
+        // verdict maps to a status, and the two spell it identically — so a new result cannot
+        // be added on one side and forgotten on the other.
+        for verdict in eadl_front::Verdict::ALL {
+            let status = Status::from_verdict(*verdict);
+            assert_eq!(
+                status.slug(),
+                verdict.slug(),
+                "verdict `{}` maps to status `{}`",
+                verdict.slug(),
+                status.slug()
+            );
+        }
+        // And every diagnostic-result status is reachable from some verdict.
+        for status in Status::ALL.iter().filter(|s| s.is_diagnostic_result()) {
+            assert!(
+                eadl_front::Verdict::ALL
+                    .iter()
+                    .any(|v| Status::from_verdict(*v) == *status),
+                "status `{}` has no verdict",
+                status.slug()
+            );
+        }
     }
 
     #[test]

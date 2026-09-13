@@ -9,6 +9,7 @@
 //! Nothing here elaborates, resolves, generates, or analyzes. `run` returns a [`Status`] and
 //! writes to the caller's streams, so the whole surface is testable without a process.
 
+pub mod check_cmd;
 pub mod cli;
 pub mod spec;
 pub mod status;
@@ -35,7 +36,7 @@ where
         Ok(Invocation::Help(None)) => emit(out, &cli::help_overview()),
         Ok(Invocation::Help(Some(name))) => emit(out, &cli::help_command(name)),
         Ok(Invocation::Version) => emit(out, &format!("osgen {VERSION}\n")),
-        Ok(Invocation::Run(parsed)) => dispatch(&parsed, err),
+        Ok(Invocation::Run(parsed)) => dispatch(&parsed, out, err),
         Err(refusal) => report(err, &refusal),
     }
 }
@@ -63,8 +64,11 @@ fn report(err: &mut dyn Write, refusal: &Refusal) -> Status {
 /// Every command is currently unbuilt. As each lands, its arm replaces the routing line with
 /// a real call and its [`spec::CommandSpec::owner`] becomes `None`, which removes it from the
 /// `[unimplemented]` column of `osgen --help` in the same change.
-fn dispatch(parsed: &Parsed, err: &mut dyn Write) -> Status {
+fn dispatch(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status {
     let spec = parsed.spec();
+    if spec.name == "check" {
+        return check_cmd::run(parsed, out, err);
+    }
     let Some(owner) = spec.owner else {
         // Unreachable while every command is unbuilt; a command whose `owner` is cleared
         // without an implementation arm would reach here, and must not look like success.
@@ -142,8 +146,10 @@ mod tests {
 
     #[test]
     fn an_unbuilt_command_exits_unimplemented_and_names_its_leaf() {
-        let (status, out, err) =
-            invoke(&["check", "examples/x.eadl", "--profile", "rt-static-up-v1"]);
+        // `resolve` is still unbuilt. This arm moved off `check` when leaf M1.8 built it — the
+        // property under test is the routing of an unbuilt command, not any particular command
+        // being unbuilt, so it follows the surface rather than pinning it.
+        let (status, out, err) = invoke(&["resolve", "examples/x.eadl", "--out", "plan.json"]);
         assert_eq!(status, Status::Unimplemented);
         assert_eq!(status.code(), 20);
         assert!(
@@ -152,9 +158,50 @@ mod tests {
         );
         assert!(err.contains("unimplemented"), "{err}");
         assert!(
-            err.contains("M1.8"),
+            err.contains("M3.4"),
             "the refusal must name the owning leaf: {err}"
         );
+    }
+
+    #[test]
+    fn a_built_command_no_longer_appears_as_unimplemented_in_help() {
+        // The help text is rendered from the same table the parser validates against, so
+        // building a command and announcing it are one change rather than two.
+        let (_, out, _) = invoke(&["--help"]);
+        let check_line = out
+            .lines()
+            .find(|line| line.trim_start().starts_with("check "))
+            .expect("check is listed");
+        assert!(
+            !check_line.contains("unimplemented"),
+            "`check` is built but still advertised as unimplemented: {check_line}"
+        );
+        let resolve_line = out
+            .lines()
+            .find(|line| line.trim_start().starts_with("resolve "))
+            .expect("resolve is listed");
+        assert!(
+            resolve_line.contains("unimplemented"),
+            "`resolve` is unbuilt and should say so: {resolve_line}"
+        );
+    }
+
+    #[test]
+    fn check_on_a_missing_file_is_a_usage_error_with_a_hint() {
+        let (status, _, err) = invoke(&["check", "no/such/file.eadl"]);
+        assert_eq!(status, Status::Usage);
+        assert!(err.contains("cannot read"), "{err}");
+        assert!(err.contains("hint:"), "{err}");
+    }
+
+    #[test]
+    fn check_against_an_unknown_profile_is_refused_before_anything_is_read() {
+        // A description checked against a profile nobody supports has not been checked.
+        let (status, _, err) =
+            invoke(&["check", "no/such/file.eadl", "--profile", "rt-fantasy-v9"]);
+        assert_eq!(status, Status::UnsupportedProfile);
+        assert!(err.contains("not a supported profile"), "{err}");
+        assert!(err.contains("rt-static-up-v1"), "{err}");
     }
 
     #[test]

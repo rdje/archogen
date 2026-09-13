@@ -1,0 +1,52 @@
+; examples/bounded-queue/system.eadl — use case uc4, the refusal fixture.
+;
+; This description MUST BE REFUSED for as long as `rt-static-up-v1` is the profile. It is here
+; so that the refusal path is exercised as often as the success path: §3.1 promises that a
+; request outside the profile "returns an unsupported-profile diagnostic rather than silently
+; reducing the requested guarantee", and a promise nothing exercises decays into a comment.
+;
+; Expected: `unsupported-profile` (exit 12), naming `general-ipc` and the obligation admitting
+; it would add.
+;
+; ⛔ The pressure to admit this will be real — bounded IPC is the FIRST item in §12 M8+'s
+; dependency order, and it will arrive attached to a use case someone wants. The correct
+; response is a NEW NAMED PROFILE with its own analysis obligations, at which point this file is
+; re-pointed at the old profile and a new refusal case is written for the new one's boundary.
+; The incorrect response is to widen `rt-static-up-v1` and keep the evidence that was produced
+; under its old assumptions.
+
+(defblock timer.counter
+  (offers counter-width tick-rate observation-coherent))
+
+(defplatform soc.playground
+  (offers (core-count 1 tick))
+  (requires (uses timer.counter)))
+
+(defservice time.monotonic
+  (requires (unambiguous-horizon (at-least 60 s)))
+  (needs counter-width tick-rate observation-coherent))
+
+; The out-of-profile requirement. `general-ipc` is one of the eighteen named exclusions in
+; `docs/profiles/rt-static-up-v1.md`, and the refusal quotes the obligation it carries: queue
+; capacity, overflow semantics, and their response-time effects.
+(defservice queue.bounded
+  (requires (queue-capacity 8 tick))
+  (needs general-ipc time.monotonic))
+
+(defsystem bounded-queue
+  (task producer
+    (period 10 ms)
+    (deadline 10 ms)
+    (deadline-from release)
+    (priority 1)
+    (uses queue.bounded)
+    (on-overrun fault))
+  (task consumer
+    (period 20 ms)
+    (deadline 20 ms)
+    (deadline-from release)
+    (priority 2)
+    (uses queue.bounded)
+    (on-overrun fault))
+  (requires (uses time.monotonic queue.bounded))
+  (platform (uses soc.playground)))

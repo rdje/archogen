@@ -14,6 +14,102 @@
 
 use crate::source::{SourceMap, Span};
 
+/// The `ROADMAP.md` §5.5 result vocabulary.
+///
+/// One source of truth for what a check concluded. `osgen-cli` maps it to an exit code and a
+/// test asserts that mapping is total, so the two cannot drift — a second enum spelling the
+/// same seven words would be the drift.
+///
+/// `tool-failure` is deliberately here too: §5.5 lists it, and a check that failed internally
+/// must be distinguishable from one that concluded something. It is "never reported as a valid
+/// system".
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Verdict {
+    /// The description was accepted.
+    Ok,
+    /// Malformed, contradictory, or ill-typed input.
+    InvalidDescription,
+    /// Relevant contract information is unavailable.
+    MissingFact,
+    /// Requested behavior or analysis lies outside implemented semantics.
+    UnsupportedProfile,
+    /// Supported constraints have no satisfying assignment.
+    InfeasibleConfiguration,
+    /// A resource limit or unresolved bound prevented a conclusion.
+    AnalysisInconclusive,
+    /// A sufficient analysis did not establish the requested property.
+    NotEstablished,
+    /// A validated witness violates a named property.
+    Counterexample,
+    /// Internal failure or an unavailable required tool.
+    ToolFailure,
+}
+
+impl Verdict {
+    /// Every verdict, in the order §5.5 lists them.
+    pub const ALL: &'static [Self] = &[
+        Self::Ok,
+        Self::InvalidDescription,
+        Self::MissingFact,
+        Self::UnsupportedProfile,
+        Self::InfeasibleConfiguration,
+        Self::AnalysisInconclusive,
+        Self::NotEstablished,
+        Self::Counterexample,
+        Self::ToolFailure,
+    ];
+
+    /// The stable machine-readable name, exactly as §5.5 spells it.
+    #[must_use]
+    pub const fn slug(self) -> &'static str {
+        match self {
+            Self::Ok => "ok",
+            Self::InvalidDescription => "invalid-description",
+            Self::MissingFact => "missing-fact",
+            Self::UnsupportedProfile => "unsupported-profile",
+            Self::InfeasibleConfiguration => "infeasible-configuration",
+            Self::AnalysisInconclusive => "analysis-inconclusive",
+            Self::NotEstablished => "not-established",
+            Self::Counterexample => "counterexample",
+            Self::ToolFailure => "tool-failure",
+        }
+    }
+
+    /// Parse the machine-readable name.
+    #[must_use]
+    pub fn parse(text: &str) -> Option<Self> {
+        Self::ALL.iter().copied().find(|v| v.slug() == text)
+    }
+
+    /// Whether the description was accepted.
+    #[must_use]
+    pub const fn is_ok(self) -> bool {
+        matches!(self, Self::Ok)
+    }
+
+    /// How severe this verdict is, for choosing which of several to report.
+    ///
+    /// ⭐ The ordering is not arbitrary and it is not severity-of-consequence. It is
+    /// **what-to-fix-first**: a malformed description makes every later answer meaningless, so
+    /// `invalid-description` outranks everything; an unsupported request should be reported
+    /// before a missing fact, because describing the missing fact would be wasted work on a
+    /// system the profile will refuse anyway.
+    #[must_use]
+    pub const fn precedence(self) -> u8 {
+        match self {
+            Self::ToolFailure => 100,
+            Self::InvalidDescription => 90,
+            Self::UnsupportedProfile => 80,
+            Self::InfeasibleConfiguration => 70,
+            Self::MissingFact => 60,
+            Self::Counterexample => 50,
+            Self::NotEstablished => 40,
+            Self::AnalysisInconclusive => 30,
+            Self::Ok => 0,
+        }
+    }
+}
+
 /// How bad it is.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Severity {

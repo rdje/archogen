@@ -1,0 +1,7 @@
+; case: invalid-contradictory-presence
+; expect: invalid-description
+; why: One fact declared both offered and absent. §5.3: reject contradictory declarations
+;   rather than choosing one.
+;
+(defblock a (offers low-power-timer))
+(defblock b (offers x) (absent low-power-timer))

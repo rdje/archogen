@@ -1,0 +1,8 @@
+; case: invalid-implementation-in-description
+; expect: invalid-description
+; why: An implementation body inside a service. The controlling boundary, refused by F27's
+;   classifier.
+;
+(defservice time.monotonic
+  (requires (needs counter-width))
+  (implementation (on-wrap (increment epoch))))

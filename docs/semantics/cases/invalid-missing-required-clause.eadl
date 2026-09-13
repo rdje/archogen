@@ -1,0 +1,6 @@
+; case: invalid-missing-required-clause
+; expect: invalid-description
+; why: `defservice` requires at least one `requires` clause: a service that requires nothing
+;   is not a requirement.
+;
+(defservice time.monotonic (offers something))

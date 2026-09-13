@@ -1,0 +1,12 @@
+; case: infeasible-required-absence
+; expect: infeasible-configuration
+; why: A required fact the platform declares absent. A definite answer, not a gap:
+;   `infeasible-configuration`, not `missing-fact`.
+;
+(defblock timer.counter (offers counter-width) (absent low-power-timer))
+(defplatform soc.p (offers (core-count 1 tick)) (requires (uses timer.counter)))
+(defservice time.lowpower (requires (needs low-power-timer)))
+(defsystem s
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses time.lowpower))
+  (requires (uses time.lowpower))
+  (platform (uses soc.p)))

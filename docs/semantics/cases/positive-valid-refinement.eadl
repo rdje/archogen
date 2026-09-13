@@ -1,0 +1,7 @@
+; case: positive-valid-refinement
+; expect: ok
+; why: A concrete platform refines an abstract one, keeping the guarantee, satisfying the
+;   bound, and adding an unused device.
+;
+(defplatform soc.abstract (offers (counter-width (at-least 32 bit))))
+(defplatform soc.concrete (refines soc.abstract) (offers (counter-width 64 bit) uart))

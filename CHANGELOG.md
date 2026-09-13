@@ -4,6 +4,47 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the frontend pipeline, and `osgen check` becomes real — **M1 complete**
+
+`ARCHOGEN-M1-0019` (leaf `M1.8`).
+
+- `crates/eadl-model/src/check.rs` composes the six passes built one at a time by `M1.1`–`M1.7`
+  and `M0.3`, and returns a `ROADMAP.md` §5.5 verdict. `osgen check` runs it — the first command
+  of the §10.2 surface to stop being a signpost.
+- ⭐ **The verdict is what to fix first**, not what was found first and not severity of
+  consequence. A malformed description makes every later answer meaningless, so it outranks
+  everything; an unsupported request outranks a missing fact, because describing that fact would
+  be wasted work on a system the profile refuses anyway. Precedence chooses the headline, never
+  what the author gets to see — every diagnostic is still printed.
+- An **accepted description is silent**. "Accepted with three warnings" is a shape this pipeline
+  does not have, so an author never has to judge which messages mattered. And acceptance says so
+  plainly: *"this checks the description, not a system: no resolution, generation or analysis has
+  run"*.
+- `docs/semantics/cases/` holds **25** worked cases against §12 M1's minimum of twenty — 5 `ok`,
+  10 `invalid-description`, 5 `unsupported-profile`, 4 `infeasible-configuration`, 1
+  `missing-fact` — each declaring its expected verdict **in its own header**. A driver that
+  computed the expectation would agree with itself forever.
+- The §5.5 contract is enforced over **every diagnostic the corpus produces** — a located span
+  and a concrete repair direction — rather than over the handful a unit test happens to build.
+- `Verdict` is the single §5.5 vocabulary, and its mapping to exit codes is asserted **total**.
+  A second enum spelling the same seven words is the drift the test exists to prevent.
+- `examples/bounded-queue/` (uc4) joins the examples and is refused by name with the obligation
+  admitting it would cost. uc3 and uc4 are both refused for reasons that must not be confused:
+  uc3's refusal is temporary and must become a build when `M3.2` lands, without the description
+  changing; uc4's is permanent for this profile.
+- The kind modules are embedded in the binary, so `osgen` cannot be shadowed by a file in the
+  working directory. If they ever fail to load the result is `tool-failure`, never a verdict about
+  the user's description.
+- ⭐ **Five defects were found by running the corpus.** `needs`/`uses` were readable by the
+  checker and unwritable in the language; a refinement pair was reported as a contradiction
+  before the refinement checker saw it; uc3 passed silently because its dependency was a
+  constraint rather than a `needs` edge; a case used `dma`, itself a profile exclusion, and would
+  have stopped testing refinement; and `check_cmd` read the file before resolving the profile,
+  contradicting its own comment — the code was changed to match the comment, not the reverse.
+- New book chapter `docs/book/src/checking.md`.
+- Validation: 246 tests across the workspace, 0 failed; fmt and clippy clean; all doctrines
+  green; `mdbook build` OK.
+
 ## archogen — the `os/rt` workload module, and a measured gap closed
 
 `ARCHOGEN-M1-0018` (leaf `M1.7`).

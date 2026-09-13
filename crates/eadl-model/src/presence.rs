@@ -83,6 +83,15 @@ pub struct FactMap {
     needs: BTreeMap<String, Vec<(String, Span)>>,
     /// What the system requests.
     requested: Vec<(String, Span)>,
+    /// `concrete` → `abstract` for every `(refines …)` claim.
+    ///
+    /// ⭐ A refinement pair is not one fact set. The abstract and the concrete description are
+    /// *alternative* accounts of the same thing, so a fact the abstract declares absent and the
+    /// concrete offers is not a contradiction inside one description — it is a violated
+    /// **exclusion obligation**, which `refinement.rs` reports with both sides and the
+    /// obligation named. Found by the semantic corpus: the refinement case was being reported
+    /// as `invalid-description` by this module before the refinement checker ever saw it.
+    refines: BTreeMap<String, String>,
 }
 
 /// The outcome of a presence check.
@@ -145,6 +154,11 @@ impl FactMap {
                 "uses" => {
                     for name in names_in(clause) {
                         self.requested.push(name);
+                    }
+                }
+                "refines" => {
+                    if let Some((target, _)) = names_in(clause).into_iter().next() {
+                        self.refines.insert(owner.clone(), target);
                     }
                 }
                 _ => {
@@ -251,6 +265,17 @@ impl FactMap {
     /// Check presence and relevance.
     #[must_use]
     pub fn check(&self) -> PresenceReport {
+        self.check_excluding(&BTreeSet::new())
+    }
+
+    /// Check presence and relevance, ignoring facts the active profile has already refused.
+    ///
+    /// ⭐ An out-of-profile capability is not a missing fact. Telling an author that
+    /// `general-ipc` "is required and nothing describes it" invites them to go and describe it,
+    /// which would be wasted work on a capability the profile refuses either way. The profile
+    /// refusal is the message that helps; this one is noise beside it.
+    #[must_use]
+    pub fn check_excluding(&self, out_of_profile: &BTreeSet<String>) -> PresenceReport {
         let mut diagnostics = Vec::new();
 
         // ── F06: contradictions are rejected, never resolved by preference ───────────────────
@@ -260,6 +285,11 @@ impl FactMap {
         // the author is the only one who knows.
         for (fact, offered) in &self.offered {
             if let Some(absent) = self.absent.get(fact) {
+                if self.related_by_refinement(&offered.declared_by, &absent.declared_by) {
+                    // Owned by the refinement checker, which reports it as a violated
+                    // exclusion obligation with both sides and the obligation named.
+                    continue;
+                }
                 diagnostics.push(
                     Diagnostic::error(
                         "invalid-description",
@@ -284,6 +314,9 @@ impl FactMap {
         // ── F04 / F05: relevance decides whether an unknown fact matters ─────────────────────
         let mut missing = Vec::new();
         for fact in &closure {
+            if out_of_profile.contains(fact) {
+                continue;
+            }
             // An explicit absence is checked FIRST, before anything can satisfy the name: a
             // block that declares a capability absent does not stop being absent because it is
             // also declared.
@@ -342,6 +375,26 @@ impl FactMap {
             missing,
             diagnostics,
         }
+    }
+
+    /// Whether one of these two declarations refines the other, directly or transitively.
+    fn related_by_refinement(&self, a: &str, b: &str) -> bool {
+        self.refines_chain(a, b) || self.refines_chain(b, a)
+    }
+
+    fn refines_chain(&self, from: &str, to: &str) -> bool {
+        let mut current = from;
+        // Bounded by the number of edges, so a cycle in `refines` cannot spin here.
+        for _ in 0..self.refines.len() + 1 {
+            let Some(next) = self.refines.get(current) else {
+                return false;
+            };
+            if next == to {
+                return true;
+            }
+            current = next;
+        }
+        false
     }
 
     /// A span to point at for a fact: its own `needs` edge if there is one, else the request.

@@ -1,0 +1,7 @@
+; case: infeasible-refinement-adds-exclusion
+; expect: infeasible-configuration
+; why: A refinement that offers what the abstract description declares absent — the obligation
+;   a naive "may say more" rule drops.
+;
+(defplatform soc.abstract (offers counter-width) (absent debug-port))
+(defplatform soc.concrete (refines soc.abstract) (offers counter-width debug-port))

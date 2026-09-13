@@ -100,7 +100,10 @@ pub const COMMANDS: &[CommandSpec] = &[
             help: "path to the eADL system description",
         }],
         options: &[PROFILE],
-        owner: Some("M1.8"),
+        // Built by leaf M1.8. `None` removes it from the `[unimplemented]` column of
+        // `osgen --help` in the same change that makes it real — the help text is rendered
+        // from this table, so the two cannot disagree.
+        owner: None,
     },
     CommandSpec {
         name: "resolve",

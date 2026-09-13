@@ -1,0 +1,13 @@
+; case: positive-sporadic-release
+; expect: ok
+; why: A sporadic task with a declared minimum separation and bounded jitter, which §3.1
+;   admits.
+;
+(defblock event.line (offers interrupt-source min-arrival-separation))
+(defplatform soc.p (offers (core-count 1 tick)) (requires (uses event.line)))
+(defservice event.release (requires (bounded-arrival true) (needs interrupt-source min-arrival-separation)))
+(defsystem s
+  (task handler (min-separation 20 ms) (deadline 15 ms) (deadline-from release) (jitter 1 ms)
+                (priority 1) (uses event.release))
+  (requires (uses event.release))
+  (platform (uses soc.p)))

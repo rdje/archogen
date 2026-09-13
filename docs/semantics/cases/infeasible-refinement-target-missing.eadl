@@ -1,0 +1,6 @@
+; case: infeasible-refinement-target-missing
+; expect: infeasible-configuration
+; why: A refinement claim whose target is not present, so the obligation cannot be checked at
+;   all.
+;
+(defplatform soc.concrete (refines soc.absent-elsewhere) (offers counter-width))

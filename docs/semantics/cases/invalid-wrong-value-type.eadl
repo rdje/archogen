@@ -1,0 +1,5 @@
+; case: invalid-wrong-value-type
+; expect: invalid-description
+; why: A task priority that is not an integer.
+;
+(defsystem s (task t (deadline 10 ms) (priority high)))

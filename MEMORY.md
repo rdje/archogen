@@ -11,10 +11,10 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M1` → frontier leaf `M1.8` (the last M1 leaf). `M0` is **done**.
-- **Next action:** the twenty-case semantic corpus, the §5.5 diagnostic contract, and profile
-  admission so `uc4-bounded-queue` is refused by name (`docs/tasks/M1.md`, leaf `M1.8`).
-- **Latest commit:** `ARCHOGEN-M1-0018 (leaf M1.7)` — `os/rt` workload; schema reach 13/13.
+- **Active tree:** `S0` → frontier leaf `S0.1`. `M0` and `M1` are **done**.
+- **Next action:** write the tiny S0 description, its changed and unsupported variants, and the
+  independent expected-output oracle — **before** any emitter exists (`docs/tasks/S0.md`, `S0.1`).
+- **Latest commit:** `ARCHOGEN-M1-0019 (leaf M1.8)` — the pipeline; `osgen check` is real.
 - **In-flight uncommitted work:** none.
 - **Blockers:** no physical board procured → tree `M5` blocked (director decision;
   `docs/targets/first-target.md`). QEMU RISC-V not installed → `M2.8` emulator half, `M4.9`.

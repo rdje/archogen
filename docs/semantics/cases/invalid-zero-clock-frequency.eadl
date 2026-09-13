@@ -1,0 +1,7 @@
+; case: invalid-zero-clock-frequency
+; expect: invalid-description
+; why: A zero tick rate. F03: refused as a constraint error before any arithmetic divides by
+;   it.
+;
+(defblock timer.counter (offers (tick-rate (exactly 0 MHz))))
+(defblock timer.real (refines timer.counter) (offers (tick-rate 0 MHz)))

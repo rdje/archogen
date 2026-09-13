@@ -1,0 +1,6 @@
+; case: unsupported-application-mutex
+; expect: unsupported-profile
+; why: Application-level mutual exclusion, which needs a sharing protocol and a blocking term
+;   the first profile has neither of.
+;
+(defservice lock.mutex (requires (needs application-mutexes)))

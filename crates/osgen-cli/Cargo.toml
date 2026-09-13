@@ -19,3 +19,5 @@ path = "src/main.rs"
 workspace = true
 
 [dependencies]
+eadl-front = { path = "../eadl-front" }
+eadl-model = { path = "../eadl-model" }

@@ -41,8 +41,12 @@
   (requires
     (absolute-deadline true)
     (supported-horizon (at-least 10 s))
-    (delivery-bound (at-most 50 us))
-    (needs time.monotonic)))
+    (delivery-bound (at-most 50 us)))
+  ; The dependency is stated explicitly. `needs` is how a description says what it depends on;
+  ; a clause head inside `requires` is a constraint on a fact, not a claim that the fact is
+  ; available. Writing it out is what puts `absolute-deadline` inside the closure, and therefore
+  ; what makes the platform's declared absence of it a checked conflict rather than a quiet one.
+  (needs time.monotonic absolute-deadline))
 
 (defservice console.write
   (requires (needs observable-output)))

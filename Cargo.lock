@@ -16,6 +16,10 @@ dependencies = [
 [[package]]
 name = "osgen-cli"
 version = "0.1.0"
+dependencies = [
+ "eadl-front",
+ "eadl-model",
+]
 
 [[package]]
 name = "osgen-evidence"

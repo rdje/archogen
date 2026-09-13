@@ -1,0 +1,6 @@
+; case: unsupported-multicore
+; expect: unsupported-profile
+; why: A second core. The profile admits one, and no earlier timing result transfers to a
+;   multicore profile.
+;
+(defplatform soc.dual (offers (core-count 2 tick) multicore))

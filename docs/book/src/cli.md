@@ -14,7 +14,7 @@ USAGE:
     osgen help <COMMAND>
 
 COMMANDS:
-    check    elaborate and type-check a description against a profile   [unimplemented — tracked by leaf M1.8]
+    check    elaborate and type-check a description against a profile
     resolve  resolve providers and resources into an independently checked build plan   [unimplemented — tracked by leaf M3.4]
     build    generate, assemble and build a complete system and its simulator   [unimplemented — tracked by leaf M4.2]
     analyze  run an analysis for one named property over a build   [unimplemented — tracked by leaf M2.6]
@@ -27,7 +27,7 @@ COMMANDS:
 
 | Command | Does | Built by |
 | --- | --- | --- |
-| `osgen check <DESCRIPTION> [--profile <PROFILE>]` | elaborate and type-check a description against a profile | leaf `M1.8` |
+| `osgen check <DESCRIPTION> [--profile <PROFILE>]` | elaborate and type-check a description against a profile | **built** — see [Checking a description](checking.md) |
 | `osgen resolve <DESCRIPTION> [--profile <P>] [--locked] --out <PLAN>` | resolve providers and resources into an independently checked build plan | leaf `M3.4` |
 | `osgen build <DESCRIPTION> [--profile <P>] [--locked] --out <DIR>` | generate, assemble and build a complete system and its simulator | leaf `M4.2` |
 | `osgen analyze <BUILD> --property <PROPERTY>` | run an analysis for one named property | leaf `M2.6` |
@@ -35,18 +35,22 @@ COMMANDS:
 | `osgen explain <BUILD> --requirement <REQUIREMENT>` | explain how one requirement was realized, or why it could not be | leaf `M3.4` |
 | `osgen replay <MANIFEST>` | replay a recorded failure manifest and check its identity | leaf `M4.7` |
 
-Every command is currently **unimplemented**, and says so precisely:
+`check` is built. The other six are not, and they say so precisely:
 
 ```console
-$ osgen check examples/periodic-three/system.eadl --profile rt-static-up-v1
-osgen: unimplemented: `osgen check` is not implemented yet
-  hint: it is part of the interface target in ROADMAP.md §10.2; the work is tracked by task-tree leaf M1.8 (docs/TASK_TREE.md)
+$ osgen resolve examples/periodic-three/system.eadl --out plan.json
+osgen: unimplemented: `osgen resolve` is not implemented yet
+  hint: it is part of the interface target in ROADMAP.md §10.2; the work is tracked by task-tree leaf M3.4 (docs/TASK_TREE.md)
 $ echo $?
 20
 ```
 
 An unbuilt command names the task-tree leaf that will build it. A gap in this toolchain is
 tracked work, not an unknown.
+
+The `[unimplemented]` marker comes from the same table the parser validates against, so a
+command becomes real and stops advertising itself as unbuilt in **one** change — a test asserts
+that `check` no longer carries the marker and `resolve` still does.
 
 ## Exit codes
 

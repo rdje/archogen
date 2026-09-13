@@ -6,6 +6,7 @@
 //! the engine crates own deciding what to build from it.
 
 pub mod boundary;
+pub mod check;
 pub mod kind;
 pub mod presence;
 pub mod profile;
@@ -13,7 +14,8 @@ pub mod quantity;
 pub mod rational;
 pub mod refinement;
 
-pub use boundary::{check, classify, BoundaryTest, Classification, ForbiddenConstruct};
+pub use boundary::{classify, BoundaryTest, Classification, ForbiddenConstruct};
+pub use check::{default_profile, shipped_registry, Outcome};
 pub use kind::{
     read_kind, validate, Cardinality, ClauseDef, Holds, KindDef, NameRule, Registry, ValueType,
 };

@@ -7,7 +7,8 @@ tested against, and the systems the engine will eventually build.
 | --- | --- | --- |
 | [`periodic-three/`](periodic-three/) | `uc1` | builds |
 | [`high-interference/`](high-interference/) | `uc2` | builds; the timing property may return `not-established` |
-| [`alternative-timer/`](alternative-timer/) | `uc3` | refused before `M3.2`, builds after |
+| [`alternative-timer/`](alternative-timer/) | `uc3` | refused before `M3.2`, builds after — `infeasible-configuration` today |
+| [`bounded-queue/`](bounded-queue/) | `uc4` | **must stay refused** — `unsupported-profile` |
 
 All numbers are **synthetic** — not measurements, not attributed to any published task set, not
 claims about any board.
@@ -30,6 +31,15 @@ Each of the three exclusions has a worked rejection case in `docs/semantics/boun
 that every example here passes the boundary classifier, so the claim is checked rather than
 asserted.
 
-`uc4-bounded-queue` has no example yet: it must be refused by **profile admission**, which is
-leaf `M1.8`. Adding the file before the refusal exists would put a case in this directory that
-nothing refuses.
+Every example runs through `osgen check`, and a test asserts the verdict each one produces:
+
+```console
+$ osgen check examples/periodic-three/system.eadl  ; echo $?   # 0  accepted
+$ osgen check examples/alternative-timer/system.eadl ; echo $? # 13 infeasible-configuration
+$ osgen check examples/bounded-queue/system.eadl   ; echo $?   # 12 unsupported-profile
+```
+
+`uc3` and `uc4` are refused for different reasons, and the difference matters. `uc3`'s refusal is
+**temporary**: the same description must build once `M3.2` supplies indirect realization, without
+changing. `uc4`'s refusal is **permanent** for this profile: admitting it requires a new named
+profile with its own analysis obligations, not a wider `rt-static-up-v1`.

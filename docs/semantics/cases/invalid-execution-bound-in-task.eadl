@@ -1,0 +1,7 @@
+; case: invalid-execution-bound-in-task
+; expect: invalid-description
+; why: A worst-case execution time inside a task. §7.3 keeps bounds in the build manifest;
+;   this is the case the schema could not see before M1.7.
+;
+(defsystem s
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (wcet 850 us)))

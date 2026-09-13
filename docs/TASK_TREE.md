@@ -52,10 +52,10 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 
 | Tree | Status | Frontier (next leaf) | Owner |
 | --- | --- | --- | --- |
-| [`M1`](tasks/M1.md) | `active` | `M1.8` — the 20-case semantic corpus, §5.5 diagnostics, profile admission | repo-local |
+| [`S0`](tasks/S0.md) | `active` | `S0.1` — tiny description, variants, and the independent oracle (F28) | repo-local |
 | [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.3` — the tiered verification runner | repo-local |
+| [`M1`](tasks/M1.md) | `done` | — all eight leaves closed; F01–F07 green; `osgen check` real | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |
-| [`S0`](tasks/S0.md) | `pending` | `S0.1` — tiny description, variants, and the independent oracle | repo-local |
 | [`M2`](tasks/M2.md) | `pending` | `M2.3` — the idealized response-time analysis (F18) | repo-local |
 | [`M3`](tasks/M3.md) | `pending` | `M3.1` — candidate enumeration and substitutability | repo-local |
 | [`M4`](tasks/M4.md) | `pending` | `M4.1` — the typed runtime/build plan | repo-local |

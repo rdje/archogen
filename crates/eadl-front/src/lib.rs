@@ -21,7 +21,7 @@ pub mod module;
 pub mod reader;
 pub mod source;
 
-pub use diagnostic::{Diagnostic, Diagnostics, Label, Severity};
+pub use diagnostic::{Diagnostic, Diagnostics, Label, Severity, Verdict};
 pub use form::{Comment, Document, Form};
 pub use module::{elaborate, Instance, MemoryModules, ModuleDecl, ModuleSource, Program, Version};
 pub use reader::read;

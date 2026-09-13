@@ -1,0 +1,5 @@
+; case: unsupported-dynamic-task-creation
+; expect: unsupported-profile
+; why: Creating tasks after boot. The task set is an input to the schedulability argument.
+;
+(defsystem s (requires (uses dynamic-task-creation)))

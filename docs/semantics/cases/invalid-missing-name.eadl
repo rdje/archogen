@@ -1,0 +1,5 @@
+; case: invalid-missing-name
+; expect: invalid-description
+; why: A declaration that carries no name, so nothing can refer to it.
+;
+(defservice (requires (needs counter-width)))
