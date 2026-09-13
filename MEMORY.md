@@ -11,16 +11,19 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** none — `S0` **closed** (all six leaves, F28 green). `M0` done; `M1` done except
-  the non-gate leaf `M1.10`. `PROGRAM` is the substrate tree and `M2` is the next milestone.
-- **Next action:** pick the next tree. Two candidates, and the choice is a judgement call:
-  **`PROGRAM.3`** (the §14.3 tiered verification runner — `make check` is informal today, and the
-  CI policy of running the full gate only before a push wants named tiers), or **`M2.3`** (the
-  §7.4 idealized response-time analysis, F18 — the first real engine knowledge, with the §13.2
-  numerical baseline already written down to check it against). `M2.3` is the milestone frontier;
-  `PROGRAM.3` is substrate that every later tree uses. Also open: `M1.10`, non-blocking.
-- **Latest commit:** `ARCHOGEN-S0-0028 (leaf S0.6)` — the S0 retirement contract, enforced by a
-  new project doctrine. ⛔ Carry the habit that found the last three defects: **mutate the subject
+- **Active tree:** `PROGRAM` → frontier `PROGRAM.4`. `S0` **closed** (F28 green); `M0` done; `M1`
+  done except the non-gate leaf `M1.10`. `M2` is the next milestone tree (frontier `M2.3`).
+- **Next action:** either **`PROGRAM.4`** (the book-structure pass — chapters have accreted one
+  per leaf and nothing has checked that the whole mirrors the programme) or **`M2.3`** (the §7.4
+  idealized response-time analysis, F18 — the first real engine knowledge, and the §13.2
+  numerical baseline is already written down to check it against). `M2.3` is the milestone
+  frontier and carries more value; `PROGRAM.4` is cheap. Also open and non-blocking: `M1.10`,
+  `PROGRAM.5`, `PROGRAM.8`, `PROGRAM.9`, `PROGRAM.10`.
+- **Run checks as tiers now:** `make focused` per commit, `make integration` before a push.
+  Exit **20 = incomplete** is not a pass.
+- **Latest commit:** `ARCHOGEN-PROGRAM-0029 (leaf PROGRAM.3)` — the §14.3 tier runner. Four of
+  five tiers report **incomplete**, each naming its owning leaf; that is the honest picture, not
+  a regression. ⛔ Carry the habit that found the last three defects: **mutate the subject
   at every gate**, and assert the mutation applied
   (`docs/knowledge/a-gate-is-only-as-sharp-as-its-fixtures.md`,
   `docs/knowledge/verify-the-mutation-applied.md`).

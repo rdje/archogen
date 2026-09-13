@@ -1,0 +1,16 @@
+# The tiered verification runner (ROADMAP.md §4.2 `xtask`, §14.3 tiers).
+#
+# Not a crate the toolchain ships: it is the repository's own runner, invoked as
+# `cargo xtask verify --tier <tier>` through the alias in `.cargo/config.toml`.
+[package]
+name = "xtask"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "The archogen repository's tiered verification runner (ROADMAP.md §14.3)"
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]

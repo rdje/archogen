@@ -48,8 +48,16 @@ apply to code changes.
 ## Required commit workflow (exact order)
 
 1. Ensure the task is complete and tested.
-2. Run the Rust checks when Rust files changed: `make check` (or `cargo fmt --all --check
-   && cargo clippy --all-targets -- -D warnings && cargo test`). Strict lint must pass.
+2. Run the **focused** tier when Rust files changed: `make focused`
+   (= `cargo xtask verify --tier focused` — format, lints, the whole suite). Strict lint must
+   pass. Before a **push**, and before closing a milestone, run `make integration` as well; it
+   adds the doctrine enforcer, the book build and the emulator check.
+
+   ⚠️ A tier can exit **20 = incomplete**, which is *not* a pass and *not* a failure: nothing
+   broke, and something could not be run. `ROADMAP.md` §14.3 requires that outcome to be visible
+   rather than silently dropped, so read what it names before deciding to proceed. Today
+   `integration` is incomplete on any machine without QEMU, and `extended`, `hardware` and
+   `assurance` are incomplete everywhere — each naming the leaf that closes it.
 3. Update every relevant tracked doc (`MEMORY.md`, `CHANGELOG.md`, `DEV_NOTES.md`,
    `LIVE_STATUS.md`, `README.md`, the owning `docs/tasks/<TREE>.md`, `docs/decisions/`,
    `docs/book/` as applicable). Treat markdown sync as systematic, not optional.
@@ -89,8 +97,8 @@ cat > git_message_brief.txt <<'EOF'
 - <brief bullet 2>
 EOF
 
-# 2) run checks when Rust changed
-make check
+# 2) run the focused tier when Rust changed (make integration before a push)
+make focused
 
 # 3) stage intended files only
 git add <tracked-file-1> <tracked-file-2> ...

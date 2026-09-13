@@ -1,0 +1,5 @@
+# `cargo xtask …` runs the repository's own verification runner (ROADMAP.md §4.2, §14.3).
+# Committed deliberately: a tier that only works if each developer remembers an incantation is a
+# tier nobody runs.
+[alias]
+xtask = "run --quiet --package xtask --"

@@ -27,10 +27,13 @@ Current progress: [`LIVE_STATUS.md`](LIVE_STATUS.md). Next action:
 
 ```bash
 git config core.hooksPath .githooks   # once per clone — activates the doctrine gate
-make check                            # cargo fmt --check + clippy -D warnings + tests
-make gate                             # the doctrine enforcer
-make book                             # build the mdBook (requires mdbook)
+make focused                          # §14.3 focused tier: format, lints, the whole suite
+make integration                      # §14.3 integration tier: + doctrines, book, emulator
+make tiers                            # list every tier and what each step proves
 ```
+
+A tier can exit **20 = incomplete**: nothing failed, and something could not be run. That is not
+a pass — see [Verifying the toolchain](docs/book/src/verification.md).
 
 ## Architecture at a glance
 
@@ -43,7 +46,9 @@ target facts   ───┘        │              │                    │  
 
 Responsibility names (crates appear when a consumer needs them): `eadl-front`,
 `eadl-model`, `eadl-resolve`, `archogen-plan`, `archogen-emit`, `archogen-check`, `rt-analysis`,
-`rt-core`, `arch-*`, `device-*`, `sim-*`, `xtask`.
+`rt-core`, `arch-*`, `device-*`, `sim-*`, `xtask`. `archogen-s0` sits outside that list on
+purpose: it is the temporary S0 prototype, with an expiry enforced by a doctrine check
+([`decision_s0-retirement.md`](docs/decisions/decision_s0-retirement.md)).
 
 ## Where things live
 

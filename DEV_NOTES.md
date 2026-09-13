@@ -19,6 +19,32 @@
 Detailed technical notes — root cause, implementation, validation — per slice. The
 engineering-continuity surface (not the public docs; that's `docs/book/`). Newest first.
 
+## _(2026-09-13)_ — a verification runner's most useful output is what it cannot run
+
+- The §14.3 tiers existed as a roadmap table and nothing else, so every verification decision was
+  a judgement made per commit and recorded nowhere. The consequence was not that checks were
+  skipped — it was that the three tiers nobody can run were **invisible** rather than incomplete,
+  which reads identically to being covered.
+- The fix needed a **third verdict**. `passed`/`failed` cannot express §14.3's "a required tool
+  skipped or unavailable is reported as such, not a passed check", so `incomplete` (exit 20) is
+  its own state, and `Verdict::of` is four lines: a failure outranks an absence, and an absence
+  never becomes a pass however many steps around it succeeded.
+- Two kinds of absence, kept apart because the response differs: **unavailable** (install the
+  tool) and **not built** (the step does not exist — here is the leaf that owns it). The second
+  turned three silences into three routed items on first run.
+- ⛔ Two defects on the first two runs, both in the runner: `fmt FAILED` printed **no reason**
+  because `cargo fmt --check` writes its diff to stdout and only stderr was captured; and the
+  leaf-existence test failed on `PROGRAM.9`, a leaf nothing declared, because the shape test
+  above it cannot tell `M9.9` from `M4.8`. Both are the same shape of error — a check that looks
+  like it checks something.
+- `focused` runs the whole suite rather than "affected tests", and the number that settled it is
+  in the source: 2.9 s for the tier, warm. Written down so the decision is re-taken against a
+  measurement rather than re-argued from memory.
+- No promotion of its own; the decline and its reason are recorded in the `PROGRAM.3` leaf. In
+  short: the transferable rule — an absence of evidence must never render as evidence — is
+  already `docs/knowledge/a-gate-is-only-as-sharp-as-its-fixtures.md`, applied there to fixtures
+  and here to tiers.
+
 ## _(2026-09-13)_ — a green end-to-end gate that could not tell `lcm` from `max`
 
 - F28 generates, compiles, runs and compares against an observation frozen before the emitter

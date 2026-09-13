@@ -77,6 +77,11 @@ justifies the split — the rows below appear as that happens.
   configuration and the only tool that renders it. `--check` exits 20 when QEMU is absent
   rather than reporting a skipped check as a pass. `docs/targets/first-target.md` records the
   board decision: none procured.
+- `xtask/` — the §14.3 tiered verification runner, reached as `cargo xtask verify --tier <t>`
+  through the committed `.cargo/config.toml` alias. Tiers are data. ⭐ Its verdict has **three**
+  states, because §14.3 requires an unavailable tool to be "reported as such, not a passed
+  check": `passed` (0), `failed` (1), `incomplete` (20). Four of the five tiers are incomplete
+  today and each names the leaf that closes it — which is the runner's most useful output.
 - `scripts/check_doctrines.sh` — the doctrine enforcer (git hook + CI). `make gate`.
   Project doctrines live in `scripts/check_doctrines.project.sh`: `check_frozen_evaluation.sh`
   keeps the reuse measurement sealed and unseen, and `check_s0_retirement.sh` keeps the S0

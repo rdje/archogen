@@ -16,3 +16,4 @@
 - [Where generated systems run](targets.md)
 - [The S0 early generation path](s0.md)
 - [The `archogen` command line](cli.md)
+- [Verifying the toolchain](verification.md)

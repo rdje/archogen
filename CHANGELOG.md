@@ -4,6 +4,40 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the five verification tiers become five commands
+
+`ARCHOGEN-PROGRAM-0029` (leaf `PROGRAM.3`).
+
+- `cargo xtask verify --tier <focused|integration|extended|hardware|assurance>`, also reachable
+  as `make focused` / `make integration` / `make tiers`. Tiers are declared as data, the idiom
+  `spec.rs` already uses here.
+- ⭐ **The verdict has three states, and the third is the point.** §14.3 says "a required tool
+  skipped or unavailable is reported as such, **not a passed check**", which two states cannot
+  express. So: `passed` (exit 0), `failed` (1), and `incomplete` (20) — nothing failed, and
+  something could not be run. The two reasons are kept apart because the response differs:
+  **unavailable** (a tool is missing from this machine) and **not built** (the step does not
+  exist, and names the leaf that owns building it).
+- ⭐ **Four of the five tiers report `incomplete`, and that is the runner's most useful output.**
+  Before it, the fuzz corpus, the mutation harness, the Miri wiring, the board and the entire
+  assurance story were not reported as missing — they were simply not mentioned, which reads
+  identically to being covered. Each now names an owner: `PROGRAM.9` (the extended tier's three
+  steps, opened by this leaf), `M5.1` (no board), `M3.6` / `M4.8` / `M4.7` (assurance).
+- CI now runs the **same object** the developer runs: `.github/workflows/rust.yml` calls
+  `cargo xtask verify --tier focused` instead of listing three steps that someone had to keep
+  identical to the Makefile's three. Wiring the integration tier into CI is `PROGRAM.10`, and the
+  deliverable there is a decided answer to whether `incomplete` should block a build — wiring it
+  up first would produce either a permanently red CI people learn to ignore or a green one that
+  hides the gap.
+- `COMMIT.md` adopts the director's CI policy explicitly: `make focused` per ordinary commit,
+  `make integration` before a push or a milestone close.
+- ⛔ The runner found two defects on its first two runs, which is the argument for it. It
+  reported `❌ fmt … FAILED` **with no reason** — `cargo fmt --check` writes its diff to stdout
+  while only stderr was captured — and its own leaf-existence test failed on `PROGRAM.9`, a leaf
+  no tree declared, because the shape test above it cannot tell `M9.9` from `M4.8`.
+- Validation: `cargo test -p xtask` → **8 passed, 0 failed**; `focused` → `passed`, exit 0;
+  `integration` → `incomplete`, exit 20, naming QEMU. `cargo test --all` → **317** passed (309
+  before, `+8`); fmt and clippy clean; all doctrines green; `mdbook build` OK.
+
 ## archogen — the S0 prototype gets an enforced expiry — **S0 complete**
 
 `ARCHOGEN-S0-0028` (leaf `S0.6`). The `S0` tree is closed and **F28 is green end to end**.

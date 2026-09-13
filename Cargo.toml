@@ -2,7 +2,7 @@
 # when a real consumer justifies the split — not as empty shells up front.
 [workspace]
 resolver = "2"
-members = ["crates/*"]
+members = ["crates/*", "xtask"]
 
 [workspace.package]
 edition = "2021"

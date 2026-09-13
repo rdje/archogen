@@ -1,19 +1,26 @@
 name: rust
+# The SAME object the developer runs locally. Before this, CI listed three steps and the
+# Makefile listed three steps, and keeping them identical was somebody's job; now there is one
+# declaration of the focused tier (xtask/src/main.rs) and both call it.
 on:
   push:
   pull_request:
 
 jobs:
-  check:
+  focused:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
-      - name: Format
-        run: cargo fmt --all -- --check
-      - name: Clippy (deny warnings)
-        run: cargo clippy --all-targets --all-features -- -D warnings
-      - name: Test
-        run: cargo test --all
+      # ROADMAP.md §14.3 focused tier: format, lints, and the whole contract suite.
+      - name: Focused tier
+        run: cargo xtask verify --tier focused
+
+  # ⚠️ The INTEGRATION tier is not run here yet. It needs `mdbook` and `qemu-system-riscv64`
+  # provisioned on the runner, and it needs a decided answer to a question this repository has
+  # not answered: should an `incomplete` verdict (exit 20 — nothing failed, something could not
+  # be run) block a build? Wiring it up before deciding would produce either a permanently red
+  # CI that people learn to ignore, or a green one that hides the gap — both worse than saying
+  # so. Tracked by task-tree leaf PROGRAM.10.

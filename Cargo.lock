@@ -33,3 +33,7 @@ version = "0.1.0"
 dependencies = [
  "eadl-front",
 ]
+
+[[package]]
+name = "xtask"
+version = "0.1.0"

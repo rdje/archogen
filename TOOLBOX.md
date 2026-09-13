@@ -35,6 +35,7 @@ before forming a theory about any failure.
 | --- | --- | --- |
 | `archogen <cmd>` exit code | what did the toolchain conclude, and about what? Diagnostic results (10–16, 70) are verdicts about the submitted system; process statuses (0, 2, 20) are verdicts about the invocation | `archogen <cmd> …; echo $?` — the table is in `archogen --help` |
 | `archogen help <cmd>` | what does this command accept, and which leaf owns building it? | `archogen help build` |
+| the tier runner | which §14.3 tier passes here, and what is missing from the ones that do not? (exit 0 passed · 1 failed · **20 incomplete — never a pass**) | `make focused` · `make integration` · `make tiers` (= `cargo xtask verify …`) |
 | the doctrine enforcer | which repository invariant is broken, and where? | `make gate` (= `scripts/check_doctrines.sh`) |
 | the seal checker | has the frozen evaluation set been modified, extended, or named outside its directory? | `bash scripts/check_frozen_evaluation.sh` |
 | the S0 retirement check | is every hard-coded S0 assumption still marked, listed and owned — and has the prototype acquired a consumer it should not have? (`--self-test` runs three RED arms) | `bash scripts/check_s0_retirement.sh` |
