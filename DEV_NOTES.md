@@ -19,6 +19,17 @@
 Detailed technical notes — root cause, implementation, validation — per slice. The
 engineering-continuity surface (not the public docs; that's `docs/book/`). Newest first.
 
+## _(2026-09-13)_ — a commit carries one owning leaf
+
+- `TASK-ACCEPTANCE` requires a complete checklist from EVERY staged `docs/tasks/*.md`, not
+  from the leaf that owns the staged code. Propagating a blocker into a second tree alongside
+  code is therefore refused, with three "no 'ROOT CAUSE' box" lines for a tree that landed no
+  code. Unstaging that one file and changing nothing else → `=== all doctrines green ===`.
+- It is the conservative closure of a measured hole (a co-staged tree supplying another leaf's
+  evidence), so the answer is a convention, not an edit to the check: split the commit, same
+  work-unit id on both. Tracked as `PROGRAM.8` with routing evidence.
+- Promoted to `docs/knowledge/cross-tree-lockstep-and-commit-scope.md`.
+
 ## _(2026-09-13)_ — a portable gate that misfires is a seam question, not a fork question
 
 - `TASK-ACCEPTANCE` blocked this project's first real commit with thirty refusal lines,

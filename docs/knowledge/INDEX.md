@@ -11,3 +11,4 @@ dated lesson in `DEV_NOTES.md` to be promoted here (or explicitly declined in it
 | Entry | Answers |
 | --- | --- |
 | [`doctrine-seams-vs-forking-a-check.md`](doctrine-seams-vs-forking-a-check.md) | A portable gate misfires on this repo's layout — do I edit the gate? |
+| [`cross-tree-lockstep-and-commit-scope.md`](cross-tree-lockstep-and-commit-scope.md) | TASK-ACCEPTANCE refuses a tree I only added a note to — what do I do? |
