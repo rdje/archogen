@@ -95,3 +95,11 @@ This is presence and relevance analysis, not provider resolution. It answers "is
 system depends on actually known?" It does not choose implementations, allocate resources, or
 check capacity — that is the joint resolver, and conflating the two here would produce a
 resolver nobody reviewed.
+
+## Where it lives
+
+`crates/eadl-model/src/presence.rs`, run as the fifth pass of `archogen check`. Fixtures **F04**
+(a relevant capability undescribed → `missing-fact`), **F05** (an irrelevant one → the system
+stays admissible) and **F06** (offered and absent together → `invalid-description`) are the two
+halves of §5.3's single decision, in `crates/eadl-model/tests/f04_f06_presence.rs`, with worked
+cases in `docs/semantics/cases/`.

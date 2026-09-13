@@ -53,7 +53,7 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 | Tree | Status | Frontier (next leaf) | Owner |
 | --- | --- | --- | --- |
 | [`S0`](tasks/S0.md) | `done` | — all six leaves closed; **F28 green**; the prototype carries an enforced expiry | repo-local |
-| [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.4` — the book-structure pass; `.3` closed, the §14.3 tiers run | repo-local |
+| [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.5` — the §15/§19 source ledger; `.3` and `.4` closed | repo-local |
 | [`M1`](tasks/M1.md) | `active` | `M1.10` — classify the twelve profile decisions that are still prose (not blocking `S0`) | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |
 | [`M2`](tasks/M2.md) | `active` | `M2.1` — `rt-core`; **F18 and F29 both green**, the accounting contract published | repo-local |

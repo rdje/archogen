@@ -39,6 +39,7 @@ before forming a theory about any failure.
 | the doctrine enforcer | which repository invariant is broken, and where? | `make gate` (= `scripts/check_doctrines.sh`) |
 | the seal checker | has the frozen evaluation set been modified, extended, or named outside its directory? | `bash scripts/check_frozen_evaluation.sh` |
 | the S0 retirement check | is every hard-coded S0 assumption still marked, listed and owned — and has the prototype acquired a consumer it should not have? (`--self-test` runs three RED arms) | `bash scripts/check_s0_retirement.sh` |
+| the book-anchor check | does every book chapter point at code that exists, and does any chapter point at nothing? (`--self-test` runs three RED arms) | `bash scripts/check_book_anchors.sh` |
 | the profile drift test | has the published profile page diverged from the profile data the engine consults? | `cargo test -p eadl-model` |
 | the emulator tool | what exactly does the pinned target run, and is its toolchain present? (exit 20 = required tool unavailable, never a skipped pass) | `scripts/target_emulator.sh --print <img>` / `--check` / `--dump-dtb <out>` |
 | the code-path seam | is this staged file classified as a code change here? | `git diff --cached --name-only \| grep -Ef <(grep -vE '^\s*(#\|$)' .doctrine/code_paths.txt)` |

@@ -4,6 +4,32 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the book gets a shape, and its citations get checked
+
+`ARCHOGEN-PROGRAM-0033` (leaf `PROGRAM.4`).
+
+- Eighteen chapters had accreted into a flat list — one per leaf, no structure. `SUMMARY.md` now
+  carries five parts that mirror the programme: what eADL describes · writing a description ·
+  what the engine may claim · generating and running a system · using the toolchain.
+- ⭐ **The second half of this leaf's acceptance is now mechanical.** `BOOK-ANCHORS` checks that
+  every chapter describing behavior **cites** a repository path, and that every path any chapter
+  cites **exists**. The book is the project's public surface and, for its director, the only
+  window into it — the code is not read, the book is — which makes a confident chapter describing
+  something the engine no longer does the most expensive drift available here.
+- The census found a real one: **`presence.md` cited nothing at all.** A chapter with no anchor
+  cannot be checked against anything, by a script or by a reader; it is an essay about a system
+  rather than a description of one. It now names `crates/eadl-model/src/presence.rs`, its F04–F06
+  test file, and the worked-case directory.
+- ⛔ The false positive was designed out rather than discovered: chapters legitimately name
+  `src/main.rs` of a **generated** crate and `os-rt.eadl` by basename, and requiring those to
+  exist at the repository root would make writing about generated output cost a doctrine breach.
+  That is the lesson from `S0-RETIREMENT`'s first run, applied in advance.
+- Validation: `scripts/check_book_anchors.sh` →
+  `OK (18 chapter(s); every cited repository path resolves)`; `--self-test` → `3 pass / 0 fail`
+  across three RED arms — an unanchored chapter, a rotted citation, and a **well-formed** chapter,
+  because a check that always fails is not discriminating either. `cargo test --all` → **357**
+  passed, unchanged (no Rust touched); all doctrines green; `mdbook build` OK with the new parts.
+
 ## archogen — F29 is green, and the two independent sources agree interval for interval
 
 `ARCHOGEN-M2-0032` (leaf `M2.5`).

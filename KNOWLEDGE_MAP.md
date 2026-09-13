@@ -102,7 +102,9 @@ justifies the split — the rows below appear as that happens.
   Project doctrines live in `scripts/check_doctrines.project.sh`: `check_frozen_evaluation.sh`
   keeps the reuse measurement sealed and unseen, and `check_s0_retirement.sh` keeps the S0
   prototype from quietly becoming permanent — every `S0-ASSUMPTION:` marker listed with an owning
-  leaf, and no new consumers of the crate. Both carry `--self-test` RED arms.
+  leaf, and no new consumers of the crate — and `check_book_anchors.sh` keeps the mdBook's claims
+  about the code resolvable: every behavior chapter cites a repository path, and every cited path
+  exists. All three carry `--self-test` RED arms.
 
 ## Active task-trees
 

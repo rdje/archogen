@@ -12,17 +12,19 @@
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M2` → frontier `M2.1`. `S0` **closed** (F28 green) and `M2.3` closed (**F18
-  green**), `M2.4` and `M2.5` closed (**F29 green**); `M0` done; `M1` done except the non-gate leaf `M1.10`; `PROGRAM` frontier `PROGRAM.4`.
+  green**), `M2.4` and `M2.5` closed (**F29 green**); `M0` done; `M1` done except the non-gate leaf `M1.10`; `PROGRAM` frontier `PROGRAM.5`.
 - **Next action:** **`M2.1`** — `rt-core`: the shared runtime state machine (static task
   creation, fixed-priority ready structure, release/timer management, interrupt dispatch, the
   context-switch boundary, a bounded fault path), usable in hosted tests and target builds.
   ⛔ Order matters here: `M2.2` is an **independent** reference model of the same semantics and
   §12 M2 says "a checker sharing the same erroneous recurrence with its reference does not qualify
   as independent" — so `M2.2` must be derived from the contract, not from `M2.1`'s code. Also open
-  and non-blocking: `M1.10`, `PROGRAM.4`, `.5`, `.8`, `.9`, `.10`.
+  and non-blocking: `M1.10`, `PROGRAM.5`, `.8`, `.9`, `.10`.
 - **Run checks as tiers now:** `make focused` per commit, `make integration` before a push.
   Exit **20 = incomplete** is not a pass.
-- **Latest commit:** `ARCHOGEN-M2-0032 (leaf M2.5)` — **F29 green**. The simulator written from
+- **Latest commit:** `ARCHOGEN-PROGRAM-0033 (leaf PROGRAM.4)` — the book is structured in five
+  parts and its citations are checked (`BOOK-ANCHORS`). Before that, `ARCHOGEN-M2-0032` — **F29
+  green**. The simulator written from
   §13.4's prose reproduces the roadmap's published trace interval for interval, and all four
   controls behave as specified.
   ⚠️ Nothing in it may be cited for a **runtime** claim until `M2.6` supplies the variant that
