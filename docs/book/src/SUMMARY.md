@@ -13,6 +13,7 @@
 - [Describing a workload](workload.md)
 - [Checking a description](checking.md)
 - [What a report may claim](evidence.md)
+- [What the scheduling checker establishes](analysis.md)
 - [Where generated systems run](targets.md)
 - [The S0 early generation path](s0.md)
 - [The `archogen` command line](cli.md)

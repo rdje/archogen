@@ -19,6 +19,29 @@
 Detailed technical notes — root cause, implementation, validation — per slice. The
 engineering-continuity surface (not the public docs; that's `docs/book/`). Newest first.
 
+## _(2026-09-13)_ — read the oracle out of the specification, not into the test
+
+- §13.2 publishes the response bounds the scheduling checker must produce. Copying them into the
+  F18 test would make §14.1's forbidden move — "silently … adjust expected oracle results" — a
+  one-line edit that looks like a fix. So the test **parses the table out of `ROADMAP.md`**: the
+  expectation and the requirement become the same object, and changing the answer means changing
+  a requirement in a diff a reviewer reads as one.
+- ⚠️ Parse strictly. The parser asserts three rows, because a table that quietly shrank would
+  leave the suite green while checking less than it did — the same shape of blind spot the
+  harmonic F28 fixtures had.
+- Two modelling decisions worth remembering. The iteration runs to its **fixed point** bounded by
+  `T`, not stopped at `D`: stopping early is sound for a yes/no answer and destroys the witness,
+  and §13.2 asks for the converged `4`, not the first iterate above `3`. And non-convergence is
+  `analysis-inconclusive`, never a deadline miss — §7.4: "conservative analysis failure is
+  `not-established` unless an exact test or validated counterexample establishes failure".
+- The strongest guard turned out to be a **type**, not a check: the only positive conclusion the
+  API can build is `HoldsUnderAssumptions`, which needs a model and a non-empty assumption list,
+  so "the deadlines are met" detached from "no overhead" does not exist as a value.
+- ⛔ `⌈n/d⌉` as `(n + d - 1) / d` overflows near the top of the range. `n/d` plus a conditional
+  increment never constructs a value larger than `n`. Tested at `u64::MAX`.
+- Promoted: `docs/knowledge/an-oracle-is-independent-by-construction.md` gains a fourth
+  mechanism — locate the oracle in the specification — rather than a near-duplicate note.
+
 ## _(2026-09-13)_ — a verification runner's most useful output is what it cannot run
 
 - The §14.3 tiers existed as a roadmap table and nothing else, so every verification decision was

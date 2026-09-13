@@ -4,6 +4,41 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the first analysis, and it establishes less than it looks like it does
+
+`ARCHOGEN-M2-0030` (leaf `M2.3`). **F18 is green.**
+
+- `crates/rt-analysis` implements §7.4's idealized zero-overhead response-time recurrence with
+  exact integer arithmetic, checked at every operation, upward rounding written so it cannot
+  overflow where the textbook `(n + d - 1) / d` does, two explicitly named limits, and the full
+  iterate sequence kept as a witness.
+- The §13.2 baseline yields exactly the published bounds — A `1`, B `2`, C `4` — and C's witness
+  is `C: 2 → 4 → 4`, which is the sequence §13.2's prose describes rather than merely its answer.
+  Changing only C's deadline to 3 produces a counterexample carrying that same sequence.
+- ⭐ **A positive answer cannot be detached from the eight conditions that make it true.** There
+  is no function returning "schedulable": the only positive conclusion available is §7.1's
+  conditional form, which will not exist without a named model and a non-empty assumption list.
+  A reader who quotes it quotes "no overhead" with it — the best defence available against the
+  misuse §7.4 warns about most loudly, since no type can tell an idealized model from a board.
+- A task set the model does not cover is **refused at construction**, not analyzed and caveated.
+- Three outcomes, and the third is the one that is easy to get wrong: converged-within-deadline,
+  converged-past-deadline (a witness), and **inconclusive**. §7.4 is explicit that a conservative
+  failure is `not-established` unless an exact test or validated counterexample establishes
+  failure — so non-convergence and overflow never become a deadline miss.
+- ⭐ **The F18 oracle is parsed out of `ROADMAP.md` §13.2, not copied into the test.** §14.1
+  forbids implementation changes that "silently … adjust expected oracle results", and a test
+  holding its own copy makes exactly that a one-line edit that looks like a fix. The parser
+  asserts the row count, because a table that quietly shrank would leave a green test checking
+  less than it did.
+- ⚠️ Nothing in this crate may be cited for a claim about a **running** system. §7.4 requires the
+  variant that charges critical sections, jitter, interrupt interference and switch costs first —
+  leaf `M2.6`, controlled by F29.
+- Validation: `cargo test -p rt-analysis` → **14 + 5 passed, 0 failed**; proven able to fail by
+  mutating the subject — ceiling → floor gives `B … gave 1 (witness B: 1 → 1)`, and `hp(i)` →
+  the whole set turns `A` inconclusive; restored and re-run green after each. `make focused` →
+  `passed`; `cargo test --all` → **336** passed (317 before, `+19`); all doctrines green;
+  `mdbook build` OK.
+
 ## archogen — the five verification tiers become five commands
 
 `ARCHOGEN-PROGRAM-0029` (leaf `PROGRAM.3`).

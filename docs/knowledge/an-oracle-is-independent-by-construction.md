@@ -4,6 +4,7 @@ answers:
   - "How do I write an expected-output oracle that is actually independent of the thing it judges?"
   - "The gate says the assertion must predate the generator — how do I make that checkable?"
   - "Why is a test that only ever passes not evidence that anything was checked?"
+  - "How do I stop someone quietly adjusting an expected result to make a test pass?"
 type: knowledge
 date: 2026-09-13
 ---
@@ -31,6 +32,15 @@ Three mechanisms, none of which rely on anybody remembering:
    wrote, and a re-derivation from the input through an implementation of the published
    contract. Either one alone is weak — a frozen file goes stale silently, a derivation alone is
    just the implementation asserting itself. Together, an edit on either side fails.
+4. **Where a specification already states the answer, read it from there.** The §13.2 scheduling
+   baseline publishes a table of expected response bounds, and the F18 test *parses that table
+   out of the roadmap* instead of copying the numbers. The rule it enforces is
+   §14.1's: "implementation changes cannot silently … **adjust expected oracle results**". A test
+   holding its own copy makes that a one-line edit that looks like a fix; reading the
+   specification makes the expectation and the requirement the same object, so changing the
+   answer means changing a requirement, in a diff a reviewer recognises as one. ⚠️ Parse
+   **strictly** — assert the row count — or a table that quietly shrinks leaves a green test
+   checking less than it did.
 
 Then **disclose what is still shared**. Ours shares the reader with the toolchain, and says so
 in its own header, because a shared parser bug would mislead both sides identically. A named

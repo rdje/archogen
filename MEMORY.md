@@ -11,19 +11,19 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `PROGRAM` → frontier `PROGRAM.4`. `S0` **closed** (F28 green); `M0` done; `M1`
-  done except the non-gate leaf `M1.10`. `M2` is the next milestone tree (frontier `M2.3`).
-- **Next action:** either **`PROGRAM.4`** (the book-structure pass — chapters have accreted one
-  per leaf and nothing has checked that the whole mirrors the programme) or **`M2.3`** (the §7.4
-  idealized response-time analysis, F18 — the first real engine knowledge, and the §13.2
-  numerical baseline is already written down to check it against). `M2.3` is the milestone
-  frontier and carries more value; `PROGRAM.4` is cheap. Also open and non-blocking: `M1.10`,
-  `PROGRAM.5`, `PROGRAM.8`, `PROGRAM.9`, `PROGRAM.10`.
+- **Active tree:** `M2` → frontier `M2.4`. `S0` **closed** (F28 green) and `M2.3` closed (**F18
+  green**); `M0` done; `M1` done except the non-gate leaf `M1.10`; `PROGRAM` frontier `PROGRAM.4`.
+- **Next action:** **`M2.4`** — the §7.4.1 cost-accounting contract: a versioned record of the
+  timing observation boundary, what task bounds include, which operations are preemptible, the
+  number and kind of context transitions, interrupt assumptions, and dispatch/critical-section
+  costs. It must exist before `M2.5` (F29) can mean anything, and §13.4 already specifies F29's
+  trace and its ledger total of 23 in full — the same "read the oracle from the specification"
+  move F18 used. Also open and non-blocking: `M1.10`, `PROGRAM.4`, `.5`, `.8`, `.9`, `.10`.
 - **Run checks as tiers now:** `make focused` per commit, `make integration` before a push.
   Exit **20 = incomplete** is not a pass.
-- **Latest commit:** `ARCHOGEN-PROGRAM-0029 (leaf PROGRAM.3)` — the §14.3 tier runner. Four of
-  five tiers report **incomplete**, each naming its owning leaf; that is the honest picture, not
-  a regression. ⛔ Carry the habit that found the last three defects: **mutate the subject
+- **Latest commit:** `ARCHOGEN-M2-0030 (leaf M2.3)` — `crates/rt-analysis`, F18 green.
+  ⚠️ Nothing in it may be cited for a **runtime** claim until `M2.6` supplies the variant that
+  charges overhead; the crate says so in its own module docs. ⛔ Carry the habit that found the last three defects: **mutate the subject
   at every gate**, and assert the mutation applied
   (`docs/knowledge/a-gate-is-only-as-sharp-as-its-fixtures.md`,
   `docs/knowledge/verify-the-mutation-applied.md`).

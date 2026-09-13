@@ -49,6 +49,15 @@ justifies the split — the rows below appear as that happens.
   engine rule that produced it; every record is resolved from **both** ends by
   `crates/archogen-cli/tests/s0_provenance.rs`, because a record pointing at the wrong line is
   worse than none.
+- `crates/rt-analysis/` — §7.4's idealized zero-overhead response-time analysis (F18).
+  `model.rs` makes the eight applicability conditions a **constructor precondition**, so the
+  analysis cannot return a number for a system the model does not describe; `response.rs` is the
+  recurrence with checked arithmetic, two named limits, and the iterate sequence kept as a
+  witness. ⭐ A positive answer exists only as `Conclusion::HoldsUnderAssumptions`, so "the
+  deadlines are met" detached from "no overhead" is not constructible. ⚠️ Nothing here may be
+  cited for a runtime claim until `M2.6`. Its F18 suite **parses §13.2's table out of
+  `ROADMAP.md`** rather than copying it, which is §14.1's "cannot silently adjust expected oracle
+  results" made mechanical.
 - `ROADMAP.md` — the program's direction, milestone exit gates, and the F01–F30 acceptance
   matrix. The single source of what "done" means.
 - `docs/tasks/PROGRAM.md` — the roadmap-unit → tree map and the fixture-ownership map.
