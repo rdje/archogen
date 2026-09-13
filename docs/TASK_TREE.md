@@ -52,14 +52,21 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 
 | Tree | Status | Frontier (next leaf) | Owner |
 | --- | --- | --- | --- |
-| [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.2` — workspace skeleton and the `osgen` CLI shell | repo-local |
-| [`M0`](tasks/M0.md) | `pending` | `M0.1` — record the controlling eADL/engine boundary | repo-local |
+| [`M1`](tasks/M1.md) | `active` | `M1.2` — the kind registry and schema facility | repo-local |
+| [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.3` — the tiered verification runner | repo-local |
+| [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |
 | [`S0`](tasks/S0.md) | `pending` | `S0.1` — tiny description, variants, and the independent oracle | repo-local |
-| [`M1`](tasks/M1.md) | `pending` | `M1.1` — the reader, source spans, diagnostic rendering | repo-local |
 | [`M2`](tasks/M2.md) | `pending` | `M2.3` — the idealized response-time analysis (F18) | repo-local |
 | [`M3`](tasks/M3.md) | `pending` | `M3.1` — candidate enumeration and substitutability | repo-local |
 | [`M4`](tasks/M4.md) | `pending` | `M4.1` — the typed runtime/build plan | repo-local |
-| [`M5`](tasks/M5.md) | `pending` | `M5.1` — board platform description and engine knowledge | repo-local |
+| [`M5`](tasks/M5.md) | `blocked` | — **no board procured** (`M0.5`, 2026-09-13) | repo-local |
 | [`M6`](tasks/M6.md) | `pending` | `M6.1` — three materially different systems | repo-local |
 | [`M7`](tasks/M7.md) | `pending` | `M7.4` — the F01–F30 mandatory-case audit | repo-local |
 | [`BOOTSTRAP`](tasks/BOOTSTRAP.md) | `done` | — | repo-local |
+
+## Keeping this index true
+
+This table is a **pointer**, and the trees are the source. It is updated in the same commit as
+any leaf that changes a tree's status or frontier. A stale index is worse than no index: it is
+the file a resuming session reads first, and it is the one place a wrong "next action" costs a
+whole session's direction.
