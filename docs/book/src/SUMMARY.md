@@ -9,6 +9,7 @@
 - [Quantities and units](quantities.md)
 - [Modules and composition](modules.md)
 - [Presence, absence, and relevance](presence.md)
+- [Refinement](refinement.md)
 - [What a report may claim](evidence.md)
 - [Where generated systems run](targets.md)
 - [The `osgen` command line](cli.md)

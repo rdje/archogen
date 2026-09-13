@@ -136,13 +136,16 @@ fn f06_a_fact_both_offered_and_absent_is_an_invalid_description() {
     );
     assert!(!report.is_admissible());
     assert!(rendered.contains("invalid-description"), "{rendered}");
+    assert!(rendered.contains("both offered and absent"), "{rendered}");
+    // Both sides must be named: the author looking at one cannot see the other.
     assert!(
-        rendered.contains("both offered and absent"),
+        rendered.contains("declared absent by `timer.b`"),
         "{rendered}"
     );
-    // Both sides must be named: the author looking at one cannot see the other.
-    assert!(rendered.contains("declared absent by `timer.b`"), "{rendered}");
-    assert!(rendered.contains("declared offered by `timer.a`"), "{rendered}");
+    assert!(
+        rendered.contains("declared offered by `timer.a`"),
+        "{rendered}"
+    );
     assert!(
         rendered.contains("only the author knows which half was meant"),
         "the refusal must say why it is not resolved by preference:\n{rendered}"
@@ -184,10 +187,7 @@ fn an_explicitly_absent_required_fact_is_infeasible_not_missing() {
     assert!(!report.is_admissible());
     assert!(rendered.contains("infeasible-configuration"), "{rendered}");
     assert!(!rendered.contains("missing-fact"), "{rendered}");
-    assert!(
-        rendered.contains("not a gap to be filled in"),
-        "{rendered}"
-    );
+    assert!(rendered.contains("not a gap to be filled in"), "{rendered}");
 }
 
 #[test]
@@ -201,7 +201,12 @@ fn the_closure_is_transitive_and_the_report_lists_it() {
         ",
     );
     assert!(report.is_admissible(), "{:?}", report.diagnostics);
-    for name in ["time.deadline", "time.monotonic", "compare-unit", "counter-width"] {
+    for name in [
+        "time.deadline",
+        "time.monotonic",
+        "compare-unit",
+        "counter-width",
+    ] {
         assert!(
             report.closure.contains(&name.to_string()),
             "`{name}` missing from closure {:?}",

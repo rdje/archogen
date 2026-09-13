@@ -11,7 +11,7 @@ summarize the snapshot in every commit-workflow completion message.
 | `PROGRAM` — workspace, tiers, book, ledger | In Progress | `.1`, `.1.1`, `.2` done; `osgen` CLI shell live; `.3`–`.7` pending |
 | `M0` — charter, boundary, profile, target | Done | all seven leaves closed; F27 green. The board remains a recorded blocker, not a passed gate |
 | `S0` — early executable generation (F28) | Not Started | frontier `S0.1` |
-| `M1` — eADL description foundation | Mostly Done | `.1`–`.5` done (F01–F06 green); frontier `.6` (refinement) |
+| `M1` — eADL description foundation | Mostly Done | `.1`–`.6` done (F01–F07, F27 green); frontier `.7` |
 | `M2` — one engine realization + controls | Not Started | frontier `M2.3` |
 | `M3` — joint resolver + checked plan | Not Started | frontier `M3.1` |
 | `M4` — generated system + simulator | Not Started | frontier `M4.1` |

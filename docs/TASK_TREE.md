@@ -52,7 +52,7 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 
 | Tree | Status | Frontier (next leaf) | Owner |
 | --- | --- | --- | --- |
-| [`M1`](tasks/M1.md) | `active` | `M1.6` — refinement and its violated obligations (F07) | repo-local |
+| [`M1`](tasks/M1.md) | `active` | `M1.7` — the `os/rt` workload module (closes the 10/11 schema gap) | repo-local |
 | [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.3` — the tiered verification runner | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |
 | [`S0`](tasks/S0.md) | `pending` | `S0.1` — tiny description, variants, and the independent oracle | repo-local |

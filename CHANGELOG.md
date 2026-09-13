@@ -4,6 +4,31 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — refinement as an obligation to check: F07
+
+`ARCHOGEN-M1-0017` (leaf `M1.6`).
+
+- `crates/eadl-model/src/refinement.rs`: three obligations — **guarantee**, **constraint**,
+  **exclusion** — and a violation names which one broke. §5.1.1: a refinement declaration is "an
+  obligation to check, not permission to trust a claim blindly".
+- ⭐ **Two roadmap sentences pull against each other here, and both directions are tested.**
+  §5.1.1 demands the obligations be checked; §5.3 says "adding an unused device is not
+  automatically an invalid refinement". A checker that demanded equality passes the exclusion arm
+  and rejects every real refinement; one that allowed any addition passes the addition arm and
+  silently drops the exclusion obligation — which is the one that matters most, because an
+  abstract description declares a fact absent *because* something depends on its absence.
+- Additions are reported even though they are allowed: allowed is not the same as invisible, and
+  the author should be able to see what grew.
+- An abstract description states **bounds with a direction**, not bare values. The same numeric
+  relationship satisfies `(at-least 32 bit)` and violates `(at-most 50 us)`, so a bare value
+  would leave the checker guessing. `exactly` refuses a merely "better" value but accepts the
+  same amount written differently, because the comparison is on the amount, not the spelling.
+- A bound checked against the wrong dimension is a type error, not a `false` — reusing F03's
+  refusal.
+- New book chapter `docs/book/src/refinement.md`.
+- Validation: 15 new arms, 223 tests across the workspace, 0 failed; fmt and clippy clean; all
+  doctrines green; `mdbook build` OK.
+
 ## archogen — presence, relevance, and the closure: F04, F05, F06
 
 `ARCHOGEN-M1-0016` (leaf `M1.5`).
