@@ -270,3 +270,162 @@ fn lcm(a: i64, b: i64) -> Option<i64> {
 fn clause<'a>(form: &'a Form, name: &str) -> Option<&'a Form> {
     form.items().iter().find(|item| item.head() == Some(name))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{interpret, Plan};
+    use eadl_front::{read, SourceMap};
+
+    fn plan_of(text: &str) -> Result<Plan, (String, String)> {
+        let mut sources = SourceMap::new();
+        let id = sources.add("test", text.to_string()).expect("small");
+        let (document, diagnostics) = read(&sources, id);
+        assert!(!diagnostics.has_errors(), "the fixture must read cleanly");
+        interpret(&document.forms, id)
+            .map_err(|d| (d.code.to_string(), format!("{} {}", d.message, d.repair)))
+    }
+
+    fn system(tasks: &str) -> String {
+        format!("(defsystem s {tasks})")
+    }
+
+    #[test]
+    fn the_horizon_is_the_hyperperiod_and_not_the_longest_period() {
+        // ⛔ THE CASE THE F28 CORPUS CANNOT SEE. Both S0 fixtures are **harmonic** — 10 and 30,
+        // then 10 and 20 — so one period divides the other and `lcm` equals `max` on both. A
+        // realization that returned the longest period instead of the least common multiple
+        // passes F28 end to end; it was found by mutating `lcm` to `max` and watching twelve
+        // oracle tests stay green.
+        //
+        // 10 and 15 are not harmonic: the hyperperiod is 30 and the longest period is 15, so
+        // this test separates them. The corpus limitation is recorded in
+        // `examples/s0-heartbeat/README.md`; this is the check that closes the hole today.
+        let plan = plan_of(&system(
+            "(task a (period 10 ms) (priority 1)) (task b (period 15 ms) (priority 2))",
+        ))
+        .expect("a periodic system");
+        assert_eq!(plan.horizon_ms, 30, "lcm(10, 15) is 30, and max is 15");
+
+        // Three mutually non-dividing periods, where max is not even close.
+        let plan = plan_of(&system(
+            "(task a (period 4 ms) (priority 1)) (task b (period 10 ms) (priority 2)) \
+             (task c (period 15 ms) (priority 3))",
+        ))
+        .expect("a periodic system");
+        assert_eq!(plan.horizon_ms, 60);
+    }
+
+    #[test]
+    fn a_harmonic_task_set_still_gets_its_hyperperiod() {
+        let plan = plan_of(&system(
+            "(task a (period 10 ms) (priority 1)) (task b (period 30 ms) (priority 2))",
+        ))
+        .expect("a periodic system");
+        assert_eq!(plan.horizon_ms, 30);
+        assert_eq!(plan.name, "s");
+        assert_eq!(plan.tasks.len(), 2);
+        assert_eq!(plan.tasks[0].period_ms, 10);
+        assert_eq!(plan.tasks[1].priority, 2);
+    }
+
+    #[test]
+    fn a_period_in_another_time_unit_converts_rather_than_being_refused() {
+        // `(period 1 s)` is a thousand whole milliseconds. Demanding the literal spelling `ms`
+        // would be a restriction on syntax rather than on anything the realization cannot do.
+        let plan = plan_of(&system(
+            "(task a (period 1 s) (priority 1)) (task b (period 250 ms) (priority 2))",
+        ))
+        .expect("a periodic system");
+        assert_eq!(plan.tasks[0].period_ms, 1000);
+        assert_eq!(plan.horizon_ms, 1000);
+    }
+
+    #[test]
+    fn a_sporadic_task_is_a_named_engine_gap_not_an_impossibility() {
+        // §5.4: "explain the missing engine capability; do not declare the requested function
+        // logically impossible". The refusal must route to work, and say what to do today.
+        let (code, text) = plan_of(&system(
+            "(task a (period 10 ms) (priority 1)) (task b (min-separation 30 ms) (priority 2))",
+        ))
+        .expect_err("sporadic releases have no schedule");
+        assert_eq!(code, "unsupported-profile");
+        assert!(text.contains("missing engine support"), "{text}");
+        assert!(
+            text.contains("M4.3"),
+            "the refusal must name its leaf: {text}"
+        );
+        assert!(
+            text.contains("period"),
+            "it must say what works today: {text}"
+        );
+    }
+
+    #[test]
+    fn a_fractional_millisecond_period_is_a_named_engine_gap() {
+        let (code, text) = plan_of(&system(
+            "(task a (period 500 us) (priority 1)) (task b (period 10 ms) (priority 2))",
+        ))
+        .expect_err("half a millisecond is not a whole one");
+        assert_eq!(code, "unsupported-profile");
+        assert!(text.contains("whole-millisecond"), "{text}");
+        assert!(
+            text.contains("M4.1"),
+            "the refusal must name its leaf: {text}"
+        );
+    }
+
+    #[test]
+    fn a_hyperperiod_that_overflows_is_reported_not_wrapped() {
+        // §7.4 requires overflow detection. A wrapped horizon would be a plausible number that
+        // is not the hyperperiod, which is worse than a refusal.
+        let (code, text) = plan_of(&system(
+            "(task a (period 4000000000 ms) (priority 1)) \
+             (task b (period 3999999999 ms) (priority 2))",
+        ))
+        .expect_err("the product of two large coprime periods does not fit");
+        assert_eq!(code, "analysis-inconclusive");
+        assert!(
+            text.contains("overflow") || text.contains("too large"),
+            "{text}"
+        );
+    }
+
+    #[test]
+    fn a_description_with_no_system_is_a_library_not_a_system() {
+        let (code, text) = plan_of("(defblock b (offers (x true)))").expect_err("no system");
+        assert_eq!(code, "invalid-description");
+        assert!(text.contains("library, not a system"), "{text}");
+    }
+
+    #[test]
+    fn two_systems_are_refused_rather_than_one_chosen() {
+        // Choosing one silently would make the output depend on declaration order.
+        let (code, text) = plan_of(
+            "(defsystem a (task t (period 1 ms) (priority 1))) \
+                                   (defsystem b (task t (period 1 ms) (priority 1)))",
+        )
+        .expect_err("two systems");
+        assert_eq!(code, "invalid-description");
+        assert!(text.contains("more than one system"), "{text}");
+    }
+
+    #[test]
+    fn a_system_with_no_tasks_has_no_observation_to_produce() {
+        let (code, text) = plan_of("(defsystem s (requires (uses x)))").expect_err("no tasks");
+        assert_eq!(code, "invalid-description");
+        assert!(text.contains("no tasks"), "{text}");
+    }
+
+    #[test]
+    fn tasks_keep_their_declaration_order_and_their_spans() {
+        // Declaration order is what the emitted table carries, and the spans are what `S0.5`
+        // will resolve provenance against — so both are asserted before anything depends on them.
+        let plan = plan_of(&system(
+            "(task first (period 10 ms) (priority 2)) (task second (period 10 ms) (priority 1))",
+        ))
+        .expect("a periodic system");
+        assert_eq!(plan.tasks[0].name, "first");
+        assert_eq!(plan.tasks[1].name, "second");
+        assert!(plan.tasks[0].span.start < plan.tasks[1].span.start);
+    }
+}

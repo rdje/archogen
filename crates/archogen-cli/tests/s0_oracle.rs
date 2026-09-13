@@ -22,11 +22,11 @@
 //! | the unsupported fixture has no derivable observation | now |
 //! | the changed case observes something materially different | now |
 //! | `archogen build` reaches each case's frozen exit code | now (leaf `S0.3`) |
-//! | the generated executable actually prints the observation | leaf `S0.4` |
+//! | the generated executable actually prints the observation | now — **F28** (leaf `S0.4`) |
 //!
 //! Until `S0.3`, the last two rows were held by a tripwire that pinned `archogen build` at
-//! `unimplemented` and failed the moment it became real — which is how the fifth row came to be
-//! written rather than quietly inherited. The sixth is the current frontier.
+//! `unimplemented` and failed the moment it became real — which is how they came to be written
+//! rather than quietly inherited.
 //!
 //! ⛔ **Note what this file never does: read the generated Rust.** Every assertion here is about
 //! the *observable* — an exit code, and soon the bytes the program prints. An assertion like
@@ -42,6 +42,7 @@
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 use archogen_cli::{run, Status};
 use eadl_front::{read, Form, SourceMap};
@@ -548,4 +549,198 @@ fn every_fixture_builds_to_its_frozen_exit_code() {
             );
         }
     }
+}
+
+// ── F28 ──────────────────────────────────────────────────────────────────────────────────────
+
+/// A build directory for one case, removed first.
+///
+/// §12 S0's exit gate is written "**from a clean local build directory**", so every case starts
+/// from nothing. Output lives under `CARGO_TARGET_TMPDIR` — inside `target/`, on the
+/// repository's own volume and derived from it, never `/tmp`.
+fn clean_build_dir(case: &str, attempt: u32) -> PathBuf {
+    let dir = Path::new(env!("CARGO_TARGET_TMPDIR"))
+        .join("f28")
+        .join(format!("{case}-{attempt}"));
+    let _ = std::fs::remove_dir_all(&dir);
+    dir
+}
+
+/// Every generated file's bytes, so "no generated file is edited" can be checked rather than
+/// promised.
+fn snapshot(dir: &Path) -> Vec<(String, Vec<u8>)> {
+    ["Cargo.toml", "src/main.rs", "src/rt.rs", "src/service.rs"]
+        .iter()
+        .map(|name| {
+            (
+                (*name).to_string(),
+                std::fs::read(dir.join(name))
+                    .unwrap_or_else(|e| panic!("{name} was not generated: {e}")),
+            )
+        })
+        .collect()
+}
+
+/// Generate, compile and run one description; return what it printed to standard output.
+fn generate_compile_run(description: &str, dir: &Path) -> String {
+    let (status, output) = invoke(&[
+        "build",
+        &absolute(description),
+        "--out",
+        &dir.display().to_string(),
+    ]);
+    assert_eq!(
+        status,
+        Status::Ok,
+        "{description} did not generate\n{output}"
+    );
+
+    let before = snapshot(dir);
+
+    // `env!`, not `option_env!`: an absent `CARGO` fails the *build* of this test rather than its
+    // run. §14.3 requires an unavailable tool to be reported as unavailable, never as a passed
+    // check, and a compile error is the loudest form of that.
+    let run = Command::new(env!("CARGO"))
+        .arg("run")
+        .arg("--quiet")
+        .arg("--manifest-path")
+        .arg(dir.join("Cargo.toml"))
+        // Its own target directory: the generated crate must not share, or contend for the lock
+        // on, the workspace's.
+        .env("CARGO_TARGET_DIR", dir.join("target"))
+        .output()
+        .expect("cargo is runnable");
+    assert!(
+        run.status.success(),
+        "the generated system did not build and run:\n{}",
+        String::from_utf8_lossy(&run.stderr)
+    );
+
+    // ⭐ "…without editing generated output" is F28's wording, and this is the check that makes
+    // it a fact about the run rather than an assurance about the author.
+    assert_eq!(
+        before,
+        snapshot(dir),
+        "{description}: a generated file changed between generation and execution"
+    );
+
+    String::from_utf8(run.stdout).expect("utf-8 stdout")
+}
+
+#[test]
+fn f28_a_small_description_produces_the_asserted_observation() {
+    // **F28.** From a clean build directory: generate, compile, run, and compare against the
+    // observation frozen in `S0.1` — before this path existed, and by an implementation that
+    // cannot be called from it.
+    for (description, expected) in CASES {
+        let expectation = load_expectation(expected);
+        if expectation.header("observation") != "stdout" {
+            continue;
+        }
+        let dir = clean_build_dir(expectation.header("case"), 1);
+        let printed = generate_compile_run(description, &dir);
+        assert_eq!(
+            printed, expectation.body,
+            "{description}: the generated system printed something other than {expected}"
+        );
+    }
+}
+
+#[test]
+fn f28_the_unsupported_request_is_rejected_with_a_diagnostic() {
+    // The third variant of the gate. The description is **accepted** by `archogen check`, so the
+    // refusal has to come from generation — and §5.4 requires it to name the missing engine
+    // capability rather than declare the request impossible.
+    let (description, expected) = CASES[2];
+    let expectation = load_expectation(expected);
+    let dir = clean_build_dir(expectation.header("case"), 1);
+    let (status, output) = invoke(&[
+        "build",
+        &absolute(description),
+        "--out",
+        &dir.display().to_string(),
+    ]);
+    assert_eq!(status.code(), expectation.exit("build-exit"), "{output}");
+    assert!(
+        !dir.exists(),
+        "a refused build left {} behind — a half-built artifact is one somebody will find and \
+         mistake for output",
+        dir.display()
+    );
+    for token in [expectation.header("names"), expectation.header("owner")] {
+        assert!(
+            output.contains(token),
+            "the refusal must name `{token}`\n{output}"
+        );
+    }
+}
+
+#[test]
+fn f28_deleting_the_build_directory_does_not_change_the_result() {
+    // The reproducibility half of the gate: "deleting the build directory does not change the
+    // result". Two full passes over the base case, each from a removed directory — identical
+    // generated bytes and identical observed output. Without this, any later artifact hash or
+    // replay manifest would rest on nothing.
+    let (description, expected) = CASES[0];
+    let expectation = load_expectation(expected);
+
+    let first_dir = clean_build_dir("repeat", 1);
+    let first = generate_compile_run(description, &first_dir);
+    let first_files = snapshot(&first_dir);
+
+    let second_dir = clean_build_dir("repeat", 2);
+    let second = generate_compile_run(description, &second_dir);
+
+    assert_eq!(
+        first, second,
+        "two clean builds observed different behavior"
+    );
+    assert_eq!(first, expectation.body, "{expected}");
+    assert_eq!(
+        first_files,
+        snapshot(&second_dir),
+        "two clean builds generated different bytes"
+    );
+}
+
+/// The description that separates a hyperperiod from a longest period.
+const NON_HARMONIC: &str = "examples/s0-heartbeat/system-non-harmonic.eadl";
+
+#[test]
+fn f28_a_non_harmonic_task_set_separates_the_hyperperiod_from_the_longest_period() {
+    // ⛔ THE THREE F28 CASES CANNOT SEE THIS. Their periods are 10 and 30, then 10 and 20 — both
+    // harmonic, so `lcm` equals `max` and a realization returning the longest period passes the
+    // whole gate. Measured, not supposed: mutating `lcm` to `max` in `crates/archogen-s0` left
+    // all twelve oracle tests green.
+    //
+    // With 10 against 15 the two answers are 30 and 15, and the trace interleaves.
+    //
+    // ⭐ There is no frozen file for this case, on purpose. The three F28 expectations predate
+    // the emitter, which is what their independence claim rests on; one frozen afterwards would
+    // sit beside them carrying a weaker pedigree that nobody could later tell apart. So the
+    // expectation is **derived** here, by the same implementation of the contract the frozen
+    // cases are checked against — an implementation that was written before the emitter and that
+    // the emitter cannot call. Two independent implementations agreeing is weaker evidence than
+    // a literal frozen in advance, and it is the right strength for a case added afterwards.
+    let derived = derive(&parse_description(NON_HARMONIC));
+    let Derived::Observation(expected) = derived else {
+        panic!("{NON_HARMONIC} is periodic and must yield an observation");
+    };
+
+    // The derivation is pinned to its hand-computed value first, so a bug in the oracle cannot
+    // quietly agree with a bug in the emitter.
+    assert_eq!(
+        expected,
+        "system heartbeat\n\
+         release 0 ms beat\n\
+         release 0 ms chime\n\
+         release 10 ms beat\n\
+         release 15 ms chime\n\
+         release 20 ms beat\n\
+         summary hyperperiod 30 ms releases 5\n",
+        "lcm(10, 15) is 30 and the longest period is 15"
+    );
+
+    let dir = clean_build_dir("non-harmonic", 1);
+    assert_eq!(generate_compile_run(NON_HARMONIC, &dir), expected);
 }

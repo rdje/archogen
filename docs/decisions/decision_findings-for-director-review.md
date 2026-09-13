@@ -5,8 +5,10 @@
 - **Status:** `active`
 - **Owner / source:** raised during the M0 + M1 build; recorded here so they survive the session
 
-Three items are outside an implementer's authority to settle. Each is also tracked as work, so
-nothing here depends on this file being read.
+Four items are recorded here so they survive the session. Three are outside an implementer's
+authority to settle; the fourth (§4) is a measurement about the programme's own evidence that you
+should see even though it is already fixed. Each is tracked as work, so nothing here depends on
+this file being read.
 
 ## 1. No physical board — the one M0 obligation that cannot be closed in software
 
@@ -48,11 +50,38 @@ another leaf's evidence), so the strictness may well be intended. Tracked as `PR
 routing evidence, and the first output of that leaf may be an upstream report rather than a
 change. No judgement needed unless you want it prioritised.
 
+## 4. F28 was green and could not see a whole class of error — found, fixed, worth knowing
+
+⚠️ **Not a decision to make; a calibration to carry.** The S0 gate (F28) generates, compiles and
+runs a described system and compares its output to an observation frozen before the emitter
+existed. It passed. It also could not distinguish a **hyperperiod** from a **longest period**.
+
+Both original fixtures are *harmonic* — periods 10 and 30, then 10 and 20 — so one period divides
+the other and `lcm` equals `max` on both. Replacing the least common multiple with the maximum in
+`crates/archogen-s0` left **all twelve oracle tests green**. It was found only because the fix was
+mutation-tested rather than assumed correct.
+
+**Fixed in the same leaf (`S0.4`):** a unit test on a non-harmonic set (`lcm(10, 15) = 30` against
+a longest period of `15`), and an end-to-end case,
+`examples/s0-heartbeat/system-non-harmonic.eadl`, that the same mutation now fails.
+
+**Why it is worth your attention anyway.** The generalisation is not about hyperperiods. A fixture
+set can be *complete against its own specification* and *blind to a class of error*, and a green
+gate says nothing about which. The programme's acceptance matrix is thirty such fixtures, and
+§13.1 is careful to call them "a minimum practical corpus, not a proof of completeness" — this is
+the first measured instance of what that sentence costs. The habit it argues for is mutation
+testing at every gate, which §13.3 already lists and which is otherwise easy to defer forever.
+
 ## A note on what "done" means so far
 
 M0 and M1 are complete, and the shape of the claim matters. What exists is a **frontend**: a
-description can be read, type-checked, admitted or refused against a profile, and 246 tests hold
-that behavior. What does not exist yet is resolution, generation, analysis, or a running artifact.
+description can be read, type-checked, admitted or refused against a profile. Since then S0 has
+added a **prototype generation path**: `archogen build` emits a Rust crate that compiles and runs,
+and F28 is green. 301 tests hold that behavior.
+
+What still does not exist is resolution, provider search, analysis, or any claim about timing —
+and the S0 path is explicitly temporary (`crates/archogen-s0`, marked experimental everywhere it
+surfaces, replaced wholesale by M4).
 
 `archogen check` says this itself on every acceptance — *"this checks the description, not a system:
 no resolution, generation or analysis has run"* — because the gap between "the description is

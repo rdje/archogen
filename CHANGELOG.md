@@ -4,6 +4,38 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — F28 is green, and mutation testing found what it could not see
+
+`ARCHOGEN-S0-0026` (leaf `S0.4`).
+
+- **F28 runs as an automated test.** For each runnable case it removes the build directory,
+  generates, compiles with `cargo`, runs the produced executable, and compares standard output to
+  the bytes frozen in `S0.1`. Plus the unsupported case's refusal, plus a repeat pass proving that
+  deleting the build directory changes nothing, plus a check that no generated file differed
+  between generation and execution — so §12 S0's "without editing generated output" is a fact
+  about the run, not an assurance about the author.
+- ⛔ **And it was blind.** Replacing the hyperperiod with the longest period
+  (`lcm` → `max`) left **all twelve** oracle tests green. Root cause, computed rather than
+  guessed: both fixtures are **harmonic** — periods 10 and 30, then 10 and 20 — so one period
+  divides the other and the two formulas agree on every input the corpus had. The fixtures were
+  not wrong; they were chosen to be checkable by hand, which is the same property that collapses
+  the formulas onto one answer.
+- Closed at both levels: a unit test where `lcm(10, 15) = 30` against a longest period of `15`,
+  and `examples/s0-heartbeat/system-non-harmonic.eadl` running the whole path on non-dividing
+  periods. The same mutation now fails both.
+- ⚠️ That fourth description has **no frozen expectation**, deliberately. The three F28 cases
+  predate the emitter, which is the whole basis of the independence claim; one frozen afterwards
+  would sit beside them with a weaker pedigree nobody could later tell apart — and the likeliest
+  outcome is the weaker one being credited with the stronger claim. Its expectation is derived by
+  the oracle instead, and labelled as such in the file, the README and the test.
+- The generalisation is worth more than the bug, and is recorded for the director: a fixture set
+  can be complete against its own specification and blind to a class of error, and a green gate
+  says nothing about which. The acceptance matrix is thirty such fixtures.
+- Validation: `cargo test -p archogen-cli --test s0_oracle` → **13 passed, 0 failed**; proven able
+  to fail by reversing the release sort key in the runtime → `2 failed`, restored byte-identical
+  and re-run green. `cargo test --all` → **301** passed (287 before, `+14`); fmt and clippy clean;
+  all doctrines green; `mdbook build` OK.
+
 ## archogen — `archogen build` becomes real, and prints exactly what was frozen before it existed
 
 `ARCHOGEN-S0-0025` (leaf `S0.3`).

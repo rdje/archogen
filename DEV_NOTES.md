@@ -19,6 +19,25 @@
 Detailed technical notes — root cause, implementation, validation — per slice. The
 engineering-continuity surface (not the public docs; that's `docs/book/`). Newest first.
 
+## _(2026-09-13)_ — a green end-to-end gate that could not tell `lcm` from `max`
+
+- F28 generates, compiles, runs and compares against an observation frozen before the emitter
+  existed. It passed. Replacing the hyperperiod with the longest period in
+  `crates/archogen-s0/src/interpret.rs` left **all twelve** oracle tests green.
+- Root cause, computed not guessed: periods `[10, 30]` and `[10, 20]` are **harmonic** —
+  `lcm == max` on both. `python3 -c` over the two sets printed `distinguishable=False` for each,
+  and `True` for `[10, 15]`. The fixtures were chosen to be verifiable by hand, which is exactly
+  the property that collapses the two formulas.
+- Closed at both levels — a unit test (`lcm(10, 15) = 30` vs a longest period of `15`) and a
+  fourth end-to-end description. Re-running the mutation now fails both: `left: 15 / right: 30`.
+- ⚠️ The fourth description carries **no frozen expectation**. Freezing one after the emitter
+  exists would put two different pedigrees side by side in one directory, and the weaker one
+  eventually gets cited for the stronger claim. Its expectation is derived by the oracle instead
+  — two independent implementations agreeing — and every place it appears says so.
+- The other red arm (release sort key reversed) failed correctly first time, which is what made
+  the second one's green so informative: the gate works, the corpus was narrow.
+- Promoted to `docs/knowledge/a-gate-is-only-as-sharp-as-its-fixtures.md`.
+
 ## _(2026-09-13)_ — a mutation that did not apply is a false green
 
 - A red arm for the S0 emitter removed a semicolon from the emitted `main` and the suite stayed

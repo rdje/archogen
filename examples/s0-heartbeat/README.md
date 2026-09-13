@@ -79,6 +79,33 @@ mis-parses `(period 10 ms)` would mislead both sides identically. That is an acc
 dependency — building a second parser to avoid it would contradict §4.1 and would be the more
 dangerous kind of green.
 
+## What the corpus cannot see
+
+⛔ **The three cases above share a blind spot, and it was measured rather than guessed.** Their
+periods are 10 and 30, then 10 and 20. In both, one period divides the other — the task sets are
+**harmonic** — so the hyperperiod equals the longest period. A realization that returned `max`
+instead of `lcm` therefore passes every one of them, end to end. Replacing `lcm` with `max` in
+`crates/archogen-s0` left all twelve oracle tests green.
+
+Two things close it:
+
+- a unit test in `crates/archogen-s0/src/interpret.rs` on a non-harmonic set, where
+  `lcm(10, 15) = 30` and the longest period is `15`; and
+- [`system-non-harmonic.eadl`](system-non-harmonic.eadl), which runs the whole path on
+  `beat` at 10 ms against `chime` at 15 ms.
+
+That fourth description has **no frozen expectation**, deliberately. The three F28 cases were
+frozen before any emitter existed, which is what their independence claim rests on; a file frozen
+afterwards would sit beside them carrying a weaker pedigree that a later reader could not tell
+apart. Its expectation is instead *derived* by the oracle — an implementation of the contract that
+predates the emitter and that the emitter cannot call — and compared to what the generated system
+prints. Two independent implementations agreeing is weaker evidence than a literal frozen in
+advance, which is the right strength for a case added afterwards.
+
+The general lesson is not about hyperperiods: a fixture set can be complete against its own
+specification and blind to a class of error, and a green gate says nothing about which. See
+[`a-gate-is-only-as-sharp-as-its-fixtures`](../../docs/knowledge/a-gate-is-only-as-sharp-as-its-fixtures.md).
+
 ## S0 assumptions recorded here for retirement
 
 Leaf `S0.6` owns the retirement note. These are the temporary decisions this corpus rests on:

@@ -1,0 +1,43 @@
+; examples/s0-heartbeat/system-non-harmonic.eadl — the discrimination case.
+;
+; ⛔ THIS FILE EXISTS BECAUSE THE THREE F28 CASES SHARE A BLIND SPOT. Their periods are 10 and 30,
+; then 10 and 20: in both, one period divides the other, so the task sets are **harmonic** and
+; the hyperperiod equals the longest period. A realization that returned `max` instead of `lcm`
+; therefore passes F28 end to end — found by mutating `lcm` to `max` in `crates/archogen-s0` and
+; watching all twelve oracle tests stay green.
+;
+; Here `chime` is released every 15 ms against `beat`'s 10 ms. Nothing divides anything:
+;
+;   hyperperiod  lcm(10, 15) = 30 ms        longest period  15 ms
+;   releases     beat at 0, 10, 20; chime at 0, 15 — five, interleaved
+;
+; ⭐ IT HAS NO FROZEN EXPECTATION, AND THAT IS DELIBERATE. The three F28 cases were frozen before
+; any emitter existed, which is what makes §12 S0's independence claim a fact of the commit
+; order. This case was written afterwards, by leaf `S0.4`, so a frozen file beside it would carry
+; a weaker pedigree than its neighbours and nobody reading the directory later would be able to
+; tell which was which. Instead the oracle **derives** its expected observation from this
+; description through its own implementation of the observation contract, and compares that to
+; what the generated system prints — two independent implementations agreeing, rather than one
+; implementation agreeing with itself.
+;
+; See examples/s0-heartbeat/README.md, "What the corpus cannot see".
+
+(defblock console.uart
+  (offers (observable-output true)))
+
+(defplatform host.playground
+  (offers (core-count 1 tick))
+  (requires (uses console.uart)))
+
+(defservice console.write
+  (requires (needs observable-output)))
+
+(defsystem heartbeat
+  (task beat
+    (period 10 ms) (deadline 10 ms) (deadline-from release)
+    (priority 1) (uses console.write) (on-overrun fault))
+  (task chime
+    (period 15 ms) (deadline 15 ms) (deadline-from release)
+    (priority 2) (uses console.write) (on-overrun fault))
+  (requires (uses console.write))
+  (platform (uses host.playground)))
