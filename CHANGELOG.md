@@ -4,6 +4,38 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — modules and instances, F01 and F02
+
+`ARCHOGEN-M1-0015` (leaf `M1.4`).
+
+- `crates/eadl-front/src/module.rs`: namespaced imports, explicit exports, typed parameters with
+  defaults, version constraints, and elaboration into a program.
+- ⭐ **Elaboration produces instances, not modules.** §5.1.1 requires instantiating a module more
+  than once "without sharing mutable elaboration state", so importing `hw.timer` twice yields two
+  instances with independent bindings and independent qualified names. A cache keyed on module
+  name would have been smaller and would have silently made the second import a no-op — a system
+  with two timers would have had one, and nothing would have said so.
+- Names carry their whole alias path (`platform.timer.timer.counter`), and instances come out in
+  dependency order, children before parents.
+- **F01 and F02 green, 18 arms.** A cycle reports its whole chain — `circular import: a → b → c →
+  a` — because "there is a cycle" is a puzzle and the chain is a diagnostic. A duplicated export
+  and a duplicated alias each name **both** sites, since the author looking at one cannot see the
+  other. Also refused: a dangling export, a name mismatch, a missing required parameter, an
+  unknown parameter (listing the real ones), and an unversioned module.
+- A **major** version difference is never satisfied, however much newer the module is. "Newer" is
+  not "compatible", and §15 keeps a locked description's meaning, which a major bump is defined
+  not to preserve.
+- A cycle is the only failure that stops elaboration; everything else is collected, so three
+  problems cost one edit cycle.
+- ⭐ A parser defect was caught by the fixture, not by inspection: the import version clause was
+  read flat while the syntax is nested, so every versioned import in the valid composition was
+  refused — five of eighteen arms red, including the F01 happy path. The nested shape was kept
+  rather than flattened to match the bug, because the relation being its own form leaves room for
+  `at-most` and `exactly`.
+- New book chapter `docs/book/src/modules.md`.
+- Validation: 18 new arms, 194 tests across the workspace, 0 failed; fmt and clippy clean; all
+  doctrines green; `mdbook build` OK.
+
 ## archogen — exact quantities, and F03
 
 `ARCHOGEN-M1-0014` (leaf `M1.3`).

@@ -10,7 +10,8 @@ justifies the split — the rows below appear as that happens.
   and caret diagnostics carrying a repair direction. Purely syntactic and float-free; comments
   are kept because the boundary corpus carries its metadata in them.
   `cargo run -q -p eadl-front --example diagnose -- <file>` is the tool that answers "where did
-  it stop?".
+  it stop?". `src/module.rs` elaborates imports into a tree of INSTANCES — importing a module
+  twice yields two, with independent bindings — and reports a cycle as its whole chain.
 - `crates/eadl-model/` — the typed eADL model (§4.2): declarations, units, contract IDs and
   profile definitions. `src/profile.rs` holds `rt-static-up-v1` as data — 13 decisions, 18
   named exclusions — and its test fails if `docs/profiles/rt-static-up-v1.md` drifts from it.

@@ -79,19 +79,14 @@ fn f03_incompatible_units_are_refused_before_any_magnitude_is_read() {
     // dimension check happens first.
     let huge_time = Quantity::new(Rational::new(i128::MAX, 1).unwrap(), unit("s").unwrap())
         .expect("a large duration is legal");
-    let huge_frequency = Quantity::new(
-        Rational::new(i128::MAX, 1).unwrap(),
-        unit("GHz").unwrap(),
-    )
-    .expect("a large frequency is legal");
+    let huge_frequency = Quantity::new(Rational::new(i128::MAX, 1).unwrap(), unit("GHz").unwrap())
+        .expect("a large frequency is legal");
 
     // Sanity: touching the magnitudes really would overflow.
     assert_eq!(huge_frequency.in_base(), Err(QuantityError::Overflow));
 
     match huge_time.compare(huge_frequency) {
-        Err(QuantityError::IncompatibleDimensions {
-            left, right, ..
-        }) => {
+        Err(QuantityError::IncompatibleDimensions { left, right, .. }) => {
             assert_eq!(left, Dimension::Time);
             assert_eq!(right, Dimension::Frequency);
         }
@@ -139,8 +134,12 @@ fn a_bare_number_is_not_a_quantity() {
 #[test]
 fn conversion_within_a_dimension_is_exact() {
     assert!(q(1, "s").equals(q(1000, "ms")).expect("same dimension"));
-    assert!(q(1, "ms").equals(q(1_000_000, "ns")).expect("same dimension"));
-    assert!(q(1, "MHz").equals(q(1_000_000, "Hz")).expect("same dimension"));
+    assert!(q(1, "ms")
+        .equals(q(1_000_000, "ns"))
+        .expect("same dimension"));
+    assert!(q(1, "MHz")
+        .equals(q(1_000_000, "Hz"))
+        .expect("same dimension"));
     assert!(q(1, "KiB").equals(q(8192, "bit")).expect("same dimension"));
     assert!(q(1, "byte").equals(q(8, "bit")).expect("same dimension"));
 }
@@ -154,7 +153,9 @@ fn conversion_round_trips_without_loss() {
         .convert_to(unit("ns").unwrap())
         .expect("same dimension");
     assert_eq!(converted.value, Rational::integer(1_500_000));
-    let back = converted.convert_to(unit("ms").unwrap()).expect("same dimension");
+    let back = converted
+        .convert_to(unit("ms").unwrap())
+        .expect("same dimension");
     assert_eq!(back.value, original.value);
 }
 
@@ -163,7 +164,9 @@ fn a_fractional_conversion_stays_exact_rather_than_rounding() {
     // 1 ns expressed in ms is 1/1_000_000, which has no short decimal form. It must stay
     // exact, because a rounded-to-zero duration is a duration that disappears.
     let nanosecond = q(1, "ns");
-    let in_ms = nanosecond.convert_to(unit("ms").unwrap()).expect("same dimension");
+    let in_ms = nanosecond
+        .convert_to(unit("ms").unwrap())
+        .expect("same dimension");
     assert_eq!(in_ms.value, Rational::new(1, 1_000_000).unwrap());
     assert!(!in_ms.value.is_zero());
     assert!(in_ms.equals(nanosecond).expect("same dimension"));
@@ -230,5 +233,8 @@ fn a_zero_duration_is_legal_but_a_negative_one_is_not() {
     // Zero is a meaningful duration — an immediate deadline. Negative is not.
     assert!(read_quantity("0 ms").is_ok());
     let rendered = read_quantity("-1 ms").expect_err("must refuse");
-    assert!(rendered.contains("quantity-negative-duration"), "{rendered}");
+    assert!(
+        rendered.contains("quantity-negative-duration"),
+        "{rendered}"
+    );
 }

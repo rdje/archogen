@@ -11,10 +11,10 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M1` → frontier leaf `M1.4` (modules and imports). `M0` is **done**.
-- **Next action:** modules, namespaced imports, explicit exports, typed parameters and
-  repeated instantiation; fixtures F01 and F02 (`docs/tasks/M1.md`, leaf `M1.4`).
-- **Latest commit:** `ARCHOGEN-M1-0014 (leaf M1.3)` — exact rationals, units, F03.
+- **Active tree:** `M1` → frontier leaf `M1.5` (presence and relevance). `M0` is **done**.
+- **Next action:** presence states (offered / explicitly absent / undescribed) and the
+  dependency closure that decides relevance; F04–F06 (`docs/tasks/M1.md`, leaf `M1.5`).
+- **Latest commit:** `ARCHOGEN-M1-0015 (leaf M1.4)` — modules and instances, F01/F02.
 - **In-flight uncommitted work:** none.
 - **Blockers:** no physical board procured → tree `M5` blocked (director decision;
   `docs/targets/first-target.md`). QEMU RISC-V not installed → `M2.8` emulator half, `M4.9`.
