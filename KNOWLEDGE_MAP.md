@@ -45,6 +45,8 @@ justifies the split — the rows below appear as that happens.
   expectation from its description through its own implementation of the five-rule observation
   contract in that directory's README, so an edit to either side fails. It sits in `tests/`
   deliberately: Rust cannot link an integration test into a library, so no emitter can call it.
+  Its sibling `s0_reader.rs` asserts the other half of F28 — that a corrupted description is
+  refused *where it broke*, with the expected line computed from the fixture rather than pinned.
 - `docs/semantics/boundary/` — the 21-case boundary corpus (accept/reject pairs, 5 ambiguous),
   the input fixture F27 mechanizes. Its README fixes the case format.
 - `docs/usecases/` — the four systems the toolchain must build or refuse; `docs/evaluation/` —

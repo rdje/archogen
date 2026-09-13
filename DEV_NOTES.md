@@ -19,6 +19,26 @@
 Detailed technical notes — root cause, implementation, validation — per slice. The
 engineering-continuity surface (not the public docs; that's `docs/book/`). Newest first.
 
+## _(2026-09-13)_ — a leaf is closed by its acceptance, not by its implementation existing
+
+- `S0.2` described a reader `M1` had already built better. Three tempting answers — delete the
+  leaf, tick it because the work exists, write a second reader — each lose something: the
+  acceptance, the measurement, and the point of the retirement clause respectively.
+- Re-verifying the acceptance clause by clause found the one nobody had checked. "The three
+  fixtures parse" was already implied; "a malformed fixture reports a **span-localized** error"
+  was asserted nowhere for this corpus:
+  `git grep -c 'read-unexpected-close\|read-unclosed-list' HEAD -- 'crates/archogen-cli'` printed
+  nothing, `rc=1`.
+- The clause is only meaningful with a negative case. A reader reporting every error at
+  end-of-input passes "an error was produced". So the test injects the corruption near the TOP
+  of the fixture and demands the caret there, with the line computed from the fixture rather than
+  pinned — otherwise the test becomes a maintenance tax the next fixture edit pays.
+- Red arms run against the **subject**: `read-unexpected-close` pointed at offset zero →
+  `left: 1 / right: 25`; the `read-unclosed-list` secondary label moved to EOF →
+  `left: 40 / right: 32`. Restored from a copy and confirmed byte-identical with
+  `git diff --stat HEAD -- crates/eadl-front crates/eadl-model` (empty).
+- Promoted to `docs/knowledge/closing-a-leaf-whose-work-landed-elsewhere.md`.
+
 ## _(2026-09-13)_ — an oracle is independent by construction, or it is not independent
 
 - F28 asks for an expected-output assertion written *before* the generator. Intent cannot carry

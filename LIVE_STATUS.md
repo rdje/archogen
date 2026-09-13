@@ -10,7 +10,7 @@ summarize the snapshot in every commit-workflow completion message.
 | Roadmap seeded into task-trees | Done | ten trees: `PROGRAM`, `M0`, `S0`, `M1`–`M7`; F01–F30 each owned |
 | `PROGRAM` — workspace, tiers, book, ledger | In Progress | `.1` `.1.1` `.2` `.2.1` done; CLI is `archogen`; `.3`–`.8` pending |
 | `M0` — charter, boundary, profile, target | Done | all seven leaves closed; F27 green. The board remains a recorded blocker, not a passed gate |
-| `S0` — early executable generation (F28) | In Progress | active tree; `S0.1` done — corpus + oracle frozen before the emitter. Frontier `S0.2`; F28 itself needs `S0.3`/`S0.4` |
+| `S0` — early executable generation (F28) | In Progress | active tree; `S0.1`, `S0.2` done — corpus + oracle frozen before the emitter, diagnostics localized. Frontier `S0.3`, the emitter; F28 itself lands at `S0.4` |
 | `M1` — eADL description foundation | Done | all eight leaves; F01–F07 green; `archogen check` real; 25 semantic cases |
 | `M2` — one engine realization + controls | Not Started | frontier `M2.3` |
 | `M3` — joint resolver + checked plan | Not Started | frontier `M3.1` |

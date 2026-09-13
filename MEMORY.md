@@ -11,13 +11,14 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `S0` → frontier leaf `S0.2`. `M0` and `M1` are **done**; `S0.1` is **done**.
-- **Next action:** close `S0.2` honestly against the frontend `M1` actually built — its
-  acceptance ("the three fixtures parse; a malformed fixture reports a span-localized error") is
-  a re-verification, not new code. Then `S0.3`, the emitter.
-- **Latest commit:** `ARCHOGEN-S0-0022 (leaf S0.1)` — the F28 corpus `examples/s0-heartbeat/` and
-  its oracle `crates/archogen-cli/tests/s0_oracle.rs`, both landed **before** any emitter exists,
-  which is what makes §12 S0's independence claim a fact of the commit order.
+- **Active tree:** `S0` → frontier leaf `S0.3`. `M0` and `M1` are **done**; `S0.1`, `S0.2` done.
+- **Next action:** `S0.3` — the emitter. One fixed engine-owned realization of the S0 observation
+  contract (`examples/s0-heartbeat/README.md`), emitting a Rust crate that compiles, wired behind
+  `archogen build`. ⛔ Write it from the **contract**, never from
+  `crates/archogen-cli/tests/s0_oracle.rs`, which is the thing that judges it.
+- **Latest commit:** `ARCHOGEN-S0-0023 (leaf S0.2)`. The F28 corpus and its oracle
+  (`ARCHOGEN-S0-0022`) landed **before** any emitter exists, which is what makes §12 S0's
+  independence claim a fact of the commit order.
 - **In-flight uncommitted work:** none.
 - **Blockers:** no physical board procured → tree `M5` blocked (director decision;
   `docs/targets/first-target.md`). QEMU RISC-V not installed → `M2.8` emulator half, `M4.9`.

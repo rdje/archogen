@@ -4,6 +4,32 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — a leaf closed by its acceptance, not by its implementation
+
+`ARCHOGEN-S0-0023` (leaf `S0.2`).
+
+- `S0.2` asked for "a minimal S-expression reader with source spans, sufficient for the S0
+  fixture only". `M1` had already built the whole frontend, and §12 S0 anticipates exactly that:
+  "the prototype implementation can be discarded or replaced as semantics settle. Keep its
+  functional fixtures."
+- So the leaf closed **without writing a reader** — and not by deleting it or ticking it either.
+  What a leaf carries is its acceptance, so both clauses were re-verified against `eadl-front`.
+  The first ("the three fixtures parse") was already implied by other tests. The second
+  ("a malformed fixture reports a **span-localized** error") was asserted **nowhere** for this
+  corpus, so closing the leaf still produced a test file.
+- ⭐ That clause needs a negative case to mean anything: a reader that reported every syntax
+  error at end-of-input would satisfy "an error was produced" and be useless on a long
+  description. `crates/archogen-cli/tests/s0_reader.rs` therefore injects a stray `)` near the
+  **top** of the fixture and requires the caret on that line — with the expected line computed
+  from the fixture text, so rearranging the declarations moves it automatically. Every
+  corruption is built in memory; no broken description enters the corpus.
+- Validation: `cargo test -p archogen-cli --test s0_reader` → **4 passed, 0 failed**, and proven
+  able to fail by mutating the **reader**, not the test: pointing `read-unexpected-close` at
+  offset zero → `left: 1 / right: 25`, one test red; moving the `read-unclosed-list` secondary
+  label to end-of-input → `left: 40 / right: 32`, one test red. Restored and re-run green both
+  times. `cargo test --all` → **259** passed (255 before, `+4`); fmt and clippy clean; all
+  doctrines green; `mdbook build` OK.
+
 ## archogen — the S0 corpus and its oracle, written before the emitter
 
 `ARCHOGEN-S0-0022` (leaf `S0.1`).
