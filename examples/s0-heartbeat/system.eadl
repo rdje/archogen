@@ -1,0 +1,40 @@
+; examples/s0-heartbeat/system.eadl — the S0 base fixture.
+;
+; ROADMAP.md §12 S0 asks for "a roughly twenty-line feature-only description" whose generated
+; hosted executable "instantiates one simple service and produces a defined event". This is it:
+; one output device, one service, one platform, two periodic tasks — sixteen lines of
+; declarations.
+;
+; WHY TWO TASKS AND NOT ONE. The observation horizon is the system's hyperperiod, and with a
+; single task that is one period, so the trace is one event and no parameter change can produce
+; a meaningfully different observation. Two is the smallest task set for which the S0 gate's
+; changed-input case can say anything.
+;
+; WHAT IS DELIBERATELY ABSENT. No execution bound, no entry point, no stack size — §7.3 puts
+; those in the build manifest and the engine. Also no message text and no run length: the event
+; format and the decision to observe exactly one hyperperiod are the engine's, and writing them
+; here would be "embedding a prebuilt output without consuming the functional input", which §12
+; S0 states does not satisfy F28.
+;
+; The expected observation is frozen in expected/system.txt and was written before any emitter
+; existed. The observation contract it rests on is in README.md.
+
+(defblock console.uart
+  (offers (observable-output true)))
+
+(defplatform host.playground
+  (offers (core-count 1 tick))
+  (requires (uses console.uart)))
+
+(defservice console.write
+  (requires (needs observable-output)))
+
+(defsystem heartbeat
+  (task beat
+    (period 10 ms) (deadline 10 ms) (deadline-from release)
+    (priority 1) (uses console.write) (on-overrun fault))
+  (task chime
+    (period 30 ms) (deadline 30 ms) (deadline-from release)
+    (priority 2) (uses console.write) (on-overrun fault))
+  (requires (uses console.write))
+  (platform (uses host.playground)))

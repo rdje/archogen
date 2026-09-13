@@ -1,0 +1,43 @@
+; examples/s0-heartbeat/system-unsupported.eadl — the S0 unsupported-input case.
+;
+; ROADMAP.md §12 S0: "one unsupported request that is rejected". This is
+; examples/s0-heartbeat/system.eadl with exactly one functional change: `chime` becomes
+; **sporadic** — it declares a minimum separation between releases instead of a period.
+;
+; ⭐ WHY THIS CASE AND NOT A PROFILE VIOLATION. A description that asks for something
+; `rt-static-up-v1` excludes — an application mutex, a task-to-task queue — is already refused by
+; the frontend, and refusing it again would test M1, not S0. This description is **valid eADL,
+; inside the profile, and accepted by `archogen check`** (§3.1 admits "periodic or sporadic
+; releases with declared minimum separation"). What has no realization is the S0 *engine*: it
+; derives the observation from declared periods, and a sporadic release has no release schedule
+; until something models the event that triggers it.
+;
+; So the refusal must arrive from generation, not from checking, and it must say what §5.4
+; requires of it: "explain the missing engine capability; do not declare the requested function
+; logically impossible". The missing capability is the modeled event source of the hosted
+; playground harness, owned by leaf `M4.3`.
+;
+; This is F10's shape — "missing engine support, not universal impossibility" — reached early,
+; which is the whole point of S0.
+;
+; Expected refusal: expected/system-unsupported.txt, frozen before any emitter existed.
+
+(defblock console.uart
+  (offers (observable-output true)))
+
+(defplatform host.playground
+  (offers (core-count 1 tick))
+  (requires (uses console.uart)))
+
+(defservice console.write
+  (requires (needs observable-output)))
+
+(defsystem heartbeat
+  (task beat
+    (period 10 ms) (deadline 10 ms) (deadline-from release)
+    (priority 1) (uses console.write) (on-overrun fault))
+  (task chime
+    (min-separation 30 ms) (deadline 30 ms) (deadline-from release)
+    (priority 2) (uses console.write) (on-overrun fault))
+  (requires (uses console.write))
+  (platform (uses host.playground)))

@@ -1,5 +1,10 @@
 # Examples
 
+Two corpora live here. The **use cases** are the systems the engine will eventually build; the
+**S0 corpus** is the tiny early-generation fixture set of `ROADMAP.md` §12 S0.
+
+## The use cases
+
 The four use cases of `docs/usecases/`, expressed in eADL. They are the corpus the frontend is
 tested against, and the systems the engine will eventually build.
 
@@ -12,6 +17,23 @@ tested against, and the systems the engine will eventually build.
 
 All numbers are **synthetic** — not measurements, not attributed to any published task set, not
 claims about any board.
+
+## The S0 corpus
+
+[`s0-heartbeat/`](s0-heartbeat/) holds the three descriptions of fixture **F28** and the
+observations they must produce, frozen before any emitter existed. It is a different kind of
+object from the use cases: not a system anyone wants, but the smallest one that can prove the
+pipeline's shape. Its README carries the observation contract and the list of temporary S0
+assumptions `S0.6` must retire.
+
+| File | Case | `archogen check` | `archogen build` |
+| --- | --- | --- | --- |
+| [`s0-heartbeat/system.eadl`](s0-heartbeat/system.eadl) | base | `0` | `0` + 4 releases over a 30 ms hyperperiod |
+| [`s0-heartbeat/system-changed.eadl`](s0-heartbeat/system-changed.eadl) | one period changed | `0` | `0` + 3 releases over a 20 ms hyperperiod |
+| [`s0-heartbeat/system-unsupported.eadl`](s0-heartbeat/system-unsupported.eadl) | sporadic release | `0` | `12` — no engine realization |
+
+The unsupported case is **accepted** by `archogen check` and refused by generation, which is the
+point of it: §3.1 admits sporadic releases, so the gap is in the engine, not in the description.
 
 ## What is not here
 

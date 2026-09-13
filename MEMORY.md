@@ -11,10 +11,13 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `S0` → frontier leaf `S0.1`. `M0` and `M1` are **done**.
-- **Next action:** write the tiny S0 description, its changed and unsupported variants, and the
-  independent expected-output oracle — **before** any emitter exists (`docs/tasks/S0.md`, `S0.1`).
-- **Latest commit:** `ARCHOGEN-PROGRAM-0021 (leaf PROGRAM.2.1)` — CLI renamed `osgen` → `archogen`.
+- **Active tree:** `S0` → frontier leaf `S0.2`. `M0` and `M1` are **done**; `S0.1` is **done**.
+- **Next action:** close `S0.2` honestly against the frontend `M1` actually built — its
+  acceptance ("the three fixtures parse; a malformed fixture reports a span-localized error") is
+  a re-verification, not new code. Then `S0.3`, the emitter.
+- **Latest commit:** `ARCHOGEN-S0-0022 (leaf S0.1)` — the F28 corpus `examples/s0-heartbeat/` and
+  its oracle `crates/archogen-cli/tests/s0_oracle.rs`, both landed **before** any emitter exists,
+  which is what makes §12 S0's independence claim a fact of the commit order.
 - **In-flight uncommitted work:** none.
 - **Blockers:** no physical board procured → tree `M5` blocked (director decision;
   `docs/targets/first-target.md`). QEMU RISC-V not installed → `M2.8` emulator half, `M4.9`.

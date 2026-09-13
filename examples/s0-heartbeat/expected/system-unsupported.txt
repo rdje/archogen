@@ -1,0 +1,16 @@
+; case: unsupported
+; description: examples/s0-heartbeat/system-unsupported.eadl
+; check-exit: 0
+; build-exit: 12
+; observation: refusal
+; diagnostic-code: unsupported-profile
+; names: min-separation
+; missing-capability: a modeled event source for sporadic releases — the S0 realization derives
+;   the observation from declared periods, and a minimum separation does not determine when a
+;   release happens
+; owner: M4.3
+; rationale: the description is well-formed and inside `rt-static-up-v1`, so `archogen check`
+;   accepts it (check-exit 0). The refusal belongs to generation, and §5.4 requires it to name
+;   the missing engine capability rather than declare the request impossible.
+; written: 2026-09-13, by leaf S0.1, before any emitter existed
+;

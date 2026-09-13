@@ -52,7 +52,7 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 
 | Tree | Status | Frontier (next leaf) | Owner |
 | --- | --- | --- | --- |
-| [`S0`](tasks/S0.md) | `active` | `S0.1` — tiny description, variants, and the independent oracle (F28) | repo-local |
+| [`S0`](tasks/S0.md) | `active` | `S0.2` — close the reader leaf against the frontend `M1` actually built | repo-local |
 | [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.3` — the tiered verification runner | repo-local |
 | [`M1`](tasks/M1.md) | `done` | — all eight leaves closed; F01–F07 green; `archogen check` real | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |

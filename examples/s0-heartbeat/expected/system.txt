@@ -1,0 +1,16 @@
+; case: base
+; description: examples/s0-heartbeat/system.eadl
+; check-exit: 0
+; build-exit: 0
+; observation: stdout
+; rationale: hyperperiod lcm(10, 30) = 30 ms; `beat` releases at 0, 10, 20 and `chime` at 0,
+;   giving 4 releases. The two releases at t = 0 are ordered `beat` before `chime` because
+;   priority 1 outranks priority 2 (docs/decisions/decision_priority-comparison-direction.md).
+; written: 2026-09-13, by leaf S0.1, before any emitter existed
+;
+system heartbeat
+release 0 ms beat
+release 0 ms chime
+release 10 ms beat
+release 20 ms beat
+summary hyperperiod 30 ms releases 4

@@ -38,6 +38,12 @@
   (clause jitter (cardinality at-most-one) (holds values number symbol))
   ; Static unique priorities (§3.1). The engine owns the ready-queue structure that realizes
   ; them; the number here is the policy, not the implementation.
+  ;
+  ; ⛔ THE NUMBER IS A RANK: a numerically LOWER value is a HIGHER priority, and 1 is the
+  ; highest. See docs/decisions/decision_priority-comparison-direction.md. The direction was
+  ; unrecorded until leaf S0.1 needed to order two releases at the same instant, and §15 forbids
+  ; changing a parameter's comparison direction silently — so reversing it is a versioned
+  ; language change with a migration note, never an edit here.
   (clause priority (cardinality one) (holds values integer))
   ; What the task requires of the system, functionally.
   (clause needs (cardinality any) (holds forms))

@@ -19,6 +19,35 @@
 Detailed technical notes — root cause, implementation, validation — per slice. The
 engineering-continuity surface (not the public docs; that's `docs/book/`). Newest first.
 
+## _(2026-09-13)_ — an oracle is independent by construction, or it is not independent
+
+- F28 asks for an expected-output assertion written *before* the generator. Intent cannot carry
+  that: once the generator exists, the cheapest "expectation" is its own output pasted back, and
+  the resulting test is a transcript that passes forever, including on every future version that
+  is wrong in the same way.
+- Three construction choices, none of which rely on anyone remembering. The fixtures land in
+  `S0.1` and the emitter in `S0.3`, so the ordering is `git log`, not a comment. The oracle lives
+  in `crates/archogen-cli/tests/`, which Rust cannot link into a library — no emitter can call it.
+  And each expectation has two legs: frozen literal bytes, plus a re-derivation from the
+  description through an implementation of the published contract, so an edit on either side
+  fails.
+- Measured in both directions rather than asserted: mutating
+  `examples/s0-heartbeat/expected/system.txt` (`releases 4` → `releases 5`) →
+  `test result: FAILED. 7 passed; 2 failed`; mutating the description instead (`chime` 30 ms →
+  15 ms, expectation untouched) → `test result: FAILED. 6 passed; 3 failed`.
+- What cannot be asserted yet is a **tripwire, not a skip**: `build_is_not_yet_assertable` pins
+  `archogen build` at `unimplemented` and fails the moment `S0.3` makes it real, so `S0.4` cannot
+  inherit a green test that checks nothing.
+- Deriving the expectations needed a semantic nobody had written down — which way `(priority N)`
+  compares. Recorded as `docs/decisions/decision_priority-comparison-direction.md` rather than
+  inferred from three example files.
+- Second seam, same instinct as `doctrine-seams-vs-forking-a-check`: `TASK-ACCEPTANCE` refused
+  this commit because its default evidence signatures bless `git ls-files`, `git cat-file` and
+  `git show` but not `git grep` or `git ls-tree` — the two verbs a census over a tree is actually
+  written with, so the ROOT CAUSE box read as prose. Declared in
+  `.doctrine/evidence_tokens.txt`, not patched into the portable script.
+- Promoted to `docs/knowledge/an-oracle-is-independent-by-construction.md`.
+
 ## _(2026-09-13)_ — a presence check cannot see an extra key
 
 - The eADL reader silently truncated a boundary-corpus rationale: it wrapped onto

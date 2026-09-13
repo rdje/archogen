@@ -5,3 +5,12 @@
 probes: [0-9]+ pass / [0-9]+ fail
 # The doctrine driver prints this:
 === all doctrines green ===
+#
+# ⛔ MEASURED, not anticipated. The universal default blesses `git ls-files`, `git log -S`,
+# `git rev-list`, `git cat-file` and `git show` — read-only forensic verbs — but not `git grep`
+# or `git ls-tree`, which are the same family and are what a census over a tree is actually
+# written with. TASK-ACCEPTANCE refused ARCHOGEN-S0-0022 for exactly that reason:
+#   "the 'ROOT CAUSE' box is ticked but carries no tool-output evidence INSIDE ITS OWN BULLET"
+# on a bullet whose evidence was two `git grep` censuses and a `git ls-tree` listing. The check's
+# own message directs a project here rather than into the portable script.
+git (grep|ls-tree)

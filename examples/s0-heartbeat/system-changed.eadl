@@ -1,0 +1,39 @@
+; examples/s0-heartbeat/system-changed.eadl — the S0 changed-input case.
+;
+; ROADMAP.md §12 S0: "Include one parameter/feature change that produces a meaningful
+; corresponding output change." This is examples/s0-heartbeat/system.eadl with exactly one
+; functional change: `chime` is released every 20 ms instead of every 30 ms.
+;
+; That single change moves three things in the observation at once, which is what makes it a
+; real test of whether the functional input was consumed rather than a prebuilt output replayed:
+;
+;   the horizon    lcm(10, 30) = 30 ms  becomes  lcm(10, 20) = 20 ms
+;   the count      4 releases           becomes  3 releases
+;   the trace      the 20 ms `beat` event disappears with the horizon
+;
+; ⛔ THE DEADLINE MOVES WITH THE PERIOD, AND THAT IS NOT A SECOND CHANGE. §3.1 admits only
+; constrained deadlines (D ≤ T). Leaving `chime`'s deadline at 30 ms with a 20 ms period would
+; describe a system outside the profile, so the deadline follows its period as an obligation of
+; the one change, not as an independent edit.
+;
+; Expected observation: expected/system-changed.txt, frozen before any emitter existed.
+
+(defblock console.uart
+  (offers (observable-output true)))
+
+(defplatform host.playground
+  (offers (core-count 1 tick))
+  (requires (uses console.uart)))
+
+(defservice console.write
+  (requires (needs observable-output)))
+
+(defsystem heartbeat
+  (task beat
+    (period 10 ms) (deadline 10 ms) (deadline-from release)
+    (priority 1) (uses console.write) (on-overrun fault))
+  (task chime
+    (period 20 ms) (deadline 20 ms) (deadline-from release)
+    (priority 2) (uses console.write) (on-overrun fault))
+  (requires (uses console.write))
+  (platform (uses host.playground)))

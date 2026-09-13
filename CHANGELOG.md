@@ -4,6 +4,40 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the S0 corpus and its oracle, written before the emitter
+
+`ARCHOGEN-S0-0022` (leaf `S0.1`).
+
+- `examples/s0-heartbeat/` holds the three descriptions of fixture **F28** — a base system, the
+  same system with one period changed, and the same system with one task made sporadic — and the
+  observations each must produce, frozen in `expected/`.
+- The point of the leaf is the **order**: this lands before any emitter exists (`S0.3`), so
+  §12 S0's "write an independent expected-output assertion *before* generating" is a fact of the
+  commit history rather than a claim. The oracle,
+  `crates/archogen-cli/tests/s0_oracle.rs`, additionally lives where Rust cannot link it into a
+  library, so no future emitter can call the derivation that judges it.
+- The unsupported case is a **realization** gap, not a profile violation: §3.1 admits sporadic
+  releases, so `archogen check` accepts the description (exit `0`) and generation must refuse it
+  (exit `12`), naming the missing engine capability and the leaf that supplies it. That is F10's
+  shape — "missing engine support, not universal impossibility" — reached early, and it exercises
+  S0's own path instead of re-testing M1's.
+- The observation contract is published in `examples/s0-heartbeat/README.md` and the new book
+  chapter: the horizon is the system's hyperperiod, a task of period `T` is released at every
+  `t = k·T` inside it, coincident releases are ordered by priority rank. No run length and no
+  message text appear in any description — both would be the engine's decisions smuggled into
+  eADL, which §12 S0 says does not satisfy the gate.
+- ⭐ Found on the way through: **the `priority` clause's comparison direction was nowhere
+  recorded.** Five tracked lines mention higher/lower priority and every one of them orders a
+  prose table. Recorded as a decision (lower number = higher priority) and cited from the
+  language module, because §15 puts a parameter's comparison direction under migration
+  discipline — the first consumer that would have depended on it unstated is `M2.3`'s
+  response-time recurrence.
+- Validation: `cargo test -p archogen-cli --test s0_oracle` → **9 passed, 0 failed**, and measured
+  *sensitive* in both directions — mutating the frozen expectation fails 2 tests, mutating the
+  description fails 3. `cargo test --all` → **255** passed (246 before, `+9`); fmt and clippy
+  clean; all doctrines green; `mdbook build` OK. What F28 still owes — generate, compile, run —
+  is held by a tripwire that fails the moment `archogen build` becomes real.
+
 ## archogen — the command is `archogen`, not `osgen`
 
 `ARCHOGEN-PROGRAM-0021` (leaf `PROGRAM.2.1`).

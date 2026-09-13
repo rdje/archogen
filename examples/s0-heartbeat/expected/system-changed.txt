@@ -1,0 +1,15 @@
+; case: changed
+; description: examples/s0-heartbeat/system-changed.eadl
+; check-exit: 0
+; build-exit: 0
+; observation: stdout
+; rationale: `chime` moves from a 30 ms to a 20 ms period, so the hyperperiod becomes
+;   lcm(10, 20) = 20 ms. `beat` releases at 0 and 10, `chime` at 0 — 3 releases. The 20 ms
+;   `beat` event of the base case falls outside the shorter horizon and disappears.
+; written: 2026-09-13, by leaf S0.1, before any emitter existed
+;
+system heartbeat
+release 0 ms beat
+release 0 ms chime
+release 10 ms beat
+summary hyperperiod 20 ms releases 3

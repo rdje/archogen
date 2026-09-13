@@ -39,6 +39,12 @@ justifies the split — the rows below appear as that happens.
 - `examples/` — the three M0 use cases as real descriptions, checked by
   `crates/eadl-model/tests/examples.rs`: they validate, and none carries an execution bound, an
   entry point or an allocation.
+- `examples/s0-heartbeat/` + `crates/archogen-cli/tests/s0_oracle.rs` — the F28 corpus and its
+  oracle. Three descriptions (base, one period changed, one sporadic) and the observations they
+  must produce, frozen in `expected/` before any emitter existed. The oracle re-derives each
+  expectation from its description through its own implementation of the five-rule observation
+  contract in that directory's README, so an edit to either side fails. It sits in `tests/`
+  deliberately: Rust cannot link an integration test into a library, so no emitter can call it.
 - `docs/semantics/boundary/` — the 21-case boundary corpus (accept/reject pairs, 5 ambiguous),
   the input fixture F27 mechanizes. Its README fixes the case format.
 - `docs/usecases/` — the four systems the toolchain must build or refuse; `docs/evaluation/` —
@@ -68,4 +74,5 @@ justifies the split — the rows below appear as that happens.
 
 - [`decision_eadl-engine-boundary.md`](docs/decisions/decision_eadl-engine-boundary.md)
 - [`decision_findings-for-director-review.md`](docs/decisions/decision_findings-for-director-review.md)
+- [`decision_priority-comparison-direction.md`](docs/decisions/decision_priority-comparison-direction.md)
 - [`decision_zero-dependency-engine-core.md`](docs/decisions/decision_zero-dependency-engine-core.md)
