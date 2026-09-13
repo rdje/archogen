@@ -11,9 +11,10 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M0` → frontier leaf `M0.1` (`pending`). `PROGRAM` yielded the frontier.
-- **Next action:** record the controlling eADL/engine boundary (`ROADMAP.md` §4, §4.3) as
-  `docs/decisions/decision_eadl-engine-boundary.md` (`docs/tasks/M0.md`, leaf `M0.1`).
-- **Latest commit:** `ARCHOGEN-PROGRAM-0003 (leaf PROGRAM.2)` — the `osgen` CLI shell.
+- **Active tree:** `M0` → frontier leaf `M0.4` (`pending`).
+- **Next action:** record the `rt-static-up-v1` profile (`ROADMAP.md` §3.1) as
+  `docs/profiles/rt-static-up-v1.md` with a machine-readable exclusion list
+  (`docs/tasks/M0.md`, leaf `M0.4`).
+- **Latest commit:** `ARCHOGEN-M0-0004 (leaf M0.1)` — the controlling eADL/engine boundary.
 - **In-flight uncommitted work:** none.
 - **Blockers:** none. Absent tooling: QEMU RISC-V (needed by `M4.9`, `M2.8`).

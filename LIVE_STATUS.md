@@ -9,7 +9,7 @@ summarize the snapshot in every commit-workflow completion message.
 | Discipline spine (`bedrock`) | Done | memory architecture · task-trees · commit workflow · doctrine enforcement · mdBook skeleton |
 | Roadmap seeded into task-trees | Done | ten trees: `PROGRAM`, `M0`, `S0`, `M1`–`M7`; F01–F30 each owned |
 | `PROGRAM` — workspace, tiers, book, ledger | In Progress | `.1`, `.1.1`, `.2` done; `osgen` CLI shell live; `.3`–`.7` pending |
-| `M0` — charter, boundary, profile, target | In Progress | active tree; frontier `M0.1` |
+| `M0` — charter, boundary, profile, target | In Progress | `M0.1` boundary recorded; frontier `M0.4` |
 | `S0` — early executable generation (F28) | Not Started | frontier `S0.1` |
 | `M1` — eADL description foundation | Not Started | frontier `M1.1` |
 | `M2` — one engine realization + controls | Not Started | frontier `M2.3` |

@@ -4,6 +4,23 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the controlling eADL/engine boundary
+
+`ARCHOGEN-M0-0004` (leaf `M0.1`).
+
+- Recorded `docs/decisions/decision_eadl-engine-boundary.md`: eADL describes functionality and
+  contains no implementation. This is the precedence rule — it overrides ambiguous wording in
+  any source draft and any later convenience argument.
+- The record fixes the three classification tests (externality, implementation-independence,
+  non-prescription), all eight worked cases of `ROADMAP.md` §4.3 with both sides named, the
+  direction of every obligation (a declared capability is not evidence; a refinement is an
+  obligation to check), and what the boundary rules out — including `defkind` becoming a
+  template language, and implementation syntax as an escape hatch for missing engine support.
+- New book chapter `docs/book/src/boundary.md`, because this is the concept a reader must
+  have before any other chapter makes sense.
+- Validation: 8/8 §4.3 rows present; layer-C index in sync
+  (`scripts/check_memory_architecture.sh`, `rc=0`); `mdbook build` OK; all doctrines green.
+
 ## archogen — the `osgen` command-line shell
 
 `ARCHOGEN-PROGRAM-0003` (leaf `PROGRAM.2`).
