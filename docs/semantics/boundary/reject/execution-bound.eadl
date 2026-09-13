@@ -1,0 +1,22 @@
+; case: execution-bound
+; verdict: reject
+; ambiguous: yes
+; tests: externality=fail implementation-independence=pass non-prescription=pass
+; failing-test: externality
+; rationale: AMBIGUOUS, resolved REJECT. A worst-case execution time feels like a task
+;   requirement and is often written next to the period and deadline. It is not an eADL field.
+;   §7.3 is precise about the split: "eADL supplies the functional requirements and
+;   constraints. The separate build manifest supplies application-code associations and
+;   evidence." A bound is *evidence about a binary*, valid only for a target, toolchain and
+;   configuration — §15 notes a compiler flag change can invalidate it while the description
+;   is byte-identical. Test 1 fails: it states no offered feature and no required behavior, it
+;   reports a measurement. A deadline is a requirement; a WCET is an observation about one
+;   implementation of it.
+; other-side: belongs in the engine build manifest: the bound, its units, origin, scope,
+;   target and binary identity, and its evidence category
+;
+(defsystem app.rt
+  (task sensor
+    (period 10 ms)
+    (deadline 10 ms)
+    (wcet 850 us)))

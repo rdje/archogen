@@ -1,0 +1,14 @@
+; case: absolute-deadline-service
+; verdict: accept
+; ambiguous: no
+; tests: externality=pass implementation-independence=pass non-prescription=pass
+; rationale: Names a required service and the externally observable bounds it must meet. It
+;   does not say whether a comparator, a delay timer plus an adapter, or firmware provides it.
+; other-side: engine: comparator programming, delay-to-deadline adaptation, acknowledgment and
+;   race handling
+;
+(defservice time.deadline
+  (requires
+    (absolute-deadline
+      (supported-horizon (at-least 10 s))
+      (delivery-bound (at-most 50 us)))))

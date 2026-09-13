@@ -1,0 +1,15 @@
+; case: required-ordering-guarantee
+; verdict: accept
+; ambiguous: no
+; tests: externality=pass implementation-independence=pass non-prescription=pass
+; rationale: An externally required ordering property between two observable effects.
+;   Barriers, cache maintenance and buffer synchronization are ways to achieve it, not part of
+;   it.
+; other-side: engine: barriers, cache maintenance, buffer synchronization, executable memory
+;   and device models
+;
+(defplatform soc.bus
+  (requires
+    (ordering
+      (before (write device.control))
+      (after  (write memory.buffer)))))

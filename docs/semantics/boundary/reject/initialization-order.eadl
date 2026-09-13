@@ -1,0 +1,21 @@
+; case: initialization-order
+; verdict: reject
+; ambiguous: yes
+; tests: externality=pass implementation-independence=fail non-prescription=pass
+; failing-test: implementation-independence
+; rationale: AMBIGUOUS, resolved REJECT. Ordering constraints sound architectural, and some
+;   are — `required-ordering-guarantee` is accepted above. This one is different: it
+;   enumerates the concrete boot sequence of selected providers. Test 2 settles it. Choose a
+;   different timer provider and the sequence is wrong, so the field describes *this*
+;   realization. §5.4 assigns initialization order to joint resolution, and §10.1 derives it
+;   into the build plan. What eADL may state is a *dependency* — this service requires that
+;   functionality to be available — from which the engine derives an order.
+; other-side: belongs in the engine: the initialization dependency graph derived during joint
+;   resolution
+;
+(defsystem app.rt
+  (init-order
+    (first  clock.pll)
+    (then   timer.compare)
+    (then   uart.console)
+    (finally scheduler.start)))

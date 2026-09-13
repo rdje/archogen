@@ -1,0 +1,12 @@
+; case: interface-units-and-ranges
+; verdict: accept
+; ambiguous: no
+; tests: externality=pass implementation-independence=pass non-prescription=pass
+; rationale: Declares the representation contract at the architectural interface: what the
+;   numbers mean and which values are admissible.
+; other-side: engine: scaling, rounding implementation, conversion helpers, overflow checks
+;
+(defblock timer.counter
+  (offers
+    (tick-unit ns)
+    (frequency (range 1 MHz 200 MHz))))

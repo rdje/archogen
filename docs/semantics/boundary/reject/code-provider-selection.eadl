@@ -1,0 +1,16 @@
+; case: code-provider-selection
+; verdict: reject
+; ambiguous: no
+; tests: externality=fail implementation-independence=pass non-prescription=pass
+; failing-test: externality
+; rationale: Names the code that must be used. Test 1 fails: this states neither an offered
+;   feature nor a required behavior, only a selection the engine is responsible for making —
+;   and §5.4 puts preferred-provider order in engine configuration, not in eADL.
+; other-side: belongs in engine configuration: the preferred-provider order and its stable
+;   tie-breaking
+;
+(defservice time.deadline
+  (requires (absolute-deadline (supported-horizon (at-least 10 s))))
+  (provider
+    (crate "device-riscv-clint")
+    (module "clint::deadline")))

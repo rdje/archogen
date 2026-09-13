@@ -1,0 +1,17 @@
+; case: rollover-algorithm
+; verdict: reject
+; ambiguous: no
+; tests: externality=pass implementation-independence=pass non-prescription=fail
+; failing-test: non-prescription
+; rationale: The declaration carries the epoch-extension procedure. Test 3 fails outright: its
+;   interpretation cannot be stated without prescribing an algorithm. Test 2 fails too — a
+;   timer with a native 64-bit counter satisfies the same guarantee and would make this text
+;   wrong.
+; other-side: belongs in engine knowledge: the timer provider's epoch-extension
+;   implementation, selected against the `time-horizon` contract
+;
+(defservice time.monotonic
+  (requires (unambiguous-horizon (at-least 60 s)))
+  (implementation
+    (on-wrap (increment epoch))
+    (read (compose epoch counter))))

@@ -11,9 +11,9 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M0` → frontier leaf `M0.2` (`pending`).
-- **Next action:** write the boundary corpus — paired accepted/rejected declarations,
-  including ambiguous cases — under `docs/semantics/boundary/` (`docs/tasks/M0.md`, `M0.2`).
-- **Latest commit:** `ARCHOGEN-M0-0005 (leaf M0.4)` — `rt-static-up-v1` as checked data.
+- **Active tree:** `M0` → frontier leaf `M0.6` (`pending`).
+- **Next action:** write the three §12 M0 use cases and seal the frozen unseen evaluation
+  set for M6 (`docs/tasks/M0.md`, leaf `M0.6`).
+- **Latest commit:** `ARCHOGEN-M0-0006 (leaf M0.2)` — the 21-case boundary corpus.
 - **In-flight uncommitted work:** none.
 - **Blockers:** none. Absent tooling: QEMU RISC-V (needed by `M4.9`, `M2.8`).

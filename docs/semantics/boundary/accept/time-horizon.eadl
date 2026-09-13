@@ -1,0 +1,12 @@
+; case: time-horizon
+; verdict: accept
+; ambiguous: no
+; tests: externality=pass implementation-independence=pass non-prescription=pass
+; rationale: States an externally testable guarantee about observed time. Any timer that keeps
+;   observations unambiguous for 60 s satisfies it, whatever its width or rate.
+; other-side: engine: wrap handling, epoch extension, read frequency, the arithmetic, and the
+;   proof that the requirement is met
+;
+(defservice time.monotonic
+  (requires
+    (unambiguous-horizon (at-least 60 s))))

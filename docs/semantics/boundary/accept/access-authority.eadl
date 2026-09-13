@@ -1,0 +1,12 @@
+; case: access-authority
+; verdict: accept
+; ambiguous: no
+; tests: externality=pass implementation-independence=pass non-prescription=pass
+; rationale: States the authority condition the function must be reachable under. It admits a
+;   direct privileged instruction, a trap, or a firmware ABI equally.
+; other-side: engine: trap path, firmware ABI, privileged instructions, capability-check code
+;
+(defservice time.deadline
+  (requires
+    (reachable-at-privilege supervisor)
+    (or-through-mediation allowed)))

@@ -1,0 +1,15 @@
+; case: ready-queue-structure
+; verdict: reject
+; ambiguous: no
+; tests: externality=pass implementation-independence=pass non-prescription=fail
+; failing-test: non-prescription
+; rationale: Names the data structure that realizes the policy. §4.3 assigns "ready-queue data
+;   structure, dispatch algorithm details" to the engine; the eADL side is the policy
+;   behavior, which `fixed-priority-execution` already states.
+; other-side: belongs in engine knowledge: the scheduler implementation record and its cost
+;   evidence
+;
+(defpolicy scheduling.fixed-priority
+  (requires (priorities static unique))
+  (implementation
+    (ready-queue bitmap (word-width 32))))

@@ -1,0 +1,14 @@
+; case: fixed-priority-execution
+; verdict: accept
+; ambiguous: no
+; tests: externality=pass implementation-independence=pass non-prescription=pass
+; rationale: Required policy behavior with the task constraints that make it checkable. It
+;   prescribes no data structure and no dispatch procedure.
+; other-side: engine: ready-queue structure, dispatch algorithm, save/restore code, cost
+;   charging
+;
+(defpolicy scheduling.fixed-priority
+  (requires
+    (priorities static unique)
+    (preemptive true)
+    (deadlines constrained)))

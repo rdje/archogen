@@ -1,0 +1,12 @@
+; case: atomic-observation
+; verdict: accept
+; ambiguous: no
+; tests: externality=pass implementation-independence=pass non-prescription=pass
+; rationale: Constrains what an observation may be, not how it is obtained. A native wide
+;   read, a retry sequence and a firmware call all satisfy it or fail it observably.
+; other-side: engine: native wide read, high/low/high retry, synchronization, or firmware-
+;   mediated access
+;
+(defservice time.monotonic
+  (requires
+    (observation-coherent true)))

@@ -1,0 +1,17 @@
+; case: retry-permitted
+; verdict: reject
+; ambiguous: yes
+; tests: externality=pass implementation-independence=pass non-prescription=fail
+; failing-test: non-prescription
+; rationale: AMBIGUOUS, resolved REJECT. This looks like a permission rather than a
+;   prescription, and permissions feel harmless. It still fails test 3: it names an
+;   implementation strategy, so its interpretation cannot be stated without reference to one.
+;   It is also redundant — the engine is already free to choose any strategy that meets the
+;   contract. A permission field's real effect is to *narrow* the engine to the strategies
+;   someone thought of, and to invite a matching prohibition field next.
+; other-side: belongs nowhere: the `atomic-observation` contract already admits every strategy
+;   that satisfies it
+;
+(defservice time.monotonic
+  (requires (observation-coherent true))
+  (permits (implementation-strategy retry-loop)))

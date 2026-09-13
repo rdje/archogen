@@ -1,0 +1,17 @@
+; case: atomic-read-retry-loop
+; verdict: reject
+; ambiguous: no
+; tests: externality=pass implementation-independence=pass non-prescription=fail
+; failing-test: non-prescription
+; rationale: A retry sequence is one way to obtain a coherent observation. Writing it here
+;   freezes that choice into the description, and a platform with a native wide read would
+;   still have to carry it.
+; other-side: belongs in engine knowledge: the access strategy chosen per platform against the
+;   `atomic-observation` contract
+;
+(defservice time.monotonic
+  (requires (observation-coherent true))
+  (implementation
+    (read-sequence
+      (loop (read high) (read low) (read high-again)
+            (until (= high high-again))))))

@@ -1,0 +1,19 @@
+; case: addressable-region
+; verdict: accept
+; ambiguous: yes
+; tests: externality=pass implementation-independence=pass non-prescription=pass
+; rationale: AMBIGUOUS, resolved ACCEPT. A concrete address range reads like a driver detail,
+;   yet it is an externally relevant platform fact: it constrains placement, aliasing and
+;   ownership regardless of which driver is chosen. §4.3 is explicit that "a concrete
+;   architectural identity or addressable region may legitimately constrain a platform". The
+;   limit is equally explicit: this is not permission to put the region's *access procedure*
+;   in the language — see the rejected case `register-programming-sequence`.
+; other-side: engine: the register map within the region, access widths, the driver, and the
+;   safe API over it
+;
+(defplatform soc.memory
+  (offers
+    (region device.timer
+      (base 0x1000_0000)
+      (size 64 KiB)
+      (reserved true))))

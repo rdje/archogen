@@ -4,6 +4,28 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the 21-case boundary corpus
+
+`ARCHOGEN-M0-0006` (leaf `M0.2`).
+
+- `docs/semantics/boundary/` — 21 worked cases against minimums of 12 and 3: 10 accepted, 11
+  rejected, 5 of them ambiguous and argued rather than asserted. Every rejected case names the
+  test that failed.
+- Cases are written in **pairs** wherever possible — the accepted contract and the rejected
+  procedure that satisfies it — so the corpus shows where the boundary runs rather than only
+  recording verdicts: `atomic-observation` vs `atomic-read-retry-loop`, `addressable-region`
+  vs `register-programming-sequence`, `required-ordering-guarantee` vs `initialization-order`.
+- The ambiguous five are the ones a reasonable author gets wrong in both directions:
+  `counter-width-and-rate` and `addressable-region` look like implementation and are accepted;
+  `execution-bound`, `initialization-order` and `retry-permitted` look like requirements and
+  are rejected. A WCET is evidence about a binary (§7.3), not a description field.
+- `docs/semantics/boundary/README.md` fixes the case format F27 will consume, and states the
+  honest limit: the mechanical check is a floor, because a field can hide an algorithm behind
+  an innocent name.
+- Sequencing decision recorded: F27 (`M0.3`) lands after the reader (`M1.1`) rather than
+  before it — mechanizing the corpus needs real parsing, and two throwaway tokenizers would
+  buy no earlier signal.
+
 ## archogen — `rt-static-up-v1` as checked data, not prose
 
 `ARCHOGEN-M0-0005` (leaf `M0.4`).

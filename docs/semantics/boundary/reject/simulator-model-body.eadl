@@ -1,0 +1,15 @@
+; case: simulator-model-body
+; verdict: reject
+; ambiguous: no
+; tests: externality=pass implementation-independence=pass non-prescription=fail
+; failing-test: non-prescription
+; rationale: An executable state-transition body. §6.1 places behavioral models in engine
+;   catalogs and §12 M4 states plainly that "no model implementation is added to eADL".
+; other-side: belongs in engine knowledge: the versioned behavioral model, selected by the
+;   engine and checked against the feature's external contract
+;
+(defblock timer.compare
+  (model
+    (state pending false)
+    (on (write control enable) (set armed true))
+    (on (>= counter cmp) (set pending true) (raise irq))))

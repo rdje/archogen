@@ -1,0 +1,18 @@
+; case: register-programming-sequence
+; verdict: reject
+; ambiguous: no
+; tests: externality=pass implementation-independence=pass non-prescription=fail
+; failing-test: non-prescription
+; rationale: A write sequence with an ordering and an acknowledgment is a driver. The
+;   externally required behavior — a deadline delivered within a bound — is already
+;   expressible; see `absolute-deadline-service`.
+; other-side: belongs in engine knowledge: the device access description, behavioral model and
+;   driver
+;
+(defblock timer.compare
+  (implementation
+    (program-deadline
+      (write cmp-low value-low)
+      (write cmp-high value-high)
+      (write control (set enable))
+      (ack (write status (clear pending))))))

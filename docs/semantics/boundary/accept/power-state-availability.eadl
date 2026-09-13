@@ -1,0 +1,12 @@
+; case: power-state-availability
+; verdict: accept
+; ambiguous: no
+; tests: externality=pass implementation-independence=pass non-prescription=pass
+; rationale: An operating condition under which the required functionality must still hold.
+;   Testable from outside; independent of how the platform keeps the clock running.
+; other-side: engine: power sequencing, clock-source switching, the state-machine model, the
+;   validation procedure
+;
+(defservice time.monotonic
+  (requires
+    (available-in-state idle)))

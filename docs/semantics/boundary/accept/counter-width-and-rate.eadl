@@ -1,0 +1,19 @@
+; case: counter-width-and-rate
+; verdict: accept
+; ambiguous: yes
+; tests: externality=pass implementation-independence=pass non-prescription=pass
+; rationale: AMBIGUOUS, resolved ACCEPT. The width and rate of an offered counter look like
+;   implementation trivia, but they are architectural facts a substituting implementation must
+;   also have: they decide the unambiguous horizon, the programmable range and the conversion
+;   arithmetic. ROADMAP.md §4.3 admits "an offered modular-counter width/rate where
+;   architecturally relevant" in exactly these words. The test that settles it is
+;   implementation-independence: a different timer with the same width and rate is
+;   interchangeable here, so the field describes the interface, not the part.
+; other-side: engine: whether to extend the epoch, how often to read, and the arithmetic that
+;   follows from these facts
+;
+(defblock timer.counter
+  (offers
+    (counter-width 32 bit)
+    (counter-modulus 4294967296)
+    (tick-rate 10 MHz)))
