@@ -1,0 +1,12 @@
+# SEALED EVALUATION SET — manifest
+# seal: sealed
+# sealed-on: 2026-09-13
+# sealed-by: leaf M0.6
+# unseals-at: leaf M6.5 (reuse measurement, ROADMAP.md §16)
+# contract: docs/evaluation/README.md
+# Lines below are `<sha256>  <file>`; the checker verifies each and refuses extra or missing files.
+4f83d77d3c382b1868dc3bdc4ea90402c5fc78c264cefb776f9d8966d7a18b14  ev-01-watchdog-kick.md
+9a1c452cab9844f213b58f381b22039a102209bb57ef3f497bfb32c7ad17976f  ev-02-dual-rate-sampler.md
+dd69c14702139bcd92d62e2038551293f393a237c1996775c0b175d08d465b33  ev-03-burst-tolerant-logger.md
+fd71f10b4c3418410be586d28ef8b50ba5afb315982d0ec760aab9dd8ae770f1  ev-04-coarse-clock-platform.md
+373ab8e2f01d36700951bc133a67f980b5ad491dbdebf06dd19f5a4cb2b7398a  ev-05-privileged-time-access.md

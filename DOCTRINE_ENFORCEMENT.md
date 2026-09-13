@@ -40,6 +40,15 @@ every human, identically.
 slot) — never in the universal driver. That is where a project adds the equivalent of its
 own build gates, format checks, invariant proofs, etc.
 
+### archogen's own doctrines
+
+The human-readable mirror of the `PROJECT_DOCTRINES` array in
+`scripts/check_doctrines.project.sh`:
+
+| ID | Proves | Check |
+| --- | --- | --- |
+| `FROZEN-EVALUATION` | the sealed evaluation set (`ROADMAP.md` §12 M0, §16) stays **sealed** and stays **unseen**: every sealed file still hashes to its seal-time digest, nothing is added or removed unlisted, and ⭐ no tracked file outside the sealed directory names a sealed case — the leg that actually protects the measurement, since a case discussed in a task tree or design note is no longer unused. ⚠️ Honest limit: it cannot prove nobody *read* them; it raises the cost of accidental contamination, which is the common failure | `scripts/check_frozen_evaluation.sh` |
+
 ## Adding a doctrine
 
 1. Write `scripts/check_<name>.sh` — cheap, deterministic, self-describing; exit nonzero

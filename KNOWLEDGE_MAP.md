@@ -20,7 +20,12 @@ justifies the split — the rows below appear as that happens.
   matrix. The single source of what "done" means.
 - `docs/tasks/PROGRAM.md` — the roadmap-unit → tree map and the fixture-ownership map.
   Start here to find which tree owns a given roadmap item.
+- `docs/semantics/boundary/` — the 21-case boundary corpus (accept/reject pairs, 5 ambiguous),
+  the input fixture F27 mechanizes. Its README fixes the case format.
+- `docs/usecases/` — the four systems the toolchain must build or refuse; `docs/evaluation/` —
+  the sealed reuse-measurement set and the check that keeps it sealed and unseen.
 - `scripts/check_doctrines.sh` — the doctrine enforcer (git hook + CI). `make gate`.
+  Project doctrines live in `scripts/check_doctrines.project.sh`.
 
 ## Active task-trees
 

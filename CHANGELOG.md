@@ -4,6 +4,34 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — four use cases, and a seal that is a check rather than a promise
+
+`ARCHOGEN-M0-0007` (leaf `M0.6`).
+
+- `docs/usecases/` — the three cases §12 M0 requires plus a fourth: `uc1-periodic-three`
+  (succeeds by building), `uc2-high-interference` (may succeed by refusing to conclude),
+  `uc3-alternative-timer` (refused before M3, supported after), `uc4-bounded-queue` (succeeds
+  by refusing). A profile that has never refused anything has not been tested as a profile.
+- `uc3` is the only case whose expected answer *changes* when a capability lands. That is how
+  the project distinguishes adding an engine capability from weakening a requirement until it
+  passes — both turn a red fixture green, only one is progress.
+- Five evaluation cases sealed under `docs/evaluation/frozen/` with SHA-256 digests, and a new
+  project doctrine `FROZEN-EVALUATION` that enforces three legs: **integrity** (no post-seal
+  edit), **completeness** (nothing added or removed unlisted), and **non-contamination** (no
+  tracked file outside the sealed directory names a sealed case). All three proven in both
+  directions. §16's reuse claim is about *unseen* systems; measured on cases that were in view
+  while the catalog was designed, it measures how well the catalog was fitted to them.
+- ⭐ A latent defect in the first cut of the checker was caught before it landed: the
+  contamination scan word-split tracked paths containing spaces and put the whole file list on
+  one command line. Replaced with `git grep --fixed-strings` and re-proven against a path with
+  a space in it.
+- `scripts/check_doctrines.project.sh` turned from a shipped no-op into a real registry;
+  `DOCTRINE_ENFORCEMENT.md` gains the project-doctrine mirror; `TOOLBOX.md`'s placeholder
+  table replaced with seven real instruments and the rule that a new tool ships a RED arm.
+- New book chapter `docs/book/src/usecases.md`.
+- Validation: `bash -n` clean on both scripts (shellcheck not installed on this machine);
+  `cargo test --all` → 34 passed, 0 failed; all doctrines green; `mdbook build` OK.
+
 ## archogen — the 21-case boundary corpus
 
 `ARCHOGEN-M0-0006` (leaf `M0.2`).

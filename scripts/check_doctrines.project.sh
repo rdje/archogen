@@ -13,11 +13,27 @@
 # few seconds, gate it in CI instead and keep this hook fast.
 set -uo pipefail
 
-# --- add project-specific checks here ---
-# Example:
-#   ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
-#   if ! cargo fmt --all -- --check >/dev/null 2>&1; then
-#     echo "PROJECT: rustfmt drift — run 'cargo fmt --all'" >&2; exit 1
-#   fi
+ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
+fail=0
 
-exit 0
+# --- archogen's own doctrines -----------------------------------------------------------------
+# Each entry: "ID|what it proves|script". Keep each cheap and deterministic; anything heavier
+# than a few seconds belongs in a CI tier (ROADMAP.md §14.3), not in the pre-commit path.
+PROJECT_DOCTRINES=(
+  "FROZEN-EVALUATION|the sealed evaluation set is unmodified, complete, and unnamed outside its directory|scripts/check_frozen_evaluation.sh"
+)
+
+for entry in "${PROJECT_DOCTRINES[@]}"; do
+  id="${entry%%|*}"; rest="${entry#*|}"; what="${rest%%|*}"; script="${rest##*|}"
+  if [ ! -x "$script" ]; then
+    echo "PROJECT: $id — $script is missing or not executable" >&2
+    fail=1
+    continue
+  fi
+  if ! "$script"; then
+    echo "PROJECT: $id breach — $what" >&2
+    fail=1
+  fi
+done
+
+exit $fail

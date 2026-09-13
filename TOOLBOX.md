@@ -28,12 +28,21 @@ because predicate P is false" before writing a single line of fix.
 
 ## This project's toolbox
 
-<!-- Fill this in as your project grows. List each diagnostic tool, what question it
-answers (WHY / WHERE / how-much), and how to invoke it (binary, flag, env var). The next
-agent should be able to reach for the right tool without reading the source. -->
+Each row: what question the tool answers, and how to invoke it. Reach for one of these
+before forming a theory about any failure.
 
 | Tool | Answers | How to invoke |
 | --- | --- | --- |
-| `<your-probe>` | does input X pass/fail, and where does it stop? | `<command>` |
-| `<your-tracer>` | which function/rule owns the failure? | `<command>` |
-| `<your-counter>` | how much / how often (the measured metric)? | `<command>` |
+| `osgen <cmd>` exit code | what did the toolchain conclude, and about what? Diagnostic results (10–16, 70) are verdicts about the submitted system; process statuses (0, 2, 20) are verdicts about the invocation | `osgen <cmd> …; echo $?` — the table is in `osgen --help` |
+| `osgen help <cmd>` | what does this command accept, and which leaf owns building it? | `osgen help build` |
+| the doctrine enforcer | which repository invariant is broken, and where? | `make gate` (= `scripts/check_doctrines.sh`) |
+| the seal checker | has the frozen evaluation set been modified, extended, or named outside its directory? | `bash scripts/check_frozen_evaluation.sh` |
+| the profile drift test | has the published profile page diverged from the profile data the engine consults? | `cargo test -p eadl-model` |
+| the code-path seam | is this staged file classified as a code change here? | `git diff --cached --name-only \| grep -Ef <(grep -vE '^\s*(#\|$)' .doctrine/code_paths.txt)` |
+| `cargo test --all` | does any contract test fail, and with which assertion diff? | `make test` |
+
+## Building a new one
+
+A diagnostic tool is a first-class deliverable: it lands in `scripts/` or as a test, it is
+named here, and it has a **RED arm** — a demonstration that it fails when the thing it checks
+is broken. A check that has only ever been seen green has not been shown to check anything.
