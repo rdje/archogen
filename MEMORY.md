@@ -11,22 +11,22 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M2` → frontier `M2.2`. `S0` **closed** (F28 green); `M2.1`, `M2.3` (**F18
+- **Active tree:** `M2` → frontier `M2.8`. `S0` **closed** (F28 green); `M2.1`, `M2.3` (**F18
   green**), `M2.4` and `M2.5` (**F29 green**) closed; `M0` done; `M1` done except the non-gate
   leaf `M1.10`; `PROGRAM` frontier `PROGRAM.5`.
-- **Next action:** **`M2.2`** — the independent reference model of `rt-core`'s semantics.
-  ⛔ **Derive it from `ROADMAP.md` §3.1 and §8, never by reading `crates/rt-core`.** §12 M2: "a
-  checker sharing the same erroneous recurrence with its reference does not qualify as
-  independent" — a reference written by reading the implementation agrees with it about
-  everything the implementation gets wrong, and the agreement looks like evidence.
-  `crates/rt-core/tests/lifecycle.rs` is written against the contract for exactly this reason, so
-  it is a specification both must satisfy. Also open and non-blocking: `M1.10`, `PROGRAM.5`,
-  `.8`, `.9`, `.10`.
+- **Next action:** **`M2.8`** — QEMU 11.1.1 is now installed, so `targets/riscv-virt-up.env`'s
+  `QEMU_VERSION_PINNED=none-yet` / `TARGET_VERIFIED=no` make the integration tier **fail** rather
+  than skip. Pin the release, run `scripts/target_emulator.sh --check` and `--dump-dtb`, compare
+  the generated device tree against the eADL platform fixture, and flip `TARGET_VERIFIED` only on
+  that evidence. ⛔ `M2.9` is **blocked on a director decision** — four of the five contract gaps
+  in `docs/decisions/decision_runtime-contract-gaps.md` change the roadmap. Also open: `M1.10`,
+  `PROGRAM.5`, `.8`, `.9`, `.10`.
 - **Run checks as tiers:** `make focused` per commit, `make integration` before a push. Exit
   **20 = incomplete** is not a pass — read what it names.
-- **Latest commit:** `ARCHOGEN-M2-0034 (leaf M2.1)` — `rt-core`, the runtime state machine that
-  decides without acting. ⚠️ Nothing in `rt-analysis` may be cited for a **runtime** claim until
-  `M2.6` supplies the variant that charges overhead; the crate says so in its own module docs.
+- **Latest commit:** `ARCHOGEN-M2-0035 (leaf M2.2)` — an independent reference model and a
+  differential harness. 16 000 events of exact agreement, and **five disagreements that are all
+  gaps in the contract**. ⚠️ Nothing in `rt-analysis` may be cited for a runtime claim until
+  `M2.6`.
 - **Carry the habit that found the last four defects:** mutate the subject at every gate, and
   assert the mutation applied (`docs/knowledge/a-gate-is-only-as-sharp-as-its-fixtures.md`,
   `docs/knowledge/verify-the-mutation-applied.md`).

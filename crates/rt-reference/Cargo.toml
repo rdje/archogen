@@ -1,0 +1,18 @@
+# An independent reference model of the runtime task-lifecycle state machine
+# (ROADMAP.md §8, §3.1; M2's exit gate requires "a separate simple reference model").
+#
+# It has NO dependencies, deliberately. §12 M2: "A checker sharing the same erroneous
+# recurrence with its reference does not qualify as independent." The same argument applies
+# to a shared type: a reference model that imports the implementation's vocabulary inherits
+# the implementation's misreadings of the contract along with it. This crate is derived from
+# ROADMAP.md §3.1/§8/§8.1, docs/profiles/rt-static-up-v1.md and the priority-direction
+# decision record, and from nothing else.
+[package]
+name = "rt-reference"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "Independent reference model of the rt-static-up-v1 task-lifecycle state machine, derived from the contract text alone"
+
+[lints]
+workspace = true

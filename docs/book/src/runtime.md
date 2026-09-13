@@ -89,6 +89,46 @@ the late job would make the running task set differ from the analyzed task set w
 that it happened. `SkipLateJob` exists, is legal where the analysis was told, and reports the
 abandonment as an event.
 
+## It has been checked against a model that never saw it
+
+§12 M2 asks for an independent reference and says exactly what would make one worthless:
+
+> A checker sharing the same erroneous recurrence with its reference does not qualify as
+> independent.
+
+So `crates/rt-reference` was derived by a separate context that was instructed not to read
+`crates/rt-core`, this chapter, or the task tree — working from `ROADMAP.md` §3.1/§8/§8.1 and the
+priority decision record alone. Its API came out visibly different: explicit `Priority` newtypes
+instead of index-as-rank, a separate `Processor` state, operations returning `Result`, dispatch
+performed eagerly inside `release`. That difference is evidence, not friction.
+
+`crates/rt-core/tests/differential.rs` drives both through **400 randomised sequences of 40
+events** and compares what a user of either could observe, with coverage floors so the agreement
+cannot be vacuous — the sequences must actually reach preemption, latched delivery, completion
+and idle. In the region the contract decides, the two agree exactly.
+
+⭐ **And the agreement is the weak result.** Two models that disagree cannot have been copied from
+each other, so every divergence is simultaneously proof of independence and a real defect. There
+are **five**, and every one turned out to be a question the roadmap does not answer:
+
+| # | The question the contract leaves open |
+| --- | --- |
+| 1 | does *detecting* an overrun apply its policy, and may a fault attach to a task that is not running? |
+| 2 | is an empty task set admissible? |
+| 3 | what does priority rank `0` mean — and which end of the range is the runtime's index? |
+| 4 | what happens when a containable fault is raised inside a masked region? |
+| 5 | what bounds mask nesting, and what happens at the bound? |
+
+They are **asserted on both sides** as ratchet tests, so neither model can drift and the list
+cannot quietly shrink by someone "fixing" one side. Resolving four of them changes the roadmap,
+which §14.1 makes a reviewed decision rather than an implementer's; they are set out with
+recommendations in `docs/decisions/decision_runtime-contract-gaps.md` and owned by leaf `M2.9`.
+
+⚠️ What is still **shared** between the two, and therefore could still produce a common error: the
+contract text itself, the priority decision record, the adapter that drives both, and the fact
+that the same model family produced each. §14 is explicit that "a second model agreeing with the
+first is not ground truth", so this is evidence with a stated scope — not a proof.
+
 ## What is deliberately absent
 
 §8: *"Use the simplest bounded structures adequate for the profile. Do not add a generic object

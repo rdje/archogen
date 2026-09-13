@@ -14,3 +14,8 @@ description = "The archogen runtime's shared state machine: fixed-priority task 
 workspace = true
 
 [dependencies]
+
+# Dev-only, and only for the differential test. ⛔ The dependency points THIS way on purpose:
+# rt-reference must never know rt-core exists, or it stops being an independent reference.
+[dev-dependencies]
+rt-reference = { path = "../rt-reference" }

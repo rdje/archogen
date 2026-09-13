@@ -44,6 +44,13 @@ dependencies = [
 [[package]]
 name = "rt-core"
 version = "0.1.0"
+dependencies = [
+ "rt-reference",
+]
+
+[[package]]
+name = "rt-reference"
+version = "0.1.0"
 
 [[package]]
 name = "xtask"

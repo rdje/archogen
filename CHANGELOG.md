@@ -4,6 +4,44 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — checked against a model that never saw it, and the disagreements are the finding
+
+`ARCHOGEN-M2-0035` (leaf `M2.2`).
+
+- `crates/rt-reference` is an **independently derived** model of the same runtime semantics,
+  written by a separate context instructed not to read `crates/rt-core`, the runtime book chapter
+  or the task tree — working from `ROADMAP.md` §3.1/§8/§8.1 and the priority decision record. Its
+  API came out visibly different (explicit `Priority` newtypes, a separate `Processor` state,
+  `Result`-returning operations, eager dispatch inside `release`), which is evidence rather than
+  friction. ⛔ The dependency points implementation → reference and never the reverse.
+- `crates/rt-core/tests/differential.rs` drives both through **400 randomised sequences of 40
+  events** and compares what a user of either could observe — with **coverage floors**, so the
+  agreement cannot be vacuous: the sequences must actually reach preemption, latched delivery,
+  completion and idle. In the region the contract decides, the two agree exactly.
+- ⭐ **The agreement is the weak result.** Two models that disagree cannot have been copied from
+  each other, so each divergence is simultaneously proof of independence and a real defect. There
+  are **five**, and every one is a question `ROADMAP.md` does not answer — where an overrun's
+  fault attaches, whether an empty task set is admissible, what priority rank `0` means, what a
+  containable fault inside a masked region does, and what bounds mask nesting. A single author had
+  resolved all five silently, and the resolutions looked like the specification.
+- ⛔ Among them, a concrete one worth naming: **the runtime's highest priority is index `0` while
+  the language's is `(priority 1)`**, and that off-by-one is written down nowhere.
+- The five are asserted on **both** sides as ratchet tests, so neither model can drift and the
+  list cannot shrink by "fixing" one side — §14.1 forbids silently weakening a requirement. Four
+  of them change the roadmap and are the director's call; they are set out with recommendations in
+  `docs/decisions/decision_runtime-contract-gaps.md` and owned by the new leaf `M2.9`.
+- ⚠️ What remains **shared** is disclosed, because §4.4 requires it and the leaf's acceptance
+  demands it: the contract text, the priority decision record, the adapter, and the fact that the
+  same model family produced both — §14: "a second model agreeing with the first is not ground
+  truth". Including one incidental leak the reference's author disclosed unprompted.
+- Two intermediate states are recorded because they show the harness was measured rather than
+  assumed: the first run reported `400 of 400` sequences diverging (the undecided region was
+  inside the generator), and after the first filter `373 of 400` — a **latched** release also owes
+  a job, which the filter missed.
+- Validation: `cargo test -p rt-reference` → **34 passed**; `--test differential` → **7 passed**;
+  `cargo test --all` → **415** passed (374 before, `+41`); fmt and clippy clean; all doctrines
+  green; `mdbook build` OK.
+
 ## archogen — a runtime that decides and does not act
 
 `ARCHOGEN-M2-0034` (leaf `M2.1`).

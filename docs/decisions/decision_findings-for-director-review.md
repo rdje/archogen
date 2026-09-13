@@ -5,7 +5,7 @@
 - **Status:** `active`
 - **Owner / source:** raised during the M0 + M1 build; recorded here so they survive the session
 
-Four items are recorded here so they survive the session. Three are outside an implementer's
+Five items are recorded here so they survive the session. Three are outside an implementer's
 authority to settle; the fourth (§4) is a measurement about the programme's own evidence that you
 should see even though it is already fixed. Each is tracked as work, so nothing here depends on
 this file being read.
@@ -71,6 +71,37 @@ gate says nothing about which. The programme's acceptance matrix is thirty such 
 §13.1 is careful to call them "a minimum practical corpus, not a proof of completeness" — this is
 the first measured instance of what that sentence costs. The habit it argues for is mutation
 testing at every gate, which §13.3 already lists and which is otherwise easy to defer forever.
+
+## 5. Five runtime-semantics questions the contract does not decide — **your call on four**
+
+⚠️ **This one needs a decision, and it is the highest-value thing in this record.**
+
+`M2.2` built an independent reference model of the runtime, derived by a separate context that
+never read the implementation. The two agree exactly over 16 000 randomised events — and disagree
+in **five** places, every one of which turned out to be a question `ROADMAP.md` does not actually
+answer. A single author had resolved all five silently, and the resolutions looked like the
+specification.
+
+They are set out with both readings and a recommendation in
+[`decision_runtime-contract-gaps.md`](decision_runtime-contract-gaps.md). In brief:
+
+| # | Question | Recommendation |
+| --- | --- | --- |
+| 1 | does detecting an overrun apply its policy, and can a fault attach to a non-running task? | §3.1 states the mapping; an overrun applies on detection, to the overrunning task |
+| 2 | is an empty task set admissible? | refuse — a vacuous schedulability result is what §7.1 exists to prevent |
+| 3 | what does priority rank `0` mean? | refuse it in a description, **and write down the off-by-one** (the runtime's highest rank is `0`, the language's is `1`, and that is recorded nowhere) |
+| 4 | a containable fault raised inside a masked region? | adopt the reference's reading — no contract change needed, it is an `rt-core` defect |
+| 5 | what bounds mask nesting? | refuse beyond the bound rather than saturating or wrapping |
+
+**The decision needed:** 1, 2, 3 and 5 change `ROADMAP.md` §3.1, the published profile, or the
+priority decision record, and §14.1 makes that a reviewed change rather than an implementer's.
+Leaf `M2.9` is open and blocked on it. Nothing else is blocked — the disagreements are asserted
+on both sides as ratchet tests, so they cannot drift while they wait.
+
+⭐ The generalisable part is worth more than any one of the five: **a specification gap is
+invisible while one person implements it**, because they resolve it and the resolution looks like
+the specification. It only becomes visible when a second reader derives the same thing without
+seeing the first. That is what §12 M2 is asking for, and it worked.
 
 ## A note on what "done" means so far
 

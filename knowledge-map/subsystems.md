@@ -69,6 +69,12 @@ justifies the split — the rows below appear as that happens.
   is its priority rank; masking nests and latches releases rather than losing them; a second
   pending release is an **overrun**, not a queue. `fault.rs` splits faults by whether the
   runtime's own state is still trustworthy — only an overrun is.
+- `crates/rt-reference/` — an **independently derived** model of the same runtime semantics,
+  written by a context that never read `crates/rt-core` (§12 M2). Its API is visibly different,
+  which is the evidence. `crates/rt-core/tests/differential.rs` drives both over 400 randomised
+  sequences with coverage floors; ⭐ the five places they disagree are all questions the contract
+  does not decide, asserted on both sides as ratchets and recorded in
+  `docs/decisions/decision_runtime-contract-gaps.md`.
 - `ROADMAP.md` — the program's direction, milestone exit gates, and the F01–F30 acceptance
   matrix. The single source of what "done" means.
 - `docs/tasks/PROGRAM.md` — the roadmap-unit → tree map and the fixture-ownership map.

@@ -42,6 +42,18 @@ Three mechanisms, none of which rely on anybody remembering:
    **strictly** — assert the row count — or a table that quietly shrinks leaves a green test
    checking less than it did.
 
+5. **Isolate the derivation, not just the artifact — and treat disagreement as the finding.**
+   For a reference *model* the strongest available form is to have it derived by someone who has
+   not seen the implementation at all, from the specification alone. Then ⭐ **agreement is the
+   weak result and disagreement is the strong one**: two models that disagree cannot have been
+   copied from each other, so every divergence is simultaneously proof of independence and a real
+   defect — in one of them, or in the specification that failed to decide it. Measured here: two
+   models of one runtime agreed over 16 000 randomised events and disagreed in five places, and
+   all five turned out to be genuine gaps in the written contract that a single author had
+   resolved silently and invisibly.
+   ⛔ Assert the disagreements on **both** sides, as a ratchet. Otherwise someone "fixes" one
+   model, the list shrinks, and a specification gap closes without anyone deciding anything.
+
 Then **disclose what is still shared**. Ours shares the reader with the toolchain, and says so
 in its own header, because a shared parser bug would mislead both sides identically. A named
 shared dependency is a reviewable fact; an unnamed one is a false independence claim.

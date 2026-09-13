@@ -19,6 +19,46 @@
 Detailed technical notes — root cause, implementation, validation — per slice. The
 engineering-continuity surface (not the public docs; that's `docs/book/`). Newest first.
 
+## _(2026-09-13)_ — a specification gap is invisible while one person implements it
+
+- `rt-core` and an independently derived `rt-reference` agree over 16 000 randomised events and
+  disagree in exactly five places. All five turned out to be questions `ROADMAP.md` does not
+  answer. One author had resolved every one of them silently, and each resolution *looked like*
+  the specification — which is why none had ever been noticed.
+- ⭐ So agreement was the weak result. Disagreement is what proves the two were not copied from
+  each other, and each divergence is either a defect or a gap. Assert them on **both** sides as a
+  ratchet, or someone "fixes" one model and a specification gap closes with nobody deciding.
+- The deepest was found twice, independently: the reference's author flagged overrun attribution
+  as a CONTRACT SILENT point while writing the model, and the randomised comparison hit it on its
+  first sequence. Both arguments are right about different faults — a trap belongs to whoever
+  executed the instruction; an overrun is a statement about a task that is precisely *not*
+  running — and §3.1 lists them in one sentence while §8.1's triage does not map onto it.
+- ⛔ Building the harness was itself instructive. `400 of 400` diverged at first, because the
+  undecided case was inside the random generator; then `373 of 400`, because a **latched** release
+  also owes a job and the filter only checked task *state*. Both numbers are recorded: a harness
+  that goes green on its first run has usually excluded the interesting region.
+- Promoted: `docs/knowledge/an-oracle-is-independent-by-construction.md` gains a fifth mechanism
+  — isolate the derivation, not just the artifact, and treat disagreement as the finding.
+
+## _(2026-09-13)_ — a lockstep script that aborts partway commits a half-updated repository
+
+- The `M2.1` commit went out without its `CHANGELOG.md` entry. The lockstep was one python
+  program doing several edits in sequence; an assertion failed partway — on a `MEMORY.md` anchor
+  that an earlier repair had already rewritten — so every write after it silently did not happen.
+- It was not noticed because the *other* command in the same batch printed green and only the
+  tail was read. Same shape as the false green in
+  `docs/knowledge/verify-the-mutation-applied.md`: a step that did nothing looks exactly like a
+  step that worked.
+- Two rules follow, and the second is the one that would have caught it: **write each lockstep
+  file in its own step so a failure cannot cascade**, and **check the whole output of a batch, not
+  its last line, before staging**. The `LOCKSTEP` box of the acceptance checklist is still
+  honour-system — a gate that compared a newly-`done` leaf against a staged `CHANGELOG.md` would
+  make this mechanical, and that is worth doing.
+- promotion: declined (the transferable rule is already
+  `docs/knowledge/verify-the-mutation-applied.md`'s — a step that silently did nothing reads as a
+  step that worked — applied there to mutations and here to lockstep writes; a second entry for
+  the same question makes the retrievable layer harder to search)
+
 ## _(2026-09-13)_ — a negative control that subtracts is not a control
 
 - F29's second control omits the timer ISR cost and the answer moves 23 → 21, which is exactly
