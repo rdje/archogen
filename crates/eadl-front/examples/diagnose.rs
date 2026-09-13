@@ -12,24 +12,52 @@
 //! ```
 //!
 //! Exit codes: `0` read cleanly · `1` diagnostics were produced · `2` usage or I/O failure.
+//!
+//! ⛔ A closed pipe is not a failure. `diagnose … | head -3` closes stdout early, and Rust's
+//! `println!` panics on the resulting `BrokenPipe` — which prints a Rust backtrace where the
+//! user expected three lines of output. Found by piping the tool while using it. Every write
+//! here goes through [`emit`], which exits quietly on a closed pipe and reports any other I/O
+//! error honestly.
 
+use std::io::{ErrorKind, Write};
 use std::process::ExitCode;
 
 use eadl_front::{read, SourceMap};
 
+/// Write one line, treating a closed pipe as a normal end of output.
+fn emit(out: &mut dyn Write, line: &str) -> Result<(), ExitCode> {
+    match writeln!(out, "{line}") {
+        Ok(()) => Ok(()),
+        Err(error) if error.kind() == ErrorKind::BrokenPipe => Err(ExitCode::SUCCESS),
+        Err(error) => {
+            // stderr may still be open even when stdout is not.
+            let _ = writeln!(std::io::stderr(), "diagnose: cannot write output: {error}");
+            Err(ExitCode::from(2))
+        }
+    }
+}
+
 fn main() -> ExitCode {
+    match run() {
+        Ok(code) | Err(code) => code,
+    }
+}
+
+#[allow(clippy::too_many_lines)]
+fn run() -> Result<ExitCode, ExitCode> {
+    let mut stdout = std::io::stdout().lock();
     let mut args = std::env::args().skip(1);
     let Some(path) = args.next() else {
         eprintln!("usage: diagnose <file.eadl>");
         eprintln!("  reads the file and prints diagnostics, canonical form, and headers");
-        return ExitCode::from(2);
+        return Ok(ExitCode::from(2));
     };
 
     let text = match std::fs::read_to_string(&path) {
         Ok(text) => text,
         Err(error) => {
             eprintln!("diagnose: cannot read {path}: {error}");
-            return ExitCode::from(2);
+            return Ok(ExitCode::from(2));
         }
     };
 
@@ -38,46 +66,65 @@ fn main() -> ExitCode {
         Ok(id) => id,
         Err(error) => {
             eprintln!("diagnose: {error}");
-            return ExitCode::from(2);
+            return Ok(ExitCode::from(2));
         }
     };
 
     let (document, diagnostics) = read(&sources, id);
 
     if diagnostics.is_empty() {
-        println!("read cleanly: {} top-level form(s)", document.forms.len());
+        emit(
+            &mut stdout,
+            &format!("read cleanly: {} top-level form(s)", document.forms.len()),
+        )?;
     } else {
-        print!("{}", diagnostics.render(&sources));
-        println!(
-            "{} diagnostic(s); {} top-level form(s) recovered",
-            diagnostics.len(),
-            document.forms.len()
-        );
+        for line in diagnostics.render(&sources).lines() {
+            emit(&mut stdout, line)?;
+        }
+        emit(
+            &mut stdout,
+            &format!(
+                "{} diagnostic(s); {} top-level form(s) recovered",
+                diagnostics.len(),
+                document.forms.len()
+            ),
+        )?;
     }
 
     let headers = document.comment_headers();
     if !headers.is_empty() {
-        println!("\nheaders:");
+        emit(&mut stdout, "")?;
+        emit(&mut stdout, "headers:")?;
         for (key, value) in &headers {
             let shown = if value.chars().count() > 72 {
                 format!("{}…", value.chars().take(72).collect::<String>())
             } else {
                 value.clone()
             };
-            println!("  {key}: {shown}");
+            emit(&mut stdout, &format!("  {key}: {shown}"))?;
         }
     }
 
     if !document.forms.is_empty() {
-        println!("\ncanonical:");
+        emit(&mut stdout, "")?;
+        emit(&mut stdout, "canonical:")?;
         for line in document.to_canonical().lines() {
-            println!("  {line}");
+            emit(&mut stdout, &format!("  {line}"))?;
         }
     }
 
-    if diagnostics.has_errors() {
+    // Flush explicitly: a drop-time flush failure would be discarded, turning truncated output
+    // into a silent success.
+    if let Err(error) = stdout.flush() {
+        if error.kind() != ErrorKind::BrokenPipe {
+            eprintln!("diagnose: cannot flush output: {error}");
+            return Ok(ExitCode::from(2));
+        }
+    }
+
+    Ok(if diagnostics.has_errors() {
         ExitCode::from(1)
     } else {
         ExitCode::SUCCESS
-    }
+    })
 }

@@ -137,6 +137,18 @@ pub const FORBIDDEN: &[ForbiddenConstruct] = &[
         belongs: "the engine build manifest: §7.3 keeps bounds, their origin, and their target and binary identity outside eADL",
     },
     ForbiddenConstruct {
+        head: "entry-point",
+        failing_test: BoundaryTest::Externality,
+        what: "an association between a logical task and the code that implements it",
+        belongs: "the engine build manifest: §7.3 keeps application-code associations outside eADL, so the same workload description can be built against different code",
+    },
+    ForbiddenConstruct {
+        head: "stack-allocation",
+        failing_test: BoundaryTest::NonPrescription,
+        what: "a concrete memory allocation",
+        belongs: "the engine: §7.3 says the engine derives concrete allocations, and §7.6 checks the result against the actual linked image rather than against a number in the description",
+    },
+    ForbiddenConstruct {
         head: "init-order",
         failing_test: BoundaryTest::ImplementationIndependence,
         what: "a concrete boot sequence over selected providers",

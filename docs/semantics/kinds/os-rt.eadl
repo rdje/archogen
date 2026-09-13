@@ -1,0 +1,46 @@
+; docs/semantics/kinds/os-rt.eadl — the `os/rt` workload feature module.
+;
+; ROADMAP.md §5.1: "Add workload requirements through an `os/rt` feature module." This file is
+; that module, declared with the same `defkind` primitive as the core surface kinds — it is an
+; extension, not a privileged addition.
+;
+; ⛔ WHAT A TASK MAY AND MAY NOT CARRY. §7.3 splits the task record in three, and only the first
+; third lives here:
+;
+;   eADL                  the functional requirements and constraints
+;   the build manifest    application-code association, execution bounds, and their evidence
+;   the engine            concrete allocations, stack placement, and other implementation fields
+;
+; So a task declares its release behavior, its priority, its deadline and the event that
+; deadline is relative to, its bounded jitter, and what it needs. It does NOT declare a worst-
+; case execution time (that is evidence about a binary, valid only for a target and toolchain —
+; §15 notes a compiler flag change invalidates it while the description is byte-identical), an
+; entry point (a code association), or a stack size (an engine-derived allocation). Each of
+; those three has a worked rejection case in `docs/semantics/boundary/reject/`.
+;
+; The profile bounds what is expressible here too: `rt-static-up-v1` admits "periodic or
+; sporadic releases with declared minimum separation; constrained deadlines; bounded release
+; jitter" and excludes `dynamic-task-creation`, so there is no clause for creating one.
+
+(defkind task
+  (doc "a logical task: its release behavior, priority, deadline and functional needs")
+  (name required)
+  ; Release behavior. A periodic task states its period; a sporadic one states the minimum
+  ; separation between releases. §3.1 admits both and requires the separation to be declared.
+  (clause period (cardinality at-most-one) (holds values number symbol))
+  (clause min-separation (cardinality at-most-one) (holds values number symbol))
+  ; §3.1: constrained deadlines. The reference event is explicit because §7.3 requires the
+  ; "relative deadline and its reference event" — a deadline measured from an unnamed instant
+  ; is not a checkable requirement.
+  (clause deadline (cardinality one) (holds values number symbol))
+  (clause deadline-from (cardinality at-most-one) (holds values symbol))
+  ; §3.1: bounded release jitter. Absent means zero, which is a claim the analysis relies on.
+  (clause jitter (cardinality at-most-one) (holds values number symbol))
+  ; Static unique priorities (§3.1). The engine owns the ready-queue structure that realizes
+  ; them; the number here is the policy, not the implementation.
+  (clause priority (cardinality one) (holds values integer))
+  ; What the task requires of the system, functionally.
+  (clause needs (cardinality any) (holds forms))
+  (clause uses (cardinality any) (holds forms))
+  ; §3.1: "defined overrun … policy". A named response, not a handler body.
+  (clause on-overrun (cardinality at-most-one) (holds values symbol)))

@@ -71,6 +71,14 @@ pub struct Declaration {
 pub struct FactMap {
     offered: BTreeMap<String, Declaration>,
     absent: BTreeMap<String, Declaration>,
+    /// Every name this description declares — a block, a service, a policy, a system.
+    ///
+    /// ⭐ A composition reference is not a fact request. `(requires (uses timer.counter))` on a
+    /// platform names a *block that is declared right there*, and that block's own obligations
+    /// are checked by its own declaration. Treating every `uses` target as a leaf fact made the
+    /// first real example fail with `missing-fact: console.uart` — found by the example suite,
+    /// not by inspection.
+    declared: BTreeSet<String>,
     /// `name` → the facts and services it needs.
     needs: BTreeMap<String, Vec<(String, Span)>>,
     /// What the system requests.
@@ -120,6 +128,9 @@ impl FactMap {
             .and_then(Form::as_symbol)
             .unwrap_or("<unnamed>")
             .to_string();
+        if owner != "<unnamed>" {
+            self.declared.insert(owner.clone());
+        }
 
         for clause in form.items().iter().skip(1) {
             let Some(head) = clause.head() else { continue };
@@ -226,6 +237,7 @@ impl FactMap {
     /// Every name mentioned anywhere — declared, needed, or requested.
     fn universe(&self) -> BTreeSet<String> {
         let mut all: BTreeSet<String> = BTreeSet::new();
+        all.extend(self.declared.iter().cloned());
         all.extend(self.offered.keys().cloned());
         all.extend(self.absent.keys().cloned());
         for (owner, edges) in &self.needs {
@@ -272,13 +284,36 @@ impl FactMap {
         // ── F04 / F05: relevance decides whether an unknown fact matters ─────────────────────
         let mut missing = Vec::new();
         for fact in &closure {
+            // An explicit absence is checked FIRST, before anything can satisfy the name: a
+            // block that declares a capability absent does not stop being absent because it is
+            // also declared.
+            if self.presence(fact) == Presence::Absent {
+                let declaration = &self.absent[fact];
+                diagnostics.push(
+                    Diagnostic::error(
+                        "infeasible-configuration",
+                        format!("`{fact}` is required by this system but declared absent"),
+                        Label::new(self.request_span(fact), "required through this request"),
+                        "either the requirement or the platform is wrong; an explicitly \
+                         absent fact is a definite answer, not a gap to be filled in",
+                    )
+                    .with_secondary(Label::new(
+                        declaration.span,
+                        format!("declared absent by `{}`", declaration.declared_by),
+                    )),
+                );
+                continue;
+            }
+
             // A name that has outgoing `needs` edges is a service, satisfied by its parts
-            // rather than by being offered itself.
-            if self.needs.contains_key(fact) {
+            // rather than by being offered itself. A name this description DECLARES is
+            // satisfied by its declaration — its own obligations are checked there.
+            if self.needs.contains_key(fact) || self.declared.contains(fact) {
                 continue;
             }
             match self.presence(fact) {
                 Presence::Offered => {}
+                Presence::Absent => unreachable!("absence was handled above"),
                 Presence::Undescribed => {
                     missing.push(fact.clone());
                     diagnostics.push(Diagnostic::error(
@@ -291,22 +326,6 @@ impl FactMap {
                              that depends on it can be made"
                         ),
                     ));
-                }
-                Presence::Absent => {
-                    let declaration = &self.absent[fact];
-                    diagnostics.push(
-                        Diagnostic::error(
-                            "infeasible-configuration",
-                            format!("`{fact}` is required by this system but declared absent"),
-                            Label::new(self.request_span(fact), "required through this request"),
-                            "either the requirement or the platform is wrong; an explicitly \
-                             absent fact is a definite answer, not a gap to be filled in",
-                        )
-                        .with_secondary(Label::new(
-                            declaration.span,
-                            format!("declared absent by `{}`", declaration.declared_by),
-                        )),
-                    );
                 }
             }
         }
@@ -422,6 +441,40 @@ mod tests {
         ] {
             assert!(closure.contains(name), "`{name}` missing from {closure:?}");
         }
+    }
+
+    #[test]
+    fn a_declared_block_satisfies_a_composition_reference() {
+        // ⭐ Found by the first real example, not by inspection: a platform's
+        // `(requires (uses timer.counter))` names a block that is declared right there. Treating
+        // every `uses` target as a leaf fact reported `missing-fact: console.uart` on a
+        // description that was complete.
+        let (map, _) = map_of(
+            "(defsystem s (uses soc.playground))\n\
+             (defplatform soc.playground (requires (uses timer.counter console.uart)))\n\
+             (defblock timer.counter (offers counter-width))\n\
+             (defblock console.uart (offers observable-output))",
+        );
+        let report = map.check();
+        assert!(report.is_admissible(), "{:?}", report.diagnostics);
+    }
+
+    #[test]
+    fn a_declared_name_that_is_also_absent_is_still_infeasible() {
+        // Being declared does not repeal an explicit absence. Order matters here: the absence
+        // check runs first, so a block that declares a capability absent cannot satisfy a
+        // requirement for it merely by existing.
+        let (map, _) = map_of(
+            "(defsystem s (uses low-power-timer))\n\
+             (defblock low-power-timer (offers x))\n\
+             (defblock other (absent low-power-timer))",
+        );
+        let report = map.check();
+        assert!(!report.is_admissible());
+        assert!(report
+            .diagnostics
+            .iter()
+            .any(|d| d.code == "infeasible-configuration"));
     }
 
     #[test]

@@ -97,7 +97,7 @@ fn corpus() -> Vec<Case> {
 #[test]
 fn f27_the_classifier_agrees_with_every_recorded_verdict() {
     let cases = corpus();
-    assert_eq!(cases.len(), 21, "the corpus changed size");
+    assert_eq!(cases.len(), 23, "the corpus changed size");
 
     for case in &cases {
         match (case.verdict.as_str(), classify(&case.form)) {

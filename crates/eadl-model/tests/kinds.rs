@@ -37,24 +37,35 @@ fn parse_file(relative: &str) -> (Vec<Form>, SourceMap) {
     (document.forms, sources)
 }
 
-/// The registry built from the core kinds file.
+/// The registry built from the shipped kind modules.
+///
+/// `core.eadl` holds the five §5.1 surface kinds; `os-rt.eadl` is the workload feature module
+/// §5.1 calls for, and supplies the `task` kind that `defsystem` references. Loading both is
+/// what a real invocation does — and a registry missing `os-rt` says so rather than silently
+/// accepting anything inside a task, which `a_missing_kind_module_is_reported_not_ignored`
+/// checks.
 fn core_registry() -> Registry {
-    let (forms, sources) = parse_file("docs/semantics/kinds/core.eadl");
     let mut registry = Registry::new();
-    for form in &forms {
-        let kind = read_kind(form).unwrap_or_else(|errors| {
-            panic!(
-                "core.eadl has a malformed kind:\n{}",
-                errors
-                    .iter()
-                    .map(|d| d.render(&sources))
-                    .collect::<Vec<_>>()
-                    .join("\n")
-            )
-        });
-        registry
-            .register(kind)
-            .expect("no duplicate kinds in core.eadl");
+    for file in [
+        "docs/semantics/kinds/core.eadl",
+        "docs/semantics/kinds/os-rt.eadl",
+    ] {
+        let (forms, sources) = parse_file(file);
+        for form in &forms {
+            let kind = read_kind(form).unwrap_or_else(|errors| {
+                panic!(
+                    "{file} has a malformed kind:\n{}",
+                    errors
+                        .iter()
+                        .map(|d| d.render(&sources))
+                        .collect::<Vec<_>>()
+                        .join("\n")
+                )
+            });
+            registry
+                .register(kind)
+                .unwrap_or_else(|e| panic!("{file}: {}", e.message));
+        }
     }
     registry
 }
@@ -72,9 +83,10 @@ fn the_core_kinds_are_declared_in_eadl_not_in_rust() {
             "defplatform",
             "defpolicy",
             "defservice",
-            "defsystem"
+            "defsystem",
+            "task"
         ],
-        "the five §5.1 surface kinds must all come from core.eadl"
+        "the five §5.1 surface kinds plus the os/rt `task` kind, all declared in eADL"
     );
     assert!(
         registry.kind("defkind").is_none(),
@@ -135,19 +147,16 @@ fn every_accepted_boundary_case_validates_against_the_core_kinds() {
 }
 
 #[test]
-fn the_schema_reaches_ten_of_the_eleven_rejected_cases_and_the_eleventh_is_named() {
-    // ⭐ MEASURED REACH, not a claim of equivalence. Two independent mechanisms refuse
-    // implementation content: F27's boundary classifier, which walks the whole tree, and the
-    // schema, which simply has no clause for it. Their reach is NOT the same, and pretending
-    // otherwise would be the more dangerous kind of green.
+fn the_schema_now_reaches_every_rejected_case() {
+    // ⭐ THE GAP, CLOSED AND RE-PINNED. This test previously asserted a measured 10-of-11 split:
+    // `execution-bound` hid `wcet` inside `(task …)`, which was declared `(holds forms)` and
+    // therefore opaque to the schema, so only the boundary classifier caught it.
     //
-    // The schema validates the declaration FRAME. A clause declared `(holds forms)` is opaque
-    // at this layer, so a forbidden construct nested inside one is invisible to it. Exactly one
-    // corpus case is shaped that way — `execution-bound` hides `wcet` inside `(task …)` — and
-    // it is caught by the boundary classifier instead.
-    //
-    // This test pins the split in both directions. If the schema's reach grows, the count is
-    // wrong and someone has to say so deliberately; if it shrinks, likewise.
+    // `M1.7` gave `task` a real kind and changed the clause to `(holds kind task)`, which makes
+    // the schema recurse into it. The reach is now 13 of 13. Keeping the assertion exact rather
+    // than loosening it to "at least one" is the point: if a later clause moves back to
+    // `(holds forms)`, or a new corpus case hides a construct somewhere else opaque, this fails
+    // and someone has to say so deliberately.
     let registry = core_registry();
     let root = repo_root().join("docs/semantics/boundary/reject");
 
@@ -172,7 +181,8 @@ fn the_schema_reaches_ten_of_the_eleven_rejected_cases_and_the_eleventh_is_named
             } else {
                 refused_by_schema.push(file.clone());
             }
-            // Whatever the schema sees, F27's classifier must refuse every one of them.
+            // Whatever the schema sees, F27's classifier must refuse every one of them. Two
+            // independent refusals for the same content is a feature, not redundancy.
             assert!(
                 !eadl_model::boundary::classify(form).is_accepted(),
                 "{relative}: neither mechanism refused it"
@@ -185,16 +195,60 @@ fn the_schema_reaches_ten_of_the_eleven_rejected_cases_and_the_eleventh_is_named
 
     assert_eq!(
         refused_by_schema.len() + out_of_reach.len(),
-        11,
+        13,
         "the reject corpus changed size"
     );
-    assert_eq!(
-        out_of_reach,
-        vec!["execution-bound.eadl".to_string()],
-        "the set of cases outside the schema's reach changed — say so deliberately, and update \
-         the note in `M1.7`, which owns giving `(task …)` a schema"
+    assert!(
+        out_of_reach.is_empty(),
+        "the schema no longer reaches every rejected case: {out_of_reach:?} — if that is \
+         deliberate, say so here and name the leaf that closes it again"
     );
-    assert_eq!(refused_by_schema.len(), 10);
+}
+
+#[test]
+fn an_execution_bound_inside_a_task_is_now_caught_by_the_schema_too() {
+    // The specific case the gap was measured on. It must be refused with the BOUNDARY wording,
+    // not merely as an unknown clause: `wcet` is not a typo, it is content in the wrong layer.
+    let registry = core_registry();
+    let relative = "docs/semantics/boundary/reject/execution-bound.eadl";
+    let (forms, sources) = parse_file(relative);
+    let errors = validate(&registry, &forms[0]);
+    let rendered = errors
+        .iter()
+        .map(|d| d.render(&sources))
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(
+        rendered.contains("boundary-implementation-in-description"),
+        "the schema recursed but used generic wording:\n{rendered}"
+    );
+    assert!(rendered.contains("build manifest"), "{rendered}");
+}
+
+#[test]
+fn a_missing_kind_module_is_reported_not_ignored() {
+    // A registry without `os-rt.eadl` cannot validate a task. It must SAY so — silently
+    // accepting whatever is inside an unvalidatable clause is the failure mode that let the
+    // gap exist in the first place.
+    let (forms, sources) = parse_file("docs/semantics/kinds/core.eadl");
+    let mut registry = Registry::new();
+    for form in &forms {
+        registry
+            .register(read_kind(form).expect("core.eadl is well-formed"))
+            .expect("no duplicates");
+    }
+    let (system, _) = parse_file("docs/semantics/boundary/reject/execution-bound.eadl");
+    let errors = validate(&registry, &system[0]);
+    let rendered = errors
+        .iter()
+        .map(|d| d.render(&sources))
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(
+        rendered.contains("schema-unknown-referenced-kind"),
+        "an unvalidatable clause passed silently:\n{rendered}"
+    );
+    assert!(rendered.contains("os-rt.eadl"), "{rendered}");
 }
 
 #[test]

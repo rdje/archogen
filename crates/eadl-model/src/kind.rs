@@ -110,9 +110,15 @@ impl Cardinality {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Holds {
     /// Nested forms, not interpreted at this layer.
+    ///
+    /// ⚠️ Opaque: a forbidden construct nested inside such a clause is invisible to the schema.
+    /// That is why [`Holds::Kind`] exists — every clause moved from `forms` to `kind` extends
+    /// the schema's reach by exactly what that clause contains.
     Forms,
     /// A fixed sequence of scalar values.
     Values(Vec<ValueType>),
+    /// Each occurrence is itself a declaration of the named kind, validated recursively.
+    Kind(String),
 }
 
 /// A scalar value type.
@@ -474,6 +480,16 @@ fn read_holds(form: &Form) -> Result<Holds, Box<Diagnostic>> {
     let items = form.items();
     match items.get(1).and_then(Form::as_symbol) {
         Some("forms") => Ok(Holds::Forms),
+        Some("kind") => match items.get(2).and_then(Form::as_symbol) {
+            Some(name) => Ok(Holds::Kind(name.to_string())),
+            None => Err(Box::new(Diagnostic::error(
+                "schema-bad-holds",
+                "`holds kind` must name the kind",
+                Label::new(form.span(), "no kind named"),
+                "write `(holds kind task)` — each occurrence of the clause is then validated \
+                 as a declaration of that kind",
+            ))),
+        },
         Some("values") => {
             let mut types = Vec::new();
             for item in items.iter().skip(2) {
@@ -493,9 +509,11 @@ fn read_holds(form: &Form) -> Result<Holds, Box<Diagnostic>> {
         }
         _ => Err(Box::new(Diagnostic::error(
             "schema-bad-holds",
-            "`holds` takes `forms` or `values <type>…`",
-            Label::new(form.span(), "expected `forms` or `values`"),
-            "write `(holds forms)` for nested content, or `(holds values number symbol)` for a quantity",
+            "`holds` takes `forms`, `values <type>…`, or `kind <name>`",
+            Label::new(form.span(), "expected `forms`, `values` or `kind`"),
+            "write `(holds forms)` for opaque nested content, `(holds values number symbol)` \
+             for a quantity, or `(holds kind task)` to validate each occurrence as a \
+             declaration of that kind",
         ))),
     }
 }
@@ -560,8 +578,28 @@ pub fn validate(registry: &Registry, form: &Form) -> Vec<Diagnostic> {
 
         *counts.entry(clause.head.as_str()).or_default() += 1;
 
-        if let Holds::Values(types) = &clause.holds {
-            check_values(item, types, &mut errors);
+        match &clause.holds {
+            Holds::Values(types) => check_values(item, types, &mut errors),
+            // ⭐ Recursion is what closes the schema's reach. A clause declared `(holds kind
+            // task)` is validated as a full declaration, so a forbidden construct nested inside
+            // it — an execution bound inside a task, say — is seen here rather than only by the
+            // boundary classifier walking the whole tree.
+            Holds::Kind(name) => match registry.kind(name) {
+                Some(_) => errors.extend(validate(registry, item)),
+                None => errors.push(Diagnostic::error(
+                    "schema-unknown-referenced-kind",
+                    format!(
+                        "clause `{}` of `{head}` is declared to hold kind `{name}`, which is not registered",
+                        clause.head
+                    ),
+                    Label::new(item.span(), "cannot be validated"),
+                    format!(
+                        "register the module that defines `{name}` — the workload kinds live in \
+                         `docs/semantics/kinds/os-rt.eadl`"
+                    ),
+                )),
+            },
+            Holds::Forms => {}
         }
     }
 

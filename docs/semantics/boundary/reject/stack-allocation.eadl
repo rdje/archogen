@@ -1,0 +1,22 @@
+; case: stack-allocation
+; verdict: reject
+; ambiguous: yes
+; tests: externality=pass implementation-independence=pass non-prescription=fail
+; failing-test: non-prescription
+; rationale: AMBIGUOUS, resolved REJECT. A stack size looks like a resource requirement, and
+;   `rt-static-up-v1` really does require "separate statically allocated task stacks". But the
+;   REQUIREMENT is that each task has its own bounded stack; the NUMBER is an allocation. §7.3
+;   assigns concrete allocations to the engine, and §7.6 checks the result against the actual
+;   linked sections — so a number written here is either redundant with what the engine derives
+;   or in conflict with it, and a conflict between a description and a linked image is resolved
+;   by the image. Test 3 settles it: the field prescribes a layout decision rather than stating
+;   a guarantee. What eADL may state is the bounded-stack requirement and the guard behavior.
+; other-side: belongs in the engine: the derived allocation, checked against the linked image,
+;   with the stack bound's evidence category recorded separately
+;
+(defsystem app.rt
+  (task sensor
+    (period 10 ms)
+    (deadline 10 ms)
+    (priority 1)
+    (stack-allocation 4 KiB)))

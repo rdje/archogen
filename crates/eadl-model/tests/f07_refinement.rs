@@ -59,7 +59,10 @@ fn f07_a_refinement_that_drops_a_guarantee_names_the_guarantee_obligation() {
         rendered.contains("violated obligation `guarantee`"),
         "the obligation must be named:\n{rendered}"
     );
-    assert!(rendered.contains("guaranteed here"), "both sites:\n{rendered}");
+    assert!(
+        rendered.contains("guaranteed here"),
+        "both sites:\n{rendered}"
+    );
 }
 
 #[test]
@@ -74,7 +77,10 @@ fn f07_a_refinement_that_violates_a_bound_names_the_constraint_obligation() {
         rendered.contains("does not satisfy `at-least 32 bit`"),
         "{rendered}"
     );
-    assert!(rendered.contains("violated obligation `constraint`"), "{rendered}");
+    assert!(
+        rendered.contains("violated obligation `constraint`"),
+        "{rendered}"
+    );
 }
 
 #[test]
@@ -87,8 +93,14 @@ fn f07_a_refinement_that_adds_an_excluded_fact_names_the_exclusion_obligation() 
     );
     assert!(!report.is_valid());
     assert_eq!(violated(&report), vec![Obligation::Exclusion]);
-    assert!(rendered.contains("which `soc.abstract` declares absent"), "{rendered}");
-    assert!(rendered.contains("violated obligation `exclusion`"), "{rendered}");
+    assert!(
+        rendered.contains("which `soc.abstract` declares absent"),
+        "{rendered}"
+    );
+    assert!(
+        rendered.contains("violated obligation `exclusion`"),
+        "{rendered}"
+    );
     assert!(
         rendered.contains("not an omission to be filled in"),
         "the refusal must say why an absence is a constraint:\n{rendered}"
@@ -104,15 +116,17 @@ fn adding_an_unused_device_is_not_an_invalid_refinement() {
          (defplatform soc.concrete (refines soc.abstract) (offers counter-width uart spi))",
     );
     assert!(report.is_valid(), "an addition was refused:\n{rendered}");
-    assert_eq!(report.additions, vec!["spi".to_string(), "uart".to_string()]);
+    assert_eq!(
+        report.additions,
+        vec!["spi".to_string(), "uart".to_string()]
+    );
 }
 
 #[test]
 fn an_addition_is_reported_even_though_it_is_allowed() {
     // Allowed is not the same as invisible: the author should be able to see what grew.
-    let (report, _) = refine(
-        "(defplatform a (offers x))\n(defplatform b (refines a) (offers x y))",
-    );
+    let (report, _) =
+        refine("(defplatform a (offers x))\n(defplatform b (refines a) (offers x y))");
     assert!(report.is_valid());
     assert_eq!(report.additions, vec!["y".to_string()]);
 }
@@ -135,7 +149,10 @@ fn direction_decides_which_way_is_stronger() {
         "(defplatform a (offers (delivery-bound (at-most 50 us))))\n\
          (defplatform b (refines a) (offers (delivery-bound 80 us)))",
     );
-    assert!(!larger_against_at_most.is_valid(), "80 us must not satisfy at-most 50 us");
+    assert!(
+        !larger_against_at_most.is_valid(),
+        "80 us must not satisfy at-most 50 us"
+    );
 
     let (smaller_against_at_most, _) = refine(
         "(defplatform a (offers (delivery-bound (at-most 50 us))))\n\
@@ -150,7 +167,10 @@ fn an_exact_bound_refuses_a_merely_better_value() {
         "(defplatform a (offers (tick-rate (exactly 10 MHz))))\n\
          (defplatform b (refines a) (offers (tick-rate 20 MHz)))",
     );
-    assert!(!report.is_valid(), "an exact bound accepted a different value");
+    assert!(
+        !report.is_valid(),
+        "an exact bound accepted a different value"
+    );
     assert!(rendered.contains("the direction is `exact`"), "{rendered}");
 }
 
@@ -160,7 +180,10 @@ fn an_exact_bound_accepts_the_same_amount_written_differently() {
         "(defplatform a (offers (tick-rate (exactly 10 MHz))))\n\
          (defplatform b (refines a) (offers (tick-rate 10000000 Hz)))",
     );
-    assert!(report.is_valid(), "comparison must be on the amount, not the spelling:\n{rendered}");
+    assert!(
+        report.is_valid(),
+        "comparison must be on the amount, not the spelling:\n{rendered}"
+    );
 }
 
 #[test]
@@ -171,7 +194,10 @@ fn a_bound_checked_against_the_wrong_dimension_is_refused_not_answered() {
          (defplatform b (refines a) (offers (horizon 60 MHz)))",
     );
     assert!(!report.is_valid());
-    assert!(rendered.contains("measures something else entirely"), "{rendered}");
+    assert!(
+        rendered.contains("measures something else entirely"),
+        "{rendered}"
+    );
 }
 
 #[test]
@@ -185,7 +211,10 @@ fn a_bounded_fact_offered_without_a_value_is_refused() {
     );
     assert!(!report.is_valid());
     assert_eq!(violated(&report), vec![Obligation::Constraint]);
-    assert!(rendered.contains("no value to check the bound against"), "{rendered}");
+    assert!(
+        rendered.contains("no value to check the bound against"),
+        "{rendered}"
+    );
 }
 
 #[test]
@@ -195,9 +224,18 @@ fn every_violated_obligation_is_reported_not_only_the_first() {
          (defplatform b (refines a) (offers (counter-width 8 bit) dma))",
     );
     let obligations = violated(&report);
-    assert!(obligations.contains(&Obligation::Guarantee), "{obligations:?}");
-    assert!(obligations.contains(&Obligation::Constraint), "{obligations:?}");
-    assert!(obligations.contains(&Obligation::Exclusion), "{obligations:?}");
+    assert!(
+        obligations.contains(&Obligation::Guarantee),
+        "{obligations:?}"
+    );
+    assert!(
+        obligations.contains(&Obligation::Constraint),
+        "{obligations:?}"
+    );
+    assert!(
+        obligations.contains(&Obligation::Exclusion),
+        "{obligations:?}"
+    );
 }
 
 #[test]

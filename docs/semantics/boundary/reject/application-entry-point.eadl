@@ -1,0 +1,22 @@
+; case: application-entry-point
+; verdict: reject
+; ambiguous: yes
+; tests: externality=fail implementation-independence=pass non-prescription=pass
+; failing-test: externality
+; rationale: AMBIGUOUS, resolved REJECT. Naming the function a task runs feels like part of
+;   describing the task, and it sits naturally beside the period and the deadline. It is not an
+;   eADL field. §7.3 splits the task record explicitly: "eADL supplies the functional
+;   requirements and constraints. The separate build manifest supplies application-code
+;   associations and evidence." Test 1 settles it — an entry point states no offered feature and
+;   no required behavior; it names an artifact. The consequence is concrete: with the entry point
+;   in the description, the same workload cannot be built against a different implementation of
+;   the same tasks, which is precisely the reuse the program exists to demonstrate.
+; other-side: belongs in the engine build manifest: the logical-task-to-code association, with
+;   the source or artifact identity it resolves to
+;
+(defsystem app.rt
+  (task sensor
+    (period 10 ms)
+    (deadline 10 ms)
+    (priority 1)
+    (entry-point "app::sensor_main")))

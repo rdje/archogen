@@ -1,0 +1,84 @@
+; examples/high-interference/system.eadl — use case uc2, interference and honest refusal.
+;
+; The same shape as uc1 with the interference turned up: a shorter timer period, a second
+; explicitly modeled interrupt source, and a low-priority task whose deadline leaves little
+; slack once switch and ISR costs are charged.
+;
+; This system is expected to BUILD. Its timing property may legitimately come back
+; `not-established` (§7.4: "conservative analysis failure is `not-established` unless an exact
+; test or validated counterexample establishes failure"). That is a pass. Reporting the
+; idealized answer for a real build would be the defect.
+;
+; Every interrupt source is declared. §7.3: "No source that can run during the analyzed interval
+; is omitted just because it belongs to the kernel or instrumentation." The profile excludes
+; `unmodeled-interrupt-load` for exactly this reason.
+
+(defblock timer.counter
+  (offers
+    (counter-width 32 bit)
+    (tick-rate 10 MHz)
+    (observation-coherent true)))
+
+(defblock event.external
+  (offers
+    (interrupt-source true)
+    (min-arrival-separation 8 ms)))
+
+(defblock console.uart
+  (offers (observable-output true)))
+
+(defplatform soc.playground
+  (offers (core-count 1 tick))
+  (requires (uses timer.counter event.external console.uart)))
+
+(defservice time.monotonic
+  (requires
+    (unambiguous-horizon (at-least 60 s))
+    (needs counter-width tick-rate observation-coherent)))
+
+(defservice time.periodic-release
+  (requires
+    (release-accuracy (at-most 1 ms))
+    (needs time.monotonic)))
+
+(defservice event.release
+  (requires
+    (bounded-arrival true)
+    (needs interrupt-source min-arrival-separation)))
+
+(defservice console.write
+  (requires (needs observable-output)))
+
+(defpolicy scheduling.fixed-priority
+  (requires
+    (priorities static unique)
+    (preemptive true)
+    (deadlines constrained)))
+
+(defsystem high-interference
+  (task control
+    (period 5 ms)
+    (deadline 5 ms)
+    (deadline-from release)
+    (priority 1)
+    (uses time.periodic-release)
+    (on-overrun fault))
+  (task sense
+    (period 10 ms)
+    (deadline 8 ms)
+    (deadline-from release)
+    (priority 2)
+    (uses time.periodic-release)
+    (on-overrun fault))
+  (task log
+    (min-separation 50 ms)
+    (deadline 20 ms)
+    (deadline-from release)
+    (jitter 1 ms)
+    (priority 3)
+    (uses event.release console.write)
+    (on-overrun fault))
+  (requires
+    (uses time.monotonic time.periodic-release event.release console.write
+          scheduling.fixed-priority))
+  (platform (uses soc.playground)))

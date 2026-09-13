@@ -6,7 +6,7 @@ declarations that belong to the engine. `ROADMAP.md` §4.3 requires this corpus,
 **F27** mechanizes it — accepted functional guarantees are interpreted, forbidden
 implementation fields are rejected, and each rejection names the test that failed.
 
-21 cases: **10 accepted**, **11 rejected**, of which **5 are ambiguous** and
+23 cases: **10 accepted**, **13 rejected**, of which **7 are ambiguous** and
 carry an explicit argument rather than an assertion.
 
 > The surface syntax here is **draft**. M1 fixtures settle the real spelling
@@ -74,6 +74,7 @@ rejected cases would fail more than one, and their rationale says so.
 
 | Case | Ambiguous | Failing test | Why |
 | --- | --- | --- | --- |
+| [`application-entry-point`](reject/application-entry-point.eadl) | yes | externality | AMBIGUOUS, resolved REJECT |
 | [`atomic-read-retry-loop`](reject/atomic-read-retry-loop.eadl) | no | non-prescription | A retry sequence is one way to obtain a coherent observation |
 | [`code-provider-selection`](reject/code-provider-selection.eadl) | no | externality | Names the code that must be used |
 | [`context-save-layout`](reject/context-save-layout.eadl) | no | non-prescription | Prescribes the register save order and frame shape |
@@ -85,6 +86,7 @@ rejected cases would fail more than one, and their rationale says so.
 | [`retry-permitted`](reject/retry-permitted.eadl) | yes | non-prescription | AMBIGUOUS, resolved REJECT |
 | [`rollover-algorithm`](reject/rollover-algorithm.eadl) | no | non-prescription | The declaration carries the epoch-extension procedure |
 | [`simulator-model-body`](reject/simulator-model-body.eadl) | no | non-prescription | An executable state-transition body |
+| [`stack-allocation`](reject/stack-allocation.eadl) | yes | non-prescription | AMBIGUOUS, resolved REJECT |
 
 ## The ambiguous cases are the point
 
@@ -95,10 +97,12 @@ here are the ones a reasonable author gets wrong in both directions:
 - **`counter-width-and-rate`** and **`addressable-region`** *look* like implementation detail
   and are **accepted**: they are architectural facts a substituting implementation must also
   have.
-- **`execution-bound`**, **`initialization-order`** and **`retry-permitted`** *look* like
-  requirements and are **rejected**: a WCET is evidence about a binary, a boot sequence
-  describes one realization, and a permission field narrows the engine to strategies someone
-  happened to think of.
+- **`execution-bound`**, **`initialization-order`**, **`retry-permitted`**,
+  **`application-entry-point`** and **`stack-allocation`** *look* like requirements and are
+  **rejected**: a WCET is evidence about a binary, a boot sequence describes one realization, a
+  permission field narrows the engine to strategies someone happened to think of, an entry point
+  names an artifact rather than a behavior, and a stack size is an allocation the engine derives
+  and §7.6 then checks against the actual linked image.
 
 Two neighbouring pairs are worth reading together, because the boundary runs *between* them:
 

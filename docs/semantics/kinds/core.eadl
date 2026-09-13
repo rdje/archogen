@@ -24,13 +24,23 @@
   (doc "a hardware block and the functionality it offers")
   (name required)
   (clause offers (cardinality one-or-more) (holds forms))
+  ; §5.3 maintains THREE presence states, and the third is not the absence of the first.
+  ; An `absent` clause is a positive statement that a capability is not available — a fact a
+  ; requirement can contradict definitely, rather than a gap to be filled in. Without this
+  ; clause the language could only say "offered" and "nothing said", and the distinction
+  ; between `infeasible-configuration` and `missing-fact` would have nowhere to come from.
+  (clause absent (cardinality any) (holds forms))
   (clause requires (cardinality any) (holds forms)))
 
 (defkind defplatform
   (doc "a platform: the blocks it is built from, their connectivity, and its constraints")
   (name required)
   (clause offers (cardinality any) (holds forms))
-  (clause requires (cardinality any) (holds forms)))
+  (clause absent (cardinality any) (holds forms))
+  (clause requires (cardinality any) (holds forms))
+  ; A refinement claim. §5.1.1: an obligation to check, not permission to trust — the three
+  ; obligations are guarantee, constraint and exclusion (`crates/eadl-model/src/refinement.rs`).
+  (clause refines (cardinality at-most-one) (holds values symbol)))
 
 (defkind defservice
   (doc "a required OS service and its externally observable contract")
@@ -46,6 +56,11 @@
 (defkind defsystem
   (doc "a system: its workload, the services it requires, and its platform binding")
   (name required)
-  (clause task (cardinality any) (holds forms))
+  ; `(holds kind task)` rather than `(holds forms)`: a task is validated as a full
+  ; declaration, so an execution bound or an allocation smuggled inside one is caught
+  ; by the schema and not only by the boundary classifier. The `task` kind lives in
+  ; `os-rt.eadl`, so a registry that has not loaded that module says so rather than
+  ; silently accepting anything.
+  (clause task (cardinality any) (holds kind task))
   (clause requires (cardinality any) (holds forms))
   (clause platform (cardinality at-most-one) (holds forms)))

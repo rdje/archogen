@@ -1,0 +1,73 @@
+; examples/alternative-timer/system.eadl — use case uc3, indirect realization.
+;
+; The workload requires an ABSOLUTE-DEADLINE time service. The platform offers only a RELATIVE
+; DELAY timer. Nothing matches directly.
+;
+; §5.4: "Engine search may realize an OS feature indirectly from lower-level hardware
+; functionality. A software deadline service can use a supported relative timer through an
+; engine-owned adapter, provided the resulting behavior and bounds satisfy the eADL requirement.
+; … If no known realization exists, explain the missing engine capability; do not declare the
+; requested function logically impossible unless that conclusion has actually been established."
+;
+; So this description is expected to be REFUSED before leaf M3.2 — with a missing-engine-
+; capability report — and to BUILD after it, with the adapter's own costs and obligations in the
+; plan. The description does not change between those two outcomes. If the only way to build it
+; were to weaken `absolute-deadline` into `relative-delay` here, the engine would have failed and
+; §17's first stop/rework trigger would apply.
+
+(defblock timer.delay
+  (offers
+    (relative-delay true)
+    (counter-width 32 bit)
+    (tick-rate 1 MHz)
+    (observation-coherent true))
+  (absent absolute-deadline))
+
+(defblock console.uart
+  (offers (observable-output true)))
+
+(defplatform soc.delay-only
+  (offers (core-count 1 tick))
+  (requires (uses timer.delay console.uart)))
+
+(defservice time.monotonic
+  (requires
+    (unambiguous-horizon (at-least 60 s))
+    (needs counter-width tick-rate observation-coherent)))
+
+; The requirement the platform cannot satisfy directly. An adapter over `relative-delay` is a
+; real provider with its own costs and proof obligations (§6.2), not a relabelling.
+(defservice time.deadline
+  (requires
+    (absolute-deadline true)
+    (supported-horizon (at-least 10 s))
+    (delivery-bound (at-most 50 us))
+    (needs time.monotonic)))
+
+(defservice console.write
+  (requires (needs observable-output)))
+
+(defpolicy scheduling.fixed-priority
+  (requires
+    (priorities static unique)
+    (preemptive true)
+    (deadlines constrained)))
+
+(defsystem alternative-timer
+  (task sampler
+    (period 25 ms)
+    (deadline 25 ms)
+    (deadline-from release)
+    (priority 1)
+    (uses time.deadline)
+    (on-overrun fault))
+  (task reporter
+    (min-separation 200 ms)
+    (deadline 150 ms)
+    (deadline-from release)
+    (priority 2)
+    (uses time.deadline console.write)
+    (on-overrun fault))
+  (requires
+    (uses time.monotonic time.deadline console.write scheduling.fixed-priority))
+  (platform (uses soc.delay-only)))

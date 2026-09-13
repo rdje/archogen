@@ -1,0 +1,72 @@
+; examples/periodic-three/system.eadl — use case uc1, the straight-through case.
+;
+; Three periodic tasks on a single-core platform with one timer and one observable output.
+; §12 M4 requires this system to "build from a clean checkout without edits to output".
+;
+; All numbers are synthetic. They are chosen so the set is schedulable with visible slack under
+; the idealized model, leaving room for real overheads to matter without dominating.
+;
+; Note what is absent: no execution bound, no entry point, no stack size. §7.3 keeps all three
+; outside the description — they are evidence about a binary, a code association, and an
+; engine-derived allocation respectively.
+
+(defblock timer.counter
+  (offers
+    (counter-width 32 bit)
+    (tick-rate 10 MHz)
+    (observation-coherent true)))
+
+(defblock console.uart
+  (offers (observable-output true)))
+
+(defplatform soc.playground
+  (offers
+    (core-count 1 tick)
+    (region device.timer (base 0x1000_0000)))
+  (requires (uses timer.counter console.uart)))
+
+(defservice time.monotonic
+  (requires
+    (unambiguous-horizon (at-least 60 s))
+    (observation-coherent true)
+    (needs counter-width tick-rate observation-coherent)))
+
+(defservice time.periodic-release
+  (requires
+    (release-accuracy (at-most 1 ms))
+    (needs time.monotonic)))
+
+(defservice console.write
+  (requires (needs observable-output)))
+
+(defpolicy scheduling.fixed-priority
+  (requires
+    (priorities static unique)
+    (preemptive true)
+    (deadlines constrained)))
+
+(defsystem periodic-three
+  (task control
+    (period 10 ms)
+    (deadline 10 ms)
+    (deadline-from release)
+    (priority 1)
+    (uses time.periodic-release)
+    (on-overrun fault))
+  (task sense
+    (period 20 ms)
+    (deadline 15 ms)
+    (deadline-from release)
+    (priority 2)
+    (uses time.periodic-release)
+    (on-overrun fault))
+  (task report
+    (period 100 ms)
+    (deadline 100 ms)
+    (deadline-from release)
+    (priority 3)
+    (uses time.periodic-release console.write)
+    (on-overrun fault))
+  (requires
+    (uses time.monotonic time.periodic-release console.write scheduling.fixed-priority))
+  (platform (uses soc.playground)))

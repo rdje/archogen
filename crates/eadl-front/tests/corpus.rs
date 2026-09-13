@@ -65,8 +65,8 @@ fn the_corpus_is_the_size_the_index_claims() {
     let cases = corpus();
     assert_eq!(
         cases.len(),
-        21,
-        "expected 21 corpus cases, found {}",
+        23,
+        "expected 23 corpus cases, found {}",
         cases.len()
     );
     let accepts = cases
@@ -74,7 +74,7 @@ fn the_corpus_is_the_size_the_index_claims() {
         .filter(|(name, _)| name.contains("/accept/"))
         .count();
     assert_eq!(accepts, 10);
-    assert_eq!(cases.len() - accepts, 11);
+    assert_eq!(cases.len() - accepts, 13);
 }
 
 #[test]

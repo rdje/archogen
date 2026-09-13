@@ -4,6 +4,38 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the `os/rt` workload module, and a measured gap closed
+
+`ARCHOGEN-M1-0018` (leaf `M1.7`).
+
+- `docs/semantics/kinds/os-rt.eadl` declares the `task` kind — release model, deadline with its
+  reference event, bounded jitter, static unique priority, functional needs, overrun response —
+  using the same `defkind` primitive as everything else.
+- ⭐ **The 10-of-11 schema gap `M1.2` measured is now 13 of 13.** `Holds::Kind` makes a clause
+  validate recursively, so `(clause task … (holds kind task))` lets the schema see inside a task.
+  `execution-bound` is now caught by the schema *and* the boundary classifier, and the refusal
+  carries the boundary's wording — `wcet` is not a typo, it is content in the wrong layer. The
+  pinned assertion was replaced, not loosened: it now asserts the out-of-reach set is **empty**.
+- A registry that has not loaded `os-rt.eadl` **says so**. Silently accepting whatever is inside
+  an unvalidatable clause is the failure mode that let the gap exist in the first place.
+- `entry-point` and `stack-allocation` join the forbidden registry, each with a worked
+  ambiguous case — both *feel* like task properties and both belong elsewhere. The corpus grew
+  from 21 to 23 cases and every census assertion with it.
+- `examples/` holds the three M0 use cases as real descriptions, checked by a 7-arm suite: they
+  validate, every task has an arrival model and a deadline with its reference event, priorities
+  are unique, and **none carries an execution bound, a code reference, or an allocation** —
+  asserted by the classifier rather than by anyone remembering. `uc3` is additionally checked for
+  still containing its own contradiction, because the tempting "fix" would make the case go quiet.
+- ⭐ **Three defects were found by running the new tests.** (a) `defblock` had no `absent`
+  clause: §5.3's three presence states were implemented in the checker and missing from the
+  language. (b) A composition reference to a declared block was reported as `missing-fact`;
+  a `uses` target that is declared is satisfied by its declaration, and the absence check was
+  reordered so that being declared does not repeal an explicit absence. (c) `diagnose | head -3`
+  panicked with `Broken pipe` — a closed pipe is not a failure.
+- New book chapter `docs/book/src/workload.md`.
+- Validation: 234 tests across 17 suites, 0 failed; fmt and clippy clean; all doctrines green;
+  `mdbook build` OK.
+
 ## archogen — refinement as an obligation to check: F07
 
 `ARCHOGEN-M1-0017` (leaf `M1.6`).
