@@ -26,6 +26,7 @@
 
 # Generating and running a system
 
+- [The runtime: decisions, not actions](runtime.md)
 - [The S0 early generation path](s0.md)
 - [Where generated systems run](targets.md)
 

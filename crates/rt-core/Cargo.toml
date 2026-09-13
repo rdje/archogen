@@ -1,0 +1,16 @@
+# Shared runtime state transitions and policy implementations (ROADMAP.md §4.2 `rt-core`, §8).
+#
+# `no_std` outside its own tests: §3.1 fixes the runtime as "Rust no_std core with narrow
+# architecture and MMIO boundaries", and a core that only compiles with `std` is one nobody can
+# put on a target.
+[package]
+name = "rt-core"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "The archogen runtime's shared state machine: fixed-priority task lifecycle, masking, and the bounded fault path"
+
+[lints]
+workspace = true
+
+[dependencies]

@@ -62,6 +62,13 @@ justifies the split — the rows below appear as that happens.
   roadmap's own expected-trace table, parsed — two sources neither derived from the other. ⛔ Its
   controls **re-simulate**: deleting the resume switch does not shorten the response by four, it
   makes a whole interfering job disappear (23 → 14, not 23 → 19).
+- `crates/rt-core/` — the shared runtime state machine (§8), `no_std` and allocation-free.
+  ⭐ **It decides and does not act**: every operation returns a `Decision`, and performing a
+  context switch belongs to the architecture port — which is what makes the policy testable on a
+  host and stops a scheduling bug and a context-save bug from being the same bug. A task's index
+  is its priority rank; masking nests and latches releases rather than losing them; a second
+  pending release is an **overrun**, not a queue. `fault.rs` splits faults by whether the
+  runtime's own state is still trustworthy — only an overrun is.
 - `ROADMAP.md` — the program's direction, milestone exit gates, and the F01–F30 acceptance
   matrix. The single source of what "done" means.
 - `docs/tasks/PROGRAM.md` — the roadmap-unit → tree map and the fixture-ownership map.

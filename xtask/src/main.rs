@@ -215,6 +215,26 @@ const TIERS: &[Tier] = &[
                 },
             },
             Step {
+                name: "no-std-build",
+                proves: "the runtime core compiles for a bare-metal target (§14.3's \"compile targets\")",
+                action: Action::Run {
+                    program: "cargo",
+                    args: &[
+                        "build",
+                        "--quiet",
+                        "-p",
+                        "rt-core",
+                        "--target",
+                        "riscv64imac-unknown-none-elf",
+                    ],
+                    requires: Some("target:riscv64imac-unknown-none-elf"),
+                    matters: "§3.1 fixes the runtime as a \"Rust no_std core\", and `#![no_std]` \
+                              being active in a host build is evidence that it *can* be, not that \
+                              it *does* build for a target. `rustup target add \
+                              riscv64imac-unknown-none-elf`",
+                },
+            },
+            Step {
                 name: "emulator",
                 proves: "the pinned riscv-virt-up configuration renders and its toolchain is present (§3.2)",
                 action: Action::Run {
@@ -328,6 +348,19 @@ fn repo_root() -> PathBuf {
 }
 
 fn on_path(tool: &str) -> bool {
+    // A rustup TARGET is not an executable and will never be on `PATH`; ask rustup which are
+    // installed. Without this, a step that needs a cross-compilation target would look like a
+    // missing program, and the fix a reader tried would be the wrong one.
+    if let Some(triple) = tool.strip_prefix("target:") {
+        return Command::new("rustup")
+            .args(["target", "list", "--installed"])
+            .output()
+            .is_ok_and(|out| {
+                String::from_utf8_lossy(&out.stdout)
+                    .lines()
+                    .any(|line| line.trim() == triple)
+            });
+    }
     // `cargo miri` is a cargo subcommand, not a bare executable; ask cargo for it.
     if let Some(sub) = tool.strip_prefix("cargo-") {
         return Command::new("cargo")
@@ -356,10 +389,13 @@ fn run_step(step: &Step, root: &Path) -> Outcome {
         } => {
             if let Some(tool) = requires {
                 if !on_path(tool) {
-                    println!(
-                        "  ⚠  {:<18} UNAVAILABLE — `{tool}` is not on PATH",
-                        step.name
+                    // A rustup target is not an executable, and telling a reader it is "not on
+                    // PATH" sends them to fix the wrong thing.
+                    let missing = tool.strip_prefix("target:").map_or_else(
+                        || format!("`{tool}` is not on PATH"),
+                        |triple| format!("the `{triple}` target is not installed"),
                     );
+                    println!("  ⚠  {:<18} UNAVAILABLE — {missing}", step.name);
                     println!("     {matters}");
                     return Outcome::Unavailable;
                 }

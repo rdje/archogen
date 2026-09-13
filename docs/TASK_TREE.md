@@ -56,7 +56,7 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 | [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.5` — the §15/§19 source ledger; `.3` and `.4` closed | repo-local |
 | [`M1`](tasks/M1.md) | `active` | `M1.10` — classify the twelve profile decisions that are still prose (not blocking `S0`) | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |
-| [`M2`](tasks/M2.md) | `active` | `M2.1` — `rt-core`; **F18 and F29 both green**, the accounting contract published | repo-local |
+| [`M2`](tasks/M2.md) | `active` | `M2.2` — the independent reference model (derive it from the roadmap, not from `rt-core`) | repo-local |
 | [`M3`](tasks/M3.md) | `pending` | `M3.1` — candidate enumeration and substitutability | repo-local |
 | [`M4`](tasks/M4.md) | `pending` | `M4.1` — the typed runtime/build plan | repo-local |
 | [`M5`](tasks/M5.md) | `blocked` | — **no board procured** (`M0.5`, 2026-09-13) | repo-local |
