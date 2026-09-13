@@ -31,12 +31,12 @@ Each of the three exclusions has a worked rejection case in `docs/semantics/boun
 that every example here passes the boundary classifier, so the claim is checked rather than
 asserted.
 
-Every example runs through `osgen check`, and a test asserts the verdict each one produces:
+Every example runs through `archogen check`, and a test asserts the verdict each one produces:
 
 ```console
-$ osgen check examples/periodic-three/system.eadl  ; echo $?   # 0  accepted
-$ osgen check examples/alternative-timer/system.eadl ; echo $? # 13 infeasible-configuration
-$ osgen check examples/bounded-queue/system.eadl   ; echo $?   # 12 unsupported-profile
+$ archogen check examples/periodic-three/system.eadl  ; echo $?   # 0  accepted
+$ archogen check examples/alternative-timer/system.eadl ; echo $? # 13 infeasible-configuration
+$ archogen check examples/bounded-queue/system.eadl   ; echo $?   # 12 unsupported-profile
 ```
 
 `uc3` and `uc4` are refused for different reasons, and the difference matters. `uc3`'s refusal is

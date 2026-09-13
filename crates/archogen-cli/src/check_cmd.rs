@@ -1,4 +1,4 @@
-//! `osgen check` — elaborate and type-check a description against a profile.
+//! `archogen check` — elaborate and type-check a description against a profile.
 //!
 //! The first command of the `ROADMAP.md` §10.2 surface to become real. It runs the frontend
 //! pipeline (`eadl_model::check`) and maps its §5.5 verdict to this process's exit code through
@@ -16,7 +16,7 @@ use crate::status::Status;
 
 /// The kind modules shipped with the toolchain.
 ///
-/// Embedded at compile time rather than read from the working directory: `osgen` must behave
+/// Embedded at compile time rather than read from the working directory: `archogen` must behave
 /// identically wherever it is run from, and a language definition that could be shadowed by a
 /// file in the current directory is a language definition an accident can change.
 const KIND_MODULES: &[(&str, &str)] = &[
@@ -30,7 +30,7 @@ const KIND_MODULES: &[(&str, &str)] = &[
     ),
 ];
 
-/// Run `osgen check`.
+/// Run `archogen check`.
 pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status {
     let path = parsed
         .positionals
@@ -44,7 +44,7 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
         let known: Vec<&str> = profile::SUPPORTED.iter().map(|p| p.id).collect();
         let _ = writeln!(
             err,
-            "osgen: {}: `{requested}` is not a supported profile",
+            "archogen: {}: `{requested}` is not a supported profile",
             Status::UnsupportedProfile.slug()
         );
         let _ = writeln!(err, "  hint: this build supports {}", known.join(", "));
@@ -59,7 +59,7 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
         Err(error) => {
             let _ = writeln!(
                 err,
-                "osgen: {}: cannot read {path}: {error}",
+                "archogen: {}: cannot read {path}: {error}",
                 Status::Usage.slug()
             );
             let _ = writeln!(err, "  hint: give the path of an eADL description");
@@ -74,7 +74,7 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
             // user's description. §5.5: never reported as a valid system.
             let _ = writeln!(
                 err,
-                "osgen: {}: the shipped kind modules could not be loaded",
+                "archogen: {}: the shipped kind modules could not be loaded",
                 Status::ToolFailure.slug()
             );
             for diagnostic in &diagnostics {
@@ -87,7 +87,7 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
     let Ok(id) = sources.add(path.clone(), text) else {
         let _ = writeln!(
             err,
-            "osgen: {}: {path} is too large to address",
+            "archogen: {}: {path} is too large to address",
             Status::ToolFailure.slug()
         );
         return Status::ToolFailure;
@@ -116,7 +116,7 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
     let _ = write!(err, "{}", outcome.render(&sources));
     let _ = writeln!(
         err,
-        "osgen: {}: {} diagnostic(s) in {path}",
+        "archogen: {}: {} diagnostic(s) in {path}",
         status.slug(),
         outcome.diagnostics.len()
     );

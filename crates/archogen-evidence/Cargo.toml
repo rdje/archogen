@@ -6,7 +6,7 @@
 # dependency graph does not show. Here it is one node, with one name, that the trust inventory
 # can classify.
 [package]
-name = "osgen-evidence"
+name = "archogen-evidence"
 version = "0.1.0"
 edition.workspace = true
 license.workspace = true

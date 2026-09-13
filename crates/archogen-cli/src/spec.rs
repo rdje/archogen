@@ -2,7 +2,7 @@
 //!
 //! `ROADMAP.md` §10.2 states an interface target: seven commands that the finished toolchain
 //! must offer. Declaring them as one table — rather than as parallel `match` arms and a
-//! hand-written help string — is what keeps `osgen --help` from drifting away from what the
+//! hand-written help string — is what keeps `archogen --help` from drifting away from what the
 //! parser actually accepts. The help text is *rendered from* this table, and the parser
 //! *validates against* this table, so a new option cannot be documented without being
 //! accepted, or accepted without being documented. A unit test asserts that property.
@@ -46,10 +46,10 @@ pub struct CommandSpec {
 }
 
 impl CommandSpec {
-    /// The `USAGE:` line body, e.g. `osgen check <DESCRIPTION> --profile <PROFILE>`.
+    /// The `USAGE:` line body, e.g. `archogen check <DESCRIPTION> --profile <PROFILE>`.
     #[must_use]
     pub fn usage(&self) -> String {
-        let mut out = format!("osgen {}", self.name);
+        let mut out = format!("archogen {}", self.name);
         for positional in self.positionals {
             out.push_str(&format!(" <{}>", positional.name));
         }
@@ -101,7 +101,7 @@ pub const COMMANDS: &[CommandSpec] = &[
         }],
         options: &[PROFILE],
         // Built by leaf M1.8. `None` removes it from the `[unimplemented]` column of
-        // `osgen --help` in the same change that makes it real — the help text is rendered
+        // `archogen --help` in the same change that makes it real — the help text is rendered
         // from this table, so the two cannot disagree.
         owner: None,
     },
@@ -148,7 +148,7 @@ pub const COMMANDS: &[CommandSpec] = &[
         summary: "run an analysis for one named property over a build",
         positionals: &[PositionalSpec {
             name: "BUILD",
-            help: "path to a build produced by `osgen build`",
+            help: "path to a build produced by `archogen build`",
         }],
         options: &[OptionSpec {
             long: "property",
@@ -163,7 +163,7 @@ pub const COMMANDS: &[CommandSpec] = &[
         summary: "run a verification tier over a build",
         positionals: &[PositionalSpec {
             name: "BUILD",
-            help: "path to a build produced by `osgen build`",
+            help: "path to a build produced by `archogen build`",
         }],
         options: &[OptionSpec {
             long: "tier",
@@ -178,7 +178,7 @@ pub const COMMANDS: &[CommandSpec] = &[
         summary: "explain how one requirement was realized, or why it could not be",
         positionals: &[PositionalSpec {
             name: "BUILD",
-            help: "path to a build produced by `osgen build`",
+            help: "path to a build produced by `archogen build`",
         }],
         options: &[OptionSpec {
             long: "requirement",
@@ -262,7 +262,10 @@ mod tests {
     fn usage_renders_required_options_bare_and_optional_ones_bracketed() {
         let resolve = command("resolve").expect("resolve exists");
         let usage = resolve.usage();
-        assert!(usage.starts_with("osgen resolve <DESCRIPTION>"), "{usage}");
+        assert!(
+            usage.starts_with("archogen resolve <DESCRIPTION>"),
+            "{usage}"
+        );
         assert!(usage.contains("[--profile <PROFILE>]"), "{usage}");
         assert!(usage.contains("[--locked]"), "{usage}");
         assert!(usage.contains(" --out <PLAN>"), "{usage}");

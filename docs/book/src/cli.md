@@ -1,17 +1,17 @@
-# The `osgen` command line
+# The `archogen` command line
 
-`osgen` is the single entry point to the toolchain. Its command surface is fixed by the
+`archogen` is the single entry point to the toolchain. Its command surface is fixed by the
 interface target in `ROADMAP.md` §10.2 and is declared in one table
-(`crates/osgen-cli/src/spec.rs`), from which both the help text and the parser are derived —
+(`crates/archogen-cli/src/spec.rs`), from which both the help text and the parser are derived —
 so a documented option is always an accepted option, and the reverse.
 
 ```console
-$ osgen --help
-osgen — generate a specialized operating system from a functional eADL description
+$ archogen --help
+archogen — generate a specialized operating system from a functional eADL description
 
 USAGE:
-    osgen <COMMAND> [OPTIONS]
-    osgen help <COMMAND>
+    archogen <COMMAND> [OPTIONS]
+    archogen help <COMMAND>
 
 COMMANDS:
     check    elaborate and type-check a description against a profile
@@ -27,19 +27,19 @@ COMMANDS:
 
 | Command | Does | Built by |
 | --- | --- | --- |
-| `osgen check <DESCRIPTION> [--profile <PROFILE>]` | elaborate and type-check a description against a profile | **built** — see [Checking a description](checking.md) |
-| `osgen resolve <DESCRIPTION> [--profile <P>] [--locked] --out <PLAN>` | resolve providers and resources into an independently checked build plan | leaf `M3.4` |
-| `osgen build <DESCRIPTION> [--profile <P>] [--locked] --out <DIR>` | generate, assemble and build a complete system and its simulator | leaf `M4.2` |
-| `osgen analyze <BUILD> --property <PROPERTY>` | run an analysis for one named property | leaf `M2.6` |
-| `osgen verify <BUILD> --tier <TIER>` | run a verification tier | leaf `PROGRAM.3` |
-| `osgen explain <BUILD> --requirement <REQUIREMENT>` | explain how one requirement was realized, or why it could not be | leaf `M3.4` |
-| `osgen replay <MANIFEST>` | replay a recorded failure manifest and check its identity | leaf `M4.7` |
+| `archogen check <DESCRIPTION> [--profile <PROFILE>]` | elaborate and type-check a description against a profile | **built** — see [Checking a description](checking.md) |
+| `archogen resolve <DESCRIPTION> [--profile <P>] [--locked] --out <PLAN>` | resolve providers and resources into an independently checked build plan | leaf `M3.4` |
+| `archogen build <DESCRIPTION> [--profile <P>] [--locked] --out <DIR>` | generate, assemble and build a complete system and its simulator | leaf `M4.2` |
+| `archogen analyze <BUILD> --property <PROPERTY>` | run an analysis for one named property | leaf `M2.6` |
+| `archogen verify <BUILD> --tier <TIER>` | run a verification tier | leaf `PROGRAM.3` |
+| `archogen explain <BUILD> --requirement <REQUIREMENT>` | explain how one requirement was realized, or why it could not be | leaf `M3.4` |
+| `archogen replay <MANIFEST>` | replay a recorded failure manifest and check its identity | leaf `M4.7` |
 
 `check` is built. The other six are not, and they say so precisely:
 
 ```console
-$ osgen resolve examples/periodic-three/system.eadl --out plan.json
-osgen: unimplemented: `osgen resolve` is not implemented yet
+$ archogen resolve examples/periodic-three/system.eadl --out plan.json
+archogen: unimplemented: `archogen resolve` is not implemented yet
   hint: it is part of the interface target in ROADMAP.md §10.2; the work is tracked by task-tree leaf M3.4 (docs/TASK_TREE.md)
 $ echo $?
 20
@@ -91,17 +91,17 @@ Every refusal states what happened and what to do about it, because §5.5 requir
 repair direction on every diagnostic:
 
 ```console
-$ osgen resolve system.eadl
-osgen: usage: `osgen resolve` requires `--out`
-  hint: osgen resolve <DESCRIPTION> [--profile <PROFILE>] [--locked] --out <PLAN> — where to write the resolved plan
+$ archogen resolve system.eadl
+archogen: usage: `archogen resolve` requires `--out`
+  hint: archogen resolve <DESCRIPTION> [--profile <PROFILE>] [--locked] --out <PLAN> — where to write the resolved plan
 
-$ osgen check system.eadl --strict
-osgen: usage: unknown option `--strict` for `osgen check`
-  hint: `osgen check` accepts: --profile
+$ archogen check system.eadl --strict
+archogen: usage: unknown option `--strict` for `archogen check`
+  hint: `archogen check` accepts: --profile
 ```
 
-Asking a command what it needs never requires satisfying it first — `osgen resolve --help`
-and `osgen help resolve` both work with no other arguments.
+Asking a command what it needs never requires satisfying it first — `archogen resolve --help`
+and `archogen help resolve` both work with no other arguments.
 
 ## What it is built from
 

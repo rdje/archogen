@@ -10,8 +10,8 @@ obligation admitting it would add.
 ## The required answer
 
 ```console
-$ osgen check examples/bounded-queue/system.eadl --profile rt-static-up-v1
-osgen: unsupported-profile: `general-ipc` is not admitted by profile `rt-static-up-v1`
+$ archogen check examples/bounded-queue/system.eadl --profile rt-static-up-v1
+archogen: unsupported-profile: `general-ipc` is not admitted by profile `rt-static-up-v1`
   hint: general inter-task communication, including task-to-task queues, needs queue capacity,
         overflow semantics, and their response-time effects; a later profile amendment
 ```

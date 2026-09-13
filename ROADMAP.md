@@ -12,6 +12,12 @@ This is a standalone replacement for the original OS-generation plan. It incorpo
 
 **Execution preferences carried forward from the session:** develop the architectural feature model top-down; keep the fictional playground as a permanent first-class target; make sub-hardware and sub-OS descriptions importable and composable; allow the language to grow using its own declaration constructs; use completion gates rather than invented calendar durations. A small independent reference implementation is a falsification control, not a prerequisite to designing the language or a source from which to reverse-engineer its architecture.
 
+**Naming migration, 2026-09-13:** the toolchain's command and its component crates were renamed
+`osgen` → `archogen`, matching the project. This affects §4.2's component names
+(`archogen-plan`, `archogen-emit`, `archogen-check`) and every command in §10.2. It is a rename
+only: no interface, semantics, or acceptance evidence changed with it. §15 requires renames to
+carry a migration note, and this is it.
+
 **Reading guide:** start with the [mission](#1-mission-and-first-result), [eADL/engine boundary](#4-system-architecture-and-responsibility-boundaries), [milestones](#12-phases-and-exit-gates), and [initial implementation queue](#18-initial-implementation-queue). The [correction table](#2-corrections-to-the-source-roadmaps) records departures from the drafts; the [acceptance matrix](#13-verification-and-acceptance-matrix) makes the gates concrete.
 
 **Revision 2 changes:** the program architecture and functional eADL boundary are retained. Four targeted additions turn review observations into executable gates:
@@ -173,9 +179,9 @@ An eADL requirement such as “provide preemptive fixed-priority task execution 
 | `eadl-front` | Reader, modules, source spans, schemas, normalization |
 | `eadl-model` | Typed declarations, units, contract IDs, resource graphs, profile definitions |
 | `eadl-resolve` | Candidate enumeration, joint constraints, deterministic selection, explanations |
-| `osgen-plan` | Complete provider bindings, application inputs, initialization graph, memory layout, build identities |
-| `osgen-emit` | Rust bindings, specialization, tables, linker input, simulator wiring, provenance |
-| `osgen-check` | Independently validate the resolved configuration and evidence relationships |
+| `archogen-plan` | Complete provider bindings, application inputs, initialization graph, memory layout, build identities |
+| `archogen-emit` | Rust bindings, specialization, tables, linker input, simulator wiring, provenance |
+| `archogen-check` | Independently validate the resolved configuration and evidence relationships |
 | `rt-analysis` | Scheduling analyses with explicit applicability conditions and arithmetic witnesses |
 | `rt-core` | Shared runtime state transitions and policy implementations |
 | `arch-*` / `device-*` | Reviewed architecture, MMIO, startup, and device implementations |
@@ -482,13 +488,13 @@ Every pass has a typed input/output contract and validation rules. Retain interm
 The following commands are an interface target to implement, not commands that exist today:
 
 ```bash
-osgen check examples/periodic-three/system.eadl --profile rt-static-up-v1
-osgen resolve examples/periodic-three/system.eadl --locked --out build/plan.json
-osgen build examples/periodic-three/system.eadl --locked --out build/periodic-three
-osgen analyze build/periodic-three --property deadlines
-osgen verify build/periodic-three --tier emulator
-osgen explain build/periodic-three --requirement timer.deadline
-osgen replay artifacts/failure/replay.json
+archogen check examples/periodic-three/system.eadl --profile rt-static-up-v1
+archogen resolve examples/periodic-three/system.eadl --locked --out build/plan.json
+archogen build examples/periodic-three/system.eadl --locked --out build/periodic-three
+archogen analyze build/periodic-three --property deadlines
+archogen verify build/periodic-three --tier emulator
+archogen explain build/periodic-three --requirement timer.deadline
+archogen replay artifacts/failure/replay.json
 ```
 
 Separate source acceptance, build success, conditional analysis, test results, and requested assurance. A build may be useful for experimentation even when stronger assurance is unavailable. An explicit assurance request fails if required evidence is missing; it is never quietly downgraded to “tests passed.”

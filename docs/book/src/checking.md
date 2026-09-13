@@ -1,7 +1,7 @@
 # Checking a description
 
 ```console
-$ osgen check examples/periodic-three/system.eadl --profile rt-static-up-v1
+$ archogen check examples/periodic-three/system.eadl --profile rt-static-up-v1
 examples/periodic-three/system.eadl: accepted against profile `rt-static-up-v1` (8 declaration(s))
   this checks the description, not a system: no resolution, generation or analysis has run
 ```
@@ -51,7 +51,7 @@ The verdict maps to the process exit code through one table, and a test asserts 
 total — so the number a script branches on and the word a human reads come from the same place:
 
 ```console
-$ osgen check examples/alternative-timer/system.eadl ; echo $?
+$ archogen check examples/alternative-timer/system.eadl ; echo $?
 error[infeasible-configuration]: `absolute-deadline` is required by this system but declared absent
   --> examples/alternative-timer/system.eadl:49:25
    |
@@ -73,7 +73,7 @@ exists yet. When `M3.2` lands, the same description must build — without chang
 ## Refused by name
 
 ```console
-$ osgen check examples/bounded-queue/system.eadl ; echo $?
+$ archogen check examples/bounded-queue/system.eadl ; echo $?
 error[unsupported-profile]: `general-ipc` is not admitted by profile `rt-static-up-v1`
   = hint: admitting it would add: needs queue capacity, overflow semantics, and their
           response-time effects; a later profile amendment. Request a profile that supports it,
@@ -86,7 +86,7 @@ so it reads as a statement about work rather than a wall.
 
 ## The language definition travels with the binary
 
-The kind modules are embedded at compile time, not read from the working directory. `osgen` must
+The kind modules are embedded at compile time, not read from the working directory. `archogen` must
 behave identically wherever it is run from, and a language definition that could be shadowed by
 a file in the current directory is a language definition an accident can change.
 

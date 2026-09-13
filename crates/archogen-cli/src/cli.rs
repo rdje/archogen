@@ -11,7 +11,7 @@ use crate::status::Status;
 /// What one command line asked for.
 #[derive(Debug, PartialEq, Eq)]
 pub enum Invocation {
-    /// `osgen` with no arguments, `--help`, or `osgen help <command>`.
+    /// `archogen` with no arguments, `--help`, or `archogen help <command>`.
     Help(Option<&'static str>),
     /// `--version`.
     Version,
@@ -104,7 +104,7 @@ where
     if first.starts_with('-') {
         return Err(refuse(
             format!("`{first}` is an option, but a command was expected"),
-            "run `osgen --help` for the command list".to_string(),
+            "run `archogen --help` for the command list".to_string(),
         ));
     }
 
@@ -141,9 +141,9 @@ fn parse_command(spec: &'static CommandSpec, args: &[String]) -> Result<Parsed, 
         let Some(body) = arg.strip_prefix("--") else {
             if arg.starts_with('-') && arg.len() > 1 {
                 return Err(refuse(
-                    format!("`{arg}` is not an option of `osgen {}`", spec.name),
+                    format!("`{arg}` is not an option of `archogen {}`", spec.name),
                     format!(
-                        "options are written `--name`; see `osgen help {}`",
+                        "options are written `--name`; see `archogen help {}`",
                         spec.name
                     ),
                 ));
@@ -211,12 +211,12 @@ fn unknown_option(spec: &'static CommandSpec, long: &str) -> Refusal {
         .map(|option| format!("--{}", option.long))
         .collect();
     let repair = if known.is_empty() {
-        format!("`osgen {}` takes no options", spec.name)
+        format!("`archogen {}` takes no options", spec.name)
     } else {
-        format!("`osgen {}` accepts: {}", spec.name, known.join(", "))
+        format!("`archogen {}` accepts: {}", spec.name, known.join(", "))
     };
     refuse(
-        format!("unknown option `--{long}` for `osgen {}`", spec.name),
+        format!("unknown option `--{long}` for `archogen {}`", spec.name),
         repair,
     )
 }
@@ -236,13 +236,13 @@ fn check_arity(spec: &'static CommandSpec, positionals: &[String]) -> Result<(),
     if positionals.len() < expected {
         let missing = &spec.positionals[positionals.len()];
         return Err(refuse(
-            format!("`osgen {}` is missing <{}>", spec.name, missing.name),
+            format!("`archogen {}` is missing <{}>", spec.name, missing.name),
             format!("{} — {}", spec.usage(), missing.help),
         ));
     }
     Err(refuse(
         format!(
-            "`osgen {}` takes {expected} positional argument(s), but {} were supplied",
+            "`archogen {}` takes {expected} positional argument(s), but {} were supplied",
             spec.name,
             positionals.len()
         ),
@@ -258,7 +258,7 @@ fn check_required(
         if option.required && !options.iter().any(|(name, _)| *name == option.long) {
             let placeholder = option.value.unwrap_or("VALUE");
             return Err(refuse(
-                format!("`osgen {}` requires `--{}`", spec.name, option.long),
+                format!("`archogen {}` requires `--{}`", spec.name, option.long),
                 format!("{} — {}", spec.usage(), option.help),
             )
             .with_placeholder(placeholder));
@@ -287,9 +287,11 @@ pub fn help_overview() -> String {
 
     let mut out = String::new();
     out.push_str(
-        "osgen — generate a specialized operating system from a functional eADL description\n\n",
+        "archogen — generate a specialized operating system from a functional eADL description\n\n",
     );
-    out.push_str("USAGE:\n    osgen <COMMAND> [OPTIONS]\n    osgen help <COMMAND>\n\nCOMMANDS:\n");
+    out.push_str(
+        "USAGE:\n    archogen <COMMAND> [OPTIONS]\n    archogen help <COMMAND>\n\nCOMMANDS:\n",
+    );
     for spec in COMMANDS {
         let tag = match spec.owner {
             Some(owner) => format!("   [unimplemented — tracked by leaf {owner}]"),
@@ -305,7 +307,7 @@ pub fn help_overview() -> String {
     }
     out.push_str("\nGLOBAL OPTIONS:\n");
     out.push_str(
-        "    -h, --help       print this help, or `osgen help <COMMAND>` for one command\n",
+        "    -h, --help       print this help, or `archogen help <COMMAND>` for one command\n",
     );
     out.push_str("    -V, --version    print the version\n");
     out.push_str("\nEXIT CODES:\n");
@@ -320,7 +322,7 @@ pub fn help_overview() -> String {
 pub fn help_command(name: &str) -> String {
     let spec = command(name).expect("help is only rendered for a known command");
     let mut out = format!(
-        "osgen {} — {}\n\nUSAGE:\n    {}\n",
+        "archogen {} — {}\n\nUSAGE:\n    {}\n",
         spec.name,
         spec.summary,
         spec.usage()

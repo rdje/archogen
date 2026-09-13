@@ -42,7 +42,7 @@ target facts   ───┘        │              │                    │  
 ```
 
 Responsibility names (crates appear when a consumer needs them): `eadl-front`,
-`eadl-model`, `eadl-resolve`, `osgen-plan`, `osgen-emit`, `osgen-check`, `rt-analysis`,
+`eadl-model`, `eadl-resolve`, `archogen-plan`, `archogen-emit`, `archogen-check`, `rt-analysis`,
 `rt-core`, `arch-*`, `device-*`, `sim-*`, `xtask`.
 
 ## Where things live

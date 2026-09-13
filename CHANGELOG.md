@@ -4,12 +4,39 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
-## archogen — the frontend pipeline, and `osgen check` becomes real — **M1 complete**
+## archogen — the command is `archogen`, not `osgen`
+
+`ARCHOGEN-PROGRAM-0021` (leaf `PROGRAM.2.1`).
+
+- The project is `archogen` and its command announced itself as `osgen`, so the toolchain carried
+  two names. Measured before the change: **169 occurrences** across 33 tracked files, in six
+  spellings. After: none, outside the two places that record the rename.
+- `crates/osgen-cli` → `crates/archogen-cli` (binary `archogen`), `crates/osgen-evidence` →
+  `crates/archogen-evidence`, both via `git mv` so history follows the files. `Cargo.lock` was
+  regenerated rather than edited.
+- The `ROADMAP.md` §4.2 component names (`archogen-plan`, `archogen-emit`, `archogen-check`) and
+  every §10.2 command went with it. **Scope call, recorded in the leaf:** the narrow reading —
+  the binary alone — would have preserved exactly the inconsistency that prompted the request,
+  leaving a project called `archogen` whose evidence crate was `osgen-evidence`. Narrowing it
+  back is a small mechanical revert if that is what was meant.
+- `ROADMAP.md` carries a dated **migration note**, which §15 requires of a rename, stating
+  plainly that nothing but the name changed.
+- ⛔ The first draft of this leaf's acceptance criterion was self-defeating — "`git grep -ci
+  osgen` returns nothing" — because the record of a rename necessarily names the old thing.
+  Rescoped to exclude the two records, and the exclusion is verified rather than assumed.
+- Earlier entries below were rewritten to the new name so they point at artifacts that exist;
+  the commit messages in `git log` still carry the old one, which is where the history lives.
+- Validation: behaviour byte-identical — `archogen check` returns the same verdicts and the same
+  exit codes (0, 12, 13) on the same examples. **246** tests passing, the same count as before,
+  so no test was lost to a renamed path; fmt and clippy clean; all doctrines green;
+  `mdbook build` OK.
+
+## archogen — the frontend pipeline, and `archogen check` becomes real — **M1 complete**
 
 `ARCHOGEN-M1-0019` (leaf `M1.8`).
 
 - `crates/eadl-model/src/check.rs` composes the six passes built one at a time by `M1.1`–`M1.7`
-  and `M0.3`, and returns a `ROADMAP.md` §5.5 verdict. `osgen check` runs it — the first command
+  and `M0.3`, and returns a `ROADMAP.md` §5.5 verdict. `archogen check` runs it — the first command
   of the §10.2 surface to stop being a signpost.
 - ⭐ **The verdict is what to fix first**, not what was found first and not severity of
   consequence. A malformed description makes every later answer meaningless, so it outranks
@@ -32,7 +59,7 @@ this repository was created from, not archogen's own history.
   admitting it would cost. uc3 and uc4 are both refused for reasons that must not be confused:
   uc3's refusal is temporary and must become a build when `M3.2` lands, without the description
   changing; uc4's is permanent for this profile.
-- The kind modules are embedded in the binary, so `osgen` cannot be shadowed by a file in the
+- The kind modules are embedded in the binary, so `archogen` cannot be shadowed by a file in the
   working directory. If they ever fail to load the result is `tool-failure`, never a verdict about
   the user's description.
 - ⭐ **Five defects were found by running the corpus.** `needs`/`uses` were readable by the
@@ -301,7 +328,7 @@ this repository was created from, not archogen's own history.
 
 `ARCHOGEN-M0-0008` (leaf `M0.7`).
 
-- New crate `crates/osgen-evidence` — the evidence, claim and trust vocabulary of §7.1, §7.3
+- New crate `crates/archogen-evidence` — the evidence, claim and trust vocabulary of §7.1, §7.3
   and §4.4. A separate crate on purpose: it is shared between the generator and the independent
   checker, and §4.4 requires such sharing to be visible rather than buried.
 - §7.1's "one global verified flag is prohibited" is encoded **three ways**, not documented
@@ -411,12 +438,12 @@ this repository was created from, not archogen's own history.
 - Validation: 8/8 §4.3 rows present; layer-C index in sync
   (`scripts/check_memory_architecture.sh`, `rc=0`); `mdbook build` OK; all doctrines green.
 
-## archogen — the `osgen` command-line shell
+## archogen — the `archogen` command-line shell
 
 `ARCHOGEN-PROGRAM-0003` (leaf `PROGRAM.2`).
 
-- Replaced the bedrock starter crate with `crates/osgen-cli` — library `osgen_cli` plus the
-  `osgen` binary. The workspace now has a real entry point.
+- Replaced the bedrock starter crate with `crates/archogen-cli` — library `archogen_cli` plus the
+  `archogen` binary. The workspace now has a real entry point.
 - The `ROADMAP.md` §10.2 command surface (`check`, `resolve`, `build`, `analyze`, `verify`,
   `explain`, `replay`) is declared **once, as data**; `--help` renders from that table and the
   parser validates against it, so a documented option is always an accepted option.

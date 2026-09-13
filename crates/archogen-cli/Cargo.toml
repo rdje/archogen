@@ -1,18 +1,18 @@
-# The `osgen` command-line entry point. Deliberately dependency-free: see
+# The `archogen` command-line entry point. Deliberately dependency-free: see
 # docs/decisions/decision_zero-dependency-engine-core.md.
 [package]
-name = "osgen-cli"
+name = "archogen-cli"
 version = "0.1.0"
 edition.workspace = true
 license.workspace = true
 description = "Command-line entry point for the archogen eADL-to-OS generation toolchain"
 
 [lib]
-name = "osgen_cli"
+name = "archogen_cli"
 path = "src/lib.rs"
 
 [[bin]]
-name = "osgen"
+name = "archogen"
 path = "src/main.rs"
 
 [lints]

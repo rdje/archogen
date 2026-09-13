@@ -14,7 +14,7 @@
 //! the §10.2 interface target has no implementation behind it, and each occurrence names the
 //! task-tree leaf that removes it.
 
-/// A complete outcome of one `osgen` invocation.
+/// A complete outcome of one `archogen` invocation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Status {
     /// The command completed and its result was affirmative.

@@ -1,4 +1,4 @@
-//! `osgen` — the command-line entry point of the archogen toolchain.
+//! `archogen` — the command-line entry point of the archogen toolchain.
 //!
 //! This crate currently owns the *shape* of the user contract and nothing else: the command
 //! surface of `ROADMAP.md` §10.2, the outcome vocabulary of §5.5 with stable exit codes, and
@@ -19,7 +19,7 @@ use std::io::Write;
 pub use cli::{Invocation, Parsed, Refusal};
 pub use status::Status;
 
-/// The version reported by `osgen --version`.
+/// The version reported by `archogen --version`.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Run one invocation, writing normal output to `out` and diagnostics to `err`.
@@ -35,7 +35,7 @@ where
     match cli::parse(args) {
         Ok(Invocation::Help(None)) => emit(out, &cli::help_overview()),
         Ok(Invocation::Help(Some(name))) => emit(out, &cli::help_command(name)),
-        Ok(Invocation::Version) => emit(out, &format!("osgen {VERSION}\n")),
+        Ok(Invocation::Version) => emit(out, &format!("archogen {VERSION}\n")),
         Ok(Invocation::Run(parsed)) => dispatch(&parsed, out, err),
         Err(refusal) => report(err, &refusal),
     }
@@ -51,8 +51,13 @@ fn emit(out: &mut dyn Write, text: &str) -> Status {
 /// Print a refusal in the shape every archogen diagnostic uses: what happened, then what to
 /// do about it. §5.5 requires a concrete repair direction on every diagnostic.
 fn report(err: &mut dyn Write, refusal: &Refusal) -> Status {
-    let written = writeln!(err, "osgen: {}: {}", refusal.status.slug(), refusal.message)
-        .and_then(|()| writeln!(err, "  hint: {}", refusal.repair));
+    let written = writeln!(
+        err,
+        "archogen: {}: {}",
+        refusal.status.slug(),
+        refusal.message
+    )
+    .and_then(|()| writeln!(err, "  hint: {}", refusal.repair));
     if written.is_err() {
         return Status::ToolFailure;
     }
@@ -63,7 +68,7 @@ fn report(err: &mut dyn Write, refusal: &Refusal) -> Status {
 ///
 /// Every command is currently unbuilt. As each lands, its arm replaces the routing line with
 /// a real call and its [`spec::CommandSpec::owner`] becomes `None`, which removes it from the
-/// `[unimplemented]` column of `osgen --help` in the same change.
+/// `[unimplemented]` column of `archogen --help` in the same change.
 fn dispatch(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status {
     let spec = parsed.spec();
     if spec.name == "check" {
@@ -74,7 +79,7 @@ fn dispatch(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status
         // without an implementation arm would reach here, and must not look like success.
         let _ = writeln!(
             err,
-            "osgen: {}: `{}` is marked implemented but has no implementation",
+            "archogen: {}: `{}` is marked implemented but has no implementation",
             Status::ToolFailure.slug(),
             spec.name
         );
@@ -83,7 +88,7 @@ fn dispatch(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status
 
     let refusal = Refusal {
         status: Status::Unimplemented,
-        message: format!("`osgen {}` is not implemented yet", spec.name),
+        message: format!("`archogen {}` is not implemented yet", spec.name),
         repair: format!(
             "it is part of the interface target in ROADMAP.md §10.2; the work is tracked by task-tree leaf {owner} (docs/TASK_TREE.md)"
         ),
@@ -141,7 +146,7 @@ mod tests {
     fn version_prints_the_package_version() {
         let (status, out, _) = invoke(&["--version"]);
         assert_eq!(status, Status::Ok);
-        assert_eq!(out.trim(), format!("osgen {}", super::VERSION));
+        assert_eq!(out.trim(), format!("archogen {}", super::VERSION));
     }
 
     #[test]
@@ -226,7 +231,7 @@ mod tests {
         let (status, _, err) = invoke(&["resolve", "system.eadl"]);
         assert_eq!(status, Status::Usage);
         assert!(err.contains("requires `--out`"), "{err}");
-        assert!(err.contains("osgen resolve <DESCRIPTION>"), "{err}");
+        assert!(err.contains("archogen resolve <DESCRIPTION>"), "{err}");
     }
 
     #[test]
@@ -269,7 +274,7 @@ mod tests {
         // A user asking what `resolve` needs must not be told to supply --out first.
         let (status, out, err) = invoke(&["resolve", "--help"]);
         assert_eq!(status, Status::Ok);
-        assert!(out.contains("osgen resolve <DESCRIPTION>"), "{out}");
+        assert!(out.contains("archogen resolve <DESCRIPTION>"), "{out}");
         assert!(
             out.contains("M3.4"),
             "command help must name the owning leaf:\n{out}"

@@ -3,6 +3,18 @@
 version = 4
 
 [[package]]
+name = "archogen-cli"
+version = "0.1.0"
+dependencies = [
+ "eadl-front",
+ "eadl-model",
+]
+
+[[package]]
+name = "archogen-evidence"
+version = "0.1.0"
+
+[[package]]
 name = "eadl-front"
 version = "0.1.0"
 
@@ -12,15 +24,3 @@ version = "0.1.0"
 dependencies = [
  "eadl-front",
 ]
-
-[[package]]
-name = "osgen-cli"
-version = "0.1.0"
-dependencies = [
- "eadl-front",
- "eadl-model",
-]
-
-[[package]]
-name = "osgen-evidence"
-version = "0.1.0"

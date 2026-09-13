@@ -33,8 +33,8 @@ before forming a theory about any failure.
 
 | Tool | Answers | How to invoke |
 | --- | --- | --- |
-| `osgen <cmd>` exit code | what did the toolchain conclude, and about what? Diagnostic results (10–16, 70) are verdicts about the submitted system; process statuses (0, 2, 20) are verdicts about the invocation | `osgen <cmd> …; echo $?` — the table is in `osgen --help` |
-| `osgen help <cmd>` | what does this command accept, and which leaf owns building it? | `osgen help build` |
+| `archogen <cmd>` exit code | what did the toolchain conclude, and about what? Diagnostic results (10–16, 70) are verdicts about the submitted system; process statuses (0, 2, 20) are verdicts about the invocation | `archogen <cmd> …; echo $?` — the table is in `archogen --help` |
+| `archogen help <cmd>` | what does this command accept, and which leaf owns building it? | `archogen help build` |
 | the doctrine enforcer | which repository invariant is broken, and where? | `make gate` (= `scripts/check_doctrines.sh`) |
 | the seal checker | has the frozen evaluation set been modified, extended, or named outside its directory? | `bash scripts/check_frozen_evaluation.sh` |
 | the profile drift test | has the published profile page diverged from the profile data the engine consults? | `cargo test -p eadl-model` |

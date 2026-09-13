@@ -1,6 +1,6 @@
 //! The frontend pipeline: a description in, a `ROADMAP.md` §5.5 verdict out.
 //!
-//! This is what `osgen check` runs, and what the semantic corpus is driven through. It composes
+//! This is what `archogen check` runs, and what the semantic corpus is driven through. It composes
 //! the passes built one at a time by `M1.1`–`M1.7`, in the order in which a failure in one makes
 //! the next meaningless:
 //!

@@ -54,6 +54,6 @@ M0 and M1 are complete, and the shape of the claim matters. What exists is a **f
 description can be read, type-checked, admitted or refused against a profile, and 246 tests hold
 that behavior. What does not exist yet is resolution, generation, analysis, or a running artifact.
 
-`osgen check` says this itself on every acceptance — *"this checks the description, not a system:
+`archogen check` says this itself on every acceptance — *"this checks the description, not a system:
 no resolution, generation or analysis has run"* — because the gap between "the description is
 well-formed" and "a system built from it will behave" is the whole remaining programme.

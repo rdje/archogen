@@ -16,7 +16,7 @@ use crate::source::{SourceMap, Span};
 
 /// The `ROADMAP.md` §5.5 result vocabulary.
 ///
-/// One source of truth for what a check concluded. `osgen-cli` maps it to an exit code and a
+/// One source of truth for what a check concluded. `archogen-cli` maps it to an exit code and a
 /// test asserts that mapping is total, so the two cannot drift — a second enum spelling the
 /// same seven words would be the drift.
 ///

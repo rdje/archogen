@@ -10,7 +10,7 @@ and the absence is enforced by the code that builds them.
 > **One global "verified" flag is prohibited.**
 
 A prohibition written in a document is one somebody violates under deadline. This one is
-encoded three ways (`crates/osgen-evidence/`).
+encoded three ways (`crates/archogen-evidence/`).
 
 ## 1. There is no aggregate verdict
 
