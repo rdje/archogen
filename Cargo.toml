@@ -1,5 +1,5 @@
-# Workspace root. Add crates under crates/*. Rename/replace the starter `app` crate with
-# your project's crates (cargo-generate substitutes {{project-name}} if you use that path).
+# Workspace root. Crates follow the responsibility names in ROADMAP.md §4.2 and are created
+# when a real consumer justifies the split — not as empty shells up front.
 [workspace]
 resolver = "2"
 members = ["crates/*"]

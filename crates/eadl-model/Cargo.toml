@@ -1,0 +1,13 @@
+# Typed declarations, units, contract IDs, resource graphs, and profile definitions
+# (ROADMAP.md §4.2). Dependency-free: docs/decisions/decision_zero-dependency-engine-core.md.
+[package]
+name = "eadl-model"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "Typed eADL declarations, units, contract identities, and supported-profile definitions"
+
+[lints]
+workspace = true
+
+[dependencies]

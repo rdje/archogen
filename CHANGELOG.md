@@ -4,6 +4,25 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — `rt-static-up-v1` as checked data, not prose
+
+`ARCHOGEN-M0-0005` (leaf `M0.4`).
+
+- New crate `crates/eadl-model` — the §4.2 home for typed declarations, units, contract IDs
+  and profile definitions. It holds `rt-static-up-v1`: 13 concern decisions and 18 named
+  exclusions, each carrying the obligation admitting it would add.
+- §3.1 requires an out-of-profile request to be refused *by name* rather than silently
+  weakened. That is only enforceable if the engine holds the list; before this it was prose in
+  the roadmap (`git grep -ln 'rt-static-up-v1' -- crates/` → no match).
+- `docs/profiles/rt-static-up-v1.md` is the published form, and a test fails if it drifts.
+  The gate was proven with a RED arm: misspelling `posix` as `posiks` on the page →
+  `docs/profiles/rt-static-up-v1.md has drifted from the profile data`, 1 failed.
+- An unknown capability is not admitted by silence — a known exclusion is refused by name,
+  an unknown one is a `missing-fact`.
+- New book chapter `docs/book/src/profile.md`.
+- Validation: fmt clean; clippy -D warnings clean; `cargo test --all` → 34 passed, 0 failed;
+  all doctrines green; `mdbook build` OK.
+
 ## archogen — the controlling eADL/engine boundary
 
 `ARCHOGEN-M0-0004` (leaf `M0.1`).
