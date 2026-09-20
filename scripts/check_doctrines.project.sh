@@ -23,6 +23,7 @@ PROJECT_DOCTRINES=(
   "FROZEN-EVALUATION|the sealed evaluation set is unmodified, complete, and unnamed outside its directory|scripts/check_frozen_evaluation.sh"
   "S0-RETIREMENT|every hard-coded S0 assumption is marked in the source, listed with an owning leaf, and the prototype has acquired no new consumers|scripts/check_s0_retirement.sh"
   "BOOK-ANCHORS|every book chapter that describes behavior cites a repository path, and every path it cites exists|scripts/check_book_anchors.sh"
+  "FEEDBACK-SELF-CONTAINED|every reported bug's directory stands alone — complete, closed, portable, and in its vendor register|scripts/check_feedback_self_contained.sh"
 )
 
 for entry in "${PROJECT_DOCTRINES[@]}"; do

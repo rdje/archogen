@@ -6,8 +6,8 @@
 #
 #   usage: repro.sh --bin <lispish_file> --grammar <Lispish.spec>
 #
-# Build those two once — see ../../SETUP.md — then every issue's repro.sh takes the same
-# two arguments.
+# Build those two once — see SETUP.md in this directory, which describes only what this
+# issue needs.
 #
 # CONTRACT (exit code is the verdict):
 #   0 = the frozen observation still reproduces — the defect is present
@@ -25,7 +25,7 @@ while [ $# -gt 0 ]; do
     *) echo "LS-006: unknown argument: $1" >&2; exit 2 ;;
   esac
 done
-[ -n "$BIN" ] && [ -x "$BIN" ] || { echo "LS-006: --bin <lispish_file> is required; see ../../SETUP.md" >&2; exit 2; }
+[ -n "$BIN" ] && [ -x "$BIN" ] || { echo "LS-006: --bin <lispish_file> is required; see SETUP.md in this directory" >&2; exit 2; }
 [ -n "$GRAMMAR" ] && [ -f "$GRAMMAR" ] || { echo "LS-006: --grammar <Lispish.spec> is required" >&2; exit 2; }
 
 err="$(mktemp)"; trap 'rm -f "$err"' EXIT

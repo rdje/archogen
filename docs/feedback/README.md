@@ -31,17 +31,23 @@ that hides its own false positives gives no signal about the ones that remain.
 <vendor>/
 ├── INDEX.md                     the register — every bug, its state, the totals
 ├── README.md                    how this tracker works, and the state model
-├── SETUP.md                     environment and pins needed to reproduce
 └── issues/
     └── <ID>-<slug>/             one self-contained sub-tree per bug
         ├── README.md            ID, State, Severity, Kind, Component, Reproducer, History
+        ├── SETUP.md             the environment and pins THIS bug needs, from scratch
         ├── repro.sh             exit 0 = reproduces · 3 = changed · 2 = could not run
         └── evidence/            its own inputs and its own frozen observation
 ```
 
-Issues do not share evidence or reproducers. Acting on one bug never requires reading another's
-directory — which is what makes a tracker usable by the person receiving it rather than only by
-the person who wrote it.
+**Issues share nothing.** Each carries its own setup, inputs, reproducer and frozen observation,
+and no file in an issue directory references a path outside it — so a single bug can be
+extracted and handed over complete. Acting on one never requires reading another's directory,
+which is what makes a tracker usable by the person receiving it rather than only by the person
+who wrote it.
+
+This is enforced rather than promised: [`scripts/check_feedback_self_contained.sh`](../../scripts/check_feedback_self_contained.sh)
+runs in the doctrine gate and fails the commit if an issue directory is incomplete, escapes
+itself, carries a machine-specific path, or is missing from its vendor's register.
 
 ## Adding a vendor
 

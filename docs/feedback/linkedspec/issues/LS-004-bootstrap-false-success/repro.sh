@@ -20,7 +20,7 @@ set -uo pipefail
 LINKEDSPEC="${1:?usage: $0 /path/to/linkedspec [workdir]}"
 WORK="${2:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)/.repro-work}"
 PGEN_REL="rgx/subs/pgen"
-[ -d "$LINKEDSPEC/$PGEN_REL/rust" ] || { echo "LS-004: $LINKEDSPEC/$PGEN_REL/rust missing — run the nested submodule init first (../../SETUP.md step 1)" >&2; exit 2; }
+[ -d "$LINKEDSPEC/$PGEN_REL/rust" ] || { echo "LS-004: $LINKEDSPEC/$PGEN_REL/rust missing — run the nested submodule init first (SETUP.md step 1, in this directory)" >&2; exit 2; }
 command -v make >/dev/null || { echo "LS-004: make not found" >&2; exit 2; }
 
 rm -rf "$WORK"; mkdir -p "$WORK/vendor"

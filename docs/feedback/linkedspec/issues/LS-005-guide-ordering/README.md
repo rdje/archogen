@@ -25,7 +25,7 @@ step.
 ## Why it is worth fixing
 
 It costs every first consumer the same wasted attempt, and the resulting failure
-([`LS-004`](../LS-004-bootstrap-false-success/README.md)) points away from the real cause.
+(`LS-004`) points away from the real cause.
 
 ## Proposed fix
 
@@ -33,7 +33,7 @@ End the "Add and pin" section with an explicit forward pointer — *"these comma
 a buildable tree; continue to Initial PGEN preparation before building"* — or move the bootstrap
 into that section.
 
-Adding [`LS-001`](../LS-001-cargo-workspace-collision/README.md)'s `[workspace]` note in the same place
+Adding `LS-001`'s `[workspace]` note in the same place
 would remove both first-run failures at once.
 
 ## Reproduce
@@ -48,10 +48,27 @@ bash repro.sh /path/to/linkedspec
 | --- | --- |
 | Reproducer | [`repro.sh`](repro.sh) |
 | Recorded run | [`evidence/OBSERVED.txt`](evidence/OBSERVED.txt) |
-| Environment and pins | [`../../SETUP.md`](../../SETUP.md) |
+| Environment and pins | [`SETUP.md`](SETUP.md) — in this directory |
 
 **Exit code is the verdict:** `0` = reproduces as recorded; `3` = behaviour **changed**, which
 may mean this issue is fixed; `2` = could not run.
+
+## State values
+
+This issue's **State** field is one of:
+
+| State | Meaning | Who sets it |
+| --- | --- | --- |
+| `open` | Reported with a reproducer; no upstream response yet | archogen |
+| `acknowledged` | LinkedSpec has confirmed the behaviour | LinkedSpec |
+| `by-design` | Confirmed intentional; archogen must adapt or route around it | LinkedSpec |
+| `fixed-upstream` | Fixed in a named revision, not yet re-measured by archogen | LinkedSpec |
+| `verified` | archogen re-ran the reproducer against that revision and it passes | archogen |
+| `withdrawn` | archogen raised it in error; the correction is recorded above | archogen |
+| `no-action` | Reproduces as described, but no change is requested | archogen |
+
+To respond, edit the **State** field in the table at the top of this file and add a dated line
+to the History below.
 
 ## History
 

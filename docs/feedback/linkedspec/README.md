@@ -26,16 +26,23 @@ signal about the ones that remain.
 linkedspec/
 ├── INDEX.md                     the register — every bug, its state, the totals
 ├── README.md                    this file — how the tracker works
-├── SETUP.md                     environment, pins, and the one build the probe issues share
 └── issues/
     └── LS-00N-<slug>/           one self-contained sub-tree per bug
-        ├── README.md            the issue: ID, State, Severity, Reproducer, History
+        ├── README.md            the issue, the state model, and its History
+        ├── SETUP.md             the environment and pins THIS issue needs, from scratch
         ├── repro.sh             its own reproducer; exit code is the verdict
         └── evidence/            its own inputs and its own frozen observation
 ```
 
-Nothing is shared between issues except `SETUP.md`, which builds the one binary four of them
-need. Fixing `LS-003` does not require reading `LS-002`'s directory.
+**Nothing is shared between issues.** Each directory carries its own setup instructions, its own
+inputs and its own frozen observation, and no file in it references a path outside it — so one
+issue directory can be extracted, mailed or attached on its own and still be complete. Fixing
+`LS-003` never requires reading `LS-002`'s directory, and the four issues that need a built
+binary each describe that build themselves.
+
+This is enforced, not promised: `scripts/check_feedback_self_contained.sh` in the archogen
+repository fails the commit if any issue directory is incomplete, references a path outside
+itself, carries a machine-specific absolute path, or is missing from `INDEX.md`.
 
 ## State model
 
@@ -72,9 +79,10 @@ bash issues/LS-004-bootstrap-false-success/repro.sh  /path/to/linkedspec
 bash issues/LS-005-guide-ordering/repro.sh           /path/to/linkedspec
 ```
 
-Four need the Lispish example binary, built once per [`SETUP.md`](SETUP.md):
+Four need the Lispish example binary. Each describes that build in its own `SETUP.md`:
 
 ```sh
+# see issues/LS-002-multi-form-truncation/SETUP.md for the build, then:
 bash issues/LS-002-multi-form-truncation/repro.sh \
   --bin <path>/lispish_file --grammar <path>/Lispish.spec
 ```

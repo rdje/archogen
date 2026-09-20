@@ -56,10 +56,14 @@ observation.
 Every row has a runnable reproducer whose exit code is its verdict, and every one of the seven
 was executed on the revision above. No row rests on reading upstream documentation.
 
+Each issue directory is **self-contained**: it carries its own setup instructions, inputs,
+reproducer and frozen observation, and references nothing outside itself. One row can be handed
+over on its own.
+
 | Reproducer needs | IDs |
 | --- | --- |
 | A LinkedSpec checkout only | LS-001, LS-004, LS-005 |
-| A built `lispish_file` (see [`SETUP.md`](SETUP.md)) | LS-002, LS-003, LS-006, LS-007 |
+| A built `lispish_file` (each issue's own `SETUP.md` describes the build) | LS-002, LS-003, LS-006, LS-007 |
 
 ## Keeping this index true
 
