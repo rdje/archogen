@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Standalone reproducer for FEEDBACK.md finding C — Cargo workspace collision.
+# Reproducer for LS-001 — Cargo workspace collision.
 #
-# Runs entirely against a LinkedSpec checkout. Does NOT need archogen.
+# Runs entirely against a LinkedSpec checkout. Needs nothing from the consuming repo.
 # It builds the documented layout (an application repo that is a Cargo workspace,
 # with LinkedSpec vendored at vendor/linkedspec), shows the failure, applies the
 # proposed fix, and shows it pass. Exit 0 means BOTH halves behaved as described.
 #
-# usage: repro-workspace-collision.sh /path/to/linkedspec [workdir]
+# usage: LS-001-workspace-collision.sh /path/to/linkedspec [workdir]
 set -uo pipefail
 
 LINKEDSPEC="${1:?usage: $0 /path/to/linkedspec [workdir]}"

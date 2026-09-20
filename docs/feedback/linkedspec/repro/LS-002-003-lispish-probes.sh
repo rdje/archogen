@@ -1,23 +1,24 @@
 #!/usr/bin/env bash
-# Reproduce the Lispish observations in FEEDBACK.md (findings A and B).
+# Reproducer for LS-002 (multi-form truncation) and LS-003 (token-kind erasure).
 #
 # Runs against any LinkedSpec checkout; does NOT need archogen's crates.
 #
-#   usage: run-probes.sh [--bin PATH] [--grammar PATH] [--probes DIR]
+#   usage: LS-002-003-lispish-probes.sh [--bin PATH] [--grammar PATH] [--probes DIR]
 #
-# Defaults match archogen's layout. From a bare LinkedSpec checkout, pass:
+# Defaults match the consuming repo's layout. From a bare LinkedSpec checkout, pass:
 #   --bin     <target>/debug/lispish_file
 #   --grammar <linkedspec>/specs/Lispish.spec
-#   --probes  <this dir>/probes
+#   --probes  <tracker>/evidence/probes
 #
 # CONTRACT: one row per probe; exit 0 if every probe ran; read-only apart from stderr capture.
 set -uo pipefail
-HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-ROOT="$(cd "$HERE/../../.." && pwd -P)"
+HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"   # .../linkedspec/repro
+TRACKER="$(cd "$HERE/.." && pwd -P)"                                # .../linkedspec
+ROOT="$(cd "$TRACKER/../../.." && pwd -P)"                          # the consuming repo root
 
 BIN="${LISPISH_BIN:-$ROOT/.app-data/target/debug/lispish_file}"
 GRAMMAR="${LISPISH_GRAMMAR:-$ROOT/vendor/linkedspec/specs/Lispish.spec}"
-PROBES="${LISPISH_PROBES:-$HERE/probes}"
+PROBES="${LISPISH_PROBES:-$TRACKER/evidence/probes}"
 RUN="${LISPISH_RUNNER:-$ROOT/vendor/linkedspec/tools/project_data_run.sh}"
 
 while [ $# -gt 0 ]; do
@@ -30,9 +31,9 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-[ -x "$BIN" ]     || { echo "run-probes: no executable at $BIN (see FEEDBACK.md 'How to reproduce')" >&2; exit 1; }
-[ -f "$GRAMMAR" ] || { echo "run-probes: no grammar at $GRAMMAR" >&2; exit 1; }
-[ -d "$PROBES" ]  || { echo "run-probes: no probe directory at $PROBES" >&2; exit 1; }
+[ -x "$BIN" ]     || { echo "LS-002-003: no executable at $BIN (see ../SETUP.md)" >&2; exit 1; }
+[ -f "$GRAMMAR" ] || { echo "LS-002-003: no grammar at $GRAMMAR" >&2; exit 1; }
+[ -d "$PROBES" ]  || { echo "LS-002-003: no probe directory at $PROBES" >&2; exit 1; }
 
 # The project_data_run.sh wrapper is optional; without it, invoke the binary directly.
 if [ -x "$RUN" ]; then

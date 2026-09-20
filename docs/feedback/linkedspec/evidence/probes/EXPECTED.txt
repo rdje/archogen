@@ -1,4 +1,4 @@
-# Frozen expected output of run-probes.sh — LinkedSpec ad290bdb4 / rgx 8763a0e6 / pgen db6f8c68
+# Frozen expected output of repro/LS-002-003-lispish-probes.sh — LinkedSpec ad290bdb4 / rgx 8763a0e6 / pgen db6f8c68
 # rustc 1.95.0, Darwin arm64. Absolute paths replaced by <PROBE> for portability.
 #
 probe                              | exit | stdout (or stderr head)
