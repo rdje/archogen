@@ -1,0 +1,3 @@
+[submodule "vendor/linkedspec"]
+	path = vendor/linkedspec
+	url = https://github.com/rdje/linkedspec

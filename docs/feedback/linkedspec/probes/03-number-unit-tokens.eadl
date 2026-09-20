@@ -1,0 +1,1 @@
+(task beat (period 10 ms) (deadline 10 ms))

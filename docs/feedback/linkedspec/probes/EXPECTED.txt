@@ -1,0 +1,17 @@
+# Frozen expected output of run-probes.sh — LinkedSpec ad290bdb4 / rgx 8763a0e6 / pgen db6f8c68
+# rustc 1.95.0, Darwin arm64. Absolute paths replaced by <PROBE> for portability.
+#
+probe                              | exit | stdout (or stderr head)
+-----------------------------------|------|------------------------
+01-multiple-top-level-forms.eadl   | 0    | ["defblock","console.uart",["offers",["observable-output","true"]]]
+02-hex-literal-underscore.eadl     | 0    | ["region","device.timer",["base","0x1000_0000"]]
+03-number-unit-tokens.eadl         | 0    | ["task","beat",["period","10","ms"],["deadline","10","ms"]]
+04-quoted-string.eadl              | 0    | ["name","ARCHOGEN"]
+05-bare-symbol.eadl                | 0    | ["name","ARCHOGEN"]
+06-unterminated-form.eadl          | 1    | lispish_file: <PROBE>
+07-trailing-garbage.eadl           | 0    | ["defblock","console.uart"]
+08-comment-no-newline.eadl         | 0    | ["priority","1"]
+09-unbalanced-close.eadl           | 0    | ["defblock","console.uart"]
+10-semantically-invalid.eadl       | 0    | ["defsystem","heartbeat",["priority","-1"],["period","0","ms"]]
+11-adjacent-fragment-join.eadl     | 0    | ["a b[c]d"]
+12-two-forms-one-line.eadl         | 0    | ["uses","console.write"]

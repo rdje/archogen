@@ -1,0 +1,5 @@
+(defblock console.uart
+  (offers (observable-output true)))
+
+(defservice console.write
+  (requires (needs observable-output)))

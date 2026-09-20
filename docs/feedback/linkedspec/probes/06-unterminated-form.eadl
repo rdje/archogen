@@ -1,0 +1,2 @@
+(defsystem heartbeat
+  (task beat (period 10 ms))
