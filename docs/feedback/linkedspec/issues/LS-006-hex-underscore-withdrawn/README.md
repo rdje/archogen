@@ -8,7 +8,7 @@
 | **Kind** | Correctness |
 | **Component** | `specs/Lispish.spec` |
 | **Affects** | — |
-| **Reproducer** | [`repro/LS-002-003-lispish-probes.sh`](../repro/LS-002-003-lispish-probes.sh), probe 02 |
+| **Reproducer** | [`repro.sh`](repro.sh), input in [`evidence/`](evidence/) |
 | **Reported by** | archogen — **raised in error, corrected here** |
 
 ## What archogen expected
@@ -34,6 +34,24 @@ The underscore survives. The concern was unfounded.
 It is kept, rather than deleted, so the tracker records what was checked and dismissed. A reader
 who has the same worry can see it was measured, and nobody re-raises it. A tracker that silently
 drops its own false positives gives no signal about the ones that remain.
+
+## Reproduce
+
+Everything needed is in this directory.
+
+```sh
+bash repro.sh --bin <path>/lispish_file --grammar <path>/Lispish.spec
+```
+
+| Item | Where |
+| --- | --- |
+| Inputs | [`evidence/`](evidence/) — one `.eadl` file per case |
+| Frozen observation | [`evidence/EXPECTED.txt`](evidence/EXPECTED.txt) |
+| Building the two arguments | [`../../SETUP.md`](../../SETUP.md) — once, for every issue |
+
+**Exit code is the verdict:** `0` = the frozen observation still reproduces; `3` = behaviour
+**changed**, which may mean this issue is fixed — the script prints the difference; `2` = could
+not run.
 
 ## History
 

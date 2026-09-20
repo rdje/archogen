@@ -5,33 +5,37 @@ and the **shipped Lispish grammar**. archogen is the first consumer of that back
 upstream integration guide names ARCHOGEN in its own example, so this is offered in the spirit
 the guide invites: the first real consumer reporting what the first integration actually did.
 
-**Everything LinkedSpec needs is in this directory.** The reproducers run against a bare
-LinkedSpec checkout and require nothing from archogen — no archogen crate, build, or test.
+> **The register of every reported bug and its state is [`INDEX.md`](INDEX.md).**
+> Currently **7 issues — 5 open, 2 of them blockers**, 1 withdrawn, 1 no-action.
+
+**Everything LinkedSpec needs is here.** Each issue is a self-contained sub-tree holding its own
+inputs, its own reproducer and its own frozen observation. Nothing outside this directory is
+read, and nothing from archogen is required.
 
 ## The rule this tracker follows
 
-**No claim leaves this repository unexecuted.** Every issue below was reproduced by running
-commands on a named revision, not by reading the upstream guide. Where archogen's first reading
-was wrong, the issue stays in the tracker with a `withdrawn` or `no-action` state and the
-correction written out — see `LS-006` and `LS-007`. A tracker that hides its own false positives
-is not worth reading.
+**No claim leaves this repository unexecuted.** Every issue was reproduced by running commands on
+a named revision, not by reading the upstream guide. Where archogen's first reading was wrong,
+the issue stays in the register with a `withdrawn` or `no-action` state and the correction
+written out — see `LS-006` and `LS-007`. A tracker that hides its own false positives gives no
+signal about the ones that remain.
 
-## Status board
+## Layout
 
-| ID | Title | Kind | Severity | State |
-| --- | --- | --- | --- | --- |
-| [LS-001](issues/LS-001-cargo-workspace-collision.md) | Documented vendoring layout does not build inside a Cargo workspace | Build | Blocker | `open` |
-| [LS-002](issues/LS-002-multi-form-truncation.md) | A multi-form file yields only its first form, exit `0` | Correctness | Blocker | `open` |
-| [LS-003](issues/LS-003-token-kind-erasure.md) | Quoted string, bare symbol and number are indistinguishable | Correctness | Major | `open` |
-| [LS-004](issues/LS-004-bootstrap-false-success.md) | PGEN bootstrap continues past a failed `cargo` and reports a false seed | Robustness | Moderate | `open` |
-| [LS-005](issues/LS-005-guide-ordering.md) | "Add and pin" commands alone never produce a buildable tree | Docs | Minor | `open` |
-| [LS-006](issues/LS-006-hex-underscore-withdrawn.md) | Hex literal underscores corrupted by atom joining | Correctness | — | `withdrawn` |
-| [LS-007](issues/LS-007-adjacent-fragment-join.md) | Adjacent fragments join into a single atom | Correctness | Informational | `no-action` |
+```text
+linkedspec/
+├── INDEX.md                     the register — every bug, its state, the totals
+├── README.md                    this file — how the tracker works
+├── SETUP.md                     environment, pins, and the one build the probe issues share
+└── issues/
+    └── LS-00N-<slug>/           one self-contained sub-tree per bug
+        ├── README.md            the issue: ID, State, Severity, Reproducer, History
+        ├── repro.sh             its own reproducer; exit code is the verdict
+        └── evidence/            its own inputs and its own frozen observation
+```
 
-`LS-002` and `LS-003` are **documented upstream behaviour**, not bugs against the shipped
-grammar's stated contract. They are tracked because the guide recommends this path to ARCHOGEN
-specifically, and for eADL they are disqualifying. They are requirements a named consumer is
-blocked on. `LS-001`, `LS-004` and `LS-005` are ordinary defects.
+Nothing is shared between issues except `SETUP.md`, which builds the one binary four of them
+need. Fixing `LS-003` does not require reading `LS-002`'s directory.
 
 ## State model
 
@@ -45,8 +49,38 @@ blocked on. `LS-001`, `LS-004` and `LS-005` are ordinary defects.
 | `withdrawn` | archogen raised it in error; the correction is recorded in the issue | archogen |
 | `no-action` | Reproduces as described, but no change is requested | archogen |
 
-To respond, edit the `State` field in the issue file and add a dated line to its **History**
-section. Every issue carries both.
+To respond: edit the `State` field in the issue's `README.md`, add a dated line to its
+**History**, and update the row in [`INDEX.md`](INDEX.md) — same commit, so the register never
+drifts from the issues.
+
+## Running a reproducer
+
+Every `repro.sh` reports its verdict as an **exit code**, so a fix can be confirmed
+mechanically:
+
+| Exit | Meaning |
+| --- | --- |
+| `0` | The recorded observation still reproduces — the defect is present |
+| `3` | Behaviour **changed** — possibly fixed; the script prints the difference |
+| `2` | Could not run (missing argument or prerequisite) |
+
+Three issues need only a checkout:
+
+```sh
+bash issues/LS-001-cargo-workspace-collision/repro.sh /path/to/linkedspec
+bash issues/LS-004-bootstrap-false-success/repro.sh  /path/to/linkedspec
+bash issues/LS-005-guide-ordering/repro.sh           /path/to/linkedspec
+```
+
+Four need the Lispish example binary, built once per [`SETUP.md`](SETUP.md):
+
+```sh
+bash issues/LS-002-multi-form-truncation/repro.sh \
+  --bin <path>/lispish_file --grammar <path>/Lispish.spec
+```
+
+`LS-001`'s reproducer is **self-checking** in both directions: it asserts the defect reproduces
+*and* that the proposed fix resolves it, so a green run is evidence for both halves of the report.
 
 ## The single most valuable ask
 
@@ -55,47 +89,9 @@ turns unconsumed input into an error rather than a silent success. It converts a
 into a diagnosable failure, and it is what decides whether an `eadl.spec` could ever serve as an
 independent recognizer of archogen's grammar. Everything else in this tracker is smaller.
 
-## Layout
-
-```text
-linkedspec/
-├── README.md                    this file — status board, state model
-├── SETUP.md                     exact environment, pins, and build from scratch
-├── issues/                      one file per bug, each with ID, State and History
-│   └── LS-001 … LS-007
-├── repro/
-│   ├── LS-001-workspace-collision.sh      self-checking; needs only a LinkedSpec checkout
-│   └── LS-002-003-lispish-probes.sh       replays the probe corpus
-└── evidence/
-    ├── system.eadl              the real 4-form eADL file behind LS-002's headline
-    └── probes/                  12 eADL inputs + EXPECTED.txt (frozen observed output)
-```
-
-## Reproducing everything
-
-Full instructions, including the toolchain and the exact pins measured, are in
-[`SETUP.md`](SETUP.md). The short version:
-
-```sh
-# LS-001 and LS-004 — no build required, about a minute
-bash repro/LS-001-workspace-collision.sh /path/to/linkedspec
-
-# LS-002, LS-003, LS-006, LS-007 — needs a working build (SETUP.md)
-bash repro/LS-002-003-lispish-probes.sh \
-  --bin     <target>/debug/lispish_file \
-  --grammar /path/to/linkedspec/specs/Lispish.spec \
-  --probes  ./evidence/probes
-```
-
-`repro/LS-001-workspace-collision.sh` is **self-checking**: it exits `0` only if the defect
-reproduces *and* the proposed fix resolves it, so a green run is evidence for both halves of the
-report. For the probe runner, diff its output against `evidence/probes/EXPECTED.txt`; a
-difference is either a fix on LinkedSpec's side or an environment difference, and both are worth
-knowing.
-
 ## What works well
 
-Worth stating, since the rest of this tracker is problems:
+Worth stating, since the register is otherwise all problems:
 
 - **The upstream limits table is unusually honest.** "Reading an entire file into a string is not
   proof that the grammar consumed it" is exactly right, and it predicted `LS-002` and `LS-003`

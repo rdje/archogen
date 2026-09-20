@@ -8,7 +8,7 @@
 | **Kind** | Build |
 | **Component** | `examples/integration/rust`, `rgx/subs/pgen/rust` |
 | **Affects** | LinkedSpec `ad290bdb4`, PGEN `db6f8c68` |
-| **Reproducer** | [`repro/LS-001-workspace-collision.sh`](../repro/LS-001-workspace-collision.sh) |
+| **Reproducer** | [`repro.sh`](repro.sh) (self-checking) |
 | **Reported by** | archogen, first consumer of the Rust backend |
 
 ## Summary
@@ -35,7 +35,7 @@ current:   <app>/vendor/linkedspec/rgx/subs/pgen/rust/Cargo.toml
 workspace: <app>/Cargo.toml
 ```
 
-The bootstrap exits `rc=101`; see [`LS-004`](LS-004-bootstrap-false-success.md) for how it
+The bootstrap exits `rc=101`; see [`LS-004`](../LS-004-bootstrap-false-success/README.md) for how it
 behaves on the way there.
 
 ## Scope measured
@@ -65,7 +65,7 @@ but it should not be the only remedy: it requires every consumer to hit the fail
 
 ## Verification
 
-`repro/LS-001-workspace-collision.sh /path/to/linkedspec` builds the documented layout from any
+`repro.sh /path/to/linkedspec` builds the documented layout from any
 LinkedSpec checkout, asserts both manifests fail with that exact error, applies the proposed fix,
 and asserts both then pass. It exits `0` only if both halves behave as described:
 
@@ -83,6 +83,23 @@ RESULT: reproduced (2/2) and fixed by the proposal (2/2).
 After applying the same fix locally, the PGEN bootstrap and the `lispish_file` build both
 succeed. Every observation in `LS-002`, `LS-003`, `LS-006` and `LS-007` was taken from that
 working build.
+
+## Reproduce
+
+Everything needed is in this directory. No build required.
+
+```sh
+bash repro.sh /path/to/linkedspec
+```
+
+| Item | Where |
+| --- | --- |
+| Reproducer | [`repro.sh`](repro.sh) |
+| Recorded run | [`evidence/OBSERVED.txt`](evidence/OBSERVED.txt) |
+| Environment and pins | [`../../SETUP.md`](../../SETUP.md) |
+
+**Exit code is the verdict:** `0` = reproduces as recorded; `3` = behaviour **changed**, which
+may mean this issue is fixed; `2` = could not run.
 
 ## History
 

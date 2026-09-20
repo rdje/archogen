@@ -20,21 +20,25 @@ needs archogen to run.
 LinkedSpec `ad290bdb4` is the commit whose message is
 `BACKEND-INTEGRATION-GUIDES.2.2 - deliver Rust Lispish file integration and deployment`.
 
-## LS-001 and LS-004 — no build needed
+## LS-001, LS-004 and LS-005 — no build needed
 
-These two reproduce from a checkout alone, in about a minute:
+These three reproduce from a checkout alone, in about a minute each:
 
 ```sh
-bash repro/LS-001-workspace-collision.sh /path/to/linkedspec
+bash issues/LS-001-cargo-workspace-collision/repro.sh /path/to/linkedspec
+bash issues/LS-004-bootstrap-false-success/repro.sh  /path/to/linkedspec
+bash issues/LS-005-guide-ordering/repro.sh           /path/to/linkedspec
 ```
 
 It constructs the layout the upstream guide documents — an application repository that is a
 Cargo workspace, with LinkedSpec vendored at `vendor/linkedspec` — then asserts the defect
 reproduces on both affected manifests, applies the proposed fix, and asserts both then pass.
-Exit `0` means **both** halves behaved as described. `LS-004` is visible in the same run's
-output, in the bootstrap's behaviour after the first `cargo` failure.
+`LS-001`'s reproducer exits `0` only if **both** halves behaved as described — the defect
+reproduces *and* the proposed fix resolves it. `LS-004` provokes the same collision to make a
+prerequisite fail, then checks what the bootstrap does next. `LS-005` reads the guide and checks
+its section order; it needs no build at all.
 
-## LS-002, LS-003, LS-006 and LS-007 — a working build
+## LS-002, LS-003, LS-006 and LS-007 — one shared build
 
 These need the Lispish example binary. The steps below are the upstream guide's own, plus the
 `LS-001` workaround without which they do not complete.
@@ -92,46 +96,49 @@ Observed here: `Finished \`dev\` profile` in 33.94s, producing
 
 **6. Run the probe corpus:**
 
+Each of the four takes the same two arguments and compares against its **own**
+`evidence/EXPECTED.txt`:
+
 ```sh
-bash repro/LS-002-003-lispish-probes.sh \
-  --bin     "$CARGO_TARGET_DIR/debug/lispish_file" \
-  --grammar "$APP_ROOT/vendor/linkedspec/specs/Lispish.spec" \
-  --probes  ./evidence/probes
+for id in LS-002-multi-form-truncation LS-003-token-kind-erasure \
+          LS-006-hex-underscore-withdrawn LS-007-adjacent-fragment-join; do
+  bash "issues/$id/repro.sh" \
+    --bin     "$CARGO_TARGET_DIR/debug/lispish_file" \
+    --grammar "$APP_ROOT/vendor/linkedspec/specs/Lispish.spec"
+done
 ```
 
-Compare against `evidence/probes/EXPECTED.txt`, which is the output frozen at the revisions
-above with absolute paths replaced by `<PROBE>`.
+Exit `0` means the frozen observation still reproduces; exit `3` means behaviour changed and the
+script prints the difference.
 
-**7. The `LS-002` headline** uses a real file rather than a probe:
+**7. The `LS-002` headline** uses a real file rather than a probe. It is included in that
+issue's own evidence and run by its `repro.sh`, but can be checked directly:
 
 ```sh
 "$CARGO_TARGET_DIR/debug/lispish_file" \
   --grammar "$APP_ROOT/vendor/linkedspec/specs/Lispish.spec" \
-  evidence/system.eadl
+  issues/LS-002-multi-form-truncation/evidence/system.eadl
 ```
 
-`evidence/system.eadl` is a genuine archogen description with four top-level forms, copied into
-this directory so the tracker is self-contained.
+That file is a genuine archogen description with four top-level forms, vendored into the issue so
+the sub-tree is self-contained.
 
-## The probe corpus
+## Where the inputs live
 
-`evidence/probes/` holds twelve `.eadl` inputs, each isolating one construct drawn from real
-eADL. They are plain S-expressions; no eADL semantics are needed to read them.
+There is no shared corpus: each issue owns the inputs that demonstrate it, under its own
+`evidence/`. They are plain S-expressions — no eADL semantics are needed to read them.
 
-| Probe | Isolates | Issue |
+| Issue | Inputs | Isolates |
 | --- | --- | --- |
-| `01-multiple-top-level-forms` | two forms on separate lines | LS-002 |
-| `02-hex-literal-underscore` | `0x1000_0000` survival | LS-006 |
-| `03-number-unit-tokens` | `(period 10 ms)` token kinds | LS-003 |
-| `04-quoted-string` | `(name "ARCHOGEN")` | LS-003 |
-| `05-bare-symbol` | `(name ARCHOGEN)` | LS-003 |
-| `06-unterminated-form` | `(defsystem heartbeat` | LS-002 (the passing case) |
-| `07-trailing-garbage` | valid form then junk | LS-002 |
-| `08-comment-no-newline` | `;` comment at end of file | — |
-| `09-unbalanced-close` | `(defblock console.uart))` | LS-002 |
-| `10-semantically-invalid` | syntactically fine, semantically wrong | — (control) |
-| `11-adjacent-fragment-join` | `(a" b"[c]{d})` | LS-007 |
-| `12-two-forms-one-line` | two forms on one line | LS-002 |
+| `LS-002` | `01-multiple-top-level-forms`, `07-trailing-garbage`, `09-unbalanced-close`, `12-two-forms-one-line`, `system.eadl` | input after the first form is discarded |
+| `LS-002` | `06-unterminated-form` | the case that **is** rejected — the gap is trailing input, not malformed input |
+| `LS-002` | `08-comment-no-newline`, `10-semantically-invalid` | controls — expected to behave correctly |
+| `LS-003` | `03-number-unit-tokens`, `04-quoted-string`, `05-bare-symbol` | token kind erased from the result |
+| `LS-006` | `02-hex-literal-underscore` | withdrawn — the literal survives intact |
+| `LS-007` | `11-adjacent-fragment-join` | adjacent fragments concatenate |
 
-Probes `08` and `10` are controls: they are expected to behave correctly and are included so a
-future run can tell a real regression from a change in the probes themselves.
+The two controls in `LS-002` are deliberate: they are expected to behave correctly, so a future
+run can tell a real regression from a change in the inputs themselves.
+
+`LS-001`, `LS-004` and `LS-005` need no inputs — they act on a LinkedSpec checkout directly, and
+each keeps the recorded run of its reproducer in `evidence/OBSERVED.txt`.

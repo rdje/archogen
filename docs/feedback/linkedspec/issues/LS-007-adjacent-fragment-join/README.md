@@ -8,7 +8,7 @@
 | **Kind** | Correctness |
 | **Component** | `specs/Lispish.spec` |
 | **Affects** | LinkedSpec `ad290bdb4` |
-| **Reproducer** | [`repro/LS-002-003-lispish-probes.sh`](../repro/LS-002-003-lispish-probes.sh), probe 11 |
+| **Reproducer** | [`repro.sh`](repro.sh), input in [`evidence/`](evidence/) |
 | **Reported by** | archogen |
 
 ## Summary
@@ -34,8 +34,26 @@ why the issue is filed as `no-action` rather than closed.
 
 ## Relationship to other issues
 
-If [`LS-003`](LS-003-token-kind-erasure.md) is addressed by preserving delimiters or byte offsets,
+If [`LS-003`](../LS-003-token-kind-erasure/README.md) is addressed by preserving delimiters or byte offsets,
 this behaviour becomes observable to a consumer and stops mattering.
+
+## Reproduce
+
+Everything needed is in this directory.
+
+```sh
+bash repro.sh --bin <path>/lispish_file --grammar <path>/Lispish.spec
+```
+
+| Item | Where |
+| --- | --- |
+| Inputs | [`evidence/`](evidence/) — one `.eadl` file per case |
+| Frozen observation | [`evidence/EXPECTED.txt`](evidence/EXPECTED.txt) |
+| Building the two arguments | [`../../SETUP.md`](../../SETUP.md) — once, for every issue |
+
+**Exit code is the verdict:** `0` = the frozen observation still reproduces; `3` = behaviour
+**changed**, which may mean this issue is fixed — the script prints the difference; `2` = could
+not run.
 
 ## History
 

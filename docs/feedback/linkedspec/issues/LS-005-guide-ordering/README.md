@@ -8,7 +8,7 @@
 | **Kind** | Documentation |
 | **Component** | `docs/linkedspec-book/src/public-api/integration-rust.md` |
 | **Affects** | LinkedSpec `ad290bdb4` |
-| **Reproducer** | Follow the guide's sections in order |
+| **Reproducer** | [`repro.sh`](repro.sh) — checks the guide's section order mechanically |
 | **Reported by** | archogen, first consumer of the Rust backend |
 
 ## Summary
@@ -25,7 +25,7 @@ step.
 ## Why it is worth fixing
 
 It costs every first consumer the same wasted attempt, and the resulting failure
-([`LS-004`](LS-004-bootstrap-false-success.md)) points away from the real cause.
+([`LS-004`](../LS-004-bootstrap-false-success/README.md)) points away from the real cause.
 
 ## Proposed fix
 
@@ -33,8 +33,25 @@ End the "Add and pin" section with an explicit forward pointer — *"these comma
 a buildable tree; continue to Initial PGEN preparation before building"* — or move the bootstrap
 into that section.
 
-Adding [`LS-001`](LS-001-cargo-workspace-collision.md)'s `[workspace]` note in the same place
+Adding [`LS-001`](../LS-001-cargo-workspace-collision/README.md)'s `[workspace]` note in the same place
 would remove both first-run failures at once.
+
+## Reproduce
+
+Everything needed is in this directory. No build required.
+
+```sh
+bash repro.sh /path/to/linkedspec
+```
+
+| Item | Where |
+| --- | --- |
+| Reproducer | [`repro.sh`](repro.sh) |
+| Recorded run | [`evidence/OBSERVED.txt`](evidence/OBSERVED.txt) |
+| Environment and pins | [`../../SETUP.md`](../../SETUP.md) |
+
+**Exit code is the verdict:** `0` = reproduces as recorded; `3` = behaviour **changed**, which
+may mean this issue is fixed; `2` = could not run.
 
 ## History
 

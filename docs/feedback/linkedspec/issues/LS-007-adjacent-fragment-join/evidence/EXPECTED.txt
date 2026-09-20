@@ -1,0 +1,4 @@
+# Frozen observation for LS-007-adjacent-fragment-join
+# LinkedSpec ad290bdb4 / rgx 8763a0e6 / pgen db6f8c68 · rustc 1.95.0 · Darwin arm64
+# Regenerate: bash repro.sh --bin <lispish_file> --grammar <Lispish.spec>
+11-adjacent-fragment-join.eadl     | 0    | ["a b[c]d"]

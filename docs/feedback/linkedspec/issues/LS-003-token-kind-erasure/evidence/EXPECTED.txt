@@ -1,0 +1,6 @@
+# Frozen observation for LS-003-token-kind-erasure
+# LinkedSpec ad290bdb4 / rgx 8763a0e6 / pgen db6f8c68 · rustc 1.95.0 · Darwin arm64
+# Regenerate: bash repro.sh --bin <lispish_file> --grammar <Lispish.spec>
+03-number-unit-tokens.eadl         | 0    | ["task","beat",["period","10","ms"],["deadline","10","ms"]]
+04-quoted-string.eadl              | 0    | ["name","ARCHOGEN"]
+05-bare-symbol.eadl                | 0    | ["name","ARCHOGEN"]

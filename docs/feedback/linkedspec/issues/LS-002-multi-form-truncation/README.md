@@ -8,13 +8,13 @@
 | **Kind** | Correctness (documented behaviour; raised as a requirement) |
 | **Component** | `specs/Lispish.spec`, `examples/integration/rust/src/bin/lispish_file.rs` |
 | **Affects** | LinkedSpec `ad290bdb4` |
-| **Reproducer** | [`repro/LS-002-003-lispish-probes.sh`](../repro/LS-002-003-lispish-probes.sh), probes 01, 07, 09, 12 |
+| **Reproducer** | [`repro.sh`](repro.sh), inputs in [`evidence/`](evidence/) |
 | **Reported by** | archogen, first consumer of the Rust backend |
 
 ## Summary
 
 Run the shipped `lispish_file` on a real, valid archogen description —
-[`evidence/system.eadl`](../evidence/system.eadl), which contains four top-level forms
+[`evidence/system.eadl`](evidence/system.eadl), which contains four top-level forms
 (`defblock`, `defplatform`, `defservice`, `defsystem`):
 
 ```json
@@ -41,7 +41,7 @@ failure mode is the dangerous one: not an error, but a **success carrying a trun
 
 ## Observed
 
-From `evidence/probes/EXPECTED.txt`:
+From `evidence/EXPECTED.txt`:
 
 | Probe | Input shape | Result | Exit |
 | --- | --- | --- | --- |
@@ -81,6 +81,24 @@ The guide states that applications requiring strict document validation or multi
 forms "need an explicit grammar/contract for those requirements", tracked as
 `SESSION-STARTUP-READING.83.1-.83.3`, and not implemented by the example. This issue is evidence
 for prioritising it, with a named consumer blocked on it.
+
+## Reproduce
+
+Everything needed is in this directory.
+
+```sh
+bash repro.sh --bin <path>/lispish_file --grammar <path>/Lispish.spec
+```
+
+| Item | Where |
+| --- | --- |
+| Inputs | [`evidence/`](evidence/) — one `.eadl` file per case |
+| Frozen observation | [`evidence/EXPECTED.txt`](evidence/EXPECTED.txt) |
+| Building the two arguments | [`../../SETUP.md`](../../SETUP.md) — once, for every issue |
+
+**Exit code is the verdict:** `0` = the frozen observation still reproduces; `3` = behaviour
+**changed**, which may mean this issue is fixed — the script prints the difference; `2` = could
+not run.
 
 ## History
 

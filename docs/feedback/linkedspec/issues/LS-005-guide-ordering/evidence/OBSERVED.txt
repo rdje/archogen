@@ -1,0 +1,11 @@
+# Recorded run of repro.sh on LinkedSpec ad290bdb4 / pgen db6f8c68 · rustc 1.95.0 · Darwin arm64
+== LS-005 observations ==
+  'Add and pin the source dependency' at line ..... 17
+  section ends at line ............................ 58
+  'Initial PGEN preparation' at line .............. 89
+  forward references to the bootstrap in between .. 0
+
+  symptom 1 — PGEN preparation lives in a later section ......... REPRODUCED
+  symptom 2 — 'Add and pin' never points the reader at it ....... REPRODUCED
+
+LS-005: RESULT — a reader who follows the sections in order attempts a build that cannot succeed.

@@ -1,0 +1,11 @@
+# Frozen observation for LS-002-multi-form-truncation
+# LinkedSpec ad290bdb4 / rgx 8763a0e6 / pgen db6f8c68 · rustc 1.95.0 · Darwin arm64
+# Regenerate: bash repro.sh --bin <lispish_file> --grammar <Lispish.spec>
+01-multiple-top-level-forms.eadl   | 0    | ["defblock","console.uart",["offers",["observable-output","true"]]]
+06-unterminated-form.eadl          | 1    | <no value: lispish_file: 06-unterminated-form.eadl: Lispish returned no parenthesiz>
+07-trailing-garbage.eadl           | 0    | ["defblock","console.uart"]
+08-comment-no-newline.eadl         | 0    | ["priority","1"]
+09-unbalanced-close.eadl           | 0    | ["defblock","console.uart"]
+10-semantically-invalid.eadl       | 0    | ["defsystem","heartbeat",["priority","-1"],["period","0","ms"]]
+12-two-forms-one-line.eadl         | 0    | ["uses","console.write"]
+system.eadl                        | 0    | ["defblock","console.uart",["offers",["observable-output","true"]]]

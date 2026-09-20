@@ -8,7 +8,7 @@
 | **Kind** | Correctness (documented behaviour; raised as a requirement) |
 | **Component** | `specs/Lispish.spec`, the `SExpression` adapter |
 | **Affects** | LinkedSpec `ad290bdb4` |
-| **Reproducer** | [`repro/LS-002-003-lispish-probes.sh`](../repro/LS-002-003-lispish-probes.sh), probes 03, 04, 05 |
+| **Reproducer** | [`repro.sh`](repro.sh), inputs in [`evidence/`](evidence/) |
 | **Reported by** | archogen, first consumer of the Rust backend |
 
 ## Summary
@@ -39,8 +39,26 @@ The result distinguishes the token kinds the surface syntax distinguishes.
 
 Retain token kind in the result — either a tagged variant (`Atom { text, kind }`) or, more
 cheaply, preserve the delimiters so the consumer can reconstruct the distinction. **Byte offsets
-per atom would serve both this and [`LS-002`](LS-002-multi-form-truncation.md)** and may be the
+per atom would serve both this and [`LS-002`](../LS-002-multi-form-truncation/README.md)** and may be the
 cheapest single change that addresses both.
+
+## Reproduce
+
+Everything needed is in this directory.
+
+```sh
+bash repro.sh --bin <path>/lispish_file --grammar <path>/Lispish.spec
+```
+
+| Item | Where |
+| --- | --- |
+| Inputs | [`evidence/`](evidence/) — one `.eadl` file per case |
+| Frozen observation | [`evidence/EXPECTED.txt`](evidence/EXPECTED.txt) |
+| Building the two arguments | [`../../SETUP.md`](../../SETUP.md) — once, for every issue |
+
+**Exit code is the verdict:** `0` = the frozen observation still reproduces; `3` = behaviour
+**changed**, which may mean this issue is fixed — the script prints the difference; `2` = could
+not run.
 
 ## History
 

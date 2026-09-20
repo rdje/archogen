@@ -1,0 +1,4 @@
+# Frozen observation for LS-006-hex-underscore-withdrawn
+# LinkedSpec ad290bdb4 / rgx 8763a0e6 / pgen db6f8c68 · rustc 1.95.0 · Darwin arm64
+# Regenerate: bash repro.sh --bin <lispish_file> --grammar <Lispish.spec>
+02-hex-literal-underscore.eadl     | 0    | ["region","device.timer",["base","0x1000_0000"]]
