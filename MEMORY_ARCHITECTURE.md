@@ -126,6 +126,29 @@ A resume reads A + one unit of B + a few C records — never a monolith.
 
 `MEMORY.md` becomes **only** layer A. Hard rules:
 
+- ⛔ **IT ANSWERS ONE QUESTION — *what is next?* — AND NOTHING ELSE.** Everything in the
+  file exists to describe the next action, task, slice or lane. A standing warning, a
+  lesson, a measurement, an environment fact, a completed-work history or a blocker's
+  detail does not, whatever its merit, and belongs in the layer that owns it. The pointer
+  may NAME that layer in a few words; it may not restate what is there.
+
+  ⛔ **It shall not grow.** The cap exists to be far away, not to be approached: the file
+  should sit at a small fraction of it, permanently. **If it grows, that is the signal
+  that something is being written into it that does not belong** — not a signal that the
+  cap is tight. Raising the cap is available if a genuinely larger *next action* ever
+  needs it, and is not the answer to accumulation.
+
+  ⚠️ **Why this is stated separately from the caps below.** A rule about HOW to write a
+  file does not tell a reader what does not belong in it, so each addition gets judged on
+  its own merit and the file accumulates while every individual step looks correct.
+  Measured on a project running this spine: the pointer reached **26 standing warnings
+  weighing 5,184 of 6,412 bytes — 81% of the file** — with the pointer proper at 19%, and
+  its guard was green throughout. Evicting the warnings, none of which held a fact that
+  was not already in layer B or C, took it to **425 bytes**. Nothing about the cap changed.
+
+  ⭐ **The test before adding a line:** does it describe what is next? If not, it belongs
+  in the layer that owns it.
+
 - **Size cap — a LINE cap *and* a BYTE cap.** Keep it to roughly one screen (≤ ~50 lines)
   **and** to a few KB. If it exceeds either, information is in the wrong layer; move it
   down to B or C. *(Both caps are mechanically enforced — §9.)*
