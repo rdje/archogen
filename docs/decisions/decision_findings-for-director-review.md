@@ -5,10 +5,11 @@
 - **Status:** `active`
 - **Owner / source:** raised during the M0 + M1 build; recorded here so they survive the session
 
-Five items are recorded here so they survive the session. Three are outside an implementer's
+Six items are recorded here so they survive the session. Three are outside an implementer's
 authority to settle; the fourth (§4) is a measurement about the programme's own evidence that you
-should see even though it is already fixed. Each is tracked as work, so nothing here depends on
-this file being read.
+should see even though it is already fixed; the sixth (§6) is a review of **your own amendment**
+by the model that has never read the implementation. Each is tracked as work, so nothing here
+depends on this file being read.
 
 ## 1. No physical board — the one M0 obligation that cannot be closed in software
 
@@ -102,6 +103,72 @@ on both sides as ratchet tests, so they cannot drift while they wait.
 invisible while one person implements it**, because they resolve it and the resolution looks like
 the specification. It only becomes visible when a second reader derives the same thing without
 seeing the first. That is what §12 M2 is asking for, and it worked.
+
+## 6. The §3.1.1 amendment was reviewed by the independent model — and it found five problems
+
+⚠️ **This needs a decision, and two of the five change behaviour.**
+
+`M2.9` resolved the five contract gaps of §5 by amending `ROADMAP.md` with a new **§3.1.1**
+(fault classification, attribution and containment). That amendment was then sent to the same
+isolated model that built `rt-reference` — which still has never read `crates/rt-core`. It
+applied the amendment (42 tests pass, up from 30) and returned five criticisms **of the
+amendment itself**. They are recorded here because they are `ROADMAP` changes, and §14.1 makes
+those a reviewed change rather than an implementer's.
+
+| # | Problem with §3.1.1 as written | Consequence |
+| --- | --- | --- |
+| a | Rule 3's second ground is **wider than rule 3's scope** | a gap, and it is the likelier event |
+| b | The latched-slot case falls **between rules 1 and 3** | the fork is fatal vs silently lost |
+| c | The `UnexpectedTrap` row does not actually pick a class | the four-to-three mapping stays partial |
+| d | Two phrasings for one attribution rule | coincide today, separable in a later profile |
+| e | Ground 2 argues against the wrong thing | wording only |
+
+**(b) is the sharpest, and it has no safe default.** Rule 1's trigger is "a release for a task
+that still owes a **job**". When the latch slot is full the task may be in `Created` — it owes an
+undelivered *release*, not a job. If that counts, rule 3 escalates it and a doubled arrival
+inside a critical section kills the system; if it does not, the second arrival is simply lost.
+There is no third behaviour available and the text supports neither side.
+
+**(a) is the one I would fix first anyway.** Ground 2 says containment "means changing the
+schedule, which is the structure a kernel critical section exists to protect". That reasoning
+does not stop at faults: `complete()` inside a masked region also changes the schedule's
+occupant, and a job that merely *ends* while holding the mask leaves "the nesting depth above
+zero with no owner" in ground 1's own words. So the contract as written escalates a *contained
+overrun* inside a critical section to fatal while saying nothing about an *ordinary completion*
+in the same region — and the completion is far the more likely of the two. The reference model
+lets the completion through unchanged and records a silent-note saying why.
+
+**(c)** "Deliberate fatal trap, or a surprise outside the model" is a disjunction, and "a
+surprise outside the model" is not one of §8.1's three classes. Since the amendment exists to
+make the four-to-three mapping a function, that row leaves it partial. No behavioural
+consequence — the row's *Containable* column is "No" either way — but it is the one cell that
+does not do what the table is for.
+
+**(d)** The table attributes a stack-guard breach to "the task whose guard was breached"; rule 2
+attributes the non-overrun faults to the executing context. These coincide in `rt-static-up-v1`
+(separate static stacks, one execution context), so nothing breaks — but they are different words
+for what must be one rule, and a later profile with a shared or guard-page stack pulls them apart.
+
+**(e)** Ground 2 reads as if any schedule change were the hazard, when the argument is really
+against *resuming* scheduling from a state the critical section had not finished making
+consistent — the fatal path is itself the largest possible change to the schedule. Rewording it
+as "resuming the schedule" closes that off.
+
+### Three new silent gaps the amendment opened
+
+Recorded so they are not rediscovered: `Runtime::release` (does a task whose latch is full "owe a
+job"? — this is (b) seen from the model's side), `ReleaseEffect::Overrun` (rule 1 settles that the
+policy applies, not what becomes of the release that triggered it), and `Runtime::complete` (this
+is (a)). Fifteen `CONTRACT SILENT` notes remain in `rt-reference` in total.
+
+**The decision needed:** (a) and (b) change behaviour and belong to you; (c), (d) and (e) are
+drafting fixes I can apply under the same leaf once you rule on the first two. `M2.9` is open and
+is where this lands.
+
+⭐ The generalisable part: **§5's lesson repeated one level up.** A second reader found gaps in
+the specification; the amendment that closed them was written by one author, and a second reader
+found gaps in *that*. The mechanism is not a one-off audit — it is worth running at every point
+where a single author's resolution gets to look like the specification.
 
 ## A note on what "done" means so far
 
