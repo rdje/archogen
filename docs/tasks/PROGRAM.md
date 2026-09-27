@@ -37,7 +37,7 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM`
   Status: `active`
   Goal: own the program spine
-  Children: `PROGRAM.1` (+ `PROGRAM.1.1`) … `PROGRAM.10`, and `PROGRAM.2.1`
+  Children: `PROGRAM.1` … `PROGRAM.14`, plus `PROGRAM.1.1` and `PROGRAM.2.1`
 
 - ID: `PROGRAM.1`
   Status: `done`
@@ -330,6 +330,104 @@ mdBook that is the director's window into the project.
   Verification: `pending`
   Commit: `pending`
 
+- ID: `PROGRAM.12`
+  Status: `done`
+  Goal: keep **harness-local scratch** out of the tracked tree, so that "handoff-ready" stays
+  decidable: an agent session's own permission and state files must not read as unfinished
+  project work, and must not be committed as if they were a project decision.
+  Reproduce / issue: after the first commit of the `2026-09-27` session, `git status --short`
+  reported `?? .qwen/` — a directory the harness created to record two command approvals
+  (`Bash(sed *)`, `Bash(git ls-files *)`). Nothing in the repository ignored it, so the tree could
+  not be reported clean, and the alternative — committing it — would have exported one session's
+  approval decisions to every future reader as project config.
+  Acceptance: `.qwen/` is ignored with the reason stated where the rule lives; a deliberately
+  shared harness config can still be tracked and the file says how; `git status --porcelain` is
+  empty after a session that created harness state; no tracked file is removed or altered by the
+  change; the ignore is scoped to the measured harness rather than speculatively listing harnesses
+  this repository has never seen.
+  Priority: **low effort, medium impact** — it does not change behaviour, but an undecidable
+  cleanliness test corrupts every handoff banner that depends on it.
+  Verification: see the acceptance checklist below.
+  Commit: `ARCHOGEN-PROGRAM-0050 (leaf PROGRAM.12)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — `git status --short` after commit `e95f5e3` reported `?? .qwen/`,
+    and `cat .qwen/settings.json` showed harness-recorded approvals
+    (`"allow": ["Bash(sed *)", "Bash(git ls-files *)"]`, `"$version": 4`) — state belonging to one
+    session, sitting in a tree whose handoff test is "no modified or untracked files".
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `.gitignore` had no arm for harness-local directories.
+    WHERE: `git check-ignore -v .qwen/settings.json` → no match, `rc=1` at the parent commit, i.e.
+    the file was untracked *and* unignored, so it appeared in every status. The two available
+    resolutions are both wrong on their own: committing it publishes one session's approvals as
+    project config, and leaving it makes "is the tree handoff-ready?" unanswerable.
+  - [x] **ADDRESSED (verified)** — after adding `/.qwen/`: `git check-ignore -v
+    .qwen/settings.json` → `.gitignore:31:/.qwen/   .qwen/settings.json`, `rc=0`;
+    `git status --porcelain` lists only the two files this leaf edits (`.gitignore`,
+    `docs/tasks/PROGRAM.md`) and no `??` row; the state itself is preserved on disk
+    (`ls -1 .qwen` → `settings.json`), so nothing the harness needs was deleted.
+  - [x] **NO REGRESSION** — `git ls-files .qwen | wc -l` → `0`, so no tracked path became ignored
+    (the failure mode that silently stops shipping a file); `git diff --stat` → `2 files changed,
+    72 insertions(+), 1 deletion(-)`, both of them this leaf's; no build input is touched, so the
+    Rust tiers are unaffected — `make gate` → `=== all doctrines green ===` on the staged set.
+  - [x] **FIX** — one anchored ignore arm at the repository root, with the reasoning beside it: why
+    the state is neither committed nor left visible, and how a deliberately shared harness config
+    would still be tracked (`git add -f`). Scoped to the harness actually measured here rather than
+    a speculative list of harnesses this repository has never seen — a guess-list is a rule with no
+    measurement behind it.
+    ⭐ **Drive-by, measured and recorded rather than slipped in:** the adjacent comment pointed at
+    `docs/feedback/linkedspec/SETUP.md`, which does not exist — `ls -1 docs/feedback/linkedspec`
+    → `INDEX.md`, `README.md`, `issues/`. The tracker was restructured into one self-contained
+    sub-tree per issue (`M1.16`, `M1.17`), each carrying its own `SETUP.md`, and this pointer was
+    not carried along. Corrected to name the per-issue files.
+  - [x] **LOCKSTEP** — this leaf, the `PROGRAM` frontier and both logs; `PROGRAM.13` and
+    `PROGRAM.14` logged from the census that this commit's own status check exposed. `README.md`,
+    the book and `LIVE_STATUS.md` are unchanged: no user-visible toolchain surface moved, and
+    `PROGRAM`'s row already reads `In Progress`.
+
+- ID: `PROGRAM.13`
+  Status: `pending`
+  Goal: backfill the **Verification Log** and **Commit Log** of the three trees whose logs stopped
+  after their first slices, transcribing from `git log` and from each leaf's own recorded checks —
+  never inventing a row.
+  Reproduce / issue: a census over every tree, counting `done` leaves against log rows
+  (`for t in docs/tasks/*.md; do … grep -c '^  Status: `done`' … sed -n '/## Verification
+  Log/,/## Commit Log/p' | grep -c '^| `' …; done`) returns
+  `BOOTSTRAP done=1 verification_rows=0 commit_rows=0`, `M2 done=5 verification_rows=1
+  commit_rows=1`, `PROGRAM done=6 verification_rows=3 commit_rows=3`, while `M0 7/8/8`,
+  `M1 17/16/17` and `S0 7/21/7` are complete. So **twelve closed leaves do not name their own
+  commit in the tree that owns them**, and `BOOTSTRAP`'s only closed leaf records no verification
+  at all. Impact: layer B is the route from a leaf to its evidence; with the log empty, a resuming
+  session or an auditor must reconstruct it from `git log --grep`, and a leaf can sit `done` with
+  no recorded verification — the exact state the acceptance checklist exists to prevent.
+  Acceptance: every `done` leaf in those three trees carries a Commit Log row naming its real
+  commit subject, derived from git; a Verification Log row carrying the checks that leaf actually
+  recorded; a row that cannot be derived is written `not recorded (<why>)` rather than guessed; the
+  census command is recorded in the leaf so the result is re-runnable; no leaf's status changes.
+  Priority: **medium** — no behaviour depends on it, but the memory architecture does: an unlogged
+  leaf is a leaf a crashed session cannot resume from.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `PROGRAM.14`
+  Status: `pending`
+  Goal: make `PROGRAM.13`'s finding **mechanically** impossible to repeat — a doctrine check that a
+  leaf marked `done` names a commit in its own tree's Commit Log, registered in
+  `scripts/check_doctrines.project.sh` and mirrored in `DOCTRINE_ENFORCEMENT.md`.
+  THE GAP: nothing gates a `done` leaf that names no commit. CENSUS:
+  `git grep -ln 'Commit Log' -- scripts/ xtask/ .doctrine/` → exactly one path,
+  `scripts/bootstrap.sh`, which **seeds** the section in a new tree and never reads one back;
+  the thirteen registered doctrines (`scripts/check_doctrines.sh`, `make gate`) include no
+  task-log check.
+  Acceptance: a new `scripts/check_*.sh` exits nonzero on a seeded `done` leaf with no commit row
+  and zero on the real trees after `PROGRAM.13`; it carries RED arms in `--self-test`; it is scoped
+  to staged files, so an unrelated tree cannot fail a commit; `TOOLBOX.md` and
+  `DOCTRINE_ENFORCEMENT.md` name it; the honest limit is stated in the script header — it proves a
+  row exists and names a subject that exists in git, never that the work was done.
+  Priority: **medium**, and it must land **after** `PROGRAM.13` or the gate is red on arrival.
+  Verification: `pending`
+  Commit: `pending`
+
 - ID: `PROGRAM.10`
   Status: `pending`
   Goal: run the **integration** tier in CI — provision `mdbook` and `qemu-system-riscv64` on the
@@ -553,10 +651,12 @@ roadmap item X live?".
 | 2 | `PROGRAM.5` | `pending` | the §15/§19 dependency and evidence ledger — every external source claim in the book should resolve to a row, and `BOOK-ANCHORS` now checks the *internal* ones |
 | 3 | `PROGRAM.9` | `pending` | the extended tier reports `incomplete` on every run until its three steps exist |
 | 4 | `PROGRAM.6` | `pending` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |
+| 5 | `PROGRAM.13` | `pending` | twelve closed leaves in `BOOTSTRAP`, `M2` and this tree do not name their own commit — backfill both logs from git, then `PROGRAM.14` gates it so the gap cannot reopen |
 
-`M0` and `S0` are closed; `M1` is open again (its frontier is `M1.20`, then `M1.12`) and `M2` is in
+`M0` and `S0` are closed; `M1` is open again (its frontier is `M1.20.1`, then `M1.12`) and `M2` is in
 progress, so `PROGRAM` carries the substrate work those trees lean on. `PROGRAM.8` remains open and
-unblocking.
+unblocking. `PROGRAM.12` is closed: harness-local scratch is ignored, so a clean `git status` means
+what the handoff rule says it means.
 
 ## Decisions
 
@@ -593,6 +693,7 @@ unblocking.
 | `2026-09-13` | `PROGRAM.1` | `scripts/check_doctrines.sh` | `13/13 green` |
 | `2026-09-13` | `PROGRAM.1.1` | `scripts/check_doctrines.sh` staged | `red → green` |
 | `2026-09-13` | `PROGRAM.2` | `make check` + `make gate` + `mdbook build` | `28 tests pass; 13/13 green` |
+| `2026-09-27` | `PROGRAM.12` | `git check-ignore -v`, `git status --porcelain`, `git ls-files .qwen`, `make gate` | `ignore matches at .gitignore:31; status carries no untracked row; 0 tracked paths ignored; 13/13 green` |
 
 ## Commit Log
 
@@ -601,6 +702,7 @@ unblocking.
 | `PROGRAM.1` | `ARCHOGEN-PROGRAM-0002 (leaf PROGRAM.1)` | roadmap seeded into ten trees |
 | `PROGRAM.1.1` | `ARCHOGEN-PROGRAM-0002 (leaf PROGRAM.1)` | code-path seam, same commit |
 | `PROGRAM.2` | `ARCHOGEN-PROGRAM-0003 (leaf PROGRAM.2)` | `archogen` CLI shell, §5.5 exit codes |
+| `PROGRAM.12` | `ARCHOGEN-PROGRAM-0050 (leaf PROGRAM.12)` | harness-local scratch ignored; the stale `.gitignore` pointer to a nonexistent shared `SETUP.md` corrected; `PROGRAM.13`/`.14` logged from the census |
 
 ## Changelog
 
