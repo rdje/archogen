@@ -7,6 +7,7 @@ record must be listed below (the MEMORY-ARCH doctrine check enforces it). New re
 | Record | Type | One-line hook |
 | --- | --- | --- |
 | [`decision_eadl-engine-boundary.md`](decision_eadl-engine-boundary.md) | `decision` | eADL describes functionality and contains no implementation — the three tests, the eight worked cases, and what the boundary rules out |
+| [`decision_emulator-independence-retained.md`](decision_emulator-independence-retained.md) | `decision` | the independent emulator stays: it is the only thing that can contradict a catalog fact, and no timing claim rests on it — `M2.8` reframed as making the platform facts *checked* rather than asserted |
 | [`decision_findings-for-director-review.md`](decision_findings-for-director-review.md) | `project` | six items for the director, **two needing rulings** — §5's five runtime-contract gaps and §6's two behaviour-changing criticisms of the §3.1.1 amendment; §1 (no board) open, §2 (QEMU) resolved, §3–§4 tracked or informational |
 | [`decision_priority-comparison-direction.md`](decision_priority-comparison-direction.md) | `decision` | a numerically lower `priority` is a higher priority — `1` is highest; §15 puts the direction under migration discipline |
 | [`decision_repository-boundary-read-only.md`](decision_repository-boundary-read-only.md) | `decision` | never write into another git repository or a vendored submodule — the rule lived only in conversation, upstream published a boundary-violation disclosure, `PROGRAM.11` owns the gate |

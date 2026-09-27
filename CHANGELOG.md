@@ -4,7 +4,42 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
-## archogen — an external document source, and a moved fact with five uncensused copies
+## archogen — the director ruled: the independent emulator stays, and `M2.8` is reframed
+
+`ARCHOGEN-PROGRAM-0066` (docs). No code changed.
+
+- The director asked why QEMU is needed at all and whether the programme could do without it, heard
+  the argument and its limits, and ruled: **keep it** — §3.2's three environments are not re-scoped.
+  Recorded as `docs/decisions/decision_emulator-independence-retained.md` (+ its `INDEX.md` row) so a
+  future session does not re-litigate it.
+- The argument in one line: archogen is a generator, so half of its correctness is "the emitted
+  artifact works on a machine", and that half is where the **facts** live — a timer's base address, a
+  controller's claim/complete registers, `mtvec` alignment, the callee-saved set. Nothing in the
+  repository can check them, and a wrong one is *quiet*: the hosted device model reads the same
+  catalog, so both sides agree and the test passes, while every WCET derived from a tick that never
+  arrives is wrong by an unknown factor inside an assurance report. `M2.2`'s independently derived
+  reference is the precedent — it agreed over 16 000 events and disagreed in five places, every one a
+  question the roadmap had not answered.
+- The limits are recorded *with* the decision so it is not over-read: QEMU is an independent
+  **implementation**, not independent **truth** (a shared misreading of the ACLINT/PLIC/16550 specs
+  would agree); only ISA/ABI/startup/interrupt mechanics transfer to a board; **no timing claim rests
+  on it** (§3.2 "not a cycle-accurate timing reference", §18 "not a WCET oracle"); and it is
+  prospective — there is no bare-metal generated image yet, since `no-std-build` only proves
+  `rt-core` *compiles* for the target and S0 emits a host crate.
+- `M2.8` reframed accordingly: not "install and pin a tool" but **make the platform facts checked
+  rather than asserted**. Measured while answering — `--dump-dtb` on QEMU 11.1.1 with the pinned
+  options gives RAM `0x8000_0000`/128 MiB, `ns16550a` UART `0x1000_0000`, `sifive,clint0` timer
+  `0x0200_0000`/64 KiB, `sifive,plic-1.0.0` interrupt controller `0x0C00_0000`/6 MiB, and
+  `riscv,isa = "rv64imafdch_…"` — which **offers F and D** while archogen builds `riscv64imac`, a
+  deliberate subset that must be written down so nobody later "fixes" the mismatch by enabling float
+  in generated code. And `docs/targets/riscv-virt-up.dtb.summary.md`, named by `DEVICE_TREE_FIXTURE`
+  at `targets/riscv-virt-up.env:45`, **does not exist** — so the §3.2 agreement check has one side
+  and no other, which is the real first step of that leaf.
+- **Validation:** docs-only; `make gate` → `=== all doctrines green ===` over 13 checks;
+  `KNOWLEDGE_MAP.md` regenerated through its published generator (one added row, the new record). No
+  code touched, so the baseline stays **430 passed / 0 failed**.
+
+## archogen — an external document source, and a moved fact with eight uncensused copies
 
 `ARCHOGEN-PROGRAM-0064` (docs). No code changed.
 
