@@ -794,7 +794,9 @@ mdBook that is the director's window into the project.
   produces either a permanently red CI that people learn to ignore, or a green one that hides the
   gap — and both are worse than the comment currently in `.github/workflows/rust.yml` saying so.
   The emulator step also cannot pass anywhere until `targets/riscv-virt-up.env` loses
-  `TARGET_VERIFIED=no`, which needs an installed QEMU to confirm it (director finding 2).
+  `TARGET_VERIFIED=no`, which `M2.8` confirms against an installed QEMU — the *installation* is no
+  longer the missing piece (director finding 2 is resolved as of `2026-09-27`); the pin and the §3.2
+  device-tree agreement check are.
   Verification: `pending`
   Commit: `pending`
 

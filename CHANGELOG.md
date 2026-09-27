@@ -4,6 +4,55 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — an external document source, and a moved fact with five uncensused copies
+
+`ARCHOGEN-PROGRAM-0064` (docs). No code changed.
+
+- **A read-only external document source is now recorded.**
+  `docs/decisions/reference_external-document-source-chipdoc.md` (+ its `INDEX.md` row): ISA, RISC-V,
+  devicetree and peripheral specifications come from the `chipdoc` corpus, mapped by `ARCHOGEN.md` at
+  its root and queried through that repository's own index rather than through anyone's memory. The
+  checkout location is deliberately **not** recorded here — §12 forbids checkout-specific absolute
+  paths in tracked files — so it is supplied at runtime as `ARCHOGEN_CHIPDOC_ROOT`. Read-only in both
+  directions; a document archogen needs and the corpus lacks is *requested*, operator-relayed, never
+  fetched around it.
+- **Every claim in that mapping was verified against the checkout rather than trusted**, because an
+  external document's own records are data: the index tool answers queries; `risc-v/isa/pinned`
+  holds a `v20260120` snapshot of 73 files across `priv`/`unpriv`/`biblio`; ACLINT, PLIC, AIA,
+  TL16C550C, Devicetree v0.4, the ELF psABI and CMSIS-SVD are present; `sifive/fe310/current`
+  (3 PDFs) and `sifive/hifive1/current` (2 PDFs) are present. Two requests already stand in that
+  repository's ledger on archogen's behalf: `REQ-006` (FE310 / HiFive1 Rev B board documents)
+  **fulfilled**, and `REQ-007` (QEMU `virt` machine documentation and its device-tree bindings)
+  **requested** — the latter a dependency of `M2.8`'s §3.2 agreement check.
+- ⛔ **A moved *fact*, not a moved number: five files still published "QEMU is not installed" after it
+  was.** `scripts/target_emulator.sh --check` reports `found: QEMU emulator version 11.1.1` and exits
+  **`1`** with `NO RELEASE IS PINNED YET`, not `20`. Three were corrected here because each was
+  actively routing someone to work already done: the director-facing register's §2 (marked resolved,
+  its original text kept verbatim — a register that silently edits its own history cannot be
+  audited), its `INDEX.md` hook, and `PROGRAM.10`'s parenthetical. The other two are recorded in
+  `M2.8`'s leaf rather than fixed here, because correcting them *is* that leaf:
+  `docs/targets/first-target.md` and `docs/book/src/targets.md`. No gate compares a prose statement
+  about tool availability with the tool's own verdict; whether a state fact is gateable at all is
+  `PROGRAM.20`'s open question.
+- ⛔ **The register's index hook was under-reporting the decisions it exists to route.** It read
+  "four items for the director: no board, no QEMU, a spine gate with no seam, and a green gate that
+  was blind" — the record carries **six**, and the two it omitted (§5's five runtime-contract gaps,
+  §6's two behaviour-changing criticisms of the §3.1.1 amendment) are exactly the ones `MEMORY.md`
+  flags as waiting on the director. It now names them.
+- ⭐ `REQ-006` being fulfilled changes what `M5`'s blocker *means* without changing its status: the
+  first `board-first` candidate whose §3.2 criteria can be checked against a datasheet now has one,
+  so the documentation half of "a board named without its datasheet in hand is a proposal wearing a
+  fact's clothes" is dischargeable. **Procurement is still the director's decision and `M5` is still
+  blocked** — recorded in the decision record, not in `M5`'s blocker row, because nothing about the
+  blocker changed.
+- `docs/knowledge/a-moved-measurement-needs-a-census-of-its-copies.md` step 1 gains the generalisation:
+  the population a census must cover is not only numbers.
+- **Validation:** docs-only, so `make focused` was re-run for form rather than necessity —
+  `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built`, exit `0`, baseline
+  unchanged at **430 passed / 0 failed**; `make gate` → `=== all doctrines green ===` over 13 checks.
+  `MEMORY.md` sits at its ~50-line budget (50): the new material went to the decision record, and the
+  resume pointer names that layer rather than restating it.
+
 ## archogen — a figure false for 49 commits, and the escape clause that excused it
 
 `ARCHOGEN-M1-0063` (leaf `M1.24`).

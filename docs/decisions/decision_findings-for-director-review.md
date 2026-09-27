@@ -30,14 +30,30 @@ physical-target support. §12 M5 is explicit that M7 cannot claim board support 
 evidence, so the choice surfaces at the release gate whether or not it is made sooner. Making it
 sooner is cheaper.
 
-## 2. QEMU RISC-V is not installed on this machine
+## 2. QEMU RISC-V is not installed on this machine — **RESOLVED `2026-09-27`; the pin remains**
 
-`scripts/target_emulator.sh --check` exits `20`. The configuration is pinned as data and carries
-`TARGET_VERIFIED=no` until an installed QEMU confirms it.
+⛔ **Resolved. The heading and the original text below are kept as the record rather than
+rewritten**, because a register that silently edits its own history cannot be audited. Measured on
+`2026-09-27`: `qemu-system-riscv64` resolves on `PATH`, and `scripts/target_emulator.sh --check`
+reports `found: QEMU emulator version 11.1.1` and exits **`1`** with `NO RELEASE IS PINNED YET
+(QEMU_VERSION_PINNED=none-yet)` — not exit `20`.
 
-**What it blocks:** `M2.8`'s emulator spike and `M4.9`. **Cheap to resolve** — install it, then
-pin the release in `targets/riscv-virt-up.env`. Flagged only because it is a dependency on
-something outside the repository.
+**So the dependency on something outside the repository is discharged, and what remains is inside
+it:** pinning the release in `targets/riscv-virt-up.env`, and the §3.2 check that QEMU's generated
+device tree agrees with the eADL platform fixture. Both are `M2.8`'s own work and need no ruling,
+which is why this item is no longer one of the director's. `M2.8` does have one external dependency
+left: `REQ-007`, the QEMU `virt` machine documentation and its device-tree bindings, requested from
+the source described in [[reference_external-document-source-chipdoc]] and recorded in that
+repository's ledger as `requested`.
+
+Original finding, unchanged:
+
+> `scripts/target_emulator.sh --check` exits `20`. The configuration is pinned as data and carries
+> `TARGET_VERIFIED=no` until an installed QEMU confirms it.
+>
+> **What it blocks:** `M2.8`'s emulator spike and `M4.9`. **Cheap to resolve** — install it, then
+> pin the release in `targets/riscv-virt-up.env`. Flagged only because it is a dependency on
+> something outside the repository.
 
 ## 3. A spine gate has no seam for cross-tree documentation
 

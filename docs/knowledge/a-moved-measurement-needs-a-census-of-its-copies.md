@@ -77,6 +77,14 @@ you to damage correct records.
    (`9030111`) behind all of them. Sweep every shape the figure can take — ratio, size, spelled-out
    number — and state which shape each hit came from. A census that reports "nothing found" without
    naming its pattern has not measured a population.
+   ⭐ **And the population is not only numbers.** A *state fact* has copies too, and they rot the same
+   way. Measured here: **five files** still published "QEMU is not installed" after it was, one of
+   them the register that routes items to the director — whose index hook said "four items" where the
+   record carried six, omitting the two that actually needed rulings. Nothing compared the prose with
+   the tool's own verdict, because a tool's availability is not a figure anyone thinks to gate.
+   A register that cannot mark an item **resolved** without rewriting it will be rewritten instead,
+   so record the resolution above the original text and keep the original verbatim: a register that
+   silently edits its own history cannot be audited.
 2. **Make the surviving live copy a consumer.** One measurement function, shared by the assertion
    and the gate; the gate reads the prose with `include_str!` so a moved or deleted file stops the
    crate compiling instead of silently gating nothing.

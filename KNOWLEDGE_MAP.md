@@ -148,3 +148,4 @@ justifies the split — the rows below appear as that happens.
 - [`decision_runtime-contract-gaps.md`](docs/decisions/decision_runtime-contract-gaps.md)
 - [`decision_s0-retirement.md`](docs/decisions/decision_s0-retirement.md)
 - [`decision_zero-dependency-engine-core.md`](docs/decisions/decision_zero-dependency-engine-core.md)
+- [`reference_external-document-source-chipdoc.md`](docs/decisions/reference_external-document-source-chipdoc.md)
