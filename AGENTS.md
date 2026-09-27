@@ -8,6 +8,7 @@ Claude-specific — the name is just the file one common harness auto-loads. Eve
 it applies to any agent.
 
 The discipline this repo enforces (durable memory, task-tree ownership, strict commits,
-mechanical doctrine gates) is defined in `MEMORY_ARCHITECTURE.md`, `TOOLBOX.md`,
-`DOCTRINE_ENFORCEMENT.md`, and `COMMIT.md`, and is enforced by git hooks + CI — so it
-binds you regardless of which harness you are.
+mechanical doctrine gates, and verifying a claim three ways before publishing it) is defined in
+`MEMORY_ARCHITECTURE.md`, `TOOLBOX.md`, `DOCTRINE_ENFORCEMENT.md`, `COMMIT.md`, and
+`docs/CLAIM_VERIFICATION.md`, and is enforced by git hooks + CI — so it binds you regardless of
+which harness you are.

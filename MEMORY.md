@@ -28,7 +28,10 @@
   design** and is guarded against drift; and both consumers are built behind
   `scripts/linkedspec_eval.sh`. See `docs/feedback/linkedspec/INDEX.md`.
 - **`PROGRAM.11` (medium)** is the other active frontier: the repository-boundary rule in **both**
-  directions — `docs/decisions/decision_repository-boundary-read-only.md`.
+  directions — `docs/decisions/decision_repository-boundary-read-only.md`. The spine is now **five**
+  portable architectures: `docs/CLAIM_VERIFICATION.md` was adopted `2026-09-27` (`PROGRAM.16`) —
+  re-derive · falsify · make durable — and `PROGRAM.18` (medium-high) owns the ten registered
+  controls that have no repeatable RED arm.
 - **⏳ WAITING ON THE DIRECTOR:** two behaviour-changing rulings on `ROADMAP` §3.1.1 — items (a) and
   (b) of §6 in `docs/decisions/decision_findings-for-director-review.md`; `M2.9` needs them.
 - **`M2.9` is checkpointed, not finished:** branch **`wip/m2.9`** (commit `758cbcdd`), resumed with

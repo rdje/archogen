@@ -1,7 +1,8 @@
 # Agent bootstrap (read this first — whatever AI / harness you are: Claude Code, Codex, Gemini, Cursor, Aider, a custom runner, …)
 
 This repository is built on a **portable discipline spine**: durable memory, task-tree
-tracking, a strict commit workflow, and mechanical doctrine enforcement. The spine is
+tracking, a strict commit workflow, mechanical doctrine enforcement, and a claim-verification
+standard for any number someone else will act on. The spine is
 enforced at the **git level** (hooks + CI), so it holds regardless of which agent or
 human is working. Follow it exactly.
 
@@ -14,7 +15,10 @@ human is working. Follow it exactly.
    result: use or build a diagnostic tool FIRST; never guess a root cause.
 4. Read `DOCTRINE_ENFORCEMENT.md` — how every mechanizable doctrine is enforced, and the
    task-acceptance checklist a change MUST pass.
-5. Resume from `MEMORY.md` (the bounded layer-A resume pointer) → the active task-tree's
+5. Read `docs/CLAIM_VERIFICATION.md` — what "checked" means before a number is published:
+   **re-derive · falsify · make durable**, three dimensionally different questions, and a
+   missing leg is stated rather than hidden. §A restates it in this project's terms.
+6. Resume from `MEMORY.md` (the bounded layer-A resume pointer) → the active task-tree's
    frontier under `docs/tasks/`.
 
 ## The non-negotiables

@@ -4,6 +4,47 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the claim-verification policy adopted: the spine is five architectures, not four
+
+`ARCHOGEN-PROGRAM-0058` (leaf `PROGRAM.16`).
+
+- **`docs/CLAIM_VERIFICATION.md` now exists here.** The director's §17 mandates adopting the policy,
+  and it was satisfied only inside a session prompt: `ls docs/CLAIM_VERIFICATION.md` → no such file,
+  and `git grep -lni 'claim verification' -- '*.md'` matched only the `DEV_NOTES.md` note recording
+  the gap. Same shape as `PROGRAM.11` — a rule that lives only in a prompt is enforced nowhere — and
+  it fired the same day: leaf `M1.20.7` carried an unverified premise about `docs/TASK_TREE.md` and
+  caught it only by running the grep.
+- **Copied, not retyped, and the copy was verified rather than read.** The 285-line body came from the
+  read-only source by `cat`, and `tail -n +122 docs/CLAIM_VERIFICATION.md | diff -q - <source>` →
+  identical, both sides digesting to `9f99df25209c43af`. Result: 406 lines / 27 263 bytes. Nothing
+  outside this repository was written to; §12's exception permits copying a policy **in** and forbids
+  editing its source. A hand-copied policy would have been an unverified transcription of the document
+  that defines verification.
+- **Restated locally, as the policy's own §7.6 demands** — a rule you cannot restate in your project's
+  terms is under-specified for you. §A maps the five portable architectures onto this repository and
+  gives each leg archogen's own measured instances: the vacuous `xargs sha` digest that would have made
+  "regenerated" indistinguishable from "UNCHANGED"; the classifier that reported a symptom over a clean
+  run; the leaf premise a grep disproved; the granularity rule evidenced by `cargo metadata`'s member
+  list rather than "the build passed".
+- ⭐ **§7's adoption sweep was run, not skipped, and step 4 found a real gap.** Eighteen registered
+  controls in `scripts/check_*.sh`; **8** carry `--self-test` RED arms and all 8 pass; **10 do not** —
+  including `check_task_acceptance.sh`, the most load-bearing gate here, whose box-scoping was
+  validated once during development and is re-fired by nothing. Filed as `PROGRAM.18`, medium-high,
+  that gate first. Publishing the adoption while burying that result would have been the exact failure
+  the policy describes.
+- Registered in **all three** entrypoints: `CLAUDE.md` (spine sentence + reading order step 5),
+  `AGENTS.md`, and `DOCTRINE_ENFORCEMENT.md`'s E1 discovery list with the sibling question stated.
+  ⛔ `AGENTS.md` was nearly missed: the leaf's first draft asserted it "names the discipline documents
+  generically", and reading it showed an **explicit** list at line 11 — so a fifth spine document
+  absent from it would be invisible to every harness that reads `AGENTS.md` instead of `CLAUDE.md`.
+  The claim was written from the file as remembered, not as it is; leg 1 applies to a leaf's own prose.
+- §5A's claim tag is adopted **by mapping**: this repository's tag is the leaf acceptance box, already
+  gated by `TASK-ACCEPTANCE`, so no second syntax was added. The policy is deliberately **not**
+  registered as a doctrine — its mechanizations are a separate decision, and adding a gate nothing
+  needs yet is how a registry accumulates checks nobody can explain.
+- Validation: `make focused` → exit `0`; `cargo test --all` → **421 passed, 0 failed** over 36 suites;
+  all 13 doctrines green, `DOCPATH` and `TABLE-ARITY-RATCHET` included on the new file.
+
 ## archogen — the LinkedSpec evaluation is closed: register reconciled by census
 
 `ARCHOGEN-LINKEDSPEC-0057` (leaf `M1.20.7`, closing `M1.20`).

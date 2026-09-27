@@ -37,7 +37,7 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM`
   Status: `active`
   Goal: own the program spine
-  Children: `PROGRAM.1` … `PROGRAM.17`, plus `PROGRAM.1.1` and `PROGRAM.2.1`
+  Children: `PROGRAM.1` … `PROGRAM.18`, plus `PROGRAM.1.1` and `PROGRAM.2.1`
 
 - ID: `PROGRAM.1`
   Status: `done`
@@ -457,7 +457,7 @@ mdBook that is the director's window into the project.
   Commit: `pending`
 
 - ID: `PROGRAM.16`
-  Status: `pending`
+  Status: `done`
   Goal: adopt the director-mandated **claim-verification policy** (§17 of the standing session
   instructions) into this repository under a repository-relative path, so the rule survives the
   session that carries it — the same failure `PROGRAM.11` was opened for, arriving from the other
@@ -479,8 +479,75 @@ mdBook that is the director's window into the project.
   the leaf records which existing practices here already satisfy the policy and which it changes.
   Priority: **high** — it is the "rule enforced nowhere" shape this tree exists to eliminate, and the
   session that must follow it is the one that cannot see whether the last one did.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the acceptance checklist below.
+  Commit: `ARCHOGEN-PROGRAM-0058 (leaf PROGRAM.16)`
+  promotion: declined (the lesson's canonical home is the adopted standard itself — §7 of
+  `docs/CLAIM_VERIFICATION.md` *is* the adoption checklist, and it is now in this repository and in the
+  bootstrap reading order, which is more discoverable than a knowledge card restating it. The local
+  finding the sweep produced is owned as work, not prose: `PROGRAM.18`.)
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: the repository's own bootstrap lists four spine
+    documents and the policy is not among them — `grep -n 'CLAIM' CLAUDE.md` → no match at the parent
+    commit — and `git grep -ni 'portable architecture' -- '*.md'` → no match, `rc=1`, so nothing here
+    even had the vocabulary the policy uses to describe itself as the fifth. WHY it matters: the
+    policy is the one that governs whether the *other four* are trustworthy, since a gate built on an
+    unverified measurement enforces the wrong thing precisely and forever. It had been followed in
+    practice all day — every leaf box cites a command, every new instrument carries RED arms — and
+    followed for exactly the reason `PROGRAM.11` was opened for: it lived in a session prompt, so
+    nothing in the tree would have noticed if a session stopped.
+  - [x] **ADDRESSED (verified)** — `docs/CLAIM_VERIFICATION.md` now exists, 406 lines / 27 263 bytes:
+    a 121-line adoption record (provenance, the §A local restatement, the §B sweep) followed by the
+    policy body. **The body was copied, not retyped, and the copy was verified rather than read:**
+    `tail -n +122 docs/CLAIM_VERIFICATION.md | diff -q - <source>` → identical, `rc=0`, and both sides
+    digest to `9f99df25209c43af…`. A hand-copied policy would have been an unverified transcription of
+    the document that defines verification. Registered where a reader meets it: `CLAUDE.md`'s spine
+    sentence now names it and its reading order gains step 5, and `DOCTRINE_ENFORCEMENT.md`'s E1
+    discovery list carries it with the sibling relationship stated. Nothing outside this repository was
+    written to — the source was opened read-only, and `git -C <source-repo> status` was never invoked
+    with a write intent.
+  - [x] **NO REGRESSION** — the adoption adds one document and edits three; it changes no check, no
+    gate and no build input. `bash scripts/check_doctrines.sh` → `=== all doctrines green ===` on the
+    staged set, still 13 doctrines (the policy is deliberately **not** registered as a doctrine: its
+    §5 mechanizations are a separate decision, and adding a gate that nothing needs yet is how a
+    registry accumulates checks nobody can explain). `make focused` → exit `0`; `cargo test --all` →
+    **421 passed, 0 failed** over 36 suites. The new file carries no checkout-specific absolute path
+    (`DOCPATH` green is the proof, and the source's own examples are domain-free), and
+    `check_table_arity`'s ratchet accepts its three new tables because every row matches its header.
+  - [x] **FIX** — copy plus restate plus sweep, which is what §7 of the policy itself asks of an
+    adopter, in its own order. §A restates all three legs in archogen's terms with **this
+    repository's** measured instances rather than the source's — the vacuous `xargs sha` digest that
+    would have made "regenerated" indistinguishable from "UNCHANGED", the classifier that reported a
+    symptom over a clean run, the leaf premise that a grep disproved — because §7.6 says a rule you
+    cannot restate in your own terms is under-specified for you. §B records the sweep, and step 5 is
+    adopted **by mapping**: the leaf acceptance box *is* this repository's claim tag and is already
+    gated, so a second inline tag syntax is deliberately not added.
+    ⛔ **The sweep found a real gap and it was filed, not footnoted.** Step 4 — fire every control —
+    measured 18 registered checks, 8 with RED arms (all passing) and **10 without**, including
+    `check_task_acceptance.sh`, whose box-scoping was validated once during development and is
+    re-fired by no arm. `PROGRAM.18` owns it, medium-high, that gate first. Publishing the adoption
+    while hiding that result would have been the exact failure the policy describes.
+    ⛔ **`GAP-CLAIM-CENSUS` blocked the first commit attempt, correctly.** The frontier row summarising
+    `PROGRAM.18` said the property "is re-fired by nothing" — a whole-tree quantifier in a section
+    carrying no census command, which is exactly the shape that doctrine exists to stop, and the census
+    was one section away in the leaf. Reworded to name the missing `--self-test` arm: the same fact,
+    stated as a count rather than as an absolute, and the count is the thing the leaf measured.
+  - [x] **LOCKSTEP** — `docs/CLAIM_VERIFICATION.md` (new); `CLAUDE.md` (spine sentence + reading
+    order); `AGENTS.md`; `DOCTRINE_ENFORCEMENT.md` (E1 list + the sibling question); this leaf,
+    `PROGRAM.18`, the frontier, the Children line and both logs; `MEMORY.md`, `LIVE_STATUS.md`,
+    `CHANGELOG.md`, `DEV_NOTES.md`.
+    ⛔ **`AGENTS.md` was nearly missed, and the draft of this box is why it is recorded.** The first
+    version of this leaf asserted that `AGENTS.md` "names the discipline documents generically, so it
+    inherits the addition — verified by reading it rather than assuming". Reading it says the
+    opposite: it carries an **explicit** list — `grep -n 'MEMORY_ARCHITECTURE' AGENTS.md` → line 11,
+    `MEMORY_ARCHITECTURE.md`, `TOOLBOX.md`, `DOCTRINE_ENFORCEMENT.md`, and `COMMIT.md` — so a fifth
+    spine document that is not added there is invisible to every harness that reads `AGENTS.md`
+    instead of `CLAUDE.md`. The list now carries `docs/CLAIM_VERIFICATION.md`. The claim was written
+    from the shape of the file remembered at session start, not from the file; leg 1 applies to a
+    leaf's own prose about the repository exactly as it applies to a number.
+    No book chapter changes: the book documents eADL and the engine, and this is spine documentation —
+    `git grep -ln 'CLAIM_VERIFICATION' -- docs/book` → no match, `rc=1`.
 
 - ID: `PROGRAM.17`
   Status: `pending`
@@ -508,6 +575,33 @@ mdBook that is the director's window into the project.
   Priority: **medium** — nothing is unreadable today and the two documents a resuming session reads
   first are both capped and enforced. But "append-only by design" is a decision nobody has written
   down, and an unwritten decision is the one a future session quietly reverses.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `PROGRAM.18`
+  Status: `pending`
+  Goal: give the registered doctrine controls the repeatable RED arms they lack, so that "is this gate
+  known to work?" stops depending on a validation somebody ran once while writing it.
+  Reproduce / issue: measured by the §7.4 sweep of the claim-verification adoption (`PROGRAM.16`,
+  `2026-09-27`): `scripts/check_*.sh` → **18** files, **8** carry `--self-test` with RED arms and all
+  8 pass, **10 do not** — `check_docpaths`, `check_doctrines`, `check_doctrines.project`,
+  `check_frozen_evaluation`, `check_memory_architecture`, `check_no_background_jobs`,
+  `check_readme_stability`, `check_task_acceptance`, `check_task_tree_ownership`,
+  `check_waiver_routing`. THE GAP: ten of eighteen controls have never been observed failing by a
+  repeatable arm, and they include the most load-bearing gate in the repository.
+  `check_task_acceptance.sh`'s own header records that its box-scoping was "priced against a real
+  corpus" and validated against two measured leakage holes — real validation, and **one-off**: nothing
+  re-fires it, so an edit could silently break the property and every commit would still pass. Census
+  command: `for s in scripts/check_*.sh; do grep -q -- '--self-test' "$s" && echo yes || echo "$s"; done`.
+  Acceptance: each of the ten either gains a `--self-test` carrying at least one RED arm that fails on
+  a seeded breach and passes on the real tree, or is recorded in `DOCTRINE_ENFORCEMENT.md` as needing
+  none with the reason — the two drivers are candidates, since they only run the others;
+  `check_task_acceptance` is done **first**, and its arms must include the two leakage holes its header
+  names, so the property it was written for is the property under test; every arm is run and its output
+  recorded in the leaf; the doctrine count and the registry stay accurate; `make gate` is green before
+  and after.
+  Priority: **medium-high** — a gate nobody has seen fail is a gate whose failure mode is unknown, and
+  this repository's whole claim is that its discipline is mechanical rather than remembered.
   Verification: `pending`
   Commit: `pending`
 
@@ -731,13 +825,18 @@ roadmap item X live?".
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
 | 1 | `PROGRAM.11` | `active` | the repository-boundary doctrine, **in both directions**. The rule was nowhere in the committed tree, which is how an *inbound* crossing got recorded backwards in a durable record. Priority medium: the outbound half is preventive, the inbound half fired once and was handled correctly |
-| 2 | `PROGRAM.16` | `pending` | **high** — the director-mandated claim-verification policy (§17) exists only inside a session prompt: `docs/CLAIM_VERIFICATION.md` does not exist here. Same shape as `PROGRAM.11`, arriving from the other direction |
+| 2 | `PROGRAM.18` | `pending` | **medium-high** — ten of eighteen registered controls carry no repeatable `--self-test` RED arm, `check_task_acceptance.sh` among them: its box-scoping was validated once during development and no arm re-fires it. Found by the claim-verification adoption's §7.4 sweep |
 | 3 | `PROGRAM.5` | `pending` | the §15/§19 dependency and evidence ledger — every external source claim in the book should resolve to a row, and `BOOK-ANCHORS` now checks the *internal* ones |
 | 4 | `PROGRAM.9` | `pending` | the extended tier reports `incomplete` on every run until its three steps exist |
 | 5 | `PROGRAM.6` | `pending` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |
 | 6 | `PROGRAM.13` | `pending` | twelve closed leaves in `BOOTSTRAP`, `M2` and this tree do not name their own commit — backfill both logs from git, then `PROGRAM.14` gates it so the gap cannot reopen |
 | 7 | `PROGRAM.15` | `pending` | a feedback register row that contradicts its own issue sub-tree passes every gate today; five state transitions in six commits held only by hand-editing and a manual census |
 | 8 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
+
+`PROGRAM.16` is closed: the claim-verification policy is adopted as `docs/CLAIM_VERIFICATION.md`,
+copied verbatim and diff-verified against its read-only source, restated in this project's terms as
+its own §7.6 requires, and registered in all three entrypoints — `CLAUDE.md`, `AGENTS.md` and
+`DOCTRINE_ENFORCEMENT.md`'s E1 list. The spine is five portable architectures, not four.
 
 `M0` and `S0` are closed; `M1` is open again (its LinkedSpec evaluation is closed, so its frontier is
 `M1.12`, the language reference) and `M2` is in
@@ -781,6 +880,7 @@ what the handoff rule says it means.
 | `2026-09-13` | `PROGRAM.1.1` | `scripts/check_doctrines.sh` staged | `red → green` |
 | `2026-09-13` | `PROGRAM.2` | `make check` + `make gate` + `mdbook build` | `28 tests pass; 13/13 green` |
 | `2026-09-27` | `PROGRAM.12` | `git check-ignore -v`, `git status --porcelain`, `git ls-files .qwen`, `make gate` | `ignore matches at .gitignore:31; status carries no untracked row; 0 tracked paths ignored; 13/13 green` |
+| `2026-09-27` | `PROGRAM.16` | the policy copied and the copy **diff-verified** against its read-only source rather than read; the §7 adoption sweep run against this repository; all three entrypoints re-grepped afterwards; tiers and the gate re-run | body `diff -q` identical, digest `9f99df25209c43af` on both sides; 406 lines / 27 263 bytes; sweep found 18 checks / 8 with RED arms / **10 without** → `PROGRAM.18`; `AGENTS.md` line 11 carries an explicit list, so it was edited after the leaf's first draft claimed otherwise; 13 doctrines green; `make focused` exit `0`, 421 passed / 0 failed |
 
 ## Commit Log
 
@@ -790,6 +890,7 @@ what the handoff rule says it means.
 | `PROGRAM.1.1` | `ARCHOGEN-PROGRAM-0002 (leaf PROGRAM.1)` | code-path seam, same commit |
 | `PROGRAM.2` | `ARCHOGEN-PROGRAM-0003 (leaf PROGRAM.2)` | `archogen` CLI shell, §5.5 exit codes |
 | `PROGRAM.12` | `ARCHOGEN-PROGRAM-0050 (leaf PROGRAM.12)` | harness-local scratch ignored; the stale `.gitignore` pointer to a nonexistent shared `SETUP.md` corrected; `PROGRAM.13`/`.14` logged from the census |
+| `PROGRAM.16` | `ARCHOGEN-PROGRAM-0058 (leaf PROGRAM.16)` | the claim-verification policy adopted as `docs/CLAIM_VERIFICATION.md` — copied verbatim and diff-verified, restated locally per its own §7.6, registered in all three entrypoints; its §7.4 sweep found ten controls with no RED arm → `PROGRAM.18` |
 
 ## Changelog
 

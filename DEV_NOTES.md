@@ -1,5 +1,41 @@
 # DEV_NOTES.md
 
+## _(2026-09-27)_ — adopting a standard means running its adoption checklist
+
+- `PROGRAM.16` adopted the claim-verification policy as `docs/CLAIM_VERIFICATION.md`. The director's
+  §17 mandated it and it was satisfied nowhere in the tree: `ls docs/CLAIM_VERIFICATION.md` → no such
+  file, and the only mention of the phrase was the `DEV_NOTES` note recording the gap. Same shape as
+  `PROGRAM.11` — a rule that lives only in a session prompt is enforced nowhere — and it fired the
+  same day, when `M1.20.7` carried an unverified premise into its reconciliation.
+- ⭐ **The body was copied, not retyped, and the copy was verified rather than read:**
+  `tail -n +122 docs/CLAIM_VERIFICATION.md | diff -q - <source>` → identical, both sides digesting to
+  `9f99df25209c43af`. A hand-copied policy would have been an unverified transcription of the document
+  that defines verification — the leg-1 breach committed in the act of adopting leg 1.
+- ⭐ **The finding was in the standard's own adoption checklist, not in the standard.** §7 step 4 says
+  "fire every control: run each against a known-bad input and confirm it goes RED". Run against this
+  repository: **18** registered checks, **8** with `--self-test` RED arms (all passing), **10 without** —
+  including `check_task_acceptance.sh`, the most load-bearing gate here, whose box-scoping its own
+  header records as "priced against a real corpus". That validation was real and one-off; nothing
+  re-fires it, so an edit could silently break the property and every commit would still pass. Filed as
+  `PROGRAM.18`, medium-high, that gate first. Adopting a standard by copying it would have found
+  nothing; adopting it by *running* it found the thing that matters.
+- ⛔ **Leg 1 applies to a leaf's own prose about the repository.** This leaf's first draft asserted
+  that `AGENTS.md` "names the discipline documents generically, so it inherits the addition — verified
+  by reading it rather than assuming". Reading it says the opposite: an **explicit** list at line 11.
+  Had the draft been committed, a fifth spine document would have been invisible to every harness that
+  reads `AGENTS.md` instead of `CLAUDE.md`, and the record would have claimed the check was done.
+- §5A's claim tag was adopted **by mapping** rather than by addition: this repository's tag is the leaf
+  acceptance box, already gated by `TASK-ACCEPTANCE`. Two syntaxes for one obligation is how a rule
+  stops being followed. The policy is also deliberately **not** registered as a doctrine — its
+  mechanizations are a separate decision, and a registry that accumulates gates nothing needs yet ends
+  up with checks nobody can explain.
+- Measured: `make focused` exit `0`; `cargo test --all` → **421 passed, 0 failed** over 36 suites;
+  13 doctrines green including `DOCPATH` and `TABLE-ARITY-RATCHET` on the new 406-line file.
+- promotion: declined (the lesson's canonical home is the adopted standard itself — §7 of
+  `docs/CLAIM_VERIFICATION.md` *is* the checklist, and it is now in the repository and in the bootstrap
+  reading order, which is more discoverable than a knowledge card restating it. The local finding it
+  produced is owned as work: `PROGRAM.18`.)
+
 ## _(2026-09-27)_ — reconcile a pointer record by census, and check a leaf's own premise first
 
 - `M1.20.7` closed the LinkedSpec evaluation. The register is a **pointer** and the seven issue

@@ -7,7 +7,10 @@ every human, identically.
 ## Defense in depth (four layers)
 
 - **E1 — discovery.** The doctrine docs: this file, `README.md`, `MEMORY_ARCHITECTURE.md`,
-  `TOOLBOX.md`, `COMMIT.md`, and `docs/decisions/`. Where an agent learns the rules.
+  `TOOLBOX.md`, `COMMIT.md`, `docs/CLAIM_VERIFICATION.md`, and `docs/decisions/`. Where an agent
+  learns the rules. ⭐ This file asks *"is this rule enforced?"*; `docs/CLAIM_VERIFICATION.md` asks
+  *"is this number earned?"* — and that question comes first, because a gate built on an unverified
+  measurement enforces the wrong thing precisely and forever.
 - **E2 — self-check.** `scripts/check_doctrines.sh` (the driver) + each registered
   `scripts/check_*.sh`. The single source of truth for "which doctrine is enforced by
   what". Runnable by hand anytime.
