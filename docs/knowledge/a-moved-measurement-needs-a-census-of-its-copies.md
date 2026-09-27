@@ -78,13 +78,24 @@ you to damage correct records.
    number — and state which shape each hit came from. A census that reports "nothing found" without
    naming its pattern has not measured a population.
    ⭐ **And the population is not only numbers.** A *state fact* has copies too, and they rot the same
-   way. Measured here: **five files** still published "QEMU is not installed" after it was, one of
-   them the register that routes items to the director — whose index hook said "four items" where the
-   record carried six, omitting the two that actually needed rulings. Nothing compared the prose with
-   the tool's own verdict, because a tool's availability is not a figure anyone thinks to gate.
-   A register that cannot mark an item **resolved** without rewriting it will be rewritten instead,
-   so record the resolution above the original text and keep the original verbatim: a register that
-   silently edits its own history cannot be audited.
+   way. Measured here: **eight files** published "QEMU is not installed" after it was — including the
+   register that routes items to the director, whose index hook said "four items" where the record
+   carried six and omitted the two that actually needed rulings, and a book chapter whose tier
+   transcript was wrong in *shape* (`incomplete`, exit `20`) and not merely in fact (the tier now
+   reports `failed`, exit `1`). Nothing compared the prose with the tool's own verdict, because a
+   tool's availability is not a figure anyone thinks to gate. A register that cannot mark an item
+   **resolved** without rewriting it will be rewritten instead, so record the resolution above the
+   original text and keep the original verbatim: a register that silently edits its own history cannot
+   be audited.
+   ⛔ **Census the concept, not the phrasings — and this card's own author got it wrong twice in two
+   commits.** The first count of that population was "five files", produced by grepping for wordings
+   already seen (`not installed|no QEMU|unavailable|install it, then re-run|…`). It could not see
+   `currently absent on this machine`, and it could not see `UNAVAILABLE — not on PATH` inside a
+   fenced console block. The bounded population was available the whole time:
+   `git grep -il <the subject>` → 24 files, each then classified as *live*, *conditional*, or
+   *record*. **Enumerate the files that could state the fact, not the wordings it might use.** A
+   phrasing census under-reports silently, and an under-reported population reads exactly like a
+   finished one.
 2. **Make the surviving live copy a consumer.** One measurement function, shared by the assertion
    and the gate; the gate reads the prose with `include_str!` so a moved or deleted file stops the
    crate compiling instead of silently gating nothing.

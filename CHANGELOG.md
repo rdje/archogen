@@ -24,16 +24,19 @@ this repository was created from, not archogen's own history.
   repository's ledger on archogen's behalf: `REQ-006` (FE310 / HiFive1 Rev B board documents)
   **fulfilled**, and `REQ-007` (QEMU `virt` machine documentation and its device-tree bindings)
   **requested** — the latter a dependency of `M2.8`'s §3.2 agreement check.
-- ⛔ **A moved *fact*, not a moved number: five files still published "QEMU is not installed" after it
-  was.** `scripts/target_emulator.sh --check` reports `found: QEMU emulator version 11.1.1` and exits
+- ⛔ **A moved *fact*, not a moved number: eight files published "QEMU is not installed" after it
+  was.** *(This entry first said "five files"; the count was corrected on `2026-09-28` — see the
+  correction note at the end of this entry.)* `scripts/target_emulator.sh --check` reports
+  `found: QEMU emulator version 11.1.1` and exits
   **`1`** with `NO RELEASE IS PINNED YET`, not `20`. Three were corrected here because each was
   actively routing someone to work already done: the director-facing register's §2 (marked resolved,
   its original text kept verbatim — a register that silently edits its own history cannot be
-  audited), its `INDEX.md` hook, and `PROGRAM.10`'s parenthetical. The other two are recorded in
+  audited), its `INDEX.md` hook, and `PROGRAM.10`'s parenthetical. The other five are recorded in
   `M2.8`'s leaf rather than fixed here, because correcting them *is* that leaf:
-  `docs/targets/first-target.md` and `docs/book/src/targets.md`. No gate compares a prose statement
-  about tool availability with the tool's own verdict; whether a state fact is gateable at all is
-  `PROGRAM.20`'s open question.
+  `docs/targets/first-target.md`, `docs/book/src/targets.md`, `docs/book/src/verification.md`, and
+  the Blockers sections of `docs/tasks/M0.md` and `docs/tasks/M4.md`. No gate compares a prose
+  statement about tool availability with the tool's own verdict; whether a state fact is gateable at
+  all is `PROGRAM.20`'s open question.
 - ⛔ **The register's index hook was under-reporting the decisions it exists to route.** It read
   "four items for the director: no board, no QEMU, a spine gate with no seam, and a green gate that
   was blind" — the record carries **six**, and the two it omitted (§5's five runtime-contract gaps,
@@ -52,6 +55,19 @@ this repository was created from, not archogen's own history.
   unchanged at **430 passed / 0 failed**; `make gate` → `=== all doctrines green ===` over 13 checks.
   `MEMORY.md` sits at its ~50-line budget (50): the new material went to the decision record, and the
   resume pointer names that layer rather than restating it.
+- ⛔ **Correction, `2026-09-28` — this entry's own count was wrong, and how it was wrong is the
+  finding.** It said "five files". The census behind that number enumerated **phrasings already
+  seen** (`not installed|no QEMU|unavailable|install it, then re-run|as soon as QEMU is
+  installed|needs an installed QEMU`), which cannot see `currently absent on this machine`
+  (`docs/tasks/M4.md`) or `UNAVAILABLE — not on PATH` inside a fenced console block
+  (`docs/book/src/verification.md`), and which missed `docs/tasks/M0.md`'s Blockers section entirely.
+  Re-measured by **concept** instead — `git grep -il qemu` → 24 files, each classified as *live*,
+  *conditional* or *record* — the population is **eight**: the three corrected here plus five recorded
+  in `M2.8`'s leaf, whose table now carries all of them with the classification of every file that was
+  deliberately left alone. This is the second phrasing-bounded under-count in two commits, in the
+  entry that documents the first, and
+  `docs/knowledge/a-moved-measurement-needs-a-census-of-its-copies.md` step 1 now says so: enumerate
+  the files that could state the fact, not the wordings it might use.
 
 ## archogen — a figure false for 49 commits, and the escape clause that excused it
 
