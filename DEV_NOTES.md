@@ -1,5 +1,32 @@
 # DEV_NOTES.md
 
+## _(2026-09-27)_ — "pin the revision the notice names" was half a rule
+
+- `M1.19` pinned LinkedSpec's named publication `fd3e328d5` and declined `origin/main`, reasoning
+  that an unnamed revision would make a later `verified` unattributable. The director overruled it.
+  ⛔ **The reasoning was half right, which is why it was wrong**: attributability requires a *named*
+  revision, not the *older* one. Naming the head satisfies it equally. `M1.19.1` pins
+  `2ac834913d85c32f532be9b0aab63644838a577a`, which is `origin/main`.
+- ⭐ The conservative choice had a concrete cost. The two skipped commits included `8b5b5ffd8`,
+  carrying the vendor's own correction for the inbound boundary write — a new read-only rule, an
+  incident record, and an unapplied reverse patch named after *our* commit `82ee99a`. Pinning the
+  older revision excluded the remedy for the one misbehaviour that had actually fired.
+- The move was made safe by measuring rather than arguing:
+  `git diff --name-only fd3e328d5..2ac834913` → 25 paths (nine root documents, sixteen under
+  `docs/`), and filtering that for `\.spec$|specs/|\.rs$|Cargo` → **NONE**. So the code and the
+  specifications the five reports concern are identical at both revisions, and the evidence cited at
+  `fd3e328d5` still describes what we pin. All eight remedy commits were confirmed ancestors with
+  `git merge-base --is-ancestor`.
+- ⚠️ One real consequence surfaced by the same diff: `docs/linkedspec-book/src/public-api/integration-rust.md`
+  — the pinned Rust integration guide the notice directs consumers to — *is* among the changed
+  documents. `M1.20` must follow the guide **at head**, not the one linked in the notice. A
+  docs-only delta is not a no-op delta when the docs are the integration contract.
+- ⭐ The nested RGX pin was identical at both revisions (`git ls-tree <rev> rgx`), so this move cost
+  seconds while `M1.19`'s cost minutes cloning 2.1 GB. Check whether a nested pin moved before
+  re-running a long sync.
+- `make focused` → exit `0` and `cargo test --all` → **421 passed, 0 failed** at the new pin. Still
+  **adoption, not acceptance**: no LinkedSpec reproducer has been re-run, so no issue state changed.
+
 ## _(2026-09-27)_ — correction: the boundary crossing was inbound, and the error reached a durable record
 
 - ⛔ **The entry below got the direction wrong, and this corrects it rather than deleting it.**

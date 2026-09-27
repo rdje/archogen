@@ -73,8 +73,12 @@ A rule that lives only in a prompt is weaker than either.
    `docs/feedback/<vendor>/` instead, which is what the LS-001 … LS-007 register is for.
 2. **A pin move is consumption, and it is owned.** Moving `vendor/<submodule>` to a commit the
    upstream has published is permitted on the director's instruction, is recorded in a task-tree
-   leaf, and is committed **in this repository** (the gitlink is our file, not theirs). Leaf
-   `M1.19` owns the LinkedSpec move to `fd3e328d5dd5c80981a1c3b8496a27270291f7b8`.
+   leaf, and is committed **in this repository** (the gitlink is our file, not theirs). Leaves
+   `M1.19` → `M1.19.1` own the LinkedSpec move, now pinned at the vendor's **latest published head**
+   `2ac834913d85c32f532be9b0aab63644838a577a`. ⭐ The director's standing preference, recorded here
+   so it is not re-litigated: **pin the latest published work**, unless a report turns out not to be
+   properly fixed or a different misbehaviour appears — and measure the delta before moving, rather
+   than assuming it is safe.
 3. **Submodules stay black boxes** (§20 of the director's directives): integrate through their
    published instructions, public APIs and contracts; do not inspect or reconstruct their
    internals, even though the source is on disk. Having access is not permission.

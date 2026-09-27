@@ -18,9 +18,11 @@
   adopted pin, through LinkedSpec's public route (`sexpr_file` / `SExprDocumentV1.spec` for the
   document requirements; RGX's public bootstrap for LS-004). Set `verified` only where archogen's
   own rerun shows the defect gone; a report that still fails stays `fixed-upstream`.
-- **LinkedSpec pin adopted** `fd3e328d5dd5c80981a1c3b8496a27270291f7b8` (leaf `M1.19`,
-  `2026-09-27`), nested RGX `f6e5acdc9`. ⛔ Adoption is **not** acceptance: no LinkedSpec reproducer
-  was re-run, so no issue state changed. See `docs/feedback/linkedspec/INDEX.md`.
+- **LinkedSpec pin = latest published head** `2ac834913d85c32f532be9b0aab63644838a577a` (leaves
+  `M1.19` → `M1.19.1`, `2026-09-27`), nested RGX `f6e5acdc9`; it contains every remedy commit.
+  ⛔ Adoption is **not** acceptance: no LinkedSpec reproducer was re-run, so no issue state changed.
+  ⚠️ The Rust integration guide changed between `fd3e328d5` and head — `M1.20` follows the guide
+  **at `2ac834913`**. See `docs/feedback/linkedspec/INDEX.md`.
 - **`PROGRAM.11` (medium):** the repository boundary was nowhere in the committed tree, in **either**
   direction. LinkedSpec's agent once wrote `.md` files *into this repo* to deliver its fix notice —
   inbound, handled correctly by `M1.18`, corrected upstream, not expected to recur. Rule + audit:

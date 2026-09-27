@@ -12,7 +12,7 @@ observation.
 | Upstream | `https://github.com/rdje/linkedspec` |
 | Component under test | Rust backend (`linkedspec-runtime`) and the shipped `specs/Lispish.spec` |
 | Revision measured | LinkedSpec `ad290bdb4`, RGX `8763a0e6`, PGEN `db6f8c68` |
-| Revision adopted | LinkedSpec `fd3e328d5dd5c80981a1c3b8496a27270291f7b8`, RGX `f6e5acdc99720349d1e3ecef9f821f365c4db19c` — pinned `2026-09-27` by leaf `M1.19`; the observations below were **not** taken at this revision |
+| Revision adopted | LinkedSpec `2ac834913d85c32f532be9b0aab63644838a577a` — the **latest published head** — with RGX `f6e5acdc99720349d1e3ecef9f821f365c4db19c`. Pinned `2026-09-27` by leaves `M1.19` → `M1.19.1`, and measured **documentation-only** ahead of the notice's `fd3e328d5` (no `.rs`, `Cargo.*` or `specs/` path differs), so the fixes under test are the same code. The observations below were **not** taken at this revision |
 | Toolchain | rustc 1.95.0, Darwin arm64 |
 | Reported by | archogen — first consumer of the Rust backend |
 | Vendored at | `vendor/linkedspec` (development-time evaluation only; no crate depends on it) |
@@ -25,8 +25,16 @@ and measurement; none is marked `verified` by this notice. Original measured rev
 last-verified dates below are unchanged. See the [LS-004 completion notice](issues/LS-004-bootstrap-false-success/UPSTREAM.md)
 and each issue's dated response. LS-006 stays withdrawn; LS-007 stays no-action.
 
-**Adopted `2026-09-27`** (leaf `M1.19`): `vendor/linkedspec` is now pinned at that publication, with
-its nested RGX submodule at the revision it names, through the vendor's published adoption route.
+**Adopted `2026-09-27`** (leaves `M1.19` → `M1.19.1`): `vendor/linkedspec` is pinned at LinkedSpec's
+**latest published head** `2ac834913`, with its nested RGX submodule at `f6e5acdc9`, through the
+vendor's published adoption route. The notice named `fd3e328d5`; the director ruled that the latest
+pushed work should be pinned, and the delta between the two was measured path by path before moving
+— nine root documents and sixteen files under `docs/`, with **no** `.rs`, `Cargo.*` or `specs/` path
+among them. The code under test is therefore identical at both revisions, and `fd3e328d5` remains an
+ancestor, so the evidence the notice cites still resolves.
+⚠️ One consequence: the pinned Rust integration guide
+(`docs/linkedspec-book/src/public-api/integration-rust.md`) *is* among the changed documents, so
+`M1.20` must follow the guide **at `2ac834913`**, not the one the notice links at `fd3e328d5`.
 Adoption is **not** acceptance — no reproducer has been re-run at this revision, so every state in
 the register below is unchanged and still reads `fixed-upstream`. Re-measurement is owned by leaf
 `M1.20`, which is the only thing that may move a row to `verified`.

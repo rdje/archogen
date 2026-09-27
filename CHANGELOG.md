@@ -4,6 +4,37 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — pin LinkedSpec's latest published head
+
+`ARCHOGEN-LINKEDSPEC-0048` (leaf `M1.19.1`).
+
+- Move `vendor/linkedspec` from the notice's named publication `fd3e328d5` to LinkedSpec's **latest
+  published head** `2ac834913d85c32f532be9b0aab63644838a577a`, on the director's ruling that the
+  latest pushed work is what should be pinned unless a report proves unfixed or a new misbehaviour
+  appears. `git submodule status` now equals `origin/main`.
+- ⭐ **Every remedy commit is an ancestor of it — measured, not assumed.** `git merge-base
+  --is-ancestor <c> HEAD` returns YES for all eight: `8259719f8`, `effe3e7b2`, `01b04138a`,
+  `a8d34c845`, `4e2598d1e`, `fd3a2444e`, `fd3e328d5`, `8b5b5ffd8`. All five fixes are in, plus
+  LinkedSpec's own boundary correction.
+- ⛔ **`M1.19`'s reasoning was half right, which is why it was wrong**, and is marked superseded
+  rather than deleted: attributability does require a *named* revision, but nothing required the
+  *older* one. Skipping `8b5b5ffd8` had excluded the remedy for the one misbehaviour that actually
+  fired — the conservative pin was the less safe one.
+- ⭐ The delta was measured before moving: `git diff --name-only fd3e328d5..2ac834913` → 25 paths,
+  nine root documents and sixteen under `docs/`, and filtering for `\.spec$|specs/|\.rs$|Cargo` →
+  **NONE**. The Rust backend and the specifications the five reports concern are identical at both
+  revisions, so the evidence the notice cites at `fd3e328d5` still describes what archogen pins.
+- ⚠️ One consequence for `M1.20`: the pinned Rust integration guide
+  (`docs/linkedspec-book/src/public-api/integration-rust.md`) *is* among the changed documents, so
+  the re-measurement follows the guide **at `2ac834913`**. A docs-only delta is not a no-op delta
+  when the docs are the integration contract.
+- Validation: nested `rgx` still `f6e5acdc99720349d1e3ecef9f821f365c4db19c`, matching
+  `git ls-tree HEAD rgx` — identical at both revisions, so no re-sync was needed; vendored worktree
+  clean; `make focused` → `tier focused: passed — 3 passed, 0 failed`, exit `0`;
+  `cargo test --all` → **421 passed, 0 failed** over 36 suites. Still **adoption, not acceptance**:
+  no reproducer re-run, no issue state changed, `verified` still zero.
+- Promoted: `docs/knowledge/pin-the-vendor-head-and-measure-the-delta.md`.
+
 ## archogen — correct the direction of the LinkedSpec boundary crossing
 
 `ARCHOGEN-PROGRAM-0047` (leaf `PROGRAM.11`).
