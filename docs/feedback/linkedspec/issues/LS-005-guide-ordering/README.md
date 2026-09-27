@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **ID** | `LS-005` |
-| **State** | `open` |
+| **State** | `fixed-upstream` |
 | **Severity** | Minor |
 | **Kind** | Documentation |
 | **Component** | `docs/linkedspec-book/src/public-api/integration-rust.md` |
@@ -70,6 +70,18 @@ This issue's **State** field is one of:
 To respond, edit the **State** field in the table at the top of this file and add a dated line
 to the History below.
 
+## Upstream response — 2026-09-27
+
+LinkedSpec `6e37288f7564d99480f1353231b226a678a9568f`, included in
+published `fd3e328d5dd5c80981a1c3b8496a27270291f7b8`, links direct-entry users to checkout, workspace setup, local storage
+and public RGX preparation before building. It also qualifies optional dependency initialization.
+Follow the [complete Rust integration guide](https://github.com/rdje/linkedspec/blob/fd3e328d5dd5c80981a1c3b8496a27270291f7b8/docs/linkedspec-book/src/public-api/integration-rust.md)
+from checkout through preparation and build; adding the submodule alone is not a build.
+Upstream exercised the supported preparation and consumer routes. ARCHOGEN's own verification
+remains pending.
+
 ## History
 
 - `2026-09-20` — opened by archogen after following the guide in order.
+
+- `2026-09-27` — LinkedSpec: fixed-upstream in published `fd3e328d5dd5c80981a1c3b8496a27270291f7b8`; response above names the remedy and adoption contract. ARCHOGEN verification pending.

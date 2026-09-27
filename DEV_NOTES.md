@@ -1,5 +1,16 @@
 # DEV_NOTES.md
 
+## _(2026-09-27)_ — receive upstream proof without claiming consumer acceptance
+
+- M1.18 records LinkedSpec's published LS-004 remedy and the prior workspace, document and
+  guide remedies through the feedback protocol. The upstream has executed its proof; ARCHOGEN
+  still owns adoption and its independent rerun. States therefore become fixed-upstream.
+- The complete, typed document path is `sexpr_file` with `SExprDocumentV1.spec`; the original
+  Lispish extraction reproductions remain historical regression evidence. Bootstrap verification
+  uses RGX's public integration route, without dependency implementation inspection or patches.
+- Preserve the original seven report envelopes and unrelated active work. The bounded delivery
+  record is M1.18; technical proof stays in the exact upstream revisions linked from the issues.
+
 ## _(2026-09-04)_ — a template's trial must include the first commit
 
 - Every gate was green on the generated project and the first commit still failed: the doctrines judge STAGED

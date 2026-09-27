@@ -4,6 +4,21 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — receive LinkedSpec's published fixes
+
+`ARCHOGEN-LINKEDSPEC-LS004` (leaf `M1.18`).
+
+- Receive the director-authorized completion notice for published LinkedSpec `fd3e328d5dd5c80981a1c3b8496a27270291f7b8`.
+  LS-004 adopts verified RGX f6e5acdc; each of the five addressed reports names its remedy.
+- Synchronize five fixed-upstream states, zero open states, one withdrawn and one no-action.
+  ARCHOGEN verification remains pending, including the two originally reported blockers.
+- Preserve all original reproducers, setup, fixtures, measured revisions, application code and
+  vendor pins. M1.12 and the M2.9 checkpoint/director rulings remain unchanged.
+- Validation: feedback closure passes; issue/index census agrees on all seven states; all36
+  original non-state feedback files remain SHA-256 identical; four prior fix commits are ancestors
+  of the publication; MEMORY43lines and diff checks pass. Required doctrine hooks govern landing.
+  LIVE_STATUS milestone states are unchanged; no application-test rerun is claimed.
+
 ## archogen — the eADL surface syntax becomes normative
 
 `ARCHOGEN-M1-0036` (leaf `M1.11`).

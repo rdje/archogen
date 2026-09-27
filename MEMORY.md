@@ -14,15 +14,15 @@
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M1` → frontier `M1.12`. `M2` frontier `M2.8`; `PROGRAM` frontier `PROGRAM.5`.
-- **main is clean and green:** 421 tests, 0 failed; all doctrines green.
+- **Last application verification:** 421 tests, 0 failed; this upstream documentation notice does not re-run application tests.
 
-- **⏳ WAITING ON THE DIRECTOR, before anything else:**
-  1. **LinkedSpec's next push** — then update `vendor/linkedspec`, re-run the seven
-     reproducers in `docs/feedback/linkedspec/issues/*/repro.sh` (exit `3` = behaviour
-     changed), and move each row's state in `docs/feedback/linkedspec/INDEX.md`.
-  2. **Two behaviour-changing rulings on `ROADMAP` §3.1.1** — items (a) and (b) of §6 in
-     `docs/decisions/decision_findings-for-director-review.md`. `M2.9` cannot finish without
-     them.
+- **LinkedSpec is published:** `fd3e328d5dd5c80981a1c3b8496a27270291f7b8` includes LS-004.
+  `M1.18` records the upstream notice; five reports are fixed-upstream, awaiting ARCHOGEN
+  adoption and verification. Follow `docs/feedback/linkedspec/INDEX.md` and the issue responses;
+  document requirements use `sexpr_file` / `SExprDocumentV1.spec`, and bootstrap uses RGX's public route.
+- **⏳ WAITING ON THE DIRECTOR:** two behaviour-changing rulings on `ROADMAP` §3.1.1 —
+  items (a) and (b) of §6 in `docs/decisions/decision_findings-for-director-review.md`.
+  `M2.9` cannot finish without them.
 
 - **Next action if unblocked:** **`M1.12`** — the **language reference**: the normative rules a
   grammar cannot carry (exactness, comment retention, canonical form, module/import semantics,

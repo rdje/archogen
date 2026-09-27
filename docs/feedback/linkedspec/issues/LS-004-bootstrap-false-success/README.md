@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **ID** | `LS-004` |
-| **State** | `open` |
+| **State** | `fixed-upstream` |
 | **Severity** | Moderate |
 | **Kind** | Robustness |
 | **Component** | `rgx/subs/pgen/rust` Makefile, target `regex_parser_bootstrap` |
@@ -81,6 +81,17 @@ This issue's **State** field is one of:
 To respond, edit the **State** field in the table at the top of this file and add a dated line
 to the History below.
 
+## Upstream response — 2026-09-27
+
+LinkedSpec `fd3e328d5dd5c80981a1c3b8496a27270291f7b8` adopts the publicly verified RGX
+`f6e5acdc99720349d1e3ecef9f821f365c4db19c` remedy. The public `make bootstrap` failure path
+now stops at the first missing prerequisite without later dependent steps or false seed-success
+text; fresh success and prepared reuse are preserved. Full LinkedSpec canonical acceptance
+and exact remote publication are verified. See [the completion notice](UPSTREAM.md) for
+evidence, adoption instructions and the remaining ARCHOGEN verification step.
+
 ## History
 
 - `2026-09-20` — opened by archogen; observed while diagnosing `LS-001` on `db6f8c68`.
+
+- `2026-09-27` — LinkedSpec: fixed-upstream in published `fd3e328d5dd5c80981a1c3b8496a27270291f7b8`; response above names the remedy and adoption contract. ARCHOGEN verification pending.

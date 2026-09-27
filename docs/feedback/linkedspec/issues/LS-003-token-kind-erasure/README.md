@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **ID** | `LS-003` |
-| **State** | `open` |
+| **State** | `fixed-upstream` |
 | **Severity** | Major for eADL |
 | **Kind** | Correctness (documented behaviour; raised as a requirement) |
 | **Component** | `specs/Lispish.spec`, the `SExpression` adapter |
@@ -77,6 +77,20 @@ This issue's **State** field is one of:
 To respond, edit the **State** field in the table at the top of this file and add a dated line
 to the History below.
 
+## Upstream response — 2026-09-27
+
+The separate document grammar and adapter retain tagged symbol,
+string and number nodes with exact token lexemes, including string delimiters and escapes.
+Grammar `77d7b3db1b65a2c83072447a6aec77456ca7aede` and adapter
+`df845ce615df20929ac501b61984fbf9d29225ca` are included in published `fd3e328d5dd5c80981a1c3b8496a27270291f7b8`.
+Use `sexpr_file` with `SExprDocumentV1.spec` (public entry `Document`); the historical
+`SExpression`/Lispish extraction result keeps its documented behavior. The tagged document
+is a syntax representation, not eADL semantic validation. See the
+[versioned document contract](https://github.com/rdje/linkedspec/blob/fd3e328d5dd5c80981a1c3b8496a27270291f7b8/docs/linkedspec-book/src/specs-and-corpora/sexpr-document-v1.md).
+ARCHOGEN's own adoption and verification remain pending.
+
 ## History
 
 - `2026-09-20` — opened by archogen; reproduced on `ad290bdb4`.
+
+- `2026-09-27` — LinkedSpec: fixed-upstream in published `fd3e328d5dd5c80981a1c3b8496a27270291f7b8`; response above names the remedy and adoption contract. ARCHOGEN verification pending.

@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **ID** | `LS-001` |
-| **State** | `open` |
+| **State** | `fixed-upstream` |
 | **Severity** | Blocker |
 | **Kind** | Build |
 | **Component** | `examples/integration/rust`, `rgx/subs/pgen/rust` |
@@ -118,6 +118,20 @@ This issue's **State** field is one of:
 To respond, edit the **State** field in the table at the top of this file and add a dated line
 to the History below.
 
+## Upstream response — 2026-09-27
+
+The documented workspace route is fixed by LinkedSpec
+`effe3e7b2544abf79f7786a7aa54e77b1893880e`, included in published `fd3e328d5dd5c80981a1c3b8496a27270291f7b8`.
+The integration example has its own workspace boundary; the enclosing application's documented
+exclusion and RGX public preparation complete the supported vendoring route. Upstream verified
+nine workspace controls and fresh native consumers. Follow the
+[workspace guide](https://github.com/rdje/linkedspec/blob/fd3e328d5dd5c80981a1c3b8496a27270291f7b8/docs/linkedspec-book/src/public-api/integration-rust.md#applications-with-a-cargo-workspace).
+The original reproducer and proposed dependency patch are historical evidence; upstream
+verification used public preparation and workspace behavior without inspecting or patching
+dependency implementations. ARCHOGEN's own adoption and verification remain pending.
+
 ## History
 
 - `2026-09-20` — opened by archogen; reproduced 2/2 and fix validated 2/2 on `ad290bdb4`.
+
+- `2026-09-27` — LinkedSpec: fixed-upstream in published `fd3e328d5dd5c80981a1c3b8496a27270291f7b8`; response above names the remedy and adoption contract. ARCHOGEN verification pending.
