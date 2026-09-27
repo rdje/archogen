@@ -1,5 +1,37 @@
 # DEV_NOTES.md
 
+## _(2026-09-27)_ — a vendor's remedy can be half in their tree and half in yours
+
+- `M1.20.2` re-measured LS-001 at the pin and the two halves came apart. The report had asked for an
+  empty `[workspace]` table in **two** vendored manifests. At `2ac834913` the integration example —
+  the one a consumer builds — carries its own boundary and resolves on its own
+  (`cargo metadata --no-deps --offline` → `rc=0`). The nested PGEN manifest — a *transitive*
+  dependency, another project's file — carries none, and still collided against archogen's workspace
+  root: `rc=101`, `current package believes it's in a workspace when it's not`.
+- ⭐ The remedy for the second half is the **consumer's**: `exclude = ["vendor/linkedspec"]` in the
+  application's workspace root, which the vendor's guide states as a required step before any
+  metadata or build command. Measured before and after adopting it — `remeasure.sh` → `rc=1` then
+  `rc=0`, both runs frozen — and the verdict now prints *which* half carries it: "Carried by BOTH
+  halves of the remedy: 1 of 2 vendored manifests declare their own [workspace] boundary, and the
+  application root excludes the vendored tree."
+- ⛔ **A green row that hides an obligation is worse than an open one.** The exclusion is now a
+  standing requirement of this repository, so it is recorded in three places: a comment in the root
+  `Cargo.toml` beside the line itself, a `Consumer workspace` row in the feedback register's vendor
+  table, and a "what a consumer must therefore still do" warning in the issue page. Without those,
+  a clean clone would reproduce the original blocker with a register saying it cannot happen.
+- The consuming workspace is provably unaffected: `cargo metadata` → `9` members, the same nine
+  package names, `0` vendored packages among them; `make focused` → exit `0`; `cargo test --all` →
+  **421 passed, 0 failed** over 36 suites.
+- ⛔ A defect in archogen's own tracker, found by reading the page against the script: LS-001's
+  `README.md` documented `repro.sh`'s contract as `0` / `3` / `2`, and the script has no `3` path —
+  it exits `1` with `RESULT: did not behave as described`. The page was corrected; the frozen script
+  and its frozen output were not. A documented exit contract nobody re-reads drifts exactly like
+  prose beside data does.
+- Its Part 2 was deliberately **not** re-run: it patches the vendored manifests to demonstrate the
+  proposed fix, and the guide at the pin forbids that as a remedy. History stays in the record as
+  history.
+- Promoted: `docs/knowledge/a-verified-row-must-name-what-you-still-owe.md`.
+
 ## _(2026-09-27)_ — a frozen reproducer answers "did it change", never "is it fixed"
 
 - `M1.20.1` re-measured LS-005 at the adopted pin `2ac834913` and the frozen `repro.sh` could not

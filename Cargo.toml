@@ -3,6 +3,12 @@
 [workspace]
 resolver = "2"
 members = ["crates/*", "xtask"]
+# LinkedSpec is vendored for development-time evaluation only (docs/feedback/linkedspec/); no crate
+# depends on it. Its packages must still stay OUT of this workspace: cargo discovers a workspace by
+# walking up from each manifest, so without this exclusion a vendored manifest binds to this root and
+# then refuses to resolve — the collision reported upstream as LS-001, and the exclusion its
+# integration guide requires of a workspace consumer before any metadata or build command.
+exclude = ["vendor/linkedspec"]
 
 [workspace.package]
 edition = "2021"

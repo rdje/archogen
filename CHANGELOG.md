@@ -4,6 +4,36 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — LS-001 verified at the adopted pin, and the consumer's half of the remedy adopted
+
+`ARCHOGEN-LINKEDSPEC-0052` (leaf `M1.20.2`).
+
+- **One of the two reported blockers is now `verified`** on archogen's own rerun at LinkedSpec
+  `2ac834913`. The remedy turned out to be **split**: the integration example — the manifest a
+  consumer builds — now carries its own `[workspace]` boundary and resolves on its own, while the
+  nested PGEN manifest, a transitive dependency in another project's tree, carries none and still
+  collided against this repository's workspace root (`rc=101`,
+  `current package believes it's in a workspace when it's not`).
+- **archogen's half:** `exclude = ["vendor/linkedspec"]` in the root `Cargo.toml`, with the reason
+  beside it. The vendor's guide states it as a required step before any cargo metadata or build
+  command, and it is what makes the nested manifest resolvable — a standing requirement of this
+  consumer, not a one-off fix. Measured before and after adopting it: `remeasure.sh` → `rc=1`
+  (`STILL PRESENT`, 1 collision of 2 probes) then `rc=0` (`GONE`, "carried by BOTH halves").
+- New instrument `remeasure.sh`, `--self-test` → `5/5 arms`: the reported shape must collide, the
+  app-root exclusion must resolve it, a vendored manifest with its own boundary must resolve it, a
+  manifest failing for an unrelated reason must be **refused** rather than counted as this defect,
+  and an application root with no workspace must be declined as not applicable. Every probe is
+  `cargo metadata --no-deps --offline`: no build, no network, nothing written into the checkout.
+- ⛔ The historical reproducer's Part 2 was deliberately **not** re-run — it patches the vendored
+  manifests, which the guide at the pin forbids as a remedy. Reading the page against the script
+  also exposed a defect in archogen's own tracker: it documented an exit `3` the script never
+  returns. Page corrected; the frozen script and its frozen output were left untouched.
+- Validation: the consuming workspace is unchanged by the exclusion — `cargo metadata` → `9`
+  members, the same nine package names, `0` vendored packages among them; `make focused` → exit `0`;
+  `cargo test --all` → **421 passed, 0 failed** over 36 suites; `FEEDBACK-SELF-CONTAINED` green on
+  the new files; all 13 doctrines green.
+- Promoted: `docs/knowledge/a-verified-row-must-name-what-you-still-owe.md`.
+
 ## archogen — LS-005 verified at the adopted pin, on archogen's own rerun
 
 `ARCHOGEN-LINKEDSPEC-0051` (leaf `M1.20.1`).

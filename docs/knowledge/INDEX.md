@@ -22,3 +22,4 @@ dated lesson in `DEV_NOTES.md` to be promoted here (or explicitly declined in it
 | [`a-rule-only-in-the-prompt-is-enforced-nowhere.md`](a-rule-only-in-the-prompt-is-enforced-nowhere.md) | The operator's instructions forbid X — where does that rule belong so it survives the session? |
 | [`pin-the-vendor-head-and-measure-the-delta.md`](pin-the-vendor-head-and-measure-the-delta.md) | A vendor's notice names a specific publication — do I pin that commit or their latest head? |
 | [`frozen-reproducers-measure-change-not-repair.md`](frozen-reproducers-measure-change-not-repair.md) | Upstream says the bug I reported is fixed — how do I verify that instead of accepting it? |
+| [`a-verified-row-must-name-what-you-still-owe.md`](a-verified-row-must-name-what-you-still-owe.md) | A vendor fixed the integration bug I reported — what do I have to change on my side? |

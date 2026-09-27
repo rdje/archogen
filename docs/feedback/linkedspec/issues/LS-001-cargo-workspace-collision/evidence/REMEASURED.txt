@@ -1,0 +1,80 @@
+# LS-001 re-measurement — LinkedSpec 2ac834913d85c32f532be9b0aab63644838a577a
+# Date 2026-09-27 · rustc 1.95.0 (59807616e 2026-04-14) · cargo 1.95.0 · Darwin arm64
+# Checkout measured: the consumer's vendored pin (nested RGX f6e5acdc9). Application root: this
+#   repository. Commands are shown relative to the application root; <checkout> stands for the
+#   LinkedSpec checkout under test.
+# Instrument: remeasure.sh, in this directory. Every probe is `cargo metadata --no-deps --offline`:
+#   no build, no network, and nothing is written into the checkout. The frozen original observation,
+#   taken at ad290bdb4, is evidence/OBSERVED.txt and is unchanged by this run.
+# VERDICT: the reported defect is GONE at this revision, carried by BOTH halves of the remedy —
+#   the vendored example's own [workspace] boundary AND the application root's documented exclusion.
+
+== 1. the instrument discriminates — bash remeasure.sh --self-test ==
+  arm passes: no vendored boundary and no app-root exclusion COLLIDES (the reported defect) (exit 1)
+  arm passes: the documented app-root exclude entry resolves it (exit 0)
+  arm passes: a vendored manifest with its own [workspace] boundary resolves it (exit 0)
+  arm passes: a manifest that fails for another reason is refused, not counted as the defect (exit 2)
+  arm passes: an application root with no [workspace] is declined as not applicable (exit 2)
+self-test: 5/5 arms passed
+self-test rc=0
+
+== 2. BEFORE — the application root without the documented exclusion ==
+# The consuming workspace root exactly as committed before this re-measurement: [workspace] with
+# explicit members and no exclude entry. This is the layout the original report was written against.
+$ bash remeasure.sh <checkout>
+== LS-001 re-measurement: linkedspec at 2ac834913 ==
+  application workspace root carries exclude = ["vendor/linkedspec"] ... no
+  manifests the documented route touches:
+  - vendor/linkedspec/examples/integration/rust/Cargo.toml
+      own [workspace] boundary: yes
+      resolves (rc=0)
+  - vendor/linkedspec/rgx/subs/pgen/rust/Cargo.toml
+      own [workspace] boundary: no
+      COLLIDES (rc=101)
+  probed 2 · collisions 1 · other failures 0 · own boundaries 1
+
+LS-001 remeasure: RESULT — the defect is STILL PRESENT: 1 manifest(s) collide with the
+  application workspace. Cargo's own message names the two remedies: an exclude entry in the
+  application root, or an empty [workspace] table in the vendored manifest.
+before rc=1
+# (the application root now carries the documented exclusion: exclude = ["vendor/linkedspec"])
+
+== 3. AFTER — the documented consumer remedy adopted at the application root ==
+# exclude = ["vendor/linkedspec"] added to the consuming workspace root, which is what the vendor's
+# integration guide at this revision requires before any cargo metadata or build command.
+$ bash remeasure.sh <checkout>
+== LS-001 re-measurement: linkedspec at 2ac834913 ==
+  application workspace root carries exclude = ["vendor/linkedspec"] ... yes
+  manifests the documented route touches:
+  - vendor/linkedspec/examples/integration/rust/Cargo.toml
+      own [workspace] boundary: yes
+      resolves (rc=0)
+  - vendor/linkedspec/rgx/subs/pgen/rust/Cargo.toml
+      own [workspace] boundary: no
+      resolves (rc=0)
+  probed 2 · collisions 0 · other failures 0 · own boundaries 1
+
+LS-001 remeasure: RESULT — the defect is GONE. Every manifest the documented route touches
+  resolves inside the application's Cargo workspace.
+  Carried by BOTH halves of the remedy: 1 of 2 vendored manifests declare their own
+  [workspace] boundary, and the application root excludes the vendored tree.
+after rc=0
+
+== 4. the consuming workspace itself is unaffected by the exclusion ==
+$ cargo metadata --format-version 1 --no-deps --offline   # at the application root
+workspace_members: 9
+packages: ['archogen-cli', 'archogen-evidence', 'archogen-s0', 'eadl-front', 'eadl-model', 'rt-analysis', 'rt-core', 'rt-reference', 'xtask']
+vendored packages among them: 0
+
+== 5. what this re-measurement does NOT claim ==
+  It measures manifest RESOLUTION inside the application workspace, which is what the report was
+  about ("current package believes it's in a workspace when it's not", rc=101). It does not build the
+  example, run RGX's bootstrap, or prove a consumer application links against the runtime: LS-004
+  owns the bootstrap and the build is measured separately.
+  The nested PGEN manifest carries NO [workspace] boundary of its own at this revision, so it depends
+  on the application root's exclusion. A consumer whose root has no [workspace] does not need one;
+  a consumer whose root is a workspace and omits the exclusion still hits the collision on that
+  manifest — arm 1 of the self-test is exactly that shape, and section 2 above is the real one.
+  The historical reproducer's second half (appending an empty [workspace] table to vendored
+  manifests) was deliberately NOT re-run: the guide at this revision forbids modifying dependency
+  manifests to work around this error, and a consumer does not edit a vendored checkout.

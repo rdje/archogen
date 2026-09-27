@@ -6,9 +6,9 @@ upstream integration guide names ARCHOGEN in its own example, so this is offered
 the guide invites: the first real consumer reporting what the first integration actually did.
 
 > **The register of every reported bug and its state is [`INDEX.md`](INDEX.md).**
-> Currently **7 issues — 1 `verified` by archogen's own rerun at the adopted pin, 4
-> fixed-upstream awaiting ARCHOGEN verification** (including the two reported blockers),
-> 1 withdrawn and 1 no-action. The [completion notice](issues/LS-004-bootstrap-false-success/UPSTREAM.md)
+> Currently **7 issues — 2 `verified` by archogen's own rerun at the adopted pin (one of them a
+> reported blocker), 3 fixed-upstream awaiting ARCHOGEN verification** (including the remaining
+> blocker), 1 withdrawn and 1 no-action. The [completion notice](issues/LS-004-bootstrap-false-success/UPSTREAM.md)
 > names the published revision and adoption steps.
 
 **Everything LinkedSpec needs is here.** Each issue is a self-contained sub-tree holding its own
@@ -111,8 +111,12 @@ bash issues/LS-002-multi-form-truncation/repro.sh \
   --bin <path>/lispish_file --grammar <path>/Lispish.spec
 ```
 
-`LS-001`'s reproducer is **self-checking** in both directions: it asserts the defect reproduces
-*and* that the proposed fix resolves it, so a green run is evidence for both halves of the report.
+`LS-001`'s historical reproducer is **self-checking** in both directions: it asserts the defect
+reproduces *and* that the proposed fix resolves it, so a green run was evidence for both halves of
+the report. Its second half patches the vendored manifests — in a copy under `.repro-work/`, never
+in the checkout you pass it — and the vendor's guide at the adopted revision forbids that as a
+remedy. So at a fixed revision it reports `did not behave as described`, and `remeasure.sh` is the
+instrument that decides.
 
 ## The single most valuable ask
 
