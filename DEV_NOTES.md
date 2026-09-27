@@ -1,5 +1,36 @@
 # DEV_NOTES.md
 
+## _(2026-09-27)_ — the pin moved, and a rule nobody had written down turned up missing
+
+- `M1.19` moves `vendor/linkedspec` from `ad290bdb4` — the revision the seven reports were
+  *measured* at — to `fd3e328d5dd5c80981a1c3b8496a27270291f7b8`, the publication carrying the
+  LS-004 remedy, with the nested RGX submodule at `f6e5acdc99720349d1e3ecef9f821f365c4db19c`.
+  Adoption only: no reproducer was re-run, so **no issue state changed** — LS-001 … LS-005 stay
+  `fixed-upstream` and `M1.20` owns the measurement.
+- ⭐ Pinned the *named* publication rather than `origin/main`. The fetch showed main already two
+  commits ahead (`8b5b5ffd8`, `2ac834913`, closure bookkeeping). Every piece of cited evidence —
+  the two checkpoint JSONs, the pinned Rust integration guide — resolves at `fd3e328d5`. Measuring
+  an unnamed revision would leave a later `verified` unattributable to anything a reader can open.
+- ⛔ The same fetch exposed something more serious than a pin. `8b5b5ffd8` is titled "record
+  publication and **repository-boundary violation**" and discloses "the unauthorized ARCHOGEN
+  documentation commit and auxiliary writes". This repository's own record is clean:
+  `git log --oneline -- vendor/linkedspec` → two commits, neither of which wrote inside the
+  submodule; `git log --all --grep=LINKEDSPEC` → one commit; and
+  `grep -rn 'READ-ONLY' CLAUDE.md AGENTS.md` → **no match**.
+- Root cause is not the write, it is *where the rule lived*: only in the director's session prompt.
+  A prohibition that is not in the committed tree is unavailable to every agent that would have
+  obeyed it — a fresh session, another harness, another model. Promoted to
+  `docs/knowledge/a-rule-only-in-the-prompt-is-enforced-nowhere.md`; the durable rule is
+  `docs/decisions/decision_repository-boundary-read-only.md`; `PROGRAM.11` owns putting it in the
+  bootstrap and gating the one symptom visible from here (a vendored checkout carrying local
+  commits or local modifications). ⚠️ The leaf states its own limit: no gate in this repository can
+  prevent a write into a checkout elsewhere on the filesystem.
+- ⚠️ `git submodule update --init --recursive` for the nested RGX pin outlived a 7-minute
+  foreground timeout (the checkout is 2.1 GB) — and had in fact **completed**. Verified with
+  `git submodule status` rather than assumed from the wrapper's exit. A long vendor sync that is
+  re-run because a timeout gave up is how a partial checkout gets mistaken for a failed one; check
+  the resulting state, and background anything that big.
+
 ## _(2026-09-27)_ — receive upstream proof without claiming consumer acceptance
 
 - M1.18 records LinkedSpec's published LS-004 remedy and the prior workspace, document and

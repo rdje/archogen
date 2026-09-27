@@ -144,6 +144,7 @@ justifies the split — the rows below appear as that happens.
 - [`decision_eadl-engine-boundary.md`](docs/decisions/decision_eadl-engine-boundary.md)
 - [`decision_findings-for-director-review.md`](docs/decisions/decision_findings-for-director-review.md)
 - [`decision_priority-comparison-direction.md`](docs/decisions/decision_priority-comparison-direction.md)
+- [`decision_repository-boundary-read-only.md`](docs/decisions/decision_repository-boundary-read-only.md)
 - [`decision_runtime-contract-gaps.md`](docs/decisions/decision_runtime-contract-gaps.md)
 - [`decision_s0-retirement.md`](docs/decisions/decision_s0-retirement.md)
 - [`decision_zero-dependency-engine-core.md`](docs/decisions/decision_zero-dependency-engine-core.md)

@@ -12,6 +12,7 @@ observation.
 | Upstream | `https://github.com/rdje/linkedspec` |
 | Component under test | Rust backend (`linkedspec-runtime`) and the shipped `specs/Lispish.spec` |
 | Revision measured | LinkedSpec `ad290bdb4`, RGX `8763a0e6`, PGEN `db6f8c68` |
+| Revision adopted | LinkedSpec `fd3e328d5dd5c80981a1c3b8496a27270291f7b8`, RGX `f6e5acdc99720349d1e3ecef9f821f365c4db19c` — pinned `2026-09-27` by leaf `M1.19`; the observations below were **not** taken at this revision |
 | Toolchain | rustc 1.95.0, Darwin arm64 |
 | Reported by | archogen — first consumer of the Rust backend |
 | Vendored at | `vendor/linkedspec` (development-time evaluation only; no crate depends on it) |
@@ -23,6 +24,12 @@ remedies. The five addressed requirements are `fixed-upstream`, awaiting ARCHOGE
 and measurement; none is marked `verified` by this notice. Original measured revisions and
 last-verified dates below are unchanged. See the [LS-004 completion notice](issues/LS-004-bootstrap-false-success/UPSTREAM.md)
 and each issue's dated response. LS-006 stays withdrawn; LS-007 stays no-action.
+
+**Adopted `2026-09-27`** (leaf `M1.19`): `vendor/linkedspec` is now pinned at that publication, with
+its nested RGX submodule at the revision it names, through the vendor's published adoption route.
+Adoption is **not** acceptance — no reproducer has been re-run at this revision, so every state in
+the register below is unchanged and still reads `fixed-upstream`. Re-measurement is owned by leaf
+`M1.20`, which is the only thing that may move a row to `verified`.
 
 ## Register
 

@@ -4,6 +4,39 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — adopt the published LinkedSpec pin
+
+`ARCHOGEN-LINKEDSPEC-0046` (leaf `M1.19`).
+
+- Move `vendor/linkedspec` from `ad290bdb4` — the revision the seven reports were **measured** at —
+  to `fd3e328d5dd5c80981a1c3b8496a27270291f7b8`, the publication that carries the LS-004 remedy,
+  with the nested `rgx` submodule at `f6e5acdc99720349d1e3ecef9f821f365c4db19c`, the revision that
+  publication pins. Director-instructed, and the step `M1.18` left pending: "awaiting ARCHOGEN
+  adoption and verification".
+- ⛔ **Adoption is not acceptance.** No reproducer was re-run, so **no issue state changes**:
+  LS-001 … LS-005 remain `fixed-upstream`, LS-006 `withdrawn`, LS-007 `no-action`, and `verified`
+  is still zero. Leaf `M1.20` owns the re-measurement and is the only thing that may move a row.
+- ⭐ Pinned the **named publication**, not `origin/main`, which the fetch showed had already
+  advanced two commits (`8b5b5ffd8`, `2ac834913`). Every piece of cited upstream evidence resolves
+  at `fd3e328d5`; measuring an unnamed revision would make a later `verified` unattributable.
+- ⛔ **A repository-boundary violation surfaced in the same fetch, and it is owned rather than
+  noted.** Upstream `8b5b5ffd8` ("record publication and repository-boundary violation") discloses
+  "the unauthorized ARCHOGEN documentation commit and auxiliary writes". This repository's own
+  record is clean — two commits ever touched `vendor/linkedspec`, neither wrote inside it — and
+  `grep -rn 'READ-ONLY' CLAUDE.md AGENTS.md` → no match. **The rule existed only in the director's
+  session prompt**, so it was unavailable to any agent resuming from git alone. Recorded in
+  `docs/decisions/decision_repository-boundary-read-only.md`, promoted to
+  `docs/knowledge/a-rule-only-in-the-prompt-is-enforced-nowhere.md`, and owned by `PROGRAM.11`
+  (state it in the bootstrap; gate the observable symptom — a vendored checkout with local commits
+  or local modifications). The leaf states its own limit: no gate here can stop a write into a
+  checkout elsewhere on the filesystem.
+- Validation: `git submodule status` → `+fd3e328d5dd5c80981a1c3b8496a27270291f7b8
+  vendor/linkedspec`; nested `rgx` → ` f6e5acdc99720349d1e3ecef9f821f365c4db19c`, matching
+  `git ls-tree HEAD rgx`; vendored worktree clean; `git merge-base --is-ancestor ad290bdb4…
+  fd3e328d5…` → yes. No archogen crate depends on the vendored checkout, and no `Cargo.toml`,
+  `Cargo.lock` or `crates/` path is touched, so no application test is claimed or needed for the
+  pin move itself. Submodule internals were not inspected, reconstructed or modified (§20).
+
 ## archogen — receive LinkedSpec's published fixes
 
 `ARCHOGEN-LINKEDSPEC-LS004` (leaf `M1.18`).
