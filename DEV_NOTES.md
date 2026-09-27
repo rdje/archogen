@@ -1,5 +1,38 @@
 # DEV_NOTES.md
 
+## _(2026-09-27)_ — a green suite can owe its green to the last run
+
+- `PROGRAM.19`'s artifact cleanup removed `target/tmp`, and `cargo test --all` then failed exactly one
+  test — `a_description_with_no_system_says_there_is_nothing_to_build`, panicking at
+  `crates/archogen-cli/tests/s0_build.rs:211` on `.expect("writable")`. The very next run reported
+  `421 passed, 0 failed`. Reproduced deliberately, twice: `rm -rf target/tmp && cargo test --all`.
+- Root cause: cargo materialises `CARGO_TARGET_TMPDIR` when it **builds** a test binary, not when it
+  runs one. Cached binaries plus a cleaned scratch directory leave the path absent, `fs::write` fails
+  with `ENOENT`, and `.expect("writable")` reports a writability problem where the real cause is
+  absence. ⛔ The assertion message pointed away from the cause, which is why the first read of the
+  failure looked like a permissions oddity rather than a missing directory.
+- ⭐ The class was censused instead of assumed: `grep -rn 'env!("CARGO_TARGET_TMPDIR")' crates/` →
+  **6 code sites across 4 files**, exactly one of which wrote into the tmpdir **root**. `s0_reader.rs`
+  calls `create_dir_all` first; the other four hand the path to the CLI as `--out`, which creates it.
+  One site, one cause, one line fixed.
+- ⛔ **The tempting wrong fix was to stop deleting `target/tmp`.** That would have hidden the
+  fragility behind a rule about which directories a cleanup may touch, and left the suite green for the
+  same accidental reason as before — a previous run's leftovers. The cleanup was correct; the test was
+  wrong.
+- ⭐ Verified under the condition that failed, not under a warm tree: the leaf's evidence deletes the
+  directory before **each** run. Cold `cargo test --all` → `suites=36 passed=421 failed=0`; cold
+  `--test s0_build` → `7 passed; 0 failed`; F28's gate → `13` and `4` passed; `make focused` exit `0`.
+- The general shape: **a test that depends on state a previous run left behind is not testing what it
+  says it is**, and one run cannot show the difference — the warm run passes for the wrong reason and
+  looks identical to passing for the right one. Cold-start verification is the only way to tell them
+  apart, and it costs one `rm -rf`.
+- promotion: declined (the durable content now lives where the next reader will actually meet it: the
+  comment above the `create_dir_all` call in `s0_build.rs` explains cargo's build-time behaviour, and
+  the leaf records the census that showed this was the only affected site. A knowledge card would be a
+  third copy of a fact that is now stated in the code it concerns, and the adjacent principle — a
+  check is only as sharp as its fixtures — is already retrievable as
+  `docs/knowledge/a-gate-is-only-as-sharp-as-its-fixtures.md`.)
+
 ## _(2026-09-27)_ — adopting a standard means running its adoption checklist
 
 - `PROGRAM.16` adopted the claim-verification policy as `docs/CLAIM_VERIFICATION.md`. The director's

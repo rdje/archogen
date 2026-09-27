@@ -203,7 +203,13 @@ fn locked_is_refused_rather_than_accepted_and_ignored() {
 #[test]
 fn a_description_with_no_system_says_there_is_nothing_to_build() {
     let dir = out_dir("no-system");
-    let source = Path::new(env!("CARGO_TARGET_TMPDIR")).join("s0-build-library.eadl");
+    let tmp = Path::new(env!("CARGO_TARGET_TMPDIR"));
+    // ⛔ Cargo creates `CARGO_TARGET_TMPDIR` when it BUILDS this test binary, not when it runs it, so
+    // a cached binary plus a cleaned `target/tmp` makes the write below panic. Every other site in
+    // this suite either passes the path to the CLI as `--out` or calls `create_dir_all` first; this
+    // was the only one writing into the root. Measured 2026-09-27: the sole cold-run failure.
+    std::fs::create_dir_all(tmp).expect("the target tmpdir is creatable");
+    let source = tmp.join("s0-build-library.eadl");
     std::fs::write(
         &source,
         "(defblock console.uart (offers (observable-output true)))\n",

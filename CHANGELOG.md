@@ -4,6 +4,34 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — S0 reopened and closed: a test that was green only because a previous run left a directory behind
+
+`ARCHOGEN-S0-0059` (leaf `S0.7`).
+
+- **One test failed on a cold run and passed on the warm one.** An artifact cleanup removed
+  `target/tmp`; with the test binaries cached, `cargo test --all` then failed exactly one test —
+  `a_description_with_no_system_says_there_is_nothing_to_build`, panicking at
+  `crates/archogen-cli/tests/s0_build.rs:211` on `.expect("writable")` — and the next run reported
+  `421 passed, 0 failed`. Reproduced deliberately, twice: `rm -rf target/tmp && cargo test --all`.
+- **Root cause.** Cargo materialises `CARGO_TARGET_TMPDIR` when it *builds* a test binary, not when it
+  runs one, so a cached binary plus a cleaned scratch directory leaves the path absent and `fs::write`
+  fails with `ENOENT` — which `.expect("writable")` reported as a writability problem rather than an
+  absence. The class was censused, not assumed: `grep -rn 'env!("CARGO_TARGET_TMPDIR")' crates/` →
+  **6 code sites across 4 files**, and this was the only one writing into the tmpdir **root**;
+  `s0_reader.rs` calls `create_dir_all` first and the other four pass the path to the CLI as `--out`.
+- **Fix:** create the directory before writing into it, with the mechanism written down beside it so
+  it is not "simplified" away. ⛔ The tempting wrong fix was to stop the cleanup from deleting
+  `target/tmp`, which would have hidden the fragility behind a rule about which directories may be
+  cleaned and left the suite green for the same accidental reason as before.
+- Verified under the condition that failed, not under a warm tree: cold `cargo test --all` → no
+  `FAILED` line, `suites=36 passed=421 failed=0`; cold `--test s0_build` → `7 passed; 0 failed`.
+  F28's own gate green (`s0_oracle` 13 passed, `s0_provenance` 4 passed); `make focused` exit `0`;
+  `fmt` and `clippy -D warnings` clean; all 13 doctrines green.
+- The tree's status stays `done`: reopened for this defect and closed with it, all seven leaves green,
+  and the reopening recorded in the frontier prose rather than left implicit.
+- ⭐ The general shape, recorded in `DEV_NOTES.md`: **a test that depends on state a previous run left
+  behind is not testing what it says it is**, and a single run cannot show the difference.
+
 ## archogen — the claim-verification policy adopted: the spine is five architectures, not four
 
 `ARCHOGEN-PROGRAM-0058` (leaf `PROGRAM.16`).
