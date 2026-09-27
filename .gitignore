@@ -8,6 +8,14 @@ git_message_brief.txt
 # Generated artifacts are regenerated locally, never tracked (see COMMIT.md)
 /generated
 
+# Documented scratch/output root. `ROADMAP.md` §10.1's worked example writes here
+# (`archogen resolve … --out build/plan.json`, `archogen build … --out build/periodic-three`), and
+# so do the book's target and S0 chapters and `scripts/target_emulator.sh --dump-dtb`. Ignored for
+# the reason `PROGRAM.12` gives for harness scratch: never committed, and never left untracked
+# either, because "handoff-ready" means a clean `git status`. A reader who follows the roadmap's own
+# example must not thereby dirty the tree. Owned by leaf `PROGRAM.22`.
+/build
+
 # Logs & OS cruft
 *.log
 .DS_Store
