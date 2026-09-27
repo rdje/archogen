@@ -13,11 +13,14 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M1` → frontier `M1.20`. `PROGRAM` frontier `PROGRAM.11`; `M2` frontier `M2.8`.
-- **Next action:** **`M1.20`** — re-measure the five `fixed-upstream` LinkedSpec reports at the
-  adopted pin, through LinkedSpec's public route (`sexpr_file` / `SExprDocumentV1.spec` for the
-  document requirements; RGX's public bootstrap for LS-004). Set `verified` only where archogen's
-  own rerun shows the defect gone; a report that still fails stays `fixed-upstream`.
+- **Active tree:** `M1` → frontier `M1.20.1`, the first of seven sub-leaves under `M1.20` (one
+  re-measurement each, plus the preparation, the build and the register reconciliation).
+  `PROGRAM` frontier `PROGRAM.11`; `M2` frontier `M2.8`.
+- **Next action:** **`M1.20.1`** — re-measure **LS-005** (guide ordering) against the guide **at
+  `2ac834913`**: does "Add and pin" now send the reader to workspace setup, local storage and RGX
+  preparation before any build? Then `M1.20.2` (LS-001), `.3` (LS-004), `.4` (build), `.5` (LS-002),
+  `.6` (LS-003), `.7` (register). Set `verified` only where archogen's own rerun shows the defect
+  gone; a report that still fails stays `fixed-upstream`.
 - **LinkedSpec pin = latest published head** `2ac834913d85c32f532be9b0aab63644838a577a` (leaves
   `M1.19` → `M1.19.1`, `2026-09-27`), nested RGX `f6e5acdc9`; it contains every remedy commit.
   ⛔ Adoption is **not** acceptance: no LinkedSpec reproducer was re-run, so no issue state changed.
