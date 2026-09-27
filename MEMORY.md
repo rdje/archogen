@@ -13,14 +13,14 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M1` → frontier `M1.20.4`, fourth of seven sub-leaves under `M1.20`.
+- **Active tree:** `M1` → frontier `M1.20.5`, fifth of seven sub-leaves under `M1.20`.
   `PROGRAM` frontier `PROGRAM.11`; `M2` frontier `M2.8`.
-- **Next action:** **`M1.20.4`** — build the two native consumers at the pin into a **fresh**
-  app-local target dir: `bash vendor/linkedspec/tools/run_cargo_local.sh build --bins --offline
-  --locked --manifest-path examples/integration/rust/Cargo.toml`, producing `sexpr_file` (the
-  document route LS-002/LS-003 are directed to) and `lispish_file` (the extraction guard). Check the
-  guide's reference input `(v 1 "1")(done)` returns the documented two-form tagged JSON. Then `.5`
-  (LS-002), `.6` (LS-003), `.7` (register), and `M1.21` (file the 753 MB-log finding as `LS-008`).
+- **Next action:** **`M1.20.5`** — re-measure **LS-002** (the remaining reported blocker) through
+  `sexpr_file` + `SExprDocumentV1.spec` on the eight frozen probes plus the four-form
+  `system.eadl`, and re-run the historical `lispish_file` route as the extraction guard against its
+  frozen `EXPECTED.txt`. Then `.6` (LS-003), `.7` (register), `M1.21` (file the 753 MB-log finding).
+  **Both consumers are already built**: `scripts/linkedspec_eval.sh bins` prints their paths, and
+  `run <bin> …` executes one inside the vendor's storage environment.
 - **LinkedSpec pin = latest published head** `2ac834913d85c32f532be9b0aab63644838a577a` (leaves
   `M1.19` → `M1.19.1`), nested RGX `f6e5acdc9`, PGEN `d9d41c28`; it contains every remedy commit.
   Re-measurement runs one row per sub-leaf: **LS-005, LS-001 and LS-004 are `verified`** on

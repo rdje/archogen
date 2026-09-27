@@ -45,6 +45,7 @@ before forming a theory about any failure.
 | the code-path seam | is this staged file classified as a code change here? | `git diff --cached --name-only \| grep -Ef <(grep -vE '^\s*(#\|$)' .doctrine/code_paths.txt)` |
 | the grammar conformance check | does the reader still implement the normative grammar — same language, same token boundaries? | `cargo test -p eadl-front --test conformance` |
 | a re-measurement instrument | has a reported vendor defect been re-measured, and is it **gone** at the pin? (exit `0` gone · `1` still present · `2` could not run — the **opposite** polarity of the frozen `repro.sh` beside it, which can only report *change*) | `bash docs/feedback/linkedspec/issues/LS-005-guide-ordering/remeasure.sh vendor/linkedspec` — `--self-test` runs its RED arms |
+| the LinkedSpec evaluation launcher | is the vendored recognizer prepared and built at the pin, which revision is the build named after, and where are its binaries? (exit `0` ok · `2` a prerequisite is missing · otherwise the underlying command's own status, never rewritten) | `scripts/linkedspec_eval.sh env` · `prepare` · `build [--network]` · `bins` · `reference` · `run <bin> …` |
 | `diagnose` | does this eADL file read, WHERE does it stop, what did it parse to, and what headers does it carry? (exit 0 clean · 1 diagnostics · 2 usage/IO) | `cargo run -q -p eadl-front --example diagnose -- <file.eadl>` |
 | `cargo test --all` | does any contract test fail, and with which assertion diff? | `make test` |
 

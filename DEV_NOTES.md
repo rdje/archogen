@@ -1,5 +1,39 @@
 # DEV_NOTES.md
 
+## _(2026-09-27)_ — a vendor's default consumer route is not automatically yours to take
+
+- The vendor's Rust guide tells a consumer to copy `sexpr_file.rs` into the application's `src/bin/`
+  and add `serde_json = "1"` plus a path dependency on the vendored runtime to the application's
+  `Cargo.toml`. For archogen that would put a serialization crate and a vendored path dependency into
+  the **engine workspace**, against the zero-dependency engine decision and §4.4's rule that every
+  shared dependency is a reviewable trust event — to evaluate a recognizer, of all things.
+- ⭐ The alternative is in the same guide: its "Reproduce the integration checks" section builds the
+  example **in place** — `run_cargo_local.sh build --bins --offline --locked --manifest-path
+  examples/integration/rust/Cargo.toml`. Identical binaries, no change to this workspace. Measured:
+  `Finished dev profile … in 1m 02s`, `rc=0`, both binaries at
+  `.app-data/target-2ac834913/debug/{sexpr_file,lispish_file}`.
+- The target directory is **named after the pin**, so a future pin move cannot silently reuse this
+  build; the `ad290bdb4`-era `.app-data/target` (1.3 GB) is preserved beside it for comparison. The
+  five storage values the guide requires are derived in one place —
+  `scripts/linkedspec_eval.sh env` — instead of being re-exported by hand in each session, which is
+  how an off-volume path enters unnoticed.
+- The published result shape is checked, not assumed: the guide's reference input `(v 1 "1")(done)`
+  returns `{"format":"linkedspec-sexpr-v1","forms":[…]}` with two forms, kinds `symbol` / `number` /
+  `string`, and the quotes **inside** the string lexeme. An empty file returns
+  `{"format":"linkedspec-sexpr-v1","forms":[]}`.
+- ⭐ The check's failure path is reachable **without mutating anything**: pointing the document
+  consumer at the historical grammar exits `1` with the typed diagnostic `entry_rule_not_found` —
+  "entry rule 'Document' is not defined" — which independently reproduces the guide's own claim that
+  Lispish has no `Document` entry. A conformance check that cannot fail has not been shown to check.
+- ⛔ And the same two-line input already separates the two routes: `lispish_file` returns
+  `["v","1","1"]` at `rc=0` — the second form `(done)` gone, the string's quotes gone. That is LS-002
+  and LS-003 reproduced on the **vendor's own example input**, and it is the baseline the next two
+  leaves measure against their frozen `EXPECTED.txt`.
+- Promotion declined and recorded in the leaf: the durable halves are already retrievable (the
+  pin-named target directory, and "a project states its own shape rather than editing a portable
+  rule"), and the route choice itself is written in the header of the launcher — the file anyone
+  would have to edit to take the other route.
+
 ## _(2026-09-27)_ — an idempotent generator will happily reuse the previous pin's parser
 
 - `M1.20.3` re-measured LS-004 through RGX's **published** `make bootstrap`, and the first thing it

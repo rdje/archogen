@@ -4,6 +4,41 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — both native consumers built at the pin, behind one launcher
+
+`ARCHOGEN-LINKEDSPEC-0054` (leaf `M1.20.4`).
+
+- New tool `scripts/linkedspec_eval.sh` (`env` · `prepare` · `build [--network]` · `bins` ·
+  `reference` · `run`) derives the five storage values the vendor's guide requires from
+  `git rev-parse --show-toplevel`, so no session re-exports them by hand and nothing lands
+  off-volume. Named in `TOOLBOX.md` with its question and its exit contract.
+- **The target directory is named after the pin** — `.app-data/target-2ac834913` — so a future pin
+  move cannot silently reuse this build. The `ad290bdb4`-era `.app-data/target` (1.3 GB) is preserved
+  beside it; the new build is 2.1 GB.
+- `build` → `Finished dev profile … in 1m 02s`, `rc=0`, `--offline --locked`, producing
+  `sexpr_file` and `lispish_file`. Nothing was written into the vendored checkout:
+  `vendor/linkedspec/rust/target` is still dated `2026-09-20`, `examples/integration/rust/target`
+  does not exist, and `git submodule status` is unmoved.
+- `reference` → `rc=0`: the guide's own input `(v 1 "1")(done)` returns
+  `{"format":"linkedspec-sexpr-v1","forms":[…]}` with two top-level forms, kinds `symbol` / `number` /
+  `string`, and the quotes inside the string lexeme. An empty file returns `{"forms":[]}`.
+- ⭐ The check can fail, proved without mutating anything: pointing the document consumer at
+  `Lispish.spec` exits `1` with the typed diagnostic `entry_rule_not_found` — independently
+  reproducing the guide's claim that Lispish has no `Document` entry.
+- ⛔ **A documented route was declined.** The guide's consumer route copies `sexpr_file.rs` into the
+  application and adds `serde_json` plus a path dependency on the vendored runtime to its
+  `Cargo.toml`. That would put a serialization crate and a vendored dependency into the engine
+  workspace, against the zero-dependency decision and §4.4. The example is built **in place**
+  instead — the route the guide's own check section uses — with identical binaries and no change
+  here: `cargo metadata` still reports 9 members and 0 vendored packages.
+- ⭐ The same reference input already separates the two routes: `lispish_file` returns
+  `["v","1","1"]` at `rc=0` — the second form and the string's quotes gone. LS-002 and LS-003, on the
+  vendor's own example.
+- Validation: `make focused` → exit `0`; `cargo test --all` → **421 passed, 0 failed** over 36
+  suites; `bash -n` clean; all 13 doctrines green. Promotion of this leaf's lesson declined with a
+  recorded reason: the durable halves are already in `docs/knowledge/`, and the route choice is
+  written in the launcher's header.
+
 ## archogen — LS-004 verified through RGX's published interface, and a stale parser caught
 
 `ARCHOGEN-LINKEDSPEC-0053` (leaf `M1.20.3`).
