@@ -4,6 +4,46 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — LS-002 verified: the last reported blocker, on the new document route
+
+`ARCHOGEN-LINKEDSPEC-0055` (leaf `M1.20.5`).
+
+- **LS-002 is `verified`, and no reported blocker is outstanding.** All eight frozen probes were run
+  at LinkedSpec `2ac834913` through `sexpr_file` with `specs/SExprDocumentV1.spec` (entry rule
+  `Document`), each against an expectation written into the instrument **before** the run:
+  `probes 8 · as expected 8 · defect 0 · undecided 0`, `rc=0`.
+- **The decisive probe.** `system.eadl`, the real four-form S0 description whose truncation decided
+  the original report, now returns all four top-level forms — heads `defblock`, `defplatform`,
+  `defservice`, `defsystem` — re-parsed independently of the instrument from the frozen JSON. The
+  historical route returned the first and silently discarded three, on a success exit.
+- Both of the report's asks are met: a complete-input mode (leading, intervening and trailing junk
+  reject the whole document with a typed error and **no partial value**) and a multi-form result
+  (every top-level form, in order).
+- ⭐ **The remedy is a new route, not a change to the old one**, so the verdict names the route and
+  the old path stays under test as a guard: `repro.sh` on `lispish_file` + `Lispish.spec` → `rc=0`,
+  `observation matches evidence/EXPECTED.txt`, all eight lines identical. That `0` means "nothing
+  drifted for consumers who have not migrated", not "still broken".
+- ⛔ Adoption is an action, and the shortcut does not perform it: the new adapter pointed at the old
+  grammar exits `1` with `entry_rule_not_found`, and the old adapter pointed at the new grammar does
+  not adopt the new result contract.
+- New instrument `remeasure.sh`, `--self-test` → `9/9 arms`, with a pure evaluator at its centre:
+  one form where two are expected must be caught, accepting trailing junk must be caught, rejecting
+  while still printing a value must be caught, an unreadable result must be **refused** rather than
+  read as zero forms, and a document expected to be accepted coming back rejected scores "could not
+  decide" — over-rejection is a different defect and must not flip this verdict.
+- ⭐ A real bug found by reading output rather than exit codes: the guard was invoked with the
+  caller's relative paths from a subshell that had changed directory, so it printed
+  `--bin <lispish_file> is required` and did nothing. Paths are resolved before use.
+- ⚠️ **This reopens a closed question.** `M1.14` ruled the shipped grammar unfit as an independent
+  cross-check on the single ground that no complete-input mode existed. That mode now exists and is
+  measured, so leaf `M1.22` is logged: settle by differential harness whether `SExprDocumentV1.spec`
+  can be the third opinion on archogen's normative surface syntax — as a development-time tool, with
+  no dependency added to the engine workspace.
+- Validation: `make focused` → exit `0`; `cargo test --all` → **421 passed, 0 failed** over 36
+  suites; the frozen `EXPECTED.txt`, `repro.sh` and all eight probe inputs untouched;
+  `FEEDBACK-SELF-CONTAINED` green on the new files; all 13 doctrines green.
+- Promoted: `docs/knowledge/a-fix-that-adds-a-route-does-not-retire-the-old-one.md`.
+
 ## archogen — both native consumers built at the pin, behind one launcher
 
 `ARCHOGEN-LINKEDSPEC-0054` (leaf `M1.20.4`).

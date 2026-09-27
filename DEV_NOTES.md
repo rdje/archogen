@@ -1,5 +1,38 @@
 # DEV_NOTES.md
 
+## _(2026-09-27)_ — a remedy that adds a route leaves the old reproducer still reproducing
+
+- `M1.20.5` re-measured LS-002, the register's last blocker and the item the tracker called "the
+  single most valuable ask". The remedy is not a change to the old behaviour but a **second route**:
+  `SExprDocumentV1.spec` (entry rule `Document`) with the `sexpr_file` adapter. On the same four-form
+  real description, at the same revision: the document route returns **4 of 4** top-level forms
+  (`rc=0`); the historical extraction route returns the first form only (`rc=0`). Both are correct,
+  and a verdict that does not say which route it measured is unusable.
+- ⭐ So the guard runs beside the verdict, with the **opposite** meaning: `repro.sh` on the historical
+  route → `rc=0`, `observation matches evidence/EXPECTED.txt`, all eight lines identical. That `0`
+  means "nothing drifted for consumers who have not migrated" — not "still broken". The row is
+  `verified` **on the document route**, and says so in the state table, the register and the History.
+- ⛔ **Adoption is an action, and the obvious shortcut does not perform it.** Pointing the new adapter
+  at the old grammar exits `1` with `entry_rule_not_found`; pointing the old adapter at the new
+  grammar does not adopt the new result contract. Selecting the route *is* the migration.
+- ⛔ A scoring instrument must refuse rather than read a failure as a zero. Form counting is delegated
+  to `python3` and the instrument exits `2` without it, because counting `"kind":"list"` by pattern
+  would have counted nested lists too and reported the four-form document as having dozens. Likewise
+  a document expected to be **accepted** coming back rejected scores `2`, not `1`: over-rejection is a
+  different defect and must not flip this verdict either way.
+- ⭐ One real bug found by reading the output rather than the exit code: the guard was invoked with the
+  caller's relative paths from a subshell that had changed directory, so `repro.sh` printed
+  `--bin <lispish_file> is required` and did nothing. Paths are resolved before use now. A guard that
+  announces it could not run is honest; one whose announcement is scrolled past is not.
+- Measured: `--self-test` → `9/9 arms`; `probes 8 · as expected 8 · defect 0 · undecided 0`;
+  `make focused` exit `0`; `cargo test --all` → **421 passed, 0 failed** over 36 suites. The frozen
+  `EXPECTED.txt`, `repro.sh` and all eight probe inputs are untouched.
+- ⚠️ **This reopens a closed question.** `M1.14` ruled that the shipped grammar "cannot be archogen's
+  reader nor an independent cross-check", on the single ground that no complete-input mode existed.
+  That mode now exists and is measured, so the third opinion `M1.11` asked for on the normative
+  grammar is available for the cost of a harness: leaf `M1.22`, after `M1.20` closes.
+- Promoted: `docs/knowledge/a-fix-that-adds-a-route-does-not-retire-the-old-one.md`.
+
 ## _(2026-09-27)_ — a vendor's default consumer route is not automatically yours to take
 
 - The vendor's Rust guide tells a consumer to copy `sexpr_file.rs` into the application's `src/bin/`

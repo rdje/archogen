@@ -10,7 +10,7 @@ observation.
 | --- | --- |
 | Vendor | LinkedSpec |
 | Upstream | `https://github.com/rdje/linkedspec` |
-| Component under test | Rust backend (`linkedspec-runtime`) and the shipped `specs/Lispish.spec` |
+| Component under test | Rust backend (`linkedspec-runtime`), the shipped `specs/Lispish.spec` and, since the `2026-09-27` re-measurements, `specs/SExprDocumentV1.spec` with the example's two native adapters `lispish_file` and `sexpr_file` |
 | Revision measured | LinkedSpec `ad290bdb4`, RGX `8763a0e6`, PGEN `db6f8c68` |
 | Revision adopted | LinkedSpec `2ac834913d85c32f532be9b0aab63644838a577a` — the **latest published head** — with RGX `f6e5acdc99720349d1e3ecef9f821f365c4db19c`. Pinned `2026-09-27` by leaves `M1.19` → `M1.19.1`, and measured **documentation-only** ahead of the notice's `fd3e328d5` (no `.rs`, `Cargo.*` or `specs/` path differs), so the fixes under test are the same code. The original observations below were taken at the **measured** revision; a row re-measured at this one says so in its own sub-tree |
 | Toolchain | rustc 1.95.0, Darwin arm64 |
@@ -38,15 +38,15 @@ ancestor, so the evidence the notice cites still resolves.
 `M1.20` must follow the guide **at `2ac834913`**, not the one the notice links at `fd3e328d5`.
 Adoption is **not** acceptance: moving the pin changed no state by itself. Re-measurement is owned
 by leaf `M1.20` — the only thing that may move a row to `verified` — and runs one report per
-sub-leaf. `LS-005`, `LS-001` and `LS-004` were re-measured at this pin on `2026-09-27` and are now
-`verified`; `LS-002` and `LS-003` stay `fixed-upstream` until their own reruns land.
+sub-leaf. `LS-005`, `LS-001`, `LS-004` and `LS-002` were re-measured at this pin on `2026-09-27`
+and are now `verified`; `LS-003` stays `fixed-upstream` until its own rerun lands.
 
 ## Register
 
 | ID | Title | Kind | Severity | State | Opened | Last verified |
 | --- | --- | --- | --- | --- | --- | --- |
 | [LS-001](issues/LS-001-cargo-workspace-collision/) | Documented vendoring layout does not build inside a Cargo workspace | Build | Blocker | `verified` | `2026-09-20` | `2026-09-27` |
-| [LS-002](issues/LS-002-multi-form-truncation/) | A multi-form file yields only its first form, exit `0` | Correctness | Blocker | `fixed-upstream` | `2026-09-20` | `2026-09-20` |
+| [LS-002](issues/LS-002-multi-form-truncation/) | A multi-form file yields only its first form, exit `0` | Correctness | Blocker | `verified` | `2026-09-20` | `2026-09-27` |
 | [LS-003](issues/LS-003-token-kind-erasure/) | Quoted string, bare symbol and number are indistinguishable | Correctness | Major | `fixed-upstream` | `2026-09-20` | `2026-09-20` |
 | [LS-004](issues/LS-004-bootstrap-false-success/) | PGEN bootstrap continues past a failed `cargo` and reports a false seed | Robustness | Moderate | `verified` | `2026-09-20` | `2026-09-27` |
 | [LS-005](issues/LS-005-guide-ordering/) | "Add and pin" commands alone never produce a buildable tree | Docs | Minor | `verified` | `2026-09-20` | `2026-09-27` |
@@ -60,20 +60,25 @@ sub-leaf. `LS-005`, `LS-001` and `LS-004` were re-measured at this pin on `2026-
 | `open` | 0 | — |
 | `acknowledged` | 0 | — |
 | `by-design` | 0 | — |
-| `fixed-upstream` | 2 | LS-002, LS-003 |
-| `verified` | 3 | LS-001, LS-004, LS-005 |
+| `fixed-upstream` | 1 | LS-003 |
+| `verified` | 4 | LS-001, LS-002, LS-004, LS-005 |
 | `withdrawn` | 1 | LS-006 |
 | `no-action` | 1 | LS-007 |
 
-**Consumer verification pending for one reported blocker:** `LS-002` (correctness — a multi-form
-file yields only its first form), and for one major: `LS-003`. Both are document-result defects, so
-both are re-measured through `sexpr_file` with `SExprDocumentV1.spec`, the route the completion
-notice directs them to, and not through the historical Lispish extraction.
-`LS-001`, `LS-004` and `LS-005` were re-measured at the adopted pin on `2026-09-27` and are
-`verified`. `LS-001`'s remedy is split: the vendored example now carries its own `[workspace]`
-boundary, and the nested PGEN manifest resolves only once the consuming workspace root carries the
-documented `exclude = ["vendor/linkedspec"]` — which this repository now does, so the exclusion is a
-standing consumer requirement, not a one-off fix.
+**No reported blocker is outstanding.** Both were re-measured at the adopted pin on `2026-09-27` and
+are `verified`. One row remains on the vendor's word: `LS-003` (token-kind erasure, Major), which is
+measured on the same document route as `LS-002`.
+
+Two standing facts a consumer of this pin needs, both recorded where they cannot be missed:
+
+- `LS-001`'s remedy is **split**. The vendored example carries its own `[workspace]` boundary, and
+  the nested PGEN manifest resolves only once the consuming workspace root carries the documented
+  `exclude = ["vendor/linkedspec"]` — which this repository does, so the exclusion is a standing
+  requirement, not a one-off fix.
+- `LS-002`'s remedy is a **new route**, not a change to the old one. `Lispish.spec` keeps its
+  extraction behaviour by design, so a consumer that needs every form must select
+  `SExprDocumentV1.spec`; changing only the old adapter's grammar argument does not adopt the new
+  contract, and fails with `entry_rule_not_found`.
 
 ⚠️ **One new finding is being filed, and it is not part of any verdict above.** Re-measuring
 `LS-004` measured the cost of the published preparation interface as well as its correctness: one
@@ -100,7 +105,7 @@ A row that has been **re-measured** also carries a `remeasure.sh`, whose exit co
 opposite question — *is the reported defect gone at this revision?* — and whose `--self-test`
 proves the instrument still reports the original revision as defective. A frozen reproducer cannot
 do that job: it reports *change*, and a renamed heading is a change too. Rows with one today:
-`LS-001`, `LS-004`, `LS-005`.
+`LS-001`, `LS-002`, `LS-004`, `LS-005`.
 
 Each issue directory is **self-contained**: it carries its own setup instructions, inputs,
 reproducer and frozen observation, and references nothing outside itself. One row can be handed
@@ -110,7 +115,8 @@ over on its own.
 | --- | --- |
 | A LinkedSpec checkout only | LS-001, LS-004, LS-005 (`repro.sh`), LS-001 and LS-005 (`remeasure.sh`) |
 | A prepared checkout, and network for the fresh-preparation arm | LS-004 (`remeasure.sh`) |
-| A built `lispish_file` (each issue's own `SETUP.md` describes the build) | LS-002, LS-003, LS-006, LS-007 |
+| A built `lispish_file` (each issue's own `SETUP.md` describes the build) | LS-002, LS-003, LS-006, LS-007 (`repro.sh`) |
+| Both built consumers, and `python3` to count forms | LS-002 (`remeasure.sh`) |
 
 ## Keeping this index true
 

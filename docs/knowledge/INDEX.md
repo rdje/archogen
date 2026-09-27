@@ -24,3 +24,4 @@ dated lesson in `DEV_NOTES.md` to be promoted here (or explicitly declined in it
 | [`frozen-reproducers-measure-change-not-repair.md`](frozen-reproducers-measure-change-not-repair.md) | Upstream says the bug I reported is fixed — how do I verify that instead of accepting it? |
 | [`a-verified-row-must-name-what-you-still-owe.md`](a-verified-row-must-name-what-you-still-owe.md) | A vendor fixed the integration bug I reported — what do I have to change on my side? |
 | [`prove-the-artifact-was-regenerated-not-just-present.md`](prove-the-artifact-was-regenerated-not-just-present.md) | I re-ran the build at a new pin and it passed — how do I know it did not reuse the old artifacts? |
+| [`a-fix-that-adds-a-route-does-not-retire-the-old-one.md`](a-fix-that-adds-a-route-does-not-retire-the-old-one.md) | The vendor says it is fixed but my reproducer still reproduces — who is right? |

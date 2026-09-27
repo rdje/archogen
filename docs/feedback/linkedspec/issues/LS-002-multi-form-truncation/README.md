@@ -3,12 +3,14 @@
 | Field | Value |
 | --- | --- |
 | **ID** | `LS-002` |
-| **State** | `fixed-upstream` |
+| **State** | `verified` |
 | **Severity** | Blocker for eADL |
 | **Kind** | Correctness (documented behaviour; raised as a requirement) |
 | **Component** | `specs/Lispish.spec`, `examples/integration/rust/src/bin/lispish_file.rs` |
 | **Affects** | LinkedSpec `ad290bdb4` |
-| **Reproducer** | [`repro.sh`](repro.sh), inputs in [`evidence/`](evidence/) |
+| **Fixed in** | new route: `specs/SExprDocumentV1.spec` + `sexpr_file` (`77d7b3db1`, `df845ce61`), published in `fd3e328d5`; re-measured by archogen at `2ac834913` |
+| **Reproducer** | [`repro.sh`](repro.sh) — the historical extraction route, inputs in [`evidence/`](evidence/) |
+| **Re-measurement** | [`remeasure.sh`](remeasure.sh) — the document route, same inputs |
 | **Reported by** | archogen, first consumer of the Rust backend |
 
 ## Summary
@@ -87,18 +89,29 @@ for prioritising it, with a named consumer blocked on it.
 Everything needed is in this directory.
 
 ```sh
-bash repro.sh --bin <path>/lispish_file --grammar <path>/Lispish.spec
+# the document route — the one this row is verified on
+bash remeasure.sh --sexpr-bin <bin>/sexpr_file --sexpr-grammar <checkout>/specs/SExprDocumentV1.spec \
+                  --lispish-bin <bin>/lispish_file --lispish-grammar <checkout>/specs/Lispish.spec
+bash remeasure.sh --self-test      # 9 evaluator arms; no binaries needed
+
+# the historical extraction route — the frozen original observation
+bash repro.sh --bin <bin>/lispish_file --grammar <checkout>/specs/Lispish.spec
 ```
 
 | Item | Where |
 | --- | --- |
 | Inputs | [`evidence/`](evidence/) — one `.eadl` file per case |
-| Frozen observation | [`evidence/EXPECTED.txt`](evidence/EXPECTED.txt) |
+| Frozen observation (historical route) | [`evidence/EXPECTED.txt`](evidence/EXPECTED.txt) |
+| Re-measurement instrument | [`remeasure.sh`](remeasure.sh) |
+| Re-measurement at `2ac834913` | [`evidence/REMEASURED.txt`](evidence/REMEASURED.txt) |
 | Building the two arguments | [`SETUP.md`](SETUP.md) — in this directory |
 
-**Exit code is the verdict:** `0` = the frozen observation still reproduces; `3` = behaviour
-**changed**, which may mean this issue is fixed — the script prints the difference; `2` = could
-not run.
+**Exit codes are the verdict, and the two instruments differ.** `remeasure.sh`: `0` = the defect is
+**gone** on the document route; `1` = **still present** — a form was dropped on a success exit, or
+unusable input was accepted; `2` = could not run, or could not decide (including a document archogen
+expects to be accepted being *rejected*, which is a different defect and is not scored as either).
+`repro.sh`: `0` = the frozen observation still reproduces, i.e. the historical route still
+truncates **as documented**; `3` = behaviour changed; `2` = could not run.
 
 ## State values
 
@@ -132,8 +145,66 @@ See the [document contract](https://github.com/rdje/linkedspec/blob/fd3e328d5dd5
 and [Rust delivery guide](https://github.com/rdje/linkedspec/blob/fd3e328d5dd5c80981a1c3b8496a27270291f7b8/docs/linkedspec-book/src/public-api/integration-rust.md).
 ARCHOGEN's own adoption and verification remain pending.
 
+⚠️ The last line above was true when the notice was recorded and is **superseded** by the
+re-measurement below, which is archogen's own.
+
+## Re-measurement at `2ac834913` — 2026-09-27 (archogen)
+
+**Verdict: the reported defect is gone on the document route**, and both of this report's asks are
+met. State moved `fixed-upstream` → `verified` on archogen's own rerun. Measured with the native
+document consumer `sexpr_file` and `specs/SExprDocumentV1.spec` (entry rule `Document`) at LinkedSpec
+`2ac834913`, RGX `f6e5acdc9`, PGEN `d9d41c28`, with the generated parser **regenerated at this pin**
+rather than the one the checkout arrived carrying.
+
+All eight frozen probes, each against an expectation archogen wrote down before running:
+
+| Probe | Expectation | Result |
+| --- | --- | --- |
+| `01-multiple-top-level-forms` | 2 forms | **2 of 2**, `rc=0` |
+| `12-two-forms-one-line` | 2 forms | **2 of 2**, `rc=0` |
+| `system.eadl` — the real four-form description | 4 forms | **4 of 4**, `rc=0` |
+| `08-comment-no-newline` | 1 form | 1 of 1, `rc=0` |
+| `10-semantically-invalid` | 1 form | 1 of 1, `rc=0` |
+| `07-trailing-garbage` | reject | **rejected**, `rc=1`, no partial value |
+| `09-unbalanced-close` | reject | **rejected**, `rc=1`, no partial value |
+| `06-unterminated-form` | reject | rejected, `rc=1`, no partial value |
+
+`remeasure.sh` → `rc=0`, `probes 8 · as expected 8 · defect 0 · undecided 0`. `--self-test` →
+`9/9 arms passed`, including the historical truncation (one form where two are expected), which must
+come back `1`, and an unreadable result, which must be refused rather than counted as zero forms.
+
+**The decisive probe.** `system.eadl` is the real four-form description that decided the original
+report. It now returns all four top-level forms, headed `defblock`, `defplatform`, `defservice`,
+`defsystem`, where the historical route returned the first and silently discarded three on a success
+exit.
+
+⭐ **Both asks were met — by a new route, not by changing the old one.** Ask (1), a complete-input
+mode: trailing, intervening and leading junk now reject the whole document. Ask (2), a multi-form
+result: every top-level form, in order. Neither was delivered by modifying `Lispish.spec`, which
+keeps its extraction behaviour by design. So a consumer must **select** the document grammar;
+changing only the old adapter's grammar argument does not adopt the new contract — the old adapter
+has no `Document` entry and fails with the typed diagnostic `entry_rule_not_found`.
+
+**The regression guard, run as the notice asks.** `repro.sh` on the historical route at this pin →
+`rc=0`, `observation matches evidence/EXPECTED.txt`: the extraction route still returns one form per
+file and still ignores trailing junk. That is now its documented contract rather than a defect, and
+this row does not claim otherwise.
+
+⚠️ **What this does not settle.** It measures syntax — how many forms there are, and whether unusable
+input is refused. `10-semantically-invalid` is accepted here and must be: a document grammar is not a
+semantic checker, and the consumer's own checking owns meaning. Nor does it establish that
+`SExprDocumentV1.spec` can serve as an **independent recognizer** of archogen's normative surface
+syntax. archogen's earlier evaluation closed that question on the grounds that no complete-input mode
+existed; this result reopens it rather than answering it, and it is tracked separately by the
+consumer. One platform, one build profile, one pin.
+
+Full output: [`evidence/REMEASURED.txt`](evidence/REMEASURED.txt). The frozen original observation,
+[`evidence/EXPECTED.txt`](evidence/EXPECTED.txt), is preserved unchanged.
+
 ## History
 
 - `2026-09-20` — opened by archogen; reproduced on `ad290bdb4` against a real 4-form description.
 
 - `2026-09-27` — LinkedSpec: fixed-upstream in published `fd3e328d5dd5c80981a1c3b8496a27270291f7b8`; response above names the remedy and adoption contract. ARCHOGEN verification pending.
+
+- `2026-09-27` — archogen: re-measured at `2ac834913` on the document route (`sexpr_file` + `SExprDocumentV1.spec`, `remeasure.sh`, 9 evaluator arms) — **8 of 8 probes as expected**, including all four top-level forms of the real description and typed rejection of trailing, unbalanced and unterminated input. The historical extraction route re-run as the guard and unchanged (`repro.sh` → `rc=0`, matches the frozen observation). State `fixed-upstream` → **`verified`**. Evidence: `evidence/REMEASURED.txt`.

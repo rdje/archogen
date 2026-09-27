@@ -6,9 +6,9 @@ upstream integration guide names ARCHOGEN in its own example, so this is offered
 the guide invites: the first real consumer reporting what the first integration actually did.
 
 > **The register of every reported bug and its state is [`INDEX.md`](INDEX.md).**
-> Currently **7 issues — 3 `verified` by archogen's own reruns at the adopted pin (one of them a
-> reported blocker), 2 fixed-upstream awaiting ARCHOGEN verification** (the remaining blocker and
-> one major), 1 withdrawn and 1 no-action. The [completion notice](issues/LS-004-bootstrap-false-success/UPSTREAM.md)
+> Currently **7 issues — 4 `verified` by archogen's own reruns at the adopted pin, including both
+> reported blockers, and 1 fixed-upstream awaiting ARCHOGEN verification** (`LS-003`, a major, on
+> the same route), 1 withdrawn and 1 no-action. The [completion notice](issues/LS-004-bootstrap-false-success/UPSTREAM.md)
 > names the published revision and adoption steps.
 
 **Everything LinkedSpec needs is here.** Each issue is a self-contained sub-tree holding its own
@@ -118,12 +118,22 @@ in the checkout you pass it — and the vendor's guide at the adopted revision f
 remedy. So at a fixed revision it reports `did not behave as described`, and `remeasure.sh` is the
 instrument that decides.
 
-## The single most valuable ask
+## The single most valuable ask — met
 
-If only one thing changes upstream, make it **`LS-002`'s complete-input mode** — an option that
-turns unconsumed input into an error rather than a silent success. It converts a wrong answer
-into a diagnosable failure, and it is what decides whether an `eadl.spec` could ever serve as an
-independent recognizer of archogen's grammar. Everything else in this tracker is smaller.
+The ask was **`LS-002`'s complete-input mode**: an option that turns unconsumed input into an error
+rather than a silent success, because it converts a wrong answer into a diagnosable failure, and
+because it decides whether an `eadl.spec` could ever serve as an independent recognizer of archogen's
+grammar. Everything else in this tracker was smaller.
+
+**Upstream delivered it, and archogen re-measured it on `2026-09-27`.** `SExprDocumentV1.spec` with
+the `sexpr_file` adapter returns every top-level form and rejects leading, intervening and trailing
+input with a typed error and no partial value — 8 of 8 frozen probes as expected, including the
+four-form real description whose truncation decided the original report.
+
+Nothing here is waiting on the vendor now except `LS-003`, which is measured on the same route. The
+question the ask existed to make answerable — whether that grammar can serve as an independent
+recognizer of archogen's normative surface syntax — is **reopened** by this result, and is now
+archogen's own work rather than an ask of LinkedSpec.
 
 ## What works well
 
