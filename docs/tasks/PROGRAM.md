@@ -290,33 +290,43 @@ mdBook that is the director's window into the project.
   decision can be re-taken against it rather than re-argued from memory.
 
 - ID: `PROGRAM.11`
-  Status: `pending`
-  Goal: make the **repository boundary** a stated, mechanically checked doctrine: no archogen
-  agent writes into another git repository or into a vendored submodule's own history, and a
-  vendored checkout that carries local commits or local modifications fails the gate.
-  Acceptance: the rule is stated where a resuming agent reads it (`CLAUDE.md`/`AGENTS.md` and
-  `DOCTRINE_ENFORCEMENT.md`, not only in a session prompt); a `scripts/check_*.sh` registered in
+  Status: `active`
+  Goal: state the **repository boundary in both directions** where a resuming agent actually reads
+  it, and gate the part that is observable from inside this repository: no archogen agent writes
+  into another repository or a vendored submodule's own history (**outbound**), and a change
+  delivered into this repository by another project's agent lands through a leaf that records its
+  authorization, its file list and what it preserved (**inbound**).
+  Acceptance: both directions are stated in `CLAUDE.md`/`AGENTS.md` and `DOCTRINE_ENFORCEMENT.md`,
+  not only in a session prompt; a `scripts/check_*.sh` registered in
   `scripts/check_doctrines.project.sh` fails on a seeded local commit and on a seeded local
-  modification inside `vendor/`, and passes on a clean pin; the check has RED arms in
-  `--self-test`; `docs/decisions/decision_repository-boundary-read-only.md` is linked from it.
-  Priority: **high** — this is the defect class that already fired once (§15 obliges the fix, not
-  just the record).
+  modification inside `vendor/`, and passes on a clean pin; the check has RED arms in `--self-test`;
+  `docs/decisions/decision_repository-boundary-read-only.md` is linked from it and states the
+  incident correctly.
+  Priority: **medium** — see the correction below. The outbound half is preventive; the inbound half
+  already fired once and was handled correctly.
 
-  ⛔ **Opened by a published upstream disclosure, not by speculation.** LinkedSpec
-  `8b5b5ffd8ea415b9b6d97387da8289e8f18606f3` (`2026-09-27`, "RGX-CONSUMER-BUILD-REPORTS.1.3.1 —
-  record publication and repository-boundary violation") discloses "the unauthorized ARCHOGEN
-  documentation commit and auxiliary writes". Measured in this repository: `git log --oneline --
-  vendor/linkedspec` → two commits, neither of which wrote inside the submodule, and
-  `git log --all --grep=LINKEDSPEC` → one commit. So the crossing is not recorded here — which is
-  itself the finding: **the rule was nowhere in the committed repository.**
-  `grep -rn 'READ-ONLY' CLAUDE.md AGENTS.md` → no match. An agent resuming from git alone would
-  never learn the boundary existed. Root cause and the permitted/unpermitted split are in
-  `docs/decisions/decision_repository-boundary-read-only.md`.
+  ⛔ **The incident, and a correction this leaf owes.** LinkedSpec `8b5b5ffd8` (`2026-09-27`,
+  "record publication and repository-boundary violation") discloses "the unauthorized ARCHOGEN
+  documentation commit and auxiliary writes". This leaf first read that as an **outbound** crossing
+  and called the priority high because "the defect class already fired". **The director corrected it
+  on `2026-09-27`: the crossing was inbound** — LinkedSpec's agent modified a few `.md` files *in
+  this repository* to deliver its fix notice. LinkedSpec has since made other repositories
+  read-only in its own bootstrap; it was a one-time error and is not expected to recur.
+  Measured here: every commit carries the single local identity, `git reflog` is linear (no
+  `reset`/`rebase`/`amend`), the inbound content entered via `82ee99a` (leaf `M1.18`) confined to
+  `docs/feedback/linkedspec/**` plus archogen's own live docs, **no code path was touched**, and
+  `make focused` → exit `0` with `cargo test --all` → **421 passed, 0 failed** over 36 suites.
+  Full table in `docs/decisions/decision_repository-boundary-read-only.md`.
+  ⭐ What survives, and it is the reason this leaf exists at all: `grep -rn 'READ-ONLY' CLAUDE.md
+  AGENTS.md` → **no match**. The boundary rule was nowhere in the committed tree, which is why the
+  direction was undecidable from inside it — and why the first draft of the durable record got it
+  backwards. That wrong record, not a stray write, is the measured damage.
 
-  ⚠️ **Honest limit to state up front:** a gate in *this* repository cannot prevent a write into a
-  checkout elsewhere on the filesystem. What it can do is (a) put the rule where every agent reads
-  it, and (b) detect the symptom that is visible from here — a vendored submodule carrying local
-  commits or modifications. The leaf must not claim more than that.
+  ⚠️ **Honest limit to state up front:** a gate in *this* repository cannot prevent an outbound write
+  into a checkout elsewhere on the filesystem, and cannot prevent an inbound write either — it can
+  only require that the inbound one land through a leaf. What it can do is put the rule where every
+  agent reads it, and detect the outbound symptom visible from here: a vendored submodule carrying
+  local commits or local modifications. The leaf must not claim more than that.
   Verification: `pending`
   Commit: `pending`
 
@@ -539,7 +549,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.11` | `pending` | the repository-boundary doctrine. **High** because the defect class already fired: upstream published a crossing, and the rule that forbids it was nowhere in the committed tree — so every agent resuming from git alone was unaware of it |
+| 1 | `PROGRAM.11` | `active` | the repository-boundary doctrine, **in both directions**. The rule was nowhere in the committed tree, which is how an *inbound* crossing got recorded backwards in a durable record. Priority medium: the outbound half is preventive, the inbound half fired once and was handled correctly |
 | 2 | `PROGRAM.5` | `pending` | the §15/§19 dependency and evidence ledger — every external source claim in the book should resolve to a row, and `BOOK-ANCHORS` now checks the *internal* ones |
 | 3 | `PROGRAM.9` | `pending` | the extended tier reports `incomplete` on every run until its three steps exist |
 | 4 | `PROGRAM.6` | `pending` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |

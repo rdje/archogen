@@ -1,5 +1,39 @@
 # DEV_NOTES.md
 
+## _(2026-09-27)_ — correction: the boundary crossing was inbound, and the error reached a durable record
+
+- ⛔ **The entry below got the direction wrong, and this corrects it rather than deleting it.**
+  LinkedSpec's `8b5b5ffd8` disclosure names "the unauthorized ARCHOGEN documentation commit and
+  auxiliary writes"; read from inside archogen with the boundary rule present only in the session
+  prompt, that was taken as *archogen writing into LinkedSpec*. The director corrected it:
+  **LinkedSpec's agent modified a few `.md` files in this repository** to deliver its fix notice.
+  LinkedSpec has since made other repositories read-only in its own bootstrap; one-time error, not
+  expected to recur, and nothing here broke.
+- Audited with tools before correcting anything. Every commit carries the single local identity
+  (`git log --format='%h | A:%an <%ae> | C:%cn <%ce>'`) — no foreign-authored commit. `git reflog`
+  is linear: only `commit:` and `checkout:`, no `reset`/`rebase`/`amend`, so nothing was created and
+  discarded. The inbound content entered through `82ee99a` (leaf `M1.18`), confined to
+  `docs/feedback/linkedspec/**` plus archogen's own live docs — **no `crates/`, `scripts/`,
+  `xtask/`, `Cargo.*` or `Makefile` path**.
+- `make focused` → exit `0` (fmt, clippy, tests); `cargo test --all` → **421 passed, 0 failed** over
+  36 suites, the same count as at `M1.11`. That is the expected result and now a measured one: no
+  crate depends on the vendored checkout, so the pin move cannot reach the suite.
+- ⭐ **The inbound write was handled correctly, and the mechanism is worth keeping.** `M1.18`
+  recorded the authorization, preserved the 36 original non-state feedback files by SHA-256, and
+  refused to let the vendor's notice set `verified`. An external agent's claim about its own fix
+  entered the tree as an attributed claim, not as a result. That is the shape to hold any inbound
+  change in.
+- ⭐ **The real damage from the unwritten rule was the wrong record, not a stray write.** The
+  prohibition was absent from `README.md`, `CLAUDE.md`/`AGENTS.md`, `DOCTRINE_ENFORCEMENT.md` and
+  `scripts/check_doctrines.project.sh` (`grep -rn 'READ-ONLY' CLAUDE.md AGENTS.md` → no match), so
+  the direction was undecidable from inside the repository — and an agent trying to comply wrote its
+  error into layer C, where the next session would trust it. `PROGRAM.11` now covers **both**
+  directions; its priority is medium, not high, because the outbound half is preventive.
+- ⚠️ Meta-lesson for the correction itself: a durable record that turns out to be wrong is corrected
+  **in place with the correction left visible** (layer C must read as current truth), while the
+  changelog and these notes **append** rather than rewrite (layer D is history). Both were done here;
+  no history was rewritten.
+
 ## _(2026-09-27)_ — the pin moved, and a rule nobody had written down turned up missing
 
 - `M1.19` moves `vendor/linkedspec` from `ad290bdb4` — the revision the seven reports were

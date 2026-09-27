@@ -19,10 +19,11 @@
   document requirements; RGX's public bootstrap for LS-004). Set `verified` only where archogen's
   own rerun shows the defect gone; a report that still fails stays `fixed-upstream`.
 - **LinkedSpec pin adopted** `fd3e328d5dd5c80981a1c3b8496a27270291f7b8` (leaf `M1.19`,
-  `2026-09-27`), nested RGX `f6e5acdc9`. ⛔ Adoption is **not** acceptance: nothing was re-run, so
-  no issue state changed. See `docs/feedback/linkedspec/INDEX.md`.
-- **`PROGRAM.11` is high priority:** the never-write-into-another-repository rule lived only in a
-  session prompt, and upstream published a boundary-violation disclosure. Rule and root cause:
+  `2026-09-27`), nested RGX `f6e5acdc9`. ⛔ Adoption is **not** acceptance: no LinkedSpec reproducer
+  was re-run, so no issue state changed. See `docs/feedback/linkedspec/INDEX.md`.
+- **`PROGRAM.11` (medium):** the repository boundary was nowhere in the committed tree, in **either**
+  direction. LinkedSpec's agent once wrote `.md` files *into this repo* to deliver its fix notice —
+  inbound, handled correctly by `M1.18`, corrected upstream, not expected to recur. Rule + audit:
   `docs/decisions/decision_repository-boundary-read-only.md`.
 - **⏳ WAITING ON THE DIRECTOR:** two behaviour-changing rulings on `ROADMAP` §3.1.1 —
   items (a) and (b) of §6 in `docs/decisions/decision_findings-for-director-review.md`.
@@ -34,8 +35,8 @@
   branch's commit message carries the full remaining list.
 - **Also open:** `M1.12` (the language reference) → `M1.13` (freeze `eadl/1`), `M1.10`, `M2.8`
   (pin the installed QEMU), `PROGRAM.5`, `.8`, `.9`, `.10`.
-- **Last application verification:** 421 tests, 0 failed (`M1.11`). The pin move touches no crate,
-  so it re-ran no application test and claims none.
+- **Last application verification:** `make focused` exit `0` at the adopted pin — **421 passed,
+  0 failed** over 36 suites, unchanged from `M1.11`, as expected: no crate depends on `vendor/`.
 - **Run checks as tiers:** `make focused` per commit, `make integration` before a push. Exit
   **20 = incomplete** is not a pass — read what it names.
 - **Blockers and missing tools** are named on every `make integration` run and owned by

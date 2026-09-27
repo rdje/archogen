@@ -4,6 +4,40 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — correct the direction of the LinkedSpec boundary crossing
+
+`ARCHOGEN-PROGRAM-0047` (leaf `PROGRAM.11`).
+
+- ⛔ **The previous entry recorded the incident backwards, and this corrects it.** Upstream
+  `8b5b5ffd8` discloses "the unauthorized ARCHOGEN documentation commit and auxiliary writes"; read
+  from inside archogen, with the boundary rule present only in a session prompt, that was taken as
+  *archogen writing into LinkedSpec*. The director corrected it on `2026-09-27`: **LinkedSpec's
+  agent modified a few `.md` files in this repository** to deliver its fix notice. LinkedSpec has
+  since made other repositories read-only in its own bootstrap; a one-time error, not expected to
+  recur, and nothing here broke.
+- Audited with tools before correcting anything: every commit carries the single local identity (no
+  foreign-authored commit); `git reflog` is linear — no `reset`, `rebase` or `amend`, so nothing was
+  created and discarded; the inbound content entered through `82ee99a` (leaf `M1.18`) confined to
+  `docs/feedback/linkedspec/**` plus archogen's own live docs, with **no** `crates/`, `scripts/`,
+  `xtask/`, `Cargo.*` or `Makefile` path touched.
+- Validation: `make focused` → exit `0` (fmt, clippy, tests); `cargo test --all` → **421 passed,
+  0 failed** over 36 suites — the same count as at `M1.11`, which is the expected result now
+  measured: no crate depends on the vendored checkout, so the pin move cannot reach the suite.
+- ⭐ The inbound write was **handled correctly**, and the mechanism is worth keeping: `M1.18`
+  recorded the authorization, preserved the 36 original non-state feedback files by SHA-256, and
+  refused to let the vendor's notice set `verified`. An external agent's claim about its own fix
+  entered the tree as an attributed claim, not as a result.
+- `PROGRAM.11` is re-scoped to cover the boundary **in both directions**, and its priority drops
+  from high to medium — the high rating rested on the false premise that the outbound defect class
+  had fired. The outbound half is preventive; the inbound half fired once and was handled.
+- Records were corrected **in place where they must read as current truth** (the decision record,
+  the promoted lesson, the leaf) and **appended where they are history** (this file, `DEV_NOTES.md`).
+  No history was rewritten.
+- ⭐ What survives the correction, unchanged and still the reason the leaf exists:
+  `grep -rn 'READ-ONLY' CLAUDE.md AGENTS.md` → **no match**. The rule was absent from the committed
+  tree, so its direction was undecidable from inside it — and the measured damage was a wrong
+  durable record in layer C, not a stray write.
+
 ## archogen — adopt the published LinkedSpec pin
 
 `ARCHOGEN-LINKEDSPEC-0046` (leaf `M1.19`).
