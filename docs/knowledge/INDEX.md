@@ -23,3 +23,4 @@ dated lesson in `DEV_NOTES.md` to be promoted here (or explicitly declined in it
 | [`pin-the-vendor-head-and-measure-the-delta.md`](pin-the-vendor-head-and-measure-the-delta.md) | A vendor's notice names a specific publication — do I pin that commit or their latest head? |
 | [`frozen-reproducers-measure-change-not-repair.md`](frozen-reproducers-measure-change-not-repair.md) | Upstream says the bug I reported is fixed — how do I verify that instead of accepting it? |
 | [`a-verified-row-must-name-what-you-still-owe.md`](a-verified-row-must-name-what-you-still-owe.md) | A vendor fixed the integration bug I reported — what do I have to change on my side? |
+| [`prove-the-artifact-was-regenerated-not-just-present.md`](prove-the-artifact-was-regenerated-not-just-present.md) | I re-ran the build at a new pin and it passed — how do I know it did not reuse the old artifacts? |

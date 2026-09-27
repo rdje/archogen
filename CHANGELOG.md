@@ -4,6 +4,42 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — LS-004 verified through RGX's published interface, and a stale parser caught
+
+`ARCHOGEN-LINKEDSPEC-0053` (leaf `M1.20.3`).
+
+- **LS-004 is `verified`** on four arms at LinkedSpec `2ac834913` / RGX `f6e5acdc9` / PGEN
+  `d9d41c28`, driven only through RGX's **published** `make -C <checkout>/rgx bootstrap` and the
+  vendor's documented storage wrapper. Two independent empty-store offline controls exit `2` at the
+  first missing prerequisite — one `error:` line, no later named step, no seed claim, `generated/`
+  empty; a fresh preparation exits `0` with 12 files and `✅ Bootstrap complete.`; prepared reuse
+  exits `0` printing `PGEN parser already generated — nothing to bootstrap.` Both reported symptoms
+  are absent, so `🌱 generated/ebnf.rs seeded.` over an empty directory cannot occur.
+- ⛔ **The checkout arrived carrying a parser from the previous pin**, and this is the finding that
+  mattered most: `generated/` was dated `2026-09-20` and built at PGEN `db6f8c68`, while the adopted
+  pin carries `d9d41c28`. RGX's published contract warns that `make bootstrap` is idempotent **on
+  existence**, so a plain rerun exits `0` and keeps the old parser — every later measurement would
+  have described the wrong revision while looking green. Regenerated per the contract: digest
+  `50eec63c9ba79b16` → `196db2eefed767ff`.
+- ⭐ The **reuse** arm is what makes staleness visible at all: it exits `0`, says "already
+  generated", and leaves the digest unchanged — from the outside identical to a stale first run.
+- ⛔ The instrument was wrong first and an arm caught it: the classifier counted any seeding message
+  as a symptom, and printed `symptom 1 — PRESENT` over a clean, successful preparation. A seed claim
+  indicts a run only if the run failed; `self-test` now has **9 arms**, including the historical log
+  from `evidence/OBSERVED.txt`, which must still come back `STILL PRESENT`.
+- The historical `repro.sh` was deliberately **not** re-run: it provokes through LS-001's collision
+  (fixed) and calls a PGEN-internal make target, which the guide now tells consumers not to do. Its
+  frozen observation stands as the record of the original defect.
+- ⚠️ **New finding, filed not folded in:** one successful preparation wrote a **753 MB** log of
+  4 008 986 lines, 1 151 376 of them `[PGEN][DBG]` progress lines, while the guide instructs a
+  consumer to preserve the full log when the command fails. Owned by leaf `M1.21` as its own
+  register row; recorded inside LS-004's re-measurement.
+- Destructive arms made safe: the controls remove `generated/`, so they ran last and the fresh parser
+  was restored from a hash-verified copy (`196db2eefed767ff` before and after, 12 files). The stale
+  parser is kept under the application's data root for comparison; the 753 MB log was measured and
+  released. No tracked content of either submodule was modified.
+- Promoted: `docs/knowledge/prove-the-artifact-was-regenerated-not-just-present.md`.
+
 ## archogen — LS-001 verified at the adopted pin, and the consumer's half of the remedy adopted
 
 `ARCHOGEN-LINKEDSPEC-0052` (leaf `M1.20.2`).

@@ -6,9 +6,9 @@ upstream integration guide names ARCHOGEN in its own example, so this is offered
 the guide invites: the first real consumer reporting what the first integration actually did.
 
 > **The register of every reported bug and its state is [`INDEX.md`](INDEX.md).**
-> Currently **7 issues — 2 `verified` by archogen's own rerun at the adopted pin (one of them a
-> reported blocker), 3 fixed-upstream awaiting ARCHOGEN verification** (including the remaining
-> blocker), 1 withdrawn and 1 no-action. The [completion notice](issues/LS-004-bootstrap-false-success/UPSTREAM.md)
+> Currently **7 issues — 3 `verified` by archogen's own reruns at the adopted pin (one of them a
+> reported blocker), 2 fixed-upstream awaiting ARCHOGEN verification** (the remaining blocker and
+> one major), 1 withdrawn and 1 no-action. The [completion notice](issues/LS-004-bootstrap-false-success/UPSTREAM.md)
 > names the published revision and adoption steps.
 
 **Everything LinkedSpec needs is here.** Each issue is a self-contained sub-tree holding its own

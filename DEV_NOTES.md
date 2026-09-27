@@ -1,5 +1,43 @@
 # DEV_NOTES.md
 
+## _(2026-09-27)_ — an idempotent generator will happily reuse the previous pin's parser
+
+- `M1.20.3` re-measured LS-004 through RGX's **published** `make bootstrap`, and the first thing it
+  found was not about the defect at all: the vendored checkout arrived carrying `generated/` dated
+  `2026-09-20`, produced at PGEN `db6f8c68`, while the adopted pin's PGEN is `d9d41c28`. RGX's own
+  downstream contract warns that `make bootstrap` is **idempotent on existence**, so a plain rerun
+  exits `0` and keeps building against the previous pin's parser. Every measurement on top of that
+  would have described the wrong revision while looking green.
+- ⭐ The fix is to require the digest to move, not merely the files to exist:
+  `parser sources ... regenerated: 50eec63c9ba79b16 -> 196db2eefed767ff`, 12 files. The prepared
+  **reuse** arm is what makes the distinction visible — it prints
+  `PGEN parser already generated — nothing to bootstrap.`, exits `0`, and leaves the digest
+  unchanged. From the outside that is indistinguishable from a stale first run; only the digest
+  separates them.
+- LS-004 is `verified` on four arms: two independent empty-store offline controls exit `2` at the
+  first missing prerequisite with no later named step and no seed claim, a fresh preparation exits
+  `0` and regenerates, and reuse exits `0` as documented. The historical `repro.sh` was deliberately
+  **not** re-run: it provokes through LS-001's collision (fixed) and calls a PGEN-internal make
+  target, which the vendor's guide now tells consumers not to do. Its frozen observation stands as
+  the record.
+- ⛔ **The instrument was wrong first, and only an arm caught it.** The classifier counted any
+  seeding message as symptom 1. On a failing run that is right — a seed claim over an empty
+  `generated/` *was* the original bug. On a successful run the seed really happened, and the first
+  version printed `symptom 1 — PRESENT` over a clean preparation. A symptom predicate has to be
+  conditioned on the outcome it is read against; arm 9 now pins that down, and arm 1 is the
+  historical log, which must still come back `STILL PRESENT`.
+- ⚠️ **A cost finding, filed rather than folded in.** One successful preparation wrote a **753 MB**
+  log of 4 008 986 lines, 1 151 376 of them `[PGEN][DBG]` progress lines — while the guide instructs
+  a consumer to "preserve its exit status and full log" when the command fails. That is a property of
+  the interface, not evidence about LS-004, so it is recorded in LS-004's re-measurement and owned by
+  leaf `M1.21` as its own register row.
+- ⭐ Backup discipline made the destructive arms safe: the failure controls must remove `generated/`
+  to provoke anything, so they ran **last**, and the freshly generated parser was restored from a
+  hash-verified copy — `196db2eefed767ff` before, `196db2eefed767ff` after, 12 files both times. The
+  stale parser is kept under the application's data root as the comparison, and the 753 MB log was
+  measured and then released.
+- Promoted: `docs/knowledge/prove-the-artifact-was-regenerated-not-just-present.md`.
+
 ## _(2026-09-27)_ — a vendor's remedy can be half in their tree and half in yours
 
 - `M1.20.2` re-measured LS-001 at the pin and the two halves came apart. The report had asked for an

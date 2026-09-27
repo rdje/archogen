@@ -13,23 +13,23 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M1` → frontier `M1.20.3`, third of seven sub-leaves under `M1.20`.
+- **Active tree:** `M1` → frontier `M1.20.4`, fourth of seven sub-leaves under `M1.20`.
   `PROGRAM` frontier `PROGRAM.11`; `M2` frontier `M2.8`.
-- **Next action:** **`M1.20.3`** — re-measure **LS-004** through RGX's **public** `make bootstrap`
-  (never by reconstructing PGEN's internals): two empty-store offline failure arms, one fresh
-  success arm, one prepared-reuse arm. ⚠️ The generated parser sources in the checkout are dated
-  `2026-09-20`, i.e. from the `8763a0e6`-era build, and PGEN has since moved to `d9d41c28` — the
-  guide at the pin warns that stale generated files can make a bootstrap a silent no-op, so
-  regenerate rather than reuse. Then `.4` (build `sexpr_file` + `lispish_file` into a **fresh**
-  app-local target dir), `.5` (LS-002), `.6` (LS-003), `.7` (register).
+- **Next action:** **`M1.20.4`** — build the two native consumers at the pin into a **fresh**
+  app-local target dir: `bash vendor/linkedspec/tools/run_cargo_local.sh build --bins --offline
+  --locked --manifest-path examples/integration/rust/Cargo.toml`, producing `sexpr_file` (the
+  document route LS-002/LS-003 are directed to) and `lispish_file` (the extraction guard). Check the
+  guide's reference input `(v 1 "1")(done)` returns the documented two-form tagged JSON. Then `.5`
+  (LS-002), `.6` (LS-003), `.7` (register), and `M1.21` (file the 753 MB-log finding as `LS-008`).
 - **LinkedSpec pin = latest published head** `2ac834913d85c32f532be9b0aab63644838a577a` (leaves
-  `M1.19` → `M1.19.1`, `2026-09-27`), nested RGX `f6e5acdc9`; it contains every remedy commit.
-  Re-measurement runs one row per sub-leaf: **LS-005 and LS-001 are `verified`** on archogen's own
-  reruns; LS-002 … LS-004 stay `fixed-upstream` until theirs land. The root `Cargo.toml` now carries
-  `exclude = ["vendor/linkedspec"]` — required by the vendor's guide and load-bearing for the nested
-  PGEN manifest, so do not remove it.
-  ⚠️ The Rust integration guide changed between `fd3e328d5` and head — `M1.20` follows the guide
-  **at `2ac834913`**. See `docs/feedback/linkedspec/INDEX.md`.
+  `M1.19` → `M1.19.1`), nested RGX `f6e5acdc9`, PGEN `d9d41c28`; it contains every remedy commit.
+  Re-measurement runs one row per sub-leaf: **LS-005, LS-001 and LS-004 are `verified`** on
+  archogen's own reruns; LS-002 and LS-003 stay `fixed-upstream`. Two standing facts: the root
+  `Cargo.toml` carries `exclude = ["vendor/linkedspec"]` (required, load-bearing — do not remove),
+  and the checkout's generated parser was **regenerated at this pin** (`50eec63c…` → `196db2ee…`),
+  because a bootstrap is idempotent on existence and the tree had arrived with the previous pin's.
+  ⚠️ Follow the integration guide **at `2ac834913`**; it changed after `fd3e328d5`. See
+  `docs/feedback/linkedspec/INDEX.md`.
 - **`PROGRAM.11` (medium)** is the other active frontier: the repository-boundary rule in **both**
   directions — `docs/decisions/decision_repository-boundary-read-only.md`.
 - **⏳ WAITING ON THE DIRECTOR:** two behaviour-changing rulings on `ROADMAP` §3.1.1 —

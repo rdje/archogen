@@ -1,0 +1,224 @@
+# LS-004 re-measurement — LinkedSpec 2ac834913d85c32f532be9b0aab63644838a577a
+# RGX f6e5acdc99720349d1e3ecef9f821f365c4db19c · PGEN d9d41c28dca86dd9ec4a6f3668c3a8c71cecf97d
+# Date 2026-09-27 · rustc 1.95.0 (59807616e 2026-04-14) · cargo 1.95.0 · Darwin arm64
+# Interface driven: RGX's PUBLISHED downstream one — make -C <checkout>/rgx bootstrap — through the
+#   vendor's documented storage wrapper, from the consuming application's root. PGEN's internal
+#   generation steps are not reproduced and neither submodule's tracked content is modified; the
+#   only removals are build outputs the published contract tells a consumer to regenerate
+#   (generated/) and not to trust after a pin bump (rust/target/).
+# Instrument: remeasure.sh, in this directory. The frozen original observation, taken at PGEN
+#   db6f8c68, is evidence/OBSERVED.txt and is unchanged by this run.
+# Path spellings: <app-root> is the consuming application's root; <parent> is a literal
+#   parent-directory element a tool printed, rewritten because this directory must stay portable.
+# VERDICT: the reported defect is GONE at this revision — on both failure controls, on a fresh
+#   successful preparation, and on prepared reuse.
+
+== 0. the four arms ==
+  self-test ................ 9/9 arms, rc=0 — the classifier reports the historical run STILL PRESENT
+  failure control 1 ........ make exit 2, verdict GONE (rc=0) — empty offline store
+  failure control 2 ........ make exit 2, verdict GONE (rc=0) — a second, independent empty store
+  fresh preparation ........ make exit 0, verdict GONE (rc=0) — 12 files, parser regenerated
+  prepared reuse ........... make exit 0, verdict GONE (rc=0) — "already generated", parser unchanged
+
+== 1. the classifier discriminates — bash remeasure.sh self-test ==
+LS-004 remeasure: self-test
+  arm passes: the historical false-success run is STILL PRESENT (exit 1)
+  arm passes: stopping at the first missing prerequisite is GONE (exit 0)
+  arm passes: a seed claim with nothing generated is STILL PRESENT (exit 1)
+  arm passes: a named step after the failure is STILL PRESENT (exit 1)
+  arm passes: a success exit that produced files is GONE (exit 0)
+  arm passes: a success exit that produced nothing is STILL PRESENT (exit 1)
+  arm passes: a true seed claim on a successful run is not a symptom (exit 0)
+  arm passes: a failure control that exited 0 is refused (exit 2)
+  arm passes: a failed preparation is refused, not classified (exit 2)
+self-test: 9/9 arms passed
+self-test rc=0
+
+== 2. failure control 1 — empty offline package store ==
+== LS-004 failure arm — empty offline package store ==
+  checkout ..................... linkedspec at 2ac834913
+  package store ................ empty-store-1 (created empty; CARGO_NET_OFFLINE=true)
+  interface .................... make -C <checkout>/rgx bootstrap, via the documented storage wrapper
+  a backup already exists at <app-data>/pgen-generated-before-remeasure — kept
+  generated/ removed ........... yes (the published regeneration step after a pin bump)
+  log .......................... <app-data>/ls004/failure-20260927-181210.log
+
+-- log (first 12 and last 6 lines) --
+  [rgx] Generating the PGEN regex parser (one-time bootstrap)...
+  🚀 Bootstrap regex parser from cold clone...
+  🌱 Seeding generated/ebnf.rs (one-time bootstrap, Rust frontend)...
+    Step A: build ast_pipeline (compiles without generated/ebnf.rs
+            because the cross-check is gated on has_generated_ebnf_parser)...
+  warning: file `<app-root>/vendor/linkedspec/rgx/subs/pgen/rust/src/main.rs` found to be present in multiple build targets:
+    * `bin` target `ast_pipeline`
+    * `bin` target `ast_pipeline_bootstrap`
+  error: no matching package named `chrono` found
+  location searched: crates.io index
+  required by package `pgen v1.0.0 (<app-root>/vendor/linkedspec/rgx/subs/pgen/rust)`
+  As a reminder, you're using offline mode (--offline) which can sometimes cause surprising resolution failures, if this error is too confusing you may wish to retry without `--offline`.
+  ...
+  error: no matching package named `chrono` found
+  location searched: crates.io index
+  required by package `pgen v1.0.0 (<app-root>/vendor/linkedspec/rgx/subs/pgen/rust)`
+  As a reminder, you're using offline mode (--offline) which can sometimes cause surprising resolution failures, if this error is too confusing you may wish to retry without `--offline`.
+  make[1]: *** [regex_parser_bootstrap] Error 101
+  make: *** [bootstrap] Error 2
+
+== LS-004 classification: failure arm ==
+  exit status .......................... 2
+  '^error' lines (distinct failures) ... 1
+  missing build product invoked ........ 0
+  seeding messages printed ............. 0
+  named steps after the first failure .. 0
+  files in generated/ afterwards ....... 0
+  symptom 1 — continued past a failed prerequisite ... not seen
+  symptom 2 — claimed a seed that did not happen ..... not seen
+LS-004 remeasure: RESULT — the defect is GONE: preparation failed at the first missing
+  prerequisite, ran no later step, and claimed no seed.
+
+== 3. failure control 2 — a second, independent empty store ==
+== LS-004 failure arm — empty offline package store ==
+  checkout ..................... linkedspec at 2ac834913
+  package store ................ empty-store-2 (created empty; CARGO_NET_OFFLINE=true)
+  interface .................... make -C <checkout>/rgx bootstrap, via the documented storage wrapper
+  a backup already exists at <app-data>/pgen-generated-before-remeasure — kept
+  generated/ removed ........... yes (the published regeneration step after a pin bump)
+  log .......................... <app-data>/ls004/failure-20260927-181210.log
+
+-- log (first 12 and last 6 lines) --
+  [rgx] Generating the PGEN regex parser (one-time bootstrap)...
+  🚀 Bootstrap regex parser from cold clone...
+  🌱 Seeding generated/ebnf.rs (one-time bootstrap, Rust frontend)...
+    Step A: build ast_pipeline (compiles without generated/ebnf.rs
+            because the cross-check is gated on has_generated_ebnf_parser)...
+  warning: file `<app-root>/vendor/linkedspec/rgx/subs/pgen/rust/src/main.rs` found to be present in multiple build targets:
+    * `bin` target `ast_pipeline`
+    * `bin` target `ast_pipeline_bootstrap`
+  error: no matching package named `chrono` found
+  location searched: crates.io index
+  required by package `pgen v1.0.0 (<app-root>/vendor/linkedspec/rgx/subs/pgen/rust)`
+  As a reminder, you're using offline mode (--offline) which can sometimes cause surprising resolution failures, if this error is too confusing you may wish to retry without `--offline`.
+  ...
+  error: no matching package named `chrono` found
+  location searched: crates.io index
+  required by package `pgen v1.0.0 (<app-root>/vendor/linkedspec/rgx/subs/pgen/rust)`
+  As a reminder, you're using offline mode (--offline) which can sometimes cause surprising resolution failures, if this error is too confusing you may wish to retry without `--offline`.
+  make[1]: *** [regex_parser_bootstrap] Error 101
+  make: *** [bootstrap] Error 2
+
+== LS-004 classification: failure arm ==
+  exit status .......................... 2
+  '^error' lines (distinct failures) ... 1
+  missing build product invoked ........ 0
+  seeding messages printed ............. 0
+  named steps after the first failure .. 0
+  files in generated/ afterwards ....... 0
+  symptom 1 — continued past a failed prerequisite ... not seen
+  symptom 2 — claimed a seed that did not happen ..... not seen
+LS-004 remeasure: RESULT — the defect is GONE: preparation failed at the first missing
+  prerequisite, ran no later step, and claimed no seed.
+
+== 4. fresh successful preparation ==
+== LS-004 success arm — RGX's published preparation interface ==
+  checkout ..................... linkedspec at 2ac834913
+  package store ................ the retained application-local store (CARGO_NET_OFFLINE=false)
+  interface .................... make -C <checkout>/rgx bootstrap, via the documented storage wrapper
+  a backup already exists at <app-data>/pgen-generated-before-remeasure — kept
+  removing stale ............... generated (0, dated 2026-09-27 18:07:50)
+  removing stale ............... rust/target (2.7G, dated 2026-09-27 18:03:54)
+  log .......................... <app-data>/ls004/success-20260927-180802.log
+
+-- log (first 8 and last 10 lines) --
+  [rgx] Generating the PGEN regex parser (one-time bootstrap)...
+  🚀 Bootstrap regex parser from cold clone...
+  🌱 Seeding generated/ebnf.rs (one-time bootstrap, Rust frontend)...
+    Step A: build ast_pipeline (compiles without generated/ebnf.rs
+            because the cross-check is gated on has_generated_ebnf_parser)...
+  warning: file `<app-root>/vendor/linkedspec/rgx/subs/pgen/rust/src/main.rs` found to be present in multiple build targets:
+    * `bin` target `ast_pipeline`
+    * `bin` target `ast_pipeline_bootstrap`
+  ...
+  [PGEN][DBG] 🧠 [src/ast_pipeline/ast_based_generator.rs:537] [pgen::ast_pipeline::ast_based_generator::AstBasedGenerator::generate_parser]
+  [PGEN][DBG] 🧠 [src/ast_pipeline/ast_based_generator.rs:539] [pgen::ast_pipeline::ast_based_generator::AstBasedGenerator::generate_parser] 🎨  Converting TokenStream to formatted Rust code...
+  [PGEN][DBG] 🧠 [src/ast_pipeline/ast_based_generator.rs:562] [pgen::ast_pipeline::ast_based_generator::AstBasedGenerator::generate_parser] ✨  Code formatting complete (43484398 characters)
+  [PGEN][DBG] 🧠 [src/ast_pipeline/ast_based_generator.rs:566] [pgen::ast_pipeline::ast_based_generator::AstBasedGenerator::generate_parser] 📂  File: src/ast_pipeline/ast_based_generator.rs:566
+  [PGEN][DBG] 🧠 [src/ast_pipeline/ast_based_generator.rs:567] [pgen::ast_pipeline::ast_based_generator::AstBasedGenerator::generate_parser]
+  SOTA parser generated: <parent>/generated/regex_parser.rs
+  Return-annotation inventory: <parent>/generated/regex_return_annotations.json (240 entries)
+  ✅ Generated: <parent>/generated/regex_parser.rs
+  ✅ Regex parser generated successfully!
+  ✅ Bootstrap complete. generated/regex_parser.rs is ready for --features generated_parsers builds.
+
+  files in generated/ .......... 12
+  parser sources ............... regenerated: 50eec63c9ba79b16 -> 196db2eefed767ff
+
+== LS-004 classification: success arm ==
+  exit status .......................... 0
+  '^error' lines (distinct failures) ... 0
+  missing build product invoked ........ 0
+  seeding messages printed ............. 1
+  named steps after the first failure .. 0
+  files in generated/ afterwards ....... 12
+  symptom 1 — continued past a failed prerequisite ... not seen
+  symptom 2 — claimed a seed that did not happen ..... not seen
+LS-004 remeasure: RESULT — the defect is GONE: preparation exited 0 and produced 12 files.
+SUCCESS ARM rc=0
+
+== 5. prepared reuse ==
+== LS-004 reuse arm — RGX's published preparation interface ==
+  checkout ..................... linkedspec at 2ac834913
+  package store ................ the retained application-local store (CARGO_NET_OFFLINE=false)
+  interface .................... make -C <checkout>/rgx bootstrap, via the documented storage wrapper
+  generated/ left in place ..... yes (this arm measures reuse of a prepared checkout)
+  log .......................... <app-data>/ls004/reuse-20260927-180957.log
+
+-- log (first 8 and last 10 lines) --
+  [rgx] PGEN parser already generated — nothing to bootstrap.
+  ...
+  [rgx] PGEN parser already generated — nothing to bootstrap.
+
+  files in generated/ .......... 12
+  parser sources ............... UNCHANGED (196db2eefed767ff) — this run generated nothing new
+
+== LS-004 classification: reuse arm ==
+  exit status .......................... 0
+  '^error' lines (distinct failures) ... 0
+  missing build product invoked ........ 0
+  seeding messages printed ............. 0
+  named steps after the first failure .. 0
+  files in generated/ afterwards ....... 12
+  symptom 1 — continued past a failed prerequisite ... not seen
+  symptom 2 — claimed a seed that did not happen ..... not seen
+LS-004 remeasure: RESULT — the defect is GONE: reuse of a prepared checkout exits 0.
+REUSE ARM rc=0
+
+== 6. what the fresh preparation cost, including its log ==
+  The successful run's full log was 753M and 41 lines, of which 1151376 were [PGEN][DBG]
+  progress lines from the generator. The vendor's guide tells a consumer that if this command fails
+  it must "stop before building the application and preserve its exit status and full log" — and a
+  SUCCESSFUL run's log is three quarters of a gigabyte. That is a separate finding about the
+  interface's cost, not evidence about this defect, so it is recorded as its own issue rather than
+  folded into this verdict. The log itself was measured and then released; its head and tail are
+  frozen in section 4 above.
+
+== 7. how the prepared state survived the failure controls ==
+  A failure control has to remove generated/ to provoke the missing prerequisite, so the two
+  controls were run last and the freshly generated parser was restored from a hash-verified copy:
+  digest 196db2eefed767ff before the controls, 196db2eefed767ff after, 12 files both times.
+  The stale parser that predated this re-measurement — digest 50eec63c9ba79b16, dated 2026-09-20,
+  generated at PGEN db6f8c68 — is kept under the application's data root, because the published
+  contract warns that a bootstrap is idempotent on EXISTENCE and would otherwise have reused it.
+  That warning was the reason this leaf regenerated at all: the checkout arrived carrying a parser
+  from the previous pin.
+
+== 8. what this re-measurement does NOT claim ==
+  It does not build LinkedSpec's Rust consumers, and says nothing about the document or extraction
+  results those consumers return — LS-002 and LS-003 own those, and are measured separately.
+  It does not claim the preparation is fast or quiet; see section 6.
+  It measures one platform (Darwin arm64, Rust 1.95.0) through one published interface.
+  The historical repro.sh was NOT re-run, deliberately. It provokes the failure through LS-001's
+  workspace collision — now fixed — and by calling PGEN's internal make target directly, which the
+  vendor's guide at this revision tells consumers not to do ("Applications should not reproduce
+  PGEN's internal generation steps or modify either submodule"). Its frozen observation stands as
+  the record of the original defect; re-running it would measure a route that is no longer
+  supported, and would say nothing about the published one.
