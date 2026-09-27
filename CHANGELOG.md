@@ -4,6 +4,45 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — a figure that was false for 47 commits, and the gate that makes the next one derived
+
+`ARCHOGEN-M1-0061` (leaf `M1.23`).
+
+- **Two live surfaces published a measurement `M1.7` had superseded.** `crates/eadl-model/src/kind.rs`'s
+  module header and `docs/book/src/kinds.md` both said the schema refuses **10 of the 11** rejected
+  boundary cases, that `execution-bound` is caught *only* by the classifier, and that a test "pins the
+  split in both directions". At `HEAD` the reject corpus holds **13** cases, the schema reaches all 13
+  (`out_of_reach.is_empty()`), and the test that pinned a split was replaced by one that pins the
+  closure. Both sentences were true when written at `b53eb85` — the corpus really was 11 — and were
+  superseded at `9030111`, **47 commits** earlier (`git rev-list --count 9030111..HEAD`).
+- ⛔ **The book contradicted itself.** `kinds.md` said 10 of 11 while its sibling `workload.md` said
+  13 of 13, both reachable from `SUMMARY.md` — and the book is the director's only window into the
+  project. `M1.7` had updated the test, the corpus and `workload.md`, and never touched `kinds.md`.
+  `BOOK-ANCHORS` could not see it, and says so: it proves a chapter points at something real, never that
+  what it says there is true.
+- ⭐ **The census was classified before anything was edited.** `grep -rnE '[0-9]+ of (the )?[0-9]+'` over
+  the live surfaces returned **9** hits: 2 live and false, and **7 correct** — past-tense history, a
+  "this test previously asserted" comment, two `CHANGELOG` entries, and three inside closed leaves and
+  the Decisions log. Editing those would have rewritten history to look current, which is its own defect
+  and the one `docs/CLAIM_VERIFICATION.md` §B names.
+- **The fix is a consumer, not a correction.** §5B of that policy names "correcting a stale constant to
+  a fresh constant" as an anti-pattern, so the number became derived: the corpus walk was extracted into
+  `measure_reach()` giving the reach **one** implementation shared by the assertion and the gate; the
+  module header now carries **no figure at all** and names the test that measures; and
+  `the_live_surfaces_publish_the_measured_reach` reads all three surfaces with `include_str!` — so a
+  moved file stops the crate compiling instead of silently gating nothing — and compares every figure to
+  the measurement, accepting a figure only as the measurement or as marked past tense.
+- ⛔ **One of the five RED arms was a false green on its first attempt.** The mutation was applied with
+  `perl -0pi -e 's{(…)}{…\$1}'`, where single quotes made `\$1` literal, so the crate failed to compile
+  (`error: expected item, found \`$\``) and the arm's output filter printed nothing — which reads exactly
+  like a pass. The harness was rebuilt to report `mutation applied` and `compiles` before any verdict,
+  and the arm re-run. `docs/knowledge/verify-the-mutation-applied.md` already prescribed this.
+- New knowledge card `docs/knowledge/a-moved-measurement-needs-a-census-of-its-copies.md` + its `INDEX.md`
+  row; `TOOLBOX.md` names the reach drift gate and its five arms; `M1`'s Decisions log gains the rule.
+- Validation: `make focused` → exit `0`, `3 passed, 0 failed, 0 unavailable`; `cargo test --all` →
+  **422 passed, 0 failed** over 36 suites against a baseline of 421, the delta being exactly the one new
+  gate; `kinds` suite `15` → `16 passed`; `make gate` → `=== all doctrines green ===`.
+
 ## archogen — 1.4 GB of regenerable artifacts released, and the cleanup record started
 
 `ARCHOGEN-PROGRAM-0060` (leaf `PROGRAM.19`).

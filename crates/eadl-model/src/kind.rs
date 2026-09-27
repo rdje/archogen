@@ -31,11 +31,23 @@
 //!
 //! One consequence is worth stating rather than discovering: a clause declared `(holds forms)`
 //! is **opaque**, so a forbidden construct nested inside one is invisible to the schema. The
-//! boundary classifier catches those, because it walks the whole tree. Measured on the corpus,
-//! the schema refuses 10 of the 11 rejected cases and the eleventh — `execution-bound`, which
-//! hides `wcet` inside `(task …)` — is caught only by the classifier. The two mechanisms are
-//! independent and their reach is not identical; `tests/kinds.rs` pins the split in both
-//! directions so a change to it has to be deliberate.
+//! boundary classifier catches those, because it walks the whole tree. A clause declared
+//! `(holds kind …)` is the opposite — each occurrence is validated as a full declaration, so the
+//! schema sees inside it. That is how `M1.7` closed a measured gap: `defsystem`'s `task` clause
+//! became `(holds kind task)`, and the `wcet` that `execution-bound` hides inside a task became
+//! visible to the schema as well as to the classifier.
+//!
+//! ⛔ **No reach figure is written here, deliberately.** This header carried one, and it was
+//! still asserting it 47 commits after the measurement that superseded it — because a number
+//! copied into prose is copied out of the reach of the test that took it, and nothing fails when
+//! it goes stale. The reach is a property of the corpus, so the corpus is where it is measured:
+//! `tests/kinds.rs::the_schema_now_reaches_every_rejected_case` counts the rejected cases,
+//! asserts the schema reaches every one, and asserts the classifier refuses every one too.
+//! `the_live_surfaces_publish_the_measured_reach` then requires this header to name that test
+//! instead of quoting a count.
+//!
+//! Equal reach on *one* corpus is not equivalence. The two mechanisms are independent, and
+//! independence is the point: a mistake in one is caught by the other.
 
 use std::collections::BTreeMap;
 

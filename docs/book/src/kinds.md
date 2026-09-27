@@ -60,20 +60,30 @@ The "did you mean" is edit-distance bounded on purpose. Suggesting `defsystem` f
 Every problem in a kind definition is reported, not just the first — a malformed definition
 usually has several things wrong with it.
 
-## What it does not check, and the measured gap
+## What it does not check, and the gap that closed
 
 A clause declared `(holds forms)` is **opaque**. `(at-least 60 s)` is nested forms at this
 layer and becomes a checked quantity later.
 
 That has a consequence worth naming rather than discovering: a forbidden construct nested
-*inside* an opaque clause is invisible to the schema. Measured on the boundary corpus, the
-schema refuses **10 of the 11** rejected cases; the eleventh, `execution-bound`, hides `wcet`
-inside `(task …)` and is caught by the boundary classifier instead, which walks the whole tree.
+*inside* an opaque clause is invisible to the schema. This was not hypothetical. The boundary
+corpus carried a case, `execution-bound`, that hides `wcet` inside `(task …)` — and while `task`
+was declared `(holds forms)`, only the boundary classifier caught it, because it walks the whole
+tree. The measured reach was **10 of 11** rejected cases.
 
-The two mechanisms are independent and their reach is not identical. The test pins the split in
-both directions, so when `(task …)` gets a real schema the count changes and someone has to say
-so deliberately.
+`M1.7` gave `task` a real kind and wrote `(holds kind task)`, which makes the schema validate
+each task as a full declaration and so see inside it. The reach is now **13 of 13**: every
+rejected case is refused by the schema *and* by the classifier.
 
-Two independent refusals for the same content is a feature, not redundancy: a mistake in one is
-caught by the other. Claiming they were equivalent would have been the more dangerous kind of
-green.
+The two mechanisms remain independent, and that is the point rather than a redundancy: a mistake
+in one is caught by the other. What changed is the *measurement*, not the argument — and equal
+reach on one corpus is not equivalence. A construct hidden inside a clause that is still
+`(holds forms)` would be invisible to the schema again, which is why the test asserts
+`out_of_reach.is_empty()` over the corpus rather than asserting a number, and why moving a clause
+back would fail the build.
+
+⭐ The figures above are **gated**, not typed. `the_live_surfaces_publish_the_measured_reach`
+measures the reach from the corpus and fails if this chapter publishes a different current
+figure. It exists because this chapter published the stale one for 47 commits: the test that
+measured the closure landed, the sibling chapter `workload.md` was updated, and this one was
+not. A number copied into prose is copied out of the reach of the test that took it.

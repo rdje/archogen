@@ -146,17 +146,19 @@ fn every_accepted_boundary_case_validates_against_the_core_kinds() {
     assert_eq!(checked, 10, "the accept corpus changed size");
 }
 
-#[test]
-fn the_schema_now_reaches_every_rejected_case() {
-    // ⭐ THE GAP, CLOSED AND RE-PINNED. This test previously asserted a measured 10-of-11 split:
-    // `execution-bound` hid `wcet` inside `(task …)`, which was declared `(holds forms)` and
-    // therefore opaque to the schema, so only the boundary classifier caught it.
-    //
-    // `M1.7` gave `task` a real kind and changed the clause to `(holds kind task)`, which makes
-    // the schema recurse into it. The reach is now 13 of 13. Keeping the assertion exact rather
-    // than loosening it to "at least one" is the point: if a later clause moves back to
-    // `(holds forms)`, or a new corpus case hides a construct somewhere else opaque, this fails
-    // and someone has to say so deliberately.
+/// Walk the reject corpus and measure how far the schema reaches into it.
+///
+/// Returns `(refused_by_schema, out_of_reach)`, both sorted.
+///
+/// ⭐ **One implementation, deliberately.** [`the_schema_now_reaches_every_rejected_case`] asserts
+/// the reach and [`the_live_surfaces_publish_the_measured_reach`] compares the published prose
+/// against it. Two ways of measuring would reintroduce exactly the defect that pair exists to end:
+/// a number in prose that nothing re-derives.
+///
+/// The classifier assertion lives inside the walk rather than in a caller, because "two
+/// independent refusals for the same content" is a property of *each* case, and putting it here
+/// means no caller can measure the reach without also checking it.
+fn measure_reach() -> (Vec<String>, Vec<String>) {
     let registry = core_registry();
     let root = repo_root().join("docs/semantics/boundary/reject");
 
@@ -192,6 +194,21 @@ fn the_schema_now_reaches_every_rejected_case() {
 
     refused_by_schema.sort();
     out_of_reach.sort();
+    (refused_by_schema, out_of_reach)
+}
+
+#[test]
+fn the_schema_now_reaches_every_rejected_case() {
+    // ⭐ THE GAP, CLOSED AND RE-PINNED. This test previously asserted a measured 10-of-11 split:
+    // `execution-bound` hid `wcet` inside `(task …)`, which was declared `(holds forms)` and
+    // therefore opaque to the schema, so only the boundary classifier caught it.
+    //
+    // `M1.7` gave `task` a real kind and changed the clause to `(holds kind task)`, which makes
+    // the schema recurse into it. Keeping the assertion exact rather than loosening it to "at
+    // least one" is the point: if a later clause moves back to `(holds forms)`, or a new corpus
+    // case hides a construct somewhere else opaque, this fails and someone has to say so
+    // deliberately.
+    let (refused_by_schema, out_of_reach) = measure_reach();
 
     assert_eq!(
         refused_by_schema.len() + out_of_reach.len(),
@@ -203,6 +220,127 @@ fn the_schema_now_reaches_every_rejected_case() {
         "the schema no longer reaches every rejected case: {out_of_reach:?} — if that is \
          deliberate, say so here and name the leaf that closes it again"
     );
+}
+
+/// The three live surfaces that talk about the schema's reach.
+///
+/// `include_str!` rather than `fs::read_to_string`, for the reason `profile.rs` gives for the
+/// published profile page: if one of these moves or is deleted, this crate **stops compiling**
+/// instead of silently gating nothing.
+const KIND_HEADER: &str = include_str!("../src/kind.rs");
+const BOOK_KINDS: &str = include_str!("../../../docs/book/src/kinds.md");
+const BOOK_WORKLOAD: &str = include_str!("../../../docs/book/src/workload.md");
+
+/// A word that marks the figure on its own line as history rather than as the current measurement.
+const HISTORY_MARKERS: &[&str] = &["was", "were", "previously", "before", "used to"];
+
+/// Every `<n> of <m>` figure in `text`, as `(line_number, n, m, the_line)`.
+///
+/// Handles the `of the` spelling too, so a surface that writes "13 of the 13" is still read as a
+/// figure rather than skipped — a gate that cannot see a variant of the thing it guards is a gate
+/// that passes for the wrong reason.
+fn reach_figures(text: &str) -> Vec<(usize, usize, usize, String)> {
+    let mut found = Vec::new();
+    for (index, line) in text.lines().enumerate() {
+        let mut rest = line;
+        while let Some(at) = rest.find(" of ") {
+            let (before, after) = rest.split_at(at);
+            let after = &after[" of ".len()..];
+            let digits = |s: &str| {
+                s.chars()
+                    .rev()
+                    .take_while(char::is_ascii_digit)
+                    .collect::<Vec<_>>()
+                    .into_iter()
+                    .rev()
+                    .collect::<String>()
+            };
+            let numerator: usize = digits(before).parse().unwrap_or(0);
+            let denominator_text = after.strip_prefix("the ").unwrap_or(after);
+            let denominator: usize = denominator_text
+                .chars()
+                .take_while(char::is_ascii_digit)
+                .collect::<String>()
+                .parse()
+                .unwrap_or(0);
+            if numerator > 0 && denominator > 0 {
+                found.push((index + 1, numerator, denominator, line.to_string()));
+            }
+            rest = &after[1.min(after.len())..];
+        }
+    }
+    found
+}
+
+#[test]
+fn the_live_surfaces_publish_the_measured_reach() {
+    // ⛔ THE DEFECT THIS GATES. `crates/eadl-model/src/kind.rs`'s module header and
+    // `docs/book/src/kinds.md` both published "the schema refuses 10 of the 11 rejected cases"
+    // for **47 commits** after `M1.7` made it 13 of 13 — and the book thereby contradicted its own
+    // sibling chapter, `workload.md`, which had been updated. Nothing failed, because a number
+    // copied into prose is copied out of the reach of the test that took it.
+    //
+    // So the prose is now compared against the measurement instead of being trusted. Retyping the
+    // fresh number and changing nothing else is explicitly not the fix: `docs/CLAIM_VERIFICATION.md`
+    // §5B calls that "correcting a stale constant to a fresh constant".
+    let (refused, out_of_reach) = measure_reach();
+    let total = refused.len() + out_of_reach.len();
+    let measured = (refused.len(), total);
+
+    // ── 1. The module header carries NO figure, and routes the reader to the measurement. ──
+    // A header that states a count is a header that can go stale; a header that names the test
+    // that counts is a header that cannot.
+    let header: Vec<&str> = KIND_HEADER
+        .lines()
+        .take_while(|line| line.starts_with("//!"))
+        .collect();
+    let header = header.join("\n");
+    assert!(
+        reach_figures(&header).is_empty(),
+        "kind.rs's module header carries a reach figure again: {:?} — state the rule and name \
+         `the_schema_now_reaches_every_rejected_case` instead, or the figure will outlive the \
+         measurement",
+        reach_figures(&header)
+    );
+    assert!(
+        header.contains("the_schema_now_reaches_every_rejected_case"),
+        "kind.rs's module header no longer names the test that measures the reach, so a reader \
+         has nowhere to go to check it"
+    );
+
+    // ── 2. Each book chapter publishes the measured pair as its CURRENT figure … ──
+    for (name, text) in [
+        ("docs/book/src/kinds.md", BOOK_KINDS),
+        ("docs/book/src/workload.md", BOOK_WORKLOAD),
+    ] {
+        let figures = reach_figures(text);
+        assert!(
+            figures.iter().any(|(_, n, m, _)| (*n, *m) == measured),
+            "{name} does not publish the measured reach {} of {total} anywhere; the figures it \
+             carries are {:?}",
+            measured.0,
+            figures
+                .iter()
+                .map(|(line, n, m, _)| format!("{line}: {n} of {m}"))
+                .collect::<Vec<_>>()
+        );
+
+        // ── 3. … and every OTHER figure in it is marked as history on its own line. ──
+        // A figure that is neither the measurement nor marked past tense is a new stale claim.
+        for (line_no, n, m, line) in &figures {
+            if (*n, *m) == measured {
+                continue;
+            }
+            assert!(
+                HISTORY_MARKERS.iter().any(|marker| line.contains(marker)),
+                "{name}:{line_no} states `{n} of {m}` as though it were current, but the corpus \
+                 measures {} of {total}. Either update the figure, or mark the sentence as \
+                 history (`was`, `before`, …) if it is deliberately describing an older \
+                 measurement.\n  {line}",
+                measured.0
+            );
+        }
+    }
 }
 
 #[test]

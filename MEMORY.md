@@ -36,7 +36,7 @@
   resolved — rewritten to assert agreement, never deleted (§14.1). Its commit message lists the rest.
 - **Also open:** `M1.12` (the language reference) → `M1.13` (freeze `eadl/1`), `M1.10`, `M1.21`,
   `M1.22`; `M2.6`, `M2.8`; `PROGRAM.18` (medium-high), `.13`, `.15`, `.17`, then `.5`, `.6`, `.9`, `.10`.
-- **Baseline to beat:** `make focused` exit `0` at the pin — **421 passed, 0 failed** over 36 suites.
+- **Baseline to beat:** `make focused` exit `0` at the pin — **422 passed, 0 failed** over 36 suites.
   Tiers: `focused` per commit, `integration` before a push; exit **20 = incomplete** is not a pass —
   read what it names (missing tools are owned by `docs/targets/first-target.md`, tree `M5`).
   ⚠️ `make integration` is **red** on one step, `emulator`: QEMU 11.1.1 is installed but no release is

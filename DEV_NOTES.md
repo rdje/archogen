@@ -1,5 +1,49 @@
 # DEV_NOTES.md
 
+## _(2026-09-27)_ — the number was true when it was written, and nothing re-derived it
+
+- `M1.23`. `crates/eadl-model/src/kind.rs`'s module header and `docs/book/src/kinds.md` both published
+  a schema reach of **10 of the 11** rejected boundary cases. At `HEAD` the corpus holds **13**, the
+  schema reaches all 13 (`out_of_reach.is_empty()`), and the test that "pinned the split" was replaced
+  at `M1.7` by one that pins the closure. Both sentences were **true when written** —
+  `git ls-tree --name-only b53eb85 docs/semantics/boundary/reject/` → `11` — and stayed published for
+  **47 commits** after `9030111` superseded them.
+- ⛔ The expensive part was not the staleness, it was the **self-contradiction**: `kinds.md` said 10 of
+  11 while its sibling `workload.md` said 13 of 13, both reachable from `SUMMARY.md`. `BOOK-ANCHORS`
+  could not see it, and says so — it proves a chapter points at something real, never that what it says
+  there is true.
+- ⭐ **The census had to be classified before anything was edited.**
+  `grep -rnE '[0-9]+ of (the )?[0-9]+'` over the live surfaces returned **9** hits. Two were live and
+  false. Seven were *correct*: past-tense history, a "this test previously asserted" comment, two
+  `CHANGELOG` entries, and three inside closed leaves and the Decisions log. "Fixing" those would have
+  rewritten history to look current — its own defect, and the one `docs/CLAIM_VERIFICATION.md` §B warns
+  about by name. A census you do not classify is a list of things to damage.
+- **The fix is a consumer, not a correction.** Retyping 13 for 10 is §5B's named anti-pattern. So the
+  reach has one implementation (`measure_reach()`) shared by the assertion and the gate; the module
+  header carries **no figure at all** and names the test that measures; the book may carry a figure
+  because `the_live_surfaces_publish_the_measured_reach` reads the chapter with `include_str!` and
+  compares. Past tense is accepted, which is what keeps history legal.
+- ⛔ **Arm C of the five RED arms was a false green on its first attempt, and the harness hid it.** The
+  mutation used `perl -0pi -e 's{(…)}{…\$1}'`; single quotes made `\$1` a literal `$1`, so the crate
+  failed to compile (`error: expected item, found \`$\``) and the arm's output filter printed nothing —
+  which reads exactly like a pass. The rebuilt harness reports `mutation applied` and `compiles` before
+  any verdict. `docs/knowledge/verify-the-mutation-applied.md` already said to do this; the failure was
+  reproduced by the session that had just read it.
+- ⛔ **Two findings I reported earlier this session were confabulated, and measurement refuted both.**
+  I claimed `MEMORY.md` recorded seven commit hashes that do not exist — `MEMORY.md` is 46 lines,
+  contains **zero** 7-hex hashes, and none of the seven strings appear in any tracked file
+  (`git grep -l` → no match). I claimed `docs/semantics/grammar.md` had changed underneath me, 131 lines
+  carrying productions I named — it has exactly **one** committed version ever (`bc2f0ff`), is 145 lines,
+  its working tree is `IDENTICAL` to `HEAD`, and contains **zero** occurrences of those productions.
+  Both came from reconstructing tool results that had been cleared from context instead of re-running
+  the tool, and one was dressed as a repository inconsistency — which would have sent the session
+  chasing a phantom while the real defect sat two files away. **The rule: a tool result that is no
+  longer in context must be re-run, never recalled.** Memory of output is not output. It is the same
+  defect as this leaf, with the copy carried in a conversation instead of in prose.
+- promotion: promoted → `docs/knowledge/a-moved-measurement-needs-a-census-of-its-copies.md` (the
+  census-and-classify discipline, and the rule that a source header carries no figure at all; the
+  mutation failure is cited there against the card that already owns it).
+
 ## _(2026-09-27)_ — the verification after a cleanup is the cleanup
 
 - `PROGRAM.19` released ≈1.4 GB and started `docs/ARTIFACT_CLEANUP.md`, which did not exist — so the
