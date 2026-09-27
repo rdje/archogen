@@ -6,8 +6,9 @@ upstream integration guide names ARCHOGEN in its own example, so this is offered
 the guide invites: the first real consumer reporting what the first integration actually did.
 
 > **The register of every reported bug and its state is [`INDEX.md`](INDEX.md).**
-> Currently **7 issues — 5 fixed-upstream awaiting ARCHOGEN verification** (including the two
-> reported blockers), 1 withdrawn and 1 no-action. The [completion notice](issues/LS-004-bootstrap-false-success/UPSTREAM.md)
+> Currently **7 issues — 1 `verified` by archogen's own rerun at the adopted pin, 4
+> fixed-upstream awaiting ARCHOGEN verification** (including the two reported blockers),
+> 1 withdrawn and 1 no-action. The [completion notice](issues/LS-004-bootstrap-false-success/UPSTREAM.md)
 > names the published revision and adoption steps.
 
 **Everything LinkedSpec needs is here.** Each issue is a self-contained sub-tree holding its own
@@ -33,7 +34,8 @@ linkedspec/
         ├── README.md            the issue, the state model, and its History
         ├── SETUP.md             the environment and pins THIS issue needs, from scratch
         ├── repro.sh             its own reproducer; exit code is the verdict
-        └── evidence/            its own inputs and its own frozen observation
+        ├── remeasure.sh         on a re-measured row: is the defect gone at THIS revision?
+        └── evidence/            its own inputs, frozen observation and re-measurement
 ```
 
 **Nothing is shared between issues.** Each directory carries its own setup instructions, its own
@@ -72,6 +74,26 @@ mechanically:
 | `0` | The recorded observation still reproduces — the defect is present |
 | `3` | Behaviour **changed** — possibly fixed; the script prints the difference |
 | `2` | Could not run (missing argument or prerequisite) |
+
+### Re-measuring a row upstream says is fixed
+
+A frozen reproducer answers *"does the recorded observation still happen?"*, and its `3` means
+only **changed**. That is not the same as **fixed**: a renamed section heading is a change, and so
+is a remedy. A row that archogen has re-measured therefore also carries a `remeasure.sh`, which
+asks the question the state model actually turns on — *"is the reported defect gone at this
+revision?"* — and reports the **opposite** polarity:
+
+| Exit | Meaning |
+| --- | --- |
+| `0` | The defect is **gone** at this revision |
+| `1` | The defect is **still present** |
+| `2` | Could not run (missing prerequisite, or a shape the instrument refuses to guess at) |
+
+Each one checks the **property** the report asked for rather than the strings that happened to
+appear in the revision it was written against, and each carries a `--self-test` with a RED arm
+built from the original observation — an instrument that has only ever been seen green has not been
+shown to check anything. `verified` in the register means a `remeasure.sh` returned `0` on a named
+revision, with its output frozen in that issue's `evidence/`.
 
 Three issues need only a checkout:
 

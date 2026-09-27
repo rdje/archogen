@@ -1,5 +1,40 @@
 # DEV_NOTES.md
 
+## _(2026-09-27)_ — a frozen reproducer answers "did it change", never "is it fixed"
+
+- `M1.20.1` re-measured LS-005 at the adopted pin `2ac834913` and the frozen `repro.sh` could not
+  produce a verdict: `expected section headings not found — the guide has been restructured`,
+  `rc=3`. It locates the preparation step by the heading text `### Initial PGEN preparation`, and
+  the fix renamed that heading to `### Initial RGX preparation` when ownership of the step moved.
+  ⛔ Exit `3` means *changed* — a rename is a change, and so is a remedy. Reading `3` as "fixed"
+  would have set `verified` on a string comparison.
+- ⭐ The instrument that could decide checks the **property the report asked for**: an ordering
+  statement inside the section (`grep -niE 'before [a-z ,]*((cargo )?metadata|build[a-z]*)'` →
+  guide line 33), a pointer to the preparation step (lines 36–37, anchor
+  `#initial-rgx-preparation`), and a preparation section that exists to be pointed at (line 137).
+  All three present → `RESULT — the defect is GONE`, `rc=0`.
+- ⛔ **The trap that a keyword check would have walked into.** The *unfixed* guide already said
+  `Checkout does not generate PGEN's parser inputs.` — and the original report called that exact
+  sentence insufficient, "a trailing sentence inside a paragraph about what the commands retrieve,
+  rather than a blocking step". An instrument asking "does the section mention preparation?" would
+  have reported the unfixed revision as fixed. The check therefore encodes the distinction the
+  report drew, and its RED arm is the section **verbatim as published at `ad290bdb4`**, which must
+  come back `1`.
+- The two instruments now have **opposite** exit-code polarity (`repro.sh` `0` = defect present;
+  `remeasure.sh` `0` = defect gone) because they answer opposite questions. Both contracts are
+  stated in the issue's `README.md` and `SETUP.md`, and the rule for future re-measured rows is in
+  the tracker `README.md`. Neither the frozen observation nor the frozen reproducer was edited:
+  the re-measurement sits beside them as `evidence/REMEASURED.txt`, assembled by running the
+  instruments rather than transcribed.
+- `make focused` → exit `0`, `cargo test --all` → **421 passed, 0 failed**, unchanged from
+  `M1.19.1`: no crate depends on the vendored checkout, and this slice staged no Rust path
+  (`git diff --cached --name-only | grep -cE '\.rs$|Cargo\.'` → `0`).
+- ⛔ **The gate caught the leaf, not the vendor.** Citing the portability scan by spelling out the
+  path prefixes it searches for *is* a checkout-specific absolute path in a tracked `.md`, and
+  `DOCPATH` refused the commit. Name the doctrine leg that runs a scan; do not reproduce its
+  pattern. The check was right, and loosening it would have exempted the typo it exists to catch.
+- Promoted: `docs/knowledge/frozen-reproducers-measure-change-not-repair.md`.
+
 ## _(2026-09-27)_ — "pin the revision the notice names" was half a rule
 
 - `M1.19` pinned LinkedSpec's named publication `fd3e328d5` and declined `origin/main`, reasoning

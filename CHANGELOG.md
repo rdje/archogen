@@ -4,6 +4,39 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — LS-005 verified at the adopted pin, on archogen's own rerun
+
+`ARCHOGEN-LINKEDSPEC-0051` (leaf `M1.20.1`).
+
+- **The register's first `verified` row.** LS-005 ("add and pin" commands alone never produce a
+  buildable tree) was re-measured at LinkedSpec `2ac834913d85c32f532be9b0aab63644838a577a` and the
+  reported defect is **gone**: the guide's "Add and pin the source dependency" section now states
+  `**Before running Cargo metadata or building:** complete` workspace setup, application-local
+  storage and RGX preparation (line 33), points at `[RGX preparation](#initial-rgx-preparation)`
+  and calls it "a required part of this setup sequence" (lines 36–37), and the target exists
+  (`### Initial RGX preparation`, line 137). State `fixed-upstream` → `verified`; the register now
+  reads 4 `fixed-upstream`, 1 `verified`, 1 `withdrawn`, 1 `no-action`.
+- ⛔ **The frozen reproducer could not decide, and that is the finding.** `repro.sh` at the same pin
+  exits `3` with `expected section headings not found — the guide has been restructured`, because it
+  keys on `### Initial PGEN preparation` and the fix renamed that heading. Exit `3` means *changed*;
+  a rename is a change and so is a remedy, so the row could not move on that output.
+- ⭐ New instrument `remeasure.sh`, checking the **property** rather than the spellings, with
+  `--self-test` → `4/4 arms passed`: the section **verbatim as published at `ad290bdb4`** must come
+  back `STILL PRESENT`, the remedied shape `GONE`, a restructured guide must be refused rather than
+  guessed, and a pointer whose target does not exist must not count as a fix.
+- ⛔ The trap it had to avoid: the *unfixed* guide already carried
+  `Checkout does not generate PGEN's parser inputs.` — the very sentence the report called
+  insufficient, because it is a trailing remark and not a blocking step. A keyword check would have
+  reported the unfixed revision as fixed.
+- The two instruments have **opposite** exit-code polarity on purpose, and both contracts are stated
+  in the issue's `README.md`, its `SETUP.md` and the tracker `README.md`, which now carries the rule
+  for every future re-measured row.
+- Validation: `remeasure.sh` → `rc=0`; `repro.sh` → `rc=3`; `evidence/OBSERVED.txt` and `repro.sh`
+  untouched (`git status --porcelain` on both → empty); `FEEDBACK-SELF-CONTAINED` self-test `6/6`
+  red arms and the doctrine green on the new files; `bash -n` clean; `make focused` → exit `0`,
+  `cargo test --all` → **421 passed, 0 failed**, unchanged from `M1.19.1`.
+- Promoted: `docs/knowledge/frozen-reproducers-measure-change-not-repair.md`.
+
 ## archogen — pin LinkedSpec's latest published head
 
 `ARCHOGEN-LINKEDSPEC-0048` (leaf `M1.19.1`).

@@ -21,3 +21,4 @@ dated lesson in `DEV_NOTES.md` to be promoted here (or explicitly declined in it
 | [`make-the-rule-a-constructor-precondition.md`](make-the-rule-a-constructor-precondition.md) | A specification says "must not do X" — where does that belong in the code? |
 | [`a-rule-only-in-the-prompt-is-enforced-nowhere.md`](a-rule-only-in-the-prompt-is-enforced-nowhere.md) | The operator's instructions forbid X — where does that rule belong so it survives the session? |
 | [`pin-the-vendor-head-and-measure-the-delta.md`](pin-the-vendor-head-and-measure-the-delta.md) | A vendor's notice names a specific publication — do I pin that commit or their latest head? |
+| [`frozen-reproducers-measure-change-not-repair.md`](frozen-reproducers-measure-change-not-repair.md) | Upstream says the bug I reported is fixed — how do I verify that instead of accepting it? |

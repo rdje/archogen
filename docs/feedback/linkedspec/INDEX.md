@@ -35,9 +35,10 @@ ancestor, so the evidence the notice cites still resolves.
 ⚠️ One consequence: the pinned Rust integration guide
 (`docs/linkedspec-book/src/public-api/integration-rust.md`) *is* among the changed documents, so
 `M1.20` must follow the guide **at `2ac834913`**, not the one the notice links at `fd3e328d5`.
-Adoption is **not** acceptance — no reproducer has been re-run at this revision, so every state in
-the register below is unchanged and still reads `fixed-upstream`. Re-measurement is owned by leaf
-`M1.20`, which is the only thing that may move a row to `verified`.
+Adoption is **not** acceptance: moving the pin changed no state by itself. Re-measurement is owned
+by leaf `M1.20` — the only thing that may move a row to `verified` — and runs one report per
+sub-leaf. `LS-005` was re-measured at this pin on `2026-09-27` and is now `verified`; `LS-001` …
+`LS-004` stay `fixed-upstream` until their own reruns land.
 
 ## Register
 
@@ -47,7 +48,7 @@ the register below is unchanged and still reads `fixed-upstream`. Re-measurement
 | [LS-002](issues/LS-002-multi-form-truncation/) | A multi-form file yields only its first form, exit `0` | Correctness | Blocker | `fixed-upstream` | `2026-09-20` | `2026-09-20` |
 | [LS-003](issues/LS-003-token-kind-erasure/) | Quoted string, bare symbol and number are indistinguishable | Correctness | Major | `fixed-upstream` | `2026-09-20` | `2026-09-20` |
 | [LS-004](issues/LS-004-bootstrap-false-success/) | PGEN bootstrap continues past a failed `cargo` and reports a false seed | Robustness | Moderate | `fixed-upstream` | `2026-09-20` | `2026-09-20` |
-| [LS-005](issues/LS-005-guide-ordering/) | "Add and pin" commands alone never produce a buildable tree | Docs | Minor | `fixed-upstream` | `2026-09-20` | `2026-09-20` |
+| [LS-005](issues/LS-005-guide-ordering/) | "Add and pin" commands alone never produce a buildable tree | Docs | Minor | `verified` | `2026-09-20` | `2026-09-27` |
 | [LS-006](issues/LS-006-hex-underscore-withdrawn/) | Hex literal underscores corrupted by atom joining | Correctness | — | `withdrawn` | `2026-09-20` | `2026-09-20` |
 | [LS-007](issues/LS-007-adjacent-fragment-join/) | Adjacent fragments join into a single atom | Correctness | Informational | `no-action` | `2026-09-20` | `2026-09-20` |
 
@@ -58,13 +59,15 @@ the register below is unchanged and still reads `fixed-upstream`. Re-measurement
 | `open` | 0 | — |
 | `acknowledged` | 0 | — |
 | `by-design` | 0 | — |
-| `fixed-upstream` | 5 | LS-001, LS-002, LS-003, LS-004, LS-005 |
-| `verified` | 0 | — |
+| `fixed-upstream` | 4 | LS-001, LS-002, LS-003, LS-004 |
+| `verified` | 1 | LS-005 |
 | `withdrawn` | 1 | LS-006 |
 | `no-action` | 1 | LS-007 |
 
 **Consumer verification pending for two reported blockers:** `LS-001` (build) and `LS-002`
 (correctness). Both are fixed-upstream; ARCHOGEN has not yet accepted its own rerun.
+`LS-005` was re-measured at the adopted pin on `2026-09-27` and is `verified`; `LS-003` and
+`LS-004` are still awaiting their own reruns.
 
 ## Totals by severity, open only
 
@@ -79,6 +82,12 @@ the register below is unchanged and still reads `fixed-upstream`. Re-measurement
 
 Every row has a runnable reproducer whose exit code is its verdict, and every one of the seven
 was executed on the revision above. No row rests on reading upstream documentation.
+
+A row that has been **re-measured** also carries a `remeasure.sh`, whose exit code answers the
+opposite question — *is the reported defect gone at this revision?* — and whose `--self-test`
+proves the instrument still reports the original revision as defective. A frozen reproducer cannot
+do that job: it reports *change*, and a renamed heading is a change too. Rows with one today:
+`LS-005`.
 
 Each issue directory is **self-contained**: it carries its own setup instructions, inputs,
 reproducer and frozen observation, and references nothing outside itself. One row can be handed
