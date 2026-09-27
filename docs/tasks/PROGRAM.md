@@ -37,7 +37,7 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM`
   Status: `active`
   Goal: own the program spine
-  Children: `PROGRAM.1` … `PROGRAM.18`, plus `PROGRAM.1.1` and `PROGRAM.2.1`
+  Children: `PROGRAM.1` … `PROGRAM.19`, plus `PROGRAM.1.1` and `PROGRAM.2.1`
 
 - ID: `PROGRAM.1`
   Status: `done`
@@ -605,6 +605,102 @@ mdBook that is the director's window into the project.
   Verification: `pending`
   Commit: `pending`
 
+- ID: `PROGRAM.19`
+  Status: `done`
+  Goal: run the ~24-hour artifact cleanup the standing instructions require, and start the record that
+  makes "when was the last one?" answerable — `docs/ARTIFACT_CLEANUP.md` did not exist, so no session
+  could tell whether a cleanup was due, which is the mechanism the instruction created the file for.
+  Reproduce / issue: `ls docs/ARTIFACT_CLEANUP.md` → no such file. Inventory measured before touching
+  anything: `.app-data` ≈ 3.6 GB, of which `.app-data/target` is **1.3 GB** — the *previous* pin's
+  LinkedSpec build, superseded by the pin-named `.app-data/target-2ac834913` (2.1 GB) — and
+  `.app-data/pgen-generated-2ac834913` is **70 MB** duplicating the checkout's own generated parser,
+  digest-verified identical; `target/` is 815 MB, of which `target/tmp` is 17 MB of test scratch
+  carrying most of **703** stale incremental `.bin` files; `docs/book/book` is 2.3 MB of built book.
+  Impact: nothing is broken, but 1.4 GB of it is unreachable-by-design residue whose regeneration path
+  is a tracked command, and one item — a documentation snapshot parked inside a *build* directory — is
+  in the wrong place whatever its size.
+  Acceptance: only artifacts whose regeneration path is a **tracked command** are deleted; every
+  retained item has its reason recorded in the leaf; nothing tracked is touched, so
+  `git status --porcelain` shows only this leaf and the new record; the focused tier, the doctrine gate
+  and one vendor instrument all still run green afterwards, measured rather than assumed;
+  `docs/ARTIFACT_CLEANUP.md` carries the date and a one-line summary with only the latest entry kept;
+  anything unexpected found on the way is investigated and reported, not deleted.
+  Priority: **low effort, low risk, mandated** — the instruction is explicit that a missing record file
+  means a cleanup is due this session.
+  Verification: see the acceptance checklist below.
+  Commit: `ARCHOGEN-PROGRAM-0060 (leaf PROGRAM.19)`
+  promotion: declined (the operative rules now live where the next session must read them —
+  `docs/ARTIFACT_CLEANUP.md` states both the trigger and the delete-only-what-regenerates test — and the
+  one interesting finding this cleanup produced is recorded twice already: in `S0.7`'s leaf and in the
+  `DEV_NOTES` lesson above it. A knowledge card would restate a standing instruction plus a fix that is
+  now in the code it concerns.)
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: `docs/ARTIFACT_CLEANUP.md` did not exist
+    (`ls docs/ARTIFACT_CLEANUP.md` → no such file), so the instruction's own trigger — "if it is more
+    than 24 hours old, **or the file does not exist**" — had been firing on every session with no way
+    to tell. WHY the residue accumulated: `.app-data` is the vendor guide's application-local data root
+    and is deliberately ignored, so nothing ever revisits it; `M1.20.4` added a *pin-named* target
+    directory beside the old one (correctly — the guide says a new one preserves the older build for
+    comparison), which is exactly the moment the older one stops being needed and starts being 1.3 GB
+    of dead weight. The residue was not a mistake; it was a comparison that outlived its purpose.
+  - [x] **ADDRESSED (verified)** — released ≈1.4 GB, each item deleted only because its regeneration
+    path is a tracked command: `.app-data/target` 1.3 GB (rebuild via `scripts/linkedspec_eval.sh
+    build` at whatever pin is checked out), `.app-data/pgen-generated-2ac834913` 70 MB (a
+    digest-verified duplicate of the checkout's own `generated/`, and re-derivable via
+    `linkedspec_eval.sh prepare`), `.app-data/empty-store-1` and `-2` (the instruments create them),
+    `.app-data/reference-check` (`linkedspec_eval.sh reference` recreates it), `.app-data/upstream-notice27`
+    (a prior session's scratch capture; the durable content is the tracked `UPSTREAM.md`), and
+    `target/tmp` 17 MB (test scratch the suite recreates). Measured: `.app-data` 3.5 GB → 2.2 GB, and
+    `target` 815 MB → 799 MB immediately after the deletion — then back to 816 MB once the verification
+    runs recreated the test scratch, which is the expected result and the reason deleting it was safe.
+    **Residue census after deletion:** all seven paths report `gone`, none `STILL PRESENT`.
+    `docs/ARTIFACT_CLEANUP.md` now carries the date and one entry, with the mechanism stated so the
+    next session can act on it.
+  - [x] **NO REGRESSION** — nothing tracked was touched: after the deletions `git status --porcelain`
+    listed only this leaf, and at commit time only this leaf plus the new record. The retained vendor
+    build still works, measured rather than assumed: `scripts/linkedspec_eval.sh bins` → both binaries
+    resolve under `.app-data/target-2ac834913/debug/`; `linkedspec_eval.sh reference` →
+    `REFERENCE CHECK: the published two-form tagged document, exactly as documented`;
+    `LS-002 …/remeasure.sh --self-test` → `9/9 arms passed`. `bash scripts/check_doctrines.sh` →
+    `=== all doctrines green ===`; `make focused` → exit `0`; `cargo test --all` → **421 passed,
+    0 failed** over 36 suites.
+    ⛔ **The verification did not pass first, and that is the point of running it.** The first
+    post-cleanup `make focused` reported `tier focused: failed — 2 passed, 1 failed`: with the test
+    binaries cached and `target/tmp` gone, `a_description_with_no_system_says_there_is_nothing_to_build`
+    panicked at `crates/archogen-cli/tests/s0_build.rs:211`. The warm re-run passed, which is how this
+    would have been written off as a flake; it was reproduced deliberately instead
+    (`rm -rf target/tmp && cargo test --all`, twice) and fixed at the root in leaf **`S0.7`** — cargo
+    creates `CARGO_TARGET_TMPDIR` at build time, not run time, and that test was the only one of six
+    sites writing into the tmpdir root. This leaf's acceptance is therefore measured *after* `S0.7`,
+    and the record file says so.
+  - [x] **FIX** — delete only what regenerates from a tracked command, retain everything else with a
+    reason, and investigate rather than remove anything unexpected. **Retained, with reasons:**
+    `.app-data/target-2ac834913` (the current pin's build; every remaining LinkedSpec measurement uses
+    it), `.app-data/cargo-home` 132 MB (the vendor's guide says offline builds depend on the retained
+    store), `.app-data/pgen-generated-before-remeasure` 18 MB (the **only** copy of the previous pin's
+    parser — it is the "before" side of the regeneration digest frozen in `LS-004`'s evidence, and
+    deleting it would make that digest unreproducible), `.app-data/ls004` 32 KB (the primary logs behind
+    that same frozen evidence), `target/debug` 794 MB and `target/riscv64imac-unknown-none-elf` 5 MB
+    (live products of the focused and integration tiers), and `docs/book/book` 2.3 MB (the built book —
+    the director's window; it rebuilds in 0.07 s but costs nothing to keep).
+    ⭐ **One item was investigated and deliberately left alone:** `target/sync-backup-2026-09-21`,
+    24 KB, holding copies of `COMMIT.md`, `DOCTRINE_ENFORCEMENT.md`, `TASK_TREE.md` and `TOOLBOX.md`
+    dated `2026-09-21`, and referenced by nothing tracked at the time it was investigated —
+    `git grep -ln 'sync-backup' -- .` → no match before this leaf mentioned it, and one match
+    afterwards, which is this sentence.
+    Its contents are recoverable from git at any revision, so it is redundant — but it is somebody's
+    deliberate backup, it is 24 KB, and "unexpected state may be someone's in-progress work" outranks
+    tidiness. **Flagged, not deleted:** a documentation snapshot parked inside a *build* directory is in
+    the wrong place whatever its size, and either belongs in git or nowhere.
+  - [x] **LOCKSTEP** — `docs/ARTIFACT_CLEANUP.md` (new, latest-entry-only); this leaf, the frontier and
+    both logs; `MEMORY.md`, `LIVE_STATUS.md`, `CHANGELOG.md`, `DEV_NOTES.md`. The cross-tree link is
+    recorded in both directions: `S0.7` names this leaf as what surfaced it, and this leaf names `S0.7`
+    as what its verification found. No book chapter changes — the book documents eADL and the engine,
+    not the repository's scratch directories, and `git grep -ln 'app-data' -- docs/book` → no match,
+    `rc=1`.
+
 - ID: `PROGRAM.10`
   Status: `pending`
   Goal: run the **integration** tier in CI — provision `mdbook` and `qemu-system-riscv64` on the
@@ -881,6 +977,7 @@ what the handoff rule says it means.
 | `2026-09-13` | `PROGRAM.2` | `make check` + `make gate` + `mdbook build` | `28 tests pass; 13/13 green` |
 | `2026-09-27` | `PROGRAM.12` | `git check-ignore -v`, `git status --porcelain`, `git ls-files .qwen`, `make gate` | `ignore matches at .gitignore:31; status carries no untracked row; 0 tracked paths ignored; 13/13 green` |
 | `2026-09-27` | `PROGRAM.16` | the policy copied and the copy **diff-verified** against its read-only source rather than read; the §7 adoption sweep run against this repository; all three entrypoints re-grepped afterwards; tiers and the gate re-run | body `diff -q` identical, digest `9f99df25209c43af` on both sides; 406 lines / 27 263 bytes; sweep found 18 checks / 8 with RED arms / **10 without** → `PROGRAM.18`; `AGENTS.md` line 11 carries an explicit list, so it was edited after the leaf's first draft claimed otherwise; 13 doctrines green; `make focused` exit `0`, 421 passed / 0 failed |
+| `2026-09-27` | `PROGRAM.19` | the artifact inventory measured before and after; a residue census over every deleted path; the retained vendor build, one instrument self-test, the focused tier and the doctrine gate all re-run afterwards | ≈1.4 GB released: `.app-data` 3.5 GB → 2.2 GB, `target` 815 MB → 799 MB (then 816 MB once the suite recreated its scratch); all 7 deleted paths `gone`; `bins` → both binaries resolve; `reference` → the documented two-form result; `LS-002 --self-test` → `9/9`; 13 doctrines green; `make focused` exit `0`, 421 passed / 0 failed. ⛔ The first post-cleanup tier run **failed** and was reproduced, not dismissed → `S0.7` |
 
 ## Commit Log
 
@@ -891,6 +988,7 @@ what the handoff rule says it means.
 | `PROGRAM.2` | `ARCHOGEN-PROGRAM-0003 (leaf PROGRAM.2)` | `archogen` CLI shell, §5.5 exit codes |
 | `PROGRAM.12` | `ARCHOGEN-PROGRAM-0050 (leaf PROGRAM.12)` | harness-local scratch ignored; the stale `.gitignore` pointer to a nonexistent shared `SETUP.md` corrected; `PROGRAM.13`/`.14` logged from the census |
 | `PROGRAM.16` | `ARCHOGEN-PROGRAM-0058 (leaf PROGRAM.16)` | the claim-verification policy adopted as `docs/CLAIM_VERIFICATION.md` — copied verbatim and diff-verified, restated locally per its own §7.6, registered in all three entrypoints; its §7.4 sweep found ten controls with no RED arm → `PROGRAM.18` |
+| `PROGRAM.19` | `ARCHOGEN-PROGRAM-0060 (leaf PROGRAM.19)` | ≈1.4 GB of regenerable artifacts released and `docs/ARTIFACT_CLEANUP.md` started, so "is a cleanup due?" is answerable; the cleanup's own verification exposed `S0.7`; one unexpected item investigated and flagged rather than deleted |
 
 ## Changelog
 

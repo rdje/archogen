@@ -1,5 +1,39 @@
 # DEV_NOTES.md
 
+## _(2026-09-27)_ — the verification after a cleanup is the cleanup
+
+- `PROGRAM.19` released ≈1.4 GB and started `docs/ARTIFACT_CLEANUP.md`, which did not exist — so the
+  standing instruction's own trigger ("clean if the record is older than 24 hours, **or the file does
+  not exist**") had been firing every session with no way to tell. The rule that makes a periodic duty
+  answerable is a dated file, not a memory.
+- The deletion rule that kept it safe: **delete only what regenerates from a tracked command.** Every
+  removed path had one — `scripts/linkedspec_eval.sh build` / `prepare` / `reference`, the instruments
+  that create their own stores, and the test suite that creates its own scratch. Everything else was
+  retained *with a reason written down*: the current pin's build, the 132 MB package store the vendor's
+  guide says offline builds need, the 18 MB copy of the **previous** pin's parser (the only "before"
+  side of a digest frozen in `LS-004`'s evidence), and 32 KB of primary logs behind that same evidence.
+  A cleanup that cannot say why it kept something is a cleanup that will delete it next time.
+- ⛔ **The verification failed first, and a warm re-run passed.** That is the exact moment a real defect
+  becomes a "flake": `make focused` → `2 passed, 1 failed`, then `421 passed, 0 failed` on the next run.
+  Reproduced deliberately instead — `rm -rf target/tmp && cargo test --all`, twice — and it failed both
+  times. Root cause and fix are `S0.7`. The tempting wrong move was to stop deleting `target/tmp`: that
+  would have hidden the fragility behind a rule about which directories a cleanup may touch, and left
+  the suite green for the same accidental reason as before.
+- ⭐ Post-deletion measurement caught a stale claim of my own: `target` was recorded as 815 MB → 799 MB,
+  and by the end of the verification runs it was 816 MB again, because the suite had recreated its
+  scratch. The honest reading is the useful one — the directory grew back on its own, which *is* the
+  evidence that deleting it was safe.
+- ⭐ One unexpected item was investigated and **left alone**: `target/sync-backup-2026-09-21`, 24 KB of
+  spine-document copies referenced by nothing tracked. Its contents are recoverable from git at any
+  revision, so it is redundant — but it is somebody's deliberate backup, and "unexpected state may be
+  in-progress work" outranks tidiness. Flagged instead: a documentation snapshot parked inside a *build*
+  directory belongs either in git or nowhere.
+- promotion: declined (the operative rules now live where they will be read: the trigger and the
+  delete-only-what-regenerates test are stated in `docs/ARTIFACT_CLEANUP.md` itself, which the next
+  session must open to answer "is a cleanup due?", and the interesting finding this cleanup produced is
+  recorded twice already — in `S0.7`'s leaf and in the lesson above it. A knowledge card would restate
+  a standing instruction plus a fix that is in the code.)
+
 ## _(2026-09-27)_ — a green suite can owe its green to the last run
 
 - `PROGRAM.19`'s artifact cleanup removed `target/tmp`, and `cargo test --all` then failed exactly one

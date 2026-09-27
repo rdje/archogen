@@ -4,6 +4,39 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — 1.4 GB of regenerable artifacts released, and the cleanup record started
+
+`ARCHOGEN-PROGRAM-0060` (leaf `PROGRAM.19`).
+
+- `docs/ARTIFACT_CLEANUP.md` did not exist, so the standing instruction's own trigger — clean if the
+  record is older than 24 hours **or missing** — had been firing on every session with no way to tell.
+  The file now carries the date, one entry and the mechanism; it is overwritten, never appended to.
+- Released ≈1.4 GB, each item deleted only because its regeneration path is a **tracked command**: the
+  previous pin's LinkedSpec build (`.app-data/target`, 1.3 GB), a digest-verified duplicate of the
+  checkout's generated parser (70 MB), two empty cargo stores, the reference-check scratch, a prior
+  session's notice scratch, and `target/tmp` (17 MB of test scratch carrying most of 703 stale
+  incremental `.bin` files). `.app-data` 3.5 GB → 2.2 GB; `target` 815 MB → 799 MB, then 816 MB once
+  the suite recreated its scratch — which is itself the proof that deleting it was safe.
+- Retained **with reasons**: the current pin's build (every remaining measurement uses it), the
+  132 MB package store (the vendor's guide says offline builds depend on it), the 18 MB copy of the
+  *previous* pin's parser (the only "before" side of a digest frozen in `LS-004`'s evidence), the
+  32 KB of primary bootstrap logs behind that same evidence, the tiers' live build products, and the
+  built book.
+- ⛔ **The verification did not pass first, and that is why it was run.** The first post-cleanup
+  `make focused` reported `2 passed, 1 failed`; the warm re-run passed, which is how this becomes a
+  "flake" in most repositories. It was reproduced deliberately instead — twice, cold — and fixed at the
+  root in `S0.7`: cargo creates `CARGO_TARGET_TMPDIR` at build time, not run time, and one test wrote
+  into the tmpdir root without creating it. The cleanup was correct; the test was wrong.
+- ⭐ One unexpected item investigated and **left alone**: `target/sync-backup-2026-09-21`, 24 KB of
+  spine-document copies dated `2026-09-21`, referenced by nothing tracked at the time. Its contents are
+  recoverable from git at any revision, so it is redundant — but it is somebody's deliberate backup,
+  and "unexpected state may be in-progress work" outranks tidiness. Flagged instead: a documentation
+  snapshot parked inside a *build* directory is in the wrong place whatever its size.
+- Validation after the deletions, measured rather than assumed: `linkedspec_eval.sh bins` → both
+  binaries resolve; `reference` → the documented two-form tagged result; `LS-002 --self-test` →
+  `9/9 arms`; `make focused` → exit `0`; `cargo test --all` → **421 passed, 0 failed** over 36 suites;
+  all 13 doctrines green; `git status --porcelain` shows only this leaf and the new record.
+
 ## archogen — S0 reopened and closed: a test that was green only because a previous run left a directory behind
 
 `ARCHOGEN-S0-0059` (leaf `S0.7`).

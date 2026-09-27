@@ -19,19 +19,15 @@
   agree; **values** are still checked only against the reader. Then `M1.13` (freeze `eadl/1`),
   `M1.10`, `M1.21`, `M1.22`.
 - **The LinkedSpec evaluation is CLOSED** (`M1.20`, `2026-09-27`): all five reported defects are
-  `verified` at pin `2ac834913d85c32f532be9b0aab63644838a577a` (RGX `f6e5acdc9`, PGEN `d9d41c28`) on
-  archogen's own reruns, and nothing in the register rests on the vendor's word. Four standing facts:
-  the root `Cargo.toml` carries `exclude = ["vendor/linkedspec"]` (load-bearing — do not remove); a
-  bootstrap is idempotent on **existence**, so regenerate the vendored parser after any pin move (it
-  was regenerated here, `50eec63c…` → `196db2ee…`); the document route is `sexpr_file` +
-  `SExprDocumentV1.spec`, while `lispish_file` + `Lispish.spec` truncates and erases kinds **by
-  design** and is guarded against drift; and both consumers are built behind
-  `scripts/linkedspec_eval.sh`. See `docs/feedback/linkedspec/INDEX.md`.
+  `verified` at pin `2ac834913` (RGX `f6e5acdc9`, PGEN `d9d41c28`) on archogen's own reruns. Four
+  standing facts: the root `Cargo.toml` carries `exclude = ["vendor/linkedspec"]` (load-bearing — do
+  not remove); a bootstrap is idempotent on **existence**, so regenerate the vendored parser after any
+  pin move; the document route is `sexpr_file` + `SExprDocumentV1.spec`, while `lispish_file` +
+  `Lispish.spec` truncates and erases kinds **by design** and is guarded against drift; both consumers
+  are built behind `scripts/linkedspec_eval.sh`. Details: `docs/feedback/linkedspec/INDEX.md`.
 - **`PROGRAM.11` (medium)** is the other active frontier: the repository-boundary rule in **both**
   directions — `docs/decisions/decision_repository-boundary-read-only.md`. The spine is now **five**
-  portable architectures: `docs/CLAIM_VERIFICATION.md` was adopted `2026-09-27` (`PROGRAM.16`) —
-  re-derive · falsify · make durable — and `PROGRAM.18` (medium-high) owns the ten registered
-  controls that have no repeatable RED arm.
+  portable architectures: `docs/CLAIM_VERIFICATION.md`, adopted `2026-09-27` (`PROGRAM.16`).
 - **⏳ WAITING ON THE DIRECTOR:** two behaviour-changing rulings on `ROADMAP` §3.1.1 — items (a) and
   (b) of §6 in `docs/decisions/decision_findings-for-director-review.md`; `M2.9` needs them.
 - **`M2.9` is checkpointed, not finished:** branch **`wip/m2.9`** (commit `758cbcdd`), resumed with
@@ -39,7 +35,12 @@
   unadapted to the reference's new API, and ratchets `d1`–`d5` still assert a disagreement `M2.9`
   resolved — rewritten to assert agreement, never deleted (§14.1). Its commit message lists the rest.
 - **Also open:** `M1.12` (the language reference) → `M1.13` (freeze `eadl/1`), `M1.10`, `M1.21`,
-  `M1.22`, `M2.8` (pin the installed QEMU), `PROGRAM.5`, `.8`, `.9`, `.10`, `.13`, `.14`.
+  `M1.22`; `M2.6`, `M2.8`; `PROGRAM.18` (medium-high), `.13`, `.15`, `.17`, then `.5`, `.6`, `.9`, `.10`.
 - **Baseline to beat:** `make focused` exit `0` at the pin — **421 passed, 0 failed** over 36 suites.
   Tiers: `focused` per commit, `integration` before a push; exit **20 = incomplete** is not a pass —
   read what it names (missing tools are owned by `docs/targets/first-target.md`, tree `M5`).
+  ⚠️ `make integration` is **red** on one step, `emulator`: QEMU 11.1.1 is installed but no release is
+  pinned in `targets/riscv-virt-up.env`, so `TARGET_VERIFIED=no` — `M2.8` owns it, and it is why this
+  branch is many commits ahead of `origin/main` rather than pushed (`git rev-list --count
+  origin/main..HEAD` for the live number). Artifact cleanup last ran `2026-09-27`; trigger and record
+  in `docs/ARTIFACT_CLEANUP.md`.
