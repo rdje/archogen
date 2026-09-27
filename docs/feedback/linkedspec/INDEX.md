@@ -36,10 +36,10 @@ ancestor, so the evidence the notice cites still resolves.
 ⚠️ One consequence: the pinned Rust integration guide
 (`docs/linkedspec-book/src/public-api/integration-rust.md`) *is* among the changed documents, so
 `M1.20` must follow the guide **at `2ac834913`**, not the one the notice links at `fd3e328d5`.
-Adoption is **not** acceptance: moving the pin changed no state by itself. Re-measurement is owned
-by leaf `M1.20` — the only thing that may move a row to `verified` — and runs one report per
-sub-leaf. `LS-005`, `LS-001`, `LS-004` and `LS-002` were re-measured at this pin on `2026-09-27`
-and are now `verified`; `LS-003` stays `fixed-upstream` until its own rerun lands.
+Adoption is **not** acceptance: moving the pin changed no state by itself. Re-measurement was owned
+by leaf `M1.20` — the only thing that may move a row to `verified` — and ran one report per sub-leaf.
+All five (`LS-005`, `LS-001`, `LS-004`, `LS-002`, `LS-003`) were re-measured at this pin on
+`2026-09-27` and are `verified`.
 
 ## Register
 
@@ -47,7 +47,7 @@ and are now `verified`; `LS-003` stays `fixed-upstream` until its own rerun land
 | --- | --- | --- | --- | --- | --- | --- |
 | [LS-001](issues/LS-001-cargo-workspace-collision/) | Documented vendoring layout does not build inside a Cargo workspace | Build | Blocker | `verified` | `2026-09-20` | `2026-09-27` |
 | [LS-002](issues/LS-002-multi-form-truncation/) | A multi-form file yields only its first form, exit `0` | Correctness | Blocker | `verified` | `2026-09-20` | `2026-09-27` |
-| [LS-003](issues/LS-003-token-kind-erasure/) | Quoted string, bare symbol and number are indistinguishable | Correctness | Major | `fixed-upstream` | `2026-09-20` | `2026-09-20` |
+| [LS-003](issues/LS-003-token-kind-erasure/) | Quoted string, bare symbol and number are indistinguishable | Correctness | Major | `verified` | `2026-09-20` | `2026-09-27` |
 | [LS-004](issues/LS-004-bootstrap-false-success/) | PGEN bootstrap continues past a failed `cargo` and reports a false seed | Robustness | Moderate | `verified` | `2026-09-20` | `2026-09-27` |
 | [LS-005](issues/LS-005-guide-ordering/) | "Add and pin" commands alone never produce a buildable tree | Docs | Minor | `verified` | `2026-09-20` | `2026-09-27` |
 | [LS-006](issues/LS-006-hex-underscore-withdrawn/) | Hex literal underscores corrupted by atom joining | Correctness | — | `withdrawn` | `2026-09-20` | `2026-09-20` |
@@ -60,25 +60,31 @@ and are now `verified`; `LS-003` stays `fixed-upstream` until its own rerun land
 | `open` | 0 | — |
 | `acknowledged` | 0 | — |
 | `by-design` | 0 | — |
-| `fixed-upstream` | 1 | LS-003 |
-| `verified` | 4 | LS-001, LS-002, LS-004, LS-005 |
+| `fixed-upstream` | 0 | — |
+| `verified` | 5 | LS-001, LS-002, LS-003, LS-004, LS-005 |
 | `withdrawn` | 1 | LS-006 |
 | `no-action` | 1 | LS-007 |
 
-**No reported blocker is outstanding.** Both were re-measured at the adopted pin on `2026-09-27` and
-are `verified`. One row remains on the vendor's word: `LS-003` (token-kind erasure, Major), which is
-measured on the same document route as `LS-002`.
+**Every reported defect has been re-measured by archogen at the adopted pin.** Nothing in this
+register rests on the vendor's word any more: all five reports were re-run on `2026-09-27` at
+`2ac834913`, each through an instrument carrying RED arms built from the original observation, and
+each with its output frozen in that issue's `evidence/REMEASURED.txt`. Both reported blockers are
+closed.
 
-Two standing facts a consumer of this pin needs, both recorded where they cannot be missed:
+Three standing facts a consumer of this pin needs, each recorded where it cannot be missed:
 
 - `LS-001`'s remedy is **split**. The vendored example carries its own `[workspace]` boundary, and
   the nested PGEN manifest resolves only once the consuming workspace root carries the documented
   `exclude = ["vendor/linkedspec"]` — which this repository does, so the exclusion is a standing
   requirement, not a one-off fix.
-- `LS-002`'s remedy is a **new route**, not a change to the old one. `Lispish.spec` keeps its
-  extraction behaviour by design, so a consumer that needs every form must select
-  `SExprDocumentV1.spec`; changing only the old adapter's grammar argument does not adopt the new
-  contract, and fails with `entry_rule_not_found`.
+- `LS-002`'s and `LS-003`'s remedy is a **new route**, not a change to the old one. `Lispish.spec`
+  keeps its extraction behaviour by design — one form per file, kinds erased — so a consumer that
+  needs every form or the token kinds must select `SExprDocumentV1.spec`; changing only the old
+  adapter's grammar argument does not adopt the new contract, and fails with `entry_rule_not_found`.
+  Both old-route behaviours are now **guarded** rather than merely reported: each issue re-runs its
+  frozen reproducer and requires it to match, so a silent change there is caught.
+- `LS-004`'s preparation must be **regenerated** after a pin move. `make bootstrap` is idempotent on
+  existence, so a checkout carrying the previous pin's parser exits `0` having done nothing.
 
 ⚠️ **One new finding is being filed, and it is not part of any verdict above.** Re-measuring
 `LS-004` measured the cost of the published preparation interface as well as its correctness: one
@@ -104,8 +110,8 @@ was executed on the revision above. No row rests on reading upstream documentati
 A row that has been **re-measured** also carries a `remeasure.sh`, whose exit code answers the
 opposite question — *is the reported defect gone at this revision?* — and whose `--self-test`
 proves the instrument still reports the original revision as defective. A frozen reproducer cannot
-do that job: it reports *change*, and a renamed heading is a change too. Rows with one today:
-`LS-001`, `LS-002`, `LS-004`, `LS-005`.
+do that job: it reports *change*, and a renamed heading is a change too. All five re-measured rows
+carry one: `LS-001`, `LS-002`, `LS-003`, `LS-004`, `LS-005`.
 
 Each issue directory is **self-contained**: it carries its own setup instructions, inputs,
 reproducer and frozen observation, and references nothing outside itself. One row can be handed
@@ -116,7 +122,7 @@ over on its own.
 | A LinkedSpec checkout only | LS-001, LS-004, LS-005 (`repro.sh`), LS-001 and LS-005 (`remeasure.sh`) |
 | A prepared checkout, and network for the fresh-preparation arm | LS-004 (`remeasure.sh`) |
 | A built `lispish_file` (each issue's own `SETUP.md` describes the build) | LS-002, LS-003, LS-006, LS-007 (`repro.sh`) |
-| Both built consumers, and `python3` to count forms | LS-002 (`remeasure.sh`) |
+| Both built consumers, and `python3` to read the tagged result | LS-002 and LS-003 (`remeasure.sh`) |
 
 ## Keeping this index true
 

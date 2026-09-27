@@ -4,6 +4,38 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — LS-003 verified: the register is closed, every report re-measured
+
+`ARCHOGEN-LINKEDSPEC-0056` (leaf `M1.20.6`).
+
+- **LS-003 is `verified`, and with it the whole register.** All five reported defects were re-run by
+  archogen at LinkedSpec `2ac834913` on `2026-09-27`; nothing rests on the vendor's word any more.
+  Totals: 5 `verified`, 1 `withdrawn`, 1 `no-action`, 0 `open`, 0 `fixed-upstream`.
+- The three frozen probes, flattened to `kind:lexeme` atoms in document order and compared with
+  expectations written into the instrument **before** the run: `04` → `symbol:name`,
+  `string:"ARCHOGEN"` with **both quotes inside the lexeme**; `05` → `symbol:name`,
+  `symbol:ARCHOGEN`; `03` → `… symbol:period number:10 symbol:ms …`. The fourth check is the
+  cross-probe one that *is* this defect — probes 04 and 05 must not collapse — and they no longer do.
+  `checks 4 · as expected 4 · defect 0 · undecided 0`, `rc=0`; `--self-test` → `9/9 arms`.
+- The scorer refuses rather than guesses in three directions, each with its own arm: an **untagged**
+  result (`2`, since scoring the wrong adapter's output either way would be a lie), unreadable JSON
+  (`2`), and a valid one-form input coming back rejected (`2`, because over-rejection is a different
+  defect and must not flip this verdict).
+- ⛔ **The verdict is scoped, and the scope is written down.** These are the document grammar's
+  lexical kinds, not eADL's: its published rule makes `0x4_0000` a number and `1__0` and `1.` symbols,
+  while eADL forbids floating point anywhere and demands canonical spelling. The issue page, the
+  evidence and the leaf all say that adopting this route inherits a lexical contract, not eADL's —
+  which is exactly what `M1.22` will measure instead of assuming.
+- The historical route is unchanged and now **guarded**: `repro.sh` → `rc=0`, matches
+  `EXPECTED.txt` line for line, probes 04 and 05 still both `["name","ARCHOGEN"]`. A silent change
+  there would be a regression for every consumer who has not migrated.
+- Validation: `make focused` → exit `0`; `cargo test --all` → **421 passed, 0 failed** over 36
+  suites; the frozen `EXPECTED.txt`, `repro.sh` and all three probe inputs untouched;
+  `FEEDBACK-SELF-CONTAINED` green on the new files; all 13 doctrines green.
+- Promoted **into an existing entry** rather than adding a fifth near-duplicate:
+  `docs/knowledge/a-verified-row-must-name-what-you-still-owe.md` gains "name whose contract you
+  verified" plus a matching `answers:` question.
+
 ## archogen — LS-002 verified: the last reported blocker, on the new document route
 
 `ARCHOGEN-LINKEDSPEC-0055` (leaf `M1.20.5`).

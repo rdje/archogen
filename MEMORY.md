@@ -13,22 +13,22 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M1` → frontier `M1.20.6`, sixth of seven sub-leaves under `M1.20`.
+- **Active tree:** `M1` → frontier `M1.20.7`, the last of seven sub-leaves under `M1.20`.
   `PROGRAM` frontier `PROGRAM.11`; `M2` frontier `M2.8`.
-- **Next action:** **`M1.20.6`** — re-measure **LS-003** (token-kind erasure), the last row still on
-  the vendor's word, on the same document route and the same build: are quoted string, bare symbol
-  and number distinguishable kinds with exact lexemes, quotes included? Then `.7` (register
-  reconciliation, which closes `M1.20`), `M1.21` (file the 753 MB-log finding as `LS-008`), `M1.22`
-  (third opinion on the normative grammar). Run a consumer with
-  `scripts/linkedspec_eval.sh run <bin> …`; `bins` prints their paths.
+- **Next action:** **`M1.20.7`** — reconcile the register against every issue sub-tree and close
+  `M1.20`: states, totals, the tracker `README.md`, this tree's frontier and the `docs/TASK_TREE.md`
+  index row (which still names `M1.20.1`). Bookkeeping with a census, not measurement — read each
+  sub-tree's State field rather than trusting the index. Then `M1.12` (the language reference),
+  `M1.21` (file the 753 MB-log finding as `LS-008`), `M1.22` (third opinion on the normative grammar).
 - **LinkedSpec pin = latest published head** `2ac834913d85c32f532be9b0aab63644838a577a` (leaves
-  `M1.19` → `M1.19.1`), nested RGX `f6e5acdc9`, PGEN `d9d41c28`. Re-measurement: **LS-005, LS-001,
-  LS-004 and LS-002 are `verified`** on archogen's own reruns — both reported blockers closed, only
-  LS-003 left. Three standing facts: the root `Cargo.toml` carries
-  `exclude = ["vendor/linkedspec"]` (required, load-bearing — do not remove); the checkout's
-  generated parser was **regenerated at this pin** (`50eec63c…` → `196db2ee…`); and LS-002's remedy
-  is a **new route** — `sexpr_file` + `SExprDocumentV1.spec` — while `lispish_file` + `Lispish.spec`
-  keeps returning one form by design, now as a guarded contract.
+  `M1.19` → `M1.19.1`), nested RGX `f6e5acdc9`, PGEN `d9d41c28`. **All five reported defects are
+  `verified`** on archogen's own reruns — both blockers included, nothing left on the vendor's word.
+  Four standing facts: the root `Cargo.toml` carries `exclude = ["vendor/linkedspec"]` (required,
+  load-bearing — do not remove); the checkout's generated parser was **regenerated at this pin**
+  (`50eec63c…` → `196db2ee…`) and a bootstrap is idempotent on existence, so regenerate after any pin
+  move; LS-002/LS-003's remedy is a **new route** — `sexpr_file` + `SExprDocumentV1.spec` — while
+  `lispish_file` + `Lispish.spec` keeps truncating and erasing kinds by design, now guarded; and both
+  consumers are built behind `scripts/linkedspec_eval.sh` (`bins`, `run <bin> …`).
   ⚠️ Follow the integration guide **at `2ac834913`**; it changed after `fd3e328d5`. See
   `docs/feedback/linkedspec/INDEX.md`.
 - **`PROGRAM.11` (medium)** is the other active frontier: the repository-boundary rule in **both**

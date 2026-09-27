@@ -5,6 +5,7 @@ answers:
   - "My register says `verified`. Does that mean there is nothing left to do?"
   - "Half of a remedy landed in my own repository — how do I record that?"
   - "How do I verify a fix whose remedy is split between the vendor's tree and mine?"
+  - "A token-kind check passed on the vendor's grammar — does that mean it classifies tokens the way my language does?"
 type: knowledge
 date: 2026-09-27
 ---
@@ -60,6 +61,11 @@ exclusion a permanent part of the supported route, not a workaround to be cleane
   never opens the manifest still learns the obligation exists.
 - **Say what `verified` does not cover.** Resolution is not a build; a build is not a link; a
   documentation fix is not a behaviour fix. One green instrument per claim, and the claim named.
+- ⭐ **Name whose contract you verified.** A token-kind check that passes on a vendor grammar's
+  lexical rules says nothing about *your* language's: one published rule makes `0x4_0000` a number
+  and `1__0` and `1.` symbols, while a language that forbids floating point anywhere and demands
+  canonical number spelling classifies differently. A green row that does not say which contract it
+  measured invites every reader to assume it measured theirs.
 - **Do not patch the vendored tree to make a measurement pass.** If the only way to reproduce the
   fix is to edit a dependency, the vendor's supported route has changed and the historical
   reproducer belongs in the record as history — re-run it as an artifact, never as a remedy.

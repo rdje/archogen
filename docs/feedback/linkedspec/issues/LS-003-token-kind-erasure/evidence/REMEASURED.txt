@@ -1,0 +1,95 @@
+# LS-003 re-measurement — LinkedSpec 2ac834913d85c32f532be9b0aab63644838a577a
+# RGX f6e5acdc9 · PGEN d9d41c28 · parser regenerated at this pin (digest 196db2eefed767ff)
+# Date 2026-09-27 · rustc 1.95.0 (59807616e 2026-04-14) · cargo 1.95.0 · Darwin arm64 · python3 3.14.7
+# Route measured, as the completion notice directs: the native document consumer `sexpr_file` with
+#   `specs/SExprDocumentV1.spec`, entry rule `Document`, whose contract tags every atom with a kind
+#   and preserves its spelling exactly. NOT the historical Lispish extraction, whose parent rules are
+#   documented as discarding the distinction; that route is run here only as the regression guard the
+#   notice asks consumers to retain.
+# Instrument: remeasure.sh, in this directory. The frozen original observation, taken at ad290bdb4,
+#   is evidence/EXPECTED.txt and is unchanged by this run. The probe inputs are this directory's own.
+# Path spellings: <app-root> is the consuming application's root; <bin> the built consumer.
+# VERDICT: the reported defect is GONE on the document route. All three probes carry the kinds and
+#   exact lexemes archogen wrote down before the run, and the two inputs that used to produce one
+#   result no longer do. The historical extraction route is unchanged, which is its documented contract.
+
+== 1. the scorer discriminates — bash remeasure.sh --self-test ==
+LS-003 remeasure: self-test
+  arm passes: a bare symbol keeps its kind and spelling (exit 0)
+  arm passes: a quoted string keeps its kind and BOTH quotes (exit 0)
+  arm passes: the historical erasure of a quoted string (exit 1)
+  arm passes: a number and a unit are different kinds (exit 0)
+  arm passes: a numeric conversion is caught (exit 1)
+  arm passes: an untagged result is refused, not read as symbols (exit 2)
+  arm passes: unreadable JSON is refused (exit 2)
+  arm passes: a rejection of a valid one-form input is not scored (exit 2)
+  arm passes: a quoted string and a bare symbol do not collapse to the same atoms
+self-test: 9/9 arms passed
+self-test rc=0
+
+== 2. the document route, and the historical route as its guard ==
+$ bash remeasure.sh --sexpr-bin <bin>/sexpr_file --sexpr-grammar <checkout>/specs/SExprDocumentV1.spec \
+                    --lispish-bin <bin>/lispish_file --lispish-grammar <checkout>/specs/Lispish.spec
+== LS-003 re-measurement: the document route ==
+  consumer ...... sexpr_file
+  grammar ....... SExprDocumentV1.spec
+
+03-number-unit-tokens.eadl     | rc=0   | kinds and lexemes exactly as expected
+      symbol:task
+      symbol:beat
+      symbol:period
+      number:10
+      symbol:ms
+      symbol:deadline
+      number:10
+      symbol:ms
+04-quoted-string.eadl          | rc=0   | kinds and lexemes exactly as expected
+      symbol:name
+      string:"ARCHOGEN"
+05-bare-symbol.eadl            | rc=0   | kinds and lexemes exactly as expected
+      symbol:name
+      symbol:ARCHOGEN
+
+  probe 04 vs probe 05 ......... DIFFERENT — the distinction survives
+  checks ........ 4 · as expected 4 · defect 0 · undecided 0
+
+== the historical extraction route (regression guard) ==
+  03-number-unit-tokens.eadl         | 0    | ["task","beat",["period","10","ms"],["deadline","10","ms"]]
+  04-quoted-string.eadl              | 0    | ["name","ARCHOGEN"]
+  05-bare-symbol.eadl                | 0    | ["name","ARCHOGEN"]
+  LS-003: RESULT — observation matches evidence/EXPECTED.txt; the issue reproduces.
+  repro.sh exit ................. 0  (0 = the frozen observation still reproduces)
+
+LS-003 remeasure: RESULT — the defect is GONE. Quoted string, bare symbol and number are
+  distinguishable kinds with exact lexemes, and the two inputs that used to produce one
+  result no longer do.
+remeasure rc=0
+
+== 3. the report's own complaint, both routes side by side ==
+# The report: "Two different inputs, one output." Probe 04 is `(name "ARCHOGEN")`, probe 05 is
+# `(name ARCHOGEN)`. On the historical route they are still identical, and still were at the original
+# revision — that is the frozen observation, unchanged:
+  historical  04-quoted-string.eadl  ->  ["name","ARCHOGEN"]
+  historical  05-bare-symbol.eadl    ->  ["name","ARCHOGEN"]     <- indistinguishable, by design
+# On the document route at this revision they are not:
+  document    04-quoted-string.eadl  ->  symbol:name  string:"ARCHOGEN"   <- quotes INSIDE the lexeme
+  document    05-bare-symbol.eadl    ->  symbol:name  symbol:ARCHOGEN
+# And the number/unit case the report called semantic rather than cosmetic — `(period 10 ms)`:
+  historical  03-number-unit-tokens  ->  ["task","beat",["period","10","ms"],["deadline","10","ms"]]
+  document    03-number-unit-tokens  ->  symbol:task symbol:beat symbol:period number:10 symbol:ms
+                                          symbol:deadline number:10 symbol:ms
+# `10` is a number and `ms` is a symbol. Neither was converted, and no unit was folded into a value.
+
+== 4. what this re-measurement does NOT claim ==
+  It measures the KIND and the SPELLING of each atom, which is what the report asked for. It does not
+  claim the kinds match eADL's own token classification: `SExprDocumentV1.spec` has its published
+  lexical rule (for example `1__0` is a symbol there, `0x4_0000` a number, `1.` a symbol), and eADL's
+  exactness rules — no floating point anywhere, canonical number spelling — are archogen's, stricter,
+  and enforced by archogen's own reader. A consumer adopting this route inherits a lexical contract,
+  not eADL's.
+  It does not claim the historical extraction route changed. It did not: the guard matches
+  evidence/EXPECTED.txt line for line, exit 0, so consumers who have not migrated see exactly what
+  they saw before.
+  It says nothing about semantics or about whether the grammar could serve as an independent
+  recognizer of archogen's normative surface syntax; the consumer tracks that question separately.
+  One platform, one build profile (dev), one pin.

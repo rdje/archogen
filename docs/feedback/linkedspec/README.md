@@ -6,10 +6,10 @@ upstream integration guide names ARCHOGEN in its own example, so this is offered
 the guide invites: the first real consumer reporting what the first integration actually did.
 
 > **The register of every reported bug and its state is [`INDEX.md`](INDEX.md).**
-> Currently **7 issues — 4 `verified` by archogen's own reruns at the adopted pin, including both
-> reported blockers, and 1 fixed-upstream awaiting ARCHOGEN verification** (`LS-003`, a major, on
-> the same route), 1 withdrawn and 1 no-action. The [completion notice](issues/LS-004-bootstrap-false-success/UPSTREAM.md)
-> names the published revision and adoption steps.
+> Currently **7 issues — all 5 reported defects `verified` by archogen's own reruns at the adopted
+> pin, including both blockers**, plus 1 withdrawn and 1 no-action. Nothing rests on the vendor's
+> word. The [completion notice](issues/LS-004-bootstrap-false-success/UPSTREAM.md) names the
+> published revision and adoption steps.
 
 **Everything LinkedSpec needs is here.** Each issue is a self-contained sub-tree holding its own
 inputs, its own reproducer and its own frozen observation. Nothing outside this directory is
@@ -130,10 +130,10 @@ the `sexpr_file` adapter returns every top-level form and rejects leading, inter
 input with a typed error and no partial value — 8 of 8 frozen probes as expected, including the
 four-form real description whose truncation decided the original report.
 
-Nothing here is waiting on the vendor now except `LS-003`, which is measured on the same route. The
-question the ask existed to make answerable — whether that grammar can serve as an independent
-recognizer of archogen's normative surface syntax — is **reopened** by this result, and is now
-archogen's own work rather than an ask of LinkedSpec.
+Nothing here is waiting on the vendor now: all five reported defects were re-measured by archogen at
+the adopted pin on `2026-09-27` and are `verified`. The question the ask existed to make answerable —
+whether that grammar can serve as an independent recognizer of archogen's normative surface syntax —
+is **reopened** by this result, and is now archogen's own work rather than an ask of LinkedSpec.
 
 ## What works well
 

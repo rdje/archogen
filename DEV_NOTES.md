@@ -1,5 +1,38 @@
 # DEV_NOTES.md
 
+## _(2026-09-27)_ — a green token-kind check has to say whose kinds it means
+
+- `M1.20.6` re-measured LS-003 and closed the register: **all five reported defects are now
+  `verified`** on archogen's own reruns, nothing rests on the vendor's word. The three frozen probes
+  flatten to `kind:lexeme` atoms and match expectations written into the instrument before the run —
+  `string:"ARCHOGEN"` with **both quotes inside the lexeme**, `symbol:ARCHOGEN`, and `number:10`
+  against `symbol:ms`. The fourth check is the cross-probe one that *is* the defect: probe 04 and
+  probe 05 must not produce the same atoms, and `probe 04 vs probe 05 ... DIFFERENT`.
+- ⛔ **The scoping is the part that could have been read too widely.** Those are the *document
+  grammar's* lexical kinds, not eADL's. Its published rule makes `0x4_0000` a number and `1__0` and
+  `1.` symbols; eADL forbids floating point anywhere and demands canonical number spelling, and
+  archogen's own reader enforces that. A `verified` row that did not say which contract it measured
+  would invite every reader to assume it measured ours — so the issue page, the evidence file and the
+  leaf all say that adopting this route inherits a lexical contract, not eADL's. That is precisely
+  what `M1.22` will measure instead of assuming.
+- The historical route is unchanged and now **guarded** rather than merely reported: `repro.sh` →
+  `rc=0`, `observation matches evidence/EXPECTED.txt`, probes 04 and 05 still both
+  `["name","ARCHOGEN"]`. That equality is the erasure the report described, and it is the vendor's
+  documented extraction contract — so a silent change there would be a regression for every consumer
+  who has not migrated, and the guard is what would catch it.
+- The scorer refuses rather than guesses in three directions, each with its own arm: an **untagged**
+  result (`2`, because scoring the wrong adapter's output either way would be a lie), unreadable JSON
+  (`2`), and a valid one-form input coming back rejected (`2`, since over-rejection is a different
+  defect). `--self-test` → `9/9 arms`, no binaries needed.
+- Measured: `checks 4 · as expected 4 · defect 0 · undecided 0`; `make focused` exit `0`;
+  `cargo test --all` → **421 passed, 0 failed** over 36 suites; the frozen `EXPECTED.txt`, `repro.sh`
+  and all three probe inputs untouched.
+- Promoted into the existing entry rather than a fifth new one:
+  `docs/knowledge/a-verified-row-must-name-what-you-still-owe.md` gains "name whose contract you
+  verified" and a matching `answers:` question. The knowledge layer was founded on a measurement of
+  1 592 entries nobody could reach by question; adding a near-duplicate to avoid editing an existing
+  file is how that happens again.
+
 ## _(2026-09-27)_ — a remedy that adds a route leaves the old reproducer still reproducing
 
 - `M1.20.5` re-measured LS-002, the register's last blocker and the item the tracker called "the
