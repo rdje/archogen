@@ -4,6 +4,67 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — a figure false for 49 commits, and the escape clause that excused it
+
+`ARCHOGEN-M1-0063` (leaf `M1.24`).
+
+- **Three more live surfaces published a corpus figure `M1.7` had superseded 49 commits earlier.**
+  `docs/book/src/reading.md` said the semantic round trip runs over "all **21** corpus files" and
+  `crates/eadl-front/tests/corpus.rs`'s module header said the suite "uses the **21** files", where the
+  suite measures **23**; `docs/semantics/boundary/README.md` said "the **five** ambiguous cases" on line
+  94 while line 9 of the *same file* said "**7** are ambiguous" and the case headers measure 7. All
+  three were true at `152d188` (`M0.2`, whose commit subject is literally "the 21-case boundary
+  corpus") and were superseded at `9030111` — the same commit that made `M1.23`'s two figures stale.
+- ⛔ **`M1.23`'s census pattern could not see any of these, and neither could the first replacement.**
+  `[0-9]+ of (the )?[0-9]+` cannot see a corpus *size*, which is not an `N of M` figure; a
+  digits-plus-size-noun pattern then found 2 of the 4 and could not see `the five ambiguous cases` or
+  `Three descriptions`, because both are spelled out. **Three sweeps with three patterns** were needed
+  for one defect class. A census is a population bounded by its pattern, so the pattern now travels
+  with the result — recorded as a decision, and as the reason `PROGRAM.20` exists rather than a fourth
+  sweep.
+- ⛔ **The gate built to fix this reported green on its own defect.** Its first cut excused a
+  non-current figure whose line carried a past-tense marker, copying the reach gate's idiom. The
+  defective line reads `…worked classification case before adoption", and the five ambiguous cases…` —
+  the `before` belongs to a quotation of `ROADMAP.md` §4.3, seven words ahead of the stale number.
+  Measured on the first run: it failed on `reading.md` while the index leg **passed** with `five` still
+  in place. A substring anywhere in a line is not a tense, it is a coincidence; history is now an
+  explicit `HISTORICAL_FIGURES` list an author has to add a line to, in review. The reach gate still
+  uses the marker scan and is `M1.25`'s.
+- ⛔ **`TASK-ACCEPTANCE` verifies one checklist per tree file, not the owning leaf's.** Its per-file
+  `awk` enters the first box matching a keyword and exits at the next box bullet. `docs/tasks/M1.md`
+  carries **24** ticked ROOT CAUSE boxes; the check reads **line 52** — leaf `M1.1`, `2026-09-13`. With
+  `corpus.rs` staged and leaf `M1.24` carrying **zero** boxes, the gate printed `task-acceptance: OK
+  (every staged code-change leaf carries a ticked, evidence-backed checklist)` and `exit=0`. Severity
+  measured rather than assumed — **latent, not active**: every leaf recording a commit was audited,
+  five carry no ticked box, and `git show --stat` on each reports **0** code files. Filed as
+  `PROGRAM.21`, priority high, ahead of `PROGRAM.18`.
+- **The fix is a consumer, not a correction.** `measure_corpus()` is now the corpus's one producer,
+  shared by the census test — which gained the `ambiguous == 7` pin it never had — and by
+  `the_live_surfaces_publish_the_measured_corpus_size`, which compares three surfaces read with
+  `include_str!` so a moved or deleted one stops the crate compiling. It also discharges a name that
+  overstated itself: `the_corpus_is_the_size_the_index_claims` had never read the index it is named
+  after.
+- **Seven permanent RED arms**, not one-off mutations: `figure_violations()` returns its violations, so
+  each arm feeds it the prose that was *actually* wrong and asserts the specific complaint on every
+  run. Each arm also pins the violation **count** via `assert_reported`, because an arm that only
+  checks a substring passes on a gate that started reporting everything — measured by appending one
+  noise violation: `6 passed; 8 failed`, all seven arms and the gate, the six unrelated tests green.
+- ⛔ The mutation-applied discipline failed a **second** time by the same mechanism as `M1.23`'s arm C:
+  a `perl -0pi` substitution produced `error: could not compile`, while the filtered test output
+  printed **nothing at all** — which reads as a pass. Caught only by re-running unfiltered.
+- **Validation:** `make focused` → `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not
+  built`, exit `0`; `cargo test --all` → **430 passed / 0 failed** over 36 suites (baseline 422, delta
+  = the gate and its seven arms); the corpus suite `6` → `14 passed; 0 failed`; `make gate` →
+  `=== all doctrines green ===` over 13 checks. Both drift legs were seen firing on the **real tree**
+  before any prose was edited.
+- **Filed from the same census:** `S0.8` (`docs/book/src/s0.md` says three descriptions where the
+  directory holds four, and four later in the same chapter — false for 38 commits), `PROGRAM.20` (the
+  carried-figure register), `PROGRAM.21` (above) and `M1.25` (converge the reach gate's escape clause).
+  `docs/knowledge/a-moved-measurement-needs-a-census-of-its-copies.md` is corrected in place — steps 1,
+  3 and 4 — which is the promotion `LESSON-PROMOTION` asks for. The `M0.2` commit subject, this file's
+  own history and the closed leaves are deliberately untouched: rewriting a record to look current is
+  the defect `docs/CLAIM_VERIFICATION.md` §5B names.
+
 ## archogen — a figure that was false for 47 commits, and the gate that makes the next one derived
 
 `ARCHOGEN-M1-0061` (leaf `M1.23`).

@@ -52,8 +52,8 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 
 | Tree | Status | Frontier (next leaf) | Owner |
 | --- | --- | --- | --- |
-| [`S0`](tasks/S0.md) | `done` | — all six leaves closed; **F28 green**; the prototype carries an enforced expiry | repo-local |
-| [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.11` — the repository-boundary doctrine: the rule lived only in a session prompt, and upstream published a crossing. Then `PROGRAM.5`, the §15/§19 source ledger | repo-local |
+| [`S0`](tasks/S0.md) | `active` | `S0.8` — the book's S0 chapter says three descriptions where the directory holds four, and says four later in the same chapter. F28's evidence is unaffected; the seven original leaves stay closed | repo-local |
+| [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.11` — the repository-boundary doctrine: the rule lived only in a session prompt, and upstream published a crossing. Then `PROGRAM.21` (**high** — `TASK-ACCEPTANCE` reads only the first checklist in a tree file, so later leaves are unverified and the gate says otherwise), `PROGRAM.18`, and `PROGRAM.5`, the §15/§19 source ledger | repo-local |
 | [`M1`](tasks/M1.md) | `active` | `M1.12` — the language reference: the rules a grammar cannot carry (exactness, comment retention, canonical form, `defkind`'s limits). The LinkedSpec evaluation is **closed**: all five reported defects re-measured and `verified` at the adopted pin `2ac834913`. Then `M1.13`, `M1.10`, `M1.21`, `M1.22` | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |
 | [`M2`](tasks/M2.md) | `active` | `M2.8` — pin the installed QEMU; the integration tier now fails on an unverified proposal | repo-local |

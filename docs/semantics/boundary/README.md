@@ -91,7 +91,7 @@ rejected cases would fail more than one, and their rationale says so.
 ## The ambiguous cases are the point
 
 Obvious cases do not teach the boundary; they only confirm it. §4.3 requires that "ambiguous
-new fields require a worked classification case before adoption", and the five ambiguous cases
+new fields require a worked classification case before adoption", and the seven ambiguous cases
 here are the ones a reasonable author gets wrong in both directions:
 
 - **`counter-width-and-rate`** and **`addressable-region`** *look* like implementation detail

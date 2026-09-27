@@ -13,7 +13,7 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M1` → frontier `M1.12`. `PROGRAM` frontier `PROGRAM.11`; `M2` frontier `M2.8`.
+- **Active tree:** `M1` → frontier `M1.12`. `PROGRAM` `.11`; `S0` reopened for `S0.8`; `M2` `.8`.
 - **Next action:** **`M1.12`** — the language reference: the rules a grammar cannot carry (exactness,
   no float anywhere; comment retention; canonical form; `defkind`'s limits). `M1.11` proved the tokens
   agree; **values** are still checked only against the reader. Then `M1.13` (freeze `eadl/1`),
@@ -35,8 +35,10 @@
   unadapted to the reference's new API, and ratchets `d1`–`d5` still assert a disagreement `M2.9`
   resolved — rewritten to assert agreement, never deleted (§14.1). Its commit message lists the rest.
 - **Also open:** `M1.12` (the language reference) → `M1.13` (freeze `eadl/1`), `M1.10`, `M1.21`,
-  `M1.22`; `M2.6`, `M2.8`; `PROGRAM.18` (medium-high), `.13`, `.15`, `.17`, then `.5`, `.6`, `.9`, `.10`.
-- **Baseline to beat:** `make focused` exit `0` at the pin — **422 passed, 0 failed** over 36 suites.
+  `M1.22`, `M1.25`; `S0.8`; `M2.6`, `M2.8`; `PROGRAM.21` (**high** — `TASK-ACCEPTANCE` reads only the
+  *first* checklist in a tree file, so later leaves are unverified and the gate says otherwise), `.18`,
+  `.13`, `.15`, `.17`, `.20`, then `.5`, `.6`, `.9`, `.10`.
+- **Baseline to beat:** `make focused` exit `0` at the pin — **430 passed, 0 failed** over 36 suites.
   Tiers: `focused` per commit, `integration` before a push; exit **20 = incomplete** is not a pass —
   read what it names (missing tools are owned by `docs/targets/first-target.md`, tree `M5`).
   ⚠️ `make integration` is **red** on one step, `emulator`: QEMU 11.1.1 is installed but no release is

@@ -5,6 +5,8 @@ answers:
   - "Why does the book contradict itself between two chapters?"
   - "How do I stop a measured figure from going stale in prose?"
   - "A doc comment states a measurement. Is that a defect?"
+  - "My census grep found nothing — is the population empty, or is my pattern wrong?"
+  - "My figure gate is green on the defect it was written for. What excused it?"
 type: knowledge
 date: 2026-09-27
 ---
@@ -66,17 +68,37 @@ you to damage correct records.
 
 ## How to apply
 
-1. **Census before editing.** `grep -rnE '[0-9]+ of (the )?[0-9]+' <live surfaces>` — and classify
-   every hit as *live* or *record* before touching one. The count of hits is a population, not a
-   defect count.
+1. **Census before editing — with as many patterns as the figure has spellings.** A census is a
+   population *bounded by its pattern*, so the pattern is part of the claim and travels with it.
+   Measured twice over here: the `N of M` pattern found `M1.23`'s two stale copies and **could not
+   see** a corpus *size* (`all 21 corpus files`), which is not an `N of M` figure; a
+   digits-plus-size-noun pattern then found that one and **could not see** `the five ambiguous
+   cases`, because it is spelled out. Three patterns, four live-false figures, and one commit
+   (`9030111`) behind all of them. Sweep every shape the figure can take — ratio, size, spelled-out
+   number — and state which shape each hit came from. A census that reports "nothing found" without
+   naming its pattern has not measured a population.
 2. **Make the surviving live copy a consumer.** One measurement function, shared by the assertion
    and the gate; the gate reads the prose with `include_str!` so a moved or deleted file stops the
    crate compiling instead of silently gating nothing.
-3. **Gate the tense, not just the number.** A figure that is neither the measurement nor marked past
-   tense is a new stale claim. Accepting past tense is what keeps history legal.
-4. **Red-arm it both ways**: revert the figure (must fire) *and* strip the past tense off a
-   legitimate historical figure (must also fire). A gate that only catches the first will be
-   satisfied by prose that quietly stops marking its history.
+3. ⛔ **Gate an explicit history list, never a tense.** "A figure that is neither the measurement
+   nor marked past tense is a new stale claim" is the right *rule* and a trap as an
+   *implementation*: scanning the line for `was`/`before`/`previously` is satisfiable by unrelated
+   prose. Measured on the first run of the gate built from this card — it reported green on the
+   exact defect it existed to catch, because the line reads
+   `…worked classification case before adoption", and the five ambiguous cases…` and the `before`
+   belongs to a quotation of the roadmap, seven words ahead of the stale number. A historical figure
+   must be something an author **lists in a constant**, where the addition is visible in review, not
+   something neighbouring words can excuse by accident. History stays legal; only the mechanism
+   changes.
+4. **Red-arm it both ways, permanently, and pin the count.** Revert the figure (must fire) *and*
+   strip the marker off a legitimate historical figure (must also fire). Two refinements this card
+   learned the hard way: make the arms **repeatable** by factoring the comparison into a function
+   that returns its violations, then feeding it the prose that was *actually* wrong — a one-off
+   mutation of the working tree proves the gate fired once, for one author, on one day, and is
+   exactly the gap `PROGRAM.18` files against the shell controls. And assert **how many** violations
+   came back, not merely that one mentions the right thing: an arm that only checks a substring also
+   passes on a gate that started reporting everything. Measured — appending one noise violation
+   failed all 7 arms and the gate, and left the 6 unrelated tests green.
 5. Retyping the fresh number and changing nothing else is **not** the fix —
    `docs/CLAIM_VERIFICATION.md` §5B names that move explicitly.
 

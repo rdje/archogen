@@ -1,5 +1,41 @@
 # DEV_NOTES.md
 
+## _(2026-09-27)_ — the census pattern is part of the claim, and an escape clause is a gate
+
+- `M1.24`. `M1.23` swept `[0-9]+ of (the )?[0-9]+`, classified its 9 hits, and closed two stale
+  figures. The same commit that made those stale — `9030111`, leaf `M1.7` — had made **three more**
+  live surfaces false, and that pattern could not see any of them: `all 21 corpus files`
+  (`docs/book/src/reading.md`), `the 21 files` (`crates/eadl-front/tests/corpus.rs`'s module header)
+  and `the five ambiguous cases` (`docs/semantics/boundary/README.md`, contradicting its own summary
+  line seven). A corpus *size* is not an `N of M` figure. All three false for **49 commits**
+  (`git rev-list --count 9030111..HEAD`).
+- ⛔ **The first replacement pattern was also too narrow, and that was measured rather than
+  assumed.** Digits followed by a size noun found 2 of the 4. It could not see `five` or `Three`,
+  because both are spelled out — and `docs/book/src/s0.md` says "Three descriptions in
+  `examples/s0-heartbeat/`" where the directory holds four and line 306 of the same chapter says
+  four. A census is a population bounded by its pattern, so the pattern travels with the result.
+  Filed as `S0.8`; the general mechanism is filed separately rather than swept a fourth time.
+- ⛔ **A gate built on the promoted card then reported green on its own defect.** The card said
+  "gate the tense": excuse a non-current figure whose line is marked past tense. The defective line
+  reads `…worked classification case before adoption", and the five ambiguous cases…` — the `before`
+  belongs to a quotation of `ROADMAP.md` §4.3, seven words ahead of the stale number, so the escape
+  clause fired and the gate passed on the exact thing it existed to catch. Caught only because the
+  first run failed later, on `reading.md`, and legs 1–3 were thereby silently exercised. Replaced
+  with an explicit `HISTORICAL_FIGURES` list: history stays legal, but an author has to *list* a
+  line, in review, rather than have unrelated prose excuse it.
+- ⭐ **The arms are permanent, not one-off.** `figure_violations()` returns its violations instead of
+  asserting them, so seven RED arms feed it the prose that was actually wrong and check the specific
+  complaint on every run — no working tree mutated. Each arm also pins **how many** violations came
+  back: an arm that only checks a substring passes on a gate that started reporting everything.
+  Measured by appending one noise violation → all 7 arms and the gate failed, the 6 unrelated tests
+  stayed green.
+- ⛔ A `perl -0pi` mutation used to run that meta-arm did not compile, and the filtered test output
+  printed **nothing** — which reads as a pass. Re-run unfiltered; see
+  `docs/knowledge/verify-the-mutation-applied.md`, reproduced here a second time by the same
+  mechanism (`perl` substitution) as the first.
+- Promoted to `docs/knowledge/a-moved-measurement-needs-a-census-of-its-copies.md` — steps 1, 3 and 4
+  corrected, and two of its `answers:` questions added.
+
 ## _(2026-09-27)_ — the number was true when it was written, and nothing re-derived it
 
 - `M1.23`. `crates/eadl-model/src/kind.rs`'s module header and `docs/book/src/kinds.md` both published

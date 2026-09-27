@@ -91,7 +91,7 @@ divergent parser to exist just to read those headers.
 
 Two descriptions differing only in whitespace print identically. That is the first link in the
 chain §12 M4 needs — "repeated generation produces identical canonical plans and generated
-sources" — and it is tested as a round trip on all 21 corpus files: read, print, read again,
+sources" — and it is tested as a round trip on all 23 corpus files: read, print, read again,
 and the structure must be unchanged.
 
 ## A lesson from the corpus

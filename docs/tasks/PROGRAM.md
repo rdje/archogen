@@ -37,7 +37,7 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM`
   Status: `active`
   Goal: own the program spine
-  Children: `PROGRAM.1` … `PROGRAM.19`, plus `PROGRAM.1.1` and `PROGRAM.2.1`
+  Children: `PROGRAM.1` … `PROGRAM.21`, plus `PROGRAM.1.1` and `PROGRAM.2.1`
 
 - ID: `PROGRAM.1`
   Status: `done`
@@ -701,6 +701,88 @@ mdBook that is the director's window into the project.
     not the repository's scratch directories, and `git grep -ln 'app-data' -- docs/book` → no match,
     `rc=1`.
 
+- ID: `PROGRAM.20`
+  Status: `pending`
+  Goal: a **carried-figure register**, so a figure no measurement watches is a breach at the commit
+  that adds it rather than a defect a later sweep happens to find. Three sweeps with three different
+  patterns have now been needed to find one defect class, and a fourth pattern would find a fourth
+  spelling: the mechanism, not the sweep, is what is missing.
+  Reproduce / issue: the class has fired four times in this repository. `M1.23` found two live
+  surfaces publishing a schema reach superseded 47 commits earlier, sweeping
+  `grep -rnE '[0-9]+ of (the )?[0-9]+'` → 9 hits, 2 false. `M1.24` found three more live surfaces
+  false from the **same commit** (`9030111`), which that pattern could not see because a corpus *size*
+  is not an `N of M` figure; its own first replacement pattern (digits followed by a size noun) then
+  found 2 of those 3 and could not see `the five ambiguous cases`, because it is spelled out. Two more
+  shapes are already measured: `docs/book/src/s0.md` says "Three descriptions" where the directory
+  holds four (`S0.8`), and `docs/TASK_TREE.md`'s `S0` row said "all six leaves closed" for one commit
+  after `S0.7` added a seventh — `git show 4b7e000^:docs/TASK_TREE.md` and `git show
+  4b7e000:docs/TASK_TREE.md` are byte-identical on that row, so the commit that moved the count never
+  looked at the index that restates it. Corrected by `M1.24`'s routing edit rather than left. Each
+  sweep is a population bounded by its pattern, so "nothing else found" has never been a result this
+  repository could rely on — and a third sweep, adding `leaves|arms|checks|doctrines|productions|rows`,
+  returned a further backlog of structure counts this leaf deliberately does **not** classify, because
+  classifying five shapes by hand is the work the register exists to end.
+  Acceptance: a registered check enumerates figure-shaped text in the **live** surfaces (book
+  chapters, corpus indexes, crate module headers) and classifies each occurrence as *gated* (a named
+  test compares it to a measurement), *registered as a record* (history, changelog, closed leaf), or
+  *unregistered*; it exits nonzero on an unregistered figure introduced by the **staged diff**, in the
+  `TABLE-ARITY-RATCHET` idiom — a per-file ratchet against `HEAD`, so the pre-existing population is a
+  reported backlog rather than a reason to bypass; `--self-test` carries RED arms including the two
+  shapes already measured (a digits figure and a spelled-out one); the gates `M1.23` and `M1.24` built
+  are registered as consumers so they do not trip it; and the honest limit is stated in the check's own
+  header — it proves a figure is *watched or listed*, never that a listed one is correct, which is
+  `BOOK-ANCHORS`' limit one level down.
+  Priority: **medium** — it is the structural fix for the most frequently recurring defect class in
+  this repository, and it is what stops `M1.23`/`M1.24`/`S0.8` from being followed by an `M2.x`. It
+  gates no milestone and blocks nothing, which is why it is scheduled behind `PROGRAM.11` and
+  `PROGRAM.18` rather than ahead of them; `PROGRAM.18` (repeatable RED arms for registered controls)
+  should land first, because this check arrives with arms and the older ten do not.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `PROGRAM.21`
+  Status: `pending`
+  Goal: **`TASK-ACCEPTANCE` examines only the first acceptance checklist in a tree file, so for every
+  leaf after the first it verifies nothing** — and prints a success message asserting the opposite.
+  Make the check leaf-scoped, and arm it.
+  Reproduce / issue: `scripts/check_task_acceptance.sh` runs one `awk` per staged `docs/tasks/*.md`.
+  That awk sets `inbox=1` on the first bullet matching the keyword and `exit`s at the **next** box
+  bullet, so exactly one box per keyword per file is ever read. Measured rather than inferred from the
+  source: `docs/tasks/M1.md` carries **24** ticked ROOT CAUSE boxes
+  (`grep -cE '^[[:space:]]*-[[:space:]]*\[[xX]\][[:space:]]*\*\*ROOT CAUSE' docs/tasks/M1.md` → `24`),
+  and the check's own awk against that file captures **line 52** — leaf `M1.1`, written `2026-09-13`.
+  Then, with `crates/eadl-front/tests/corpus.rs` staged and leaf `M1.24` carrying **zero** boxes
+  (`awk '/^- ID: `M1.24`/,/^## Current Frontier/' docs/tasks/M1.md | grep -cE '^\s*- \[[ x]\] …'` →
+  `0`), the gate printed
+  `task-acceptance: OK (every staged code-change leaf carries a ticked, evidence-backed checklist)`
+  and `exit=0`.
+  ⭐ **Severity, measured rather than assumed: latent, not active.** Auditing every leaf that records a
+  commit found five with no ticked ROOT CAUSE box — `M0.1`, `M0.2`, `M1.18`, `M1.20`, `PROGRAM.1` — and
+  `git show --stat` on each of their commits reports **0** code files: `M1.18` staged twelve `.md`
+  files, `M0.1`/`M0.2`/`PROGRAM.1` none, and `M1.20` is an aggregation node whose seven sub-leaves
+  each carry their own checklist. So no code change has landed unboxed. The defect is that the gate
+  **could not have stopped one** on any leaf but the first in its file, while telling the author it had.
+  ⛔ That is the same failure mode the check's own header says box-scoping was introduced to end. It
+  closed cross-**file** leakage and incidental-**prose** leakage, and left cross-**leaf** leakage open —
+  a co-staged tree file supplying another leaf's evidence, one directory level down from the hole it
+  was written for.
+  Acceptance: the check verifies the boxes of the leaf that **owns** the staged change rather than the
+  first leaf in the file; its success message is true of what it actually examined; a staged code change
+  whose owning leaf carries no ticked, evidence-backed boxes is refused **with that leaf's ID in the
+  message**; `--self-test` carries RED arms including (a) a *second* leaf in a file with no boxes while
+  the first is complete — the exact shape measured here, (b) a file whose only leaf is complete, and
+  (c) the `TEMPLATE.md` exclusion still holding; and the honest limit is stated in the header,
+  including that the owning leaf is **not always identifiable from staged paths alone** (the commit
+  message names it, and `pre-commit` does not have one) and what the check does when it cannot tell.
+  Priority: **high** — this is the gate enforcing root-cause / effect / no-regression evidence on every
+  code change; it is unsound for the majority of leaves in every multi-leaf tree file (`M1.md` 33
+  leaves, `PROGRAM.md` 23, `M2.md` 10, `S0.md` 9); and a false success message is worse than a silent
+  one, because it teaches an author that the box they skipped did not matter. Scheduled **ahead of
+  `PROGRAM.18`**, which would otherwise spend effort arming a control that reads the wrong boxes —
+  `PROGRAM.18` keeps the other nine.
+  Verification: `pending`
+  Commit: `pending`
+
 - ID: `PROGRAM.10`
   Status: `pending`
   Goal: run the **integration** tier in CI — provision `mdbook` and `qemu-system-riscv64` on the
@@ -921,21 +1003,24 @@ roadmap item X live?".
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
 | 1 | `PROGRAM.11` | `active` | the repository-boundary doctrine, **in both directions**. The rule was nowhere in the committed tree, which is how an *inbound* crossing got recorded backwards in a durable record. Priority medium: the outbound half is preventive, the inbound half fired once and was handled correctly |
-| 2 | `PROGRAM.18` | `pending` | **medium-high** — ten of eighteen registered controls carry no repeatable `--self-test` RED arm, `check_task_acceptance.sh` among them: its box-scoping was validated once during development and no arm re-fires it. Found by the claim-verification adoption's §7.4 sweep |
-| 3 | `PROGRAM.5` | `pending` | the §15/§19 dependency and evidence ledger — every external source claim in the book should resolve to a row, and `BOOK-ANCHORS` now checks the *internal* ones |
-| 4 | `PROGRAM.9` | `pending` | the extended tier reports `incomplete` on every run until its three steps exist |
-| 5 | `PROGRAM.6` | `pending` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |
-| 6 | `PROGRAM.13` | `pending` | twelve closed leaves in `BOOTSTRAP`, `M2` and this tree do not name their own commit — backfill both logs from git, then `PROGRAM.14` gates it so the gap cannot reopen |
-| 7 | `PROGRAM.15` | `pending` | a feedback register row that contradicts its own issue sub-tree passes every gate today; five state transitions in six commits held only by hand-editing and a manual census |
-| 8 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
+| 2 | `PROGRAM.21` | `pending` | **high** — `TASK-ACCEPTANCE` reads only the *first* checklist in a tree file, so for every later leaf it verifies nothing and then says it did. Measured: `M1.md` carries 24 ticked ROOT CAUSE boxes and the check's awk captures line 52 (`M1.1`); a staged `.rs` with `M1.24` carrying zero boxes returned `exit=0`. Latent, not active — all five checklist-less committed leaves staged no code. Ahead of `PROGRAM.18`, which would otherwise arm the wrong boxes |
+| 3 | `PROGRAM.18` | `pending` | **medium-high** — ten of eighteen registered controls carry no repeatable `--self-test` RED arm, `check_task_acceptance.sh` among them: its box-scoping was validated once during development and no arm re-fires it. Found by the claim-verification adoption's §7.4 sweep, and `PROGRAM.21` is what an arm would have caught |
+| 4 | `PROGRAM.5` | `pending` | the §15/§19 dependency and evidence ledger — every external source claim in the book should resolve to a row, and `BOOK-ANCHORS` now checks the *internal* ones. The director has offered a read-only external document source (ISA / RISC-V / devicetree / peripheral specifications) reachable by operator-relayed request; the ledger is where that seam gets a row |
+| 5 | `PROGRAM.9` | `pending` | the extended tier reports `incomplete` on every run until its three steps exist |
+| 6 | `PROGRAM.6` | `pending` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |
+| 7 | `PROGRAM.13` | `pending` | twelve closed leaves in `BOOTSTRAP`, `M2` and this tree do not name their own commit — backfill both logs from git, then `PROGRAM.14` gates it so the gap cannot reopen |
+| 8 | `PROGRAM.15` | `pending` | a feedback register row that contradicts its own issue sub-tree passes every gate today; five state transitions in six commits held only by hand-editing and a manual census |
+| 9 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
+| 10 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with |
 
 `PROGRAM.16` is closed: the claim-verification policy is adopted as `docs/CLAIM_VERIFICATION.md`,
 copied verbatim and diff-verified against its read-only source, restated in this project's terms as
 its own §7.6 requires, and registered in all three entrypoints — `CLAUDE.md`, `AGENTS.md` and
 `DOCTRINE_ENFORCEMENT.md`'s E1 list. The spine is five portable architectures, not four.
 
-`M0` and `S0` are closed; `M1` is open again (its LinkedSpec evaluation is closed, so its frontier is
-`M1.12`, the language reference) and `M2` is in
+`M0` is closed; `S0` is open again for `S0.8` (a book figure `M1.24`'s census found — F28's evidence
+is unchanged, so the seven original leaves stay closed); `M1` is open (its LinkedSpec evaluation is
+closed, so its frontier is `M1.12`, the language reference) and `M2` is in
 progress, so `PROGRAM` carries the substrate work those trees lean on. `PROGRAM.8` remains open and
 unblocking. `PROGRAM.12` is closed: harness-local scratch is ignored, so a clean `git status` means
 what the handoff rule says it means.
