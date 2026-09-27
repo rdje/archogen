@@ -54,7 +54,7 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 | --- | --- | --- | --- |
 | [`S0`](tasks/S0.md) | `done` | — all six leaves closed; **F28 green**; the prototype carries an enforced expiry | repo-local |
 | [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.11` — the repository-boundary doctrine: the rule lived only in a session prompt, and upstream published a crossing. Then `PROGRAM.5`, the §15/§19 source ledger | repo-local |
-| [`M1`](tasks/M1.md) | `active` | `M1.20.1` — re-measure the five `fixed-upstream` LinkedSpec reports at the adopted pin `2ac834913`, one issue per sub-leaf, LS-005 first. Then `M1.12`, the language reference | repo-local |
+| [`M1`](tasks/M1.md) | `active` | `M1.12` — the language reference: the rules a grammar cannot carry (exactness, comment retention, canonical form, `defkind`'s limits). The LinkedSpec evaluation is **closed**: all five reported defects re-measured and `verified` at the adopted pin `2ac834913`. Then `M1.13`, `M1.10`, `M1.21`, `M1.22` | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |
 | [`M2`](tasks/M2.md) | `active` | `M2.8` — pin the installed QEMU; the integration tier now fails on an unverified proposal | repo-local |
 | [`M3`](tasks/M3.md) | `pending` | `M3.1` — candidate enumeration and substitutability | repo-local |

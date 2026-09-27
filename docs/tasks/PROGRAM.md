@@ -37,7 +37,7 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM`
   Status: `active`
   Goal: own the program spine
-  Children: `PROGRAM.1` … `PROGRAM.14`, plus `PROGRAM.1.1` and `PROGRAM.2.1`
+  Children: `PROGRAM.1` … `PROGRAM.17`, plus `PROGRAM.1.1` and `PROGRAM.2.1`
 
 - ID: `PROGRAM.1`
   Status: `done`
@@ -428,6 +428,89 @@ mdBook that is the director's window into the project.
   Verification: `pending`
   Commit: `pending`
 
+- ID: `PROGRAM.15`
+  Status: `pending`
+  Goal: make the outbound feedback register's **states and totals** mechanically consistent with the
+  issue sub-trees that are their source — the half of "keeping this index true" that no check
+  performs today.
+  Reproduce / issue: `FEEDBACK-SELF-CONTAINED` leg 4 checks only that every issue directory is *named*
+  in the vendor's `INDEX.md` — `grep -n 'INDEX' scripts/check_feedback_self_contained.sh` → lines 17,
+  47, 49, 75, all registration. Nothing compares a register row's `State` cell with the `**State**`
+  field in that issue's own `README.md`, and nothing recomputes the totals table from the rows:
+  `git grep -ln 'State' -- scripts/` → only `check_waiver_routing.sh`, which is about waivers.
+  THE GAP: a register row that contradicts its own sub-tree is undetectable by any gate. Measured
+  consequence: five state transitions landed across six commits on `2026-09-27` (leaves `M1.20.1` –
+  `M1.20.7`), and consistency held only because each leaf hand-edited both files and the last one ran
+  a census by hand — 7 of 7 rows matched, but a commit that got one wrong would have passed every
+  check. Impact: the register is the file a vendor reads first, and a row that disagrees with its own
+  sub-tree is worse than no register at all.
+  Acceptance: a check — a new `scripts/check_*.sh` or a fifth leg of the existing feedback check —
+  fails when a row's State differs from its sub-tree's State field, when a `verified` row carries no
+  dated archogen re-measurement behind it, or when the totals table does not equal a recount of the
+  rows; it is registered in `scripts/check_doctrines.project.sh` and mirrored in
+  `DOCTRINE_ENFORCEMENT.md`; it carries RED arms in `--self-test`; it is scoped to staged files, so an
+  unrelated vendor's register cannot fail a commit; and its honest limit is stated in the header — it
+  proves the two records agree, never that the measurement behind them was right.
+  Priority: **medium** — no behaviour depends on it, but this repository's whole claim to a vendor is
+  that its records are consistent, and that claim currently rests on hand-editing.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `PROGRAM.16`
+  Status: `pending`
+  Goal: adopt the director-mandated **claim-verification policy** (§17 of the standing session
+  instructions) into this repository under a repository-relative path, so the rule survives the
+  session that carries it — the same failure `PROGRAM.11` was opened for, arriving from the other
+  direction.
+  Reproduce / issue: the policy is not here. `ls docs/CLAIM_VERIFICATION.md` → no such file, and
+  `git grep -lni 'claim verification' -- '*.md'` → only `DEV_NOTES.md`, and only in the note that
+  records this gap. THE GAP: a standing instruction is satisfied only inside a session prompt, so it
+  is enforced nowhere in the repository and dies with the session. The read-only source is another
+  repository's `docs/CLAIM_VERIFICATION.md` (285 lines, 18 166 bytes, read `2026-09-27`); §12's
+  exception permits copying it **into** this repository and forbids writing to it. Measured
+  consequence on the same day: leaf `M1.20.7` entered its reconciliation carrying an unverified
+  premise about `docs/TASK_TREE.md` and caught it only by running the grep — exactly the behaviour
+  the policy exists to require.
+  Acceptance: the policy is copied to a repository-relative path with its provenance (source
+  repository, path, date read) recorded **in the file**; nothing outside this repository is written
+  to; the adoption is registered where a reader will find it — the `CLAUDE.md`/`AGENTS.md` pointer set
+  and, for any mechanically checkable clause, `DOCTRINE_ENFORCEMENT.md`; the copy is compared against
+  the source and any later change is applied or recorded as deliberately not applied with a reason;
+  the leaf records which existing practices here already satisfy the policy and which it changes.
+  Priority: **high** — it is the "rule enforced nowhere" shape this tree exists to eliminate, and the
+  session that must follow it is the one that cannot see whether the last one did.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `PROGRAM.17`
+  Status: `pending`
+  Goal: check the director-mandated **live-document size-containment guide** (§18) against what this
+  repository already does and adopt what is missing — the instruction covers a *partial* adoption too,
+  and this is one.
+  Reproduce / issue: partially adopted, with no record of the comparison. Caps exist and are
+  mechanically enforced for two documents — `README.md` (`line_cap=300`, `byte_cap=16384`,
+  `scripts/check_readme_stability.sh`; measured 82 lines / 4 062 bytes) and `MEMORY.md` (≤ 50 lines /
+  ≤ 7168 bytes, `scripts/check_memory_architecture.sh`; measured 42 / 3 273). No budget at all is
+  recorded for the rest, and they are not small: `CHANGELOG.md` 1 464 lines / 109 666 bytes and grows
+  one entry per commit, `ROADMAP.md` 912 / 101 260, `DEV_NOTES.md` 687 / 54 492, `LIVE_STATUS.md`
+  20 / 3 315, `KNOWLEDGE_MAP.md` 150 / 11 842 (derived). THE GAP: nothing states which live documents
+  are under a size budget and which are deliberately allowed to grow — census:
+  `git grep -lni 'byte_cap\|line_cap\|size cap\|byte cap\|line cap' -- '*.md' '*.sh'` → `README_POLICY`,
+  `MEMORY_ARCHITECTURE`, `DOCTRINE_ENFORCEMENT`, `CHANGELOG` and two check scripts, i.e. the two
+  capped documents and their doctrine, not the other five. The read-only source (431 lines,
+  21 327 bytes) has not been re-read since adoption, which §18 requires even for a partial one.
+  Acceptance: the guide is read at its current source revision and the comparison recorded; every
+  live document is listed with its measured size and either a cap or a recorded reason it has none;
+  `CHANGELOG.md` and `DEV_NOTES.md` get an explicit decision — cap, rotate into dated segments, or
+  grow deliberately — instead of drifting; anything adopted is copied in under a repository-relative
+  path with provenance and nothing outside this repository is written to; a mechanical check is added
+  only if a cap is actually set, registered like the others and carrying RED arms.
+  Priority: **medium** — nothing is unreadable today and the two documents a resuming session reads
+  first are both capped and enforced. But "append-only by design" is a decision nobody has written
+  down, and an unwritten decision is the one a future session quietly reverses.
+  Verification: `pending`
+  Commit: `pending`
+
 - ID: `PROGRAM.10`
   Status: `pending`
   Goal: run the **integration** tier in CI — provision `mdbook` and `qemu-system-riscv64` on the
@@ -648,12 +731,16 @@ roadmap item X live?".
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
 | 1 | `PROGRAM.11` | `active` | the repository-boundary doctrine, **in both directions**. The rule was nowhere in the committed tree, which is how an *inbound* crossing got recorded backwards in a durable record. Priority medium: the outbound half is preventive, the inbound half fired once and was handled correctly |
-| 2 | `PROGRAM.5` | `pending` | the §15/§19 dependency and evidence ledger — every external source claim in the book should resolve to a row, and `BOOK-ANCHORS` now checks the *internal* ones |
-| 3 | `PROGRAM.9` | `pending` | the extended tier reports `incomplete` on every run until its three steps exist |
-| 4 | `PROGRAM.6` | `pending` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |
-| 5 | `PROGRAM.13` | `pending` | twelve closed leaves in `BOOTSTRAP`, `M2` and this tree do not name their own commit — backfill both logs from git, then `PROGRAM.14` gates it so the gap cannot reopen |
+| 2 | `PROGRAM.16` | `pending` | **high** — the director-mandated claim-verification policy (§17) exists only inside a session prompt: `docs/CLAIM_VERIFICATION.md` does not exist here. Same shape as `PROGRAM.11`, arriving from the other direction |
+| 3 | `PROGRAM.5` | `pending` | the §15/§19 dependency and evidence ledger — every external source claim in the book should resolve to a row, and `BOOK-ANCHORS` now checks the *internal* ones |
+| 4 | `PROGRAM.9` | `pending` | the extended tier reports `incomplete` on every run until its three steps exist |
+| 5 | `PROGRAM.6` | `pending` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |
+| 6 | `PROGRAM.13` | `pending` | twelve closed leaves in `BOOTSTRAP`, `M2` and this tree do not name their own commit — backfill both logs from git, then `PROGRAM.14` gates it so the gap cannot reopen |
+| 7 | `PROGRAM.15` | `pending` | a feedback register row that contradicts its own issue sub-tree passes every gate today; five state transitions in six commits held only by hand-editing and a manual census |
+| 8 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
 
-`M0` and `S0` are closed; `M1` is open again (its frontier is `M1.20.1`, then `M1.12`) and `M2` is in
+`M0` and `S0` are closed; `M1` is open again (its LinkedSpec evaluation is closed, so its frontier is
+`M1.12`, the language reference) and `M2` is in
 progress, so `PROGRAM` carries the substrate work those trees lean on. `PROGRAM.8` remains open and
 unblocking. `PROGRAM.12` is closed: harness-local scratch is ignored, so a clean `git status` means
 what the handoff rule says it means.

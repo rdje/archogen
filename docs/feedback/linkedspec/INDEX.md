@@ -26,6 +26,10 @@ and measurement; none is marked `verified` by this notice. Original measured rev
 last-verified dates below are unchanged. See the [LS-004 completion notice](issues/LS-004-bootstrap-false-success/UPSTREAM.md)
 and each issue's dated response. LS-006 stays withdrawn; LS-007 stays no-action.
 
+⚠️ That paragraph records the state **when the notice arrived** and is superseded by the two below:
+adoption landed the same day, and all five reports were then re-measured by archogen at the adopted
+pin. Nothing is awaiting measurement now.
+
 **Adopted `2026-09-27`** (leaves `M1.19` → `M1.19.1`): `vendor/linkedspec` is pinned at LinkedSpec's
 **latest published head** `2ac834913`, with its nested RGX submodule at `f6e5acdc9`, through the
 vendor's published adoption route. The notice named `fd3e328d5`; the director ruled that the latest

@@ -1,5 +1,43 @@
 # DEV_NOTES.md
 
+## _(2026-09-27)_ — reconcile a pointer record by census, and check a leaf's own premise first
+
+- `M1.20.7` closed the LinkedSpec evaluation. The register is a **pointer** and the seven issue
+  sub-trees are the source, so the reconciliation read each sub-tree's own `**State**` field and
+  compared it with its row, checked that every `verified` row has both a frozen
+  `evidence/REMEASURED.txt` and a dated rerun line, and recounted the totals from the rows:
+  **7 of 7 match, 0 mismatches**. Five state transitions had landed across six commits; consistency
+  held because each leaf hand-edited both files — and this census is what proved it rather than
+  assumed it.
+- ⛔ **The leaf's own premise was wrong, and checking it was the point.** `M1.20.7`'s goal said
+  `docs/TASK_TREE.md` "still names the superseded pin `fd3e328d5`". `grep -n 'fd3e328d5'
+  docs/TASK_TREE.md` → no match: the `M1.20` split commit had already corrected that row. Acting on
+  the premise would have "fixed" something that was not broken and recorded a change that never
+  happened. A leaf is a plan written before the work; its claims about the repository are hypotheses
+  until measured, exactly like anyone else's.
+- Two real drifts the census did find: this tree's **root node** still read `Status: pending` and
+  `Children: M1.1 … M1.8`, while the index and `LIVE_STATUS.md` called it `active` with 22 leaves —
+  stale since `M1.9`, and invisible to every gate because nothing reads a root node's Children line.
+- ⭐ **A gap filed rather than noted.** `FEEDBACK-SELF-CONTAINED` leg 4 checks that every issue
+  directory is *named* in the register (`grep -n 'INDEX' scripts/check_feedback_self_contained.sh` →
+  lines 17, 47, 49, 75). Nothing compares a row's State with its sub-tree's, and nothing recounts the
+  totals: `git grep -ln 'State' -- scripts/` → only `check_waiver_routing.sh`, which is about waivers.
+  So a register row contradicting its own sub-tree would pass every check. Owned by `PROGRAM.15`,
+  which is the difference between mentioning a gap and closing it.
+- ⛔ The register's "Upstream response" paragraph still read "awaiting ARCHOGEN adoption and
+  measurement". It was **not** rewritten: it is a transcript of what the notice said, and a transcript
+  edited to match today's state is no longer evidence. It gained a dated **superseded** marker
+  pointing at the two paragraphs below — the same treatment the five issue pages use for the same
+  sentence.
+- Measured: `make focused` exit `0`; `cargo test --all` → **421 passed, 0 failed** over 36 suites;
+  `git status --porcelain docs/feedback/linkedspec/issues` → empty, so the reconciliation edited no
+  sub-tree; all 13 doctrines green.
+- promotion: declined (the durable content is already owned as work rather than prose — `PROGRAM.15`
+  turns the register-consistency gap into a gate, and "verify a claim before acting on it" is the
+  claim-verification policy the director mandates, which this repository has **not** adopted:
+  `ls docs/CLAIM_VERIFICATION.md` → no such file, and `git grep -l 'claim verification'` matches only
+  this note. Filed as `PROGRAM.16` rather than restated here as a lesson.)
+
 ## _(2026-09-27)_ — a green token-kind check has to say whose kinds it means
 
 - `M1.20.6` re-measured LS-003 and closed the register: **all five reported defects are now

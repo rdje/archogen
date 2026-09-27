@@ -4,6 +4,35 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the LinkedSpec evaluation is closed: register reconciled by census
+
+`ARCHOGEN-LINKEDSPEC-0057` (leaf `M1.20.7`, closing `M1.20`).
+
+- **`M1.20` is closed.** Seven sub-leaves, six measurement commits, one census. All five reported
+  defects — `LS-001` … `LS-005`, both blockers among them — were re-measured by archogen at LinkedSpec
+  `2ac834913` and are `verified`; nothing in the register rests on the vendor's word any more.
+- **Reconciled by census, not by trust.** Each of the seven issue sub-trees' own `**State**` field was
+  read and compared with its register row, each `verified` row checked for a frozen
+  `evidence/REMEASURED.txt` **and** a dated archogen rerun line, and the totals recounted from the
+  rows: **7 of 7 match, 0 mismatches**; `verified 5`, `withdrawn 1`, `no-action 1`, everything else
+  `0`. No issue sub-tree was edited by the reconciliation —
+  `git status --porcelain docs/feedback/linkedspec/issues` → empty.
+- ⛔ **Two real drifts found and fixed.** This tree's root node still read `Status: pending` and
+  `Children: M1.1 … M1.8` while the index and `LIVE_STATUS.md` both called it `active` with 22 leaves.
+  And `M1.20.7`'s own goal claimed `docs/TASK_TREE.md` still named the superseded pin `fd3e328d5` —
+  `grep` disproved it, because the split commit had already corrected that row; the claim was fixed
+  before anything was done about it. A leaf that acts on its own unverified premise is how drift gets
+  "fixed" into a new shape.
+- ⭐ **A gap filed rather than noted.** `FEEDBACK-SELF-CONTAINED` checks that every issue directory is
+  *named* in the register; nothing anywhere compares a row's State with its sub-tree's, or recounts
+  the totals. Five state transitions in six commits stayed consistent by hand-editing plus this
+  census, and a commit that got one wrong would have passed every gate. Owned by `PROGRAM.15`.
+- The register's "Upstream response" paragraph keeps its original wording — it is a transcript of what
+  the notice said — and gains a dated **superseded** marker, the same treatment the five issue pages
+  use. ⛔ Nothing was rewritten to look tidy.
+- Validation: `make focused` → exit `0`; `cargo test --all` → **421 passed, 0 failed** over 36 suites;
+  no Rust or manifest path staged; all 13 doctrines green, `FEEDBACK-SELF-CONTAINED` included.
+
 ## archogen — LS-003 verified: the register is closed, every report re-measured
 
 `ARCHOGEN-LINKEDSPEC-0056` (leaf `M1.20.6`).
