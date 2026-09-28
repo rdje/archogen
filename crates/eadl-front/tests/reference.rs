@@ -41,15 +41,18 @@
 //!    emitted-but-unstated — so a green run is evidence about the scanner, not only about the table.
 //! 6. **ANCHORED** — every repository path the reference cites resolves, which is the leg
 //!    `scripts/check_book_anchors.sh` runs on the book, applied to a normative document.
+//! 7. **HEADERS** — every case in §5's comment-header table, run against `Document::comment_headers`,
+//!    including the cases that must yield *no* header: a table of successful parses alone would pass
+//!    on an implementation that treated every comment as one.
 //!
 //! ⚠️ **Honest limit.** A deleted row is caught only when the corpus used that literal, or when it was
 //! the last row of its verdict class; the literal *forms* the language admits are enumerated by
 //! `conformance.rs`, which runs these same tables against the recognizer derived from
-//! `docs/semantics/grammar.md`. This file also says nothing about nesting, meaning or kinds —
-//! `corpus.rs` owns the first two — and §4's census reaches only the sources the reference declares,
-//! which today is the reader and canonical form.
+//! `docs/semantics/grammar.md`. This file also says nothing about nesting or meaning — `corpus.rs`
+//! owns those — and §6's and §7's rules are prose that cites the tests enforcing them, because a
+//! module elaboration or a schema check is not a row in a table of literals.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use eadl_front::{read, Form, Severity, SourceMap};
@@ -57,7 +60,7 @@ use eadl_front::{read, Form, Severity, SourceMap};
 mod common;
 
 use common::reference_table::{
-    control_character, encode_canonical, machine_table, StringValue, Value,
+    control_character, decode_escapes, encode_canonical, machine_table, StringValue, Value,
 };
 
 /// The normative document under test.
@@ -88,6 +91,8 @@ struct Probe {
     errors: Vec<&'static str>,
     /// The rendered diagnostics, for a failure message an author can act on.
     rendered: String,
+    /// The `; key: value` headers the comments yielded, in source order.
+    headers: Vec<(String, String)>,
 }
 
 /// Read `text` as a whole description.
@@ -101,7 +106,9 @@ fn probe(text: &str) -> Probe {
         .add("reference.eadl", text.to_string())
         .expect("small");
     let (document, diagnostics) = read(&sources, id);
+    let headers = document.comment_headers();
     Probe {
+        headers,
         forms: document.forms,
         errors: diagnostics
             .items()
@@ -111,6 +118,42 @@ fn probe(text: &str) -> Probe {
             .collect(),
         rendered: diagnostics.render(&sources),
     }
+}
+
+/// §3's round-trip guarantee, checked on the canonical text the frontend just printed.
+///
+/// ⭐ Not a duplicate of the canonical-text comparison, and finding F-D is the reason. A printer that
+/// emitted a raw carriage return still produced a *form* equal to the row's value: the defect was in
+/// the text, and only re-reading that text catches a printer whose output the reader cannot read back.
+fn round_trip_violation(line: usize, literal: &str, printed: &str) -> Option<String> {
+    let before = probe(literal);
+    let again = probe(printed);
+    if !again.errors.is_empty() {
+        return Some(violation(
+            line,
+            format!(
+                "`{literal}`: the frontend printed canonical text it cannot read back:\n{}",
+                again.rendered
+            ),
+        ));
+    }
+    let (Some(before), Some(after)) = (before.forms.first(), again.forms.first()) else {
+        return Some(violation(
+            line,
+            format!("`{literal}`: canonical text `{printed}` did not read back to a form"),
+        ));
+    };
+    if !before.structurally_eq(after) {
+        return Some(violation(
+            line,
+            format!(
+                "`{literal}`: canonical form is not a fixed point — {} reads back as {}",
+                describe(before),
+                describe(after)
+            ),
+        ));
+    }
+    None
 }
 
 /// Name a form in the reference's own notation, so a failure reads as a disagreement about values.
@@ -219,6 +262,9 @@ fn number_violations(document: &str) -> Vec<String> {
                     printed.escape_debug()
                 ),
             ));
+        }
+        if let Some(message) = round_trip_violation(line, literal, &printed) {
+            out.push(message);
         }
     }
     out
@@ -330,6 +376,9 @@ fn string_violations(document: &str) -> Vec<String> {
                     printed.escape_debug()
                 ),
             ));
+        }
+        if let Some(message) = round_trip_violation(line, source, &printed) {
+            out.push(message);
         }
     }
     out
@@ -816,6 +865,104 @@ fn citation_violations(document: &str) -> Vec<String> {
     out
 }
 
+// ── leg 7: the header convention, executed ─────────────────────────────────────────────────────
+
+/// Leg 7 — every case in the comment-header table, run against `Document::comment_headers`.
+///
+/// Rows that share a source cell are one case, and their order is the order the headers must come out
+/// in. A case whose rows are all `—` states that the block yields **no header at all**, which is the
+/// half of §5's rule a table of successful parses could never pin.
+fn header_violations(document: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let rows = machine_table(document, "comment-headers");
+    if rows.is_empty() {
+        out.push(
+            "docs/semantics/reference.md carries no `<!-- machine-read: comment-headers -->` table, \
+             so §5's header convention is prose and nothing executes it"
+                .to_string(),
+        );
+        return out;
+    }
+    let mut order: Vec<String> = Vec::new();
+    let mut cases: BTreeMap<String, Vec<(usize, String, String)>> = BTreeMap::new();
+    for (line, cells) in &rows {
+        let Some([cell_source, key, value]) = array3(cells) else {
+            out.push(violation(
+                *line,
+                format!(
+                    "this row has {} cell(s) and the table's header has 3",
+                    cells.len()
+                ),
+            ));
+            continue;
+        };
+        let Some(source) = decode_escapes(cell_source) else {
+            out.push(violation(
+                *line,
+                format!("`{cell_source}` is not writable in the reference's own escape notation"),
+            ));
+            continue;
+        };
+        if !cases.contains_key(&source) {
+            order.push(source.clone());
+        }
+        cases
+            .entry(source)
+            .or_default()
+            .push((*line, key.clone(), value.clone()));
+    }
+
+    let mut yielded = 0;
+    let mut refused = 0;
+    for source in &order {
+        let expected = &cases[source];
+        let line = expected[0].0;
+        let found = probe(source);
+        let shown = source.replace('\n', "\\n");
+        if expected
+            .iter()
+            .all(|(_, key, value)| key == "—" && value == "—")
+        {
+            refused += 1;
+            if !found.headers.is_empty() {
+                out.push(violation(
+                    line,
+                    format!(
+                        "§5 says `{shown}` yields no header, and `comment_headers` yielded {:?}",
+                        found.headers
+                    ),
+                ));
+            }
+            continue;
+        }
+        yielded += 1;
+        let want: Vec<(String, String)> = expected
+            .iter()
+            .map(|(_, key, value)| (key.clone(), value.clone()))
+            .collect();
+        if found.headers != want {
+            out.push(violation(
+                line,
+                format!(
+                    "§5 says `{shown}` yields {want:?}, and `comment_headers` yielded {:?}",
+                    found.headers
+                ),
+            ));
+        }
+    }
+    // ⛔ Not vacuous in either direction. A table that only produced headers would pass on a
+    // `comment_headers` treating every comment as one; a table that only refused would pass on one
+    // that returned nothing. §5's rule is two discriminators *and* a continuation, so both outcomes
+    // have to be pinned or the leg proves one of them.
+    if yielded == 0 || refused == 0 {
+        out.push(format!(
+            "docs/semantics/reference.md: the header table pins {yielded} case(s) that yield a header \
+             and {refused} that do not, so one of the two outcomes is unchecked"
+        ));
+    }
+    out
+}
+
 /// Every leg at once, so an arm can be fed a mutated document and read one list of complaints.
 fn all_violations(document: &str) -> Vec<String> {
     let mut out = vacuity_violations(document);
@@ -824,6 +971,7 @@ fn all_violations(document: &str) -> Vec<String> {
     out.extend(coverage_violations(document));
     out.extend(census_violations(document));
     out.extend(citation_violations(document));
+    out.extend(header_violations(document));
     out.sort();
     out
 }
@@ -880,6 +1028,18 @@ fn every_repository_path_the_reference_cites_resolves() {
     assert!(
         wrong.is_empty(),
         "the reference cites something that is not there:\n\n{}",
+        wrong.join("\n\n")
+    );
+}
+
+#[test]
+fn the_reference_header_table_is_the_frontend_s_verdict() {
+    let wrong = header_violations(REFERENCE);
+    assert!(
+        wrong.is_empty(),
+        "§5's header convention and `comment_headers` disagree:\n\n{}\n\n\
+         The convention is how a description states facts about itself, and F27 reads those facts — \
+         a header that silently moves between fields is a verdict attached to the wrong case.",
         wrong.join("\n\n")
     );
 }
@@ -1214,5 +1374,80 @@ fn arm_14_a_document_that_stops_declaring_its_sources_is_reported() {
             .any(|item| item.contains("declares no normative source")),
         "the legs did not name the missing declaration:\n{}",
         wrong.join("\n\n")
+    );
+}
+
+#[test]
+fn arm_15_a_wrong_header_value_is_reported() {
+    let mutated = replacing_line(
+        REFERENCE,
+        "| `; case: counter-width-and-rate` |",
+        "| `; case: counter-width-and-rate` | `case` | `counter-width` |",
+    );
+    assert_reported(
+        &header_violations(&mutated),
+        1,
+        &["counter-width", "`comment_headers` yielded"],
+    );
+}
+
+#[test]
+fn arm_16_the_indentation_discriminator_is_load_bearing() {
+    // ⛔ §5 rule 5's first case, from `counter-width-and-rate.eadl`: a wrapped rationale line whose
+    // text is *exactly* a well-shaped key followed by a colon. Take its indentation away and the line
+    // opens a spurious header and truncates the value — the defect `corpus.rs` holds a test for,
+    // reproduced here from the table alone.
+    let mutated = REFERENCE.replace(
+        ";   implementation-independence: a different timer is",
+        "; implementation-independence: a different timer is",
+    );
+    assert_ne!(
+        mutated, REFERENCE,
+        "the mutation did not apply — a false green"
+    );
+    let wrong = header_violations(&mutated);
+    assert_eq!(
+        wrong.len(),
+        1,
+        "expected one violation; got:\n{}",
+        wrong.join("\n\n")
+    );
+    assert!(
+        wrong[0].contains("implementation-independence"),
+        "the violation does not name the spurious header:\n{}",
+        wrong[0]
+    );
+}
+
+#[test]
+fn arm_17_the_key_shape_discriminator_is_load_bearing() {
+    // ⛔ §5 rule 5's second case, from `examples/bounded-queue/system.eadl`: prose at one space of
+    // indentation, where only the capital in `Expected` stops it becoming a field.
+    let mutated = REFERENCE.replace(
+        "; Expected: unsupported-profile",
+        "; expected: unsupported-profile",
+    );
+    assert_ne!(
+        mutated, REFERENCE,
+        "the mutation did not apply — a false green"
+    );
+    assert_reported(
+        &header_violations(&mutated),
+        1,
+        &["yields no header", "expected"],
+    );
+}
+
+#[test]
+fn arm_18_a_document_that_stops_carrying_the_header_table_is_reported() {
+    let mutated = REFERENCE.replace("<!-- machine-read: comment-headers -->", "<!-- headers -->");
+    assert_ne!(
+        mutated, REFERENCE,
+        "the mutation did not apply — a false green"
+    );
+    assert_reported(
+        &header_violations(&mutated),
+        1,
+        &["carries no `<!-- machine-read: comment-headers -->` table"],
     );
 }

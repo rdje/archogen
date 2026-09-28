@@ -4,6 +4,51 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the language reference is complete, except for the version identifier
+
+`ARCHOGEN-M1-0076` (leaf `M1.12.4`).
+
+- **§5 comments and the header convention, executed.** A comment runs from `;` to the end of its line
+  and is retained; a `; key: value` line at one space of indentation with a lowercase-kebab key is a
+  **header**, which is how the boundary corpus states its own verdict and how F27 reads it. The rules
+  are a machine-read table run against `Document::comment_headers`, including the cases that must yield
+  **no header at all** — a table of successful parses alone would pass on an implementation that treated
+  every comment as one.
+- ⭐ **Both discriminators are proved load-bearing from the document.** One arm takes the indentation
+  off a wrapped rationale line whose text is exactly a well-shaped key and a colon, and the leg reports
+  the spurious header that appears; the other lowercases `Expected` in a line of prose, and the leg
+  reports a header where §5 says there is none. Neither arm touches the code, so each shows it is the
+  *row* pinning the rule. Both cases are real: `counter-width-and-rate.eadl:10` and
+  `examples/bounded-queue/system.eadl:8`.
+- **§6 modules and imports** states what an import produces — an *instance* addressed by its dotted
+  alias path, so one module imported twice under two aliases is two instances with their own parameter
+  bindings — plus alias defaulting to the last dotted segment, version satisfaction (same major, at
+  least the stated minor, and a major bump is never silently accepted because §15's promise is that a
+  description retains its meaning), children-before-parents elaboration, and why a cycle is refused
+  rather than resolved.
+- **§7 kinds and `defkind`** states the trusted foundation: `defkind` is the only primitive whose
+  meaning is Rust, every other kind is declared in eADL with it, and §5.6's prohibition is enforced
+  *against the facility that declares the language* — the boundary classifier runs over the `defkind`
+  form itself, so `(defkind x (implementation …))` is refused by the same machine that refuses it
+  anywhere else. It also states what a schema does **not** check: the declaration frame, not the
+  constraint vocabulary inside a clause.
+- **The reference now declares four normative sources**, so §4's census covers **53** diagnostic codes
+  rather than the seven the reader emits — 46 rules the language enforced and no document stated,
+  extracted by instrument (code, message and repair hint) and then restated normatively. `boundary.rs`
+  is named as deliberately *not* declared: it classifies implementation syntax, which is a profile
+  concern, and a normative document's scope is worth less for being wider than the document.
+- **Every literal row now round-trips**: canonical text is read back and must be structurally equal to
+  what produced it. Comparing the text pins the spelling; re-reading it pins the contract — and finding
+  F-D violated exactly that, where the control-character property catches only the control-character
+  case.
+- **Validation:** `cargo test -p eadl-front --test reference` → **24 passed / 0 failed** (was 19);
+  `make focused` → `passed — 3 passed, 0 failed, 0 unavailable`; `cargo test --all` → **461 passed,
+  0 failed over 37 suites** (baseline 456 over 37); `=== all doctrines green ===`.
+  `git diff --stat HEAD -- crates/eadl-front/src crates/eadl-model/src` is empty: no production code
+  changed, so the rules were written down and checked rather than fitted to an implementation. No book
+  chapter became false — `reading.md:99-103` already stated that the header format needs two independent
+  discriminators; pointing the book at the reference is `M1.12.5`'s.
+
 ## archogen — a diagnostic code is now a stated rule, not a string in a call site
 
 `ARCHOGEN-M1-0075` (leaf `M1.12.3`).

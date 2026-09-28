@@ -88,13 +88,14 @@ justifies the split — the rows below appear as that happens.
   measured too weak: dropping `_` from hex literals turned `(base 0x1000_0000)` into `4096` and
   `_0000` with every acceptance test green.
 - `docs/semantics/reference.md` — ⭐ **the normative language reference**: what a literal is
-  *worth*, which is the half a grammar cannot say, plus the diagnostics the frontend may emit and the
-  repair each one owes. `crates/eadl-front/tests/reference.rs` reads its tables **out of the
-  document** — literal values, the sources it declares itself normative over, the diagnostic-code
-  census — and executes them against the frontend, then adds a coverage leg whose population is the
-  corpus, a citation leg, and a non-vacuity leg over the tables themselves. Its expected values were
-  derived arithmetically rather than printed from the reader, which is why its first run found three
-  defects instead of confirming an implementation.
+  *worth*, which comments become `; key: value` headers, what a module import produces, what a kind may
+  say, and which diagnostics the language may emit with the repair each one owes. It **declares the
+  sources it governs** in a machine-read table, and `crates/eadl-front/tests/reference.rs` reads every
+  table out of the document and executes it against the frontend — literal values, the diagnostic-code
+  census in both directions, the header cases that must yield *nothing*, canonical text read back — plus
+  a coverage leg whose population is the corpus, a citation leg, and a non-vacuity leg over each table.
+  Its expected values were derived arithmetically rather than printed from the reader, which is why its
+  first run found three defects instead of confirming an implementation.
 - `docs/semantics/kinds/` — the language declared in itself: `core.eadl` (the five surface
   kinds) and `os-rt.eadl` (the `task` kind of the workload module). Only `defkind` is Rust.
 - `examples/` — the three M0 use cases as real descriptions, checked by
