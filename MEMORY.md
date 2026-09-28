@@ -13,15 +13,15 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M1` → frontier `M1.13`. `PROGRAM` `.11`; `S0` reopened for `S0.8`; `M2` `.8.2`.
+- **Active tree:** `M1` → frontier `M1.13`. `PROGRAM` `.11`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
 - **Next action:** **`M1.13`** — version the language and freeze the first compatibility baseline,
   carrying the two routed value-domain findings **F-F** (nothing at or above 2^63 is writable) and
   **F-G** (a control character other than `\n \t \r` cannot be escaped). **`M1.12` closed** `2026-09-28`.
-- **⭐ Ruled `2026-09-28`, filing next:** archogen gains a **programmatic interface** — a declared
-  engine API, a wasm binding and an **MCP server** any agent can drive. Rulings: a **new tree +
-  `ROADMAP.md` §10 amendment**; **after the `M1.13` freeze**; MCP controls an instance **post-build
-  only, both builds excluded** (archogen's compilation *and* `archogen build <description>`), so the
-  surface stays pure. The measurements behind it go on that tree, not here.
+- **⭐ New tree `API`** (ruled `2026-09-28` → `ROADMAP.md` §10.4): one declared engine API with a
+  **wasm** binding and an **MCP server** any agent can drive, controlling an instance **post-build only**
+  — both builds excluded. `API.3`–`.7` wait on `M1.13`; only `API.1` (the wasm feasibility measurement)
+  and `API.2` (gate the no-subprocess invariant) are unblocked, and neither displaces `M1.13`.
+  `docs/decisions/decision_programmatic-interface.md`.
 - **The LinkedSpec evaluation is CLOSED** (`M1.20`, `2026-09-27`): all five reported defects are
   `verified` at pin `2ac834913` on archogen's own reruns, both blockers included. The standing
   consequences, the two consumer routes and the register: `docs/feedback/linkedspec/INDEX.md`.

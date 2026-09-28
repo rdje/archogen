@@ -4,6 +4,67 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — a programmatic interface is now part of the roadmap: one engine API, a wasm binding, and an MCP server
+
+`ARCHOGEN-API-0078` (leaf `API`). Docs only — no code, no behaviour change.
+
+- **`ROADMAP.md` §10.4 added by director ruling `2026-09-28`.** §10.2's CLI stays the human interface;
+  the same operations are also exposed programmatically so a browser, an editor, a build farm or an agent
+  can drive archogen without a shell. One declared, versioned, **transport-neutral engine API** — a
+  description as text plus a profile in, a structured result out — with the CLI as a *consumer* of it, so
+  a capability cannot exist behind one surface and not another.
+- ⛔ **Both builds are outside it, by ruling.** Neither archogen's own compilation nor `archogen build`
+  (system generation, §10.3) is controllable programmatically. That is not only policy: a server must
+  exist before it can be controlled, so "MCP-controllable during the build" is a bootstrapping fixed
+  point. Excluding generation is also what keeps the whole surface pure — computation over an in-memory
+  description, no filesystem, no subprocess, no ambient authority — which is what makes it safe to hand
+  to an arbitrary agent, and what makes wasm and MCP one API with two transports rather than two projects.
+- **Sequenced behind the `M1` language freeze.** `M1.13` settles the integer domain (F-F) and the escape
+  set (F-G), which are exactly the API's numeric types and its string encoding. Declaring first means
+  declaring twice.
+- **The evidence vocabulary crosses the boundary unchanged.** Every programmatic response carries §5.5's
+  verdict; a result without one is how `tool-failure` becomes `established` in a consumer that never saw
+  the distinction. §7.1 applies to a machine-readable response exactly as to a printed one.
+- **Feasibility measured before it was promised.** A census over every crate's production half: six of
+  eight crates touch no `std::fs`, `std::process` or `std::env`; `rt-core` and `rt-reference` are already
+  `#![cfg_attr(not(test), no_std)]` and the integration tier already compiles for bare metal; the
+  workspace has **zero** third-party dependencies, every `[dependencies]` entry being a `path =` sibling;
+  and every library crate already has a `lib.rs` with public items, so a de facto API exists that was
+  simply never declared.
+- ⛔ **A claim made in conversation and then corrected by measurement.** `archogen build` was described as
+  shelling out to `cargo` and QEMU, making an MCP-exposed build a remote-code-execution surface. It does
+  not: `Command::new` appears in **no production half** anywhere in the workspace, `archogen-cli`'s only
+  `std::process` use is `use std::process::ExitCode;`, and the one place that compiles a generated
+  artifact is `crates/archogen-cli/tests/s0_oracle.rs:609` — a test. `archogen build` writes a crate tree
+  and stops. The corrected finding is stronger and is now `API.2`: **the invariant that makes agent
+  control safe is written down nowhere** — `git grep -niE 'spawns? no|no subprocess|does not execute|never
+  executes|no child process'` over tracked files returns nothing — so a `Command::new` added to a product
+  crate tomorrow passes every gate in the tree.
+- ⛔ **A second correction, this one against a recorded decision.** An early framing held that a
+  "non-core" transport crate would sit outside `decision_zero-dependency-engine-core.md`. Reading the
+  record says otherwise: its "How to apply" forbids a `[dependencies]` entry in **any** crate under
+  `crates/` without a decision record naming the §4.4 trust category and the claims its compromise would
+  invalidate. The shape that satisfies both is a one-way dependence, transport → engine, so the generator
+  and the checker share nothing new and F30's independence argument is untouched.
+- **Seven leaves, two of them unblocked.** `API.1` makes the wasm build a §14.3 tier step in the shape of
+  the existing `no-std-build`, so feasibility stays a measurement rather than becoming an opinion; `API.2`
+  states and gates the no-subprocess invariant. `API.3` (the declared API) is the load-bearing leaf and
+  waits on `M1.13`; `API.4` the instance model and the resource limits an untrusted consumer makes
+  necessary; `API.5` the wasm binding; `API.6` the MCP server, deriving its tool list from
+  `crates/archogen-cli/src/spec.rs` — which already declares the command surface as data with a
+  three-state `Maturity`, renders help from it, validates the parser against it and names the owning leaf
+  for every non-built state, so the tool list is a fourth consumer of one table and not a second list;
+  `API.7` the book chapter, its own leaf so it cannot be quietly skipped when the server lands.
+- **Three open questions recorded with owners rather than decided by analogy** — whether `archogen verify`
+  may be exposed at all (it invokes a toolchain and an emulator through `xtask`, unlike everything else on
+  this surface, and needs its own ruling); what an instance is bound to and for how long; and whether the
+  API surfaces the model layer's diagnostics, which `M1.26` has just measured are stated normatively
+  nowhere.
+- **Validation:** docs only, so no Rust tier was required; run anyway. `make focused` →
+  `passed — 3 passed, 0 failed, 0 unavailable`; `=== all doctrines green ===`;
+  `check_knowledge_map.sh` → `rc=0` after regenerating for the new tree and decision record;
+  `cargo test --all` unchanged at **471 passed, 0 failed over 37 suites**.
+
 ## archogen — the language reference is closed, and its instruments now read the book
 
 `ARCHOGEN-M1-0077` (leaf `M1.12.5`, closing `M1.12`).

@@ -1,0 +1,244 @@
+# API: the programmatic interface — one engine API, a wasm binding, and an MCP server
+
+## Metadata
+
+- Tree ID: `API`
+- Status: `active`
+- Roadmap lane: `ROADMAP.md` §10.4 (added by director ruling `2026-09-28`); §4.4 trust; §5.5 verdicts;
+  §7.1 report completeness; §14.3 compile targets; §15 versioning
+- Created: `2026-09-28`
+- Owner: repo-local workflow
+- Decision record: [`decision_programmatic-interface.md`](../decisions/decision_programmatic-interface.md)
+
+## Goal
+
+One declared, versioned, transport-neutral **engine API** — a description as text plus a profile in, a
+structured result carrying §5.5's verdicts out — with the CLI as a consumer of it rather than a parallel
+implementation, and two bindings over it: a `wasm32-unknown-unknown` build and an **MCP server** that any
+agent can drive. The server is a capability of the built binary, spawned per instance.
+
+## Non-Goals
+
+- **Neither build is controllable programmatically.** Not archogen's own compilation, and not
+  `archogen build <description>` (system generation, §10.3). Generation writes a crate tree and stays a
+  human or CI action. Ruled, not deferred.
+- No web UI, no editor plugin, no hosted service. The deliverable is an API and two transports; what
+  consumes them is somebody else's work.
+- No new language feature and no change to the description format. The freeze (`M1.13`) settles the
+  language; this tree exposes it.
+- No LLM in the loop. §10.3 already forbids a build calling one, and nothing here changes that: the
+  agent is a *consumer* of archogen, never a component of it.
+
+## Acceptance Criteria
+
+- The engine API is declared, versioned, documented in the mdBook, and the CLI is a consumer of it — a
+  capability cannot exist behind one and not the other.
+- Every programmatic response carries §5.5's verdict. A result without one is a contract violation, not
+  a degraded result.
+- The pure engine crates compile for `wasm32-unknown-unknown` as a tier step, so the feasibility claim is
+  a measurement rather than an opinion, and stays one.
+- An MCP server exposes the built operations, derives its tool list from
+  `crates/archogen-cli/src/spec.rs` rather than a second list, and reports an unimplemented operation's
+  owning leaf instead of failing at runtime.
+- The invariant that makes agent control safe — **no product code spawns a subprocess or executes
+  anything** — is stated in a durable record and gated, not merely observed.
+- Resource limits exist for a description supplied by an untrusted consumer.
+- The book has a chapter for the programmatic interface. The director reads the book; a capability that
+  is not in it does not exist as far as the only reader of it is concerned.
+- Focused validation passes per slice; broader validation when the blast radius warrants it.
+- Live docs and roadmap status updated where project state changed.
+- Each completed leaf is committed through `COMMIT.md`.
+
+## Task Tree
+
+- ID: `API`
+  Status: `active`
+  Goal: the programmatic interface — one engine API, two bindings
+  Children: `API.1` … `API.7`
+
+- ID: `API.1`
+  Status: `pending`
+  Goal: **measure** whether the engine compiles for the browser, before anything is promised about it.
+  Add a `wasm32-unknown-unknown` compile-target step to the §14.3 tier runner over the crates that are
+  I/O-free in production, in the shape of the existing `no-std-build` step.
+  Acceptance: the step exists and reports one of the runner's real verdicts — `passed`, `failed`, or
+  `not built` naming a leaf — never a silent skip; the crate set it walks is **derived** (from the
+  workspace members, minus the two that touch the filesystem) rather than listed, so a new crate is in
+  scope without anyone editing the runner; if it fails, the failure is recorded here with the exact
+  error and a leaf filed for each distinct cause rather than the step being weakened to pass; the book's
+  `verification.md` names the step; `make focused` exit `0`.
+  Priority: **high, and the only leaf here that is not sequenced behind the freeze.** It is a
+  measurement, not a contract: it converts "should be feasible" into "compiles, or here is exactly what
+  breaks", and every later leaf is cheaper to scope once that is known. The director approved it landing
+  before `M1.13` for that reason.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `API.2`
+  Status: `pending`
+  Goal: state and gate the invariant that makes handing archogen to an arbitrary agent safe — **no
+  product code spawns a subprocess or executes anything.**
+  Reproduce / issue: measured `2026-09-28`. `git grep -niE 'spawns? no|no subprocess|does not
+  execute|never executes|no child process'` over tracked files returns **nothing**, so the property is
+  written down nowhere. It holds today: `Command::new` appears in no production half in the workspace,
+  the only `std::process` use in `crates/archogen-cli/src` is `use std::process::ExitCode;`, and the one
+  place that compiles a generated artifact is `crates/archogen-cli/tests/s0_oracle.rs:609` — a test.
+  census: `for f in $(git ls-files 'crates/*/src/*.rs'); do awk '/#\[cfg\(test\)\]/{exit} {print
+  FILENAME":"NR": "$0}' "$f"; done | grep -E 'Command::new|std::process'` → one hit, `ExitCode`.
+  Acceptance: the invariant is stated in a durable record and in the book; a gate fails if a production
+  half anywhere in `crates/*/src` spawns a subprocess, with the test half excluded by construction and
+  the exclusion itself armed; RED arms proving the gate fires on a real spawn and does **not** fire on
+  `ExitCode`, on a test-half `Command::new`, or on the `xtask` and `scripts/` surfaces that legitimately
+  drive a toolchain; `make focused` exit `0`.
+  Priority: **medium-high** — cheap, unblocked by the freeze, and it is the property §10.4's safety
+  argument rests on. A `Command::new` added to a product crate tomorrow passes every gate in the tree
+  today.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `API.3`
+  Status: `pending`
+  Goal: declare the **engine API** — the transport-neutral contract every binding consumes, and the one
+  the CLI becomes a consumer of.
+  Acceptance: an in-memory entry point taking a description as text plus a profile and returning a
+  structured result; every result carries §5.5's `Verdict` and the diagnostics with their codes, spans
+  and repair directions; the API is versioned under §15 with a stated compatibility promise; the CLI's
+  `check` path calls it rather than reimplementing it, and a test asserts that a capability cannot exist
+  behind one surface and not the other; `docs/book/src/` documents it; `make focused` exit `0`.
+  Priority: **the load-bearing leaf** — everything after it is a binding. ⛔ **Sequenced behind `M1.13`.**
+  The freeze settles the integer domain (F-F) and the escape set (F-G), which are exactly what the API's
+  numeric types and its string encoding depend on. Declaring first means declaring twice.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `API.4`
+  Status: `pending`
+  Goal: define an **instance** — lifecycle, identity, what a server is bound to, and what a response is
+  reproducible against — and put resource limits under an untrusted consumer's input.
+  Acceptance: "instance" is defined in a durable record rather than implied by an implementation; a
+  response is attributable to the description and profile that produced it; a description from an
+  untrusted consumer cannot exhaust memory or CPU without a stated limit and a verdict that says so,
+  which is `tool-failure` and never a partial result; RED arms for a limit that is exceeded and for one
+  that is not; `make focused` exit `0`.
+  Priority: **medium** — archogen is stateless over files today and has no such concept, so this is new
+  architecture rather than a binding. It is also the precondition for the server being safe to spawn
+  per instance, which is the deployment model the director described.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `API.5`
+  Status: `pending`
+  Goal: the **wasm binding** over the declared API, so the description-side toolchain runs in a browser
+  or a worker.
+  Acceptance: the API is reachable from `wasm32-unknown-unknown` as an artifact a page can load; a
+  worked example checks a real description in a browser and shows the verdict; no filesystem, no
+  subprocess and no ambient authority is required, and a test asserts the binding does not reach for one;
+  the book documents it; `make integration` exit `0` or naming what is incomplete.
+  Priority: **medium** — behind `API.1` (which measures whether this is possible at all) and `API.3`
+  (which decides what it exposes).
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `API.6`
+  Status: `pending`
+  Goal: the **MCP server** — any agent drives a running archogen instance through it.
+  Acceptance: the tool list is derived from `crates/archogen-cli/src/spec.rs`, so a documented operation
+  is always an offered one and an unimplemented one names its owning leaf instead of failing at runtime;
+  the three-state `Maturity` is visible in capability discovery, so a consumer learns at the handshake
+  that `resolve` does not exist yet rather than after calling it; every response carries §5.5's verdict;
+  neither build is exposed, and a test asserts that rather than leaving it to convention; any external
+  dependency arrives with a decision record naming its §4.4 trust category and the claims its compromise
+  would invalidate, and is reachable from the transport and **not** from the generator or the checker;
+  the book documents it; `make integration` exit `0` or naming what is incomplete.
+  Priority: **the point of the tree**, and last because everything above is what makes it safe.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `API.7`
+  Status: `pending`
+  Goal: the book chapter for the programmatic interface.
+  Acceptance: a chapter states what an agent and a browser can do, what they cannot, and which verdicts
+  they receive; it cites the API, the bindings and the decision record; `BOOK-ANCHORS` and
+  `reference.rs`'s legs 8 and 9 pass over it; `PROGRAM.24`'s coverage question is answered for every
+  crate this tree adds, so the tree does not create the drift it was filed to end.
+  Priority: **medium, and not optional** — the director reads the book and not the code. Filed as its own
+  leaf rather than folded into `API.6` so it cannot be quietly skipped when the server lands.
+  Verification: `pending`
+  Commit: `pending`
+
+## Current Frontier
+
+| Order | Leaf | Status | Why next |
+| --- | --- | --- | --- |
+| 1 | `API.1` | `pending` | the wasm feasibility **measurement** — the one leaf the director ruled may land before the `M1.13` freeze, because it is a measurement and not a contract. It makes every later leaf cheaper to scope. The project's main line stays `M1.13`; this tree does not displace it |
+| 2 | `API.2` | `pending` | state and gate the no-subprocess invariant, also unblocked by the freeze and also cheap. §10.4's whole safety argument rests on a property that is currently written down nowhere |
+| 3 | `API.3` | `pending` | **the load-bearing leaf, and blocked on `M1.13`.** Declaring an API over an unfrozen language means declaring it twice: the freeze settles the integer domain and the escape set, which are the API's numeric types and its string encoding |
+| 4 | `API.4` | `pending` | the instance model and the resource limits an untrusted consumer makes necessary. New architecture, not a binding — archogen is stateless over files today |
+| 5 | `API.5` | `pending` | the wasm binding, behind `API.1` and `API.3` |
+| 6 | `API.6` | `pending` | the MCP server — the point of the tree, and last because everything above is what makes it safe to hand to an arbitrary agent |
+| 7 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6` |
+
+⛔ **This tree does not displace the project's main line.** `M1.13` is the frontier in
+[`M1.md`](M1.md), and `API.3`–`API.7` are sequenced behind it by the director's ruling. `API.1` and
+`API.2` are the only unblocked slices, and both are measurements or gates rather than features — taking
+them early is cheap and makes the rest estimable.
+
+## Decisions
+
+- `2026-09-28`: **the programmatic interface is one API with two bindings, not two projects.** The
+  director asked for browser runnability and for MCP control in two messages; measured, they describe the
+  same pure surface, because both builds are excluded and what remains is computation over an in-memory
+  description. Building the API once is what makes that true rather than hoped.
+- `2026-09-28`: **post-build only, and both builds excluded.** Ruled by the director. It is also a
+  bootstrapping fixed point rather than only a preference — a server must exist before it can be
+  controlled — and it is what keeps the surface free of filesystem and subprocess authority.
+- `2026-09-28`: **capability discovery comes from `spec.rs`, not from a second list.** That table already
+  declares the command surface as data with a three-state `Maturity`, renders help from it, validates the
+  parser against it, asserts the property in a test, and names the owning leaf for every non-built state.
+  A fourth consumer of one table is this project's idiom; a parallel tool list is the drift
+  `docs/semantics/grammar.md` exists to end, in a new place.
+- `2026-09-28`: **the zero-dependency rule is keyed on `crates/`, not on a list of engine crates.** An
+  early framing in conversation held that a "non-core" transport crate would sit outside
+  [[zero-dependency-engine-core]]; reading the record says otherwise — its "How to apply" forbids a
+  `[dependencies]` entry in *any* crate under `crates/` without a decision record. The shape that
+  satisfies both is a one-way dependence, transport → engine, so the generator and the checker share
+  nothing new and F30's independence argument is untouched.
+- `2026-09-28`: **the book chapter is its own leaf.** `PROGRAM.24` was filed the same day on a measured
+  instance of a crate the book never names. A tree that adds crates and folds their documentation into a
+  feature leaf is a tree that reproduces that defect.
+
+## Open Questions
+
+- **May `archogen verify` be exposed programmatically?** It runs verification tiers, which invoke a
+  toolchain and an emulator through `xtask` — side-effecting and subprocess-spawning, unlike everything
+  else on this surface. It is unimplemented (`PROGRAM.3`), so nothing is blocked, but it needs its own
+  ruling and must not be exposed by analogy to `build`. Owner: the director. Recorded here rather than
+  decided, because deciding it by analogy is how an exclusion becomes an exception.
+- **What is an instance bound to, and for how long?** A description's text, a directory, a lock file, a
+  session? `API.4` must answer it before `API.6` can spawn anything. Owner: `API.4`. Does not block
+  `API.1` or `API.2`.
+- **Does the API surface the model layer's diagnostics, and with what normative statement behind them?**
+  `M1.26` owns the fact that those codes are stated normatively nowhere. An API that returns them to an
+  agent returns rules no document states. Owner: `M1.26`, and `API.3` must not close before it is
+  answered or explicitly accepted.
+
+## Blockers
+
+- `API.3`–`API.7` are sequenced behind `M1.13` (the language freeze) by director ruling. `API.1` and
+  `API.2` are not blocked.
+
+## Verification Log
+
+| Date | Leaf | Checks | Result |
+| --- | --- | --- | --- |
+| `2026-09-28` | `API` | tree seeded from the director's ruling and a feasibility census; no code | the census is recorded in `docs/decisions/decision_programmatic-interface.md`: six of eight crates I/O-free in production, two already `no_std`, zero third-party dependencies, no `Command::new` in any production half |
+
+## Commit Log
+
+| Leaf | Commit subject or reference | Notes |
+| --- | --- | --- |
+| `API` | `ARCHOGEN-API-0078 (leaf API)` | tree seeded: `ROADMAP.md` §10.4, the decision record and its index row, seven leaves, three of the four open questions routed to a named owner |
+
+## Changelog
+
+- `2026-09-28`: Created task tree from the director's ruling of the same date and `ROADMAP.md` §10.4.

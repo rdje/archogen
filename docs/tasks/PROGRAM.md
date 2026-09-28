@@ -1146,6 +1146,7 @@ roadmap item X live?".
 | §12 M5 — physical execution | [`M5`](M5.md) | board/emulator evidence |
 | §12 M6 — reuse and extension | [`M6`](M6.md) | catalog reuse measurement |
 | §12 M7 — first supported release | [`M7`](M7.md) | release packaging |
+| §10.4 programmatic interface — engine API, wasm binding, MCP server | [`API`](API.md) | added by director ruling `2026-09-28`; §10.2's CLI stays the human interface and becomes a consumer of the same contract |
 | §11 workstream F — engineering operations | `PROGRAM` | this tree |
 | §14 agent workflow, review, CI tiers | `PROGRAM` | `PROGRAM.3` |
 | §15 versioning and change management | `PROGRAM` | `PROGRAM.5`, `PROGRAM.6` |

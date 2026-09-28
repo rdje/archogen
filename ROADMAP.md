@@ -516,6 +516,47 @@ Builds do not call an LLM or fetch new semantic knowledge to resolve missing inp
 
 Generate into a dedicated output directory. User customization belongs in descriptions or catalog inputs. Reproducibility means identical semantic plans and deterministic generated sources from locked inputs; binary reproducibility is additionally tested in the same pinned build environment, with unavoidable differences identified rather than ignored.
 
+### 10.4 Programmatic interface
+
+The CLI in §10.2 is the human interface. The same operations are also exposed programmatically, so a
+machine consumer — a browser, an editor, a build farm, another toolchain, or an agent — can drive
+archogen without a shell and without parsing prose. Added by director ruling 2026-09-28; recorded in
+`docs/decisions/decision_programmatic-interface.md` and owned by the `API` task tree.
+
+**One declared engine API, and the CLI is a consumer of it.** The API takes a description as text plus a
+profile and returns a structured result. It is transport-neutral: the command line, the wasm binding and
+the MCP server are three consumers of one contract, not three implementations of it. A capability that
+exists only behind the CLI does not exist programmatically, and the reverse.
+
+**Bindings.** A `wasm32-unknown-unknown` build, so the description-side toolchain runs in a browser or a
+worker; and an MCP server, so any agent — an LLM, a swarm, an orchestrator — can drive a running archogen
+instance. The server is a capability of the built binary: it is spawned per instance and listened to, and
+its tool list is derived from the same command table the CLI help is derived from, so a documented
+operation is always an offered one, and an unimplemented one names the leaf that owns it rather than
+failing at runtime.
+
+**Both builds are outside the programmatic interface.** Neither the compilation of archogen itself nor
+`archogen build` (system generation, §10.3) is controllable through it. Generation writes a crate tree
+and is a human or CI action; exposing it would give a remote consumer a filesystem authority the rest of
+the surface does not need, and would end the property that makes the surface safe to hand to an arbitrary
+agent. `archogen verify` runs verification tiers, which invoke a toolchain and an emulator, and needs the
+same ruling before it is exposed; it is not exposed by analogy.
+
+**The evidence vocabulary crosses the boundary unchanged.** Every programmatic response carries §5.5's
+verdict for what it reports. A result returned without its verdict is not a result: it is how
+`tool-failure` or `analysis-inconclusive` becomes `established` in a consumer that never saw the
+distinction. §7.1's rule — no report renders while a named property is unanswered — applies to a
+machine-readable response exactly as it applies to a printed one.
+
+**Trust and dependencies.** The engine crates stay dependency-free (§4.4). A transport crate may take an
+external dependency only through a decision record naming its §4.4 trust category and the claims its
+compromise would invalidate, and that dependency must be reachable from the transport and not from the
+generator or the checker: a serializer shared between the engine and its reporting surface is precisely
+the loss of independence the F30 gate exists to surface.
+
+**Sequencing.** Declared after the M1 language freeze (§12 M1, §15). An API over an unfrozen language is
+an API that will break, and a freeze is what makes declaring one worth the cost.
+
 ## 11. Workstreams and integration ownership
 
 | Workstream | Owns | First integration |
