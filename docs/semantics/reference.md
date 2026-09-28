@@ -47,6 +47,16 @@ deliberately **not** here: it classifies implementation syntax, and the boundary
 documented in `docs/book/src/boundary.md`. Adding it to this table before a chapter of this file states
 its rules would make the census demand rows for codes nothing here explains.
 
+⚠️ **So this file governs the surface, and the surface is not the whole toolchain.** The model layer
+above it — quantities and units, presence and absence, refinement, the profile check — emits
+diagnostics of its own, and `docs/book/src/` renders some of them to the reader. No normative document
+states those codes yet, which means `crates/eadl-front/tests/reference.rs` can check that one the book
+shows is a code the engine really emits, but not that its rule is written down anywhere. That is a gap
+with an owner rather than a limit of this file's subject matter: leaf `M1.26` in `docs/tasks/M1.md`,
+which carries the census. This file's scope does not widen to cover them, because a quantity's unit or
+a refinement's direction is a rule about *meaning*, and §7 rule 5 is explicit that this reference does
+not interpret meaning.
+
 ## Notation for the tables
 
 A table introduced by a `<!-- machine-read: … -->` comment is **executed**:

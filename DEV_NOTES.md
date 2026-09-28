@@ -1,5 +1,45 @@
 # DEV_NOTES.md
 
+## _(2026-09-28)_ — a census that finds a subset is more dangerous than one that finds nothing
+
+- `M1.12.5`, closing `M1.12`. The reference's instruments were turned on the book: every `error[<code>]`
+  a chapter renders must be a code a production source really emits, and every chapter publishing the
+  surface must cite `docs/semantics/reference.md`. `BOOK-ANCHORS` now walks two populations.
+- ⛔ **The empty-set fixed point has a worse sibling.** `M1.12.3` censused the book for diagnostic-code
+  citations with `(read|module|schema)-[a-z]+(-[a-z]+)*` and reported eight hits, seven real. Every part
+  of that was true — and the book renders **fourteen distinct** codes, so eight of them were inside the
+  population and outside the pattern *by construction*. A zero result looks suspicious and gets a second
+  pattern; a seven-result comes with real hits, a hand-classified false positive, and a number a later
+  leaf trusts. **Enumerate the population before narrowing it** — `grep -rhoE 'error\[[a-z0-9-]+\]'
+  docs/book/src | sort -u | wc -l` → `14`, against the prefix pattern's `6` — and treat the gap between
+  the two counts as the finding.
+- ⭐ **A deferral is a claim, and the population moves under it.** `M1.12.3` deferred an executable
+  `fires on` column on §4's table for two reasons: it needs notation for a control character, and
+  reachability is "already covered per-code by `reader.rs`'s own unit tests". The first still holds. The
+  second was measured and holds for the seven codes it could see (`read-` **7 of 7**) and not for the
+  forty-six `M1.12.4` added afterwards (`module-` 11 of 24, `schema-` 10 of 22) — **25 of 53** rows are
+  named by no test. The parent still closed, because its criteria ask that rules be *stated* and legs 4/5
+  pin that exactly; the gap became `M1.26`. Re-measure a recorded reason when the thing it was about has
+  grown, and separate "the criterion is met" from "the reason we recorded is still true" — they come
+  apart, and only the second one rots.
+- ⭐ **Derive the population from the document, or it is frozen at the moment you wrote it.** Leg 8's
+  governed prefixes come out of §4's declaration's own words ("every diagnostic in §4 whose code begins
+  `read-`"), and legs 8/9 walk `docs/book/src/` from disk. A list of prefixes inside a test would be the
+  drift the declaration exists to prevent, one level down; a list of chapters would miss the next one.
+- ⛔ **Nobody had asked whether a second normative document existed.** `BOOK-ANCHORS` was written when
+  the book was the only prose surface describing the code, and its population was one directory. Three
+  commits later `docs/semantics/reference.md` was the authority the code is held to and no doctrine
+  walked it. A doctrine's scope is a claim too, and it needs the same re-derivation: *what prose in this
+  repository describes the code?*
+- ⭐ **Mutation-test the arms; do not trust them.** Widening leg 8's first rule from governed codes to
+  every code — one token — turned **six** tests red including the green leg. That is the pinned violation
+  counts proving themselves, and it is cheap: one edit, one run, one restore verified byte-identical.
+  One arm deliberately requires an ungoverned code the engine *does* emit to stay **unreported**, so the
+  leg cannot pass by demanding the reference govern rules that are not language rules.
+- Promoted into `docs/knowledge/a-moved-measurement-needs-a-census-of-its-copies.md`, which asked "is the
+  population empty, or is my pattern wrong?" and now carries the third answer — the pattern is right and
+  the population is bigger — plus the defence that generalises.
+
 ## _(2026-09-28)_ — a census that finds nothing has an empty-set fixed point
 
 - `M1.12.3`. The reference now declares the sources it is normative over in a machine-read table, and

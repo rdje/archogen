@@ -98,7 +98,11 @@ justifies the split — the rows below appear as that happens.
   census in both directions, the header cases that must yield *nothing*, canonical text read back — plus
   a coverage leg whose population is the corpus, a citation leg, and a non-vacuity leg over each table.
   Its expected values were derived arithmetically rather than printed from the reader, which is why its
-  first run found three defects instead of confirming an implementation.
+  first run found three defects instead of confirming an implementation. Two legs then turn the same
+  instruments on the **book**: every `error[<code>]` a chapter renders is a code a production source
+  really emits, and one whose prefix the declaration governs is a row of §4; and every chapter that
+  publishes the surface cites this reference, the population derived (it renders a governed diagnostic
+  or cites the grammar) rather than listed.
 - `docs/semantics/kinds/` — the language declared in itself: `core.eadl` (the five surface
   kinds) and `os-rt.eadl` (the `task` kind of the workload module). Only `defkind` is Rust.
 - `examples/` — the three M0 use cases as real descriptions, checked by
@@ -130,11 +134,16 @@ justifies the split — the rows below appear as that happens.
   today and each names the leaf that closes it — which is the runner's most useful output.
 - `scripts/check_doctrines.sh` — the doctrine enforcer (git hook + CI). `make gate`.
   Project doctrines live in `scripts/check_doctrines.project.sh`: `check_frozen_evaluation.sh`
-  keeps the reuse measurement sealed and unseen, and `check_s0_retirement.sh` keeps the S0
+  keeps the reuse measurement sealed and unseen, `check_s0_retirement.sh` keeps the S0
   prototype from quietly becoming permanent — every `S0-ASSUMPTION:` marker listed with an owning
-  leaf, and no new consumers of the crate — and `check_book_anchors.sh` keeps the mdBook's claims
-  about the code resolvable: every behavior chapter cites a repository path, and every cited path
-  exists. All three carry `--self-test` RED arms.
+  leaf, and no new consumers of the crate — `check_feedback_self_contained.sh` keeps an upstream
+  bug report readable inside someone else's project, and `check_book_anchors.sh` keeps prose about
+  the code resolvable over **two populations**, the mdBook's chapters and the normative documents under
+  `docs/semantics/`: every behavior document cites a repository path, and every cited path exists. An
+  empty normative population is a breach rather than a "not applicable", because the frontend
+  `include_str!`s the reference. ⚠️ Both directions are not covered: this walks prose and asks about
+  the code, and nothing walks the code and asks whether the book describes it — `PROGRAM.24`, filed on
+  a measured instance. All four carry `--self-test` RED arms.
 
 ## Active task-trees
 

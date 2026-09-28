@@ -3,6 +3,13 @@
 A **kind** says what a declaration may contain. `defservice`, `defblock`, `defplatform`,
 `defpolicy` and `defsystem` are kinds, and so is anything a user adds tomorrow.
 
+> **The normative rules are `docs/semantics/reference.md` §7, and every refusal this chapter shows is
+> a row of its §4.** That `defkind` is the only trusted primitive, that a kind defines well-formedness
+> and nothing else, which cardinalities and value types exist, and — the limit that matters most when
+> reading a green result — what a schema does **not** check. §5.6's prohibition on `defkind` becoming
+> a host-code evaluator is stated there and cited to the classifier that enforces it against the
+> facility that declares the language.
+
 ## Exactly one primitive is trusted
 
 `ROADMAP.md` §2 settles where the trust sits:

@@ -1068,6 +1068,68 @@ mdBook that is the director's window into the project.
   Verification: `pending`
   Commit: `pending`
 
+- ID: `PROGRAM.24`
+  Status: `pending`
+  Goal: the **mirror direction** of `BOOK-ANCHORS`. That doctrine walks the book and asks whether what
+  it cites exists; nothing walks the codebase and asks whether the book describes it. The standing
+  instruction is that the roadmap, the codebase and the mdBook stay in lockstep, and the book is the
+  director's only window into the project — so an undocumented capability is not a documentation nit.
+  It is a feature that, as far as the only reader of it is concerned, does not exist.
+  Reproduce / issue: **one live instance, measured `2026-09-28` by `M1.12.5`.** The `rt-analysis`
+  crate is named nowhere in `docs/book/`, and `docs/book/src/analysis.md` — the chapter titled *"What
+  the scheduling checker establishes"*, which is precisely what that crate does — cites only
+  `ROADMAP.md` and `docs/analysis/cost-accounting-v1.md`. It passes `BOOK-ANCHORS` on both legs, and
+  that is the finding rather than an excuse: leg 1 asks for *a* repository path and the chapter has
+  two, leg 2 asks whether they exist and they do. A chapter can be perfectly anchored and still never
+  tell its reader where the thing it describes is implemented.
+
+  ```text
+  census: for c in crates/*/; do n=$(basename "$c"); printf '%-22s %s\n' "$n" \
+            "$(grep -roF "$n" docs/book/src/ | wc -l | tr -d ' ')"; done
+          → archogen-cli 2 · archogen-evidence 1 · archogen-s0 2 · eadl-front 1 · eadl-model 3 ·
+            rt-analysis **0** · rt-core 4 · rt-reference 1     (7 of 8 workspace crates named)
+  census: grep -rn "rt-analysis" docs/book/                     → no match, exit 1
+  census: grep -noE '`(crates|docs|scripts)/[A-Za-z0-9_./-]+`|`ROADMAP\.md`' docs/book/src/analysis.md
+          → 4 citations, none inside the crate the chapter is about
+  census: grep -rln "docs/book" scripts/ crates/*/tests/*.rs xtask/src/
+          → check_readme_stability.sh · check_book_anchors.sh · corpus.rs · reference.rs · kinds.rs ·
+            differential.rs · xtask/src/main.rs. Every one starts FROM the book and asks about the
+            code; none starts from the code and asks about the book.
+  census: grep -n '^members' Cargo.toml                         → members = ["crates/*", "xtask"]
+  ```
+
+  Acceptance: the population is **derived from the root manifest's workspace members**, never listed
+  inside the check, so a crate added tomorrow is in scope without anyone editing a gate; the rule is
+  the stronger of the two shapes below, or the weaker one with the reason for stopping there recorded
+  in this leaf —
+  1. *weak*: every workspace member is named in at least one chapter. Cheap, and it catches the live
+     instance, but a list of crate names in an appendix satisfies it and is worth nothing — the same
+     token-citation trap `check_book_anchors.sh`'s own header refuses to set.
+  2. *strong*: every workspace member is named in a chapter that **also cites a repository path inside
+     that member**. Mechanical, and not satisfiable by an appendix, because a bare name carries no path
+     with it. ⭐ This is the shape to build unless measurement says it cannot be met honestly.
+
+  Plus: the `rt-analysis` instance fixed in the same commit, with `analysis.md` naming the crate and
+  the fixtures that establish its claims; RED arms in the `--self-test` idiom, each pinning its
+  violation count, including one that proves a name-without-a-path does **not** satisfy the strong
+  shape; `TOOLBOX.md`, `DOCTRINE_ENFORCEMENT.md` and `scripts/check_doctrines.project.sh` updated if
+  this becomes a doctrine rather than a test; `make focused` exit `0`.
+
+  ⛔ **Deliberately out of scope: `ROADMAP.md` → book.** Nothing gates that direction either, and this
+  leaf must not "complete" itself by adding one. The roadmap is direction and exit criteria; the book
+  is a description of what the toolchain does for a user. Requiring every roadmap section to appear in
+  the book would produce a chapter per milestone and teach exactly the token-mention habit the strong
+  shape exists to refuse. Recorded so the absence stays a decision. Where the roadmap *is* load-bearing
+  as data, it is already read as data and gated: `crates/rt-analysis/tests/f18_baseline.rs` and
+  `f29_preemption.rs` parse §13.2's table out of `ROADMAP.md` and fail loudly if it will not parse,
+  because a baseline that quietly shrank would still be green.
+  Priority: **medium-high** — a live drift in the one artifact the director reads, and no mechanism in
+  the tree that could have found it. Sequenced behind `PROGRAM.21` and `PROGRAM.18` only because those
+  are about gates reporting that they checked something they did not, which corrupts every other
+  gate's evidence including this one's.
+  Verification: `pending`
+  Commit: `pending`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1134,15 +1196,16 @@ roadmap item X live?".
 | 1 | `PROGRAM.11` | `active` | the repository-boundary doctrine, **in both directions**. The rule was nowhere in the committed tree, which is how an *inbound* crossing got recorded backwards in a durable record. Priority medium: the outbound half is preventive, the inbound half fired once and was handled correctly |
 | 2 | `PROGRAM.21` | `pending` | **high** — `TASK-ACCEPTANCE` reads only the *first* checklist in a tree file, so for every later leaf it verifies nothing and then says it did. Measured: `M1.md` carries 24 ticked ROOT CAUSE boxes and the check's awk captures line 52 (`M1.1`); a staged `.rs` with `M1.24` carrying zero boxes returned `exit=0`. Latent, not active — all five checklist-less committed leaves staged no code. Ahead of `PROGRAM.18`, which would otherwise arm the wrong boxes |
 | 3 | `PROGRAM.18` | `pending` | **medium-high** — ten of eighteen registered controls carry no repeatable `--self-test` RED arm, `check_task_acceptance.sh` among them: its box-scoping was validated once during development and no arm re-fires it. Found by the claim-verification adoption's §7.4 sweep, and `PROGRAM.21` is what an arm would have caught |
-| 4 | `PROGRAM.5` | `pending` | the §15/§19 dependency and evidence ledger — every external source claim in the book should resolve to a row, and `BOOK-ANCHORS` now checks the *internal* ones. The director has offered a read-only external document source (ISA / RISC-V / devicetree / peripheral specifications) reachable by operator-relayed request; the ledger is where that seam gets a row |
-| 5 | `PROGRAM.9` | `pending` | the extended tier reports `incomplete` on every run until its three steps exist |
-| 6 | `PROGRAM.6` | `pending` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |
-| 7 | `PROGRAM.13` | `pending` | twelve closed leaves in `BOOTSTRAP`, `M2` and this tree do not name their own commit — backfill both logs from git, then `PROGRAM.14` gates it so the gap cannot reopen |
-| 8 | `PROGRAM.15` | `pending` | a feedback register row that contradicts its own issue sub-tree passes every gate today; five state transitions in six commits held only by hand-editing and a manual census |
-| 9 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
-| 10 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with |
-| 11 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
-| 12 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
+| 4 | `PROGRAM.24` | `pending` | **medium-high** — the mirror direction of `BOOK-ANCHORS`, which nobody checks: does a capability the codebase has get described in the book? One live instance measured `2026-09-28`: the `rt-analysis` crate is named nowhere in `docs/book/`, and `analysis.md` — the chapter about what it establishes — cites only `ROADMAP.md` and a cost-accounting doc, passing both `BOOK-ANCHORS` legs while never telling its reader where the code is. Filed by `M1.12.5` on the director's lockstep instruction |
+| 5 | `PROGRAM.5` | `pending` | the §15/§19 dependency and evidence ledger — every external source claim in the book should resolve to a row, and `BOOK-ANCHORS` now checks the *internal* ones. The director has offered a read-only external document source (ISA / RISC-V / devicetree / peripheral specifications) reachable by operator-relayed request; the ledger is where that seam gets a row |
+| 6 | `PROGRAM.9` | `pending` | the extended tier reports `incomplete` on every run until its three steps exist |
+| 7 | `PROGRAM.6` | `pending` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |
+| 8 | `PROGRAM.13` | `pending` | twelve closed leaves in `BOOTSTRAP`, `M2` and this tree do not name their own commit — backfill both logs from git, then `PROGRAM.14` gates it so the gap cannot reopen |
+| 9 | `PROGRAM.15` | `pending` | a feedback register row that contradicts its own issue sub-tree passes every gate today; five state transitions in six commits held only by hand-editing and a manual census |
+| 10 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
+| 11 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with |
+| 12 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
+| 13 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
 
 `PROGRAM.16` is closed: the claim-verification policy is adopted as `docs/CLAIM_VERIFICATION.md`,
 copied verbatim and diff-verified against its read-only source, restated in this project's terms as
@@ -1150,11 +1213,11 @@ its own §7.6 requires, and registered in all three entrypoints — `CLAUDE.md`,
 `DOCTRINE_ENFORCEMENT.md`'s E1 list. The spine is five portable architectures, not four.
 
 `M0` is closed; `S0` is open again for `S0.8` (a book figure `M1.24`'s census found — F28's evidence
-is unchanged, so the seven original leaves stay closed); `M1` is open (its LinkedSpec evaluation is
-closed, so its frontier is `M1.12`, the language reference) and `M2` is in
-progress, so `PROGRAM` carries the substrate work those trees lean on. `PROGRAM.8` remains open and
-unblocking. `PROGRAM.12` is closed: harness-local scratch is ignored, so a clean `git status` means
-what the handoff rule says it means.
+is unchanged, so the seven original leaves stay closed); `M1` is open with its frontier at `M1.13`,
+the language freeze — `M1.12` closed `2026-09-28` when its fifth child delivered the reference's
+lockstep; and `M2` is in progress, so `PROGRAM` carries the substrate work those trees lean on.
+`PROGRAM.8` remains open and unblocking. `PROGRAM.12` is closed: harness-local scratch is ignored, so
+a clean `git status` means what the handoff rule says it means.
 
 ## Decisions
 

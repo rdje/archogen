@@ -6,6 +6,7 @@ answers:
   - "How do I stop a measured figure from going stale in prose?"
   - "A doc comment states a measurement. Is that a defect?"
   - "My census grep found nothing — is the population empty, or is my pattern wrong?"
+  - "My census grep found something. Is that everything, or a subset shaped like my pattern?"
   - "My figure gate is green on the defect it was written for. What excused it?"
 type: knowledge
 date: 2026-09-27
@@ -88,6 +89,21 @@ you to damage correct records.
    **run both directions** — a producer→document leg alone passes on an empty producer set, but adding
    the document→producer leg means every row the document states is now unaccounted for, so the same
    broken pattern fails loudly instead of quietly.
+   ⛔ **The second-worst case is a subset, and it is worse than zero in practice because a subset
+   produces evidence.** Measured by `M1.12.5`: `M1.12.3` censused the book for diagnostic-code
+   citations with `(read|module|schema)-[a-z]+(-[a-z]+)*` and reported "eight hits, seven of them
+   real code citations, one a protocol name in prose". Every part of that was true, and the
+   conclusion drawn from it was still wrong — the book renders **fourteen distinct** codes, and the
+   pattern's three prefixes could only ever match six of them, so eight were inside the population and
+   outside the pattern *by construction*. Seven of fourteen reads exactly like fourteen of fourteen,
+   and unlike the zero case it comes with real hits, a hand-classified false positive, and a number
+   recorded in a leaf that a later leaf then trusted. The defence is the same one the "census the
+   concept, not the phrasings" rule gives, applied to shape rather than wording: **enumerate the
+   population before narrowing it** — here `grep -rhoE 'error\[[a-z0-9-]+\]' docs/book/src | sort -u
+   | wc -l` → `14`, against the prefix pattern's `6` — and then ask what the narrower pattern excludes
+   and whether the exclusion was decided or merely inherited. A pattern is a hypothesis about the
+   population's shape; the population is measured first, and the gap between the two counts is the
+   finding.
    ⭐ **And the population is not only numbers.** A *state fact* has copies too, and they rot the same
    way. Measured here: **eight files** published "QEMU is not installed" after it was — including the
    register that routes items to the director, whose index hook said "four items" where the record

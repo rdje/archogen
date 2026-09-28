@@ -3,6 +3,13 @@
 A description is not one file. Reusable sub-hardware and sub-OS descriptions are imported with
 namespaces, explicit exports, typed parameters and version constraints.
 
+> **The normative rules are `docs/semantics/reference.md` §6, and every refusal this chapter shows is
+> a row of its §4.** What an import binds, what an alias defaults to, when a version requirement is
+> satisfied, why elaboration runs children before parents, and why a parameter with no default must be
+> bound — those are stated there as rules, each cited to the test that enforces it, and the diagnostic
+> codes are censused against the module reader in both directions. This chapter explains why the
+> module system is shaped that way.
+
 ```text
 (defmodule app.system
   (version 1 0)

@@ -4,6 +4,71 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the language reference is closed, and its instruments now read the book
+
+`ARCHOGEN-M1-0077` (leaf `M1.12.5`, closing `M1.12`).
+
+- ⭐ **Two new legs turn the reference's instruments on the book**, which is the only view of this
+  project its director has. **Leg 8** requires every diagnostic a chapter renders as `error[<code>]` to
+  be a code a production source really emits, and every one whose prefix §4 governs to be a row of §4;
+  a rendered severity other than `error` violates §4 rule 1. **Leg 9** requires every chapter that
+  publishes the surface to cite `docs/semantics/reference.md`, the population *derived* — it renders a
+  governed diagnostic, or it cites the grammar — rather than listed, so a chapter written tomorrow is
+  in scope without anyone editing a test. This is `BOOK-ANCHORS` one level deeper: not "does the
+  citation resolve" but "is the thing the chapter shows still a thing the engine does".
+- **Four chapters cited the grammar and nothing anywhere in the book cited the reference** —
+  `reading.md`, `modules.md`, `kinds.md` and `s0.md`. The grammar says what a description *is* and the
+  reference says what it is *worth*; a chapter pointing at one made it look like the whole definition.
+  Each now carries a pointer that says something true about the reference's content rather than a bare
+  path. Leg 9's first run named all four, with the code that put each in the population.
+- **`BOOK-ANCHORS` walks two populations instead of one**: the book's chapters *and* the normative
+  documents under `docs/semantics/`, because the grammar and the reference are prose about the code in
+  the same sense and are the authority the code is held to — a rotted citation there sends an
+  implementer to nothing. An empty normative population is a **breach** rather than a "not applicable",
+  since the frontend `include_str!`s the reference and cannot compile without it. Three RED arms became
+  six, three per population, and the chapter count was deliberately held at 19 so a refactor did not
+  move a reported figure.
+- ⛔ **The closure review measured two gaps outside the parent's criteria and filed them rather than
+  folding them in** — `M1.26`. **(a)** The book renders fourteen distinct diagnostic codes and §4
+  governs six; the other eight come from the model layer, which no normative document states. `M1.12.3`
+  had censused this with a prefix-shaped pattern and reported seven citations — correct, and a subset of
+  a fourteen-code population it could not see. **(b)** No input is pinned to any row of §4, so
+  **25 of the 53** stated codes are named by no test, which **falsifies the reason `M1.12.3` recorded
+  for deferring** the `fires on` column: it holds for `read-` (7 of 7) and not for the 46 codes `M1.12.4`
+  added (`module-` 11 of 24, `schema-` 10 of 22). The parent still closes, because its criteria ask that
+  rules be *stated* and legs 4/5 pin that exactly at 53 stated / 53 emitted / 0 rotted rows — but a
+  deferral is a claim, and this one was re-measured when the population moved.
+- **`M1.12`'s acceptance re-checked criterion by criterion against measurement.** The frontend's six
+  source files emit from exactly two (`reader.rs` 7 codes over 11 call sites, `module.rs` 24);
+  `diagnostic.rs`, `form.rs`, `lib.rs` and `source.rs` emit none. Every `Diagnostic::` constructor in a
+  production half takes a **string literal**, so no code reaches a diagnostic dynamically and the
+  literal-shaped census is sound rather than lucky — which is the assumption both legs rest on.
+- ⛔ **The new arms were mutation-tested, not trusted.** Widening leg 8's first rule from governed codes
+  to every code — one token — turned **six** tests red, including the green leg, which is the pinned
+  violation counts proving themselves. One arm requires an ungoverned code the engine *does* emit to
+  stay unreported, so the leg cannot pass by demanding the reference govern rules that are not language
+  rules.
+- **Two defects fixed in passing, both small:** `check_book_anchors.sh`'s self-test opened a `mktemp -d`
+  it never used — dead code writing off-volume, against §13 — replaced by a `trap` over the in-repo
+  victims; and `TOOLBOX.md`'s reference-value row said "its **four** declared sources", an ungated figure
+  of exactly the class `M1.23`/`M1.24` exist to end, removed rather than retyped.
+- **Also filed: `PROGRAM.24`**, the mirror direction of `BOOK-ANCHORS` that nothing covers — does a
+  capability the codebase has get described in the book? One live instance measured: the `rt-analysis`
+  crate is named nowhere in `docs/book/`, and `analysis.md` is the chapter about what it establishes. It
+  passes both `BOOK-ANCHORS` legs, because a chapter can be perfectly anchored and still never say where
+  its subject is implemented.
+- **Validation:** `cargo test -p eadl-front --test reference` → **34 passed / 0 failed** (was 24);
+  `book-anchors: OK (19 chapter(s), 2 normative document(s))` with **6/6** self-test arms; chapters
+  citing the reference **0 → 4**; `make focused` → `passed — 3 passed, 0 failed, 0 unavailable`;
+  `cargo test --all` → **471 passed, 0 failed over 37 suites** (baseline 461 over 37);
+  `=== all doctrines green ===` over 13 checks; `check_knowledge_map.sh` → `rc=0`.
+  `git diff --stat HEAD -- 'crates/*/src'` is empty: no production code changed.
+  ⚠️ `make integration` → `failed — 6 passed, 1 failed`, the one failure being `emulator`
+  (`TARGET_VERIFIED=no`), pre-existing and owned by `M2.8.2`; `git diff --stat HEAD -- crates/rt-core
+  crates/rt-analysis crates/rt-reference targets scripts/target_emulator.sh xtask` is empty, so nothing
+  that step reads was touched. `ROADMAP.md` needed no edit, measured rather than assumed: its only
+  relevant claim is "`docs/semantics/` with at least twenty worked cases", and the corpus holds 62.
+
 ## archogen — the language reference is complete, except for the version identifier
 
 `ARCHOGEN-M1-0076` (leaf `M1.12.4`).

@@ -1,10 +1,17 @@
 # Reading a description
 
-> **The normative definition of the surface syntax is `docs/semantics/grammar.md`.** This chapter
-> explains what the reader *produces* and why; the grammar says what a well-formed description
-> *is*. A recognizer derived from that grammar and the reader are checked against each other over
-> the whole corpus — they must accept the same language and agree on where every token begins and
-> ends, or the build fails.
+> **The surface has two normative halves, and this chapter is neither of them.**
+> `docs/semantics/grammar.md` says what a well-formed description *is*;
+> `docs/semantics/reference.md` says what a well-formed description *is worth* — the exact value
+> behind every literal, the escapes a string may carry, what canonical form guarantees, which
+> comments become headers, and every diagnostic the reader can emit with the repair it owes you.
+> This chapter explains what the reader *produces* and why.
+>
+> Both halves are executed rather than merely written: a recognizer derived from the grammar and the
+> reader are checked against each other over the whole corpus — they must accept the same language
+> and agree on where every token begins and ends, or the build fails — and the reference's tables are
+> read back out of the document and run against the reader row by row, so a value it states and a
+> value the reader produces cannot disagree quietly.
 
 
 Before anything can be checked, resolved or generated, it has to be read — and when it cannot

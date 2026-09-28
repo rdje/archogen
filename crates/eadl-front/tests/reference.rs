@@ -44,6 +44,15 @@
 //! 7. **HEADERS** — every case in §5's comment-header table, run against `Document::comment_headers`,
 //!    including the cases that must yield *no* header: a table of successful parses alone would pass
 //!    on an implementation that treated every comment as one.
+//! 8. **BOOK-CODES** — every diagnostic the book renders is one the toolchain can produce, and every
+//!    one whose code §4 governs is a row of §4. `scripts/check_book_anchors.sh` one level deeper: not
+//!    "does the citation resolve" but "is the thing the chapter shows still a thing the engine does".
+//!    The book is the director's only view of the project, so a rendered diagnostic is a claim about
+//!    behavior, and a renamed code leaves the chapter showing something that cannot happen.
+//! 9. **SURFACE-POINTED** — every chapter that publishes the language surface cites
+//!    `docs/semantics/reference.md`. The population is derived (it renders a governed diagnostic, or
+//!    it cites the grammar) rather than listed, so a chapter written tomorrow is inside it without
+//!    anyone editing this file.
 //!
 //! ⚠️ **Honest limit.** A deleted row is caught only when the corpus used that literal, or when it was
 //! the last row of its verdict class; the literal *forms* the language admits are enumerated by
@@ -51,6 +60,17 @@
 //! `docs/semantics/grammar.md`. This file also says nothing about nesting or meaning — `corpus.rs`
 //! owns those — and §6's and §7's rules are prose that cites the tests enforcing them, because a
 //! module elaboration or a schema check is not a row in a table of literals.
+//!
+//! ⚠️ **Two gaps this file cannot close, both measured and both owned rather than noted.** They are
+//! named here without a count, because a figure in a header is a figure nothing re-derives — the
+//! censuses live on the leaves that own them, beside the commands that reproduce them:
+//! - leg 8's "is this code stated" rule reaches only the prefixes §4's declaration governs. The book
+//!   also renders the model layer's codes, which no normative document states, and those are checked
+//!   for *existence* only — the gap is meaning, not rot. Leaf `M1.26`.
+//! - legs 4 and 5 pin §4's code set against the sources that emit it, and nothing pins it against an
+//!   *input*. A code whose call site can no longer be reached is still emitted as far as a scan of the
+//!   production half can tell. Leaf `M1.26`, which is where `M1.12.3`'s deferred `fires on` column
+//!   went.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -963,6 +983,339 @@ fn header_violations(document: &str) -> Vec<String> {
     out
 }
 
+// ── legs 8 and 9: the book, which is the surface the director reads ────────────────────────────
+//
+// ⭐ WHY THESE LIVE HERE AND NOT IN `scripts/check_book_anchors.sh`. That doctrine proves a citation
+// resolves; it says so in its own honest limit, and it is right to — prose cannot be checked by grep.
+// A rendered diagnostic is the one piece of prose that *can* be: it is a machine-readable name in a
+// fixed shape, `error[<code>]`, and the code either exists or it does not. So this is `BOOK-ANCHORS`
+// one level deeper, exactly as `M1.12.3` framed it — not "does the citation resolve" but "is the thing
+// the chapter shows still a thing the toolchain does".
+
+/// The two normative documents, and the halves of one definition they are.
+const REFERENCE_PATH: &str = "docs/semantics/reference.md";
+const GRAMMAR_PATH: &str = "docs/semantics/grammar.md";
+
+/// The severities a rendered diagnostic can carry.
+///
+/// Only `error` exists in production — `Diagnostic::error` is the sole constructor — but the rendered
+/// shapes are enumerated so that a chapter inventing a `warning[…]` is a violation of §4 rule 1
+/// rather than something this leg cannot see.
+const RENDERED_SEVERITIES: [&str; 3] = ["error", "warning", "note"];
+
+/// One violation on a book chapter, phrased so the failure names the chapter and the line.
+fn chapter_violation(chapter: &str, line: usize, message: String) -> String {
+    format!("{chapter}:{line}: {message}")
+}
+
+/// The book's chapters, as `(repo-relative path, text)`.
+///
+/// Read from disk rather than `include_str!`, because the population is the *directory*: a chapter
+/// written tomorrow is inside these legs' scope without anyone editing this file. That is what makes
+/// them a census rather than a list of the chapters that happened to exist when they were written.
+fn book_chapters() -> Vec<(String, String)> {
+    let root = repo_root();
+    let dir = root.join("docs/book/src");
+    let mut found = Vec::new();
+    let Ok(entries) = std::fs::read_dir(&dir) else {
+        return found;
+    };
+    for entry in entries.filter_map(Result::ok) {
+        let path = entry.path();
+        let Some(extension) = path.extension() else {
+            continue;
+        };
+        if extension != "md" {
+            continue;
+        }
+        let relative = path
+            .strip_prefix(&root)
+            .expect("inside the repository")
+            .display()
+            .to_string();
+        found.push((
+            relative,
+            std::fs::read_to_string(&path).expect("a chapter is readable"),
+        ));
+    }
+    found.sort();
+    found
+}
+
+/// Whether a chapter cites `path` inside a code span.
+///
+/// The code-span rule is the one every chapter already follows and the one
+/// `scripts/check_book_anchors.sh` matches, so the two mechanisms do not disagree about what counts as
+/// a citation — `cited_paths` above uses the same odd-index-of-a-backtick-split test.
+fn cites(text: &str, path: &str) -> bool {
+    text.lines().any(|line| {
+        line.split('`')
+            .enumerate()
+            .any(|(position, span)| position % 2 == 1 && span == path)
+    })
+}
+
+/// The code prefixes §4 governs, read out of the declaration table's own words.
+///
+/// ⛔ Derived, not listed. The declaration's third column says which codes each source owns —
+/// "every diagnostic in §4 whose code begins `read-`" — so the governed set is a property of the
+/// normative document and moves when the document does. A list of prefixes inside this file would be
+/// the drift the declaration exists to prevent, one level down.
+fn governed_prefixes(document: &str) -> BTreeSet<String> {
+    const MARKER: &str = "code begins `";
+    let mut out = BTreeSet::new();
+    for (_, cells) in machine_table(document, "normative-sources") {
+        for cell in cells {
+            let mut rest = cell.as_str();
+            while let Some(at) = rest.find(MARKER) {
+                let after = &rest[at + MARKER.len()..];
+                match after.find('`') {
+                    Some(end) => {
+                        out.insert(after[..end].to_string());
+                        rest = &after[end..];
+                    }
+                    None => break,
+                }
+            }
+        }
+    }
+    out
+}
+
+/// Every diagnostic a text renders as `severity[code]`, as `(line, severity, code)`.
+///
+/// The shape is what `Diagnostics::render` prints and what every chapter already pastes, so this reads
+/// the book's own evidence blocks rather than guessing at prose. A code-shaped word in a sentence —
+/// `boundary.md`'s "a `read-sequence` protocol", which is a *protocol* and not a diagnostic — is not
+/// matched, and that is the point: `M1.12.3`'s census needed a human to separate seven real citations
+/// from that one false positive, and this shape does not.
+fn rendered_diagnostics(text: &str) -> Vec<(usize, String, String)> {
+    let mut out = Vec::new();
+    for (index, line) in text.lines().enumerate() {
+        for severity in RENDERED_SEVERITIES {
+            let open = format!("{severity}[");
+            let mut from = 0;
+            while let Some(at) = line[from..].find(&open) {
+                let start = from + at + open.len();
+                let Some(end) = line[start..].find(']') else {
+                    break;
+                };
+                let code = &line[start..start + end];
+                if !code.is_empty()
+                    && code
+                        .chars()
+                        .all(|ch| ch.is_ascii_lowercase() || ch.is_ascii_digit() || ch == '-')
+                {
+                    out.push((index + 1, severity.to_string(), code.to_string()));
+                }
+                from = start + end;
+            }
+        }
+    }
+    out
+}
+
+/// Every diagnostic code a **production** half in `crates/` can emit, and the sources that emit it.
+///
+/// Wider than the reference's declaration on purpose: leg 8's third rule is a claim about the *book*
+/// — that it shows nothing the toolchain cannot produce — and that claim does not get narrower just
+/// because the reference does not govern the emitter. `xtask/` and `vendor/` are outside the walk; the
+/// first emits no diagnostic and the second is not this project's code.
+fn workspace_codes() -> BTreeMap<String, Vec<String>> {
+    let root = repo_root();
+    let mut out: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    let mut stack = vec![root.join("crates")];
+    while let Some(dir) = stack.pop() {
+        let Ok(entries) = std::fs::read_dir(&dir) else {
+            continue;
+        };
+        for entry in entries.filter_map(Result::ok) {
+            let path = entry.path();
+            if path.is_dir() {
+                stack.push(path);
+                continue;
+            }
+            let Some(extension) = path.extension() else {
+                continue;
+            };
+            if extension != "rs" {
+                continue;
+            }
+            let relative = path
+                .strip_prefix(&root)
+                .expect("inside the repository")
+                .display()
+                .to_string();
+            if !relative.contains("/src/") {
+                continue;
+            }
+            let Ok(text) = std::fs::read_to_string(&path) else {
+                continue;
+            };
+            for (_, code) in emitted_diagnostics(&text) {
+                out.entry(code).or_default().push(relative.clone());
+            }
+        }
+    }
+    for sources in out.values_mut() {
+        sources.sort();
+        sources.dedup();
+    }
+    out
+}
+
+/// Leg 8 — every diagnostic the book renders is one the toolchain can actually produce, and every one
+/// whose code §4 governs is a row of §4.
+///
+/// Three rules, each closing a different way the book can drift from the engine:
+///
+/// 1. a **governed** code the reference does not state — the book is publishing a rule the normative
+///    document has not written down;
+/// 2. **any** rendered code no production source emits — a renamed or removed code leaves the book
+///    showing a diagnostic that can no longer happen, which reads exactly like one that can;
+/// 3. a rendered severity other than `error` — §4 rule 1 says there is no warning and no note
+///    *anywhere* in the toolchain's diagnostics, and the book is where the director would learn
+///    otherwise.
+///
+/// ⚠️ **HONEST LIMIT, MEASURED.** Rules 2 and 3 cover every rendered diagnostic; rule 1 covers only
+/// the governed ones. `M1.12.3` censused the book with a prefix-shaped pattern — `(read|module|schema)-…`
+/// — and reported seven citations, which is seven *of a population it could not see the rest of*: the
+/// chapters also render the model layer's codes, and no normative document states those, because the
+/// reference governs the surface and they are not surface rules. So a model-layer code the book shows
+/// is checked for existence and not for meaning. Leaf `M1.26` owns closing that, and the census is
+/// recorded there rather than only here.
+fn book_code_violations(document: &str, chapters: &[(String, String)]) -> Vec<String> {
+    let mut out = Vec::new();
+    if chapters.is_empty() {
+        out.push(
+            "no chapter under `docs/book/src/`, so the book leg compared nothing — the director's only \
+             view of the project is either empty or somewhere this leg does not look"
+                .to_string(),
+        );
+        return out;
+    }
+    let governed = governed_prefixes(document);
+    if governed.is_empty() {
+        out.push(
+            "docs/semantics/reference.md's declaration names no code prefix, so the book leg has no \
+             governed population and would pass on any chapter at all"
+                .to_string(),
+        );
+    }
+    let stated: BTreeSet<String> = machine_table(document, "diagnostics")
+        .iter()
+        .filter_map(|(_, cells)| cells.first().cloned())
+        .collect();
+    let emittable = workspace_codes();
+
+    let mut rendered = 0;
+    for (chapter, text) in chapters {
+        for (line, severity, code) in rendered_diagnostics(text) {
+            rendered += 1;
+            if severity != "error" {
+                out.push(chapter_violation(
+                    chapter,
+                    line,
+                    format!(
+                        "renders `{severity}[{code}]`, and §4 rule 1 states there is no warning and no \
+                         note anywhere in the toolchain's diagnostics — a chapter showing one teaches \
+                         the director a severity the engine does not have"
+                    ),
+                ));
+            }
+            if governed.iter().any(|prefix| code.starts_with(prefix)) && !stated.contains(&code) {
+                out.push(chapter_violation(
+                    chapter,
+                    line,
+                    format!(
+                        "renders `{code}`, whose prefix the reference declares itself normative over, \
+                         and §4 does not state it — the book is publishing a rule the normative \
+                         document has not written down"
+                    ),
+                ));
+            }
+            if !emittable.contains_key(&code) {
+                out.push(chapter_violation(
+                    chapter,
+                    line,
+                    format!(
+                        "renders `{code}` and no production source in `crates/` emits it — a renamed or \
+                         removed code leaves the book showing a diagnostic the toolchain can no longer \
+                         produce, which reads exactly like one it can"
+                    ),
+                ));
+            }
+        }
+    }
+    if rendered == 0 {
+        out.push(
+            "no chapter renders a diagnostic at all, so the book leg compared two empty populations"
+                .to_string(),
+        );
+    }
+    out
+}
+
+/// Leg 9 — a chapter that publishes the language surface points at the reference.
+///
+/// The population is derived, not listed: a chapter is in it when it **renders a diagnostic §4
+/// governs** or **cites `docs/semantics/grammar.md`**. Both are the chapter publishing the surface, one
+/// by showing the engine's verdict and one by naming the authority already. A chapter about analysis,
+/// evidence or the command line is not in it, and is not made to carry a citation it has no use for —
+/// a gate that demands a token citation teaches authors to add one, which is how `BOOK-ANCHORS`' own
+/// header says a gate teaches authors to route around it.
+///
+/// ⭐ The rule is that the two normative documents **travel together**, because they are complementary
+/// halves of one definition: the grammar says what a well-formed description *is*, the reference says
+/// what it is *worth*. `reading.md` pointed at the grammar and nothing pointed at the reference, which
+/// leaves the chapter that explains numbers, escapes, canonical form and headers citing an authority
+/// for one half of them.
+fn surface_pointer_violations(document: &str, chapters: &[(String, String)]) -> Vec<String> {
+    let mut out = Vec::new();
+    let governed = governed_prefixes(document);
+    let mut population = 0;
+    for (chapter, text) in chapters {
+        let renders_governed: Vec<(usize, String)> = rendered_diagnostics(text)
+            .into_iter()
+            .filter(|(_, _, code)| governed.iter().any(|prefix| code.starts_with(prefix)))
+            .map(|(line, _, code)| (line, code))
+            .collect();
+        let cites_grammar = cites(text, GRAMMAR_PATH);
+        if renders_governed.is_empty() && !cites_grammar {
+            continue;
+        }
+        population += 1;
+        if cites(text, REFERENCE_PATH) {
+            continue;
+        }
+        let why = match renders_governed.first() {
+            Some((line, code)) => format!(
+                "it renders `{code}` at line {line}, a diagnostic §4 states normatively{}",
+                if renders_governed.len() > 1 {
+                    format!(" along with {} others", renders_governed.len() - 1)
+                } else {
+                    String::new()
+                }
+            ),
+            None => format!("it cites `{GRAMMAR_PATH}`, the sibling normative document"),
+        };
+        out.push(format!(
+            "{chapter} publishes the language surface — {why} — and does not cite `{REFERENCE_PATH}`. \
+             The grammar says what a description is and the reference says what it is worth, so a \
+             chapter pointing at one and not the other makes the one it points at look like the whole \
+             of the definition."
+        ));
+    }
+    if population == 0 {
+        out.push(
+            "no chapter cites the grammar or renders a governed diagnostic, so the surface-pointer leg \
+             has no population and proves nothing"
+                .to_string(),
+        );
+    }
+    out
+}
+
 /// Every leg at once, so an arm can be fed a mutated document and read one list of complaints.
 fn all_violations(document: &str) -> Vec<String> {
     let mut out = vacuity_violations(document);
@@ -1040,6 +1393,29 @@ fn the_reference_header_table_is_the_frontend_s_verdict() {
         "§5's header convention and `comment_headers` disagree:\n\n{}\n\n\
          The convention is how a description states facts about itself, and F27 reads those facts — \
          a header that silently moves between fields is a verdict attached to the wrong case.",
+        wrong.join("\n\n")
+    );
+}
+
+#[test]
+fn every_diagnostic_the_book_renders_is_one_the_toolchain_can_produce() {
+    let wrong = book_code_violations(REFERENCE, &book_chapters());
+    assert!(
+        wrong.is_empty(),
+        "the book shows the director a diagnostic the engine does not have:\n\n{}\n\n\
+         The book is the only view of this project its director has, so a rendered diagnostic is a \
+         claim about behavior — either §4 states the rule, or the code was renamed and the chapter \
+         is now showing something that cannot happen.",
+        wrong.join("\n\n")
+    );
+}
+
+#[test]
+fn every_chapter_that_publishes_the_surface_points_at_the_reference() {
+    let wrong = surface_pointer_violations(REFERENCE, &book_chapters());
+    assert!(
+        wrong.is_empty(),
+        "a chapter publishes the language surface and cites only half of its definition:\n\n{}",
         wrong.join("\n\n")
     );
 }
@@ -1449,5 +1825,191 @@ fn arm_18_a_document_that_stops_carrying_the_header_table_is_reported() {
         &header_violations(&mutated),
         1,
         &["carries no `<!-- machine-read: comment-headers -->` table"],
+    );
+}
+
+// ── RED arms for legs 8 and 9 ──────────────────────────────────────────────────────────────────
+//
+// ⭐ These arms bite the **shipped book**, not a synthetic one, wherever the mutation can be written
+// against a real chapter. A leg that only ever fails on an input constructed to fail it is a leg whose
+// population nobody has seen it walk.
+
+/// The real chapters with one chapter's text replaced.
+fn chapters_with(chapter: &str, text: String) -> Vec<(String, String)> {
+    let chapters = book_chapters();
+    assert!(
+        chapters.iter().any(|(path, _)| path == chapter),
+        "{chapter} is not a chapter of the book, so this arm would mutate nothing"
+    );
+    chapters
+        .into_iter()
+        .map(|(path, old)| {
+            if path == chapter {
+                (path, text.clone())
+            } else {
+                (path, old)
+            }
+        })
+        .collect()
+}
+
+/// One synthetic chapter, for an arm about the leg's shape rather than about the shipped book.
+fn one_chapter(text: &str) -> Vec<(String, String)> {
+    vec![("docs/book/src/__arm__.md".to_string(), text.to_string())]
+}
+
+/// Replace one substring of a chapter, asserting it was there to replace.
+fn edited(chapter: &str, from: &str, to: &str) -> Vec<(String, String)> {
+    let text = book_chapters()
+        .into_iter()
+        .find(|(path, _)| path == chapter)
+        .unwrap_or_else(|| panic!("{chapter} is not a chapter of the book"))
+        .1;
+    assert!(
+        text.contains(from),
+        "{chapter} does not contain {from:?}, so this arm would mutate nothing"
+    );
+    chapters_with(chapter, text.replace(from, to))
+}
+
+#[test]
+fn arm_19_a_governed_code_the_book_renders_and_section_4_does_not_state_is_reported() {
+    // ⛔ Two violations, and both are honest: the typo is a governed code §4 does not state (rule 1)
+    // *and* a code nothing emits (rule 2). Pinning 2 rather than "at least one" is what stops an
+    // over-reporting leg from passing its own arm.
+    let chapters = edited(
+        "docs/book/src/reading.md",
+        "error[read-malformed-number]",
+        "error[read-malformed-numbers]",
+    );
+    assert_reported(
+        &book_code_violations(REFERENCE, &chapters),
+        2,
+        &[
+            "whose prefix the reference declares itself normative over",
+            "no production source in `crates/` emits it",
+            "reading.md",
+        ],
+    );
+}
+
+#[test]
+fn arm_20_an_ungoverned_code_nothing_emits_is_still_reported() {
+    // ⭐ The scoping cuts one way only. `quantity-` is not a prefix §4 governs, so rule 1 stays
+    // silent — and rule 2 fires anyway, because "the book shows a diagnostic the toolchain cannot
+    // produce" does not get narrower because the reference does not govern the emitter. One
+    // violation, not two, which is the same scoping arm 19 pins from the other side.
+    let chapters = edited(
+        "docs/book/src/quantities.md",
+        "error[quantity-missing-unit]",
+        "error[quantity-missing-units]",
+    );
+    assert_reported(
+        &book_code_violations(REFERENCE, &chapters),
+        1,
+        &[
+            "quantity-missing-units",
+            "no production source in `crates/` emits it",
+        ],
+    );
+}
+
+#[test]
+fn arm_21_a_rendered_severity_other_than_error_is_reported() {
+    // §4 rule 1 says there is no warning and no note *anywhere* in the toolchain's diagnostics. The
+    // code itself is stated and emittable, so the severity is the only thing wrong here.
+    let chapters = edited(
+        "docs/book/src/s0.md",
+        "error[read-unclosed-list]",
+        "warning[read-unclosed-list]",
+    );
+    assert_reported(
+        &book_code_violations(REFERENCE, &chapters),
+        1,
+        &["warning[read-unclosed-list]", "§4 rule 1"],
+    );
+}
+
+#[test]
+fn arm_22_an_ungoverned_code_the_workspace_does_emit_is_not_reported() {
+    // ⛔ The discriminating arm. Without it, arms 19–21 would also pass on a leg that reported every
+    // model-layer diagnostic the book renders — which would be a leg demanding the reference govern
+    // rules that are not language rules, and teaching authors to route around it. The honest limit in
+    // `book_code_violations` is executable here rather than only prose.
+    let chapters =
+        one_chapter("```text\nerror[quantity-missing-unit]: `period` has no unit\n```\n");
+    assert_reported(&book_code_violations(REFERENCE, &chapters), 0, &[]);
+}
+
+#[test]
+fn arm_23_a_declaration_that_names_no_code_prefix_is_reported_rather_than_skipped() {
+    // Non-vacuity: with no governed prefix, rule 1 has no population and would pass on any chapter at
+    // all. The prefixes are read out of the declaration's own words, so renaming the phrase is the
+    // mutation — and it is the mutation a rewrite of that table would make by accident.
+    let mutated = REFERENCE.replace("code begins `", "codes begin `");
+    assert_ne!(
+        mutated, REFERENCE,
+        "the mutation did not apply — a false green"
+    );
+    assert!(
+        governed_prefixes(&mutated).is_empty(),
+        "the declaration still yields a governed prefix after the mutation"
+    );
+    assert_reported(
+        &book_code_violations(&mutated, &book_chapters()),
+        1,
+        &["declaration names no code prefix"],
+    );
+}
+
+#[test]
+fn arm_24_a_surface_chapter_that_stops_citing_the_reference_is_reported() {
+    // The shipped `reading.md`, with the citation removed — the state this leaf found it in, when the
+    // chapter pointed at the grammar and nothing anywhere in the book pointed at the reference.
+    let chapters = edited(
+        "docs/book/src/reading.md",
+        "`docs/semantics/reference.md` says what a well-formed description *is worth*",
+        "the reference says what a well-formed description *is worth*",
+    );
+    let wrong = surface_pointer_violations(REFERENCE, &chapters);
+    assert_eq!(
+        wrong.len(),
+        1,
+        "expected only reading.md to be reported; got:\n{}",
+        wrong.join("\n\n")
+    );
+    assert!(
+        wrong[0].contains("docs/book/src/reading.md"),
+        "the violation does not name the chapter:\n{}",
+        wrong[0]
+    );
+    assert!(
+        wrong[0].contains("read-malformed-number"),
+        "the violation does not say which rendered diagnostic put the chapter in the population:\n{}",
+        wrong[0]
+    );
+}
+
+#[test]
+fn arm_25_a_chapter_citing_only_the_grammar_is_reported() {
+    // The other half of the population: a chapter that renders nothing but already names one of the
+    // two normative documents, so the "they travel together" rule is pinned independently of §4.
+    let chapters = one_chapter("The surface syntax is defined by `docs/semantics/grammar.md`.\n");
+    assert_reported(
+        &surface_pointer_violations(REFERENCE, &chapters),
+        1,
+        &["sibling normative document", "docs/semantics/reference.md"],
+    );
+}
+
+#[test]
+fn arm_26_a_surface_pointer_leg_with_no_population_is_reported() {
+    // Non-vacuity: a book with no surface chapter at all would otherwise pass by comparing nothing,
+    // which is the empty-set fixed point `M1.12.3` measured the census nearly falling into.
+    let chapters = one_chapter("A chapter about the command line, citing no normative document.\n");
+    assert_reported(
+        &surface_pointer_violations(REFERENCE, &chapters),
+        1,
+        &["no population and proves nothing"],
     );
 }
