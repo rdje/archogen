@@ -145,6 +145,7 @@ justifies the split — the rows below appear as that happens.
 - [`decision_emulator-independence-retained.md`](docs/decisions/decision_emulator-independence-retained.md)
 - [`decision_findings-for-director-review.md`](docs/decisions/decision_findings-for-director-review.md)
 - [`decision_priority-comparison-direction.md`](docs/decisions/decision_priority-comparison-direction.md)
+- [`decision_push-cadence.md`](docs/decisions/decision_push-cadence.md)
 - [`decision_repository-boundary-read-only.md`](docs/decisions/decision_repository-boundary-read-only.md)
 - [`decision_runtime-contract-gaps.md`](docs/decisions/decision_runtime-contract-gaps.md)
 - [`decision_s0-retirement.md`](docs/decisions/decision_s0-retirement.md)

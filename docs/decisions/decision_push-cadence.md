@@ -1,0 +1,57 @@
+# Push cadence: `N = 400` commits ahead of `origin/main`
+
+- **Type:** `decision`
+- **Date:** `2026-09-28`
+- **Status:** `active`
+- **Owner / source:** director ruling, `2026-09-28`, in answer to "what is N in this project?" — which
+  had no answer: the layer-A template provides the field and nobody had ever filled it in
+
+## The decision
+
+Push when the branch reaches **400 commits** ahead of `origin/main`. The threshold lives in **one
+machine-readable place** and is reported by a check, so the number has a single producer rather than
+a copy in every document that mentions it (`PROGRAM.23` owns building that; until it lands, the
+number is recorded here and in `MEMORY.md`'s layer-A field).
+
+No push happens without the director's explicit authorization — this decision sets *when a push is
+due*, not a standing permission to perform one.
+
+## Why
+
+`MEMORY_ARCHITECTURE.md` gives the rationale and no number: "**Push regularly** — the remote is your
+crash insurance; an unpushed commit dies with the machine" (`:239`), "The single point of failure is
+**not committing / not pushing**" (`:432`), and layer 1 survives a machine loss only because "it's
+committed, and pushed it's off-machine" (`:57`). Its resume-pointer template even carries the slot —
+`:193`, `(ahead of origin: <N>; push at ~<threshold>)` — and archogen left it empty, so the cadence
+existed only as an operator instruction (batch BWFSC, default 100 slices) that the PNT loop can never
+trigger, because PNT has no fixed BWFSC by definition. Measured consequence: the branch went
+unpushed from `32e6b14` (`2026-09-13`) at roughly 4.9 commits/day.
+
+**The recommendation put to the director was different, and is recorded so the choice is visible
+rather than silent:** `25` commits **or 7 days, whichever comes first**. The reasoning was that crash
+insurance scales with *elapsed time*, not with commit count — a fixed N halves the exposure window if
+the rate doubles and never fires at all if work stalls — and that at the measured rate `400` is
+roughly **82 days** of work existing only on one volume, which is what `MEMORY_ARCHITECTURE.md:104`
+calls "survives nothing". The director chose `400`. That is a legitimate call: it trades durability
+against push overhead and review churn, and the trade is the director's to make. It is recorded here
+so a future session does not re-litigate it, and so the number is not mistaken for a measurement.
+
+## How to apply
+
+- **The threshold is one number with one producer.** `PROGRAM.23` puts it where a check can read it
+  and has `MEMORY.md` report it, rather than letting `400` be retyped into every document that
+  mentions pushing — which is precisely the defect `M1.23`, `M1.24` and `S0.8` each fixed, and
+  [[a-moved-measurement-needs-a-census-of-its-copies]] is the card. An ungated threshold is prose:
+  [[a-rule-only-in-the-prompt-is-enforced-nowhere]].
+- ⛔ **The check must not be able to deadlock the repository.** A hard gate at `N` that refuses
+  commits would strand the work it is meant to protect, and the remedy it demands — push — has its own
+  precondition: `COMMIT.md` step 2 requires `make integration` before a push, which currently **fails**
+  on the emulator step. So at `N`, a blocking check plus a red integration tier means the repository
+  can neither commit nor push. `PROGRAM.10` (reclassify the emulator step per §14.3's quarantine
+  clause) must therefore land **before** `PROGRAM.23`'s check is given teeth, or the check must report
+  loudly without blocking until it has.
+- **The live count is never written down.** It moves with every commit, so documents point at
+  `git rev-list --count origin/main..HEAD` instead of quoting a number — the idiom `MEMORY.md`
+  already uses. This record states the *threshold*, which only moves by decision.
+- Reaching `N` is a prompt to push, not an automatic push. Read `make integration` first, and if it
+  reports `incomplete`, read what it names before deciding to proceed (§14.3).

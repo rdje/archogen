@@ -37,7 +37,7 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM`
   Status: `active`
   Goal: own the program spine
-  Children: `PROGRAM.1` … `PROGRAM.22`, plus `PROGRAM.1.1` and `PROGRAM.2.1`
+  Children: `PROGRAM.1` … `PROGRAM.23`, plus `PROGRAM.1.1` and `PROGRAM.2.1`
 
 - ID: `PROGRAM.1`
   Status: `done`
@@ -812,6 +812,35 @@ mdBook that is the director's window into the project.
   new rule); `make gate` → `=== all doctrines green ===` over 13 checks, `exit=0`.
   Commit: `ARCHOGEN-PROGRAM-0067 (leaf PROGRAM.22)`
 
+- ID: `PROGRAM.23`
+  Status: `pending`
+  Goal: make the ruled push cadence **enforced rather than prose** — one machine-readable threshold, a
+  check that reports the live count against it, and `MEMORY.md`'s layer-A field filled in. Ruled
+  `2026-09-28` at `N = 400` commits ahead of `origin/main`; see [[decision_push-cadence]].
+  Reproduce / issue: `MEMORY_ARCHITECTURE.md:193` provides the slot — `(ahead of origin: <N>; push at
+  ~<threshold>)` — and archogen never filled it. `grep -rniE 'rev-list --count|origin/main|
+  push.threshold|ahead of origin' scripts/*.sh xtask/src/main.rs` → **no match**, so nothing mechanical
+  has ever read a threshold. The cadence existed only as an operator batch instruction (BWFSC, default
+  100 slices) that the PNT loop can never trigger, because PNT has no fixed BWFSC by definition; the
+  branch went unpushed from `32e6b14` (`2026-09-13`) at ≈4.9 commits/day. Fourth instance in a week of
+  a rule that lives only in prose — [[a-rule-only-in-the-prompt-is-enforced-nowhere]].
+  Acceptance: the threshold has **one** producer, a machine-readable location the check reads, with
+  `MEMORY.md` *reporting* it rather than restating it and no document carrying a second copy of the
+  number; the check reports the live `git rev-list --count origin/main..HEAD` against the threshold and
+  is registered in `TOOLBOX.md` and `DOCTRINE_ENFORCEMENT.md`'s E1 list; it arrives with repeatable
+  `--self-test` RED arms to `PROGRAM.18`'s standard rather than joining its backlog, including an arm
+  at exactly the threshold and one above it; the **live count appears in no tracked document**, since
+  it moves with every commit; and ⛔ it **cannot deadlock the repository** — a blocking verdict at `N`
+  while `make integration` fails would leave the tree able neither to commit nor to push, because
+  `COMMIT.md` step 2 requires `make integration` before a push and that tier currently fails on the
+  emulator step. So this leaf is sequenced **after `PROGRAM.10`** reclassifies that step, or ships as a
+  loud non-blocking report until it has.
+  Priority: **medium** — it makes a director ruling durable and observable, and it is the mechanism
+  that stops the cadence becoming the next rule that exists only in a prompt. Behind `PROGRAM.10` for
+  the deadlock reason above.
+  Verification: `pending`
+  Commit: `pending`
+
 - ID: `PROGRAM.10`
   Status: `pending`
   Goal: run the **integration** tier in CI — provision `mdbook` and `qemu-system-riscv64` on the
@@ -835,8 +864,9 @@ mdBook that is the director's window into the project.
   because `COMMIT.md` step 2 treats the two differently: it explicitly permits proceeding past
   **incomplete** after reading what it names ("*not* a pass and *not* a failure: nothing broke, and
   something could not be run"), and it does **not** permit proceeding past **failed**. So the branch
-  is 73 commits ahead of `origin/main` (`32e6b14`, `2026-09-13`) over a *classification*, not over a
-  broken build.
+  has been unpushed since `origin/main`'s `32e6b14` (`2026-09-13`) over a *classification*, not over
+  a broken build — `git rev-list --count origin/main..HEAD` for the live number, which moves with
+  every commit and is therefore deliberately not written down here.
   ⭐ **And §14.3 already supplies the mechanism, unused.** "A required tool skipped or unavailable is
   reported as such, not a passed check. Quarantine requires a named issue, owner, affected claim, and
   bounded scope." The runner already has the vocabulary — `Outcome::{Passed, Failed, Unavailable,
@@ -1063,6 +1093,8 @@ roadmap item X live?".
 | 8 | `PROGRAM.15` | `pending` | a feedback register row that contradicts its own issue sub-tree passes every gate today; five state transitions in six commits held only by hand-editing and a manual census |
 | 9 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
 | 10 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with |
+| 11 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
+| 12 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
 
 `PROGRAM.16` is closed: the claim-verification policy is adopted as `docs/CLAIM_VERIFICATION.md`,
 copied verbatim and diff-verified against its read-only source, restated in this project's terms as
@@ -1098,11 +1130,34 @@ what the handoff rule says it means.
 
 ## Open Questions
 
-- None blocking the frontier.
+- **What is the push cadence?** The layer-A template provides the field — `MEMORY_ARCHITECTURE.md:193`,
+  `(ahead of origin: <N>; push at ~<threshold>)` — and `MEMORY.md` has never filled it in. Nothing
+  mechanical reads it: `grep -rniE 'rev-list --count|origin/main|push.threshold|ahead of origin'
+  scripts/*.sh xtask/src/main.rs` → no match. The doctrine is qualitative only: "**Push regularly** —
+  the remote is your crash insurance; an unpushed commit dies with the machine" (`:239`), "The single
+  point of failure is **not committing / not pushing**" (`:432`). The only numeric threshold anywhere
+  is the operator's *batch* rule (BWFSC, default 100 slices) — and the PNT loop has no fixed BWFSC by
+  definition, so under PNT that trigger can never fire. That is the structural reason the branch went
+  unpushed from `origin/main`'s `32e6b14` (`2026-09-13`) at ≈4.9 commits/day — `git rev-list --count
+  origin/main..HEAD` for the live number, which is deliberately not written down because it moves
+  with every commit.
+  **Ruled `2026-09-28`: `N = 400` commits.** See Decisions below and
+  [[decision_push-cadence]]. The recommendation put to the director was `25` commits or `7` days,
+  whichever came first; `400` was chosen, and the consequence at the measured rate is recorded in the
+  decision rather than argued again here. Enforcement is `PROGRAM.23`, because an ungated threshold
+  is the unenforced-prose class `docs/knowledge/a-rule-only-in-the-prompt-is-enforced-nowhere.md`
+  describes — and `MEMORY.md`'s template field now carries the number.
 
 ## Blockers
 
-- None.
+- **The branch cannot be pushed under `COMMIT.md`'s own precondition**, and the cause is a verdict
+  *classification*, not a broken build: `make integration` exits `1` (`failed`) on the emulator step
+  because `QEMU_VERSION_PINNED=none-yet`, while `COMMIT.md` step 2 permits proceeding past
+  `incomplete` (exit `20`) after reading what it names, and does not permit proceeding past `failed`.
+  `PROGRAM.10` owns the reclassification (§14.3's quarantine clause, with the runner's existing
+  `NotBuilt { owner, note }` vocabulary); `M2.8` owns removing the cause. **Not urgent**: the cadence
+  is now ruled at `400` commits and the branch is far below it, so no push is due — but it must be
+  cleared before the threshold is reached, or the cadence becomes unpayable exactly when it fires.
 
 ## Verification Log
 

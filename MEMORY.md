@@ -39,11 +39,11 @@
   *first* checklist in a tree file), `.18`, `.13`, `.15`, `.17`, `.20`, then `.5`, `.6`, `.9`, `.10`.
 - **Baseline to beat:** `make focused` exit `0` at the pin — **430 passed, 0 failed** over 36 suites.
   Tiers: `focused` per commit, `integration` before a push; exit **20 = incomplete** is not a pass —
-  read what it names (missing tools are owned by `docs/targets/first-target.md`, tree `M5`; ISA and
-  target specifications come read-only from the `chipdoc` corpus via `ARCHOGEN_CHIPDOC_ROOT` —
-  `docs/decisions/reference_external-document-source-chipdoc.md`).
+  read what it names (missing tools: `docs/targets/first-target.md`, tree `M5`; ISA/target specs:
+  read-only `chipdoc` via `ARCHOGEN_CHIPDOC_ROOT`, `docs/decisions/`).
+  **Push cadence: `400` commits ahead of `origin/main`** — ruled `2026-09-28`,
+  `docs/decisions/decision_push-cadence.md`; `git rev-list --count origin/main..HEAD` for the live
+  number; `PROGRAM.23` makes it enforced rather than prose.
   ⚠️ `make integration` is **red** on one step, `emulator`: QEMU 11.1.1 is installed but no release is
-  pinned in `targets/riscv-virt-up.env`, so `TARGET_VERIFIED=no` — `M2.8` owns it, and it is why this
-  branch is many commits ahead of `origin/main` rather than pushed (`git rev-list --count
-  origin/main..HEAD` for the live number). Artifact cleanup last ran `2026-09-27`; trigger and record
-  in `docs/ARTIFACT_CLEANUP.md`.
+  pinned in `targets/riscv-virt-up.env`, so `TARGET_VERIFIED=no` — `M2.8` owns it. Artifact cleanup
+  last ran `2026-09-27`; trigger and record in `docs/ARTIFACT_CLEANUP.md`.

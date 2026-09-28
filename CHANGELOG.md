@@ -4,6 +4,47 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the director ruled a push cadence, and the slot for it had never been filled
+
+`ARCHOGEN-PROGRAM-0069` (docs). No code changed.
+
+- **Ruled `2026-09-28`: push at `400` commits ahead of `origin/main`.** Recorded as
+  `docs/decisions/decision_push-cadence.md` (+ its `INDEX.md` row), and `MEMORY.md`'s layer-A block now
+  carries it. `MEMORY_ARCHITECTURE.md:193` has provided the slot since the spine was adopted —
+  `(ahead of origin: <N>; push at ~<threshold>)` — and archogen never filled it in.
+- "What is N in this project?" had no answer, measured rather than assumed:
+  `grep -rniE 'rev-list --count|origin/main|push.threshold|ahead of origin' scripts/*.sh
+  xtask/src/main.rs` → **no match**, so nothing mechanical has ever read a threshold. The doctrine is
+  qualitative only ("**Push regularly** — the remote is your crash insurance; an unpushed commit dies
+  with the machine"). The sole numeric threshold anywhere was the operator's *batch* rule (BWFSC,
+  default 100 slices), which the PNT loop can never trigger because PNT has no fixed BWFSC by
+  definition.
+- ⭐ **The recommendation was `25` commits or `7` days, whichever came first, and the record says so.**
+  Crash insurance scales with elapsed time, not commit count: a fixed N halves the window if the rate
+  doubles and never fires at all if work stalls. At the measured ≈4.9 commits/day, `400` is roughly
+  **82 days** of work on one volume — what `MEMORY_ARCHITECTURE.md:104` calls "survives nothing". The
+  director chose `400`, which is a legitimate trade of durability against push overhead and review
+  churn; it is recorded so a future session neither re-litigates it nor mistakes the number for a
+  measurement.
+- ⛔ **The check that enforces it must not be able to deadlock the repository**, and that hazard is
+  recorded in `PROGRAM.23` now rather than discovered at 400: a blocking verdict at N while
+  `make integration` fails leaves the tree able neither to commit nor to push, because `COMMIT.md`
+  step 2 requires `make integration` before a push. `PROGRAM.23` is therefore sequenced behind
+  `PROGRAM.10`, or ships as a loud non-blocking report until it has.
+- `PROGRAM.10` gained the measured reason it now owns the push precondition: the emulator step's
+  verdict **changed shape** when QEMU was installed — `Unavailable` → tier `incomplete` → exit `20`
+  became `Failed` → tier `failed` → exit `1`, because `--check` now reaches the unpinned-config
+  branch. `COMMIT.md` permits proceeding past `incomplete` after reading what it names, and does not
+  permit proceeding past `failed`. §14.3's quarantine clause and the runner's existing
+  `Action::NotBuilt { owner, note }` — five steps already use it under `PROGRAM.9` — supply the fix.
+- Two stale `73 commits` counts written earlier today were replaced with the **live-number idiom**
+  rather than retyped to `74`: the count moves with every commit, so any written copy is false by the
+  next one. `MEMORY.md` already pointed at `git rev-list --count origin/main..HEAD`; `PROGRAM.10` and
+  this tree's Open Questions now do too.
+- **Validation:** docs-only; `make gate` → `=== all doctrines green ===` over 13 checks;
+  `KNOWLEDGE_MAP.md` regenerated through its published generator (one added row). `MEMORY.md` stays at
+  its 50-line budget. Baseline unchanged at **430 passed / 0 failed**.
+
 ## archogen — the director ruled: the independent emulator stays, and `M2.8` is reframed
 
 `ARCHOGEN-PROGRAM-0066` (docs). No code changed.
