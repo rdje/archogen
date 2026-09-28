@@ -701,6 +701,49 @@ mdBook that is the director's window into the project.
     not the repository's scratch directories, and `git grep -ln 'app-data' -- docs/book` → no match,
     `rc=1`.
 
+  ### Run `2026-09-28` — the second cleanup, under this leaf because the obligation is recurring
+
+  A new leaf per run would flood this tree with one entry per day forever, and the mechanism this leaf
+  built is precisely a *latest-only* record with a standing owner. So runs append here and
+  `docs/ARTIFACT_CLEANUP.md` stays the answer to "is one due?". Status stays `done`: the leaf's goal was
+  the mechanism, and it works — this run is the mechanism running.
+
+  - **Trigger, measured rather than assumed.** `docs/ARTIFACT_CLEANUP.md` recorded `2026-09-27` and the
+    session date is `2026-09-28`; the record carries a date and not a time, so "more than 24 hours old"
+    is undecidable at that granularity. Cleaned, because the instruction's own tie-break is to clean.
+  - **Inventory before touching anything.** `target` 873 MB, of which `target/tmp` 17 MB and
+    `target/debug/incremental` 614 MB; `.app-data` 2.2 GB (`target-2ac834913` 2.0 GB,
+    `cargo-home` 132 MB, `pgen-generated-before-remeasure` 18 MB); `docs/book/book` 2.3 MB; `build/`
+    empty; **715** `.bin` files and **0** `.log` files under `target`.
+  - **Deleted, each with a tracked regeneration path.** The test scratch under `target/tmp` — `f28`
+    (14 MB), `s0-build` (2.8 MB), `s0-oracle`, `s0-provenance`, `s0-reader`, `s0-build-library.eadl` —
+    all recreated by `cargo test`; and one stale `…/archogen_cli-…/s-…-working` incremental directory,
+    the residue of an interrupted build. `target` 873 MB → 855 MB, `.bin` count 715 → 693. **Residue
+    census: all seven paths report `gone`, none `STILL PRESENT`.** `target/tmp/m112` (44 KB) was
+    retained because it is the *active* literal-probe instrument of the session doing the cleanup, not
+    residue.
+  - ⛔ **Two deletions this run did not make, both after investigation rather than by policy.**
+    1. `.app-data/pgen-generated-before-remeasure` — independently re-investigated and re-retained.
+       `git grep -rn 'pgen-generated-before-remeasure'` → `LS-004`'s `remeasure.sh:225-227`, which
+       treats an existing backup as a reason to **keep** it and prints `a backup already exists … —
+       kept`. Deleting it would not merely lose the "before" digest this leaf's checklist already
+       recorded; it would change what a *frozen* instrument prints on its next run.
+    2. `target/debug/incremental`, 614 MB and 684 of the 693 remaining `.bin` files. Not residue:
+       measured at most **four** `s-*` generations per crate across 121 crate directories, which is
+       cargo's own retention, and its "regeneration path" is a full rebuild of a 37-suite workspace.
+       The standing instruction says to *check* that directory, and checking it produced a reason to
+       keep it — deleting live cache to satisfy a word count would slow every subsequent edit loop
+       without removing anything stale.
+  - **Verified cold, which is the only verification that means anything here.** `make focused` →
+    `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built` with the scratch it
+    consumes already deleted, so the F28/S0 suites recreated what they need. That is `S0.7`'s lesson
+    applied rather than remembered: the first run of the previous cleanup *failed* on exactly this, and
+    a warm re-run would have hidden it again. `bash scripts/check_doctrines.sh` → `=== all doctrines
+    green ===`. `git status --porcelain` after the deletions → empty, so nothing tracked was touched.
+  - **Lockstep.** `docs/ARTIFACT_CLEANUP.md` overwritten with this run only; this section;
+    `MEMORY.md`, `LIVE_STATUS.md`, `CHANGELOG.md`. No frontier move — the frontier stays where `M1`
+    left it — and no book change, for the reason recorded above.
+
 - ID: `PROGRAM.20`
   Status: `pending`
   Goal: a **carried-figure register**, so a figure no measurement watches is a breach at the commit
@@ -1174,6 +1217,7 @@ what the handoff rule says it means.
 | `2026-09-27` | `PROGRAM.12` | `git check-ignore -v`, `git status --porcelain`, `git ls-files .qwen`, `make gate` | `ignore matches at .gitignore:31; status carries no untracked row; 0 tracked paths ignored; 13/13 green` |
 | `2026-09-27` | `PROGRAM.16` | the policy copied and the copy **diff-verified** against its read-only source rather than read; the §7 adoption sweep run against this repository; all three entrypoints re-grepped afterwards; tiers and the gate re-run | body `diff -q` identical, digest `9f99df25209c43af` on both sides; 406 lines / 27 263 bytes; sweep found 18 checks / 8 with RED arms / **10 without** → `PROGRAM.18`; `AGENTS.md` line 11 carries an explicit list, so it was edited after the leaf's first draft claimed otherwise; 13 doctrines green; `make focused` exit `0`, 421 passed / 0 failed |
 | `2026-09-27` | `PROGRAM.19` | the artifact inventory measured before and after; a residue census over every deleted path; the retained vendor build, one instrument self-test, the focused tier and the doctrine gate all re-run afterwards | ≈1.4 GB released: `.app-data` 3.5 GB → 2.2 GB, `target` 815 MB → 799 MB (then 816 MB once the suite recreated its scratch); all 7 deleted paths `gone`; `bins` → both binaries resolve; `reference` → the documented two-form result; `LS-002 --self-test` → `9/9`; 13 doctrines green; `make focused` exit `0`, 421 passed / 0 failed. ⛔ The first post-cleanup tier run **failed** and was reproduced, not dismissed → `S0.7` |
+| `2026-09-28` | `PROGRAM.19` (second run) | the trigger read off `docs/ARTIFACT_CLEANUP.md` rather than assumed; a full inventory taken before any deletion; a residue census over every deleted path; `git grep` for each retention candidate's consumers; the focused tier re-run **cold**, with the scratch it consumes already deleted | ≈18 MB released: `target` 873 MB → 855 MB, `.bin` files 715 → 693, all 7 deleted paths `gone`; **2.2 GB retained on evidence** — `pgen-generated-before-remeasure` is read by `LS-004`'s `remeasure.sh:225-227`, and `target/debug/incremental` holds at most four generations per crate across 121 directories, which is cargo's retention and not residue; `make focused` → `passed — 3 / 0 / 0` cold; 13 doctrines green; `git status --porcelain` empty after the deletions |
 
 ## Commit Log
 
@@ -1185,6 +1229,7 @@ what the handoff rule says it means.
 | `PROGRAM.12` | `ARCHOGEN-PROGRAM-0050 (leaf PROGRAM.12)` | harness-local scratch ignored; the stale `.gitignore` pointer to a nonexistent shared `SETUP.md` corrected; `PROGRAM.13`/`.14` logged from the census |
 | `PROGRAM.16` | `ARCHOGEN-PROGRAM-0058 (leaf PROGRAM.16)` | the claim-verification policy adopted as `docs/CLAIM_VERIFICATION.md` — copied verbatim and diff-verified, restated locally per its own §7.6, registered in all three entrypoints; its §7.4 sweep found ten controls with no RED arm → `PROGRAM.18` |
 | `PROGRAM.19` | `ARCHOGEN-PROGRAM-0060 (leaf PROGRAM.19)` | ≈1.4 GB of regenerable artifacts released and `docs/ARTIFACT_CLEANUP.md` started, so "is a cleanup due?" is answerable; the cleanup's own verification exposed `S0.7`; one unexpected item investigated and flagged rather than deleted |
+| `PROGRAM.19` | `ARCHOGEN-PROGRAM-0074 (leaf PROGRAM.19, second run)` | ≈18 MB more released, and **2.2 GB retained on evidence**: a frozen instrument's backup, which `remeasure.sh` treats an existing copy of as a reason to keep it, and cargo's own incremental cache. Runs append to the standing owner rather than becoming one leaf per day |
 
 ## Changelog
 

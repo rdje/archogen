@@ -4,6 +4,29 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the second artifact cleanup, and the two deletions it declined to make
+
+`ARCHOGEN-PROGRAM-0074` (leaf `PROGRAM.19`, recorded as a run under the standing owner rather than a
+new leaf — one leaf per day forever is not a task tree).
+
+- **Deleted, each with a tracked regeneration path:** the test scratch under `target/tmp` (`f28`,
+  `s0-build`, `s0-oracle`, `s0-provenance`, `s0-reader`, `s0-build-library.eadl`), all recreated by
+  `cargo test`, and one stale `-working` incremental directory left by an interrupted build. `target`
+  873 MB → 855 MB; `.bin` count 715 → 693; residue census reports all seven paths `gone`.
+- ⛔ **`.app-data/pgen-generated-before-remeasure` was investigated and kept.** It looks like a
+  superseded snapshot. It is not: `LS-004`'s `remeasure.sh` treats an existing backup as a reason to
+  keep it and prints `a backup already exists … — kept`, so deleting it would change what a **frozen**
+  instrument prints on its next run — not just lose a digest.
+- ⛔ **`target/debug/incremental` (614 MB, most of the repository's `.bin` files) was measured and
+  kept.** At most four `s-*` generations per crate across 121 crate directories is cargo's own
+  retention, not residue; its "regeneration path" is a full rebuild of a 37-suite workspace. The
+  instruction says to *check* that directory, and checking it produced a reason to keep it.
+- **Verified cold**, which is the only verification that means anything here: `make focused` →
+  `passed — 3 passed, 0 failed, 0 unavailable` with the scratch it consumes already deleted. The
+  previous cleanup's first run failed on exactly this and a warm re-run would have hidden it again —
+  `S0.7`'s lesson applied rather than remembered. `=== all doctrines green ===`; nothing tracked
+  touched, `git status --porcelain` empty after the deletions.
+
 ## archogen — the literal space now has one definition, and three surfaces agreeing on it
 
 `ARCHOGEN-M1-0073` (leaf `M1.12.2`).
