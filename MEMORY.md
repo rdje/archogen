@@ -13,12 +13,12 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M1` → frontier `M1.13.3`. `PROGRAM` `.11`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
-- **Next action:** **`M1.13.3`** — put the version identifier on the surface. It **cannot ride the
-  comment-header convention**: §3 drops comments from canonical form and §12 M4 hashes canonical text,
-  so it must be a **form** — a grammar change free only before `.4` writes the baseline. Decidable only
-  here: what **absence** of the identifier means, and `M1.13.1`'s routed question (an invisible
-  character outside Unicode `Cc`). Then `.4` (suite + baseline), `.5` (the freeze gate).
+- **Active tree:** `PROGRAM` → `PROGRAM.21`. Then `M1` → `M1.13.3`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
+- **Next action:** **`PROGRAM.21`** — make `TASK-ACCEPTANCE` leaf-scoped. ⛔ **The design is pinned by
+  measurement on its leaf; do not re-derive it.** Owner = `TASK_ACCEPTANCE_LEAF`, else the `(leaf X)`
+  token in the pending message's subject (new seam `.doctrine/commit_message_file`), else **refuse** —
+  never fall back to the first checklist in the file, because that fallback *is* the defect. Nine
+  throwaway-repo `--self-test` arms and both resume traps are there. Then `M1.13.3`.
 - ⛔ **`M1.13.2` settled F-F, and both measurements it was routed on were false** — a census figure with
   an unstated scope and a radix-scoped maximum, restated in **7** places, and an address argument true
   of *physical* addresses only. The decision stands (exact signed 64-bit, widening deferred as

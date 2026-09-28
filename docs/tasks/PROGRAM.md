@@ -789,7 +789,7 @@ mdBook that is the director's window into the project.
   Commit: `pending`
 
 - ID: `PROGRAM.21`
-  Status: `pending`
+  Status: `active`
   Goal: **`TASK-ACCEPTANCE` examines only the first acceptance checklist in a tree file, so for every
   leaf after the first it verifies nothing** — and prints a success message asserting the opposite.
   Make the check leaf-scoped, and arm it.
@@ -854,6 +854,69 @@ mdBook that is the director's window into the project.
   one, because it teaches an author that the box they skipped did not matter. Scheduled **ahead of
   `PROGRAM.18`**, which would otherwise spend effort arming a control that reads the wrong boxes —
   `PROGRAM.18` keeps the other nine.
+
+  ### Design pinned by measurement `2026-09-29` — implementation NOT started, and this is the resume point
+
+  ⛔ **The obvious design is dead, measured rather than argued.** Identifying the owning leaf from
+  *which leaf sections a commit's tree-file diff touches* was priced against the last seven code
+  commits, comparing the touched set with the `(leaf X)` token in each subject:
+  ```text
+  3a6bbb9 M1.13.2 → touched M1.13,M1.13.2                  DISAGREE
+  cd355ef M1.13.1 → touched M1.13.1,M1.26                   DISAGREE
+  e4212c4 M1.12.5 → touched M1,M1.12,M1.12.5,M1.26,PROGRAM.24  DISAGREE
+  64e35c4 M1.12.4 → touched M1.12.4                         agree
+  951f6c0 M1.12.3 → touched M1.12.3,M1.12.4,M1.12.5         DISAGREE
+  690f5c6 M1.12.2 → touched M1.12.2,PROGRAM.20              DISAGREE
+  29154da M1.12.1 → touched M1.12.1,M1.12.2                 DISAGREE
+  → agree 1 / disagree 6 / no-map 0
+  ```
+  A commit legitimately touches its own leaf, its parent, the frontier, and every leaf it routes a
+  finding to, so the touched set is not the owner and narrowing it (e.g. "touched sections that carry a
+  checklist") still leaves `M1.13.2` and `M1.13` both live. **Do not re-derive this; it is measured.**
+
+  ⭐ **The chosen identification chain, and why it fails closed:**
+  1. `TASK_ACCEPTANCE_LEAF=<ID>` — for a commit made with no message file (an IDE dialog, `-m`).
+  2. the **subject** of the pending commit message, via a new seam `.doctrine/commit_message_file`
+     (one line, default `git_message_brief.txt`) so the template stays project-neutral. `COMMIT.md`
+     step 4 already writes that file before step 6's `git commit -F`, so it exists at `pre-commit` time.
+  3. ⛔ **otherwise REFUSE.** Do not fall back to the first checklist in the file — that fallback *is*
+     the defect. A green verdict about a leaf nobody claimed is worse than no verdict, because the
+     author reads it as protection. The refusal must name what it tried and both ways to satisfy it.
+     Consequence to state in the header: `make gate` with staged code and no message file now fails,
+     which enforces the mandated workflow rather than quietly excusing its absence.
+
+  **Scoping mechanism:** slice the leaf by *exact string* match on ``- ID: `<owner>` `` (not a regular
+  expression — an id's `.` would match another leaf's), running to the next flush-left `- ID: ` or
+  `## `, then run the existing three-box awk over that slice alone. **Success message must name what it
+  read** — `leaf <ID> in <file>` — because criterion 2 is that the message be true of what was examined.
+  Also refuse when the named leaf is in **no staged** tree file, which catches a stale message file
+  left over from a previous commit.
+
+  **`--self-test` arms, each in a throwaway `git init` repo under `mktemp -d` so the real index is never
+  touched** (the house pattern in `check_book_anchors.sh` cannot be copied directly, because this check
+  reads `git diff --cached`): (1) first leaf complete, second leaf owns the change and has no checklist
+  — the measured defect — must **fail** naming the second; (2) same fixture, complete leaf named, must
+  **pass**, proving arm 1 fails for the right reason; (3) named leaf with unticked boxes fails;
+  (4) no owner identifiable fails closed; (5) a stale message file naming an unstaged leaf fails;
+  (6) the env override beats the message file; (7) `TEMPLATE.md` staged beside a complete leaf still
+  passes; (8) code with no leaf staged still fails with `NO owning task-tree leaf`; (9) the OK message
+  names the leaf it read.
+
+  ⚠️ **Two traps for whoever resumes.** (a) The new check gates **its own** commit: the hook runs the
+  working-tree script, so this leaf must carry ticked, evidence-backed `ROOT CAUSE` / `ADDRESSED` /
+  `NO REGRESSION` boxes before the commit can land — which is the right self-test, not an obstacle.
+  (b) `ADDRESSED` should re-run the two historical scenarios (`cd355ef`, `3a6bbb9`) as fixtures rather
+  than asserting from memory, since those are the commits the defect was measured on.
+
+  ⛔ **A full draft was written and then REVERTED, deliberately, rather than committed unverified.**
+  It parsed (`bash -n` clean) but its `--self-test` was never run, and committing an untested gate that
+  fails closed would have blocked every subsequent code commit. A copy sits at
+  `target/tmp/p21/check_task_acceptance.draft.sh` — **scratch, and the next artifact cleanup will
+  delete it**, so the design above is the durable artifact and the draft is only a head start.
+  `scripts/check_task_acceptance.sh` is byte-identical to `HEAD` (`diff -q` against
+  `git show HEAD:…` silent). Lockstep owed with the fix: `DOCTRINE_ENFORCEMENT.md` §4's description of
+  this control, `.doctrine/README.md` for the new seam, `TOOLBOX.md`, and `PROGRAM.18`'s note that ten
+  controls lack a RED arm (this one gains nine).
   Verification: `pending`
   Commit: `pending`
 
