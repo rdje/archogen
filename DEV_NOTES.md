@@ -1,5 +1,43 @@
 # DEV_NOTES.md
 
+## _(2026-09-28)_ — a normative table is only as independent as its expected values
+
+- `M1.12.1`. `docs/semantics/reference.md` states what a literal is *worth* — the half
+  `docs/semantics/grammar.md` cannot carry — and `crates/eadl-front/tests/reference.rs` reads its
+  tables out of the document and runs every row against the frontend. Same shape as `M1.11`: the
+  document is the source, the test reads it, so the prose cannot drift from the code it describes.
+- ⭐ **The rule that made it evidence rather than decoration: derive each expected value, never
+  transcribe it.** Every row's value came from the literal's arithmetic meaning (`0x1000_0000` is
+  16^7), from §7.4, or from a recorded decision. A table filled in by printing what the reader
+  produced would have been green on the first run and worthless forever after — the reader checking
+  the reader is the unfalsifiability `M1.11` existed to end, one level up. Measured payoff: the first
+  run reported **four violations over three real defects** (`0x_10` read as 16, canonical form
+  emitting a raw carriage return, `i64::MIN` refused as overflow). A transcribed table finds nothing,
+  by construction.
+- ⛔ **Two implementations agreeing over the inputs you ship is not agreement over the language.**
+  `M1.11`'s conformance check compares a recognizer derived from the EBNF with the reader, over the
+  corpus *and* 23 probes, and it is mutation-tested. It still missed three divergences, because all
+  three live in a literal form no description in the repository contains: `git grep -nE
+  '0X[0-9a-fA-F]'`, `git grep -nE '0[xX]_'` and `git grep -nF '\0' -- '*.eadl'` each return nothing.
+  Mutation testing asks *"what would a wrong implementation do to my inputs"*; it cannot ask *"which
+  input does nobody supply"*. The population has to come from somewhere the document under test does
+  not define — here, a coverage leg whose population is the corpus; in `M1.12.2`, a probe set derived
+  from the specification's own table.
+- ⭐ **Enforce the property, not the row.** The carriage-return fix is not one row's expectation: leg 1
+  requires that *no* row's canonical text carries an ASCII control character. The next unescaped
+  control byte fails on the property instead of needing someone to have thought of a row for it. The
+  same shape is why `signed(magnitude: i128, negative: bool)` is one helper both conversion sites
+  share — the order that made `i64::MIN` unwritable can no longer be written twice.
+- ⛔ **A rule implemented in one module and not its sibling is a rule nobody owns.**
+  `crates/archogen-s0/src/provenance.rs` has escaped `'\r'` in its own `quote()` since S0; the
+  normative canonical printer did not. Nothing compared the two, because nothing stated the rule —
+  which is what a reference is for. When a fix restores a rule the project already follows elsewhere,
+  cite the sibling: it is the evidence that the rule was intended and not invented.
+- Keep two wordings when there are two mistakes. `0x` (no digits at all) and `0x_10` (a separator
+  leading the digits) now report differently, because the repairs differ; collapsing them into one
+  message to save a branch would have made the tighter rule harder to act on.
+- `promotion: declined` — recorded in the owning leaf, with the reason and the leaf that inherits it.
+
 ## _(2026-09-27)_ — the census pattern is part of the claim, and an escape clause is a gate
 
 - `M1.24`. `M1.23` swept `[0-9]+ of (the )?[0-9]+`, classified its 9 hits, and closed two stale

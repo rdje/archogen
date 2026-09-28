@@ -297,6 +297,13 @@ impl<'a> Reader<'a> {
         if self.peek() == Some(b'0') && matches!(self.peek_at(1), Some(b'x' | b'X')) {
             self.at += 2;
             let digits_start = self.at;
+            // ⛔ A hexadecimal literal must BEGIN with a digit. `_` separates digits, it does not
+            // lead them — and the decimal path below cannot begin with one either, so accepting
+            // `0x_10` made hexadecimal the one literal form whose leading character the reader did
+            // not police. It also disagreed with `docs/semantics/grammar.md`, whose `hexadecimal`
+            // production requires a `hex_digit` first; no corpus file contained the spelling, which
+            // is how the divergence stayed hidden (finding F-B, leaf `M1.12.1`).
+            let leads_with_digit = self.peek().is_some_and(|b| b.is_ascii_hexdigit());
             while self
                 .peek()
                 .is_some_and(|b| b.is_ascii_hexdigit() || b == b'_')
@@ -305,21 +312,35 @@ impl<'a> Reader<'a> {
             }
             let raw: String = self.raw[digits_start..self.at].replace('_', "");
             let end = self.offset();
-            if raw.is_empty() {
-                self.diagnostics.push(Diagnostic::error(
-                    "read-malformed-number",
-                    "`0x` with no hexadecimal digits after it",
-                    Label::new(self.span(start, end), "expected hexadecimal digits"),
-                    "write the digits, e.g. `0x1000_0000`",
-                ));
+            if !leads_with_digit {
+                let written = self.raw[start as usize..end as usize].to_string();
+                let diagnostic = if raw.is_empty() {
+                    Diagnostic::error(
+                        "read-malformed-number",
+                        "`0x` with no hexadecimal digits after it",
+                        Label::new(self.span(start, end), "expected hexadecimal digits"),
+                        "write the digits, e.g. `0x1000_0000`",
+                    )
+                } else {
+                    Diagnostic::error(
+                        "read-malformed-number",
+                        format!("`{written}` is not a hexadecimal literal"),
+                        Label::new(self.span(start, end), "a separator cannot lead the digits"),
+                        "write the digits first and separate them after, e.g. `0x1000_0000`",
+                    )
+                };
+                self.diagnostics.push(diagnostic);
                 return None;
             }
-            return match i64::from_str_radix(&raw, 16) {
-                Ok(value) => Some(Form::Integer {
-                    value: if negative { -value } else { value },
+            let value = i128::from_str_radix(&raw, 16)
+                .ok()
+                .and_then(|m| signed(m, negative));
+            return match value {
+                Some(value) => Some(Form::Integer {
+                    value,
                     span: self.span(start, end),
                 }),
-                Err(_) => {
+                None => {
                     self.diagnostics.push(Diagnostic::error(
                         "read-number-overflow",
                         "this hexadecimal literal does not fit in a 64-bit signed integer",
@@ -368,23 +389,24 @@ impl<'a> Reader<'a> {
         let end = self.offset();
         let combined = format!("{int_digits}{frac_digits}");
         let scale = u32::try_from(frac_digits.len()).unwrap_or(u32::MAX);
-        match combined.parse::<i64>() {
-            Ok(magnitude) => {
-                let value = if negative { -magnitude } else { magnitude };
-                Some(if scale == 0 {
-                    Form::Integer {
-                        value,
-                        span: self.span(start, end),
-                    }
-                } else {
-                    Form::Decimal {
-                        value,
-                        scale,
-                        span: self.span(start, end),
-                    }
-                })
-            }
-            Err(_) => {
+        let value = combined
+            .parse::<i128>()
+            .ok()
+            .and_then(|magnitude| signed(magnitude, negative));
+        match value {
+            Some(value) => Some(if scale == 0 {
+                Form::Integer {
+                    value,
+                    span: self.span(start, end),
+                }
+            } else {
+                Form::Decimal {
+                    value,
+                    scale,
+                    span: self.span(start, end),
+                }
+            }),
+            None => {
                 self.diagnostics.push(Diagnostic::error(
                     "read-number-overflow",
                     "this literal does not fit in a 64-bit signed integer",
@@ -434,6 +456,21 @@ fn is_symbol_byte(byte: u8) -> bool {
     !byte.is_ascii_whitespace()
         && !matches!(byte, b'(' | b')' | b'"' | b';')
         && !byte.is_ascii_control()
+}
+
+/// Apply a sign to a parsed magnitude and narrow it to an exact `i64`, or refuse.
+///
+/// ⛔ **The magnitude is parsed in a wider domain than the value it becomes, and the sign is applied
+/// afterwards.** The other order makes `-9223372036854775808` unwritable: its magnitude is one more
+/// than `i64::MAX`, so it overflowed before the sign could make it exactly `i64::MIN` — and the
+/// language's own rule, stated in `docs/semantics/reference.md` §1, is that every value in the 64-bit
+/// signed range is writable including both endpoints (finding F-E, leaf `M1.12.1`).
+///
+/// Refusing is the only other option: wrapping would turn an out-of-range quantity into a plausible
+/// wrong one, which §7.4's exactness requirement exists to prevent.
+fn signed(magnitude: i128, negative: bool) -> Option<i64> {
+    let signed = if negative { -magnitude } else { magnitude };
+    i64::try_from(signed).ok()
 }
 
 #[cfg(test)]
@@ -585,6 +622,76 @@ mod tests {
         let (_, diagnostics, sources) = parse("(x 99999999999999999999)");
         let rendered = diagnostics.render(&sources);
         assert!(rendered.contains("read-number-overflow"), "{rendered}");
+    }
+
+    #[test]
+    fn a_hexadecimal_literal_may_not_lead_with_a_separator() {
+        // ⛔ `0x_10` read as 16 while `docs/semantics/grammar.md` refused it: `_` separates digits,
+        // it does not lead them, and the decimal path never could. No corpus file contained the
+        // spelling, which is how the divergence stayed hidden (finding F-B, leaf `M1.12.1`).
+        let (_, diagnostics, sources) = parse("(base 0x_10)");
+        let rendered = diagnostics.render(&sources);
+        assert!(rendered.contains("read-malformed-number"), "{rendered}");
+        assert!(
+            rendered.contains("a separator cannot lead the digits"),
+            "{rendered}"
+        );
+
+        // A prefix with no digits at all keeps its own wording: it is a different mistake, and the
+        // repair an author needs is different too.
+        let (_, empty, sources) = parse("(base 0x)");
+        let rendered = empty.render(&sources);
+        assert!(
+            rendered.contains("no hexadecimal digits after it"),
+            "{rendered}"
+        );
+
+        // A separator *between* digits is still a separator.
+        let document = parse_ok("(base 0x1000_0000)");
+        assert!(matches!(
+            document.forms[0].items()[1],
+            Form::Integer {
+                value: 268435456,
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn the_whole_signed_64_bit_range_is_writable_including_its_negative_endpoint() {
+        // ⛔ `-9223372036854775808` is `i64::MIN`, and it was refused as overflow because the
+        // magnitude was parsed as an `i64` *before* the sign was applied — so the range this
+        // language claims had exactly one unwritable value (finding F-E, leaf `M1.12.1`).
+        let document = parse_ok("(x -9223372036854775808 9223372036854775807)");
+        let items = document.forms[0].items();
+        assert!(matches!(
+            items[1],
+            Form::Integer {
+                value: i64::MIN,
+                ..
+            }
+        ));
+        assert!(matches!(
+            items[2],
+            Form::Integer {
+                value: i64::MAX,
+                ..
+            }
+        ));
+        assert_eq!(
+            document.to_canonical().trim(),
+            "(x -9223372036854775808 9223372036854775807)"
+        );
+
+        // One past either endpoint is still refused rather than wrapped.
+        for literal in ["9223372036854775808", "-9223372036854775809"] {
+            let (_, diagnostics, sources) = parse(&format!("(x {literal})"));
+            let rendered = diagnostics.render(&sources);
+            assert!(
+                rendered.contains("read-number-overflow"),
+                "{literal} was not refused:\n{rendered}"
+            );
+        }
     }
 
     #[test]

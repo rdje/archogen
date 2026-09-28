@@ -23,7 +23,9 @@ grammar free of them is what lets one reader serve the boundary corpus, the S0 f
 semantic corpus without any of them leaking assumptions into it.
 
 Everything the grammar cannot carry — exactness of numbers, comment retention, canonical form,
-module semantics — is stated normatively in the language reference (leaf `M1.12`).
+module semantics — is stated normatively in the language reference,
+[`docs/semantics/reference.md`](reference.md), which is executed against the frontend the same way
+the EBNF below is.
 
 ## Notation
 
@@ -104,14 +106,24 @@ symbol_start    = symbol_char - digit ;
 | which head symbols are declarations | `docs/semantics/kinds/` | the language is extended by `defkind`, not by editing this file |
 | what a clause means | `crates/eadl-model/` | the grammar is syntax; §5.6 keeps interpretation in the engine |
 | units, quantities, contract IDs | `crates/eadl-model/src/quantity.rs` | `bit` is a symbol here and a unit there |
-| that numbers are **exact** | the language reference (`M1.12`) | a grammar cannot express "and never a float" |
-| that comments are **retained** | the language reference (`M1.12`) | a grammar says what is skipped, not what is kept |
-| canonical form | the language reference (`M1.12`) | it is a property of printing, not of parsing |
+| that numbers are **exact** | [`docs/semantics/reference.md`](reference.md) §1 | a grammar cannot express "and never a float" |
+| what each escape **denotes** | [`docs/semantics/reference.md`](reference.md) §2 | a grammar says what is shaped like an escape, not what it means |
+| that comments are **retained** | the language reference (`M1.12.4`) | a grammar says what is skipped, not what is kept |
+| canonical form | [`docs/semantics/reference.md`](reference.md) §3 | it is a property of printing, not of parsing |
+
+⚠️ **Two spellings below are being reconciled with the reference, and the reference is the authority
+on what a literal means.** `hexadecimal` spells its prefix `"0x"` where the reference admits `0X10`
+as a value, and `escape` admits `"0"` where the reference refuses `\0` as `read-bad-escape`. Neither
+spelling appears in any description the repository ships, so the conformance check below cannot reach
+them; leaf `M1.12.2` runs the reference's own literal table against the recognizer derived from this
+file, which is what makes both divergences impossible rather than merely noted.
 
 ⚠️ **No float, anywhere.** The grammar admits a decimal literal; §7.4 requires "exact integer time
 units or checked rational arithmetic", so a conforming reader holds `1.5` as fifteen tenths and
-never as an IEEE double. The grammar cannot say that, which is exactly why the language reference
-is a separate normative document rather than a section of this one.
+never as an IEEE double. The grammar cannot say that, which is exactly why
+[`docs/semantics/reference.md`](reference.md) is a separate normative document rather than a section
+of this one — and its §1 states the value of every literal form as a table that
+`crates/eadl-front/tests/reference.rs` executes.
 
 ## Conformance
 
@@ -135,11 +147,16 @@ With segmentation compared, the same mutation fails with the offending byte offs
 ⭐ **The probes exist because the corpus is not a conformance suite.** It contains exactly one
 number with a digit separator, and that one is hexadecimal — so nothing in it reached decimal
 separators, signs, escapes, CRLF, or several other productions. A suite that never exercises a
-production is not evidence about it.
+production is not evidence about it. `M1.12` measured that limit harder and found three literal
+forms this file and the reader disagreed about — `0X10`, `0x_10` and `\0` — none of which any
+description in the repository contains, so no check here could reach them. The census is in
+`docs/tasks/M1.md`; `M1.12.2` derives the probe set from the reference's literal table so the gap
+cannot reopen.
 
 ⚠️ **Honest limit.** This establishes that the two agree on the language and on where tokens
 begin and end. It does **not** establish that the reader builds the right *tree* from those
 tokens, or that it assigns the right *value* to each — a reader that tokenized identically and
 mis-nested, or read `1.5` as three halves, would pass here. Nesting is the corpus suites'
-business (`corpus.rs`, the semantic cases) and value exactness is the language reference's
-(`M1.12`).
+business (`corpus.rs`, the semantic cases); value exactness is
+[`docs/semantics/reference.md`](reference.md)'s, and
+`crates/eadl-front/tests/reference.rs` is the leg that closed it.

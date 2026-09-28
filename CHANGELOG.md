@@ -4,6 +4,47 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the language reference exists, and it is executed rather than read
+
+`ARCHOGEN-M1-0072` (leaf `M1.12.1`).
+
+- **`docs/semantics/reference.md` is now the normative statement of what a literal is *worth*** — the
+  half `docs/semantics/grammar.md` cannot carry. It states number exactness (no float anywhere, per
+  §7.4), the string escape set, and what canonical form guarantees, as rules plus two machine-read
+  tables of `literal → value → canonical text`.
+- **`crates/eadl-front/tests/reference.rs` reads those tables out of the document and runs every row
+  against the frontend.** A row the reader disagrees with fails naming the literal, the stated value
+  and the produced one. Two further legs: the population for "did we forget a literal" is the **corpus**
+  rather than the table, so a deleted row is caught by something the document does not define; and a
+  table that stops being a table is reported instead of silently gating nothing. Eight RED arms, each
+  pinning its violation count.
+- ⭐ **The expected values were derived arithmetically, never printed from the reader** — and that is
+  why the first run found three defects instead of confirming an implementation:
+  - **`0x_10` read as 16.** A separator separates digits, it does not lead them; the grammar already
+    required a leading hex digit and the reader's decimal path could never begin with `_`. The reader
+    was tightened to the grammar, with its own diagnostic wording (`a separator cannot lead the
+    digits`) distinct from `0x`'s.
+  - **Canonical form emitted a raw carriage return.** `diagnose` on `(probe "a\rb")` piped to `od -c`
+    showed the control byte inside the text §12 M4 hashes and compares; a terminal read it as "back to
+    column zero" and overwrote the start of its own line. `archogen-s0`'s provenance quoting already
+    escaped `\r` — the rule existed in the project and was missing from the normative printer. The leg
+    that now forbids it is a property over every row, not one row's expectation.
+  - **`i64::MIN` was unwritable.** `-9223372036854775808` was refused as overflow because the
+    magnitude was parsed as an `i64` *before* the sign was applied. Both conversion sites now share one
+    helper that parses wide and narrows once, so the wrong order cannot be written twice; one past
+    either endpoint is still refused, never wrapped.
+- ⚠️ **Two normative documents disagree on purpose, and say so.** The reader accepts `0X10` where the
+  grammar spells the prefix `"0x"`, and the grammar admits `\0` where the reader refuses it. Neither
+  spelling appears in any description the repository ships, so no existing check could reach them —
+  three `git grep` censuses, three empty results. `grammar.md` carries a ⚠️ block naming both and
+  stating that the reference is the authority on what a literal means; `M1.12.2` runs the same table
+  against the recognizer derived from the grammar, which is what turns the note into an impossibility.
+- **Validation:** `cargo test -p eadl-front --test reference` → `11 passed; 0 failed`;
+  `eadl-front` lib `46` → `49`; `make focused` → `passed — 3 passed, 0 failed, 0 unavailable`;
+  `cargo test --all` → **444 passed, 0 failed over 37 suites** (baseline 430 over 36);
+  `scripts/check_doctrines.sh` → `=== all doctrines green ===`; `conformance.rs` and `corpus.rs`
+  unmodified, so the grammar leg and the corpus-figure gate still pass on their own terms.
+
 ## archogen — QEMU pinned at 11.1.1, and what pinning does *not* unblock
 
 `ARCHOGEN-M2-0070` (leaf `M2.8.1`).

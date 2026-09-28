@@ -178,6 +178,14 @@ impl Form {
                         '\\' => out.push_str("\\\\"),
                         '\n' => out.push_str("\\n"),
                         '\t' => out.push_str("\\t"),
+                        // ⛔ A carriage return is escaped like any other character canonical text
+                        // cannot carry. Emitting it raw put a control byte inside the text §12 M4
+                        // hashes and compares, and inside a document whose canonical form is one
+                        // form per line — a terminal re-reads it as "return to column zero", so the
+                        // rest of the line overwrote the beginning. `archogen-s0`'s provenance
+                        // quoting already escaped it; the normative printer did not (finding F-D,
+                        // leaf `M1.12.1`).
+                        '\r' => out.push_str("\\r"),
                         _ => out.push(ch),
                     }
                 }
@@ -375,6 +383,24 @@ mod tests {
             span: span(),
         };
         assert_eq!(form.to_canonical(), "\"a\\\"b\\\\c\\nd\"");
+    }
+
+    #[test]
+    fn canonical_text_escapes_every_character_that_would_break_one_form_per_line() {
+        // ⛔ A raw carriage return in canonical text is a control byte inside the text §12 M4 hashes
+        // and compares, and a terminal reads it as "back to column zero" — the rest of the line
+        // overwrote its beginning when `diagnose` printed one (finding F-D, leaf `M1.12.1`).
+        let form = Form::Str {
+            value: "a\rb\tc\nd".into(),
+            span: span(),
+        };
+        let canonical = form.to_canonical();
+        assert_eq!(canonical, "\"a\\rb\\tc\\nd\"");
+        assert!(
+            !canonical.chars().any(|ch| ch.is_ascii_control()),
+            "canonical text carries a control character: {}",
+            canonical.escape_debug()
+        );
     }
 
     #[test]

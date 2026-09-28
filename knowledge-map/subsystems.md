@@ -85,6 +85,12 @@ justifies the split — the rows below appear as that happens.
   language **and produce the same token spans** over all 62 corpus descriptions, plus 23 probes
   covering every production. ⛔ Acceptance alone was measured too weak: dropping `_` from hex
   literals turned `(base 0x1000_0000)` into `4096` and `_0000` with every acceptance test green.
+- `docs/semantics/reference.md` — ⭐ **the normative language reference**: what a literal is
+  *worth*, which is the half a grammar cannot say. `crates/eadl-front/tests/reference.rs` reads its
+  `literal → value → canonical text` tables **out of the document** and executes every row against
+  the reader, then adds a coverage leg whose population is the corpus and a non-vacuity leg over the
+  tables themselves. Its expected values were derived arithmetically rather than printed from the
+  reader, which is why its first run found three defects instead of confirming an implementation.
 - `docs/semantics/kinds/` — the language declared in itself: `core.eadl` (the five surface
   kinds) and `os-rt.eadl` (the `task` kind of the workload module). Only `defkind` is Rust.
 - `examples/` — the three M0 use cases as real descriptions, checked by
