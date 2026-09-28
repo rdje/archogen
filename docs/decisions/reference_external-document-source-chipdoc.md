@@ -30,6 +30,17 @@ answer queries; `risc-v/isa/pinned/v20260120` holds 73 files across `priv`/`unpr
 `devicetree/spec`, `risc-v/psabi` and `cmsis/svd` are present; `sifive/fe310/current` (3 PDFs) and
 `sifive/hifive1/current` (2 PDFs) are present.
 
+⛔ **Those five board PDFs are readable here, and one tool's error says the opposite.** The ISA pin is
+HTML and reads directly; the SiFive material is PDF, and `read_file`'s PDF bridge answers
+`pdftotext is not installed. Install poppler-utils…` for it on this host — while `command -v pdftotext`
+resolves to `/opt/homebrew/bin/pdftotext` (Xpdf 4.06, not poppler) and
+`pdftotext -f 1 -l 6 <datasheet> -` prints `SiFive FE310-G002 Datasheet v1p2`. The bridge does not see
+the shell `PATH`, so its message describes the bridge and not the machine. Recorded because the
+opposite conclusion — *the datasheets cannot be read here, so §3.2's `board-first` rows are blocked on
+tooling as well as on procurement* — was drawn from that error and nearly filed as a second blocker on
+tree `M5`. It is not a blocker; `M5` is blocked on procurement alone. Owner of this note: `PROGRAM.25`,
+and the route is a row in `TOOLBOX.md`.
+
 ## How to apply
 
 - **Query the index, not the page's memory.**

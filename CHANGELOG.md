@@ -4,6 +4,36 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — two findings raised in conversation are now owned by a task tree, and one of them was false
+
+`ARCHOGEN-PROGRAM-0083` (leaf `PROGRAM.25`). Docs only. §15 makes raising an issue the *first* step and
+a verified fix the goal; both of these stopped at a reply, so neither would have survived the session.
+
+- ⛔ **The PDF finding was false as raised, and measuring before filing is what caught it.**
+  `read_file`'s PDF bridge answered `pdftotext is not installed` for chipdoc's SiFive datasheets, and
+  that was reported onward as "this machine has no PDF text extractor, so §3.2's `board-first` facts
+  cannot be read here". `command -v pdftotext` resolves to `/opt/homebrew/bin/pdftotext` (Xpdf **4.06**)
+  and `pdftotext -f 1 -l 6 <the FE310-G002 datasheet> -` prints its first page. The bridge cannot see
+  the host `PATH`, so its message describes the bridge and not the machine. **Consequence: the opposite
+  of the one reported** — those datasheets are readable, and `M5` is blocked on procurement alone. A
+  second blocker on `M5`, drafted on that premise, is **not** filed. What is filed is the route: a
+  `TOOLBOX.md` row and a note beside the chipdoc record's inventory, so the next session does not
+  re-conclude the documents are unreachable.
+- ⭐ **`docs/decisions/reference_sibling-project-semulith.md`** records that `../semulith` exists, is
+  **read-only** under §21, builds CPU/DSP models, and names archogen as a concrete consumer with an
+  integration contract and a tree of its own waiting on archogen's real eADL interface. A pointer,
+  deliberately **not** an analysis — that was offered and declined. Indexed, and the Knowledge Map
+  regenerated.
+- ⛔ **The census needed both halves, and one of them is a trap.** `git grep -il semulith -- ':!vendor'`
+  → **0**: archogen's own tracked files named it nowhere. `grep -ril semulith vendor/` → **40**. The
+  difference is that `vendor/linkedspec` is a **submodule**, which `git grep` skips entirely — so the
+  tracked-file census alone would have supported "the two projects have never met", when in fact they
+  met through the vendor's issue ledger during `M1.20`. A census that cannot see part of its population
+  is worse than no census.
+- `GAP-CLAIM-CENSUS` fired on the first draft of this filing — a log row saying "owned by nothing" with
+  its census on the leaf rather than beside the claim. The census went inline rather than the wording
+  going soft, because rewording around a gate leaves the gate unexercised.
+
 ## archogen — `eadl/1`'s value domain becomes a stated property of the language version, and both measurements it was routed on turn out to be false
 
 `ARCHOGEN-M1-0082` (leaf `M1.13.2`). Finding F-F settled: **the domain stays exact signed 64-bit**, and

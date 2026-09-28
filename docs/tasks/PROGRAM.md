@@ -1156,6 +1156,72 @@ mdBook that is the director's window into the project.
   Verification: `pending`
   Commit: `pending`
 
+- ID: `PROGRAM.25`
+  Status: `done`
+  Goal: **own the two findings raised in conversation on `2026-09-28`/`29` and left unowned.** §15 is
+  explicit that reporting an issue for the director to review, or mentioning it in a summary, is
+  incomplete — an issue raised and not owned is a complaint. Both of these were raised in a reply and
+  recorded nowhere in the tracked tree, so if the session ended they would have ended with it.
+  Reproduce / issue: two separate failures of the same rule, and the second one is the worse shape.
+  **(1)** Answering a question about the target ISA, `read_file` on
+  `$ARCHOGEN_CHIPDOC_ROOT/sifive/fe310/current/FE310-G002_datasheet_v1p2.pdf` returned
+  `pdftotext is not installed. Install poppler-utils…`, and that was reported onward as "this machine
+  has no PDF text extractor, so §3.2's board facts cannot be read here" — with a promise to log it as
+  its own commit. ⛔ **The premise is false, and measuring before filing is what caught it:**
+  ```text
+  $ command -v pdftotext pdftk mutool qpdf gs
+  /opt/homebrew/bin/pdftotext
+  /opt/homebrew/bin/pdftk
+  $ pdftotext -v | head -1
+  pdftotext version 4.06 [www.xpdfreader.com]
+  $ pdftotext -f 1 -l 6 <that datasheet> - | head -1
+  SiFive FE310-G002 Datasheet v1p2            ← the route works
+  ```
+  So the host has an extractor (Xpdf's, not poppler's) and the **`read_file` PDF bridge cannot see the
+  host `PATH`**. The consequence is the *opposite* of the one reported: chipdoc's board PDFs **are**
+  readable here via `run_shell_command`, and §3.2's `board-first` rows are **not** blocked on tooling.
+  Census of what that unblocks: `sifive/fe310/current` holds **3** PDFs and `sifive/hifive1/current`
+  **2**, all named as *present* by `docs/decisions/reference_external-document-source-chipdoc.md`, which
+  says nothing about whether they can be read — so the record needs the route as well as the inventory.
+  **(2)** Told that a sibling repository `../semulith` exists, the reply analysed it and then, on being
+  told the analysis was not what was asked for, deleted it and reported "nothing filed, nothing changed
+  in the repo". Correct response to "don't analyse it"; wrong response to §9, which requires a novel
+  finding to be recorded in a **durable, tracked file** so it survives the message. Census, both
+  directions, so the claim is checkable:
+  ```text
+  $ git grep -il "semulith" -- ':!vendor' | wc -l
+  0                     ← archogen's own tracked files name it nowhere
+  $ grep -ril "semulith" vendor/ | wc -l
+  40                    ← the vendored LinkedSpec submodule names it, as a fellow consumer
+  ```
+  ⛔ Note the census trap this records: `vendor/linkedspec` is a **submodule** (`.gitmodules`), so
+  `git grep` skips it entirely and a `git grep` alone would have reported "nothing anywhere mentions
+  it" — the two projects have already met, through the vendor's own issue ledger, and archogen's side
+  of that meeting never says so.
+  Acceptance: `TOOLBOX.md` carries the PDF route with the misreport named, so the next session does not
+  re-conclude the datasheets are unreadable; `reference_external-document-source-chipdoc.md` gains the
+  readability fact beside its inventory; a `docs/decisions/reference_*` record states what `semulith`
+  is, that it is **read-only** under §21, and which archogen leaves would need to know it exists —
+  with no analysis of it, which is what was declined; the record is indexed; `KNOWLEDGE_MAP.md`
+  regenerated; `make gate` green.
+  Priority: **medium** — neither finding blocks the current frontier. Filed ahead of it anyway, because
+  the alternative is a false statement ("no PDF extractor here") standing as the last word in a
+  conversation nobody can search, and a sibling project that names archogen as its consumer while
+  archogen's tree has never heard of it.
+  Verification: docs-only, so no tier step governs the change itself; what was measured is in the
+  Reproduce block above and was re-run rather than recalled — `command -v pdftotext` →
+  `/opt/homebrew/bin/pdftotext`, `pdftotext -v` → `version 4.06 [www.xpdfreader.com]`, and
+  `pdftotext -f 1 -l 6 <the FE310-G002 datasheet> -` → its first line, so the route is proven and not
+  assumed. Both censuses re-run: `git grep -il semulith -- ':!vendor' | wc -l` → **0**,
+  `grep -ril semulith vendor/ | wc -l` → **40**, and `.gitmodules` confirms `vendor/linkedspec` is a
+  submodule, which is why the first census alone would have been a false negative. Every citation in
+  the new record resolves (`decision_repository-boundary-read-only`,
+  `decision_emulator-independence-retained`, `reference_external-document-source-chipdoc`,
+  `an-oracle-is-independent-by-construction`), and the semulith path is written as `../semulith` rather
+  than an absolute one so §12 holds if the repository moves volume. `make gate` → `13/13 green`;
+  `KNOWLEDGE_MAP.md` regenerated for the new record.
+  Commit: `ARCHOGEN-PROGRAM-0083 (leaf PROGRAM.25)`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1309,6 +1375,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-27` | `PROGRAM.19` | the artifact inventory measured before and after; a residue census over every deleted path; the retained vendor build, one instrument self-test, the focused tier and the doctrine gate all re-run afterwards | ≈1.4 GB released: `.app-data` 3.5 GB → 2.2 GB, `target` 815 MB → 799 MB (then 816 MB once the suite recreated its scratch); all 7 deleted paths `gone`; `bins` → both binaries resolve; `reference` → the documented two-form result; `LS-002 --self-test` → `9/9`; 13 doctrines green; `make focused` exit `0`, 421 passed / 0 failed. ⛔ The first post-cleanup tier run **failed** and was reproduced, not dismissed → `S0.7` |
 | `2026-09-28` | `PROGRAM.19` (second run) | the trigger read off `docs/ARTIFACT_CLEANUP.md` rather than assumed; a full inventory taken before any deletion; a residue census over every deleted path; `git grep` for each retention candidate's consumers; the focused tier re-run **cold**, with the scratch it consumes already deleted | ≈18 MB released: `target` 873 MB → 855 MB, `.bin` files 715 → 693, all 7 deleted paths `gone`; **2.2 GB retained on evidence** — `pgen-generated-before-remeasure` is read by `LS-004`'s `remeasure.sh:225-227`, and `target/debug/incremental` holds at most four generations per crate across 121 directories, which is cargo's retention and not residue; `make focused` → `passed — 3 / 0 / 0` cold; 13 doctrines green; `git status --porcelain` empty after the deletions |
 | `2026-09-28` | `PROGRAM.21` | **no code changed — this is the finding's severity re-measured, not its fix.** Three instruments over the commit that had just landed: a `grep -c` census of ticked ROOT CAUSE boxes in `docs/tasks/M1.md`; the check's **own awk**, extracted from `scripts/check_task_acceptance.sh` and run over the file with `kw="root.?cause"`, printing the line it captures and whether that box is ticked; and a **mutation** — `M1.13.1`'s ROOT CAUSE box unticked in a scratch copy under `target/tmp/m113/`, with the same awk re-run over both files and the captures compared | the census returns **31** ticked boxes where this leaf recorded 24; the awk captures **line 53, ticked=1**, which is leaf `M1.1`'s box from `2026-09-13`, while `M1.13.1`'s sits near line 1470; and the mutation gives an **identical capture for both files**, so `M1.13.1`'s boxes provably cannot affect the verdict for commit `cd355ef` — five Rust files staged, `task-acceptance: OK`, `exit=0`. ⛔ The severity claim on this leaf is therefore superseded from *latent* to **active**: the gate read a thirteen-day-old checklist belonging to a different leaf and reported that it had checked the staged change |
+| `2026-09-29` | `PROGRAM.25` | **docs-only, and the point of the run was to falsify the finding before filing it.** `command -v pdftotext pdftk mutool qpdf gs`; `pdftotext -v`; `pdftotext -f 1 -l 6` on the FE310-G002 datasheet to stdout; both semulith censuses (`git grep` excluding `vendor/`, and a filesystem walk of `vendor/`); `.gitmodules`; and a resolution check on every citation the new record makes | ⛔ **The finding as raised was false and the measurement is what caught it**: `pdftotext` resolves to `/opt/homebrew/bin/pdftotext` (Xpdf **4.06**), and the datasheet's first page extracts, so chipdoc's board PDFs are readable here and §3.2's `board-first` rows are **not** blocked on tooling — `read_file`'s bridge cannot see the host `PATH`, and its "not installed" message describes the bridge. A blocker on tree `M5` was drafted on that false premise and is **not** filed; what is filed is the route, in `TOOLBOX.md` and beside the chipdoc record's inventory. Semulith census: **0** archogen tracked files name it, **40** files inside the vendored submodule do, and `.gitmodules` confirms `vendor/linkedspec` is a submodule — so `git grep` alone returns a false negative and the census needs both halves. All four citations resolve; `make gate` → `13/13 green` |
 
 ## Commit Log
 
@@ -1322,6 +1389,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.19` | `ARCHOGEN-PROGRAM-0060 (leaf PROGRAM.19)` | ≈1.4 GB of regenerable artifacts released and `docs/ARTIFACT_CLEANUP.md` started, so "is a cleanup due?" is answerable; the cleanup's own verification exposed `S0.7`; one unexpected item investigated and flagged rather than deleted |
 | `PROGRAM.19` | `ARCHOGEN-PROGRAM-0074 (leaf PROGRAM.19, second run)` | ≈18 MB more released, and **2.2 GB retained on evidence**: a frozen instrument's backup, which `remeasure.sh` treats an existing copy of as a reason to keep it, and cargo's own incremental cache. Runs append to the standing owner rather than becoming one leaf per day |
 | `PROGRAM.21` | `ARCHOGEN-PROGRAM-0081 (leaf PROGRAM.21)` | **filed, not fixed** — the severity re-measured from *latent* to **active** on commit `cd355ef`: five Rust files staged, `task-acceptance: OK`, and the box it read was leaf `M1.1`'s from `2026-09-13`. A mutation proves `M1.13.1`'s own boxes could not have changed the verdict. No code in this commit, so the gate stays unsound and the fix is still owed |
+| `PROGRAM.25` | `ARCHOGEN-PROGRAM-0083 (leaf PROGRAM.25)` | two findings raised in conversation and owned by nothing are now tracked — census, both halves, because `git grep` alone is a false negative here: `git grep -il semulith -- ':!vendor' \| wc -l` → **0** archogen tracked files, `grep -ril semulith vendor/ \| wc -l` → **40** files inside the submodule, which `.gitmodules` confirms `git grep` skips. And one of the two findings was **false as raised**: `pdftotext` is on the host (`/opt/homebrew/bin`, Xpdf 4.06) and chipdoc's board datasheets extract fine, so `read_file`'s "not installed" is a bridge limitation and §3.2's `board-first` rows are not tooling-blocked. The route is a `TOOLBOX.md` row and a note beside the chipdoc inventory; an `M5` blocker drafted on the false premise is **not** filed. `docs/decisions/reference_sibling-project-semulith.md` records that `../semulith` exists, is read-only, and names archogen as its consumer — a pointer with no analysis, which is what was declined |
 
 ## Changelog
 
