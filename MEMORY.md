@@ -39,8 +39,8 @@
 - **`M2.9` is checkpointed, not finished:** branch **`wip/m2.9`** (commit `758cbcdd`), and it does
   **not** compile — `crates/rt-core/tests/differential.rs` is unadapted to the reference's new API.
 - **Also open:** `M1.25`, `M1.26`, `M1.10`, `M1.21`, `M1.22`; `S0.8`; `M2.6`, `M2.8`; `PROGRAM.21`
-  (**high**), `.18`, `.24`, `.13`, `.15`, `.17`, `.20`, then `.5`, `.6`, `.9`, `.10` — each with its
-  census on its own leaf.
+  (**high, and now ACTIVE** — `cd355ef` was gated on leaf `M1.1`'s checklist from `2026-09-13`), `.18`,
+  `.24`, `.13`, `.15`, `.17`, `.20`, then `.5`, `.6`, `.9`, `.10` — each with its census on its own leaf.
 - **Baseline to beat:** `make focused` exit `0` at the pin — **474 passed, 0 failed** over 37 suites.
   Tiers: `focused` per commit, `integration` before a push; exit **20 = incomplete** is not a pass —
   read what it names (missing tools: `docs/targets/first-target.md`, tree `M5`; ISA/target specs:

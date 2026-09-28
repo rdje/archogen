@@ -804,12 +804,38 @@ mdBook that is the director's window into the project.
   `0`), the gate printed
   `task-acceptance: OK (every staged code-change leaf carries a ticked, evidence-backed checklist)`
   and `exit=0`.
-  ⭐ **Severity, measured rather than assumed: latent, not active.** Auditing every leaf that records a
+  ⭐ **Severity as first measured: latent, not active.** Auditing every leaf that records a
   commit found five with no ticked ROOT CAUSE box — `M0.1`, `M0.2`, `M1.18`, `M1.20`, `PROGRAM.1` — and
   `git show --stat` on each of their commits reports **0** code files: `M1.18` staged twelve `.md`
   files, `M0.1`/`M0.2`/`PROGRAM.1` none, and `M1.20` is an aggregation node whose seven sub-leaves
-  each carry their own checklist. So no code change has landed unboxed. The defect is that the gate
+  each carry their own checklist. So no code change had landed unboxed. The defect was that the gate
   **could not have stopped one** on any leaf but the first in its file, while telling the author it had.
+
+  ⛔ **That severity claim is SUPERSEDED `2026-09-28`: the defect is active, and this is measured rather
+  than inferred.** Commit `cd355ef` (`ARCHOGEN-M1-0080`, leaf `M1.13.1`) staged five Rust files —
+  `crates/eadl-front/src/form.rs`, `crates/eadl-front/src/reader.rs` and three test files — and the gate
+  printed `task-acceptance: OK (every staged code-change leaf carries a ticked, evidence-backed
+  checklist)` with `exit=0`. What it actually read was **`docs/tasks/M1.md` line 53**, inside leaf
+  **`M1.1`**, written `2026-09-13`. Three measurements, all re-runnable:
+
+  ```text
+  census: grep -cE '^[[:space:]]*-[[:space:]]*\[[xX]\][[:space:]]*\*\*ROOT CAUSE' docs/tasks/M1.md
+          → 31 ticked ROOT CAUSE boxes in the file (24 when this leaf was written); exactly one is read
+  census: the check's own awk over docs/tasks/M1.md with kw="root.?cause"
+          → captures line 53, ticked=1 — leaf M1.1's box, not M1.13.1's at line ~1470
+  mutation: M1.13.1's ROOT CAUSE box unticked in a scratch copy, the same awk re-run over both files
+          → identical capture, line 53 ticked=1 in BOTH, so M1.13.1's boxes cannot affect the verdict
+  ```
+
+  ⚠️ **The mutation is the finding, so read it before reading the reassurance.** Nothing bad happened in
+  `cd355ef`: `M1.13.1`'s checklist was written, ticked and evidence-backed, so the commit was honest and
+  the verdict was right **for the wrong reason**. Had those boxes been empty the verdict would have been
+  byte-identical, which means the gate supplied that commit no protection and told its author it had.
+  Every code commit on every leaf of `M1.md` after `M1.1` sits in the same position — 30 of the file's
+  31 boxes belong to leaves the gate never reads — and `M1.md` is the tree the project is working in.
+  ⛔ Interim mitigation, stated so it is not mistaken for a fix: there is none inside the gate. The only
+  thing standing between this and an unboxed code commit is the author's own discipline, which is
+  precisely what a gate exists to not depend on.
   ⛔ That is the same failure mode the check's own header says box-scoping was introduced to end. It
   closed cross-**file** leakage and incidental-**prose** leakage, and left cross-**leaf** leakage open —
   a co-staged tree file supplying another leaf's evidence, one directory level down from the hole it
@@ -1282,6 +1308,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-27` | `PROGRAM.16` | the policy copied and the copy **diff-verified** against its read-only source rather than read; the §7 adoption sweep run against this repository; all three entrypoints re-grepped afterwards; tiers and the gate re-run | body `diff -q` identical, digest `9f99df25209c43af` on both sides; 406 lines / 27 263 bytes; sweep found 18 checks / 8 with RED arms / **10 without** → `PROGRAM.18`; `AGENTS.md` line 11 carries an explicit list, so it was edited after the leaf's first draft claimed otherwise; 13 doctrines green; `make focused` exit `0`, 421 passed / 0 failed |
 | `2026-09-27` | `PROGRAM.19` | the artifact inventory measured before and after; a residue census over every deleted path; the retained vendor build, one instrument self-test, the focused tier and the doctrine gate all re-run afterwards | ≈1.4 GB released: `.app-data` 3.5 GB → 2.2 GB, `target` 815 MB → 799 MB (then 816 MB once the suite recreated its scratch); all 7 deleted paths `gone`; `bins` → both binaries resolve; `reference` → the documented two-form result; `LS-002 --self-test` → `9/9`; 13 doctrines green; `make focused` exit `0`, 421 passed / 0 failed. ⛔ The first post-cleanup tier run **failed** and was reproduced, not dismissed → `S0.7` |
 | `2026-09-28` | `PROGRAM.19` (second run) | the trigger read off `docs/ARTIFACT_CLEANUP.md` rather than assumed; a full inventory taken before any deletion; a residue census over every deleted path; `git grep` for each retention candidate's consumers; the focused tier re-run **cold**, with the scratch it consumes already deleted | ≈18 MB released: `target` 873 MB → 855 MB, `.bin` files 715 → 693, all 7 deleted paths `gone`; **2.2 GB retained on evidence** — `pgen-generated-before-remeasure` is read by `LS-004`'s `remeasure.sh:225-227`, and `target/debug/incremental` holds at most four generations per crate across 121 directories, which is cargo's retention and not residue; `make focused` → `passed — 3 / 0 / 0` cold; 13 doctrines green; `git status --porcelain` empty after the deletions |
+| `2026-09-28` | `PROGRAM.21` | **no code changed — this is the finding's severity re-measured, not its fix.** Three instruments over the commit that had just landed: a `grep -c` census of ticked ROOT CAUSE boxes in `docs/tasks/M1.md`; the check's **own awk**, extracted from `scripts/check_task_acceptance.sh` and run over the file with `kw="root.?cause"`, printing the line it captures and whether that box is ticked; and a **mutation** — `M1.13.1`'s ROOT CAUSE box unticked in a scratch copy under `target/tmp/m113/`, with the same awk re-run over both files and the captures compared | the census returns **31** ticked boxes where this leaf recorded 24; the awk captures **line 53, ticked=1**, which is leaf `M1.1`'s box from `2026-09-13`, while `M1.13.1`'s sits near line 1470; and the mutation gives an **identical capture for both files**, so `M1.13.1`'s boxes provably cannot affect the verdict for commit `cd355ef` — five Rust files staged, `task-acceptance: OK`, `exit=0`. ⛔ The severity claim on this leaf is therefore superseded from *latent* to **active**: the gate read a thirteen-day-old checklist belonging to a different leaf and reported that it had checked the staged change |
 
 ## Commit Log
 
@@ -1294,6 +1321,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.16` | `ARCHOGEN-PROGRAM-0058 (leaf PROGRAM.16)` | the claim-verification policy adopted as `docs/CLAIM_VERIFICATION.md` — copied verbatim and diff-verified, restated locally per its own §7.6, registered in all three entrypoints; its §7.4 sweep found ten controls with no RED arm → `PROGRAM.18` |
 | `PROGRAM.19` | `ARCHOGEN-PROGRAM-0060 (leaf PROGRAM.19)` | ≈1.4 GB of regenerable artifacts released and `docs/ARTIFACT_CLEANUP.md` started, so "is a cleanup due?" is answerable; the cleanup's own verification exposed `S0.7`; one unexpected item investigated and flagged rather than deleted |
 | `PROGRAM.19` | `ARCHOGEN-PROGRAM-0074 (leaf PROGRAM.19, second run)` | ≈18 MB more released, and **2.2 GB retained on evidence**: a frozen instrument's backup, which `remeasure.sh` treats an existing copy of as a reason to keep it, and cargo's own incremental cache. Runs append to the standing owner rather than becoming one leaf per day |
+| `PROGRAM.21` | `ARCHOGEN-PROGRAM-0081 (leaf PROGRAM.21)` | **filed, not fixed** — the severity re-measured from *latent* to **active** on commit `cd355ef`: five Rust files staged, `task-acceptance: OK`, and the box it read was leaf `M1.1`'s from `2026-09-13`. A mutation proves `M1.13.1`'s own boxes could not have changed the verdict. No code in this commit, so the gate stays unsound and the fix is still owed |
 
 ## Changelog
 

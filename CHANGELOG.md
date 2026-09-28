@@ -4,6 +4,35 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — `TASK-ACCEPTANCE` is measured active-unsound, not latent: a real code commit was gated on a different leaf's checklist
+
+`ARCHOGEN-PROGRAM-0081` (leaf `PROGRAM.21`). **Filed, not fixed** — docs only, no code, so the gate
+stays unsound and the fix is still owed.
+
+- `PROGRAM.21` was written with the severity measured as **latent**: five committed leaves carried no
+  ticked ROOT CAUSE box, and `git show --stat` on each reported zero code files, so no code change had
+  landed unboxed. That claim is now superseded by an instance rather than an argument.
+- ⛔ **Commit `cd355ef`** (`ARCHOGEN-M1-0080`, leaf `M1.13.1`) staged five Rust files and the gate
+  printed `task-acceptance: OK (every staged code-change leaf carries a ticked, evidence-backed
+  checklist)` with `exit=0`. The box it read was **`docs/tasks/M1.md` line 53 — leaf `M1.1`, written
+  `2026-09-13`**, thirteen days stale and about a different subject.
+- Three measurements, all re-runnable: a `grep -c` census returning **31** ticked ROOT CAUSE boxes in
+  the file where the leaf recorded 24, of which exactly one is ever read; the check's **own awk**
+  extracted and run over the file, printing `captures line 53 ticked=1`; and a **mutation** — the
+  committing leaf's box unticked in a scratch copy, the same awk re-run over both files, giving an
+  **identical capture**.
+- ⭐ The mutation is the finding. `M1.13.1`'s checklist was in fact written, ticked and evidence-backed,
+  so the commit was honest and the verdict was right — **for the wrong reason**. Had those boxes been
+  empty the verdict would have been byte-identical. The gate supplied that commit no protection and
+  reported that it had. Every code commit on every leaf of `M1.md` after `M1.1` is in the same
+  position, and `M1.md` is the tree the project is actively working in.
+- ⛔ **Interim mitigation: none inside the gate.** The only thing between this and an unboxed code
+  commit is author discipline, which is what a gate exists to not depend on. The fix is bounded and
+  already specified on the leaf — scope the boxes to the leaf that owns the staged change, make the
+  success message true of what was examined, refuse with the leaf's ID in the message, and arm
+  `--self-test` with the *second-leaf-with-no-boxes* shape measured here — but it needs the owning-leaf
+  question answered honestly, since a pre-commit hook has no commit message to read.
+
 ## archogen — the escape set is closed *and* sufficient, so canonical form can no longer carry a raw control byte
 
 `ARCHOGEN-M1-0080` (leaf `M1.13.1`, the first of the language freeze's five children). Closes finding
