@@ -1,5 +1,38 @@
 # DEV_NOTES.md
 
+## _(2026-09-29)_ — an arm that accepts "not success" cannot tell a refusal from a command that never ran
+
+- `PROGRAM.21`, making `TASK-ACCEPTANCE` leaf-scoped. Nine RED arms were written with the pass
+  condition `[ "$rc" -ne 0 ]` for the arms expecting a refusal. The first run reported
+  **`4 pass / 5 fail`** — and all four passes were on **`exit 127`**. The check had not been *found*:
+  `$0` was a relative path and every arm `cd`s into a throwaway repository, so the arms exec'd nothing.
+- ⛔ **The tally still read like partial progress.** `4 pass / 5 fail` invites "four work, five need
+  fixing"; the truth was "zero were exercised". A refusal and a failure to exec are different claims,
+  and `127` is the *shell's* exit code, not the subject's — an oracle written against "not zero" cannot
+  distinguish a correct refusal from a missing binary, a crash, an empty fixture, or a missing
+  interpreter, and every one of those prints ✅.
+- The fix is to require the subject's **own** verdict: its documented exit code *and* its own
+  identifying text. `[ "$rc" -eq 1 ] && printf '%s' "$out" | grep -q 'TASK-ACCEPTANCE'`. Mutation B2
+  reproduces the false green deliberately — the same broken invocation path with the weak oracle gives
+  `4 pass / 5 fail`, and with the exact oracle gives `0 pass / 9 fail` — so the difference is measured,
+  not asserted.
+- ⭐ **Generalise it: an arm has three parts, and each can be weaker than the property.** The **needle**
+  (does it match?), the **mutation** (did it destroy the property, or one instance of it?), and the
+  **oracle** (does its pass condition exclude the ways the arm can fail to run?). A count assertion
+  covers the first, a post-mutation assertion the second, an exact verdict the third. Missing any one
+  leaves decoration that prints ✅.
+- promotion: promoted (`docs/knowledge/verify-the-mutation-applied.md` gains the section "An oracle that
+  accepts 'not success' accepts 'never ran'", a fifth `answers:` line — *"My RED arm reported a pass,
+  but did the thing it tests actually run?"* — and a How-to-apply bullet. Same card as the partial-
+  mutation lesson from `M1.13.2`, because both are the same statement about a different part of the
+  arm; a third card answering "is my red arm real?" would make the retrievable layer harder to search.)
+- ⛔ **One more, found by diffing rather than by reading.** The draft rewrite of the check had also
+  **widened `DEFAULT_SIG`** with a token that does not exist (`\bspindb\b` beside `\bspindump\b`) and
+  re-dated a historical comment (`awk version 20200816` → `20260816`), which would have falsified a
+  record of what an earlier cut rejected. Neither is visible in a rewrite you read top-to-bottom; both
+  are visible in `diff <(git show HEAD:…) …` over the blocks meant to be preserved. **When you rewrite a
+  file, diff the parts you intended not to change.**
+
 ## _(2026-09-28)_ — a superlative published without its population is a figure nobody can check
 
 - `M1.13.2`, settling finding F-F. The leaf it was routed on had measured "the largest literal in the

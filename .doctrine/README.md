@@ -8,8 +8,9 @@ turns a portable standard into a fork of it — that is what these seams exist t
 |---|---|---|
 | `code_paths.txt` | `TASK-ACCEPTANCE` | one extended regular expression per line: what counts as a **code change** here. Absent ⇒ the built-in Rust-workspace default (`crates/`, `src/`, `scripts/`, `*.rs`, `*.sh`, `Makefile`). |
 | `evidence_tokens.txt` | `TASK-ACCEPTANCE` | one extended regular expression per line: **your** tools' output signatures, ADDED to the universal defaults. Absent ⇒ defaults only. |
+| `commit_message_file` | `TASK-ACCEPTANCE` | one path: the file holding the **pending commit message**, whose SUBJECT names the owning leaf as `(leaf <ID>)`. Absent ⇒ the default `git_message_brief.txt`. ⛔ Not a convenience — the owning leaf **cannot** be inferred from the staged paths (measured: the leaf sections a commit touches name the right leaf once in seven), and when the owner cannot be identified the check **refuses** rather than reading the first checklist in the file. Override per-invocation with `TASK_ACCEPTANCE_LEAF=<ID>`. |
 
-Blank lines and `#` comments are ignored in both.
+Blank lines and `#` comments are ignored in all three.
 
 ## When to declare evidence tokens
 

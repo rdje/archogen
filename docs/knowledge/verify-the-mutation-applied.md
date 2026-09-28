@@ -5,6 +5,7 @@ answers:
   - "How do I know a red arm actually exercised anything?"
   - "Why did my sed/python patch silently do nothing?"
   - "My mutation applied, its count assertion passed, and the arm still proves nothing — what did I miss?"
+  - "My RED arm reported a pass, but did the thing it tests actually run?"
 type: knowledge
 date: 2026-09-13
 ---
@@ -87,6 +88,38 @@ specific.
 This is [[a-gate-is-only-as-sharp-as-its-fixtures]] one level up: that card is about a population that
 cannot contain the case; this one is about a mutation that cannot remove all of it.
 
+## An oracle that accepts "not success" accepts "never ran"
+
+Added `2026-09-29`, measured on leaf `PROGRAM.21`.
+
+The same weakness appears on the other side of the arm — in its **pass condition**. Nine RED arms for a
+doctrine check were written as *"expect a non-zero exit"*, and the first run scored **four passes on
+`exit 127`**: the check under test could not be *found*, because the arms invoked it by a relative path
+and then `cd`'d into a throwaway repository. Nothing was verified. The four arms that expected failure
+"passed" on a command that never executed, and they passed *loudly enough to look right* — the harness
+printed ✅ and a tally of `4 pass / 5 fail`, so the number that should have been `0 pass` read as
+partial success.
+
+⛔ **A refusal and a failure to exec are different claims.** `127` is the shell's, not the subject's. An
+oracle written as `rc != 0` cannot distinguish "the gate correctly refused" from "the gate was not
+found", "the gate crashed", "the fixture was empty", or "the interpreter is missing" — and every one of
+those is a green tick on an arm that proved nothing. Require the subject's **own** verdict: the exact
+exit code it documents, *and* its own identifying text in the output.
+
+```sh
+# ✗ passes on 127, on a crash, on an empty fixture — on anything that is not success
+if [ "$rc" -ne 0 ]; then ok=$((ok + 1)); fi
+
+# ✓ the subject's documented refusal code AND the subject's own voice
+if [ "$rc" -eq 1 ] && printf '%s' "$out" | grep -q 'TASK-ACCEPTANCE'; then verdict=good; fi
+```
+
+⭐ **The general rule, and it is the same rule as the sections above.** An arm has three parts that can
+each be weaker than the property: the **needle** (does it match?), the **mutation** (did it destroy the
+property, or one instance of it?), and the **oracle** (does its pass condition exclude the ways the arm
+can fail to run?). A count assertion covers the first, a post-mutation assertion the second, and only an
+exact verdict covers the third. Check all three, or the arm is decoration that prints ✅.
+
 ## How to apply
 
 - Never write `sed -i` / `s.replace(...)` for a mutation without a count assertion. `sed` in
@@ -94,6 +127,10 @@ cannot contain the case; this one is about a mutation that cannot remove all of 
 - ⛔ **And never stop there: assert the post-mutation state, not only that the needle matched.** A
   partial mutation satisfies a count assertion and still leaves the property intact, so the arm proves
   nothing while looking exactly like one that does.
+- ⛔ **And make the oracle exact: require the subject's own documented exit code AND its own
+  identifying output — never merely `rc != 0`.** An arm that accepts any non-zero exit passes on `127`
+  (command not found), on a crash, and on an empty fixture: three ways to print ✅ while verifying
+  nothing, and the tally still reads like partial success.
 - Back the file up and **restore from the copy**, then prove the restore was exact —
   `git diff --stat <paths>` must be empty. A red arm that leaves the subject modified is worse
   than no red arm.

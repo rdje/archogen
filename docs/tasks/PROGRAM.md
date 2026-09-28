@@ -789,7 +789,7 @@ mdBook that is the director's window into the project.
   Commit: `pending`
 
 - ID: `PROGRAM.21`
-  Status: `active`
+  Status: `done`
   Goal: **`TASK-ACCEPTANCE` examines only the first acceptance checklist in a tree file, so for every
   leaf after the first it verifies nothing** — and prints a success message asserting the opposite.
   Make the check leaf-scoped, and arm it.
@@ -917,8 +917,123 @@ mdBook that is the director's window into the project.
   `git show HEAD:…` silent). Lockstep owed with the fix: `DOCTRINE_ENFORCEMENT.md` §4's description of
   this control, `.doctrine/README.md` for the new seam, `TOOLBOX.md`, and `PROGRAM.18`'s note that ten
   controls lack a RED arm (this one gains nine).
-  Verification: `pending`
-  Commit: `pending`
+  ✅ **That checkpoint is superseded the same day: the draft was installed, its arms were run, and the
+  fix landed.** The lockstep listed above is discharged in this commit, and the design was followed
+  except where measurement corrected it — see the NO REGRESSION box, where the arms' own oracle turned
+  out to be unsound in the same way the check was.
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE` — which, from this commit, enforces it *here*)
+
+  - [x] **ROOT CAUSE (WHY + WHERE)** — **WHERE:** `scripts/check_task_acceptance.sh`, the per-keyword
+    `awk` that extracts a box's bullet: `if (inbox) exit` stops at the *next* box bullet, and the awk is
+    run once over the whole tree **file**, so a file holding N leaves yields exactly one box per keyword
+    — whichever leaf comes first. **WHY it survived:** the check had already been hardened twice, for
+    cross-**file** and incidental-**prose** leakage, and its own header claimed box-scoping was "the
+    soundness property"; cross-**leaf** leakage is the same hole one directory level down, and the
+    success message asserted the opposite of what was examined, so a green run taught the author the
+    box they skipped did not matter. Measured at `HEAD`, not recalled:
+    ```text
+    $ git show HEAD:scripts/check_task_acceptance.sh | grep -n "if (inbox) exit"
+    111:          if (inbox) exit
+    $ grep -cE '^[[:space:]]*-[[:space:]]*\[[xX]\][[:space:]]*\*\*ROOT CAUSE' docs/tasks/M1.md
+    32                                        ← 32 ticked boxes in the file; the awk reads ONE
+    $ <HEAD's own awk, kw="root.?cause", over docs/tasks/M1.md>
+    53:   - [x] **ROOT CAUSE (WHY + WHERE)** — §12 M1's exit gate is that "invalid examples produce
+                                                ↑ leaf M1.1, written 2026-09-13
+    ```
+    ⛔ **And the fix's premise was priced before it was chosen.** Identifying the owner from the leaf
+    sections a commit touches — the only signal inside the staged paths — was measured against seven
+    real code commits and agrees with the `(leaf X)` subject token on **1 of 7** (`3a6bbb9` touched
+    `M1.13`+`M1.13.2`; `e4212c4` touched five leaves across two trees). So the owner comes from the
+    author's own declaration and the check refuses when there is none; the table is in the design
+    section above.
+  - [x] **FIX** — `scripts/check_task_acceptance.sh` rewritten leaf-scoped, plus the new seam
+    `.doctrine/commit_message_file`. (1) The owner is `TASK_ACCEPTANCE_LEAF`, else the `(leaf <ID>)`
+    token in the pending message's **subject**, else **refuse** — no fallback to the first checklist,
+    because that fallback *is* the defect. (2) The leaf's section is sliced by **exact string** match on
+    ``- ID: `<owner>` `` (not a regular expression, so an id's `.` cannot match another leaf's) running
+    to the next flush-left `- ID: ` or `## `, and the three-box awk now runs over that slice alone.
+    (3) A named leaf found in **no staged** tree file is refused, which catches a stale message file.
+    (4) The OK message names the leaf and the file it read. (5) `--self-test` with nine RED arms, each in
+    a throwaway `git init` repo under `mktemp -d`, because the house pattern in `check_book_anchors.sh`
+    cannot be copied by a check that reads `git diff --cached`.
+  - [x] **ADDRESSED (verified)** — both commits the defect was measured on, **replayed as fixtures**
+    rather than asserted from memory: each commit's own `docs/tasks/M1.md` and one of its staged source
+    files extracted with `git show <commit>:<path>` into a throwaway repo, its `.doctrine/` seams copied,
+    and a brief naming the leaf that commit claimed. Then the same fixture with that leaf's ROOT CAUSE
+    box unticked. `HEAD`'s check and the new one run over both:
+    ```text
+    cd355ef  pristine  OLD exit=0 OK | NEW exit=0  → "OK (leaf M1.13.1 in docs/tasks/M1.md — …)"
+    cd355ef  mutated   OLD exit=0 OK | NEW exit=1  → "leaf M1.13.1 — the 'ROOT CAUSE' box is present
+                                                      but NOT ticked."
+    3a6bbb9  pristine  OLD exit=0 OK | NEW exit=0  → "OK (leaf M1.13.2 in docs/tasks/M1.md — …)"
+    3a6bbb9  mutated   OLD exit=0 OK | NEW exit=1  → "leaf M1.13.2 — the 'ROOT CAUSE' box is present
+                                                      but NOT ticked."
+    ```
+    ⭐ Read the `mutated` rows as the finding: the OLD verdict is **byte-identical** pristine and
+    mutated, so those two commits' own boxes provably could not change it, while the NEW verdict moves
+    and names the right leaf. Both leaves were honest, which is why `pristine` passes on both — the
+    defect was never a bad commit, it was a gate that supplied no protection and said it had.
+    `bash scripts/check_task_acceptance.sh --self-test` → **9 pass / 0 fail**, `exit=0`.
+    `bash -n` clean; `make gate` → `=== all doctrines green ===` over 13 checks; `make focused` run
+    below. ⚠️ This commit is the new check's first real exercise: it gates itself, so the verdict it
+    prints is about *this* leaf's boxes and not `PROGRAM.1`'s.
+    ⭐ **And it refused this very commit before the brief was written** — the fail-closed path exercised
+    live rather than only in a fixture, with the real staged set (11 files, `scripts/…` among them):
+    ```text
+    $ git add <the 11 files> && bash scripts/check_doctrines.sh      # git_message_brief.txt still empty
+      ❌ TASK-ACCEPTANCE
+       TASK-ACCEPTANCE: a CODE change is staged but the check CANNOT TELL WHICH LEAF owns it.
+         It does not guess. Falling back to the first checklist in the file is how this check
+         came to print OK having read a different leaf's boxes, and a green verdict about a leaf
+         nobody claimed is worse than no verdict: the author reads it as protection.
+         Name the owning leaf either way:
+           • write the commit message to 'git_message_brief.txt' with '(leaf <ID>)' in its SUBJECT, or
+           • TASK_ACCEPTANCE_LEAF=<ID> <your commit command>
+         tried: TASK_ACCEPTANCE_LEAF (unset), 'git_message_brief.txt' (exists but its subject names no leaf)
+    ```
+    `make focused` → `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built`.
+  - [x] **NO REGRESSION** — three mutations, each restoration proven byte-identical with `diff -q`
+    against the saved copy (`target/tmp/p21/new.sh.orig`), per
+    `docs/knowledge/verify-the-mutation-applied.md`:
+    ```text
+    mutation A: replace the fail-closed refusal with the OLD behaviour — take the first leaf in the file
+      → self-test `8 pass / 1 fail`: arm 4 (no owner identifiable) goes green, so the refusal is
+        load-bearing and an arm proves it
+    mutation B: point the arms' invocation at a file that does not exist, exact oracle kept
+      → self-test `0 pass / 9 fail`: every arm reports that the check never ran
+    mutation B2: the same break, with the oracle weakened from `rc -eq 1 && grep TASK-ACCEPTANCE` to
+      `rc -ne 0`
+      → self-test `4 pass / 5 fail`, and the four ✅ are arms 1/3/4/5 **reported as passes on
+        `exit 127`** — the false green reproduced deliberately
+    restored: `diff -q` silent; self-test `9 pass / 0 fail`, `exit=0`
+    ```
+    ⛔ **B2 is the reason this leaf found a second defect, in its own new code.** The arms as first
+    written used `rc -ne 0` as the pass condition, and their first run scored **4 passes on `exit 127`**
+    — `$0` was a relative path and every arm `cd`s into a throwaway repo, so the check was never found.
+    A refusal and a failure to exec are different claims, and an oracle that accepts "not success"
+    cannot tell them apart; the tally still read like partial success. Fixed by requiring the subject's
+    **own** exit code and its **own** identifying output, and by resolving the invocation path against
+    the directory the caller stood in. Promoted into `docs/knowledge/verify-the-mutation-applied.md`,
+    which now names all three parts of an arm that can be weaker than the property: the needle, the
+    mutation, and the oracle.
+  - [x] **LOCKSTEP** — `scripts/check_task_acceptance.sh` (header now names three leakage holes, the
+    leaf-scoping rationale, the fail-closed rule and its three honest limits);
+    `.doctrine/commit_message_file` (new seam, with the 1-of-7 measurement as its reason);
+    `.doctrine/README.md` (the seam table, "in both" → "in all three"); `DOCTRINE_ENFORCEMENT.md` §4's
+    `TASK-ACCEPTANCE` row (two holes → three, the identification rule, the refusal, nine arms);
+    `TOOLBOX.md` (a row for the check and its `--self-test`);
+    `docs/knowledge/verify-the-mutation-applied.md` (new section + `answers:` line + a How-to-apply
+    bullet); this leaf, this tree's frontier and both logs; `MEMORY.md`, `LIVE_STATUS.md`,
+    `CHANGELOG.md`, `DEV_NOTES.md`. ⛔ `KNOWLEDGE_MAP.md` was regenerated and came out **unchanged** —
+    `git diff --stat HEAD -- KNOWLEDGE_MAP.md` empty, and `grep -c` for the new `answers:` line in the
+    map returns 0, so the map does not index a card's `answers:` and adding one moves nothing. Recorded
+    rather than claimed, because "regenerated the map" reads as "the map changed". ⭐ `PROGRAM.18`'s
+    population moves: it counted ten registered controls with no repeatable RED arm,
+    `check_task_acceptance.sh` among them — this one now has nine, so `PROGRAM.18` keeps the other nine
+    and must re-run its census rather than reuse the figure.
+  Verification: see the acceptance checklist above.
+  Commit: `ARCHOGEN-PROGRAM-0086 (leaf PROGRAM.21)`
 
 - ID: `PROGRAM.22`
   Status: `done`
@@ -1349,19 +1464,33 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.11` | `active` | the repository-boundary doctrine, **in both directions**. The rule was nowhere in the committed tree, which is how an *inbound* crossing got recorded backwards in a durable record. Priority medium: the outbound half is preventive, the inbound half fired once and was handled correctly |
-| 2 | `PROGRAM.21` | `pending` | **high** — `TASK-ACCEPTANCE` reads only the *first* checklist in a tree file, so for every later leaf it verifies nothing and then says it did. Measured: `M1.md` carries 24 ticked ROOT CAUSE boxes and the check's awk captures line 52 (`M1.1`); a staged `.rs` with `M1.24` carrying zero boxes returned `exit=0`. Latent, not active — all five checklist-less committed leaves staged no code. Ahead of `PROGRAM.18`, which would otherwise arm the wrong boxes |
-| 3 | `PROGRAM.18` | `pending` | **medium-high** — ten of eighteen registered controls carry no repeatable `--self-test` RED arm, `check_task_acceptance.sh` among them: its box-scoping was validated once during development and no arm re-fires it. Found by the claim-verification adoption's §7.4 sweep, and `PROGRAM.21` is what an arm would have caught |
-| 4 | `PROGRAM.24` | `pending` | **medium-high** — the mirror direction of `BOOK-ANCHORS`, which nobody checks: does a capability the codebase has get described in the book? One live instance measured `2026-09-28`: the `rt-analysis` crate is named nowhere in `docs/book/`, and `analysis.md` — the chapter about what it establishes — cites only `ROADMAP.md` and a cost-accounting doc, passing both `BOOK-ANCHORS` legs while never telling its reader where the code is. Filed by `M1.12.5` on the director's lockstep instruction |
-| 5 | `PROGRAM.5` | `pending` | the §15/§19 dependency and evidence ledger — every external source claim in the book should resolve to a row, and `BOOK-ANCHORS` now checks the *internal* ones. The director has offered a read-only external document source (ISA / RISC-V / devicetree / peripheral specifications) reachable by operator-relayed request; the ledger is where that seam gets a row |
-| 6 | `PROGRAM.9` | `pending` | the extended tier reports `incomplete` on every run until its three steps exist |
-| 7 | `PROGRAM.6` | `pending` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |
-| 8 | `PROGRAM.13` | `pending` | twelve closed leaves in `BOOTSTRAP`, `M2` and this tree do not name their own commit — backfill both logs from git, then `PROGRAM.14` gates it so the gap cannot reopen |
-| 9 | `PROGRAM.15` | `pending` | a feedback register row that contradicts its own issue sub-tree passes every gate today; five state transitions in six commits held only by hand-editing and a manual census |
-| 10 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
-| 11 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with |
-| 12 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
-| 13 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
+| 1 | `PROGRAM.11` | `active` | **the frontier leaf** — the repository-boundary doctrine, **in both directions**. The rule was nowhere in the committed tree, which is how an *inbound* crossing got recorded backwards in a durable record. Priority medium: the outbound half is preventive, the inbound half fired once and was handled correctly |
+| 2 | `PROGRAM.18` | `pending` | **medium-high** — **nine** of eighteen registered controls carry no repeatable `--self-test` RED arm. ⛔ The figure this row carried was **ten**, and `PROGRAM.21` moved it: `check_task_acceptance.sh` now ships nine arms, so `PROGRAM.18` must **re-run its census** rather than reuse the number — the exact defect class `PROGRAM.20` exists to catch. Its own reason for being sequenced behind `PROGRAM.21` is discharged: arming the boxes is now meaningful because the check reads the right ones |
+| 3 | `PROGRAM.24` | `pending` | **medium-high** — the mirror direction of `BOOK-ANCHORS`, which nobody checks: does a capability the codebase has get described in the book? One live instance measured `2026-09-28`: the `rt-analysis` crate is named nowhere in `docs/book/`, and `analysis.md` — the chapter about what it establishes — cites only `ROADMAP.md` and a cost-accounting doc, passing both `BOOK-ANCHORS` legs while never telling its reader where the code is. Filed by `M1.12.5` on the director's lockstep instruction |
+| 4 | `PROGRAM.5` | `pending` | the §15/§19 dependency and evidence ledger — every external source claim in the book should resolve to a row, and `BOOK-ANCHORS` now checks the *internal* ones. The director has offered a read-only external document source (ISA / RISC-V / devicetree / peripheral specifications) reachable by operator-relayed request; the ledger is where that seam gets a row |
+| 5 | `PROGRAM.9` | `pending` | the extended tier reports `incomplete` on every run until its three steps exist |
+| 6 | `PROGRAM.6` | `pending` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |
+| 7 | `PROGRAM.13` | `pending` | twelve closed leaves in `BOOTSTRAP`, `M2` and this tree do not name their own commit — backfill both logs from git, then `PROGRAM.14` gates it so the gap cannot reopen |
+| 8 | `PROGRAM.15` | `pending` | a feedback register row that contradicts its own issue sub-tree passes every gate today; five state transitions in six commits held only by hand-editing and a manual census |
+| 9 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
+| 10 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. ⭐ A **near-miss** worth pricing in, recorded honestly as a near-miss and not as a fourth instance: `PROGRAM.18`'s frontier row still read "ten of eighteen controls" while this leaf was being written, and was corrected in the same commit — it would have gone stale the moment the fix landed, and nothing in the tree compares a control count against the controls. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with |
+| 11 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
+| 12 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
+
+**`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
+cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
+stopping at the first box, so a file of N leaves verified whichever came first and then printed that it
+had checked the staged change. Measured active on two real commits, and replayed here as fixtures rather
+than recalled: `cd355ef` and `3a6bbb9` each return a **byte-identical** verdict from `HEAD`'s check
+pristine and with the committing leaf's own ROOT CAUSE box unticked, while the new check moves and names
+the right leaf. The owner is taken from the author's declaration — `TASK_ACCEPTANCE_LEAF`, else the
+`(leaf <ID>)` token in the pending message's subject — and **never inferred from the staged paths**,
+because that signal was priced against seven real code commits and agrees on **1 of 7**. Nine `--self-test`
+RED arms, each in a throwaway repository. ⛔ The arms' own first oracle was unsound in the same way the
+check was: `rc -ne 0` scored **four passes on `exit 127`**, a check that was never found, and the tally
+still read like partial success — reproduced deliberately as mutation B2 and promoted into
+`docs/knowledge/verify-the-mutation-applied.md`, which now names all three parts of an arm that can be
+weaker than the property.
 
 `PROGRAM.16` is closed: the claim-verification policy is adopted as `docs/CLAIM_VERIFICATION.md`,
 copied verbatim and diff-verified against its read-only source, restated in this project's terms as
@@ -1439,6 +1568,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-28` | `PROGRAM.19` (second run) | the trigger read off `docs/ARTIFACT_CLEANUP.md` rather than assumed; a full inventory taken before any deletion; a residue census over every deleted path; `git grep` for each retention candidate's consumers; the focused tier re-run **cold**, with the scratch it consumes already deleted | ≈18 MB released: `target` 873 MB → 855 MB, `.bin` files 715 → 693, all 7 deleted paths `gone`; **2.2 GB retained on evidence** — `pgen-generated-before-remeasure` is read by `LS-004`'s `remeasure.sh:225-227`, and `target/debug/incremental` holds at most four generations per crate across 121 directories, which is cargo's retention and not residue; `make focused` → `passed — 3 / 0 / 0` cold; 13 doctrines green; `git status --porcelain` empty after the deletions |
 | `2026-09-28` | `PROGRAM.21` | **no code changed — this is the finding's severity re-measured, not its fix.** Three instruments over the commit that had just landed: a `grep -c` census of ticked ROOT CAUSE boxes in `docs/tasks/M1.md`; the check's **own awk**, extracted from `scripts/check_task_acceptance.sh` and run over the file with `kw="root.?cause"`, printing the line it captures and whether that box is ticked; and a **mutation** — `M1.13.1`'s ROOT CAUSE box unticked in a scratch copy under `target/tmp/m113/`, with the same awk re-run over both files and the captures compared | the census returns **31** ticked boxes where this leaf recorded 24; the awk captures **line 53, ticked=1**, which is leaf `M1.1`'s box from `2026-09-13`, while `M1.13.1`'s sits near line 1470; and the mutation gives an **identical capture for both files**, so `M1.13.1`'s boxes provably cannot affect the verdict for commit `cd355ef` — five Rust files staged, `task-acceptance: OK`, `exit=0`. ⛔ The severity claim on this leaf is therefore superseded from *latent* to **active**: the gate read a thirteen-day-old checklist belonging to a different leaf and reported that it had checked the staged change |
 | `2026-09-29` | `PROGRAM.25` | **docs-only, and the point of the run was to falsify the finding before filing it.** `command -v pdftotext pdftk mutool qpdf gs`; `pdftotext -v`; `pdftotext -f 1 -l 6` on the FE310-G002 datasheet to stdout; both semulith censuses (`git grep` excluding `vendor/`, and a filesystem walk of `vendor/`); `.gitmodules`; and a resolution check on every citation the new record makes | ⛔ **The finding as raised was false and the measurement is what caught it**: `pdftotext` resolves to `/opt/homebrew/bin/pdftotext` (Xpdf **4.06**), and the datasheet's first page extracts, so chipdoc's board PDFs are readable here and §3.2's `board-first` rows are **not** blocked on tooling — `read_file`'s bridge cannot see the host `PATH`, and its "not installed" message describes the bridge. A blocker on tree `M5` was drafted on that false premise and is **not** filed; what is filed is the route, in `TOOLBOX.md` and beside the chipdoc record's inventory. Semulith census: **0** archogen tracked files name it, **40** files inside the vendored submodule do, and `.gitmodules` confirms `vendor/linkedspec` is a submodule — so `git grep` alone returns a false negative and the census needs both halves. All four citations resolve; `make gate` → `13/13 green` |
+| `2026-09-29` | `PROGRAM.21` | the check rewritten leaf-scoped, then **its own RED arms run before anything was claimed** — and the arms' first oracle found unsound, so three mutations were run over the finished script (`bash -n` first, then `--self-test`); both historical commits **replayed as fixtures** built from `git show <commit>:<path>` in throwaway repos, each run pristine and then with the committing leaf's ROOT CAUSE box unticked, against `HEAD`'s check and the new one side by side; `make focused`; `make gate`; the knowledge map regenerated | ⛔ **The arms' first run scored `4 pass / 5 fail` and the four passes were on `exit 127`** — the check was never found, because `$0` was relative and every arm `cd`s into a throwaway repo, and the oracle was `rc -ne 0`. Mutation B2 reproduces that false green deliberately (`4 pass / 5 fail`, arms 1/3/4/5 ✅ on 127) while mutation B, with the exact oracle, gives `0 pass / 9 fail`. Restored: `diff -q` silent, `9 pass / 0 fail`, `exit=0`. Mutation A (restore the first-leaf fallback) → `8 pass / 1 fail`, arm 4 only, so the refusal is load-bearing. **Replay, the finding:** `cd355ef` and `3a6bbb9` both give OLD `exit=0 OK` **pristine and mutated** — byte-identical, so neither commit's own boxes could affect the verdict — while NEW gives `exit=0` pristine naming `M1.13.1`/`M1.13.2` and `exit=1` mutated naming the same leaf. Root cause confirmed at `HEAD`: `if (inbox) exit` at line 111, **32** ticked ROOT CAUSE boxes in `docs/tasks/M1.md`, and that awk captures **line 53** — leaf `M1.1`, `2026-09-13`. `make focused` → `passed — 3 / 0 / 0`; `make gate` → `13 doctrines green`; ⚠️ the draft had also silently **widened `DEFAULT_SIG`** with a token that does not exist (`\bspindb\b`) and mis-dated a historical comment — both caught by diffing the preserved blocks against `HEAD` and restored byte-identical |
 
 ## Commit Log
 
@@ -1453,6 +1583,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.19` | `ARCHOGEN-PROGRAM-0074 (leaf PROGRAM.19, second run)` | ≈18 MB more released, and **2.2 GB retained on evidence**: a frozen instrument's backup, which `remeasure.sh` treats an existing copy of as a reason to keep it, and cargo's own incremental cache. Runs append to the standing owner rather than becoming one leaf per day |
 | `PROGRAM.21` | `ARCHOGEN-PROGRAM-0081 (leaf PROGRAM.21)` | **filed, not fixed** — the severity re-measured from *latent* to **active** on commit `cd355ef`: five Rust files staged, `task-acceptance: OK`, and the box it read was leaf `M1.1`'s from `2026-09-13`. A mutation proves `M1.13.1`'s own boxes could not have changed the verdict. No code in this commit, so the gate stays unsound and the fix is still owed |
 | `PROGRAM.25` | `ARCHOGEN-PROGRAM-0083 (leaf PROGRAM.25)` | two findings raised in conversation and owned by nothing are now tracked — census, both halves, because `git grep` alone is a false negative here: `git grep -il semulith -- ':!vendor' \| wc -l` → **0** archogen tracked files, `grep -ril semulith vendor/ \| wc -l` → **40** files inside the submodule, which `.gitmodules` confirms `git grep` skips. And one of the two findings was **false as raised**: `pdftotext` is on the host (`/opt/homebrew/bin`, Xpdf 4.06) and chipdoc's board datasheets extract fine, so `read_file`'s "not installed" is a bridge limitation and §3.2's `board-first` rows are not tooling-blocked. The route is a `TOOLBOX.md` row and a note beside the chipdoc inventory; an `M5` blocker drafted on the false premise is **not** filed. `docs/decisions/reference_sibling-project-semulith.md` records that `../semulith` exists, is read-only, and names archogen as its consumer — a pointer with no analysis, which is what was declined |
+| `PROGRAM.21` | `ARCHOGEN-PROGRAM-0086 (leaf PROGRAM.21)` | **fixed, not filed**: `TASK-ACCEPTANCE` is leaf-scoped. The owner comes from `TASK_ACCEPTANCE_LEAF` or the `(leaf <ID>)` token in the pending message's subject through the new `.doctrine/commit_message_file` seam, and the check **refuses** when it cannot tell — never falling back to the first checklist, because that fallback *was* the defect. The staged-paths signal was priced first and is dead: **1 of 7** real code commits. Both historical commits replayed as fixtures, pristine and mutated, old check against new: the old verdict is byte-identical either way, the new one moves and names the right leaf. Nine `--self-test` arms; ⛔ their first oracle scored **4 passes on `exit 127`** and the false green is reproduced deliberately as mutation B2, promoted into `verify-the-mutation-applied`. This commit is the new check's first real exercise — it gated itself |
 
 ## Changelog
 

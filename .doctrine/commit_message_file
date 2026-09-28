@@ -1,0 +1,21 @@
+# .doctrine/commit_message_file — where TASK-ACCEPTANCE finds the pending commit message.
+#
+# One path, relative to the repository root. Blank lines and `#` comments are ignored; the first
+# remaining line wins. Absent file ⇒ the neutral default `git_message_brief.txt`.
+#
+# ⛔ WHY THIS SEAM EXISTS — measured, not anticipated. `TASK-ACCEPTANCE` has to verify the boxes of
+#   the leaf that OWNS the staged change, and **no signal inside the staged paths identifies it**.
+#   Priced over seven real code commits, the set of leaf sections a commit's tree-file diff touches
+#   names the right leaf **once in seven**: a commit legitimately touches its own leaf, its parent,
+#   the frontier table, and every leaf it routes a finding to (`PROGRAM.21`). The commit message's
+#   SUBJECT is the one place the author states the owner, and `COMMIT.md` step 4 writes this file
+#   before step 6 runs `git commit -F`, so it exists at `pre-commit` time. The subject must carry
+#   `(leaf <ID>)`.
+#
+#   When the owner cannot be identified the check **REFUSES** rather than falling back to the first
+#   checklist in the file — that fallback is precisely the defect `PROGRAM.21` measured: a green
+#   verdict about a leaf nobody claimed, which the author reads as protection. For a commit made with
+#   no message file at all (an IDE dialog, `git commit -m`), name the leaf directly:
+#
+#       TASK_ACCEPTANCE_LEAF=<ID> git commit -m '…'
+git_message_brief.txt

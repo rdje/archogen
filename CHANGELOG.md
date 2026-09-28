@@ -4,6 +4,56 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it cannot tell which one that is
+
+`ARCHOGEN-PROGRAM-0086` (leaf `PROGRAM.21`). **Fixed, not filed** — the gate that enforces root-cause,
+effect and no-regression evidence on every code change had been reading the wrong checklist since the
+repository was created, and saying it had checked the staged one.
+
+- ⛔ **The hole was cross-*leaf* leakage.** One `awk` ran over the whole tree **file** and stopped at the
+  first box it found (`if (inbox) exit`, line 111 at `HEAD`), so a file of N leaves verified exactly one
+  — whichever came first. `docs/tasks/M1.md` carries **32** ticked ROOT CAUSE boxes; the awk captured
+  **line 53**, leaf `M1.1`, written `2026-09-13`. The check had already been hardened twice, for
+  cross-*file* and incidental-*prose* leakage, and its header called box-scoping "the soundness
+  property" — this was the same hole one directory level down.
+- ⭐ **Both real commits it mis-gated were replayed as fixtures**, not recalled: each commit's own
+  `docs/tasks/M1.md` and one staged source file extracted with `git show <commit>:<path>` into a
+  throwaway repo, run pristine and then with the committing leaf's ROOT CAUSE box unticked, old check
+  against new. `cd355ef` and `3a6bbb9` both give the **old** check a byte-identical `exit=0 OK` either
+  way — so neither commit's own boxes could have changed its verdict — while the new check passes
+  pristine naming `M1.13.1`/`M1.13.2` and refuses when that leaf's box is unticked.
+- **The owner is declared, never inferred.** It comes from `TASK_ACCEPTANCE_LEAF`, else the `(leaf <ID>)`
+  token in the pending message's subject through the new `.doctrine/commit_message_file` seam, else the
+  check **refuses** — because falling back to the first checklist in the file *is* the defect, and a
+  green verdict about a leaf nobody claimed is worse than no verdict. The inference route was priced
+  first and is dead: the leaf sections a commit's diff touches agree with the subject on **1 of 7** real
+  code commits. Leaf sections are sliced by **exact string** match, not a regular expression, so an id's
+  `.` cannot match another leaf's.
+- ⛔ **The new arms' first oracle was unsound in the same way the check was.** Written as
+  `[ "$rc" -ne 0 ]`, the first run scored **`4 pass / 5 fail`** — and all four passes were on
+  **`exit 127`**: `$0` was a relative path and every arm `cd`s into a throwaway repo, so the check was
+  never found. The tally read like partial progress; the truth was that nothing had been exercised. Now
+  each arm requires the subject's **own** exit code and its **own** identifying output, and mutation B2
+  reproduces the false green deliberately (`4 pass / 5 fail` weak oracle vs `0 pass / 9 fail` exact).
+- Three mutations, each restoration proven byte-identical: A restores the first-leaf fallback →
+  `8 pass / 1 fail`, arm 4 only, so the refusal is load-bearing; B breaks the invocation path with the
+  exact oracle → `0 pass / 9 fail`; B2 the same with the weak oracle → the false green. Restored:
+  **9 pass / 0 fail**, `exit=0`.
+- ⛔ **Two silent corruptions in the rewrite, caught by diffing the blocks meant to be preserved:**
+  `DEFAULT_SIG` had been widened with a token that does not exist (`\bspindb\b` beside `\bspindump\b`),
+  which would have let a box pass on evidence that is not evidence, and a historical comment had been
+  re-dated `awk version 20200816` → `20260816`, falsifying a record of what an earlier cut rejected.
+  Both restored byte-identical to `HEAD`. Neither is visible reading a rewrite top to bottom.
+- Lockstep: the check's header now names three leakage holes and three honest limits; the new seam is
+  documented in `.doctrine/README.md` with its measurement; `DOCTRINE_ENFORCEMENT.md` §4's row; a
+  `TOOLBOX.md` row; `docs/knowledge/verify-the-mutation-applied.md` gains the oracle section, a fifth
+  `answers:` line and a How-to-apply bullet — an arm has **three** parts that can each be weaker than
+  the property (needle, mutation, oracle). ⭐ `PROGRAM.18`'s population moved from ten controls without
+  a RED arm to **nine**, and its frontier row says to re-run the census rather than reuse the figure.
+- `make focused` → `passed — 3 / 0 / 0`; `make gate` → 13 doctrines green; `bash -n` clean. **This
+  commit is the new check's first real exercise: it gated itself**, so the verdict it printed is about
+  `PROGRAM.21`'s boxes and not `PROGRAM.1`'s.
+
 ## archogen — two findings raised in conversation are now owned by a task tree, and one of them was false
 
 `ARCHOGEN-PROGRAM-0083` (leaf `PROGRAM.25`). Docs only. §15 makes raising an issue the *first* step and
