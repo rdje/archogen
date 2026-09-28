@@ -80,7 +80,8 @@ use eadl_front::{read, Form, Severity, SourceMap};
 mod common;
 
 use common::reference_table::{
-    control_character, decode_escapes, encode_canonical, machine_table, StringValue, Value,
+    control_character, decode_escapes, encode_canonical, machine_table, source_text, StringValue,
+    Value,
 };
 
 /// The normative document under test.
@@ -213,7 +214,19 @@ fn number_violations(document: &str) -> Vec<String> {
             ));
             continue;
         };
-        let found = probe(literal);
+        // The source notation is decoded for every table, not only §2's, so one cell spelling means
+        // one input to both consumers of this document.
+        let Some(text) = source_text(literal) else {
+            out.push(violation(
+                line,
+                format!(
+                    "`{literal}` names a character the source notation cannot decode, so nothing \
+                     checks this row"
+                ),
+            ));
+            continue;
+        };
+        let found = probe(&text);
         if let Some(code) = expected.refusal() {
             if !found.errors.contains(&code) {
                 out.push(violation(
@@ -283,7 +296,7 @@ fn number_violations(document: &str) -> Vec<String> {
                 ),
             ));
         }
-        if let Some(message) = round_trip_violation(line, literal, &printed) {
+        if let Some(message) = round_trip_violation(line, &text, &printed) {
             out.push(message);
         }
     }
@@ -304,7 +317,17 @@ fn string_violations(document: &str) -> Vec<String> {
             ));
             continue;
         };
-        let found = probe(source);
+        let Some(text) = source_text(source) else {
+            out.push(violation(
+                line,
+                format!(
+                    "`{source}` names a character the source notation cannot decode, so nothing \
+                     checks this row"
+                ),
+            ));
+            continue;
+        };
+        let found = probe(&text);
         let expected = match StringValue::parse(stated) {
             None => {
                 out.push(violation(
@@ -397,7 +420,7 @@ fn string_violations(document: &str) -> Vec<String> {
                 ),
             ));
         }
-        if let Some(message) = round_trip_violation(line, source, &printed) {
+        if let Some(message) = round_trip_violation(line, &text, &printed) {
             out.push(message);
         }
     }
@@ -1574,6 +1597,23 @@ fn arm_6_canonical_text_carrying_a_control_character_is_reported() {
         encode_canonical("a\rb"),
         format!("\"a{}b\"", '\r'),
         "a printer that emits the character itself is what this forbids"
+    );
+
+    // ⭐ Unicode `Cc`, not ASCII only. `M1.13.1` widened the predicate and the printer together, and
+    // C1 is the half an `is_ascii_control` predicate silently drops: a rule stated about "no control
+    // character" that checks only ASCII has a hole 33 characters wide, and finding F-G was measured
+    // through exactly one of them.
+    assert_eq!(control_character("(a \"x\u{9f}y\")"), Some('\u{9f}'));
+    assert_eq!(control_character("(a \"x\u{7f}y\")"), Some('\u{7f}'));
+    assert_eq!(
+        encode_canonical("a\u{9f}b"),
+        "\"a\\u{9f}b\"",
+        "a C1 control character has no named escape, so it prints by code point"
+    );
+    assert_eq!(
+        encode_canonical("a\u{0}b"),
+        "\"a\\u{0}b\"",
+        "a NUL is the byte that truncates whatever it is written into"
     );
 }
 

@@ -35,7 +35,7 @@ use eadl_front::{read, Form, SourceMap};
 
 mod common;
 
-use common::reference_table::{machine_table, StringValue, Value};
+use common::reference_table::{machine_table, source_text, StringValue, Value};
 
 /// The normative grammar, and the normative reference whose literal table it is compared against.
 ///
@@ -94,6 +94,29 @@ fn lex(src: &str) -> Vec<String> {
             i += 1;
             while i < chars.len() && chars[i] != quote {
                 if chars[i] == '\\' && i + 1 < chars.len() {
+                    // ⭐ `\u{…}` is the same escape the language has, and it is what lets the notation
+                    // name a control character at all: `control` is a set of ranges whose bounds are
+                    // invisible bytes, and a grammar that cannot write one cannot exclude one. The
+                    // supported escapes in an EBNF literal are therefore the language's own, which
+                    // keeps one spelling of `\u{1b}` meaning one thing in both documents.
+                    if chars[i + 1] == 'u' && i + 2 < chars.len() && chars[i + 2] == '{' {
+                        let mut at = i + 3;
+                        let mut digits = String::new();
+                        while at < chars.len() && chars[at] != '}' {
+                            digits.push(chars[at]);
+                            at += 1;
+                        }
+                        assert!(at < chars.len(), "an EBNF literal has an unclosed `\\u{{`");
+                        let code = u32::from_str_radix(&digits, 16).unwrap_or_else(|_| {
+                            panic!("`\\u{{{digits}}}` in the EBNF is not hexadecimal")
+                        });
+                        lit.push(
+                            char::from_u32(code)
+                                .unwrap_or_else(|| panic!("`\\u{{{digits}}}` names no character")),
+                        );
+                        i = at + 1;
+                        continue;
+                    }
                     lit.push(match chars[i + 1] {
                         'n' => '\n',
                         't' => '\t',
@@ -760,6 +783,8 @@ fn the_conformance_probes_exercise_every_production() {
             ("uppercase hexadecimal", "(n 0xDEADBEEF)"),
             ("empty string", "(s \"\")"),
             ("string with escapes", "(s \"a\\\"b\\\\c\\nd\\te\")"),
+            ("string with a general escape", "(s \"a\\u{1b}b\")"),
+            ("raw tab inside a string", "(s \"a\tb\")"),
             ("string containing delimiters", "(s \"(;)\")"),
             ("crlf line endings", "(a)\r\n(b)\r\n"),
             ("tabs as whitespace", "(a\tb)"),
@@ -822,8 +847,8 @@ fn literal_space(reference: &str, grammar: &Grammar) -> LiteralSpace {
         rejected: 0,
         violations: Vec::new(),
     };
-    for (line, literal, well_formed) in literal_rows(reference) {
-        let accepted = grammar.accepts(&literal);
+    for (line, cell, text, well_formed) in literal_rows(reference) {
+        let accepted = grammar.accepts(&text);
         if accepted {
             space.accepted += 1;
         } else {
@@ -831,7 +856,7 @@ fn literal_space(reference: &str, grammar: &Grammar) -> LiteralSpace {
         }
         if accepted != well_formed {
             space.violations.push(format!(
-                "docs/semantics/reference.md:{line}: the reference says `{literal}` is {}, and the \
+                "docs/semantics/reference.md:{line}: the reference says `{cell}` is {}, and the \
                  recognizer derived from docs/semantics/grammar.md {} it",
                 if well_formed {
                     "well-formed"
@@ -845,26 +870,32 @@ fn literal_space(reference: &str, grammar: &Grammar) -> LiteralSpace {
     space
 }
 
-/// Every literal row of both tables, as `(line, literal, whether the reference calls it well-formed)`.
+/// Every literal row of both tables, as `(line, the cell as written, the text it denotes, whether the
+/// reference calls it well-formed)`.
+///
+/// The cell and the text it denotes are carried separately, because a row about a raw control byte is
+/// written `<0x1b>` and feeding *that* to the recognizer would ask it about the wrong input — while
+/// printing the decoded byte in a violation message would put an invisible character in the failure
+/// output. `source_text` is the one decoder, shared with `reference.rs`.
 ///
 /// Rows this file cannot read are skipped rather than reported: a cell the notation cannot express is
 /// `reference.rs`'s complaint, and reporting it here too would make one defect look like two.
-fn literal_rows(reference: &str) -> Vec<(usize, String, bool)> {
+fn literal_rows(reference: &str) -> Vec<(usize, String, String, bool)> {
     let mut rows = Vec::new();
     for (line, cells) in machine_table(reference, "number-values") {
         let (Some(literal), Some(stated)) = (cells.first(), cells.get(1)) else {
             continue;
         };
-        if let Some(value) = Value::parse(stated) {
-            rows.push((line, literal.clone(), value.well_formed()));
+        if let (Some(value), Some(text)) = (Value::parse(stated), source_text(literal)) {
+            rows.push((line, literal.clone(), text, value.well_formed()));
         }
     }
     for (line, cells) in machine_table(reference, "string-values") {
         let (Some(literal), Some(stated)) = (cells.first(), cells.get(1)) else {
             continue;
         };
-        if let Some(value) = StringValue::parse(stated) {
-            rows.push((line, literal.clone(), value.well_formed()));
+        if let (Some(value), Some(text)) = (StringValue::parse(stated), source_text(literal)) {
+            rows.push((line, literal.clone(), text, value.well_formed()));
         }
     }
     rows
@@ -953,8 +984,8 @@ fn arm_2_a_grammar_that_stops_admitting_the_uppercase_prefix_is_reported() {
 fn arm_3_a_grammar_that_admits_a_null_escape_is_reported() {
     // Finding F-C restored: `escape` used to admit `"0"`, and the reader has never implemented `\0`.
     let mutated = GRAMMAR_DOCUMENT.replace(
-        r#"escape          = "\\" , ( quote | "\\" | "n" | "t" | "r" ) ;"#,
-        r#"escape          = "\\" , ( quote | "\\" | "n" | "t" | "r" | "0" ) ;"#,
+        r#"escape          = "\\" , ( quote | "\\" | "n" | "t" | "r" | unicode_escape ) ;"#,
+        r#"escape          = "\\" , ( quote | "\\" | "n" | "t" | "r" | unicode_escape | "0" ) ;"#,
     );
     assert_ne!(
         mutated, GRAMMAR_DOCUMENT,
@@ -976,5 +1007,78 @@ fn arm_3_a_grammar_that_admits_a_null_escape_is_reported() {
         space.violations[0].contains("NOT well-formed"),
         "the violation does not name the claim: {}",
         space.violations[0]
+    );
+}
+
+#[test]
+fn arm_4_a_grammar_that_admits_a_raw_control_character_is_reported() {
+    // Finding F-G restored. `string_char` was `any - quote - "\\"`, which admits every control byte,
+    // while the reader refused the same byte between forms as "a stray control character" — so the
+    // language had the rule and stopped applying it at the opening quote. Reverting the exclusion must
+    // fail, on exactly the rows that state it.
+    let mutated = GRAMMAR_DOCUMENT.replace(
+        r#"string_char     = escape | ( any - quote - "\\" - control ) ;"#,
+        r#"string_char     = escape | ( any - quote - "\\" ) ;"#,
+    );
+    assert_ne!(
+        mutated, GRAMMAR_DOCUMENT,
+        "the mutation did not apply — a false green"
+    );
+    let grammar = Grammar::from_document(&mutated);
+    assert!(
+        grammar.accepts("\"a\u{1b}b\""),
+        "the mutated grammar still rejects a raw ESC, so this arm proves nothing"
+    );
+    let space = literal_space(REFERENCE, &grammar);
+    // Four: the raw ESC, the raw NUL, the raw C1 control and the raw line feed. The raw TAB row is
+    // well-formed and stays accepted, so it is this arm's green control — the exception is pinned by
+    // the same leg that pins the rule.
+    assert_eq!(
+        space.violations.len(),
+        4,
+        "expected the four raw-control-character rows; got:\n{}",
+        space.violations.join("\n\n")
+    );
+    assert!(
+        space.violations
+            .iter()
+            .all(|each| each.contains("NOT well-formed")),
+        "a violation that is not about well-formedness means the count is right for the wrong reason"
+    );
+}
+
+#[test]
+fn arm_5_a_grammar_that_drops_the_general_escape_is_reported() {
+    // The other half of F-G: `\u{…}` is what makes the escape set sufficient, so §3 can escape a
+    // control character and still produce text the language reads back (§3 rule 5). Drop it from
+    // `escape` and every row that writes a character by code point becomes unreadable.
+    let mutated = GRAMMAR_DOCUMENT.replace(
+        r#"escape          = "\\" , ( quote | "\\" | "n" | "t" | "r" | unicode_escape ) ;"#,
+        r#"escape          = "\\" , ( quote | "\\" | "n" | "t" | "r" ) ;"#,
+    );
+    assert_ne!(
+        mutated, GRAMMAR_DOCUMENT,
+        "the mutation did not apply — a false green"
+    );
+    let grammar = Grammar::from_document(&mutated);
+    assert!(
+        !grammar.accepts(r#""a\u{1b}b""#),
+        "the mutated grammar still accepts `\\u{{…}}`, so this arm proves nothing"
+    );
+    let space = literal_space(REFERENCE, &grammar);
+    // Six: the four rows the reference calls well-formed and the two it calls `refused`, all of which
+    // a recognizer must accept. A refusal because a value is out of domain is a *well-formed* input,
+    // which is the distinction `Value`'s docs call load-bearing.
+    assert_eq!(
+        space.violations.len(),
+        6,
+        "expected the six code-point rows; got:\n{}",
+        space.violations.join("\n\n")
+    );
+    assert!(
+        space.violations
+            .iter()
+            .all(|each| each.contains("is well-formed")),
+        "a violation that is not about well-formedness means the count is right for the wrong reason"
     );
 }

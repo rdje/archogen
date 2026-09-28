@@ -186,6 +186,18 @@ impl Form {
                         // quoting already escaped it; the normative printer did not (finding F-D,
                         // leaf `M1.12.1`).
                         '\r' => out.push_str("\\r"),
+                        // ⛔ TOTAL, where the four arms above are merely named. §3 rule 3 says
+                        // canonical text carries no control character, and until `M1.13.1` that held
+                        // only for the characters this language had a named escape for: the
+                        // fall-through copied everything else, so a string holding a raw ESC, BEL or
+                        // NUL printed it — a NUL inside the text §12 M4 hashes, with no diagnostic
+                        // anywhere (finding F-G). The rule belongs here rather than only in the
+                        // reader, because a `Form::Str` is constructible outside this crate and need
+                        // never pass a reader at all. `\u{…}` is in the language, so what is printed
+                        // here reads back, which is §3 rule 5.
+                        _ if ch.is_control() => {
+                            out.push_str(&format!("\\u{{{:x}}}", u32::from(ch)));
+                        }
                         _ => out.push(ch),
                     }
                 }
@@ -335,7 +347,8 @@ impl Document {
 #[cfg(test)]
 mod tests {
     use super::{format_decimal, Form};
-    use crate::source::{SourceId, Span};
+    use crate::reader::read;
+    use crate::source::{SourceId, SourceMap, Span};
 
     fn span() -> Span {
         Span::new(SourceId(0), 0, 0)
@@ -399,6 +412,52 @@ mod tests {
         assert!(
             !canonical.chars().any(|ch| ch.is_ascii_control()),
             "canonical text carries a control character: {}",
+            canonical.escape_debug()
+        );
+    }
+
+    #[test]
+    fn canonical_text_escapes_control_characters_that_never_passed_a_reader() {
+        // ⭐ The route a reader cannot police. `Form::Str` is constructible outside this crate —
+        // `lib.rs` re-exports it, an enum's variant fields carry the enum's visibility, and
+        // `Span::new` is public — so §3 rule 3 has to hold **in the printer**, not only at the door.
+        // Before `M1.13.1` the fall-through copied every character the four named arms did not cover,
+        // so this value printed a raw NUL into the text §12 M4 hashes and compares, with no diagnostic
+        // anywhere: the reader had refused nothing, because nothing had been read (finding F-G).
+        let form = Form::Str {
+            value: "a\u{0}b\u{1b}c\u{7f}d\u{9f}e".into(),
+            span: span(),
+        };
+        let canonical = form.to_canonical();
+        assert_eq!(canonical, "\"a\\u{0}b\\u{1b}c\\u{7f}d\\u{9f}e\"");
+        // Unicode `Cc`, not ASCII only: `\u{9f}` is a control character and `is_ascii_control` would
+        // have let it through a rule stated about every control character.
+        assert!(
+            !canonical.chars().any(char::is_control),
+            "canonical text carries a control character: {}",
+            canonical.escape_debug()
+        );
+
+        // §3 rule 5, on the value the reader could never have produced: what the printer escapes, the
+        // reader reads back to a structurally equal form. This is why `\u{…}` is in the language and
+        // not only in the printer — an escape the reader refused would make canonical text unreadable.
+        let mut sources = SourceMap::new();
+        let id = sources
+            .add("canonical", canonical.clone())
+            .expect("canonical text is valid UTF-8");
+        let (document, diagnostics) = read(&sources, id);
+        assert!(
+            !diagnostics.has_errors(),
+            "the frontend printed canonical text it cannot read back:\n{}",
+            diagnostics.render(&sources)
+        );
+        let again = document
+            .forms
+            .first()
+            .expect("canonical text holds one form");
+        assert!(
+            form.structurally_eq(again),
+            "canonical text `{}` read back as a different value",
             canonical.escape_debug()
         );
     }

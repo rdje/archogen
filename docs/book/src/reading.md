@@ -101,6 +101,19 @@ chain §12 M4 needs — "repeated generation produces identical canonical plans 
 sources" — and it is tested as a round trip on all 23 corpus files: read, print, read again,
 and the structure must be unchanged.
 
+Canonical text also never carries a **raw control character**. `\n`, `\t` and `\r` print as the
+escapes you would write yourself, and every other control character — the ones with no short
+name, a NUL included — prints as `\u{…}`, which the language reads back. That is worth more than
+it sounds: canonical text is what gets hashed, diffed and pasted into a report, and an invisible
+byte is merely confusing in the first two and destructive in the third, where a carriage return
+sends a terminal back to column zero and overwrites what it already printed.
+
+The same rule runs in the other direction. A description may not contain a raw control character
+either — except a tab, which is whitespace — and the reader says so with
+`error[read-control-character]`, naming the escape that writes the character you meant. Nothing
+writable is lost by that: `\u{…}` reaches every character there is, so an unusual one costs six
+visible characters instead of one invisible byte.
+
 ## A lesson from the corpus
 
 The header format needs **two** independent discriminators — indentation *and* key shape — and

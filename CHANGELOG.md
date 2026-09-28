@@ -4,6 +4,68 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the escape set is closed *and* sufficient, so canonical form can no longer carry a raw control byte
+
+`ARCHOGEN-M1-0080` (leaf `M1.13.1`, the first of the language freeze's five children). Closes finding
+F-G, which `M1.12` routed to the freeze because settling it changes what the language can express.
+
+- ⛔ **The defect was worse than the finding said, and the reason it survived is the interesting part.**
+  `(probe "a<ESC>b")`, `(probe "a<BEL>b")` and `(probe "a<NUL>b")` each read cleanly with **no
+  diagnostic** and each printed the byte raw into canonical text — the artifact §12 M4 hashes and
+  compares, and which §3 defines as one form per line. The NUL case truncated the output of the very
+  test that reported it, and `grep` declared its own input a *binary file*. Two legs checked §3's "no
+  control character" rule and both were green, for two reasons: **0 of 75** tracked descriptions hold
+  such a byte, so the coverage leg's population could not contain the case — and the second
+  implementation the legs compared against, `encode_canonical` in the shared test helper, had the
+  printer's same four arms and same fall-through. It was not a copy of the printer, it was a copy of
+  the printer's *omission*.
+- **The reader already had the rule and stopped applying it at the opening quote.** The same byte
+  *between* forms was refused as `read-unexpected-character` — "a byte that can start nothing … a stray
+  control character". So this was an inconsistency, not a missing rule, and the fix applies the existing
+  rule uniformly rather than inventing one.
+- **Fix, at the producer rather than the door.** `form.rs`'s printer now escapes every Unicode `Cc`
+  character — `\n`, `\t`, `\r` keep their names, everything else prints as `\u{…}`. That placement is
+  forced, not preferred: `Form::Str` is constructible outside the frontend (`lib.rs` re-exports it, an
+  enum's variant fields carry its visibility, `Span::new` is public), so a value that never passed a
+  reader still has to print safely. `reader.rs` gains `\u{…}` — one to six hexadecimal digits — and
+  refuses a raw control character other than tab as `read-control-character`.
+- **`\u{…}` has two refusals, and collapsing them would break a leg.** An escape that is not shaped like
+  one (`\u{}`, `\u{1bx}`) is not well-formed: `read-bad-escape`. One shaped correctly but naming no
+  character — a surrogate, or a code point past `10ffff` — is well-formed and outside the domain:
+  `read-escape-out-of-range`, `refused` in the reference's notation. That is the same distinction §1
+  draws between `read-malformed-number` and `read-number-overflow`, and it is load-bearing because the
+  recognizer derived from the grammar must reject every `error` row and accept every `refused` one.
+- **The grammar moves with it.** `escape` gains `unicode_escape`; `string_char` gains `- control`, a new
+  production naming `Cc` minus tab in the language's own escape notation. That also closed a live
+  disagreement nobody could reach: the grammar accepted a raw line feed inside a string that the reader
+  refused as `read-unterminated-string`, and no probe or corpus file could contain the input.
+- **A notation the reference was missing, which unblocks `M1.26`.** `<0xNN>` in a source cell names a
+  character that cannot be written into a markdown table — invisible in the cell, and a raw line feed
+  would end the row. That is why `M1.12.3` deferred an executable input column on §4's table and
+  `M1.26`'s gap (b) inherited the deferral; it is now solved rather than routed around, and a raw NUL
+  is an executed table row for the first time.
+- **Four false statements found in normative surfaces and corrected in place**, none of them in this
+  leaf's acceptance criteria: §2 rule 5 claimed a character with no escape cannot be written into a
+  string; §3 rule 3 named `provenance.rs` as held to the same escape set when that `quote()` writes
+  **JSON** (`\b`, `\f`, `\u00XX`); `grammar.md`'s notation table said `a - b` excludes single characters
+  only, which `symbol_char = any - whitespace - …` already contradicted; and the `\0` rationale there
+  ("a NUL byte has no use in a description") needed narrowing, since a NUL is now writable *by name* —
+  six visible characters, which is the point.
+- ⭐ **Honest limit, measured and routed rather than hidden.** `Cc` is not the whole of "invisible": a
+  zero-width space, a BOM or a bidirectional override still prints raw and nothing refuses it. Census:
+  **0 of 75** tracked descriptions hold one, and every non-ASCII character the corpus does hold is
+  visible. Stated in §3 and routed to `M1.13.3`, the last child that can narrow the language for free.
+- **Validation.** BEFORE, measured with the rows added and no production code moved:
+  `the_grammar_and_the_reference_agree_on_the_literal_space` → `FAILED` with **4 violations** naming
+  exactly the raw ESC, NUL, C1 and line-feed rows, and the reader leg with **3**. AFTER: conformance
+  `12 passed / 0 failed` (was 6/4), reference `34 passed / 0 failed`, **474 passed / 0 failed over 37
+  suites** (baseline 471 over 37), `make focused` → `passed — 3 / 0 / 0`, `book-anchors: OK (19
+  chapter(s), 2 normative document(s))` with self-test `6/6`. Two mutations of the fix were each seen
+  firing and each restoration proven byte-identical with `diff -q`: deleting the printer's control arm
+  gives `49 passed; 1 failed`, the one failure being the new test that constructs a `Form::Str` holding
+  a NUL, ESC, DEL and a C1 control **without a reader** and requires canonical text to escape all four
+  and read back structurally equal. No corpus file, example or fixture changed.
+
 ## archogen — a programmatic interface is now part of the roadmap: one engine API, a wasm binding, and an MCP server
 
 `ARCHOGEN-API-0078` (leaf `API`). Docs only — no code, no behaviour change.

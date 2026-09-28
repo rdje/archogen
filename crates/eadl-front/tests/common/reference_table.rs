@@ -119,6 +119,32 @@ impl StringValue {
     }
 }
 
+/// Decode a **source** cell into the text the frontend is given.
+///
+/// ⭐ This exists because the reference had a notation hole it could not write its way out of. A row
+/// about a raw control byte — the input `read-unexpected-character` and `read-control-character` fire
+/// on — cannot be written in a markdown table: the byte is invisible in the cell, and a line feed
+/// ends the row. `M1.12.3` deferred an executable input column on §4's diagnostic table for exactly
+/// this reason, and `M1.26`'s gap (b) inherits the deferral. `<0x1b>` names the character instead, so
+/// the document stays readable and the row stays executable.
+///
+/// `None` is a **violation**, never a reason to skip the row: a cell nothing can decode is a rule
+/// nothing checks, which is the same contract `Value::parse` holds.
+pub fn source_text(cell: &str) -> Option<String> {
+    let mut out = String::new();
+    let mut rest = cell;
+    while let Some(start) = rest.find("<0x") {
+        out.push_str(&rest[..start]);
+        let (digits, tail) = rest[start + 3..].split_once('>')?;
+        // `char::from_u32` refuses a surrogate and anything past the last scalar value, so a marker
+        // that names no character is a document defect rather than a silently dropped row.
+        out.push(char::from_u32(u32::from_str_radix(digits, 16).ok()?)?);
+        rest = tail;
+    }
+    out.push_str(rest);
+    Some(out)
+}
+
 /// Decode the reference's value notation into characters.
 ///
 /// ⭐ A second implementation of the escape rule, written from §2 of the reference rather than from
@@ -138,6 +164,23 @@ pub fn decode_escapes(cell: &str) -> Option<String> {
             'r' => out.push('\r'),
             '"' => out.push('"'),
             '\\' => out.push('\\'),
+            // `\u{…}`, the general escape §2 added so the set is closed **and sufficient**: every
+            // Unicode scalar value is writable, which is what lets §3 escape a control character
+            // without producing text the language cannot read back.
+            'u' => {
+                if chars.next()? != '{' {
+                    return None;
+                }
+                let mut digits = String::new();
+                loop {
+                    match chars.next()? {
+                        '}' => break,
+                        digit if digit.is_ascii_hexdigit() => digits.push(digit),
+                        _ => return None,
+                    }
+                }
+                out.push(char::from_u32(u32::from_str_radix(&digits, 16).ok()?)?);
+            }
             // The notation says a backslash in a value cell always starts one of the escapes the
             // reference defines, so anything else means the document is not writable in its own
             // notation — which is a defect in the document, not a row to skip.
@@ -152,6 +195,11 @@ pub fn decode_escapes(cell: &str) -> Option<String> {
 /// Also a second implementation, and the one that makes finding F-D a permanent impossibility rather
 /// than a repaired incident: canonical text escapes every character that would break "one form per
 /// line", so a printer that emits a raw control byte disagrees with this and fails.
+///
+/// ⛔ **Total, and it has to be.** This mirrored `form.rs`'s four-arm escape set exactly, which is why
+/// both were green while finding F-G was live: a second implementation of the *same* hole is not a
+/// check on it. §3 rule 3 is a claim about every value the printer can be given, so the fall-through
+/// escapes by code point, and the named escapes stay named because `\r` is more readable than `\u{d}`.
 pub fn encode_canonical(value: &str) -> String {
     let mut out = String::from("\"");
     for ch in value.chars() {
@@ -161,6 +209,7 @@ pub fn encode_canonical(value: &str) -> String {
             '\n' => out.push_str("\\n"),
             '\t' => out.push_str("\\t"),
             '\r' => out.push_str("\\r"),
+            _ if ch.is_control() => out.push_str(&format!("\\u{{{:x}}}", u32::from(ch))),
             other => out.push(other),
         }
     }
@@ -168,13 +217,16 @@ pub fn encode_canonical(value: &str) -> String {
     out
 }
 
-/// The first ASCII control character in `text`, if any.
+/// The first control character in `text`, if any.
 ///
 /// §3 of the reference: canonical text is what gets diffed, hashed and printed in a report, so it
 /// carries no control character. Tab, line feed and carriage return each break "one form per line" in
 /// a different way, and a bare tab in a report column is invisible rather than merely ugly.
+///
+/// ⭐ Unicode `Cc`, not ASCII only: the C1 range `0x80`–`0x9f` is control characters too, and a
+/// narrower predicate would have let one through a rule stated about "no control character".
 pub fn control_character(text: &str) -> Option<char> {
-    text.chars().find(|ch| ch.is_ascii_control())
+    text.chars().find(|ch| ch.is_control())
 }
 
 /// The rows of the table introduced by `<!-- machine-read: <marker> -->`, with their line numbers.

@@ -70,7 +70,15 @@ the frontend. A table without that comment is prose and checks nothing.
 | `symbol T` | not a number at all — the atom is the symbol whose text is `T` |
 | `error C` | **not well-formed**, and refused with a diagnostic whose code is `C` |
 | `refused C` | well-formed, but its value is outside the domain the language can hold; refused with code `C` |
+| `<0xNN>` | in a **source** cell only: the single character whose code point is `NN` in hexadecimal |
 | `—` | no canonical text, because the literal yields no value |
+
+⭐ **Why a source cell needs `<0xNN>`.** A row about a raw control byte cannot otherwise be written:
+the byte is invisible in the cell, and a raw line feed would end the row and take the table with it. So
+the input `read-control-character` and `read-unexpected-character` fire on was unwritable here, which
+is why `M1.12.3` deferred an executable input column on §4's table and `M1.26`'s gap (b) inherited the
+deferral. A marker that names no character — a surrogate, or a code point past `10ffff` — is a
+**violation** and not a row to skip, the same contract `error` and `refused` hold.
 
 ⭐ **`error` and `refused` are different claims, and the difference is not cosmetic.** `1.2.3` is not
 a number and no conforming implementation may read it; `9223372036854775808` *is* a well-formed integer
@@ -206,20 +214,45 @@ gives it its own token kind, and the erasure of that distinction is what the Lin
 | `"§ multi-byte"` | `§ multi-byte` |
 | `"nul\0here"` | `error read-bad-escape` |
 | `"bad\qescape"` | `error read-bad-escape` |
+| `"a\u{1b}b"` | `a\u{1b}b` |
+| `"\u{0}"` | `\u{0}` |
+| `"\u{7f}"` | `\u{7f}` |
+| `"\u{10ffff}"` | `\u{10ffff}` |
+| `"\u{d800}"` | `refused read-escape-out-of-range` |
+| `"\u{110000}"` | `refused read-escape-out-of-range` |
+| `"\u{}"` | `error read-bad-escape` |
+| `"\u{1bx}"` | `error read-bad-escape` |
+| `"a<0x1b>b"` | `error read-control-character` |
+| `"a<0x0>b"` | `error read-control-character` |
+| `"a<0x9f>b"` | `error read-control-character` |
+| `"a<0xa>b"` | `error read-unterminated-string` |
+| `"a<0x9>b"` | `a\tb` |
 | `"unterminated` | `error read-unterminated-string` |
 
 ### The rules those rows state
 
 1. **A string with no backslash in it denotes exactly its characters.** Any character may appear
-   literally except `"` — which ends the string — and `\`, which starts an escape. Row
-   `"§ multi-byte"` is that rule with a character outside ASCII in it, and it is why the coverage leg
-   of `crates/eadl-front/tests/reference.rs` can require a table row only of a string that carries a
-   backslash: every other string in a description is already covered by this sentence.
+   literally except `"` — which ends the string — `\`, which starts an escape, and **a control
+   character other than tab**, which is refused as `read-control-character`. Row `"§ multi-byte"` is
+   that rule with a character outside ASCII in it, and it is why the coverage leg of
+   `crates/eadl-front/tests/reference.rs` can require a table row only of a string that carries a
+   backslash: every other string in a description is already covered by this sentence. Tab is the one
+   control character that may appear raw, because it is whitespace the grammar already names and §3
+   prints it as `\t`; a raw line feed keeps its own more specific diagnostic, `read-unterminated-string`
+   (rule 3), which is what row `"a<0xa>b"` pins.
 2. **The escapes are exactly these:** `\n` line feed, `\t` tab, `\r` carriage return, `\"` a quote,
-   and `\\` a backslash. They are enumerated in `crates/eadl-front/src/reader.rs` and restated here
-   because a grammar can say that `\0` is *shaped* like an escape without knowing whether it means
-   anything. Anything else after a backslash is `read-bad-escape`, and the diagnostic names the
-   supported set — §5.5 requires a repair direction, not just a refusal.
+   `\\` a backslash, and `\u{…}` the character whose code point is written in hexadecimal — one to six
+   digits, so `\u{1b}` is ESCAPE and `\u{10ffff}` the last character there is. They are enumerated in
+   `crates/eadl-front/src/reader.rs` and restated here because a grammar can say that `\0` is *shaped*
+   like an escape without knowing whether it means anything. Anything else after a backslash is
+   `read-bad-escape`, and the diagnostic names the supported set — §5.5 requires a repair direction,
+   not just a refusal. ⭐ `\u{…}` has **two** refusals and they are not interchangeable: an escape that
+   is not shaped like one (`\u{}`, `\u{1bx`) is not well-formed at all, while one that is shaped
+   correctly but names no character — a surrogate, or a code point past `10ffff` — is well-formed and
+   outside the domain, so it is `refused` rather than `error`. That is the same distinction §1 draws
+   between `read-malformed-number` and `read-number-overflow`, and it is load-bearing for the same
+   reason: `crates/eadl-front/tests/conformance.rs` requires the recognizer derived from the grammar to
+   reject every `error` row and accept every `refused` one.
 3. **A string ends at the end of its line.** A raw line break inside a string is
    `read-unterminated-string`, as is running out of input; both label the opening quote as a secondary
    span, so the author sees the two ends of the mistake. There is no multi-line string literal, and
@@ -228,9 +261,17 @@ gives it its own token kind, and the erasure of that distinction is what the Lin
    text — and a byte-oriented reader would cut one in half. Spans and rendered columns count
    **characters**, not bytes, which is why a caret still lands under the right text on a line
    containing `§`.
-5. **The escape set is closed on purpose.** A character that has no escape cannot be written into a
-   string, and cannot be written *out* of one either: §3 escapes what canonical form cannot carry.
-   Adding an escape is a language change (`M1.13`, finding F-G), not a reader fix.
+5. ⭐ **The escape set is closed, and it is sufficient — the two halves are what make rule 1 safe.**
+   Closed: a backslash followed by anything the set does not define is `read-bad-escape`, so the set
+   cannot grow by accident. Sufficient: every character is writable, because `\u{…}` reaches any
+   Unicode scalar value, so §3 can escape anything canonical form cannot carry and still produce text
+   this language reads back (rule 5 of §3). Neither half holds without the other. A set that were only
+   closed would leave characters that cannot be written *or* printed, which is what finding F-G was:
+   `M1.12` measured a raw control byte reaching canonical text, and until `M1.13.1` this rule claimed
+   it could not. ⛔ A raw control character is refused rather than normalized, so an invisible byte
+   cannot enter a description at all — and a character that must appear is written by name, where a
+   reviewer can see it. Adding an escape is still a language change; after the freeze it is also a
+   migration note (`M1.13`).
 
 ## 3. Canonical form
 
@@ -245,10 +286,15 @@ Canonical form **guarantees**:
    in comments print identically.
 2. **It is one form per line, with no comment and no line break inside a form.** Siblings are separated
    by exactly one space.
-3. **It carries no control character.** Every character that would break rule 2 — line feed, tab,
-   carriage return — is printed as its escape instead, so canonical text is safe to diff, to hash and
-   to put in a report. `crates/archogen-s0/src/provenance.rs` escapes the same set in its own quoting:
-   one rule, and every surface that prints a string is held to it.
+3. **It carries no control character — all of them, not the three that have names.** Line feed, tab
+   and carriage return print as `\n`, `\t` and `\r`; every other character in Unicode `Cc`, which is
+   what "control character" means in this rule, prints as `\u{…}`. So canonical text is safe to diff,
+   to hash and to put in a report whatever a string value holds. ⭐ The guarantee is enforced **in the
+   printer** and not at the door, because `Form::Str` is constructible outside the frontend — `lib.rs`
+   re-exports it and `Span::new` is public — so a value that never passed a reader still has to print
+   safely. `crates/archogen-s0/src/provenance.rs` shares the *property*, not the escape set: it writes
+   **JSON**, where the short forms are `\b` and `\f` and a code point is `\u00XX`, so its output is
+   deliberately not eADL text and is not held to this rule.
 4. **A decimal keeps its scale.** `1.5` and `1.50` print differently, per §1 rule 2.
 5. **Reading canonical text back yields a structurally equal document.** That is what "round-trips
    semantically" means: same forms, same values, spans necessarily different.
@@ -257,10 +303,20 @@ Canonical form does **not** guarantee that two descriptions with the same meanin
 `(a 1.5)` and `(a 1.50)` are the same magnitude and different canonical text — nor that canonical text
 is stable across a change to these rules, which is what freezing the language at `M1.13` is for.
 
-⚠️ **Known limit (finding F-G).** Rule 3 holds for every control character the language has an escape
-for. A raw control byte copied into a string from its source has no escape to use and prints as
-itself; closing that needs either a general escape or a rule that a description may not contain one,
-and both are language changes owned by `M1.13`.
+⚠️ **Honest limit.** Rule 3 is about control characters, and "invisible" is a wider set than
+"control". A zero-width space, a byte-order mark or a bidirectional override is not in Unicode `Cc`, so
+a string holding one prints it raw: canonical text stays one form per line and stays readable by this
+language, but a report that renders it can still mislead whoever reads it. Nothing refuses one, and
+this section does not claim otherwise. Measured rather than assumed, so the limit is sized: **0 of 75**
+tracked descriptions hold such a character, and every non-ASCII character the corpus does hold is a
+visible one (`§`, `—`, `…`, `≤`, `⛔`, `⭐`). Whether the language should refuse them anyway is a scope
+question for the freeze, owned by `M1.13.3`, not a rule left quietly unstated here.
+
+⭐ The limit this section used to carry is closed. Finding F-G — a raw control byte reaching canonical
+text with nothing to escape it into — was measured by `M1.12` and closed by `M1.13.1`: the escape set
+gained `\u{…}`, the printer became total, and the reader now refuses the raw spelling (§2 rules 1, 2
+and 5). What closed it is a row, not a sentence: `"a<0x0>b"` in §2's table is a **NUL**, and it is
+executed.
 
 ## 4. Diagnostics
 
@@ -273,9 +329,11 @@ cheapest diagnostic to write is the most expensive to receive.
 | --- | --- | --- |
 | `read-unclosed-list` | a `(` is never matched and the input ends inside it | add the matching `)`; the diagnostic also labels where the list opened |
 | `read-unexpected-close` | a `)` appears with no list open | remove it, or add the `(` that was meant to open a list |
-| `read-unexpected-character` | a byte that can start nothing, which in practice means a stray control character | delete it — a form is a list `(…)`, a symbol, a number or a string |
+| `read-unexpected-character` | a byte that can start nothing **between forms**, which in practice means a stray control character; inside a string the same byte is `read-control-character` | delete it — a form is a list `(…)`, a symbol, a number or a string |
 | `read-unterminated-string` | a `"` is not closed before the end of its line, or before the end of the input | close the string on its own line, or escape the newline as `\n`; there is no multi-line string (§2 rule 3) |
-| `read-bad-escape` | a backslash inside a string is followed by anything other than the escapes §2 defines | use one of those; the diagnostic names the set |
+| `read-bad-escape` | a backslash inside a string is followed by anything other than the escapes §2 defines, including a `\u` escape that is not shaped like one | use one of those; the diagnostic names the set |
+| `read-control-character` | a **raw** control character inside a string: anything in Unicode `Cc` except tab, which is whitespace the grammar names (§2 rule 2) | write the escape instead — `\n`, `\t`, `\r`, or `\u{…}` for any other character |
+| `read-escape-out-of-range` | a **well-formed** `\u{…}` escape that names no Unicode scalar value — a surrogate, or a code point past `10ffff` (§2 rule 2) | write a code point that denotes a character; a surrogate denotes one only inside a UTF-16 encoding |
 | `read-malformed-number` | an atom that begins with a digit, or with a sign and a digit, and is not a number — a second decimal point, an exponent, a unit glued to the magnitude, `0x` with no digits after it, or a separator leading them | write an integer or a decimal; a unit goes in a following atom, `10 ms` |
 | `read-number-overflow` | a **well-formed** literal whose value lies outside the 64-bit signed range (§1 rule 1) | reduce the digits, split the quantity, or change its units |
 | `module-not-a-module` | a file resolved as a module does not begin with a `defmodule` declaration | write `(defmodule <name> (version <major> <minor>) …)` |

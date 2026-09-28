@@ -35,7 +35,7 @@ this dialect and nothing more, so the notation cannot quietly grow past what is 
 | Form | Means |
 | --- | --- |
 | `name = expr ;` | a production |
-| `"text"` | a literal, matched exactly |
+| `"text"` | a literal, matched exactly. Inside the quotes, `\n`, `\t`, `\r` and `\u{…}` mean what they mean in the language — which is what lets `control` below *name* invisible characters instead of containing them |
 | `"a" .. "z"` | any single character in the inclusive range |
 | `a , b` | `a` followed by `b` |
 | `? a` | `a` must follow, but is **not consumed** (lookahead) |
@@ -44,7 +44,7 @@ this dialect and nothing more, so the notation cannot quietly grow past what is 
 | `( a )` | grouping |
 | `[ a ]` | zero or one |
 | `{ a }` | zero or more |
-| `a - b` | `a`, but not if it also matches `b` (single characters only) |
+| `a - b` | `a`, but not if the same text also matches `b`. ⛔ `b` is **any** expression, not a single character, and this table said otherwise until `M1.13.1` needed the general form: `symbol_char` already excluded `whitespace`, whose expansion is four characters |
 | `any` | any single character |
 
 ## The grammar
@@ -63,8 +63,11 @@ atom            = ( string | number | symbol ) , ? delimiter ;
 delimiter       = whitespace | "(" | ")" | quote | ";" | end ;
 
 string          = quote , { string_char } , quote ;
-string_char     = escape | ( any - quote - "\\" ) ;
-escape          = "\\" , ( quote | "\\" | "n" | "t" | "r" ) ;
+string_char     = escape | ( any - quote - "\\" - control ) ;
+escape          = "\\" , ( quote | "\\" | "n" | "t" | "r" | unicode_escape ) ;
+unicode_escape  = "u" , "{" , hex_digit , { hex_digit } , "}" ;
+control         = ( "\u{0}" .. "\u{8}" ) | ( "\u{a}" .. "\u{1f}" ) | "\u{7f}"
+                | ( "\u{80}" .. "\u{9f}" ) ;
 quote           = "\"" ;
 
 number          = hexadecimal | decimal | integer ;
@@ -114,13 +117,29 @@ symbol_start    = symbol_char - digit ;
 ⭐ **Two spellings were reconciled with the reference by `M1.12.2`, and the mechanism that reconciled
 them is permanent.** `hexadecimal`'s prefix now admits `0X` as well as `0x`, because its digits were
 already case-insensitive and a case-*sensitive* prefix would be the one inconsistency in the literal;
-and `escape` no longer admits `"0"`, because the reader never implemented `\0`, its own hint lists the
-escapes that do exist, and a NUL byte has no use in a description. Neither spelling appears in any
+and `escape` no longer admits `"0"`, because the reader never implemented `\0` and its own hint lists
+the escapes that do exist. ⚠️ Read that second half narrowly, because `M1.13.1` changed what is true
+beside it: `\0` is still not a spelling this language has, but a NUL *is* writable as `\u{0}` — only by
+naming it, in six visible characters, which is the point. An invisible byte in a description should cost
+an author something a reviewer can see. Neither spelling appears in any
 description the repository ships, which is why the corpus and the production probes below could not
 reach either one — measured, three `git grep` censuses, three empty results. What closes the gap is
 `crates/eadl-front/tests/conformance.rs` running the reference's own literal table against the
 recognizer derived from this file: a spelling one normative document admits and the other refuses now
 fails the build, rather than waiting for a description to happen to use it.
+
+⭐ **Two productions exist because of what `M1.13.1` measured, and both are pinned by an arm.**
+`unicode_escape` is the general escape that makes the set *sufficient* as well as closed: without it,
+§3 of the reference cannot escape a control character and still produce text this language reads back,
+so canonical form had to choose between carrying a raw byte and printing something unreadable.
+`control` is the set of characters that may not appear **raw** inside a string — Unicode `Cc` minus tab,
+which is whitespace this grammar already names. Before it, `string_char` was `any - quote - "\\"`, which
+admitted every control byte, while the reader refused the same byte *between* forms as "a byte that can
+start nothing": the language had the rule and stopped applying it at the opening quote. A raw line feed
+was the measurable case — this grammar accepted it and `read-unterminated-string` refused it, a
+disagreement no probe and no corpus file reached, because a corpus file that contained one would not be
+a corpus file. `arm_4` and `arm_5` of `crates/eadl-front/tests/conformance.rs` each revert one
+production and require the comparison to fail, on a pinned count of rows.
 
 ⚠️ **No float, anywhere.** The grammar admits a decimal literal; §7.4 requires "exact integer time
 units or checked rational arithmetic", so a conforming reader holds `1.5` as fifteen tenths and

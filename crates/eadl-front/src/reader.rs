@@ -261,13 +261,18 @@ impl<'a> Reader<'a> {
                         b'r' => value.push('\r'),
                         b'"' => value.push('"'),
                         b'\\' => value.push('\\'),
+                        b'u' => {
+                            if let Some(ch) = self.read_unicode_escape(escape_start) {
+                                value.push(ch);
+                            }
+                        }
                         other => {
                             let end = self.offset();
                             self.diagnostics.push(Diagnostic::error(
                                 "read-bad-escape",
                                 format!("`\\{}` is not an escape sequence", other as char),
                                 Label::new(self.span(escape_start, end), "unknown escape"),
-                                "the supported escapes are \\n, \\t, \\r, \\\" and \\\\",
+                                "the supported escapes are \\n, \\t, \\r, \\\", \\\\ and \\u{…}",
                             ));
                             // Keep the characters literally so one typo does not cascade.
                             value.push('\\');
@@ -280,10 +285,95 @@ impl<'a> Reader<'a> {
                     let char_start = self.at;
                     let ch = self.raw[char_start..].chars().next().unwrap_or('\u{FFFD}');
                     self.at += ch.len_utf8();
+                    // ⛔ A raw control character is refused inside a string exactly as it already is
+                    // between forms, where `read-unexpected-character` calls it "a stray control
+                    // character". The rule was the language's and it stopped at the string's opening
+                    // quote, so a description could carry an invisible byte that canonical form then
+                    // printed into the text §12 M4 hashes and compares — a NUL included, with no
+                    // diagnostic at all (finding F-G, leaf `M1.13.1`). TAB is the one exception: it is
+                    // whitespace the grammar already names, and canonical form prints it as `\t`.
+                    // Nothing writable is lost, because every control character now has an escape.
+                    if ch.is_control() && ch != '\t' {
+                        let end = self.offset();
+                        self.diagnostics.push(Diagnostic::error(
+                            "read-control-character",
+                            format!(
+                                "a string cannot hold a raw control character; `\\u{{{:x}}}` writes this one",
+                                u32::from(ch)
+                            ),
+                            Label::new(
+                                self.span(char_start as u32, end),
+                                "invisible here, and it would print into canonical text",
+                            ),
+                            "write the escape instead — `\\n`, `\\t`, `\\r`, or `\\u{…}` for any other",
+                        ));
+                        continue;
+                    }
                     value.push(ch);
                 }
             }
         }
+    }
+
+    /// Read the `{…}` of a `\u{…}` escape — the `u` is already consumed — and return the character it
+    /// names, or push the diagnostic saying why it names none.
+    ///
+    /// ⭐ **Two different refusals, and collapsing them would break a leg.** An escape that is not
+    /// *shaped* like one (`\u41`, `\u{}`, `\u{1b`) is not well-formed at all, so the recognizer derived
+    /// from `docs/semantics/grammar.md` must reject it too: `read-bad-escape`. One that is shaped
+    /// correctly but names no Unicode scalar value (`\u{d800}`, `\u{110000}`) *is* well-formed and is
+    /// outside the domain the language can hold — the same distinction §1 draws between
+    /// `read-malformed-number` and `read-number-overflow`, with its own code for the same reason:
+    /// `crates/eadl-front/tests/conformance.rs` requires the recognizer to accept every `refused` row
+    /// and reject every `error` one, so one code for both would make one of the two legs wrong.
+    fn read_unicode_escape(&mut self, escape_start: u32) -> Option<char> {
+        if self.peek() != Some(b'{') {
+            let end = self.offset();
+            self.bad_unicode_escape(escape_start, end);
+            return None;
+        }
+        self.at += 1;
+        let digits_start = self.at;
+        while self.peek().is_some_and(|byte| byte.is_ascii_hexdigit()) {
+            self.at += 1;
+        }
+        // Owned, because the diagnostic below borrows `self` mutably while naming these digits.
+        let digits = self.raw[digits_start..self.at].to_string();
+        if digits.is_empty() || self.peek() != Some(b'}') {
+            if self.peek() == Some(b'}') {
+                self.at += 1;
+            }
+            let end = self.offset();
+            self.bad_unicode_escape(escape_start, end);
+            return None;
+        }
+        self.at += 1;
+        let end = self.offset();
+        let Some(ch) = u32::from_str_radix(&digits, 16)
+            .ok()
+            .and_then(char::from_u32)
+        else {
+            self.diagnostics.push(Diagnostic::error(
+                "read-escape-out-of-range",
+                format!("`\\u{{{digits}}}` names no character"),
+                Label::new(self.span(escape_start, end), "not a Unicode scalar value"),
+                "a code point runs to `10ffff` and is not a surrogate (`d800`–`dfff`)",
+            ));
+            return None;
+        };
+        Some(ch)
+    }
+
+    /// Report a `\u` escape whose shape is wrong, over the span from the backslash to where reading
+    /// stopped.
+    fn bad_unicode_escape(&mut self, escape_start: u32, end: u32) {
+        let written = self.raw[escape_start as usize..end as usize].to_string();
+        self.diagnostics.push(Diagnostic::error(
+            "read-bad-escape",
+            format!("`{written}` is not an escape sequence"),
+            Label::new(self.span(escape_start, end), "malformed `\\u{…}` escape"),
+            "write one to six hexadecimal digits in braces, e.g. `\\u{1b}`",
+        ));
     }
 
     fn read_number(&mut self) -> Option<Form> {

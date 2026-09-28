@@ -1,5 +1,44 @@
 # DEV_NOTES.md
 
+## _(2026-09-28)_ — a second implementation copied from the first is a mirror, not a check
+
+- `M1.13.1`, closing finding F-G. §3 of `docs/semantics/reference.md` states that canonical text
+  "carries no control character". Two legs checked it, and both were green while the rule was false.
+- ⛔ **The mechanism has two halves, and the second is the one worth remembering.** Half one is the
+  familiar shape: the legs read populations that cannot contain the thing they forbid — **0 of 75**
+  tracked `.eadl` files hold a raw control byte
+  (`docs/knowledge/a-gate-is-only-as-sharp-as-its-fixtures.md`). Half two is not familiar:
+  `encode_canonical` in `crates/eadl-front/tests/common/reference_table.rs` exists *specifically* to be
+  a second implementation written from the reference rather than from `form.rs`, and it had the **same
+  four arms and the same `_ => out.push(ch)` fall-through**. An independent check that agrees with the
+  defect is not weak evidence, it is *no* evidence with a reputation for being evidence.
+- The tell is that the helper was right about everything it enumerated and silent about everything it
+  did not. It was not a copy of the printer — it was a copy of the printer's *omission*, and omissions
+  copy perfectly, because there is nothing to copy.
+- **What closed it was a row, not a sentence.** Adding `<0xNN>` to the reference's source notation made
+  a raw NUL writable in a table cell for the first time, and the row
+  `"a<0x0>b"` → `error read-control-character` turned the population from empty to non-empty. Both legs
+  then fired on the unmodified tree — 4 violations on the grammar side, 3 on the reader side — which is
+  the reproduction, and the failure output was mangled by the bytes it was reporting (`grep` declared
+  its own input a binary file).
+- ⭐ Corollary worth carrying: **when a property leg is green, ask what its population can contain, and
+  then ask whether the oracle was written from the specification or transcribed from the code.** The
+  first question is `a-gate-is-only-as-sharp-as-its-fixtures`; the second is this one.
+- Also found while in there — four false statements in normative surfaces, all corrected in place
+  rather than noted: §2 rule 5 claimed a character with no escape cannot be written into a string
+  (`(probe "a<ESC>b")` wrote one); §3 rule 3 named `provenance.rs` as held to the same escape set, when
+  that `quote()` writes **JSON**; `grammar.md`'s notation table said `a - b` excludes single characters
+  only, which `symbol_char = any - whitespace - …` already contradicted; and the grammar accepted a raw
+  line feed inside a string that the reader refused.
+- promotion: declined (three already-recorded cards carry the transferable content, and a fourth entry
+  answering the same question makes the retrievable layer harder to search:
+  `docs/knowledge/a-gate-is-only-as-sharp-as-its-fixtures.md` for the empty population,
+  `docs/knowledge/make-the-rule-a-constructor-precondition.md` for fixing at the producer rather than
+  the door — `Form::Str` is constructible outside the frontend, so refusing input covers one route and
+  not the only one — and `docs/knowledge/prose-beside-data-goes-unenforced.md` for the false sentence.
+  What is new is a degree rather than a kind, and it is recorded where the next reader meets it, in
+  `encode_canonical`'s own doc comment.)
+
 ## _(2026-09-28)_ — a census that finds a subset is more dangerous than one that finds nothing
 
 - `M1.12.5`, closing `M1.12`. The reference's instruments were turned on the book: every `error[<code>]`
