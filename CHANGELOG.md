@@ -4,6 +4,48 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — a diagnostic code is now a stated rule, not a string in a call site
+
+`ARCHOGEN-M1-0075` (leaf `M1.12.3`).
+
+- **`docs/semantics/reference.md` §4 states every code the frontend can emit** — when it fires and what
+  to do about it — and the reference now *declares the sources it is normative over* in a machine-read
+  table. The census takes its population from that declaration, so widening the reference's scope is a
+  reviewable edit to a normative document rather than a change to a list inside a test.
+- ⛔ **The obvious census pattern finds nothing, and that was measured before the scanner was written.**
+  A grep requiring the code on its constructor's own line — `Diagnostic::error("…"` — returns **0 of 7**
+  codes for `reader.rs`, **0 of 24** for `module.rs` and **0 of 22** for `kind.rs`, because every call
+  in this codebase puts the code on the *next* line. A producer→document leg built on it would not have
+  reported a short list; it would have reported that the code and the document agree perfectly, having
+  compared two empty sets. So the census runs in **both** directions and refuses an empty population
+  outright.
+- ⭐ **The two directions pin the code set exactly.** Every emitted code has a row and every row is an
+  emitted code, so a scanner that missed one leaves a stated-but-unemitted row and a scanner that
+  invented one fails the other leg — a green run is evidence about the scanner, not only about the
+  table. The `#[cfg(test)]` cut is load-bearing too: without it, `diagnostic.rs` would contribute
+  `read-example` and two test locals named `e` and `w`.
+- **Severity is censused with the code**, which makes §4's rule "every diagnostic the frontend emits is
+  an error" a checked claim rather than an observation. §5.5's repair-direction requirement is checked
+  per row for the same reason.
+- ⛔ **A census claim in this leaf's own checklist was wrong once, and the correction is recorded
+  rather than quietly fixed.** The first sweep of `docs/book/src` for code citations returned one hit
+  and supported the sentence "no book chapter cites a diagnostic code". A second sweep without the
+  backtick requirement returned **eight**, seven of them real — `read-malformed-number`,
+  `read-unclosed-list` (twice), `schema-unknown-clause`, `module-circular-import`,
+  `module-conflicting-export`, `module-incompatible-version` — and one false positive (`read-sequence`,
+  a protocol name in prose). The book therefore cites four codes from sources this reference does not
+  declare yet; that is `M1.12.4`'s, and the cross-surface leg it makes writable is `M1.12.5`'s.
+- 📌 **Deferred with a reason, not dropped:** an executable `fires on` column giving each code an input
+  that must produce it. It needs one more piece of notation (a control character cannot be written
+  literally in a table cell, and `read-unexpected-character` fires on exactly that), and per-code
+  reachability is already covered by `reader.rs`'s unit tests. `M1.12.5`'s closure review decides
+  whether the parent's acceptance needs it.
+- **Validation:** `cargo test -p eadl-front --test reference` → **19 passed / 0 failed** (was 11 — two
+  legs and six arms); `make focused` → `passed — 3 passed, 0 failed, 0 unavailable`;
+  `cargo test --all` → **456 passed, 0 failed over 37 suites** (baseline 448 over 37);
+  `=== all doctrines green ===`; `git diff --stat HEAD -- crates/eadl-front/src crates/eadl-model/src`
+  empty, so the rule was written down and checked rather than fitted to the code.
+
 ## archogen — the second artifact cleanup, and the two deletions it declined to make
 
 `ARCHOGEN-PROGRAM-0074` (leaf `PROGRAM.19`, recorded as a run under the standing owner rather than a

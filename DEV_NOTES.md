@@ -1,5 +1,36 @@
 # DEV_NOTES.md
 
+## _(2026-09-28)_ — a census that finds nothing has an empty-set fixed point
+
+- `M1.12.3`. The reference now declares the sources it is normative over in a machine-read table, and
+  §4 states every diagnostic code they can emit with what to do about it. Two legs: producer →
+  document, and document → producer.
+- ⛔ **The pattern was measured before the scanner was written, and the obvious one finds nothing.**
+  `Diagnostic::error("…"` — code on the constructor's own line, the grep everyone reaches for — returns
+  **0 of 7** codes in `reader.rs`, **0 of 24** in `module.rs`, **0 of 22** in `kind.rs`. Every call in
+  this codebase puts the code on the *next* line. So the failure mode is not an under-count that shows
+  up as a short list; it is a leg that reports the code and the document in perfect agreement after
+  comparing two empty sets.
+- ⭐ **Run a census in both directions, or assert the population is non-empty — and prefer both.** A
+  producer→document leg passes on an empty producer set. Add the mirror and every row the document
+  states becomes unaccounted for, so the same broken scanner fails loudly. Together the two legs also
+  pin the set *exactly*: a scanner that missed a code leaves a stated-but-unemitted row, and one that
+  invented a code fails the other leg. A green run is then evidence about the scanner, not only about
+  the table — which is the difference between a check and a coincidence.
+- ⛔ **`#[cfg(test)]` is part of the population definition, not a tidy-up.** Dropping the cut would add
+  `read-example` and two test locals named `e` and `w` from `diagnostic.rs`. Documenting a code only a
+  test can produce adds a row no description could ever falsify with an input.
+- ⛔ **A census claim in this leaf's own checklist was wrong, and the second pattern is the evidence.**
+  The first sweep for diagnostic codes cited in `docs/book/src` required backticks, returned one hit,
+  and supported the sentence "no book chapter cites a code". Without the backtick requirement the same
+  question returns eight hits, seven real — including four codes from sources the reference does not
+  declare yet. The lesson is `M1.24`'s, arriving a third time: a census is a population bounded by its
+  pattern, so the pattern travels with the result, and "nothing found" is a claim about the pattern
+  until a second one agrees.
+- Promoted into `docs/knowledge/a-moved-measurement-needs-a-census-of-its-copies.md`, which already
+  asked "My census grep found nothing — is the population empty, or is my pattern wrong?" and now
+  carries the measured instance plus the two defences that generalise.
+
 ## _(2026-09-28)_ — the population is the part nobody tests
 
 - `M1.12.2`. `M1.11` compared a recognizer derived from `docs/semantics/grammar.md` with the reader,

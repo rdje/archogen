@@ -77,6 +77,17 @@ you to damage correct records.
    (`9030111`) behind all of them. Sweep every shape the figure can take — ratio, size, spelled-out
    number — and state which shape each hit came from. A census that reports "nothing found" without
    naming its pattern has not measured a population.
+   ⛔ **The worst case is not an under-count, it is zero — because a gate comparing two empty sets
+   passes.** Measured building the diagnostic-code census (`M1.12.3`): the grep shape someone reaches
+   for, `Diagnostic::error("…"` with the code on the constructor's own line, finds **0 of 7** codes in
+   `crates/eadl-front/src/reader.rs`, **0 of 24** in `module.rs` and **0 of 22** in
+   `crates/eadl-model/src/kind.rs`, because every call in that codebase puts the code on the *next*
+   line. A census leg built on it would not have reported a short list; it would have reported that the
+   code and the document agree perfectly, having compared nothing with nothing. Two defences, and the
+   second is the one that generalises: **assert the population is non-empty** before comparing it, and
+   **run both directions** — a producer→document leg alone passes on an empty producer set, but adding
+   the document→producer leg means every row the document states is now unaccounted for, so the same
+   broken pattern fails loudly instead of quietly.
    ⭐ **And the population is not only numbers.** A *state fact* has copies too, and they rot the same
    way. Measured here: **eight files** published "QEMU is not installed" after it was — including the
    register that routes items to the director, whose index hook said "four items" where the record

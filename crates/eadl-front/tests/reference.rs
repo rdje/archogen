@@ -24,21 +24,30 @@
 //!
 //! The legs, because "the rows pass" is the weakest thing this file could claim:
 //!
-//! 1. **EXECUTED** — every row of both tables, against the reader: verdict, exact value, canonical
-//!    text, and the property that canonical text carries no control character.
+//! 1. **EXECUTED** — every row of both literal tables, against the reader: verdict, exact value,
+//!    canonical text, and the property that canonical text carries no control character.
 //! 2. **COVERING** — every numeric literal the repository actually ships has a row, and so does every
 //!    string that carries a backslash. The population is the corpus, which this file does not define,
 //!    so the leg cannot be satisfied by writing a table that agrees with itself.
 //! 3. **NON-VACUOUS** — each verdict class the notation defines is pinned by at least one row, and a
 //!    document that stops carrying a table is reported rather than silently gating nothing.
+//! 4. **CENSUSED, producer → reference** — every diagnostic code the sources this document *declares
+//!    itself normative over* can emit is stated in §4, with the repair direction §5.5 requires. The
+//!    scan is multi-line safe and stops at `#[cfg(test)]`; measured, a same-line pattern finds **zero**
+//!    codes in every source here, so multi-line tolerance is the census and not a refinement of it.
+//! 5. **CENSUSED, reference → producer** — every code §4 states is one a declared source emits, so a
+//!    renamed code leaves a rotted row instead of a stale truth. ⭐ Legs 4 and 5 together pin the set
+//!    *exactly*: a code the scan missed would be stated-but-unemitted, and a code it invented would be
+//!    emitted-but-unstated — so a green run is evidence about the scanner, not only about the table.
+//! 6. **ANCHORED** — every repository path the reference cites resolves, which is the leg
+//!    `scripts/check_book_anchors.sh` runs on the book, applied to a normative document.
 //!
 //! ⚠️ **Honest limit.** A deleted row is caught only when the corpus used that literal, or when it was
-//! the last row of its verdict class; nothing here enumerates the *forms* the language admits, so a
-//! literal shape no description happens to contain can be absent from the table and this file stays
-//! green. That enumeration is `M1.12.2`'s, which runs the same rows against the recognizer derived
-//! from `docs/semantics/grammar.md` and derives its production probes from them. This file also says
-//! nothing about nesting, meaning, kinds or diagnostics — `corpus.rs` owns the first two and
-//! `M1.12.3`/`M1.12.4` the last.
+//! the last row of its verdict class; the literal *forms* the language admits are enumerated by
+//! `conformance.rs`, which runs these same tables against the recognizer derived from
+//! `docs/semantics/grammar.md`. This file also says nothing about nesting, meaning or kinds —
+//! `corpus.rs` owns the first two — and §4's census reaches only the sources the reference declares,
+//! which today is the reader and canonical form.
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -557,12 +566,264 @@ fn vacuity_violations(document: &str) -> Vec<String> {
     out
 }
 
+// ── leg 4: the diagnostic-code census, both directions ─────────────────────────────────────────
+
+/// Every diagnostic a source's **production half** can emit, as `(severity, code)`.
+///
+/// ⛔ **Multi-line safe, and both halves of that sentence are measured rather than assumed.**
+/// A pattern that required the code on the same line as its constructor — the grep someone reaches
+/// for, `Diagnostic::error("…"` — finds **zero** codes in every source this census can declare:
+/// `reader.rs` 0 of 7, `module.rs` 0 of 24, `kind.rs` 0 of 22. Every call in this codebase puts the
+/// code on the next line, so a same-line census does not under-count, it counts nothing, and the leg
+/// built on it would pass by comparing two empty sets. That is what the `emitted.is_empty()` guard
+/// below is for.
+///
+/// ⛔ **Stopping at `#[cfg(test)]` is a rule about the population, not a fix for today's files.** For
+/// the two sources declared right now the cut changes nothing (measured). It is load-bearing for
+/// `crates/eadl-front/src/diagnostic.rs`, whose test half would otherwise contribute `read-example`
+/// and `read-unclosed-list` alongside `e` and `w` — two test locals that are not codes at all.
+/// Documenting a test-only code would add a row no description can ever falsify with an input.
+fn emitted_diagnostics(text: &str) -> BTreeSet<(String, String)> {
+    let production = text
+        .split_once("#[cfg(test)]")
+        .map_or(text, |(head, _)| head);
+    let mut out = BTreeSet::new();
+    for (at, _) in production.match_indices("Diagnostic::") {
+        let rest = &production[at + "Diagnostic::".len()..];
+        let Some(severity) = ["error", "warning", "note"]
+            .into_iter()
+            .find(|word| rest.starts_with(*word))
+        else {
+            continue;
+        };
+        let after = &rest[severity.len()..];
+        // The code is the first string literal after the opening parenthesis, which is usually on a
+        // later line. Everything between is whitespace and newlines, so scanning rather than matching
+        // a fixed shape is what makes this leg see the whole population.
+        let (Some(open), Some(quote)) = (after.find('('), after.find('"')) else {
+            continue;
+        };
+        if quote < open {
+            continue;
+        }
+        let literal = &after[quote + 1..];
+        let Some(end) = literal.find('"') else {
+            continue;
+        };
+        let code = &literal[..end];
+        if !code.is_empty()
+            && code
+                .chars()
+                .all(|ch| ch.is_ascii_lowercase() || ch.is_ascii_digit() || ch == '-')
+        {
+            out.insert((severity.to_string(), code.to_string()));
+        }
+    }
+    out
+}
+
+/// The sources the reference declares itself normative over, with their line numbers.
+fn declared_sources(document: &str) -> Vec<(usize, String)> {
+    machine_table(document, "normative-sources")
+        .iter()
+        .filter_map(|(line, cells)| cells.first().map(|path| (*line, path.clone())))
+        .collect()
+}
+
+/// Legs 4 and 5 — every code the declared sources emit is stated, and every code stated is emitted.
+fn census_violations(document: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let sources = declared_sources(document);
+    if sources.is_empty() {
+        out.push(
+            "docs/semantics/reference.md declares no normative source, so the diagnostic census has \
+             no population and proves nothing"
+                .to_string(),
+        );
+    }
+    let rows = machine_table(document, "diagnostics");
+    if rows.is_empty() {
+        out.push(
+            "docs/semantics/reference.md carries no `<!-- machine-read: diagnostics -->` table, so no \
+             diagnostic code is stated anywhere in it"
+                .to_string(),
+        );
+    }
+
+    let mut stated = BTreeSet::new();
+    for (line, cells) in &rows {
+        let Some(code) = cells.first() else { continue };
+        stated.insert(code.clone());
+        if cells.len() != 3 {
+            out.push(violation(
+                *line,
+                format!(
+                    "the row for `{code}` has {} cell(s) and the table's header has 3",
+                    cells.len()
+                ),
+            ));
+        } else if cells[2].trim().is_empty() || cells[2].trim() == "—" {
+            // §5.5 requires a repair direction, and a table is where that requirement can be checked
+            // instead of merely stated.
+            out.push(violation(
+                *line,
+                format!(
+                    "`{code}` states no repair direction, which §5.5 requires of every diagnostic — \
+                     a refusal that does not say what to do costs an author an edit cycle"
+                ),
+            ));
+        }
+    }
+
+    let mut emitted: BTreeSet<String> = BTreeSet::new();
+    for (line, path) in &sources {
+        let full = repo_root().join(path);
+        let text = match std::fs::read_to_string(&full) {
+            Ok(text) => text,
+            Err(error) => {
+                out.push(violation(
+                    *line,
+                    format!(
+                        "`{path}` is declared as a normative source and cannot be read: {error}"
+                    ),
+                ));
+                continue;
+            }
+        };
+        for (severity, code) in emitted_diagnostics(&text) {
+            if severity != "error" {
+                out.push(violation(
+                    *line,
+                    format!(
+                        "`{path}` emits `{code}` at severity `{severity}`, and §4 rule 1 states that \
+                         every diagnostic the frontend emits is an error"
+                    ),
+                ));
+            }
+            if emitted.insert(code.clone()) && !stated.contains(&code) {
+                out.push(violation(
+                    *line,
+                    format!(
+                        "`{path}` can emit `{code}` and §4 does not state it — a rule the frontend \
+                         enforces and this reference does not"
+                    ),
+                ));
+            }
+        }
+    }
+    for (line, cells) in &rows {
+        let Some(code) = cells.first() else { continue };
+        if !emitted.contains(code) {
+            out.push(violation(
+                *line,
+                format!(
+                    "§4 states `{code}` and no declared source emits it — a renamed or removed code \
+                     leaves a rotted row that reads exactly like a live rule"
+                ),
+            ));
+        }
+    }
+    if !sources.is_empty() && emitted.is_empty() {
+        out.push(
+            "the declared sources emit no diagnostic code at all, so the census compared nothing"
+                .to_string(),
+        );
+    }
+    out
+}
+
+// ── leg 6: the reference's own citations resolve ───────────────────────────────────────────────
+
+/// The top-level directories whose contents are unambiguously claims about this repository.
+///
+/// Mirrors `scripts/check_book_anchors.sh`'s `PATH_RE` rather than inventing a second notion of what
+/// counts as a citation. Matching a repository path and not any filename is deliberate: a chapter may
+/// legitimately name `src/main.rs` of a *generated* crate, and requiring that to resolve would teach
+/// authors to route around the gate.
+const REPO_DIRS: [&str; 7] = [
+    "crates/",
+    "scripts/",
+    "examples/",
+    "docs/",
+    "xtask/",
+    "targets/",
+    "knowledge-map/",
+];
+
+/// The root documents that are cited by name rather than by path.
+const ROOT_DOCS: [&str; 14] = [
+    "ROADMAP.md",
+    "COMMIT.md",
+    "TOOLBOX.md",
+    "MEMORY.md",
+    "LIVE_STATUS.md",
+    "CHANGELOG.md",
+    "DEV_NOTES.md",
+    "README.md",
+    "README_POLICY.md",
+    "DOCTRINE_ENFORCEMENT.md",
+    "MEMORY_ARCHITECTURE.md",
+    "KNOWLEDGE_MAP.md",
+    "AGENTS.md",
+    "CLAUDE.md",
+];
+
+/// Every repository path this document cites inside a code span, with line numbers.
+fn cited_paths(document: &str) -> Vec<(usize, String)> {
+    let mut out = Vec::new();
+    for (index, line) in document.lines().enumerate() {
+        // Odd-numbered pieces of a backtick split are inside a code span.
+        for (position, span) in line.split('`').enumerate() {
+            if position % 2 == 0 {
+                continue;
+            }
+            if REPO_DIRS.iter().any(|dir| span.starts_with(dir)) || ROOT_DOCS.contains(&span) {
+                out.push((index + 1, span.to_string()));
+            }
+        }
+    }
+    out
+}
+
+/// Leg 6 — a normative document's rotted citation reads exactly like a live one.
+fn citation_violations(document: &str) -> Vec<String> {
+    let root = repo_root();
+    let mut out = Vec::new();
+    let mut seen = BTreeSet::new();
+    for (line, path) in cited_paths(document) {
+        if !seen.insert(path.clone()) {
+            continue;
+        }
+        // A trailing slash names a directory and a trailing `/*` a glob; both resolve to their parent.
+        let probe = path.trim_end_matches("/*").trim_end_matches('/');
+        if !root.join(probe).exists() {
+            out.push(violation(
+                line,
+                format!(
+                    "this file cites `{path}`, which does not exist — the reference is normative, so a \
+                     rotted citation sends its reader to nothing"
+                ),
+            ));
+        }
+    }
+    if seen.is_empty() {
+        out.push(
+            "docs/semantics/reference.md cites no repository path at all, so nothing in it can be \
+             checked against the code it describes"
+                .to_string(),
+        );
+    }
+    out
+}
+
 /// Every leg at once, so an arm can be fed a mutated document and read one list of complaints.
 fn all_violations(document: &str) -> Vec<String> {
     let mut out = vacuity_violations(document);
     out.extend(number_violations(document));
     out.extend(string_violations(document));
     out.extend(coverage_violations(document));
+    out.extend(census_violations(document));
+    out.extend(citation_violations(document));
     out.sort();
     out
 }
@@ -597,6 +858,28 @@ fn the_reference_tables_are_not_vacuous() {
     assert!(
         wrong.is_empty(),
         "a table that pins nothing is worse than no table, because it looks like a check:\n\n{}",
+        wrong.join("\n\n")
+    );
+}
+
+#[test]
+fn the_reference_states_every_diagnostic_its_declared_sources_can_emit() {
+    let wrong = census_violations(REFERENCE);
+    assert!(
+        wrong.is_empty(),
+        "the diagnostic census disagrees with the reference, in one direction or both:\n\n{}\n\n\
+         The population is the code, taken from the sources the reference itself declares — not a \
+         list inside this file, which is the drift the declaration exists to prevent.",
+        wrong.join("\n\n")
+    );
+}
+
+#[test]
+fn every_repository_path_the_reference_cites_resolves() {
+    let wrong = citation_violations(REFERENCE);
+    assert!(
+        wrong.is_empty(),
+        "the reference cites something that is not there:\n\n{}",
         wrong.join("\n\n")
     );
 }
@@ -784,5 +1067,152 @@ fn arm_8_a_literal_the_reference_refuses_but_the_frontend_accepts_is_reported() 
         &all_violations(&mutated),
         1,
         &["`0xg`", "read-malformed-number"],
+    );
+}
+
+#[test]
+fn arm_9_a_code_the_frontend_emits_but_the_reference_does_not_state_is_reported() {
+    // Census leg 1, producer → reference. Deleting the row is the defect: the frontend still refuses
+    // out-of-range literals, and nothing would say so.
+    let mutated = REFERENCE
+        .lines()
+        .filter(|line| !line.starts_with("| `read-number-overflow` |"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert_ne!(
+        mutated, REFERENCE,
+        "the mutation did not apply — a false green"
+    );
+    assert_reported(
+        &census_violations(&mutated),
+        1,
+        &[
+            "can emit `read-number-overflow`",
+            "§4 does not state it",
+            "crates/eadl-front/src/reader.rs",
+        ],
+    );
+}
+
+#[test]
+fn arm_10_a_code_the_reference_states_but_nothing_emits_is_reported() {
+    // Census leg 2, reference → producer: a renamed code leaves a rotted row that reads exactly like
+    // a live rule. Two complaints, and both are honest — the typo is stated-but-unemitted, and the
+    // real code the typo replaced is now emitted-but-unstated.
+    let mutated = replacing_line(
+        REFERENCE,
+        "| `read-number-overflow` |",
+        "| `read-number-overflowed` | a well-formed literal whose value lies outside the range | reduce the digits |",
+    );
+    assert_reported(
+        &census_violations(&mutated),
+        2,
+        &[
+            "§4 states `read-number-overflowed` and no declared source emits it",
+            "can emit `read-number-overflow`",
+        ],
+    );
+}
+
+#[test]
+fn arm_11_the_census_sees_a_code_written_on_the_line_after_its_constructor() {
+    // ⛔ The census must not be a population bounded by one spelling. Measured over this repository:
+    // a pattern requiring the code on the constructor's own line finds **zero** codes in `reader.rs`
+    // (0 of 7), `module.rs` (0 of 24) and `kind.rs` (0 of 22), because every call puts the code on
+    // the next line. The test-only half is excluded for the opposite reason: `diagnostic.rs`'s tests
+    // construct `read-example`, and documenting a code no description can trigger would add a row
+    // nothing could ever falsify with an input.
+    let multi_line = "fn f(&mut self) {\n    self.diagnostics.push(Diagnostic::error(\n        \"read-late-code\",\n        \"message\",\n        Label::new(span, \"label\"),\n        \"hint\",\n    ));\n}\n";
+    let found = emitted_diagnostics(multi_line);
+    assert!(
+        found.contains(&("error".to_string(), "read-late-code".to_string())),
+        "a code on the line after its constructor was not seen: {found:?}"
+    );
+
+    let same_line = r#"Diagnostic::error("read-same-line", "message", label, "hint")"#;
+    assert!(
+        emitted_diagnostics(same_line)
+            .contains(&("error".to_string(), "read-same-line".to_string())),
+        "a same-line code was not seen"
+    );
+
+    let with_tests = "Diagnostic::error(\"read-production\", \"m\", l, \"h\")\n\n#[cfg(test)]\nmod tests {\n    Diagnostic::error(\"read-example\", \"m\", l, \"h\")\n}\n";
+    let found = emitted_diagnostics(with_tests);
+    assert!(
+        found.contains(&("error".to_string(), "read-production".to_string())),
+        "the production half was not scanned: {found:?}"
+    );
+    assert!(
+        !found.iter().any(|(_, code)| code == "read-example"),
+        "a test-only code was counted as one the language can emit: {found:?}"
+    );
+
+    // Severity is part of the census, because §4 rule 1 claims every diagnostic is an error.
+    assert!(
+        emitted_diagnostics(r#"Diagnostic::warning("module-slow", "m", l, "h")"#)
+            .contains(&("warning".to_string(), "module-slow".to_string())),
+        "a non-error severity was not recorded, so rule 1 would be checked by nothing"
+    );
+}
+
+#[test]
+fn arm_12_a_rotted_citation_is_reported() {
+    let mutated = REFERENCE.replace(
+        "`crates/archogen-s0/src/provenance.rs`",
+        "`crates/archogen-s0/src/provenence.rs`",
+    );
+    assert_ne!(
+        mutated, REFERENCE,
+        "the mutation did not apply — a false green"
+    );
+    assert_reported(
+        &citation_violations(&mutated),
+        1,
+        &["provenence.rs", "does not exist"],
+    );
+}
+
+#[test]
+fn arm_13_a_diagnostic_with_no_repair_direction_is_reported() {
+    // §5.5 requires every diagnostic to say what to do about it. That requirement is checkable in a
+    // table and is checked here, rather than being a sentence a new row can quietly ignore.
+    let mutated = replacing_line(
+        REFERENCE,
+        "| `read-unexpected-close` |",
+        "| `read-unexpected-close` | a `)` appears with no list open | — |",
+    );
+    assert_reported(
+        &census_violations(&mutated),
+        1,
+        &["`read-unexpected-close` states no repair direction", "§5.5"],
+    );
+}
+
+#[test]
+fn arm_14_a_document_that_stops_declaring_its_sources_is_reported() {
+    let mutated = REFERENCE.replace(
+        "<!-- machine-read: normative-sources -->",
+        "<!-- sources -->",
+    );
+    assert_ne!(
+        mutated, REFERENCE,
+        "the mutation did not apply — a false green"
+    );
+    // One complaint for the missing declaration, and one per stated code that no longer has a
+    // population to be compared against — so a renamed marker reads as a hole, not as a clean sweep.
+    let stated = machine_table(REFERENCE, "diagnostics").len();
+    let wrong = census_violations(&mutated);
+    assert_eq!(
+        wrong.len(),
+        stated + 1,
+        "expected one complaint for the missing declaration plus one per stated code; got:\n{}",
+        wrong.join("\n\n")
+    );
+    assert!(
+        wrong
+            .iter()
+            .any(|item| item.contains("declares no normative source")),
+        "the legs did not name the missing declaration:\n{}",
+        wrong.join("\n\n")
     );
 }

@@ -91,11 +91,13 @@ justifies the split — the rows below appear as that happens.
   measured too weak: dropping `_` from hex literals turned `(base 0x1000_0000)` into `4096` and
   `_0000` with every acceptance test green.
 - `docs/semantics/reference.md` — ⭐ **the normative language reference**: what a literal is
-  *worth*, which is the half a grammar cannot say. `crates/eadl-front/tests/reference.rs` reads its
-  `literal → value → canonical text` tables **out of the document** and executes every row against
-  the reader, then adds a coverage leg whose population is the corpus and a non-vacuity leg over the
-  tables themselves. Its expected values were derived arithmetically rather than printed from the
-  reader, which is why its first run found three defects instead of confirming an implementation.
+  *worth*, which is the half a grammar cannot say, plus the diagnostics the frontend may emit and the
+  repair each one owes. `crates/eadl-front/tests/reference.rs` reads its tables **out of the
+  document** — literal values, the sources it declares itself normative over, the diagnostic-code
+  census — and executes them against the frontend, then adds a coverage leg whose population is the
+  corpus, a citation leg, and a non-vacuity leg over the tables themselves. Its expected values were
+  derived arithmetically rather than printed from the reader, which is why its first run found three
+  defects instead of confirming an implementation.
 - `docs/semantics/kinds/` — the language declared in itself: `core.eadl` (the five surface
   kinds) and `os-rt.eadl` (the `task` kind of the workload module). Only `defkind` is Rust.
 - `examples/` — the three M0 use cases as real descriptions, checked by

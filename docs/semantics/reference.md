@@ -25,6 +25,24 @@ false on live surfaces long after the measurement behind it had moved.
 and a figure in prose is a figure nothing re-derives; the mechanisms that read this file enumerate the
 population themselves, so a table that grows does not leave a stale number behind.
 
+## What this reference is normative over
+
+A normative document has to say what it governs, or "every rule the frontend enforces is stated here"
+is a claim nobody can check. These are the sources. The diagnostic census in §4 is taken over exactly
+this list, in both directions, by `crates/eadl-front/tests/reference.rs`.
+
+<!-- machine-read: normative-sources -->
+| source | what this reference states about it |
+| --- | --- |
+| `crates/eadl-front/src/reader.rs` | §1 numbers, §2 strings and escapes, and every diagnostic in §4 whose code begins `read-` |
+| `crates/eadl-front/src/form.rs` | §3 canonical form: what is printed, what is escaped, and what structural equality compares |
+
+⚠️ **A source belongs here when a chapter of this file states rules about it**, not when it merely
+happens to be nearby. `crates/eadl-front/src/module.rs` and `crates/eadl-model/src/kind.rs` enforce
+rules this reference does not state yet — module and import semantics, and what `defkind` may and may
+not become — and they arrive with `M1.12.4`. Declaring them before their chapter exists would make the
+census demand a row for every code they emit while nothing here explains what any of them means.
+
 ## Notation for the tables
 
 A table introduced by a `<!-- machine-read: … -->` comment is **executed**:
@@ -230,6 +248,41 @@ for. A raw control byte copied into a string from its source has no escape to us
 itself; closing that needs either a general escape or a rule that a description may not contain one,
 and both are language changes owned by `M1.13`.
 
+## 4. Diagnostics
+
+A description that does not read is refused with diagnostics, and §5.5 requires each one to carry a
+repair direction: a refusal that does not say what to do costs an author an edit cycle, and the
+cheapest diagnostic to write is the most expensive to receive.
+
+<!-- machine-read: diagnostics -->
+| code | when it fires | what to do |
+| --- | --- | --- |
+| `read-unclosed-list` | a `(` is never matched and the input ends inside it | add the matching `)`; the diagnostic also labels where the list opened |
+| `read-unexpected-close` | a `)` appears with no list open | remove it, or add the `(` that was meant to open a list |
+| `read-unexpected-character` | a byte that can start nothing, which in practice means a stray control character | delete it — a form is a list `(…)`, a symbol, a number or a string |
+| `read-unterminated-string` | a `"` is not closed before the end of its line, or before the end of the input | close the string on its own line, or escape the newline as `\n`; there is no multi-line string (§2 rule 3) |
+| `read-bad-escape` | a backslash inside a string is followed by anything other than the escapes §2 defines | use one of those; the diagnostic names the set |
+| `read-malformed-number` | an atom that begins with a digit, or with a sign and a digit, and is not a number — a second decimal point, an exponent, a unit glued to the magnitude, `0x` with no digits after it, or a separator leading them | write an integer or a decimal; a unit goes in a following atom, `10 ms` |
+| `read-number-overflow` | a **well-formed** literal whose value lies outside the 64-bit signed range (§1 rule 1) | reduce the digits, split the quantity, or change its units |
+
+### The rules those rows state
+
+1. **Every diagnostic the frontend emits is an error.** There is no warning and no note in it: a
+   description that does not read cannot be used, and a severity that said "probably fine" would be a
+   lie. `crates/eadl-front/tests/reference.rs` takes the census over severities as well as codes, so
+   adding a warning is a change to this sentence and not only to the code.
+2. **Reading does not stop at the first error.** Every malformed literal in a description is reported
+   in one pass, so a file with three typos costs one edit cycle rather than three.
+3. **A code names a rule, not a call site.** `read-malformed-number` fires wherever a digit-led atom
+   turns out not to be a number, and the message names the offending text and which shape of mistake
+   it was — `1.2.3`, `0x` and `0x_10` are refused for different reasons and say so. A new call site
+   that enforces the same rule adds no row here; a new *rule* adds a code and a row.
+4. **The set above is complete for the sources this file is normative over, in both directions.** A
+   code the frontend can emit and this file does not state is a rule nobody has written down; a code
+   this file states and no declared source emits is a rotted row that reads like a live rule. Both are
+   build failures, and both are checked against the declaration above rather than against a list
+   inside the test.
+
 ## What this reference does not yet carry
 
 Stated rather than left implicit, because a reference that quietly omits a rule reads as though the
@@ -237,7 +290,6 @@ rule does not exist:
 
 | Not here yet | Where it will be | Leaf |
 | --- | --- | --- |
-| the census of diagnostic codes the frontend can emit, and the repair each carries | a chapter of this file, checked in both directions against the code that emits them | `M1.12.3` |
 | comment retention, and the `; key: value` header convention with its two discriminators | a chapter of this file, with a table executed against `Document::comment_headers` | `M1.12.4` |
 | module and import semantics — instances rather than modules, version satisfaction, alias defaulting, the one failure that stops | a chapter of this file | `M1.12.4` |
 | the `defkind` facility's meaning and its limits (§5.6: it must not become a host-code evaluator) | a chapter of this file | `M1.12.4` |
