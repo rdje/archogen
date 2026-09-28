@@ -826,6 +826,26 @@ mdBook that is the director's window into the project.
   `TARGET_VERIFIED=no`, which `M2.8` confirms against an installed QEMU — the *installation* is no
   longer the missing piece (director finding 2 is resolved as of `2026-09-27`); the pin and the §3.2
   device-tree agreement check are.
+
+  ⛔ **Measured `2026-09-28`: the verdict this leaf must rule on has already changed shape, and the
+  change is what blocks pushing.** When this leaf was written the emulator step reported
+  `Unavailable` → tier `incomplete` → exit `20`, because the tool was absent. QEMU is now installed,
+  so `scripts/target_emulator.sh --check` reaches the unpinned-config branch and exits `1`, and the
+  runner maps "ran, nonzero" to `Failed` → tier `failed` → `make integration` exit `1`. That matters
+  because `COMMIT.md` step 2 treats the two differently: it explicitly permits proceeding past
+  **incomplete** after reading what it names ("*not* a pass and *not* a failure: nothing broke, and
+  something could not be run"), and it does **not** permit proceeding past **failed**. So the branch
+  is 73 commits ahead of `origin/main` (`32e6b14`, `2026-09-13`) over a *classification*, not over a
+  broken build.
+  ⭐ **And §14.3 already supplies the mechanism, unused.** "A required tool skipped or unavailable is
+  reported as such, not a passed check. Quarantine requires a named issue, owner, affected claim, and
+  bounded scope." The runner already has the vocabulary — `Outcome::{Passed, Failed, Unavailable,
+  NotBuilt}` and `Action::NotBuilt { owner, note }`, which five steps use under `PROGRAM.9`. "QEMU is
+  present; the release is unpinned and `DEVICE_TREE_FIXTURE` does not exist, so the §3.2 agreement
+  check could not be run" is *incomplete*, quarantined with owner `M2.8`, affected claim
+  `target-verification`, bounded to that one step. This leaf's deliverable is therefore not only the
+  CI provisioning and the blocking policy — it is also making the step report the verdict §14.3's own
+  vocabulary already has a word for.
   Verification: `pending`
   Commit: `pending`
 
