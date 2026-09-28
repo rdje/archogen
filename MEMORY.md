@@ -13,11 +13,10 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M1` → frontier `M1.12`. `PROGRAM` `.11`; `S0` reopened for `S0.8`; `M2` `.8`.
+- **Active tree:** `M1` → frontier `M1.12`. `PROGRAM` `.11`; `S0` reopened for `S0.8`; `M2` `.8.2`.
 - **Next action:** **`M1.12`** — the language reference: the rules a grammar cannot carry (exactness,
   no float anywhere; comment retention; canonical form; `defkind`'s limits). `M1.11` proved the tokens
-  agree; **values** are still checked only against the reader. Then `M1.13` (freeze `eadl/1`),
-  `M1.10`, `M1.21`, `M1.22`.
+  agree; **values** are still checked only against the reader.
 - **The LinkedSpec evaluation is CLOSED** (`M1.20`, `2026-09-27`): all five reported defects are
   `verified` at pin `2ac834913` (RGX `f6e5acdc9`, PGEN `d9d41c28`) on archogen's own reruns. Four
   standing facts: the root `Cargo.toml` carries `exclude = ["vendor/linkedspec"]` (load-bearing — do
@@ -44,6 +43,7 @@
   **Push cadence: `400` commits ahead of `origin/main`** — ruled `2026-09-28`,
   `docs/decisions/decision_push-cadence.md`; `git rev-list --count origin/main..HEAD` for the live
   number; `PROGRAM.23` makes it enforced rather than prose.
-  ⚠️ `make integration` is **red** on one step, `emulator`: QEMU 11.1.1 is installed but no release is
-  pinned in `targets/riscv-virt-up.env`, so `TARGET_VERIFIED=no` — `M2.8` owns it. Artifact cleanup
-  last ran `2026-09-27`; trigger and record in `docs/ARTIFACT_CLEANUP.md`.
+  ⚠️ `make integration` is **red** on one step, `emulator`: QEMU 11.1.1 is installed and **pinned**
+  (`M2.8.1`), but `TARGET_VERIFIED=no` until the §3.2 agreement check exists — and it has **neither**
+  side yet, so `M2.8.2` (device-tree fixture) then `M2.8.3` (eADL platform description) own it.
+  Artifact cleanup last ran `2026-09-27`; trigger and record in `docs/ARTIFACT_CLEANUP.md`.

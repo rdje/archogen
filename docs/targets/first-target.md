@@ -7,10 +7,10 @@ or pretending an emulator is hardware.
 | Environment | Purpose | Limitation | Status here |
 | --- | --- | --- | --- |
 | `hosted-playground` | fast deterministic testing of shared runtime logic and explicit device models | host execution speed gives no target WCET guarantee; simulated preemption covers defined boundaries only | available — the default development target |
-| `riscv-virt-up` | early execution of target binaries, startup code, interrupt paths and MMIO contracts in an independent emulator | a virtual platform, not a physical board and not a cycle-accurate timing reference | **configuration pinned, toolchain not installed** |
+| `riscv-virt-up` | early execution of target binaries, startup code, interrupt paths and MMIO contracts in an independent emulator | a virtual platform, not a physical board and not a cycle-accurate timing reference | **release pinned (QEMU 11.1.1) and installed; `TARGET_VERIFIED=no` — the §3.2 agreement check does not exist yet** |
 | `board-first` | the same OS profile on a named physical processor and device revision | selection and timing evidence must be documented before any hardware claim | **no board procured — decision recorded below** |
 
-## `riscv-virt-up` — pinned, unverified, uninstalled
+## `riscv-virt-up` — installed and pinned, **unverified**
 
 The configuration is pinned as data in [`targets/riscv-virt-up.env`](../../targets/riscv-virt-up.env)
 and rendered by one tool, so no two callers can type it slightly differently:
@@ -26,23 +26,38 @@ payload.
 
 **Two facts, recorded rather than smoothed over:**
 
-1. **QEMU is not installed on the current development machine.**
+1. **QEMU is installed, and its release is pinned.** `qemu-system-riscv64 --version` reports
+   `QEMU emulator version 11.1.1`; `-machine help` offers `virt` ("RISC-V VirtIO board"); `-cpu help`
+   offers `rv64`. `targets/riscv-virt-up.env` carries `QEMU_VERSION_PINNED=11.1.1` (leaf `M2.8.1`),
+   and `--check` compares that string against the installed version and refuses a mismatch — measured,
+   not assumed, by pinning `99.99.99` and reading `PINNED RELEASE MISMATCH: pinned '99.99.99',
+   installed 'QEMU emulator version 11.1.1'`. A pin nothing compares is prose.
 
    ```console
    $ scripts/target_emulator.sh --check
-   target-emulator: required tool unavailable: qemu-system-riscv64 is not on PATH
-   target-emulator:   the riscv-virt-up environment cannot be exercised on this machine
-   target-emulator:   install it, then re-run; do NOT record an emulator result without it
+   target-emulator: found: QEMU emulator version 11.1.1
+   target-emulator: TARGET_VERIFIED=no — this configuration is still a PROPOSAL
+   target-emulator:   leaf M2.8 owns flipping it, with the evidence that justifies it
    $ echo $?
-   20
+   1
    ```
 
-   §14.3: "A required tool skipped or unavailable is reported as such, not a passed check."
+   §14.3 still governs the absent case, and the tool still honours it: on a machine without
+   `qemu-system-riscv64` this exits `20` and says so, because "a required tool skipped or unavailable
+   is reported as such, not a passed check".
 
-2. **No QEMU release is pinned yet, and `TARGET_VERIFIED=no`.** Every value in the
-   configuration is a *proposal* until checked against an installed QEMU. Recording it as a
-   proposal is a fact about our knowledge; recording it as verified with nothing behind it
-   would be a fabricated fact, which §9 forbids. Leaf `M2.8` owns flipping it, with evidence.
+2. **`TARGET_VERIFIED=no`, and pinning did not change that.** A pinned release is a fact about the
+   *tool*; verification is a claim about the *platform*, and §3.2 says what would justify it —
+   "inspect the produced hardware description, and verify agreement with the eADL platform fixture".
+   ⛔ **Neither side of that comparison exists yet.** `DEVICE_TREE_FIXTURE`
+   (`docs/targets/riscv-virt-up.dtb.summary.md`) is named at `targets/riscv-virt-up.env:45` and is not
+   on disk — `ls docs/targets/` returns only this file — and no eADL description of this target exists
+   either: `git grep -ln 'riscv|virt|qemu' -- '*.eadl'` returns a single boundary *rejection* case,
+   and every `defplatform` in the repository is a semantic fixture (`host.playground`, `soc.abstract`,
+   `soc.concrete`, `soc.p`). `M2.8.2` writes the fixture from a measured dump and makes re-dumping it
+   a test; `M2.8.3` writes the description and the agreement test, and flips the flag only on that
+   evidence. Recording the configuration as a proposal is a fact about our knowledge; recording it as
+   verified with nothing behind it would be a fabricated fact, which §9 forbids.
 
 ### The agreement check this enables
 
@@ -96,8 +111,11 @@ unsuitable for strong timing guarantees." Applied to `rt-static-up-v1`:
 **Blocked:** tree `M5` in full; leaf `M2.8`'s board half; any `target-evidence` claim; any
 statement that the toolchain supports a physical target.
 
-**Not blocked:** everything through M4. `hosted-playground` carries S0 through M4, and
-`riscv-virt-up` carries the independent-execution half as soon as QEMU is installed. §12 M5 is
+**Not blocked:** everything through M4. `hosted-playground` carries S0 through M4. `riscv-virt-up`
+carries the independent-execution half once `M2.8.3` exists — QEMU is installed and pinned, but there
+is no bare-metal generated image to run yet (`no-std-build` proves `rt-core` *compiles* for the
+target; S0's prototype emits a *host* crate) and no agreement check to justify `TARGET_VERIFIED`.
+§12 M5 is
 explicit that "M6 development may proceed while a physical access issue is resolved, but M7
 cannot claim board support without M5 evidence."
 

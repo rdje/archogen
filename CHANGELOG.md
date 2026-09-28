@@ -4,6 +4,54 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — QEMU pinned at 11.1.1, and what pinning does *not* unblock
+
+`ARCHOGEN-M2-0070` (leaf `M2.8.1`).
+
+- **`targets/riscv-virt-up.env` carries `QEMU_VERSION_PINNED=11.1.1`**, on evidence from the installed
+  tool rather than from a package manager: `--version` → `QEMU emulator version 11.1.1`;
+  `-machine help` → `virt  RISC-V VirtIO board`; `-cpu help` → `rv64`. §3.2's "do not rely on changing
+  defaults" now has a value behind it.
+- **The pin's RED arm was measured, because a pin nothing compares is prose.** Setting
+  `QEMU_VERSION_PINNED=99.99.99` and re-running `--check` gives
+  `PINNED RELEASE MISMATCH: pinned '99.99.99', installed 'QEMU emulator version 11.1.1'`, exit `1`;
+  the correct pin was restored and re-verified afterwards.
+- ⛔ **Pinning is not verification, and the tier is still red — correctly.** `--check` has four
+  independent `rc=1` causes and this removed one: `NO RELEASE IS PINNED YET` is gone, and what remains
+  is `TARGET_VERIFIED=no — this configuration is still a PROPOSAL`. `make integration` →
+  `failed — 6 passed, 1 failed`. Flipping that flag is §3.2's agreement check, and the check currently
+  has **neither side**:
+  - `DEVICE_TREE_FIXTURE=docs/targets/riscv-virt-up.dtb.summary.md` is named at
+    `targets/riscv-virt-up.env:45` and **does not exist** — `ls docs/targets/` returns one file;
+  - no eADL description of this target exists — `git grep -ln 'riscv|virt|qemu' -- '*.eadl'` returns a
+    single boundary *rejection* case, and every `defplatform` in the repository is a semantic fixture
+    (`host.playground`, `soc.abstract`, `soc.concrete`, `soc.p`).
+  So `M2.8` is split: **`M2.8.1`** (this pin, done) → **`M2.8.2`** (write the fixture from a measured
+  dump and make re-dumping it a test) → **`M2.8.3`** (write the target's `defplatform`, the agreement
+  test, and only then flip the flag). `M2.8.3` is sequenced **after `M1.12`/`M1.13`**: deciding what
+  `defplatform` means for a real target and *then* freezing `eadl/1` is the cheap order, and the
+  reverse is not.
+- **`docs/targets/first-target.md` was rewritten to the measured state, because pinning falsified it on
+  the spot.** Its fact 2 said "No QEMU release is pinned yet"; its fact 1, status-table row, section
+  heading ("pinned, unverified, **uninstalled**") and "as soon as QEMU is installed" sentence were
+  already false from the install. All five now state what `--check` reports, and fact 2 states the
+  sharper truth: a pinned release is a fact about the *tool*, while verification is a claim about the
+  *platform*. Three stale surfaces remain (`docs/book/src/verification.md`'s transcript, which is wrong
+  in *shape* — `incomplete`/exit `20` where the tier reports `failed`/exit `1` — plus
+  `docs/book/src/targets.md` and the Blockers sections of `M0.md`/`M4.md`); `M2.8.3` owns them.
+- ⛔ **An edit dropped `QEMU_BINARY` from the `.env` and was caught before commit** by reading
+  `git diff` line by line and diffing the `KEY=` set against `HEAD`. The same class of self-inflicted
+  breakage as `M1.23`'s arm C and `M1.24`'s `perl` mutation: a change that did not do what its author
+  intended, visible only to a tool that compared before and after rather than to a read of the intent.
+- `M2`'s root node was also stale — `Status: pending` with `Children: M2.1 … M2.8` while `M2.9` exists
+  and five leaves are closed. Corrected to `active` / `M2.1 … M2.9` plus sub-leaves. This is the second
+  tree whose root node drifted behind its own leaves (`M1.20.7` found the same in `M1`), which is
+  `PROGRAM.15`'s register-consistency gap.
+- **Validation:** `scripts/target_emulator.sh --check` → exit `1` on one remaining cause;
+  `make integration` → `failed — 6 passed, 1 failed, 0 unavailable`; `make focused` →
+  `tier focused: passed — 3 passed, 0 failed`, exit `0`, baseline unchanged at **430 passed / 0
+  failed** (no Rust touched); `make gate` → `=== all doctrines green ===` over 13 checks.
+
 ## archogen — the director ruled a push cadence, and the slot for it had never been filled
 
 `ARCHOGEN-PROGRAM-0069` (docs). No code changed.
