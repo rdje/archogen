@@ -142,6 +142,10 @@ and a scale, so `0.1` is one tenth exactly and survives any number of round trip
 | `0xdead_BEEF` | `integer 3735928559` | `3735928559` |
 | `0x7fff_ffff_ffff_ffff` | `integer 9223372036854775807` | `9223372036854775807` |
 | `0x8000_0000_0000_0000` | `refused read-number-overflow` | — |
+| `-0x8000_0000_0000_0000` | `integer -9223372036854775808` | `-9223372036854775808` |
+| `-0x8000_0000_0000_0001` | `refused read-number-overflow` | — |
+| `0xFFFF_FFFF_C000_0000` | `refused read-number-overflow` | — |
+| `-1073741824` | `integer -1073741824` | `-1073741824` |
 | `0x` | `error read-malformed-number` | — |
 | `0xg` | `error read-malformed-number` | — |
 | `0x_10` | `error read-malformed-number` | — |
@@ -191,10 +195,32 @@ and a scale, so `0.1` is one tenth exactly and survives any number of round trip
    truer diagnostic than a silently accepted half.
 8. **Hexadecimal digits and the `0x` prefix are case-insensitive.** `0X10` and `0xdead_BEEF` are
    values; canonical text prints them in decimal, because canonical form is a function of value.
-9. **⚠️ Nothing at or above 2^63 is writable.** An integer is signed, so a base address of
-   `0x8000_0000_0000_0000` is refused. This is a limit of the value domain rather than a rule about
-   literals, it is stated here so that nobody reads row `0x8000_0000_0000_0000` as an accident, and
-   widening it is a language change owned by the freeze (`M1.13`, finding F-F).
+9. ⭐ **The value domain is a property of this version of the language, not of an implementation.**
+   `eadl/1` holds an integer in an exact signed 64-bit value, so what is writable runs from
+   `-9223372036854775808` to `9223372036854775807`, and a well-formed literal outside that range is
+   `refused read-number-overflow`. Both endpoints are rows above **in both spellings and in both
+   directions** — the value that reads and the next one out, decimal and hexadecimal — so the boundary
+   is executed rather than described. The sign is applied to a wider magnitude before the value is
+   narrowed, in `crates/eadl-front/src/reader.rs`, and that order is load-bearing rather than an
+   implementation detail: it is the only reason the two rows for the minimum are writable at all,
+   since a magnitude one past the maximum *is* the minimum once signed.
+   Widening the domain is a **compatible** language change — every literal this version reads keeps the
+   value it has here, so no description changes meaning and none needs migrating. It therefore lands in
+   a later version behind a migration note, and costs one added compatibility-corpus row: a literal
+   refused under `eadl/1` and readable under the version that widens. It is not a change this version
+   has to make pre-emptively, and the decision with its measurements is
+   `docs/decisions/decision_eadl1-value-domain.md`.
+10. ⚠️ **Honest limit — an address whose most significant bit is set has no unsigned spelling here.**
+    A canonical high-half virtual address, which is the shape every RV64 paging scheme gives kernel
+    space because such an address has its upper bits all set, is a magnitude above this domain: row
+    `0xFFFF_FFFF_C000_0000` is refused. ⛔ The address is **not** lost — the row below it,
+    `-1073741824`, is the same 64-bit pattern read as signed, and it reads and round-trips. What is
+    refused is the *spelling* a datasheet, a linker script or a device tree prints, and that is a real
+    cost rather than a curiosity: it is the named trigger for rule 9's widening, because the first
+    target description that has to state a high-half address is the description that needs the unsigned
+    spelling. Physical addresses are unaffected — the widest one a standardized RV64 target can have
+    sits far inside the domain — and both measurements live in the decision record rather than being
+    restated here, because a figure in this document is a figure nothing re-derives.
 
 ## 2. Strings and escapes
 
@@ -335,7 +361,7 @@ cheapest diagnostic to write is the most expensive to receive.
 | `read-control-character` | a **raw** control character inside a string: anything in Unicode `Cc` except tab, which is whitespace the grammar names (§2 rule 2) | write the escape instead — `\n`, `\t`, `\r`, or `\u{…}` for any other character |
 | `read-escape-out-of-range` | a **well-formed** `\u{…}` escape that names no Unicode scalar value — a surrogate, or a code point past `10ffff` (§2 rule 2) | write a code point that denotes a character; a surrogate denotes one only inside a UTF-16 encoding |
 | `read-malformed-number` | an atom that begins with a digit, or with a sign and a digit, and is not a number — a second decimal point, an exponent, a unit glued to the magnitude, `0x` with no digits after it, or a separator leading them | write an integer or a decimal; a unit goes in a following atom, `10 ms` |
-| `read-number-overflow` | a **well-formed** literal whose value lies outside the 64-bit signed range (§1 rule 1) | reduce the digits, split the quantity, or change its units |
+| `read-number-overflow` | a **well-formed** literal whose value lies outside the 64-bit signed range, which §1 rule 9 makes a property of this version of the language rather than of an implementation | reduce the magnitude or change its units; an address with its most significant bit set is writable as the negative value it is two's-complement equal to (§1 rule 10) |
 | `module-not-a-module` | a file resolved as a module does not begin with a `defmodule` declaration | write `(defmodule <name> (version <major> <minor>) …)` |
 | `module-missing-name` | a `defmodule` carries no name | write `(defmodule platform.timer (version 1 0) …)` |
 | `module-bad-version` | `version` is not a major and a minor integer | write `(version 1 0)` |

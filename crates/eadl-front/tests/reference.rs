@@ -2004,12 +2004,29 @@ fn arm_23_a_declaration_that_names_no_code_prefix_is_reported_rather_than_skippe
 
 #[test]
 fn arm_24_a_surface_chapter_that_stops_citing_the_reference_is_reported() {
-    // The shipped `reading.md`, with the citation removed — the state this leaf found it in, when the
-    // chapter pointed at the grammar and nothing anywhere in the book pointed at the reference.
+    // The shipped `reading.md`, citing nothing — the state this leaf found it in, when the chapter
+    // pointed at the grammar and nothing anywhere in the book pointed at the reference.
+    //
+    // ⛔ **Every citation, not one chosen sentence.** This arm mutated a single blockquote line until
+    // `M1.13.2` added a second citation to the same chapter and the mutation stopped producing the
+    // state the arm's name claims: the chapter still cited the reference, the leg correctly reported
+    // nothing, and the arm failed on its own count. That it failed loudly is the design working —
+    // `edited` asserts its needle is present — but a needle scoped to one sentence measures "this line
+    // changed", and only "this chapter cites nothing" is the property under test. So the needle is now
+    // the cited path itself, which `edited` replaces at every occurrence, and the arm says so.
     let chapters = edited(
         "docs/book/src/reading.md",
-        "`docs/semantics/reference.md` says what a well-formed description *is worth*",
-        "the reference says what a well-formed description *is worth*",
+        "`docs/semantics/reference.md`",
+        "the reference",
+    );
+    let mutated = chapters
+        .iter()
+        .find(|(path, _)| path == "docs/book/src/reading.md")
+        .expect("this arm edits that chapter, so it is in the population it returns");
+    assert!(
+        !mutated.1.contains("docs/semantics/reference.md"),
+        "the mutation left a citation behind in the chapter it edits, so this arm would prove \
+         nothing — other chapters cite the reference and are not this arm's subject"
     );
     let wrong = surface_pointer_violations(REFERENCE, &chapters);
     assert_eq!(

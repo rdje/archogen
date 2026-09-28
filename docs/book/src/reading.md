@@ -50,7 +50,30 @@ lose that before any analysis ran: a `0.1 ms` in a description would silently be
 that is not one tenth of a millisecond. So `1.5` is kept as 15 with a scale of 1, and prints
 back as `1.5`.
 
-A literal that does not fit in a 64-bit signed integer is **refused**, not wrapped.
+A literal that does not fit in a 64-bit signed integer is **refused**, not wrapped. That range is a
+property of the **language version** rather than of this build: `eadl/1` writes every value from
+`-9223372036854775808` to `9223372036854775807`, in decimal or in hexadecimal, and both endpoints are
+executed rows of `docs/semantics/reference.md` §1 rather than a claim in prose. A later version may
+widen the domain, and that costs a migration note rather than a rewritten description — every literal
+this version reads keeps the value it has here, so nothing changes meaning underneath you.
+
+⚠️ **One thing the domain costs today.** An address whose most significant bit is set — a kernel-space
+virtual address under any RV64 paging scheme, whose upper bits the scheme requires to be all set — has
+no unsigned spelling. `0xFFFF_FFFF_C000_0000` is refused, while `-1073741824`, the same 64-bit pattern
+read as signed, reads and round-trips. The address is not lost; the spelling a datasheet or a linker
+script prints is. The refusal says what to write instead, and §1 rule 10 of the reference states the
+limit and names the trigger that would end it.
+
+How much of the domain the descriptions in this repository actually use is a command rather than a
+figure somebody typed, so it cannot go stale:
+
+```console
+$ cargo run -q -p eadl-front --example literals -- docs/semantics examples
+```
+
+It prints every distinct integer value the population writes, the largest of them and how many of the
+domain's magnitude bits it needs, and — the number a decision about the domain rests on — how many
+literals the domain **refused**.
 
 ## Diagnostics point at the problem
 

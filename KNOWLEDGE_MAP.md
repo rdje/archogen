@@ -163,6 +163,7 @@ justifies the split — the rows below appear as that happens.
 ## Decision records
 
 - [`decision_eadl-engine-boundary.md`](docs/decisions/decision_eadl-engine-boundary.md)
+- [`decision_eadl1-value-domain.md`](docs/decisions/decision_eadl1-value-domain.md)
 - [`decision_emulator-independence-retained.md`](docs/decisions/decision_emulator-independence-retained.md)
 - [`decision_findings-for-director-review.md`](docs/decisions/decision_findings-for-director-review.md)
 - [`decision_priority-comparison-direction.md`](docs/decisions/decision_priority-comparison-direction.md)

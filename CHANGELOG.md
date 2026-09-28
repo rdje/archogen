@@ -4,6 +4,59 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — `eadl/1`'s value domain becomes a stated property of the language version, and both measurements it was routed on turn out to be false
+
+`ARCHOGEN-M1-0082` (leaf `M1.13.2`). Finding F-F settled: **the domain stays exact signed 64-bit**, and
+widening it stays deferred — but now on a reason that survived being re-measured, which the original one
+did not.
+
+- ⛔ **Both measurements `M1.13` routed this leaf on were false.** Re-derived rather than carried, per
+  `docs/CLAIM_VERIFICATION.md` leg 1 and its auditor's asymmetry:
+  - the census said "**27** distinct integer literals; the largest is `0x1000_0000` (2^28) and the largest
+    decimal is 2^32" — an **unstated scope** (27 is the *non-negative* count) and a **radix-scoped maximum
+    published as the overall one**, in one self-contradictory sentence. The frontend measures **24**
+    distinct values over **194** occurrences, largest **4294967296** (2^32, 33 of 63 magnitude bits),
+    smallest `-1`, and **0** literals refused by the domain. Census of the copies, both directions:
+    **7** restatements over **3** live surfaces, all corrected at their sources with the originals quoted
+    rather than retyped.
+  - "no address a standardized target can have reaches 2^57" is true of every **physical** address and
+    false of every canonical **high-half virtual** one. `0xFFFF_FC00_0000_0000`, `0xFFFF_FFFF_C000_0000`
+    and `0xFFFF_FF80_0000_0000` are each refused today, because an Sv39 kernel address has bits 63-39 all
+    set — a magnitude of 2^64−2^38 against a limit of 2^63−1. No value is lost (`-1073741824`, the same
+    64-bit pattern, reads and round-trips); what is refused is the **unsigned spelling** a datasheet, a
+    linker script or a device tree prints. Sv64 is also stronger than "Reserved": the pin says it "**will
+    be defined** in a later version of this specification".
+- ⭐ **What closed it is rows and an instrument, not sentences.** §1 rule 9 states the domain as a property
+  of `eadl/1` and cites the code that enforces it; new rule 10 states the honest limit and names the
+  trigger that would end it. **Four new executed rows** carry both, including a hexadecimal lower boundary
+  that nothing had pinned — the spelling finding F-E's `i64::MIN` defect originally lived in. And
+  `crates/eadl-front/examples/literals.rs` makes the census a **command** rather than a description of
+  one, asking the frontend instead of a second regular expression, which is the mechanism by which the
+  original figure went wrong; it names its population as its arguments and counts every atom category, so
+  one holding nothing is visibly zero.
+- ⛔ **One code carried three repair wordings** — "split the quantity" in the hexadecimal arm, "reduce the
+  digits" in the decimal one, and a third merged in §4's column — and none of them told the author of a
+  kernel address anything usable, which §4's own preamble calls the most expensive diagnostic to receive.
+  Now one shared `OVERFLOW_REPAIR` naming the spelling that works.
+- Two new reader tests, and **two mutations seen firing** with both restorations proven byte-identical:
+  dropping the repair clause fails the high-half test; parsing the hexadecimal magnitude as `i64` fails
+  the new unit test **and** `reference.md:145`'s row — one plausible regression now caught in two places
+  where before it was caught in neither.
+- ⭐ `arm_24` fired on the real tree for a reason worth keeping: its mutation removed **one sentence** from
+  a chapter this leaf had given a second citation, so it no longer produced the state its name claims.
+  Widened to every occurrence with a post-mutation assertion, and promoted into
+  `docs/knowledge/verify-the-mutation-applied.md` — **assert the post-mutation state, not only that the
+  needle matched**.
+- ⚠️ Routed onward, measured and sized: the census reports **`decimal literals : 0`** over all 75 tracked
+  descriptions, independently confirmed by `grep`. §1 rule 2's exact rationals are pinned by table rows
+  and unit tests but exercised by **no shipped description**, so the conformance suite `M1.13.4` builds
+  would not test them. Both commands are on the leaf and on the frontier row.
+- `docs/decisions/decision_eadl1-value-domain.md` carries the decision, both censuses as re-runnable
+  commands, the ISA measurements with their pin and digests, and **three named triggers** that would make
+  it wrong — the first description needing a high-half address, Sv64 being defined, and any layer that
+  starts treating an integer as a bit pattern (the only one that would make deferral *expensive* rather
+  than merely late). `476 passed / 0 failed` over 37 suites (baseline 474; delta = the two new tests).
+
 ## archogen — `TASK-ACCEPTANCE` is measured active-unsound, not latent: a real code commit was gated on a different leaf's checklist
 
 `ARCHOGEN-PROGRAM-0081` (leaf `PROGRAM.21`). **Filed, not fixed** — docs only, no code, so the gate

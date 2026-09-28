@@ -435,7 +435,7 @@ impl<'a> Reader<'a> {
                         "read-number-overflow",
                         "this hexadecimal literal does not fit in a 64-bit signed integer",
                         Label::new(self.span(start, end), "too large"),
-                        "eADL integers are exact 64-bit signed values; split the quantity or change its units",
+                        OVERFLOW_REPAIR,
                     ));
                     None
                 }
@@ -501,7 +501,7 @@ impl<'a> Reader<'a> {
                     "read-number-overflow",
                     "this literal does not fit in a 64-bit signed integer",
                     Label::new(self.span(start, end), "too large"),
-                    "eADL numbers are exact 64-bit signed values; reduce the digits or change the units",
+                    OVERFLOW_REPAIR,
                 ));
                 None
             }
@@ -548,6 +548,25 @@ fn is_symbol_byte(byte: u8) -> bool {
         && !byte.is_ascii_control()
 }
 
+/// The repair direction for a literal outside the value domain, shared by both arms that refuse one.
+///
+/// ⭐ **One code, one repair.** §4 rule 3 of `docs/semantics/reference.md` makes
+/// `read-number-overflow` a *rule* rather than a call site, so the decimal and hexadecimal arms
+/// enforce the same rule and must not offer two different ways out of it. Measured, they did: the
+/// hexadecimal arm said "split the quantity", the decimal one said "reduce the digits", and §4's own
+/// column merged them into a third wording — three texts for one rule, none checked against another.
+///
+/// ⛔ **The third clause is the one the domain's honest limit needs.** A canonical high-half address —
+/// an RV64 kernel address, whose upper bits a paging scheme requires to be all set — is above this
+/// domain *as a magnitude* while being exactly representable as a signed value, so what fails is the
+/// unsigned spelling and not the address. Telling that author to "reduce the digits" sends them away
+/// with the wrong repair, which is what §4's preamble calls the most expensive diagnostic to receive.
+/// §1 rule 10 states the limit; leaf `M1.13.2` measured it.
+const OVERFLOW_REPAIR: &str = concat!(
+    "eADL integers are exact 64-bit signed values; reduce the magnitude, change the units, ",
+    "or write the negative value the literal is two's-complement equal to",
+);
+
 /// Apply a sign to a parsed magnitude and narrow it to an exact `i64`, or refuse.
 ///
 /// ⛔ **The magnitude is parsed in a wider domain than the value it becomes, and the sign is applied
@@ -555,6 +574,12 @@ fn is_symbol_byte(byte: u8) -> bool {
 /// than `i64::MAX`, so it overflowed before the sign could make it exactly `i64::MIN` — and the
 /// language's own rule, stated in `docs/semantics/reference.md` §1, is that every value in the 64-bit
 /// signed range is writable including both endpoints (finding F-E, leaf `M1.12.1`).
+///
+/// ⭐ **Both spellings of the minimum go through here, and the hexadecimal one was pinned by nothing
+/// until `M1.13.2`.** `-9223372036854775808` and `-0x8000_0000_0000_0000` are the same value written
+/// two ways, and both are §1 rows now; before that the table and this file's own tests carried only
+/// the decimal, so a regression in the hexadecimal arm — the spelling the original defect lived in —
+/// would have left every gate green.
 ///
 /// Refusing is the only other option: wrapping would turn an out-of-range quantity into a plausible
 /// wrong one, which §7.4's exactness requirement exists to prevent.
@@ -782,6 +807,76 @@ mod tests {
                 "{literal} was not refused:\n{rendered}"
             );
         }
+    }
+
+    #[test]
+    fn the_hexadecimal_spelling_of_the_domain_boundary_behaves_like_the_decimal_one() {
+        // ⭐ §1 rule 9 pins the domain in **both** spellings, and until `M1.13.2` nothing pinned the
+        // hexadecimal one: the reference's table, the test above and `docs/book/src/reading.md` all
+        // used decimal. `-0x8000_0000_0000_0000` is the same value as `-9223372036854775808` but
+        // reaches it through a different arm of the reader, so a regression there left every gate
+        // green — in the spelling finding F-E originally lived in.
+        let document = parse_ok("(x -0x8000_0000_0000_0000 0x7fff_ffff_ffff_ffff)");
+        let items = document.forms[0].items();
+        assert!(matches!(
+            items[1],
+            Form::Integer {
+                value: i64::MIN,
+                ..
+            }
+        ));
+        assert!(matches!(
+            items[2],
+            Form::Integer {
+                value: i64::MAX,
+                ..
+            }
+        ));
+        // Canonical form is a function of value, so both spellings print as decimal (§3 rule 1).
+        assert_eq!(
+            document.to_canonical().trim(),
+            "(x -9223372036854775808 9223372036854775807)"
+        );
+
+        for literal in ["0x8000_0000_0000_0000", "-0x8000_0000_0000_0001"] {
+            let (_, diagnostics, sources) = parse(&format!("(x {literal})"));
+            let rendered = diagnostics.render(&sources);
+            assert!(
+                rendered.contains("read-number-overflow"),
+                "{literal} was not refused:\n{rendered}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_high_half_address_is_refused_unsigned_and_readable_signed() {
+        // ⚠️ §1 rule 10's honest limit, executed rather than described. A canonical RV64 high-half
+        // virtual address has its upper bits all set, so as a magnitude it is above this domain —
+        // while the same 64-bit pattern is exactly a negative `i64`, and that spelling reads and
+        // round-trips. ⭐ This test is what a future widening has to *change*: it pins today's
+        // behaviour so widening the domain is a decision someone makes deliberately rather than a
+        // refusal that quietly stops firing.
+        let (_, diagnostics, sources) = parse("(base 0xFFFF_FFFF_C000_0000)");
+        let rendered = diagnostics.render(&sources);
+        assert!(
+            rendered.contains("read-number-overflow"),
+            "the unsigned spelling was not refused:\n{rendered}"
+        );
+        assert!(
+            rendered.contains("two's-complement"),
+            "the repair direction does not name the spelling that does work, which is the whole \
+             point of §5.5's repair requirement:\n{rendered}"
+        );
+
+        let document = parse_ok("(base -1073741824)");
+        assert!(matches!(
+            document.forms[0].items()[1],
+            Form::Integer {
+                value: -1_073_741_824,
+                ..
+            }
+        ));
+        assert_eq!(document.to_canonical().trim(), "(base -1073741824)");
     }
 
     #[test]

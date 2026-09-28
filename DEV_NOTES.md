@@ -1,5 +1,40 @@
 # DEV_NOTES.md
 
+## _(2026-09-28)_ — a superlative published without its population is a figure nobody can check
+
+- `M1.13.2`, settling finding F-F. The leaf it was routed on had measured "the largest literal in the
+  whole tracked corpus" and published **2^28**. Re-deriving it found the sentence was two claims wearing
+  one number's clothes: a **count** whose scope was never stated (27 is the *non-negative* population;
+  the whole one holds 28) and a **superlative** scoped to one radix (the largest *hexadecimal* literal),
+  restated seven times over three live surfaces as the largest literal, full stop.
+- ⛔ **The mechanism was that the census had no producer.** M-G's recorded "command" was prose —
+  *"every hex and decimal literal in every tracked .eadl, deduplicated and sorted by value"* — so there
+  was nothing to re-run, and nothing that could have caught either half. `docs/CLAIM_VERIFICATION.md`
+  leg 3 names this exactly: a measured number whose instrument lives nowhere is a "trust me" with extra
+  steps. What replaced it is a tracked instrument, `crates/eadl-front/examples/literals.rs`.
+- ⭐ **And the first re-derivation was wrong too, which is the part worth remembering.** A regular
+  expression over file text reported **28** distinct values over **303** occurrences. The frontend
+  reports **24** over **194**. The difference is digits inside *comments* — prose that is not a literal.
+  `crates/eadl-front/tests/reference.rs` already states the rule: "a second tokenizer here would be a
+  second thing to be wrong about." A census of what a *language* contains has to ask the language.
+- The instrument asserts nothing and is not a gate: a figure printed into a document is a carried
+  figure, and a carried figure is a stale one (`M1.23`, `M1.24`). Its population is its argument list,
+  so the scope travels with the number — the property the original figure lacked.
+- **Second lesson from the same slice, promoted rather than noted here.** `arm_24` in `reference.rs`
+  failed on the real tree because its mutation removed *one sentence* from a chapter this leaf had given
+  a second citation: the needle matched, the count assertion would have passed, and the post-mutation
+  state was not the state the arm's name claims. A count assertion on the needle proves the needle
+  exists; only an assertion on the **post-mutation state** proves the property was destroyed.
+- promotion: promoted (`docs/knowledge/verify-the-mutation-applied.md` gains the section "A mutation that
+  applied *partially* is the same failure in a greener disguise" and a fourth `answers:` line, so it is
+  reachable by "my mutation applied, its count assertion passed, and the arm still proves nothing".
+  Promoted *into* the existing card rather than forked beside it — the card already owns "did my
+  mutation land", and a near-duplicate answering the same question makes the retrievable layer harder to
+  search.) The scope-of-a-superlative lesson is **not** promoted separately:
+  `docs/knowledge/a-moved-measurement-needs-a-census-of-its-copies.md` already answers "is that
+  everything, or a subset shaped like my pattern?", and this is that question one level up — in a
+  superlative rather than a count.
+
 ## _(2026-09-28)_ — a second implementation copied from the first is a mirror, not a check
 
 - `M1.13.1`, closing finding F-G. §3 of `docs/semantics/reference.md` states that canonical text
