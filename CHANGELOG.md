@@ -4,6 +4,52 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the literal space now has one definition, and three surfaces agreeing on it
+
+`ARCHOGEN-M1-0073` (leaf `M1.12.2`).
+
+- **`conformance.rs` asks the recognizer for a verdict on every literal the reference enumerates** —
+  not on the corpus, and not on one probe per production. That is the only reason it can see the two
+  divergences it was written for: no description the repository ships contains either spelling, so
+  `M1.11`'s mutation-tested conformance check agreed on everything it was ever given.
+- **Both were settled by changing the grammar, never by relaxing the reader** — `crates/eadl-front/src`
+  is unmodified in this commit:
+  - **F-A: `0X10` is a hexadecimal literal.** `hexadecimal`'s prefix is now `( "0x" | "0X" )`. The
+    reader has always read it, its digits were already case-insensitive, and a case-*sensitive* prefix
+    would be the one inconsistency in the literal; canonical form prints `16` either way.
+  - **F-C: `\0` is not an escape.** `escape` no longer admits `"0"`. The reader never implemented it,
+    a NUL byte has no use in a description, and `read-bad-escape`'s own hint already enumerated the set
+    that exists.
+- ⭐ **The two RED arms are the original defect restored, verified byte-for-byte.** A `python3` diff of
+  each arm's mutated production against `git show HEAD:docs/semantics/grammar.md` reports the lines
+  identical, so reverting either fix fails the build. The leg itself was seen firing on the real tree
+  first: with `HEAD`'s grammar temporarily restored it reported exactly two violations, naming `0X10`
+  as well-formed-but-rejected and `"nul\0here"` as not-well-formed-but-accepted.
+- **`error` and `refused` are now distinct claims in the reference**, because the leg needed the
+  difference and the language always had it. `1.2.3` is *not well-formed* and the grammar must reject
+  it; `9223372036854775808` *is* well-formed and its value does not fit, so the grammar must accept it
+  and the frontend refuse it. A syntax that could express "too large" would have to know the width of
+  the value domain — exactly the implementation detail `grammar.md` keeps out of itself.
+- **One normative document gets one parser.** The table reader moved to
+  `crates/eadl-front/tests/common/reference_table.rs`, shared by `reference.rs` and `conformance.rs`;
+  two parsers for one normative table would be two things that can disagree about what a rule *says*
+  before either asks what it means. `Grammar::load()` became `Grammar::from_document(text)` over an
+  `include_str!` constant, which is what makes the grammar side mutable by an arm at all.
+- ⛔ **A defect found and fixed on the way:** `grammar.md` headed a list "**Three** rules the
+  productions above imply" above *four* numbered items — a count in a normative document that no gate
+  watches. The count was deleted rather than retyped, and the instance recorded as a fifth shape on
+  `PROGRAM.20`, whose surface list ("book chapters, corpus indexes, crate module headers") does not
+  include normative language documents.
+- **Promoted:** `docs/knowledge/enumerate-the-population-from-the-specification.md` — *agreement over
+  your inputs is not agreement over the specification*. This discharges the promotion `M1.12.1`
+  declined and handed on, in the same commit as the mechanism it describes.
+- **Validation:** `cargo test -p eadl-front --test conformance` → **10 passed / 0 failed** (was 6);
+  `make focused` → `passed — 3 passed, 0 failed, 0 unavailable`; `cargo test --all` → **448 passed,
+  0 failed over 37 suites** (baseline 444 over 37); `scripts/check_doctrines.sh` → `=== all doctrines
+  green ===`. A census for other surfaces stating the escape set or the hex prefix returned one
+  unrelated hit, so no book chapter had drifted. The one surface still quoting the old production is
+  the **frozen** `LS-006` record, left untouched on purpose.
+
 ## archogen — the language reference exists, and it is executed rather than read
 
 `ARCHOGEN-M1-0072` (leaf `M1.12.1`).

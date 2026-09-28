@@ -45,6 +45,12 @@ use std::path::{Path, PathBuf};
 
 use eadl_front::{read, Form, Severity, SourceMap};
 
+mod common;
+
+use common::reference_table::{
+    control_character, encode_canonical, machine_table, StringValue, Value,
+};
+
 /// The normative document under test.
 ///
 /// `include_str!` rather than `fs::read_to_string`, for the reason `corpus.rs` gives for its live
@@ -52,169 +58,15 @@ use eadl_front::{read, Form, Severity, SourceMap};
 /// gating nothing.
 const REFERENCE: &str = include_str!("../../../docs/semantics/reference.md");
 
-// ── the value notation ─────────────────────────────────────────────────────────────────────────
+// ── the value notation, and reading the tables out of the document ─────────────────────────────
 //
-// Exactly the forms `docs/semantics/reference.md` defines in its notation table, and no others: a
-// notation that could express more than this file understands is a notation that would eventually be
-// used to write a rule nothing checks.
-
-/// What the reference says a literal is worth.
-#[derive(Debug, Clone, PartialEq, Eq)]
-enum Value {
-    /// `integer N` — an exact 64-bit signed integer.
-    Integer(i64),
-    /// `rational N/10^S` — the digits `N` with the last `S` after the point. Never a float.
-    Rational(i64, u32),
-    /// `symbol T` — not a number: the atom is the symbol `T`.
-    Symbol(String),
-    /// `error C` — refused, with diagnostic code `C`.
-    Error(String),
-}
-
-impl Value {
-    /// Read one value cell, or `None` if the notation cannot express it.
-    ///
-    /// `None` is a **violation**, never a reason to skip the row: a cell this file cannot parse is a
-    /// rule nothing checks, which is the state this leaf exists to end.
-    fn parse(cell: &str) -> Option<Self> {
-        let (head, rest) = cell.split_once(' ')?;
-        let rest = rest.trim();
-        match head {
-            "integer" => Some(Self::Integer(rest.parse().ok()?)),
-            "rational" => {
-                let (digits, scale) = rest.split_once("/10^")?;
-                Some(Self::Rational(digits.parse().ok()?, scale.parse().ok()?))
-            }
-            "symbol" if !rest.is_empty() => Some(Self::Symbol(rest.to_string())),
-            "error" if !rest.is_empty() => Some(Self::Error(rest.to_string())),
-            _ => None,
-        }
-    }
-
-    /// The verdict class name, for the non-vacuity leg.
-    fn class(&self) -> &'static str {
-        match self {
-            Self::Integer(_) => "integer",
-            Self::Rational(_, _) => "rational",
-            Self::Symbol(_) => "symbol",
-            Self::Error(_) => "error",
-        }
-    }
-}
-
-/// Decode the reference's value notation into characters.
-///
-/// ⭐ A second implementation of the escape rule, written from §2 of the reference rather than from
-/// `reader.rs`. That is the point: one implementation cannot disagree with itself, so a reader that
-/// decoded `\n` as a tab would be checked by nothing.
-fn decode_escapes(cell: &str) -> Option<String> {
-    let mut out = String::new();
-    let mut chars = cell.chars();
-    while let Some(ch) = chars.next() {
-        if ch != '\\' {
-            out.push(ch);
-            continue;
-        }
-        match chars.next()? {
-            'n' => out.push('\n'),
-            't' => out.push('\t'),
-            'r' => out.push('\r'),
-            '"' => out.push('"'),
-            '\\' => out.push('\\'),
-            // The notation says a backslash in a value cell always starts one of the five escapes, so
-            // anything else means the document is not writable in its own notation.
-            _ => return None,
-        }
-    }
-    Some(out)
-}
-
-/// Encode characters as canonical text, per §3 of the reference.
-///
-/// Also a second implementation, and the one that makes finding F-D a permanent impossibility rather
-/// than a repaired incident: canonical text escapes every character that would break "one form per
-/// line", so a printer that emits a raw control byte disagrees with this and fails.
-fn encode_canonical(value: &str) -> String {
-    let mut out = String::from("\"");
-    for ch in value.chars() {
-        match ch {
-            '"' => out.push_str("\\\""),
-            '\\' => out.push_str("\\\\"),
-            '\n' => out.push_str("\\n"),
-            '\t' => out.push_str("\\t"),
-            '\r' => out.push_str("\\r"),
-            other => out.push(other),
-        }
-    }
-    out.push('"');
-    out
-}
-
-/// The first ASCII control character in `text`, if any.
-///
-/// §3 rule 3 of the reference: canonical text is what gets diffed, hashed and printed in a report, so
-/// it carries no control character. Tab, line feed and carriage return all break "one form per line"
-/// in a different way, and a bare `\t` in a report column is invisible rather than merely ugly.
-fn control_character(text: &str) -> Option<char> {
-    text.chars().find(|ch| ch.is_ascii_control())
-}
+// Both live in `tests/common/reference_table.rs`, because `conformance.rs` reads the same tables to
+// compare them with the recognizer derived from `docs/semantics/grammar.md`. One normative document,
+// one reader for it.
 
 /// One violation, phrased so the failure names the row and both sides.
 fn violation(line: usize, message: String) -> String {
     format!("docs/semantics/reference.md:{line}: {message}")
-}
-
-// ── reading the tables out of the document ─────────────────────────────────────────────────────
-
-/// The rows of the table introduced by `<!-- machine-read: <marker> -->`, with their line numbers.
-///
-/// Returns an empty vector when the marker is absent — which the non-vacuity leg turns into a
-/// violation, so a renamed marker cannot make this file pass by checking nothing.
-fn machine_table(document: &str, marker: &str) -> Vec<(usize, Vec<String>)> {
-    let needle = format!("<!-- machine-read: {marker} -->");
-    let lines: Vec<&str> = document.lines().collect();
-    let Some(start) = lines.iter().position(|line| line.trim() == needle) else {
-        return Vec::new();
-    };
-    let mut rows = Vec::new();
-    let mut header_seen = false;
-    let mut separator_seen = false;
-    for (index, line) in lines.iter().enumerate().skip(start + 1) {
-        let trimmed = line.trim();
-        if !trimmed.starts_with('|') {
-            // A blank line between the marker and the table is layout; anything else ends it.
-            if trimmed.is_empty() && !header_seen {
-                continue;
-            }
-            break;
-        }
-        let cells = split_cells(trimmed);
-        if !header_seen {
-            header_seen = true;
-            continue;
-        }
-        if !separator_seen {
-            separator_seen = true;
-            continue;
-        }
-        rows.push((index + 1, cells));
-    }
-    rows
-}
-
-/// Split a markdown table row into cells, dropping one surrounding code span per cell.
-fn split_cells(line: &str) -> Vec<String> {
-    line.trim()
-        .trim_start_matches('|')
-        .trim_end_matches('|')
-        .split('|')
-        .map(|cell| {
-            let cell = cell.trim();
-            cell.strip_prefix('`')
-                .and_then(|inner| inner.strip_suffix('`'))
-                .map_or_else(|| cell.to_string(), str::to_string)
-        })
-        .collect()
 }
 
 // ── running a literal through the frontend ─────────────────────────────────────────────────────
@@ -283,14 +135,15 @@ fn number_violations(document: &str) -> Vec<String> {
                 line,
                 format!(
                     "`{stated}` is not a value this language's notation defines (`integer N`, \
-                     `rational N/10^S`, `symbol T`, `error C`), so nothing checks `{literal}`"
+                     `rational N/10^S`, `symbol T`, `error C`, `refused C`), so nothing checks \
+                     `{literal}`"
                 ),
             ));
             continue;
         };
         let found = probe(literal);
-        if let Value::Error(code) = &expected {
-            if !found.errors.contains(&code.as_str()) {
+        if let Some(code) = expected.refusal() {
+            if !found.errors.contains(&code) {
                 out.push(violation(
                     line,
                     format!(
@@ -377,34 +230,39 @@ fn string_violations(document: &str) -> Vec<String> {
             continue;
         };
         let found = probe(source);
-        if let Some(code) = stated.strip_prefix("error ") {
-            if !found.errors.contains(&code) {
+        let expected = match StringValue::parse(stated) {
+            None => {
                 out.push(violation(
                     line,
                     format!(
-                        "the reference refuses {source} as `{code}`, and the frontend did not:\n{}",
-                        if found.errors.is_empty() {
-                            format!(
-                                "  it read {} with no diagnostic",
-                                describe_all(&found.forms)
-                            )
-                        } else {
-                            found.rendered
-                        }
+                        "`{stated}` is not writable in the reference's own notation (`error C`, \
+                         `refused C`, or the decoded text in the language's escapes), so nothing \
+                         checks {source}"
                     ),
                 ));
+                continue;
             }
-            continue;
-        }
-        let Some(expected) = decode_escapes(stated) else {
-            out.push(violation(
-                line,
-                format!(
-                    "`{stated}` is not writable in the reference's own escape notation, so nothing \
-                     checks {source}"
-                ),
-            ));
-            continue;
+            Some(StringValue::Error(code)) | Some(StringValue::Refused(code)) => {
+                if !found.errors.contains(&code.as_str()) {
+                    out.push(violation(
+                        line,
+                        format!(
+                            "the reference refuses {source} as `{code}`, and the frontend did \
+                             not:\n{}",
+                            if found.errors.is_empty() {
+                                format!(
+                                    "  it read {} with no diagnostic",
+                                    describe_all(&found.forms)
+                                )
+                            } else {
+                                found.rendered
+                            }
+                        ),
+                    ));
+                }
+                continue;
+            }
+            Some(StringValue::Text(text)) => text,
         };
         if !found.errors.is_empty() {
             out.push(violation(
@@ -474,6 +332,7 @@ fn describe_value(value: &Value) -> String {
         Value::Rational(v, s) => format!("`rational {v}/10^{s}`"),
         Value::Symbol(t) => format!("`symbol {t}`"),
         Value::Error(c) => format!("`error {c}`"),
+        Value::Refused(c) => format!("`refused {c}`"),
     }
 }
 
@@ -652,7 +511,7 @@ fn vacuity_violations(document: &str) -> Vec<String> {
             .filter_map(|cell| Value::parse(cell))
             .map(|value| value.class())
             .collect();
-        for class in ["integer", "rational", "symbol", "error"] {
+        for class in ["integer", "rational", "symbol", "error", "refused"] {
             if !classes.contains(class) {
                 out.push(format!(
                     "docs/semantics/reference.md: the number table has no `{class}` row, so no row \
@@ -670,21 +529,24 @@ fn vacuity_violations(document: &str) -> Vec<String> {
                 .to_string(),
         );
     } else {
-        let values: Vec<&str> = strings
+        let values: Vec<StringValue> = strings
             .iter()
-            .filter_map(|(_, cells)| cells.get(1).map(String::as_str))
+            .filter_map(|(_, cells)| cells.get(1))
+            .filter_map(|cell| StringValue::parse(cell))
             .collect();
-        if !values.iter().any(|cell| cell.starts_with("error ")) {
+        if !values
+            .iter()
+            .any(|value| matches!(value, StringValue::Error(_)))
+        {
             out.push(
-                "docs/semantics/reference.md: the string table refuses nothing, so no row pins that \
-                 an unsupported escape is an error rather than a value"
+                "docs/semantics/reference.md: the string table refuses nothing as malformed, so no \
+                 row pins that an unsupported escape is an error rather than a value"
                     .to_string(),
             );
         }
-        if !values
-            .iter()
-            .any(|cell| !cell.starts_with("error ") && cell.contains('\\'))
-        {
+        if !values.iter().any(|value| {
+            matches!(value, StringValue::Text(text) if text.contains(['\n', '\t', '\r', '"', '\\']))
+        }) {
             out.push(
                 "docs/semantics/reference.md: the string table decodes no escape, so no row pins \
                  what a backslash denotes"

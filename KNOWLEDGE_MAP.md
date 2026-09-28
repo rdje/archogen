@@ -86,8 +86,10 @@ justifies the split — the rows below appear as that happens.
   eADL?" that used to be a 743-line parser. `crates/eadl-front/tests/conformance.rs` derives a
   recognizer from the EBNF block in that file and requires it and the reader to accept the same
   language **and produce the same token spans** over all 62 corpus descriptions, plus 23 probes
-  covering every production. ⛔ Acceptance alone was measured too weak: dropping `_` from hex
-  literals turned `(base 0x1000_0000)` into `4096` and `_0000` with every acceptance test green.
+  covering every production. It also asks the recognizer for a verdict on **every literal the
+  reference enumerates**, which is the population the corpus could not supply. ⛔ Acceptance alone was
+  measured too weak: dropping `_` from hex literals turned `(base 0x1000_0000)` into `4096` and
+  `_0000` with every acceptance test green.
 - `docs/semantics/reference.md` — ⭐ **the normative language reference**: what a literal is
   *worth*, which is the half a grammar cannot say. `crates/eadl-front/tests/reference.rs` reads its
   `literal → value → canonical text` tables **out of the document** and executes every row against

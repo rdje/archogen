@@ -36,8 +36,16 @@ the frontend. A table without that comment is prose and checks nothing.
 | `integer N` | an exact integer whose value is `N` |
 | `rational N/10^S` | an exact rational: the digits `N`, with the last `S` of them after the decimal point. Never a float |
 | `symbol T` | not a number at all — the atom is the symbol whose text is `T` |
-| `error C` | refused, with a diagnostic whose code is `C` |
-| `—` | no canonical text, because the literal is refused and yields no form |
+| `error C` | **not well-formed**, and refused with a diagnostic whose code is `C` |
+| `refused C` | well-formed, but its value is outside the domain the language can hold; refused with code `C` |
+| `—` | no canonical text, because the literal yields no value |
+
+⭐ **`error` and `refused` are different claims, and the difference is not cosmetic.** `1.2.3` is not
+a number and no conforming implementation may read it; `9223372036854775808` *is* a well-formed integer
+whose value does not fit, and a grammar that could say so would have to know the width of the value
+domain — which is precisely the implementation detail `docs/semantics/grammar.md` keeps out of itself.
+So the recognizer derived from that grammar must reject every `error` row and accept every `refused`
+one, and `crates/eadl-front/tests/conformance.rs` is what requires it.
 
 A string's **decoded value** column is written in the language's own escape notation, so it is
 unambiguous: a backslash in that column is always the start of one of the escapes this file defines.
@@ -84,16 +92,16 @@ and a scale, so `0.1` is one tenth exactly and survives any number of round trip
 | `+` | `symbol +` | `+` |
 | `9223372036854775807` | `integer 9223372036854775807` | `9223372036854775807` |
 | `-9223372036854775808` | `integer -9223372036854775808` | `-9223372036854775808` |
-| `9223372036854775808` | `error read-number-overflow` | — |
-| `-9223372036854775809` | `error read-number-overflow` | — |
-| `99999999999999999999` | `error read-number-overflow` | — |
+| `9223372036854775808` | `refused read-number-overflow` | — |
+| `-9223372036854775809` | `refused read-number-overflow` | — |
+| `99999999999999999999` | `refused read-number-overflow` | — |
 | `0x0` | `integer 0` | `0` |
 | `0x10` | `integer 16` | `16` |
 | `0X10` | `integer 16` | `16` |
 | `0x1000_0000` | `integer 268435456` | `268435456` |
 | `0xdead_BEEF` | `integer 3735928559` | `3735928559` |
 | `0x7fff_ffff_ffff_ffff` | `integer 9223372036854775807` | `9223372036854775807` |
-| `0x8000_0000_0000_0000` | `error read-number-overflow` | — |
+| `0x8000_0000_0000_0000` | `refused read-number-overflow` | — |
 | `0x` | `error read-malformed-number` | — |
 | `0xg` | `error read-malformed-number` | — |
 | `0x_10` | `error read-malformed-number` | — |
@@ -117,12 +125,15 @@ and a scale, so `0.1` is one tenth exactly and survives any number of round trip
 1. **An integer is exact and 64-bit signed.** Every value from `-9223372036854775808` to
    `9223372036854775807` is writable, and the endpoints are rows above rather than a claim in prose.
    A literal outside that range is refused as `read-number-overflow`; it is never wrapped, truncated
-   or silently reduced, because a wrapped magnitude is a wrong system rather than an error.
+   or silently reduced, because a wrapped magnitude is a wrong system rather than an error. Such a
+   literal is still **well-formed** — the grammar accepts it and the value domain refuses it — which
+   is why those rows read `refused` and not `error`.
 2. **A decimal is a rational, not a quotient.** `rational 15/10^1` is fifteen tenths exactly. The
    scale — how many digits sit after the point — is part of the value's identity, so `1.5` and `1.50`
-   are **different literals with different canonical text**, even though §3's model layer makes them
-   the same magnitude. That is deliberate: an author who writes `1.50` has stated a precision, and
-   erasing it here would erase it everywhere.
+   are **different literals with different canonical text**, even though the model layer above the
+   frontend makes them the same magnitude again — `crates/eadl-model/src/rational.rs` holds an exact
+   rational, so `15/10` and `150/100` are equal there. That is deliberate: an author who writes `1.50`
+   has stated a precision, and erasing it in the reader would erase it everywhere.
 3. **`_` separates digits and is ignored.** It may repeat and it may trail. It may **not** lead: a
    hexadecimal literal must begin with a hexadecimal digit, exactly as a decimal one must begin with a
    decimal digit, so `0x_10` is `read-malformed-number`. The scale of a decimal counts the digits

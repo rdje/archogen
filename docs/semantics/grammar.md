@@ -64,11 +64,11 @@ delimiter       = whitespace | "(" | ")" | quote | ";" | end ;
 
 string          = quote , { string_char } , quote ;
 string_char     = escape | ( any - quote - "\\" ) ;
-escape          = "\\" , ( quote | "\\" | "n" | "t" | "r" | "0" ) ;
+escape          = "\\" , ( quote | "\\" | "n" | "t" | "r" ) ;
 quote           = "\"" ;
 
 number          = hexadecimal | decimal | integer ;
-hexadecimal     = [ sign ] , "0x" , hex_digit , { hex_digit | "_" } ;
+hexadecimal     = [ sign ] , ( "0x" | "0X" ) , hex_digit , { hex_digit | "_" } ;
 decimal         = [ sign ] , digit , { digit | "_" } , "." , digit , { digit | "_" } ;
 integer         = [ sign ] , digit , { digit | "_" } ;
 sign            = "+" | "-" ;
@@ -80,7 +80,7 @@ symbol_char     = any - whitespace - "(" - ")" - quote - ";" ;
 symbol_start    = symbol_char - digit ;
 ```
 
-### Three rules the productions above imply, stated because they are load-bearing
+### Rules the productions above imply, stated because they are load-bearing
 
 1. **A token ends where a delimiter begins**, and `atom`'s trailing `? delimiter` is what says
    so. `(`, `)`, `"`, `;` and whitespace terminate a token and are never part of one, so `(a)` is
@@ -111,12 +111,16 @@ symbol_start    = symbol_char - digit ;
 | that comments are **retained** | the language reference (`M1.12.4`) | a grammar says what is skipped, not what is kept |
 | canonical form | [`docs/semantics/reference.md`](reference.md) §3 | it is a property of printing, not of parsing |
 
-⚠️ **Two spellings below are being reconciled with the reference, and the reference is the authority
-on what a literal means.** `hexadecimal` spells its prefix `"0x"` where the reference admits `0X10`
-as a value, and `escape` admits `"0"` where the reference refuses `\0` as `read-bad-escape`. Neither
-spelling appears in any description the repository ships, so the conformance check below cannot reach
-them; leaf `M1.12.2` runs the reference's own literal table against the recognizer derived from this
-file, which is what makes both divergences impossible rather than merely noted.
+⭐ **Two spellings were reconciled with the reference by `M1.12.2`, and the mechanism that reconciled
+them is permanent.** `hexadecimal`'s prefix now admits `0X` as well as `0x`, because its digits were
+already case-insensitive and a case-*sensitive* prefix would be the one inconsistency in the literal;
+and `escape` no longer admits `"0"`, because the reader never implemented `\0`, its own hint lists the
+escapes that do exist, and a NUL byte has no use in a description. Neither spelling appears in any
+description the repository ships, which is why the corpus and the production probes below could not
+reach either one — measured, three `git grep` censuses, three empty results. What closes the gap is
+`crates/eadl-front/tests/conformance.rs` running the reference's own literal table against the
+recognizer derived from this file: a spelling one normative document admits and the other refuses now
+fails the build, rather than waiting for a description to happen to use it.
 
 ⚠️ **No float, anywhere.** The grammar admits a decimal literal; §7.4 requires "exact integer time
 units or checked rational arithmetic", so a conforming reader holds `1.5` as fifteen tenths and

@@ -717,7 +717,12 @@ mdBook that is the director's window into the project.
   holds four (`S0.8`), and `docs/TASK_TREE.md`'s `S0` row said "all six leaves closed" for one commit
   after `S0.7` added a seventh — `git show 4b7e000^:docs/TASK_TREE.md` and `git show
   4b7e000:docs/TASK_TREE.md` are byte-identical on that row, so the commit that moved the count never
-  looked at the index that restates it. Corrected by `M1.24`'s routing edit rather than left. Each
+  looked at the index that restates it. Corrected by `M1.24`'s routing edit rather than left. A fifth
+  shape, `2026-09-28` (`M1.12.2`): `docs/semantics/grammar.md` headed a list **"Three rules the
+  productions above imply"** above *four* numbered items — a **normative document**, and not one of
+  the surfaces this leaf's acceptance enumerates (book chapters, corpus indexes, crate module headers),
+  so no existing gate would have caught it and no sweep pattern aimed at it. Fixed by deleting the
+  count rather than retyping it, which is the register's own prescription. Each
   sweep is a population bounded by its pattern, so "nothing else found" has never been a result this
   repository could rely on — and a third sweep, adding `leaves|arms|checks|doctrines|productions|rows`,
   returned a further backlog of structure counts this leaf deliberately does **not** classify, because

@@ -33,6 +33,18 @@ use std::path::{Path, PathBuf};
 
 use eadl_front::{read, Form, SourceMap};
 
+mod common;
+
+use common::reference_table::{machine_table, StringValue, Value};
+
+/// The normative grammar, and the normative reference whose literal table it is compared against.
+///
+/// `include_str!` rather than `fs::read_to_string` for the reason `corpus.rs` gives: if either
+/// document moves or is deleted, this crate **stops compiling** instead of silently gating nothing.
+/// It also lets a RED arm mutate the grammar text and prove the comparison can fail on that side.
+const GRAMMAR_DOCUMENT: &str = include_str!("../../../docs/semantics/grammar.md");
+const REFERENCE: &str = include_str!("../../../docs/semantics/reference.md");
+
 // ── the EBNF dialect ─────────────────────────────────────────────────────────────────────────
 //
 // Exactly the operators `docs/semantics/grammar.md` documents, and no others: a notation that can
@@ -226,9 +238,15 @@ struct Grammar {
 
 impl Grammar {
     fn load() -> Self {
-        let path = repo_root().join("docs/semantics/grammar.md");
-        let text = std::fs::read_to_string(&path)
-            .unwrap_or_else(|e| panic!("cannot read {}: {e}", path.display()));
+        Self::from_document(GRAMMAR_DOCUMENT)
+    }
+
+    /// Build the recognizer from a document's fenced `ebnf` block.
+    ///
+    /// ⭐ Takes the text rather than a path, so a RED arm can feed it a **mutated** grammar and prove
+    /// the comparison with the reference fails on the grammar's side too — not only when someone
+    /// mistypes a row of the table.
+    fn from_document(text: &str) -> Self {
         let block = text
             .split_once("```ebnf")
             .expect("grammar.md carries an ```ebnf block")
@@ -766,4 +784,197 @@ fn the_conformance_probes_exercise_every_production() {
             wrong.join("\n")
         );
     });
+}
+
+// ── the literal space: the grammar and the reference must agree ────────────────────────────────
+//
+// `M1.12.2`. The properties above compared this recognizer with the reader over the corpus and over
+// one probe per production, and three literal forms still disagreed with
+// `docs/semantics/reference.md`: `0X10` and `0x_10`, which the reader read and the grammar refused,
+// and `\0`, which the grammar admitted and the reader refused. None of the three appears in any
+// description the repository ships — three `git grep` censuses, three empty results — so no input
+// either check had could reach them.
+//
+// ⭐ The population therefore comes from the reference's own table rather than from the corpus. That
+// is the only way to enumerate a *space* rather than a sample: the table is a systematic enumeration
+// of literal forms, and this leg asks the grammar for a verdict on every one of them. It is also the
+// remedy for the blind spot the probes have — one probe per production never combines two, and every
+// one of these divergences lived in a combination.
+
+/// What the grammar said about every literal the reference states, and where the two disagree.
+struct LiteralSpace {
+    /// Rows the recognizer accepted.
+    accepted: usize,
+    /// Rows the recognizer rejected.
+    rejected: usize,
+    /// One message per disagreement.
+    violations: Vec<String>,
+}
+
+/// Compare the recognizer's verdict with the reference's, for every row of both literal tables.
+///
+/// No `with_deep_stack`: the inputs are single literals, and the deep stack exists for corpus
+/// descriptions thousands of characters long, where a continuation-passing recognizer recurses once
+/// per character.
+fn literal_space(reference: &str, grammar: &Grammar) -> LiteralSpace {
+    let mut space = LiteralSpace {
+        accepted: 0,
+        rejected: 0,
+        violations: Vec::new(),
+    };
+    for (line, literal, well_formed) in literal_rows(reference) {
+        let accepted = grammar.accepts(&literal);
+        if accepted {
+            space.accepted += 1;
+        } else {
+            space.rejected += 1;
+        }
+        if accepted != well_formed {
+            space.violations.push(format!(
+                "docs/semantics/reference.md:{line}: the reference says `{literal}` is {}, and the \
+                 recognizer derived from docs/semantics/grammar.md {} it",
+                if well_formed {
+                    "well-formed"
+                } else {
+                    "NOT well-formed"
+                },
+                if accepted { "accepts" } else { "rejects" }
+            ));
+        }
+    }
+    space
+}
+
+/// Every literal row of both tables, as `(line, literal, whether the reference calls it well-formed)`.
+///
+/// Rows this file cannot read are skipped rather than reported: a cell the notation cannot express is
+/// `reference.rs`'s complaint, and reporting it here too would make one defect look like two.
+fn literal_rows(reference: &str) -> Vec<(usize, String, bool)> {
+    let mut rows = Vec::new();
+    for (line, cells) in machine_table(reference, "number-values") {
+        let (Some(literal), Some(stated)) = (cells.first(), cells.get(1)) else {
+            continue;
+        };
+        if let Some(value) = Value::parse(stated) {
+            rows.push((line, literal.clone(), value.well_formed()));
+        }
+    }
+    for (line, cells) in machine_table(reference, "string-values") {
+        let (Some(literal), Some(stated)) = (cells.first(), cells.get(1)) else {
+            continue;
+        };
+        if let Some(value) = StringValue::parse(stated) {
+            rows.push((line, literal.clone(), value.well_formed()));
+        }
+    }
+    rows
+}
+
+#[test]
+fn the_grammar_and_the_reference_agree_on_the_literal_space() {
+    let grammar = Grammar::load();
+    let space = literal_space(REFERENCE, &grammar);
+
+    // ⛔ Not vacuous, in both directions. A leg over zero rows proves nothing, and a leg in which the
+    // recognizer gave only one verdict would pass on a recognizer that accepts everything or rejects
+    // everything — the same false green `the_recognizer_is_not_vacuously_permissive` refuses.
+    assert!(
+        space.accepted > 0 && space.rejected > 0,
+        "the literal tables gave the recognizer nothing to discriminate: {} accepted, {} rejected",
+        space.accepted,
+        space.rejected
+    );
+    assert!(
+        space.violations.is_empty(),
+        "the normative grammar and the normative reference disagree about the literal space:\n\n{}\n\n\
+         One of the two documents states a rule the language does not have. They are both normative, \
+         so this is a decision to make and record, not a row to adjust until the test goes quiet.",
+        space.violations.join("\n\n")
+    );
+}
+
+// Each arm mutates one side and asserts the specific complaint, with the count pinned. Arms 2 and 3
+// are the two divergences this leaf was written for, restored: they prove that reverting either fix
+// fails the build, which is the difference between a repaired defect and an impossible one.
+
+#[test]
+fn arm_1_a_reference_row_that_flips_its_verdict_is_reported() {
+    let grammar = Grammar::load();
+    let mutated = REFERENCE.replace(
+        "| `0X10` | `integer 16` | `16` |",
+        "| `0X10` | `error read-malformed-number` | — |",
+    );
+    assert_ne!(
+        mutated, REFERENCE,
+        "the mutation did not apply — a false green"
+    );
+    let space = literal_space(&mutated, &grammar);
+    assert_eq!(
+        space.violations.len(),
+        1,
+        "expected one violation; got:\n{}",
+        space.violations.join("\n\n")
+    );
+    assert!(
+        space.violations[0].contains("`0X10` is NOT well-formed"),
+        "the violation does not name the row and the claim: {}",
+        space.violations[0]
+    );
+}
+
+#[test]
+fn arm_2_a_grammar_that_stops_admitting_the_uppercase_prefix_is_reported() {
+    // Finding F-A restored: the reader has always read `0X10`, and the grammar refused it.
+    let mutated = GRAMMAR_DOCUMENT.replace(r#"( "0x" | "0X" ) , hex_digit"#, r#""0x" , hex_digit"#);
+    assert_ne!(
+        mutated, GRAMMAR_DOCUMENT,
+        "the mutation did not apply — a false green"
+    );
+    let grammar = Grammar::from_document(&mutated);
+    assert!(
+        !grammar.accepts("0X10"),
+        "the mutated grammar still accepts `0X10`, so this arm proves nothing"
+    );
+    let space = literal_space(REFERENCE, &grammar);
+    assert_eq!(
+        space.violations.len(),
+        1,
+        "expected one violation; got:\n{}",
+        space.violations.join("\n\n")
+    );
+    assert!(
+        space.violations[0].contains("`0X10` is well-formed"),
+        "the violation does not name the row and the claim: {}",
+        space.violations[0]
+    );
+}
+
+#[test]
+fn arm_3_a_grammar_that_admits_a_null_escape_is_reported() {
+    // Finding F-C restored: `escape` used to admit `"0"`, and the reader has never implemented `\0`.
+    let mutated = GRAMMAR_DOCUMENT.replace(
+        r#"escape          = "\\" , ( quote | "\\" | "n" | "t" | "r" ) ;"#,
+        r#"escape          = "\\" , ( quote | "\\" | "n" | "t" | "r" | "0" ) ;"#,
+    );
+    assert_ne!(
+        mutated, GRAMMAR_DOCUMENT,
+        "the mutation did not apply — a false green"
+    );
+    let grammar = Grammar::from_document(&mutated);
+    assert!(
+        grammar.accepts(r#""nul\0here""#),
+        "the mutated grammar still rejects `\\0`, so this arm proves nothing"
+    );
+    let space = literal_space(REFERENCE, &grammar);
+    assert_eq!(
+        space.violations.len(),
+        1,
+        "expected one violation; got:\n{}",
+        space.violations.join("\n\n")
+    );
+    assert!(
+        space.violations[0].contains("NOT well-formed"),
+        "the violation does not name the claim: {}",
+        space.violations[0]
+    );
 }

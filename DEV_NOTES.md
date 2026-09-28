@@ -1,5 +1,44 @@
 # DEV_NOTES.md
 
+## _(2026-09-28)_ — the population is the part nobody tests
+
+- `M1.12.2`. `M1.11` compared a recognizer derived from `docs/semantics/grammar.md` with the reader,
+  over every description the repository ships plus one probe per production, and the recognizer was
+  mutation-tested in both directions. Three literal forms still disagreed with the reference: `0X10`
+  and `0x_10`, which the reader read and the grammar refused, and `\0`, which the grammar admitted and
+  the reader refused. Nothing was careless. The **population** was the defect.
+- ⛔ **Mutation testing cannot find a missing input.** A mutation is a hypothesis about the
+  implementation — *what would a wrong rule do to my inputs?* — and it sharpens a gate against the
+  population the gate already has. It can never ask *which input does nobody supply?* These are
+  different questions, and only the second finds a hole. Worse, the probes were one per production, so
+  a population built by walking the specification's parts one at a time structurally cannot contain a
+  **combination** — and all three divergences were combinations: an uppercase prefix on a hex literal,
+  a separator where a digit is required, a backslash before a character the escape set does not define.
+- ⭐ **Take the population from the specification, not from the corpus.** The reference's literal table
+  *is* an enumeration of forms, so `conformance.rs` now asks the recognizer for a verdict on every row
+  of it. One table, two legs, read by two suites from one shared parser
+  (`tests/common/reference_table.rs`): `reference.rs` compares it with the reader, `conformance.rs`
+  with the grammar. Neither implementation can be nudged to match the other without editing a
+  normative document, and the document is what review reads.
+- ⭐ **A refusal has two kinds, and conflating them breaks one of the two legs.** `1.2.3` is *not
+  well-formed*; `9223372036854775808` *is* well-formed and its value does not fit. The grammar must
+  reject the first and accept the second, because a syntax that could express "too large" would have to
+  know the width of the value domain — the one implementation detail `grammar.md` exists to leave out.
+  So the notation carries `error C` and `refused C` separately, and the recognizer leg reads
+  `well_formed()` off that.
+- ⭐ **Arm the side you changed, from the version you changed it from.** Both grammar arms build their
+  mutation by restoring `HEAD`'s production, and a `python3` diff proves the restored line is
+  byte-identical to `git show HEAD:docs/semantics/grammar.md`. An arm whose mutation is *approximately*
+  the old code proves approximately nothing; this way, reverting the fix fails the build.
+- ⛔ **A normative document carried an ungated count, and it was already wrong.** `grammar.md` headed a
+  list "Three rules the productions above imply" above four numbered items. No gate reads that file for
+  figures — the two figure gates read the book, the corpus index and one crate header — so it was
+  invisible to exactly the mechanism `M1.23`/`M1.24` built. Count deleted rather than retyped; the
+  instance recorded as a fifth shape on `PROGRAM.20`, whose acceptance enumerates "book chapters,
+  corpus indexes, crate module headers" — a list the added instance now shows to be incomplete.
+- Promoted to `docs/knowledge/enumerate-the-population-from-the-specification.md`, discharging the
+  promotion `M1.12.1` declined and handed here — with the mechanism beside it, as that leaf required.
+
 ## _(2026-09-28)_ — a normative table is only as independent as its expected values
 
 - `M1.12.1`. `docs/semantics/reference.md` states what a literal is *worth* — the half
