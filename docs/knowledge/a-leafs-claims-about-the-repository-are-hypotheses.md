@@ -6,6 +6,7 @@ answers:
   - "Why did a leaf's own premise turn out to be false, and what do I do when it does?"
   - "How much of a task leaf should I re-measure before implementing it?"
   - "I am about to exclude something from a check because it obviously cannot run there — do I measure first?"
+  - "A grep shows a line that looks like a defect — is it one?"
 type: knowledge
 date: 2026-09-29
 ---
@@ -76,6 +77,13 @@ carefully (`docs/tasks/M1.md`):
   with four ignored tests, each marked where it is written, and five test targets left out on measured cost.
   Before shrinking a check's population, time or run each candidate exclusion. A reason that sounds right
   is how a population quietly shrinks.
+- ⛔ **A defect a grep finds is a hypothesis too — the grep read one line, and the state it names may be set
+  elsewhere.** `PROGRAM.10.2` was written because `grep -n 'commit -q'` over the scripts showed
+  `selftest_spine.sh:121` committing with no `-c user.name`, and a CI runner has no git identity. Run under a
+  simulated bare runner (global and system config hidden, `user.useConfigOnly=true`), all 23 self-tests
+  passed: the harness's `repo()` helper sets a local identity twenty lines above. The defect was never there,
+  and it had already been announced as found. Reproduce the condition before calling a line a defect. Keep
+  the instrument that falsified the claim: it is now how `run_self_tests.sh` runs every arm.
 
 Related: [[enumerate-the-population-from-the-specification]] — the same discipline applied to a test's
 inputs rather than to a plan's premises; [[a-moved-measurement-needs-a-census-of-its-copies]] — what to

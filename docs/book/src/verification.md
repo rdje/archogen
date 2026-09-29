@@ -93,7 +93,8 @@ other than the pin, or a machine QEMU does not offer, is still a failure: that i
 doctrines say the tree is clean; the self-tests say each doctrine gate can still *fail* — the RED arms of
 every script that carries them, discovered by census from `scripts/` (the gates, the emulator tool, and the
 self-test runner itself), plus `scripts/selftest_spine.sh`, which arms the gates the scaffold owns from
-outside. Until leaf `PROGRAM.28` nothing ran them, so an arm that broke, or began to pass
+outside. Each runs as a CI runner would: the global and system git configuration hidden, and no identity
+it did not set itself, so an arm that leans on the developer's `~/.gitconfig` fails here first. Until leaf `PROGRAM.28` nothing ran them, so an arm that broke, or began to pass
 for the wrong reason, stayed invisible until someone happened to invoke it. It takes about forty seconds,
 which is why it lives here and not on every commit.
 

@@ -2000,12 +2000,53 @@ mdBook that is the director's window into the project.
     because its deadlock premise was this leaf's defect.
 
 - ID: `PROGRAM.10.2`
-  Status: `pending`
+  Status: `done`
   Goal: every gate's self-test runs as a CI runner would run it — with no git identity it did not set itself.
   Acceptance: `scripts/run_self_tests.sh` runs the arms with the caller's global git configuration hidden, so an arm
   that commits without its own identity fails here as it would on a runner; every such arm fixed.
-  Verification: `pending`
-  Commit: `pending`
+  ⚠️ **Premise falsified `2026-09-30`, and recorded rather than implemented around.** The leaf was written on a grep
+  (`selftest_spine.sh:121` commits with no `-c user.name`), and the "every such arm fixed" half has nothing to fix:
+  the harness's `repo()` helper sets a local identity at line 31. The first half stands — it is the instrument that
+  showed it, kept so the next arm that leans on this machine fails here.
+  Verification: see the checklist — 23 of 23 self-tests pass as a bare runner; the runner's two new arms, one killed
+  by removing the bare environment.
+  Commit: `ARCHOGEN-PROGRAM-0146 (leaf PROGRAM.10.2)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — the suspected defect, reproduced under the runner's condition rather than read:
+    ```text
+    $ env -u GIT_AUTHOR_NAME … GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null \
+        GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=user.useConfigOnly GIT_CONFIG_VALUE_0=true bash scripts/run_self_tests.sh
+      self-tests: OK — 23 self-test(s) passed                                      exit=0
+    $ … bash scripts/selftest_spine.sh | grep -cE "Author identity unknown|empty ident"   → 0
+      spine self-test: 34 pass / 0 fail (34 arms)
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — of the *false alarm*: a line read out of its function. `grep -rnE "commit
+    (-q|-m)" scripts/` listed `scripts/selftest_spine.sh:121` without `-c user.name`, and `grep -n "user\.name"
+    scripts/selftest_spine.sh` → `31:  git -C "$d" config user.name arm` — the `repo()` helper every scratch repository
+    is made by. **Of the gap that remains:** nothing ran the arms without this machine's `~/.gitconfig`, so the only
+    way to learn whether an arm leaned on it was to push — `git show HEAD:scripts/run_self_tests.sh | grep -c
+    GIT_CONFIG` → `0`.
+  - [x] **FIX** — `run_self_tests.sh` runs every self-test through `bare()`: `GIT_CONFIG_NOSYSTEM=1`,
+    `GIT_CONFIG_GLOBAL=/dev/null`, `user.useConfigOnly=true`, and the four `GIT_AUTHOR_*`/`GIT_COMMITTER_*` variables
+    unset. Two arms: a stub that commits with the ambient identity must fail; one that sets its own must pass.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    $ bash scripts/run_self_tests.sh --self-test   → run-self-tests self-test: 8 pass / 0 fail (8 arms)
+    mutation: `bare bash "$gate"` → `bash "$gate"` (applied: cmp differs)
+      SELF-TEST: an arm leaning on this machine's git identity fails, as it would on a runner — expected exit 1, got 0
+      run-self-tests self-test: 7 pass / 1 fail (8 arms)                           restored (cmp)
+    ```
+  - [x] **NO REGRESSION** — every self-test, now under the bare environment:
+    ```text
+    $ bash scripts/run_self_tests.sh; echo "exit=$?"
+      ✓ scripts/selftest_spine.sh   20s  spine self-test: 34 pass / 0 fail (34 arms)
+      self-tests: OK — 23 self-test(s) passed
+      exit=0
+    ```
+  - [x] **LOCKSTEP** — `TOOLBOX.md`, `DOCTRINE_ENFORCEMENT.md`, `verification.md`; the instance added to
+    `docs/knowledge/a-leafs-claims-about-the-repository-are-hypotheses.md`, because it had been announced as found.
 
 - ID: `PROGRAM.10.3`
   Status: `pending`
@@ -3276,7 +3317,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.10` | `in_progress` | run the `integration` tier in CI. `.10.1` is done: the emulator step is quarantined under `M2.8` (§14.3), so the tier reads `incomplete`, not `failed`. Next `.10.2` — the self-tests run with no git identity they did not set, as a runner runs them — then `.10.3`, the blocking policy, before `.10.4` wires the job |
+| 1 | `PROGRAM.10` | `in_progress` | run the `integration` tier in CI. `.10.1` quarantined the emulator step (§14.3), so the tier reads `incomplete`; `.10.2` runs every self-test as a bare runner would. Next `.10.3` — the blocking policy for `incomplete`, recorded and implemented — before `.10.4` wires the job |
 | 2 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **After `PROGRAM.10`**: since `.10.1` the emulator no longer fails `make integration`, so a verdict at N no longer deadlocks — but its blocking policy should be the one `.10.3` records |
 | 3 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
 | 4 | `PROGRAM.30` | `pending` | **medium** — the Rust channel, mdBook and CI actions are unpinned; found deriving the ledger's pins |
@@ -3410,6 +3451,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.20.2` | the transcript test before and after; the backlog grown and made stale; the renderer mutation through the catalog | 5 of 12 checkable transcripts differed, two contradicting their own prose; all 12 exact after re-rendering; both ratchet directions refused; the mutation killed by the book's own transcripts |
 | `2026-09-30` | `PROGRAM.20.3` / `PROGRAM.20` | a census of figure-shaped text in the live surfaces; the gate's 14 arms; eight mutations; the `S0.8` shape staged on the real tree | 96 phrases over 28 files as backlog; the added figure refused; the register's own first row refused as false; `PROGRAM.20` closed |
 | `2026-09-30` | `PROGRAM.10.1` | the emulator check against HEAD's script and the new one; its 7 arms and 3 mutations; the runner's judgement table and 2 catalogued mutations; the whole `integration` tier | HEAD exit `1`, now `20`; every arm and mutation as designed; the tier `incomplete` with the emulator quarantined under `M2.8`, a failing step now naming its cause |
+| `2026-09-30` | `PROGRAM.10.2` | every self-test under a simulated bare runner; the spine harness's identity; the runner's two new arms and one mutation | 23 of 23 pass bare — the suspected defect is not one (`repo()` sets a local identity); the bare environment kept, and shown to fire |
 
 ## Commit Log
 
@@ -3460,6 +3502,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.20.2` | `ARCHOGEN-PROGRAM-0143 (leaf PROGRAM.20.2)` | **every diagnostic the book shows is a real run** — a test re-runs each and requires it exactly; five blocks re-rendered, two of which contradicted their own prose |
 | `PROGRAM.20.3` → `PROGRAM.20` | `ARCHOGEN-PROGRAM-0144 (leaf PROGRAM.20.3)` | **a figure added to a live document says what keeps it true** — `FIGURE-REGISTER`, a ratchet with a classifying register. `PROGRAM.20` closed: orders, transcripts and figures each have an instrument |
 | `PROGRAM.10.1` | `ARCHOGEN-PROGRAM-0145 (leaf PROGRAM.10.1)` | **the emulator step is quarantined, not failed** — §14.3's quarantine as a runner row with its four fields; a failing step shows both streams |
+| `PROGRAM.10.2` | `ARCHOGEN-PROGRAM-0146 (leaf PROGRAM.10.2)` | **the self-tests run as a bare runner would** — the suspected identity defect falsified; the instrument kept |
 
 ## Changelog
 

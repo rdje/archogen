@@ -4,6 +4,18 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the self-tests run as a CI runner would
+
+`ARCHOGEN-PROGRAM-0146` (leaf `PROGRAM.10.2`).
+
+- Every gate's self-test now runs with this machine's git configuration hidden, and with no identity the test
+  did not set itself. That is how a CI runner runs them. A test that relies on the developer's setup now fails
+  here instead of on the first push.
+- The defect this leaf was opened for did not exist. The script that looked like it committed without an
+  identity sets one twenty lines earlier. Under the runner's conditions, all 23 self-tests passed. The
+  mistake is recorded in the knowledge card for exactly this error, because it had already been reported as
+  found.
+
 ## archogen — the emulator step is quarantined, not failed
 
 `ARCHOGEN-PROGRAM-0145` (leaf `PROGRAM.10.1`).

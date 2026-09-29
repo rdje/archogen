@@ -49,7 +49,8 @@ Every refusing arm must name what it refuses.
 
 ⭐ **Every gate's arms are re-run, not just written** (leaf `PROGRAM.28`): `scripts/run_self_tests.sh` discovers
 every script that handles `--self-test` by census — the gates, the tools that classify, the runner itself — plus
-the outside harness above, runs them all, and fails on any failed arm. It is the `self-tests` step of the `integration` tier and a step of the CI doctrine workflow;
+the outside harness above, runs them all — each as a bare CI runner would, with no global or system git
+configuration and no identity it did not set (`PROGRAM.10.2`) — and fails on any failed arm. It is the `self-tests` step of the `integration` tier and a step of the CI doctrine workflow;
 at ~40 s it is not on the pre-commit path.
 
 **Project-specific doctrines go in `scripts/check_doctrines.project.sh`** (the pluggable
