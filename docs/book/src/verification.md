@@ -214,6 +214,20 @@ The script's arms run inside the real job, from the `self-tests` step. The first
 matters. While the arms shared the job's log file, they truncated it under the running job, and the one real
 gap went unnamed. They now keep their own log, and an arm checks that the real one is left untouched.
 
+The job is `integration` in `.github/workflows/rust.yml` (leaf `PROGRAM.10.4`). It installs its tools at their
+pins, not the runner image's versions. The image's QEMU is another release, which `--check` would refuse, so
+`scripts/ci_provision.sh` builds QEMU `11.1.1` from its release tarball, and installs mdBook `0.5.2` from its
+release asset. It refuses any download whose sha256 differs from the one recorded in `.github/ci-tools.env`.
+Those pins are held to [the ledger](ledger.md#qemu) like every other. A cache keeps the built tools between
+runs, keyed on the files that pin them.
+
+Nothing on this machine can watch that workflow run, so `scripts/ci_rehearse.sh` runs the job's steps against
+the repository as the runner receives it: one commit, checked out as [`actions/checkout`](ledger.md#github-actions) checks it out, nothing
+untracked or built, no submodule, no global git configuration. Its first rehearsal, `2026-09-30`, passed:
+every step green but the quarantined emulator, the gap annotated, the summary written. What it cannot
+reproduce is the runner's own userland, GNU `sed` and `awk` where this machine has BSD ones. Leaf
+`PROGRAM.10.5` reads the first real run for that, after the next push.
+
 ## What the `tests` step is a suite *of*
 
 The row above says "every contract test passes", and for the language that means a declared population.

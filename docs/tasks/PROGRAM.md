@@ -1893,7 +1893,7 @@ mdBook that is the director's window into the project.
   Commit: `pending`
 
 - ID: `PROGRAM.10`
-  Status: `in_progress`
+  Status: `blocked` — `.10.1`–`.10.4` done; `.10.5`, reading the first real run, waits on the next push
   Goal: run the **integration** tier in CI — provision `mdbook` and `qemu-system-riscv64` on the
   runner — and decide the blocking policy for an `incomplete` verdict.
   Acceptance: CI runs `cargo xtask verify --tier integration`; the repository has a recorded,
@@ -2104,16 +2104,61 @@ mdBook that is the director's window into the project.
     `incomplete` tier"; `TOOLBOX.md`. The workflow itself is `.10.4`'s.
 
 - ID: `PROGRAM.10.4`
-  Status: `pending`
+  Status: `done`
   Goal: the `integration` job in `.github/workflows/rust.yml`, provisioning `mdbook` and `qemu-system-riscv64` at
   their pins, verified against a hash, and implementing `PROGRAM.10.3`'s policy.
   Acceptance: the provisioning lives in one script the workflow calls; each download is checked against a recorded
   sha256; a rehearsal on this machine — a fresh clone, no global git configuration — runs the job's commands.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the checklist — the pinned QEMU built here from its verified tarball; the provisioner's 8 arms,
+  three mutations and a real digest refused; the job rehearsed from a fresh checkout, passing.
+  Commit: `ARCHOGEN-PROGRAM-0148 (leaf PROGRAM.10.4)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — no job ran the tier, and the runner image cannot supply the pinned emulator:
+    ```text
+    $ git show HEAD:.github/workflows/rust.yml | grep -c "integration"   → 0
+    $ curl -sSfL https://packages.ubuntu.com/noble-updates/qemu-system-misc | grep -oE 'qemu-system-misc \([^)]+\)'
+      qemu-system-misc (1:8.2.2+ds-0ubuntu1.18)          — the pin is 11.1.1, and --check refuses another release
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — **WHERE:** `.github/workflows/rust.yml` held a comment where the job would be,
+    because the tier needed a policy (`.10.3`) and tools no workflow step installed. **WHY an apt install is not the
+    fix:** the pin is the contract (§3.2), so the job must build the pinned release. And the ledger's pin population
+    could not see a CI tool pin: `git show HEAD:scripts/check_source_ledger.sh | grep -n "git ls-files -- 'targets"`
+    → `65:  done < <(git ls-files -- 'targets/*.env')` — pins were looked for in target files only.
+  - [x] **FIX** — `scripts/ci_provision.sh`: mdBook from its release asset, QEMU from its release tarball
+    (`--target-list=riscv64-softmmu`), every download kept only if its sha256 equals the one in `.github/ci-tools.env`,
+    tools in `target/ci/tools/bin` (appended to `GITHUB_PATH` under Actions); a pin that moves past its recorded digest
+    is refused. The job: `ubuntu-24.04`, the riscv target, QEMU's build dependencies, `actions/cache@v4` keyed on the
+    pin files, then the provisioner and `scripts/ci_integration.sh`. `SOURCE-LEDGER` reads pins from every tracked
+    `*.env`, with an arm; the `mdbook`, `qemu` and `github-actions` entries carry the new pins and digests.
+    `scripts/ci_rehearse.sh` runs the job's steps on a checkout made as `actions/checkout` makes it.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    digests: mdbook x86_64-linux 084e4342…1f6d and aarch64-darwin da2f5565…4222 = GitHub's published asset digests;
+             qemu-11.1.1.tar.xz 079ffbff…2482 (141888716 bytes), one derivation, signature not checked (no gpg here)
+    $ PATH=<venv ninja>:$PATH bash scripts/ci_provision.sh   → exit=0
+      ci-provision: mdbook: mdbook v0.5.2 installed
+      ci-provision: qemu: QEMU emulator version 11.1.1 installed      (-machine help: virt  RISC-V VirtIO board)
+    $ bash scripts/ci_provision.sh --self-test   → ci-provision self-test: 8 pass / 0 fail (8 arms)
+      M1 a mismatched download kept → 2 refused · M2 a file already there trusted → 1 · M3 a truncated digest → 1
+    a wrong recorded digest for the real mdBook asset → "DIGEST MISMATCH …", exit=1, no mdbook installed
+    $ bash scripts/ci_rehearse.sh   → exit=0   (18f55e4: the staged change, 448 tracked files, submodule not initialised)
+      ✅ fmt ✅ clippy ✅ tests ✅ doctrines ✅ self-tests ✅ book ✅ no-std-build   ⚠ emulator QUARANTINED
+      ::warning title=integration: incomplete, not a pass::emulator 0.11s QUARANTINED — … leaf M2.8 owns the gap
+      ci-rehearse: the job would pass
+    ```
+  - [x] **NO REGRESSION** — the ledger gate, its new arm among the others, and the real ledger:
+    ```text
+    $ bash scripts/check_source_ledger.sh --self-test   → source-ledger self-test: 21 pass / 0 fail (21 arms)
+    $ bash scripts/check_source_ledger.sh               → source-ledger: OK (12 entries; 11 pin(s) …)
+    ```
+    11 pins, was 7: `MDBOOK_VERSION_PINNED` and the new job's three `uses:` refs. The other two jobs are unchanged.
+  - [x] **LOCKSTEP** — `verification.md` (the job, its pins, the rehearsal and its limit), `ledger.md`,
+    `DOCTRINE_ENFORCEMENT.md`, `TOOLBOX.md`. ⚠️ Not verified: a run on the runner itself — `.10.5`.
 
 - ID: `PROGRAM.10.5`
-  Status: `pending`
+  Status: `blocked` — on the next push, which the ruled cadence places at `400` commits ahead
   Goal: read the first real run of the `integration` job, and fix what the runner's userland finds.
   Acceptance: the run's verdict and log are recorded here. ⚠️ It cannot happen before the next push, which the ruled
   cadence (`decision_push-cadence.md`) places at `400` commits ahead; until then the job's evidence is a rehearsal
@@ -3364,10 +3409,10 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.10` | `in_progress` | run the `integration` tier in CI. `.10.1` quarantined the emulator step, `.10.2` runs the self-tests as a bare runner would, `.10.3` recorded the policy — `incomplete` passes a job loudly, and `--provisioned` makes a missing tool fail it. Next `.10.4`: the job itself, provisioning `mdbook` and QEMU at their pins |
-| 2 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **After `PROGRAM.10`**: since `.10.1` the emulator no longer fails `make integration`, so a verdict at N no longer deadlocks — but its blocking policy should be the one `.10.3` records |
-| 3 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
-| 4 | `PROGRAM.30` | `pending` | **medium** — the Rust channel, mdBook and CI actions are unpinned; found deriving the ledger's pins |
+| 1 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. Since `PROGRAM.10.1` the emulator no longer fails `make integration`, so a verdict at N cannot deadlock; the check's policy should follow `decision_incomplete-blocking-policy.md` |
+| 2 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
+| 3 | `PROGRAM.30` | `pending` | **medium** — the Rust channel and CI actions are unpinned, and mdBook outside CI (the `integration` job pins it since `PROGRAM.10.4`); found deriving the ledger's pins |
+| 4 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
 | 5 | `PROGRAM.31` | `blocked` | on the director's ruling on the findings record's §8 — the changelog and development notes as rolling ledgers |
 | 6 | `PROGRAM.32` | `blocked` | on the same ruling — closed leaves sealed out of the task trees |
 
@@ -3500,6 +3545,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.10.1` | the emulator check against HEAD's script and the new one; its 7 arms and 3 mutations; the runner's judgement table and 2 catalogued mutations; the whole `integration` tier | HEAD exit `1`, now `20`; every arm and mutation as designed; the tier `incomplete` with the emulator quarantined under `M2.8`, a failing step now naming its cause |
 | `2026-09-30` | `PROGRAM.10.2` | every self-test under a simulated bare runner; the spine harness's identity; the runner's two new arms and one mutation | 23 of 23 pass bare — the suspected defect is not one (`repo()` sets a local identity); the bare environment kept, and shown to fire |
 | `2026-09-30` | `PROGRAM.10.3` | `--provisioned` both ways on a PATH without QEMU; the policy script's 7 arms and four mutations; the real job run locally | `1` provisioned, `20` not; one mutation equivalent under `pipefail`, the rest killed; the real run found its own arms clobbering its log — fixed, then exit `0` with the gap annotated |
+| `2026-09-30` | `PROGRAM.10.4` | the pinned tools installed here from verified downloads, QEMU built from source; the provisioner's arms, three mutations and a real refused digest; the job rehearsed from a fresh checkout | QEMU `11.1.1` built and offering `virt`; every arm and mutation as designed; the rehearsal passes, `incomplete` with the emulator annotated — the runner's own userland still unobserved (`.10.5`) |
 
 ## Commit Log
 
@@ -3552,6 +3598,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.10.1` | `ARCHOGEN-PROGRAM-0145 (leaf PROGRAM.10.1)` | **the emulator step is quarantined, not failed** — §14.3's quarantine as a runner row with its four fields; a failing step shows both streams |
 | `PROGRAM.10.2` | `ARCHOGEN-PROGRAM-0146 (leaf PROGRAM.10.2)` | **the self-tests run as a bare runner would** — the suspected identity defect falsified; the instrument kept |
 | `PROGRAM.10.3` | `ARCHOGEN-PROGRAM-0147 (leaf PROGRAM.10.3)` | **the blocking policy for `incomplete`** — recorded, and carried out by `--provisioned` and `scripts/ci_integration.sh` |
+| `PROGRAM.10.4` | `ARCHOGEN-PROGRAM-0148 (leaf PROGRAM.10.4)` | **the `integration` job** — its tools built and installed at their pins from digest-checked downloads; rehearsed from a fresh checkout |
 
 ## Changelog
 

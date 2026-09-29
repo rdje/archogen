@@ -4,6 +4,21 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the integration tier has a CI job
+
+`ARCHOGEN-PROGRAM-0148` (leaf `PROGRAM.10.4`).
+
+- `.github/workflows/rust.yml` gains an `integration` job. It installs its tools at the versions the project
+  pins, not the ones the runner image ships. Ubuntu 24.04's QEMU is 8.2.2, and the pin is 11.1.1, so QEMU is
+  built from its release tarball. Every download must match a recorded sha256 before it is used. A wrong digest
+  was tried on purpose and the download was refused.
+- The pins and digests are in `.github/ci-tools.env`, and the source ledger now reads pins from every `.env`
+  file. So the CI tools are held to their ledger entries, like the emulator.
+- The workflow cannot be run from here. `scripts/ci_rehearse.sh` runs the job's steps on a fresh checkout,
+  as GitHub's checkout makes it, with no local git configuration. The rehearsal passes: `incomplete`, with
+  the emulator gap annotated. The runner's own Linux tools remain unobserved until the first real run, after
+  the next push (`PROGRAM.10.5`).
+
 ## archogen — what CI does with an incomplete tier
 
 `ARCHOGEN-PROGRAM-0147` (leaf `PROGRAM.10.3`). A recorded decision: `decision_incomplete-blocking-policy.md`.

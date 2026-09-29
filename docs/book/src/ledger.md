@@ -10,8 +10,8 @@ names one of these sources links to its entry.
 `SOURCE-LEDGER` (`scripts/check_source_ledger.sh`) keeps the entries honest in three ways:
 
 - **Pins.** Every version this repository pins is found by reading the repository: its vendored
-  checkouts, the emulator release in `targets/riscv-virt-up.env`, `DOCTRINE_VERSION`,
-  `rust-toolchain.toml` and the CI workflows' actions. Each must belong to an entry that carries
+  checkouts, the emulator release in `targets/riscv-virt-up.env`, the CI job's tools in
+  `.github/ci-tools.env`, `DOCTRINE_VERSION`, `rust-toolchain.toml` and the CI workflows' actions. Each must belong to an entry that carries
   the same version, so a pin cannot move without its entry moving too.
 - **Citations.** A chapter or decision record that names a source listed here must link to its
   entry, and every link must lead to one.
@@ -31,7 +31,7 @@ the day a chapter or a decision relies on it, as Miri did.
 | Version | `11.1.1` |
 | Pinned at | `env:targets/riscv-virt-up.env:QEMU_VERSION_PINNED` |
 | Retrieved | `2026-09-28` |
-| Hash | sha256 `03725d89f81f327c7e95dd6129dc7e9a6440d49d7158ade0d558efa9d6bd56f3` of the installed binary, captured `2026-09-29` on this machine. Another machine's build of the same release differs, which is why `scripts/target_emulator.sh --check` compares the version and not the digest |
+| Hash | sha256 `03725d89f81f327c7e95dd6129dc7e9a6440d49d7158ade0d558efa9d6bd56f3` of the installed binary, captured `2026-09-29` on this machine. Another machine's build of the same release differs, which is why `scripts/target_emulator.sh --check` compares the version and not the digest. What CI builds from is fixed instead: the release's source tarball, sha256 `079ffbff…2482`, recorded in `.github/ci-tools.env` on `2026-09-30` and checked before the build (`PROGRAM.10.4`) — one derivation, over HTTPS from download.qemu.org; its GPG signature is not checked |
 | Scope | independent execution of the `riscv-virt-up` target's binaries, and the device tree it generates, compared with the platform fixture by `M2.8` |
 | Known limitations | a virtual platform: not a board and not a timing reference (§19). It is an independent *implementation*, not independent truth, because it reads the same specifications this project does (`docs/decisions/decision_emulator-independence-retained.md`). Its own `virt` machine documentation is not yet held (`REQ-007`, requested) |
 | Revalidation trigger | `scripts/target_emulator.sh --check` reporting a mismatch against the pin; any QEMU upgrade; `TARGET_VERIFIED` changing |
@@ -154,13 +154,13 @@ the day a chapter or a decision relies on it, as Miri did.
 | Field | Value |
 | --- | --- |
 | Source | mdBook, which builds this book |
-| Version | `v0.5.2`, measured |
-| Pinned at | not pinned — the `book` step builds with whatever is installed (`PROGRAM.30`) |
-| Retrieved | `2026-09-29` |
-| Hash | not captured |
+| Version | `v0.5.2`, measured; `0.5.2` pinned for CI |
+| Pinned at | `env:.github/ci-tools.env:MDBOOK_VERSION_PINNED` — in CI only: `scripts/ci_provision.sh` installs that release (`PROGRAM.10.4`), and a developer's `book` step still builds with whatever is installed (`PROGRAM.30`) |
+| Retrieved | `2026-09-29`; the release assets `2026-09-30` |
+| Hash | sha256 of the release tarballs, recorded in `.github/ci-tools.env` and checked before use: `084e4342…1f6d` (`x86_64-unknown-linux-gnu`), `da2f5565…4222` (`aarch64-apple-darwin`) — each equal to the digest GitHub publishes for the asset |
 | Scope | the `book` step of the `integration` tier |
-| Known limitations | unpinned. A release that changes how heading anchors are derived would silently break every `ledger.md#…` link on this page |
-| Revalidation trigger | `mdbook --version` changing |
+| Known limitations | pinned in CI, not locally. A release that changes how heading anchors are derived would silently break every `ledger.md#…` link on this page |
+| Revalidation trigger | `mdbook --version` changing; `MDBOOK_VERSION_PINNED` moving |
 | Named as | `mdBook` |
 
 ## `github-actions`
@@ -168,14 +168,14 @@ the day a chapter or a decision relies on it, as Miri did.
 | Field | Value |
 | --- | --- |
 | Source | the actions the CI workflows run |
-| Version | `actions/checkout@v4`; `dtolnay/rust-toolchain@stable` |
-| Pinned at | `uses:actions/checkout`, `uses:dtolnay/rust-toolchain` |
-| Retrieved | `2026-09-13` |
-| Hash | not captured — both are tags, not commits |
-| Scope | the CI runs in `.github/workflows/` |
+| Version | `actions/checkout@v4`; `dtolnay/rust-toolchain@stable`; `actions/cache@v4` |
+| Pinned at | `uses:actions/checkout`, `uses:dtolnay/rust-toolchain`, `uses:actions/cache` |
+| Retrieved | `2026-09-13`; `actions/cache` `2026-09-30` |
+| Hash | not captured — all three are tags, not commits |
+| Scope | the CI runs in `.github/workflows/`; `actions/cache` keeps the `integration` job's pinned tools between runs, keyed on the files that pin them |
 | Known limitations | a tag moves, so a CI run is not reproducible from its commit alone (`PROGRAM.30`) |
-| Revalidation trigger | either tag moving; any workflow edit |
-| Named as | `actions/checkout`, `dtolnay/rust-toolchain` |
+| Revalidation trigger | any tag moving; any workflow edit |
+| Named as | `actions/checkout`, `dtolnay/rust-toolchain`, `actions/cache` |
 
 ## `miri`
 

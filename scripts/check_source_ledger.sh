@@ -11,7 +11,8 @@
 # version. The ledger is `docs/book/src/ledger.md`, one section per source.
 #
 # THREE LEGS:
-#   1. PINS — derived, never listed: every gitlink, every `*_VERSION_PINNED=` in a tracked `targets/*.env`,
+#   1. PINS — derived, never listed: every gitlink, every `*_VERSION_PINNED=` in any tracked `*.env` (a target's
+#      emulator in `targets/`, the CI job's tools in `.github/ci-tools.env` — widened by `PROGRAM.10.4`),
 #      `DOCTRINE_VERSION`, `rust-toolchain.toml`'s channel and every CI `uses:` ref. Each is claimed by exactly
 #      one entry's `Pinned at` (as `gitlink:<path>`, `env:<file>:<VAR>`, `file:<path>`, `toml:<file>:<key>` or
 #      `uses:<action>`), and that entry's `Version` carries the pinned value. A pin that moves without its entry
@@ -62,7 +63,7 @@ pins() {
     [ -f "$f" ] || continue
     sed -nE 's/^([A-Z0-9_]+_VERSION_PINNED)=["'"'"']?([^"'"'"']*)["'"'"']?[[:space:]]*$/\1\t\2/p' "$f" |
       while IFS=$'\t' read -r var val; do printf 'env:%s:%s\t%s\n' "$f" "$var" "$val"; done
-  done < <(git ls-files -- 'targets/*.env')
+  done < <(git ls-files -- '*.env')
   if git ls-files --error-unmatch DOCTRINE_VERSION >/dev/null 2>&1; then
     printf 'file:DOCTRINE_VERSION\t%s\n' "$(head -n 1 DOCTRINE_VERSION)"
   fi
@@ -219,6 +220,8 @@ self_test() {
   arm "a pin moved without its entry is refused" 1 "the repository pins '1.2.4'"
   fresh; printf 'GAMMA_VERSION_PINNED=9\n' >> "$work/targets/t.env"
   arm "a new pin with no entry is refused" 1 "env:targets/t.env:GAMMA_VERSION_PINNED = '9', and no entry"
+  fresh; mkdir -p "$work/.github"; printf 'DELTA_VERSION_PINNED=4.5\n' > "$work/.github/tools.env"; git -C "$work" add -A
+  arm "a pin in an env file outside targets/ is a pin too" 1 "env:.github/tools.env:DELTA_VERSION_PINNED = '4.5', and no entry"
   fresh; printf 'TARGET_ID=t\n' > "$work/targets/t.env"
   arm "an entry claiming a pin the repository no longer has is stale" 1 "entry \`alpha\` claims the pin env:targets/t.env:ALPHA_VERSION_PINNED"
   fresh; git -C "$work" update-index --add --cacheinfo "160000,$(git -C "$work" hash-object -t blob /dev/null),vendor/v"

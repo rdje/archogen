@@ -18,9 +18,35 @@ jobs:
       - name: Focused tier
         run: cargo xtask verify --tier focused
 
-  # ⚠️ The INTEGRATION tier is not run here yet. It needs `mdbook` and `qemu-system-riscv64`
-  # provisioned on the runner, and it needs a decided answer to a question this repository has
-  # not answered: should an `incomplete` verdict (exit 20 — nothing failed, something could not
-  # be run) block a build? Wiring it up before deciding would produce either a permanently red
-  # CI that people learn to ignore, or a green one that hides the gap — both worse than saying
-  # so. Tracked by task-tree leaf PROGRAM.10.
+  # ROADMAP.md §14.3 integration tier, "before merge" (leaf PROGRAM.10.4). What its verdict does to this job is
+  # docs/decisions/decision_incomplete-blocking-policy.md, carried out by scripts/ci_integration.sh: `passed`
+  # passes, `failed` fails, `incomplete` passes with a warning per owned gap and a job summary. The tier runs
+  # --provisioned, so a tool the steps below fail to install is a failure, never an "unavailable".
+  integration:
+    # A named image rather than ubuntu-latest: the package names below are this release's.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # the doctrine step reads history, as the doctrines workflow does
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+          targets: riscv64imac-unknown-none-elf
+      # What building the pinned QEMU needs from the image. QEMU itself is built at its pin, below: the image's
+      # own package is another release, and target_emulator.sh --check refuses a release other than the pin.
+      - name: Build dependencies for the pinned QEMU
+        run: >-
+          sudo apt-get update &&
+          sudo apt-get install -y --no-install-recommends
+          ninja-build pkg-config libglib2.0-dev libpixman-1-dev flex bison python3-venv
+      # The pinned tools, kept between runs. The key moves with any file that pins them or checks their digests.
+      - uses: actions/cache@v4
+        with:
+          path: target/ci/tools
+          key: ci-tools-${{ runner.os }}-${{ hashFiles('.github/ci-tools.env', 'targets/riscv-virt-up.env', 'scripts/ci_provision.sh') }}
+      - name: Provision mdbook and QEMU at their pins
+        run: bash scripts/ci_provision.sh
+      - name: Integration tier
+        run: bash scripts/ci_integration.sh
