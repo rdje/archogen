@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-09-29
 - leaf: M1.33 (`docs/tasks/M1.md`)
-- status: pending
+- status: applied
 - constructs: docs/semantics/reference.md#diagnostics, suite/docs/semantics/cases/invalid-duplicate-name.eadl, suite/docs/semantics/modules/bad.name-collision.eadl
 - invalidates: none in this repository, measured — every tracked description run through `archogen check` before and after, 118 of them, 0 changed; outside it, any description that declares one name twice, which was accepted and is now `invalid-description`
 

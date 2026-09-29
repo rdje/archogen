@@ -14,9 +14,7 @@
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M1` → frontier `M1.29.4`. `PROGRAM` `.11`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
-- **Next action:** ⛔ **first, flip `docs/semantics/migrations/eadl-1-a-name-is-declared-once.md` to
-  `status: applied`** in a docs-only commit — the freeze gate refuses every commit until it does. Then
-  **`M1.29.4`, medium — module parameters** are bound and consumed by nothing (`Instance::bindings` is read
+- **Next action:** **`M1.29.4`, medium — module parameters** are bound and consumed by nothing (`Instance::bindings` is read
   only by tests): state the substitution rule in §6 first, then make two instances of one module differ in a
   declaration, not only in `bindings`. `docs/semantics/modules/app.two-timers.eadl` is the natural fixture.
 - ⭐ **Closed today:** `M1.29.1`–`.3`, `M1.31`, `M1.33`, `PROGRAM.27` — `archogen check` elaborates **and
