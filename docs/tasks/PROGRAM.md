@@ -650,7 +650,7 @@ mdBook that is the director's window into the project.
   Commit: `pending`
 
 - ID: `PROGRAM.18`
-  Status: `active` — **decomposed `2026-09-29` into two children on a re-run census**, as the leaf itself asks.
+  Status: `done` — closed by its two children `2026-09-29`; **decomposed `2026-09-29` into two children on a re-run census**, as the leaf itself asks.
   Measured at `61e5f09`: `check_task_acceptance.sh` is **already armed** (nine arms, `PROGRAM.21`), so the
   "first" this leaf names is spent. Still without a `--self-test`: **seven registered controls** — six
   universal (`MEMORY-ARCH`, `DOCPATH`, `TASK-TREE-OWNERSHIP`, `README-STABILITY`, `WAIVER-ROUTING`,
@@ -744,18 +744,78 @@ mdBook that is the director's window into the project.
     docs; and **`PROGRAM.29` filed** for the `mktemp` scratch this script (and five others) puts in `/tmp`.
 
 - ID: `PROGRAM.18.2`
-  Status: `active`
+  Status: `done`
   Goal: arm the six scaffold-owned universal gates and the two doctrine drivers **without editing them** — a
   project-owned harness that copies nothing of theirs, runs each unmodified script with its working
   directory inside a scratch repository holding a seeded breach, and requires its refusal to name the
   subject; and record `check_no_background_jobs.sh`'s disposition (armed, or needing none with the reason).
-  Acceptance: the harness is registered where a tier or the driver runs it; each arm names what it refuses;
-  a mutation of each gate's copy in the scratch area is not needed — the arms are proven against the real
-  scripts by seeding the breach, and against vacuity by a clean-fixture arm per gate; `DOCTRINE_ENFORCEMENT.md`
-  and `TOOLBOX.md` updated.
+  Acceptance: each arm names what it refuses; each gate has a clean-fixture arm so a refusal cannot pass for a
+  second reason; a mutation of each gate seen failing its own arm; `DOCTRINE_ENFORCEMENT.md` and `TOOLBOX.md`
+  updated. ⚠️ Registration in a tier moved to **`PROGRAM.28`**, measured rather than assumed: the harness takes
+  **~30 s** (the handoff tool walks every process with `lsof`), which is a tier's budget and not the pre-commit
+  path's, and `PROGRAM.28` exists to run every `--self-test` in one — registering this one alone would be a
+  second mechanism for the same job.
   Priority: **medium-high**.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the checklist — 34 arms, nine mutations each failing exactly its own arm.
+  Commit: `ARCHOGEN-PROGRAM-0121 (leaf PROGRAM.18.2)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — the re-run census on the parent: six scaffold-owned universal gates, the two
+    drivers and the handoff tool had never been seen failing by a repeatable arm (`grep -q -- '--self-test'`
+    → absent in all nine).
+  - [x] **ROOT CAUSE (WHY + WHERE)** — nobody could arm them in place without the arm being erased by the
+    scaffold, and two of them could not even be pointed at a scratch repository by working directory,
+    because they find their root by their own path:
+    ```text
+    $ git grep -n 'ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"' 6bf578f -- scripts/check_waiver_routing.sh
+      6bf578f:scripts/check_waiver_routing.sh:38:ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    $ git grep -n 'REPO_ROOT="$(cd "$(dirname …' 6bf578f -- scripts/check_no_background_jobs.sh
+      6bf578f:scripts/check_no_background_jobs.sh:53:REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)" || exit 2
+    ```
+    — so those two are run as byte-for-byte copies placed inside the scratch repository (the harness checks
+    the copy is identical), and the other four by working directory.
+  - [x] **FIX** — `scripts/selftest_spine.sh`, project-owned: a fresh scratch git repository per arm under
+    `target/doctrine_scratch/`, one seeded breach, the real gate run there, and a refusal required to carry
+    the text naming its subject. The drivers get stub gates at every path they register (their property is
+    "run each, propagate a failure"); the handoff tool gets a real `sleep` holding a file in the scratch
+    repository, killed and reaped before the next arm. Removes its scratch on success.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    $ bash scripts/selftest_spine.sh
+      spine self-test: 34 pass / 0 fail (34 arms)                          real 0m28.5s
+    ```
+    ⛔ The first run was **33 / 1**, and the failing arm was a *clean* one: the stub regex `[a-z_.]` missed
+    the digit in `check_s0_retirement.sh`, so that gate was absent — which meant the project driver's two
+    refusal arms were refusing for a second reason as well. The clean arm is what exposed it; fixed to
+    `[a-z0-9_.]`. Nine mutations, one per script, each applied to the real file, run, and restored from a
+    copy verified by `cmp` — every one fails **exactly** the arm named for it:
+    ```text
+    S-1 MEMORY-ARCH line cap never compared        -> 33 / 1: the line-cap arm
+    S-2 DOCPATH pattern matches nothing            -> 33 / 1: the checkout-path arm
+    S-3 TASK-TREE-OWNERSHIP lets an unowned change -> 33 / 1: the unowned-code arm
+    S-4 README-STABILITY dated lines ignored       -> 33 / 1: the release-history arm
+    S-5 WAIVER-ROUTING any line names an owner     -> 33 / 1: the unowned-waiver arm
+    S-6 KNOWLEDGE-MAP never compared               -> 33 / 1: the out-of-sync arm
+    S-7 universal driver does not count a failure  -> 33 / 1: its failing-gate arm
+    S-8 project driver does not count a failure    -> 33 / 1: its failing-gate arm
+    S-9 handoff tool never reports a holder        -> 33 / 1: the holding-process arm
+    ```
+  - [x] **NO REGRESSION** — `bash scripts/check_no_background_jobs.sh` → `handoff: OK` after the run (the
+    holder was reaped); `git status` after the mutations shows only the new harness, every script
+    byte-identical to its copy; no Rust changed; and the doctrine driver over the real tree with the harness
+    in place:
+    ```text
+    $ bash scripts/check_doctrines.sh | tail -1
+      === all doctrines green ===
+    ```
+  - [x] **LOCKSTEP** — `DOCTRINE_ENFORCEMENT.md` (how the universal gates are armed, and why from outside),
+    `TOOLBOX.md`, the parent closed, `PROGRAM.28` widened to register this harness, the live docs. ⚠️ One
+    observation recorded, not fixed here: `TASK-TREE-OWNERSHIP` hard-codes "code" as Rust and Cargo
+    (`6bf578f:scripts/check_task_tree_ownership.sh:27`) instead of reading `.doctrine/code_paths.txt`, so a
+    staged script alone passes it — `TASK-ACCEPTANCE` reads the seam and still refuses one, so nothing is
+    unguarded, and the arm pins today's scope. The script is the scaffold's; `PROGRAM.26` owns what a
+    scaffold sync may and may not change here.
 
 - ID: `PROGRAM.19`
   Status: `done`
@@ -2063,7 +2123,8 @@ mdBook that is the director's window into the project.
   that half is what `PROGRAM.27`'s subject-naming oracle is for. `PROGRAM.18` gives the ten gates without
   arms their arms; this leaf makes all of them run.
   Acceptance: an `integration`-tier step (and the CI doctrine workflow) that discovers every script
-  carrying `--self-test` by census rather than by list, runs each, and fails on any arm that fails — with
+  carrying `--self-test` by census rather than by list — **and `scripts/selftest_spine.sh`**, which arms the
+  scaffold-owned gates from outside (`PROGRAM.18.2`, ~30 s) — runs each, and fails on any arm that fails — with
   a RED arm of its own proving a failing arm is reported; `make tiers` lists it; the book's
   `verification.md` says what the step proves.
   Priority: **medium** — nothing is failing today; it is the difference between an arm that was checked
@@ -2135,9 +2196,9 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.18` | `pending` | **medium-high** — **nine** of eighteen registered controls carry no repeatable `--self-test` RED arm. ⛔ The figure this row carried was **ten**, and `PROGRAM.21` moved it: `check_task_acceptance.sh` now ships nine arms, so `PROGRAM.18` must **re-run its census** rather than reuse the number — the exact defect class `PROGRAM.20` exists to catch. Its own reason for being sequenced behind `PROGRAM.21` is discharged: arming the boxes is now meaningful because the check reads the right ones |
-| 2 | `PROGRAM.24` | `pending` | **medium-high** — the mirror direction of `BOOK-ANCHORS`, which nobody checks: does a capability the codebase has get described in the book? One live instance measured `2026-09-28`: the `rt-analysis` crate is named nowhere in `docs/book/`, and `analysis.md` — the chapter about what it establishes — cites only `ROADMAP.md` and a cost-accounting doc, passing both `BOOK-ANCHORS` legs while never telling its reader where the code is. Filed by `M1.12.5` on the director's lockstep instruction |
-| 3 | `PROGRAM.28` | `pending` | **medium** — no tier and no CI workflow runs any gate's `--self-test`: 10 gates carry one and all 10 pass today, but an arm is re-fired only when somebody runs it by hand. Found by `PROGRAM.27`, which had to. Sequenced after `PROGRAM.18`, whose new arms it would then run too |
+| 1 | `PROGRAM.24` | `pending` | **medium-high** — the mirror direction of `BOOK-ANCHORS`, which nobody checks: does a capability the codebase has get described in the book? One live instance measured `2026-09-28`: the `rt-analysis` crate is named nowhere in `docs/book/`, and `analysis.md` — the chapter about what it establishes — cites only `ROADMAP.md` and a cost-accounting doc, passing both `BOOK-ANCHORS` legs while never telling its reader where the code is. Filed by `M1.12.5` on the director's lockstep instruction |
+| 2 | `PROGRAM.28` | `pending` | **medium** — no tier and no CI workflow runs any gate's `--self-test`: 10 gates carry one and all 10 pass today, but an arm is re-fired only when somebody runs it by hand. Found by `PROGRAM.27`, which had to. Sequenced after `PROGRAM.18`, whose new arms it would then run too |
+| 3 | `PROGRAM.29` | `pending` | **medium** — six `mktemp` sites in five gate scripts and the scaffold updater put scratch in `/tmp`, against the director's data-locality rule; four are project-owned and fixable here |
 | 4 | `PROGRAM.5` | `pending` | the §15/§19 dependency and evidence ledger — every external source claim in the book should resolve to a row, and `BOOK-ANCHORS` now checks the *internal* ones. The director has offered a read-only external document source (ISA / RISC-V / devicetree / peripheral specifications) reachable by operator-relayed request; the ledger is where that seam gets a row |
 | 5 | `PROGRAM.9` | `pending` | the extended tier reports `incomplete` on every run until its three steps exist |
 | 6 | `PROGRAM.6` | `pending` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |
@@ -2252,6 +2313,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-29` | `PROGRAM.20` | **docs only — the book population re-measured, keyed on the `$ archogen check` line.** Every `error[…]` block classified by its command line (or its first `-->` when it has none), the tracked ones re-run through the command | 20 blocks: **9** tracked (7 verbatim), **6** untracked, **5** location-free — 11 uncheckable, was 15; the movement is `M1.31`'s and `M1.29.2`'s re-rendered transcripts |
 | `2026-09-29` | `PROGRAM.11` | `git grep` for the rule in the entrypoints and for any vendor doctrine at `b9f6e22`; the real checkout's pin, local-only commits (tags excluded) and status; the naive census on one nested checkout; the new check and its `--self-test`; five mutations R-1–R-5 with `cmp` restoration; the doctrine driver | the rule absent from both entrypoints and no doctrine looking at `vendor/` → both fixed; the real checkout clean (**0** local-only commits), the naive census **4 040** on a nested one; **9 / 0** arms; every mutation fails exactly its arm, one arm found vacuous first and re-seeded; all doctrines green |
 | `2026-09-29` | `PROGRAM.18.1` | the census of armed scripts at `61e5f09`; `FROZEN-EVALUATION --self-test`; seven mutations F-1–F-7 with `cmp` restoration; the real tree; the doctrine driver | `check_task_acceptance.sh` already armed, seven registered controls not; **9 / 0** arms on synthetic cases; every mutation fails its own arm (F-5 three, the untracked arm among them); all doctrines green; `PROGRAM.29` filed for six `mktemp` sites in `/tmp` |
+| `2026-09-29` | `PROGRAM.18.2` | `bash scripts/selftest_spine.sh`; the `git grep` of the two self-locating roots; nine mutations S-1–S-9 on the real scripts with `cmp` restoration; the handoff tool after the run | **34 / 34** after one clean arm caught a stub-regex gap (first run 33 / 1); every mutation fails exactly its own arm; `handoff: OK`; `PROGRAM.18` closed |
 
 ## Commit Log
 
@@ -2278,6 +2340,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.20` | `ARCHOGEN-PROGRAM-0113 (leaf PROGRAM.20)` | **re-measurement recorded, and `M1.29.2`'s migration note flipped to `applied`** — the second commit of the two-commit lifecycle, which the freeze gate's spent-note leg refused the tree until it happened |
 | `PROGRAM.11` | `ARCHOGEN-PROGRAM-0119 (leaf PROGRAM.11)` | **every other repository is read-only, stated and gated.** The rule in `CLAUDE.md` (both directions), and `REPOSITORY-BOUNDARY` on every commit: each vendored checkout this repository pins is at its pin with nothing committed, modified or created in it. Scoped on measurement to the pins this repository owns — the vendor's documented bootstrap legitimately dirties its nested checkouts — and with tags excluded from "local-only", because the naive census counted 4 040 phantom commits |
 | `PROGRAM.18` → `PROGRAM.18.1` | `ARCHOGEN-PROGRAM-0120 (leaf PROGRAM.18.1)` | **`FROZEN-EVALUATION` is armed**: nine arms in `--self-test`, each seeding one breach in a scratch repository with synthetic case names and naming what it refuses. `PROGRAM.18` decomposed by ownership on a re-run census — the six scaffold-owned gates are armed from outside in `.18.2`, because an arm written into them is erased by the scaffold and cannot be sent upstream; `PROGRAM.29` filed |
+| `PROGRAM.18.2` → `PROGRAM.18` | `ARCHOGEN-PROGRAM-0121 (leaf PROGRAM.18.2)` | **every registered control now has repeatable RED arms.** The six scaffold-owned universal gates, both drivers and the handoff tool are armed **from outside** by `scripts/selftest_spine.sh` — each run unmodified in a scratch repository with one seeded breach, 34 arms, nine mutations each failing its own arm — so the arms survive a scaffold sync that would erase them in place. `PROGRAM.18` closed; tier registration is `PROGRAM.28`'s |
 
 ## Changelog
 

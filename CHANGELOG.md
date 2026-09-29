@@ -4,6 +4,22 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — every registered doctrine control has repeatable RED arms, the scaffold-owned ones armed from outside
+
+`ARCHOGEN-PROGRAM-0120` and `-0121` (leaves `PROGRAM.18.1`, `.18.2`, closing `PROGRAM.18`). 43 new arms; sixteen
+mutations, each failing exactly its own arm.
+
+- **Re-run census first**, as the leaf asked: `check_task_acceptance` was already armed, and seven registered
+  controls were not — six scaffold-owned universal gates and `FROZEN-EVALUATION`.
+- **`FROZEN-EVALUATION --self-test`**: nine arms in a scratch repository on **synthetic** case names (a real
+  sealed name in an arm would itself be contamination), one per leg and per exemption.
+- **`scripts/selftest_spine.sh`**, project-owned: the six scaffold-owned gates run **unmodified** in scratch
+  repositories with one seeded breach each, the two drivers against stub gates, and the handoff tool against a
+  real process holding a file. An arm written into a scaffold-owned script would be erased by the next sync and
+  could not be sent upstream; from outside it survives both. A clean-fixture arm caught the harness's own first
+  mistake. Tier registration is `PROGRAM.28`'s.
+- `PROGRAM.29` filed: six `mktemp` sites put gate scratch in `/tmp`.
+
 ## archogen — every other repository is read-only, stated where agents read it and gated where it shows
 
 `ARCHOGEN-PROGRAM-0119` (leaf `PROGRAM.11`). A new doctrine, `REPOSITORY-BOUNDARY`, nine RED arms, five

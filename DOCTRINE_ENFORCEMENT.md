@@ -39,6 +39,14 @@ every human, identically.
 | `KNOWLEDGE-MAP` | the derived Knowledge Map is in sync (if the subsystem exists) | `knowledge-map/scripts/check_knowledge_map.sh` |
 | `PROJECT-SPECIFIC` | this project's own doctrines | `scripts/check_doctrines.project.sh` |
 
+⭐ **The universal gates above that carry no `--self-test` of their own are armed from outside** (leaf
+`PROGRAM.18.2`): `scripts/selftest_spine.sh` runs `MEMORY-ARCH`, `DOCPATH`, `TASK-TREE-OWNERSHIP`,
+`README-STABILITY`, `WAIVER-ROUTING` and `KNOWLEDGE-MAP` — unmodified — inside scratch repositories holding one
+seeded breach each, arms both drivers with stub gates, and arms the handoff tool with a real process holding a
+file. These scripts are on `scripts/update_scaffold.sh`'s overwrite list and their upstream is another repository,
+so an arm written into them would be erased and could not be sent upstream; from outside, it survives both.
+Every refusing arm must name what it refuses.
+
 **Project-specific doctrines go in `scripts/check_doctrines.project.sh`** (the pluggable
 slot) — never in the universal driver. That is where a project adds the equivalent of its
 own build gates, format checks, invariant proofs, etc.
