@@ -4,6 +4,50 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — §8's rule had a third consumer, and it was the one no description-level test could reach
+
+`ARCHOGEN-M1-0091` (leaf `M1.13.4.1`). A production defect, found by measurement and fixed with one
+accessor. `496 passed / 0 failed` over 37 suites (baseline 492, delta = four new tests).
+
+- ⛔ **The defect.** `M1.13.3` put `(eadl-version eadl/1)` on the surface as a top-level form and told
+  the two consumers that refused it. There was a third, in the same file: `shipped_registry`, the loader
+  that reads `docs/semantics/kinds/`, handed **every** top-level form to `read_kind` — so a kind module
+  stating its own language version was refused as `schema-not-a-kind` and took the whole registry with
+  it. `archogen` then answered `tool-failure: the shipped kind modules could not be loaded` for *every*
+  description it was asked about. No description-level test could reach it, because nothing reads a kind
+  module except that loader and no fixture had ever put the construct in one.
+- ⭐ **How it was found: not by searching for consumers.** The identifier was written into all **62**
+  shipped descriptions — every file kind the toolchain reads — and the whole suite run: **45 failed /
+  447 passed over 9 suites**, `schema-not-a-kind` rendered **43** times, **36** of the failures this one
+  consumer, and 9 legs that treat every top-level form as a declaration. The tree was restored and the
+  restoration proven (`git status --porcelain` → 0 entries, `git diff --stat` → 0 lines).
+- **The fix is an accessor, not a third hand-rolled filter.** `eadl_front::language_version::declarations()`
+  now sits beside the predicate, and every pass that treats a form *as* a declaration goes through it:
+  the kind loader, `check`'s boundary/schema/presence passes, `module.rs`'s §6 count, and the
+  `Outcome::declarations` field. That last one is user-visible — `archogen check` prints
+  `(8 declaration(s))` from it and `docs/book/src/checking.md` publishes the line, so a consumer that
+  counted forms would report one declaration too many for every description that states its version.
+- **Proven through the CLI's own loader, not a test double:** with the identifier written into the real
+  `docs/semantics/kinds/core.eadl`, `archogen check examples/periodic-three/system.eadl` returns
+  `accepted against profile rt-static-up-v1 (8 declaration(s))` at `exit=0`, where the unfiltered loader
+  answers `tool-failure`. Restoration byte-identical.
+- **Three mutations, each seen firing, each restoration proven with `diff -q`:** the loader iterating
+  every form again → the new kind-module leg fails with `schema-not-a-kind`; `check` not filtering → the
+  new count leg fails (`left: 2, right: 3`) *and* `M1.13.3`'s model-layer leg with it; the identifier in
+  the shipped kind module → the CLI leg above.
+- **Three test helpers that hand-rolled a kind-module loader now call the production one** — a second
+  loader is a second place for the rule to be missing, and the suite could otherwise have stayed green
+  on a loader that could not read the shipped files.
+- ⛔ **The gate fired on this leaf's own prose.** §8 rule 8's new citation `docs/semantics/kinds/*.eadl`
+  was reported as a path that does not exist — leg 6 resolves a glob only in its trailing-`/*` form — and
+  **12** arms and legs reported the extra violation until the wording named the directory instead.
+- **Lockstep:** §8 rule 8 now says *three* layers, names the third, and records why
+  `crates/eadl-model/src/check.rs` is still **not** a declared normative source — §4's census runs in
+  both directions over that list, so declaring it would demand a row for every model-layer code, which
+  is `M1.26`'s gap (a). `docs/book/src/kinds.md` tells the reader a kind module may state its version.
+  The lesson is promoted into `docs/knowledge/enumerate-the-population-from-the-specification.md` as a
+  second axis of the same statement: a rule's consumers are a population too.
+
 ## archogen — the third artifact cleanup, and the backup that turned out to be somebody else's files
 
 `ARCHOGEN-PROGRAM-0090` (leaf `PROGRAM.19`, third run under the standing owner).

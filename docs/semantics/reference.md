@@ -611,15 +611,30 @@ reading it.
    identifier before counting, so a module can state its language version without being refused as
    `module-multiple-forms`. Without that, the one file kind that most needs a locked version would be
    the one unable to carry it.
-8. ⛔ **The identifier is not a declaration, and two layers had to be told.** §7's schema layer
+8. ⛔ **The identifier is not a declaration, and three layers had to be told.** §7's schema layer
    validates every top-level form against the kind registry, and `eadl-version` is not a kind — so
    without an exemption a description that states its version reads cleanly and is then refused as
    `schema-unknown-kind`, contradicting this section from the layer furthest from it, where no frontend
-   test can see it happen. Rule 7 is the same problem in miniature. One predicate in
-   `crates/eadl-front/src/language_version.rs` serves both consumers, because a rule each consumer
-   re-implements is a rule the next consumer lacks — the reasoning that put §2's escape rule in the
-   printer. Measured, not anticipated: the refusal was reproduced through `check`, the entry point the
-   corpus suite uses, before the exemption existed.
+   test can see it happen. Rule 7 is the same problem in miniature. The **third** is the kind registry
+   itself: `crates/eadl-model/src/check.rs` reads the kind modules under `docs/semantics/kinds/` and
+   handed every top-level form to `read_kind`, so a kind module stating its own version was refused as
+   `schema-not-a-kind` and took the whole registry with it — `tool-failure`, not a verdict about
+   anybody's description. No description-level test could reach it, because nothing reads a kind module
+   except that loader; it was found by writing the identifier into all 62 corpus descriptions and
+   running the suite, which is `M1.13.4`'s measurement and 36 of its 45 failures.
+   ⭐ **So the rule now has one accessor and not only one predicate**:
+   `crates/eadl-front/src/language_version.rs` exports `declarations`, the top-level forms that *are*
+   declarations, and every pass that treats a form as one goes through it — because a rule each
+   consumer re-implements is a rule the next consumer lacks, the reasoning that put §2's escape rule in
+   the printer. That includes the count a reader sees: `archogen check` reports how many declarations
+   it accepted, so a consumer that counted forms would report one too many for every description that
+   states its version. Measured, not anticipated: both refusals were reproduced through the real entry
+   points — `check` for the schema layer, `shipped_registry` for the kind loader — before either
+   exemption existed, and each fix carries a mutation arm showing the leg that fails without it.
+   ⚠️ `crates/eadl-model/src/check.rs` is **not** a declared source in the table above, and that is not
+   an oversight: §4's census runs in both directions over exactly that list, so declaring a source
+   demands a row for every code it can emit, and this one emits the model layer's diagnostics — which
+   no normative document states yet. That is leaf `M1.26`'s gap (a), and it is what has to close first.
 
 ⚠️ **Honest limit: the identifier is read and refused, and nothing yet *acts* on it.** There is one
 version, so no behaviour differs between stating it and omitting it, and saying otherwise would be the

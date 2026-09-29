@@ -27,6 +27,7 @@
 
 use std::collections::BTreeSet;
 
+use eadl_front::language_version::{declarations, is_identifier};
 use eadl_front::{read, Diagnostic, Form, Label, SourceId, SourceMap, Verdict};
 
 use crate::boundary;
@@ -44,6 +45,12 @@ pub struct Outcome {
     /// Everything found, in pass order.
     pub diagnostics: Vec<Diagnostic>,
     /// The declarations that were read, whether or not the check passed.
+    ///
+    /// ⛔ **Declarations, and not top-level forms.** §8 of `docs/semantics/reference.md` makes the
+    /// language-version identifier a statement about the *document*, so it is filtered out before this
+    /// field is populated — `archogen check` prints this count and `docs/book/src/checking.md` publishes
+    /// it, and a field that counted forms would print one declaration too many for every description
+    /// that states its version.
     pub declarations: Vec<Form>,
 }
 
@@ -92,10 +99,18 @@ pub fn shipped_registry(
         };
         let (document, diagnostics) = read(sources, id);
         if diagnostics.has_errors() {
+            // The reader's own diagnostics are surfaced rather than swallowed, so a *malformed*
+            // identifier in a kind module is still reported with its §4 code — the filter below drops
+            // well-formed ones, not problems with one.
             errors.extend(diagnostics.items().iter().cloned());
             continue;
         }
-        for form in &document.forms {
+        // §8: a kind module may state its language version like any other description. ⛔ Measured,
+        // not anticipated — without this the loader hands the identifier to `read_kind` and refuses the
+        // whole registry as `schema-not-a-kind`, so a kind file that states its version cannot be read
+        // at all. This is the third consumer that needed telling (`is_identifier`'s doc comment names
+        // all three), and the one that no description-level test could reach.
+        for form in declarations(&document.forms) {
             match read_kind(form) {
                 Ok(kind) => {
                     if let Err(error) = registry.register(kind) {
@@ -140,14 +155,24 @@ pub fn check(
 
     // ── read ─────────────────────────────────────────────────────────────────────────────────
     let (document, read_diagnostics) = read(sources, source);
+    // §8 of `docs/semantics/reference.md`: the language-version identifier is a statement about the
+    // *document*, not a declaration, so **no pass below may treat it as one** and the field that names
+    // them may not hold it. Filtered once here, by move, rather than once per pass — the third consumer
+    // that lacked the rule was this crate's kind registry, and a per-pass filter is how a pass comes to
+    // lack it. The reader has already checked the identifier itself (`language_version::state` runs
+    // inside `read`), so dropping the form here loses no verdict.
+    let forms: Vec<Form> = document
+        .forms
+        .into_iter()
+        .filter(|form| !is_identifier(form))
+        .collect();
     if read_diagnostics.has_errors() {
         return Outcome {
             verdict: Verdict::InvalidDescription,
             diagnostics: read_diagnostics.items().to_vec(),
-            declarations: document.forms,
+            declarations: forms,
         };
     }
-    let forms = document.forms;
 
     // ── boundary (F27) ───────────────────────────────────────────────────────────────────────
     let mut boundary_errors = Vec::new();
@@ -162,17 +187,12 @@ pub fn check(
     //
     // Skipped for a declaration the boundary already refused: "`implementation` is not a known
     // kind" adds nothing to a message that already said what it is and where it belongs.
+    //
+    // ⛔ The language-version identifier is not skipped here any more; it was filtered once above,
+    // which is the same rule in one place instead of two. Without it the form was refused as
+    // `schema-unknown-kind` — which it is, and correctly: it is not a kind.
     let mut schema_errors = Vec::new();
     for form in &forms {
-        // §8 of `docs/semantics/reference.md`: the language-version identifier is a statement about
-        // the *document*, not a declaration, so it is not a kind and must not be validated as one.
-        // ⛔ Measured, not anticipated — without this skip the form is refused as
-        // `schema-unknown-kind`, contradicting §8 in the layer furthest from it, where no frontend
-        // test can see it. The predicate lives beside the rule so the next consumer does not have to
-        // rediscover it.
-        if eadl_front::language_version::is_identifier(form) {
-            continue;
-        }
         if boundary::classify(form).is_accepted() {
             schema_errors.extend(validate(registry, form));
         }

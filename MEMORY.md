@@ -13,21 +13,22 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M1` → frontier `M1.13.4.1`. `PROGRAM` `.11`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
-- **Next action:** **`M1.13.4.1`** — the kind registry refuses `(eadl-version eadl/1)` as
-  `schema-not-a-kind`: §8 contradicted from a **third** layer, so "not a declaration" becomes
-  single-defined. Then `.4.2` (the retrofit — all **62** state their version, which is what makes §8
-  rule 2's justifying sentence true), `.4.3` (the one empty literal category), `.4.4` (the manifest),
-  `.4.5` (the baseline), then `.13.5` (the freeze gate). ⛔ Decomposed on **measurement**: the retrofit
-  was executed on all 62 and reverted — **45 failed / 447 passed**, two root causes — and the exclusion
-  cannot use content identity (`LS-002`'s evidence copy is byte-identical to a suite file). ⚠️ Open in
-  `## Open Questions`: `M1.13.1`'s invisible character, and the language's **name** (not published).
+- **Active tree:** `M1` → frontier `M1.13.4.2`. `PROGRAM` `.11`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
+- **Next action:** **`M1.13.4.2`** — the retrofit: all **62** suite descriptions state
+  `(eadl-version eadl/1)`, which is what makes §8 rule 2's justifying sentence true (it names the
+  relying population as the frozen evidence; 62 live files rely on it too). Owed with it: the **9** legs
+  that treat every top-level form as a declaration, and the book transcripts whose line numbers move.
+  Then `.4.3` (the one empty literal category), `.4.4` (the manifest), `.4.5` (the baseline), `.13.5`
+  (the freeze gate). ⛔ The exclusion cannot use content identity — `LS-002`'s evidence copy is
+  byte-identical to a suite file. ⚠️ Open in `## Open Questions`: `M1.13.1`'s invisible character, and
+  the language's **name** (not published).
 - ⛔ **`M1.13.2` settled F-F, and both measurements it was routed on were false** — a census figure with
   an unstated scope and a radix-scoped maximum, restated in **7** places, and an address argument true
   of *physical* addresses only. Details: `docs/decisions/decision_eadl1-value-domain.md`.
-- **Closed, and named rather than restated:** `M1.13.3` (`(eadl-version eadl/1)` is a **form**; §8 of
-  the reference; absence denotes `eadl/1` by rule with a stated expiry); `PROGRAM.21`
-  (`TASK-ACCEPTANCE` leaf-scoped); `M1.13.1`; `M1.20`; `M1.12`; `docs/CLAIM_VERIFICATION.md`.
+- **Closed, and named rather than restated:** `M1.13.4.1` (§8's rule had a **third** consumer — the
+  kind registry — now one accessor, `language_version::declarations()`); `M1.13.3`
+  (`(eadl-version eadl/1)` is a **form**; §8; absence denotes `eadl/1` by rule, with an expiry);
+  `PROGRAM.21` (`TASK-ACCEPTANCE` leaf-scoped); `M1.13.1`; `M1.20`; `M1.12`; `docs/CLAIM_VERIFICATION.md`.
 - **⭐ Tree `API`** (ruled `2026-09-28`, `decision_programmatic-interface.md`): one engine API, a
   **wasm** binding and an **MCP server**, post-build only. `API.3`–`.7` wait on `M1.13`.
 - **`PROGRAM.11` (medium)** is the other active frontier: the repository-boundary rule in **both**
@@ -39,12 +40,11 @@
 - **Also open:** `M1.25`, `M1.26` (sequenced *before* any value-domain widening), `M1.10`, `M1.21`,
   `M1.22`; `S0.8`; `M2.6`, `M2.8`; `PROGRAM.11`, `.18`, `.24`, `.13`, `.15`, `.17`, `.20`, then `.5`,
   `.6`, `.9`, `.10`.
-- **Baseline to beat:** `make focused` exit `0` at the pin — **492 passed, 0 failed** over 37 suites.
-  Tiers: `focused` per commit, `integration` before a push; exit **20 = incomplete** is not a pass, so
-  read what it names. **Push cadence:** at `400` ahead of `origin/main`, measured not carried —
-  `git rev-list --count origin/main..HEAD`, `decision_push-cadence.md`. ⚠️ `make integration` is **red**
-  on `emulator`: QEMU is **pinned** (`M2.8.1`) but `TARGET_VERIFIED=no` until the §3.2 agreement check
-  exists, so `M2.8.2` then `M2.8.3` own it.
+- **Baseline to beat:** `make focused` exit `0` at the pin — **496 passed, 0 failed** over 37 suites.
+  Tiers: `focused` per commit, `integration` before a push; exit **20 = incomplete** is not a pass.
+  **Push cadence:** at `400` ahead of `origin/main`, measured not carried — `git rev-list --count
+  origin/main..HEAD`, `decision_push-cadence.md`. ⚠️ `make integration` is **red** on `emulator`: QEMU
+  is **pinned** (`M2.8.1`) but `TARGET_VERIFIED=no` until the §3.2 agreement check exists (`M2.8.2`).
 - ⛔ **Committing changed `2026-09-29`** (`PROGRAM.21`): `TASK-ACCEPTANCE` is leaf-scoped — a staged
   code change is **refused** unless the pending message's subject carries `(leaf <ID>)`, or
   `TASK_ACCEPTANCE_LEAF=<ID>` is set. It no longer falls back to the first checklist in the file.

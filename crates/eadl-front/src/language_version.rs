@@ -37,21 +37,48 @@ pub const EADL_1: &str = "eadl/1";
 
 /// Whether `form` is a language-version identifier.
 ///
-/// ⭐ **One predicate, every consumer.** Two layers have to recognise the identifier and treat it as
-/// what it is — a statement about the document, not a declaration:
+/// ⭐ **One predicate, every consumer.** Consumers that treat a top-level form *as a declaration* have
+/// to recognise the identifier and skip it, or §8 is contradicted from whichever layer forgot. Prefer
+/// [`declarations`] over calling this directly: it is the same rule already applied, and a consumer that
+/// re-filters is a consumer that can filter differently.
+///
+/// ⛔ **Three layers had to be told, and each was measured rather than anticipated.**
 ///
 /// * `crates/eadl-front/src/module.rs` skips it when counting a module file's top-level forms, or §6's
 ///   "exactly one" would refuse a module that states its own version.
-/// * `crates/eadl-model/src/check.rs` skips it before the schema pass, or §7's registry refuses it as
-///   `schema-unknown-kind` — which it is, and correctly: it is not a kind.
+/// * `crates/eadl-model/src/check.rs` skips it before the boundary and schema passes, or §7's registry
+///   refuses it as `schema-unknown-kind` — which it is, and correctly: it is not a kind. Found by a test
+///   that ran the real path and printed `error[schema-unknown-kind]: \`eadl-version\` is not a known
+///   kind`, in a layer no frontend test can see.
+/// * the **kind registry** in the same file, which reads `docs/semantics/kinds/*.eadl` and hands every
+///   top-level form to `read_kind`, refused it as `schema-not-a-kind` — so a kind module could not state
+///   its own version. Found the same way, by `M1.13.4`'s measurement: the identifier was written into all
+///   62 suite descriptions and the suite run, which is the only reason anyone looked at a *kind* file.
+///   36 of the 45 failures that run produced were this one consumer.
 ///
-/// ⛔ Both were measured, not anticipated. The second was found by a test that ran the real path and
-/// printed `error[schema-unknown-kind]: \`eadl-version\` is not a known kind`, in a layer no frontend
-/// test can see. A rule each consumer re-implements is a rule the next consumer lacks — the reasoning
-/// that put `M1.13.1`'s escape rule in the printer, one layer up.
+/// A rule each consumer re-implements is a rule the next consumer lacks — the reasoning that put
+/// `M1.13.1`'s escape rule in the printer, one layer up. The third consumer is what that reasoning
+/// predicts, and why the rule now has one accessor rather than one predicate.
 #[must_use]
 pub fn is_identifier(form: &Form) -> bool {
     form.head() == Some(HEAD)
+}
+
+/// The forms of a document that are **declarations**: every top-level form except the identifier.
+///
+/// ⭐ This is the rule §8 states — the identifier is a statement about the document, not a declaration
+/// — as an accessor rather than as a filter each consumer writes. A pass that treats a form *as* a
+/// declaration (classifying it, validating it against a kind, reading it as a `defkind`, counting it as
+/// one of the file's declarations) goes through here. A pass that selects by head symbol does not need
+/// it, because `(eadl-version …)` is not the head it is looking for.
+///
+/// ⛔ **The count is part of the rule, not a consequence of it.** `archogen check` reports how many
+/// declarations it accepted, and `docs/book/src/checking.md` publishes that number, so a consumer that
+/// counted forms and called them declarations would print one too many for every description that states
+/// its version — a wrong figure in the toolchain's own output, in the sentence a reader is most likely
+/// to believe.
+pub fn declarations(forms: &[Form]) -> impl Iterator<Item = &Form> {
+    forms.iter().filter(|form| !is_identifier(form))
 }
 
 impl Document {
@@ -74,6 +101,16 @@ impl Document {
                 .and_then(Form::as_symbol)
                 .filter(|stated| *stated == EADL_1)
         })
+    }
+
+    /// The top-level forms that are declarations — every form except the language-version identifier.
+    ///
+    /// The [`declarations`] rule as a method, for the common case of holding a whole document.
+    ///
+    /// No `#[must_use]` here: the iterator it returns already carries one, and clippy's
+    /// `double_must_use` is right that a second one says nothing.
+    pub fn declarations(&self) -> impl Iterator<Item = &Form> {
+        declarations(&self.forms)
     }
 
     /// The language version this description denotes: the one it states, or the one §8 rule 2 supplies.
@@ -319,6 +356,30 @@ mod tests {
             with_form.to_canonical()
         );
         assert_eq!(with_comment.stated_version(), None);
+    }
+
+    #[test]
+    fn the_declarations_of_a_document_are_its_forms_minus_the_identifier() {
+        // ⭐ The accessor every consumer goes through, executed rather than described: it drops the
+        // identifier wherever it sits, keeps everything else in source order, and is not confused by a
+        // *nested* form of the same name (§8 rule 5 — only a top-level form states the version).
+        let document = parse_ok(
+            "(eadl-version eadl/1)\n(defblock b (offers x))\n(defsystem s (eadl-version eadl/1))",
+        );
+        let heads: Vec<Option<&str>> = document.declarations().map(Form::head).collect();
+        assert_eq!(heads, [Some("defblock"), Some("defsystem")]);
+        assert_eq!(
+            document.forms.len(),
+            3,
+            "the document still holds all three forms"
+        );
+
+        let unstated = parse_ok("(defblock b (offers x))");
+        assert_eq!(
+            unstated.declarations().count(),
+            unstated.forms.len(),
+            "a description that states no version loses nothing to the filter"
+        );
     }
 
     #[test]

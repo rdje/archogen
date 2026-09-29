@@ -12,7 +12,8 @@ use std::path::{Path, PathBuf};
 
 use eadl_front::{read, Form, SourceMap};
 use eadl_model::boundary::{classify, Classification};
-use eadl_model::kind::{read_kind, validate, Registry};
+use eadl_model::check::shipped_registry;
+use eadl_model::kind::{validate, Registry};
 use eadl_model::presence::FactMap;
 
 fn repo_root() -> PathBuf {
@@ -38,20 +39,37 @@ fn parse_file(relative: &str) -> (Vec<Form>, SourceMap) {
     (document.forms, sources)
 }
 
+/// The shipped registry, built by the **production loader** rather than by a second one here.
+///
+/// ⭐ This helper used to loop over `read_kind` itself, which made it a second implementation of
+/// "what a kind module may contain" — and a second implementation is a second place for §8's rule to
+/// be missing. `M1.13.4.1` measured the cost of exactly that: the production loader refused a kind
+/// module stating its language version as `schema-not-a-kind`, and this helper would have refused it
+/// too, so a test suite could have stayed green on a loader that could not read the shipped files.
 fn registry() -> Registry {
-    let mut registry = Registry::new();
-    for file in [
+    let mut sources = SourceMap::new();
+    let kind_files: Vec<(String, String)> = [
         "docs/semantics/kinds/core.eadl",
         "docs/semantics/kinds/os-rt.eadl",
-    ] {
-        let (forms, _) = parse_file(file);
-        for form in &forms {
-            registry
-                .register(read_kind(form).expect("shipped kinds are well-formed"))
-                .expect("no duplicates");
-        }
-    }
-    registry
+    ]
+    .iter()
+    .map(|relative| {
+        let path = repo_root().join(relative);
+        let text = std::fs::read_to_string(&path)
+            .unwrap_or_else(|e| panic!("cannot read {}: {e}", path.display()));
+        ((*relative).to_string(), text)
+    })
+    .collect();
+    shipped_registry(&mut sources, &kind_files).unwrap_or_else(|errors| {
+        panic!(
+            "the shipped kind modules are malformed:\n{}",
+            errors
+                .iter()
+                .map(|d| d.render(&sources))
+                .collect::<Vec<_>>()
+                .join("\n")
+        )
+    })
 }
 
 /// The examples, as `(relative path, use case)`.

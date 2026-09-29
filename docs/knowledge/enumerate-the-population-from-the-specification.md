@@ -5,6 +5,7 @@ answers:
   - "A mutation-tested gate is green. What can it still not see?"
   - "Where should a test's input population come from?"
   - "Why did a grammar and its reader disagree for a whole milestone with nothing failing?"
+  - "I added a construct to the language and every test passed — which reader have I not told?"
 type: knowledge
 date: 2026-09-28
 ---
@@ -87,3 +88,40 @@ Related: [[a-gate-is-only-as-sharp-as-its-fixtures]] reaches the same blind spot
 by mutating the subject; the two remedies are complements, not alternatives — mutation proves the gate
 would notice a wrong rule, enumeration proves the gate was given the input. [[verify-the-mutation-applied]]
 applies to every mutation an arm feeds itself.
+
+## The population has a second axis: the kinds of file a rule reaches
+
+Everything above is about *inputs to one gate*. The same statement bites a second way, on the consumers
+of a rule rather than the inputs to a check, and it was measured here by `M1.13.4.1`
+(`docs/tasks/M1.md`).
+
+A language version identifier, `(eadl-version eadl/1)`, was added as a top-level **form**. The rule it
+needs is "this form is not a declaration", and every consumer that iterates top-level forms owes it.
+Two were found and fixed at the time, by running the real path and reading the refusal: the module
+loader (which counts a module file's forms) and the schema pass (which validates each form against the
+kind registry). Both were found the right way — through the entry point the consumer uses — and the
+leaf closed green.
+
+⛔ **There was a third.** The same file also holds the loader that reads the shipped *kind modules*,
+and it handed every top-level form to `read_kind`, so a kind file stating its own version was refused
+as `schema-not-a-kind` and took the whole registry with it — `tool-failure` for every description the
+toolchain was asked about. No description-level test could reach it, because nothing reads a kind
+module except that loader, and **no fixture put the new construct in one**.
+
+What found it was not reading the code for consumers. It was writing the identifier into all 62 shipped
+descriptions — every file kind the toolchain reads — and running everything: 45 failures, 36 of them
+this one consumer.
+
+- **Generalise it: when a language gains a construct, put it in one file of every kind the toolchain
+  reads before deciding the change is complete.** Descriptions, kind modules, module files, frozen
+  evidence. A rule's consumers are a population, and only the ones your fixtures reach will tell you
+  they are missing.
+- **Then make the rule one accessor, not one predicate per caller.** The fix was `declarations()` beside
+  the predicate, so a pass that treats a form as a declaration goes through the same filter — a rule
+  each consumer re-implements is a rule the next consumer lacks.
+- ⭐ **Census the consumers by shape, not by name.** `grep` for the iteration (`for form in
+  &document.forms`, `.forms.iter()`) rather than for the construct: a consumer that has never seen the
+  construct cannot be found by searching for it.
+- The same run found the shape's test-side copy: three test helpers each hand-rolled a kind-module
+  loader, so a suite could have stayed green on a loader that could not read the shipped files. They now
+  call the production loader.

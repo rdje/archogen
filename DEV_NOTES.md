@@ -1,5 +1,40 @@
 # DEV_NOTES.md
 
+## _(2026-09-29)_ — the third consumer of a rule is in a file kind no fixture uses
+
+- `M1.13.4.1`. `M1.13.3` put `(eadl-version eadl/1)` on the surface as a top-level **form** and taught
+  the two consumers that refused it: `module.rs` (which counts a module file's forms) and `check.rs`'s
+  schema pass (which validates each form against the kind registry). Both were found the right way — by
+  running the real entry point and reading the refusal — and that leaf closed green with 16 new tests.
+- ⛔ There was a **third** consumer, in the same file: `shipped_registry`, the loader that reads
+  `docs/semantics/kinds/`. It handed every top-level form to `read_kind`, so a kind module stating its
+  own version was refused as `schema-not-a-kind` and the whole registry failed to build —
+  `archogen: tool-failure: the shipped kind modules could not be loaded` for *every* description. No
+  description-level test can reach it, because nothing reads a kind module except that loader, and no
+  fixture had ever put the new construct in one.
+- What found it was not a search for consumers. It was writing the identifier into **all 62** shipped
+  descriptions — every file kind the toolchain reads — and running the whole suite: `45 failed / 447
+  passed over 9 suites`, of which **36** were this one consumer and 9 were legs that treat every
+  top-level form as a declaration. The measurement was a temporary edit, reverted, with the restoration
+  proven (`git status --porcelain` → 0 entries).
+- The rule: **when a language gains a construct, put it in one file of every kind the toolchain reads
+  before deciding the change is complete.** A rule's consumers are a population, and only the ones your
+  fixtures reach will tell you they are missing. Census them by *shape* (`for form in &document.forms`),
+  never by the construct's name — a consumer that has never seen the construct cannot be found by
+  searching for it.
+- ⭐ The fix is an accessor, not a third hand-rolled filter: `language_version::declarations()` sits
+  beside `is_identifier` and every pass that treats a form as a declaration goes through it, including
+  the field `archogen check` counts when it prints `(N declaration(s))` — a line
+  `docs/book/src/checking.md` publishes, so a consumer that counted forms would have printed one too
+  many for every description that states its version. The same run found the shape's test-side copy:
+  three test helpers hand-rolled a kind-module loader, so the suite could have stayed green on a loader
+  that could not read the shipped files. They now call the production one.
+- promotion: promoted (`docs/knowledge/enumerate-the-population-from-the-specification.md` gains the
+  section "The population has a second axis: the kinds of file a rule reaches" and a fifth `answers:`
+  line — *"I added a construct to the language and every test passed — which reader have I not told?"*.
+  Same card as the input-population lesson, because both are one statement about two populations: green
+  over the population you supplied says nothing about the population you did not.)
+
 ## _(2026-09-29)_ — a fix in a caller is invisible to a test of the callee
 
 - `M1.13.3`, adding the language-version identifier. §8 made `(eadl-version eadl/1)` a top-level form;

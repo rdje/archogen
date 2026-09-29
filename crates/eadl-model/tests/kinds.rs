@@ -12,7 +12,14 @@
 use std::path::{Path, PathBuf};
 
 use eadl_front::{read, Form, SourceMap};
+use eadl_model::check::shipped_registry;
 use eadl_model::kind::{read_kind, validate, Cardinality, NameRule, Registry};
+
+/// The two kind modules the toolchain ships.
+const KIND_MODULES: &[&str] = &[
+    "docs/semantics/kinds/core.eadl",
+    "docs/semantics/kinds/os-rt.eadl",
+];
 
 fn repo_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -45,29 +52,45 @@ fn parse_file(relative: &str) -> (Vec<Form>, SourceMap) {
 /// accepting anything inside a task, which `a_missing_kind_module_is_reported_not_ignored`
 /// checks.
 fn core_registry() -> Registry {
-    let mut registry = Registry::new();
-    for file in [
-        "docs/semantics/kinds/core.eadl",
-        "docs/semantics/kinds/os-rt.eadl",
-    ] {
-        let (forms, sources) = parse_file(file);
-        for form in &forms {
-            let kind = read_kind(form).unwrap_or_else(|errors| {
-                panic!(
-                    "{file} has a malformed kind:\n{}",
-                    errors
-                        .iter()
-                        .map(|d| d.render(&sources))
-                        .collect::<Vec<_>>()
-                        .join("\n")
-                )
-            });
-            registry
-                .register(kind)
-                .unwrap_or_else(|e| panic!("{file}: {}", e.message));
-        }
-    }
-    registry
+    registry_from(KIND_MODULES)
+}
+
+/// Read kind modules from disk into the `(name, text)` pairs [`shipped_registry`] takes.
+fn kind_files(files: &[&str]) -> Vec<(String, String)> {
+    files
+        .iter()
+        .map(|relative| {
+            let path = repo_root().join(relative);
+            let text = std::fs::read_to_string(&path)
+                .unwrap_or_else(|e| panic!("cannot read {}: {e}", path.display()));
+            ((*relative).to_string(), text)
+        })
+        .collect()
+}
+
+/// Build a registry from the named kind modules, **through the production loader**.
+///
+/// ⭐ `shipped_registry` and not a loop over `read_kind`, for the reason
+/// `the_language_version_identifier_survives_the_model_layer` gives for running `check` rather than
+/// `validate`: a test that bypasses the layer under test measures the wrong thing, confidently. This
+/// helper *was* a second loader, and a second loader is a second place for §8's rule to be missing —
+/// which is how the production one came to be the third consumer nobody had told
+/// (`M1.13.4.1`). Going through the real path means a kind module that states its language version is
+/// read here the way `archogen` reads it, and a loader regression fails these tests instead of only
+/// the CLI's.
+fn registry_from(files: &[&str]) -> Registry {
+    let mut sources = SourceMap::new();
+    let kind_files = kind_files(files);
+    shipped_registry(&mut sources, &kind_files).unwrap_or_else(|errors| {
+        panic!(
+            "the kind modules are malformed:\n{}",
+            errors
+                .iter()
+                .map(|d| d.render(&sources))
+                .collect::<Vec<_>>()
+                .join("\n")
+        )
+    })
 }
 
 #[test]
@@ -368,14 +391,8 @@ fn a_missing_kind_module_is_reported_not_ignored() {
     // A registry without `os-rt.eadl` cannot validate a task. It must SAY so — silently
     // accepting whatever is inside an unvalidatable clause is the failure mode that let the
     // gap exist in the first place.
-    let (forms, sources) = parse_file("docs/semantics/kinds/core.eadl");
-    let mut registry = Registry::new();
-    for form in &forms {
-        registry
-            .register(read_kind(form).expect("core.eadl is well-formed"))
-            .expect("no duplicates");
-    }
-    let (system, _) = parse_file("docs/semantics/boundary/reject/execution-bound.eadl");
+    let registry = registry_from(&["docs/semantics/kinds/core.eadl"]);
+    let (system, sources) = parse_file("docs/semantics/boundary/reject/execution-bound.eadl");
     let errors = validate(&registry, &system[0]);
     let rendered = errors
         .iter()
@@ -605,5 +622,125 @@ fn the_language_version_identifier_survives_the_model_layer() {
             .any(|item| item.contains("schema-unknown-kind")),
         "the language-version identifier was refused by the schema layer:\n{}",
         rendered.join("\n")
+    );
+}
+
+#[test]
+fn stating_a_version_does_not_change_how_many_declarations_a_description_has() {
+    // ⭐ The half of §8's rule that is user-visible. `archogen check` prints
+    // "accepted against profile `…` (N declaration(s))" and `docs/book/src/checking.md` publishes that
+    // line for a real example, so the field the count comes from has to hold **declarations** and not
+    // top-level forms — or every description that states its language version is reported as one
+    // declaration larger than it is, in the sentence a reader is most likely to believe.
+    //
+    // This is what makes `M1.13.4.2`'s retrofit safe for the book: the eight declarations of
+    // `examples/periodic-three/system.eadl` stay eight when the identifier is added above them.
+    use eadl_model::check::{check, default_profile};
+
+    let without = "(defblock b (offers (x true)))\n(defsystem s (platform (uses b)))";
+    let with = &format!("(eadl-version eadl/1)\n{without}");
+    let registry = core_registry();
+
+    let mut sources = SourceMap::new();
+    let unstated = sources
+        .add("unstated.eadl", without.to_string())
+        .expect("small");
+    let stated = sources.add("stated.eadl", with.clone()).expect("small");
+    let first = check(&sources, unstated, &registry, default_profile());
+    let second = check(&sources, stated, &registry, default_profile());
+
+    assert_eq!(
+        first.declarations.len(),
+        second.declarations.len(),
+        "stating the language version changed the reported declaration count: {} vs {}",
+        first.declarations.len(),
+        second.declarations.len()
+    );
+    assert_eq!(
+        second.declarations.len(),
+        2,
+        "the identifier was counted as a declaration"
+    );
+    assert!(
+        second
+            .declarations
+            .iter()
+            .all(|form| form.head() != Some("eadl-version")),
+        "`Outcome::declarations` holds the identifier, so every consumer of the field inherits it"
+    );
+}
+
+#[test]
+fn a_kind_module_may_state_its_language_version() {
+    // §8 says a *description* states its language version, and a kind module is a description: the
+    // loader reads it with the same `read` and the file is a tracked `.eadl` like any other. So the
+    // identifier has to be skipped here too, or the one file kind that declares the language cannot
+    // say which version of it it declares.
+    //
+    // ⛔ Measured, not anticipated. Before this leaf the loader handed **every** top-level form to
+    // `read_kind`, which refused the identifier as `schema-not-a-kind` and took the whole registry
+    // with it — `archogen: tool-failure: the shipped kind modules could not be loaded`, and 36 of the
+    // 45 failures `M1.13.4`'s retrofit measurement produced. It is the third consumer of §8's rule
+    // (`is_identifier`'s doc comment names all three) and the one no description-level test could
+    // reach, because nothing reads a kind module except this loader.
+    //
+    // ⭐ The assertion is that stating a version changes **nothing** about what is declared, which is
+    // the property a filter has to have: not merely "does not fail".
+    let stated = "(eadl-version eadl/1)\n(defkind deftimer (doc \"a timer\") (name required))";
+    let unstated = "(defkind deftimer (doc \"a timer\") (name required))";
+
+    let mut sources = SourceMap::new();
+    let with = shipped_registry(
+        &mut sources,
+        &[("stated.eadl".to_string(), stated.to_string())],
+    )
+    .unwrap_or_else(|errors| {
+        panic!(
+            "a kind module stating its language version was refused:\n{}",
+            errors
+                .iter()
+                .map(|d| d.render(&sources))
+                .collect::<Vec<_>>()
+                .join("\n")
+        )
+    });
+    let without = shipped_registry(
+        &mut sources,
+        &[("unstated.eadl".to_string(), unstated.to_string())],
+    )
+    .expect("a kind module with no identifier loads");
+
+    assert_eq!(
+        with.heads(),
+        without.heads(),
+        "stating the language version changed what the module declares"
+    );
+    assert_eq!(with.heads(), vec!["deftimer"], "the kind is registered");
+    assert_eq!(
+        with.len(),
+        without.len(),
+        "the identifier was registered as a kind of its own"
+    );
+}
+
+#[test]
+fn a_malformed_version_in_a_kind_module_is_still_reported() {
+    // ⛔ The other half of the fix, and the half a "just skip the form" patch gets wrong: skipping the
+    // identifier must not swallow a *problem* with one. `shipped_registry` surfaces the reader's own
+    // diagnostics before it iterates anything, so a version this toolchain does not read is still
+    // refused with §8's code — a filter that quietly dropped the form would trade a false refusal for
+    // a silent one, and a kind module claiming `eadl/2` would load as though it claimed `eadl/1`.
+    let text = "(eadl-version eadl/2)\n(defkind deftimer (doc \"a timer\") (name required))";
+    let mut sources = SourceMap::new();
+    let errors = shipped_registry(&mut sources, &[("bad.eadl".to_string(), text.to_string())])
+        .expect_err("a version this toolchain does not read must be refused");
+    let codes: Vec<&str> = errors.iter().map(|d| d.code).collect();
+    assert!(
+        codes.contains(&"language-version-unknown"),
+        "§8's own diagnostic was swallowed by the filter: {codes:?}"
+    );
+    assert!(
+        !codes.iter().any(|code| code.starts_with("schema-")),
+        "the refusal must be about the version, not about the identifier not being a kind: {codes:?}"
     );
 }

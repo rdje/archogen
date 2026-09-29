@@ -788,12 +788,10 @@ fn single_module(document: &Document, diagnostics: &mut Diagnostics) -> Option<F
     // §8: a language-version identifier may precede the declaration and is not a stray form — §6's
     // "exactly one top-level form" is about the *declaration*. Without this filter, stating the
     // language version in a module file would be refused as `module-multiple-forms`, which would leave
-    // the one file kind that most needs a locked version unable to carry one.
-    let declarations: Vec<&Form> = document
-        .forms
-        .iter()
-        .filter(|form| !crate::language_version::is_identifier(form))
-        .collect();
+    // the one file kind that most needs a locked version unable to carry one. The filter is the shared
+    // accessor rather than a second spelling of the rule, because a rule each consumer re-implements is
+    // a rule the next consumer lacks.
+    let declarations: Vec<&Form> = document.declarations().collect();
     match declarations.len() {
         1 => Some(declarations[0].clone()),
         0 => {

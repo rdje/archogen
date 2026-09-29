@@ -34,6 +34,15 @@ registry entry. If a future change needs a second trusted primitive, it has to b
 Rust, where it is visible — which is what "cannot silently introduce new trusted axioms" means
 once it stops being a sentence and starts being a build.
 
+⭐ **A kind module is a description, so it may state its language version.** `(eadl-version eadl/1)`
+as the first form of a kind module is not a kind, and is not refused as one: the loader skips it and
+the module declares exactly the same kinds with it as without, which is what
+`docs/semantics/reference.md` §8 rule 8 requires of every layer that
+treats a top-level form as a declaration. That was measured rather than assumed — before the rule
+reached the loader, a kind module stating its version was refused as `schema-not-a-kind` and took the
+whole registry with it, so `archogen` answered `tool-failure` for every description it was asked about,
+and no test that checked a *description* could see it happen.
+
 ## A kind defines well-formedness, never behavior
 
 §5.6 is explicit that `defkind` "must not become a host-code evaluator or an implementation
