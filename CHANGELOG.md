@@ -4,6 +4,18 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — a bug register says what its issues say, and its totals are recounts
+
+`ARCHOGEN-PROGRAM-0137` (leaf `PROGRAM.15`). A new doctrine, `FEEDBACK-REGISTER`.
+
+- ⛔ **Found stale.** The index of outbound bug trackers still said LinkedSpec had **5 open bugs and 2
+  blockers**, three days after all five had been verified. It is corrected to 0 and 0.
+- The gate checks each register row's State and Severity against the bug's own page, requires a `verified`
+  row to be backed by a dated re-measurement, and recounts every total, the cross-vendor index included. It
+  runs on the vendors a commit touches, and on every vendor when nothing is staged.
+- "Open" is now defined where it is counted: not yet resolved from archogen's side, meaning `open`,
+  `acknowledged` or `fixed-upstream`.
+
 ## archogen — every closed leaf names its commit and its checks in its own tree
 
 `ARCHOGEN-PROGRAM-0136` (leaf `PROGRAM.13`).

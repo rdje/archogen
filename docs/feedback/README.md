@@ -11,11 +11,13 @@ state and history in the issue — so a report stays live instead of becoming a 
 
 | Vendor | Tracker | Component | Bugs | Open | Blockers |
 | --- | --- | --- | --- | --- | --- |
-| LinkedSpec | [`linkedspec/`](linkedspec/INDEX.md) | Rust backend + shipped Lispish grammar | 7 | 5 | 2 |
+| LinkedSpec | [`linkedspec/`](linkedspec/INDEX.md) | Rust backend + shipped Lispish grammar | 7 | 0 | 0 |
 
-Per-vendor detail — severity, reproducibility and totals by state — is in that vendor's
-`INDEX.md`. This table is a pointer; the vendor registers are the source, and both move in the
-same commit.
+**Open** counts the bugs not yet resolved from archogen's side: `open`, `acknowledged` or
+`fixed-upstream`. **Blockers** counts the open ones of severity Blocker. Per-vendor detail, meaning
+severity, reproducibility and totals by state, is in that vendor's `INDEX.md`. This table is a
+pointer; the vendor registers are the source. Both move in the same commit, and
+`FEEDBACK-REGISTER` (`scripts/check_feedback_register.sh`) refuses a commit where they disagree.
 
 ## The rule every tracker here follows
 

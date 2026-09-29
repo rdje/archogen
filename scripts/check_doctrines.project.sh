@@ -30,6 +30,7 @@ PROJECT_DOCTRINES=(
   "SCRATCH-LOCALITY|nothing this repository owns puts scratch off its volume — every temporary file or directory is made under target/, and no script names the system temporary directory|scripts/check_scratch_locality.sh"
   "SOURCE-LEDGER|every external source the repository pins has a ledger entry carrying the pinned version, and every chapter or decision naming a ledgered source cites its entry|scripts/check_source_ledger.sh"
   "VERSION-REGISTER|every version the code declares — format identifiers, version constants, profile ids, the engine version — is an entry of the register at that value, and every entry still has its declaration|scripts/check_version_register.sh"
+  "FEEDBACK-REGISTER|every outbound bug register agrees with its issues — each row's State and Severity, a verified row backed by a dated re-measurement — and its totals and the cross-vendor index are recounts|scripts/check_feedback_register.sh"
 )
 
 for entry in "${PROJECT_DOCTRINES[@]}"; do

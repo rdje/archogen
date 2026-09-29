@@ -378,6 +378,19 @@ $ bash scripts/check_version_register.sh              # the gate
 $ bash scripts/check_version_register.sh --self-test  # its RED arms, on scratch repositories
 ```
 
+## A bug report says what its issue says
+
+The bugs this project reports to the tools it uses live in `docs/feedback/`, one register per vendor
+and one directory per bug. `FEEDBACK-REGISTER` checks that each register row states what its bug's
+own page states, that a `verified` bug was re-measured on the date the register gives, and that every
+total is a recount. When it was written, the index above the registers still said [LinkedSpec](ledger.md#linkedspec) had five
+open bugs and two blockers, three days after all five had been verified.
+
+```console
+$ bash scripts/check_feedback_register.sh              # the gate
+$ bash scripts/check_feedback_register.sh --self-test  # its RED arms, on scratch repositories
+```
+
 ## Why `focused` runs the whole suite
 
 §14.3 defines the focused tier as "format/type checks and **affected** contract tests", and

@@ -99,6 +99,8 @@ the reported defect.
 
 ## Totals by severity, open only
 
+"Open" means not yet resolved from archogen's side: `open`, `acknowledged` or `fixed-upstream`.
+
 | Severity | Count |
 | --- | --- |
 | Blocker | 0 |

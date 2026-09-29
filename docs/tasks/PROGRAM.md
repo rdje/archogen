@@ -515,7 +515,7 @@ mdBook that is the director's window into the project.
   Commit: `pending`
 
 - ID: `PROGRAM.15`
-  Status: `pending`
+  Status: `done`
   Goal: make the outbound feedback register's **states and totals** mechanically consistent with the
   issue sub-trees that are their source — the half of "keeping this index true" that no check
   performs today.
@@ -539,8 +539,51 @@ mdBook that is the director's window into the project.
   proves the two records agree, never that the measurement behind them was right.
   Priority: **medium** — no behaviour depends on it, but this repository's whole claim to a vendor is
   that its records are consistent, and that claim currently rests on hand-editing.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the checklist — a new gate over five legs (15 arms, 8 mutations), whose first run found a
+  live inconsistency.
+  Commit: `ARCHOGEN-PROGRAM-0137 (leaf PROGRAM.15)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — found live, one level above the register the leaf named: the cross-vendor index
+    still counted five open bugs and two blockers after the register had closed all five (`0a98c66`,
+    `2026-09-27`), and nothing noticed:
+    ```text
+    $ git grep -n "| 7 | 5 | 2 |" bf1eef8 -- docs/feedback/README.md
+      bf1eef8:docs/feedback/README.md:14:| LinkedSpec | [`linkedspec/`](linkedspec/INDEX.md) | Rust backend + shipped Lispish grammar | 7 | 5 | 2 |
+    $ bash scripts/check_feedback_register.sh            (its first run, on the real tree)
+      FEEDBACK-REGISTER: docs/feedback/README.md says linkedspec has 5 open, and its register has 0 unresolved …
+      FEEDBACK-REGISTER: docs/feedback/README.md says linkedspec has 2 blockers, and its register has 0 unresolved Blockers
+      exit=1
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `FEEDBACK-SELF-CONTAINED`'s only register leg is registration: that every
+    issue is *named* in its `INDEX.md`; nothing read what a row, a total or the cross-vendor index *says*:
+    ```text
+    $ git grep -n "INDEX" bf1eef8 -- scripts/check_feedback_self_contained.sh
+      bf1eef8:scripts/check_feedback_self_contained.sh:17:#   4. REGISTRATION   — the vendor's INDEX.md names every issue dire…
+      bf1eef8:scripts/check_feedback_self_contained.sh:77:        note "$id exists but is not named in ${vendor}INDEX.md"; …
+    ```
+    And "open only" was never defined — the data at `792bb9d` (all five `open`) cannot tell "State is `open`"
+    from "unresolved"; the register now says which.
+  - [x] **FIX** — `scripts/check_feedback_register.sh` (**`FEEDBACK-REGISTER`**): rows against their issues (State,
+    Severity's leading token, the linked directory), a `verified` row backed by a dated archogen re-measurement
+    whose date is its `Last verified`, totals by state (counts and IDs) and by severity (unresolved = `open`,
+    `acknowledged`, `fixed-upstream`, now stated in the register and the index) as recounts, and the cross-vendor
+    index's Bugs / Open / Blockers; scoped to staged vendors, all when nothing is staged. The index corrected to
+    `| 7 | 0 | 0 |`.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    $ bash scripts/check_feedback_register.sh
+      feedback-register: OK (1 vendor register(s) agree with their issues, their totals and the cross-vendor index)   exit=0
+    $ bash scripts/check_feedback_register.sh --self-test
+      feedback-register self-test: 15 pass / 0 fail (15 arms)
+    ```
+    Eight mutations R-1–R-8, each restored by `cmp`, each fails its own arms (R-7 — `verified` counted as open —
+    fails five). The staged-scope arm and the nothing-staged arm both hold.
+  - [x] **NO REGRESSION** — `FEEDBACK-SELF-CONTAINED` exit=0 on the edited register; `SOURCE-LEDGER` caught the new
+    book paragraph naming LinkedSpec uncited, and it cites the entry now; the doctrine driver green at the commit.
+  - [x] **LOCKSTEP** — `DOCTRINE_ENFORCEMENT.md`, `TOOLBOX.md`, `verification.md` ("A bug report says what its issue
+    says"); the definition of "open" in `docs/feedback/README.md` and `linkedspec/INDEX.md`.
 
 - ID: `PROGRAM.16`
   Status: `done`
@@ -2843,13 +2886,12 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.15` | `pending` | a feedback register row that contradicts its own issue sub-tree passes every gate today; five state transitions in six commits held only by hand-editing and a manual census |
-| 2 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
-| 3 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. ⭐ A **near-miss** worth pricing in, recorded honestly as a near-miss and not as a fourth instance: `PROGRAM.18`'s frontier row still read "ten of eighteen controls" while this leaf was being written, and was corrected in the same commit — it would have gone stale the moment the fix landed, and nothing in the tree compares a control count against the controls. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with. ⛔ An **eighth** shape landed `2026-09-29` and it falsifies the acceptance's *population* rather than adding a figure: `CHANGELOG.md` said "Newest first" and did not, one entry sitting above six newer ones for seven commits because five consecutive commits inserted at the same wrong anchor — and `CHANGELOG.md` is not one of the three live surfaces the acceptance enumerates. Two falsifications of a three-item list, so the population becomes every live surface the commit stages |
-| 4 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
-| 5 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
-| 6 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
-| 7 | `PROGRAM.30` | `pending` | **medium** — the Rust channel, mdBook and CI actions are unpinned; found deriving the ledger's pins |
+| 1 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
+| 2 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. ⭐ A **near-miss** worth pricing in, recorded honestly as a near-miss and not as a fourth instance: `PROGRAM.18`'s frontier row still read "ten of eighteen controls" while this leaf was being written, and was corrected in the same commit — it would have gone stale the moment the fix landed, and nothing in the tree compares a control count against the controls. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with. ⛔ An **eighth** shape landed `2026-09-29` and it falsifies the acceptance's *population* rather than adding a figure: `CHANGELOG.md` said "Newest first" and did not, one entry sitting above six newer ones for seven commits because five consecutive commits inserted at the same wrong anchor — and `CHANGELOG.md` is not one of the three live surfaces the acceptance enumerates. Two falsifications of a three-item list, so the population becomes every live surface the commit stages |
+| 3 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
+| 4 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
+| 5 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
+| 6 | `PROGRAM.30` | `pending` | **medium** — the Rust channel, mdBook and CI actions are unpinned; found deriving the ledger's pins |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
@@ -2970,6 +3012,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-28` | `PROGRAM.22` | backfilled `2026-09-30` (`PROGRAM.13`), transcribed from the leaf's own checklist: `git status --short` after the change → empty, with `build/riscv-virt.dtb` and `build/riscv-virt.dts` still present on disk (`git check-ignore -v build/riscv-virt.dtb` names the new rule); `make gate` → `=== all doctrines green ===` over … | `done` at `f199e1f`; the full evidence is the leaf's acceptance checklist |
 | `2026-09-13` | `PROGRAM.4` | backfilled `2026-09-30` (`PROGRAM.13`), transcribed from the leaf's own checklist: `SUMMARY.md` now carries five parts that mirror the programme (what eADL describes · writing a description · what the engine may claim · generating and running a system · using the toolchain), and `presence.md` names … | `done` at `2733efe`; the full evidence is the leaf's acceptance checklist |
 | `2026-09-30` | `PROGRAM.13` | the unlogged-leaf census by leaf ID over every tree, before and after; each derived commit against the commit its leaf records | 22 rows owed across `BOOTSTRAP`, `M1`, `M2`, `PROGRAM` → 0; every commit derived from `git log` matched its leaf's own record |
+| `2026-09-30` | `PROGRAM.15` | the register gate's first run on the real tree; its 15 arms; eight mutations R-1–R-8 | the cross-vendor index said 5 open / 2 blockers against a closed register — corrected; 15 / 0; every mutation fires |
 
 ## Commit Log
 
@@ -3012,6 +3055,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.22` | `ARCHOGEN-PROGRAM-0067 (leaf PROGRAM.22)` | the roadmap's own example dirtied the tree — backfilled `2026-09-30` (`PROGRAM.13`) from `git log`, `f199e1f` `2026-09-28` |
 | `PROGRAM.4` | `ARCHOGEN-PROGRAM-0033 (leaf PROGRAM.4)` | the book gets a shape, and its citations get checked — backfilled `2026-09-30` (`PROGRAM.13`) from `git log`, `2733efe` `2026-09-13` |
 | `PROGRAM.13` | `ARCHOGEN-PROGRAM-0136 (leaf PROGRAM.13)` | **every closed leaf names its commit and its checks in its own tree** — 22 rows backfilled from `git log` and the leaves' own checklists; `BOOTSTRAP` gains a Verification Log |
+| `PROGRAM.15` | `ARCHOGEN-PROGRAM-0137 (leaf PROGRAM.15)` | **a bug register says what its issues say, and its totals are recounts** — `FEEDBACK-REGISTER`; its first run found the cross-vendor index three days stale |
 
 ## Changelog
 
