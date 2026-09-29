@@ -2025,13 +2025,53 @@ mdBook that is the director's window into the project.
     `DOCTRINE_ENFORCEMENT.md` and `TOOLBOX.md` rows; the live docs.
 
 - ID: `PROGRAM.6.2`
-  Status: `pending`
+  Status: `done`
   Goal: "a locked description retains its meaning across an engine upgrade", made mechanical — the verdict of
   every tracked description, frozen, so an engine change that moves one is refused unless the change says so.
   Acceptance: a frozen table of every tracked description's verdict and diagnostic codes, checked by a test on
   every run; the census `M1.34`–`M1.36` each ran by hand (120 descriptions before and after) becomes that test.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the checklist — the table cross-checked against the binary census, three falsifications, a
+  permanent mutation-catalog entry.
+  Commit: `ARCHOGEN-PROGRAM-0134 (leaf PROGRAM.6.2)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — the register's own `engine` entry said nothing pinned meaning across an engine
+    change outside the conformance suite:
+    ```text
+    $ git grep -n "PROGRAM.6.2" 2883035 -- docs/book/src/versions.md
+      2883035:docs/book/src/versions.md:46:| Pinned by | the conformance suite today. ⚠️ A frozen verdict for every tracked description is `PROGRAM.6.2`, pending: …
+    $ git cat-file -e 2883035:crates/archogen-cli/tests/verdicts.rs      -> rc=128
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — the conformance suite pins its own cases; the other descriptions (examples,
+    module trees, the boundary corpus, the feedback evidence) kept their verdicts only while someone re-ran the
+    census by hand — `M1.34`, `M1.35` and `M1.36` each did, building the CLI from a stash and from the change:
+    ```text
+    $ diff m136_before.txt m136_after.txt      (M1.36's census: exit code and output digest per description)
+      rc=0
+    ```
+  - [x] **FIX** — `crates/archogen-cli/tests/verdicts.rs`: every `*.eadl` under the root (walked, skipping
+    `target/`, `build/`, `vendor/` and hidden directories — no `git` dependency), run through `archogen check`
+    in-process, its exit code and sorted diagnostic codes compared with `crates/archogen-cli/tests/verdicts.txt`;
+    a moved, new or vanished verdict fails and is named; `ARCHOGEN_BLESS_VERDICTS=1` regenerates deliberately.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    $ ARCHOGEN_BLESS_VERDICTS=1 cargo test -q -p archogen-cli --test verdicts; cargo test -q -p archogen-cli --test verdicts
+      test result: ok. 1 passed; 0 failed      120 descriptions (35 × 0, 70 × 10, 2 × 11, 8 × 12, 5 × 13), 0.05 s
+    $ diff <binary census exit codes> <table exit codes>      -> rc=0, 120 identical (re-derived two ways)
+    ```
+    Falsified: the D ≤ T rule made to refuse equality → `20 of 120 description(s) differ` with each `MOVED: … was
+    \`0 -\`, is \`12 unsupported-profile\``; a new `examples/zz-probe.eadl` → `new, with no frozen verdict`; a table
+    row for a missing file → `frozen but gone`; each restored (`git checkout`, `cmp`). Kept as catalog entry
+    `constrained-deadline-seen-by-the-frozen-verdicts` → `killed by every_description_keeps_its_frozen_verdict`.
+  - [x] **NO REGRESSION** — the test adds 0.08 s; ignored under Miri with the other corpus walks:
+    ```text
+    $ cargo test --all -q
+      test result: passed=617 failed=0 ignored=1 over 45 suites      (the 1 ignored: fuzz_extended, by design)
+    ```
+    The doctrine driver green at the commit; `make focused` passed.
+  - [x] **LOCKSTEP** — `versions.md`'s `engine` entry is pinned now, and the chapter gains "How an engine change is
+    held to what descriptions mean"; the mutation catalog gains its ninth entry.
 
 - ID: `PROGRAM.6.3`
   Status: `pending`
@@ -2857,6 +2897,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-29` | `PROGRAM.9.2` | the harness's first runs (smoke, and 5 seeds × 20 000 with overflow checks); the step on a fixed and a fresh seed; seeded defects F-A–F-D and F-C without overflow checks; `cargo test -p xtask` | found `M1.36` on the first run (and `M1.34`, `M1.35` while designing it) — all three fixed first; then 8 properties and 6 arms green on every seed; every seeded defect fails its own property or arm; F-D's restore nearly skipped (untracked file) |
 | `2026-09-30` | `PROGRAM.9.3` / `PROGRAM.9` | `cargo xtask mutate` twice (the second naming each kill's tests); harness arms H-1–H-4 through temporary entries; `cargo test -p xtask`; the `extended` tier end to end | 8 of 8 as expected, each kill by the test written for its defect, the `lcm`→`max` blind spot surviving the harmonic corpus; every arm refused as designed, `crates/` clean after each; 14 / 0; **`extended` passed for the first time** |
 | `2026-09-30` | `PROGRAM.6.1` | the register gate on the real tree and its 12 arms; seven mutations V-1–V-7; `FORMAT` bumped on the real code; the book build | no register before; 7 entries and 7 declared versions after — the seventh (`idealized-zero-overhead/1`) found by the gate, missed by the planning census; every mutation fires; the bump refused at its entry |
+| `2026-09-30` | `PROGRAM.6.2` | the frozen table blessed and checked; its exit codes against `M1.36`'s binary census; the D ≤ T mutation; a new description; a stale row; the catalog entry through `cargo xtask mutate` | 120 verdicts frozen, identical to the binary census; 20 moved and named under the mutation; the new and the vanished each named; the catalog entry killed by the verdict test |
 
 ## Commit Log
 
@@ -2892,6 +2933,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.9.2` | `ARCHOGEN-PROGRAM-0131 (leaf PROGRAM.9.2)` | **the `extended` tier fuzzes the reader and the exact arithmetic.** A dependency-free seeded harness, six known-false arms it must refute, eight properties; a fixed and a fresh seed, overflow checks on. It found three engine defects before its own commit (`M1.34`–`M1.36`) |
 | `PROGRAM.9.3` → `PROGRAM.9` | `ARCHOGEN-PROGRAM-0132 (leaf PROGRAM.9.3)` | **the mutation controls are a catalog run on every `extended` tier**, and **`extended` passes** for the first time. `cargo xtask mutate`: eight entries, each checked to apply once, name its killing tests and restore byte for byte; S0.4's blind spot reproduced by command. `PROGRAM.9` closed |
 | `PROGRAM.6` → `PROGRAM.6.1` | `ARCHOGEN-PROGRAM-0133 (leaf PROGRAM.6.1)` | **everything versioned is in one register, derived from the code.** Seven surfaces with what changes and pins each; F25's home named (`M6.4`); `VERSION-REGISTER` refuses an unannounced format, bump or stale entry. `PROGRAM.6` decomposed |
+| `PROGRAM.6.2` | `ARCHOGEN-PROGRAM-0134 (leaf PROGRAM.6.2)` | **every description keeps its frozen verdict.** The census three engine fixes ran by hand is a test: 120 descriptions, exit code and diagnostic codes; a moved verdict fails unless the table is regenerated in the same change |
 
 ## Changelog
 

@@ -4,6 +4,19 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — every description keeps its frozen verdict
+
+`ARCHOGEN-PROGRAM-0134` (leaf `PROGRAM.6.2`).
+
+- `crates/archogen-cli/tests/verdicts.rs` runs `archogen check` on every description in the repository, 120
+  today, and compares each exit code and set of diagnostic codes with a frozen table. A verdict that moves
+  fails the test unless the table is regenerated in the same change, which puts the move in the diff.
+- This is §15's "a source description retains its meaning", made a test. Three engine fixes in the last day
+  each checked it by hand by building the tool twice. The table matches that hand check on all 120 exit
+  codes.
+- As a test of the test, making the deadline rule refuse deadline = period moves 20 verdicts, each named.
+  That mutation is now a permanent entry in the mutation catalog.
+
 ## archogen — everything versioned is in one register, derived from the code
 
 `ARCHOGEN-PROGRAM-0133` (leaf `PROGRAM.6.1`). A new book chapter, "What is versioned, and what changing it

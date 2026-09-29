@@ -126,3 +126,14 @@ from
 to
         if ordering.is_ge() {
 end
+
+mutation constrained-deadline-seen-by-the-frozen-verdicts
+file crates/eadl-model/src/workload.rs
+test -p archogen-cli --test verdicts
+expect killed
+why PROGRAM.6.2: an engine change that moves a description's verdict must be seen by the frozen table, not only by the unit test beside the rule.
+from
+        if ordering.is_gt() {
+to
+        if ordering.is_ge() {
+end
