@@ -6,8 +6,9 @@
 //! unresolved import brings in — while `archogen help check` said "elaborate and type-check", and nothing in
 //! production called the elaborator. It made the commands say so, and coupled the summary to the
 //! capability. `M1.29.2` wired the elaborator in: a module file is now elaborated from its module path
-//! (`docs/semantics/reference.md` §6 rule 7), every composition rule of §6 is enforced, and a tree that
-//! elaborates cleanly is `unimplemented` until `M1.29.3` gives the later passes a name rule to read it with.
+//! (`docs/semantics/reference.md` §6 rule 7) and every composition rule of §6 is enforced. `M1.29.3` gave the
+//! later passes a name rule to read an elaborated tree with (§6 rules 9 and 10), so a tree is now
+//! type-checked like a single description, and the summary says "elaborate and type-check" again — truly.
 //!
 //! The pipeline-level cases — every `module-` code, `check` against `build` — are in `module_cases.rs`,
 //! over the tracked fixtures under `docs/semantics/modules/`. This file holds what those cannot: the
@@ -17,7 +18,6 @@
 
 use std::path::{Path, PathBuf};
 
-use archogen_cli::check_cmd::MODULE_TYPE_CHECK_OWNER;
 use archogen_cli::{run, spec, Status};
 
 /// `docs/book/src/modules.md`'s opening example, byte for byte: the module file a reader of the book is
@@ -171,10 +171,12 @@ fn a_module_is_recognised_after_the_language_version_identifier() {
         "hw.timer.eadl",
         "(eadl-version eadl/1)\n(defmodule hw.timer (version 1 0))\n",
     );
-    let (status, _, err) = invoke(&["check", &path]);
-    assert_eq!(status, Status::Unimplemented, "{err}");
-    assert!(err.contains("elaborated into 1 instance(s)"), "{err}");
-    assert!(err.contains("(root) = hw.timer 1.0"), "{err}");
+    let (status, out, err) = invoke(&["check", &path]);
+    assert_eq!(status, Status::Ok, "{err}");
+    assert!(
+        out.contains("elaborated from 1 instance(s): (root) = hw.timer 1.0"),
+        "{out}"
+    );
 }
 
 #[test]
@@ -212,8 +214,8 @@ fn the_check_summary_says_it_elaborates_exactly_while_a_module_file_is_elaborate
     let summary = spec::command("check").expect("check exists").summary;
     let dir = scratch("summary-elaborate");
     let path = write(&dir, "app.system.eadl", BOOK_OPENING_EXAMPLE);
-    let (_, _, err) = invoke(&["check", &path]);
-    let elaborated = err.contains("error[module-") || err.contains("elaborated into");
+    let (_, out, err) = invoke(&["check", &path]);
+    let elaborated = err.contains("error[module-") || out.contains("elaborated from");
     assert_eq!(
         summary.contains("elaborat"),
         elaborated,
@@ -224,9 +226,9 @@ fn the_check_summary_says_it_elaborates_exactly_while_a_module_file_is_elaborate
 
 #[test]
 fn the_check_summary_claims_to_type_check_a_module_tree_only_once_one_is() {
-    // The second clause, coupled the same way: "elaborate and type-check a description" is a claim that an
-    // elaborated tree is type-checked, which is `M1.29.3`. Until then the summary states the two halves
-    // separately, and a clean tree is answered `unimplemented`.
+    // The second claim, coupled the same way: "elaborate and type-check a description" says an elaborated
+    // tree is type-checked. `M1.29.2` could not say it — a clean tree was answered `unimplemented` — and stated
+    // the two halves separately; `M1.29.3` made it true, and this leg is what keeps it that way.
     let summary = spec::command("check").expect("check exists").summary;
     let path = repo_root()
         .join("docs/semantics/modules/app.system.eadl")
@@ -243,28 +245,5 @@ fn the_check_summary_claims_to_type_check_a_module_tree_only_once_one_is() {
         } else {
             "refused as unimplemented"
         }
-    );
-}
-
-#[test]
-fn the_module_refusal_names_a_leaf_the_tree_declares_and_has_not_closed() {
-    // A refusal that names a closed or absent leaf routes the author to nothing. Held to the task tree
-    // rather than to the id's shape, so closing the owner without removing the refusal fails here.
-    let tree = std::fs::read_to_string(repo_root().join("docs/tasks/M1.md"))
-        .expect("the M1 task tree is readable");
-    let header = format!("- ID: `{MODULE_TYPE_CHECK_OWNER}`");
-    let mut lines = tree.lines().skip_while(|line| *line != header);
-    assert_eq!(
-        lines.next(),
-        Some(header.as_str()),
-        "the refusal names {MODULE_TYPE_CHECK_OWNER}, which docs/tasks/M1.md does not declare"
-    );
-    let status = lines
-        .next()
-        .and_then(|line| line.trim_start().strip_prefix("Status: "))
-        .expect("a leaf's first field is its status");
-    assert!(
-        !status.starts_with("`done`"),
-        "{MODULE_TYPE_CHECK_OWNER} is closed and the refusal still names it: {status}"
     );
 }

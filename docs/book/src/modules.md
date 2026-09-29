@@ -22,17 +22,17 @@ namespaces, explicit exports, typed parameters and version constraints.
 
 ## What you can run today
 
-`archogen check` **elaborates** a module file. The example above is
+`archogen check` **elaborates and type-checks** a module file. The example above is
 `docs/semantics/modules/app.system.eadl`, and the modules it imports sit beside it — that directory is its
 **module path**:
 
 ```console
 $ archogen check docs/semantics/modules/app.system.eadl
-archogen: unimplemented: docs/semantics/modules/app.system.eadl elaborated into 4 instance(s), and no command type-checks an elaborated module tree yet
-  instances: platform.timer = hw.timer 1.0, platform = hw.soc 1.2, clock = os.time 2.0, (root) = app.system 1.0
-  hint: every composition rule of docs/semantics/reference.md §6 held. The declarations of an elaborated tree need the name rule of task-tree leaf M1.29.3 (docs/TASK_TREE.md) before the later passes can read them — how a name written inside an imported module resolves, and what an `export` hides
+docs/semantics/modules/app.system.eadl: accepted against profile `rt-static-up-v1` (4 declaration(s))
+  elaborated from 4 instance(s): platform.timer = hw.timer 1.0, platform = hw.soc 1.2, clock = os.time 2.0, (root) = app.system 1.0
+  this checks the description, not a system: no resolution, generation or analysis has run
 $ echo $?
-20
+0
 ```
 
 Two rules decide what an import reads, and both are normative (`docs/semantics/reference.md` §6):
@@ -48,14 +48,15 @@ Two rules decide what an import reads, and both are normative (`docs/semantics/r
   on a filesystem that folds case it would be the same file as `hw.soc` on one machine and a different
   one on the next.
 
-**Every composition rule of §6 is enforced, and the tree is not yet type-checked.** Exit 20 is a
-statement about the tool: the four instances above are exactly what the rules produce, and what stops the
-command is the next step. The declarations of an elaborated tree need a **name rule** — how a name
-written *inside* an imported module resolves, and what an `export` hides from its importer — before the
-schema, presence and refinement passes can read them, and §6 does not state one yet. That is leaf
-`M1.29.3`; checking the tree with names nothing resolves would report missing facts that are not missing.
-Module parameters reaching the declarations they parameterize is `M1.29.4` — today a `(with …)` binding
-is recorded and then used by nothing. `archogen build` answers a module file exactly as `check` does.
+After elaboration the tree's declarations go through **every pass a single description gets** — the same
+code, in the same order ([Checking a description](checking.md)) — once two more rules have said what their
+names mean. They are the subject of [Names carry their whole path](#names-carry-their-whole-path) below.
+`archogen build` answers a module file exactly as `check` does, and then meets the S0 path's own limits.
+
+Still open, each owned by a leaf: module **parameters** reach no declaration yet — a `(with …)` binding is
+recorded and used by nothing (`M1.29.4`); and nothing yet makes a **name mean one declaration** — a
+single description can declare one name twice, and a module can collide with an import's names
+(`M1.33`, filed while writing the rules below).
 
 Every refusal this chapter shows is rendered by the command from a file in `docs/semantics/modules/`,
 which holds one case for every `module-` code a command can reach; the one code without a case,
@@ -84,6 +85,9 @@ initialization order, resolution, emission — relies on that.
 
 ## Names carry their whole path
 
+**Rule 9.** A declaration in an imported instance is named by the path of aliases that reached it, and the
+root's declarations keep their own names:
+
 ```text
 platform.timer.timer.counter     ← hw.timer, imported by hw.soc, imported by app.system
 platform.soc.bus
@@ -92,7 +96,55 @@ app.rt                            ← the root is unqualified
 ```
 
 An alias defaults to the module's last dotted segment, which is what an author means nine times
-out of ten and is still explicit in the resulting names.
+out of ten and is still explicit in the resulting names. Two instances of one module therefore declare
+different names — `fast.timer.counter` and `slow.timer.counter` — which is what lets them coexist.
+
+**Rule 10.** A name a module *writes* — in `uses`, `needs` or `refines`, the clauses that name other
+declarations — is resolved where it was written: first among that module's own declarations, by their
+local names; then as `alias.name` through one of its own imports, which must be a name that import's
+module **exports**; and otherwise it is a word of the capability vocabulary, like `counter-width`, and
+is left as it is. So a reusable module names its own parts without knowing where it will be imported:
+
+```text
+(defmodule hw.bus
+  (version 1 0)
+  (export bus.main bus.fast)
+  (defplatform bus.main
+    (uses bus.timer)
+    (offers (bus-width 32 bit)))
+  (defplatform bus.fast
+    (refines bus.main)
+    (needs bus.clock)
+    (offers (bus-width 32 bit)))
+  (defblock bus.timer
+    (offers (counter-width 32 bit)))
+  (defblock bus.clock
+    (offers (clock-rate 10 MHz))))
+```
+
+Imported as `board`, `bus.fast`'s `(refines bus.main)` means `board.bus.main` and its `(needs bus.clock)`
+means `board.bus.clock` — without the rule both would be looked for at the root and reported missing:
+
+```console
+$ archogen check docs/semantics/modules/app.sibling.eadl
+docs/semantics/modules/app.sibling.eadl: accepted against profile `rt-static-up-v1` (5 declaration(s))
+  elaborated from 2 instance(s): board = hw.bus 1.0, (root) = app.sibling 1.0
+  this checks the description, not a system: no resolution, generation or analysis has run
+```
+
+An **export** is what an importer may name, and there is no re-export: `app.system` imports `hw.soc`,
+which imports `hw.timer`, but `hw.soc` exports only `soc.bus`, so the timer is not `app.system`'s to name:
+
+```console
+$ archogen check docs/semantics/modules/bad.not-exported-transitive.eadl
+error[module-not-exported]: module `hw.soc`, imported as `platform`, exports no `timer.timer.counter`
+  --> docs/semantics/modules/bad.not-exported-transitive.eadl:12:21
+   |
+12 |     (requires (uses platform.timer.timer.counter))))
+   |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not exported by that import
+  = hint: module `hw.soc` exports `soc.bus`, and declares no `timer.timer.counter` — a module's own imports are not visible to its importer, because §6 has no re-export (rule 10); import the module that declares it, or name one of those
+archogen: invalid-description: 1 diagnostic(s) in docs/semantics/modules/bad.not-exported-transitive.eadl
+```
 
 ## Precise composition errors
 

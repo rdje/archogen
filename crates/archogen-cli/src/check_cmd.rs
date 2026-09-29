@@ -1,32 +1,25 @@
-//! `archogen check` — elaborate a module tree, and type-check a description, against a profile.
+//! `archogen check` — elaborate and type-check a description against a profile.
 //!
 //! The first command of the `ROADMAP.md` §10.2 surface to become real. It runs the frontend
 //! pipeline (`eadl_model::check`) and maps its §5.5 verdict to this process's exit code through
 //! [`Status::from_verdict`], so the number a script branches on and the word a human reads come
 //! from the same place.
 //!
-//! ⛔ **A module tree is elaborated and not yet type-checked.** `ROADMAP.md` §10.1 puts elaboration first.
-//! A file [`is_module_file`] recognises is elaborated by [`elaborate_module_file`] from the module path of
-//! `docs/semantics/reference.md` §6 rule 7, and every composition rule of §6 is enforced — but the later
-//! passes cannot read an elaborated program until the name rule of leaf `M1.29.3` exists, so a tree that
-//! elaborates cleanly is answered `unimplemented` rather than checked with names nothing resolves. Both
-//! commands route through those two functions.
+//! A description is either one file or a module tree, and [`frontend`] is where the two meet: a file
+//! [`is_module_file`] recognises is elaborated from its module path (`docs/semantics/reference.md` §6 rule
+//! 7), its names are resolved (rules 9 and 10), and its declarations go through the passes a single file
+//! gets. Both commands call it, so they cannot disagree about which file is which or what it means.
 
 use std::io::Write;
 use std::path::Path;
 
 use eadl_front::{elaborate_source, read, DirectoryModules, SourceId, SourceMap, Verdict};
-use eadl_model::check::{check, shipped_registry};
-use eadl_model::profile;
+use eadl_model::check::{check, check_program, shipped_registry, Outcome};
+use eadl_model::kind::Registry;
+use eadl_model::profile::{self, Profile};
 
 use crate::cli::Parsed;
 use crate::status::Status;
-
-/// The leaf that makes an elaborated module tree something `check` and `build` type-check.
-///
-/// A constant rather than a literal inside the message, so a test can hold it to the task tree: the
-/// refusal names a leaf the tree declares, and it cannot outlive that leaf being closed.
-pub const MODULE_TYPE_CHECK_OWNER: &str = "M1.29.3";
 
 /// The kind modules shipped with the toolchain.
 ///
@@ -107,11 +100,10 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
         return Status::ToolFailure;
     };
 
-    if is_module_file(&sources, id) {
-        return elaborate_module_file(&mut sources, id, path, err, "");
-    }
-
-    let outcome = check(&sources, id, &registry, active);
+    let (outcome, instances) = match frontend(&mut sources, id, path, &registry, active, err) {
+        Frontend::Failed(status) => return status,
+        Frontend::Checked { outcome, instances } => (outcome, instances),
+    };
     let status = Status::from_verdict(outcome.verdict);
 
     if outcome.is_ok() {
@@ -121,6 +113,14 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
             active.id,
             outcome.declarations.len()
         );
+        if let Some(instances) = &instances {
+            let _ = writeln!(
+                out,
+                "  elaborated from {} instance(s): {}",
+                instances.len(),
+                instances.join(", ")
+            );
+        }
         // ⚠️ Deliberately modest wording. Acceptance means the description is well-formed, in
         // profile, and internally consistent — it is not a statement that any system built from
         // it will behave. §7.1's evidence categories start after this point.
@@ -161,25 +161,50 @@ pub fn is_module_file(sources: &SourceMap, id: SourceId) -> bool {
             .any(|form| form.head() == Some("defmodule"))
 }
 
-/// Elaborate the module file at `id` — already in `sources` as `path` — from its module path, and answer
-/// for it. `tail` ends the summary line, so `build` can say that nothing was generated.
+/// What the frontend concluded about the file a command was given.
+#[derive(Debug)]
+pub enum Frontend {
+    /// The invocation failed before any verdict — an imported module that exists and cannot be read. Already
+    /// reported; the status is the command's to return.
+    Failed(Status),
+    /// A §5.5 verdict about the description, with the instances it was elaborated from when it is a module
+    /// tree (`<alias path> = <module> <version>`, the root as `(root)`).
+    Checked {
+        /// The verdict, its diagnostics, and the declarations the later steps read.
+        outcome: Outcome,
+        /// `Some` for a module tree.
+        instances: Option<Vec<String>>,
+    },
+}
+
+/// Run the frontend over the file at `id`, already in `sources` as `path`: `check` for a description, and for
+/// a module file, elaboration from its module path followed by [`check_program`].
 ///
-/// Three answers, in the order that makes each one true:
+/// Three answers for a module file, in the order that makes each one true:
 ///
 /// 1. **A module file that exists and cannot be read is a failure of the invocation** (§6 rule 7): `usage`,
 ///    exactly as for an unreadable description, and none of the elaborator's diagnostics — it would have
 ///    called the file missing, which is a false statement about the description.
-/// 2. **A composition problem is a verdict about the description**: every diagnostic, and the verdict their
-///    codes carry through [`Verdict::of_code`], the one accessor every consumer shares.
-/// 3. **A tree that elaborates cleanly is `unimplemented`**, naming [`MODULE_TYPE_CHECK_OWNER`] and the
-///    instances it found — not checked with names nothing resolves, and not accepted either.
-pub fn elaborate_module_file(
+/// 2. **A composition problem is a verdict about the description**: every elaboration diagnostic, with the
+///    verdict their codes carry through [`Verdict::of_code`], the one accessor every consumer shares — and
+///    nothing past elaboration, because the passes cannot read a tree that did not compose.
+/// 3. **A tree that composes is resolved and checked** by [`check_program`], so it gets every pass a single
+///    description gets.
+pub fn frontend(
     sources: &mut SourceMap,
     id: SourceId,
     path: &str,
+    registry: &Registry,
+    active: &Profile,
     err: &mut dyn Write,
-    tail: &str,
-) -> Status {
+) -> Frontend {
+    if !is_module_file(sources, id) {
+        return Frontend::Checked {
+            outcome: check(sources, id, registry, active),
+            instances: None,
+        };
+    }
+
     // §6 rule 7: the module path is the directory holding the description the command was given.
     let module_path = Path::new(path).parent().unwrap_or_else(|| Path::new(""));
     let modules = DirectoryModules::new(module_path);
@@ -198,7 +223,7 @@ pub fn elaborate_module_file(
             err,
             "  hint: the module exists and could not be read — check its permissions and that it is UTF-8 text"
         );
-        return Status::Usage;
+        return Frontend::Failed(Status::Usage);
     }
 
     if diagnostics.has_errors() {
@@ -208,18 +233,17 @@ pub fn elaborate_module_file(
             .map(|diagnostic| Verdict::of_code(diagnostic.code))
             .max_by_key(|verdict| verdict.precedence())
             .unwrap_or(Verdict::InvalidDescription);
-        let status = Status::from_verdict(verdict);
-        let _ = write!(err, "{}", diagnostics.render(sources));
-        let _ = writeln!(
-            err,
-            "archogen: {}: {} diagnostic(s) in {path}{tail}",
-            status.slug(),
-            diagnostics.len()
-        );
-        return status;
+        return Frontend::Checked {
+            outcome: Outcome {
+                verdict,
+                diagnostics: diagnostics.items().to_vec(),
+                declarations: Vec::new(),
+            },
+            instances: None,
+        };
     }
 
-    let instances: Vec<String> = program
+    let instances = program
         .instances
         .iter()
         .map(|instance| {
@@ -231,22 +255,10 @@ pub fn elaborate_module_file(
             format!("{name} = {} {}", instance.module, instance.version)
         })
         .collect();
-    let _ = writeln!(
-        err,
-        "archogen: {}: {path} elaborated into {} instance(s), and no command type-checks an elaborated \
-         module tree yet{tail}",
-        Status::Unimplemented.slug(),
-        program.len()
-    );
-    let _ = writeln!(err, "  instances: {}", instances.join(", "));
-    let _ = writeln!(
-        err,
-        "  hint: every composition rule of docs/semantics/reference.md §6 held. The declarations of an \
-         elaborated tree need the name rule of task-tree leaf {MODULE_TYPE_CHECK_OWNER} (docs/TASK_TREE.md) \
-         before the later passes can read them — how a name written inside an imported module resolves, and \
-         what an `export` hides"
-    );
-    Status::Unimplemented
+    Frontend::Checked {
+        outcome: check_program(&program, registry, active),
+        instances: Some(instances),
+    }
 }
 
 /// The shipped kind modules, owned so a `SourceMap` can take them.

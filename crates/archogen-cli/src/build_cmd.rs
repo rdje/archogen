@@ -26,10 +26,10 @@ use std::path::Path;
 
 use archogen_s0::{emit, interpret};
 use eadl_front::SourceMap;
-use eadl_model::check::{check, shipped_registry};
+use eadl_model::check::shipped_registry;
 use eadl_model::profile;
 
-use crate::check_cmd::{elaborate_module_file, embedded_modules, is_module_file};
+use crate::check_cmd::{embedded_modules, frontend, Frontend};
 use crate::cli::Parsed;
 use crate::status::Status;
 
@@ -116,13 +116,13 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
         return Status::ToolFailure;
     };
 
-    // The routing `archogen check` uses, so the two commands cannot disagree about a module file.
-    if is_module_file(&sources, id) {
-        return elaborate_module_file(&mut sources, id, path, err, " — nothing was generated");
-    }
-
-    // The whole frontend, not a subset. A description that does not check does not build.
-    let outcome = check(&sources, id, &registry, active);
+    // The whole frontend, not a subset — the same function `archogen check` calls, so the two commands
+    // cannot disagree about a description or a module tree. A description that does not check does not
+    // build.
+    let outcome = match frontend(&mut sources, id, path, &registry, active, err) {
+        Frontend::Failed(status) => return status,
+        Frontend::Checked { outcome, .. } => outcome,
+    };
     if !outcome.is_ok() {
         let status = Status::from_verdict(outcome.verdict);
         let _ = write!(err, "{}", outcome.render(&sources));

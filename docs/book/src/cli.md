@@ -14,7 +14,7 @@ USAGE:
     archogen help <COMMAND>
 
 COMMANDS:
-    check    elaborate a module tree, and type-check a description, against a profile
+    check    elaborate and type-check a description against a profile
     resolve  resolve providers and resources into an independently checked build plan   [unimplemented — tracked by leaf M3.4]
     build    generate, assemble and build a complete system and its simulator   [experimental — the S0 path: one fixed realization, periodic releases, hosted playground; completed by leaf M4.2]
     analyze  run an analysis for one named property over a build   [unimplemented — tracked by leaf M2.6]
@@ -27,7 +27,7 @@ COMMANDS:
 
 | Command | Does | Built by |
 | --- | --- | --- |
-| `archogen check <DESCRIPTION> [--profile <PROFILE>]` | elaborate a module tree, and type-check a description, against a profile | **built** — a module tree is elaborated and not yet type-checked (leaf `M1.29.3`); see [Checking a description](checking.md) and [Modules and composition](modules.md) |
+| `archogen check <DESCRIPTION> [--profile <PROFILE>]` | elaborate and type-check a description against a profile | **built** — a description is one file or a module tree; see [Checking a description](checking.md) and [Modules and composition](modules.md) |
 | `archogen resolve <DESCRIPTION> [--profile <P>] [--locked] --out <PLAN>` | resolve providers and resources into an independently checked build plan | leaf `M3.4` |
 | `archogen build <DESCRIPTION> [--profile <P>] --out <DIR>` | generate, assemble and build a complete system and its simulator | **experimental** — the S0 path only, see [The S0 early generation path](s0.md); leaf `M4.2` completes it |
 | `archogen analyze <BUILD> --property <PROPERTY>` | run an analysis for one named property | leaf `M2.6` |
@@ -35,14 +35,13 @@ COMMANDS:
 | `archogen explain <BUILD> --requirement <REQUIREMENT>` | explain how one requirement was realized, or why it could not be | leaf `M3.4` |
 | `archogen replay <MANIFEST>` | replay a recorded failure manifest and check its identity | leaf `M4.7` |
 
-`check` is built, and its summary states **two** capabilities because they are not yet one. A module
-file is **elaborated** from its module path (`docs/semantics/reference.md` §6 rule 7) and every
-composition rule of §6 is enforced; a tree that elaborates cleanly is answered `unimplemented` (exit 20)
-naming leaf `M1.29.3`, because the later passes cannot read an elaborated program until §6 states how a
-name inside an imported module resolves. A single description is **type-checked** by every pass. The
-summary used to say "elaborate and type-check a description" while no command elaborated anything; two
-legs in `crates/archogen-cli/tests/module_files.rs` now couple each clause to its capability, so the
-sentence can neither run ahead of the code nor lag behind it.
+`check` is built, over one file or a module tree. A module file is **elaborated** from its module path
+(`docs/semantics/reference.md` §6 rule 7), its names are resolved (§6 rules 9 and 10), and its
+declarations are **type-checked** by every pass a single description gets. The summary said "elaborate
+and type-check" from the day `spec.rs` was written (`2026-09-13`) while no command elaborated anything,
+until leaf `M1.29.1`; then it stated the two halves apart while only one was true of a module tree
+(`M1.29.2`); two legs in `crates/archogen-cli/tests/module_files.rs` couple each word to its capability,
+so the sentence can neither run ahead of the code nor lag behind it.
 
 `build` **runs, but over a narrower path than its §10.2 contract**, and the
 surface has a third state to say so rather than lying in either direction:

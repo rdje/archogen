@@ -1,0 +1,20 @@
+; module: hw.bus
+; role: imported by the cases in this directory, which is their module path
+; why: §6 rule 10 — declarations that name their own siblings by local name, in `uses`, `needs` and `refines`
+;
+(eadl-version eadl/1)
+
+(defmodule hw.bus
+  (version 1 0)
+  (export bus.main bus.fast)
+  (defplatform bus.main
+    (uses bus.timer)
+    (offers (bus-width 32 bit)))
+  (defplatform bus.fast
+    (refines bus.main)
+    (needs bus.clock)
+    (offers (bus-width 32 bit)))
+  (defblock bus.timer
+    (offers (counter-width 32 bit)))
+  (defblock bus.clock
+    (offers (clock-rate 10 MHz))))

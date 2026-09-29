@@ -264,6 +264,11 @@ pub struct Instance {
     pub version: Version,
     /// The dotted path of aliases from the root, e.g. `soc.timer`. Empty for the root.
     pub path: String,
+    /// The alias its importer bound it to — the last step of [`Instance::path`]. Empty for the root.
+    pub alias: String,
+    /// The names its module exports, which are all an importer may name through [`Instance::alias`]
+    /// (`docs/semantics/reference.md` §6 rule 10).
+    pub exports: Vec<String>,
     /// Resolved parameter bindings, sorted by name.
     pub bindings: Vec<(String, Form)>,
     /// The instance ids this one imports, in source order.
@@ -273,6 +278,14 @@ pub struct Instance {
 }
 
 impl Instance {
+    /// Whether this instance declares `name` itself.
+    #[must_use]
+    pub fn declares(&self, name: &str) -> bool {
+        self.declarations
+            .iter()
+            .any(|form| form.items().get(1).and_then(Form::as_symbol) == Some(name))
+    }
+
     /// A declaration's fully qualified name: the instance path and the local name.
     #[must_use]
     pub fn qualify(&self, name: &str) -> String {
@@ -317,6 +330,86 @@ impl Program {
             }
         }
         out
+    }
+
+    /// Resolve `name`, written at `span` inside instance `id`, by `docs/semantics/reference.md` §6 rule 10.
+    ///
+    /// `Ok(Some(qualified))` when it names a declaration in the instance's scope — its own, or one an import
+    /// exports; `Ok(None)` when it names none, which makes it a name of the capability vocabulary to be left
+    /// as written; `Err` when it is written through one of the instance's aliases and that import's module
+    /// does not export it.
+    ///
+    /// # Errors
+    ///
+    /// `module-not-exported`, naming what the module does export.
+    ///
+    /// # Panics
+    ///
+    /// Only if `id` is not an instance of this program.
+    pub fn resolve(
+        &self,
+        id: usize,
+        name: &str,
+        span: Span,
+    ) -> Result<Option<String>, Box<Diagnostic>> {
+        let instance = &self.instances[id];
+        // An alias never shadows a local declaration: the instance's own names come first.
+        if instance.declares(name) {
+            return Ok(Some(instance.qualify(name)));
+        }
+        // Through an alias: the longest one that is a whole leading run of segments of `name`, so an alias
+        // written `(as my.timer)` is not mistaken for `my`.
+        let Some(import) = instance
+            .imports
+            .iter()
+            .map(|child| &self.instances[*child])
+            .filter(|child| {
+                name.strip_prefix(child.alias.as_str())
+                    .is_some_and(|rest| rest.starts_with('.') && rest.len() > 1)
+            })
+            .max_by_key(|child| child.alias.len())
+        else {
+            return Ok(None);
+        };
+        let exported = &name[import.alias.len() + 1..];
+        if import.exports.iter().any(|export| export == exported) {
+            return Ok(Some(import.qualify(exported)));
+        }
+        let exports: Vec<&str> = import.exports.iter().map(String::as_str).collect();
+        Err(Box::new(Diagnostic::error(
+            "module-not-exported",
+            if import.declares(exported) {
+                format!(
+                    "`{exported}` is declared by module `{}` but not exported, so `{name}` is not visible \
+                     through `{}`",
+                    import.module, import.alias
+                )
+            } else {
+                format!(
+                    "module `{}`, imported as `{}`, exports no `{exported}`",
+                    import.module, import.alias
+                )
+            },
+            Label::new(span, "not exported by that import"),
+            {
+                let exports = if exports.is_empty() {
+                    format!("module `{}` exports nothing", import.module)
+                } else {
+                    format!("module `{}` exports {}", import.module, join(&exports))
+                };
+                // ⛔ Only suggest exporting a name the module declares: an export of anything else is
+                // `module-dangling-export`, so that repair would trade one refusal for another.
+                if import.declares(exported) {
+                    format!("{exports}; add `(export {exported})` to it, or name one of those (§6 rule 10)")
+                } else {
+                    format!(
+                        "{exports}, and declares no `{exported}` — a module's own imports are not visible to \
+                         its importer, because §6 has no re-export (rule 10); import the module that declares \
+                         it, or name one of those"
+                    )
+                }
+            },
+        )))
     }
 
     /// How many instances were created.
@@ -645,7 +738,7 @@ pub fn elaborate(
     root: &str,
 ) -> (Program, Diagnostics) {
     let mut elaborator = Elaborator::new(sources, modules);
-    elaborator.instantiate(root, String::new(), &[], None, None);
+    elaborator.instantiate(root, Request::root());
     elaborator.finish()
 }
 
@@ -661,8 +754,50 @@ pub fn elaborate_source(
     root: SourceId,
 ) -> (Program, Diagnostics) {
     let mut elaborator = Elaborator::new(sources, modules);
-    elaborator.instantiate_source(root, None, String::new(), &[], None, None);
+    elaborator.instantiate_source(root, None, Request::root());
     elaborator.finish()
+}
+
+/// What an importer asks of the instance it creates: where the instance sits, what it binds, and what it
+/// requires. The root asks for nothing.
+struct Request<'r> {
+    /// The alias the importer bound it to; empty for the root.
+    alias: &'r str,
+    /// Its dotted alias path from the root; empty for the root.
+    path: String,
+    /// Parameter bindings, in source order.
+    arguments: &'r [(String, Form)],
+    /// The minimum version the import requires, if it states one.
+    required_version: Option<Version>,
+    /// The import clause, for labels; `None` for the root, which nothing imported.
+    site: Option<Span>,
+}
+
+impl<'r> Request<'r> {
+    const fn root() -> Self {
+        Self {
+            alias: "",
+            path: String::new(),
+            arguments: &[],
+            required_version: None,
+            site: None,
+        }
+    }
+
+    /// The request `import` makes, written in the instance at `parent_path`.
+    fn of(import: &'r ImportDecl, parent_path: &str) -> Self {
+        Self {
+            alias: &import.alias,
+            path: if parent_path.is_empty() {
+                import.alias.clone()
+            } else {
+                format!("{parent_path}.{}", import.alias)
+            },
+            arguments: &import.arguments,
+            required_version: import.required_version,
+            site: Some(import.span),
+        }
+    }
 }
 
 struct Elaborator<'a> {
@@ -695,14 +830,8 @@ impl<'a> Elaborator<'a> {
     }
 
     /// Find an imported module by name, and elaborate it as one instance. Returns the instance's id.
-    fn instantiate(
-        &mut self,
-        module_name: &str,
-        path: String,
-        arguments: &[(String, Form)],
-        required_version: Option<Version>,
-        site: Option<Span>,
-    ) -> Option<usize> {
+    fn instantiate(&mut self, module_name: &str, request: Request<'_>) -> Option<usize> {
+        let site = request.site;
         // ⛔ The one failure that must stop rather than collect: continuing into a cycle does
         // not terminate. The whole chain is reported, because "there is a cycle" without the
         // path is a puzzle rather than a diagnostic.
@@ -745,14 +874,7 @@ impl<'a> Elaborator<'a> {
             return None;
         };
 
-        self.instantiate_source(
-            source_id,
-            Some(module_name),
-            path,
-            arguments,
-            required_version,
-            site,
-        )
+        self.instantiate_source(source_id, Some(module_name), request)
     }
 
     /// Elaborate the module held by `source_id` as one instance. Returns the instance's id.
@@ -763,11 +885,15 @@ impl<'a> Elaborator<'a> {
         &mut self,
         source_id: SourceId,
         imported_as: Option<&str>,
-        path: String,
-        arguments: &[(String, Form)],
-        required_version: Option<Version>,
-        site: Option<Span>,
+        request: Request<'_>,
     ) -> Option<usize> {
+        let Request {
+            alias,
+            path,
+            arguments,
+            required_version,
+            site,
+        } = request;
         let (document, read_diagnostics) = read(self.sources, source_id);
         let had_read_errors = read_diagnostics.has_errors();
         for item in read_diagnostics.items() {
@@ -855,18 +981,7 @@ impl<'a> Elaborator<'a> {
             }
             aliases.insert(import.alias.as_str(), import.span);
 
-            let child_path = if path.is_empty() {
-                import.alias.clone()
-            } else {
-                format!("{path}.{}", import.alias)
-            };
-            if let Some(id) = self.instantiate(
-                &import.module,
-                child_path,
-                &import.arguments,
-                import.required_version,
-                Some(import.span),
-            ) {
+            if let Some(id) = self.instantiate(&import.module, Request::of(import, &path)) {
                 import_ids.push(id);
             }
         }
@@ -879,6 +994,12 @@ impl<'a> Elaborator<'a> {
             module: module.name.clone(),
             version: module.version,
             path,
+            alias: alias.to_string(),
+            exports: module
+                .exports
+                .iter()
+                .map(|export| export.name.clone())
+                .collect(),
             bindings,
             imports: import_ids,
             declarations: module.declarations,

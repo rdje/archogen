@@ -7,6 +7,7 @@
 //! | Pass | Owns | Verdict on failure |
 //! |---|---|---|
 //! | read | syntax and spans (`M1.1`) | `invalid-description` |
+//! | resolve | a module tree's names, `docs/semantics/reference.md` §6 rules 9–10 (`M1.29.3`) — [`check_program`] only | `invalid-description` |
 //! | boundary | implementation content (`M0.3`, F27) | `invalid-description` |
 //! | schema | the declaration frame (`M1.2`) | `invalid-description` |
 //! | profile | the capabilities the profile refuses (`M0.4`) | `unsupported-profile` |
@@ -33,11 +34,13 @@
 use std::collections::BTreeSet;
 
 use eadl_front::language_version::{declarations, is_identifier};
-use eadl_front::{read, Diagnostic, Form, Label, SourceId, SourceMap, Verdict};
+use eadl_front::{
+    read, Diagnostic, Form, Instance, Label, Program, SourceId, SourceMap, Span, Verdict,
+};
 
 use crate::boundary;
 use crate::kind::{read_kind, validate, Registry};
-use crate::presence::FactMap;
+use crate::presence::{FactMap, NAME_CLAUSES};
 use crate::profile::{self, Profile};
 use crate::refinement::{self, Facets};
 use crate::workload;
@@ -156,8 +159,6 @@ pub fn check(
     registry: &Registry,
     active_profile: &Profile,
 ) -> Outcome {
-    let mut findings: Vec<Finding> = Vec::new();
-
     // ── read ─────────────────────────────────────────────────────────────────────────────────
     let (document, read_diagnostics) = read(sources, source);
     // §8 of `docs/semantics/reference.md`: the language-version identifier is a statement about the
@@ -178,7 +179,131 @@ pub fn check(
             declarations: forms,
         };
     }
+    passes(forms, registry, active_profile, Vec::new())
+}
 
+/// Check an elaborated module tree, by `docs/semantics/reference.md` §6 rules 9 and 10.
+///
+/// Every declaration is renamed to the path of its instance, and every operand of a `uses`, `needs` or
+/// `refines` clause is resolved in the scope of the instance that wrote it, through [`Program::resolve`]. The
+/// declarations then go through **exactly** the passes [`check`] runs — one sequence, so a module tree is
+/// judged by the same rules as a single description and cannot drift from it.
+#[must_use]
+pub fn check_program(program: &Program, registry: &Registry, active_profile: &Profile) -> Outcome {
+    let mut unresolved = Vec::new();
+    let forms: Vec<Form> = program
+        .instances
+        .iter()
+        .flat_map(|instance| {
+            instance
+                .declarations
+                .iter()
+                .map(|declaration| {
+                    resolve_declaration(program, instance, declaration, &mut unresolved)
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect();
+    let mut findings = Vec::new();
+    push(&mut findings, Verdict::InvalidDescription, unresolved);
+    passes(forms, registry, active_profile, findings)
+}
+
+/// Rule 9 for the declaration's own name, and rule 10 for every name it writes.
+fn resolve_declaration(
+    program: &Program,
+    instance: &Instance,
+    form: &Form,
+    errors: &mut Vec<Diagnostic>,
+) -> Form {
+    let Form::List { items, span } = form else {
+        return form.clone();
+    };
+    let items = items
+        .iter()
+        .enumerate()
+        .map(|(index, item)| match (index, item) {
+            (1, Form::Symbol { name, span }) => Form::Symbol {
+                name: instance.qualify(name),
+                span: *span,
+            },
+            (0 | 1, _) => item.clone(),
+            _ => resolve_clause(program, instance.id, item, errors),
+        })
+        .collect();
+    Form::List { items, span: *span }
+}
+
+/// Walk a clause; the operands of a name clause are resolved, anything else is walked for one.
+fn resolve_clause(program: &Program, id: usize, form: &Form, errors: &mut Vec<Diagnostic>) -> Form {
+    let Form::List { items, span } = form else {
+        return form.clone();
+    };
+    let names = form.head().is_some_and(|head| NAME_CLAUSES.contains(&head));
+    let items = items
+        .iter()
+        .enumerate()
+        .map(|(index, item)| match (index, names) {
+            (0, _) => item.clone(),
+            (_, true) => resolve_operand(program, id, item, errors),
+            (_, false) => resolve_clause(program, id, item, errors),
+        })
+        .collect();
+    Form::List { items, span: *span }
+}
+
+/// A name operand is a symbol, or a list naming its head — the two shapes `presence.rs` reads as names.
+fn resolve_operand(
+    program: &Program,
+    id: usize,
+    form: &Form,
+    errors: &mut Vec<Diagnostic>,
+) -> Form {
+    match form {
+        Form::Symbol { name, span } => Form::Symbol {
+            name: resolve_name(program, id, name, *span, errors),
+            span: *span,
+        },
+        Form::List { items, span } => {
+            let mut items = items.clone();
+            if let Some(Form::Symbol { name, span: head }) = items.first() {
+                items[0] = Form::Symbol {
+                    name: resolve_name(program, id, name, *head, errors),
+                    span: *head,
+                };
+            }
+            Form::List { items, span: *span }
+        }
+        other => other.clone(),
+    }
+}
+
+fn resolve_name(
+    program: &Program,
+    id: usize,
+    name: &str,
+    span: Span,
+    errors: &mut Vec<Diagnostic>,
+) -> String {
+    match program.resolve(id, name, span) {
+        Ok(Some(qualified)) => qualified,
+        // A capability-vocabulary name, left as written for the presence pass to judge.
+        Ok(None) => name.to_string(),
+        Err(diagnostic) => {
+            errors.push(*diagnostic);
+            name.to_string()
+        }
+    }
+}
+
+/// Every pass after reading, in the order in which a failure in one makes the next meaningless. `check` and
+/// `check_program` both end here; `findings` carries what the caller found before handing over.
+fn passes(
+    forms: Vec<Form>,
+    registry: &Registry,
+    active_profile: &Profile,
+    mut findings: Vec<Finding>,
+) -> Outcome {
     // ── boundary (F27) ───────────────────────────────────────────────────────────────────────
     let mut boundary_errors = Vec::new();
     for form in &forms {

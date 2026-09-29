@@ -430,6 +430,11 @@ enum Slot {
 /// `(offers counter-width)` and `(offers (counter-width 32 bit))` both name `counter-width`, so
 /// an author can write the bare fact or the fact with its parameters and mean the same thing
 /// about presence.
+/// The clauses whose operands name other declarations: `collect` reads their operands as names, and
+/// `docs/semantics/reference.md` §6 rule 10 resolves exactly these positions in an elaborated module tree.
+/// One list, so the pass that reads a name and the rule that resolves it cannot disagree about where names are.
+pub const NAME_CLAUSES: &[&str] = &["uses", "needs", "refines"];
+
 fn names_in(clause: &Form) -> Vec<(String, Span)> {
     clause
         .items()

@@ -6,6 +6,7 @@ answers:
   - "Why did a wrong formula pass every test?"
   - "Every RED arm of my gate passes — could the gate still be unable to fail on the real tree?"
   - "My arm expects a refusal and gets one — how do I know it was refused for the reason the arm names?"
+  - "My new rule's fixtures went green — would they have gone green without the rule?"
 type: knowledge
 date: 2026-09-13
 ---
@@ -85,3 +86,10 @@ act on. Mutation testing is what turns it into a measurement.
   arm had to find its construct id in the output, putting the unsorted fixture back turned both red
   (`PROGRAM.27`, mutation P-F). Seed the arm with the file that actually broke, byte for byte — the
   deployed README, not a README-shaped string.
+- ⛔ **Remove the rule and see which fixtures notice.** `M1.29.3` gave an elaborated module tree a name rule
+  in two halves — declarations renamed by their instance path, and names resolved where they are written —
+  and both F01 trees went green at once. With the second half removed they *stayed* green: their root
+  writes names that already equal the global ones, so resolution changed no string. A fixture that passes
+  with and without a rule is evidence about something else. Only a module naming **its own sibling** by a
+  local name, and a name an export **hides**, discriminate; `app.sibling` does the first in all three name
+  positions, and dropping any one position fails it.

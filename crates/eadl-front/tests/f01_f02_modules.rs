@@ -634,3 +634,152 @@ fn an_empty_module_is_reported_in_the_file_that_is_empty() {
     assert!(rendered.contains("--> hollow.eadl:1:1"), "{rendered}");
     assert!(!rendered.contains("unrelated.eadl"), "{rendered}");
 }
+
+// ── Leaf `M1.29.3`: docs/semantics/reference.md §6 rules 9 and 10 — what a name means in an elaborated tree ──
+
+/// A root importing one module that declares more than it exports, and whose own declaration names its
+/// sibling; the root declares one name of its own.
+fn scope() -> (eadl_front::Program, usize, usize) {
+    let modules = MemoryModules::new()
+        .with(
+            "lib.part",
+            r"(defmodule lib.part
+               (version 1 0)
+               (export shown)
+               (defblock shown (offers (p 1 bit)) (uses hidden))
+               (defblock hidden (offers (p 1 bit))))",
+        )
+        .with(
+            "root",
+            "(defmodule root (version 1 0) (import lib.part (as part)) (defblock mine (offers (p 1 bit))))",
+        );
+    let mut sources = SourceMap::new();
+    let (program, diagnostics) = elaborate(&mut sources, &modules, "root");
+    assert!(
+        !diagnostics.has_errors(),
+        "{}",
+        diagnostics.render(&sources)
+    );
+    let root = program.root().id;
+    let part = program.instances[root].imports[0];
+    (program, root, part)
+}
+
+fn at() -> eadl_front::Span {
+    eadl_front::Span::new(eadl_front::SourceId(0), 0, 0)
+}
+
+#[test]
+fn rule_9_an_instance_knows_its_alias_and_its_exports() {
+    let (program, root, part) = scope();
+    assert_eq!(program.instances[part].alias, "part");
+    assert_eq!(program.instances[part].exports, ["shown"]);
+    assert_eq!(
+        program.instances[root].alias, "",
+        "the root has no importer"
+    );
+    assert_eq!(program.instances[part].qualify("hidden"), "part.hidden");
+}
+
+#[test]
+fn rule_10_a_name_resolves_to_its_own_instance_first() {
+    let (program, root, part) = scope();
+    assert_eq!(
+        program.resolve(part, "hidden", at()).unwrap(),
+        Some("part.hidden".into()),
+        "a module names its own sibling by the local name, exported or not"
+    );
+    assert_eq!(
+        program.resolve(root, "mine", at()).unwrap(),
+        Some("mine".into()),
+        "the root's own names are unqualified"
+    );
+}
+
+#[test]
+fn rule_10_an_import_shows_what_its_module_exports() {
+    let (program, root, _) = scope();
+    assert_eq!(
+        program.resolve(root, "part.shown", at()).unwrap(),
+        Some("part.shown".into())
+    );
+}
+
+#[test]
+fn rule_10_a_declared_name_the_module_does_not_export_is_refused_with_the_export_to_add() {
+    let (program, root, _) = scope();
+    let refusal = program
+        .resolve(root, "part.hidden", at())
+        .expect_err("hidden is not exported");
+    assert_eq!(refusal.code, "module-not-exported");
+    assert!(
+        refusal
+            .message
+            .contains("declared by module `lib.part` but not exported"),
+        "{}",
+        refusal.message
+    );
+    assert!(
+        refusal.repair.contains("add `(export hidden)`"),
+        "{}",
+        refusal.repair
+    );
+}
+
+#[test]
+fn rule_10_an_undeclared_name_through_an_alias_is_refused_without_suggesting_an_impossible_export()
+{
+    // Exporting a name the module does not declare is `module-dangling-export`, so suggesting it would trade
+    // one refusal for another.
+    let (program, root, _) = scope();
+    let refusal = program
+        .resolve(root, "part.nowhere", at())
+        .expect_err("nothing is called that");
+    assert_eq!(refusal.code, "module-not-exported");
+    assert!(
+        refusal.message.contains("exports no `nowhere`"),
+        "{}",
+        refusal.message
+    );
+    assert!(
+        !refusal.repair.contains("(export nowhere)"),
+        "{}",
+        refusal.repair
+    );
+    assert!(
+        refusal.repair.contains("no re-export"),
+        "{}",
+        refusal.repair
+    );
+}
+
+#[test]
+fn rule_10_a_name_that_is_neither_is_vocabulary_and_left_as_written() {
+    let (program, root, part) = scope();
+    assert_eq!(program.resolve(root, "counter-width", at()).unwrap(), None);
+    assert_eq!(
+        program.resolve(part, "absolute-deadline", at()).unwrap(),
+        None
+    );
+    // `partial.x` begins with the characters of an alias and not with the alias as a segment.
+    assert_eq!(program.resolve(root, "partial.x", at()).unwrap(), None);
+}
+
+#[test]
+fn rule_10_an_alias_never_shadows_a_local_declaration() {
+    // The instance's own names come first: a local `part.shown` is the root's, not the import's.
+    let modules = MemoryModules::new()
+        .with("lib.part", "(defmodule lib.part (version 1 0) (export shown) (defblock shown (offers (p 1 bit))))")
+        .with(
+            "root",
+            "(defmodule root (version 1 0) (import lib.part (as part)) (defblock part.hidden (offers (p 1 bit))))",
+        );
+    let mut sources = SourceMap::new();
+    let (program, _) = elaborate(&mut sources, &modules, "root");
+    let root = program.root().id;
+    assert_eq!(
+        program.resolve(root, "part.hidden", at()).unwrap(),
+        Some("part.hidden".into()),
+        "a local declaration was reported as an unexported name of the import"
+    );
+}

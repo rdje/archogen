@@ -4,6 +4,34 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — a module tree is type-checked like a description, because a name now means something inside it
+
+`ARCHOGEN-M1-0114` (leaf `M1.29.3`, closing the capability half of `M1.29`). **596 passed / 0 failed** over
+42 suites (baseline 590, delta = 7 library legs minus one retired owner leg). Eight mutations seen firing.
+Conformance suite **100 → 105**; frozen baseline **107 → 112** under a pending migration note.
+
+- **The rules first.** `docs/semantics/reference.md` §6 rule 9: a declaration in an imported instance is
+  named by its alias path — `platform.timer.timer.counter` — and a root declaration keeps its name. Rule 10:
+  a name written in `uses`, `needs` or `refines` resolves where it was written — the writing module's own
+  declarations first, then `alias.n` through one of its imports, which must be a name that import's module
+  **exports** (`module-not-exported` otherwise), else it is a word of the capability vocabulary. There is no
+  re-export. One new §4 row.
+- **One pass sequence for both shapes.** `eadl_model::check::check_program` renames and resolves an
+  elaborated tree and hands its declarations to the same `passes` function `check` now ends in, and the CLI's
+  one `frontend` returns an `Outcome` either way — so `archogen check` accepts or refuses a tree exactly as it
+  does a file, and `archogen build` realizes it through the same S0 path (which refuses the F01 trees for
+  having no tasks, and says the check accepted them).
+- **Cases that fail without the rule.** `app.sibling` names its own module's siblings in all three positions
+  and is accepted; `bad.not-exported` and `bad.not-exported-transitive` are refused. With names left as
+  written, exactly those three change — the F01 trees survive on rule 9 alone, which is why the sibling case
+  exists.
+- ⛔ **Filed `M1.33`, high.** Writing rule 9's legs exposed that two declarations can share a name — and that
+  a single description declaring `timer.counter` twice, with 32 and 16 bits, is **accepted** today, the
+  presence pass keeping the first. §6 states the limit and names the leaf.
+- `archogen help check` says "elaborate and type-check a description against a profile" again, and it is true.
+  Book: `modules.md` (an accepted tree, and rules 9–10 with two transcripts rendered by the command),
+  `checking.md` (a `resolve` row), `cli.md`.
+
 ## archogen — `archogen check` elaborates a module tree, and every `module-` code but one has a case a command runs
 
 `ARCHOGEN-M1-0112` (leaf `M1.29.2`). **590 passed / 0 failed** over 42 suites (baseline 575 / 41, delta =

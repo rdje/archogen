@@ -1,5 +1,24 @@
 # DEV_NOTES.md
 
+## _(2026-09-29)_ — the fixture that passes with and without a rule is not a fixture for the rule
+
+- `M1.29.3`, giving an elaborated module tree a name rule (§6 rules 9–10) so the model passes can read it.
+  The two F01 trees were the obvious fixtures, and both went green the moment the rule landed.
+- ⛔ **They would have gone green without half of it.** Mutation N-2 kept rule 9 (declarations renamed by
+  instance path) and dropped rule 10 (names resolved where written): both F01 trees still passed, because
+  their root writes names that *already equal* the global ones — `clock.time.monotonic` is the same string
+  whether or not anything resolved it. Only a module that names **its own sibling** by a local name, and a
+  name an export **hides**, can tell the rule from its absence. So `app.sibling` names siblings in `uses`,
+  `needs` and `refines`, and removing any one head from the name-clause list fails it — each head is
+  individually load-bearing, measured, not argued.
+- ⭐ **Writing a rule's legs is how its holes show.** Building the "an alias never shadows a local name" leg
+  needed a module with a local dotted name beside an alias — which is exactly the case where rule 9 gives two
+  declarations one name. Asking what catches duplicates at all found that nothing does, in a single
+  description either: two `(defblock timer.counter …)` with 32 and 16 bits are accepted, and `presence.rs`'s
+  `or_insert` keeps the first. Filed as `M1.33`, high, with §6 stating the limit instead of implying it away.
+- Promoted into `docs/knowledge/a-gate-is-only-as-sharp-as-its-fixtures.md` as an instance of its question
+  "How do I know a fixture set is discriminating and not just complete?", with an `answers:` line.
+
 ## _(2026-09-29)_ — a code a command cannot reach hides the defects its own tests assert around
 
 - `M1.29.2`, wiring the module elaborator into `archogen check` and `archogen build`. The elaborator had 24

@@ -148,11 +148,11 @@ const LOCKED: OptionSpec = OptionSpec {
 pub const COMMANDS: &[CommandSpec] = &[
     CommandSpec {
         name: "check",
-        // ⛔ Each clause is a capability, coupled to it by `tests/module_files.rs`. This line said
+        // ⛔ Each word is a capability, coupled to it by `tests/module_files.rs`. This line said
         // "elaborate and type-check a description" while nothing in production called the elaborator
-        // (leaf `M1.29.1`); `M1.29.2` wired elaboration in, and an elaborated tree is not type-checked
-        // until `M1.29.3` — so the two halves are stated separately until the second is true of both.
-        summary: "elaborate a module tree, and type-check a description, against a profile",
+        // (leaf `M1.29.1`); `M1.29.2` wired elaboration in and `M1.29.3` gave an elaborated tree the name
+        // rule the passes need, so the sentence is true again — and the legs keep it true.
+        summary: "elaborate and type-check a description against a profile",
         positionals: &[PositionalSpec {
             name: "DESCRIPTION",
             help: "path to the eADL system description",

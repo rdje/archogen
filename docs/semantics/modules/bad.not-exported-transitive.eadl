@@ -1,0 +1,12 @@
+; case: bad.not-exported-transitive
+; expect: invalid-description
+; code: module-not-exported
+; why: §6 rule 10 — there is no re-export, so a module's own imports are not visible to its importer
+;
+(eadl-version eadl/1)
+
+(defmodule bad.not-exported-transitive
+  (version 1 0)
+  (import hw.soc (as platform))
+  (defsystem app.rt
+    (requires (uses platform.timer.timer.counter))))

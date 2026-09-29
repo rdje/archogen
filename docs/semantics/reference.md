@@ -396,6 +396,7 @@ cheapest diagnostic to write is the most expensive to receive.
 | `module-unknown-parameter` | an import binds a parameter the module does not declare | the diagnostic lists the parameters it does declare |
 | `module-missing-argument` | an import leaves a parameter that has no default unbound | add `(with (<param> <value>))` to the import |
 | `module-bad-argument` | a `with` binding is not written `(<param> <value>)` | write `(with (tick-rate 20 MHz))` |
+| `module-not-exported` | a name written through an import's alias is not one that import's module exports (§6 rule 10) | export it from that module, or name one of its exports — the diagnostic lists them |
 | `schema-not-a-kind` | a form read as a kind definition is not a `defkind` | write `(defkind <head> (doc "…") (name …) (clause …) …)` |
 | `schema-missing-kind-head` | a `defkind` does not name the declaration head it defines | write `(defkind defservice …)` |
 | `schema-duplicate-kind` | one declaration head is defined twice | remove one — redefining a kind would silently change what already-written descriptions mean |
@@ -540,6 +541,29 @@ A module is a file holding exactly one `(defmodule …)` form. Its clauses are `
    (`a..b`), and no uppercase letter exists, because on a case-insensitive filesystem `HW.Timer` and
    `hw.timer` would be one file on one machine and two on another. An import naming anything else does not
    name a module, which is `module-bad-import`.
+9. **An elaborated declaration is named by the path of its instance.** A declaration named `n` in the
+   instance at alias path `p` is `p.n` in the elaborated program — `timer.counter`, in `hw.timer` imported
+   as `timer` by `hw.soc` imported as `platform`, is `platform.timer.timer.counter` — and a declaration of the
+   description the command was given keeps its own name. Two instances of one module therefore declare
+   different names, which is what rule 1 needs of them.
+10. **A name written inside an instance resolves in that instance's scope, and an import shows only what its
+    module exports.** The operands of `uses`, `needs` and `refines` are the positions that name another
+    declaration, and each is resolved in order: a declaration of the same instance, by its local name; then a
+    name written through one of the instance's own aliases, `alias.n`, where `n` must be one of the names
+    that import's module **exports** — anything else written through an alias is `module-not-exported`;
+    then, neither, the name is left as written, because it is a name of the capability vocabulary
+    (`counter-width`, `absolute-deadline`) and not of a declaration. An alias never shadows a local
+    declaration. There is no re-export, so an importer sees exactly the exports of the modules it imports
+    directly: `app.system` cannot name `platform.timer.timer.counter`, because `hw.soc` does not export it.
+    `crates/eadl-model/src/check.rs`'s `check_program` applies this rule and then runs every pass a single
+    description gets, so a module tree is judged by exactly the same rules.
+
+⚠️ **Rule 9 does not by itself make a name mean one declaration, and nothing enforces that yet.** A module
+that declares `inner.x` and also imports a module as `inner` that declares `x` gives both declarations the
+name `p.inner.x`; and a single description can already declare one name twice — measured, two
+`(defblock timer.counter …)` offering 32 and 16 bits are accepted, and the presence pass keeps the first.
+Both are one missing rule, that a name is declared once, and it is owned by leaf `M1.33` in
+`docs/tasks/M1.md`, not by this section's rules.
 
 ⚠️ **One code has no fixture, and the reason is stated rather than hidden.** `module-too-large` fires when
 a module's source cannot be given an address — at 2^32 bytes — and no tracked fixture carries a

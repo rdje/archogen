@@ -15,6 +15,7 @@ built from it will behave — the evidence categories start after this point.
 | Pass | Owns | Verdict on failure |
 | --- | --- | --- |
 | read | syntax and spans | `invalid-description` |
+| resolve | a module tree only: its names, by §6 rules 9 and 10 of `docs/semantics/reference.md` | `invalid-description` (`module-not-exported`) |
 | boundary | implementation content (F27) | `invalid-description` |
 | schema | the declaration frame, and every quantity a clause declares | `invalid-description` |
 | profile | the capabilities the profile refuses | `unsupported-profile` |
@@ -25,15 +26,15 @@ built from it will behave — the evidence categories start after this point.
 Every pass runs. Every diagnostic is collected. A description with three problems costs one edit
 cycle, not three.
 
-⛔ **A module file is elaborated before any of these passes, and not yet handed to them.** `ROADMAP.md`
-§10.1 makes elaboration the first step. A file that declares a `(defmodule …)` is elaborated from its
-module path (`docs/semantics/reference.md` §6 rule 7): an import problem is refused with its `module-`
-code and `invalid-description`, and a tree that elaborates cleanly is answered `unimplemented`, exit 20,
-naming leaf `M1.29.3` — the passes above read declarations by name, and an elaborated tree's names need a
-resolution rule §6 does not state yet. Handing them over without one would report facts as missing that
-the tree describes. A module file that does not *read* is still the read pass's to report: a syntax error
-is a verdict about the bytes, whatever they were meant to be. See
-[Modules and composition](modules.md#what-you-can-run-today).
+⭐ **A module tree gets exactly these passes.** A file that declares a `(defmodule …)` is elaborated first
+(`ROADMAP.md` §10.1 step 1) from its module path, by `docs/semantics/reference.md` §6 rule 7 — an import
+problem is refused there with its `module-` code, because a tree that did not compose has nothing to
+check. A tree that did is **resolved** — every declaration named by the path of its instance, every name
+it writes resolved where it was written (§6 rules 9 and 10) — and then its declarations go through the
+same passes, in the same code (`crates/eadl-model/src/check.rs`'s `check` and `check_program` share one
+sequence), so a module tree cannot be judged by rules a single description escapes, or the other way
+round. A module file that does not *read* is still the read pass's to report: a syntax error is a verdict
+about the bytes, whatever they were meant to be. See [Modules and composition](modules.md).
 
 The `profile` and `workload` passes are two halves of one contract and it is worth keeping them
 apart. `profile` consults the capabilities `rt-static-up-v1` **refuses** — `general-ipc`,

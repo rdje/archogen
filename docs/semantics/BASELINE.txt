@@ -14,7 +14,7 @@
 #             This script writes the baseline; that check enforces it.
 729a9724bc1673d7463e6e2455ea2e71a8b09736edbe1a64ba4a3447ff638caf  docs/semantics/grammar.md#ebnf
 f43870b2252ba2f76072adefc99b328e35b32aec8c62b6a1f4c4553d33280736  docs/semantics/reference.md#comment-headers
-e810759afb815224a80c93b2907d78819c8d67f8f741d0e6791bfc56042a4749  docs/semantics/reference.md#diagnostics
+0fa17453515f0cafa86af325e95df15eaa67c777df2adbd3b9e9113e72e5ba57  docs/semantics/reference.md#diagnostics
 24da41fe2d7949db327454ff0ee13c980263da15995636a0d20e211cccf3ec14  docs/semantics/reference.md#language-version
 95435b3138c055f0cec5127269174f50c86d0311f1f6b37e00113707ad924b7f  docs/semantics/reference.md#normative-sources
 491364023b22e9b111db659262d32c3e3a480606c7fd9df75e82daa164daf2cb  docs/semantics/reference.md#number-values
@@ -76,6 +76,7 @@ cd50fbb3fcad565672eef71f5bd2994c0c5577ba25397fb0c9d7a9eb77e3fbb5  suite/docs/sem
 3b8dfa2ec48bdd120f3d25c8a4a2e318174679a432b4cfc2275a0f845982779d  suite/docs/semantics/cases/unsupported-precedence-over-missing-fact.eadl
 f3ca57d06da7e041325630224c0edc386f4d24cf84faf108d166d5356f8edf2a  suite/docs/semantics/kinds/core.eadl
 dd534f3f7a058cfc35cde865a6a5b89b1dc3211addcdc3e99de19cc6af389f5c  suite/docs/semantics/kinds/os-rt.eadl
+e8c98dc4a0649aeb06bd66ed54ae6544fb4f9ec76255df751485197ce6f83324  suite/docs/semantics/modules/app.sibling.eadl
 a30f8a355284f1128c16e8650f6f3dc4ba496d3e2787d2e2146ae6a00d437778  suite/docs/semantics/modules/app.system.eadl
 d383212985dee3cbf61761a97d6ee0db75dcc3dd5fdff8fd648f3feda83e5c63  suite/docs/semantics/modules/app.two-timers.eadl
 cca7dc3668e9db7e4129e5492bc61f5a221b3cd28a5f4375565b75774b84dfc2  suite/docs/semantics/modules/bad.bad-alias.eadl
@@ -99,14 +100,18 @@ b5de0a0951862b226fe58dd71bf765da1fda44cf4d0bed9282d9856da8726436  suite/docs/sem
 99e34b618acc4cf42e9b9c6c826fbb55dd6346091c5a9bb60c9261ed68e5f607  suite/docs/semantics/modules/bad.multiple-forms.eadl
 dfeb80c5e6af8c46573f69e2484730c3ee0abfebb756decb4b3c931b715790c2  suite/docs/semantics/modules/bad.name-mismatch.eadl
 47a57e020f8dfad3ef13b4588dfe645f1d053f2fa02dd76cd9597cb6cfaf3999  suite/docs/semantics/modules/bad.not-a-module.eadl
+0e614f5653f39b282165026e08eb483e94fbe46e26a785e030830aba0ba28185  suite/docs/semantics/modules/bad.not-exported-transitive.eadl
+b3a7e6395338b846121e50a28c53d8dd752bb619e9c9689811b3f3c8a6c759f6  suite/docs/semantics/modules/bad.not-exported.eadl
 fc137f3356909a6993f4592eea3e16f8ed0bc3227d2a0538c3e825eb55bf3140  suite/docs/semantics/modules/bad.not-found.eadl
 a9eba12268f17028096e46b13cab111c5536d86ba184321c26c3db98e2acd47b  suite/docs/semantics/modules/bad.unknown-import-clause.eadl
 d16ce3373f19065bbde0d721920e030a3d51f1c015b88a5fc6c2dc8917c65494  suite/docs/semantics/modules/bad.unknown-parameter.eadl
 337f695a61aca412b8e5c6b6113de446fbd987dccd9ac3bb7f1a478949743d92  suite/docs/semantics/modules/cycle.b.eadl
 6856a2871bf3b1dea4c66350a7e9b51be1c36bc7b657e41cac0f63f43a51c359  suite/docs/semantics/modules/cycle.c.eadl
+aa0385ff9cf4d82a1b3c511a6dcba94edc160abc7dbc9a2e993bd6895ef5651f  suite/docs/semantics/modules/hw.bus.eadl
 07eb176efbe0ac83f73b12059cc200cf073ad8cc5fbfd810ed9e33971f0fe7c7  suite/docs/semantics/modules/hw.misnamed.eadl
 4f21f17d48e22ce62abafa7bfe59b8a1ed88f992c1b6cf8af77b5c4ff6d7b3f5  suite/docs/semantics/modules/hw.nothing.eadl
 5ddc46119ae0e14f52668db2619b3f1ffbbcfb0ace60f3e4ac1f41414b833469  suite/docs/semantics/modules/hw.plain.eadl
+aa9d032797143325c241eece922a96a4e7fede324ea7abf27bd391b481ce0f89  suite/docs/semantics/modules/hw.private.eadl
 30d4ad05cb10c75adafd8205916a73b16edbd01050fc5ae361bf113c619fa68c  suite/docs/semantics/modules/hw.sized.eadl
 29118990e5f2d245211e5dcbc2e4f21d0bd252981091375947005cf2d0aff91b  suite/docs/semantics/modules/hw.soc.eadl
 072951d13d4ae77e36a47f52ec1e2e0f5a83d34b2af551892f6d3d5450297450  suite/docs/semantics/modules/hw.timer.eadl

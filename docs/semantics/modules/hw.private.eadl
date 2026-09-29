@@ -1,0 +1,13 @@
+; module: hw.private
+; role: imported by the cases in this directory, which is their module path
+; why: a module that declares more than it exports
+;
+(eadl-version eadl/1)
+
+(defmodule hw.private
+  (version 1 0)
+  (export public.part)
+  (defblock public.part
+    (offers (p 1 bit)))
+  (defblock private.part
+    (offers (p 1 bit))))

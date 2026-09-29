@@ -1,0 +1,12 @@
+; case: app.sibling
+; expect: ok
+; why: §6 rule 10 — an imported module's own names resolve in its scope, so its `uses`, `needs` and `refines` reach its siblings
+;
+(eadl-version eadl/1)
+
+(defmodule app.sibling
+  (version 1 0)
+  (import hw.bus (as board))
+  (export app.rt)
+  (defsystem app.rt
+    (requires (uses board.bus.main) (uses board.bus.fast))))

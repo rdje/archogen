@@ -1,0 +1,12 @@
+; case: bad.not-exported
+; expect: invalid-description
+; code: module-not-exported
+; why: §6 rule 10 — a name the imported module declares and does not export is not visible through its alias
+;
+(eadl-version eadl/1)
+
+(defmodule bad.not-exported
+  (version 1 0)
+  (import hw.private (as parts))
+  (defsystem app.rt
+    (requires (uses parts.private.part))))

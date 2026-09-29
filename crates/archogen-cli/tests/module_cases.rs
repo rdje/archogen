@@ -1,5 +1,6 @@
-//! Leaf `M1.29.2`: every module case under `docs/semantics/modules/` through `archogen check` and
-//! `archogen build`, and every `module-` code of `docs/semantics/reference.md` §4 reached by one of them.
+//! Leaves `M1.29.2` and `M1.29.3`: every module case under `docs/semantics/modules/` through `archogen
+//! check` and `archogen build`, and every `module-` code of `docs/semantics/reference.md` §4 reached by one of
+//! them.
 //!
 //! The directory is a module path in the sense of §6 rule 7: library modules, and one root file per case.
 //! A root is the file whose comment header carries `expect:` — the §5.5 verdict the description earns —
@@ -7,14 +8,13 @@
 //! that produced its code *and* another would pass a containment check while an author reads two messages
 //! for one mistake, which is how `(version one zero)` was found reporting "declares no version".
 //!
-//! ⚠️ A case that expects `ok` is answered `unimplemented` naming `M1.29.3` until that leaf lands: the tree
-//! elaborates, and no command type-checks an elaborated tree yet. The header states what the description
-//! *is*; this suite states what the command *does* today, and the difference is one leaf.
+//! A case that expects `ok` is elaborated, resolved by §6 rules 9 and 10, and type-checked by every pass a
+//! single description gets — and accepted. `M1.29.2` answered those cases `unimplemented`; the headers did not
+//! change when that stopped being true, because a header states what the description *is*.
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-use archogen_cli::check_cmd::MODULE_TYPE_CHECK_OWNER;
 use archogen_cli::{run, Status};
 use eadl_front::{read, SourceMap, Verdict};
 
@@ -127,15 +127,13 @@ fn every_case_gets_exactly_the_answer_its_header_declares() {
         let (status, out, err) = invoke(&["check", &case.path]);
         let found = codes(&err);
         if case.expect.is_ok() {
-            // Until M1.29.3: elaborated, and refused as unimplemented rather than accepted or checked.
-            if status != Status::Unimplemented
+            if status != Status::Ok
                 || !found.is_empty()
-                || !err.contains("elaborated into")
-                || !err.contains(MODULE_TYPE_CHECK_OWNER)
+                || !out.contains("accepted against profile")
+                || !out.contains("elaborated from")
             {
                 wrong.push(format!(
-                    "{}: expected a clean elaboration answered `unimplemented` naming \
-                     {MODULE_TYPE_CHECK_OWNER}, got {status:?}:\n{err}",
+                    "{}: expected the tree accepted, got {status:?}:\n{out}{err}",
                     case.path
                 ));
             }
@@ -162,9 +160,11 @@ fn every_case_gets_exactly_the_answer_its_header_declares() {
 }
 
 #[test]
-fn build_answers_every_case_exactly_as_check_does() {
-    // One frontend: `build` routes a module file through the same function, so the two commands cannot
-    // disagree about a module tree the way they once disagreed about a quantity (`M1.28`).
+fn build_never_contradicts_check_about_a_case() {
+    // One frontend: `build` calls the same function, so the two commands cannot disagree about a module tree
+    // the way they once disagreed about a quantity (`M1.28`). A refusal is the same refusal. An accepted tree
+    // may still be refused by `build` — but only on the S0 realization path, which is narrower than the
+    // language, and it must say that the check accepted it.
     let out_root = Path::new(env!("CARGO_TARGET_TMPDIR")).join("module-cases");
     let mut disagreements = Vec::new();
     for (index, case) in cases().iter().enumerate() {
@@ -173,6 +173,18 @@ fn build_answers_every_case_exactly_as_check_does() {
         let (checked, _, check_err) = invoke(&["check", &case.path]);
         let (built, _, build_err) =
             invoke(&["build", &case.path, "--out", &out_dir.display().to_string()]);
+        let realization_refusal = checked == Status::Ok
+            && build_err.contains("the S0 path cannot realize")
+            && build_err.contains("though the check pipeline accepted it");
+        if checked == Status::Ok {
+            if built != Status::Ok && !realization_refusal {
+                disagreements.push(format!(
+                    "{}: check accepted it and build refused it for a reason that is not the S0 path's:\n{build_err}",
+                    case.path
+                ));
+            }
+            continue;
+        }
         if checked != built || codes(&check_err) != codes(&build_err) {
             disagreements.push(format!("{}: check {checked:?}, build {built:?}", case.path));
         }
@@ -268,24 +280,24 @@ fn every_file_is_either_a_case_or_a_module_a_case_imports() {
 #[test]
 fn f01_the_composition_elaborates_into_the_instances_the_book_names() {
     // The names `docs/book/src/modules.md` shows are what the command reports, not what a library test does.
-    let (status, _, err) = invoke(&["check", &fixture("app.system.eadl")]);
-    assert_eq!(status, Status::Unimplemented, "{err}");
+    let (status, out, err) = invoke(&["check", &fixture("app.system.eadl")]);
+    assert_eq!(status, Status::Ok, "{err}");
     for instance in [
         "platform.timer = hw.timer 1.0",
         "platform = hw.soc 1.2",
         "clock = os.time 2.0",
         "(root) = app.system 1.0",
     ] {
-        assert!(err.contains(instance), "missing `{instance}`:\n{err}");
+        assert!(out.contains(instance), "missing `{instance}`:\n{out}");
     }
 }
 
 #[test]
 fn f01_one_module_imported_twice_is_two_instances() {
-    let (status, _, err) = invoke(&["check", &fixture("app.two-timers.eadl")]);
-    assert_eq!(status, Status::Unimplemented, "{err}");
-    assert!(err.contains("fast = hw.timer 1.0"), "{err}");
-    assert!(err.contains("slow = hw.timer 1.0"), "{err}");
+    let (status, out, err) = invoke(&["check", &fixture("app.two-timers.eadl")]);
+    assert_eq!(status, Status::Ok, "{err}");
+    assert!(out.contains("fast = hw.timer 1.0"), "{out}");
+    assert!(out.contains("slow = hw.timer 1.0"), "{out}");
 }
 
 #[test]
