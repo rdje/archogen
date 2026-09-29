@@ -1061,33 +1061,7 @@ mdBook that is the director's window into the project.
 
   ```text
   census:   awk -F'|' '/^\| \[`/{print $2, substr($4,1,14)}' docs/TASK_TREE.md, against each
-            docs/tasks/<TREE>.md "- ID: `PROGRAM.29`
-  Status: `pending`
-  Goal: no gate script puts its scratch in `/tmp` — every scratch directory is derived from the repository
-  root, on its own volume, as the director's data-locality rule requires ("never default to `/tmp`").
-  Reproduce / issue: found `2026-09-29` by `PROGRAM.18.1`, reading the script it was arming:
-  ```text
-  census: grep -n mktemp scripts/*.sh knowledge-map/scripts/*.sh
-    scripts/check_frozen_evaluation.sh:59          tmp="$(mktemp -d)"            project-owned
-    scripts/check_feedback_self_contained.sh:84    tmp="$(mktemp -d)"            project-owned
-    scripts/check_s0_retirement.sh:120             tmp="$(mktemp -d)"            project-owned
-    scripts/update_scaffold.sh:16                  tmp="$(mktemp -d)"            project-owned
-    scripts/check_task_acceptance.sh:184, :358     SELF/tmp="$(mktemp -d)"       scaffold-owned
-    scripts/check_waiver_routing.sh:73, :93        "$(mktemp)"                   scaffold-owned
-  ```
-  `mktemp` with no template writes under `$TMPDIR` or `/tmp`, off the repository's volume. The newer gates
-  (`check_language_freeze.sh`, `check_repository_boundary.sh`) already use `target/doctrine_scratch/`.
-  Acceptance: the four project-owned sites moved to `target/doctrine_scratch/<gate>/`, removed on exit, and a
-  census leg that fails when a project-owned gate calls `mktemp` without a repository-derived template; the
-  two scaffold-owned sites recorded with the reason they cannot be fixed here (another repository owns them,
-  and the scaffold would erase a local edit) and the exact upstream change written down for whoever owns the
-  scaffold — never sent there by an archogen agent; a residue census showing nothing left in `/tmp` by a gate
-  run.
-  Priority: **medium** — a director directive (§13) broken in six places, none of them losing data today.
-  Verification: `pending`
-  Commit: `pending`
-
-## Current Frontier" order-1 row
+            docs/tasks/<TREE>.md "## Current Frontier" order-1 row
             -> 10 of 12 rows AGREE, pre-correction; PROGRAM DISAGREE (index `PROGRAM.21`,
                tree `PROGRAM.11`). After this commit's correction: 11 of 12, and the only
                DISAGREE left is the artifact below.
@@ -1992,6 +1966,9 @@ mdBook that is the director's window into the project.
   refuses it. The `2026-09-21` sync survived because whoever ran it kept a copy of the incoming files
   in `target/` — a hand-made mitigation, in a scratch directory that any `cargo clean` deletes, which
   is how the cleanup run found it.
+  ⚠️ Added `2026-09-29` by `PROGRAM.29`: upstream's updater (`bedrock` `5af0c1c`, `:37`) still makes its scratch with a
+  bare `mktemp -d`, and it is not in its own `NEUTRAL` array, so it stays project-owned after adoption and
+  `SCRATCH-LOCALITY` refuses the adopted copy unless it keeps this repository's `"$ROOT/target/…"` template.
   Acceptance: `scripts/update_scaffold.sh` is replaced by **upstream's** version at a named `bedrock`
   revision (copied in, per §12's exception for read-only external sources — never depended on at build
   time, and `bedrock` is not a submodule), so the fix is adopted rather than re-derived; the adoption
@@ -2226,6 +2203,99 @@ mdBook that is the director's window into the project.
     re-rendered from this run, with the tier table and the "incomplete tiers" count corrected to the
     measured three; `DOCTRINE_ENFORCEMENT.md`, `TOOLBOX.md`, the live docs.
 
+- ID: `PROGRAM.29`
+  Status: `done`
+  Goal: no gate script puts its scratch in `/tmp` — every scratch directory is derived from the repository
+  root, on its own volume, as the director's data-locality rule requires ("never default to `/tmp`").
+  Reproduce / issue: found `2026-09-29` by `PROGRAM.18.1`, reading the script it was arming:
+  ```text
+  census: grep -n mktemp scripts/*.sh knowledge-map/scripts/*.sh
+    scripts/check_frozen_evaluation.sh:59          tmp="$(mktemp -d)"            project-owned
+    scripts/check_feedback_self_contained.sh:84    tmp="$(mktemp -d)"            project-owned
+    scripts/check_s0_retirement.sh:120             tmp="$(mktemp -d)"            project-owned
+    scripts/update_scaffold.sh:16                  tmp="$(mktemp -d)"            project-owned
+    scripts/check_task_acceptance.sh:184, :358     SELF/tmp="$(mktemp -d)"       scaffold-owned
+    scripts/check_waiver_routing.sh:73, :93        "$(mktemp)"                   scaffold-owned
+  ```
+  `mktemp` with no template writes under `$TMPDIR` or `/tmp`, off the repository's volume. The newer gates
+  (`check_language_freeze.sh`, `check_repository_boundary.sh`) already use `target/doctrine_scratch/`.
+  Acceptance: the four project-owned sites moved to `target/doctrine_scratch/<gate>/`, removed on exit, and a
+  census leg that fails when a project-owned gate calls `mktemp` without a repository-derived template; the
+  two scaffold-owned sites recorded with the reason they cannot be fixed here (another repository owns them,
+  and the scaffold would erase a local edit) and the exact upstream change written down for whoever owns the
+  scaffold — never sent there by an archogen agent; a residue census showing nothing left in `/tmp` by a gate
+  run.
+  Priority: **medium** — a director directive (§13) broken in six places, none of them losing data today.
+  Verification: see the checklist — a new gate over every tracked script (16 arms, 9 mutations), a logging
+  `mktemp` on `PATH` before and after, every changed script re-run, and a residue census.
+  Commit: `ARCHOGEN-PROGRAM-0124 (leaf PROGRAM.29)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — measured, not read: a logging `mktemp` first on `PATH` (under `target/`)
+    during one doctrine-driver run and one self-test run recorded **26 calls from five gates, 26 off the
+    volume** (`$TMPDIR` = `/var/folders/…/T/`, so no path says `/tmp` and the rule is still broken). ⛔ The
+    filing census **undercounted**: it searched `scripts/` and found 8 sites in 6 files (calling them "six");
+    a census over every tracked script finds 18 in 15 — ten under `docs/` (eight LinkedSpec feedback scripts,
+    two probe artifacts), which a census that dropped `docs/` to shed prose also missed:
+    ```text
+    $ git grep -c mktemp 7bf85ba -- '*.sh' '.githooks/*' Makefile
+      … 15 files … => 18 line(s) in 15 file(s)          (scripts/ only => 8 in 6)
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `mktemp` with no template resolves against `$TMPDIR`; every site was
+    written that way, and nothing read scripts for it. Residue was **not** the problem: 0 of 26 paths existed
+    after the run — each site cleans up, so the breach is location only. The shape, at three of the 18:
+    ```text
+    $ git grep -n 'mktemp -d)"' 7bf85ba -- scripts/check_frozen_evaluation.sh scripts/update_scaffold.sh docs/tasks/artifacts/task_acceptance/
+      7bf85ba:docs/tasks/artifacts/task_acceptance/run_task_acceptance_probes.sh:22:WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
+      7bf85ba:scripts/check_frozen_evaluation.sh:132:tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
+      7bf85ba:scripts/update_scaffold.sh:16:tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
+    ```
+  - [x] **FIX** — the 14 project-owned sites make scratch under `$ROOT/target/`: gates and probes under
+    `target/doctrine_scratch/<name>.XXXXXX`; the feedback scripts, which must stand alone in someone else's
+    checkout, derive `ROOT` from their own location (the enclosing work tree, else their own directory) and
+    write under `target/feedback_scratch/`. New doctrine **`SCRATCH-LOCALITY`**
+    (`scripts/check_scratch_locality.sh`): every tracked `*.sh`, `.githooks/*`, `Makefile` and `*.rs`; a
+    `mktemp` must be `mktemp [-d] "$ROOT/target/…XXXXXX"`, no line may name the system temporary directory,
+    no Rust `temp_dir()`; ownership **derived** from `update_scaffold.sh`'s `NEUTRAL` array, the scaffold's
+    four sites reported and not refused; its own source assembles every refused shape from pieces, so it
+    scans itself rather than excluding itself. The scaffold's change is written down —
+    `docs/decisions/decision_scratch-on-the-repository-volume.md` — and not sent (upstream `bedrock`
+    `5af0c1c` still has all of them, read-only).
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    $ bash scripts/check_scratch_locality.sh
+      scratch-locality: OK (124 file(s) scanned; 4 site(s) in scaffold-owned files reported …)   exit=0
+    $ bash scripts/check_scratch_locality.sh --self-test
+      scratch-locality self-test: 16 pass / 0 fail (16 arms)
+    after, same shim: 58 calls — 25 in project-owned files, all under $ROOT/target/; the 33 off the volume are
+      check_task_acceptance.sh (21) and check_waiver_routing.sh (12), scaffold-owned
+    residue: 0 of 58 logged scratch paths still exist; target/feedback_scratch: 0 entries
+    ```
+    Nine mutations, each restored and checked by `cmp`: **S-1** the template check dropped → 7 / 8; **S-2**
+    comments read as code → 11 / 4; **S-3** scaffold files refused → 13 / 2; **S-4** scope narrowed to
+    `scripts/` → 14 / 1; **S-5** an empty population passing → 14 / 1; **S-6** the Rust leg dropped → 14 / 1;
+    **S-7** the system-path leg dropped → 13 / 2; **S-8b** the `$ROOT/target/` requirement dropped → 14 / 2.
+    **S-8** (only the accepted options widened) survived, and was right to: the options do not place the file,
+    the template does, and GNU `mktemp` rejects `-t`/`-p` with an absolute template. The arm that S-8b needed —
+    an off-repository template, a home cache — was missing and was added.
+  - [x] **NO REGRESSION** — ⛔ moving scratch changed what two self-tests tested, and both were caught and
+    fixed at the cause. **`FEEDBACK-SELF-CONTAINED`'s self-test went partly vacuous** (4/6 red arms fired —
+    its lister asked git, which ignores all of `target/`) → a `$ROOT/target/` fixture is listed with `find`,
+    6/6. **LS-001's re-measurement false-failed an arm** (4/5 — Cargo walks up past a workspace that
+    excludes a package and found this root) → the root `Cargo.toml` excludes `target`, the remedy LS-001 itself
+    documents, 5/5; and its self-test now checks that no workspace encloses its scratch, exit 2 "could not
+    run" otherwise — falsified by removing the exclusion (`rc=2`, naming the workspace), restored by `cmp`.
+    Every changed script re-run against its before-state: LS-002/3/6/7 `repro.sh` `rc=0` ×4 before and after;
+    LS-001/4/5 `--self-test` 5/5 · 9/9 · 4/4 before and after; probes `3 pass / 7 fail` and `5 pass / 0 fail`,
+    unchanged. `cargo test --all` → `test result: passed=602 failed=0` over 42 suites; `cargo metadata` → 9
+    workspace members, unchanged; `make focused` passed; the doctrine driver green at the commit.
+  - [x] **LOCKSTEP** — the book's `verification.md` gains "Scratch stays on this volume";
+    `DOCTRINE_ENFORCEMENT.md` and `TOOLBOX.md` rows; the doctrine registered in the project slot; LS-004's
+    `SETUP.md` said "a temp dir" and now says where; `PROGRAM.26` told that the adopted updater must keep the
+    fix; two lessons promoted — `docs/knowledge/scope-a-census-by-the-rule-not-by-the-folder.md` (new) and
+    `a-gate-is-only-as-sharp-as-its-fixtures.md` (a moved fixture moves its surroundings).
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -2290,17 +2360,16 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.29` | `pending` | **medium** — six `mktemp` sites in five gate scripts and the scaffold updater put scratch in `/tmp`, against the director's data-locality rule; four are project-owned and fixable here |
-| 2 | `PROGRAM.5` | `pending` | the §15/§19 dependency and evidence ledger — every external source claim in the book should resolve to a row, and `BOOK-ANCHORS` now checks the *internal* ones. The director has offered a read-only external document source (ISA / RISC-V / devicetree / peripheral specifications) reachable by operator-relayed request; the ledger is where that seam gets a row |
-| 3 | `PROGRAM.9` | `pending` | the extended tier reports `incomplete` on every run until its three steps exist |
-| 4 | `PROGRAM.6` | `pending` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |
-| 5 | `PROGRAM.13` | `pending` | twelve closed leaves in `BOOTSTRAP`, `M2` and this tree do not name their own commit — backfill both logs from git, then `PROGRAM.14` gates it so the gap cannot reopen |
-| 6 | `PROGRAM.15` | `pending` | a feedback register row that contradicts its own issue sub-tree passes every gate today; five state transitions in six commits held only by hand-editing and a manual census |
-| 7 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
-| 8 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. ⭐ A **near-miss** worth pricing in, recorded honestly as a near-miss and not as a fourth instance: `PROGRAM.18`'s frontier row still read "ten of eighteen controls" while this leaf was being written, and was corrected in the same commit — it would have gone stale the moment the fix landed, and nothing in the tree compares a control count against the controls. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with. ⛔ An **eighth** shape landed `2026-09-29` and it falsifies the acceptance's *population* rather than adding a figure: `CHANGELOG.md` said "Newest first" and did not, one entry sitting above six newer ones for seven commits because five consecutive commits inserted at the same wrong anchor — and `CHANGELOG.md` is not one of the three live surfaces the acceptance enumerates. Two falsifications of a three-item list, so the population becomes every live surface the commit stages |
-| 9 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
-| 10 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
-| 11 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
+| 1 | `PROGRAM.5` | `pending` | the §15/§19 dependency and evidence ledger — every external source claim in the book should resolve to a row, and `BOOK-ANCHORS` now checks the *internal* ones. The director has offered a read-only external document source (ISA / RISC-V / devicetree / peripheral specifications) reachable by operator-relayed request; the ledger is where that seam gets a row |
+| 2 | `PROGRAM.9` | `pending` | the extended tier reports `incomplete` on every run until its three steps exist |
+| 3 | `PROGRAM.6` | `pending` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |
+| 4 | `PROGRAM.13` | `pending` | twelve closed leaves in `BOOTSTRAP`, `M2` and this tree do not name their own commit — backfill both logs from git, then `PROGRAM.14` gates it so the gap cannot reopen |
+| 5 | `PROGRAM.15` | `pending` | a feedback register row that contradicts its own issue sub-tree passes every gate today; five state transitions in six commits held only by hand-editing and a manual census |
+| 6 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
+| 7 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. ⭐ A **near-miss** worth pricing in, recorded honestly as a near-miss and not as a fourth instance: `PROGRAM.18`'s frontier row still read "ten of eighteen controls" while this leaf was being written, and was corrected in the same commit — it would have gone stale the moment the fix landed, and nothing in the tree compares a control count against the controls. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with. ⛔ An **eighth** shape landed `2026-09-29` and it falsifies the acceptance's *population* rather than adding a figure: `CHANGELOG.md` said "Newest first" and did not, one entry sitting above six newer ones for seven commits because five consecutive commits inserted at the same wrong anchor — and `CHANGELOG.md` is not one of the three live surfaces the acceptance enumerates. Two falsifications of a three-item list, so the population becomes every live surface the commit stages |
+| 8 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
+| 9 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
+| 10 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
@@ -2408,6 +2477,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-29` | `PROGRAM.18.2` | `bash scripts/selftest_spine.sh`; the `git grep` of the two self-locating roots; nine mutations S-1–S-9 on the real scripts with `cmp` restoration; the handoff tool after the run | **34 / 34** after one clean arm caught a stub-regex gap (first run 33 / 1); every mutation fails exactly its own arm; `handoff: OK`; `PROGRAM.18` closed |
 | `2026-09-29` | `PROGRAM.24` | the leaf's census; a strong-shape census over all nine members; the new check before and after the chapter fixes; `--self-test`; four mutations C-1–C-4; `cargo test --all --no-fail-fast`; the doctrine driver | `rt-analysis` named nowhere, and `xtask` named without a path — **2 of 9**, where a first census over-reported 5 by missing directory citations; **8 / 8** arms after one unfailable arm was re-staged; every mutation fires; **602 / 0** |
 | `2026-09-29` | `PROGRAM.28` | `git grep` for any runner of `--self-test` at `96636ac`; the new runner and its `--self-test`; four mutations U-1–U-4; `cargo xtask verify --tier integration` and the three other tiers; `cargo test -p xtask` | nothing ran them → **14** discovered and passing in 42 s; 6 / 6 arms; every mutation fires; integration 7 passed / 1 failed (emulator, `M2.8`), the book's transcript re-rendered from it |
+| `2026-09-29` | `PROGRAM.29` | a logging `mktemp` on `PATH` over the driver and the self-test runner, before and after; `git grep -c mktemp 7bf85ba` over every tracked script; `SCRATCH-LOCALITY` and its 16 arms; nine mutations S-1–S-8b; every changed script re-run against its before-state; the LS-001 precondition falsified; `cargo test --all`; a residue census | **26 of 26** calls off the volume before; **18 sites in 15 files** where the filing census had 8 in 6; after, every project-owned call under `target/`, 0 of 58 paths left; eight mutations fire, S-8 survives for a stated reason; two self-tests that the move broke — one gone partly vacuous — fixed at the cause; 602 / 0 |
 
 ## Commit Log
 
@@ -2437,6 +2507,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.18.2` → `PROGRAM.18` | `ARCHOGEN-PROGRAM-0121 (leaf PROGRAM.18.2)` | **every registered control now has repeatable RED arms.** The six scaffold-owned universal gates, both drivers and the handoff tool are armed **from outside** by `scripts/selftest_spine.sh` — each run unmodified in a scratch repository with one seeded breach, 34 arms, nine mutations each failing its own arm — so the arms survive a scaffold sync that would erase them in place. `PROGRAM.18` closed; tier registration is `PROGRAM.28`'s |
 | `PROGRAM.24` | `ARCHOGEN-PROGRAM-0122 (leaf PROGRAM.24)` | **the book is checked from the code's side too.** `BOOK-COVERAGE`: every workspace member, derived from `Cargo.toml`, is named in a chapter beside a path into it — a name alone does not count. Two members failed and are fixed: `rt-analysis` gains "Where it lives" in `analysis.md`, `xtask` its file in `verification.md` |
 | `PROGRAM.28` | `ARCHOGEN-PROGRAM-0123 (leaf PROGRAM.28)` | **every gate's RED arms now run in a tier and in CI.** `scripts/run_self_tests.sh` discovers every armed gate by census, plus the outside harness, and fails on any failed arm; a `self-tests` step in `integration`. The book's stale tier transcript re-rendered from a real run |
+| `PROGRAM.29` | `ARCHOGEN-PROGRAM-0124 (leaf PROGRAM.29)` | **scratch stays on this volume, and a gate says so.** 14 project-owned sites moved under `target/`; `SCRATCH-LOCALITY` reads every tracked script and Rust source; the scaffold's four sites recorded for its owner, not sent. The root manifest excludes `target`, so a Cargo fixture there is standalone |
 
 ## Changelog
 

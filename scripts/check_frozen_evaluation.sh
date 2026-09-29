@@ -129,7 +129,9 @@ case "$seal" in
   *) note "$MANIFEST has no '# seal: sealed|unsealed' line (found: '${seal:-<none>}')" ;;
 esac
 
-tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
+# Scratch on this repository's own volume, never `$TMPDIR` (leaf `PROGRAM.29`, `SCRATCH-LOCALITY`).
+mkdir -p "$ROOT/target/doctrine_scratch"
+tmp="$(mktemp -d "$ROOT/target/doctrine_scratch/frozen_evaluation.XXXXXX")"; trap 'rm -rf "$tmp"' EXIT
 
 # ── 1. INTEGRITY + 2. COMPLETENESS ───────────────────────────────────────────────────────────
 grep -vE '^[[:space:]]*(#|$)' "$MANIFEST" > "$tmp/entries.txt" || true

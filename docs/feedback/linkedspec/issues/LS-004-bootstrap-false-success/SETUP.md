@@ -73,7 +73,7 @@ What the arms do, and what they cost:
 
 | Arm | Writes | Needs | Rough cost |
 | --- | --- | --- | --- |
-| `self-test` | a temp dir it removes | nothing | seconds |
+| `self-test` | a scratch directory it removes, under the enclosing work tree's `target/` (or beside this script) | nothing | seconds |
 | `arm failure` | removes `generated/` in the checkout; creates the empty store | `make`, `cargo` | under a minute — it fails at the first prerequisite |
 | `arm success` | removes `generated/` and the nested `rust/target`, then regenerates both | network for the first package resolution | minutes; the log is hundreds of megabytes |
 | `arm reuse` | nothing | a prepared checkout | seconds |

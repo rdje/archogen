@@ -13,7 +13,9 @@ URL="${1:-}"
 [ -n "$URL" ] || { echo "usage: scripts/update_scaffold.sh <bedrock-repo-url-or-local-path>" >&2; exit 2; }
 ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
 
-tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
+# Scratch on this repository's own volume, never `$TMPDIR` (leaf `PROGRAM.29`, `SCRATCH-LOCALITY`).
+mkdir -p "$ROOT/target/doctrine_scratch"
+tmp="$(mktemp -d "$ROOT/target/doctrine_scratch/update_scaffold.XXXXXX")"; trap 'rm -rf "$tmp"' EXIT
 if [ -d "$URL/.git" ]; then
   cp -R "$URL" "$tmp/bedrock"
 else

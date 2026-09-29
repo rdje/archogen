@@ -242,6 +242,26 @@ $ bash scripts/check_repository_boundary.sh --self-test  # its RED arms, on scra
 moves and dirties those — thousands of entries, measured — and running a documented build is
 consumption, so a gate that counted them would refuse every commit for doing what the rules allow.
 
+## Scratch stays on this volume
+
+Every temporary file this repository's scripts create lives under its own `target/`, never in the
+system's temporary directory. `SCRATCH-LOCALITY` reads every tracked shell script and Rust source and
+refuses a `mktemp` with no template under `target/`, a line naming the system temporary directory, and a
+Rust `temp_dir()` call. When it was written, one ordinary run of the doctrines and their self-tests made
+**26** temporary directories and files, **every one** of them off this volume, from 18 places in 15
+files. Four of those places are in files this project takes from its scaffold. A local edit there would
+be erased by the next sync, so the check lists them without refusing them, and the change they need is
+written down for the scaffold's owner in `docs/decisions/decision_scratch-on-the-repository-volume.md`.
+
+Moving a fixture changes what surrounds it. Two self-tests broke when their scratch moved under
+`target/`: one because git ignores that whole directory, and one because Cargo, walking up from the
+fixture, now found this workspace. The second is why the root `Cargo.toml` excludes `target`.
+
+```console
+$ bash scripts/check_scratch_locality.sh              # the gate
+$ bash scripts/check_scratch_locality.sh --self-test  # its RED arms, on scratch repositories
+```
+
 ## Why `focused` runs the whole suite
 
 §14.3 defines the focused tier as "format/type checks and **affected** contract tests", and

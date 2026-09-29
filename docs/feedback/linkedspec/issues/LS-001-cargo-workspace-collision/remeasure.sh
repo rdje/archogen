@@ -29,6 +29,10 @@
 #       [workspace] at all (where the collision cannot occur), or a failure that is NOT the collision
 #       — which is reported as such rather than counted as this defect
 set -uo pipefail
+HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+# Scratch stays on the volume this directory lives on — under the enclosing work tree's `target/`, else
+# beside this script — and never in the system temporary directory.
+ROOT="$(git -C "$HERE" rev-parse --show-toplevel 2>/dev/null || printf '%s' "$HERE")"
 
 APP_ROOT=""
 CHECKOUT=""
@@ -160,10 +164,22 @@ measure() {
   return 1
 }
 
-# ── self-test: synthetic layouts, no LinkedSpec checkout, no network, no writes outside temp ──
+# ── self-test: synthetic layouts, no LinkedSpec checkout, no network, no writes outside scratch ──
 if [ "$SELF_TEST" -eq 1 ]; then
   command -v cargo >/dev/null || { echo "LS-001 remeasure: the self-test needs cargo" >&2; exit 2; }
-  t="$(mktemp -d)"; trap 'rm -rf "$t"' EXIT
+  mkdir -p "$ROOT/target/feedback_scratch"
+  t="$(mktemp -d "$ROOT/target/feedback_scratch/LS-001.XXXXXX")"; trap 'rm -rf "$t"' EXIT
+  # The arms model applications with and without an enclosing workspace, so the scratch directory itself
+  # must have none: Cargo walks up past a workspace that excludes a package, and one above the scratch
+  # would capture every layout. Where one does, this is "could not run", not an arm failing.
+  mkdir -p "$t/probe/src"; echo 'fn main() {}' > "$t/probe/src/main.rs"
+  printf '[package]\nname = "probe"\nversion = "0.1.0"\nedition = "2021"\n' > "$t/probe/Cargo.toml"
+  found="$(cargo locate-project --workspace --message-format plain --manifest-path "$t/probe/Cargo.toml" 2>&1)"
+  if [ "$found" != "$t/probe/Cargo.toml" ]; then
+    echo "LS-001 remeasure: the self-test's scratch $t is inside a Cargo workspace ($found);" >&2
+    echo "  exclude \`target\` from that workspace, or run this directory from outside it" >&2
+    exit 2
+  fi
   arms=0; ok=0
   arm() { # $1 expected exit, $2 label, $3 app root, $4 manifest
     arms=$((arms + 1))

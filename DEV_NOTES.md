@@ -1,5 +1,23 @@
 # DEV_NOTES.md
 
+## _(2026-09-29)_ — a census scoped to a folder, and a fixture moved out of its environment
+
+- `PROGRAM.29`, moving gate scratch out of the system temporary directory. The leaf was filed on a census of
+  `scripts/`: 8 sites in 6 files. A second census, over every tracked file but dropping `docs/` to shed prose,
+  found the same 8. The gate written for the leaf reads every tracked shell script by extension and found **18
+  in 15**. The ten missing were all under `docs/`, the vendor-feedback scripts and two probe artifacts. Both
+  filters removed a *place*, and code lives in places you file as documentation. Promoted:
+  `docs/knowledge/scope-a-census-by-the-rule-not-by-the-folder.md`.
+- ⛔ **Moving a fixture moved what surrounded it.** Two self-tests changed meaning without a line changing.
+  `FEEDBACK-SELF-CONTAINED`'s went **partly vacuous**: two red arms stopped firing because its lister asked
+  git, which ignores all of `target/`. LS-001's re-measurement false-failed an arm because Cargo, walking up
+  past an excluding workspace, found this repository's root. The vacuous one is the dangerous kind: it was
+  seen only because `PROGRAM.28`'s runner counts every gate's fired arms. Both fixed at the cause (a `find`
+  for `target/` fixtures; `exclude = [..., "target"]` in the root manifest; a precondition probe in LS-001).
+  Promoted into `docs/knowledge/a-gate-is-only-as-sharp-as-its-fixtures.md`.
+- Measured, not read: a logging `mktemp` first on `PATH` recorded 26 calls, 26 off the volume, and 0 left
+  behind. On macOS `$TMPDIR` is `/var/folders/…/T/`, so a grep for `/tmp` would have found nothing to fix.
+
 ## _(2026-09-29)_ — an `or_insert` over a fact map is the code shape of "choosing one"
 
 - `M1.33`. A single description declaring `timer.counter` twice, offering 32 and 16 bits, was accepted. Two

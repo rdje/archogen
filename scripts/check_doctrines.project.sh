@@ -27,6 +27,7 @@ PROJECT_DOCTRINES=(
   "LANGUAGE-FREEZE|no construct of eadl/1 moved without a migration note — the baseline agrees with the working tree, and amending it is an explicit act|scripts/check_language_freeze.sh"
   "BOOK-COVERAGE|every workspace member is named in a book chapter that also cites a path inside it — the mirror of BOOK-ANCHORS|scripts/check_book_coverage.sh"
   "REPOSITORY-BOUNDARY|every other repository is read-only — each vendored checkout this repository pins is at its pin, with no local commit, no modified file and no created file|scripts/check_repository_boundary.sh"
+  "SCRATCH-LOCALITY|nothing this repository owns puts scratch off its volume — every temporary file or directory is made under target/, and no script names the system temporary directory|scripts/check_scratch_locality.sh"
 )
 
 for entry in "${PROJECT_DOCTRINES[@]}"; do

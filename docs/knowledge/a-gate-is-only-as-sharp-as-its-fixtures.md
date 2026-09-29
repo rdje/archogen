@@ -7,6 +7,7 @@ answers:
   - "Every RED arm of my gate passes — could the gate still be unable to fail on the real tree?"
   - "My arm expects a refusal and gets one — how do I know it was refused for the reason the arm names?"
   - "My new rule's fixtures went green — would they have gone green without the rule?"
+  - "I moved a self-test's scratch directory and it still passes — is it still testing anything?"
 type: knowledge
 date: 2026-09-13
 ---
@@ -93,3 +94,11 @@ act on. Mutation testing is what turns it into a measurement.
   with and without a rule is evidence about something else. Only a module naming **its own sibling** by a
   local name, and a name an export **hides**, discriminate; `app.sibling` does the first in all three name
   positions, and dropping any one position fails it.
+- ⛔ **Moving a fixture moves what surrounds it.** `PROGRAM.29` moved every gate's scratch from the system
+  temporary directory into `target/`, and two self-tests changed meaning without changing a line.
+  `FEEDBACK-SELF-CONTAINED`'s fixture had relied on being *outside* the repository: inside `target/`, which git
+  ignores entirely, its file lister asked git and got nothing, so two red arms stopped firing. The gate had gone
+  partly vacuous, and it still looked healthy until the self-test counted arms. LS-001's re-measurement had
+  relied on there being no Cargo workspace above it. Inside this repository there was one, and an arm failed
+  for a reason that had nothing to do with the instrument. A fixture encodes its environment. Where the
+  environment is the point, **check it before the arms**, and report "could not run" when it does not hold.

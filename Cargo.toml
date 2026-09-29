@@ -8,7 +8,10 @@ members = ["crates/*", "xtask"]
 # walking up from each manifest, so without this exclusion a vendored manifest binds to this root and
 # then refuses to resolve — the collision reported upstream as LS-001, and the exclusion its
 # integration guide requires of a workspace consumer before any metadata or build command.
-exclude = ["vendor/linkedspec"]
+# `target` for the same walk from the other side: a Cargo fixture built under `target/` — a test's scratch
+# or a gate's — must not bind to this root either, or a fixture that models "no enclosing workspace"
+# silently has one (measured by leaf `PROGRAM.29`: LS-001's self-test, moved onto this volume, lost an arm).
+exclude = ["vendor/linkedspec", "target"]
 
 [workspace.package]
 edition = "2021"

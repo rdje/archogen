@@ -19,7 +19,9 @@ GUARD="$ROOT/scripts/check_task_acceptance.sh"
 [ -f "$GUARD" ] || { echo "probe: REFUSED — $GUARD not found" >&2; exit 2; }
 
 pass=0; fail=0
-WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
+# Scratch on this repository's own volume, never the system temporary directory (leaf `PROGRAM.29`).
+mkdir -p "$ROOT/target/doctrine_scratch"
+WORK="$(mktemp -d "$ROOT/target/doctrine_scratch/task_acceptance_probes.XXXXXX")"; trap 'rm -rf "$WORK"' EXIT
 
 mkrepo() { # $1 = name -> repo dir
   local d="$WORK/$1"

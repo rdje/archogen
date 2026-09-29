@@ -28,7 +28,11 @@ done
 [ -n "$BIN" ] && [ -x "$BIN" ] || { echo "LS-003: --bin <lispish_file> is required; see SETUP.md in this directory" >&2; exit 2; }
 [ -n "$GRAMMAR" ] && [ -f "$GRAMMAR" ] || { echo "LS-003: --grammar <Lispish.spec> is required" >&2; exit 2; }
 
-err="$(mktemp)"; trap 'rm -f "$err"' EXIT
+# Scratch stays on the volume this directory lives on — under the enclosing work tree's `target/`, else
+# beside this script — and never in the system temporary directory.
+ROOT="$(git -C "$HERE" rev-parse --show-toplevel 2>/dev/null || printf '%s' "$HERE")"
+mkdir -p "$ROOT/target/feedback_scratch"
+err="$(mktemp "$ROOT/target/feedback_scratch/LS-003.XXXXXX")"; trap 'rm -f "$err"' EXIT
 observe() {
   for input in "$HERE"/evidence/*.eadl; do
     out="$("$BIN" --grammar "$GRAMMAR" "$input" 2>"$err")"; rc=$?

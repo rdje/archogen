@@ -4,6 +4,24 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — scratch stays on this repository's volume, and a doctrine says so
+
+`ARCHOGEN-PROGRAM-0124` (leaf `PROGRAM.29`). A new doctrine, `SCRATCH-LOCALITY`, with 16 arms and nine
+mutations.
+
+- Measured with a logging `mktemp` first on `PATH`: one run of the doctrines and their self-tests made 26
+  temporary files and directories, **every one off this volume**. None was left behind; they were simply
+  written in the wrong place.
+- **18 sites in 15 files**, where the census that filed the leaf found 8 in 6. The other ten are under
+  `docs/`: the LinkedSpec feedback scripts and two probe artifacts. The 14 project-owned sites now write under
+  `target/`. Each feedback script derives its root from its own location, so it still stands alone.
+- `scripts/check_scratch_locality.sh` reads every tracked shell script and Rust source. Scaffold-owned files
+  are reported, not refused. Their change is written down in
+  `docs/decisions/decision_scratch-on-the-repository-volume.md` and not sent.
+- ⛔ Moving the scratch changed what two self-tests tested. `FEEDBACK-SELF-CONTAINED`'s went partly vacuous
+  and LS-001's re-measurement false-failed. Both are fixed at the cause. The root `Cargo.toml` now excludes
+  `target`, so a Cargo fixture under it is standalone.
+
 ## archogen — every gate's RED arms now run in the integration tier and in CI
 
 `ARCHOGEN-PROGRAM-0123` (leaf `PROGRAM.28`). 14 self-tests discovered and passing; six arms for the runner;

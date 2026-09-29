@@ -117,7 +117,9 @@ done <<< "$consumers"
 # ── RED arms ─────────────────────────────────────────────────────────────────────────────────
 # A check that has only ever been seen green has not been shown to check anything (TOOLBOX.md).
 if [ "${1:-}" = "--self-test" ]; then
-  tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
+  # Scratch on this repository's own volume, never `$TMPDIR` (leaf `PROGRAM.29`, `SCRATCH-LOCALITY`).
+  mkdir -p "$ROOT/target/doctrine_scratch"
+  tmp="$(mktemp -d "$ROOT/target/doctrine_scratch/s0_retirement.XXXXXX")"; trap 'rm -rf "$tmp"' EXIT
   arms=0; arms_ok=0
 
   # Arm 1: a marker with no row in the record.

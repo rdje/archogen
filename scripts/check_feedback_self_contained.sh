@@ -29,9 +29,11 @@ ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
 note() { printf 'FEEDBACK-SELF-CONTAINED: %s\n' "$1" >&2; }
 
 # list_files <dir> — files to inspect. Inside the repo: tracked plus not-yet-staged, never
-# ignored scratch. Outside it (the self-test fixture): everything.
+# ignored scratch. The self-test fixture, under `target/`: everything — git ignores all of `target/`,
+# so asking git would list nothing and every arm would pass vacuously (leaf `PROGRAM.29`).
 list_files() {
   case "$1" in
+    "$ROOT"/target/*) find "$1" -type f ;;
     "$ROOT"/*|docs/*) git ls-files --cached --others --exclude-standard "$1" ;;
     *) find "$1" -type f ;;
   esac
@@ -81,7 +83,9 @@ scan() {
 
 # ── self-test ────────────────────────────────────────────────────────────────────────────────
 if [ "${1:-}" = "--self-test" ]; then
-  tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
+  # Scratch on this repository's own volume, never `$TMPDIR` (leaf `PROGRAM.29`, `SCRATCH-LOCALITY`).
+  mkdir -p "$ROOT/target/doctrine_scratch"
+  tmp="$(mktemp -d "$ROOT/target/doctrine_scratch/feedback_self_contained.XXXXXX")"; trap 'rm -rf "$tmp"' EXIT
   v="$tmp/vendor"; mkdir -p "$v/issues"
   mk() {
     mkdir -p "$1/evidence"

@@ -30,7 +30,9 @@ GUARD="$ROOT/scripts/check_waiver_routing.sh"
 [ -f "$GUARD" ] || { echo "probe: REFUSED — $GUARD not found" >&2; exit 2; }
 
 pass=0; fail=0
-WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
+# Scratch on this repository's own volume, never the system temporary directory (leaf `PROGRAM.29`).
+mkdir -p "$ROOT/target/doctrine_scratch"
+WORK="$(mktemp -d "$ROOT/target/doctrine_scratch/waiver_routing_probes.XXXXXX")"; trap 'rm -rf "$WORK"' EXIT
 
 # $1 = name, $2 = guard to install -> prints the repo dir
 mkrepo() {

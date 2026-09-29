@@ -26,6 +26,10 @@
 #   1 = the defect is STILL PRESENT
 #   2 = could not run (no guide, or a section shape this instrument cannot measure)
 set -uo pipefail
+HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+# Scratch stays on the volume this directory lives on — under the enclosing work tree's `target/`, else
+# beside this script — and never in the system temporary directory.
+ROOT="$(git -C "$HERE" rev-parse --show-toplevel 2>/dev/null || printf '%s' "$HERE")"
 
 GUIDE=""
 SELF_TEST=0
@@ -48,7 +52,8 @@ measure() {  # $1 = guide file, $2 = label to print
   if [ ! -f "$guide" ]; then
     echo "LS-005 remeasure: guide not found: $guide" >&2; return 2
   fi
-  work="$(mktemp -d)"
+  mkdir -p "$ROOT/target/feedback_scratch"
+  work="$(mktemp -d "$ROOT/target/feedback_scratch/LS-005.XXXXXX")"
   sec="$work/section.md"; flat="$work/section.flat"
 
   # The section runs from its own heading to the next top-level heading.
@@ -101,7 +106,8 @@ measure() {  # $1 = guide file, $2 = label to print
 
 # ── self-test: prove the verdict discriminates ──────────────────────────────────────────────
 if [ "$SELF_TEST" -eq 1 ]; then
-  t="$(mktemp -d)"; trap 'rm -rf "$t"' EXIT
+  mkdir -p "$ROOT/target/feedback_scratch"
+  t="$(mktemp -d "$ROOT/target/feedback_scratch/LS-005-self-test.XXXXXX")"; trap 'rm -rf "$t"' EXIT
   arms=0; ok=0
   arm() {  # $1 = expected exit, $2 = label, $3 = guide file
     arms=$((arms + 1))

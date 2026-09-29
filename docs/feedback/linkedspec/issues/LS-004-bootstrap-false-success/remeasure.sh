@@ -42,6 +42,10 @@
 # CONTRACT (exit code is the verdict):
 #   0 = the defect is GONE for this arm · 1 = STILL PRESENT · 2 = could not run or could not decide
 set -uo pipefail
+HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+# Scratch stays on the volume this directory lives on — under the enclosing work tree's `target/`, else
+# beside this script — and never in the system temporary directory.
+ROOT="$(git -C "$HERE" rev-parse --show-toplevel 2>/dev/null || printf '%s' "$HERE")"
 
 APP_ROOT=""
 CHECKOUT=""
@@ -126,7 +130,8 @@ classify() { # $1 log, $2 exit code, $3 nfiles, $4 arm kind
 # ── self-test: the classifier against the historical log and the shapes it must not accept ──────
 self_test() {
   local t arms=0 ok=0 rc
-  t="$(mktemp -d)" || return 2
+  mkdir -p "$ROOT/target/feedback_scratch" || return 2
+  t="$(mktemp -d "$ROOT/target/feedback_scratch/LS-004.XXXXXX")" || return 2
 
   # RED arm — the log tail exactly as frozen in evidence/OBSERVED.txt at PGEN db6f8c68: two failing
   # cargo invocations, a missing build product invoked twice, one false seed, nothing generated.
