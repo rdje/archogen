@@ -4,6 +4,19 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — every gate's RED arms now run in the integration tier and in CI
+
+`ARCHOGEN-PROGRAM-0123` (leaf `PROGRAM.28`). 14 self-tests discovered and passing; six arms for the runner;
+four mutations.
+
+- `scripts/run_self_tests.sh` finds every gate that handles `--self-test` **by census** — plus
+  `scripts/selftest_spine.sh` — runs each, and fails on any failed arm; finding nothing is exit 2, not a pass.
+- It is the new `self-tests` step of `make integration` (~40 s) and a step of the CI doctrine workflow. Until
+  now no tier and no workflow ran a single arm.
+- The book's `verification.md` transcript of the `integration` tier was stale — it predated the `no_std` step
+  and showed QEMU as missing after it was pinned — and is re-rendered from a real run: 7 passed, 1 failed, the
+  emulator's `TARGET_VERIFIED=no`, owned by `M2.8`.
+
 ## archogen — the book is checked from the code's side: every crate is named beside a path into it
 
 `ARCHOGEN-PROGRAM-0122` (leaf `PROGRAM.24`). A new doctrine, `BOOK-COVERAGE`; eight arms; four mutations.

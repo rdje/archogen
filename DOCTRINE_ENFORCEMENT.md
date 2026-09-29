@@ -47,6 +47,11 @@ file. These scripts are on `scripts/update_scaffold.sh`'s overwrite list and the
 so an arm written into them would be erased and could not be sent upstream; from outside, it survives both.
 Every refusing arm must name what it refuses.
 
+⭐ **Every gate's arms are re-run, not just written** (leaf `PROGRAM.28`): `scripts/run_self_tests.sh` discovers
+every gate that handles `--self-test` by census — plus the outside harness above — runs them all, and fails on
+any failed arm. It is the `self-tests` step of the `integration` tier and a step of the CI doctrine workflow;
+at ~40 s it is not on the pre-commit path.
+
 **Project-specific doctrines go in `scripts/check_doctrines.project.sh`** (the pluggable
 slot) — never in the universal driver. That is where a project adds the equivalent of its
 own build gates, format checks, invariant proofs, etc.

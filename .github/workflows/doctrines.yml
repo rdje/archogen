@@ -16,3 +16,7 @@ jobs:
         run: chmod +x scripts/*.sh knowledge-map/scripts/*.sh .githooks/pre-commit .githooks/commit-msg || true
       - name: Run the doctrine enforcer
         run: scripts/check_doctrines.sh
+      # Every gate's own RED arms (PROGRAM.28): the enforcer proves the tree is clean, this proves each gate
+      # can still fail. Discovered by census, so a gate armed tomorrow runs here the day it is armed.
+      - name: Run every gate's self-test
+        run: scripts/run_self_tests.sh

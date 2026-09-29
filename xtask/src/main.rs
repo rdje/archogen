@@ -180,6 +180,20 @@ const DOCTRINES: Step = Step {
     },
 };
 
+/// Every gate's own RED arms, discovered by census (leaf `PROGRAM.28`). A doctrine gate proves the tree is
+/// clean; its `--self-test` proves the gate can still fail — and until this step nothing re-ran those arms.
+/// ~40 s, which is why it is here and not on the pre-commit path.
+const SELF_TESTS: Step = Step {
+    name: "self-tests",
+    proves: "every doctrine gate's RED arms still fire — a gate that stopped being able to fail is caught here",
+    action: Action::Run {
+        program: "scripts/run_self_tests.sh",
+        args: &[],
+        requires: None,
+        matters: "",
+    },
+};
+
 /// The §14.3 tiers, as data.
 ///
 /// ⚠️ **`focused` runs the whole test suite, and that is a measured decision rather than a
@@ -203,6 +217,7 @@ const TIERS: &[Tier] = &[
             CLIPPY,
             TESTS,
             DOCTRINES,
+            SELF_TESTS,
             Step {
                 name: "book",
                 proves: "the mdBook builds — it is the director's window, so a broken book is a broken deliverable",

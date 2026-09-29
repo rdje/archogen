@@ -13,7 +13,7 @@ $ cargo xtask verify --list              # or: make tiers
 | Tier | When | What it covers |
 | --- | --- | --- |
 | `focused` | each edit loop, and every ordinary commit | format, lints, the whole contract suite |
-| `integration` | before a push, and before closing a milestone | the above, plus the doctrine enforcer, the book build, and the pinned emulator |
+| `integration` | before a push, and before closing a milestone | the above, plus the doctrine enforcer, every doctrine gate's own RED arms, the book build, the `no_std` build and the pinned emulator |
 | `extended` | scheduled, or when a change touches parsing, arithmetic or event ordering | fuzzing, mutation, Miri |
 | `hardware` | a change to target support, and every release gate | board regressions and timing observations |
 | `assurance` | every supported release | trust inventory, claim completeness, source and binary identity |
@@ -44,28 +44,45 @@ there. And the two reasons a step cannot run are kept apart, because the respons
 
 ## What that looks like today
 
+Rendered from a run, not retyped:
+
 ```console
 $ cargo xtask verify --tier integration
 tier: integration — before a push, and before closing a milestone
-  ✅ fmt                  0.11s  every Rust source is in canonical format
-  ✅ clippy               0.07s  no lint fires anywhere, including in tests and examples
-  ✅ tests                2.27s  every contract test passes, F28 and the semantic corpus included
-  ✅ doctrines            1.44s  every repository invariant holds on the working tree
-  ✅ book                 0.06s  the mdBook builds — it is the director's window
-  ⚠  emulator           UNAVAILABLE — `qemu-system-riscv64` is not on PATH
-     §14.3 puts "selected emulator runs" in this tier. Without QEMU there is no independent
-     execution of a target binary at all — see docs/targets/first-target.md
-tier integration: incomplete — 5 passed, 0 failed, 1 unavailable, 0 not built
-  ⚠  incomplete is NOT a pass.
+  ✅ fmt                  0.18s  every Rust source is in canonical format
+  ✅ clippy               0.49s  no lint fires anywhere, including in tests and examples
+  ✅ tests                3.07s  every contract test passes, F28 and the semantic corpus included
+  ✅ doctrines            4.22s  every repository invariant holds on the working tree
+  ✅ self-tests          33.87s  every doctrine gate's RED arms still fire — a gate that stopped being able to fail is caught here
+  ✅ book                 0.08s  the mdBook builds — it is the director's window, so a broken book is a broken deliverable
+  ✅ no-std-build         0.04s  the runtime core compiles for a bare-metal target (§14.3's "compile targets")
+  ❌ emulator             0.12s  FAILED
+     target-emulator: found: QEMU emulator version 11.1.1
+     target-emulator: TARGET_VERIFIED=no — this configuration is still a PROPOSAL
+     target-emulator:   leaf M2.8 owns flipping it, with the evidence that justifies it
+     re-run it directly: scripts/target_emulator.sh --check
+tier integration: failed — 7 passed, 1 failed, 0 unavailable, 0 not built
 $ echo $?
-20
+1
 ```
 
-⭐ **Four of the five tiers are incomplete, and that is the runner's most useful output.** Before
-it existed, the fuzz corpus, the mutation harness, the Miri wiring, the board and the whole
-assurance story were not *reported as missing* — they were simply not mentioned, which reads
-identically to being covered. Each gap now names its owner: `PROGRAM.9` for the extended tier's
-three steps, `M5.1` for the board, `M3.6` / `M4.8` / `M4.7` for the assurance tier.
+The one failure is honest and owned. QEMU is installed and pinned now, so the emulator step *runs* — and
+refuses, because the target configuration it checks still says `TARGET_VERIFIED=no`: it is a proposal until
+leaf `M2.8` supplies the evidence to flip it. A tier that turned that into a pass would be claiming a target
+nobody has verified.
+
+⭐ **The `self-tests` step is the newest, and it answers a different question from `doctrines`.** The
+doctrines say the tree is clean; the self-tests say each doctrine gate can still *fail* — every gate's own
+RED arms, discovered by census from `scripts/`, plus `scripts/selftest_spine.sh`, which arms the gates the
+scaffold owns from outside. Until leaf `PROGRAM.28` nothing ran them, so an arm that broke, or began to pass
+for the wrong reason, stayed invisible until someone happened to invoke it. It takes about forty seconds,
+which is why it lives here and not on every commit.
+
+⭐ **Three of the five tiers are incomplete, and that is the runner's most useful output.** Before it
+existed, the fuzz corpus, the mutation harness, the Miri wiring, the board and the whole assurance story
+were not *reported as missing* — they were simply not mentioned, which reads identically to being covered.
+Each gap now names its owner: `PROGRAM.9` for the extended tier's three steps, `M5.1` for the board,
+`M3.6` / `M4.8` / `M4.7` for the assurance tier.
 
 ## What the `tests` step is a suite *of*
 
