@@ -81,10 +81,12 @@ scaffold owns from outside. Until leaf `PROGRAM.28` nothing ran them, so an arm 
 for the wrong reason, stayed invisible until someone happened to invoke it. It takes about forty seconds,
 which is why it lives here and not on every commit.
 
-⭐ **Three of the five tiers are incomplete, and that is the runner's most useful output.** Before it
-existed, the fuzz corpus, the mutation harness, the Miri wiring, the board and the whole assurance story
-were not *reported as missing* — they were simply not mentioned, which reads identically to being covered.
-Each gap now names its owner: `PROGRAM.9` for the extended tier's three steps, `M5.1` for the board,
+⭐ **Two of the five tiers are incomplete, and saying so is the runner's most useful output.** Before
+the runner existed, the fuzz corpus, the mutation harness, the Miri wiring, the board and the whole
+assurance story were not *reported as missing*. They were simply not mentioned, which reads exactly
+like being covered. Each gap was given an owner. The `extended` tier's three steps were built under
+`PROGRAM.9`, and on `2026-09-30` it reported **passed** for the first time: `fuzz` in 3.75 s,
+`mutation` in 8.00 s, `miri` in 996.69 s. The remaining gaps are named: `M5.1` for the board, and
 `M3.6` / `M4.8` / `M4.7` for the assurance tier.
 
 ### The `miri` step proves it can fail before it passes
@@ -144,6 +146,31 @@ release run passed straight over the third defect.
 ```console
 $ bash scripts/extended_fuzz.sh                 # the fixed seed and a fresh one
 $ FUZZ_SEED=42 bash scripts/extended_fuzz.sh    # a chosen seed; a failure prints its replay command
+```
+
+### The `mutation` step: each defect, put back, must still be caught
+
+Every leaf that fixed a defect proved its test by breaking the code on purpose and watching the test
+fail. That was done by hand, once. `cargo xtask mutate` does it again on every run, from a catalog
+(`xtask/mutations.txt`). Each entry is an exact piece of code, a deliberate defect to swap in, and
+the tests that must catch it. The harness checks each step:
+
+- the text occurs exactly once;
+- the defect really landed in the file;
+- the tests failed, and which ones;
+- the file was restored byte for byte.
+
+A defect that does not even compile is a broken entry, never a "kill". A run that is interrupted
+leaves a marker, and the next run refuses to start until the file is restored.
+
+One entry is expected to **survive**. S0's first oracle could not tell the hyperperiod (`lcm`) from
+the longest period (`max`), because all its fixtures were harmonic. That blind spot is kept as a
+reproduction you can run: the harmonic tests alone let the defect through, and the full suite
+catches it with the non-harmonic case added for exactly that reason.
+
+```console
+$ cargo xtask mutate                        # the whole catalog
+$ cargo xtask mutate --only lcm-to-max      # one entry
 ```
 
 ## What the `tests` step is a suite *of*

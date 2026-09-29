@@ -4,6 +4,21 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the mutation controls are a catalog, and the extended tier passes for the first time
+
+`ARCHOGEN-PROGRAM-0132` (leaf `PROGRAM.9.3`; closes `PROGRAM.9`).
+
+- `cargo xtask mutate` runs `xtask/mutations.txt`. Each entry puts a real defect back, runs the tests that
+  must catch it, and restores the file byte for byte. It checks that the text occurs once and that the
+  defect landed, names the tests that failed, and treats a defect that does not compile as a broken entry,
+  never a catch. An interrupted run leaves a marker that blocks the next run until the file is restored.
+- There are eight entries: the three defects fixed in the last day (`M1.34`–`M1.36`), the scheduler's
+  priority direction, the response-time ceiling, the D ≤ T rule, and S0's `lcm`/`max` pair. The last is
+  **kept as a blind spot that must survive** the harmonic corpus, the first oracle's weakness reproduced
+  by command.
+- **`cargo xtask verify --tier extended` reports `passed`** for the first time: fuzz 3.75 s, mutation 8.00 s,
+  Miri 996.69 s. Two of the five tiers remain incomplete, `hardware` and `assurance`.
+
 ## archogen — the extended tier fuzzes the reader and the exact arithmetic, and found three defects first
 
 `ARCHOGEN-PROGRAM-0131` (leaf `PROGRAM.9.2`).

@@ -34,6 +34,8 @@
 //! * **not built** — the step does not exist yet. It names the task-tree leaf that owns building
 //!   it, so a reader learns where the work is tracked instead of concluding the project forgot.
 
+mod mutation;
+
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::Instant;
@@ -280,13 +282,12 @@ const TIERS: &[Tier] = &[
             },
             Step {
                 name: "mutation",
-                proves: "the suite is sensitive to the defects it claims to catch",
-                action: Action::NotBuilt {
-                    owner: "PROGRAM.9.3",
-                    note: "mutation controls are run by hand, per leaf, and recorded in each \
-                           acceptance checklist — which is evidence but not a repeatable tier. \
-                           One of them found a real blind spot in F28 (see \
-                           docs/knowledge/a-gate-is-only-as-sharp-as-its-fixtures.md)",
+                proves: "every catalogued defect is still caught by the test written for it, and the recorded blind spot still survives the corpus that has it",
+                action: Action::Run {
+                    program: "cargo",
+                    args: &["xtask", "mutate"],
+                    requires: None,
+                    matters: "",
                 },
             },
             Step {
@@ -583,6 +584,11 @@ fn main() {
             0
         }
         ["verify", "--tier", name] => verify(name),
+        ["mutate"] => mutation::run(&repo_root(), &[]),
+        ["mutate", "--only", ids @ ..] if !ids.is_empty() => mutation::run(
+            &repo_root(),
+            &ids.iter().map(|s| (*s).to_string()).collect::<Vec<_>>(),
+        ),
         other => {
             eprintln!("xtask: unrecognized arguments {other:?}");
             eprintln!("  hint: cargo xtask verify --tier <{}>", tier_names());

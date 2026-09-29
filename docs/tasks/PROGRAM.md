@@ -1607,7 +1607,7 @@ mdBook that is the director's window into the project.
   Commit: `pending`
 
 - ID: `PROGRAM.9`
-  Status: `in-progress`
+  Status: `done`
   Goal: build what the **extended** tier declares but cannot run — a fuzz corpus over the reader
   and the checked arithmetic, a repeatable mutation harness, and Miri wiring (§13.3).
   Acceptance: `cargo xtask verify --tier extended` reports `passed` on a machine with the tools
@@ -1618,8 +1618,13 @@ mdBook that is the director's window into the project.
   ⛔ **Opened by `PROGRAM.3`, which is the point of that leaf.** These three gaps existed before
   the runner and were invisible; the runner makes the extended tier report `incomplete` until
   they are closed, so the absence is a routed item rather than a silence.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: closed `2026-09-30` by its three children. Its own acceptance, each part measured: `cargo xtask
+  verify --tier extended` → **`tier extended: passed — 3 passed, 0 failed`** on this machine (fuzz 3.75 s, mutation
+  8.00 s, miri 996.69 s); each step fails on a seeded defect (the Miri arm's dangling read, the fuzz harness's
+  six arms and F-A–F-D, the mutation catalog's own H-1–H-4); the `lcm`→`max` blind spot is reproduced by
+  `cargo xtask mutate --only lcm-to-max-against-the-harmonic-corpus`. The fuzz harness also found three
+  engine defects before its own commit (`M1.34`–`M1.36`).
+  Commit: `ARCHOGEN-PROGRAM-0127` (`.9.1`), `ARCHOGEN-PROGRAM-0131` (`.9.2`), `ARCHOGEN-PROGRAM-0132` (`.9.3`)
   Children: `PROGRAM.9.1`, `PROGRAM.9.2`, `PROGRAM.9.3` — decomposed `2026-09-29`: three different tools, one
   commit each. Each step **arms itself**: before its real run it proves, on a seeded defect in scratch under
   `target/`, that it can still fail — so `passed` from this tier always means "an instrument that can fail did
@@ -1759,14 +1764,67 @@ mdBook that is the director's window into the project.
     `a-gate-is-only-as-sharp-as-its-fixtures.md`.
 
 - ID: `PROGRAM.9.3`
-  Status: `pending`
+  Status: `done`
   Goal: the mutation controls that each leaf ran by hand become a repeatable harness — a catalog of
   mutations, each applied, verified to have applied, run against the suite and restored.
   Acceptance: a `mutation` step over the catalog that fails on a surviving mutation; it reproduces by
   command the `lcm`→`max` blind spot found by hand in `S0.4` (surviving against the original harmonic
   fixtures, killed by the discriminating one); restoration checked byte for byte.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the checklist — the catalog run twice, four harness arms, the tier end to end.
+  Commit: `ARCHOGEN-PROGRAM-0132 (leaf PROGRAM.9.3)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — mutation controls existed only as hand-run evidence inside checklists; no command
+    re-ran any of them:
+    ```text
+    $ git grep -n 'owner: "PROGRAM.9.3"' 0274f41 -- xtask/src/main.rs
+      0274f41:xtask/src/main.rs:285:                    owner: "PROGRAM.9.3",          (the step: NOT BUILT)
+    $ git grep -c "restored by \`cmp\`\|mutation" 0274f41 -- docs/tasks/M1.md docs/tasks/PROGRAM.md
+      0274f41:docs/tasks/M1.md:129     0274f41:docs/tasks/PROGRAM.md:57       (hand-run controls, recorded once)
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — a control run once proves the test caught the defect *then*; the next
+    change can make it stop, and nothing asked again. The evidence lived in prose, not in a runnable catalog —
+    the step's own note said so:
+    ```text
+    $ git grep -n "mutation controls are run by hand" 0274f41 -- xtask/src/main.rs
+      0274f41:xtask/src/main.rs:286:                    note: "mutation controls are run by hand, per leaf, and recorded in each \
+    ```
+  - [x] **FIX** — `xtask/src/mutation.rs` (`cargo xtask mutate`, `--only <id>`) over `xtask/mutations.txt`: each
+    entry an exact text that must occur once, a replacement, the `cargo test` arguments and `expect
+    killed|survives`. Checked at every step: the text occurs once; the mutated file is read back; a mutation that
+    does not compile is a **broken entry**, never a kill; a kill **names the failing tests**; the original is
+    restored and read back byte for byte, by a `Drop` guard on panic, and a sentinel under `target/` stops the
+    next run after an interrupted one. Eight entries: the `lcm`→`max` pair (killed by the full oracle; **surviving**
+    the harmonic corpus — S0.4's blind spot, reproduced by command), `M1.34`–`M1.36`, the scheduler's priority
+    scan, the response-time ceiling, and §3.1's D ≤ T. The `mutation` step runs it.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    $ cargo xtask mutate
+      ✓ lcm-to-max        killed by f28_a_non_harmonic_task_set_separates_the_hyperperiod_from_the_longest_period (2.1s)
+      ✓ lcm-to-max-against-the-harmonic-corpus     survived (1.4s) — … s0_oracle -- --skip non_harmonic
+      ✓ saturating-comparison   killed by rational::tests::ordering_agrees_with_equality_on_values_near_the_limits, …
+      ✓ byte-wise-escape        killed by reader::tests::an_unknown_escape_before_a_multibyte_character_is_reported_not_a_panic
+      ✓ unchecked-power-of-ten  killed by rational::tests::exact_text_survives_a_power_of_ten_beyond_i128
+      … (8 of 8)
+      mutate: OK — 8 mutation(s), each killed or surviving exactly as the catalog expects        exit=0  (8 s)
+    ```
+    Harness arms, each through a temporary catalog entry, the catalog restored by `cmp`: **H-1** a text not in
+    the file → `occurs 0 time(s)`, exit=2; **H-2** a mutation that does not compile → `a broken catalog entry,
+    not a kill`, exit=2; **H-3** an equivalent mutant expected killed → `1 of 1 did not do what the catalog
+    expects`, exit=1; **H-4** a leftover sentinel → `an earlier run was interrupted`, refused. After every arm,
+    `git status --short -- crates/` → empty. ⚠️ Honest limit: the `Drop` restore on a panic is by construction,
+    not exercised; a killed process is what the sentinel covers.
+  - [x] **NO REGRESSION** — `cargo test -q -p xtask` → `test result: ok. 14 passed` (5 new: the catalog parser,
+    its refusals, indentation, the once-only rule, the failing-test list); the tier end to end:
+    ```text
+    $ cargo xtask verify --tier extended
+      ✅ fuzz                 3.75s   ✅ mutation             8.00s   ✅ miri               996.69s
+      tier extended: passed — 3 passed, 0 failed, 0 unavailable, 0 not built                exit=0
+    ```
+  - [x] **LOCKSTEP** — `verification.md` gains "The `mutation` step: each defect, put back, must still be caught",
+    and its "three of the five tiers are incomplete" is now two, with the date `extended` first passed;
+    `COMMIT.md`'s tier status said `extended` was incomplete everywhere and is corrected; `TOOLBOX.md` row.
 
 - ID: `PROGRAM.4`
   Status: `done`
@@ -2599,16 +2657,15 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.9` | `in-progress` | the extended tier reports `incomplete` on every run until its three steps exist |
-| 2 | `PROGRAM.6` | `pending` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |
-| 3 | `PROGRAM.13` | `pending` | twelve closed leaves in `BOOTSTRAP`, `M2` and this tree do not name their own commit — backfill both logs from git, then `PROGRAM.14` gates it so the gap cannot reopen |
-| 4 | `PROGRAM.15` | `pending` | a feedback register row that contradicts its own issue sub-tree passes every gate today; five state transitions in six commits held only by hand-editing and a manual census |
-| 5 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
-| 6 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. ⭐ A **near-miss** worth pricing in, recorded honestly as a near-miss and not as a fourth instance: `PROGRAM.18`'s frontier row still read "ten of eighteen controls" while this leaf was being written, and was corrected in the same commit — it would have gone stale the moment the fix landed, and nothing in the tree compares a control count against the controls. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with. ⛔ An **eighth** shape landed `2026-09-29` and it falsifies the acceptance's *population* rather than adding a figure: `CHANGELOG.md` said "Newest first" and did not, one entry sitting above six newer ones for seven commits because five consecutive commits inserted at the same wrong anchor — and `CHANGELOG.md` is not one of the three live surfaces the acceptance enumerates. Two falsifications of a three-item list, so the population becomes every live surface the commit stages |
-| 7 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
-| 8 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
-| 9 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
-| 10 | `PROGRAM.30` | `pending` | **medium** — the Rust channel, mdBook and CI actions are unpinned; found deriving the ledger's pins |
+| 1 | `PROGRAM.6` | `pending` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |
+| 2 | `PROGRAM.13` | `pending` | twelve closed leaves in `BOOTSTRAP`, `M2` and this tree do not name their own commit — backfill both logs from git, then `PROGRAM.14` gates it so the gap cannot reopen |
+| 3 | `PROGRAM.15` | `pending` | a feedback register row that contradicts its own issue sub-tree passes every gate today; five state transitions in six commits held only by hand-editing and a manual census |
+| 4 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
+| 5 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. ⭐ A **near-miss** worth pricing in, recorded honestly as a near-miss and not as a fourth instance: `PROGRAM.18`'s frontier row still read "ten of eighteen controls" while this leaf was being written, and was corrected in the same commit — it would have gone stale the moment the fix landed, and nothing in the tree compares a control count against the controls. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with. ⛔ An **eighth** shape landed `2026-09-29` and it falsifies the acceptance's *population* rather than adding a figure: `CHANGELOG.md` said "Newest first" and did not, one entry sitting above six newer ones for seven commits because five consecutive commits inserted at the same wrong anchor — and `CHANGELOG.md` is not one of the three live surfaces the acceptance enumerates. Two falsifications of a three-item list, so the population becomes every live surface the commit stages |
+| 6 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
+| 7 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
+| 8 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
+| 9 | `PROGRAM.30` | `pending` | **medium** — the Rust channel, mdBook and CI actions are unpinned; found deriving the ledger's pins |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
@@ -2720,6 +2777,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-29` | `PROGRAM.5` | `git grep` for URLs and ledger links at `cb8180d`; the ledger gate on the real tree and its 20 arms; fifteen mutations M-1–M-15; two falsifications on the real tree (the QEMU pin moved, a citation deleted); `mdbook build` and each entry's anchor in the HTML; `BOOK-ANCHORS` | 0 URLs and 0 ledger links before; 11 entries, 7 pins carried, 21 citations in 12 files after; every mutation fails its own arm; both real-tree falsifications refused at the named entry and line; the Rust channel, mdBook and CI actions found unpinned → `PROGRAM.30` |
 | `2026-09-29` | `PROGRAM.9.1` | the extended tier at `39aa2fc` against `cargo +nightly miri --version`; every one of 34 test targets under Miri alone (600 s cap); the tier end to end; F-1 arm without UB, F-2 stale exclusion, F-3 missing component; the probe-form test and its mutation; the home cache after the run | Miri reported unavailable while installed → found on `nightly`; 541 passed, 4 ignored, 0 failed; five corpus walks over 300 s left out on measurement; `miri` ✅ in 851 s; all three falsifications refused; sysroot under `target/` |
 | `2026-09-29` | `PROGRAM.9.2` | the harness's first runs (smoke, and 5 seeds × 20 000 with overflow checks); the step on a fixed and a fresh seed; seeded defects F-A–F-D and F-C without overflow checks; `cargo test -p xtask` | found `M1.36` on the first run (and `M1.34`, `M1.35` while designing it) — all three fixed first; then 8 properties and 6 arms green on every seed; every seeded defect fails its own property or arm; F-D's restore nearly skipped (untracked file) |
+| `2026-09-30` | `PROGRAM.9.3` / `PROGRAM.9` | `cargo xtask mutate` twice (the second naming each kill's tests); harness arms H-1–H-4 through temporary entries; `cargo test -p xtask`; the `extended` tier end to end | 8 of 8 as expected, each kill by the test written for its defect, the `lcm`→`max` blind spot surviving the harmonic corpus; every arm refused as designed, `crates/` clean after each; 14 / 0; **`extended` passed for the first time** |
 
 ## Commit Log
 
@@ -2753,6 +2811,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.5` | `ARCHOGEN-PROGRAM-0126 (leaf PROGRAM.5)` | **§15's ledger exists and is checked.** A book chapter of 11 external sources at the versions they are pinned to; `SOURCE-LEDGER` derives every pin and every naming document. `PROGRAM.30` filed for the unpinned toolchain |
 | `PROGRAM.9` → `PROGRAM.9.1` | `ARCHOGEN-PROGRAM-0127 (leaf PROGRAM.9.1)` | **the `miri` step runs, and proves it can fail first.** Found on `nightly` (it had been reported unavailable while installed); a seeded dangling-pointer read refused before every run; every test target timed under Miri, five corpus walks left out on measured cost; sysroot under `target/`. `PROGRAM.9` decomposed into `.9.1`–`.9.3` |
 | `PROGRAM.9.2` | `ARCHOGEN-PROGRAM-0131 (leaf PROGRAM.9.2)` | **the `extended` tier fuzzes the reader and the exact arithmetic.** A dependency-free seeded harness, six known-false arms it must refute, eight properties; a fixed and a fresh seed, overflow checks on. It found three engine defects before its own commit (`M1.34`–`M1.36`) |
+| `PROGRAM.9.3` → `PROGRAM.9` | `ARCHOGEN-PROGRAM-0132 (leaf PROGRAM.9.3)` | **the mutation controls are a catalog run on every `extended` tier**, and **`extended` passes** for the first time. `cargo xtask mutate`: eight entries, each checked to apply once, name its killing tests and restore byte for byte; S0.4's blind spot reproduced by command. `PROGRAM.9` closed |
 
 ## Changelog
 

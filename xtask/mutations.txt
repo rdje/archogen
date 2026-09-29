@@ -1,0 +1,128 @@
+# xtask/mutations.txt — the catalog `cargo xtask mutate` runs (leaf `PROGRAM.9.3`).
+#
+# Each entry: an exact text that must occur once in `file`, its replacement, the `cargo test` arguments
+# that must see it, and whether they KILL it or, for a blind spot kept on purpose as a reproduction,
+# let it SURVIVE. `from`/`to` lines are indented four spaces beyond the code's own indentation.
+# An entry comes from a defect found or a control run by hand; its `why` says which.
+
+mutation lcm-to-max
+file crates/archogen-s0/src/interpret.rs
+test -p archogen-cli --test s0_oracle
+expect killed
+why S0.4's blind spot: the hyperperiod as the longest period. F28's non-harmonic case (10 and 15 ms) must see it.
+from
+        (a / gcd(a, b)).checked_mul(b)
+to
+        Some(a.max(b))
+end
+
+mutation lcm-to-max-against-the-harmonic-corpus
+file crates/archogen-s0/src/interpret.rs
+test -p archogen-cli --test s0_oracle -- --skip non_harmonic
+expect survives
+why The blind spot itself, kept as a reproduction: F28's harmonic fixtures (10/30, 10/20 ms) cannot tell lcm from max, which is why the non-harmonic case exists.
+from
+        (a / gcd(a, b)).checked_mul(b)
+to
+        Some(a.max(b))
+end
+
+mutation saturating-comparison
+file crates/eadl-model/src/rational.rs
+test -p eadl-model --lib
+expect killed
+why M1.34: two unequal values compared Equal once both cross products passed i128, and a deadline longer than its period was admitted.
+from
+            let (left_sign, right_sign) = (self.numerator.signum(), other.numerator.signum());
+            if left_sign != right_sign {
+                return left_sign.cmp(&right_sign);
+            }
+            let left = widening_mul(
+                self.numerator.unsigned_abs(),
+                other.denominator.unsigned_abs(),
+            );
+            let right = widening_mul(
+                other.numerator.unsigned_abs(),
+                self.denominator.unsigned_abs(),
+            );
+            let magnitude = left.cmp(&right);
+            if left_sign < 0 {
+                magnitude.reverse()
+            } else {
+                magnitude
+            }
+to
+            let left = self.numerator.saturating_mul(other.denominator);
+            let right = other.numerator.saturating_mul(self.denominator);
+            left.cmp(&right)
+end
+
+mutation byte-wise-escape
+file crates/eadl-front/src/reader.rs
+test -p eadl-front --lib
+expect killed
+why M1.35: an unknown escape read as one byte stranded the reader inside a multi-byte character, and `archogen check` crashed.
+from
+                        let Some(escape) = self.raw[self.at..].chars().next() else {
+                            continue;
+                        };
+                        self.at += escape.len_utf8();
+to
+                        let Some(escape) = self.peek().map(char::from) else {
+                            continue;
+                        };
+                        self.at += 1;
+end
+
+mutation unchecked-power-of-ten
+file crates/eadl-model/src/rational.rs
+test -p eadl-model --lib
+expect killed
+why M1.36: printing 1/2^100 overflowed the power of ten — a panic in debug, a wrong decimal in release.
+from
+            let Some(multiplier) = 10_i128.checked_pow(scale) else {
+                return format!("{}/{}", self.numerator, self.denominator);
+            };
+to
+            let mut multiplier: i128 = 1;
+            for _ in 0..scale {
+                multiplier *= 10;
+            }
+end
+
+mutation scheduler-picks-the-lowest-priority
+file crates/rt-core/src/scheduler.rs
+test -p rt-core
+expect killed
+why The index is the priority rank, 0 highest (decision_priority-comparison-direction.md): scanning from the top picks the lowest-priority ready task.
+from
+            // The highest-priority ready task is the lowest index, because the index IS the rank.
+            let mut best: Option<usize> = None;
+            for task in 0..N {
+to
+            // The highest-priority ready task is the lowest index, because the index IS the rank.
+            let mut best: Option<usize> = None;
+            for task in (0..N).rev() {
+end
+
+mutation response-time-rounds-down
+file crates/rt-analysis/src/response.rs
+test -p rt-analysis
+expect killed
+why §7.4's upward rounding: a floor instead of a ceiling understates interference and turns a missed deadline into a reported pass.
+from
+            whole.checked_add(1)
+to
+            Some(whole)
+end
+
+mutation constrained-deadline-refuses-equality
+file crates/eadl-model/src/workload.rs
+test -p eadl-model --lib
+expect killed
+why §3.1 admits D ≤ T, not D < T: refusing equality would reject every implicit-deadline task set in the repository.
+from
+        if ordering.is_gt() {
+to
+        if ordering.is_ge() {
+end
