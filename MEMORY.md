@@ -14,9 +14,7 @@
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M1` → frontier `M1.33`. `PROGRAM` `.11`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
-- **Next action:** ⛔ **first, flip `docs/semantics/migrations/eadl-1-name-resolution.md` to `status: applied`**
-  in a docs-only commit — the freeze gate refuses every commit until it does. Then **`M1.33`, high — a name is
-  declared once**: a single description declaring `timer.counter` twice with 32 and 16 bits is **accepted**
+- **Next action:** **`M1.33`, high — a name is declared once**: a single description declaring `timer.counter` twice with 32 and 16 bits is **accepted**
   (presence's `or_insert` keeps the first), and §6 rule 9 adds a second way in; §6 states the limit and names
   `M1.33`. Decide the home on the leaf (§7 + a `schema-` code in `kind.rs` is the natural one), make it run
   inside `check.rs`'s shared `passes`, and re-derive the book's case figures. Then `M1.29.4` (parameters).

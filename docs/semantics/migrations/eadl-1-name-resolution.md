@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-09-29
 - leaf: M1.29.3 (`docs/tasks/M1.md`)
-- status: pending
+- status: applied
 - constructs: docs/semantics/reference.md#diagnostics, suite/docs/semantics/modules/app.sibling.eadl, suite/docs/semantics/modules/bad.not-exported-transitive.eadl, suite/docs/semantics/modules/bad.not-exported.eadl, suite/docs/semantics/modules/hw.bus.eadl, suite/docs/semantics/modules/hw.private.eadl
 - invalidates: none in this repository, measured — no command read a module tree's declarations before this change; outside it, a module that names an import's declaration the import does not export, which now is `module-not-exported` where before no command resolved it at all
 
