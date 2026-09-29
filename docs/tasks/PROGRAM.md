@@ -2295,6 +2295,14 @@ mdBook that is the director's window into the project.
     `SETUP.md` said "a temp dir" and now says where; `PROGRAM.26` told that the adopted updater must keep the
     fix; two lessons promoted — `docs/knowledge/scope-a-census-by-the-rule-not-by-the-folder.md` (new) and
     `a-gate-is-only-as-sharp-as-its-fixtures.md` (a moved fixture moves its surroundings).
+  - [x] **ALSO REPAIRED — this leaf's own placement.** `6bf578f` had inserted it at the first `## Current Frontier`
+    in the file, which was **inside `PROGRAM.20`'s census block**, splitting the line
+    `docs/tasks/<TREE>.md "## Current Frontier" order-1 row` and turning its tail into a false `## ` heading
+    (the unanchored-`index` class, fixed once before with an anchored `"\n## …\n"`). Moved to follow
+    `PROGRAM.28`; `PROGRAM.20`'s block compared against `61e5f09` with `cmp` → identical. A census of every
+    tree for a leaf header not at column 0 found only this one. Nothing new is filed: `TASK-ACCEPTANCE` reads a
+    leaf only from a flush-left `- ID:` line, so the displaced header would have been refused when this leaf
+    closed.
 
 ## Roadmap coverage map
 
