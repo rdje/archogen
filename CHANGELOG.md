@@ -4,6 +4,18 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — "next" means what the task tree says, and the gate proves it
+
+`ARCHOGEN-PROGRAM-0142` (leaf `PROGRAM.20.1`), with `ARCHOGEN-M2-0141`. A new doctrine, `STATED-ORDER`.
+
+- Every place that repeats an order is now compared with its source on each commit. That covers each tree's
+  own list of what is next, against the tasks' own statuses; the next task named in `LIVE_STATUS.md`,
+  `docs/TASK_TREE.md` and `MEMORY.md`; any list of what follows; and the changelog's newest-first order.
+- Its first run found a contradiction: `M2.9`'s tree listed it as blocked while the task itself said
+  `in_progress`. Blocked is the truth, the director's rulings being what it waits on, and it is corrected in
+  its own commit.
+- The gate reads all three status pages; each, falsified, is refused.
+
 ## archogen — how the histories should stop growing is put to the director
 
 `ARCHOGEN-PROGRAM-0140` (leaf `PROGRAM.17.3`; closes `PROGRAM.17`).

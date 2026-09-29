@@ -15,8 +15,8 @@
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `PROGRAM` → frontier `PROGRAM.20`. Every other tree's frontier head is in `docs/TASK_TREE.md`;
   it is not copied here.
-- **Next action:** **`PROGRAM.20`** — a carried-figure register, so a figure no measurement watches is refused at the
-  commit that adds it.
+- **Next action:** **`PROGRAM.20.2`** — every rendered diagnostic in the book that names a tracked input is re-run and
+  must match what the command prints.
 - **In flight:** branch **`wip/m2.9`** (`758cbcd`) is a checkpoint, not a finished leaf — `M2.9` records it as
   not compiling (`crates/rt-core/tests/differential.rs` unadapted).
 - **⏳ Blockers (the director's):** `M1.29.4` — §7 of `decision_findings-for-director-review.md`; `M2.9` — §6 (a)

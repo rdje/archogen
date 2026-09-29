@@ -32,6 +32,7 @@ PROJECT_DOCTRINES=(
   "VERSION-REGISTER|every version the code declares — format identifiers, version constants, profile ids, the engine version — is an entry of the register at that value, and every entry still has its declaration|scripts/check_version_register.sh"
   "FEEDBACK-REGISTER|every outbound bug register agrees with its issues — each row's State and Severity, a verified row backed by a dated re-measurement — and its totals and the cross-vendor index are recounts|scripts/check_feedback_register.sh"
   "LIVE-SNAPSHOTS|every live document that shows current state stays within its ceilings on lines, bytes and longest line, and every snapshot the inventory declares is bounded|scripts/check_live_snapshots.sh"
+  "STATED-ORDER|every restated order agrees with its source — frontier tables with their leaves, snapshot heads and successor lists with their trees, the changelog newest-first|scripts/check_stated_order.sh"
 )
 
 for entry in "${PROJECT_DOCTRINES[@]}"; do

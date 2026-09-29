@@ -406,6 +406,20 @@ $ bash scripts/check_live_snapshots.sh              # the gate
 $ bash scripts/check_live_snapshots.sh --self-test  # its RED arms, on scratch repositories
 ```
 
+## "Next" means what the task tree says
+
+A page that names the next task is repeating what that task's tree says, and a repeat goes stale the
+moment the tree moves without it. It has happened here several times: a page naming a task already
+finished, a list of what comes next naming the current task as its own successor, and a changelog whose
+header says "newest first" opening with an entry seven commits old. `STATED-ORDER` compares every such
+repeat with its source on every commit. On its first run it found one more: a task whose own status said
+it was in progress while its tree's list said it was blocked.
+
+```console
+$ bash scripts/check_stated_order.sh              # the gate
+$ bash scripts/check_stated_order.sh --self-test  # its RED arms, on scratch repositories
+```
+
 ## Why `focused` runs the whole suite
 
 §14.3 defines the focused tier as "format/type checks and **affected** contract tests", and

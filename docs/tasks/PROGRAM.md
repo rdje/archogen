@@ -1191,7 +1191,7 @@ mdBook that is the director's window into the project.
     documents eADL and the engine, not the repository's scratch directories.
 
 - ID: `PROGRAM.20`
-  Status: `pending`
+  Status: `in-progress`
   Goal: a **carried-figure register**, so a figure no measurement watches is a breach at the commit
   that adds it rather than a defect a later sweep happens to find. Three sweeps with three different
   patterns have now been needed to find one defect class, and a fourth pattern would find a fourth
@@ -1421,6 +1421,80 @@ mdBook that is the director's window into the project.
   gates no milestone and blocks nothing, which is why it is scheduled behind `PROGRAM.11` and
   `PROGRAM.18` rather than ahead of them; `PROGRAM.18` (repeatable RED arms for registered controls)
   should land first, because this check arrives with arms and the older ten do not.
+  Verification: `pending`
+  Commit: `pending`
+  Children: `PROGRAM.20.1`, `PROGRAM.20.2`, `PROGRAM.20.3` — decomposed `2026-09-30`, because the shapes above need three
+  different instruments, and one check trying to be all three is the "list that keeps being wrong" again:
+  **sequences** (a restated frontier head, a successor clause, a ledger's own ordering rule) are exact and derivable —
+  the adopted `LIVE_DOCUMENT_SIZE_CONTAINMENT.md` calls them *verified copies* and requires an executed verifier;
+  **transcripts** are exact too, by re-running the command a block quotes; **figures** are the fuzzy residue.
+
+- ID: `PROGRAM.20.1`
+  Status: `done`
+  Goal: every restated frontier head and successor list is a verified copy of its tree, and the changelog keeps the
+  order its own header states — the sixth and eighth shapes, closed by a verifier rather than a sweep.
+  Acceptance: a registered check reads each snapshot's restated heads (`LIVE_STATUS.md`, `docs/TASK_TREE.md`,
+  `MEMORY.md`) and refuses one that differs from its tree's Current Frontier order-1 leaf or names a `done` leaf; a
+  successor list must equal the frontier's following order; `CHANGELOG.md`'s entry ids must be newest-first; RED arms
+  include a head left behind by a closure, a successor list naming its own head, and an entry inserted below a newer
+  one.
+  Verification: see the checklist — a gate over four legs (10 arms, 7 mutations), each real snapshot falsified, and
+  one live inconsistency found and corrected in its own commit.
+  Commit: `ARCHOGEN-PROGRAM-0142 (leaf PROGRAM.20.1)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — the sixth and eighth shapes above, and one more found live on the gate's first run:
+    ```text
+    $ git grep -n 'Status: `in_progress`' 29c609c -- docs/tasks/M2.md
+      29c609c:docs/tasks/M2.md:174:  Status: `in_progress` — checkpointed on branch `wip/m2.9` …
+    $ git grep -n '| 4 | `M2.9` | `blocked`' 29c609c -- docs/tasks/M2.md
+      29c609c:docs/tasks/M2.md:633:| 4 | `M2.9` | `blocked` | …
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — nothing compared a restated order with its source; the only scripts that read a
+    frontier use it as a boundary, not a claim:
+    ```text
+    $ git grep -ln "Current Frontier" 29c609c -- scripts/
+      29c609c:scripts/bootstrap.sh              (seeds a tree)
+      29c609c:scripts/check_task_acceptance.sh  (ends a leaf block at it)
+    ```
+  - [x] **FIX** — `scripts/check_stated_order.sh` (**`STATED-ORDER`**): frontier rows against their leaves' statuses; the
+    heads restated in `LIVE_STATUS.md`, `docs/TASK_TREE.md` and `MEMORY.md` against each tree's order-1 leaf (a next action
+    may be its child) and never `done`; `Then …` successor lists against the frontier's order and never naming their own
+    head; `CHANGELOG.md` strictly newest-first. `M2.9`'s status corrected to `blocked` in its own docs-only commit
+    (`ARCHOGEN-M2-0141`, `23febb2`), this leaf's work parked in `git stash` meanwhile so the tree was clean at the pivot.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    $ bash scripts/check_stated_order.sh          (first run, before the M2.9 correction)
+      STATED-ORDER: docs/tasks/M2.md: its frontier says `M2.9` is `blocked`, and the leaf says `in_progress`     exit=1
+    $ bash scripts/check_stated_order.sh          (after)
+      stated-order: OK (every frontier table, restated head, successor list and the changelog's order agree …)  exit=0
+    $ bash scripts/check_stated_order.sh --self-test
+      stated-order self-test: 10 pass / 0 fail (10 arms)
+    ```
+    Each real snapshot falsified and restored by `cmp`: `LIVE_STATUS.md`'s, `docs/TASK_TREE.md`'s and `MEMORY.md`'s head
+    moved → each refused naming both sides, so none of the three passes vacuously. Seven mutations O-1–O-7, each restored
+    by `cmp`, each fails its own arm.
+  - [x] **NO REGRESSION** — the changelog leg on the real file: 103 entries with ids, 0 out-of-order pairs; the doctrine
+    driver green at the commit; `BOOK-ANCHORS` exit=0 over the new book section.
+  - [x] **LOCKSTEP** — `verification.md` gains "\"Next\" means what the task tree says"; `DOCTRINE_ENFORCEMENT.md`,
+    `TOOLBOX.md`.
+
+- ID: `PROGRAM.20.2`
+  Status: `pending`
+  Goal: every rendered diagnostic in the book that names a tracked input is what the command prints — the seventh
+  shape, by the instrument recorded above, tracked and armed.
+  Acceptance: for each `error[` block, the input from its `$ archogen check` line (else its first `-->`); a tracked one
+  re-run and required verbatim; an untracked or location-free block counted as backlog that may not grow; the two
+  `checking.md` blocks re-rendered.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `PROGRAM.20.3`
+  Status: `pending`
+  Goal: the figure register itself — figure-shaped text in the staged live surfaces classified as gated, recorded or
+  unregistered, with an unregistered one introduced by the staged diff refused (`TABLE-ARITY-RATCHET` idiom).
+  Acceptance: as the parent's acceptance above, for figures; the population is every live surface the commit stages.
   Verification: `pending`
   Commit: `pending`
 
@@ -3010,7 +3084,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. ⭐ A **near-miss** worth pricing in, recorded honestly as a near-miss and not as a fourth instance: `PROGRAM.18`'s frontier row still read "ten of eighteen controls" while this leaf was being written, and was corrected in the same commit — it would have gone stale the moment the fix landed, and nothing in the tree compares a control count against the controls. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with. ⛔ An **eighth** shape landed `2026-09-29` and it falsifies the acceptance's *population* rather than adding a figure: `CHANGELOG.md` said "Newest first" and did not, one entry sitting above six newer ones for seven commits because five consecutive commits inserted at the same wrong anchor — and `CHANGELOG.md` is not one of the three live surfaces the acceptance enumerates. Two falsifications of a three-item list, so the population becomes every live surface the commit stages |
+| 1 | `PROGRAM.20` | `in-progress` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. ⭐ A **near-miss** worth pricing in, recorded honestly as a near-miss and not as a fourth instance: `PROGRAM.18`'s frontier row still read "ten of eighteen controls" while this leaf was being written, and was corrected in the same commit — it would have gone stale the moment the fix landed, and nothing in the tree compares a control count against the controls. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with. ⛔ An **eighth** shape landed `2026-09-29` and it falsifies the acceptance's *population* rather than adding a figure: `CHANGELOG.md` said "Newest first" and did not, one entry sitting above six newer ones for seven commits because five consecutive commits inserted at the same wrong anchor — and `CHANGELOG.md` is not one of the three live surfaces the acceptance enumerates. Two falsifications of a three-item list, so the population becomes every live surface the commit stages |
 | 2 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
 | 3 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
 | 4 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
@@ -3141,6 +3215,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.17.1` | the guide and doctrine at their current fsmgen revisions; a three-axis measurement of every live document; the copied body against its source | the copy byte-identical (`cmp`); `LIVE_STATUS.md` 42 110 bytes with a 30 256-byte row, `CHANGELOG.md` 3 428 lines — both recorded as debt or a decision |
 | `2026-09-30` | `PROGRAM.17.2` | the no-loss proof (ids declared, commit rows present, pre-trim digests); the checker and its 11 arms; six mutations; the pre-trim `LIVE_STATUS.md` put back | 42 110 → 2 324 bytes and 30 256 → 220 on the longest line; every arm and mutation as designed; the old file refused on bytes and width, not on lines |
 | `2026-09-30` | `PROGRAM.17.3` / `PROGRAM.17` | growth since `2026-09-27` from `git show 4d6d002:<file>`; closed-leaf share of `M1.md` and `PROGRAM.md` by an `awk` over leaf blocks | 77% of `M1.md` and 75% of `PROGRAM.md` are closed leaves; §8 written, `PROGRAM.31`/`.32` filed blocked; `PROGRAM.17` closed |
+| `2026-09-30` | `PROGRAM.20.1` | the gate's first run; its 10 arms; seven mutations; each real snapshot's head moved | `M2.9`'s status contradiction found and corrected in its own commit; every arm and mutation as designed; all three snapshots genuinely checked |
 
 ## Commit Log
 
@@ -3187,6 +3262,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.17` → `PROGRAM.17.1` | `ARCHOGEN-PROGRAM-0138 (leaf PROGRAM.17.1)` | **the live-document size-containment doctrine is adopted, with a measured inventory** — a project-owned copy, an adoption note per surface, and the snapshots' chronology recorded as debt. `PROGRAM.17` decomposed |
 | `PROGRAM.17.2` | `ARCHOGEN-PROGRAM-0139 (leaf PROGRAM.17.2)` | **the snapshots hold current state, and a checker bounds them on lines, bytes and longest line** — `LIVE_STATUS.md` 42 110 → 2 324 bytes after a no-loss proof; `LIVE-SNAPSHOTS`; `COMMIT.md` stops asking for history in a snapshot |
 | `PROGRAM.17.3` → `PROGRAM.17` | `ARCHOGEN-PROGRAM-0140 (leaf PROGRAM.17.3)` | **the history lifecycle choices go to the director** — findings §8 with measurements and a recommendation; `PROGRAM.31`/`.32` filed blocked; `PROGRAM.17` closed |
+| `PROGRAM.20` → `PROGRAM.20.1` | `ARCHOGEN-PROGRAM-0142 (leaf PROGRAM.20.1)` | **a restated order is a verified copy** — `STATED-ORDER` checks frontier rows, snapshot heads, successor lists and the changelog's order; its first run found `M2.9` stated two ways. `PROGRAM.20` decomposed |
 
 ## Changelog
 
