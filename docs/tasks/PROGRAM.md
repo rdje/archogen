@@ -1955,12 +1955,90 @@ mdBook that is the director's window into the project.
     not pinned to exact versions.
 
 - ID: `PROGRAM.6`
-  Status: `pending`
+  Status: `in-progress`
   Goal: implement semantic versioning separation (§15) — language/profile semantics, engine
   implementation, catalog entries, model versions, evidence formats — as machine-checked
   version records with a compatibility corpus.
   Acceptance: a locked description retains its meaning across an engine upgrade; F25 has a
   home.
+  Children: `PROGRAM.6.1`, `PROGRAM.6.2`, `PROGRAM.6.3` — decomposed `2026-09-30` on a census of what is versioned
+  today: the language (`EADL_1 = "eadl/1"`, `crates/eadl-front/src/language_version.rs`), the profile
+  (`rt-static-up-v1`, `crates/eadl-model/src/profile.rs`), the engine (`0.1.0` in all 9 member manifests), one stub
+  catalog entry (`s0.hosted-playground.periodic` `0.1.0`, `crates/archogen-s0/src/provenance.rs`) and two evidence
+  formats (`archogen-provenance/1`, `cost-accounting/1`). Catalogs proper and device/timing models do not exist
+  yet (`M6`, `M2`); F25 — a locked rebuild after a catalog update — is `M6.4`'s, and `6.1` names that home.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `PROGRAM.6.1`
+  Status: `done`
+  Goal: one register of everything versioned, what changes each version, and what pins it — derived from the
+  code, so a new format identifier or a bump cannot land unannounced.
+  Acceptance: a book chapter with one entry per versioned surface (version, where declared, when it changes,
+  what pins it, what a locked description or artifact keeps), the not-yet-versioned surfaces named with their
+  owners (F25 at `M6.4`); a gate deriving every version constant, profile id and the engine version from the
+  code, each claimed by an entry carrying its value, and every entry's declaration still present; RED arms.
+  Verification: see the checklist — the register, a gate over four derived populations (12 arms, 7 mutations),
+  a falsification on the real code.
+  Commit: `ARCHOGEN-PROGRAM-0133 (leaf PROGRAM.6.1)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — the versions existed as constants scattered through four crates, and nothing
+    recorded what changes each or what pins it:
+    ```text
+    $ git cat-file -e b387492:docs/book/src/versions.md            -> rc=128 (no register)
+    $ git grep -nE 'pub const [A-Z0-9_]+: &str = "[a-z][a-z0-9-]*/[0-9]+' b387492 -- 'crates/*/src/*.rs'
+      b387492:crates/archogen-s0/src/provenance.rs:43:pub const FORMAT: &str = "archogen-provenance/1";
+      b387492:crates/eadl-front/src/language_version.rs:36:pub const EADL_1: &str = "eadl/1";
+      b387492:crates/rt-analysis/src/cost.rs:36:pub const CONTRACT_VERSION: &str = "cost-accounting/1 (ROADMAP.md §7.4.1)";
+      b387492:crates/rt-analysis/src/response.rs:44:pub const MODEL: &str = "idealized-zero-overhead/1 (ROADMAP.md §7.4)";
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — §15's separation was honoured constant by constant, each with a comment
+    saying why it is versioned, but with no index the set had no edge: ⛔ the census that planned this leaf looked
+    for constants **named** `VERSION|FORMAT|…` and found six surfaces; `MODEL` above, the analysis model every
+    conclusion names, was the seventh, found only when the gate derived by the value's **shape** — its first run,
+    against a register holding the six:
+    ```text
+    $ bash scripts/check_version_register.sh
+      VERSION-REGISTER: the code declares const:crates/rt-analysis/src/response.rs:MODEL = 'idealized-zero-overhead/1', and no entry of docs/book/src/versions.md claims it — add one
+      exit=1
+    ```
+  - [x] **FIX** — `docs/book/src/versions.md`, "What is versioned, and what changing it costs": seven entries
+    (`language`, `profile`, `engine`, `catalog-s0`, `analysis-model`, `provenance-format`, `cost-format`) with
+    version, declaration locator, what changes it, what pins it (`pending` stated where nothing does yet —
+    `PROGRAM.6.2`, `PROGRAM.6.3`), and what it keeps; the not-yet-versioned surfaces named with their owners —
+    catalogs `M6` (**F25 at `M6.4`**), models `M2`, the plan's identity `M4.7`. New doctrine **`VERSION-REGISTER`**.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    $ bash scripts/check_version_register.sh
+      version-register: OK (7 entries; 7 declared version(s), each carried by its entry)     exit=0  (0.55 s)
+    $ bash scripts/check_version_register.sh --self-test
+      version-register self-test: 12 pass / 0 fail (12 arms)
+    ```
+    Seven mutations V-1–V-7, restored by `cmp`, each fails its own arms. On the real code: `FORMAT` bumped to
+    `archogen-provenance/2` → `entry \`provenance-format\` does not carry the declared value … the code says
+    'archogen-provenance/2'`, exit=1; restored by `git checkout`, matching HEAD.
+  - [x] **NO REGRESSION** — `mdbook build docs/book` exit=0; `BOOK-ANCHORS` exit=0; `BOOK-COVERAGE` OK; the doctrine
+    driver green at the commit; `make focused` passed.
+  - [x] **LOCKSTEP** — the chapter in `SUMMARY.md`; `verification.md` gains "What is versioned is written down";
+    `DOCTRINE_ENFORCEMENT.md` and `TOOLBOX.md` rows; the live docs.
+
+- ID: `PROGRAM.6.2`
+  Status: `pending`
+  Goal: "a locked description retains its meaning across an engine upgrade", made mechanical — the verdict of
+  every tracked description, frozen, so an engine change that moves one is refused unless the change says so.
+  Acceptance: a frozen table of every tracked description's verdict and diagnostic codes, checked by a test on
+  every run; the census `M1.34`–`M1.36` each ran by hand (120 descriptions before and after) becomes that test.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `PROGRAM.6.3`
+  Status: `pending`
+  Goal: an evidence format's shape is pinned to its version: `archogen-provenance/1` and `cost-accounting/1`
+  cannot change what they emit without the identifier moving.
+  Acceptance: a golden sample per format, compared on every run; a shape change with the same identifier is
+  refused, with a bump accepted only alongside a new golden.
   Verification: `pending`
   Commit: `pending`
 
@@ -2657,7 +2735,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.6` | `pending` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |
+| 1 | `PROGRAM.6` | `in-progress` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |
 | 2 | `PROGRAM.13` | `pending` | twelve closed leaves in `BOOTSTRAP`, `M2` and this tree do not name their own commit — backfill both logs from git, then `PROGRAM.14` gates it so the gap cannot reopen |
 | 3 | `PROGRAM.15` | `pending` | a feedback register row that contradicts its own issue sub-tree passes every gate today; five state transitions in six commits held only by hand-editing and a manual census |
 | 4 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
@@ -2778,6 +2856,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-29` | `PROGRAM.9.1` | the extended tier at `39aa2fc` against `cargo +nightly miri --version`; every one of 34 test targets under Miri alone (600 s cap); the tier end to end; F-1 arm without UB, F-2 stale exclusion, F-3 missing component; the probe-form test and its mutation; the home cache after the run | Miri reported unavailable while installed → found on `nightly`; 541 passed, 4 ignored, 0 failed; five corpus walks over 300 s left out on measurement; `miri` ✅ in 851 s; all three falsifications refused; sysroot under `target/` |
 | `2026-09-29` | `PROGRAM.9.2` | the harness's first runs (smoke, and 5 seeds × 20 000 with overflow checks); the step on a fixed and a fresh seed; seeded defects F-A–F-D and F-C without overflow checks; `cargo test -p xtask` | found `M1.36` on the first run (and `M1.34`, `M1.35` while designing it) — all three fixed first; then 8 properties and 6 arms green on every seed; every seeded defect fails its own property or arm; F-D's restore nearly skipped (untracked file) |
 | `2026-09-30` | `PROGRAM.9.3` / `PROGRAM.9` | `cargo xtask mutate` twice (the second naming each kill's tests); harness arms H-1–H-4 through temporary entries; `cargo test -p xtask`; the `extended` tier end to end | 8 of 8 as expected, each kill by the test written for its defect, the `lcm`→`max` blind spot surviving the harmonic corpus; every arm refused as designed, `crates/` clean after each; 14 / 0; **`extended` passed for the first time** |
+| `2026-09-30` | `PROGRAM.6.1` | the register gate on the real tree and its 12 arms; seven mutations V-1–V-7; `FORMAT` bumped on the real code; the book build | no register before; 7 entries and 7 declared versions after — the seventh (`idealized-zero-overhead/1`) found by the gate, missed by the planning census; every mutation fires; the bump refused at its entry |
 
 ## Commit Log
 
@@ -2812,6 +2891,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.9` → `PROGRAM.9.1` | `ARCHOGEN-PROGRAM-0127 (leaf PROGRAM.9.1)` | **the `miri` step runs, and proves it can fail first.** Found on `nightly` (it had been reported unavailable while installed); a seeded dangling-pointer read refused before every run; every test target timed under Miri, five corpus walks left out on measured cost; sysroot under `target/`. `PROGRAM.9` decomposed into `.9.1`–`.9.3` |
 | `PROGRAM.9.2` | `ARCHOGEN-PROGRAM-0131 (leaf PROGRAM.9.2)` | **the `extended` tier fuzzes the reader and the exact arithmetic.** A dependency-free seeded harness, six known-false arms it must refute, eight properties; a fixed and a fresh seed, overflow checks on. It found three engine defects before its own commit (`M1.34`–`M1.36`) |
 | `PROGRAM.9.3` → `PROGRAM.9` | `ARCHOGEN-PROGRAM-0132 (leaf PROGRAM.9.3)` | **the mutation controls are a catalog run on every `extended` tier**, and **`extended` passes** for the first time. `cargo xtask mutate`: eight entries, each checked to apply once, name its killing tests and restore byte for byte; S0.4's blind spot reproduced by command. `PROGRAM.9` closed |
+| `PROGRAM.6` → `PROGRAM.6.1` | `ARCHOGEN-PROGRAM-0133 (leaf PROGRAM.6.1)` | **everything versioned is in one register, derived from the code.** Seven surfaces with what changes and pins each; F25's home named (`M6.4`); `VERSION-REGISTER` refuses an unannounced format, bump or stale entry. `PROGRAM.6` decomposed |
 
 ## Changelog
 

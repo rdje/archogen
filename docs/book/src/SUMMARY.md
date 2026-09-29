@@ -35,3 +35,4 @@
 - [The `archogen` command line](cli.md)
 - [Verifying the toolchain](verification.md)
 - [What this project relies on from outside](ledger.md)
+- [What is versioned, and what changing it costs](versions.md)

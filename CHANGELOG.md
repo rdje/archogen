@@ -4,6 +4,20 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — everything versioned is in one register, derived from the code
+
+`ARCHOGEN-PROGRAM-0133` (leaf `PROGRAM.6.1`). A new book chapter, "What is versioned, and what changing it
+costs", and a new doctrine, `VERSION-REGISTER`.
+
+- Seven versioned surfaces, each with where its version is declared, what change forces a new one, what
+  refuses an unannounced change, and what a description or artifact can rely on. They are the language, the
+  profile, the engine, S0's stub catalog entry, the analysis model, and two evidence formats. The surfaces not
+  versioned yet are named with their owners, and F25's home is `M6.4`.
+- The gate derives every version from the code: format identifiers, version constants, profile ids, and the
+  engine version, which every crate must agree on. A new one, or a bump, cannot land without the page changing.
+- ⛔ The census that planned it found six surfaces. The gate found the seventh, `idealized-zero-overhead/1`,
+  because it looks at a value's shape rather than a constant's name.
+
 ## archogen — the mutation controls are a catalog, and the extended tier passes for the first time
 
 `ARCHOGEN-PROGRAM-0132` (leaf `PROGRAM.9.3`; closes `PROGRAM.9`).

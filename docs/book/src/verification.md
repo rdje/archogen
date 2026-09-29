@@ -364,6 +364,20 @@ $ bash scripts/check_source_ledger.sh              # the gate
 $ bash scripts/check_source_ledger.sh --self-test  # its RED arms, on scratch repositories
 ```
 
+## What is versioned is written down
+
+`VERSION-REGISTER` keeps [What is versioned, and what changing it costs](versions.md) true to the code.
+Every version the code declares must be on that page at the same value: each format identifier, each
+version constant, each profile id, and the engine version, which every crate must agree on. When the
+check was written, it found one version that the census planning it had missed, the model the
+scheduling analysis reasons in, because the census looked for version constants by name and the gate
+looks at what the value is.
+
+```console
+$ bash scripts/check_version_register.sh              # the gate
+$ bash scripts/check_version_register.sh --self-test  # its RED arms, on scratch repositories
+```
+
 ## Why `focused` runs the whole suite
 
 §14.3 defines the focused tier as "format/type checks and **affected** contract tests", and
