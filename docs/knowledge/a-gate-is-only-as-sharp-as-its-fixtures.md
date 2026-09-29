@@ -8,6 +8,7 @@ answers:
   - "My arm expects a refusal and gets one — how do I know it was refused for the reason the arm names?"
   - "My new rule's fixtures went green — would they have gone green without the rule?"
   - "I moved a self-test's scratch directory and it still passes — is it still testing anything?"
+  - "My test is named for the property it guards — does it contain a case where the property could fail?"
 type: knowledge
 date: 2026-09-13
 ---
@@ -102,3 +103,10 @@ act on. Mutation testing is what turns it into a measurement.
   relied on there being no Cargo workspace above it. Inside this repository there was one, and an arm failed
   for a reason that had nothing to do with the instrument. A fixture encodes its environment. Where the
   environment is the point, **check it before the arms**, and report "could not run" when it does not hold.
+- ⛔ **A test's name is a claim about its cases.** `ordering_is_exact_and_total` compared `1/3`, `1/2` and zero,
+  values whose cross products fit easily in `i128`, so the saturating comparison beside it passed. The
+  comment on that comparison explained why saturation was safe, and the explanation was false in the one case
+  it did not consider: both products saturating. `(2^100+1)/2^30` and `(2^100+3)/2^30` compared `Equal`, and a
+  description whose deadline exceeded its period in the 17th decimal was admitted (`M1.34`). Read the name as
+  the specification and add the case that sits where the implementation's own reasoning stops. For a
+  comparison, that means the values at the limits of the representation.

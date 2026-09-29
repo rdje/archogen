@@ -1,5 +1,17 @@
 # DEV_NOTES.md
 
+## _(2026-09-29)_ — a comparison that saturated, a comment that said why that was safe, and a test named for exactness
+
+- `M1.34`, found while designing `PROGRAM.9.2`'s fuzz properties. `Rational`'s `Ord` multiplied across with
+  `saturating_mul`, on the stated ground that saturation "preserves the sign of the comparison". Not when both
+  products saturate: two different values compared `Equal` while `==` said they differ. Through
+  `Quantity::compare`, that let `(deadline 1.00000000000000003 ns)` pass `(period 1.00000000000000001 ns)`,
+  exit 0, where the same relation in short decimals exits 12.
+- Fixed with an exact 256-bit cross product from 64-bit limbs, no dependency. The saturating version restored
+  as a mutation fails the three new tests; 120 tracked descriptions keep their verdicts.
+- The existing `ordering_is_exact_and_total` never had a value large enough to tell the two apart. Promoted:
+  `docs/knowledge/a-gate-is-only-as-sharp-as-its-fixtures.md`.
+
 ## _(2026-09-29)_ — a tool reported absent was installed, and an exclusion written from a story was wrong twice
 
 - `PROGRAM.9.1`. The `extended` tier's `miri` step said **UNAVAILABLE** on a machine where

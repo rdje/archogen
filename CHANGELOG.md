@@ -4,6 +4,21 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — exact comparison of quantities: a deadline longer than its period is refused at any precision
+
+`ARCHOGEN-M1-0128` (leaf `M1.34`).
+
+- ⛔ **A wrong verdict, fixed.** `Rational`'s ordering multiplied across with a saturating `i128` multiply.
+  When both products saturated, two different values compared as equal. Through `Quantity::compare`, a task
+  with `(deadline 1.00000000000000003 ns)` against `(period 1.00000000000000001 ns)` passed the profile's
+  deadline ≤ period rule: `archogen check` exited 0, where the same relation in short decimals exits 12.
+- The comparison is now exact, a 256-bit cross product built from 64-bit limbs with no dependency, so
+  ordering also agrees with equality.
+- Four new tests, including one at the description level. The old comparison restored as a mutation fails
+  exactly the three that concern it. All 120 tracked descriptions keep their verdicts.
+- Found while designing the fuzz step's properties (`PROGRAM.9.2`), which will carry the property that
+  would have caught it.
+
 ## archogen — the extended tier's Miri step runs, and proves it can fail before it passes
 
 `ARCHOGEN-PROGRAM-0127` (leaf `PROGRAM.9.1`).

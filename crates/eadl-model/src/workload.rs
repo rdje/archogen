@@ -284,6 +284,26 @@ mod tests {
     }
 
     #[test]
+    fn a_deadline_longer_by_the_seventeenth_decimal_is_still_refused() {
+        // Leaf `M1.34`: in base units both are fractions over 10^26 s, so both cross products pass
+        // `i128`. The comparison used to saturate them to the same value and call the two equal —
+        // and this system, whose deadline exceeds its period, was admitted.
+        let found = diagnose(&system(
+            "(period 1.00000000000000001 ns) (deadline 1.00000000000000003 ns) (priority 1)",
+            OK_B,
+        ));
+        assert_eq!(found.len(), 1, "{found:?}");
+        assert!(found[0].contains("longer than its period"), "{found:?}");
+        // …and at that precision an equal deadline is still admitted, so the fix is not a refusal of
+        // long decimals.
+        assert!(diagnose(&system(
+            "(period 1.00000000000000001 ns) (deadline 1.00000000000000001 ns) (priority 1)",
+            OK_B,
+        ))
+        .is_empty());
+    }
+
+    #[test]
     fn the_deadline_comparison_crosses_units() {
         // `1 s` is longer than `100 ms`, and a checker that compared magnitudes would miss it.
         let found = diagnose(&system("(period 100 ms) (deadline 1 s) (priority 1)", OK_B));

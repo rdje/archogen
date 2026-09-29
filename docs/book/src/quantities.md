@@ -42,6 +42,14 @@ Every operation is checked. Overflow returns "no result", never a wrapped one �
 numerator turns an unschedulable system into a schedulable-looking one, and nothing in the
 output would say so.
 
+**Comparison is exact too, and until leaf `M1.34` it was not.** Two fractions are ordered by
+multiplying across, and that product can pass `i128` long before either value does. It used to be
+saturated to the largest `i128`, and that went wrong when *both* products saturated: two different
+amounts then compared as equal. A task whose deadline exceeded its period in the 17th decimal place,
+`(deadline 1.00000000000000003 ns)` against `(period 1.00000000000000001 ns)`, was admitted under a
+profile that requires deadline ≤ period. The products are now computed exactly, in 256 bits
+(`crates/eadl-model/src/rational.rs`), and that description is refused like any other.
+
 Rounding, where it is needed, goes **up**: analysis needs `⌈R/T⌉`, and rounding the other way
 understates interference, which turns a missed deadline into a reported pass.
 

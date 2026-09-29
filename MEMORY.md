@@ -18,7 +18,7 @@
 - **Next action:** **`PROGRAM.9.2`** — a dependency-free, seeded fuzz step over the reader and the checked arithmetic,
   armed by known-false properties it must refute; then `.9.3`. ⏳ **`M1.29.4` waits on the director** — §7 of
   `decision_findings-for-director-review.md`. `extended`'s `miri` step: `scripts/extended_miri.sh`, ~14 min.
-- ⭐ **Closed today:** `M1.29.1`–`.3`, `M1.31`, `M1.33`, `PROGRAM.27`, `PROGRAM.11`, `PROGRAM.18`, `PROGRAM.24`, `PROGRAM.28` (gate arms run in a tier), `PROGRAM.29` (scratch on this volume, gated), `PROGRAM.5` (§15 source ledger), `PROGRAM.9.1` (Miri step armed) — `archogen check` elaborates **and
+- ⭐ **Closed today:** `M1.29.1`–`.3`, `M1.31`, `M1.33`, `PROGRAM.27`, `PROGRAM.11`, `PROGRAM.18`, `PROGRAM.24`, `PROGRAM.28` (gate arms run in a tier), `PROGRAM.29` (scratch on this volume, gated), `PROGRAM.5` (§15 source ledger), `PROGRAM.9.1` (Miri step armed), `M1.34` (`Rational` ordering exact) — `archogen check` elaborates **and
   type-checks** a module tree (§6 rules 7–10); a name is declared once (§7 rule 6), for a file and a tree.
   30 cases in `docs/semantics/modules/`. A migration is **two commits** (`pending`, then `applied` — enforced).
 - ⭐ **`eadl/1` is frozen and gated** (`M1.13`, `PROGRAM.27`): `BASELINE.txt` (**114** digests) +

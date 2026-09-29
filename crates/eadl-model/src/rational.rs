@@ -245,17 +245,54 @@ impl PartialOrd for Rational {
 }
 
 impl Ord for Rational {
-    /// Compares by cross-multiplication, on `i128` widened from normalized values.
+    /// Compares by cross-multiplication, **exactly**: `a/b < c/d` iff `a·d < c·b`, both denominators
+    /// being positive after normalization.
     ///
-    /// Both denominators are positive after normalization, so the cross products keep their
-    /// sign and the comparison needs no case analysis. A saturating multiply is used rather
-    /// than a checked one: ordering must be total to satisfy `Ord`, and saturation preserves
-    /// the sign of the comparison at the extremes where an exact product would overflow.
+    /// ⛔ The products are computed in 256 bits, never saturated. This used a saturating `i128`
+    /// multiply on the stated ground that "saturation preserves the sign of the comparison at the
+    /// extremes" — which fails exactly when **both** products saturate: `(2^100+1)/2^30` and
+    /// `(2^100+3)/2^30` compared `Equal`, and a description whose deadline exceeded its period in the
+    /// 17th decimal was accepted (leaf `M1.34`). Normalization makes the representation unique, so
+    /// an exact order is also the one that agrees with the derived `Eq`.
     fn cmp(&self, other: &Self) -> core::cmp::Ordering {
-        let left = self.numerator.saturating_mul(other.denominator);
-        let right = other.numerator.saturating_mul(self.denominator);
-        left.cmp(&right)
+        let (left_sign, right_sign) = (self.numerator.signum(), other.numerator.signum());
+        if left_sign != right_sign {
+            return left_sign.cmp(&right_sign);
+        }
+        let left = widening_mul(
+            self.numerator.unsigned_abs(),
+            other.denominator.unsigned_abs(),
+        );
+        let right = widening_mul(
+            other.numerator.unsigned_abs(),
+            self.denominator.unsigned_abs(),
+        );
+        let magnitude = left.cmp(&right);
+        if left_sign < 0 {
+            magnitude.reverse()
+        } else {
+            magnitude
+        }
     }
+}
+
+/// The exact product of two `u128`s as `(high, low)` 128-bit halves, from 64-bit limbs.
+///
+/// A pair compares like the 256-bit number it is: the high halves first, then the low. No partial
+/// sum can overflow: each limb product is below `2^128`, the middle sum below `2^66`, and the whole
+/// product below `2^256`, so the high half fits.
+const fn widening_mul(a: u128, b: u128) -> (u128, u128) {
+    const LOW: u128 = u64::MAX as u128;
+    let (a_high, a_low) = (a >> 64, a & LOW);
+    let (b_high, b_low) = (b >> 64, b & LOW);
+    let low_low = a_low * b_low;
+    let high_low = a_high * b_low;
+    let low_high = a_low * b_high;
+    let high_high = a_high * b_high;
+    let middle = (low_low >> 64) + (high_low & LOW) + (low_high & LOW);
+    let low = (middle << 64) | (low_low & LOW);
+    let high = high_high + (high_low >> 64) + (low_high >> 64) + (middle >> 64);
+    (high, low)
 }
 
 impl core::fmt::Display for Rational {
@@ -362,6 +399,81 @@ mod tests {
         let mut values = [b, a, Rational::ZERO];
         values.sort();
         assert_eq!(values, [Rational::ZERO, a, b]);
+    }
+
+    #[test]
+    fn ordering_stays_exact_when_both_cross_products_pass_i128() {
+        // Leaf `M1.34`: these compared `Equal` while `==` said they differ, because both cross
+        // products (~2^130) saturated to `i128::MAX`.
+        let a = Rational::new((1 << 100) + 1, 1 << 30).unwrap();
+        let b = Rational::new((1 << 100) + 3, 1 << 30).unwrap();
+        assert_ne!(a, b);
+        assert_eq!(a.cmp(&b), core::cmp::Ordering::Less);
+        assert_eq!(b.cmp(&a), core::cmp::Ordering::Greater);
+        // Mirrored below zero, where the magnitude order reverses.
+        let (na, nb) = (a.negate().unwrap(), b.negate().unwrap());
+        assert_eq!(na.cmp(&nb), core::cmp::Ordering::Greater);
+        // The extremes of the representation.
+        let top = Rational::new(i128::MAX, 1).unwrap();
+        let bottom = Rational::new(i128::MIN, 1).unwrap();
+        let tiny = Rational::new(1, i128::MAX).unwrap();
+        assert!(bottom < tiny && tiny < top);
+        assert!(Rational::new(i128::MAX, 3).unwrap() < Rational::new(i128::MAX, 2).unwrap());
+    }
+
+    #[test]
+    fn ordering_agrees_with_equality_on_values_near_the_limits() {
+        // `Ord` must agree with the derived `Eq`: `cmp` is `Equal` exactly when the (normalized)
+        // values are identical, and `cmp` reverses when its arguments do.
+        let numerators = [
+            i128::MIN,
+            -(1 << 100) - 3,
+            -1,
+            0,
+            1,
+            (1 << 100) + 1,
+            (1 << 100) + 3,
+            i128::MAX,
+        ];
+        let denominators = [1, 3, 1 << 30, (1 << 100) + 7, i128::MAX];
+        let values: Vec<Rational> = numerators
+            .iter()
+            .flat_map(|&n| {
+                denominators
+                    .iter()
+                    .filter_map(move |&d| Rational::new(n, d))
+            })
+            .collect();
+        assert!(
+            values.len() >= 35,
+            "the grid must actually be populated: {}",
+            values.len()
+        );
+        for a in &values {
+            for b in &values {
+                assert_eq!(
+                    a.cmp(b) == core::cmp::Ordering::Equal,
+                    a == b,
+                    "{a:?} vs {b:?}"
+                );
+                assert_eq!(a.cmp(b), b.cmp(a).reverse(), "{a:?} vs {b:?}");
+            }
+        }
+    }
+
+    #[test]
+    fn the_wide_product_is_exact_at_the_limits() {
+        use super::widening_mul;
+        assert_eq!(widening_mul(0, u128::MAX), (0, 0));
+        assert_eq!(widening_mul(1, u128::MAX), (0, u128::MAX));
+        assert_eq!(widening_mul(1 << 64, 1 << 64), (1, 0));
+        // (2^128 - 1)^2 = 2^256 - 2^129 + 1: high half 2^128 - 2, low half 1.
+        assert_eq!(widening_mul(u128::MAX, u128::MAX), (u128::MAX - 1, 1));
+        // Agrees with `u128` wherever the product fits.
+        assert_eq!(
+            widening_mul(0xDEAD_BEEF, 0xCAFE_F00D),
+            (0, 0xDEAD_BEEF * 0xCAFE_F00D)
+        );
     }
 
     #[test]
