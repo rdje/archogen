@@ -11,9 +11,9 @@
 //!
 //! 1. Resolve the profile. A system built under a profile nobody supports has not been built.
 //! 2. Refuse `--locked`, which the S0 path cannot honor (see below).
-//! 3. Run the **whole frontend** — the same `eadl_model::check` that `archogen check` runs.
-//!    A description that does not check does not build, and the build reports the *check's*
-//!    verdict rather than inventing one of its own.
+//! 3. Run the **whole frontend** — the same `eadl_model::check` that `archogen check` runs,
+//!    behind the same module-file routing. A description that does not check does not build, and
+//!    the build reports the *check's* verdict rather than inventing one of its own.
 //! 4. Interpret into an S0 plan, which is where a valid, in-profile description can still be
 //!    refused for want of an engine realization.
 //! 5. Emit.
@@ -29,7 +29,7 @@ use eadl_front::SourceMap;
 use eadl_model::check::{check, shipped_registry};
 use eadl_model::profile;
 
-use crate::check_cmd::embedded_modules;
+use crate::check_cmd::{embedded_modules, module_file, refuse_module_file};
 use crate::cli::Parsed;
 use crate::status::Status;
 
@@ -115,6 +115,11 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
         );
         return Status::ToolFailure;
     };
+
+    // The routing `archogen check` uses, so the two commands cannot disagree about a module file.
+    if let Some(module) = module_file(&sources, id) {
+        return refuse_module_file(err, path, &module);
+    }
 
     // The whole frontend, not a subset. A description that does not check does not build.
     let outcome = check(&sources, id, &registry, active);

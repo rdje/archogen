@@ -25,6 +25,15 @@ built from it will behave — the evidence categories start after this point.
 Every pass runs. Every diagnostic is collected. A description with three problems costs one edit
 cycle, not three.
 
+⛔ **There is no *elaborate* row, and that is the table telling the truth.** `ROADMAP.md` §10.1 makes
+module elaboration the first step, ahead of every pass above, and it does not run yet: the elaborator is a
+library no command calls. So `check` reads **one file** whose top-level forms are its declarations, and a
+**module file** — any file declaring a `(defmodule …)` — is refused before the first pass as
+`unimplemented`, exit 20, naming leaf `M1.29.2`, instead of being walked by passes that would report its
+imports as missing facts. A module file that does not *read* is still the read pass's to report: a syntax
+error is a verdict about the bytes, whatever they were meant to be. See
+[Modules and composition](modules.md#what-you-can-run-today).
+
 The `profile` and `workload` passes are two halves of one contract and it is worth keeping them
 apart. `profile` consults the capabilities `rt-static-up-v1` **refuses** — `general-ipc`,
 `runtime-heap`, `dma`. `workload` consults the task model it **admits** — unique priorities,

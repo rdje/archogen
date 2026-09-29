@@ -20,6 +20,36 @@ namespaces, explicit exports, typed parameters and version constraints.
     (requires (uses clock.time.monotonic))))
 ```
 
+## What you can run today
+
+⛔ **No command elaborates a module tree yet.** Everything this chapter describes is implemented and
+tested as a library — `crates/eadl-front/src/module.rs`, driven by
+`crates/eadl-front/tests/f01_f02_modules.rs` — but neither `archogen check` nor `archogen build` calls it.
+`ROADMAP.md` §10.1 makes elaboration the pipeline's first step, and wiring it in is leaf `M1.29.2`. Hand
+either command the module above and it says so rather than pretending:
+
+```console
+$ archogen check app.system.eadl
+archogen: unimplemented: app.system.eadl:1:1 is a module, `(defmodule app.system …)`, and no command elaborates a module tree yet
+  hint: the module reader and elaborator exist as a library (docs/semantics/reference.md §6, docs/book/src/modules.md), but no command calls them, so this file's imports would go unresolved. Wiring them in is task-tree leaf M1.29.2 (docs/TASK_TREE.md); until then, check a description whose top-level forms are its declarations
+$ echo $?
+20
+```
+
+Exit 20 is a statement about the **tool**, not about your module. Until leaf `M1.29.1` both commands
+answered this same file with `invalid-description`, exit 10 — `schema-unknown-kind` for the `defmodule`,
+then `missing-fact` for `clock.time.monotonic`, because the import that brings it in was never resolved.
+That is a verdict about a system the toolchain never read, and it would have sent you to fix a module
+that has nothing wrong with it.
+
+Three pieces of work stand between this refusal and a checked module tree, each owned by a leaf: a
+module path that finds an imported module on disk (`M1.29.2`); the rule for what a name written *inside*
+an imported module refers to, and what an `export` hides from its importer (`M1.29.3`) — §6 does not
+state it yet, and the later passes cannot read an elaborated program without it; and module parameters
+reaching the declarations they parameterize (`M1.29.4`), since today a `(with …)` binding is recorded and
+then used by nothing. The diagnostics shown below are rendered by the library; none is reachable from a
+command until `M1.29.2` lands.
+
 ## Elaboration produces instances, not modules
 
 This is the design decision the whole module system turns on. `ROADMAP.md` §5.1.1:

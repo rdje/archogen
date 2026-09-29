@@ -14,7 +14,7 @@ USAGE:
     archogen help <COMMAND>
 
 COMMANDS:
-    check    elaborate and type-check a description against a profile
+    check    type-check a description against a profile
     resolve  resolve providers and resources into an independently checked build plan   [unimplemented — tracked by leaf M3.4]
     build    generate, assemble and build a complete system and its simulator   [experimental — the S0 path: one fixed realization, periodic releases, hosted playground; completed by leaf M4.2]
     analyze  run an analysis for one named property over a build   [unimplemented — tracked by leaf M2.6]
@@ -27,7 +27,7 @@ COMMANDS:
 
 | Command | Does | Built by |
 | --- | --- | --- |
-| `archogen check <DESCRIPTION> [--profile <PROFILE>]` | elaborate and type-check a description against a profile | **built** — see [Checking a description](checking.md) |
+| `archogen check <DESCRIPTION> [--profile <PROFILE>]` | type-check a description against a profile | **built** for a description; a **module file** is refused as `unimplemented` until leaf `M1.29.2` — see [Checking a description](checking.md) and [Modules and composition](modules.md) |
 | `archogen resolve <DESCRIPTION> [--profile <P>] [--locked] --out <PLAN>` | resolve providers and resources into an independently checked build plan | leaf `M3.4` |
 | `archogen build <DESCRIPTION> [--profile <P>] --out <DIR>` | generate, assemble and build a complete system and its simulator | **experimental** — the S0 path only, see [The S0 early generation path](s0.md); leaf `M4.2` completes it |
 | `archogen analyze <BUILD> --property <PROPERTY>` | run an analysis for one named property | leaf `M2.6` |
@@ -35,7 +35,14 @@ COMMANDS:
 | `archogen explain <BUILD> --requirement <REQUIREMENT>` | explain how one requirement was realized, or why it could not be | leaf `M3.4` |
 | `archogen replay <MANIFEST>` | replay a recorded failure manifest and check its identity | leaf `M4.7` |
 
-`check` is built. `build` **runs, but over a narrower path than its §10.2 contract**, and the
+`check` is built — over a single description. It does **not** elaborate a module tree: `ROADMAP.md`
+§10.1 puts elaboration first, and the elaborator exists as a library, but no command calls it yet, so
+both `check` and `build` refuse a module file as `unimplemented` (exit 20) and name leaf `M1.29.2`
+rather than checking it as if it were a description. Until leaf `M1.29.1` the summary above said
+"elaborate and type-check", which no command did; a test now couples that word to the capability, so
+it returns with the elaborator and not before.
+
+`build` **runs, but over a narrower path than its §10.2 contract**, and the
 surface has a third state to say so rather than lying in either direction:
 
 ```console

@@ -148,7 +148,10 @@ const LOCKED: OptionSpec = OptionSpec {
 pub const COMMANDS: &[CommandSpec] = &[
     CommandSpec {
         name: "check",
-        summary: "elaborate and type-check a description against a profile",
+        // ⛔ No "elaborate" until a command elaborates (leaf `M1.29.1`): this line said so while
+        // nothing in production called the elaborator, and it is what `archogen help check` prints.
+        // `tests/module_files.rs` couples the word to the capability, so it cannot come back alone.
+        summary: "type-check a description against a profile",
         positionals: &[PositionalSpec {
             name: "DESCRIPTION",
             help: "path to the eADL system description",

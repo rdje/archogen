@@ -1,18 +1,38 @@
-//! `archogen check` — elaborate and type-check a description against a profile.
+//! `archogen check` — type-check a description against a profile.
 //!
 //! The first command of the `ROADMAP.md` §10.2 surface to become real. It runs the frontend
 //! pipeline (`eadl_model::check`) and maps its §5.5 verdict to this process's exit code through
 //! [`Status::from_verdict`], so the number a script branches on and the word a human reads come
 //! from the same place.
+//!
+//! ⛔ **It does not elaborate.** `ROADMAP.md` §10.1 puts module elaboration first, and the elaborator
+//! exists (`eadl_front::module`), but no command calls it yet — so a module file is classified by
+//! [`module_file`] and refused by [`refuse_module_file`] rather than checked as if it were a description.
+//! Both commands route through those two functions, which is what `M1.29.2` replaces with elaboration.
 
 use std::io::Write;
 
-use eadl_front::SourceMap;
+use eadl_front::{read, Form, Position, SourceId, SourceMap};
 use eadl_model::check::{check, shipped_registry};
 use eadl_model::profile;
 
 use crate::cli::Parsed;
 use crate::status::Status;
+
+/// The leaf that makes a module file something `check` and `build` elaborate instead of refuse.
+///
+/// A constant rather than a literal inside the message, so a test can hold it to the task tree: the
+/// refusal names a leaf the tree declares, and it cannot outlive that leaf being closed.
+pub const MODULE_ELABORATION_OWNER: &str = "M1.29.2";
+
+/// A description file that is a module, in the sense of `docs/semantics/reference.md` §6.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ModuleFile {
+    /// The name its `(defmodule …)` declares, when it declares one.
+    pub name: Option<String>,
+    /// Where that declaration starts.
+    pub position: Position,
+}
 
 /// The kind modules shipped with the toolchain.
 ///
@@ -93,6 +113,10 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
         return Status::ToolFailure;
     };
 
+    if let Some(module) = module_file(&sources, id) {
+        return refuse_module_file(err, path, &module);
+    }
+
     let outcome = check(&sources, id, &registry, active);
     let status = Status::from_verdict(outcome.verdict);
 
@@ -121,6 +145,65 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
         outcome.diagnostics.len()
     );
     status
+}
+
+/// Classify the description at `id`: `Some` when it is a module file.
+///
+/// A file is a module when **any** of its declarations is a `(defmodule …)`, not only the first. §6 makes a
+/// module file hold exactly one; a file holding one beside other declarations is still a module file — a
+/// malformed one, `module-multiple-forms`, which is the elaborator's to report — and classifying by the
+/// first declaration alone would hand that file to the schema pass to be told `defmodule` is not a kind.
+/// Declarations and not forms, because the language-version identifier may precede the module (§8) and is
+/// not one.
+///
+/// A file that does not **read** is not classified at all, so the read pass reports it: a syntax error is a
+/// verdict about the bytes, whatever they were meant to be.
+#[must_use]
+pub fn module_file(sources: &SourceMap, id: SourceId) -> Option<ModuleFile> {
+    let (document, diagnostics) = read(sources, id);
+    if diagnostics.has_errors() {
+        return None;
+    }
+    let module = document
+        .declarations()
+        .find(|form| form.head() == Some("defmodule"))?;
+    Some(ModuleFile {
+        name: module
+            .items()
+            .get(1)
+            .and_then(Form::as_symbol)
+            .map(str::to_string),
+        position: sources.get(id)?.position(module.span().start),
+    })
+}
+
+/// Refuse a module file as `unimplemented`, saying what it is and which leaf makes it checkable.
+///
+/// ⛔ Leaf `M1.29.1`. Before it, both commands handed a module file to the schema pass, which answered
+/// `schema-unknown-kind` for the `defmodule` and then `missing-fact` for the names the module imports —
+/// an `invalid-description` **verdict about the system**, exit 10, for a description that is well-formed and
+/// that the tool cannot read. The missing capability is the tool's, so the status is the process one
+/// `build --locked` returns for the same reason: a command that exists, asked for something it cannot do yet.
+pub fn refuse_module_file(err: &mut dyn Write, path: &str, module: &ModuleFile) -> Status {
+    let declared = module.name.as_deref().map_or_else(
+        || "(defmodule …)".to_string(),
+        |name| format!("(defmodule {name} …)"),
+    );
+    let _ = writeln!(
+        err,
+        "archogen: {}: {path}:{}:{} is a module, `{declared}`, and no command elaborates a module tree yet",
+        Status::Unimplemented.slug(),
+        module.position.line,
+        module.position.column
+    );
+    let _ = writeln!(
+        err,
+        "  hint: the module reader and elaborator exist as a library (docs/semantics/reference.md §6, \
+         docs/book/src/modules.md), but no command calls them, so this file's imports would go \
+         unresolved. Wiring them in is task-tree leaf {MODULE_ELABORATION_OWNER} (docs/TASK_TREE.md); \
+         until then, check a description whose top-level forms are its declarations"
+    );
+    Status::Unimplemented
 }
 
 /// The shipped kind modules, owned so a `SourceMap` can take them.

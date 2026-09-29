@@ -4,6 +4,30 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — a module file is refused as what it is, and `archogen help check` stops claiming elaboration
+
+`ARCHOGEN-M1-0108` (leaf `M1.29.1`, the first child of `M1.29`). **569 passed / 0 failed** over 40
+suites (baseline 559 / 39, delta = the 10 legs of one new suite). Six mutations seen firing. 78 tracked
+descriptions censused before and after: **0** changed.
+
+- **What a reader of the book met.** `docs/book/src/modules.md` opens with a `(defmodule app.system …)`;
+  handed to `archogen check` or `archogen build` it was told `invalid-description`, exit **10** —
+  `schema-unknown-kind` for the `defmodule`, then `missing-fact` for a name its never-resolved import
+  brings in. No command elaborates a module tree: the elaborator is a library only its own tests call.
+- **Now both commands say so**, through one routing pair in `crates/archogen-cli/src/check_cmd.rs`:
+  `unimplemented`, exit **20**, naming the module, its location and leaf `M1.29.2`. A module file that
+  does not *read* keeps the read pass's verdict; a module after the language-version identifier, beside
+  another declaration, or with no name is still recognised as one.
+- **`archogen help check` says "type-check a description against a profile"**, and
+  `crates/archogen-cli/tests/module_files.rs` couples the word "elaborate" to the capability in both
+  directions, and holds the refusal's owning leaf to the task tree.
+- **`M1.29` is decomposed on measurement**: the disk loader (`M1.29.2`), the name rule an elaborated
+  program needs and `docs/semantics/reference.md` §6 does not state (`M1.29.3`), and module parameters,
+  which are bound and consumed by nothing (`M1.29.4`). **`M1.31`** is filed: a caret overruns its line in
+  23 of 78 tracked descriptions, found by this leaf's own reproduction.
+- Book: `cli.md` (help transcript re-rendered from the command), `modules.md` ("What you can run today"),
+  `checking.md` (why the pass table has no *elaborate* row).
+
 ## archogen — the schema can now say a clause holds a quantity, so `check` and `build` stop disagreeing about the same bytes
 
 `ARCHOGEN-M1-0105` (leaf `M1.28.2`, closing `M1.28`). **559 passed / 0 failed** over 39 suites

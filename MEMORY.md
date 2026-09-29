@@ -13,24 +13,23 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M1` → frontier `M1.29`. `PROGRAM` `.27`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
-- **Next action:** **`M1.29`, high — nothing in production elaborates a module tree**, and three surfaces
-  claim otherwise. `git grep -n "elaborate(" -- crates` outside `src/module.rs` → two hits, both in
-  `tests/f01_f02_modules.rs`; `MemoryModules` is the only `ModuleSource`; `archogen check` on `modules.md`'s
-  own opening `(defmodule …)` answers `schema-unknown-kind`, while `spec.rs:151` — what `archogen help
-  check` prints — says "elaborate and type-check". So §10.1 step 1 does not run, **none of §6's 24
-  `module-*` codes is reachable from any command**, and F01/F02 are green at library level only. Then
-  `M1.26.1` (gap (a)), `.2` (gap (b)), `M1.30` (§5.3's metadata, computed and dropped).
-- ⭐ **`M1.28` is closed** (both children): `check` and `build` agree about a malformed quantity —
-  `ValueType::Quantity`, four `task` clauses onto it, `refinement.rs` propagating not discarding,
-  `Verdict::of_code` in one place (exit **70 → 10**). 76 descriptions censused: **1** changed, **0** lost.
+- **Active tree:** `M1` → frontier `M1.31`. `PROGRAM` `.27`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
+- **Next action:** **`M1.31`, medium — a caret overruns its line** in **23 of 78** tracked descriptions (all
+  13 boundary rejects): `diagnostic.rs:264` sizes the caret by the whole span while printing only its first
+  line. Clip to the line, mark continuation, re-run the census to 0. Sequenced ahead of `M1.29.2` because
+  that leaf's module diagnostics label multi-line `(defmodule …)` forms. Then **`M1.29.2`** (disk loader,
+  §6's codes reachable from a command — read its two ⛔ design constraints first: resolve by a *stated* rule
+  from the imported name so `module-name-mismatch` stays firable, and a tracked module fixture is a
+  `conformance.md` manifest decision + migration note), `M1.29.3` (the name rule §6 lacks), `.4` (params).
+- ⭐ **`M1.29.1` closed `M1.29`'s live defect**: `check`/`build` refuse a module file as `unimplemented`
+  (exit 20, was 10) through one routing pair in `check_cmd.rs`; `help check` says "type-check"; a leg in
+  `crates/archogen-cli/tests/module_files.rs` couples "elaborate" to the capability and another fails if
+  `M1.29.2` closes while the refusal still names it. 78 descriptions censused, 0 changed.
 - ⛔ **F-O → `PROGRAM.27`, high: `LANGUAGE-FREEZE`'s explicitness leg cannot fail on the real tree** —
   with the baseline amended and **no note at all** it prints `OK`: its notes grep matches the migrations
   `README.md`'s form template and `names_construct`'s `*all*` case reads it as covering every construct.
-- ⭐ **`M1.13` is closed: `eadl/1` is frozen and gated** — one manifest (**no count** in it), one reader,
-  four two-sided rules, `BASELINE.txt` (**72** digests enumerated at run time), and `LANGUAGE-FREEZE`, whose
-  **second** leg is what stops `--emit` being the waiver — and is the leg **F-O** found inert. Also closed:
-  `M1.25`, `M1.13.4`, `.3`, `PROGRAM.21`, `M1.13.1`, `M1.20`, `M1.12`; F-F by `M1.13.2`.
+- ⭐ **`eadl/1` is frozen and gated** (`M1.13`): `BASELINE.txt` (**72** digests) + `LANGUAGE-FREEZE`, whose
+  **second** leg is the one **F-O** found inert. Also closed: `M1.28`, `M1.25`, `PROGRAM.21`, `M1.20`, `M1.12`.
 - **⭐ Tree `API`** (ruled `2026-09-28`, `decision_programmatic-interface.md`): one engine API, a **wasm**
   binding and an **MCP server**, post-build only; `API.3`–`.7` waited on `M1.13`'s freeze, now closed, so
   the frontier order is a director's call and not a dependency. **`PROGRAM.11`** is the other active
@@ -39,10 +38,10 @@
   of §6 in `decision_findings-for-director-review.md`; `M2.9` needs them. That branch (**`wip/m2.9`**,
   `758cbcdd`) is checkpointed, not finished, and does **not** compile — `crates/rt-core/tests/differential.rs`
   is unadapted to the reference's new API.
-- **Also open:** `M1.27`, `.10`, `.21`, `.22`; `S0.8`; `M2.6`, `.8`; `PROGRAM.18`, `.24`, `.26`, `.13`,
+- **Also open:** `M1.26.1`, `.26.2`, `.30`, `.27`, `.10`, `.21`, `.22`; `S0.8`; `M2.6`, `.8`; `PROGRAM.18`, `.24`, `.26`, `.13`,
   `.15`, `.17`, `.20`, `.5`, `.6`, `.9`, `.10`. ⚠️ `M1`'s open questions: `M1.13.1`'s invisible
   character, and the language's **name**.
-- **Baseline to beat:** `make focused` exit `0` at the pin — **541 passed, 0 failed** over 39 suites.
+- **Baseline to beat:** `make focused` exit `0` at the pin — **569 passed, 0 failed** over 40 suites.
   Tiers: `focused` per commit, `integration` before a push; exit **20 = incomplete** is not a pass. Push
   cadence at `400` ahead of `origin/main`, measured (`decision_push-cadence.md`). ⚠️ `integration` is
   **red** on `emulator`: QEMU **pinned** (`M2.8.1`), `TARGET_VERIFIED=no` until `M2.8.2`.

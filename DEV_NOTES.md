@@ -1,5 +1,30 @@
 # DEV_NOTES.md
 
+## _(2026-09-29)_ — a help line is a claim about a capability, and it needs a leg in both directions
+
+- `M1.29.1`. `archogen help check` said "elaborate and type-check" from the day `spec.rs` was created (`af4e6dc`, `2026-09-13`), and
+  no production code called the elaborator: `git grep "elaborate("` outside `module.rs` finds two hits,
+  both in `f01_f02_modules.rs`. Every gate near it was green — legs 4 and 5 pin all 24 `module-*` codes,
+  `BOOK-ANCHORS` resolves every path `modules.md` cites — because each is an existence census, and the
+  elaborator *exists*. It is the limiting case of `M1.28`'s shape: not a result discarded by its caller,
+  but an emitter with no caller at all.
+- ⭐ **The fix to the sentence is a leg, not an edit.** `module_files.rs` reads the `check` summary, runs
+  a module file through the command, and asserts `summary.contains("elaborat") == (not refused)`. Mutation
+  A (the old summary restored) fails it; so will wiring the elaborator without saying so. The refusal's
+  owning leaf is held to the task tree the same way, so it cannot name `M1.29.2` after `M1.29.2` closes.
+- ⛔ **The first honest answer was not available inside the pipeline.** `eadl_model::check` can only
+  return a §5.5 verdict, and every verdict is about the *system*; "this tool cannot read a module yet" is
+  about the tool. So a module file got the only verdict the passes could produce — `invalid-description`,
+  exit 10, for a well-formed module — and the classification had to move ahead of the call, into the CLI,
+  which owns the process statuses. `unimplemented`, exit 20, the same status `build --locked` returns.
+- **A race found by the suite before any mutation ran.** Three legs wrote the same scratch file name;
+  tests run in parallel and `fs::write` truncates first, so one `check` read the empty file, found no
+  declarations and *accepted* it. Here that surfaced as a red leg; with an assertion that expected
+  acceptance it would have been a green one for the wrong reason. One name per leg, recorded on the helper.
+- Promoted into `docs/knowledge/an-existence-census-cannot-see-a-discarded-result.md` as its fifth
+  instance, with a new `answers:` line — "The help text says the command does X and a library does X — how
+  do I know the command calls it?"
+
 ## _(2026-09-29)_ — an empty diff from a census is a claim about the census, not about the tree
 
 - `M1.28.2`, making `archogen check` refuse a quantity it cannot read. The change was a language change, so
