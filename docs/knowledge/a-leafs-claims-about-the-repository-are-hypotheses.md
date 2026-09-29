@@ -5,6 +5,7 @@ answers:
   - "I planned a slice around something the leaf describes. What if the description is wrong?"
   - "Why did a leaf's own premise turn out to be false, and what do I do when it does?"
   - "How much of a task leaf should I re-measure before implementing it?"
+  - "I am about to exclude something from a check because it obviously cannot run there — do I measure first?"
 type: knowledge
 date: 2026-09-29
 ---
@@ -67,6 +68,14 @@ carefully (`docs/tasks/M1.md`):
   child diverged the pair.
 - **Correct the leaf's acceptance text in the same commit**, marking what moved and why, so the
   acceptance the checklist is graded against is the one that was actually achievable.
+
+- ⛔ **An exclusion is a claim too, and the one you write yourself is the easiest to believe.** `PROGRAM.9.1`
+  first left three whole crates out of the Miri step as "its tests spawn child processes". Measured, two of
+  the three were wrong: `archogen-s0` spawns nothing, and `xtask`'s tests are data checks. In the third, 4
+  tests out of 80 reached a process. Measuring each test target on its own replaced three crate exclusions
+  with four ignored tests, each marked where it is written, and five test targets left out on measured cost.
+  Before shrinking a check's population, time or run each candidate exclusion. A reason that sounds right
+  is how a population quietly shrinks.
 
 Related: [[enumerate-the-population-from-the-specification]] — the same discipline applied to a test's
 inputs rather than to a plan's premises; [[a-moved-measurement-needs-a-census-of-its-copies]] — what to

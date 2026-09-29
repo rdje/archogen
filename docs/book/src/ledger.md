@@ -21,7 +21,7 @@ names one of these sources links to its entry.
 ⚠️ It finds a claim by the source's **name**. A claim about something this page does not list at
 all is not seen, and that part stays a matter for review. `ROADMAP.md` §19's prior-art sources,
 checked on `2026-09-13`, are design references rather than dependencies. One gets an entry here
-the day a chapter or a decision relies on it, as Miri has.
+the day a chapter or a decision relies on it, as Miri did.
 
 ## `qemu`
 
@@ -167,12 +167,12 @@ the day a chapter or a decision relies on it, as Miri has.
 
 | Field | Value |
 | --- | --- |
-| Source | Miri, Rust's undefined-behaviour interpreter |
-| Version | none — not adopted |
-| Pinned at | not pinned — the `extended` tier's Miri step does not exist yet (`PROGRAM.9`) |
-| Retrieved | `2026-09-13` |
+| Source | Miri, Rust's undefined-behaviour interpreter, from the `nightly` toolchain |
+| Version | `miri 0.1.0 (809936eac6 2026-09-12)` on `rustc 1.100.0-nightly (809936eac 2026-09-12)` |
+| Pinned at | not pinned — the `extended` tier's `miri` step runs whatever `nightly` is installed (`PROGRAM.30`) |
+| Retrieved | `2026-09-29` |
 | Hash | not captured |
-| Scope | planned: hosted detection of undefined behaviour in the `extended` tier |
-| Known limitations | §19: its coverage is bounded; it checks the executions it runs, not every execution |
-| Revalidation trigger | its adoption by `PROGRAM.9` |
+| Scope | the `extended` tier's `miri` step (`scripts/extended_miri.sh`): every test target of every workspace crate that finished within 300 s under Miri when measured (29 of 34), after a seeded dangling-pointer read has been refused by the same wiring |
+| Known limitations | §19: it checks the executions the tests drive, for the undefined behaviour it can detect; passing does not establish soundness. This workspace has no `unsafe` code, so today a pass says little beyond "the standard library was used soundly on these paths", which is why the step arms itself first |
+| Revalidation trigger | a `nightly` update; the first `unsafe` block in the workspace |
 | Named as | `Miri` |

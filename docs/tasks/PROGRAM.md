@@ -1607,7 +1607,7 @@ mdBook that is the director's window into the project.
   Commit: `pending`
 
 - ID: `PROGRAM.9`
-  Status: `pending`
+  Status: `in-progress`
   Goal: build what the **extended** tier declares but cannot run — a fuzz corpus over the reader
   and the checked arithmetic, a repeatable mutation harness, and Miri wiring (§13.3).
   Acceptance: `cargo xtask verify --tier extended` reports `passed` on a machine with the tools
@@ -1618,6 +1618,97 @@ mdBook that is the director's window into the project.
   ⛔ **Opened by `PROGRAM.3`, which is the point of that leaf.** These three gaps existed before
   the runner and were invisible; the runner makes the extended tier report `incomplete` until
   they are closed, so the absence is a routed item rather than a silence.
+  Verification: `pending`
+  Commit: `pending`
+  Children: `PROGRAM.9.1`, `PROGRAM.9.2`, `PROGRAM.9.3` — decomposed `2026-09-29`: three different tools, one
+  commit each. Each step **arms itself**: before its real run it proves, on a seeded defect in scratch under
+  `target/`, that it can still fail — so `passed` from this tier always means "an instrument that can fail did
+  not", never "an instrument ran". ⛔ Found while decomposing: the `miri` step reports **UNAVAILABLE** on a
+  machine where Miri **is** installed (`cargo +nightly miri --version` → `miri 0.1.0 (809936eac6
+  2026-09-12)`), because its probe runs `cargo miri --version` under this repository's pinned `stable`
+  toolchain, which has no Miri — the probe asks the wrong question, so the tier misreports its environment.
+
+- ID: `PROGRAM.9.1`
+  Status: `done`
+  Goal: the `miri` step finds Miri where it lives (the `nightly` toolchain), runs it over every crate whose
+  tests Miri can execute, and proves each run that it still reports undefined behaviour.
+  Acceptance: the step's probe asks the nightly toolchain for its `miri` component and says which toolchain
+  it asked; the population is measured, not guessed — per crate, what Miri runs and what stops it;
+  a seeded use of undefined behaviour in a scratch crate is refused by the same wiring before the real
+  run; the `miri` ledger entry records the adopted version.
+  Verification: see the checklist — every test target timed under Miri alone, the step end to end through the
+  tier, three falsifications and a probe test with its mutation.
+  Commit: `ARCHOGEN-PROGRAM-0127 (leaf PROGRAM.9.1)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — on a machine where Miri is installed:
+    ```text
+    $ cargo xtask verify --tier extended      (at 39aa2fc)
+      ⚠  miri               UNAVAILABLE — `cargo-miri` is not on PATH                    exit=20
+    $ cargo +nightly miri --version
+      miri 0.1.0 (809936eac6 2026-09-12)
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — the probe runs `cargo miri --version` from the repository, where
+    `rust-toolchain.toml` selects `stable`, which has no Miri component. The question was wrong, so its true
+    answer was misread:
+    ```text
+    $ git grep -n 'requires: Some("cargo-miri")\|if let Some(sub) = tool.strip_prefix("cargo-")' 39aa2fc -- xtask/src/main.rs
+      39aa2fc:xtask/src/main.rs:297:                    requires: Some("cargo-miri"),
+      39aa2fc:xtask/src/main.rs:380:    if let Some(sub) = tool.strip_prefix("cargo-") {
+    $ git grep -n channel 39aa2fc -- rust-toolchain.toml
+      39aa2fc:rust-toolchain.toml:2:channel = "stable"
+    ```
+  - [x] **FIX** — a probe form `component:<toolchain>:<component>` that asks `rustup +<toolchain>` for the
+    component and names both when it is missing; a test refusing any requirement the probe does not understand.
+    The step now runs `scripts/extended_miri.sh`: (1) Miri's sysroot under `target/miri-sysroot` via
+    `MIRI_SYSROOT` + `cargo miri setup` — by default it was `~/Library/Caches/org.rust-lang.miri`, off this
+    volume; (2) **the arm** — a scratch crate under `target/` whose one test reads through a dangling pointer
+    must be refused with "Undefined Behavior", or the step fails; (3) every workspace member and every test
+    target, derived, minus five test targets left out on **measured** cost (> 300 s each under Miri), `--all`
+    to include them; a stale exclusion is refused before the run. The four tests that run cargo as a child
+    process carry `#[cfg_attr(miri, ignore = …)]` where they are written. ⛔ The first population excluded
+    three whole crates on a story; measured, two of the three were wrong.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    per target, alone, 600 s cap: 34 targets — 541 passed, 4 ignored, 0 failed; over 300 s: archogen-cli/
+      module_cases 463 s, eadl-front/corpus 397 s, eadl-model/rendering 473 s; not finished in 600 s:
+      eadl-front/conformance (twice), eadl-front/reference
+    $ cargo xtask verify --tier extended
+      ✅ miri               851.13s  Miri still refuses a seeded dangling-pointer read, …
+      tier extended: incomplete — 1 passed, 0 failed, 0 unavailable, 2 not built          exit=20
+    ```
+    Falsified, each restored by `cmp`: **F-1** the arm without undefined behaviour (the vector kept alive) →
+    `EXTENDED-MIRI: the seeded dangling-pointer read was NOT refused`, exit=1; **F-2** a stale exclusion
+    `eadl-model/no_such_target` → refused before the run, exit=1; **F-3** the probe asking for
+    `no-such-component` → `UNAVAILABLE — the \`no-such-component\` component is not installed for the
+    \`nightly\` toolchain`, exit=20. The probe-form test, mutated to `component:miri`, fails:
+    `test result: FAILED. 8 passed; 1 failed`. After the run, nothing in the home cache newer than the script.
+  - [x] **NO REGRESSION** — `cargo test -q -p xtask` → `test result: ok. 9 passed; 0 failed`; the
+    `cfg_attr(miri, …)` ignores change nothing outside Miri (`make focused` passed); the doctrine driver green
+    at the commit. ⚠️ Honest limit: `--all` has not been observed to finish — two of its targets were stopped at
+    600 s, twice for one of them.
+  - [x] **LOCKSTEP** — the book's `verification.md` gains "The `miri` step proves it can fail before it passes";
+    the ledger's `miri` entry records the adopted version and scope; `TOOLBOX.md` row; the not-built steps now
+    name `PROGRAM.9.2` and `PROGRAM.9.3`; lesson promoted into
+    `docs/knowledge/a-leafs-claims-about-the-repository-are-hypotheses.md`.
+
+- ID: `PROGRAM.9.2`
+  Status: `pending`
+  Goal: a fuzz corpus over the reader and the checked arithmetic (§13.3), within the zero-dependency
+  decision — a deterministic, seeded generator in-tree rather than `cargo-fuzz` and `libfuzzer-sys`.
+  Acceptance: a `fuzz` step that runs a fixed number of seeded cases per property, prints the seed of any
+  failure so it replays by command, and fails on a seeded defect before its real run.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `PROGRAM.9.3`
+  Status: `pending`
+  Goal: the mutation controls that each leaf ran by hand become a repeatable harness — a catalog of
+  mutations, each applied, verified to have applied, run against the suite and restored.
+  Acceptance: a `mutation` step over the catalog that fails on a surviving mutation; it reproduces by
+  command the `lcm`→`max` blind spot found by hand in `S0.4` (surviving against the original harmonic
+  fixtures, killed by the discriminating one); restoration checked byte for byte.
   Verification: `pending`
   Commit: `pending`
 
@@ -2452,7 +2543,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.9` | `pending` | the extended tier reports `incomplete` on every run until its three steps exist |
+| 1 | `PROGRAM.9` | `in-progress` | the extended tier reports `incomplete` on every run until its three steps exist |
 | 2 | `PROGRAM.6` | `pending` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |
 | 3 | `PROGRAM.13` | `pending` | twelve closed leaves in `BOOTSTRAP`, `M2` and this tree do not name their own commit — backfill both logs from git, then `PROGRAM.14` gates it so the gap cannot reopen |
 | 4 | `PROGRAM.15` | `pending` | a feedback register row that contradicts its own issue sub-tree passes every gate today; five state transitions in six commits held only by hand-editing and a manual census |
@@ -2571,6 +2662,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-29` | `PROGRAM.28` | `git grep` for any runner of `--self-test` at `96636ac`; the new runner and its `--self-test`; four mutations U-1–U-4; `cargo xtask verify --tier integration` and the three other tiers; `cargo test -p xtask` | nothing ran them → **14** discovered and passing in 42 s; 6 / 6 arms; every mutation fires; integration 7 passed / 1 failed (emulator, `M2.8`), the book's transcript re-rendered from it |
 | `2026-09-29` | `PROGRAM.29` | a logging `mktemp` on `PATH` over the driver and the self-test runner, before and after; `git grep -c mktemp 7bf85ba` over every tracked script; `SCRATCH-LOCALITY` and its 16 arms; nine mutations S-1–S-8b; every changed script re-run against its before-state; the LS-001 precondition falsified; `cargo test --all`; a residue census | **26 of 26** calls off the volume before; **18 sites in 15 files** where the filing census had 8 in 6; after, every project-owned call under `target/`, 0 of 58 paths left; eight mutations fire, S-8 survives for a stated reason; two self-tests that the move broke — one gone partly vacuous — fixed at the cause; 602 / 0 |
 | `2026-09-29` | `PROGRAM.5` | `git grep` for URLs and ledger links at `cb8180d`; the ledger gate on the real tree and its 20 arms; fifteen mutations M-1–M-15; two falsifications on the real tree (the QEMU pin moved, a citation deleted); `mdbook build` and each entry's anchor in the HTML; `BOOK-ANCHORS` | 0 URLs and 0 ledger links before; 11 entries, 7 pins carried, 21 citations in 12 files after; every mutation fails its own arm; both real-tree falsifications refused at the named entry and line; the Rust channel, mdBook and CI actions found unpinned → `PROGRAM.30` |
+| `2026-09-29` | `PROGRAM.9.1` | the extended tier at `39aa2fc` against `cargo +nightly miri --version`; every one of 34 test targets under Miri alone (600 s cap); the tier end to end; F-1 arm without UB, F-2 stale exclusion, F-3 missing component; the probe-form test and its mutation; the home cache after the run | Miri reported unavailable while installed → found on `nightly`; 541 passed, 4 ignored, 0 failed; five corpus walks over 300 s left out on measurement; `miri` ✅ in 851 s; all three falsifications refused; sysroot under `target/` |
 
 ## Commit Log
 
@@ -2602,6 +2694,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.28` | `ARCHOGEN-PROGRAM-0123 (leaf PROGRAM.28)` | **every gate's RED arms now run in a tier and in CI.** `scripts/run_self_tests.sh` discovers every armed gate by census, plus the outside harness, and fails on any failed arm; a `self-tests` step in `integration`. The book's stale tier transcript re-rendered from a real run |
 | `PROGRAM.29` | `ARCHOGEN-PROGRAM-0124 (leaf PROGRAM.29)` | **scratch stays on this volume, and a gate says so.** 14 project-owned sites moved under `target/`; `SCRATCH-LOCALITY` reads every tracked script and Rust source; the scaffold's four sites recorded for its owner, not sent. The root manifest excludes `target`, so a Cargo fixture there is standalone |
 | `PROGRAM.5` | `ARCHOGEN-PROGRAM-0126 (leaf PROGRAM.5)` | **§15's ledger exists and is checked.** A book chapter of 11 external sources at the versions they are pinned to; `SOURCE-LEDGER` derives every pin and every naming document. `PROGRAM.30` filed for the unpinned toolchain |
+| `PROGRAM.9` → `PROGRAM.9.1` | `ARCHOGEN-PROGRAM-0127 (leaf PROGRAM.9.1)` | **the `miri` step runs, and proves it can fail first.** Found on `nightly` (it had been reported unavailable while installed); a seeded dangling-pointer read refused before every run; every test target timed under Miri, five corpus walks left out on measured cost; sysroot under `target/`. `PROGRAM.9` decomposed into `.9.1`–`.9.3` |
 
 ## Changelog
 

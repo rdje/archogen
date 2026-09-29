@@ -77,6 +77,10 @@ fn the_base_fixture_generates_a_crate() {
 }
 
 #[test]
+#[cfg_attr(
+    miri,
+    ignore = "runs cargo as a child process, which Miri does not support"
+)]
 fn the_generated_crate_compiles() {
     // `S0.3`'s acceptance, in one line: *"`archogen build` on the fixture writes a generated
     // crate that compiles."*

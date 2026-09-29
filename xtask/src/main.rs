@@ -272,7 +272,7 @@ const TIERS: &[Tier] = &[
                 name: "fuzz",
                 proves: "the reader and the checked arithmetic survive a fuzz corpus (§13.3)",
                 action: Action::NotBuilt {
-                    owner: "PROGRAM.9",
+                    owner: "PROGRAM.9.2",
                     note: "no fuzz target exists yet; §13.3 asks for property tests and fuzzing \
                            over parsing, constraints, checked arithmetic and event sequences",
                 },
@@ -281,7 +281,7 @@ const TIERS: &[Tier] = &[
                 name: "mutation",
                 proves: "the suite is sensitive to the defects it claims to catch",
                 action: Action::NotBuilt {
-                    owner: "PROGRAM.9",
+                    owner: "PROGRAM.9.3",
                     note: "mutation controls are run by hand, per leaf, and recorded in each \
                            acceptance checklist — which is evidence but not a repeatable tier. \
                            One of them found a real blind spot in F28 (see \
@@ -290,11 +290,11 @@ const TIERS: &[Tier] = &[
             },
             Step {
                 name: "miri",
-                proves: "the hosted logic Miri can execute is free of the UB it detects",
+                proves: "Miri still refuses a seeded dangling-pointer read, and every crate it can run is free of the UB it detects",
                 action: Action::Run {
-                    program: "cargo",
-                    args: &["miri", "test"],
-                    requires: Some("cargo-miri"),
+                    program: "scripts/extended_miri.sh",
+                    args: &[],
+                    requires: Some("component:nightly:miri"),
                     matters: "§13.3 selects Miri for the hosted Rust logic, and records that \
                               passing it does not establish soundness; `rustup +nightly component \
                               add miri`",
@@ -376,6 +376,22 @@ fn on_path(tool: &str) -> bool {
                     .any(|line| line.trim() == triple)
             });
     }
+    // A rustup COMPONENT of a named toolchain — `component:nightly:miri`. Miri ships with `nightly`, and this
+    // repository pins `stable`, so asking plain `cargo miri` asks the wrong toolchain: measured, the step
+    // reported "not on PATH" on a machine where `cargo +nightly miri --version` answered (leaf `PROGRAM.9.1`).
+    if let Some((toolchain, component)) = tool
+        .strip_prefix("component:")
+        .and_then(|rest| rest.split_once(':'))
+    {
+        return Command::new("rustup")
+            .args([&format!("+{toolchain}"), "component", "list", "--installed"])
+            .output()
+            .is_ok_and(|out| {
+                String::from_utf8_lossy(&out.stdout).lines().any(|line| {
+                    line.trim().starts_with(&format!("{component}-")) || line.trim() == component
+                })
+            });
+    }
     // `cargo miri` is a cargo subcommand, not a bare executable; ask cargo for it.
     if let Some(sub) = tool.strip_prefix("cargo-") {
         return Command::new("cargo")
@@ -406,10 +422,16 @@ fn run_step(step: &Step, root: &Path) -> Outcome {
                 if !on_path(tool) {
                     // A rustup target is not an executable, and telling a reader it is "not on
                     // PATH" sends them to fix the wrong thing.
-                    let missing = tool.strip_prefix("target:").map_or_else(
-                        || format!("`{tool}` is not on PATH"),
-                        |triple| format!("the `{triple}` target is not installed"),
-                    );
+                    let missing = if let Some(triple) = tool.strip_prefix("target:") {
+                        format!("the `{triple}` target is not installed")
+                    } else if let Some((toolchain, component)) = tool
+                        .strip_prefix("component:")
+                        .and_then(|rest| rest.split_once(':'))
+                    {
+                        format!("the `{component}` component is not installed for the `{toolchain}` toolchain")
+                    } else {
+                        format!("`{tool}` is not on PATH")
+                    };
                     println!("  ⚠  {:<18} UNAVAILABLE — {missing}", step.name);
                     println!("     {matters}");
                     return Outcome::Unavailable;
@@ -712,6 +734,39 @@ mod tests {
                     assert!(
                         matters.len() > 40,
                         "`{}` gates on `{tool}` without saying what its absence costs",
+                        step.name
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn every_requirement_is_a_form_the_probe_understands() {
+        // A requirement the probe does not recognise falls through to a PATH lookup of the literal string, so a
+        // typo such as `component:miri` would report "unavailable" for ever while the tool sat installed — the
+        // same misreport `PROGRAM.9.1` found.
+        for tier in TIERS {
+            for step in tier.steps {
+                if let super::Action::Run {
+                    requires: Some(tool),
+                    ..
+                } = &step.action
+                {
+                    let understood = if let Some(rest) = tool.strip_prefix("component:") {
+                        rest.split_once(':').is_some_and(|(toolchain, component)| {
+                            !toolchain.is_empty()
+                                && !component.is_empty()
+                                && !component.contains(':')
+                        })
+                    } else if let Some(triple) = tool.strip_prefix("target:") {
+                        !triple.is_empty() && !triple.contains(':')
+                    } else {
+                        !tool.is_empty() && !tool.contains(':') && !tool.contains('/')
+                    };
+                    assert!(
+                        understood,
+                        "`{}` requires `{tool}`, a form the probe does not understand",
                         step.name
                     );
                 }

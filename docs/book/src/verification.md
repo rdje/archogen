@@ -87,6 +87,28 @@ were not *reported as missing* — they were simply not mentioned, which reads i
 Each gap now names its owner: `PROGRAM.9` for the extended tier's three steps, `M5.1` for the board,
 `M3.6` / `M4.8` / `M4.7` for the assurance tier.
 
+### The `miri` step proves it can fail before it passes
+
+The workspace contains no `unsafe` code, so a Miri run over it that passes looks exactly like a run
+in which Miri saw nothing at all. `scripts/extended_miri.sh` therefore starts by building a
+throwaway crate under `target/` whose one test reads through a dangling pointer. If Miri does not
+refuse that test, the step fails before touching the real code. Miri comes from the `nightly`
+toolchain, and until this step existed the tier asked the pinned `stable` toolchain for it and
+reported Miri **unavailable** on a machine where it was installed.
+
+Every test target was measured under Miri on its own: 34 targets, **541 tests passed, 4 ignored,
+none failed**. The four ignored tests run cargo as a child process, which Miri cannot do, and each
+says so where it is written. Five targets that walk a whole corpus take more than 300 seconds each
+under Miri (two did not finish in 600). They are left out of the default run, named with their
+measurements, and `--all` runs them. What remains took **851 seconds** end to end through the tier. Miri keeps its
+sysroot under `target/`, not in a cache under the user's home directory.
+
+```console
+$ bash scripts/extended_miri.sh             # the step: the arm, then every crate
+$ bash scripts/extended_miri.sh --arm-only  # only the seeded dangling-pointer read
+$ bash scripts/extended_miri.sh --all       # every test target, the corpus walks included
+```
+
 ## What the `tests` step is a suite *of*
 
 The row above says "every contract test passes", and for the language that means a declared population.

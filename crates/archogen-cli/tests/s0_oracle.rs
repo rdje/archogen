@@ -634,6 +634,10 @@ fn generate_compile_run(description: &str, dir: &Path) -> String {
 }
 
 #[test]
+#[cfg_attr(
+    miri,
+    ignore = "runs cargo as a child process, which Miri does not support"
+)]
 fn f28_a_small_description_produces_the_asserted_observation() {
     // **F28.** From a clean build directory: generate, compile, run, and compare against the
     // observation frozen in `S0.1` — before this path existed, and by an implementation that
@@ -682,6 +686,10 @@ fn f28_the_unsupported_request_is_rejected_with_a_diagnostic() {
 }
 
 #[test]
+#[cfg_attr(
+    miri,
+    ignore = "runs cargo as a child process, which Miri does not support"
+)]
 fn f28_deleting_the_build_directory_does_not_change_the_result() {
     // The reproducibility half of the gate: "deleting the build directory does not change the
     // result". Two full passes over the base case, each from a removed directory — identical
@@ -713,6 +721,10 @@ fn f28_deleting_the_build_directory_does_not_change_the_result() {
 const NON_HARMONIC: &str = "examples/s0-heartbeat/system-non-harmonic.eadl";
 
 #[test]
+#[cfg_attr(
+    miri,
+    ignore = "runs cargo as a child process, which Miri does not support"
+)]
 fn f28_a_non_harmonic_task_set_separates_the_hyperperiod_from_the_longest_period() {
     // ⛔ THE THREE F28 CASES CANNOT SEE THIS. Their periods are 10 and 30, then 10 and 20 — both
     // harmonic, so `lcm` equals `max` and a realization returning the longest period passes the

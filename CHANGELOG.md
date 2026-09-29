@@ -4,6 +4,22 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the extended tier's Miri step runs, and proves it can fail before it passes
+
+`ARCHOGEN-PROGRAM-0127` (leaf `PROGRAM.9.1`).
+
+- The step had reported Miri **unavailable** on a machine where it was installed. It asked the pinned
+  `stable` toolchain; Miri ships with `nightly`. The probe now asks a named toolchain for a named component,
+  and a test refuses any requirement form the probe does not understand.
+- `scripts/extended_miri.sh` first makes Miri refuse a seeded read through a dangling pointer. The workspace
+  has no `unsafe` code, so without that arm a pass would look the same as Miri not looking at all.
+- Every test target was timed under Miri on its own: 541 tests passed, 4 ignored, none failed. The four
+  ignored tests run cargo as a child process and say so where they are written. Five corpus walks over 300 s
+  each are left out of the default run on that measurement, and `--all` runs them. End to end through the
+  tier: 851 s.
+- Miri's sysroot is kept under `target/`, not in the user's home cache.
+- `PROGRAM.9` is split into `.9.1` (Miri), `.9.2` (fuzzing) and `.9.3` (mutation).
+
 ## archogen — what the project relies on from outside is written down, at the version it is pinned to
 
 `ARCHOGEN-PROGRAM-0126` (leaf `PROGRAM.5`). A new book chapter, "What this project relies on from outside",

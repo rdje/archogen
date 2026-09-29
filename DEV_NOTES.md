@@ -1,5 +1,20 @@
 # DEV_NOTES.md
 
+## _(2026-09-29)_ — a tool reported absent was installed, and an exclusion written from a story was wrong twice
+
+- `PROGRAM.9.1`. The `extended` tier's `miri` step said **UNAVAILABLE** on a machine where
+  `cargo +nightly miri --version` answered. Its probe ran `cargo miri --version` under the repository's
+  pinned `stable` toolchain, which has no Miri. It asked the wrong question and got a true answer to it. The
+  probe now asks the named toolchain for the component, and a test refuses any requirement the probe does
+  not understand.
+- ⛔ The first population left out three crates on a plausible story ("their tests spawn processes"). Two
+  were wrong. Measuring each of the 34 test targets under Miri on its own gave 541 tests passed, 4 ignored,
+  none failed. The four genuine process-spawning tests are marked where they are written, and the five
+  corpus walks that cost more than 300 s each are left out on their measured cost, with `--all` to run them.
+  Promoted: `docs/knowledge/a-leafs-claims-about-the-repository-are-hypotheses.md`.
+- By default Miri puts its sysroot in `~/Library/Caches`, off this volume. `MIRI_SYSROOT` with
+  `cargo miri setup` puts it under `target/`, as Miri's own README documents.
+
 ## _(2026-09-29)_ — a census scoped to a folder, and a fixture moved out of its environment
 
 - `PROGRAM.29`, moving gate scratch out of the system temporary directory. The leaf was filed on a census of
