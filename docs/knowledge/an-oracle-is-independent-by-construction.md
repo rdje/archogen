@@ -5,6 +5,7 @@ answers:
   - "The gate says the assertion must predate the generator — how do I make that checkable?"
   - "Why is a test that only ever passes not evidence that anything was checked?"
   - "How do I stop someone quietly adjusting an expected result to make a test pass?"
+  - "My digest pipeline and an independent re-computation disagree — which one is wrong?"
 type: knowledge
 date: 2026-09-13
 ---
@@ -82,3 +83,31 @@ input does not satisfy the gate."*
 - Deriving the expectation may need semantics nobody has written down. Record them as a decision
   in the same commit rather than inferring them — that is how the `priority` comparison
   direction came to be recorded.
+
+## When the two sides are byte streams, suspect the cross-check first
+
+`M1.13.4.5` (`docs/tasks/M1.md`) built a baseline of digests over constructs extracted from documents,
+with the extraction in Rust and the hashing in shell — two processes that have to agree on bytes through
+a NUL-framed pipe. Two independent cross-checks were run over the result, and the first **disagreed**:
+
+- the grammar's EBNF fence, re-extracted in another language and hashed there → an identical digest;
+- one machine-read table, re-extracted the same way → a **different** digest.
+
+The instrument was right and the cross-check was wrong: the checker kept consuming blank lines after the
+table ended, so it hashed trailing newlines the instrument's rule stops before. The rule — contiguous
+`|` lines after the marker, blanks allowed only *before* the header — was in the code and not in the
+cross-check, and a cross-check that reimplements a rule from memory is not independent. It is a second
+guess with a confident output format.
+
+- **State the extraction rule where a cross-check can read it**, then write the check from the statement
+  rather than from the code. Re-run from the statement, both constructs agreed; and a third check — a
+  suite file's canonical form re-printed by a *different* printer (`diagnose`) and hashed — agreed too,
+  which is the one that mattered, because it crossed an implementation boundary rather than a language
+  one.
+- ⛔ **Read the output; do not trust the pipeline.** The same slice shipped a shell bug the digests hid:
+  `records+="$(printf '%s  %s\n' …)"` — command substitution strips the trailing newline, so all 70
+  records reached `sort` as one line and `sort -k2` on one line returns one line. Every digest was
+  correct and the file was unusable. Nothing but looking at the emitted bytes would have shown it.
+- A framing byte has to be one the payload provably cannot contain. Here the payload is canonical text,
+  and §3 rule 3 of the language reference forbids a control character in it — which is what makes NUL a
+  safe frame and a documented reason rather than a lucky choice.

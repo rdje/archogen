@@ -52,6 +52,59 @@ four new legs and arms). 62 descriptions, 9 test legs, 4 book chapters.
   "every top-level form **it is given**", which is what the filter made true; `reading.md` carries the
   fact for the reader with no count in it, deliberately, because `M1.13.4.3` is about to move one.
 
+## archogen — `eadl/1` has a frozen baseline, and its digests were cross-checked rather than trusted
+
+`ARCHOGEN-M1-0097` (leaf `M1.13.4.5`, closing `M1.13.4` with it). `535 passed / 0 failed` over 39
+suites (baseline 526, delta = the new file's nine legs and arms).
+
+- **`docs/semantics/BASELINE.txt`: 70 digests over three construct classes** — the EBNF fence of
+  `docs/semantics/grammar.md`, **every** machine-read table `docs/semantics/reference.md` carries, and
+  the **canonical form** of all 63 descriptions the manifest declares. Written by
+  `scripts/language_baseline.sh` from `crates/eadl-front/examples/language_freeze.rs`, 83 lines, sorted
+  by construct id so two runs are byte-comparable, and deterministic: two `--print` runs are `diff -q`
+  identical, and the file reproduces exactly after unrelated document edits.
+- ⛔ **Enumerated at run time, and never listed — on evidence.** `M1.13`'s decomposition censused "five
+  machine-read tables"; the reference carries **six**, because `M1.13.3` added `language-version`. The
+  instrument finds tables by scanning for markers at line start, so a seventh is frozen by the next run
+  and nothing has to be told, and the reference's own *prose* mention of the convention is not a table.
+- **Canonical form and not file bytes**, because a corpus file's header carries its `case:` / `why:` /
+  `rationale:` prose and editing a rationale is not a language change: a digest of bytes would make every
+  documentation fix look like a change to a frozen construct, and a gate that fires on prose gets
+  disabled. Canonical form is also the artifact §12 M4 hashes, so the baseline and the build agree on
+  what "the same description" means. The limit is stated in the file's own header: a corpus header is
+  invisible here, so this proves the described systems did not move, not that the files did not.
+- **Shell hashes and Rust prints**, because the workspace carries zero dependencies and so has no hasher;
+  the portable `sha256sum`/`shasum` helper is the one `scripts/check_frozen_evaluation.sh` already uses.
+  Records are NUL-framed, and NUL is safe for a documented reason: the payload is canonical text and §3
+  rule 3 forbids a control character in it. Scratch lives under `target/tmp/`, never `/tmp`.
+- ⭐ **Three digests were re-computed independently and agreed**: the EBNF fence and the `number-values`
+  table re-extracted and hashed in another language, and one description's canonical form re-printed by a
+  *different* printer (`diagnose`) — the check that crosses an implementation boundary rather than a
+  language one. ⛔ **The first cross-check disagreed, and the checker was wrong**: it consumed blank
+  lines after the table, hashing trailing newlines the instrument's rule stops before. A cross-check that
+  reimplements a rule from memory is a second guess with a confident output format. Promoted into
+  `docs/knowledge/an-oracle-is-independent-by-construction.md`.
+- ⛔ **A defect the exit codes hid.** The first cut assembled records with `records+="$(printf '%s  %s\n' …)"`;
+  command substitution strips the trailing newline, so all 70 records reached `sort` as one line and
+  `sort -k2` on one line returns one line. Every digest was correct and the file was unusable. Found by
+  reading the emitted bytes, and now a comment in the script naming the failure it prevents.
+- **Mutation I on the real tree:** one row added to §1's `number-values` table moved exactly one digest —
+  `reference.md#number-values`, `49136402…` → `b83b04a4…` — and left the other 69; the restoration
+  reproduced the tracked baseline byte-for-byte. So the baseline is sensitive to one row of one table and
+  insensitive to everything else.
+- ⛔ **This child writes the baseline and gates nothing**, which is the ⛔ it was written with: a gate in
+  the same commit as its baseline has no prior state to differ from, so no RED arm can fire against the
+  real tree. `scripts/check_doctrines.project.sh` is untouched, and no test fails on a digest difference.
+  What exists for `M1.13.5` instead: a comparator that classifies **moved** / **added** / **removed** and
+  names the construct and both digests — three different claims, which is why it classifies rather than
+  diffs — with six arms over synthetic baselines, and a measured cost for the trade that leaf has to
+  make: `--emit` is **0.8 s** warm.
+- **Lockstep:** `docs/book/src/verification.md` gains "What is frozen, and what a digest can prove", with
+  **no digest and no output listing quoted** — a digest is the purest form of the figure class
+  `PROGRAM.20` registers, and `M1.13.4.3` had just found two live false ones; `conformance.md` gains the
+  pointer from the population to the baseline that digests it; `M1.13.4`'s closure review re-checks the
+  parent's acceptance criterion by criterion and records the three defects the children found outside it.
+
 ## archogen — the conformance suite has one declared population, and four rules that used to be coincidences
 
 `ARCHOGEN-M1-0096` (leaf `M1.13.4.4`). `526 passed / 0 failed` over 38 suites (baseline 512, delta =

@@ -8,5 +8,6 @@
 
 #![allow(dead_code)]
 
+pub mod baseline;
 pub mod reference_table;
 pub mod suite;

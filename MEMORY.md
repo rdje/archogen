@@ -13,22 +13,22 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M1` → frontier `M1.13.4.5`. `PROGRAM` `.11`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
-- **Next action:** **`M1.13.4.5`** — the baseline instrument: one digest per frozen construct (the EBNF
-  fence, **every** machine-read table, the canonical form of every suite description). ⛔ Constructs must
-  be **enumerated at run time**, never listed: `M1.13` recorded "five machine-read tables" and the
-  reference carries **six**. No hasher and no dependencies, so the instrument emits construct *texts* and
-  `sha256` comes from the helper `check_frozen_evaluation.sh` uses. It **writes** the baseline and does
-  not gate it — `M1.13.5` does, and needs a Rust entry point in a cheap pre-commit path. Then `.13.5`,
-  `.25`, `.26`, `.27`. ⚠️ Open in `## Open Questions`: `M1.13.1`'s invisible character, the **name**.
+- **Active tree:** `M1` → frontier `M1.13.5`. `PROGRAM` `.11`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
+- **Next action:** **`M1.13.5`** — the freeze gate, and the last child of `M1.13`:
+  `scripts/check_language_freeze.sh` recomputes `docs/semantics/BASELINE.txt` and fails on any difference
+  no migration note covers, keeping **moved** / **added** / **removed** apart (the comparator already
+  classifies them). Two rules pre-decided: *any* movement needs a note including a correction, and
+  regeneration must be an explicit act that **fails without a note**. Handed to it: the gate needs a Rust
+  entry point (canonical form is only printable by the frontend) and `--emit` costs **0.8 s** warm against
+  a pre-commit path that must stay cheap. Then `.25`, `.26`, `.27`, `.10`, `.21`, `.22`.
+  ⚠️ Open in `## Open Questions`: `M1.13.1`'s invisible character, and the language's **name**.
 - ⛔ **`M1.13.2` settled F-F, and both measurements it was routed on were false** — a census figure with
   an unstated scope and a radix-scoped maximum, restated in **7** places, and an address argument true
   of *physical* addresses only. Details: `docs/decisions/decision_eadl1-value-domain.md`.
-- **Closed, and named rather than restated:** `M1.13.4.4` (one machine-read manifest, one reader, four
-  executed rules, **no count** in it); `M1.13.4.3` (the empty literal category; two live false book
-  figures found and gated); `M1.13.4.2` (all **62** shipped descriptions state their version; §8 rule 2's
-  population is a census, **13 of 75**); `M1.13.4.1` (§8's third consumer, the kind registry; one
-  accessor `language_version::declarations()`); `M1.13.3`; `PROGRAM.21`; `M1.13.1`; `M1.20`; `M1.12`.
+- **Closed, and named rather than restated:** `M1.13.4` (all five children: one manifest with **no count**,
+  one reader, four two-sided rules, and a **70**-digest baseline enumerated at run time — plus a
+  production defect, a false normative sentence and five false book figures found on the way);
+  `M1.13.3`; `PROGRAM.21`; `M1.13.1`; `M1.20`; `M1.12`.
 - **⭐ Tree `API`** (ruled `2026-09-28`, `decision_programmatic-interface.md`): one engine API, a
   **wasm** binding and an **MCP server**, post-build only. `API.3`–`.7` wait on `M1.13`.
 - **`PROGRAM.11` (medium)** is the other active frontier: the repository-boundary rule in **both**
@@ -40,7 +40,7 @@
 - **Also open:** `M1.25`, `M1.26` (sequenced *before* any value-domain widening), `M1.10`, `M1.21`,
   `M1.22`; `S0.8`; `M2.6`, `M2.8`; `PROGRAM.11`, `.18`, `.24`, `.13`, `.15`, `.17`, `.20`, then `.5`,
   `.6`, `.9`, `.10`.
-- **Baseline to beat:** `make focused` exit `0` at the pin — **526 passed, 0 failed** over 38 suites.
+- **Baseline to beat:** `make focused` exit `0` at the pin — **535 passed, 0 failed** over 39 suites.
   Tiers: `focused` per commit, `integration` before a push; exit **20 = incomplete** is not a pass.
   **Push cadence:** at `400` ahead of `origin/main`, measured not carried — `git rev-list --count
   origin/main..HEAD`, `decision_push-cadence.md`. ⚠️ `make integration` is **red** on `emulator`: QEMU

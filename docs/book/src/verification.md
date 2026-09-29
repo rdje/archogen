@@ -106,6 +106,45 @@ conformance cases of a language version.
 standard — a checker "sharing the same erroneous recurrence with its reference does not qualify as
 independent" — is not met by it, and leaf `M1.22` owns the question of a third recognizer.
 
+## What is frozen, and what a digest can prove
+
+The constructs of `eadl/1` are digested into `docs/semantics/BASELINE.txt`, one line per construct, in
+the form `<sha256 of the construct's text>  <construct id>`. Three commands, and no output is quoted
+here because a digest is exactly the kind of figure that rots silently:
+
+```console
+$ scripts/language_baseline.sh --list    # the construct ids alone
+$ scripts/language_baseline.sh --print   # the baseline, on stdout, touching nothing
+$ scripts/language_baseline.sh --emit    # rewrite docs/semantics/BASELINE.txt — an explicit act
+```
+
+Three classes of construct are frozen: the EBNF fence of `docs/semantics/grammar.md`, **every**
+machine-read table `docs/semantics/reference.md` carries, and the **canonical form** of every
+description the manifest declares. ⛔ Enumerated at run time rather than listed, in the instrument
+(`crates/eadl-front/examples/language_freeze.rs`) and again in the script: the decomposition that
+planned this recorded "five machine-read tables" and the reference carries six, because §8 added one —
+a list written into a tool is a stale figure with a compiler behind it.
+
+⭐ **Canonical form, and not file bytes.** A corpus file's comment header carries its `case:`, `why:` and
+`rationale:` prose, and editing a rationale is not a language change. Canonical form is the language's
+own normative printer and drops comments, so a digest moves exactly when the described system moves — and
+it is the same artifact §12 M4 hashes, so the baseline and the build agree on what "the same
+description" means instead of maintaining two definitions of it.
+
+⚠️ **What a digest proves, and what it does not.** That a construct *moved*. It cannot prove that the
+migration note covering the movement is correct, or complete, or that every description the change
+invalidates was found — and because canonical form carries no comment, a change to a corpus file's
+*header* is invisible here. The headers that carry data are pinned elsewhere: by `corpus.rs` against
+`docs/semantics/boundary/README.md`'s counts and by `reference.rs` against the reference's
+`comment-headers` table. So the baseline proves the described systems did not move, not that the files
+did not.
+
+⛔ **Writing the baseline and gating it are different commits, on purpose.** A gate written beside the
+baseline it enforces has no prior state to differ from, so no RED arm can fire against the real tree.
+`M1.13.4.5` wrote the file and the comparator that classifies a difference as *moved*, *added* or
+*removed*; leaf `M1.13.5` owns the check that fails on a movement no migration note covers, and the rule
+that regenerating the file is an explicit act rather than a side effect.
+
 ## Why `focused` runs the whole suite
 
 §14.3 defines the focused tier as "format/type checks and **affected** contract tests", and

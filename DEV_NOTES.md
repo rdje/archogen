@@ -1,5 +1,33 @@
 # DEV_NOTES.md
 
+## _(2026-09-29)_ — an independent re-computation that disagrees is usually the one that is wrong
+
+- `M1.13.4.5`, writing `eadl/1`'s frozen-construct baseline: Rust extracts each construct's text and
+  emits NUL-framed records, shell hashes them, because the workspace carries zero dependencies and so has
+  no hasher. Two processes agreeing on bytes is a claim, so it was cross-checked twice — the grammar's
+  EBNF fence re-extracted and hashed in python, and one machine-read table the same way.
+- ⛔ The fence agreed and **the table did not**. The instrument was right: the cross-check kept consuming
+  blank lines after the table ended and so hashed trailing newlines the instrument's rule stops before.
+  The rule (contiguous `|` lines after the marker, blanks allowed only before the header) was in the code
+  and not in the check — and a cross-check that reimplements a rule from memory is not independent, it is
+  a second guess with a confident output format. Re-written from the stated rule, both agreed; a third
+  check crossed an implementation boundary rather than a language one (a suite file's canonical form
+  re-printed by `diagnose` and hashed) and agreed too.
+- ⛔ **The pipeline also shipped a bug the digests hid.** `records+="$(printf '%s  %s\n' …)"` — command
+  substitution strips the trailing newline, so all 70 records reached `sort` as a single line and
+  `sort -k2` on one line returns one line. Every digest was correct and the file was unusable. It was
+  visible only by reading the emitted text rather than the exit code, and it is now a comment in
+  `scripts/language_baseline.sh` naming the failure it prevents.
+- ⭐ The framing byte is NUL because the payload is canonical text and §3 rule 3 of
+  `docs/semantics/reference.md` forbids a control character in it — a documented reason, not a lucky
+  choice. A frame the payload can contain silently merges two constructs and both digests still look
+  fine.
+- promotion: promoted (`docs/knowledge/an-oracle-is-independent-by-construction.md` gains the section
+  "When the two sides are byte streams, suspect the cross-check first" and a fifth `answers:` line —
+  *"My digest pipeline and an independent re-computation disagree — which one is wrong?"*. Same card as
+  the oracle-independence lesson, because the statement is the same: independence is a property of how
+  the second opinion was produced, not of the fact that there are two.)
+
 ## _(2026-09-29)_ — the third consumer of a rule is in a file kind no fixture uses
 
 - `M1.13.4.1`. `M1.13.3` put `(eadl-version eadl/1)` on the surface as a top-level **form** and taught

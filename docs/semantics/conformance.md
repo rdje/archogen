@@ -81,6 +81,19 @@ Four rules, each executed by `crates/eadl-front/tests/conformance_suite.rs` rath
    population or matched by an exclusion, so a description added under a new top-level directory is a
    manifest decision and not an accident.
 
+## The frozen baseline
+
+The population declared here is what `eadl/1`'s frozen baseline digests: `docs/semantics/BASELINE.txt`
+holds one digest per frozen construct, and one of its three classes is the **canonical form** of every
+description this manifest declares. `scripts/language_baseline.sh --emit` rewrites it — an explicit act,
+never a side effect — and `crates/eadl-front/examples/language_freeze.rs` is the instrument that
+enumerates the constructs, reading this file for the population rather than carrying a list of its own.
+
+⭐ **So a change here moves the baseline, and that is the point.** Adding a root, widening one, or adding
+a description changes which constructs are frozen; `M1.13.5` is the leaf that turns that movement into a
+required migration note. Nothing in this file is a count, so nothing here can go stale silently — the
+population is walked, and `crates/eadl-front/tests/conformance_suite.rs` pins the census.
+
 ## What the suite proves, and what it does not
 
 It proves that one version's rules and this repository's descriptions agree: that the reader and the
