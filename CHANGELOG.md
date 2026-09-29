@@ -4,6 +4,35 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the third artifact cleanup, and the backup that turned out to be somebody else's files
+
+`ARCHOGEN-PROGRAM-0090` (leaf `PROGRAM.19`, third run under the standing owner).
+
+- **Deleted, each with a tracked regeneration path:** the twelve scratch directories under
+  `target/tmp` — six recreated by `cargo test` during the cold verification, the rest prior leaves'
+  probe scratch whose measurements are recorded on their leaves — and `target/doctrine_scratch`, which
+  the doctrine gate recreates. `target` 957 MB → 949 MB, then 965 MB once verification put the scratch
+  back, which is the evidence that what was deleted was regenerable.
+- ⛔ **`target/sync-backup-2026-09-21/` matched no committed state of this repository** — `DIFFER` on
+  4 of 4 against both the pre-sync and post-sync commits — so "retain it, it is not reproducible"
+  looked correct. It was the wrong stopping point: the four files are **byte-identical to `bedrock`'s
+  `HEAD`** copies of the same neutral spine files (`MATCH` on 4 of 4, read-only per §21), which makes
+  the directory a copy of the *incoming* scaffold rather than a backup of archogen's spine. Deleted on
+  that evidence.
+- ⭐ **Identifying it exposed a hazard the cleanup does not own.** archogen is on `bedrock-scaffold
+  0.8.1` where upstream is `0.10.0`, and this repository's `scripts/update_scaffold.sh` still `cp`s
+  every neutral file over the project's copy — including `docs/TASK_TREE.md`, whose Active Task Trees
+  table is project content, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed
+  exactly that shape in `BEDROCK-MAINTENANCE-0015`/`-0016`. Filed as `PROGRAM.26`.
+- **Two new retentions, both investigations:** `build/riscv-virt.dtb` and `.dts` (16 KB) regenerate
+  only through the **pinned emulator**, and `M2.8.2` is the leaf that compares a fixture against them;
+  `target/s0-demo/base` (20 KB) is cited as verification evidence by a closed leaf and needs a full
+  `archogen build` to recreate. The previous run's two retentions were re-checked and stand, so
+  **2.2 GB is kept on evidence** again.
+- **Verified cold:** `make focused` → `passed — 3 passed, 0 failed, 0 unavailable`; `cargo test --all`
+  → **492 passed, 0 failed**; `=== all doctrines green ===`, with `target/doctrine_scratch` recreated
+  by the run — the proof that the deleted directory was scratch and not state.
+
 ## archogen — a description can state its language version, and the leaf that owned adding it was wrong about what that costs
 
 `ARCHOGEN-M1-0087` (leaf `M1.13.3`). `(eadl-version eadl/1)` is on the surface. §8 of the reference

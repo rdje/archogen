@@ -37,7 +37,7 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM`
   Status: `active`
   Goal: own the program spine
-  Children: `PROGRAM.1` … `PROGRAM.23`, plus `PROGRAM.1.1` and `PROGRAM.2.1`
+  Children: `PROGRAM.1` … `PROGRAM.26`, plus `PROGRAM.1.1` and `PROGRAM.2.1`
 
 - ID: `PROGRAM.1`
   Status: `done`
@@ -743,6 +743,79 @@ mdBook that is the director's window into the project.
   - **Lockstep.** `docs/ARTIFACT_CLEANUP.md` overwritten with this run only; this section;
     `MEMORY.md`, `LIVE_STATUS.md`, `CHANGELOG.md`. No frontier move — the frontier stays where `M1`
     left it — and no book change, for the reason recorded above.
+
+  ### Run `2026-09-29` — the third cleanup
+
+  Same standing owner, same mechanism. One difference worth recording: **the unexpected item was
+  identified rather than merely retained**, and identifying it is what made it deletable — and is also
+  what exposed a hazard this leaf does not own.
+
+  - **Trigger, read off the record rather than assumed.** `docs/ARTIFACT_CLEANUP.md` recorded
+    `2026-09-28`, and `git log -1 --format='%ci' -- docs/ARTIFACT_CLEANUP.md` →
+    `2026-09-28 03:57:18 +0200` against a session clock of `2026-09-29 10:38 CEST` — more than 24 hours
+    on the commit's own timestamp, so the date-only granularity that made the previous run undecidable
+    did not have to be guessed at this time.
+  - **Inventory before touching anything.** `target` 957 MB, of which `target/tmp` 9 MB,
+    `target/doctrine_scratch` 260 KB, `target/sync-backup-2026-09-21` 24 KB, `target/s0-demo` 20 KB, and
+    **696** `.bin` files under `target/debug/incremental` plus 9 more under the `no_std` target's; a
+    further 15 appeared under `target/tmp/f28` once the suite had run. `.app-data` 2.2 GB
+    (`target-2ac834913` 2.0 GB, `cargo-home` 132 MB, `pgen-generated-before-remeasure` 18 MB, `ls004`
+    32 KB). `build/` 16 KB. `.log` files: **4** outside the submodule, all under `.app-data/ls004/`, and
+    **27** inside `vendor/linkedspec`, which §20 and §21 put out of reach and out of scope.
+  - **Deleted, each with a tracked regeneration path.** The twelve scratch directories under
+    `target/tmp` — `f28`, `m112`, `m1125`, `m113`, `m1132`, `m1134`, `p21`, `s0-build`,
+    `s0-build-library.eadl`, `s0-oracle`, `s0-provenance`, `s0-reader` — of which six are recreated by
+    `cargo test` and the `m*`/`p21` ones are prior leaves' probe scratch whose measurements are
+    recorded on their leaves (`M1.12`, `M1.13`, `M1.13.2`, `M1.13.4`, `PROGRAM.21`); and
+    `target/doctrine_scratch`, which `scripts/check_gap_claims.sh:40` recreates on the next commit.
+    `target` 957 MB → 949 MB. **Residue census: all five sampled paths report `gone`, none `STILL
+    PRESENT`.** Unlike the previous run, no leaf's *active* scratch was spared: `M1.13.4`'s probe
+    directory `m1134` was deleted only after its measurements were written onto the leaf and committed
+    in `ARCHOGEN-M1-0089`, so the record outlives the scratch it was taken from.
+  - ⛔ **The unexpected item, identified before it was deleted.** `target/sync-backup-2026-09-21/`
+    held four spine files — `COMMIT.md`, `DOCTRINE_ENFORCEMENT.md`, `TOOLBOX.md`, `TASK_TREE.md` — that
+    match **no** committed state of this repository: `diff` against both `a4cbab5^:COMMIT.md` and
+    `a4cbab5:COMMIT.md` differs, and likewise for the other three (`DIFFER` on 4 of 4 both ways). The
+    first instinct — retain it, because it is not reproducible from here — was the wrong stopping
+    point, and §21 permits reading a sibling repository. The `bedrock` checkout settles it:
+    `git -C ../bedrock show HEAD:<path>` is **byte-identical** to all four (`MATCH` on 4 of 4, including
+    `docs/TASK_TREE.md` for the backup's `TASK_TREE.md`). So the directory is a copy of the *incoming*
+    scaffold and not a backup of archogen's own spine, and its regeneration path is a read of a
+    repository that exists on this volume. Deleted, with that evidence.
+  - ⭐ **And identifying it exposed a hazard that is not this leaf's, so it is filed rather than fixed
+    here.** archogen is on `bedrock-scaffold 0.8.1` (`cat DOCTRINE_VERSION`) where upstream is `0.10.0`,
+    and this repository's `scripts/update_scaffold.sh` still `cp`s every NEUTRAL file straight over the
+    project's copy — including `docs/TASK_TREE.md`, whose Active Task Trees table *is* project content,
+    and `COMMIT.md`, which carries this project's tier paragraph and the no-agent-trailer ruling.
+    Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015` and `-0016`: "never overwrites
+    anything", "the merge is asked for and never applied"). Owner: **`PROGRAM.26`**.
+  - **Two retentions, both new and both investigations rather than policy.**
+    1. `build/riscv-virt.dtb` and `build/riscv-virt.dts`, 16 KB. Their regeneration path is
+       `scripts/target_emulator.sh --dump-dtb`, which needs the **pinned emulator** to be present, and
+       `M2.8.2` is the leaf whose whole subject is comparing a device-tree fixture against them.
+       Deleting 16 KB to satisfy a word in the instruction, one leaf before the leaf that needs the
+       file, is a bad trade and is recorded as declined.
+    2. `target/s0-demo/base`, 20 KB. A **closed** leaf cites it as verification evidence
+       (`docs/tasks/S0.md:181`: `archogen build examples/s0-heartbeat/system.eadl --out
+       target/s0-demo/base` → `exit=0`), and recreating it is a full `archogen build` rather than a
+       `cargo test` — so it does not meet the bar the six `s0-*` scratch directories meet.
+    The previous run's two retentions were re-checked and stand: `.app-data/pgen-generated-before-remeasure`
+    (18 MB) is still read by `LS-004`'s `remeasure.sh`, whose own behaviour changes if the backup is
+    absent, and `target/debug/incremental` is still cargo's retention rather than residue.
+    `.app-data/ls004/`'s four `.log` files are retained with it: they are a frozen instrument's RED-arm
+    output, and no document cites them, so nothing here can prove they are regenerable.
+  - **Verified cold, which is the only verification that means anything here.** `make focused` →
+    `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built`, exit `0`, with the scratch
+    it consumes already deleted; `cargo test --all` → **492 passed, 0 failed**, matching the recorded
+    baseline; `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`, and
+    `target/doctrine_scratch/gap_claim_census` exists again afterwards, which is the proof that the
+    deleted directory was scratch and not state. `target` measured 965 MB after these runs — **larger**
+    than before the deletion — because the suite recreated its scratch and cargo its cache, which is
+    the same observation the first run made and the reason deleting them was safe.
+  - **Lockstep.** `docs/ARTIFACT_CLEANUP.md` overwritten with this run only; this section;
+    `LIVE_STATUS.md`'s `PROGRAM` row; `CHANGELOG.md`. No frontier move and no book change, for the
+    reason the first run recorded: `git grep -ln 'app-data' -- docs/book` → no match, and the book
+    documents eADL and the engine, not the repository's scratch directories.
 
 - ID: `PROGRAM.20`
   Status: `pending`
@@ -1450,6 +1523,63 @@ mdBook that is the director's window into the project.
   `KNOWLEDGE_MAP.md` regenerated for the new record.
   Commit: `ARCHOGEN-PROGRAM-0083 (leaf PROGRAM.25)`
 
+- ID: `PROGRAM.26`
+  Status: `pending`
+  Goal: make `make update-scaffold` unable to destroy project content, by adopting the upstream fix
+  rather than inventing one — this repository's `scripts/update_scaffold.sh` is two minor versions
+  behind `bedrock`, and the version it has `cp`s every neutral spine file straight over the project's
+  copy.
+  Reproduce / issue: **measured `2026-09-29` by `PROGRAM.19`'s third cleanup run**, which found
+  `target/sync-backup-2026-09-21/` — four spine files matching no committed state of this repository —
+  and identified them as byte-identical to `bedrock`'s `HEAD` copies. Identifying them is what exposed
+  the hazard beside them.
+
+  ```text
+  census: cat DOCTRINE_VERSION                                -> bedrock-scaffold 0.8.1
+          cat ../bedrock/DOCTRINE_VERSION   (read-only, §21)  -> bedrock-scaffold 0.10.0
+  census: grep -n 'cp "\$tmp/bedrock/\$f"' scripts/update_scaffold.sh
+          -> one unconditional `cp` per NEUTRAL file, 25 entries in the array, no comparison and no
+             refusal; the script's own header calls them "safe to overwrite because it never carries
+             project content"
+  census: the array includes docs/TASK_TREE.md, COMMIT.md, DOCTRINE_ENFORCEMENT.md, TOOLBOX.md and
+          .doctrine/README.md — and this repository's copies of at least the first two DO carry project
+          content: docs/TASK_TREE.md's Active Task Trees table is the index a resuming session reads
+          first, and COMMIT.md carries the §14.3 tier paragraph and the ⛔ no-agent-trailer ruling
+          (maintainer ruling 2026-08-22, ported by BEDROCK-MAINTENANCE.2.5)
+  census: git -C ../bedrock log --oneline -8 | grep -i overwrite
+          -> BEDROCK-MAINTENANCE-0015 (.2.10) "update_scaffold.sh never overwrites anything"
+             BEDROCK-MAINTENANCE-0016 (.2.11) "never overwrite is now auditable, and the merge is
+             asked for and never applied"
+             BEDROCK-MAINTENANCE-0014 (.2.9)  "a spine file that carries a project decision can now
+             reach a project that predates it"
+  ```
+
+  Impact: running `make update-scaffold` today would replace this project's task-tree **index** with the
+  template's empty one and its commit workflow with the neutral text, and the only thing standing
+  between that and a commit is the script's closing advice to "review `git diff`". Nothing mechanical
+  refuses it. The `2026-09-21` sync survived because whoever ran it kept a copy of the incoming files
+  in `target/` — a hand-made mitigation, in a scratch directory that any `cargo clean` deletes, which
+  is how the cleanup run found it.
+  Acceptance: `scripts/update_scaffold.sh` is replaced by **upstream's** version at a named `bedrock`
+  revision (copied in, per §12's exception for read-only external sources — never depended on at build
+  time, and `bedrock` is not a submodule), so the fix is adopted rather than re-derived; the adoption
+  is recorded in a `docs/decisions/` record naming the revision and what it changes; a **dry run** on
+  this repository is measured and its output recorded on this leaf — what it would touch, what it
+  refuses to touch, and what it asks for; `DOCTRINE_VERSION` states the adopted revision truthfully
+  afterwards, whether or not the rest of `0.10.0` is adopted in the same commit; the other neutral files
+  are **censused rather than assumed** — each one diffed against upstream and classified as
+  *identical*, *project-carrying* or *behind*, so adopting the script is not confused with adopting the
+  whole spine; RED arm: a seeded project-carrying spine file survives a dry run and is named in its
+  output; `make gate` green.
+  Priority: **medium** — it fires only on a deliberate sync, and the last one was `2026-09-21`. Filed
+  now rather than then-because the cost of being wrong is the task-tree index, and because the
+  mitigation currently in use is a directory inside `target/`.
+  ⚠️ **Interim mitigation, until this leaf lands:** do not run `make update-scaffold`. If a sync becomes
+  necessary before then, run it on a clean tree, `git diff` every one of the 25 files before staging,
+  and keep the incoming copies somewhere tracked rather than under `target/`.
+  Verification: `pending`
+  Commit: `pending`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1526,6 +1656,7 @@ roadmap item X live?".
 | 10 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. ⭐ A **near-miss** worth pricing in, recorded honestly as a near-miss and not as a fourth instance: `PROGRAM.18`'s frontier row still read "ten of eighteen controls" while this leaf was being written, and was corrected in the same commit — it would have gone stale the moment the fix landed, and nothing in the tree compares a control count against the controls. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with |
 | 11 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
 | 12 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
+| 13 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
@@ -1620,6 +1751,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-29` | `PROGRAM.25` | **docs-only, and the point of the run was to falsify the finding before filing it.** `command -v pdftotext pdftk mutool qpdf gs`; `pdftotext -v`; `pdftotext -f 1 -l 6` on the FE310-G002 datasheet to stdout; both semulith censuses (`git grep` excluding `vendor/`, and a filesystem walk of `vendor/`); `.gitmodules`; and a resolution check on every citation the new record makes | ⛔ **The finding as raised was false and the measurement is what caught it**: `pdftotext` resolves to `/opt/homebrew/bin/pdftotext` (Xpdf **4.06**), and the datasheet's first page extracts, so chipdoc's board PDFs are readable here and §3.2's `board-first` rows are **not** blocked on tooling — `read_file`'s bridge cannot see the host `PATH`, and its "not installed" message describes the bridge. A blocker on tree `M5` was drafted on that false premise and is **not** filed; what is filed is the route, in `TOOLBOX.md` and beside the chipdoc record's inventory. Semulith census: **0** archogen tracked files name it, **40** files inside the vendored submodule do, and `.gitmodules` confirms `vendor/linkedspec` is a submodule — so `git grep` alone returns a false negative and the census needs both halves. All four citations resolve; `make gate` → `13/13 green` |
 | `2026-09-29` | `PROGRAM.21` | the check rewritten leaf-scoped, then **its own RED arms run before anything was claimed** — and the arms' first oracle found unsound, so three mutations were run over the finished script (`bash -n` first, then `--self-test`); both historical commits **replayed as fixtures** built from `git show <commit>:<path>` in throwaway repos, each run pristine and then with the committing leaf's ROOT CAUSE box unticked, against `HEAD`'s check and the new one side by side; `make focused`; `make gate`; the knowledge map regenerated | ⛔ **The arms' first run scored `4 pass / 5 fail` and the four passes were on `exit 127`** — the check was never found, because `$0` was relative and every arm `cd`s into a throwaway repo, and the oracle was `rc -ne 0`. Mutation B2 reproduces that false green deliberately (`4 pass / 5 fail`, arms 1/3/4/5 ✅ on 127) while mutation B, with the exact oracle, gives `0 pass / 9 fail`. Restored: `diff -q` silent, `9 pass / 0 fail`, `exit=0`. Mutation A (restore the first-leaf fallback) → `8 pass / 1 fail`, arm 4 only, so the refusal is load-bearing. **Replay, the finding:** `cd355ef` and `3a6bbb9` both give OLD `exit=0 OK` **pristine and mutated** — byte-identical, so neither commit's own boxes could affect the verdict — while NEW gives `exit=0` pristine naming `M1.13.1`/`M1.13.2` and `exit=1` mutated naming the same leaf. Root cause confirmed at `HEAD`: `if (inbox) exit` at line 111, **32** ticked ROOT CAUSE boxes in `docs/tasks/M1.md`, and that awk captures **line 53** — leaf `M1.1`, `2026-09-13`. `make focused` → `passed — 3 / 0 / 0`; `make gate` → `13 doctrines green`; ⚠️ the draft had also silently **widened `DEFAULT_SIG`** with a token that does not exist (`\bspindb\b`) and mis-dated a historical comment — both caught by diffing the preserved blocks against `HEAD` and restored byte-identical |
 | `2026-09-29` | `PROGRAM.20` | **docs only, no code staged — a sixth shape of the class recorded, and its three copies corrected.** A census over the frontier surfaces rather than the two lines spotted by reading: an `awk` over `docs/TASK_TREE.md`'s row heads against each `docs/tasks/<TREE>.md` `## Current Frontier` order-1 row; `git ls-files '*.md'` piped to `grep -n -o` for successor clauses; `git show --stat 7c59b0b -- docs/TASK_TREE.md` for the copy the closing commit never touched. Recovery post-conditions after the force-quit measured rather than assumed: `git status --short` empty, `git rev-parse HEAD` = `91f329d`, `wc -c git_message_brief.txt` = `0` and untracked, `git config core.hooksPath` = `.githooks`. Then the baseline re-derived rather than carried: `cargo test --all` → **492 passed, 0 failed, 37 suites**; `make focused` → `passed — 3 / 0 / 0`; `scripts/check_doctrines.sh` → `13/13 green`; `scripts/check_no_background_jobs.sh` → `handoff: OK` | ⛔ The class fired a **sixth** time and the shape is new: not a figure but an ordered **sequence**. `docs/TASK_TREE.md`'s `PROGRAM` row named `PROGRAM.21` as the frontier one commit after that leaf's status became `done` — `7c59b0b` staged **0** lines of the index that restates it, the same evidence shape as the `S0` instance above — and both that row and `LIVE_STATUS.md`'s `M1` row named `.13.4` as its own successor, because a closure rewrote the frontier sentence and left the old clause behind. **10 of 12** index rows agreed with their tree file before the correction and **11 of 12** after; `M5`'s `DISAGREE` is the census pattern reading the blocker its cell names, recorded rather than dropped. Nothing in the tree compares an index row against the tree it indexes, and this leaf's acceptance enumerated figure-shaped text only — so it is widened on the leaf rather than left to miss the shape that just fired |
+| `2026-09-29` | `PROGRAM.19` (third run) | the trigger read off the record's own commit timestamp rather than its date-only line; a full inventory before any deletion; a residue census over the deleted paths; the unexpected item **identified against a read-only sibling repository** before deletion; the focused tier, the whole suite and the doctrine gate all re-run **cold** with the scratch they consume already deleted | ≈11 MB released: `target` 957 MB → 949 MB, then 965 MB once verification recreated the scratch; all five sampled paths `gone`. `target/sync-backup-2026-09-21` matched **no** committed state here (`DIFFER` on 4 of 4 against both `a4cbab5^:` and `a4cbab5:`) and was proven **byte-identical to `bedrock`'s `HEAD`** copies (`MATCH` on 4 of 4), so it was the incoming scaffold and not a backup — deleted on that evidence, and identifying it exposed `PROGRAM.26`. **2.2 GB retained on evidence**, with two new retentions: `build/riscv-virt.dtb` needs the pinned emulator to regenerate and `M2.8.2` compares against it, and `target/s0-demo/base` is cited by a closed leaf and needs a full `archogen build`. `make focused` → `passed — 3 / 0 / 0`; `cargo test --all` → **492 passed, 0 failed**; 13 doctrines green, with `target/doctrine_scratch` recreated by the run |
 
 ## Commit Log
 
@@ -1636,6 +1768,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.25` | `ARCHOGEN-PROGRAM-0083 (leaf PROGRAM.25)` | two findings raised in conversation and owned by nothing are now tracked — census, both halves, because `git grep` alone is a false negative here: `git grep -il semulith -- ':!vendor' \| wc -l` → **0** archogen tracked files, `grep -ril semulith vendor/ \| wc -l` → **40** files inside the submodule, which `.gitmodules` confirms `git grep` skips. And one of the two findings was **false as raised**: `pdftotext` is on the host (`/opt/homebrew/bin`, Xpdf 4.06) and chipdoc's board datasheets extract fine, so `read_file`'s "not installed" is a bridge limitation and §3.2's `board-first` rows are not tooling-blocked. The route is a `TOOLBOX.md` row and a note beside the chipdoc inventory; an `M5` blocker drafted on the false premise is **not** filed. `docs/decisions/reference_sibling-project-semulith.md` records that `../semulith` exists, is read-only, and names archogen as its consumer — a pointer with no analysis, which is what was declined |
 | `PROGRAM.21` | `ARCHOGEN-PROGRAM-0086 (leaf PROGRAM.21)` | **fixed, not filed**: `TASK-ACCEPTANCE` is leaf-scoped. The owner comes from `TASK_ACCEPTANCE_LEAF` or the `(leaf <ID>)` token in the pending message's subject through the new `.doctrine/commit_message_file` seam, and the check **refuses** when it cannot tell — never falling back to the first checklist, because that fallback *was* the defect. The staged-paths signal was priced first and is dead: **1 of 7** real code commits. Both historical commits replayed as fixtures, pristine and mutated, old check against new: the old verdict is byte-identical either way, the new one moves and names the right leaf. Nine `--self-test` arms; ⛔ their first oracle scored **4 passes on `exit 127`** and the false green is reproduced deliberately as mutation B2, promoted into `verify-the-mutation-applied`. This commit is the new check's first real exercise — it gated itself |
 | `PROGRAM.20` | `ARCHOGEN-PROGRAM-0088 (docs)` | **an instance recorded, not the register built** — three stale frontier copies corrected, in `docs/TASK_TREE.md` (the `PROGRAM` head, which named a `done` leaf, and the `M1` successor clause) and `LIVE_STATUS.md` (the `M1` successor clause), and the sixth shape filed on the leaf with its census and its acceptance widened: an ordered sequence, which a register scoped to figure-shaped text could not have seen |
+| `PROGRAM.19` | `ARCHOGEN-PROGRAM-0090 (leaf PROGRAM.19, third run)` | ≈11 MB more released and **2.2 GB retained on evidence**. The run's finding is not a deletion but an identification: a directory that matched no committed state here was proven byte-identical to the upstream scaffold's, so it was deleted on evidence — and reading it exposed that this repository's `update_scaffold.sh` is two minor versions behind a fix upstream made to exactly that hazard → `PROGRAM.26` |
 
 ## Changelog
 
