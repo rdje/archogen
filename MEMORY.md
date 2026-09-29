@@ -13,30 +13,14 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `PROGRAM` → frontier `PROGRAM.17` (child `.17.2` next). `M1` `.29.4` (**waiting on the director**);
-  `API` `.1`; `S0` `.8`; `M2` `.8.2`.
-- **Next action:** **`PROGRAM.17.2`** — make `LIVE_STATUS.md`, `MEMORY.md` and `docs/TASK_TREE.md` current-state only
-  (each removed closure note first proved present in its tree's Commit Log), then bound all three. ⏳ **`M1.29.4` waits
-  on the director** — §7 of `decision_findings-for-director-review.md`.
-- ⭐ **Closed today:** `M1.29.1`–`.3`, `M1.31`, `M1.33`, `PROGRAM.27`, `PROGRAM.11`, `PROGRAM.18`, `PROGRAM.24`, `PROGRAM.28` (gate arms run in a tier), `PROGRAM.29` (scratch on this volume, gated), `PROGRAM.5` (§15 source ledger), `PROGRAM.9.1` (Miri step armed), `PROGRAM.9.2` (fuzz step: found 3 defects), `PROGRAM.9.3` (mutation catalog; `extended` passes), `PROGRAM.6.1` (version register), `PROGRAM.6.2` (frozen verdicts), `PROGRAM.6.3` (format goldens; `PROGRAM.6` closed), `PROGRAM.13` (logs backfilled), `PROGRAM.15` (feedback register checked), `M1.34` (`Rational` ordering exact), `M1.35` (reader escape panic), `M1.36` (exact printing never overflows) — `archogen check` elaborates **and
-  type-checks** a module tree (§6 rules 7–10); a name is declared once (§7 rule 6), for a file and a tree.
-  30 cases in `docs/semantics/modules/`. A migration is **two commits** (`pending`, then `applied` — enforced).
-- ⭐ **`eadl/1` is frozen and gated** (`M1.13`, `PROGRAM.27`): `BASELINE.txt` (**114** digests) +
-  `LANGUAGE-FREEZE`, three legs. Also closed: `M1.28`, `M1.25`, `PROGRAM.21`, `M1.20`, `M1.12`.
-- **⭐ Tree `API`** (ruled `2026-09-28`, `decision_programmatic-interface.md`): one engine API, a **wasm**
-  binding and an **MCP server**, post-build only; `API.3`–`.7` waited on `M1.13`'s freeze, now closed, so
-  the frontier order is a director's call and not a dependency. **`PROGRAM.11`** is the other active
-  frontier: the repository-boundary rule in **both** directions (`decision_repository-boundary-read-only.md`).
-- **⏳ WAITING ON THE DIRECTOR:** two behaviour-changing rulings on `ROADMAP` §3.1.1 — items (a) and (b)
-  of §6 in `decision_findings-for-director-review.md`; `M2.9` needs them. That branch (**`wip/m2.9`**,
-  `758cbcdd`) is checkpointed, not finished, and does **not** compile — `crates/rt-core/tests/differential.rs`
-  is unadapted to the reference's new API.
-- **Also open:** `M1.26.1`, `.26.2`, `.30`, `.27`, `.32`, `.10`, `.21`, `.22`; `S0.8`; `M2.6`, `.8`;
-  `PROGRAM.18`, `.24`, `.28`, `.26`, `.13`, `.15`, `.17`, `.20`, `.5`, `.6`, `.9`, `.10`. ⚠️ `M1`'s open
-  questions: `M1.13.1`'s invisible character, and the language's **name**.
-- **Baseline to beat:** `make focused` exit `0` at the pin — **602 passed, 0 failed** over 42 suites.
-  Tiers: `focused` per commit, `integration` before a push; exit **20 = incomplete** is not a pass. Push
-  cadence at `400` ahead of `origin/main`, measured (`decision_push-cadence.md`). ⚠️ `integration` is
-  **red** on `emulator`: QEMU **pinned** (`M2.8.1`), `TARGET_VERIFIED=no` until `M2.8.2`.
-- ⛔ **Committing changed `2026-09-29`** (`PROGRAM.21`): `TASK-ACCEPTANCE` is leaf-scoped — a staged code
-  change is **refused** unless the subject carries `(leaf <ID>)` or `TASK_ACCEPTANCE_LEAF=<ID>` is set.
+- **Active tree:** `PROGRAM` → frontier `PROGRAM.17`, child `.17.3`. Every other tree's frontier head is in
+  `docs/TASK_TREE.md`; it is not copied here.
+- **Next action:** **`PROGRAM.17.3`** — put the changelog, development notes and task-tree lifecycle choices to the
+  director with measurements and a recommendation each; rotate or partition nothing without the ruling.
+- **In flight:** branch **`wip/m2.9`** (`758cbcd`) is a checkpoint, not a finished leaf — `M2.9` records it as
+  not compiling (`crates/rt-core/tests/differential.rs` unadapted).
+- **⏳ Blockers (the director's):** `M1.29.4` — §7 of `decision_findings-for-director-review.md`; `M2.9` — §6 (a)
+  and (b), two rulings on `ROADMAP` §3.1.1; `M5` — no board procured.
+- **Derive, don't copy:** the test baseline is `cargo test --all -q` (must be 0 failed); the push distance is
+  `git rev-list --count origin/main..HEAD` against the cadence in `decision_push-cadence.md`; `integration` is red
+  only on `emulator` until `M2.8.2` (`make integration`).

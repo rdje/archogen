@@ -4,6 +4,21 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the status pages hold current state again, and stay bounded
+
+`ARCHOGEN-PROGRAM-0139` (leaf `PROGRAM.17.2`). A new doctrine, `LIVE-SNAPSHOTS`.
+
+- `LIVE_STATUS.md` goes from 42 110 bytes to **2 324**, and its longest row from 30 256 bytes to **220**.
+  `docs/TASK_TREE.md` and `MEMORY.md` are cut back to current state too. Each row now gives a status, the next
+  task (read from its tree) and any blocker.
+- Nothing was lost. Every task the pages mentioned exists in its tree, and every finished task has its own
+  Commit Log row. The old text can be restored exactly from the previous commit, and its digests are recorded.
+- `LIVE-SNAPSHOTS` bounds the four snapshot pages on lines, bytes and **longest line**. The old
+  `LIVE_STATUS.md`, put back, fails on bytes and width while passing on lines, which is why width is a separate
+  axis.
+- `COMMIT.md` and `LIVE_STATUS.md` now say that a snapshot changes only when the state it shows changes. What a
+  commit did belongs in its tree's Commit Log and here.
+
 ## archogen — the live-document size-containment doctrine is adopted, with a measured inventory
 
 `ARCHOGEN-PROGRAM-0138` (leaf `PROGRAM.17.1`).

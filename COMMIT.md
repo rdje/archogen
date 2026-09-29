@@ -62,7 +62,11 @@ apply to code changes.
    `hardware` and `assurance` are incomplete everywhere — each naming the leaf that closes it.
 3. Update every relevant tracked doc (`MEMORY.md`, `CHANGELOG.md`, `DEV_NOTES.md`,
    `LIVE_STATUS.md`, `README.md`, the owning `docs/tasks/<TREE>.md`, `docs/decisions/`,
-   `docs/book/` as applicable). Treat markdown sync as systematic, not optional.
+   `docs/book/` as applicable). Treat markdown sync as systematic, not optional. ⛔ But a **snapshot**
+   (`MEMORY.md`, `LIVE_STATUS.md`, `docs/TASK_TREE.md`) changes only when the state it shows changes:
+   a status, a frontier head, the next action, a blocker. What a commit *did* goes in the owning tree's
+   Commit Log and in `CHANGELOG.md`, never appended to a snapshot. `LIVE-SNAPSHOTS` bounds all three
+   (`LIVE_DOCUMENT_SIZE_CONTAINMENT.md`).
 4. Write a concise message to `git_message_brief.txt`.
 5. Stage only the intended tracked files (`git add <files>`).
 6. Commit: `git commit -F git_message_brief.txt` (the pre-commit hook runs the doctrine

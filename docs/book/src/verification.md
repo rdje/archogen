@@ -391,6 +391,21 @@ $ bash scripts/check_feedback_register.sh              # the gate
 $ bash scripts/check_feedback_register.sh --self-test  # its RED arms, on scratch repositories
 ```
 
+## The status pages stay short
+
+`LIVE_STATUS.md` and `docs/TASK_TREE.md` show where each part of the work stands now. They grew into
+something else. Each finished task appended a note to its area's row, until `LIVE_STATUS.md` held
+42,110 bytes in 21 lines, one row alone being 30,256 bytes long. What each task did already lives in
+its tree's Commit Log and in `CHANGELOG.md`, so the rows were cut back to status, next task and any
+blocker, after checking that every task they mentioned had its own record. `LIVE-SNAPSHOTS` now
+bounds these pages, `MEMORY.md` and `README.md` on lines, bytes and longest line. The longest line is
+counted separately because a page can keep a short line count while one row grows without limit.
+
+```console
+$ bash scripts/check_live_snapshots.sh              # the gate
+$ bash scripts/check_live_snapshots.sh --self-test  # its RED arms, on scratch repositories
+```
+
 ## Why `focused` runs the whole suite
 
 §14.3 defines the focused tier as "format/type checks and **affected** contract tests", and

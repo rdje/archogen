@@ -734,14 +734,61 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0138 (leaf PROGRAM.17.1)`
 
 - ID: `PROGRAM.17.2`
-  Status: `pending`
+  Status: `done`
   Goal: the guide's Phase 1 — the bounded snapshots (`LIVE_STATUS.md`, `MEMORY.md`, `docs/TASK_TREE.md`) hold current
   state only, and a checker keeps them bounded on all three axes.
   Acceptance: every closure note removed from a snapshot is first proved present in its canonical home (the leaf's
   Commit Log row, `CHANGELOG.md`); caps set from the reviewed survivor with transaction-sized headroom; a checker with
   RED arms, registered; `COMMIT.md` no longer asks for a snapshot edit that only restates history.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the checklist — the no-loss proof before the trim, a checker on three axes (11 arms, 6
+  mutations), the pre-trim file refused.
+  Commit: `ARCHOGEN-PROGRAM-0139 (leaf PROGRAM.17.2)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — measured at `2ae5559` (lines / bytes / longest line):
+    ```text
+    LIVE_STATUS.md       21 / 42 110 / 30 256      (3 315 bytes when PROGRAM.17 was filed)
+    docs/TASK_TREE.md    73 /  7 199 /  1 158
+    MEMORY.md            41 /  4 035 /    705      (a "Closed today" list, and a stale "Also open" list naming eight closed leaves)
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — two instructions asked for a snapshot edit on every commit, and the path of
+    least resistance was to append what the commit did:
+    ```text
+    $ git grep -n "Review and update before every commit\|Update every relevant tracked doc" 2ae5559 -- LIVE_STATUS.md COMMIT.md
+      2ae5559:COMMIT.md:63:3. Update every relevant tracked doc (`MEMORY.md`, `CHANGELOG.md`, `DEV_NOTES.md`,
+      2ae5559:LIVE_STATUS.md:4:Review and update before every commit whenever actual closure or remaining scope changes;
+    ```
+    Nothing bounded any of the three on line width, and only `MEMORY.md` on lines and bytes.
+  - [x] **FIX** — the three snapshots rewritten to current state: status, frontier head and blocker per row, each
+    head **derived** from its tree's frontier table and that leaf's own goal; `MEMORY.md` to the guide's Phase 1 shape
+    (one work unit, next action, in-flight state, blockers), with the test count and push distance given as
+    commands rather than copied. **No-loss proof first:** every leaf id the three mentioned — 60, 43, 39 distinct —
+    declared by its tree (0 undeclared); every `done` leaf in every tree has its Commit Log row (0 missing); the removed
+    text retrievable byte-exact — `git show 2ae5559:<file>`, sha256 `4910305cff6e9c53…` (`LIVE_STATUS.md`, 42 110
+    bytes), `0d2eca15c82fa3d2…` (`docs/TASK_TREE.md`, 7 199), `55d49964525f4f60…` (`MEMORY.md`, 4 035); retention: this
+    repository's history. New doctrine **`LIVE-SNAPSHOTS`**: ceilings as data in the adoption note, set from the reviewed
+    survivor plus one ordinary change. `COMMIT.md` and `LIVE_STATUS.md`'s header now say a snapshot changes only when
+    its state does.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    LIVE_STATUS.md       22 /  2 324 / 220    docs/TASK_TREE.md  73 / 4 469 / 189    MEMORY.md  26 / 1 770 / 120
+    $ bash scripts/check_live_snapshots.sh
+      live-snapshots: OK (4 snapshot(s) within their ceilings on lines, bytes and longest line)          exit=0
+    $ bash scripts/check_live_snapshots.sh --self-test
+      live-snapshots self-test: 11 pass / 0 fail (11 arms)
+    $ git show 2ae5559:LIVE_STATUS.md > LIVE_STATUS.md; bash scripts/check_live_snapshots.sh
+      LIVE-SNAPSHOTS: LIVE_STATUS.md: 42110 bytes, over its ceiling of 4096 — …
+      LIVE-SNAPSHOTS: LIVE_STATUS.md: 30256 bytes on its longest line, over its ceiling of 320 — …   exit=1  (21 lines passes)
+    ```
+    Six mutations L-1–L-6, each restored by `cmp`, each fails its own arms — L-5 (the ceiling made exclusive) fails
+    the at-the-ceiling arm. ⚠️ One arm's fixture was mis-sized by hand (43 bytes for "one over 40"); caught by the arm
+    itself, rebuilt to exactly 41.
+  - [x] **NO REGRESSION** — `MEMORY-ARCH` exit=0 on the rewritten pointer; `README-STABILITY` 84/300 lines; `TABLE-ARITY`
+    green — one self-inflicted slip on the way, `LIVE_STATUS.md`'s header row dropped by an off-by-one slice and
+    restored before any check ran on it; the doctrine driver green at the commit.
+  - [x] **LOCKSTEP** — `verification.md` gains "The status pages stay short"; `DOCTRINE_ENFORCEMENT.md`, `TOOLBOX.md`;
+    the adoption note's inventory and debt statements updated to what is now true.
 
 - ID: `PROGRAM.17.3`
   Status: `pending`
@@ -3059,6 +3106,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.13` | the unlogged-leaf census by leaf ID over every tree, before and after; each derived commit against the commit its leaf records | 22 rows owed across `BOOTSTRAP`, `M1`, `M2`, `PROGRAM` → 0; every commit derived from `git log` matched its leaf's own record |
 | `2026-09-30` | `PROGRAM.15` | the register gate's first run on the real tree; its 15 arms; eight mutations R-1–R-8 | the cross-vendor index said 5 open / 2 blockers against a closed register — corrected; 15 / 0; every mutation fires |
 | `2026-09-30` | `PROGRAM.17.1` | the guide and doctrine at their current fsmgen revisions; a three-axis measurement of every live document; the copied body against its source | the copy byte-identical (`cmp`); `LIVE_STATUS.md` 42 110 bytes with a 30 256-byte row, `CHANGELOG.md` 3 428 lines — both recorded as debt or a decision |
+| `2026-09-30` | `PROGRAM.17.2` | the no-loss proof (ids declared, commit rows present, pre-trim digests); the checker and its 11 arms; six mutations; the pre-trim `LIVE_STATUS.md` put back | 42 110 → 2 324 bytes and 30 256 → 220 on the longest line; every arm and mutation as designed; the old file refused on bytes and width, not on lines |
 
 ## Commit Log
 
@@ -3103,6 +3151,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.13` | `ARCHOGEN-PROGRAM-0136 (leaf PROGRAM.13)` | **every closed leaf names its commit and its checks in its own tree** — 22 rows backfilled from `git log` and the leaves' own checklists; `BOOTSTRAP` gains a Verification Log |
 | `PROGRAM.15` | `ARCHOGEN-PROGRAM-0137 (leaf PROGRAM.15)` | **a bug register says what its issues say, and its totals are recounts** — `FEEDBACK-REGISTER`; its first run found the cross-vendor index three days stale |
 | `PROGRAM.17` → `PROGRAM.17.1` | `ARCHOGEN-PROGRAM-0138 (leaf PROGRAM.17.1)` | **the live-document size-containment doctrine is adopted, with a measured inventory** — a project-owned copy, an adoption note per surface, and the snapshots' chronology recorded as debt. `PROGRAM.17` decomposed |
+| `PROGRAM.17.2` | `ARCHOGEN-PROGRAM-0139 (leaf PROGRAM.17.2)` | **the snapshots hold current state, and a checker bounds them on lines, bytes and longest line** — `LIVE_STATUS.md` 42 110 → 2 324 bytes after a no-loss proof; `LIVE-SNAPSHOTS`; `COMMIT.md` stops asking for history in a snapshot |
 
 ## Changelog
 
