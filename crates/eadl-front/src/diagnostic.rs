@@ -226,7 +226,9 @@ impl Diagnostic {
     /// Render in the style a caret-and-line-number reader expects.
     ///
     /// The caret is placed by character column, and its width is the character width of the
-    /// span, so it lands under the right text in a line containing non-ASCII prose.
+    /// span **on the line shown**, so it lands under the right text in a line containing non-ASCII
+    /// prose and never runs past that line; a span that continues onto later lines says which one it
+    /// ends on.
     #[must_use]
     pub fn render(&self, sources: &SourceMap) -> String {
         let mut out = format!(
@@ -258,14 +260,43 @@ impl Diagnostic {
         let gutter_width = position.line.to_string().len();
         let pad = " ".repeat(gutter_width);
 
-        // Caret width in characters, never zero: a zero-width span still has to point at
-        // something, and a caret of width 0 renders as nothing at all.
-        let snippet = sources.snippet(label.span);
-        let caret_width = snippet.chars().count().max(1);
+        // ⛔ The caret covers the span **on the line printed above it**, and no further (leaf `M1.31`).
+        // It used to be sized by the whole span, so a label over a seven-line `(defmodule …)` drew 236
+        // carets under a 21-character line — wrapping the terminal and pointing at nothing, in 10 of the
+        // 78 tracked descriptions. The part of the span past this line is not drawn; it is *said*, so a
+        // reader can still tell a one-line span from the first line of a longer one.
+        //
+        // Width in characters, never zero: a zero-width span still has to point at something, and a
+        // caret of width 0 renders as nothing at all.
+        let covered = sources.snippet(label.span);
+        let on_this_line = covered
+            .split('\n')
+            .next()
+            .unwrap_or_default()
+            .trim_end_matches('\r');
+        let caret_width = on_this_line.chars().count().max(1);
         let indent = " ".repeat((position.column as usize).saturating_sub(1));
 
+        // Counted over the covered text rather than found by offset arithmetic: `end - 1` can land inside
+        // a multi-byte character, and `position` slices at the offset it is given — measured, twelve
+        // reference legs panicked on exactly that. A span that ends by covering a newline has not
+        // continued onto the next line, so one trailing newline is not a continuation.
+        let continued_lines = covered
+            .strip_suffix('\n')
+            .unwrap_or(covered)
+            .matches('\n')
+            .count();
+        let continuation = if continued_lines > 0 {
+            format!(
+                " (continues to line {})",
+                position.line as usize + continued_lines
+            )
+        } else {
+            String::new()
+        };
+
         format!(
-            "  --> {}:{}:{}\n{pad} |\n{} | {}\n{pad} | {}{}{}\n",
+            "  --> {}:{}:{}\n{pad} |\n{} | {}\n{pad} | {}{}{}{}\n",
             source.name,
             position.line,
             position.column,
@@ -277,7 +308,8 @@ impl Diagnostic {
                 String::new()
             } else {
                 format!(" {}", label.message)
-            }
+            },
+            continuation
         )
     }
 }
@@ -483,6 +515,101 @@ mod tests {
         assert!(
             rendered.contains('^'),
             "a zero-width span rendered no caret:\n{rendered}"
+        );
+    }
+
+    /// The marker line of the first label `render` draws.
+    fn marker_line(rendered: &str) -> &str {
+        rendered
+            .lines()
+            .find(|line| line.trim_start().starts_with("| ") && line.contains(['^', '-']))
+            .expect("a marker line")
+    }
+
+    #[test]
+    fn a_multi_line_span_is_clipped_to_its_first_line_and_says_where_it_ends() {
+        // ⭐ Leaf `M1.31`: the renderer drew one caret per character of the WHOLE span under its first
+        // line — 236 under `(defmodule app.system`, the book's own opening example.
+        let mut sources = SourceMap::new();
+        let text = "(defmodule app.system\n  (version 1 0)\n  (export app.rt))\n";
+        let id = sources.add("t.eadl", text).unwrap();
+        let end = u32::try_from(text.trim_end().len()).unwrap();
+        let rendered = Diagnostic::error(
+            "read-example",
+            "m",
+            Label::new(Span::new(id, 0, end), "the whole form"),
+            "r",
+        )
+        .render(&sources);
+        assert_eq!(
+            marker_line(&rendered),
+            format!(
+                "  | {} the whole form (continues to line 3)",
+                "^".repeat("(defmodule app.system".len())
+            ),
+            "{rendered}"
+        );
+    }
+
+    #[test]
+    fn a_span_starting_mid_line_is_clipped_to_the_rest_of_that_line() {
+        let mut sources = SourceMap::new();
+        let text = "  (implementation\n    (step 1))\n";
+        let id = sources.add("t.eadl", text).unwrap();
+        let end = u32::try_from(text.trim_end().len()).unwrap();
+        let rendered = Diagnostic::error(
+            "read-example",
+            "m",
+            Label::new(Span::new(id, 2, end), ""),
+            "r",
+        )
+        .render(&sources);
+        assert_eq!(
+            marker_line(&rendered),
+            format!(
+                "  |   {} (continues to line 2)",
+                "^".repeat("(implementation".len())
+            ),
+            "{rendered}"
+        );
+    }
+
+    #[test]
+    fn a_span_that_ends_by_covering_its_newline_has_not_continued() {
+        // `end` is exclusive, so a span over `(a)\n` ends ON line 1 — the continuation note would be false.
+        let mut sources = SourceMap::new();
+        let id = sources.add("t.eadl", "(a)\n(b)\n").unwrap();
+        let rendered = Diagnostic::error(
+            "read-example",
+            "m",
+            Label::new(Span::new(id, 0, 4), "x"),
+            "r",
+        )
+        .render(&sources);
+        assert_eq!(marker_line(&rendered), "  | ^^^ x", "{rendered}");
+    }
+
+    #[test]
+    fn a_multi_line_span_ending_inside_non_ascii_text_renders_without_panicking() {
+        // ⛔ Measured while writing this leaf: finding the last line by `position(end - 1)` put the offset
+        // inside a multi-byte character, `position` sliced there, and twelve reference legs panicked. The
+        // continuation is now counted over the covered text, which has no byte offset to get wrong.
+        // The span's LAST character is the two-byte `é`, so `end - 1` is not a character boundary.
+        let mut sources = SourceMap::new();
+        let text = "(a\n  é)\n";
+        let id = sources.add("t.eadl", text).unwrap();
+        let end = u32::try_from(text.find(')').unwrap()).unwrap();
+        let rendered = Diagnostic::error(
+            "read-example",
+            "m",
+            Label::new(Span::new(id, 0, end), ""),
+            "r",
+        )
+        .render(&sources);
+        assert_eq!(
+            marker_line(&rendered),
+            "  | ^^ (continues to line 2)",
+            "{rendered}"
         );
     }
 

@@ -4,6 +4,28 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — a caret stays on the line it is drawn under
+
+`ARCHOGEN-M1-0109` (leaf `M1.31`). **575 passed / 0 failed** over 41 suites (baseline 569 / 40, delta =
+6 new legs). Five mutations seen firing. Marker overruns over the 78 tracked descriptions: **14 → 0**.
+
+- **The defect.** `crates/eadl-front/src/diagnostic.rs`'s `render_label` sized a caret by the character
+  count of the whole span and printed only the span's first line, so a label over a multi-line form drew
+  183 carets under `(implementation` (17 characters), and one under a kind module reached column 2 474.
+  Ten tracked descriptions rendered at least one such run; every renderer leg built a one-line span.
+- **The fix.** The run covers the span on the line shown and stops there; a span that goes on says
+  ` (continues to line N)`. The continuation is counted over the covered text — the first cut found the
+  last line by `position(end - 1)`, which lands inside a multi-byte character and made twelve reference
+  legs panic.
+- **The gate.** `crates/eadl-model/tests/rendering.rs` renders every diagnostic `check` produces over the
+  whole conformance suite — population read from `docs/semantics/conformance.md`'s roots table — and
+  fails on any marker past its line, with a guard that the population still renders a multi-line label.
+- ⛔ **It corrects the previous entry's figure.** "23 of 78" was wrong in both directions: the census
+  counted label text as caret (38 files, before and after the fix) and its output file was truncated at
+  2048 bytes by `tee | head`. Every copy is corrected and the historical ones say so.
+- `M1.32` filed: `archogen check` on a kind module answers `invalid-description`. Book: `reading.md` shows
+  a multi-line label, rendered by the command over a tracked file and checked verbatim.
+
 ## archogen — a module file is refused as what it is, and `archogen help check` stops claiming elaboration
 
 `ARCHOGEN-M1-0108` (leaf `M1.29.1`, the first child of `M1.29`). **569 passed / 0 failed** over 40
@@ -24,7 +46,8 @@ descriptions censused before and after: **0** changed.
 - **`M1.29` is decomposed on measurement**: the disk loader (`M1.29.2`), the name rule an elaborated
   program needs and `docs/semantics/reference.md` §6 does not state (`M1.29.3`), and module parameters,
   which are bound and consumed by nothing (`M1.29.4`). **`M1.31`** is filed: a caret overruns its line in
-  23 of 78 tracked descriptions, found by this leaf's own reproduction.
+  23 of 78 tracked descriptions, found by this leaf's own reproduction. ⛔ *Corrected by `M1.31`: the figure
+  is **10** of 78 — the census behind "23" counted label text as caret and its output was truncated.*
 - Book: `cli.md` (help transcript re-rendered from the command), `modules.md` ("What you can run today"),
   `checking.md` (why the pass table has no *elaborate* row).
 

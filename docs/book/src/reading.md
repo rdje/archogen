@@ -115,6 +115,25 @@ error[read-unclosed-list]: this list is never closed
 Columns count **characters**, not bytes, so the caret still lands under the right text on a
 line containing `§` or an em dash — and eADL descriptions carry prose in their comments.
 
+A label can cover more than one line — the boundary check points at a whole `(implementation …)` body,
+which here runs from line 15 to line 20. The caret underlines the part on the line shown and **stops at
+the end of that line**; the label then says where the span ends:
+
+```console
+$ archogen check docs/semantics/boundary/reject/register-programming-sequence.eadl
+error[boundary-implementation-in-description]: `implementation` is implementation, and eADL contains no implementation
+  --> docs/semantics/boundary/reject/register-programming-sequence.eadl:15:3
+   |
+15 |   (implementation
+   |   ^^^^^^^^^^^^^^^ this is an implementation body — an algorithm, a sequence, or a data structure (continues to line 20)
+  = hint: it fails the `non-prescription` test — can its interpretation be stated without prescribing an algorithm, instruction sequence, code provider, data structure, or executable model body? It belongs to engine knowledge: the provider record selected against this declaration's contract.
+```
+
+Until leaf `M1.31` the caret was sized by the whole span, so this one drew **183** carets under a
+17-character line, and ten of the repository's tracked descriptions rendered a caret that wrapped the
+terminal and pointed at nothing. `crates/eadl-model/tests/rendering.rs` now renders every diagnostic
+`check` produces over the whole conformance suite and fails on any marker that runs past its line.
+
 Reading does not stop at the first error: three malformed numbers cost one edit cycle, not
 three.
 

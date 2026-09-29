@@ -1,5 +1,27 @@
 # DEV_NOTES.md
 
+## _(2026-09-29)_ — the census that sized a defect was wrong in both directions, and each error looked plausible
+
+- `M1.31`, fixing a caret that overran its line. `M1.29.1` had sized the defect by census and published
+  "23 of 78 tracked descriptions" on the leaf, in `MEMORY.md`, `LIVE_STATUS.md`, `CHANGELOG.md` and the
+  task-tree index. Re-run after the fix, the same census still reported **38** files.
+- ⛔ **Two independent errors, each pinned with a tool.** (1) The awk measured the whole marker line,
+  *label text included*: a long label under a short line is not an overrun, and the instrument counted it
+  as one — 38 before, 38 after. (2) The saved list was exactly 2048 bytes: `| tee census.txt | head -20`
+  truncated it when `head` exited, and "23" was counted from the alphabetical head of the list, which cut
+  off both kind modules — the two largest overruns in the repository.
+- The corrected instrument measures indent + marker run only, writes to a file with nothing downstream,
+  and was re-run on the *before* state from a stash: **14 runs over 10 files → 0**. Mutation M-E puts the
+  first instrument's error back inside the new leg and it reports **53** phantom overruns on the fixed
+  renderer, so the leg is proven to measure the run and not the label.
+- Every copy of "23" is corrected in `M1.31`'s commit, and the historical copies say they were corrected
+  rather than being silently rewritten (`docs/knowledge/a-moved-measurement-needs-a-census-of-its-copies.md`).
+- A second defect on the way: the first cut of the fix found the last line with `position(end - 1)`,
+  which lands inside a multi-byte character, and twelve reference legs panicked at `source.rs:119`. The
+  continuation is now counted over the covered text, and a leg whose span *ends* on `é` pins it.
+- Promoted into `docs/knowledge/verify-the-mutation-applied.md` as the fifth and sixth parts of a census —
+  the quantity it measures and the file it saved — with two new `answers:` lines.
+
 ## _(2026-09-29)_ — a help line is a claim about a capability, and it needs a leg in both directions
 
 - `M1.29.1`. `archogen help check` said "elaborate and type-check" from the day `spec.rs` was created (`af4e6dc`, `2026-09-13`), and

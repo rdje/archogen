@@ -7,6 +7,8 @@ answers:
   - "My mutation applied, its count assertion passed, and the arm still proves nothing — what did I miss?"
   - "My RED arm reported a pass, but did the thing it tests actually run?"
   - "My before→after census shows no difference — did nothing change, or did I record too little?"
+  - "My census sized a defect — how do I know it measured the defect and not something containing it?"
+  - "The count I published came from a saved census file — was the file complete?"
 type: knowledge
 date: 2026-09-13
 ---
@@ -131,6 +133,17 @@ claimed. Re-run recording the verdict **and every code**, the same census report
 acceptances lost`, which is the figure the leaf publishes. ⛔ The failure mode is worse than a weak oracle
 because it reports *success*: a measurement that under-records does not fail, it agrees with you.
 
+⭐⭐ **And a census that *sizes* a defect has two more: the quantity it measures, and the file it saved.**
+`M1.29.1` sized a renderer defect — a caret overrunning its line — at "23 of 78 tracked descriptions" and
+published that figure on a new leaf. `M1.31`, fixing it, found the figure wrong in **both** directions.
+The instrument measured the whole marker line, *label text included*, so a long label under a short line
+counted as an overrun: run to completion it reported **38** files, and 38 again after the fix — the tell,
+because a census that does not move when its defect is fixed was never measuring the defect. And the
+saved list was exactly **2048 bytes**: it had been written by `… | tee census.txt | head -20`, `head`
+exited after twenty lines, SIGPIPE stopped `tee`, and the count was taken from the alphabetical head of
+the list — which cut off both of the largest overruns there were. Measured correctly, the figure is **10**.
+Neither error announced itself; each produced a plausible number.
+
 ## How to apply
 
 - Never write `sed -i` / `s.replace(...)` for a mutation without a count assertion. `sed` in
@@ -145,6 +158,12 @@ because it reports *success*: a measurement that under-records does not fail, it
 - ⛔ **And a census you diff must record every field the change could move.** A verdict is a summary; if
   the change can move the *reason* and leave the summary alone, record the reason too. The empty diff is
   indistinguishable from a correct one unless you can say which fields were compared.
+- ⛔ **A census that sizes a defect must be re-run after the fix, and must move to zero.** If it does not
+  move, it measured something else. Measure the narrowest quantity that *is* the defect — the marker run,
+  not the line it sits on.
+- ⛔ **Never save a census through a pipe you also truncate.** `tee file | head` writes a file exactly as
+  long as `head` let it be. Write the census to the file with nothing downstream, and read the file;
+  a figure is taken from the complete population or it is not taken.
 - Back the file up and **restore from the copy**, then prove the restore was exact —
   `git diff --stat <paths>` must be empty. A red arm that leaves the subject modified is worse
   than no red arm.
