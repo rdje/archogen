@@ -33,6 +33,7 @@ PROJECT_DOCTRINES=(
   "FEEDBACK-REGISTER|every outbound bug register agrees with its issues — each row's State and Severity, a verified row backed by a dated re-measurement — and its totals and the cross-vendor index are recounts|scripts/check_feedback_register.sh"
   "LIVE-SNAPSHOTS|every live document that shows current state stays within its ceilings on lines, bytes and longest line, and every snapshot the inventory declares is bounded|scripts/check_live_snapshots.sh"
   "STATED-ORDER|every restated order agrees with its source — frontier tables with their leaves, snapshot heads and successor lists with their trees, the changelog newest-first|scripts/check_stated_order.sh"
+  "FIGURE-REGISTER|a commit may not add an unclassified figure to a live document — gated by a test that reads it, a dated record, or not a count, per docs/figures.md|scripts/check_figure_register.sh"
 )
 
 for entry in "${PROJECT_DOCTRINES[@]}"; do

@@ -1191,7 +1191,7 @@ mdBook that is the director's window into the project.
     documents eADL and the engine, not the repository's scratch directories.
 
 - ID: `PROGRAM.20`
-  Status: `in-progress`
+  Status: `done`
   Goal: a **carried-figure register**, so a figure no measurement watches is a breach at the commit
   that adds it rather than a defect a later sweep happens to find. Three sweeps with three different
   patterns have now been needed to find one defect class, and a fourth pattern would find a fourth
@@ -1421,8 +1421,12 @@ mdBook that is the director's window into the project.
   gates no milestone and blocks nothing, which is why it is scheduled behind `PROGRAM.11` and
   `PROGRAM.18` rather than ahead of them; `PROGRAM.18` (repeatable RED arms for registered controls)
   should land first, because this check arrives with arms and the older ten do not.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: closed `2026-09-30` by its three children, each an instrument for a different shape of the class:
+  **orders** (`STATED-ORDER`, `.20.1` — its first run found `M2.9` stated two ways), **transcripts** (`book_transcripts.rs`,
+  `.20.2` — 5 of 12 checkable transcripts differed, two contradicting their own prose), **figures** (`FIGURE-REGISTER`,
+  `.20.3` — a ratchet at the commit that adds one; its first run refused a false "gated" claim). The acceptance's figure
+  register exists, registered and armed, with the population the staged live documents rather than a list of three.
+  Commit: `ARCHOGEN-PROGRAM-0142` (`.20.1`), `ARCHOGEN-PROGRAM-0143` (`.20.2`), `ARCHOGEN-PROGRAM-0144` (`.20.3`)
   Children: `PROGRAM.20.1`, `PROGRAM.20.2`, `PROGRAM.20.3` — decomposed `2026-09-30`, because the shapes above need three
   different instruments, and one check trying to be all three is the "list that keeps being wrong" again:
   **sequences** (a restated frontier head, a successor clause, a ledger's own ordering rule) are exact and derivable —
@@ -1531,12 +1535,57 @@ mdBook that is the director's window into the project.
     own class, caught by reading the output back; the catalog's thirteenth entry.
 
 - ID: `PROGRAM.20.3`
-  Status: `pending`
+  Status: `done`
   Goal: the figure register itself — figure-shaped text in the staged live surfaces classified as gated, recorded or
   unregistered, with an unregistered one introduced by the staged diff refused (`TABLE-ARITY-RATCHET` idiom).
   Acceptance: as the parent's acceptance above, for figures; the population is every live surface the commit stages.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the checklist — a ratchet gate over staged live documents (14 arms, 8 mutations), a register
+  that starts empty because its first row was false, and the `S0.8` shape refused on the real tree.
+  Commit: `ARCHOGEN-PROGRAM-0144 (leaf PROGRAM.20.3)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — a census of the live surfaces with the gate's own pattern, `2026-09-30`: **96**
+    figure-shaped phrases over 28 files, roughly half real carried figures (`five tiers`, `541 tests`, the `S0.8`
+    `Three descriptions`, `eleven trees`) and half noise (`§7 rule 5`, `two descriptions that differ`). Then, on the
+    real tree, the `S0.8` shape added to a staged chapter:
+    ```text
+    $ printf '\nThe directory holds three descriptions.\n' >> docs/book/src/s0.md; git add …; bash scripts/check_figure_register.sh
+      FIGURE-REGISTER: docs/book/src/s0.md adds a figure no row of docs/figures.md classifies: three descriptions …   exit=1
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — nothing looked at a figure when it was *added*; each fix was a sweep afterwards,
+    bounded by its pattern. No gate existed:
+    ```text
+    $ git grep -n "figure" e9ae521 -- 'scripts/check_*.sh'
+      e9ae521:scripts/check_book_anchors.sh:55:# than the language, and its own figures are gated by `corpus.rs`.
+      e9ae521:scripts/check_book_anchors.sh:98:  # below has always reported, so the figure does not move when the loop is restructured.
+      e9ae521:scripts/check_stated_order.sh:5:# ⭐ WHY THIS EXISTS. The defect class `PROGRAM.20` records has a shape that no figure-shaped …
+    ```
+    Three mentions, all in comments — none a gate on figure-shaped text. ⚠️ This box was first written as "no match,
+    rc=1" before the command was re-run; the run said otherwise, and the box now carries its output.
+  - [x] **FIX** — `scripts/check_figure_register.sh` (**`FIGURE-REGISTER`**): per staged live document, unclassified
+    figure-shaped phrases may not rise against `HEAD`; `docs/figures.md` classifies a phrase `gated` (a test that must
+    exist and read the file), `record` (dated) or `not-a-count`, stale rows refused. Exempt by construction: code fences
+    (`PROGRAM.20.2` owns transcripts), code spans, `§N` references, a line carrying its measurement date. The gates
+    `M1.23`/`M1.24` built measure figures written in code spans, so they cannot trip it — measured, not assumed: their
+    figures are backticked (`corpus.rs:461` "states a corpus of `21`").
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    $ bash scripts/check_figure_register.sh --self-test
+      figure-register self-test: 14 pass / 0 fail (14 arms)
+    $ bash scripts/check_figure_register.sh        (this commit staged)
+      figure-register: OK (no staged live document adds an unclassified figure; 14 … are backlog)   exit=0
+    ```
+    ⛔ Its first real run refused this leaf's own first register row — `five tiers` in `verification.md` "gated by"
+    `xtask`'s tier test, which compares the runner with the roadmap and never reads the book; the row was a false claim,
+    and the register starts empty. And writing the book section, it refused `three rules` — a quotation, moved into a
+    code span. Eight mutations, each restored by `cmp`: F-1 spelled-out shape dropped (7 fail), F-2 the dated-line
+    exemption (1), F-3 code spans read (1), F-4 the ratchet disabled (3), F-5 a gate that never reads the file accepted
+    (1), F-6 stale rows accepted (1), F-7b the `§` lookbehind dropped from the count-noun pattern (1). F-7 (the same on
+    the `N of M` pattern) survives: no arm has a `§N of M`, and no live text does.
+  - [x] **NO REGRESSION** — the doctrine driver green at the commit, now 13.3 s wall; `BOOK-ANCHORS` exit=0.
+  - [x] **LOCKSTEP** — `verification.md` gains "A number added to this book says what keeps it true", itself passing the
+    gate; `DOCTRINE_ENFORCEMENT.md`, `TOOLBOX.md`.
 
 - ID: `PROGRAM.21`
   Status: `done`
@@ -3124,13 +3173,12 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.20` | `in-progress` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. ⭐ A **near-miss** worth pricing in, recorded honestly as a near-miss and not as a fourth instance: `PROGRAM.18`'s frontier row still read "ten of eighteen controls" while this leaf was being written, and was corrected in the same commit — it would have gone stale the moment the fix landed, and nothing in the tree compares a control count against the controls. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with. ⛔ An **eighth** shape landed `2026-09-29` and it falsifies the acceptance's *population* rather than adding a figure: `CHANGELOG.md` said "Newest first" and did not, one entry sitting above six newer ones for seven commits because five consecutive commits inserted at the same wrong anchor — and `CHANGELOG.md` is not one of the three live surfaces the acceptance enumerates. Two falsifications of a three-item list, so the population becomes every live surface the commit stages |
-| 2 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
-| 3 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
-| 4 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
-| 5 | `PROGRAM.30` | `pending` | **medium** — the Rust channel, mdBook and CI actions are unpinned; found deriving the ledger's pins |
-| 6 | `PROGRAM.31` | `blocked` | on the director's ruling on the findings record's §8 — the changelog and development notes as rolling ledgers |
-| 7 | `PROGRAM.32` | `blocked` | on the same ruling — closed leaves sealed out of the task trees |
+| 1 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
+| 2 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
+| 3 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
+| 4 | `PROGRAM.30` | `pending` | **medium** — the Rust channel, mdBook and CI actions are unpinned; found deriving the ledger's pins |
+| 5 | `PROGRAM.31` | `blocked` | on the director's ruling on the findings record's §8 — the changelog and development notes as rolling ledgers |
+| 6 | `PROGRAM.32` | `blocked` | on the same ruling — closed leaves sealed out of the task trees |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
@@ -3257,6 +3305,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.17.3` / `PROGRAM.17` | growth since `2026-09-27` from `git show 4d6d002:<file>`; closed-leaf share of `M1.md` and `PROGRAM.md` by an `awk` over leaf blocks | 77% of `M1.md` and 75% of `PROGRAM.md` are closed leaves; §8 written, `PROGRAM.31`/`.32` filed blocked; `PROGRAM.17` closed |
 | `2026-09-30` | `PROGRAM.20.1` | the gate's first run; its 10 arms; seven mutations; each real snapshot's head moved | `M2.9`'s status contradiction found and corrected in its own commit; every arm and mutation as designed; all three snapshots genuinely checked |
 | `2026-09-30` | `PROGRAM.20.2` | the transcript test before and after; the backlog grown and made stale; the renderer mutation through the catalog | 5 of 12 checkable transcripts differed, two contradicting their own prose; all 12 exact after re-rendering; both ratchet directions refused; the mutation killed by the book's own transcripts |
+| `2026-09-30` | `PROGRAM.20.3` / `PROGRAM.20` | a census of figure-shaped text in the live surfaces; the gate's 14 arms; eight mutations; the `S0.8` shape staged on the real tree | 96 phrases over 28 files as backlog; the added figure refused; the register's own first row refused as false; `PROGRAM.20` closed |
 
 ## Commit Log
 
@@ -3305,6 +3354,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.17.3` → `PROGRAM.17` | `ARCHOGEN-PROGRAM-0140 (leaf PROGRAM.17.3)` | **the history lifecycle choices go to the director** — findings §8 with measurements and a recommendation; `PROGRAM.31`/`.32` filed blocked; `PROGRAM.17` closed |
 | `PROGRAM.20` → `PROGRAM.20.1` | `ARCHOGEN-PROGRAM-0142 (leaf PROGRAM.20.1)` | **a restated order is a verified copy** — `STATED-ORDER` checks frontier rows, snapshot heads, successor lists and the changelog's order; its first run found `M2.9` stated two ways. `PROGRAM.20` decomposed |
 | `PROGRAM.20.2` | `ARCHOGEN-PROGRAM-0143 (leaf PROGRAM.20.2)` | **every diagnostic the book shows is a real run** — a test re-runs each and requires it exactly; five blocks re-rendered, two of which contradicted their own prose |
+| `PROGRAM.20.3` → `PROGRAM.20` | `ARCHOGEN-PROGRAM-0144 (leaf PROGRAM.20.3)` | **a figure added to a live document says what keeps it true** — `FIGURE-REGISTER`, a ratchet with a classifying register. `PROGRAM.20` closed: orders, transcripts and figures each have an instrument |
 
 ## Changelog
 

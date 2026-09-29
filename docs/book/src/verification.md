@@ -420,6 +420,22 @@ $ bash scripts/check_stated_order.sh              # the gate
 $ bash scripts/check_stated_order.sh --self-test  # its RED arms, on scratch repositories
 ```
 
+## A number added to this book says what keeps it true
+
+The error this project has made most often is a number written into a page that later stopped being
+true: a count of descriptions over a directory that had grown, a list introduced as `Three rules` above
+four. `FIGURE-REGISTER` stops a commit from adding such a number to a live page without saying what keeps
+it true. The number must either be compared with a measurement by a named test that reads the page, carry
+the date it was measured on the same line, or be marked as not a count (`docs/figures.md`). Numbers
+already on these pages are counted and reported, and a commit may only lower their count in a page it
+touches. Its first run refused a claim written while the check was being built, which named a test that
+never reads the page.
+
+```console
+$ bash scripts/check_figure_register.sh              # the gate
+$ bash scripts/check_figure_register.sh --self-test  # its RED arms, on scratch repositories
+```
+
 ## Every diagnostic shown in this book is a real run
 
 When this book shows `archogen check` refusing a description, a test re-runs that command and requires

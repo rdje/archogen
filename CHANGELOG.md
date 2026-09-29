@@ -4,6 +4,19 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — a number added to the book says what keeps it true
+
+`ARCHOGEN-PROGRAM-0144` (leaf `PROGRAM.20.3`; closes `PROGRAM.20`). A new doctrine, `FIGURE-REGISTER`.
+
+- A commit may not add a figure-shaped phrase to a live page, such as `3 descriptions`, `three descriptions`
+  or `5 of 12`, unless `docs/figures.md` says what keeps it true: a test that reads the page and compares
+  it, the date it was measured, or that it is not a count. The phrases already there are a reported
+  backlog; a commit may only lower their count in the pages it touches.
+- On its first run it refused the register's own first row, which claimed a figure was checked by a test
+  that never reads the page. While its book section was being written, it also caught a quoted example.
+- `PROGRAM.20` is closed. The most frequent defect in this repository, a restated fact that goes stale,
+  now has an instrument for each of its shapes: orders, transcripts and figures.
+
 ## archogen — every diagnostic the book shows is a real run
 
 `ARCHOGEN-PROGRAM-0143` (leaf `PROGRAM.20.2`).
