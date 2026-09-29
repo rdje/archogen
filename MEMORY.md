@@ -19,7 +19,7 @@
   reachable from a command. ⛔ Read its two design constraints first: resolve the file by a *stated* rule
   from the imported name so `module-name-mismatch` stays firable, and a tracked module fixture is a
   `docs/semantics/conformance.md` manifest decision + migration note. Then `M1.29.3` (the name rule §6
-  lacks), `M1.29.4` (parameters consumed by nothing). Pending first: `M1.31`'s routing note into `PROGRAM.20` (docs-only).
+  lacks), `M1.29.4` (parameters consumed by nothing).
 - ⭐ **Closed today:** `M1.29.1` — module files refused as `unimplemented` (exit 20, was 10), and "elaborate"
   coupled to the capability by a leg; `M1.31` — markers clipped to their line (**14 runs / 10 files → 0**),
   with a pipeline leg over the whole conformance suite. ⛔ `M1.29.1`'s published "23 of 78" was wrong both
