@@ -137,3 +137,26 @@ from
 to
         if ordering.is_ge() {
 end
+
+mutation provenance-gains-a-key-under-the-same-identifier
+file crates/archogen-s0/src/provenance.rs
+test -p archogen-cli --test format_golden
+expect killed
+why PROGRAM.6.3: a key added to the provenance without moving `archogen-provenance/1` would reach every consumer of /1 unannounced.
+from
+        out.push_str("  \"experimental\": true,\n");
+to
+        out.push_str("  \"experimental\": true,\n");
+        out.push_str("  \"extra\": true,\n");
+end
+
+mutation cost-contract-reworded-under-the-same-identifier
+file crates/rt-analysis/src/cost.rs
+test -p rt-analysis --test format_golden
+expect killed
+why PROGRAM.6.3: §7.4.1 — a changed accounting rule invalidates every total stated under the old one, so it must move the identifier.
+from
+                "useful computation only — no dispatch, no interrupt service, no context save or \
+to
+                "useful computation only, and no dispatch, no interrupt service, no context save or \
+end

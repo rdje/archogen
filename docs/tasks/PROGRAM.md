@@ -1955,7 +1955,7 @@ mdBook that is the director's window into the project.
     not pinned to exact versions.
 
 - ID: `PROGRAM.6`
-  Status: `in-progress`
+  Status: `done`
   Goal: implement semantic versioning separation (§15) — language/profile semantics, engine
   implementation, catalog entries, model versions, evidence formats — as machine-checked
   version records with a compatibility corpus.
@@ -1967,8 +1967,12 @@ mdBook that is the director's window into the project.
   catalog entry (`s0.hosted-playground.periodic` `0.1.0`, `crates/archogen-s0/src/provenance.rs`) and two evidence
   formats (`archogen-provenance/1`, `cost-accounting/1`). Catalogs proper and device/timing models do not exist
   yet (`M6`, `M2`); F25 — a locked rebuild after a catalog update — is `M6.4`'s, and `6.1` names that home.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: closed `2026-09-30` by its three children. Its acceptance, each half measured: **"a locked
+  description retains its meaning across an engine upgrade"** — every description's verdict is frozen and checked
+  on every run (`PROGRAM.6.2`: 120 descriptions; an engine change that moves 20 of them is named, line by line);
+  **"F25 has a home"** — `docs/book/src/versions.md` names catalogs as `M6`'s and F25 at `M6.4` (`PROGRAM.6.1`). The
+  register pins every versioned surface it lists, the two evidence formats to their identifiers (`PROGRAM.6.3`).
+  Commit: `ARCHOGEN-PROGRAM-0133` (`.6.1`), `ARCHOGEN-PROGRAM-0134` (`.6.2`), `ARCHOGEN-PROGRAM-0135` (`.6.3`)
 
 - ID: `PROGRAM.6.1`
   Status: `done`
@@ -2074,13 +2078,62 @@ mdBook that is the director's window into the project.
     held to what descriptions mean"; the mutation catalog gains its ninth entry.
 
 - ID: `PROGRAM.6.3`
-  Status: `pending`
+  Status: `done`
   Goal: an evidence format's shape is pinned to its version: `archogen-provenance/1` and `cost-accounting/1`
   cannot change what they emit without the identifier moving.
   Acceptance: a golden sample per format, compared on every run; a shape change with the same identifier is
   refused, with a bump accepted only alongside a new golden.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the checklist — two goldens, a shape lexer with its own test, four falsifications, two
+  permanent catalog entries.
+  Commit: `ARCHOGEN-PROGRAM-0135 (leaf PROGRAM.6.3)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — the register said nothing refused a format change under the same identifier:
+    ```text
+    $ git grep -n "PROGRAM.6.3" eac86bd -- docs/book/src/versions.md
+      eac86bd:docs/book/src/versions.md:68:| Pinned by | `crates/archogen-cli/tests/s0_provenance.rs`. ⚠️ A golden sample that refuses a shape change under …
+      eac86bd:docs/book/src/versions.md:90:| Pinned by | the tests in `crates/rt-analysis/src/cost.rs`. ⚠️ The golden sample is `PROGRAM.6.3`, pending |
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — the provenance test reads the handful of fields it asserts and checks the
+    JSON is well formed; nothing compared the *set* of keys, so a key added under `archogen-provenance/1` passed.
+    The cost contract's drift test compares code with its page, not with its version — both could move together
+    under `/1`. Measured, with F-1's extra key in the artifact:
+    ```text
+    $ cargo test -q -p archogen-cli --test s0_provenance      -> test result: ok. 4 passed; 0 failed
+    $ cargo test -q -p archogen-s0                            -> test result: ok. 20 passed; 0 failed
+    ```
+  - [x] **FIX** — a golden per identifier, **never rewritten**: `crates/archogen-cli/tests/format_golden.rs` builds
+    the S0 base fixture and freezes the provenance's shape (every key path and value kind — a lexer with a key
+    stack, deliberately not a parser, and a test of its own) in `tests/goldens/archogen-provenance-1.golden`;
+    `crates/rt-analysis/tests/format_golden.rs` freezes what `cost-accounting/1` says (kinds of total and ledger
+    categories through exhaustive `match`es, the seven identifications, a rendered ledger) in
+    `tests/goldens/cost-accounting-1.golden`. `ARCHOGEN_BLESS_FORMATS=1` creates a golden for a new identifier
+    only.
+    ⛔ The first cut imported the identifier from the S0 prototype and `S0-RETIREMENT` refused the commit (`imports
+    the S0 prototype. Only its declared consumers may`); the test now reads it from the artifact, which carries it —
+    the stronger pin, since it is what a consumer reads. F-1 and F-2 re-run after the change: both still refused.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    $ cargo test -q -p archogen-cli --test format_golden; cargo test -q -p rt-analysis --test format_golden
+      test result: ok. 2 passed; 0 failed          test result: ok. 1 passed; 0 failed
+    provenance shape: 20 key paths — re-derived from the renderer's source: 6 top-level, 5 realization, 9 records[]
+    ```
+    Falsified, sources restored by `git checkout`: **F-1** a key added, same identifier → `the shape of
+    \`archogen-provenance/1\` has changed`; **F-2** the identifier bumped with no golden → `no golden for
+    \`archogen-provenance/2\``; **F-3** blessing over the changed shape → still `has changed`, `test result: FAILED`
+    (a golden is not overwritten); **F-4** a contract statement reworded → `what \`cost-accounting/1\` says has
+    changed`. F-1 and F-4 kept as catalog entries → `cargo xtask mutate` → `mutate: OK — 11 mutation(s)`.
+    ⚠️ The lexer's own test caught a bug in it on the first bless (empty frames gave `.realization.id`); the bad
+    golden was deleted and re-blessed.
+  - [x] **NO REGRESSION** —
+    ```text
+    $ cargo test --all -q
+      test result: passed=620 failed=0 ignored=1 over 47 suites
+    ```
+    `VERSION-REGISTER` OK; the doctrine driver green at the commit; `make focused` passed.
+  - [x] **LOCKSTEP** — `versions.md`: both format entries pinned, and a section "How a format is held to its
+    identifier"; the catalog's tenth and eleventh entries.
 
 - ID: `PROGRAM.8`
   Status: `pending`
@@ -2775,15 +2828,14 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.6` | `in-progress` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |
-| 2 | `PROGRAM.13` | `pending` | twelve closed leaves in `BOOTSTRAP`, `M2` and this tree do not name their own commit — backfill both logs from git, then `PROGRAM.14` gates it so the gap cannot reopen |
-| 3 | `PROGRAM.15` | `pending` | a feedback register row that contradicts its own issue sub-tree passes every gate today; five state transitions in six commits held only by hand-editing and a manual census |
-| 4 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
-| 5 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. ⭐ A **near-miss** worth pricing in, recorded honestly as a near-miss and not as a fourth instance: `PROGRAM.18`'s frontier row still read "ten of eighteen controls" while this leaf was being written, and was corrected in the same commit — it would have gone stale the moment the fix landed, and nothing in the tree compares a control count against the controls. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with. ⛔ An **eighth** shape landed `2026-09-29` and it falsifies the acceptance's *population* rather than adding a figure: `CHANGELOG.md` said "Newest first" and did not, one entry sitting above six newer ones for seven commits because five consecutive commits inserted at the same wrong anchor — and `CHANGELOG.md` is not one of the three live surfaces the acceptance enumerates. Two falsifications of a three-item list, so the population becomes every live surface the commit stages |
-| 6 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
-| 7 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
-| 8 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
-| 9 | `PROGRAM.30` | `pending` | **medium** — the Rust channel, mdBook and CI actions are unpinned; found deriving the ledger's pins |
+| 1 | `PROGRAM.13` | `pending` | twelve closed leaves in `BOOTSTRAP`, `M2` and this tree do not name their own commit — backfill both logs from git, then `PROGRAM.14` gates it so the gap cannot reopen |
+| 2 | `PROGRAM.15` | `pending` | a feedback register row that contradicts its own issue sub-tree passes every gate today; five state transitions in six commits held only by hand-editing and a manual census |
+| 3 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
+| 4 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. ⭐ A **near-miss** worth pricing in, recorded honestly as a near-miss and not as a fourth instance: `PROGRAM.18`'s frontier row still read "ten of eighteen controls" while this leaf was being written, and was corrected in the same commit — it would have gone stale the moment the fix landed, and nothing in the tree compares a control count against the controls. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with. ⛔ An **eighth** shape landed `2026-09-29` and it falsifies the acceptance's *population* rather than adding a figure: `CHANGELOG.md` said "Newest first" and did not, one entry sitting above six newer ones for seven commits because five consecutive commits inserted at the same wrong anchor — and `CHANGELOG.md` is not one of the three live surfaces the acceptance enumerates. Two falsifications of a three-item list, so the population becomes every live surface the commit stages |
+| 5 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
+| 6 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
+| 7 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
+| 8 | `PROGRAM.30` | `pending` | **medium** — the Rust channel, mdBook and CI actions are unpinned; found deriving the ledger's pins |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
@@ -2898,6 +2950,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.9.3` / `PROGRAM.9` | `cargo xtask mutate` twice (the second naming each kill's tests); harness arms H-1–H-4 through temporary entries; `cargo test -p xtask`; the `extended` tier end to end | 8 of 8 as expected, each kill by the test written for its defect, the `lcm`→`max` blind spot surviving the harmonic corpus; every arm refused as designed, `crates/` clean after each; 14 / 0; **`extended` passed for the first time** |
 | `2026-09-30` | `PROGRAM.6.1` | the register gate on the real tree and its 12 arms; seven mutations V-1–V-7; `FORMAT` bumped on the real code; the book build | no register before; 7 entries and 7 declared versions after — the seventh (`idealized-zero-overhead/1`) found by the gate, missed by the planning census; every mutation fires; the bump refused at its entry |
 | `2026-09-30` | `PROGRAM.6.2` | the frozen table blessed and checked; its exit codes against `M1.36`'s binary census; the D ≤ T mutation; a new description; a stale row; the catalog entry through `cargo xtask mutate` | 120 verdicts frozen, identical to the binary census; 20 moved and named under the mutation; the new and the vanished each named; the catalog entry killed by the verdict test |
+| `2026-09-30` | `PROGRAM.6.3` / `PROGRAM.6` | both goldens blessed and checked; the lexer's own test; F-1–F-4 with restores; the two new catalog entries and the whole catalog; `cargo test --all` | 20 provenance key paths, re-derived from the renderer; the cost contract frozen; every falsification refused, blessing never overwrites; 11 of 11 mutations as expected; 620 / 0 |
 
 ## Commit Log
 
@@ -2934,6 +2987,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.9.3` → `PROGRAM.9` | `ARCHOGEN-PROGRAM-0132 (leaf PROGRAM.9.3)` | **the mutation controls are a catalog run on every `extended` tier**, and **`extended` passes** for the first time. `cargo xtask mutate`: eight entries, each checked to apply once, name its killing tests and restore byte for byte; S0.4's blind spot reproduced by command. `PROGRAM.9` closed |
 | `PROGRAM.6` → `PROGRAM.6.1` | `ARCHOGEN-PROGRAM-0133 (leaf PROGRAM.6.1)` | **everything versioned is in one register, derived from the code.** Seven surfaces with what changes and pins each; F25's home named (`M6.4`); `VERSION-REGISTER` refuses an unannounced format, bump or stale entry. `PROGRAM.6` decomposed |
 | `PROGRAM.6.2` | `ARCHOGEN-PROGRAM-0134 (leaf PROGRAM.6.2)` | **every description keeps its frozen verdict.** The census three engine fixes ran by hand is a test: 120 descriptions, exit code and diagnostic codes; a moved verdict fails unless the table is regenerated in the same change |
+| `PROGRAM.6.3` → `PROGRAM.6` | `ARCHOGEN-PROGRAM-0135 (leaf PROGRAM.6.3)` | **each evidence format is held to its identifier** — a golden per identifier, never rewritten: the provenance's shape and the cost contract's text. `PROGRAM.6` closed: the register, frozen verdicts and format goldens |
 
 ## Changelog
 

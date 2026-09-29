@@ -65,7 +65,7 @@ this page changing too.
 | Version | `archogen-provenance/1` |
 | Declared at | `const:crates/archogen-s0/src/provenance.rs:FORMAT` |
 | Changes when | a field is added, removed or reinterpreted. A consumer that does not recognize the identifier must refuse rather than guess |
-| Pinned by | `crates/archogen-cli/tests/s0_provenance.rs`. ⚠️ A golden sample that refuses a shape change under the same identifier is `PROGRAM.6.3`, pending |
+| Pinned by | its shape — every key path and the kind of value at it — frozen in `crates/archogen-cli/tests/goldens/archogen-provenance-1.golden` and compared by `crates/archogen-cli/tests/format_golden.rs`; a golden is never rewritten, so a shape change fails until the identifier moves |
 | Keeps | an artifact labelled `archogen-provenance/1` means the same to every reader of `/1` |
 
 ## `analysis-model`
@@ -87,7 +87,7 @@ this page changing too.
 | Version | `cost-accounting/1` |
 | Declared at | `const:crates/rt-analysis/src/cost.rs:CONTRACT_VERSION` |
 | Changes when | a cost term is added, removed or reinterpreted |
-| Pinned by | the tests in `crates/rt-analysis/src/cost.rs`. ⚠️ The golden sample is `PROGRAM.6.3`, pending |
+| Pinned by | everything it says — its kinds of total, ledger categories, seven identifications and the table a ledger renders as — frozen in `crates/rt-analysis/tests/goldens/cost-accounting-1.golden` and compared by `crates/rt-analysis/tests/format_golden.rs`; never rewritten |
 | Keeps | a bound computed under `cost-accounting/1` counts the same costs every time |
 
 ## How an engine change is held to what descriptions mean
@@ -108,6 +108,21 @@ nowhere. Three engine fixes in one day checked this by hand, each by building th
 comparing the output for every description. The frozen table does the same check on every run. As a
 test of the test, making the deadline rule refuse deadline = period moves **20** of the 120 verdicts,
 and the table names each one with its old and new verdict.
+
+## How a format is held to its identifier
+
+Each evidence format has a golden file named after its identifier, and a test compares what the format
+emits, or says, with it on every run. A golden is **never rewritten**. Change the provenance's keys
+or the cost contract's wording under the same identifier, and the test fails until the identifier
+moves. A new identifier gets its golden only deliberately:
+
+```console
+$ ARCHOGEN_BLESS_FORMATS=1 cargo test -p archogen-cli --test format_golden
+$ ARCHOGEN_BLESS_FORMATS=1 cargo test -p rt-analysis --test format_golden
+```
+
+Blessing cannot overwrite an existing golden, so it cannot be used to relabel a changed shape as the
+old one. The old golden stays behind as the record of what the old identifier meant.
 
 ## Not versioned yet
 

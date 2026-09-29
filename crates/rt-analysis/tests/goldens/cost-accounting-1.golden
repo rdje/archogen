@@ -1,0 +1,27 @@
+cost-accounting/1 (ROADMAP.md §7.4.1)
+contract record: cost-accounting/1 (ROADMAP.md §7.4.1)
+kinds of total:
+  exact-trace
+  safe-envelope
+  observed-maximum
+ledger categories:
+  initial dispatch
+  <task> useful execution
+  interrupt service
+  task switch
+  critical section
+  instrumentation
+  idle/wakeup
+identifications:
+  timing observation boundary: a job's response interval ends at the end of its useful computation; the switch away from it is outside that job's interval and remains interference for others
+  what task execution bounds include: useful computation only — no dispatch, no interrupt service, no context save or restore is inside a declared C
+  how releases become ready: a release is signalled by an interrupt; the task becomes ready at ISR completion, and its deadline still refers to the nominal release, so the readiness delay is inside the response time
+  which operations are preemptible: task computation is preemptible; switches and interrupt service are not. Arrivals during them are latched and serviced before the next task computation interval
+  the number and kind of context transitions: one initial dispatch from idle, and one two-part switch (save outgoing, restore incoming) per task-to-task transition, charged in both directions
+  interrupt arrival and service assumptions: every modelled source declares its arrivals and its service cost; an undeclared source is `unmodeled-interrupt-load`, which the profile excludes
+  dispatch, critical-section, instrumentation and idle/wakeup costs: each has its own category and is charged to exactly one interval; a cost with no category is an omission, not a zero
+a ledger renders as:
+ledger (exact-trace) under cost-accounting/1 (ROADMAP.md §7.4.1)
+  [0, 2) dispatch a                           2  initial dispatch
+  [2, 5) a runs                               3  a useful execution
+  total 5

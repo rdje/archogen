@@ -4,6 +4,19 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — each evidence format is held to its identifier
+
+`ARCHOGEN-PROGRAM-0135` (leaf `PROGRAM.6.3`; closes `PROGRAM.6`).
+
+- There is a golden file per format identifier, and it is **never rewritten**. For `archogen-provenance/1`
+  it records the provenance's shape, every key path and the kind of value at it, taken from a real build.
+  For `cost-accounting/1` it records everything the contract says. Changing either under the same
+  identifier fails until the identifier moves, and blessing cannot overwrite an old golden.
+- Before this, adding a key to the provenance passed every existing test.
+- Both checks are now permanent entries in the mutation catalog, which has 11 entries.
+- **`PROGRAM.6` is closed.** §15's version separation now has a register of every versioned surface, a
+  frozen verdict for every description, and format goldens.
+
 ## archogen — every description keeps its frozen verdict
 
 `ARCHOGEN-PROGRAM-0134` (leaf `PROGRAM.6.2`).

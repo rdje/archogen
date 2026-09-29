@@ -13,12 +13,12 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `PROGRAM` → frontier `PROGRAM.6` (child `.6.3` format goldens left). `M1`
-  `.29.4` (**waiting on the director**); `API` `.1`; `S0` `.8`; `M2` `.8.2`.
-- **Next action:** **`PROGRAM.6.3`** — a golden sample per evidence format, so a shape change under the same identifier is
-  refused. ⏳ **`M1.29.4` waits on the director** — §7 of `decision_findings-for-director-review.md`. A new
-  version constant or format needs an entry in `docs/book/src/versions.md` (`VERSION-REGISTER`).
-- ⭐ **Closed today:** `M1.29.1`–`.3`, `M1.31`, `M1.33`, `PROGRAM.27`, `PROGRAM.11`, `PROGRAM.18`, `PROGRAM.24`, `PROGRAM.28` (gate arms run in a tier), `PROGRAM.29` (scratch on this volume, gated), `PROGRAM.5` (§15 source ledger), `PROGRAM.9.1` (Miri step armed), `PROGRAM.9.2` (fuzz step: found 3 defects), `PROGRAM.9.3` (mutation catalog; `extended` passes), `PROGRAM.6.1` (version register), `PROGRAM.6.2` (frozen verdicts), `M1.34` (`Rational` ordering exact), `M1.35` (reader escape panic), `M1.36` (exact printing never overflows) — `archogen check` elaborates **and
+- **Active tree:** `PROGRAM` → frontier `PROGRAM.13`. `M1` `.29.4` (**waiting on the director**); `API` `.1`; `S0` `.8`;
+  `M2` `.8.2`.
+- **Next action:** **`PROGRAM.13`**. ⏳ **`M1.29.4` waits on the director** — §7 of `decision_findings-for-director-review.md`.
+  A moved verdict needs `ARCHOGEN_BLESS_VERDICTS=1`; a format change needs a new identifier (goldens are never
+  rewritten); a new version constant needs a `versions.md` entry.
+- ⭐ **Closed today:** `M1.29.1`–`.3`, `M1.31`, `M1.33`, `PROGRAM.27`, `PROGRAM.11`, `PROGRAM.18`, `PROGRAM.24`, `PROGRAM.28` (gate arms run in a tier), `PROGRAM.29` (scratch on this volume, gated), `PROGRAM.5` (§15 source ledger), `PROGRAM.9.1` (Miri step armed), `PROGRAM.9.2` (fuzz step: found 3 defects), `PROGRAM.9.3` (mutation catalog; `extended` passes), `PROGRAM.6.1` (version register), `PROGRAM.6.2` (frozen verdicts), `PROGRAM.6.3` (format goldens; `PROGRAM.6` closed), `M1.34` (`Rational` ordering exact), `M1.35` (reader escape panic), `M1.36` (exact printing never overflows) — `archogen check` elaborates **and
   type-checks** a module tree (§6 rules 7–10); a name is declared once (§7 rule 6), for a file and a tree.
   30 cases in `docs/semantics/modules/`. A migration is **two commits** (`pending`, then `applied` — enforced).
 - ⭐ **`eadl/1` is frozen and gated** (`M1.13`, `PROGRAM.27`): `BASELINE.txt` (**114** digests) +

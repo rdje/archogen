@@ -1,0 +1,21 @@
+archogen-provenance/1
+description: string
+experimental: bool
+format: string
+hyperperiod_ms: number
+note: string
+realization.catalog_fields_missing: string
+realization.id: string
+realization.retired_by: string
+realization.summary: string
+realization.version: string
+records[].declaration: string
+records[].generated.file: string
+records[].generated.line: number
+records[].name: string
+records[].source.column: number
+records[].source.end: number
+records[].source.line: number
+records[].source.start: number
+records[].via: string
+system: string
