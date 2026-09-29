@@ -167,11 +167,14 @@ fn the_population_is_the_size_the_census_pins() {
     //
     // 100 → 105 at leaf `M1.29.3`: two library modules and three cases for §6 rules 9 and 10 — a module naming
     // its own siblings in `uses`, `needs` and `refines`, and `module-not-exported` directly and transitively.
+    //
+    // 105 → 107 at leaf `M1.33`: §7 rule 6, a name is declared once — one semantic case for a single file and
+    // one module case for §6 rule 9's collision.
     let suite = suite();
     assert_eq!(
         suite.len(),
-        105,
-        "the conformance suite holds {} descriptions and this census pins 105 — if a case was added or \
+        107,
+        "the conformance suite holds {} descriptions and this census pins 107 — if a case was added or \
          removed deliberately, update the census in the same commit and say why in the leaf; if not, a \
          root stopped being walked",
         suite.len()

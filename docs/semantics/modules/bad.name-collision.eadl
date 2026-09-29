@@ -1,0 +1,12 @@
+; case: bad.name-collision
+; expect: invalid-description
+; code: schema-duplicate-name
+; why: §7 rule 6 over a module tree — a local name that begins with an alias is the same name as the import's declaration
+;
+(eadl-version eadl/1)
+
+(defmodule bad.name-collision
+  (version 1 0)
+  (import hw.private (as parts))
+  (defblock parts.public.part
+    (offers (p 1 bit))))

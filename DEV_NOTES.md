@@ -1,5 +1,23 @@
 # DEV_NOTES.md
 
+## _(2026-09-29)_ — an `or_insert` over a fact map is the code shape of "choosing one"
+
+- `M1.33`. A single description declaring `timer.counter` twice, offering 32 and 16 bits, was accepted. Two
+  reasons, and they are the same reason: every schema check took **one** declaration (`kind::validate`), so
+  nothing in the schema could see a second one; and the one pass that spans declarations,
+  `presence.rs`'s `record`, stored an offer with `entry(name).or_insert(…)` — keeping the first and dropping
+  the second without a word. §5.3 of `ROADMAP.md` says "reject contradictory declarations rather than choosing
+  one", and `or_insert` *is* choosing one, spelled as a map operation.
+- The rule went into §7 as rule 6 (the declaration frame, one level across declarations) with the code
+  `schema-duplicate-name`, and runs once, inside the shared `passes` — so the single-file defect and §6 rule
+  9's collision in a module tree are one check with one message, and the message explains rule 9 only when the
+  two sites are in different files.
+- Measured, not assumed: every tracked description through `archogen check` before (from a stash) and after —
+  118, 0 changed. The book's two corpus figures moved and their gates refused the old ones until they were
+  re-derived from the walk.
+- Promotion declined on the leaf, with the reason: the lesson is the rule, and the rule is now written where a
+  reader looks for it.
+
 ## _(2026-09-29)_ — the fixture that passes with and without a rule is not a fixture for the rule
 
 - `M1.29.3`, giving an elaborated module tree a name rule (§6 rules 9–10) so the model passes can read it.

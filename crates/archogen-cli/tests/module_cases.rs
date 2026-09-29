@@ -205,11 +205,19 @@ fn every_module_code_the_reference_states_is_reached_by_a_case_or_stated_unreach
     // seen enforcing, and a case whose code §4 does not state is a rule nobody wrote down.
     let reference = std::fs::read_to_string(repo_root().join("docs/semantics/reference.md"))
         .expect("the reference is readable");
-    let stated: BTreeSet<String> = reference
+    // Every code §4 states, and the `module-` ones among them. A case may reach a code of another family —
+    // `bad.name-collision` reaches `schema-duplicate-name` (§7 rule 6) — which must still be a row of §4.
+    let every: BTreeSet<String> = reference
         .lines()
-        .filter_map(|line| line.strip_prefix("| `module-"))
+        .filter_map(|line| line.strip_prefix("| `"))
         .filter_map(|rest| rest.split('`').next())
-        .map(|code| format!("module-{code}"))
+        .filter(|code| code.contains('-') && !code.contains(' '))
+        .map(str::to_string)
+        .collect();
+    let stated: BTreeSet<String> = every
+        .iter()
+        .filter(|code| code.starts_with("module-"))
+        .cloned()
         .collect();
     let reached: BTreeSet<String> = cases().into_iter().filter_map(|case| case.code).collect();
     let unreached: BTreeSet<String> = UNREACHED
@@ -230,7 +238,7 @@ fn every_module_code_the_reference_states_is_reached_by_a_case_or_stated_unreach
         missing.is_empty(),
         "§4 states {missing:?} and no case in docs/semantics/modules reaches it"
     );
-    let unstated: Vec<&String> = reached.difference(&stated).collect();
+    let unstated: Vec<&String> = reached.difference(&every).collect();
     assert!(
         unstated.is_empty(),
         "cases produce {unstated:?}, which §4 does not state"

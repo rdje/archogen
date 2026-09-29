@@ -14,7 +14,7 @@
 #             This script writes the baseline; that check enforces it.
 729a9724bc1673d7463e6e2455ea2e71a8b09736edbe1a64ba4a3447ff638caf  docs/semantics/grammar.md#ebnf
 f43870b2252ba2f76072adefc99b328e35b32aec8c62b6a1f4c4553d33280736  docs/semantics/reference.md#comment-headers
-0fa17453515f0cafa86af325e95df15eaa67c777df2adbd3b9e9113e72e5ba57  docs/semantics/reference.md#diagnostics
+996d53ebbc1993eb8cdfd282342f7ea7d5abc508e321c7adbe6fe362d8b04e39  docs/semantics/reference.md#diagnostics
 24da41fe2d7949db327454ff0ee13c980263da15995636a0d20e211cccf3ec14  docs/semantics/reference.md#language-version
 95435b3138c055f0cec5127269174f50c86d0311f1f6b37e00113707ad924b7f  docs/semantics/reference.md#normative-sources
 491364023b22e9b111db659262d32c3e3a480606c7fd9df75e82daa164daf2cb  docs/semantics/reference.md#number-values
@@ -47,6 +47,7 @@ bb05f1cfb05a54b5a05c962518cc9ebd5ab71adc369a53a972e7210760e41a95  suite/docs/sem
 ab5e0720a0e54426d1888d0e9d15a1e2741558a974e03bde0723f880a944989e  suite/docs/semantics/cases/infeasible-refinement-target-missing.eadl
 03e566061534637a9ff53f5e43cfa26df51186ed88fa228d4b7cba4f04699f38  suite/docs/semantics/cases/infeasible-required-absence.eadl
 88602791e2b104916411b19d310f7e7cc25eb39d6c92f723a350b9a3d1ae3e94  suite/docs/semantics/cases/invalid-contradictory-presence.eadl
+a9d63886810d97bbaf97e0f14aa828819d7e1a19af9011fd524a745bf9931a10  suite/docs/semantics/cases/invalid-duplicate-name.eadl
 f1a98ae67be88ebdc2b58bfc47100213a6a8f54264cbd09392a0ce6a5c61db3a  suite/docs/semantics/cases/invalid-execution-bound-in-task.eadl
 f19cf9a62e4fa88b9a5eae2446da3f8656db6fb253ef364c0cb714b08564e3f1  suite/docs/semantics/cases/invalid-implementation-in-description.eadl
 c466466d0df1fec55dcedb7ab3f7d68939ac7dac406c21b957ce658af4cd62fc  suite/docs/semantics/cases/invalid-missing-name.eadl
@@ -98,6 +99,7 @@ f8746b8c43a011cd94dc45126631bc6d4b6e320c47314129570dff172616cc3b  suite/docs/sem
 aadef44b65d1e5242e3e00fd24be3394d0d38ba2813f9ba9e1cf4293bbe5ee55  suite/docs/semantics/modules/bad.missing-name.eadl
 b5de0a0951862b226fe58dd71bf765da1fda44cf4d0bed9282d9856da8726436  suite/docs/semantics/modules/bad.missing-version.eadl
 99e34b618acc4cf42e9b9c6c826fbb55dd6346091c5a9bb60c9261ed68e5f607  suite/docs/semantics/modules/bad.multiple-forms.eadl
+6081b8ab5da9de7ab6ca4d94c45713a32481929bf49292d01d8205020adb9cb3  suite/docs/semantics/modules/bad.name-collision.eadl
 dfeb80c5e6af8c46573f69e2484730c3ee0abfebb756decb4b3c931b715790c2  suite/docs/semantics/modules/bad.name-mismatch.eadl
 47a57e020f8dfad3ef13b4588dfe645f1d053f2fa02dd76cd9597cb6cfaf3999  suite/docs/semantics/modules/bad.not-a-module.eadl
 0e614f5653f39b282165026e08eb483e94fbe46e26a785e030830aba0ba28185  suite/docs/semantics/modules/bad.not-exported-transitive.eadl

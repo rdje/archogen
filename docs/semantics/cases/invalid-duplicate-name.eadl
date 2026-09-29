@@ -1,0 +1,11 @@
+; case: invalid-duplicate-name
+; expect: invalid-description
+; why: One name declared twice, offering contradictory facts. Neither is chosen: the description is refused with both sites named.
+;
+(eadl-version eadl/1)
+
+(defblock timer.counter
+  (offers (counter-width 32 bit)))
+
+(defblock timer.counter
+  (offers (counter-width 16 bit)))

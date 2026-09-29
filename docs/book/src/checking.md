@@ -17,7 +17,7 @@ built from it will behave — the evidence categories start after this point.
 | read | syntax and spans | `invalid-description` |
 | resolve | a module tree only: its names, by §6 rules 9 and 10 of `docs/semantics/reference.md` | `invalid-description` (`module-not-exported`) |
 | boundary | implementation content (F27) | `invalid-description` |
-| schema | the declaration frame, and every quantity a clause declares | `invalid-description` |
+| schema | the declaration frame — including that each name is declared once — and every quantity a clause declares | `invalid-description` |
 | profile | the capabilities the profile refuses | `unsupported-profile` |
 | workload | the task model the profile admits | `unsupported-profile`, `missing-fact`, `invalid-description` |
 | presence | offered / absent / undescribed | `missing-fact`, `infeasible-configuration`, `invalid-description` |
@@ -35,6 +35,22 @@ same passes, in the same code (`crates/eadl-model/src/check.rs`'s `check` and `c
 sequence), so a module tree cannot be judged by rules a single description escapes, or the other way
 round. A module file that does not *read* is still the read pass's to report: a syntax error is a verdict
 about the bytes, whatever they were meant to be. See [Modules and composition](modules.md).
+
+⛔ **A name is declared once** (`docs/semantics/reference.md` §7 rule 6). Until leaf `M1.33` a description
+could declare `timer.counter` twice, offering 32 and 16 bits, and be **accepted** — the presence pass kept
+the first offer, which is choosing one half of a contradiction on the author's behalf. It is refused now,
+at the repeat, with the first declaration named:
+
+```console
+$ archogen check docs/semantics/cases/invalid-duplicate-name.eadl
+error[schema-duplicate-name]: `timer.counter` is declared twice
+  --> docs/semantics/cases/invalid-duplicate-name.eadl:10:11
+   |
+10 | (defblock timer.counter
+   |           ^^^^^^^^^^^^^ declared again here
+  = hint: rename one — a name means one declaration (§7 rule 6); with two, every reference to it has two answers and every fact it offers two values
+archogen: invalid-description: 1 diagnostic(s) in docs/semantics/cases/invalid-duplicate-name.eadl
+```
 
 The `profile` and `workload` passes are two halves of one contract and it is worth keeping them
 apart. `profile` consults the capabilities `rt-static-up-v1` **refuses** — `general-ipc`,
@@ -135,13 +151,13 @@ verdict about the user's description. §5.5: a tool failure is never reported as
 
 ## The semantic corpus
 
-`docs/semantics/cases/` holds 32 worked cases — §12 M1 asks for twenty — each declaring the
+`docs/semantics/cases/` holds 33 worked cases — §12 M1 asks for twenty — each declaring the
 verdict it expects in its own header, and each run through this pipeline:
 
 | Expected | Cases |
 | --- | --- |
 | `ok` | 6 |
-| `invalid-description` | 13 |
+| `invalid-description` | 14 |
 | `unsupported-profile` | 7 |
 | `infeasible-configuration` | 4 |
 | `missing-fact` | 2 |

@@ -4,6 +4,22 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — a name is declared once
+
+`ARCHOGEN-M1-0116` (leaf `M1.33`). **602 passed / 0 failed** over 42 suites (baseline 596, delta = 6 new
+legs). Four mutations seen firing. 118 tracked descriptions censused before and after: **0** changed.
+
+- **The defect.** A description declaring `timer.counter` twice, offering 32 and 16 bits, was **accepted**:
+  every schema check looked at one declaration, and the presence pass kept the first offer with an
+  `or_insert` — choosing one half of a contradiction, which §5.3 forbids. §6 rule 9 had added a second way in:
+  a module declaring a local `parts.public.part` beside an import aliased `parts` that declares `public.part`.
+- **The rule.** `docs/semantics/reference.md` §7 rule 6 and the §4 row `schema-duplicate-name`, enforced by
+  `kind::duplicate_names` inside the pass sequence a file and a module tree share, so both are refused alike,
+  at the repeat, with the first declaration named — in two files when the collision is a module tree's.
+- Cases `docs/semantics/cases/invalid-duplicate-name.eadl` and `docs/semantics/modules/bad.name-collision.eadl`;
+  the book's corpus figures (33 cases, 14 `invalid-description`) re-derived; `checking.md`, `kinds.md` and
+  `modules.md` show the refusals as the command renders them.
+
 ## archogen — a module tree is type-checked like a description, because a name now means something inside it
 
 `ARCHOGEN-M1-0114` (leaf `M1.29.3`, closing the capability half of `M1.29`). **596 passed / 0 failed** over

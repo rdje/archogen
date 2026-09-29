@@ -61,8 +61,8 @@ A kind must also carry a `doc`. A kind nobody can explain is a kind nobody shoul
 
 ## What the schema checks
 
-The **declaration frame**: known kind, name present when required, known clauses, right number
-of them, right value shapes. A clause declares those shapes with `(holds values …)`, and one of
+The **declaration frame**: known kind, name present when required, **each name declared once**, known
+clauses, right number of them, right value shapes. A clause declares those shapes with `(holds values …)`, and one of
 the types is `quantity` — a number **and** its unit, checked by the module that owns quantities
 rather than by a second idea of what one is:
 

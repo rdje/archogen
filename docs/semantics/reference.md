@@ -406,6 +406,7 @@ cheapest diagnostic to write is the most expensive to receive.
 | `schema-bad-name-rule` | `name` is neither `required` nor `forbidden` | write `(name required)` when the declaration is written `(<head> <name> …)` |
 | `schema-missing-clause-head` | a `clause` does not name the clause it declares | write `(clause <name> (cardinality …) (holds …))` |
 | `schema-duplicate-clause` | one clause is declared twice in a kind | declare each once, and use `(cardinality any)` to allow repetition in a description |
+| `schema-duplicate-name` | two declarations carry one name — in a module tree, after §6 rule 9 has named them (§7 rule 6) | rename one: a name means one declaration, and the diagnostic names both sites |
 | `schema-unknown-clause-field` | a clause declaration holds a field that is not `cardinality` or `holds` | a clause declaration holds those two |
 | `schema-bad-cardinality` | `cardinality` is not one of `one`, `at-most-one`, `one-or-more`, `any` | use one of those spellings; the diagnostic lists them |
 | `schema-bad-holds` | `holds` is not `forms`, `values <type>…` or `kind <name>` | write `(holds kind task)` to have each occurrence validated as a declaration of that kind |
@@ -558,12 +559,9 @@ A module is a file holding exactly one `(defmodule …)` form. Its clauses are `
     `crates/eadl-model/src/check.rs`'s `check_program` applies this rule and then runs every pass a single
     description gets, so a module tree is judged by exactly the same rules.
 
-⚠️ **Rule 9 does not by itself make a name mean one declaration, and nothing enforces that yet.** A module
-that declares `inner.x` and also imports a module as `inner` that declares `x` gives both declarations the
-name `p.inner.x`; and a single description can already declare one name twice — measured, two
-`(defblock timer.counter …)` offering 32 and 16 bits are accepted, and the presence pass keeps the first.
-Both are one missing rule, that a name is declared once, and it is owned by leaf `M1.33` in
-`docs/tasks/M1.md`, not by this section's rules.
+⚠️ **Rule 9 does not by itself make a name mean one declaration**: a module that declares `inner.x` and
+also imports a module as `inner` that declares `x` gives both the name `p.inner.x`. That is refused by §7
+rule 6 — a name is declared once — which covers a single description and a module tree alike.
 
 ⚠️ **One code has no fixture, and the reason is stated rather than hidden.** `module-too-large` fires when
 a module's source cannot be given an address — at 2^32 bytes — and no tracked fixture carries a
@@ -606,6 +604,12 @@ and registered; `docs/semantics/kinds/core.eadl` declares the surface kinds and
    of times, are their values the declared shape. It does **not** interpret the constraint vocabulary
    inside a clause — `(at-least 60 s)` is nested forms at this stage and becomes a checked quantity
    later. Claiming otherwise would be the more dangerous kind of green.
+6. **A name is declared once.** Two declarations carrying one name are refused with both sites named,
+   never merged and never resolved by order: choosing one would silently decide which half of the
+   description the author meant, which is what §5.3 of `ROADMAP.md` forbids for facts. The rule is over
+   the declarations the pipeline checks, so it covers a module tree after §6 rule 9 has named them — where
+   a module that declares `inner.x` and imports a module as `inner` that declares `x` has made one name of
+   two. `crates/eadl-model/src/kind.rs`'s `duplicate_names` enforces it.
 
 ## 8. The language version a description states
 

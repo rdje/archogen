@@ -13,7 +13,7 @@ use std::path::{Path, PathBuf};
 
 use eadl_front::{read, Form, SourceMap};
 use eadl_model::check::shipped_registry;
-use eadl_model::kind::{read_kind, validate, Cardinality, NameRule, Registry};
+use eadl_model::kind::{duplicate_names, read_kind, validate, Cardinality, NameRule, Registry};
 
 /// The two kind modules the toolchain ships.
 const KIND_MODULES: &[&str] = &[
@@ -1120,4 +1120,118 @@ fn a_value_type_a_kind_definition_does_not_know_lists_every_one_that_exists() {
         rendered.contains("quantity"),
         "the type leaf `M1.28` added must be one an author is told about: {rendered}"
     );
+}
+
+// ── Leaf `M1.33`: docs/semantics/reference.md §7 rule 6 — a name is declared once ──
+
+/// Read `text` as one description and return its forms with the map that resolves their spans.
+fn description(text: &str) -> (Vec<Form>, SourceMap) {
+    let mut sources = SourceMap::new();
+    let id = sources.add("t.eadl", text.to_string()).expect("small");
+    let (document, diagnostics) = read(&sources, id);
+    assert!(
+        !diagnostics.has_errors(),
+        "{}",
+        diagnostics.render(&sources)
+    );
+    (document.forms, sources)
+}
+
+#[test]
+fn rule_6_a_name_declared_twice_is_refused_against_its_first_declaration() {
+    let (forms, sources) =
+        description("(defblock a (offers (p 1 bit)))\n(defblock a (offers (p 2 bit)))\n");
+    let errors = duplicate_names(&core_registry(), &declarations(&forms));
+    assert_eq!(errors.len(), 1, "one repeat, one refusal");
+    assert_eq!(errors[0].code, "schema-duplicate-name");
+    let rendered = errors[0].render(&sources);
+    assert!(
+        rendered.contains("--> t.eadl:2:11"),
+        "the repeat is the primary site:\n{rendered}"
+    );
+    assert!(
+        rendered.contains("--> t.eadl:1:11"),
+        "the first site is named too:\n{rendered}"
+    );
+    assert!(rendered.contains("first declared here"), "{rendered}");
+}
+
+#[test]
+fn rule_6_every_repeat_is_refused_against_the_first() {
+    let (forms, sources) = description(
+        "(defblock a (offers (p 1 bit)))\n(defblock a (offers (p 1 bit)))\n(defblock a (offers (p 1 bit)))\n",
+    );
+    let errors = duplicate_names(&core_registry(), &declarations(&forms));
+    assert_eq!(errors.len(), 2, "two repeats");
+    for error in &errors {
+        assert!(
+            error.render(&sources).contains("--> t.eadl:1:11"),
+            "each names the first"
+        );
+    }
+}
+
+#[test]
+fn rule_6_one_name_space_holds_every_kind() {
+    // A block and a service may not share a name: a reference to it would have two answers.
+    let (forms, _) = description(
+        "(defblock a (offers (p 1 bit)))\n(defservice a (requires (unambiguous-horizon (at-least 60 s))))\n",
+    );
+    assert_eq!(
+        duplicate_names(&core_registry(), &declarations(&forms)).len(),
+        1
+    );
+}
+
+#[test]
+fn rule_6_distinct_names_are_not_duplicates() {
+    let (forms, _) =
+        description("(defblock a (offers (p 1 bit)))\n(defblock b (offers (p 1 bit)))\n");
+    assert!(duplicate_names(&core_registry(), &declarations(&forms)).is_empty());
+}
+
+#[test]
+fn rule_6_a_kind_that_forbids_a_name_contributes_none() {
+    // A symbol in the name position of a kind whose rule is `(name forbidden)` is not a name — the schema
+    // refuses it as a clause — so it cannot be a duplicate of anything.
+    let mut sources = SourceMap::new();
+    let mut files = kind_files(KIND_MODULES);
+    files.push((
+        "note.eadl".to_string(),
+        "(defkind defnote (doc \"a note\") (name forbidden) (clause says (cardinality any) (holds forms)))"
+            .to_string(),
+    ));
+    let registry = shipped_registry(&mut sources, &files).expect("the kinds load");
+    let (forms, _) = description("(defnote a (says x))\n(defnote a (says y))\n");
+    assert!(duplicate_names(&registry, &declarations(&forms)).is_empty());
+}
+
+#[test]
+fn rule_6_the_corpus_case_is_refused_by_the_pipeline_with_exactly_that_code() {
+    // Through `check`, so the rule is proven where the pipeline runs it, not only where it is written.
+    let (forms_text, relative) = (
+        std::fs::read_to_string(
+            repo_root().join("docs/semantics/cases/invalid-duplicate-name.eadl"),
+        )
+        .expect("the case is readable"),
+        "docs/semantics/cases/invalid-duplicate-name.eadl",
+    );
+    let mut sources = SourceMap::new();
+    let registry =
+        shipped_registry(&mut sources, &kind_files(KIND_MODULES)).expect("the kinds load");
+    let id = sources.add(relative, forms_text).expect("small");
+    let outcome = eadl_model::check::check(
+        &sources,
+        id,
+        &registry,
+        eadl_model::check::default_profile(),
+    );
+    let codes: Vec<&str> = outcome.diagnostics.iter().map(|d| d.code).collect();
+    assert_eq!(
+        codes,
+        ["schema-duplicate-name"],
+        "{}",
+        outcome.render(&sources)
+    );
+    assert!(!outcome.is_ok());
 }

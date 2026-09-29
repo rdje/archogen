@@ -710,6 +710,54 @@ pub fn validate(registry: &Registry, form: &Form) -> Vec<Diagnostic> {
     errors
 }
 
+/// Refuse a name declared more than once, by `docs/semantics/reference.md` §7 rule 6.
+///
+/// Over the declarations the pipeline checks — for a module tree, after §6 rule 9 has named them — and only
+/// for a kind that carries a name. Each repeat is reported against the first, with both sites labelled:
+/// choosing one would silently decide which half of the description the author meant.
+#[must_use]
+pub fn duplicate_names(registry: &Registry, forms: &[&Form]) -> Vec<Diagnostic> {
+    let mut first: BTreeMap<&str, &Form> = BTreeMap::new();
+    let mut errors = Vec::new();
+    for form in forms {
+        let named = form
+            .head()
+            .and_then(|head| registry.kind(head))
+            .is_some_and(|kind| matches!(kind.name, NameRule::Required));
+        let Some(name_form) = form.items().get(1).filter(|_| named) else {
+            continue;
+        };
+        let Some(name) = name_form.as_symbol() else {
+            continue;
+        };
+        let Some(earlier) = first.get(name) else {
+            first.insert(name, name_form);
+            continue;
+        };
+        let across_files = earlier.span().source != name_form.span().source;
+        errors.push(
+            Diagnostic::error(
+                "schema-duplicate-name",
+                format!("`{name}` is declared twice"),
+                Label::new(name_form.span(), "declared again here"),
+                if across_files {
+                    format!(
+                        "rename one — a name means one declaration (§7 rule 6). In a module tree a \
+                         declaration is named by its instance path and its local name (§6 rule 9), so a \
+                         local `a.x` beside an import aliased `a` that declares `x` is one name: `{name}`"
+                    )
+                } else {
+                    "rename one — a name means one declaration (§7 rule 6); with two, every reference to \
+                     it has two answers and every fact it offers two values"
+                        .to_string()
+                },
+            )
+            .with_secondary(Label::new(earlier.span(), "first declared here")),
+        );
+    }
+    errors
+}
+
 fn check_values(clause: &Form, types: &[ValueType], errors: &mut Vec<Diagnostic>) {
     let values: Vec<&Form> = clause.items().iter().skip(1).collect();
     // ⭐ The width, not the length: [`ValueType::Quantity`] consumes a number *and* a unit, so a clause

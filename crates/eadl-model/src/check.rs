@@ -39,7 +39,7 @@ use eadl_front::{
 };
 
 use crate::boundary;
-use crate::kind::{read_kind, validate, Registry};
+use crate::kind::{duplicate_names, read_kind, validate, Registry};
 use crate::presence::{FactMap, NAME_CLAUSES};
 use crate::profile::{self, Profile};
 use crate::refinement::{self, Facets};
@@ -321,12 +321,16 @@ fn passes(
     // ⛔ The language-version identifier is not skipped here any more; it was filtered once above,
     // which is the same rule in one place instead of two. Without it the form was refused as
     // `schema-unknown-kind` — which it is, and correctly: it is not a kind.
+    let declared: Vec<&Form> = forms
+        .iter()
+        .filter(|form| boundary::classify(form).is_accepted())
+        .collect();
     let mut schema_errors = Vec::new();
-    for form in &forms {
-        if boundary::classify(form).is_accepted() {
-            schema_errors.extend(validate(registry, form));
-        }
+    for form in &declared {
+        schema_errors.extend(validate(registry, form));
     }
+    // §7 rule 6: a name is declared once — across declarations, so after the per-declaration frame.
+    schema_errors.extend(duplicate_names(registry, &declared));
     push(&mut findings, Verdict::InvalidDescription, schema_errors);
 
     // ── profile admission ────────────────────────────────────────────────────────────────────

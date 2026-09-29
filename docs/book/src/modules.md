@@ -53,10 +53,8 @@ code, in the same order ([Checking a description](checking.md)) — once two mor
 names mean. They are the subject of [Names carry their whole path](#names-carry-their-whole-path) below.
 `archogen build` answers a module file exactly as `check` does, and then meets the S0 path's own limits.
 
-Still open, each owned by a leaf: module **parameters** reach no declaration yet — a `(with …)` binding is
-recorded and used by nothing (`M1.29.4`); and nothing yet makes a **name mean one declaration** — a
-single description can declare one name twice, and a module can collide with an import's names
-(`M1.33`, filed while writing the rules below).
+Still open, owned by leaf `M1.29.4`: module **parameters** reach no declaration yet — a `(with …)`
+binding is recorded and used by nothing.
 
 Every refusal this chapter shows is rendered by the command from a file in `docs/semantics/modules/`,
 which holds one case for every `module-` code a command can reach; the one code without a case,
@@ -144,6 +142,22 @@ error[module-not-exported]: module `hw.soc`, imported as `platform`, exports no 
    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not exported by that import
   = hint: module `hw.soc` exports `soc.bus`, and declares no `timer.timer.counter` — a module's own imports are not visible to its importer, because §6 has no re-export (rule 10); import the module that declares it, or name one of those
 archogen: invalid-description: 1 diagnostic(s) in docs/semantics/modules/bad.not-exported-transitive.eadl
+```
+
+**A name means one declaration** (`docs/semantics/reference.md` §7 rule 6), and rule 9 is where a module
+tree can break that: a module that declares a local `parts.public.part` while importing `hw.private` as
+`parts` — which declares `public.part` — has given two declarations one name. It is refused, with both
+sites named, in the two files they are in:
+
+```console
+$ archogen check docs/semantics/modules/bad.name-collision.eadl
+error[schema-duplicate-name]: `parts.public.part` is declared twice
+  --> docs/semantics/modules/bad.name-collision.eadl:11:13
+   |
+11 |   (defblock parts.public.part
+   |             ^^^^^^^^^^^^^^^^^ declared again here
+  = hint: rename one — a name means one declaration (§7 rule 6). In a module tree a declaration is named by its instance path and its local name (§6 rule 9), so a local `a.x` beside an import aliased `a` that declares `x` is one name: `parts.public.part`
+archogen: invalid-description: 1 diagnostic(s) in docs/semantics/modules/bad.name-collision.eadl
 ```
 
 ## Precise composition errors
