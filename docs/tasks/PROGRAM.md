@@ -765,9 +765,37 @@ mdBook that is the director's window into the project.
   productions above imply"** above *four* numbered items — a **normative document**, and not one of
   the surfaces this leaf's acceptance enumerates (book chapters, corpus indexes, crate module headers),
   so no existing gate would have caught it and no sweep pattern aimed at it. Fixed by deleting the
-  count rather than retyping it, which is the register's own prescription. Each
-  sweep is a population bounded by its pattern, so "nothing else found" has never been a result this
-  repository could rely on — and a third sweep, adding `leaves|arms|checks|doctrines|productions|rows`,
+  count rather than retyping it, which is the register's own prescription.
+  A sixth shape, `2026-09-29` — found while recovering a force-quit session, and ⛔ **it is not a
+  figure at all**, so a register scoped to figure-shaped text would not see it. Three stale copies of
+  an *ordered sequence* and of a *list head*, left by the two commits that closed `PROGRAM.21` and
+  `M1.13.3`: `docs/TASK_TREE.md`'s `PROGRAM` row still named `PROGRAM.21` as the frontier one commit
+  after that leaf's own status became `done`, and both that row and `LIVE_STATUS.md`'s `M1` row named
+  the frontier as its own successor ("Then `.13.4` … `.13.5`"), because a closure rewrote the frontier
+  sentence and left the old successor clause behind. Census, re-runnable both ways:
+
+  ```text
+  census:   awk -F'|' '/^\| \[`/{print $2, substr($4,1,14)}' docs/TASK_TREE.md, against each
+            docs/tasks/<TREE>.md "## Current Frontier" order-1 row
+            -> 10 of 12 rows AGREE, pre-correction; PROGRAM DISAGREE (index `PROGRAM.21`,
+               tree `PROGRAM.11`). After this commit's correction: 11 of 12, and the only
+               DISAGREE left is the artifact below.
+               M5's cell carries no head at all, so its DISAGREE is the pattern reading the
+               blocker the cell names (`M0.5`) — recorded, not quietly dropped
+  census:   git ls-files '*.md' | xargs grep -n -o "[Tt]hen `\.13\.4\`"
+            -> LIVE_STATUS.md:15 and docs/TASK_TREE.md:57 only; no other tree's row repeats
+               its own head, and MEMORY.md / docs/tasks/M1.md already read `.13.4` then `.13.5`
+  evidence: git show --stat 7c59b0b -- docs/TASK_TREE.md | wc -l  -> 0
+            the commit that closed PROGRAM.21 staged no line of the index that restates its
+            frontier — the same evidence shape as the S0 row above
+            (git show --stat 91f329d -- docs/TASK_TREE.md -> 1 insertion, the M1 row it rewrote)
+  ```
+
+  Corrected in `ARCHOGEN-PROGRAM-0088`, docs only, no code staged. ⚠️ The paragraph above ends
+  "classifying **five** shapes by hand": with this one it is six, so the register's own description
+  carries a figure — the class, restated inside the leaf that exists to end it.
+  Each sweep is a population bounded by its pattern, so "nothing else found" has never been a result
+  this repository could rely on — and a third sweep, adding `leaves|arms|checks|doctrines|productions|rows`,
   returned a further backlog of structure counts this leaf deliberately does **not** classify, because
   classifying five shapes by hand is the work the register exists to end.
   Acceptance: a registered check enumerates figure-shaped text in the **live** surfaces (book
@@ -780,6 +808,13 @@ mdBook that is the director's window into the project.
   are registered as consumers so they do not trip it; and the honest limit is stated in the check's own
   header — it proves a figure is *watched or listed*, never that a listed one is correct, which is
   `BOOK-ANCHORS`' limit one level down.
+  ⚠️ **Widened `2026-09-29` on the sixth shape.** Everything above enumerates *figure-shaped text*, and
+  the shape that just fired is an ordered **sequence**: an index row naming a leaf whose own status is
+  `done`, and a successor clause naming the frontier as its own successor. Neither contains a number
+  that moved, so a digits-or-spelled-out census passes the commit that produces them. The registered
+  check must therefore also compare a restated list head against the tree file it indexes (and a
+  successor clause against the head it follows), and `--self-test` must carry an arm whose subject is a
+  sequence rather than a count — priced here rather than discovered by the seventh shape.
   Priority: **medium** — it is the structural fix for the most frequently recurring defect class in
   this repository, and it is what stops `M1.23`/`M1.24`/`S0.8` from being followed by an `M2.x`. It
   gates no milestone and blocks nothing, which is why it is scheduled behind `PROGRAM.11` and
@@ -1569,6 +1604,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-28` | `PROGRAM.21` | **no code changed — this is the finding's severity re-measured, not its fix.** Three instruments over the commit that had just landed: a `grep -c` census of ticked ROOT CAUSE boxes in `docs/tasks/M1.md`; the check's **own awk**, extracted from `scripts/check_task_acceptance.sh` and run over the file with `kw="root.?cause"`, printing the line it captures and whether that box is ticked; and a **mutation** — `M1.13.1`'s ROOT CAUSE box unticked in a scratch copy under `target/tmp/m113/`, with the same awk re-run over both files and the captures compared | the census returns **31** ticked boxes where this leaf recorded 24; the awk captures **line 53, ticked=1**, which is leaf `M1.1`'s box from `2026-09-13`, while `M1.13.1`'s sits near line 1470; and the mutation gives an **identical capture for both files**, so `M1.13.1`'s boxes provably cannot affect the verdict for commit `cd355ef` — five Rust files staged, `task-acceptance: OK`, `exit=0`. ⛔ The severity claim on this leaf is therefore superseded from *latent* to **active**: the gate read a thirteen-day-old checklist belonging to a different leaf and reported that it had checked the staged change |
 | `2026-09-29` | `PROGRAM.25` | **docs-only, and the point of the run was to falsify the finding before filing it.** `command -v pdftotext pdftk mutool qpdf gs`; `pdftotext -v`; `pdftotext -f 1 -l 6` on the FE310-G002 datasheet to stdout; both semulith censuses (`git grep` excluding `vendor/`, and a filesystem walk of `vendor/`); `.gitmodules`; and a resolution check on every citation the new record makes | ⛔ **The finding as raised was false and the measurement is what caught it**: `pdftotext` resolves to `/opt/homebrew/bin/pdftotext` (Xpdf **4.06**), and the datasheet's first page extracts, so chipdoc's board PDFs are readable here and §3.2's `board-first` rows are **not** blocked on tooling — `read_file`'s bridge cannot see the host `PATH`, and its "not installed" message describes the bridge. A blocker on tree `M5` was drafted on that false premise and is **not** filed; what is filed is the route, in `TOOLBOX.md` and beside the chipdoc record's inventory. Semulith census: **0** archogen tracked files name it, **40** files inside the vendored submodule do, and `.gitmodules` confirms `vendor/linkedspec` is a submodule — so `git grep` alone returns a false negative and the census needs both halves. All four citations resolve; `make gate` → `13/13 green` |
 | `2026-09-29` | `PROGRAM.21` | the check rewritten leaf-scoped, then **its own RED arms run before anything was claimed** — and the arms' first oracle found unsound, so three mutations were run over the finished script (`bash -n` first, then `--self-test`); both historical commits **replayed as fixtures** built from `git show <commit>:<path>` in throwaway repos, each run pristine and then with the committing leaf's ROOT CAUSE box unticked, against `HEAD`'s check and the new one side by side; `make focused`; `make gate`; the knowledge map regenerated | ⛔ **The arms' first run scored `4 pass / 5 fail` and the four passes were on `exit 127`** — the check was never found, because `$0` was relative and every arm `cd`s into a throwaway repo, and the oracle was `rc -ne 0`. Mutation B2 reproduces that false green deliberately (`4 pass / 5 fail`, arms 1/3/4/5 ✅ on 127) while mutation B, with the exact oracle, gives `0 pass / 9 fail`. Restored: `diff -q` silent, `9 pass / 0 fail`, `exit=0`. Mutation A (restore the first-leaf fallback) → `8 pass / 1 fail`, arm 4 only, so the refusal is load-bearing. **Replay, the finding:** `cd355ef` and `3a6bbb9` both give OLD `exit=0 OK` **pristine and mutated** — byte-identical, so neither commit's own boxes could affect the verdict — while NEW gives `exit=0` pristine naming `M1.13.1`/`M1.13.2` and `exit=1` mutated naming the same leaf. Root cause confirmed at `HEAD`: `if (inbox) exit` at line 111, **32** ticked ROOT CAUSE boxes in `docs/tasks/M1.md`, and that awk captures **line 53** — leaf `M1.1`, `2026-09-13`. `make focused` → `passed — 3 / 0 / 0`; `make gate` → `13 doctrines green`; ⚠️ the draft had also silently **widened `DEFAULT_SIG`** with a token that does not exist (`\bspindb\b`) and mis-dated a historical comment — both caught by diffing the preserved blocks against `HEAD` and restored byte-identical |
+| `2026-09-29` | `PROGRAM.20` | **docs only, no code staged — a sixth shape of the class recorded, and its three copies corrected.** A census over the frontier surfaces rather than the two lines spotted by reading: an `awk` over `docs/TASK_TREE.md`'s row heads against each `docs/tasks/<TREE>.md` `## Current Frontier` order-1 row; `git ls-files '*.md'` piped to `grep -n -o` for successor clauses; `git show --stat 7c59b0b -- docs/TASK_TREE.md` for the copy the closing commit never touched. Recovery post-conditions after the force-quit measured rather than assumed: `git status --short` empty, `git rev-parse HEAD` = `91f329d`, `wc -c git_message_brief.txt` = `0` and untracked, `git config core.hooksPath` = `.githooks`. Then the baseline re-derived rather than carried: `cargo test --all` → **492 passed, 0 failed, 37 suites**; `make focused` → `passed — 3 / 0 / 0`; `scripts/check_doctrines.sh` → `13/13 green`; `scripts/check_no_background_jobs.sh` → `handoff: OK` | ⛔ The class fired a **sixth** time and the shape is new: not a figure but an ordered **sequence**. `docs/TASK_TREE.md`'s `PROGRAM` row named `PROGRAM.21` as the frontier one commit after that leaf's status became `done` — `7c59b0b` staged **0** lines of the index that restates it, the same evidence shape as the `S0` instance above — and both that row and `LIVE_STATUS.md`'s `M1` row named `.13.4` as its own successor, because a closure rewrote the frontier sentence and left the old clause behind. **10 of 12** index rows agreed with their tree file before the correction and **11 of 12** after; `M5`'s `DISAGREE` is the census pattern reading the blocker its cell names, recorded rather than dropped. Nothing in the tree compares an index row against the tree it indexes, and this leaf's acceptance enumerated figure-shaped text only — so it is widened on the leaf rather than left to miss the shape that just fired |
 
 ## Commit Log
 
@@ -1584,6 +1620,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.21` | `ARCHOGEN-PROGRAM-0081 (leaf PROGRAM.21)` | **filed, not fixed** — the severity re-measured from *latent* to **active** on commit `cd355ef`: five Rust files staged, `task-acceptance: OK`, and the box it read was leaf `M1.1`'s from `2026-09-13`. A mutation proves `M1.13.1`'s own boxes could not have changed the verdict. No code in this commit, so the gate stays unsound and the fix is still owed |
 | `PROGRAM.25` | `ARCHOGEN-PROGRAM-0083 (leaf PROGRAM.25)` | two findings raised in conversation and owned by nothing are now tracked — census, both halves, because `git grep` alone is a false negative here: `git grep -il semulith -- ':!vendor' \| wc -l` → **0** archogen tracked files, `grep -ril semulith vendor/ \| wc -l` → **40** files inside the submodule, which `.gitmodules` confirms `git grep` skips. And one of the two findings was **false as raised**: `pdftotext` is on the host (`/opt/homebrew/bin`, Xpdf 4.06) and chipdoc's board datasheets extract fine, so `read_file`'s "not installed" is a bridge limitation and §3.2's `board-first` rows are not tooling-blocked. The route is a `TOOLBOX.md` row and a note beside the chipdoc inventory; an `M5` blocker drafted on the false premise is **not** filed. `docs/decisions/reference_sibling-project-semulith.md` records that `../semulith` exists, is read-only, and names archogen as its consumer — a pointer with no analysis, which is what was declined |
 | `PROGRAM.21` | `ARCHOGEN-PROGRAM-0086 (leaf PROGRAM.21)` | **fixed, not filed**: `TASK-ACCEPTANCE` is leaf-scoped. The owner comes from `TASK_ACCEPTANCE_LEAF` or the `(leaf <ID>)` token in the pending message's subject through the new `.doctrine/commit_message_file` seam, and the check **refuses** when it cannot tell — never falling back to the first checklist, because that fallback *was* the defect. The staged-paths signal was priced first and is dead: **1 of 7** real code commits. Both historical commits replayed as fixtures, pristine and mutated, old check against new: the old verdict is byte-identical either way, the new one moves and names the right leaf. Nine `--self-test` arms; ⛔ their first oracle scored **4 passes on `exit 127`** and the false green is reproduced deliberately as mutation B2, promoted into `verify-the-mutation-applied`. This commit is the new check's first real exercise — it gated itself |
+| `PROGRAM.20` | `ARCHOGEN-PROGRAM-0088 (docs)` | **an instance recorded, not the register built** — three stale frontier copies corrected, in `docs/TASK_TREE.md` (the `PROGRAM` head, which named a `done` leaf, and the `M1` successor clause) and `LIVE_STATUS.md` (the `M1` successor clause), and the sixth shape filed on the leaf with its census and its acceptance widened: an ordered sequence, which a register scoped to figure-shaped text could not have seen |
 
 ## Changelog
 
