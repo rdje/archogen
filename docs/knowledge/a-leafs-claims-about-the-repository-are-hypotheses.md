@@ -24,7 +24,7 @@ that did not take it.
 status as anyone else's: hypotheses until measured. `docs/CLAIM_VERIFICATION.md` leg 1 says it for
 numbers; this is the same rule applied to the sentence a slice is built on.
 
-Four measured instances in this repository, all found by running the census rather than by reading
+Five measured instances in this repository, all found by running the census rather than by reading
 carefully (`docs/tasks/M1.md`):
 
 | Leaf said | Measured | Cost of not checking |
@@ -33,6 +33,7 @@ carefully (`docs/tasks/M1.md`):
 | `M1.13.4`: the exclusion of the frozen evidence can be enforced "so a feedback file cannot become a conformance case by being copied into a walked root" | `shasum -a 256` put the frozen evidence copy and a suite file at the **same digest**, so content identity is false in one direction on the shipped tree | a check that fires RED on a legitimate file, discovered after it was written |
 | `M1.13.4.4`: exclusions "matched by path with a stated, minimal **glob** semantics" | every excluded description sits under one directory, so a path **prefix** is the whole matcher | a glob matcher, its honest-limit prose, and its arms — all unnecessary, and a matcher that quietly understood `*` would have made the manifest's stated rule false |
 | `M1.25`: "all **five** existing arms are re-expressed against the new mechanism" | `grep -c '^fn arm_' crates/eadl-model/tests/kinds.rs` → **0**; the seven arms it was probably thinking of belong to a different gate over different surfaces | the slice was sized as a refactor and was actually a build-from-nothing — and the gate it was about had **never been seen to fire** |
+| `M1.26`: "§4's population is now **55** rows", and `M1.13.1` "pinned two of them" so the unnamed count moved to 27 | the table holds **60** rows — `M1.13.3` added five `language-version-*` rows after `M1.13.1` measured — and `read-control-character` / `read-escape-out-of-range` are *still* named by no test, because what `.1` pinned was their reachability from a §2 **input**, a different property from a test naming the code | a decomposition written against 55 rows would have sized gap (b) wrong, and the note crediting `.1` with two pinned codes reads as coverage that does not exist |
 
 ## Why
 
@@ -42,9 +43,13 @@ carefully (`docs/tasks/M1.md`):
 - **The error is invisible from inside the slice.** Implementing against a false premise produces code
   that works; what it produces beside the code is a normative surface edited for no reason, a mechanism
   built for a case that does not exist, or a gate believed to be armed.
-- **It compounds at a freeze.** Three of the four instances above were in the leaf sequence that ends by
+- **It compounds at a freeze.** Three of the five instances above were in the leaf sequence that ends by
   freezing the language, where an unnecessary edit to a normative document is exactly what the freeze
   exists to make expensive.
+- ⭐ **It compounds at a leaf whose subject *is* stale figures.** `M1.26` exists because a claim was
+  true when written and false after the population moved, and its own recorded census had gone stale the
+  same way — the defect class is not a property of the surfaces a leaf governs but of any figure carried
+  in prose, including the prose that files the work.
 
 ## How to apply
 

@@ -1,5 +1,43 @@
 # DEV_NOTES.md
 
+## _(2026-09-29)_ — an existence census cannot see a rule that is stated falsely
+
+- `M1.26`'s decomposition, measuring the two gaps it inherited before writing either child. The census
+  was run to size the work; it found a defect instead.
+- ⛔ **`docs/semantics/reference.md` §4 states a mechanism that does not exist.** The row reads
+  `module-too-large` | "a module has more addressable parts than an instance identifier can hold" |
+  "split the module". `grep -rn "module-too-large" --include='*.rs' --include='*.md' .` → exactly one
+  call site, `crates/eadl-front/src/module.rs:605`, and it fires when `SourceMap::add` returns `Err`;
+  `crates/eadl-front/src/source.rs:198` shows `add` fails only on `u32::try_from(text.len()).is_err()`,
+  i.e. a source of **2^32 bytes**. `grep -rn "addressable\|instance identifier" crates/eadl-front/src/module.rs`
+  → **no match**: there is no instance-identifier width and no addressable-part count anywhere in the
+  elaborator. The same `SourceError::TooLarge` condition surfaces **four** ways — `module-too-large`,
+  `tool-failure` (`crates/eadl-model/src/check.rs:95`), and two bare `archogen:` lines that are not
+  diagnostics at all (`crates/archogen-cli/src/{build_cmd.rs:113,check_cmd.rs:90}`).
+- ⭐ **Why both existing legs are green on it, and why that is the argument for gap (b) rather than an
+  objection to it.** Legs 4 and 5 of `crates/eadl-front/tests/reference.rs` pin §4's code set against the
+  sources that emit it, in both directions — an *existence* census, and an exact one. A row can be
+  emitted, stated, repair-directed and still describe a rule the code does not implement, because the
+  census reads the code's `Diagnostic::error("…")` literal and never its predicate. What would have seen
+  it is the thing §4 does not have: an **input** per row. Asking "what input fires this?" answers
+  "nothing writable" for `module-too-large`, and the follow-up question "then what does the call site
+  actually test?" is one `sed` away from the false sentence.
+- Filed as **F-H** on `M1.26`'s leaf with its four censuses and owned by `M1.26.2`, which is the leaf that
+  writes the column and therefore the one that has to decide between correcting the row, implementing the
+  rule the row states (a language change, so a migration note), and removing the code. Not fixed here:
+  the choice changes what an author is told, and `M1.26.2` is where the evidence for it lands.
+- ⛔ **Three of the leaf's own recorded figures were stale on pickup**, which is the defect class the leaf
+  exists to close: §4 is **60** rows and not 55 (`M1.13.3` added five after `M1.13.1` measured); the
+  ungoverned population is **16** and not 15, the extra being `analysis-inconclusive` from
+  `crates/archogen-s0/src/interpret.rs`, which a census over six *named* files could not see; and the
+  "27 codes named by no test" count survives with a composition that does not. Fifth instance of
+  `docs/knowledge/a-leafs-claims-about-the-repository-are-hypotheses.md`, recorded there.
+- promotion: promoted (`docs/knowledge/a-leafs-claims-about-the-repository-are-hypotheses.md` gains the
+  fifth measured instance and a note that the class compounds at a leaf whose *subject* is stale figures.
+  F-H's own lesson — an existence census is blind to a falsely stated rule — is deliberately **not**
+  promoted yet: it is promoted by `M1.26.2`, which lands the instrument that sees it, because a card
+  written before the fix exists would state the blind spot without the mechanism that closes it)
+
 ## _(2026-09-29)_ — the arms a leaf says exist are worth counting
 
 - `M1.25`, converging the reach gate on an explicit list of historical lines instead of a past-tense

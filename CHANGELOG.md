@@ -4,6 +4,51 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the leaf that closes two gaps was decomposed on measurement, and the measurement found a false rule the two existing legs are green on
+
+`ARCHOGEN-M1-0100` (leaf `M1.26`). Docs and task-tree only: no Rust changed, so no test delta —
+**541 passed / 0 failed** over 39 suites stands, and `scripts/check_doctrines.sh` → `=== all doctrines
+green ===` over 13 checks. Six censuses, two findings, two children.
+
+- ⛔ **Three figures `M1.26`'s own leaf carried were stale on pickup**, which is the defect class the leaf
+  exists to close and the reason its text says *re-run the census rather than reuse a figure here*. §4's
+  population is **60** rows and not 55 — `M1.13.3` added five `language-version-*` rows after `M1.13.1`
+  measured it. The ungoverned population is **16** and not 15, the extra being `analysis-inconclusive`
+  from `crates/archogen-s0/src/interpret.rs`, invisible to a census that walked six *named* files instead
+  of the workspace. And the "27 codes named by no test" count survives with a composition that does not:
+  the two `read-` codes the leaf credited to `M1.13.1` are still named by no test, because what `.1`
+  pinned was their reachability *from an input in §2's table* — a different property, and the one gap (b)
+  is about.
+- ⛔ **F-H — a live false normative sentence, found by sizing the work rather than by doing it.** §4's
+  `module-too-large` row states "a module has more addressable parts than an instance identifier can
+  hold". Its only call site (`crates/eadl-front/src/module.rs:605`) fires when `SourceMap::add` refuses a
+  text of **2^32** bytes (`crates/eadl-front/src/source.rs:198`), and
+  `grep -rn "addressable\|instance identifier" crates/eadl-front/src/module.rs` finds no such limit
+  anywhere in the elaborator. The one condition behind it surfaces as **four** codes or messages across
+  two crates, two of them bare `archogen:` lines that are not diagnostics at all. Both existing census
+  legs are green, because they pin a code's *existence* against the sources that emit it and never read
+  the predicate — which is precisely the argument for gap (b)'s input column. Owned by `M1.26.2`.
+- **F-I — the frozen population is scoped by file, and the reason is written down nowhere.**
+  `TABLE_DOCUMENTS` in `crates/eadl-front/examples/language_freeze.rs` names
+  `docs/semantics/reference.md` alone, so §4's 60 diagnostic rows are frozen constructs of `eadl/1` while
+  an identical table in a sibling document would not be. The distinction that makes that defensible is
+  real — §4's codes are the *language's* refusals while the model layer's are the *engine's* semantic
+  verdicts, which grow with every profile `ROADMAP.md` §12 admits later — and `M1.26.1` records it in the
+  freeze instrument's own header, where the next reader looks.
+- **Two children, and gap (b) is deliberately one of them.** `M1.26.1` lands a second normative document
+  for the 16 ungoverned codes with its own machine-read declaration and a both-directions census, and
+  widens leg 8 of `crates/eadl-front/tests/reference.rs` to read *every* normative document's declaration,
+  so the book's eight rendered model-layer codes are checked for meaning and not only for existence.
+  `M1.26.2` lands §4's `fires on` column. First because it moves no frozen construct and costs no
+  migration note, so it cannot conflict with `.2`'s baseline re-emit. Two splits of gap (b) were priced
+  and rejected on the leaf — a partly filled column is a silent omission `TABLE-ARITY-RATCHET` forbids and
+  `M1.12.4` refused to write, and landing the notation before the rows that use it is dead code strict
+  lint refuses — recorded so a future session does not re-price them.
+- ⭐ The measurement also corrected a stale paragraph on the leaf itself: gap (b)'s "no input that
+  triggers `read-unexpected-character` is writable in the reference's own notation" has been false since
+  `M1.13.1` landed `<0xNN>`, and the notation problem that *is* still open is a different one — a cell
+  cannot hold a line break, and five of the 24 `module-*` codes can only fire over two or more modules.
+
 ## archogen — every description the repository ships now states its language version, and §8 rule 2's sentence became a measurement
 
 `ARCHOGEN-M1-0092` (leaf `M1.13.4.2`). `500 passed / 0 failed` over 37 suites (baseline 496, delta =
