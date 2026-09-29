@@ -2,9 +2,9 @@
 # scripts/selftest_spine.sh — RED arms for the spine's scaffold-owned gates, the two doctrine drivers and the
 # handoff tool, run from OUTSIDE them (leaf `PROGRAM.18.2`).
 #
-# ⭐ WHY FROM OUTSIDE. These scripts are on `scripts/update_scaffold.sh`'s overwrite list and their upstream is
-# another repository, so an arm written into one would be erased by the next scaffold sync and could not be
-# sent upstream from here (every other repository is read-only). So nothing here edits them: each arm builds
+# ⭐ WHY FROM OUTSIDE. These scripts are on `scripts/update_scaffold.sh`'s neutral list and their upstream is
+# another repository, so an arm written into one would make it differ from upstream at every scaffold sync and
+# could not be sent upstream from here (every other repository is read-only). So nothing here edits them: each arm builds
 # a fresh scratch repository under `target/doctrine_scratch/`, seeds one breach, and runs the REAL script
 # with its working directory there. Two of them locate their root by their own path rather than by git —
 # `check_waiver_routing.sh` and `check_no_background_jobs.sh` — so for those the arm runs a byte-for-byte copy
@@ -175,6 +175,33 @@ holder=$!
 arm "the handoff tool: a process holding a file in the repository blocks" 1 "STILL RUNNING" "$d" bash scripts/check_no_background_jobs.sh
 kill "$holder" 2>/dev/null; wait "$holder" 2>/dev/null
 arm "the handoff tool: once the holder is gone it is handoff-ready again" 0 "handoff: OK" "$d" bash scripts/check_no_background_jobs.sh
+
+# ── the scaffold updater (upstream's never-overwrite version, adopted by `PROGRAM.26`) ──────────────
+# A scratch TEMPLATE with a neutral file, an identical one and a seed-once file; a scratch PROJECT whose copy of
+# the neutral file carries project content. The real updater runs in the project, as `make update-scaffold` does.
+tpl="$(repo template)"
+printf 'template 1\n' > "$tpl/DOCTRINE_VERSION"; printf 'the template text\n' > "$tpl/COMMIT.md"
+printf 'same everywhere\n' > "$tpl/README_POLICY.md"; printf 'posture: public\n' > "$tpl/VISIBILITY.md"
+git -C "$tpl" add -A; git -C "$tpl" commit -q -m template
+proj() {
+  local d; d="$(repo project)"; mkdir -p "$d/scripts"; cp "$ROOT/scripts/update_scaffold.sh" "$d/scripts/"
+  printf 'target/\n.bedrock-incoming/\n' > "$d/.gitignore"; printf 'template 1\n' > "$d/DOCTRINE_VERSION"
+  printf 'this project'"'"'s own workflow\n' > "$d/COMMIT.md"; printf 'same everywhere\n' > "$d/README_POLICY.md"
+  git -C "$d" add -A; git -C "$d" commit -q -m project
+  printf '%s' "$d"
+}
+d="$(proj)"
+arm "the updater: a spine file carrying project content survives a sync, and is named" 0 "DIFFERS  COMMIT.md — yours is UNTOUCHED" "$d" bash scripts/update_scaffold.sh "$tpl"
+arms=$((arms + 1))
+if [ "$(cat "$d/COMMIT.md")" = "this project's own workflow" ] && [ -f "$d/.bedrock-incoming/COMMIT.md" ]; then
+  ok=$((ok + 1)); echo "  ✅ the updater: …byte for byte, with the template's copy set aside in .bedrock-incoming/"
+else echo "SELF-TEST: the updater modified a project-carrying file, or set nothing aside" >&2; fi
+d="$(proj)"
+arm "the updater: a seed-once file the project lacks is seeded" 0 "seeded   VISIBILITY.md (new)" "$d" bash scripts/update_scaffold.sh "$tpl"
+d="$(proj)"; printf 'posture: private\n' > "$d/VISIBILITY.md"; git -C "$d" add -A; git -C "$d" commit -q -m posture
+arm "the updater: a seed-once file the project changed is kept" 0 "kept     VISIBILITY.md (yours" "$d" bash scripts/update_scaffold.sh "$tpl"
+d="$(proj)"; printf 'uncommitted\n' >> "$d/COMMIT.md"
+arm "the updater: a dirty tree is refused, not synced" 2 "REFUSED: the working tree is dirty" "$d" bash scripts/update_scaffold.sh "$tpl"
 
 echo "spine self-test: $ok pass / $((arms - ok)) fail ($arms arms)"
 if [ "$ok" -eq "$arms" ]; then

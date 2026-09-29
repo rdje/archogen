@@ -19,7 +19,8 @@ Do I edit the check?
 
 No. Declare the project's shape in the seam the check already reads. Editing a portable
 check to hardcode one project's paths turns a shared standard into a private fork of it, and
-the next `scripts/update_scaffold.sh` either clobbers the edit or has to be fought.
+every later `scripts/update_scaffold.sh` reports the check as differing and sets the template's copy aside, so
+each sync becomes a hand merge of that one edit.
 
 The seams are in `.doctrine/` and documented by `.doctrine/README.md`:
 

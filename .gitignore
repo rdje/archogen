@@ -37,3 +37,6 @@ docs/feedback/**/.repro-work/
 # `git status`. A harness config this project deliberately shares is added with `git add -f`.
 # Scoped to the harness measured here (leaf PROGRAM.12); add a line when another one appears.
 /.qwen/
+# The template's incoming copies, written by scripts/update_scaffold.sh beside nothing of ours (bedrock 0.10.0,
+# adopted by leaf PROGRAM.26): read them, take what you want by hand, then `rm -rf .bedrock-incoming`.
+.bedrock-incoming/

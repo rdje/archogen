@@ -2969,7 +2969,7 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0083 (leaf PROGRAM.25)`
 
 - ID: `PROGRAM.26`
-  Status: `pending`
+  Status: `done`
   Goal: make `make update-scaffold` unable to destroy project content, by adopting the upstream fix
   rather than inventing one — this repository's `scripts/update_scaffold.sh` is two minor versions
   behind `bedrock`, and the version it has `cp`s every neutral spine file straight over the project's
@@ -2983,7 +2983,7 @@ mdBook that is the director's window into the project.
   census: cat DOCTRINE_VERSION                                -> bedrock-scaffold 0.8.1
           cat ../bedrock/DOCTRINE_VERSION   (read-only, §21)  -> bedrock-scaffold 0.10.0
   census: grep -n 'cp "\$tmp/bedrock/\$f"' scripts/update_scaffold.sh
-          -> one unconditional `cp` per NEUTRAL file, 25 entries in the array, no comparison and no
+          -> one unconditional `cp` per NEUTRAL file, 25 entries in the array [29, re-measured 2026-09-30], no comparison and no
              refusal; the script's own header calls them "safe to overwrite because it never carries
              project content"
   census: the array includes docs/TASK_TREE.md, COMMIT.md, DOCTRINE_ENFORCEMENT.md, TOOLBOX.md and
@@ -3025,8 +3025,53 @@ mdBook that is the director's window into the project.
   ⚠️ **Interim mitigation, until this leaf lands:** do not run `make update-scaffold`. If a sync becomes
   necessary before then, run it on a clean tree, `git diff` every one of the 25 files before staging,
   and keep the incoming copies somewhere tracked rather than under `target/`.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the checklist — the census of every neutral file, two dry runs on clones (before and after), five
+  new arms in the spine harness that all fail against the replaced updater, and `make gate`.
+  Commit: `ARCHOGEN-PROGRAM-0150 (leaf PROGRAM.26)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — the replaced updater, run by the new arms against a scratch project:
+    ```text
+    $ git show HEAD:scripts/update_scaffold.sh > scripts/update_scaffold.sh; bash scripts/selftest_spine.sh
+      SELF-TEST: the updater modified a project-carrying file, or set nothing aside
+      SELF-TEST: the updater: a dirty tree is refused, not synced — expected exit 2, got 0
+      spine self-test: 34 pass / 5 fail (39 arms)                                   (restored by cmp)
+    ```
+    — it overwrote a project-carrying file and synced over uncommitted work.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — **WHERE:** `git show HEAD:scripts/update_scaffold.sh | grep -nF 'cp "$tmp/bedrock/$f" "$f"'`
+    → `62:    cp "$tmp/bedrock/$f" "$f"`, unconditional, inside the loop over the `NEUTRAL` array — **29** entries by
+    `sed -n '/^NEUTRAL=(/,/^)/p' | grep -vc '[()]'`, not the 25 this leaf's own census said. **WHY:** its premise,
+    "never carries project content", is false for 7 of them here (the census below) — the template was written before
+    projects diverged from it, and this copy predates upstream's fix (`bedrock-scaffold 0.8.1` against `0.10.0`).
+    ```text
+    census (ours vs upstream HEAD 5af0c1c vs the 0.8.1 base 8222e97, found by git log -S"bedrock-scaffold 0.8.1"):
+      identical 21 · project-carrying (only we moved) 7 · behind: DOCTRINE_VERSION · both moved: update_scaffold.sh
+      VISIBILITY.md: absent here — a SEED_ONCE file of 0.8.1 the old updater could not deliver
+    $ git -C ../bedrock diff --stat 8222e97 5af0c1c   → .gitignore, CHANGELOG.md, DOCTRINE_VERSION, the maintenance tree,
+      scripts/update_scaffold.sh — 5 files changed: no other spine file moved
+    ```
+  - [x] **FIX** — upstream's `scripts/update_scaffold.sh` at `5af0c1c`, plus one hunk (scratch under
+    `target/doctrine_scratch/`), `diff` against upstream = that hunk alone (6 lines); `.bedrock-incoming/` ignored, as
+    upstream ignores it; `VISIBILITY.md` seeded from `5af0c1c` (the host measured `PUBLIC` by `gh repo view`, matching
+    the posture it declares); `DOCTRINE_VERSION` → `bedrock-scaffold 0.10.0`; five arms in `scripts/selftest_spine.sh`;
+    `docs/decisions/decision_scaffold-updater-adopted.md`.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    dry run 1, a clone with the adopted updater, before seeding:
+      ✓ 21 already current, 1 seeded, 8 differ, 0 merged to a side file — nothing of yours was modified.   exit=0
+      (seeded VISIBILITY.md; DIFFERS for the 7 project-carrying files and DOCTRINE_VERSION, each "yours is UNTOUCHED")
+    dry run 2, a clone of this commit's staged state, with --merge and no terminal:
+      ✓ 23 already current, 0 seeded, 7 differ, 0 merged to a side file — nothing of yours was modified.   exit=0
+    $ git -C ../bedrock log --format=%h -S"bedrock-scaffold 0.10.0" -- DOCTRINE_VERSION   → 6bbbf82  (the merge base resolves)
+    $ bash scripts/selftest_spine.sh   → spine self-test: 39 pass / 0 fail (39 arms)
+    ```
+  - [x] **NO REGRESSION** — `bash scripts/check_scratch_locality.sh` → `scratch-locality: OK (143 file(s) scanned; 4
+    site(s) in scaffold-owned files reported …)`, so the adopted copy keeps the fix; `make gate` green at the commit;
+    `bash scripts/check_source_ledger.sh` → `source-ledger: OK (12 entries; 11 pin(s) …)` with the entry at `0.10.0`.
+  - [x] **LOCKSTEP** — the decision record and its INDEX row, the `bedrock` ledger entry, `README.md` (a pointer to
+    `VISIBILITY.md`), `DOCTRINE_ENFORCEMENT.md`, the `doctrine-seams-vs-forking-a-check` card, `KNOWLEDGE_MAP.md`
+    regenerated. The interim mitigation above is lifted: `make update-scaffold` is safe on a clean tree.
 
 
 - ID: `PROGRAM.27`
@@ -3449,11 +3494,10 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
-| 2 | `PROGRAM.30` | `pending` | **medium** — the Rust channel and CI actions are unpinned, and mdBook outside CI (the `integration` job pins it since `PROGRAM.10.4`); found deriving the ledger's pins |
-| 3 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
-| 4 | `PROGRAM.31` | `blocked` | on the director's ruling on the findings record's §8 — the changelog and development notes as rolling ledgers |
-| 5 | `PROGRAM.32` | `blocked` | on the same ruling — closed leaves sealed out of the task trees |
+| 1 | `PROGRAM.30` | `pending` | **medium** — the Rust channel and CI actions are unpinned, and mdBook outside CI (the `integration` job pins it since `PROGRAM.10.4`); found deriving the ledger's pins |
+| 2 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
+| 3 | `PROGRAM.31` | `blocked` | on the director's ruling on the findings record's §8 — the changelog and development notes as rolling ledgers |
+| 4 | `PROGRAM.32` | `blocked` | on the same ruling — closed leaves sealed out of the task trees |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
@@ -3583,6 +3627,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.10.3` | `--provisioned` both ways on a PATH without QEMU; the policy script's 7 arms and four mutations; the real job run locally | `1` provisioned, `20` not; one mutation equivalent under `pipefail`, the rest killed; the real run found its own arms clobbering its log — fixed, then exit `0` with the gap annotated |
 | `2026-09-30` | `PROGRAM.10.4` | the pinned tools installed here from verified downloads, QEMU built from source; the provisioner's arms, three mutations and a real refused digest; the job rehearsed from a fresh checkout | QEMU `11.1.1` built and offering `virt`; every arm and mutation as designed; the rehearsal passes, `incomplete` with the emulator annotated — the runner's own userland still unobserved (`.10.5`) |
 | `2026-09-30` | `PROGRAM.23` | the threshold's copies before and after; the check's 10 arms and three mutations; the real distance | 8 copies outside the record, now 0; every arm and mutation as designed; a push not yet due |
+| `2026-09-30` | `PROGRAM.26` | a census of every neutral file against upstream and its base; two dry runs on clones; five spine arms against the adopted and the replaced updater; `make gate` | 21 identical, 7 project-carrying, only the updater and the version behind; nothing of ours modified by either run; the arms pass on the adopted updater and all five fail on the old one |
 
 ## Commit Log
 
@@ -3637,6 +3682,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.10.3` | `ARCHOGEN-PROGRAM-0147 (leaf PROGRAM.10.3)` | **the blocking policy for `incomplete`** — recorded, and carried out by `--provisioned` and `scripts/ci_integration.sh` |
 | `PROGRAM.10.4` | `ARCHOGEN-PROGRAM-0148 (leaf PROGRAM.10.4)` | **the `integration` job** — its tools built and installed at their pins from digest-checked downloads; rehearsed from a fresh checkout |
 | `PROGRAM.23` | `ARCHOGEN-PROGRAM-0149 (leaf PROGRAM.23)` | **the push cadence is a report, not prose** — one copy of the threshold, the distance on demand, never a gate |
+| `PROGRAM.26` | `ARCHOGEN-PROGRAM-0150 (leaf PROGRAM.26)` | **the scaffold updater never overwrites** — upstream's at `bedrock` `5af0c1c` plus one hunk; the spine at `0.10.0` |
 
 ## Changelog
 

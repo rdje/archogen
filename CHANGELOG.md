@@ -4,6 +4,19 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the scaffold updater never overwrites
+
+`ARCHOGEN-PROGRAM-0150` (leaf `PROGRAM.26`). The spine is now `bedrock-scaffold 0.10.0`.
+
+- `make update-scaffold` used to copy the template's files over this project's. Seven of them hold this
+  project's own content: the task-tree index, the commit workflow, the tool list and others. It is now
+  upstream's updater, which never overwrites. It sets the template's copy aside in `.bedrock-incoming/` and
+  says so. The one local change keeps its scratch files on this volume.
+- A trial run on a copy of the repository changed nothing of ours and added one file: `VISIBILITY.md`, which
+  states the repository is public (it is). It was part of the template already, but the old updater could not
+  deliver it.
+- New tests pass on the adopted updater and fail on the old one.
+
 ## archogen — when a push is due is a report, not prose
 
 `ARCHOGEN-PROGRAM-0149` (leaf `PROGRAM.23`).

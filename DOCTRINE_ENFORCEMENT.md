@@ -43,8 +43,9 @@ every human, identically.
 `PROGRAM.18.2`): `scripts/selftest_spine.sh` runs `MEMORY-ARCH`, `DOCPATH`, `TASK-TREE-OWNERSHIP`,
 `README-STABILITY`, `WAIVER-ROUTING` and `KNOWLEDGE-MAP` — unmodified — inside scratch repositories holding one
 seeded breach each, arms both drivers with stub gates, and arms the handoff tool with a real process holding a
-file. These scripts are on `scripts/update_scaffold.sh`'s overwrite list and their upstream is another repository,
-so an arm written into them would be erased and could not be sent upstream; from outside, it survives both.
+file. These scripts are on `scripts/update_scaffold.sh`'s neutral list and their upstream is another repository,
+so an arm written into them would make them differ from upstream at every sync and could not be sent upstream;
+from outside, it does neither. The same harness arms the updater itself (`PROGRAM.26`).
 Every refusing arm must name what it refuses.
 
 ⭐ **Every gate's arms are re-run, not just written** (leaf `PROGRAM.28`): `scripts/run_self_tests.sh` discovers

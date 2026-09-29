@@ -75,6 +75,7 @@ it holds for any agent or human identically:
   ([`TOOLBOX.md`](TOOLBOX.md)). The enforced doctrines are listed in
   [`DOCTRINE_ENFORCEMENT.md`](DOCTRINE_ENFORCEMENT.md).
 - Agent bootstrap: [`CLAUDE.md`](CLAUDE.md) / [`AGENTS.md`](AGENTS.md).
+- The repository is public, and nothing confidential goes into it ([`VISIBILITY.md`](VISIBILITY.md)).
 
 This README is a landing page, governed by [`README_POLICY.md`](README_POLICY.md) and
 mechanically capped. Route changing detail to its canonical home above.

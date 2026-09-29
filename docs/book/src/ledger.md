@@ -98,13 +98,13 @@ the day a chapter or a decision relies on it, as Miri did.
 | Field | Value |
 | --- | --- |
 | Source | the `bedrock` scaffold — the discipline spine's template: doctrine gates, hooks and spine documents |
-| Version | `bedrock-scaffold 0.8.1` |
+| Version | `bedrock-scaffold 0.10.0` |
 | Pinned at | `file:DOCTRINE_VERSION` |
-| Retrieved | `2026-09-21` |
-| Hash | not captured. Upstream was read at `5af0c1c5b9cc2a65f51ecda1c0937fbc234c84da` (`0.10.0`) on `2026-09-29`, read-only |
-| Scope | the files named in `scripts/update_scaffold.sh`'s `NEUTRAL` array |
-| Known limitations | two minor versions behind upstream. The updater copies over project content (`PROGRAM.26`). Four of its scratch sites write off this volume (`docs/decisions/decision_scratch-on-the-repository-volume.md`) |
-| Revalidation trigger | `DOCTRINE_VERSION` changing; an upstream release; `PROGRAM.26`'s adoption |
+| Retrieved | `2026-09-30`, read-only, at upstream revision `5af0c1c5b9cc2a65f51ecda1c0937fbc234c84da` |
+| Hash | not captured as a digest. The revision above is the identity: `scripts/update_scaffold.sh` is that revision's file plus one recorded hunk, and `VISIBILITY.md` and `DOCTRINE_VERSION` are its bytes (`docs/decisions/decision_scaffold-updater-adopted.md`) |
+| Scope | the files named in `scripts/update_scaffold.sh`'s `NEUTRAL` and `SEED_ONCE` arrays |
+| Known limitations | seven neutral files carry project content and differ from upstream by design; a sync sets the template's copies aside in `.bedrock-incoming/` and never overwrites. Four scratch sites in scaffold-owned files write off this volume (`docs/decisions/decision_scratch-on-the-repository-volume.md`) |
+| Revalidation trigger | `DOCTRINE_VERSION` changing; an upstream release |
 | Named as | `bedrock` |
 
 ## `semulith`
