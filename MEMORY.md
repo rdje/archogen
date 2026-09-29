@@ -13,14 +13,14 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `PROGRAM` → frontier `PROGRAM.17`, child `.17.3`. Every other tree's frontier head is in
-  `docs/TASK_TREE.md`; it is not copied here.
-- **Next action:** **`PROGRAM.17.3`** — put the changelog, development notes and task-tree lifecycle choices to the
-  director with measurements and a recommendation each; rotate or partition nothing without the ruling.
+- **Active tree:** `PROGRAM` → frontier `PROGRAM.20`. Every other tree's frontier head is in `docs/TASK_TREE.md`;
+  it is not copied here.
+- **Next action:** **`PROGRAM.20`** — a carried-figure register, so a figure no measurement watches is refused at the
+  commit that adds it.
 - **In flight:** branch **`wip/m2.9`** (`758cbcd`) is a checkpoint, not a finished leaf — `M2.9` records it as
   not compiling (`crates/rt-core/tests/differential.rs` unadapted).
 - **⏳ Blockers (the director's):** `M1.29.4` — §7 of `decision_findings-for-director-review.md`; `M2.9` — §6 (a)
-  and (b), two rulings on `ROADMAP` §3.1.1; `M5` — no board procured.
+  and (b), two rulings on `ROADMAP` §3.1.1; `PROGRAM.31`/`.32` — §8; `M5` — no board procured.
 - **Derive, don't copy:** the test baseline is `cargo test --all -q` (must be 0 failed); the push distance is
   `git rev-list --count origin/main..HEAD` against the cadence in `decision_push-cadence.md`; `integration` is red
   only on `emulator` until `M2.8.2` (`make integration`).

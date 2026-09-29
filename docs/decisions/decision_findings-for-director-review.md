@@ -6,7 +6,7 @@
 - **Owner / source:** raised during the M0 + M1 build; recorded here so they survive the session
 - **External sources:** [QEMU](../book/src/ledger.md#qemu) — version, scope and limits in the ledger
 
-Seven items are recorded here so they survive the session. Three are outside an implementer's
+Eight items are recorded here so they survive the session. Three are outside an implementer's
 authority to settle; the fourth (§4) is a measurement about the programme's own evidence that you
 should see even though it is already fixed; the sixth (§6) is a review of **your own amendment**
 by the model that has never read the implementation. Each is tracked as work, so nothing here
@@ -204,6 +204,42 @@ case in an otherwise uniform symbol grammar).
 
 **The decision needed:** accept the proposal, or name a different spelling. `M1.29.4` waits on it; nothing
 else does, and the leaf is medium priority, so the frontier has moved past it rather than stalling.
+
+## 8. The histories grow without a lifecycle — the changelog, the development notes, the task trees (`2026-09-30`)
+
+The live-document size-containment doctrine you mandated, adopted as `LIVE_DOCUMENT_SIZE_CONTAINMENT.md` by
+`PROGRAM.17`, forbids one thing outright: a document that is both a growing history and something every
+session must read. Nothing here does that today. None of these files is in the bootstrap reads, and the three
+status pages that had turned into histories are fixed and bounded (`PROGRAM.17.2`). But these documents are
+what you browse, they grow fast, and nothing bounds them. Measured over the 82 commits since `2026-09-27`:
+
+| Document | Lines then → now | What is growing |
+| --- | --- | --- |
+| `CHANGELOG.md` | 1 464 → 3 459 | about 24 lines per commit |
+| `DEV_NOTES.md` | 687 → 1 602 | one entry per lesson, each also promoted to `docs/knowledge/` |
+| `docs/tasks/M1.md` | 1 864 → 6 928 | closed leaves: **5 328 of the 6 928 lines** are the bodies of its 55 closed leaves |
+| `docs/tasks/PROGRAM.md` | 796 → 3 158 | closed leaves: 2 375 of 3 158 lines, 33 leaves |
+
+The doctrine offers three answers, and each changes what you see when you open these files. Its adoption
+guide says to stop and ask before making a change like that, so it is waiting for you:
+
+- **(A) Keep them growing.** This is the status quo, and it is recorded as a decision rather than left to
+  drift. The cost is that the files you open keep lengthening. `M1.md` is already mostly finished work.
+- **(B) The changelog and the development notes as rolling ledgers.** At each month's end, the finished
+  month moves, byte for byte, into a sealed file such as `docs/history/changelog/2026-09.md`, with its digest
+  recorded. `CHANGELOG.md` keeps the current month and a short index of the sealed ones. A check proves that
+  sealed months never change and that the index lists all of them. Nothing is deleted, and a past month is
+  one click away.
+- **(C) Seal closed leaves out of the task trees.** A finished leaf's body, its checklist and evidence, moves
+  byte for byte to a sealed file per subtree, with a digest. The tree keeps one line per closed leaf naming
+  its commit and linking to the sealed text. Open leaves, the Current Frontier and the logs stay where they
+  are. `M1.md` would drop from 6 928 lines to roughly 1 600 of live work, with a closed leaf one click away.
+
+**The recommendation:** (B) for both the changelog and the development notes, monthly; (C) for the task
+trees, starting with `M1` and `PROGRAM`. Both are lossless and checked mechanically, and both change what you
+browse, which is why neither has been done. **The decision needed:** accept, amend (a different rotation
+period, or trees kept whole), or keep (A). The work is filed as `PROGRAM.31` (B) and `PROGRAM.32` (C), both
+`blocked` on this ruling.
 
 ## A note on what "done" means so far
 

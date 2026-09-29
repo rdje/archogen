@@ -37,7 +37,7 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM`
   Status: `active`
   Goal: own the program spine
-  Children: `PROGRAM.1` … `PROGRAM.30`, plus `PROGRAM.1.1`, `PROGRAM.2.1`, `PROGRAM.18.1` and `PROGRAM.18.2`
+  Children: `PROGRAM.1` … `PROGRAM.32`, plus `PROGRAM.1.1`, `PROGRAM.2.1`, `PROGRAM.18.1` and `PROGRAM.18.2`
 
 - ID: `PROGRAM.1`
   Status: `done`
@@ -679,7 +679,7 @@ mdBook that is the director's window into the project.
     `git grep -ln 'CLAIM_VERIFICATION' -- docs/book` → no match, `rc=1`.
 
 - ID: `PROGRAM.17`
-  Status: `in-progress`
+  Status: `done`
   Goal: check the director-mandated **live-document size-containment guide** (§18) against what this
   repository already does and adopt what is missing — the instruction covers a *partial* adoption too,
   and this is one.
@@ -704,8 +704,13 @@ mdBook that is the director's window into the project.
   Priority: **medium** — nothing is unreadable today and the two documents a resuming session reads
   first are both capped and enforced. But "append-only by design" is a decision nobody has written
   down, and an unwritten decision is the one a future session quietly reverses.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: closed `2026-09-30` by its three children, each part of the acceptance met: the guide read at its
+  current revision and the comparison recorded (`LIVE_DOCUMENT_SIZE_CONTAINMENT.md`'s adoption note, `.17.1`); every
+  live document listed with its measured size and a bound or a reason (`.17.1`); the changelog and development notes
+  given an explicit decision — grow deliberately until the ruling in §8 (`.17.1`, `.17.3`); the doctrine copied in with
+  provenance and nothing written outside the repository (`.17.1`); a mechanical check added because caps were set,
+  registered and armed (`LIVE-SNAPSHOTS`, `.17.2`).
+  Commit: `ARCHOGEN-PROGRAM-0138` (`.17.1`), `ARCHOGEN-PROGRAM-0139` (`.17.2`), `ARCHOGEN-PROGRAM-0140` (`.17.3`)
   Children: `PROGRAM.17.1`, `PROGRAM.17.2`, `PROGRAM.17.3` — decomposed `2026-09-30` after re-measuring. The guide the
   leaf means is fsmgen's adoption bridge, `docs/LIVE_DOCUMENT_SIZE_CONTAINMENT_ADOPTION_GUIDE.md` (431 lines /
   21 327 bytes at `727e0d086`, exactly the leaf's figure); the normative doctrine is fsmgen's root
@@ -791,13 +796,19 @@ mdBook that is the director's window into the project.
     the adoption note's inventory and debt statements updated to what is now true.
 
 - ID: `PROGRAM.17.3`
-  Status: `pending`
+  Status: `done`
   Goal: the lifecycle decisions that change what the director browses, put to the director with evidence — the
   changelog and development notes as rolling ledgers, and the task-tree monoliths (`M1.md` 658 KB).
   Acceptance: a findings entry with measured sizes, the options the doctrine allows, a recommendation each, and what
   is lost or kept by each; no rotation or partition performed without the ruling.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: §8 of `docs/decisions/decision_findings-for-director-review.md` written from measurements taken
+  `2026-09-30`: growth since `4d6d002` (`2026-09-27`, 82 commits) — `CHANGELOG.md` 1 464 → 3 459 lines, `DEV_NOTES.md`
+  687 → 1 602, `M1.md` 1 864 → 6 928, `PROGRAM.md` 796 → 3 158 — and an `awk` over each tree's leaf blocks by status:
+  closed leaves hold 5 328 of `M1.md`'s 6 928 lines (55 leaves) and 2 375 of `PROGRAM.md`'s 3 158 (33). Three options
+  from the doctrine, what each changes for the reader, a recommendation, and the work filed as `PROGRAM.31` and
+  `PROGRAM.32`, both `blocked` on the ruling; nothing rotated or sealed. On the way: the decisions index's hook for
+  that record still said "six items… two needing rulings" from before §7 — corrected to eight and four.
+  Commit: `ARCHOGEN-PROGRAM-0140 (leaf PROGRAM.17.3)`
 
 - ID: `PROGRAM.18`
   Status: `done` — closed by its two children `2026-09-29`; **decomposed `2026-09-29` into two children on a re-run census**, as the leaf itself asks.
@@ -2914,6 +2925,27 @@ mdBook that is the director's window into the project.
   Verification: `pending`
   Commit: `pending`
 
+- ID: `PROGRAM.31`
+  Status: `blocked`
+  Goal: `CHANGELOG.md` and `DEV_NOTES.md` as rolling ledgers — each finished month sealed byte for byte into
+  `docs/history/<ledger>/<YYYY-MM>.md` with its digest, the live file keeping the current month and a bounded index.
+  Blocked on: the director's ruling on §8 of `docs/decisions/decision_findings-for-director-review.md` (option B).
+  Acceptance (if accepted): the doctrine's atomic protocol — boundary, digests, a check proving sealed segments
+  unchanged and the index complete; no entry lost (`cmp` of the concatenation against the pre-rotation file).
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `PROGRAM.32`
+  Status: `blocked`
+  Goal: seal closed leaves out of the task trees — each `done` leaf's body moved byte for byte to a sealed per-subtree
+  file with its digest, the tree keeping one line per closed leaf with its commit and a link; `M1` and `PROGRAM` first.
+  Blocked on: the director's ruling on §8 of `docs/decisions/decision_findings-for-director-review.md` (option C).
+  Acceptance (if accepted): `TASK-ACCEPTANCE` and every gate that reads a leaf still finds it (sealed text included);
+  a check proving sealed bodies unchanged; the tree's live graph complete; no line lost.
+  Verification: `pending`
+  Commit: `pending`
+
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -2978,12 +3010,13 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.17` | `in-progress` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
-| 2 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. ⭐ A **near-miss** worth pricing in, recorded honestly as a near-miss and not as a fourth instance: `PROGRAM.18`'s frontier row still read "ten of eighteen controls" while this leaf was being written, and was corrected in the same commit — it would have gone stale the moment the fix landed, and nothing in the tree compares a control count against the controls. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with. ⛔ An **eighth** shape landed `2026-09-29` and it falsifies the acceptance's *population* rather than adding a figure: `CHANGELOG.md` said "Newest first" and did not, one entry sitting above six newer ones for seven commits because five consecutive commits inserted at the same wrong anchor — and `CHANGELOG.md` is not one of the three live surfaces the acceptance enumerates. Two falsifications of a three-item list, so the population becomes every live surface the commit stages |
-| 3 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
-| 4 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
-| 5 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
-| 6 | `PROGRAM.30` | `pending` | **medium** — the Rust channel, mdBook and CI actions are unpinned; found deriving the ledger's pins |
+| 1 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. ⭐ A **near-miss** worth pricing in, recorded honestly as a near-miss and not as a fourth instance: `PROGRAM.18`'s frontier row still read "ten of eighteen controls" while this leaf was being written, and was corrected in the same commit — it would have gone stale the moment the fix landed, and nothing in the tree compares a control count against the controls. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with. ⛔ An **eighth** shape landed `2026-09-29` and it falsifies the acceptance's *population* rather than adding a figure: `CHANGELOG.md` said "Newest first" and did not, one entry sitting above six newer ones for seven commits because five consecutive commits inserted at the same wrong anchor — and `CHANGELOG.md` is not one of the three live surfaces the acceptance enumerates. Two falsifications of a three-item list, so the population becomes every live surface the commit stages |
+| 2 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
+| 3 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
+| 4 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
+| 5 | `PROGRAM.30` | `pending` | **medium** — the Rust channel, mdBook and CI actions are unpinned; found deriving the ledger's pins |
+| 6 | `PROGRAM.31` | `blocked` | on the director's ruling on the findings record's §8 — the changelog and development notes as rolling ledgers |
+| 7 | `PROGRAM.32` | `blocked` | on the same ruling — closed leaves sealed out of the task trees |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
@@ -3107,6 +3140,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.15` | the register gate's first run on the real tree; its 15 arms; eight mutations R-1–R-8 | the cross-vendor index said 5 open / 2 blockers against a closed register — corrected; 15 / 0; every mutation fires |
 | `2026-09-30` | `PROGRAM.17.1` | the guide and doctrine at their current fsmgen revisions; a three-axis measurement of every live document; the copied body against its source | the copy byte-identical (`cmp`); `LIVE_STATUS.md` 42 110 bytes with a 30 256-byte row, `CHANGELOG.md` 3 428 lines — both recorded as debt or a decision |
 | `2026-09-30` | `PROGRAM.17.2` | the no-loss proof (ids declared, commit rows present, pre-trim digests); the checker and its 11 arms; six mutations; the pre-trim `LIVE_STATUS.md` put back | 42 110 → 2 324 bytes and 30 256 → 220 on the longest line; every arm and mutation as designed; the old file refused on bytes and width, not on lines |
+| `2026-09-30` | `PROGRAM.17.3` / `PROGRAM.17` | growth since `2026-09-27` from `git show 4d6d002:<file>`; closed-leaf share of `M1.md` and `PROGRAM.md` by an `awk` over leaf blocks | 77% of `M1.md` and 75% of `PROGRAM.md` are closed leaves; §8 written, `PROGRAM.31`/`.32` filed blocked; `PROGRAM.17` closed |
 
 ## Commit Log
 
@@ -3152,6 +3186,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.15` | `ARCHOGEN-PROGRAM-0137 (leaf PROGRAM.15)` | **a bug register says what its issues say, and its totals are recounts** — `FEEDBACK-REGISTER`; its first run found the cross-vendor index three days stale |
 | `PROGRAM.17` → `PROGRAM.17.1` | `ARCHOGEN-PROGRAM-0138 (leaf PROGRAM.17.1)` | **the live-document size-containment doctrine is adopted, with a measured inventory** — a project-owned copy, an adoption note per surface, and the snapshots' chronology recorded as debt. `PROGRAM.17` decomposed |
 | `PROGRAM.17.2` | `ARCHOGEN-PROGRAM-0139 (leaf PROGRAM.17.2)` | **the snapshots hold current state, and a checker bounds them on lines, bytes and longest line** — `LIVE_STATUS.md` 42 110 → 2 324 bytes after a no-loss proof; `LIVE-SNAPSHOTS`; `COMMIT.md` stops asking for history in a snapshot |
+| `PROGRAM.17.3` → `PROGRAM.17` | `ARCHOGEN-PROGRAM-0140 (leaf PROGRAM.17.3)` | **the history lifecycle choices go to the director** — findings §8 with measurements and a recommendation; `PROGRAM.31`/`.32` filed blocked; `PROGRAM.17` closed |
 
 ## Changelog
 

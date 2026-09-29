@@ -4,6 +4,19 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — how the histories should stop growing is put to the director
+
+`ARCHOGEN-PROGRAM-0140` (leaf `PROGRAM.17.3`; closes `PROGRAM.17`).
+
+- The findings record gains §8. The changelog, the development notes and the task trees grow without a
+  lifecycle. In three days, `M1.md` went from 1 864 to 6 928 lines, and 5 328 of those lines are the bodies
+  of finished tasks.
+- Three options from the adopted doctrine: keep growing; seal finished months of the changelog and
+  development notes into dated files; or seal finished tasks out of the trees behind a one-line link. The
+  recommendation is the last two. Both are lossless and checked, but both change what the director sees, so
+  neither has been done. The work is filed as `PROGRAM.31` and `PROGRAM.32`, waiting on the ruling.
+- `PROGRAM.17` is closed: the doctrine is adopted and measured, and the status pages are bounded.
+
 ## archogen — the status pages hold current state again, and stay bounded
 
 `ARCHOGEN-PROGRAM-0139` (leaf `PROGRAM.17.2`). A new doctrine, `LIVE-SNAPSHOTS`.
