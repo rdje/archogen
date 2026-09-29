@@ -156,6 +156,10 @@ error[schema-duplicate-name]: `parts.public.part` is declared twice
    |
 11 |   (defblock parts.public.part
    |             ^^^^^^^^^^^^^^^^^ declared again here
+  --> docs/semantics/modules/hw.private.eadl:10:13
+   |
+10 |   (defblock public.part
+   |             ----------- first declared here
   = hint: rename one — a name means one declaration (§7 rule 6). In a module tree a declaration is named by its instance path and its local name (§6 rule 9), so a local `a.x` beside an import aliased `a` that declares `x` is one name: `parts.public.part`
 archogen: invalid-description: 1 diagnostic(s) in docs/semantics/modules/bad.name-collision.eadl
 ```

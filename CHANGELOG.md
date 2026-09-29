@@ -4,6 +4,18 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — every diagnostic the book shows is a real run
+
+`ARCHOGEN-PROGRAM-0143` (leaf `PROGRAM.20.2`).
+
+- A test re-runs each `archogen check` the book shows and requires the chapter to show exactly what it
+  prints: every label, the summary line and the exit code.
+- **Five of the twelve checkable examples differed.** Two had dropped the "first declared here" label that
+  the text beside them promised, so each chapter contradicted itself. All five are re-rendered from real
+  runs.
+- Eleven examples use a file that is not in the repository and cannot be re-run. They are listed, and the
+  list may only shrink.
+
 ## archogen — "next" means what the task tree says, and the gate proves it
 
 `ARCHOGEN-PROGRAM-0142` (leaf `PROGRAM.20.1`), with `ARCHOGEN-M2-0141`. A new doctrine, `STATED-ORDER`.

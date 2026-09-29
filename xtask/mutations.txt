@@ -160,3 +160,14 @@ from
 to
                 "useful computation only, and no dispatch, no interrupt service, no context save or \
 end
+
+mutation renderer-drops-secondary-labels
+file crates/eadl-front/src/diagnostic.rs
+test -p archogen-cli --test book_transcripts
+expect killed
+why PROGRAM.20.2: two book transcripts had silently dropped their "first declared here" label; a renderer that dropped them for real must be seen by the book's own transcripts.
+from
+            for label in &self.secondary {
+to
+            for label in self.secondary.iter().take(0) {
+end

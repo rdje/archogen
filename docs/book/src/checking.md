@@ -48,6 +48,10 @@ error[schema-duplicate-name]: `timer.counter` is declared twice
    |
 10 | (defblock timer.counter
    |           ^^^^^^^^^^^^^ declared again here
+  --> docs/semantics/cases/invalid-duplicate-name.eadl:7:11
+  |
+7 | (defblock timer.counter
+  |           ------------- first declared here
   = hint: rename one — a name means one declaration (§7 rule 6); with two, every reference to it has two answers and every fact it offers two values
 archogen: invalid-description: 1 diagnostic(s) in docs/semantics/cases/invalid-duplicate-name.eadl
 ```
@@ -117,8 +121,8 @@ error[infeasible-configuration]: `absolute-deadline` is required by this system 
    |
 26 |   (absent absolute-deadline))
    |           ----------------- declared absent by `timer.delay`
-  = hint: either the requirement or the platform is wrong; an explicitly absent fact is a
-          definite answer, not a gap to be filled in
+  = hint: either the requirement or the platform is wrong; an explicitly absent fact is a definite answer, not a gap to be filled in
+archogen: infeasible-configuration: 1 diagnostic(s) in examples/alternative-timer/system.eadl
 13
 ```
 
@@ -131,9 +135,12 @@ exists yet. When `M3.2` lands, the same description must build — without chang
 ```console
 $ archogen check examples/bounded-queue/system.eadl ; echo $?
 error[unsupported-profile]: `general-ipc` is not admitted by profile `rt-static-up-v1`
-  = hint: admitting it would add: needs queue capacity, overflow semantics, and their
-          response-time effects; a later profile amendment. Request a profile that supports it,
-          or remove the requirement — it is never silently reduced to a weaker guarantee
+  --> examples/bounded-queue/system.eadl:36:10
+   |
+36 |   (needs general-ipc time.monotonic))
+   |          ^^^^^^^^^^^ general inter-task communication, including task-to-task queues is out of profile
+  = hint: admitting it would add: needs queue capacity, overflow semantics, and their response-time effects; a later profile amendment. Request a profile that supports it, or remove the requirement — it is never silently reduced to a weaker guarantee
+archogen: unsupported-profile: 1 diagnostic(s) in examples/bounded-queue/system.eadl
 12
 ```
 

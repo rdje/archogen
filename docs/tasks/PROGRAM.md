@@ -1481,14 +1481,54 @@ mdBook that is the director's window into the project.
     `TOOLBOX.md`.
 
 - ID: `PROGRAM.20.2`
-  Status: `pending`
+  Status: `done`
   Goal: every rendered diagnostic in the book that names a tracked input is what the command prints — the seventh
   shape, by the instrument recorded above, tracked and armed.
   Acceptance: for each `error[` block, the input from its `$ archogen check` line (else its first `-->`); a tracked one
   re-run and required verbatim; an untracked or location-free block counted as backlog that may not grow; the two
   `checking.md` blocks re-rendered.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the checklist — the transcript test, five blocks re-rendered from runs, the backlog ratchet both
+  ways, a permanent catalog entry.
+  Commit: `ARCHOGEN-PROGRAM-0143 (leaf PROGRAM.20.2)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — the test's first run, before any block was touched:
+    ```text
+    $ cargo test -q -p archogen-cli --test book_transcripts
+      5 of 12 checked transcript(s) disagree with the tool:
+      checking.md:44 · checking.md:109 · checking.md:131 · modules.md:152 · reading.md:122
+      test result: FAILED. 0 passed; 1 failed
+    ```
+    Two of them (`checking.md:44`, `modules.md:152`) dropped the secondary "first declared here" label — the very label the
+    prose around each says is there ("with the first declaration named"; "with both sites named, in the two files they
+    are in"); the other three re-wrapped a hint or dropped the final summary line. ⚠️ The hand instrument (a substring
+    match) had counted `reading.md:122` as verbatim; exact equality is what caught its missing summary line.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — the tests that read the book read its figures, sources and tables, never its
+    transcripts:
+    ```text
+    $ git grep -ln "docs/book/src" f72b50e -- 'crates/*/tests/*.rs'      (then each file's uses)
+      corpus.rs: a corpus size in reading.md · kinds.rs: kinds.md's tables · semantic_corpus.rs: checking.md's corpus size
+      module_files.rs: modules.md's opening example source · module_cases.rs: the names modules.md shows · reference.rs: tables
+    $ git grep -n "error\[" f72b50e -- 'crates/*/tests/*.rs' | grep -c book        -> 0
+    ```
+  - [x] **FIX** — `crates/archogen-cli/tests/book_transcripts.rs`: a block with an `error[` line is a transcript; one opened
+    by `$ archogen check <file>` must **equal** the in-process run (with the exit code when it echoes `$?`), one keyed by
+    `-->` must appear verbatim; a transcript over an input no reader can rebuild is a backlog of 11 that may shrink, not
+    grow. The five blocks re-rendered from runs of the current binary.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    $ cargo test -q -p archogen-cli --test book_transcripts          -> test result: ok. 1 passed; 0 failed
+    a new block over nowhere.eadl → "new transcript(s) over an input no reader can rebuild: [\"presence.md:107\"]"
+    a stale backlog entry        → "backlog entries that are no longer there: [\"gone.md:1\"]"          (each restored by `cmp`)
+    $ cargo xtask mutate --only renderer-drops-secondary-labels
+      ✓ renderer-drops-secondary-labels  killed by every_rendered_diagnostic_in_the_book_is_what_the_command_prints
+    ```
+  - [x] **NO REGRESSION** — `mdbook build docs/book` exit=0; `BOOK-ANCHORS` exit=0; the test takes 0.01 s and is ignored
+    under Miri with the other corpus walks; the doctrine driver green at the commit.
+  - [x] **LOCKSTEP** — `verification.md` gains "Every diagnostic shown in this book is a real run" — ⚠️ written first with
+    "thirteen checkable examples" against the test's own `5 of 12`, and corrected to twelve before the commit: this leaf's
+    own class, caught by reading the output back; the catalog's thirteenth entry.
 
 - ID: `PROGRAM.20.3`
   Status: `pending`
@@ -3216,6 +3256,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.17.2` | the no-loss proof (ids declared, commit rows present, pre-trim digests); the checker and its 11 arms; six mutations; the pre-trim `LIVE_STATUS.md` put back | 42 110 → 2 324 bytes and 30 256 → 220 on the longest line; every arm and mutation as designed; the old file refused on bytes and width, not on lines |
 | `2026-09-30` | `PROGRAM.17.3` / `PROGRAM.17` | growth since `2026-09-27` from `git show 4d6d002:<file>`; closed-leaf share of `M1.md` and `PROGRAM.md` by an `awk` over leaf blocks | 77% of `M1.md` and 75% of `PROGRAM.md` are closed leaves; §8 written, `PROGRAM.31`/`.32` filed blocked; `PROGRAM.17` closed |
 | `2026-09-30` | `PROGRAM.20.1` | the gate's first run; its 10 arms; seven mutations; each real snapshot's head moved | `M2.9`'s status contradiction found and corrected in its own commit; every arm and mutation as designed; all three snapshots genuinely checked |
+| `2026-09-30` | `PROGRAM.20.2` | the transcript test before and after; the backlog grown and made stale; the renderer mutation through the catalog | 5 of 12 checkable transcripts differed, two contradicting their own prose; all 12 exact after re-rendering; both ratchet directions refused; the mutation killed by the book's own transcripts |
 
 ## Commit Log
 
@@ -3263,6 +3304,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.17.2` | `ARCHOGEN-PROGRAM-0139 (leaf PROGRAM.17.2)` | **the snapshots hold current state, and a checker bounds them on lines, bytes and longest line** — `LIVE_STATUS.md` 42 110 → 2 324 bytes after a no-loss proof; `LIVE-SNAPSHOTS`; `COMMIT.md` stops asking for history in a snapshot |
 | `PROGRAM.17.3` → `PROGRAM.17` | `ARCHOGEN-PROGRAM-0140 (leaf PROGRAM.17.3)` | **the history lifecycle choices go to the director** — findings §8 with measurements and a recommendation; `PROGRAM.31`/`.32` filed blocked; `PROGRAM.17` closed |
 | `PROGRAM.20` → `PROGRAM.20.1` | `ARCHOGEN-PROGRAM-0142 (leaf PROGRAM.20.1)` | **a restated order is a verified copy** — `STATED-ORDER` checks frontier rows, snapshot heads, successor lists and the changelog's order; its first run found `M2.9` stated two ways. `PROGRAM.20` decomposed |
+| `PROGRAM.20.2` | `ARCHOGEN-PROGRAM-0143 (leaf PROGRAM.20.2)` | **every diagnostic the book shows is a real run** — a test re-runs each and requires it exactly; five blocks re-rendered, two of which contradicted their own prose |
 
 ## Changelog
 

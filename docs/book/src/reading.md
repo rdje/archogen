@@ -127,6 +127,7 @@ error[boundary-implementation-in-description]: `implementation` is implementatio
 15 |   (implementation
    |   ^^^^^^^^^^^^^^^ this is an implementation body — an algorithm, a sequence, or a data structure (continues to line 20)
   = hint: it fails the `non-prescription` test — can its interpretation be stated without prescribing an algorithm, instruction sequence, code provider, data structure, or executable model body? It belongs to engine knowledge: the provider record selected against this declaration's contract.
+archogen: invalid-description: 1 diagnostic(s) in docs/semantics/boundary/reject/register-programming-sequence.eadl
 ```
 
 Until leaf `M1.31` the caret was sized by the whole span, so this one drew **183** carets under a

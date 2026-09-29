@@ -420,6 +420,16 @@ $ bash scripts/check_stated_order.sh              # the gate
 $ bash scripts/check_stated_order.sh --self-test  # its RED arms, on scratch repositories
 ```
 
+## Every diagnostic shown in this book is a real run
+
+When this book shows `archogen check` refusing a description, a test re-runs that command and requires
+the book to show exactly what it prints: every label, the final summary line and the exit code, with
+nothing shortened or re-wrapped (`crates/archogen-cli/tests/book_transcripts.rs`). Before that test,
+five of the twelve checkable examples differed from a real run. Two had silently dropped the "first
+declared here" label that the text around them said was there. All five are re-rendered from runs.
+Eleven older examples use a file that is not in the repository, so no one can re-run them. They are
+listed in the test, and the list may shrink but never grow.
+
 ## Why `focused` runs the whole suite
 
 §14.3 defines the focused tier as "format/type checks and **affected** contract tests", and
