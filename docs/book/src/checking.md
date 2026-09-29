@@ -53,6 +53,25 @@ And an out-of-profile capability is not *also* reported as a missing fact. Telli
 `general-ipc` "is required and nothing describes it" invites them to go and describe it, on a
 capability the profile refuses either way.
 
+### Which verdict one diagnostic carries
+
+Some codes **are** §5.5 verdict names — `missing-fact`, `unsupported-profile`,
+`infeasible-configuration` — and a diagnostic carrying one decides the verdict itself. Most are not:
+`read-unclosed-list`, `schema-arity` and `quantity-unknown-unit` each name a *rule* rather than a
+verdict, and a description that breaks one is malformed, so the verdict is `invalid-description`.
+
+⛔ That default is one rule in one place — `Verdict::of_code` in
+`crates/eadl-front/src/diagnostic.rs` — because it had three consumers and two answers, and the one
+facing the author had the wrong one: `archogen build` classified a mistyped unit as `tool-failure` and
+exited **70**, a status [the contract below](cli.md) reserves for the invocation, which tells an author
+to file a bug about the tool for a symbol they mistyped. It now exits **10**. A rule each consumer
+re-implements is a rule the next consumer lacks.
+
+⭐ It is a **classification**, not a claim that the description was checked. `archogen check` still
+accepts a quantity whose unit the table does not hold, because the passes that read quantities discard
+what they find — leaf `M1.28` owns that, and until it lands the two commands can disagree about the same
+bytes.
+
 ## Exit codes
 
 The verdict maps to the process exit code through one table, and a test asserts the mapping is

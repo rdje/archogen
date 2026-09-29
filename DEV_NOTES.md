@@ -1,5 +1,38 @@
 # DEV_NOTES.md
 
+## _(2026-09-29)_ — the consumer facing the author was the one that had re-implemented the rule
+
+- `M1.28.1`, closing F-M: `archogen build` classified a description defect as a toolchain failure and
+  exited **70** for a mistyped unit symbol.
+- ⛔ The rule "which verdict does a diagnostic code that is not a §5.5 verdict slug carry?" had **three**
+  consumers and **two** answers, and `grep -rn "Verdict::parse" crates/ --include='*.rs'` shows the split
+  in one screen: `crates/eadl-model/src/check.rs:212` and `:223` both
+  `unwrap_or(Verdict::InvalidDescription)`, `crates/archogen-cli/src/build_cmd.rs:136`
+  `map_or(Status::ToolFailure, …)`. The two that were right are internal — they feed a precedence
+  comparison. The one that was wrong prints to stderr and sets the exit code a script branches on.
+- ⭐ **That is the shape worth naming: the consumer facing the author is the one most likely to have
+  re-implemented the rule**, because it is the furthest from the crate that owns it and the least likely to
+  be reached by that crate's tests. `grep -rn "quantity-" crates/archogen-cli/tests/` → **no match**: no
+  fixture ever drove a non-verdict-shaped code through `build`, so the divergence had nothing to fail on.
+  Second instance of `M1.13.4.1`'s lesson in four commits, and the prescription is identical — extract the
+  rule into one named accessor at the lowest level that can carry it, so a fourth consumer cannot pick its
+  own default without deleting the function.
+- **Four mutations, because three of them test different hazards.** Restoring the old default fails only the
+  new end-to-end arm; setting the accessor's default to `ToolFailure` reproduces the original defect as a
+  mutation; setting it to `Ok` fails two arms, which is the one that pins *silent acceptance* — a hazard
+  nobody reported and the more dangerous of the two, because an unrecognized code that meant `ok` would
+  have made `archogen check` print nothing at all; and making the accessor ignore its argument fails the
+  totality arm, which is what proves `of_code` does not simply shadow `parse`.
+- ⚠️ The before→after was taken from a **stashed tree**, not from memory or from the leaf's own text: the
+  leaf quoted `exit=70` from the filing measurement, and re-running it against `git stash` confirmed the
+  number rather than carrying it. `git stash pop` restored four modified files and
+  `git status --short` agreed with the pre-stash listing.
+- promotion: declined (recorded on `M1.28.1`'s leaf with the reason — a second instance of a shape whose
+  prescription is now a named function, cited in that function's own doc comment where the next consumer
+  reads it; this repository promotes at recurrence, and
+  `docs/knowledge/a-leafs-claims-about-the-repository-are-hypotheses.md` was declined at one instance and
+  promoted at four)
+
 ## _(2026-09-29)_ — every leg was an existence census, and the discard was in the caller
 
 - Found by picking up `M1.26.1`, not by looking for it. The first question a normative document forces is

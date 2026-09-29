@@ -228,3 +228,64 @@ fn a_description_with_no_system_says_there_is_nothing_to_build() {
         "the refusal should say what the file is, not only what it is not: {err}"
     );
 }
+
+/// ⛔ Leaf `M1.28.1`: the refusal an author sees is a statement about the **description**, and its exit
+/// code is the one §5.5 gives a malformed description.
+///
+/// This is the end-to-end arm for the rule `Verdict::of_code` now carries in one place. The fixture is
+/// the committed S0 description with one symbol changed — `(period 10 ms)` → `(period 10 parsec)` — so
+/// `interpret` refuses it with `quantity-unknown-unit`, a code that is **not** a §5.5 verdict slug.
+/// `build_cmd.rs` used to classify that as `ToolFailure` and exit **70**, which
+/// `crates/archogen-cli/src/status.rs:8` reserves for a failure of the invocation, so an author who
+/// mistyped a unit was told the toolchain had broken.
+///
+/// ⚠️ **What this arm does and does not pin.** It pins the *classification*, not the reachability of the
+/// diagnostic: `archogen check` still accepts these bytes, because three consumers of `Quantity::read`
+/// discard what it finds, and that is leaf `M1.28.2`. When `.2` lands, `check` refuses the description
+/// first and this build stops reaching `interpret` — the assertion is `Status::InvalidDescription` either
+/// way, which is why it is written against the status and not against the path that produced it.
+#[test]
+fn a_build_refused_for_a_bad_unit_is_a_malformed_description_not_a_tool_failure() {
+    let dir = out_dir("bad-unit");
+    let tmp = Path::new(env!("CARGO_TARGET_TMPDIR"));
+    std::fs::create_dir_all(tmp).expect("the target tmpdir is creatable");
+
+    let committed = description("examples/s0-heartbeat/system.eadl");
+    let text = std::fs::read_to_string(&committed)
+        .unwrap_or_else(|e| panic!("cannot read {committed}: {e}"));
+    let corrupted = text.replacen("(period 10 ms)", "(period 10 parsec)", 1);
+    assert_ne!(
+        corrupted, text,
+        "the fixture no longer holds `(period 10 ms)`, so this arm mutated nothing"
+    );
+    let source = tmp.join("s0-build-bad-unit.eadl");
+    std::fs::write(&source, &corrupted).expect("writable");
+
+    let (status, out, err) = build(&[
+        "build",
+        &source.display().to_string(),
+        "--out",
+        &dir.display().to_string(),
+    ]);
+
+    assert!(
+        err.contains("quantity-unknown-unit"),
+        "the refusal must name the unit the table does not hold: {err}"
+    );
+    assert_eq!(
+        status,
+        Status::InvalidDescription,
+        "a description the S0 path cannot realize is malformed, not a toolchain failure: {err}"
+    );
+    assert_eq!(status.code(), 10, "the contract `status.rs` publishes");
+    assert_ne!(
+        status,
+        Status::ToolFailure,
+        "exit 70 is reserved for the invocation; reporting it here tells the author to file a bug \
+         about the tool for a symbol they mistyped: {err}"
+    );
+    assert!(
+        out.is_empty(),
+        "a refused build must not also report success: {out}"
+    );
+}

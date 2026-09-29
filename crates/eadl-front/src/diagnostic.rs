@@ -81,6 +81,29 @@ impl Verdict {
         Self::ALL.iter().copied().find(|v| v.slug() == text)
     }
 
+    /// The verdict a diagnostic's code carries, with the one default every consumer shares.
+    ///
+    /// ⭐ **A code that is not a §5.5 verdict slug is a statement about the description, not about the
+    /// toolchain.** `quantity-unknown-unit`, `schema-arity` and `read-unclosed-list` each name a rule the
+    /// language enforces and none of them is a verdict name, so the verdict for a description that breaks
+    /// one is `InvalidDescription`. Defaulting the other way tells an author to file a bug about the
+    /// toolchain for a symbol they mistyped, and §5.5 is explicit that a tool failure is never a statement
+    /// about the system — the `tool-failure` diagnostic `crates/eadl-model/src/check.rs` builds says so in
+    /// its own repair direction.
+    ///
+    /// ⛔ **One accessor, because this rule had three consumers and two answers.**
+    /// `crates/eadl-model/src/check.rs` defaulted it to `InvalidDescription` twice while
+    /// `crates/archogen-cli/src/build_cmd.rs` defaulted it to `ToolFailure` once, so `archogen check` and
+    /// `archogen build` classified the *same* diagnostic differently and the one facing the author was the
+    /// wrong one: a build refusing `(period 10 parsec)` exited **70**. A rule each consumer re-implements
+    /// is a rule the next consumer lacks, which is why `M1.13.4.1` extracted
+    /// `crate::language_version::declarations()` for the language-version identifier and this extracts the
+    /// same rule for the verdict — see leaf `M1.28.1` in `docs/tasks/M1.md`.
+    #[must_use]
+    pub fn of_code(code: &str) -> Self {
+        Self::parse(code).unwrap_or(Self::InvalidDescription)
+    }
+
     /// Whether the description was accepted.
     #[must_use]
     pub const fn is_ok(self) -> bool {
@@ -316,8 +339,83 @@ impl Diagnostics {
 
 #[cfg(test)]
 mod tests {
-    use super::{Diagnostic, Diagnostics, Label, Severity};
+    use super::{Diagnostic, Diagnostics, Label, Severity, Verdict};
     use crate::source::{SourceMap, Span};
+
+    // ── `Verdict::of_code`: one rule, one default, every consumer ────────────────────────────
+    //
+    // ⛔ These are the RED arms for leaf `M1.28.1`. The rule had three consumers and two answers:
+    // `check.rs` defaulted a code that is not a verdict slug to `InvalidDescription` and
+    // `build_cmd.rs` to `ToolFailure`, so the same diagnostic was classified differently by
+    // `archogen check` and `archogen build` — and the one facing the author was the wrong one, exiting
+    // 70 for a mistyped unit symbol.
+
+    #[test]
+    fn a_code_that_is_not_a_verdict_slug_says_something_about_the_description() {
+        // Real codes, taken from the emitters rather than invented: a unit the table does not hold, a
+        // clause with the wrong number of values, an unclosed list. None is a §5.5 verdict name, and
+        // each is a rule the language enforces — so each is a malformed description, never a broken
+        // toolchain.
+        for code in [
+            "quantity-unknown-unit",
+            "quantity-non-positive-frequency",
+            "schema-arity",
+            "read-unclosed-list",
+            "refinement-violated",
+            "boundary-implementation-in-description",
+        ] {
+            let verdict = Verdict::of_code(code);
+            assert_eq!(
+                verdict,
+                Verdict::InvalidDescription,
+                "`{code}` is a rule the language enforces, so a description that breaks it is \
+                 malformed; §5.5 reserves `tool-failure` for the toolchain"
+            );
+            assert_ne!(
+                verdict,
+                Verdict::ToolFailure,
+                "`{code}` classified as a toolchain failure tells the author to file a bug about \
+                 the tool for a symbol they mistyped"
+            );
+        }
+    }
+
+    #[test]
+    fn every_verdict_slug_still_maps_back_to_its_own_verdict() {
+        // The accessor must not shadow `parse`: a consumer that relied on `unsupported-profile`
+        // arriving as `UnsupportedProfile` is the reason the rule exists at all, and a default that
+        // swallowed the slugs would pass the arm above while breaking every verdict-shaped code.
+        for verdict in Verdict::ALL {
+            assert_eq!(
+                &Verdict::of_code(verdict.slug()),
+                verdict,
+                "`{}` is a §5.5 verdict name and must arrive as itself",
+                verdict.slug()
+            );
+        }
+    }
+
+    #[test]
+    fn the_default_is_never_acceptance() {
+        // ⭐ The failure this pins is silent: a default of `Ok` would make an unrecognized code
+        // *accept* the description, which no reading of §5.5 permits. `parse` returns `None` for a
+        // code it does not know, and `None` means "not `ok`".
+        for code in ["", "nonsense", "eadl-version", "ok-but-not-really"] {
+            let verdict = Verdict::of_code(code);
+            assert!(
+                !verdict.is_ok(),
+                "an unrecognized code `{code}` was classified as acceptance"
+            );
+            assert!(
+                verdict.precedence() > Verdict::Ok.precedence(),
+                "an unrecognized code `{code}` must outrank `ok`, so a description carrying one is \
+                 never reported as valid"
+            );
+        }
+        // And the slug `ok` itself is the one code that does mean acceptance, so the arm above is not
+        // green on a default that refuses everything.
+        assert!(Verdict::of_code("ok").is_ok());
+    }
 
     #[test]
     fn a_rendered_diagnostic_carries_location_caret_and_repair() {

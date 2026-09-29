@@ -133,13 +133,18 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
     let plan = match interpret(&outcome.declarations, id) {
         Ok(plan) => plan,
         Err(diagnostic) => {
-            let status = eadl_front::Verdict::parse(diagnostic.code)
-                .map_or(Status::ToolFailure, Status::from_verdict);
+            // ⭐ The verdict comes from the diagnostic's own code through the one accessor every consumer
+            // shares, and its default is `invalid-description`: a code that is not a §5.5 verdict slug is a
+            // statement about the description, not about the toolchain. This line used to default to
+            // `Status::ToolFailure` instead, so a build refusing `(period 10 parsec)` exited **70** and
+            // told the author to file a bug about the toolchain for a symbol they mistyped — leaf
+            // `M1.28.1`.
+            let status = Status::from_verdict(eadl_front::Verdict::of_code(diagnostic.code));
             let _ = write!(err, "{}", diagnostic.render(&sources));
             let _ = writeln!(
                 err,
-                "archogen: {}: {path} was accepted, but the S0 path cannot realize it — nothing \
-                 was generated",
+                "archogen: {}: the S0 path cannot realize {path}, though the check pipeline accepted \
+                 it — nothing was generated",
                 status.slug()
             );
             return status;

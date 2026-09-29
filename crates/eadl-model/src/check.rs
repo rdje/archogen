@@ -209,8 +209,11 @@ pub fn check(
     // exclusion admission and before presence: a task set the profile does not admit should be
     // reported before the author is sent to describe facts for it.
     for diagnostic in workload::check(&forms) {
-        let verdict = Verdict::parse(diagnostic.code).unwrap_or(Verdict::InvalidDescription);
-        push(&mut findings, verdict, vec![diagnostic]);
+        push(
+            &mut findings,
+            Verdict::of_code(diagnostic.code),
+            vec![diagnostic],
+        );
     }
 
     // ── presence and relevance ───────────────────────────────────────────────────────────────
@@ -220,8 +223,11 @@ pub fn check(
     }
     let presence = facts.check_excluding(&out_of_profile);
     for diagnostic in presence.diagnostics {
-        let verdict = Verdict::parse(diagnostic.code).unwrap_or(Verdict::InvalidDescription);
-        push(&mut findings, verdict, vec![diagnostic]);
+        push(
+            &mut findings,
+            Verdict::of_code(diagnostic.code),
+            vec![diagnostic],
+        );
     }
 
     // ── refinement ───────────────────────────────────────────────────────────────────────────

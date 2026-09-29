@@ -4,6 +4,52 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — a rule with three consumers had two answers, and the one facing the author was wrong
+
+`ARCHOGEN-M1-0104` (leaf `M1.28.1`). **545 passed / 0 failed** over 39 suites (baseline 541, delta = four
+new arms). One accessor, three consumers, four mutations seen firing, one exit code moved.
+
+- ⛔ **`archogen build` classified a description defect as a toolchain failure.** Over
+  `examples/s0-heartbeat/system.eadl` with `(period 10 ms)` → `(period 10 parsec)` it printed
+  `error[quantity-unknown-unit]` and then `archogen: tool-failure: … was accepted, but the S0 path cannot
+  realize it`, exiting **70** — the status `crates/archogen-cli/src/status.rs:8` reserves for *the
+  invocation*, and which `crates/eadl-model/src/check.rs:131`'s own `tool_failure` helper says in its
+  repair direction is "not a verdict about the description". An author who mistyped a unit symbol was told
+  to file a bug about the tool.
+- **Root cause: one rule, three consumers, two answers.** `grep -rn "Verdict::parse" crates/ --include='*.rs'`
+  → `check.rs:212` and `:223` both read `unwrap_or(Verdict::InvalidDescription)`, while
+  `build_cmd.rs:136` read `map_or(Status::ToolFailure, …)`. Nothing failed on the divergence because no
+  fixture drove a non-verdict-shaped code through `build`: `grep -rn "quantity-" crates/archogen-cli/tests/`
+  → **no match**. That is `M1.13.4.1`'s lesson verbatim — a rule each consumer re-implements is a rule the
+  next consumer lacks — and the second instance of it in four commits.
+- **The fix is the accessor, not the call site.** `Verdict::of_code(code)` now sits beside `parse` in
+  `crates/eadl-front/src/diagnostic.rs`, documented with the reason the default is `InvalidDescription` and
+  with the three-consumer history, and all three consumers call it — so a fourth cannot pick its own default
+  without deleting the accessor. The build's message stopped contradicting its own status: `the S0 path
+  cannot realize <path>, though the check pipeline accepted it`.
+- ⭐ **Measured before→after through the published CLI, with the *before* taken from a stashed tree rather
+  than remembered**: `exit=70`, `archogen: tool-failure: …` → `exit=10`,
+  `archogen: invalid-description: …`. And **four mutations seen firing**, each restoration proven
+  byte-identical by `diff -q`: the old default restored in `build_cmd.rs` (`7 passed; 1 failed` — only the
+  new end-to-end arm); the accessor's default set to `ToolFailure` (`64; 1` — the original defect
+  reproduced deliberately); set to `Ok` (`63; 2` — so silent **acceptance** is pinned, not only the
+  reported hazard); and the accessor made to ignore its argument (`63; 2` — so the totality arm is
+  load-bearing and `of_code` provably does not shadow `parse`).
+- ⛔ **What this does not claim.** It fixes the *classification*, not the reachability: `archogen check`
+  still accepts `(period 10 parsec)`, because three consumers of `Quantity::read` discard what it finds.
+  That is `M1.28.2`, and the book says so in the same breath — `docs/book/src/checking.md` gains "Which
+  verdict one diagnostic carries" under its precedence section, naming the accessor, the moved exit code
+  and the residue `.2` owns, rather than leaving the rule in a doc comment.
+- `make focused` → `passed — 3 / 0 / 0` (the first run failed on `fmt` alone, `push(…)` needing wrapping in
+  `check.rs`); 13 doctrines green; `book-anchors: OK (19 chapter(s), 3 normative document(s))`;
+  `mdbook build` `rc=0`. No normative document moved, so no migration note and the frozen baseline is
+  untouched. The exit-code contract is unchanged and still asserted total by `status.rs`'s own
+  `verdict_mapping_is_total` — one path's classification moved, no status was added or removed.
+- Lesson promotion **declined on the leaf, with the reason**: second instance of a shape whose prescription
+  is now a named function, cited in that function's own doc comment where the next consumer reads it. This
+  repository promotes at recurrence — `a-leafs-claims-about-the-repository-are-hypotheses` was declined at
+  one instance and promoted at four.
+
 ## archogen — `archogen check` accepts a description `archogen build` cannot realize, and every gate that should have seen it is an existence census
 
 `ARCHOGEN-M1-0102` (leaf `M1.28`, filed). Docs and task-tree only: no code path staged, so no test

@@ -13,15 +13,15 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M1` → frontier `M1.28.1`. `PROGRAM` `.11`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
-- **Next action:** **`M1.28.1`, high — `M1.28` is a live production defect, decomposed into two.**
-  `archogen check` **accepts** a description `archogen build` cannot realize: `(period 10 parsec)` passes
-  `check` and is refused as `quantity-unknown-unit` by `build`, and a zero tick rate (§13.1's **F03**, an
-  M1 gate fixture) draws no diagnostic from `check` at all. Three consumers of `Quantity::read` discard
-  what it finds, the only one that propagates is the S0 prototype, and the schema cannot ask — `period` is
-  `(holds values number symbol)` and `ValueType` has no quantity. `.1` is F-M (the verdict), `.2` the
-  enforcement, which costs a migration note; both precede `M1.26.1`, which would otherwise be born stating
-  a rule the pipeline does not enforce. Then `M1.26.1`, `.2`.- ⛔ **Every gate stayed green because all of them are existence censuses** — promoted to
+- **Active tree:** `M1` → frontier `M1.28.2`. `PROGRAM` `.11`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
+- **Next action:** **`M1.28.2`, high — the quantity enforcement.** `archogen check` **accepts** a
+  description `archogen build` cannot realize: `(period 10 parsec)` passes `check`, and a zero tick rate
+  (§13.1's **F03**, an M1 gate fixture) draws no diagnostic from `check` at all. Three consumers of
+  `Quantity::read` discard what it finds, the only one that propagates is the S0 prototype, and the schema
+  cannot ask — `period` is `(holds values number symbol)`, `ValueType` has no quantity. A language change,
+  so a migration note; ⛔ propagating from the three sites alone is **worse than doing nothing**. `.1` is
+  closed (`Verdict::of_code`, exit **70 → 10**). Both precede `M1.26.1`. Then `M1.26.1`, `.2`.
+- ⛔ **Every gate stayed green because all of them are existence censuses** — promoted to
   `docs/knowledge/an-existence-census-cannot-see-a-discarded-result.md` with three more instances of the
   shape: **F-H** (`M1.26.2`) a §4 row naming a mechanism `grep` cannot find; **F-J** (`M1.26.1`) a code
   whose only site is a totality arm; **F-K** (`M1.28`) the F03 case passing on a clause-name typo.
