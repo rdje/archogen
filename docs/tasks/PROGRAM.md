@@ -791,9 +791,24 @@ mdBook that is the director's window into the project.
             (git show --stat 91f329d -- docs/TASK_TREE.md -> 1 insertion, the M1 row it rewrote)
   ```
 
-  Corrected in `ARCHOGEN-PROGRAM-0088`, docs only, no code staged. ⚠️ The paragraph above ends
-  "classifying **five** shapes by hand": with this one it is six, so the register's own description
-  carries a figure — the class, restated inside the leaf that exists to end it.
+  Corrected in `ARCHOGEN-PROGRAM-0088`, docs only, no code staged. ⚠️ The paragraph above ended
+  "classifying **five** shapes by hand", which made the register's own description carry a figure — the
+  class, restated inside the leaf that exists to end it. ⛔ It went stale one shape later, so the count
+  is **deleted** here rather than retyped, which is this leaf's own prescription for exactly this.
+
+  A seventh shape, `2026-09-29` — found by `M1.13.4`'s measurement (its M-I: the identifier retrofit
+  executed on all 62 suite files and reverted), and ⛔ **not a figure about the repository at all**: a
+  line number **inside a quoted transcript**. `grep -rn '^[0-9]\+ |' docs/book/src/*.md` → 14 lines over
+  8 chapters (`boundary.md:88`, `checking.md:66` and `:70`, `modules.md:73` and `:77`, `presence.md:67`
+  and `:71`, `quantities.md:62`, `reading.md:84`, `:99` and `:103`, `s0.md:218` and `:222`,
+  `workload.md:94` and `:98`), each one a diagnostic rendering copied out of a real run. Editing the
+  description a transcript quotes moves every line number in it, and nothing compares a transcript to
+  the run it claims to be — so the shape is invisible to both existing sweep patterns (`N of M`, digits
+  followed by a size noun) and to every gate in the repository. It is the `M1.23`/`M1.24` class in the
+  one live surface the register's acceptance already names (book chapters) but no sweep has aimed at.
+  ⚠️ **Recorded, not fixed here**: `M1.13.4.2` re-renders the transcripts its own insertion moves and
+  states on its leaf that the class stays open. Whether the register should require a transcript to be
+  *generated* rather than copied — which is the only fix that cannot rot — is this leaf's design work.
   Each sweep is a population bounded by its pattern, so "nothing else found" has never been a result
   this repository could rely on — and a third sweep, adding `leaves|arms|checks|doctrines|productions|rows`,
   returned a further backlog of structure counts this leaf deliberately does **not** classify, because

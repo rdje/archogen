@@ -13,14 +13,15 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M1` → frontier `M1.13.4`. `PROGRAM` `.11`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
-- **Next action:** **`M1.13.4`** — make the corpora `eadl/1`'s conformance suite: one declared
-  population of **62** files, the **13** frozen evidence files excluded, and an instrument digesting
-  every frozen construct's **canonical form** rather than its bytes. It inherits two measured questions
-  of the same shape — no tracked description holds a **decimal literal**, and none carries the new
-  `(eadl-version eadl/1)` identifier — so §1 rule 2 and §8 are exercised only by the reference's rows.
-  Then `.13.5` (the freeze gate). ⚠️ Still open in `## Open Questions`: `M1.13.1`'s invisible-character
-  question, and the language's **name** (recorded, deliberately not published).
+- **Active tree:** `M1` → frontier `M1.13.4.1`. `PROGRAM` `.11`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
+- **Next action:** **`M1.13.4.1`** — the kind registry refuses `(eadl-version eadl/1)` as
+  `schema-not-a-kind`: §8 contradicted from a **third** layer, so "not a declaration" becomes
+  single-defined. Then `.4.2` (the retrofit — all **62** state their version, which is what makes §8
+  rule 2's justifying sentence true), `.4.3` (the one empty literal category), `.4.4` (the manifest),
+  `.4.5` (the baseline), then `.13.5` (the freeze gate). ⛔ Decomposed on **measurement**: the retrofit
+  was executed on all 62 and reverted — **45 failed / 447 passed**, two root causes — and the exclusion
+  cannot use content identity (`LS-002`'s evidence copy is byte-identical to a suite file). ⚠️ Open in
+  `## Open Questions`: `M1.13.1`'s invisible character, and the language's **name** (not published).
 - ⛔ **`M1.13.2` settled F-F, and both measurements it was routed on were false** — a census figure with
   an unstated scope and a radix-scoped maximum, restated in **7** places, and an address argument true
   of *physical* addresses only. Details: `docs/decisions/decision_eadl1-value-domain.md`.
