@@ -9,8 +9,9 @@
 # inspect:    scripts/language_baseline.sh --print
 # limit:      canonical form carries no comment, so a corpus file's header is invisible here; this
 #             proves the described systems did not move, not that the files did not.
-# gate:       leaf M1.13.5 owns comparing this file against a fresh run and requiring a migration
-#             note for any movement. This script writes the baseline and does not enforce it.
+# gate:       scripts/check_language_freeze.sh compares this file against a fresh run and against
+#             HEAD's, and refuses a movement no pending note in docs/semantics/migrations/ covers.
+#             This script writes the baseline; that check enforces it.
 729a9724bc1673d7463e6e2455ea2e71a8b09736edbe1a64ba4a3447ff638caf  docs/semantics/grammar.md#ebnf
 f43870b2252ba2f76072adefc99b328e35b32aec8c62b6a1f4c4553d33280736  docs/semantics/reference.md#comment-headers
 1fdff8699b1ed6a631d0528d37e47f745effc000a589593ff42aa53c9fc8f710  docs/semantics/reference.md#diagnostics

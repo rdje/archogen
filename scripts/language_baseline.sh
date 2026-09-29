@@ -24,11 +24,10 @@
 # `docs/semantics/boundary/README.md`'s counts and by `reference.rs` against the reference's
 # `comment-headers` table.
 #
-# ⛔ THIS SCRIPT WRITES THE BASELINE AND DOES NOT GATE IT. Comparing a fresh run against the tracked
-# file, requiring a migration note for any movement, and refusing a note-less regeneration are leaf
-# `M1.13.5`'s, which registers `scripts/check_language_freeze.sh` as a doctrine. A gate written in the
-# same commit as its baseline has no prior state to differ from, so no RED arm can fire against the real
-# tree — which is why the two are separate commits and not one.
+# ⛔ THIS SCRIPT WRITES THE BASELINE AND DOES NOT GATE IT — `scripts/check_language_freeze.sh` does,
+# and the two are separate tools on purpose: writing is an explicit act an author performs, gating is a
+# refusal everybody else inherits. Keeping them apart is also what let the baseline exist one commit
+# before the gate, so the gate's RED arms had a prior state to differ from.
 #
 # CONTRACT: exit code is the verdict; explains on stderr; deterministic. Scratch lives under
 # `target/tmp/`, on the repository's own volume (§13 of the standing instructions), never in `/tmp`.
@@ -104,8 +103,9 @@ header() {
 # inspect:    scripts/language_baseline.sh --print
 # limit:      canonical form carries no comment, so a corpus file's header is invisible here; this
 #             proves the described systems did not move, not that the files did not.
-# gate:       leaf M1.13.5 owns comparing this file against a fresh run and requiring a migration
-#             note for any movement. This script writes the baseline and does not enforce it.
+# gate:       scripts/check_language_freeze.sh compares this file against a fresh run and against
+#             HEAD's, and refuses a movement no pending note in docs/semantics/migrations/ covers.
+#             This script writes the baseline; that check enforces it.
 TEXT
 }
 

@@ -48,15 +48,16 @@ rather than about one.
 <!-- machine-read: suite-exclusions -->
 | excluded path | why it is not a conformance case |
 | --- | --- |
-| `docs/feedback` | outbound bug reports to another project. Every description under it is a **frozen reproducer**: its bytes are the reproduction, `FEEDBACK-SELF-CONTAINED` seals them, and five of the thirteen are deliberately malformed. A suite that swept them in would make one project's bug reports into conformance cases of a language version, and a malformed one would fail the accept legs for a reason that is not a language defect |
+| `docs/feedback` | outbound bug reports to another project. Every description under it is a **frozen reproducer**: its bytes are the reproduction, `FEEDBACK-SELF-CONTAINED` seals them, and some are deliberately malformed — which is what makes them evidence. A suite that swept them in would make one project's bug reports into conformance cases of a language version, and a malformed one would fail the accept legs for a reason that is not a language defect |
 
 ⛔ **An exclusion is a path prefix, and the matcher has no glob grammar.** A pattern matches a path when
 the pattern's path segments are the leading segments of the path's, so `docs/feedback` excludes
 everything beneath it. There is no `*`, no `**` and no character class, because a matcher with the full
 glob grammar is a second thing to be wrong about beside the manifest — and the narrower spelling the
 first draft of this leaf carried (`docs/feedback/linkedspec/issues/*/evidence`) needs one. Measured
-before choosing: all thirteen excluded descriptions are under an `evidence/` directory, and nothing else
-under `docs/feedback` is a description at all, so the wider prefix excludes nothing that should be in.
+before choosing: every excluded description is under an `evidence/` directory, and nothing else under
+`docs/feedback` is a description at all, so the wider prefix excludes nothing that should be in — and the
+leg `every_exclusion_matches_a_real_description` counts them instead of this file.
 
 ## How the population is enumerated
 
@@ -90,9 +91,10 @@ never a side effect — and `crates/eadl-front/examples/language_freeze.rs` is t
 enumerates the constructs, reading this file for the population rather than carrying a list of its own.
 
 ⭐ **So a change here moves the baseline, and that is the point.** Adding a root, widening one, or adding
-a description changes which constructs are frozen; `M1.13.5` is the leaf that turns that movement into a
-required migration note. Nothing in this file is a count, so nothing here can go stale silently — the
-population is walked, and `crates/eadl-front/tests/conformance_suite.rs` pins the census.
+a description changes which constructs are frozen, and `scripts/check_language_freeze.sh` refuses the
+movement until a note in [`migrations/README.md`](migrations/README.md) covers it. Nothing in this file
+is a count, so nothing here can go stale silently — the population is walked, and
+`crates/eadl-front/tests/conformance_suite.rs` pins the census.
 
 ## What the suite proves, and what it does not
 

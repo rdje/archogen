@@ -24,6 +24,7 @@ PROJECT_DOCTRINES=(
   "S0-RETIREMENT|every hard-coded S0 assumption is marked in the source, listed with an owning leaf, and the prototype has acquired no new consumers|scripts/check_s0_retirement.sh"
   "BOOK-ANCHORS|every book chapter, and every normative document under docs/semantics/, that describes behavior cites a repository path — and every path either of them cites exists|scripts/check_book_anchors.sh"
   "FEEDBACK-SELF-CONTAINED|every reported bug's directory stands alone — complete, closed, portable, and in its vendor register|scripts/check_feedback_self_contained.sh"
+  "LANGUAGE-FREEZE|no construct of eadl/1 moved without a migration note — the baseline agrees with the working tree, and amending it is an explicit act|scripts/check_language_freeze.sh"
 )
 
 for entry in "${PROJECT_DOCTRINES[@]}"; do

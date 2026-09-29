@@ -95,12 +95,22 @@ fn fail(message: &str) -> ExitCode {
 fn run() -> Result<ExitCode, ExitCode> {
     let mut stdout = std::io::stdout().lock();
     let args: Vec<String> = std::env::args().skip(1).collect();
+    // `--diff` is the gate's classifier: `scripts/check_language_freeze.sh` hashes a fresh baseline in
+    // shell and asks this to say *what kind* of movement each difference is, because a moved digest, an
+    // added construct and a removed one are three different claims and a migration note has to answer to
+    // the right one. One comparator, in one language, used by both the gate and its arms.
+    if let [flag, fresh, tracked] = args.as_slice() {
+        if flag == "--diff" {
+            return diff(fresh, tracked);
+        }
+    }
     let list = match args.as_slice() {
         [] => false,
         [flag] if flag == "--list" => true,
         [flag] if flag == "--texts" => false,
         _ => {
-            eprintln!("usage: language_freeze [--list | --texts]");
+            eprintln!("usage: language_freeze [--list | --texts | --diff <fresh> <tracked>]");
+            eprintln!("  --diff   classify how two baseline files differ; exit 1 if they do");
             eprintln!("  --list   the construct ids, one per line");
             eprintln!(
                 "  --texts  NUL-framed `<id>\\0<text>\\0` records, for hashing (the default)"
@@ -246,6 +256,60 @@ pub fn constructs(root: &Path) -> Result<Vec<(String, String)>, Vec<String>> {
         )]);
     }
     Ok(out)
+}
+
+/// Classify how the baseline at `fresh_path` differs from the one at `tracked_path`.
+///
+/// Exit `0` when they agree, `1` when they differ — printing one line per difference, classified — and
+/// `2` when either file is not a baseline at all, which is a defect in the file and not a movement.
+fn diff(fresh_path: &str, tracked_path: &str) -> Result<ExitCode, ExitCode> {
+    let fresh = parse_baseline(fresh_path)?;
+    let tracked = parse_baseline(tracked_path)?;
+    let differences = common::baseline::compare(&fresh, &tracked);
+    if differences.is_empty() {
+        return Ok(ExitCode::SUCCESS);
+    }
+    let mut stdout = std::io::stdout().lock();
+    for difference in &differences {
+        emit(
+            &mut stdout,
+            &format!("{}\t{}", difference.kind(), difference.render()),
+        )?;
+    }
+    let (mut moved, mut added, mut removed) = (0, 0, 0);
+    for difference in &differences {
+        match difference.kind() {
+            "moved" => moved += 1,
+            "added" => added += 1,
+            _ => removed += 1,
+        }
+    }
+    emit(
+        &mut stdout,
+        &format!(
+            "{moved} moved, {added} added, {removed} removed — a moved digest is a construct that \
+             changed, an added one is a language that grew, and a removed one is a construct nothing \
+             freezes any more"
+        ),
+    )?;
+    Ok(ExitCode::from(1))
+}
+
+/// Read one baseline file, reporting a malformed one as a defect rather than as a movement.
+fn parse_baseline(path: &str) -> Result<common::baseline::Baseline, ExitCode> {
+    let text = match std::fs::read_to_string(path) {
+        Ok(text) => text,
+        Err(error) => return Err(fail(&format!("cannot read {path}: {error}"))),
+    };
+    match common::baseline::parse(&text) {
+        Ok(baseline) => Ok(baseline),
+        Err(problems) => {
+            for problem in &problems {
+                eprintln!("language_freeze: {problem}");
+            }
+            Err(ExitCode::from(2))
+        }
+    }
 }
 
 fn read_document(root: &Path, relative: &str) -> Result<String, String> {

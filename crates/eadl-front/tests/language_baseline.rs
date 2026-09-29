@@ -65,15 +65,20 @@ fn the_baseline_covers_all_three_classes_of_frozen_construct() {
 
 #[test]
 fn the_baseline_header_names_the_act_that_rewrites_it() {
-    // ⛔ "Amending the baseline must be an explicit act, never a side effect" — `M1.13.5`'s second rule,
+    // ⛔ "Amending the baseline must be an explicit act, never a side effect" — the freeze's second rule,
     // and the header is where a reader meets it. A generated file that does not say how it is generated
     // gets edited by hand, and the first hand-edit is the one that makes the digest mean nothing.
+    //
+    // ⭐ The needle is the **gate's path**, not a task-tree leaf id. The first cut of this leg asked for
+    // `M1.13.5`, and it was right for exactly one commit: a generated artifact that names the leaf which
+    // produced it rots the moment that leaf closes, and a rotting pointer in a file nobody edits by hand
+    // is worse than none. The tool that enforces the file is the thing worth naming.
     for needle in [
         "GENERATED",
         "do not edit",
         "scripts/language_baseline.sh --emit",
         "limit:",
-        "M1.13.5",
+        "scripts/check_language_freeze.sh",
     ] {
         assert!(
             BASELINE.contains(needle),

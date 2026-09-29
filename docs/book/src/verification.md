@@ -139,11 +139,47 @@ invalidates was found — and because canonical form carries no comment, a chang
 `comment-headers` table. So the baseline proves the described systems did not move, not that the files
 did not.
 
-⛔ **Writing the baseline and gating it are different commits, on purpose.** A gate written beside the
-baseline it enforces has no prior state to differ from, so no RED arm can fire against the real tree.
-`M1.13.4.5` wrote the file and the comparator that classifies a difference as *moved*, *added* or
-*removed*; leaf `M1.13.5` owns the check that fails on a movement no migration note covers, and the rule
-that regenerating the file is an explicit act rather than a side effect.
+⛔ **Writing the baseline and gating it are different tools, and different commits.** A gate written
+beside the baseline it enforces has no prior state to differ from, so no RED arm can fire against the real
+tree. `M1.13.4.5` wrote the file and the comparator that classifies a difference as *moved*, *added* or
+*removed*; `scripts/check_language_freeze.sh` is the gate.
+
+## The freeze, and the note it demands
+
+`LANGUAGE-FREEZE` runs with the other doctrines — on every commit, and in the `integration` tier — and has
+**two legs, because each has a hole the other closes**:
+
+| Leg | Asks | Catches |
+| --- | --- | --- |
+| integrity | does the tracked baseline agree with a fresh run over the working tree? | a frozen construct edited and the baseline left alone |
+| explicitness | does the tracked baseline agree with `HEAD`'s — or does a **pending** migration note name every construct the amendment moves? | a baseline regenerated because something moved, with nothing written down |
+
+The second leg is the one that makes the freeze mean something. Without it, "amend the baseline" is the
+waiver: edit the construct, re-run `--emit`, and the first leg goes green having proved nothing. So
+regeneration is an **explicit act** that fails until a note exists, and a note from an earlier migration
+cannot cover a later one — the gate accepts only `status: pending`, which the author flips to `applied`
+after regenerating.
+
+⛔ **Any movement needs a note, including a correction.** A note may say *"correction: the specification
+was wrong and no description changes meaning"* — that is still explicit, which is the whole requirement,
+and it costs one paragraph. A gate that tried to distinguish a bug fix from a language change would need
+judgement it cannot have, so it does not try. The form, the workflow and the four sections a note carries
+are in `docs/semantics/migrations/README.md`.
+
+```console
+$ scripts/check_language_freeze.sh              # the gate: green when every frozen construct agrees
+$ scripts/check_language_freeze.sh --self-test  # its RED arms, one of them against the real tree
+```
+
+⭐ Neither command's output is quoted here, deliberately. Both print counts — how many constructs agree,
+how many arms passed — and a count in prose is a count nothing re-derives: the repository's own register
+of that defect class (`PROGRAM.20` in `docs/tasks/PROGRAM.md`) exists because figures copied into chapters
+went stale for dozens of commits with every gate green. Run the command; do not read a number here.
+
+⚠️ **Honest limit.** A digest proves a construct *moved*. It cannot prove that the note covering the
+movement is correct, or complete, or that every description the change invalidates was found — that
+residue is review, exactly as `BOOK-ANCHORS` states its own. The gate removes the cheapest failure, a
+frozen construct edited silently, and leaves the expensive one to the reader.
 
 ## Why `focused` runs the whole suite
 

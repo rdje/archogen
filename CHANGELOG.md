@@ -52,6 +52,62 @@ four new legs and arms). 62 descriptions, 9 test legs, 4 book chapters.
   "every top-level form **it is given**", which is what the filter made true; `reading.md` carries the
   fact for the reader with no count in it, deliberately, because `M1.13.4.3` is about to move one.
 
+## archogen — `eadl/1` is frozen, and the gate's second leg is the one that makes it a freeze
+
+`ARCHOGEN-M1-0098` (leaf `M1.13.5`, closing `M1.13` with it). `535 passed / 0 failed` over 39 suites.
+`make integration` → `6 passed, 1 failed`, the failure being the pre-existing `emulator` step
+(`TARGET_VERIFIED=no`, owned by `M2.8`) and not this leaf.
+
+- **Two legs, because one has a hole the other closes.** *Integrity*: the tracked baseline agrees with a
+  fresh run over the working tree — that catches a frozen construct edited and the baseline left alone.
+  *Explicitness*: the tracked baseline agrees with `HEAD`'s, **or** a `status: pending` note in
+  `docs/semantics/migrations/` names every construct the amendment moves. Without the second, the waiver
+  is one command long — edit the construct, run `scripts/language_baseline.sh --emit`, green — and a gate
+  with a one-command waiver gets used. A note from an earlier migration cannot cover a later one: only
+  `pending` is accepted, and the author flips it to `applied` after regenerating, so a note is a record
+  rather than an open permission.
+- ⛔ **Any movement needs a note, including a correction.** A note may say *"correction: the specification
+  was wrong and no description changes meaning"* — that is still explicit, which is the whole requirement
+  of §15, and it costs one paragraph. A gate that tried to distinguish a bug fix from a language change
+  would need judgement it cannot have, so it does not try.
+- **One classifier, shared.** The gate calls the Rust comparator `M1.13.4.5` wrote, through a new `--diff
+  <fresh> <tracked>` mode on `crates/eadl-front/examples/language_freeze.rs` (exit `0` agree, `1` differ,
+  `2` unreadable), because a *moved* digest, an *added* construct and a *removed* one are three different
+  claims and a note has to answer to the right one. A second classifier in shell would be a second thing
+  that can disagree about what moved.
+- ⛔ **Two defects in the gate, both found by its own arms and not by reading it.** `if report="$(classify
+  …)"; then return; fi` followed by `case "$?"`: bash returns **0** from an `if` whose condition failed
+  with no `else`, so every real movement would have been reported as "not a readable baseline file" — the
+  branch that sounds plausible and stops anyone investigating. And the arms' parser read the classifier's
+  *summary* line as a difference, producing an id of `1` that no note could name, so a covered movement
+  looked uncovered (`8 pass / 1 fail` before the fix). Both are comments in the script now, naming the
+  failure they prevent.
+- **Nine RED arms, one against the real tree.** Fixtures for a moved digest, a construct the baseline no
+  longer freezes, a construct nobody declared, and an agreeing baseline passing — so the refusals are not
+  a gate that fails whatever it is given; an amendment with no note, the same amendment covered by a
+  pending note, that note spent and therefore refused, and a pending note for a *different* construct; and
+  the arm the parent leaf said only this one could have — a real description edited, the gate firing on
+  that file **by name**, restoration inside a `trap` and proven by `diff -q`, so an arm that fails still
+  leaves the tree clean. Every oracle requires this check's own word in the output as well as the exit
+  code, because "not zero" scores passes on a command that never ran.
+- **Cost measured rather than assumed, and the decision recorded with a trigger.** `time` over three runs:
+  **1.52 s, 1.60 s, 1.66 s** warm, nearly all of it the `cargo run` that prints canonical forms, so the
+  pre-commit doctrine path roughly doubles. Kept there rather than moved to CI — a freeze that runs only
+  in CI is a freeze that gets fixed later — with the trigger named on the leaf (the hook passing ~5 s) and
+  the cheap fallback stated (a shape-only leg in the hook, the comparison in `integration`).
+- **The book quotes neither command's output, and says why.** Both print counts — how many constructs
+  agree, how many arms passed — and a count in prose is the figure class `PROGRAM.20` registers; the same
+  chapter is where `M1.13.4.3` found two live false ones. Two ungated counts also came *out* of
+  `docs/semantics/conformance.md` in favour of naming the leg that measures them, and the leg that pins
+  the baseline's header now asks for the **gate's path** rather than a leaf id — the first cut asked for
+  `M1.13.5` and was right for exactly one commit.
+- ⭐ **`M1.13` closes with its acceptance re-checked criterion by criterion**, and both findings routed to
+  it settled neither as routed: F-F stayed 64-bit but on a reason that survives measurement, after both
+  figures it arrived with were re-derived as false; F-G turned out to be three defects rather than one.
+  The sequence was the point — two language changes, then the identifier, then the suite, then the
+  baseline, then the gate — because a leaf that both moves a construct and freezes it cannot show a clean
+  before→after for either. **535 passed / 0 failed** over 39 suites, from 476 when the leaf opened.
+
 ## archogen — `eadl/1` has a frozen baseline, and its digests were cross-checked rather than trusted
 
 `ARCHOGEN-M1-0097` (leaf `M1.13.4.5`, closing `M1.13.4` with it). `535 passed / 0 failed` over 39
