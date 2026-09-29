@@ -17,6 +17,7 @@
 
 pub mod diagnostic;
 pub mod form;
+pub mod language_version;
 pub mod module;
 pub mod reader;
 pub mod source;

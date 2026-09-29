@@ -406,3 +406,50 @@ fn a_module_file_holding_two_forms_is_refused() {
     assert!(failed);
     assert!(rendered.contains("module-multiple-forms"), "{rendered}");
 }
+
+#[test]
+fn a_module_may_state_its_language_version_before_its_declaration() {
+    // §8 rule 7, and the interaction that made it non-optional: §6 requires a module file to hold
+    // exactly one top-level form, so without the filter in `single_module` a module that states its
+    // language version would be refused as `module-multiple-forms`. That would leave the one file kind
+    // which most needs a locked version — the unit of reuse, imported by name into other descriptions
+    // — the one kind unable to carry it.
+    //
+    // ⛔ Note the two `version`s in this fixture are different things and that is the point:
+    // `(eadl-version eadl/1)` is the *language* version (§8), `(version 1 0)` is the *module's* own
+    // version (§6 rule 3, which an import matches with `(at-least …)`). One head symbol for both would
+    // have made this file ambiguous by nesting depth alone.
+    let modules = MemoryModules::new().with(
+        "platform.timer",
+        "(eadl-version eadl/1)\n(defmodule platform.timer (version 1 0) (export x) (defblock x (offers (p 1 bit))))",
+    );
+    let (_, rendered, failed) = run(&modules, "platform.timer");
+    assert!(
+        !failed,
+        "a leading language-version identifier was refused:\n{rendered}"
+    );
+    assert!(
+        !rendered.contains("module-multiple-forms"),
+        "the identifier was counted as a stray top-level form:\n{rendered}"
+    );
+}
+
+#[test]
+fn a_stray_form_beside_a_version_identifier_is_still_reported_against_the_stray_form() {
+    // ⛔ The filter must not weaken §6. Skipping the identifier means the count is over *declarations*,
+    // so a genuinely stray third form still has to be refused — and the label has to point at the stray
+    // form. `single_module` used to label `document.forms[1]`, which with an identifier present is the
+    // `(defmodule …)` itself: the diagnostic would have told the author to delete their declaration
+    // and keep the stray form.
+    let modules = MemoryModules::new().with(
+        "stray",
+        "(eadl-version eadl/1)\n(defmodule stray (version 1 0) (export x) (defblock x (offers (p 1 bit))))\n(defblock y (offers (p 1 bit)))",
+    );
+    let (_, rendered, failed) = run(&modules, "stray");
+    assert!(failed, "a stray form beside the declaration was accepted");
+    assert!(rendered.contains("module-multiple-forms"), "{rendered}");
+    assert!(
+        rendered.contains("defblock y"),
+        "the label must point at the stray form, not at the declaration:\n{rendered}"
+    );
+}

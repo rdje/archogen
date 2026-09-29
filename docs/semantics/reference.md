@@ -38,6 +38,7 @@ this list, in both directions, by `crates/eadl-front/tests/reference.rs`.
 | `crates/eadl-front/src/form.rs` | §3 canonical form and §5 comment retention: what is printed, what is escaped, what structural equality compares, and which comments become headers |
 | `crates/eadl-front/src/module.rs` | §6 modules and imports, and every diagnostic in §4 whose code begins `module-` |
 | `crates/eadl-model/src/kind.rs` | §7 kinds and `defkind`, and every diagnostic in §4 whose code begins `schema-` |
+| `crates/eadl-front/src/language_version.rs` | §8 the language version a description states, and every diagnostic in §4 whose code begins `language-version-` |
 
 ⚠️ **A source belongs here when a chapter of this file states rules about it**, not when it merely
 happens to be nearby. `crates/eadl-model/src/kind.rs` is in a different crate from the frontend and is
@@ -408,6 +409,11 @@ cheapest diagnostic to write is the most expensive to receive.
 | `schema-cardinality` | a clause appears a number of times its kind's cardinality forbids | keep the number of `(clause …)` occurrences the cardinality allows |
 | `schema-arity` | a clause does not hold the number of values its kind requires | the diagnostic names the clause, the number required and the number found |
 | `schema-type` | a value in a clause is not of the type the kind declares for it | write a value of the declared type |
+| `language-version-unknown` | a **well-formed** `(eadl-version …)` names a version this toolchain does not read (§8 rule 6) | write `(eadl-version eadl/1)`; a description is never silently re-read as another version |
+| `language-version-not-an-identifier` | the identifier is not a bare symbol — a string, a number or a list (§8 rule 5) | write `(eadl-version eadl/1)`; `"eadl/1"` is a string and is not the same atom |
+| `language-version-missing` | an `(eadl-version …)` form carries no identifier at all | write `(eadl-version eadl/1)` |
+| `language-version-extra-argument` | an `(eadl-version …)` form carries more than the one identifier | keep `(eadl-version eadl/1)` and delete what follows it |
+| `language-version-duplicated` | a description states its language version more than once (§8 rule 5) | keep one `(eadl-version eadl/1)` and delete the other |
 
 ### The rules those rows state
 
@@ -540,6 +546,87 @@ and registered; `docs/semantics/kinds/core.eadl` declares the surface kinds and
    inside a clause — `(at-least 60 s)` is nested forms at this stage and becomes a checked quantity
    later. Claiming otherwise would be the more dangerous kind of green.
 
+## 8. The language version a description states
+
+A description says which version of this language it is written in, so that `ROADMAP.md` §15's promise
+— *a source description retains its meaning under its locked semantic version* — is something a reader
+can **determine from the description** rather than assume from whichever toolchain happens to be
+reading it.
+
+<!-- machine-read: language-version -->
+| source | verdict | identifier |
+| --- | --- | --- |
+| `(eadl-version eadl/1)` | clean | `stated` |
+| `(defsystem s)` | clean | `absent` |
+| `(defsystem s (eadl-version eadl/1))` | clean | `absent` |
+| `(eadl-version eadl/1) (defmodule m (version 1 0))` | clean | `stated` |
+| `(eadl-version eadl/2)` | `refused language-version-unknown` | — |
+| `(eadl-version eadl)` | `refused language-version-unknown` | — |
+| `(eadl-version "eadl/1")` | `error language-version-not-an-identifier` | — |
+| `(eadl-version 1)` | `error language-version-not-an-identifier` | — |
+| `(eadl-version)` | `error language-version-missing` | — |
+| `(eadl-version eadl/1 eadl/1)` | `error language-version-extra-argument` | — |
+| `(eadl-version eadl/1) (eadl-version eadl/1)` | `error language-version-duplicated` | — |
+
+### The rules those rows state
+
+1. ⛔ **The identifier is a form, not a comment header.** §3 states that canonical form carries **no
+   comment**, and §12 M4 hashes canonical text — so a version written in trivia is a version the hashed
+   artifact does not capture: two descriptions differing only in the language version they claim would
+   hash identically, and any tool that strips comments would strip the lock along with them. The header
+   route is genuinely available (§5 makes one shape of comment data, and
+   `crates/eadl-front/src/form.rs` reads it) and is still wrong here, for that reason and no other.
+2. ⭐ **Absence denotes `eadl/1` — by rule, not by default.** A description that carries no identifier
+   is not missing information; the rule above says what it denotes, which is what makes the version
+   determinable from the description alone. ⛔ **And `eadl/1` is the last version for which that is
+   true.** A default that outlives the version it defaults to is exactly how a description silently
+   changes meaning, so the day a second version exists, absence must be **refused** and this rule
+   retired with a migration note. What makes the rule acceptable now is that the descriptions relying
+   on it are known rather than assumed: the frozen LinkedSpec evidence under `docs/feedback/`, whose
+   bytes *are* the reproduction of another project's defect and which nothing in `crates/` reads.
+3. **This is not a grammar change, and that is measured rather than convenient.**
+   `docs/semantics/grammar.md` fixes *shape* and names no construct vocabulary — its own table says "the
+   language is extended by `defkind`, not by editing this file", and `document` already admits any
+   s-expression. So `(eadl-version eadl/1)` was well-formed before this section existed and the
+   recognizer `conformance.rs` derives from that grammar accepts it unchanged. What this section adds
+   is **meaning**, which is the half the two normative documents exist to keep apart.
+4. ⛔ **The head symbol is `eadl-version`, not `version`, because `version` is taken.** §6 uses
+   `version` as a clause of `defmodule` for the *module's* own version, and an import's requirement
+   spells it `(version (at-least 1 2))`. One name carrying two different versions in one file is a
+   collision a reader could only resolve by nesting depth, which is the kind of rule that looks
+   unambiguous until some tool forgets the depth. Row 4 states the two together, so the combination is
+   executed and not merely permitted.
+5. **The identifier is one bare symbol.** `/` is an ordinary `symbol_char`, so `eadl/1` needs no
+   quoting — and `"eadl/1"` is a *string*, a different value under §2, refused rather than accepted as
+   an interchangeable spelling of the same thing. Row 3 is the mirror image: only a **top-level** form
+   states the version, so a clause named `eadl-version` inside a declaration denotes nothing and cannot
+   be mistaken for a statement.
+6. **A version this toolchain does not read is refused, never re-interpreted.** Reading `eadl/2` as
+   `eadl/1` would be the precise failure §15 exists to prevent: a description whose meaning changed
+   without anyone editing it. Refusing is also why the diagnostic is a `refused` row and not an `error`
+   one — the form is well-formed, and what is out of range is its *value*, the same distinction §1 draws
+   for a literal outside the integer domain.
+7. **In a module file the identifier precedes the declaration and is not a stray form.** §6's "exactly
+   one top-level form" is about the declaration; `crates/eadl-front/src/module.rs` filters the
+   identifier before counting, so a module can state its language version without being refused as
+   `module-multiple-forms`. Without that, the one file kind that most needs a locked version would be
+   the one unable to carry it.
+8. ⛔ **The identifier is not a declaration, and two layers had to be told.** §7's schema layer
+   validates every top-level form against the kind registry, and `eadl-version` is not a kind — so
+   without an exemption a description that states its version reads cleanly and is then refused as
+   `schema-unknown-kind`, contradicting this section from the layer furthest from it, where no frontend
+   test can see it happen. Rule 7 is the same problem in miniature. One predicate in
+   `crates/eadl-front/src/language_version.rs` serves both consumers, because a rule each consumer
+   re-implements is a rule the next consumer lacks — the reasoning that put §2's escape rule in the
+   printer. Measured, not anticipated: the refusal was reproduced through `check`, the entry point the
+   corpus suite uses, before the exemption existed.
+
+⚠️ **Honest limit: the identifier is read and refused, and nothing yet *acts* on it.** There is one
+version, so no behaviour differs between stating it and omitting it, and saying otherwise would be the
+more dangerous kind of green. What makes it more than a placeholder is that `M1.13.4` digests the
+corpora into `eadl/1`'s frozen baseline, so "differs" becomes checkable the moment a second version
+exists — and rule 2's expiry is what forces that question to be answered rather than defaulted.
+
 ## What this reference does not yet carry
 
 Stated rather than left implicit, because a reference that quietly omits a rule reads as though the
@@ -547,4 +634,4 @@ rule does not exist:
 
 | Not here yet | Where it will be | Leaf |
 | --- | --- | --- |
-| a version identifier on the surface, and the frozen compatibility baseline | `eadl/1`, with the corpora as that version's conformance suite | `M1.13` |
+| the frozen compatibility baseline, and the corpora as one version's conformance suite | §8 states the identifier; the baseline that makes a second version's differences checkable is next | `M1.13` |

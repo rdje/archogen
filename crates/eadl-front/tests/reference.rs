@@ -75,7 +75,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
-use eadl_front::{read, Form, Severity, SourceMap};
+use eadl_front::{language_version::EADL_1, read, Form, Severity, SourceMap};
 
 mod common;
 
@@ -114,6 +114,13 @@ struct Probe {
     rendered: String,
     /// The `; key: value` headers the comments yielded, in source order.
     headers: Vec<(String, String)>,
+    /// The language version §8 says this document **states**, or `None` when it states none.
+    ///
+    /// ⭐ Carried because §8's table is the first one whose third column is a claim about the
+    /// *document* rather than about a literal, and a leg that could only see diagnostics would check
+    /// half of it. `None` is a verdict here, not a missing one: §8 rule 2 makes absence denote
+    /// `eadl/1`, so "states nothing" is something the row can assert and the frontend can contradict.
+    stated: Option<String>,
 }
 
 /// Read `text` as a whole description.
@@ -128,8 +135,10 @@ fn probe(text: &str) -> Probe {
         .expect("small");
     let (document, diagnostics) = read(&sources, id);
     let headers = document.comment_headers();
+    let stated = document.stated_version().map(str::to_string);
     Probe {
         headers,
+        stated,
         forms: document.forms,
         errors: diagnostics
             .items()
@@ -1339,11 +1348,141 @@ fn surface_pointer_violations(document: &str, chapters: &[(String, String)]) -> 
     out
 }
 
+/// Leg 8 — §8's table: the language version a description states.
+///
+/// ⭐ This leg checks something §1's and §2's cannot. Their third column is the canonical text of a
+/// *literal*; §8's is a claim about the *document* — whether it states its language version at all. So
+/// the leg asserts on [`Probe::stated`] as well as on the diagnostics, and `absent` is a verdict a row
+/// can state and the frontend can contradict, not a hole in the table.
+///
+/// ⛔ The verdict column reuses §1's notation (`clean` / `error C` / `refused C`) rather than inventing
+/// a second one, because §8 rule 6's whole point is that a well-formed identifier naming an unread
+/// version is *refused* and not *errored* — the same distinction §1 draws for a literal outside the
+/// integer domain, and one a reader can only see if both tables spell it the same way.
+fn language_version_violations(document: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let rows = machine_table(document, "language-version");
+    if rows.is_empty() {
+        out.push(
+            "docs/semantics/reference.md carries no `<!-- machine-read: language-version -->` table, \
+             so nothing in it states what a description's language version is — §8's rules would be \
+             prose, and prose drifts"
+                .to_string(),
+        );
+        return out;
+    }
+    for (line, cells) in rows {
+        let Some([source, verdict, identifier]) = array3(&cells) else {
+            out.push(violation(
+                line,
+                format!(
+                    "this row has {} cell(s) and the table's header has 3 — GFM silently pads or \
+                     drops the difference, so the row does not say what it looks like it says",
+                    cells.len()
+                ),
+            ));
+            continue;
+        };
+        let Some(text) = source_text(source) else {
+            out.push(violation(
+                line,
+                format!(
+                    "`{source}` names a character the source notation cannot decode, so nothing \
+                     checks this row"
+                ),
+            ));
+            continue;
+        };
+        let found = probe(&text);
+
+        match verdict.split_once(' ') {
+            None if verdict == "clean" => {
+                if !found.errors.is_empty() {
+                    out.push(violation(
+                        line,
+                        format!(
+                            "the reference says `{source}` reads cleanly, and the frontend refused \
+                             it:\n{}",
+                            found.rendered
+                        ),
+                    ));
+                }
+            }
+            Some((kind, code)) if kind == "error" || kind == "refused" => {
+                if !found.errors.contains(&code) {
+                    out.push(violation(
+                        line,
+                        format!(
+                            "the reference states `{source}` is {kind} as `{code}`, and the frontend \
+                             did not:\n{}",
+                            if found.errors.is_empty() {
+                                format!(
+                                    "  it read {} with no diagnostic",
+                                    describe_all(&found.forms)
+                                )
+                            } else {
+                                found.rendered.clone()
+                            }
+                        ),
+                    ));
+                }
+            }
+            _ => out.push(violation(
+                line,
+                format!(
+                    "`{verdict}` is not a verdict this table's notation defines (`clean`, `error C`, \
+                     `refused C`), so nothing checks `{source}`"
+                ),
+            )),
+        }
+
+        match identifier.as_str() {
+            "stated" => {
+                if found.stated.as_deref() != Some(EADL_1) {
+                    out.push(violation(
+                        line,
+                        format!(
+                            "the reference says `{source}` **states** its language version, and the \
+                             frontend reported {:#?} — §8 rule 2 makes absence denote `{EADL_1}`, so a \
+                             row that claims a statement the reader did not find is claiming the \
+                             identifier was read rather than defaulted",
+                            found.stated
+                        ),
+                    ));
+                }
+            }
+            "absent" => {
+                if found.stated.is_some() {
+                    out.push(violation(
+                        line,
+                        format!(
+                            "the reference says `{source}` states **no** language version, and the \
+                             frontend reported {:#?} — §8 rule 5 makes only a top-level form a \
+                             statement, so a nested or malformed one must not count",
+                            found.stated
+                        ),
+                    ));
+                }
+            }
+            "—" | "" => {}
+            other => out.push(violation(
+                line,
+                format!(
+                    "`{other}` is not `stated`, `absent` or `—`, so nothing checks whether `{source}` \
+                     states a language version"
+                ),
+            )),
+        }
+    }
+    out
+}
+
 /// Every leg at once, so an arm can be fed a mutated document and read one list of complaints.
 fn all_violations(document: &str) -> Vec<String> {
     let mut out = vacuity_violations(document);
     out.extend(number_violations(document));
     out.extend(string_violations(document));
+    out.extend(language_version_violations(document));
     out.extend(coverage_violations(document));
     out.extend(census_violations(document));
     out.extend(citation_violations(document));
@@ -2068,5 +2207,89 @@ fn arm_26_a_surface_pointer_leg_with_no_population_is_reported() {
         &surface_pointer_violations(REFERENCE, &chapters),
         1,
         &["no population and proves nothing"],
+    );
+}
+
+#[test]
+fn arm_27_a_wrong_verdict_in_the_language_version_table_is_reported() {
+    // §8 rule 6: a well-formed identifier naming a version this toolchain does not read is REFUSED,
+    // never re-interpreted. Turning that row into `clean` is what a frontend which silently read
+    // `eadl/2` as `eadl/1` would look like — the exact failure §15 exists to prevent.
+    let mutated = replacing_line(
+        REFERENCE,
+        "| `(eadl-version eadl/2)` |",
+        "| `(eadl-version eadl/2)` | `clean` | — |",
+    );
+    assert_reported(
+        &all_violations(&mutated),
+        1,
+        &[
+            "eadl-version eadl/2",
+            "reads cleanly",
+            "language-version-unknown",
+        ],
+    );
+}
+
+#[test]
+fn arm_28_a_wrong_identifier_column_is_reported() {
+    // The column §1 and §2 have no equivalent of: whether the description *states* its version or
+    // relies on §8 rule 2. Claiming `stated` for a description that carries no identifier is claiming
+    // the reader found something it defaulted, which is the difference the column exists to pin.
+    let mutated = replacing_line(
+        REFERENCE,
+        "| `(defsystem s)` |",
+        "| `(defsystem s)` | `clean` | `stated` |",
+    );
+    assert_reported(
+        &all_violations(&mutated),
+        1,
+        &["states** its language version", "None"],
+    );
+}
+
+#[test]
+fn arm_29_a_language_version_table_that_is_not_machine_read_is_reported() {
+    // Non-vacuity: unmarking the table leaves §8's rules as prose and the leg comparing nothing, which
+    // passes silently unless the absence is itself a violation.
+    let mutated = REFERENCE.replace(
+        "<!-- machine-read: language-version -->",
+        "<!-- the language version -->",
+    );
+    assert_ne!(
+        mutated, REFERENCE,
+        "the mutation did not apply — a false green"
+    );
+    assert_reported(
+        &all_violations(&mutated),
+        1,
+        &["machine-read: language-version", "prose, and prose drifts"],
+    );
+}
+
+#[test]
+fn arm_30_an_unstated_language_version_code_is_reported_by_the_census() {
+    // ⛔ This arm is the one that proves the new normative source is *in* the census population rather
+    // than silently outside it. `crates/eadl-front/src/language_version.rs` was added to §4's declared
+    // sources by this leaf; if the census could not see it, deleting one of its rows would change
+    // nothing and every `language-version-*` code would be emitted-but-unstated with a green gate —
+    // `M1.26`'s gap (b) recreated at birth.
+    let row = REFERENCE
+        .lines()
+        .find(|line| line.starts_with("| `language-version-unknown` |"))
+        .expect("§4 states this code, so the row is there to delete");
+    let mutated = REFERENCE.replace(&format!("{row}\n"), "");
+    assert_ne!(
+        mutated, REFERENCE,
+        "the mutation did not apply — a false green"
+    );
+    let wrong = all_violations(&mutated);
+    assert!(
+        wrong
+            .iter()
+            .any(|item| item.contains("language-version-unknown")),
+        "deleting §4's row for a code `language_version.rs` emits was not reported, so the census \
+         does not cover that source:\n{}",
+        wrong.join("\n\n")
     );
 }

@@ -137,6 +137,48 @@ either — except a tab, which is whitespace — and the reader says so with
 writable is lost by that: `\u{…}` reaches every character there is, so an unusual one costs six
 visible characters instead of one invisible byte.
 
+## Which language version a description is written in
+
+A description can say so:
+
+```eadl
+(eadl-version eadl/1)
+
+(defsystem periodics
+  (name "three periodic tasks"))
+```
+
+`docs/semantics/reference.md` §8 states the rules, and its table is executed by the same legs that
+cover numbers and strings — so what follows is what the reader does, not a description of it.
+
+**Why a form and not a comment.** The obvious home for a version is the comment header at the top of
+the file, and it is wrong here: canonical form carries no comment, and §12 M4 hashes canonical text. A
+version written in trivia would be a version the hashed artifact does not capture — two descriptions
+differing only in the language they claim would hash identically, and any tool that strips comments
+would strip the lock along with them.
+
+**Absence means `eadl/1`, by rule.** A description carrying no identifier is not missing information;
+§8 rule 2 says what absence *denotes*, which is what makes the version determinable from the
+description rather than from whichever toolchain happens to be reading it. That rule carries a stated
+expiry: `eadl/1` is the last version for which absence is permitted, because a default that outlives
+the version it defaults to is how a description silently changes meaning.
+
+**What is refused**, and why each is a different mistake rather than one:
+
+| you wrote | what the reader says |
+| --- | --- |
+| `(eadl-version eadl/2)` | `error[language-version-unknown]` — this toolchain reads one version, and a description is never silently re-read as another |
+| `(eadl-version "eadl/1")` | `error[language-version-not-an-identifier]` — a string is a different atom from a symbol, not an interchangeable spelling of one |
+| `(eadl-version)` | `error[language-version-missing]` |
+| `(eadl-version eadl/1 eadl/1)` | `error[language-version-extra-argument]` |
+| the same identifier twice | `error[language-version-duplicated]`, pointing at the second and labelling the first |
+
+⚠️ **What this does not do yet.** There is one version, so nothing behaves differently between stating
+it and omitting it: the identifier is read, checked and refused, but not yet *acted on*. Saying
+otherwise would be the more dangerous kind of green. What makes it more than a placeholder is that the
+corpora are about to be digested into `eadl/1`'s frozen baseline, which is what turns "a later version
+differs" from a promise into something a gate can check.
+
 ## A lesson from the corpus
 
 The header format needs **two** independent discriminators — indentation *and* key shape — and

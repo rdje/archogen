@@ -13,20 +13,20 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M1` → frontier `M1.13.3`. `PROGRAM` `.11`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
-- **Next action:** **`M1.13.3`** — put the version identifier on the surface, and with it the language's
-  **name**. It **cannot ride the comment-header convention**: §3 drops comments from canonical form and
-  §12 M4 hashes it, so it must be a **form** — a grammar change free only before `.4` writes the
-  baseline. Three questions are decidable only here: what **absence** means, `M1.13.1`'s routed one (an
-  invisible character outside Unicode `Cc`), and which reading of "**Extended** ADL" to publish — the
-  acronym is expanded nowhere today, and the director's own rationale (*code and data wear the same
-  cloth … inherently extensible*) picks *extensible*. All three are in `## Open Questions` on the leaf.
+- **Active tree:** `M1` → frontier `M1.13.4`. `PROGRAM` `.11`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
+- **Next action:** **`M1.13.4`** — make the corpora `eadl/1`'s conformance suite: one declared
+  population of **62** files, the **13** frozen evidence files excluded, and an instrument digesting
+  every frozen construct's **canonical form** rather than its bytes. It inherits two measured questions
+  of the same shape — no tracked description holds a **decimal literal**, and none carries the new
+  `(eadl-version eadl/1)` identifier — so §1 rule 2 and §8 are exercised only by the reference's rows.
+  Then `.13.5` (the freeze gate). ⚠️ Still open in `## Open Questions`: `M1.13.1`'s invisible-character
+  question, and the language's **name** (recorded, deliberately not published).
 - ⛔ **`M1.13.2` settled F-F, and both measurements it was routed on were false** — a census figure with
   an unstated scope and a radix-scoped maximum, restated in **7** places, and an address argument true
   of *physical* addresses only. Details: `docs/decisions/decision_eadl1-value-domain.md`.
-- **Closed, and named rather than restated:** `M1.13.1` (the escape set closed *and* sufficient, §3
-  rule 3 total, in the printer because `Form::Str` is constructible outside the frontend); `M1.20`
-  (LinkedSpec, five defects `verified` at pin `2ac834913`); `M1.12`; `docs/CLAIM_VERIFICATION.md`.
+- **Closed, and named rather than restated:** `M1.13.3` (`(eadl-version eadl/1)` is a **form**; §8 of
+  the reference; absence denotes `eadl/1` by rule with a stated expiry); `PROGRAM.21`
+  (`TASK-ACCEPTANCE` leaf-scoped); `M1.13.1`; `M1.20`; `M1.12`; `docs/CLAIM_VERIFICATION.md`.
 - **⭐ Tree `API`** (ruled `2026-09-28`, `decision_programmatic-interface.md`): one engine API, a
   **wasm** binding and an **MCP server**, post-build only. `API.3`–`.7` wait on `M1.13`.
 - **`PROGRAM.11` (medium)** is the other active frontier: the repository-boundary rule in **both**
@@ -38,7 +38,7 @@
 - **Also open:** `M1.25`, `M1.26` (sequenced *before* any value-domain widening), `M1.10`, `M1.21`,
   `M1.22`; `S0.8`; `M2.6`, `M2.8`; `PROGRAM.11`, `.18`, `.24`, `.13`, `.15`, `.17`, `.20`, then `.5`,
   `.6`, `.9`, `.10`.
-- **Baseline to beat:** `make focused` exit `0` at the pin — **476 passed, 0 failed** over 37 suites.
+- **Baseline to beat:** `make focused` exit `0` at the pin — **492 passed, 0 failed** over 37 suites.
   Tiers: `focused` per commit, `integration` before a push; exit **20 = incomplete** is not a pass, so
   read what it names. **Push cadence:** at `400` ahead of `origin/main`, measured not carried —
   `git rev-list --count origin/main..HEAD`, `decision_push-cadence.md`. ⚠️ `make integration` is **red**

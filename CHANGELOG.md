@@ -4,6 +4,60 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — a description can state its language version, and the leaf that owned adding it was wrong about what that costs
+
+`ARCHOGEN-M1-0087` (leaf `M1.13.3`). `(eadl-version eadl/1)` is on the surface. §8 of the reference
+states it with an executed table and eight rules; five new §4 rows; one new normative source; 16 new
+tests. `492 passed / 0 failed` over 37 suites (baseline 476).
+
+- ⛔ **The identifier is a form, not a comment header.** §3 drops comments from canonical text and §12
+  M4 hashes canonical text, so a version in trivia is a version the hashed artifact does not capture —
+  two descriptions differing only in the language they claim would hash identically. The header route is
+  genuinely available (`Document::comment_headers` exists and 63 of the 75 descriptions already open
+  with a header) and is still wrong, for that reason. A test executes the difference rather than
+  asserting it.
+- ⛔ **The leaf's own design premise was false.** It said a new top-level form "is a grammar change, so
+  `grammar.md`'s `document` production and `conformance.rs`'s probe set both move". Measured, neither
+  moves: the grammar names **no** construct vocabulary — `grammar.md:109` says "the language is extended
+  by `defkind`, not by editing this file" — so `(eadl-version eadl/1)` was already well-formed and the
+  recognizer derived from that grammar accepts it unchanged. What this adds is *meaning*, which is the
+  half the two normative documents exist to keep apart.
+- ⛔ **`version` was already taken.** §6 uses it as a `defmodule` clause for the *module's* version, with
+  four §4 rows and an implemented reader behind it. One head symbol for two different versions in one
+  file is a collision resolvable only by nesting depth, so the language's is `eadl-version`. A test
+  fixture now carries both in one file, so the distinction is executed.
+- ⭐ **Absence denotes `eadl/1` by rule, with a stated expiry** — not by default. A reader can determine
+  the version from the description alone, which is the point of having an identifier; and `eadl/1` is
+  recorded as the last version for which absence is permitted, because a default that outlives the
+  version it defaults to is how a description silently changes meaning. What makes the rule acceptable
+  now is that its population is measured: all **75** tracked descriptions lack the identifier, and the
+  **13** frozen LinkedSpec evidence fixtures cannot be edited because their bytes *are* the reproduction
+  of another project's defect — `grep -rn docs/feedback --include='*.rs' crates/` finds one hit, a usage
+  comment, so nothing in the codebase reads them.
+- ⛔ **The model layer refused the new form, and only an end-to-end test could see it.** `check.rs`
+  validates every top-level form against the kind registry, so `(eadl-version eadl/1)` read cleanly in
+  the frontend and was then refused as `schema-unknown-kind` — §8 contradicted from the layer furthest
+  from it, where no frontend test can look. One shared `is_identifier` predicate now serves both
+  consumers (§8 rule 8), because a rule each consumer re-implements is a rule the next consumer lacks.
+- ⛔ **And the first test of that break could not have seen the fix.** It called `validate` directly, and
+  the exemption lives in `validate`'s *caller*, so it kept failing after the fix landed and would have
+  kept failing whatever `check.rs` did. Rewritten to run `check` — the entry point S0 and the corpus
+  suite use.
+- Two mutations of the fix, each restoration proven byte-identical: accepting any version instead of
+  refusing an unread one fails both the §8 leg (naming `reference.md:563`) and the unit test; dropping
+  the module filter fails both new module tests. Four new RED arms, of which the important one deletes
+  §4's row for a code `language_version.rs` emits — proving the new normative source is **inside** the
+  diagnostic census rather than silently outside it, which is `M1.26`'s gap (b) recreated at birth.
+- ⚠️ The language's **name** stays open and unpublished. The director supplied "Extended Architecture
+  Description Language" while unsure what it extends; the rationale they gave (*code and data wear the
+  same cloth … inherently extensible*) picks the reading in which `defkind` already makes it true, and
+  that is recorded — but the expansion is **not** written into `README.md`, `ROADMAP.md` or the book,
+  because publishing a word its author is unsure of into the surfaces `M1.13.5` is about to freeze is
+  the wrong order.
+- Routed to `M1.13.4` with its census: no tracked description carries the identifier, so a suite built
+  from those files exercises §8 only through the reference's rows — the same shape as the
+  `decimal literals : 0` finding `M1.13.2` routed to the same leaf.
+
 ## archogen — `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it cannot tell which one that is
 
 `ARCHOGEN-PROGRAM-0086` (leaf `PROGRAM.21`). **Fixed, not filed** — the gate that enforces root-cause,

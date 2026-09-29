@@ -30,7 +30,13 @@ pub fn read(sources: &SourceMap, source: SourceId) -> (Document, Diagnostics) {
         .expect("read called with an id not in this SourceMap")
         .text
         .clone();
-    Reader::new(&text, source).run()
+    let (document, mut diagnostics) = Reader::new(&text, source).run();
+    // §8 of `docs/semantics/reference.md`: the language version a description states. Checked here
+    // rather than by a caller of `read`, so every consumer of a `Document` gets the same verdict
+    // including the ones that do not know the rule exists — the reason `M1.13.1` put the escape rule
+    // in the printer, since a rule that lives in one consumer is a rule the next consumer lacks.
+    crate::language_version::state(&document, &mut diagnostics);
+    (document, diagnostics)
 }
 
 struct Reader<'a> {

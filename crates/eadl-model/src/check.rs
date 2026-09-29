@@ -164,6 +164,15 @@ pub fn check(
     // kind" adds nothing to a message that already said what it is and where it belongs.
     let mut schema_errors = Vec::new();
     for form in &forms {
+        // §8 of `docs/semantics/reference.md`: the language-version identifier is a statement about
+        // the *document*, not a declaration, so it is not a kind and must not be validated as one.
+        // ⛔ Measured, not anticipated — without this skip the form is refused as
+        // `schema-unknown-kind`, contradicting §8 in the layer furthest from it, where no frontend
+        // test can see it. The predicate lives beside the rule so the next consumer does not have to
+        // rediscover it.
+        if eadl_front::language_version::is_identifier(form) {
+            continue;
+        }
         if boundary::classify(form).is_accepted() {
             schema_errors.extend(validate(registry, form));
         }

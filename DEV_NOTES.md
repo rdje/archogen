@@ -1,5 +1,30 @@
 # DEV_NOTES.md
 
+## _(2026-09-29)_ — a fix in a caller is invisible to a test of the callee
+
+- `M1.13.3`, adding the language-version identifier. §8 made `(eadl-version eadl/1)` a top-level form;
+  `crates/eadl-model/src/check.rs` validates every top-level form against the kind registry, so the new
+  form was refused as `schema-unknown-kind` — the rule contradicted end-to-end by the layer furthest
+  from it, and invisibly: no frontend test can see a model-layer refusal.
+- The exemption went in `check.rs`, in front of `validate`. My first test of the break called
+  **`validate` directly**, so it kept failing after the fix landed and would have kept failing whatever
+  `check.rs` did. ⛔ A test that bypasses the layer under test measures the wrong thing *confidently* —
+  it was red before the fix and red after, which reads as "the fix did not work" and is actually "the
+  test is not looking at the fix".
+- The rule: **test through the entry point the real consumer uses.** Here that is `check`, which is what
+  S0 and the corpus suite call. Calling the inner function is fine for unit-testing that function; it is
+  not evidence about a caller's behaviour, and an exemption is always a caller's behaviour.
+- Same slice, same shape, one level down: the leaf's own design premise was false. It said a new
+  top-level form is a grammar change. `grammar.md:109` says the grammar names no construct vocabulary at
+  all — "the language is extended by `defkind`, not by editing this file" — so the form was already
+  well-formed and nothing downstream of the grammar moved. **A cost argument is a claim; read the thing
+  it claims about.**
+- promotion: declined (one instance, and the transferable half — "test through the entry point the
+  consumer uses" — is a practice this repository already follows everywhere else, so a card would be
+  searchable by a question nobody asks. Recorded here instead, where the next session reads it. If it
+  recurs, that is the signal to promote it, and `a-gate-is-only-as-sharp-as-its-fixtures` is the card it
+  would join rather than a new one.)
+
 ## _(2026-09-29)_ — an arm that accepts "not success" cannot tell a refusal from a command that never ran
 
 - `PROGRAM.21`, making `TASK-ACCEPTANCE` leaf-scoped. Nine RED arms were written with the pass

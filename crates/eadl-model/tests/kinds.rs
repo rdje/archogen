@@ -567,3 +567,43 @@ fn registering_a_kind_twice_is_refused() {
     assert_eq!(error.code, "schema-duplicate-kind");
     assert!(error.repair.contains("silently change"), "{}", error.repair);
 }
+
+#[test]
+fn the_language_version_identifier_survives_the_model_layer() {
+    // §8 of `docs/semantics/reference.md` puts the language version on the surface as a **top-level
+    // form**. `crates/eadl-model/src/check.rs` validates every top-level form against the kind
+    // registry, so without an exemption `(eadl-version eadl/1)` reads cleanly in the frontend and is
+    // then refused *here* as `schema-unknown-kind` — §8 contradicted end-to-end, by the layer furthest
+    // from it, and invisibly: no frontend test can see a model-layer refusal.
+    //
+    // ⛔ This runs the real path — `check`, the entry point S0 and the corpus suite use — rather than
+    // calling `validate` directly. The first version of this test called `validate`, which is the
+    // function the exemption sits *in front of*, so it kept failing after the fix landed and would have
+    // kept failing whatever `check.rs` did. A test that bypasses the layer under test measures the
+    // wrong thing, confidently.
+    //
+    // Measured before the fix: `error[schema-unknown-kind]: `eadl-version` is not a known kind`.
+    use eadl_model::check::{check, default_profile};
+
+    let mut sources = SourceMap::new();
+    let id = sources
+        .add(
+            "version.eadl",
+            "(eadl-version eadl/1)\n(defsystem s (name n))",
+        )
+        .expect("small");
+    let registry = core_registry();
+    let outcome = check(&sources, id, &registry, default_profile());
+    let rendered: Vec<String> = outcome
+        .diagnostics
+        .iter()
+        .map(|diagnostic| diagnostic.render(&sources))
+        .collect();
+    assert!(
+        !rendered
+            .iter()
+            .any(|item| item.contains("schema-unknown-kind")),
+        "the language-version identifier was refused by the schema layer:\n{}",
+        rendered.join("\n")
+    );
+}

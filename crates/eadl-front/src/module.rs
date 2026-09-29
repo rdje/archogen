@@ -785,8 +785,17 @@ impl Elaborator<'_> {
 }
 
 fn single_module(document: &Document, diagnostics: &mut Diagnostics) -> Option<Form> {
-    match document.forms.len() {
-        1 => Some(document.forms[0].clone()),
+    // §8: a language-version identifier may precede the declaration and is not a stray form — §6's
+    // "exactly one top-level form" is about the *declaration*. Without this filter, stating the
+    // language version in a module file would be refused as `module-multiple-forms`, which would leave
+    // the one file kind that most needs a locked version unable to carry one.
+    let declarations: Vec<&Form> = document
+        .forms
+        .iter()
+        .filter(|form| !crate::language_version::is_identifier(form))
+        .collect();
+    match declarations.len() {
+        1 => Some(declarations[0].clone()),
         0 => {
             diagnostics.push(Diagnostic::error(
                 "module-empty",
@@ -797,12 +806,19 @@ fn single_module(document: &Document, diagnostics: &mut Diagnostics) -> Option<F
             None
         }
         n => {
+            // ⛔ The label points at the second *declaration*, not at `document.forms[1]`: with an
+            // identifier form present those are different forms, and labelling `forms[1]` would point
+            // at the `(defmodule …)` and tell the author to delete the declaration instead of the
+            // stray form.
+            let offender = declarations
+                .get(1)
+                .map_or_else(|| document.forms[1].span(), |form| form.span());
             diagnostics.push(Diagnostic::error(
                 "module-multiple-forms",
-                format!("this module file holds {n} top-level forms"),
-                Label::new(document.forms[1].span(), "only one module per file"),
-                "a module file holds exactly one `(defmodule …)` form; move the rest into their \
-                 own modules",
+                format!("this module file holds {n} top-level declarations"),
+                Label::new(offender, "only one module per file"),
+                "a module file holds exactly one `(defmodule …)` form, optionally preceded by \
+                 `(eadl-version eadl/1)`; move the rest into their own modules",
             ));
             None
         }
