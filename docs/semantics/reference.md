@@ -151,6 +151,7 @@ and a scale, so `0.1` is one tenth exactly and survives any number of round trip
 | `0xg` | `error read-malformed-number` | — |
 | `0x_10` | `error read-malformed-number` | — |
 | `1.5` | `rational 15/10^1` | `1.5` |
+| `12.5` | `rational 125/10^1` | `12.5` |
 | `0.1` | `rational 1/10^1` | `0.1` |
 | `10.50` | `rational 1050/10^2` | `10.50` |
 | `1.05` | `rational 105/10^2` | `1.05` |
@@ -179,6 +180,14 @@ and a scale, so `0.1` is one tenth exactly and survives any number of round trip
    frontend makes them the same magnitude again — `crates/eadl-model/src/rational.rs` holds an exact
    rational, so `15/10` and `150/100` are equal there. That is deliberate: an author who writes `1.50`
    has stated a precision, and erasing it in the reader would erase it everywhere.
+   ⭐ **And a description in the conformance suite writes one.**
+   `docs/semantics/cases/positive-decimal-quantity.eadl` declares `(period 12.5 ms)` — an 80 Hz control
+   loop, which no integer number of milliseconds can spell — so this rule is exercised through a real
+   declaration and not only through the rows above. Until that case existed the census instrument
+   reported `decimal literals : 0` over every description the repository ships, against 194 integer
+   occurrences and 13 strings: a rule the specification states and no description uses is a rule the
+   suite does not conform-test, and §12 M2's standard for an independent checker is not met by rows
+   alone.
 3. **`_` separates digits and is ignored.** It may repeat and it may trail. It may **not** lead: a
    hexadecimal literal must begin with a hexadecimal digit, exactly as a decimal one must begin with a
    decimal digit, so `0x_10` is `read-malformed-number`. The scale of a decimal counts the digits

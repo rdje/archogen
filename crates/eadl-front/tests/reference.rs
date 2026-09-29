@@ -1539,6 +1539,87 @@ fn absence_violations(population: &[(String, String)]) -> Vec<String> {
     out
 }
 
+// ── leg 11: every literal category the reference states is written by the suite ──────────────────
+
+/// Which literal categories `population` writes, and a complaint for each one it does not.
+///
+/// ⭐ The census instrument `crates/eadl-front/examples/literals.rs` prints its categories "so a
+/// category holding nothing is visibly zero", and one did: **`decimal literals : 0`** over every
+/// description the repository ships, against 194 integer occurrences and 13 strings. A rule the
+/// specification states and no description uses is a rule the suite does not conform-test — §1 rule 2's
+/// exact rationals were executed by the rows above and by nothing else, so an implementation that only
+/// ever met a decimal in a table row would pass. `M1.13.4.3` closed the category with a case whose
+/// subject *is* the rational, and this leg is what keeps it closed: a description edited to drop its
+/// decimal now fails here instead of quietly narrowing what the suite proves.
+///
+/// ⛔ Counted from the frontend's own variants and not from a regular expression over the text. The
+/// census figure this leg descends from was wrong twice for exactly that reason (`M1.13.2`'s M-G: an
+/// unstated scope and a radix-scoped maximum published as the overall one), and digits in a comment are
+/// prose. The match below has **no wildcard arm**, so a new `Form` variant is a compile error here
+/// rather than a category silently outside the census — the population is enumerated from the type that
+/// defines it.
+fn category_violations(population: &[(String, String)]) -> Vec<String> {
+    if population.is_empty() {
+        return vec![
+            "the suite walk reached no descriptions at all, so every literal category is empty and this \
+             leg would report the suite as proving nothing about all of them"
+                .to_string(),
+        ];
+    }
+    let mut integers: BTreeSet<String> = BTreeSet::new();
+    let mut decimals: BTreeSet<String> = BTreeSet::new();
+    let mut strings: BTreeSet<String> = BTreeSet::new();
+    for (name, text) in population {
+        let mut sources = SourceMap::new();
+        let Ok(id) = sources.add(name.clone(), text.clone()) else {
+            continue;
+        };
+        let (parsed, _) = read(&sources, id);
+        let mut stack: Vec<&Form> = parsed.forms.iter().collect();
+        while let Some(form) = stack.pop() {
+            match form {
+                Form::List { items, .. } => stack.extend(items.iter()),
+                Form::Integer { span, .. } => {
+                    integers.insert(spelled(text, span.start, span.end));
+                }
+                Form::Decimal { span, .. } => {
+                    decimals.insert(spelled(text, span.start, span.end));
+                }
+                Form::Str { span, .. } => {
+                    strings.insert(spelled(text, span.start, span.end));
+                }
+                Form::Symbol { .. } => {}
+            }
+        }
+    }
+    let mut out = Vec::new();
+    for (category, found, rule) in [
+        (
+            "integer",
+            &integers,
+            "§1 rule 1 — an integer is exact and 64-bit signed",
+        ),
+        (
+            "decimal",
+            &decimals,
+            "§1 rule 2 — a decimal is a rational, not a quotient",
+        ),
+        (
+            "string",
+            &strings,
+            "§2 — a string denotes its characters through the escape set",
+        ),
+    ] {
+        if found.is_empty() {
+            out.push(format!(
+                "no description in the suite writes a {category} literal, so {rule} is conformance-tested \
+                 by the reference's rows and by nothing a reader would actually write"
+            ));
+        }
+    }
+    out
+}
+
 // ── the green legs ─────────────────────────────────────────────────────────────────────────────
 
 #[test]
@@ -1640,6 +1721,19 @@ fn every_description_in_the_suite_states_its_language_version() {
         wrong.is_empty(),
         "§8 rule 2 says the descriptions relying on absence are the frozen LinkedSpec evidence, and \
          these are not:\n\n{}",
+        wrong.join("\n\n")
+    );
+}
+
+#[test]
+fn every_literal_category_the_reference_states_is_written_by_the_suite() {
+    // The population is `corpus()`, the same walk legs 2 and 10 take, so the three legs cannot
+    // disagree about what the suite contains.
+    let wrong = category_violations(&corpus());
+    assert!(
+        wrong.is_empty(),
+        "a literal category the reference states is empty in the suite, and a rule no description \
+         exercises is a rule the suite does not conform-test:\n\n{}",
         wrong.join("\n\n")
     );
 }
@@ -2404,4 +2498,60 @@ fn arm_33_an_empty_population_is_reported_rather_than_passed() {
     // produces.
     let wrong = absence_violations(&[]);
     assert_reported(&wrong, 1, &["empty population"]);
+}
+
+#[test]
+fn arm_34_a_suite_that_writes_no_decimal_is_reported_by_category() {
+    // ⛔ The arm behind leg 11, and the shape `M1.13.4.3` was written against: a population holding an
+    // integer and a string but no decimal must be reported *as an empty category*, naming the rule the
+    // suite then fails to conform-test. Before the case was added, the real suite was this population.
+    let population: Vec<(String, String)> = [
+        (
+            "integer.eadl",
+            "(defblock b (offers (counter-width 32 bit)))",
+        ),
+        (
+            "string.eadl",
+            "(defkind k (doc \"a kind\") (name required))",
+        ),
+    ]
+    .iter()
+    .map(|(name, text)| ((*name).to_string(), (*text).to_string()))
+    .collect();
+    let wrong = category_violations(&population);
+    assert_reported(&wrong, 1, &["decimal", "§1 rule 2"]);
+}
+
+#[test]
+fn arm_35_a_decimal_in_a_declaration_closes_the_category() {
+    // The other half: the same population with one decimal added reports nothing, so arm 34 is not
+    // passing on a leg that complains whatever it is given.
+    let population: Vec<(String, String)> = [
+        (
+            "integer.eadl",
+            "(defblock b (offers (counter-width 32 bit)))",
+        ),
+        (
+            "string.eadl",
+            "(defkind k (doc \"a kind\") (name required))",
+        ),
+        ("decimal.eadl", "(defsystem s (task t (period 12.5 ms)))"),
+    ]
+    .iter()
+    .map(|(name, text)| ((*name).to_string(), (*text).to_string()))
+    .collect();
+    let wrong = category_violations(&population);
+    assert!(
+        wrong.is_empty(),
+        "a decimal in a declaration did not close the category: {}",
+        wrong.join("\n\n")
+    );
+}
+
+#[test]
+fn arm_36_an_empty_population_is_reported_rather_than_passed() {
+    // Three empty categories over zero files would be "reported" three times and mean nothing; the
+    // leg says which situation it is in instead.
+    let wrong = category_violations(&[]);
+    assert_reported(&wrong, 1, &["no descriptions at all"]);
 }

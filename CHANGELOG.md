@@ -52,6 +52,56 @@ four new legs and arms). 62 descriptions, 9 test legs, 4 book chapters.
   "every top-level form **it is given**", which is what the filter made true; `reading.md` carries the
   fact for the reader with no count in it, deliberately, because `M1.13.4.3` is about to move one.
 
+## archogen — the empty literal category is closed, and the census that found it also found two false figures in the book
+
+`ARCHOGEN-M1-0094` (leaf `M1.13.4.3`). `512 passed / 0 failed` over 37 suites (baseline 500, delta =
+twelve new legs and arms).
+
+- **The gap was one empty category, and the instrument that reports it says why that matters.**
+  `crates/eadl-front/examples/literals.rs` prints its categories "so a category holding nothing is
+  visibly zero", and one did: `decimal literals : 0` over every description the repository ships,
+  against `194` integer occurrences and `13` strings. §1 rule 2's exact rationals were executed by the
+  reference's rows and by nothing a reader would write — so a conformance suite for `eadl/1` did not
+  demonstrate the language's rational half, which is what §12 M2's independence standard asks of it. It
+  was a coverage gap, not a capability gap: `archogen check` accepts `(period 12.5 ms)` end to end and
+  the model layer's rational path was already unit-tested.
+- **The new case's subject *is* the rational:**
+  `docs/semantics/cases/positive-decimal-quantity.eadl`, an 80 Hz control loop at `(period 12.5 ms)` —
+  a period no integer number of milliseconds can spell — with the headers `semantic_corpus.rs` reads and
+  `(eadl-version eadl/1)` like every other suite file. Into `cases/` and not into an `examples/` system,
+  because an example's numbers are pinned by analysis expectations and published in the book.
+- ⭐ **§1's new row was demanded by a gate, not added by hand.** Before it existed, the coverage leg
+  failed with "`positive-decimal-quantity.eadl` writes the numeric literal `12.5` and the reference's
+  number table has no row for it, so nothing states what it is worth". The row
+  `| `12.5` | `rational 125/10^1` | `12.5` |` is therefore a consequence of the language being stated,
+  and §1 rule 2 now names the case that exercises it.
+- **A new leg refuses an empty category**, counted from the frontend's own `Form` variants with **no
+  wildcard arm in the match** — so a future variant is a compile error here rather than a category
+  silently outside the census. Three arms: a population with no decimal reported *by category and by
+  rule*; the same population with one decimal added reporting nothing; and an empty population reported
+  as empty rather than passed. Mutation E — the case's decimals replaced by integers in the declaration
+  line only, its comment prose untouched — fires it, restoration byte-identical.
+- ⛔ **The census of surfaces this change moves found two live false figures in the book.**
+  `docs/book/src/checking.md` said "`docs/semantics/cases/` holds **25** worked cases": true at
+  `6df022f` (`2026-09-13`), when the directory held 25, and false for **71 commits** after `538fe3b`
+  (`M1.9`) added four — `git rev-list --count 538fe3b..HEAD`. And its per-verdict table read `ok` 5,
+  `invalid-description` 10, `unsupported-profile` 5, `infeasible-configuration` 4, `missing-fact` 1,
+  against a walk that found 11 / 7 / 5 / 4 / 2: **three of five rows wrong**, and the table's own sum
+  contradicting the sentence above it.
+- **Both are corrected to the measurement *and* gated**, because retyping a fresh constant is what
+  `docs/CLAIM_VERIFICATION.md` §5B says is not a fix: one leg compares the published size to the walk,
+  another compares the table in **both directions** (a table checked only against the corpus passes when
+  it omits a verdict; a table checked only for real verdict names passes when its counts are wrong). The
+  table reader is strict — two cells, the first backticked, the second bare digits — so the chapter's
+  three-column passes table cannot be mistaken for a count, and an arm pins that. Mutations F and G each
+  fire their leg on the real tree; restorations byte-identical.
+- **The surfaces publishing the old zero are named, as the acceptance requires:** corrected in the live
+  ones (`MEMORY.md`, `LIVE_STATUS.md`, `docs/TASK_TREE.md`, the frontier row) and **dated rather than
+  rewritten** in the records — `M1.13.2`'s leaf and verification rows, `M1.13.3`'s routed finding,
+  `M1.13.4`'s M-O row (annotated as closed here) and two `CHANGELOG.md` entries, each a measurement of
+  the population as it stood on its date. `docs/decisions/decision_eadl1-value-domain.md` needed nothing:
+  its "nothing in the corpus" is about magnitude against the domain limit, which a `12.5` does not move.
+
 ## archogen — §8's rule had a third consumer, and it was the one no description-level test could reach
 
 `ARCHOGEN-M1-0091` (leaf `M1.13.4.1`). A production defect, found by measurement and fixed with one

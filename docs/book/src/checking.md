@@ -103,16 +103,16 @@ verdict about the user's description. §5.5: a tool failure is never reported as
 
 ## The semantic corpus
 
-`docs/semantics/cases/` holds 25 worked cases — §12 M1 asks for twenty — each declaring the
+`docs/semantics/cases/` holds 30 worked cases — §12 M1 asks for twenty — each declaring the
 verdict it expects in its own header, and each run through this pipeline:
 
 | Expected | Cases |
 | --- | --- |
-| `ok` | 5 |
-| `invalid-description` | 10 |
-| `unsupported-profile` | 5 |
+| `ok` | 6 |
+| `invalid-description` | 11 |
+| `unsupported-profile` | 7 |
 | `infeasible-configuration` | 4 |
-| `missing-fact` | 1 |
+| `missing-fact` | 2 |
 
 The expectation lives **in the case**, not in the driver. A driver that computed what to expect
 would agree with itself forever.

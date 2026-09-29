@@ -1,0 +1,25 @@
+; case: positive-decimal-quantity
+; expect: ok
+; why: A decimal literal inside a real declaration, so §1 rule 2's exact rationals are exercised by a
+;   shipped description and not only by the reference's rows. `12.5 ms` is an 80 Hz control loop — a
+;   period no integer number of milliseconds can spell — and the language holds it as 125 tenths, so it
+;   survives every round trip exactly. §7.4 forbids a float anywhere in the pipeline, and this case is
+;   the one place a description rather than a table row depends on that.
+; rationale: the census instrument reports its literal categories "so a category holding nothing is
+;   visibly zero", and `decimal literals` was the one empty category: 194 integer occurrences over 24
+;   distinct values and 13 strings, against no decimal at all. A rule the specification states and no
+;   description uses is a rule the suite does not conform-test.
+;
+(eadl-version eadl/1)
+
+(defblock timer.counter (offers counter-width tick-rate observation-coherent))
+(defplatform soc.p (offers (core-count 1 tick)) (requires (uses timer.counter)))
+(defservice time.monotonic
+  (requires (unambiguous-horizon (at-least 60 s))
+            (needs counter-width tick-rate observation-coherent)))
+(defsystem s
+  (task loop
+    (period 12.5 ms) (deadline 12.5 ms) (deadline-from release) (priority 1)
+    (uses time.monotonic))
+  (requires (uses time.monotonic))
+  (platform (uses soc.p)))
