@@ -512,31 +512,22 @@ fn repo_root() -> PathBuf {
         .to_path_buf()
 }
 
-/// Every `.eadl` file the repository contains — the grammar's conformance suite.
+/// The conformance suite: the population `docs/semantics/conformance.md` declares.
+///
+/// ⛔ **Enumerated from the manifest, not from a root list restated here.** This function used to walk
+/// `docs/semantics` and `examples` itself, and `reference.rs` walked the same two directories in its own
+/// copy — so the suite's scope was a claim in two files and a rule in neither, and a description added
+/// under a third directory would have been outside one walk, both, or neither depending on which author
+/// remembered. `common::suite` is the one reader; `conformance_suite.rs` checks the manifest's own rules.
 fn corpus() -> Vec<(String, String)> {
-    let root = repo_root();
-    let mut found = Vec::new();
-    let mut stack = vec![root.join("docs/semantics"), root.join("examples")];
-    while let Some(dir) = stack.pop() {
-        let Ok(entries) = std::fs::read_dir(&dir) else {
-            continue;
-        };
-        for entry in entries.filter_map(Result::ok) {
-            let path = entry.path();
-            if path.is_dir() {
-                stack.push(path);
-            } else if path.extension().is_some_and(|e| e == "eadl") {
-                let relative = path
-                    .strip_prefix(&root)
-                    .expect("inside the repository")
-                    .display()
-                    .to_string();
-                found.push((relative, std::fs::read_to_string(&path).expect("readable")));
-            }
-        }
-    }
-    found.sort();
-    found
+    common::suite::population(&repo_root()).unwrap_or_else(|problems| {
+        panic!(
+            "{} declares a suite that cannot be enumerated, so this file would be green on an empty \
+             population:\n\n{}",
+            common::suite::MANIFEST_PATH,
+            problems.join("\n")
+        )
+    })
 }
 
 /// Run `body` with a large stack.

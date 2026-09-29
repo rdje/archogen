@@ -155,10 +155,18 @@ into the same tokens the reader does. `crates/eadl-front/tests/conformance.rs` c
 
 | Check | Over |
 | --- | --- |
-| both accept | every `.eadl` file in `docs/semantics/` and `examples/` |
+| both accept | every description in the suite [`conformance.md`](conformance.md) declares |
 | both reject | the malformed fixtures |
-| both produce the **same token spans** | every corpus file |
-| both accept | 23 probes, one per production |
+| both produce the **same token spans** | every description in that suite |
+| both accept | the probe set `conformance.rs` carries, and every literal row `reference.md` states |
+
+⛔ **No count belongs in that table, and one used to.** The population is walked from the manifest's
+roots, so a figure here is a figure nothing re-derives — this file already published one that went
+stale, the heading "Three rules the productions above imply" above four items, and the fix was to delete
+the count rather than retype it (`M1.12.2`). The probe set lives in the test, where adding a probe
+cannot leave a sentence behind. ⚠️ The suite's scope is not this file's to state either: which
+descriptions conform is [`conformance.md`](conformance.md)'s subject, and what a literal is *worth* is
+[`reference.md`](reference.md)'s.
 
 ⛔ **Acceptance agreement alone is too weak, and that is measured rather than argued.** Dropping
 `_` from hexadecimal literals in the reader left every acceptance test green while

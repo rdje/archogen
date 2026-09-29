@@ -66,6 +66,46 @@ assurance story were not *reported as missing* — they were simply not mentione
 identically to being covered. Each gap now names its owner: `PROGRAM.9` for the extended tier's
 three steps, `M5.1` for the board, `M3.6` / `M4.8` / `M4.7` for the assurance tier.
 
+## What the `tests` step is a suite *of*
+
+The row above says "every contract test passes", and for the language that means a declared population.
+`docs/semantics/conformance.md` is the manifest: which descriptions
+are `eadl/1`'s conformance suite, what each part of it proves, and what is deliberately outside it. The
+tables in it are **machine-read**, and one module — `crates/eadl-front/tests/common/suite.rs` — walks
+them, so every leg that needs the suite enumerates the same population instead of restating its own idea
+of it.
+
+| Root | What it proves |
+| --- | --- |
+| `docs/semantics/boundary` | the controlling boundary — functionality versus implementation — in paired accept/reject cases, each carrying its verdict in a comment header that **F27** reads |
+| `docs/semantics/cases` | the worked semantic cases, each declaring the §5.5 verdict it expects in its own header, so a driver that computed the expectation could not agree with itself |
+| `docs/semantics/kinds` | the `defkind` modules the registry is built from, which makes the language's own definitions conformance cases of the language |
+| `examples` | the descriptions a reader copies, checked end to end and — for the S0 fixture — built and run |
+
+⭐ **The manifest carries no count.** A size is a property of the roots, so the roots are where it is
+measured: a leg pins the population and refuses an empty one, and the chapters that publish a figure
+publish the measured one under a leg comparing prose to walk.
+
+**What is outside the suite, and why.** Everything under `docs/feedback` — the reproductions of defects
+reported to another project. Their bytes *are* the reproduction, `FEEDBACK-SELF-CONTAINED` seals them,
+and several are deliberately malformed, so sweeping them in would turn one project's bug reports into
+conformance cases of a language version.
+
+**Four rules the manifest's legs enforce**, in `crates/eadl-front/tests/conformance_suite.rs`:
+
+1. the population is exactly what the declared roots hold — checked in **both** directions against a
+   walk that shares no root list with the manifest, because one direction alone cannot see a root that
+   stopped existing;
+2. a root that reaches an excluded path is a **violation**, not a silent skip;
+3. no suite file is byte-identical to an excluded one, which is what a path prefix cannot see — a frozen
+   reproducer copied into a walked root;
+4. no description in the repository is silently outside the suite, so a new one under a new directory is
+   a manifest decision rather than an accident.
+
+⚠️ **Honest limit.** This is one implementation checking itself against its own specification. §12 M2's
+standard — a checker "sharing the same erroneous recurrence with its reference does not qualify as
+independent" — is not met by it, and leaf `M1.22` owns the question of a third recognizer.
+
 ## Why `focused` runs the whole suite
 
 §14.3 defines the focused tier as "format/type checks and **affected** contract tests", and

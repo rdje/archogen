@@ -52,6 +52,58 @@ four new legs and arms). 62 descriptions, 9 test legs, 4 book chapters.
   "every top-level form **it is given**", which is what the filter made true; `reading.md` carries the
   fact for the reader with no count in it, deliberately, because `M1.13.4.3` is about to move one.
 
+## archogen — the conformance suite has one declared population, and four rules that used to be coincidences
+
+`ARCHOGEN-M1-0096` (leaf `M1.13.4.4`). `526 passed / 0 failed` over 38 suites (baseline 512, delta =
+the new test file's fourteen legs and arms).
+
+- ⛔ **The defect: the suite's scope was stated twice and enforced nowhere.**
+  `crates/eadl-front/tests/conformance.rs:496` and `reference.rs:473` each hardcoded
+  `docs/semantics` + `examples`, so "what is in `eadl/1`'s conformance suite" was two private lists in
+  two test binaries and no document a reader could consult. The exclusion of the frozen LinkedSpec
+  evidence was a *property of those lists* rather than a rule: nothing refused a root that reached
+  `docs/feedback/`, so widening one would have turned five deliberately malformed upstream bug reports
+  into conformance cases with a green suite.
+- **`docs/semantics/conformance.md` is now the manifest**: three machine-read tables — the version and
+  what conforming to it means, the roots and what each proves, the exclusions and why — the four
+  enumeration rules with the leg that executes each, and the honest limits, including that this is one
+  implementation checking itself against its own specification, which §12 M2's independence standard does
+  not accept and `M1.22` owns. **No count appears in it**, deliberately: a size is a property of the
+  roots, and a figure in a manifest is a figure nothing re-derives.
+- **One reader, `crates/eadl-front/tests/common/suite.rs`**, and both walks now call it, so legs that
+  used to agree by coincidence agree by construction. A census leg pins the population at **63** and
+  refuses an empty one.
+- **Four rules executed rather than promised.** (1) The population is exactly what the declared roots
+  hold, checked in **both** directions against `repository_descriptions` — a walk that shares no root
+  list with the manifest, because one direction alone cannot see a root that stopped existing and the
+  other cannot see a description nobody walks. (2) A root that reaches an excluded path is a **violation**
+  and not a silent skip; arm 1 fires it on the real tree by declaring `docs` as a root. (3) No suite file
+  is byte-identical to an excluded one — the rule a path prefix cannot express, and the one the acceptance
+  criterion actually asked for, usable only because `M1.13.4.2`'s identifier diverged the one legitimate
+  pair (`LS-002`'s evidence copy of the S0 fixture). (4) No description in the repository is silently
+  outside the suite: **mutation H** wrote `catalog/new-family/device.eadl`, a directory no root declares,
+  and the leg failed naming the file and both remedies; the directory was removed and the leg green again.
+- ⛔ **The exclusion needed no glob grammar at all**, and the leaf's own acceptance said otherwise. All
+  thirteen excluded descriptions are under `docs/feedback`, and nothing else there is a description, so a
+  **path prefix** is the whole matcher — and a prefix matcher that quietly understood `*` would make the
+  manifest's stated rule false and every pattern in it ambiguous. An arm pins that `docs/*` matches
+  nothing, so a glob in a future manifest is a leg failure rather than a silent widening.
+- ⛔ **A live false figure in a normative document, and a defect filed under it rather than folded in.**
+  `docs/semantics/grammar.md`'s Conformance table published "23 probes, one per production" where the test
+  holds **25** probes and the EBNF fence declares **24** productions. The count is deleted rather than
+  retyped — `M1.12.2`'s prescription for this same file — but deleting a number does not retract the claim
+  underneath it: `the_conformance_probes_exercise_every_production` asserts only that each probe is
+  accepted by both implementations, and nothing maps a probe to a production. That is **`M1.27`**, filed
+  with its census.
+- **Arm 3's first cut was a false green** and is recorded as one: replacing a substring of the `examples`
+  row left the em-dashed remainder in the cell, so the parser saw a non-empty `proves` and reported
+  nothing. The arm's own mutation-applied assertion is what caught it, and the fix replaces the whole row.
+- **Lockstep:** `docs/book/src/verification.md` gains "What the `tests` step is a suite *of*" — the roots,
+  the exclusion, the four rules and where they are enforced, and the independence limit, with no count in
+  it; `grammar.md`'s Conformance table cites the manifest instead of restating the roots;
+  `book-anchors: OK (19 chapter(s), 3 normative document(s))` with `--self-test` at `6 pass / 0 fail`, the
+  manifest being the third.
+
 ## archogen — the empty literal category is closed, and the census that found it also found two false figures in the book
 
 `ARCHOGEN-M1-0094` (leaf `M1.13.4.3`). `512 passed / 0 failed` over 37 suites (baseline 500, delta =
