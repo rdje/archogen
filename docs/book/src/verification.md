@@ -44,6 +44,13 @@ there. And the two reasons a step cannot run are kept apart, because the respons
 - **not built** — the step does not exist yet, and it names the **task-tree leaf** that owns
   building it, so a reader learns where the work is tracked rather than concluding the project
   forgot.
+- **quarantined** — the step exists, its tool is present, it ran, and it could not reach a verdict
+  because what it compares against is owned by a leaf that has not delivered it. §14.3 allows that
+  only on terms: "Quarantine requires a named issue, owner, affected claim, and bounded scope." So a
+  quarantine is one row of `QUARANTINES` in `xtask/src/main.rs` carrying exactly those four, and it
+  covers one step's exit `20` and nothing else — the same step exiting `1` still fails, a step no row
+  names exiting `20` still fails, and a quarantined step that *passes* is refused as a stale
+  quarantine, so the leaf that closes the gap deletes the row in the same commit (leaf `PROGRAM.10.1`).
 
 ## What that looks like today
 
@@ -52,36 +59,46 @@ Rendered from a run, not retyped:
 ```console
 $ cargo xtask verify --tier integration
 tier: integration — before a push, and before closing a milestone
-  ✅ fmt                  0.18s  every Rust source is in canonical format
-  ✅ clippy               0.49s  no lint fires anywhere, including in tests and examples
-  ✅ tests                3.07s  every contract test passes, F28 and the semantic corpus included
-  ✅ doctrines            4.22s  every repository invariant holds on the working tree
-  ✅ self-tests          33.87s  every doctrine gate's RED arms still fire — a gate that stopped being able to fail is caught here
-  ✅ book                 0.08s  the mdBook builds — it is the director's window, so a broken book is a broken deliverable
+  ✅ fmt                  0.24s  every Rust source is in canonical format
+  ✅ clippy               0.13s  no lint fires anywhere, including in tests and examples
+  ✅ tests                5.14s  every contract test passes, F28 and the semantic corpus included
+  ✅ doctrines            8.29s  every repository invariant holds on the working tree
+  ✅ self-tests          57.84s  every doctrine gate's RED arms still fire — a gate that stopped being able to fail is caught here
+  ✅ book                 0.10s  the mdBook builds — it is the director's window, so a broken book is a broken deliverable
   ✅ no-std-build         0.04s  the runtime core compiles for a bare-metal target (§14.3's "compile targets")
-  ❌ emulator             0.12s  FAILED
+  ⚠  emulator             0.06s  QUARANTINED — could not be run; leaf M2.8 owns the gap
+     issue: QEMU is present, at the pinned release, and offers the pinned machine — but the §3.2 agreement check has nothing to compare yet: `DEVICE_TREE_FIXTURE` (leaf `M2.8.2`) and the eADL platform description it must agree with (`M2.8.3`) do not exist
+     unproven while it stands: that `riscv-virt-up` is the platform its eADL fixture describes (§3.2) — `TARGET_VERIFIED` in `targets/riscv-virt-up.env`
      target-emulator: found: QEMU emulator version 11.1.1
      target-emulator: TARGET_VERIFIED=no — this configuration is still a PROPOSAL
+     target-emulator:   the §3.2 agreement check could not be run: docs/targets/riscv-virt-up.dtb.summary.md does not exist
      target-emulator:   leaf M2.8 owns flipping it, with the evidence that justifies it
-     re-run it directly: scripts/target_emulator.sh --check
-tier integration: failed — 7 passed, 1 failed, 0 unavailable, 0 not built
+tier integration: incomplete — 7 passed, 0 failed, 0 unavailable, 0 not built, 1 quarantined
+  ⚠  incomplete is NOT a pass. §14.3: "a required tool skipped or unavailable is reported as such, not a passed check".
+  ⚠  and a quarantine is an absence on terms. §14.3: "Quarantine requires a named issue, owner, affected claim, and bounded scope" — each is printed above.
 $ echo $?
-1
+20
 ```
 
-The one failure is honest and owned. QEMU is installed and pinned now, so the emulator step *runs* — and
-refuses, because the target configuration it checks still says `TARGET_VERIFIED=no`: it is a proposal until
-leaf `M2.8` supplies the evidence to flip it. A tier that turned that into a pass would be claiming a target
-nobody has verified.
+The one absence is honest and owned. QEMU is installed and pinned, so the emulator step *runs*: it finds
+the pinned release and the pinned machine, and then cannot reach a verdict, because the §3.2 agreement check
+has nothing to compare yet — the device-tree fixture and the eADL platform description are `M2.8`'s to
+write, and the configuration says `TARGET_VERIFIED=no` until they exist. A tier that turned that into a pass
+would be claiming a target nobody has verified. Until `PROGRAM.10.1` it was reported as a *failure*, which
+was wrong the other way: nothing had disagreed, and `COMMIT.md` treats the two differently — it permits
+proceeding past an `incomplete` tier after reading what it names, and not past a `failed` one. A release
+other than the pin, or a machine QEMU does not offer, is still a failure: that is a comparison that ran.
 
 ⭐ **The `self-tests` step is the newest, and it answers a different question from `doctrines`.** The
-doctrines say the tree is clean; the self-tests say each doctrine gate can still *fail* — every gate's own
-RED arms, discovered by census from `scripts/`, plus `scripts/selftest_spine.sh`, which arms the gates the
-scaffold owns from outside. Until leaf `PROGRAM.28` nothing ran them, so an arm that broke, or began to pass
+doctrines say the tree is clean; the self-tests say each doctrine gate can still *fail* — the RED arms of
+every script that carries them, discovered by census from `scripts/` (the gates, the emulator tool, and the
+self-test runner itself), plus `scripts/selftest_spine.sh`, which arms the gates the scaffold owns from
+outside. Until leaf `PROGRAM.28` nothing ran them, so an arm that broke, or began to pass
 for the wrong reason, stayed invisible until someone happened to invoke it. It takes about forty seconds,
 which is why it lives here and not on every commit.
 
-⭐ **Two of the five tiers are incomplete, and saying so is the runner's most useful output.** Before
+⭐ **Of the five tiers, `hardware` and `assurance` are incomplete, and `integration` is too — the emulator
+quarantined, as above. Saying so is the runner's most useful output.** Before
 the runner existed, the fuzz corpus, the mutation harness, the Miri wiring, the board and the whole
 assurance story were not *reported as missing*. They were simply not mentioned, which reads exactly
 like being covered. Each gap was given an owner. The `extended` tier's three steps were built under

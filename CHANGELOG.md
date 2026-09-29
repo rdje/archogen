@@ -4,6 +4,21 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the emulator step is quarantined, not failed
+
+`ARCHOGEN-PROGRAM-0145` (leaf `PROGRAM.10.1`).
+
+- `make integration` now reads **incomplete** (exit `20`), where it read **failed** (exit `1`). QEMU is installed
+  and matches the pin, but the check that would verify the target has nothing to compare against yet. That is
+  "could not be run", not "ran and disagreed". `COMMIT.md` lets a push proceed past the first after reading it,
+  and not past the second.
+- The runner has a third kind of absence, which `ROADMAP.md` §14.3 names: a **quarantine**, allowed only with an
+  issue, an owner, the claim left unproven and a bounded scope. It covers one step's exit `20` and nothing
+  else. A real mismatch (another QEMU release, a missing machine) still fails. Once the gap closes, the
+  quarantine must be deleted.
+- A failing step now shows why. Before, the doctrine step printed "1 breach, commit blocked" and never which
+  doctrine had broken, because the runner showed only one of the two output streams.
+
 ## archogen — a number added to the book says what keeps it true
 
 `ARCHOGEN-PROGRAM-0144` (leaf `PROGRAM.20.3`; closes `PROGRAM.20`). A new doctrine, `FIGURE-REGISTER`.

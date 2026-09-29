@@ -50,6 +50,10 @@ so a future session does not re-litigate it, and so the number is not mistaken f
   can neither commit nor push. `PROGRAM.10` (reclassify the emulator step per §14.3's quarantine
   clause) must therefore land **before** `PROGRAM.23`'s check is given teeth, or the check must report
   loudly without blocking until it has.
+  *Amended `2026-09-30`:* the reclassification landed in `PROGRAM.10.1` — the emulator step is now
+  quarantined under `M2.8`, so `make integration` reads `incomplete` rather than `failed`, and step 2
+  permits a push past it after reading what it names. The premise above is lifted for that step; any
+  other failing step still blocks, as it should.
 - **The live count is never written down.** It moves with every commit, so documents point at
   `git rev-list --count origin/main..HEAD` instead of quoting a number — the idiom `MEMORY.md`
   already uses. This record states the *threshold*, which only moves by decision.

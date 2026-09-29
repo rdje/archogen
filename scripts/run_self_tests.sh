@@ -6,10 +6,11 @@
 # passing for the wrong reason, stayed unseen until a person happened to invoke it. This runner is the
 # `self-tests` step of the `integration` tier and of the CI doctrine workflow.
 #
-# THE POPULATION is discovered, never listed: every `scripts/check_*.sh` and `knowledge-map/scripts/check_*.sh`
-# that handles `--self-test`, plus `scripts/selftest_spine.sh`, which arms the scaffold-owned gates from outside
-# (`PROGRAM.18.2`). A gate armed tomorrow is run the day it is armed. An empty population is a breach, because a
-# runner with nothing to run reports success about nothing.
+# THE POPULATION is discovered, never listed: every `scripts/*.sh` and `knowledge-map/scripts/*.sh` that handles
+# `--self-test` — the gates, the tools that classify (`target_emulator.sh`, `PROGRAM.10.1`) and this runner's own
+# arms — plus `scripts/selftest_spine.sh`, which arms the scaffold-owned gates from outside (`PROGRAM.18.2`). A
+# script armed tomorrow is run the day it is armed. An empty population is a breach, because a runner with
+# nothing to run reports success about nothing.
 #
 # CONTRACT: exit 0 = every self-test passed; 1 = at least one failed, each named; 2 = nothing to run.
 # `--self-test` runs this runner's own arms against stub gates in `target/doctrine_scratch/`.
@@ -20,7 +21,7 @@ SELF="$0"
 case "$SELF" in /*) ;; *) SELF="$PWD/$SELF" ;; esac
 ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
 
-GLOB="${SELF_TESTS_GLOB:-scripts/check_*.sh knowledge-map/scripts/check_*.sh}"
+GLOB="${SELF_TESTS_GLOB:-scripts/*.sh knowledge-map/scripts/*.sh}"
 HARNESS="${SELF_TESTS_HARNESS-scripts/selftest_spine.sh}"
 
 # Every armed gate, one per line: a script that handles the `--self-test` argument.

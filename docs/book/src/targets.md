@@ -49,6 +49,12 @@ The configuration also carries `TARGET_VERIFIED=no` until an installed QEMU has 
 A proposal recorded as a proposal is a fact about what is known; the same line marked verified
 with nothing behind it would be a fabricated fact.
 
+With QEMU installed, `--check` keeps two answers apart. A release other than the pin, or a
+machine the emulator does not offer, is a comparison that ran and disagreed: exit `1`. A
+configuration that matches, whose §3.2 agreement check has nothing to compare against yet, could
+not be run: exit `20`, the same code as the absent tool, and the runner accepts it only because a
+quarantine names its owner, `M2.8` — [the verification chapter](verification.md) has the terms.
+
 ## There is no board
 
 **No physical board has been selected or procured.** Physical-target evidence is blocked, and

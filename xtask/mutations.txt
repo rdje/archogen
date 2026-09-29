@@ -171,3 +171,25 @@ from
 to
             for label in self.secondary.iter().take(0) {
 end
+
+mutation undeclared-could-not-run-counted-as-an-absence
+file xtask/src/main.rs
+test -p xtask a_quarantine_is_an_absence_and_nothing_else
+expect killed
+why PROGRAM.10.1: §14.3 lets an absence stand only under a quarantine with an issue, owner, claim and scope. A runner that took any step's exit 20 as an absence would let a step exempt itself by choosing its exit code.
+from
+            (Some(COULD_NOT_RUN), false) => Judgement::Undeclared,
+to
+            (Some(COULD_NOT_RUN), false) => Judgement::Quarantined,
+end
+
+mutation failing-step-shows-one-stream
+file xtask/src/main.rs
+test -p xtask a_failing_step_shows_the_cause_on_whichever_stream_it_was_written
+expect killed
+why PROGRAM.10.1: the runner showed stderr whenever it was non-empty, so a failing `doctrines` step printed its summary and never which doctrine broke — the breach is on stdout.
+from
+        for stream in [stdout, stderr] {
+to
+        for stream in [if stderr.trim().is_empty() { stdout } else { stderr }] {
+end

@@ -1893,7 +1893,7 @@ mdBook that is the director's window into the project.
   Commit: `pending`
 
 - ID: `PROGRAM.10`
-  Status: `pending`
+  Status: `in_progress`
   Goal: run the **integration** tier in CI — provision `mdbook` and `qemu-system-riscv64` on the
   runner — and decide the blocking policy for an `incomplete` verdict.
   Acceptance: CI runs `cargo xtask verify --tier integration`; the repository has a recorded,
@@ -1927,6 +1927,109 @@ mdBook that is the director's window into the project.
   `target-verification`, bounded to that one step. This leaf's deliverable is therefore not only the
   CI provisioning and the blocking policy — it is also making the step report the verdict §14.3's own
   vocabulary already has a word for.
+  Verification: `pending`
+  Commit: `pending`
+  Children: `PROGRAM.10.1` … `PROGRAM.10.5` — decomposed `2026-09-30`, in the order the warning above requires: the
+  verdict made the right shape first, the policy decided second, the workflow wired last — and a fifth leaf for the
+  one leg no machine here can supply, because this repository's CI has not run since `origin/main`'s `32e6b14`.
+
+- ID: `PROGRAM.10.1`
+  Status: `done`
+  Goal: the emulator step reports what §14.3 has a word for — a **quarantine** with a named issue, owner, affected
+  claim and bounded scope — when the one thing missing is the §3.2 agreement evidence `M2.8` owns, and still reports
+  a **failure** for a real mismatch (a release other than the pin, a machine the emulator does not offer).
+  Acceptance: `scripts/target_emulator.sh --check` separates *could not be run* (exit `20`) from *ran and disagreed*
+  (exit `1`); the runner turns exit `20` into an absence only for a step that declares a quarantine carrying all four
+  of §14.3's fields, so an undeclared step exiting `20` is still a failure; a quarantine whose step passes is refused
+  as stale; `make integration` reads `incomplete`, naming `M2.8`.
+  Verification: see the checklist — the script's `--check` split and armed (7 arms, 3 mutations), the runner's
+  judgement a tested table with two catalogued mutations, and `make integration` `incomplete` at exit `20`.
+  Commit: `ARCHOGEN-PROGRAM-0145 (leaf PROGRAM.10.1)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — `HEAD`'s own script, run from scratch against the installed QEMU:
+    ```text
+    $ git show HEAD:scripts/target_emulator.sh > …/head_target_emulator.sh; bash …/head_target_emulator.sh --check
+      target-emulator:   leaf M2.8 owns flipping it, with the evidence that justifies it
+      HEAD's --check exit=1
+    ```
+    and the runner maps "ran, nonzero" to `Failed`, so the tier read `failed` — the verdict `COMMIT.md` step 2
+    does not let a push proceed past, over a comparison that never ran.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — **WHERE (1):** `scripts/target_emulator.sh --check` folded *could not be
+    run* into *disagreed*: the `TARGET_VERIFIED` branch set the same code as the three real mismatches.
+    ```text
+    $ git show HEAD:scripts/target_emulator.sh | grep -n 'rc=1'
+      58:      rc=1      (no pin)          62:      rc=1   (release mismatch)
+      68:      rc=1      (machine absent)  74:      rc=1   (TARGET_VERIFIED=no — nothing compared)
+    $ git grep -c -i "quarantin" HEAD -- xtask/src/main.rs   → no match
+    ```
+    **WHY:** the runner had words for *unavailable* and *not built* but none for §14.3's third case, so the
+    script had no code that meant "ran, and could not reach a verdict", and nothing could accept one on terms.
+    **WHERE (2), found on the first run of the fix:** the runner showed a failing step's stderr whenever it was
+    non-empty — `git show HEAD:xtask/src/main.rs | grep -n "stderr.trim().is_empty()"` → `464:` — and the
+    doctrine driver writes each breach to stdout, so a failing `doctrines` step printed `=== 1 doctrine
+    breach(es) — commit blocked ===` and never which doctrine: 32 stdout lines, 1 stderr line, measured.
+  - [x] **FIX** — `--check` exits `20` when the only shortfall is `TARGET_VERIFIED=no` (and names the missing
+    `DEVICE_TREE_FIXTURE`), `1` for any mismatch, which outranks it, and `1` for `TARGET_VERIFIED=yes` with no
+    fixture behind it; `--self-test` runs the verdicts against a stub QEMU. The runner gains `QUARANTINES` —
+    step, issue, owner, claim — and a pure `judge()`: exit `20` from a named step is `Quarantined`, from any other
+    step a failure with a hint; a named step passing is a stale quarantine, refused. A failing step shows both
+    streams' tails (`TAIL_LINES` 24 → 40 per stream, sized on the driver's 32-line report).
+    `scripts/run_self_tests.sh` censuses every `scripts/*.sh` carrying `--self-test`, so the new arms, and the
+    runner's own, run in the `self-tests` step.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    $ bash scripts/target_emulator.sh --self-test      → target-emulator self-test: 7 pass / 0 fail (7 arms)
+    $ bash scripts/target_emulator.sh --check          → exit=20, "the §3.2 agreement check could not be run"
+      M1 unverified outranks a mismatch               → 3 arm(s) refused, restored (cmp)
+      M2 unverified back to exit 1 (the old verdict)   → 1 arm refused, restored (cmp)
+      M3 verified with no fixture accepted             → 1 arm refused, restored (cmp)
+    $ cargo xtask mutate --only failing-step-shows-one-stream undeclared-could-not-run-counted-as-an-absence
+      mutate: OK — 2 mutation(s), each killed or surviving exactly as the catalog expects
+    $ cargo xtask verify --tier integration
+      tier integration: incomplete — 7 passed, 0 failed, 0 unavailable, 0 not built, 1 quarantined   exit=20
+    ```
+  - [x] **NO REGRESSION** — `cargo test -p xtask` → `test result: ok. 17 passed; 0 failed`; the same tier run's
+    `tests`, `doctrines`, `self-tests` (`self-tests: OK — 23 self-test(s) passed`, was 21: the census adds
+    `target_emulator.sh` and the runner itself), `book` and `no-std-build` all ✅. A real mismatch still fails:
+    arms 2–5 of the script's self-test pin `exit 1`.
+  - [x] **LOCKSTEP** — `verification.md` names the third kind of absence and re-renders its transcript from the
+    run above; `targets.md` and `docs/targets/first-target.md` carry the two exits (the latter re-rendered from
+    a run); `COMMIT.md` step 2, `TOOLBOX.md`, `DOCTRINE_ENFORCEMENT.md`; `decision_push-cadence.md` amended,
+    because its deadlock premise was this leaf's defect.
+
+- ID: `PROGRAM.10.2`
+  Status: `pending`
+  Goal: every gate's self-test runs as a CI runner would run it — with no git identity it did not set itself.
+  Acceptance: `scripts/run_self_tests.sh` runs the arms with the caller's global git configuration hidden, so an arm
+  that commits without its own identity fails here as it would on a runner; every such arm fixed.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `PROGRAM.10.3`
+  Status: `pending`
+  Goal: the blocking policy for `incomplete` — a recorded, reasoned answer, and a runner mode that implements it.
+  Acceptance: a decision record under `docs/decisions/`; the runner can be told the environment is provisioned, so a
+  missing tool is a failure of that claim rather than an absence; what remains `incomplete` is only what a leaf owns.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `PROGRAM.10.4`
+  Status: `pending`
+  Goal: the `integration` job in `.github/workflows/rust.yml`, provisioning `mdbook` and `qemu-system-riscv64` at
+  their pins, verified against a hash, and implementing `PROGRAM.10.3`'s policy.
+  Acceptance: the provisioning lives in one script the workflow calls; each download is checked against a recorded
+  sha256; a rehearsal on this machine — a fresh clone, no global git configuration — runs the job's commands.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `PROGRAM.10.5`
+  Status: `pending`
+  Goal: read the first real run of the `integration` job, and fix what the runner's userland finds.
+  Acceptance: the run's verdict and log are recorded here. ⚠️ It cannot happen before the next push, which the ruled
+  cadence (`decision_push-cadence.md`) places at `400` commits ahead; until then the job's evidence is a rehearsal
+  on macOS, not a run on the runner's GNU userland, and the parent says so rather than closing on it.
   Verification: `pending`
   Commit: `pending`
 
@@ -3173,8 +3276,8 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
-| 2 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
+| 1 | `PROGRAM.10` | `in_progress` | run the `integration` tier in CI. `.10.1` is done: the emulator step is quarantined under `M2.8` (§14.3), so the tier reads `incomplete`, not `failed`. Next `.10.2` — the self-tests run with no git identity they did not set, as a runner runs them — then `.10.3`, the blocking policy, before `.10.4` wires the job |
+| 2 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **After `PROGRAM.10`**: since `.10.1` the emulator no longer fails `make integration`, so a verdict at N no longer deadlocks — but its blocking policy should be the one `.10.3` records |
 | 3 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
 | 4 | `PROGRAM.30` | `pending` | **medium** — the Rust channel, mdBook and CI actions are unpinned; found deriving the ledger's pins |
 | 5 | `PROGRAM.31` | `blocked` | on the director's ruling on the findings record's §8 — the changelog and development notes as rolling ledgers |
@@ -3306,6 +3409,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.20.1` | the gate's first run; its 10 arms; seven mutations; each real snapshot's head moved | `M2.9`'s status contradiction found and corrected in its own commit; every arm and mutation as designed; all three snapshots genuinely checked |
 | `2026-09-30` | `PROGRAM.20.2` | the transcript test before and after; the backlog grown and made stale; the renderer mutation through the catalog | 5 of 12 checkable transcripts differed, two contradicting their own prose; all 12 exact after re-rendering; both ratchet directions refused; the mutation killed by the book's own transcripts |
 | `2026-09-30` | `PROGRAM.20.3` / `PROGRAM.20` | a census of figure-shaped text in the live surfaces; the gate's 14 arms; eight mutations; the `S0.8` shape staged on the real tree | 96 phrases over 28 files as backlog; the added figure refused; the register's own first row refused as false; `PROGRAM.20` closed |
+| `2026-09-30` | `PROGRAM.10.1` | the emulator check against HEAD's script and the new one; its 7 arms and 3 mutations; the runner's judgement table and 2 catalogued mutations; the whole `integration` tier | HEAD exit `1`, now `20`; every arm and mutation as designed; the tier `incomplete` with the emulator quarantined under `M2.8`, a failing step now naming its cause |
 
 ## Commit Log
 
@@ -3355,6 +3459,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.20` → `PROGRAM.20.1` | `ARCHOGEN-PROGRAM-0142 (leaf PROGRAM.20.1)` | **a restated order is a verified copy** — `STATED-ORDER` checks frontier rows, snapshot heads, successor lists and the changelog's order; its first run found `M2.9` stated two ways. `PROGRAM.20` decomposed |
 | `PROGRAM.20.2` | `ARCHOGEN-PROGRAM-0143 (leaf PROGRAM.20.2)` | **every diagnostic the book shows is a real run** — a test re-runs each and requires it exactly; five blocks re-rendered, two of which contradicted their own prose |
 | `PROGRAM.20.3` → `PROGRAM.20` | `ARCHOGEN-PROGRAM-0144 (leaf PROGRAM.20.3)` | **a figure added to a live document says what keeps it true** — `FIGURE-REGISTER`, a ratchet with a classifying register. `PROGRAM.20` closed: orders, transcripts and figures each have an instrument |
+| `PROGRAM.10.1` | `ARCHOGEN-PROGRAM-0145 (leaf PROGRAM.10.1)` | **the emulator step is quarantined, not failed** — §14.3's quarantine as a runner row with its four fields; a failing step shows both streams |
 
 ## Changelog
 

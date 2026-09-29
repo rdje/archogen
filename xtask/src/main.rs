@@ -33,6 +33,12 @@
 //! * **unavailable** — the step exists, and a *tool* is missing from this machine. Install it.
 //! * **not built** — the step does not exist yet. It names the task-tree leaf that owns building
 //!   it, so a reader learns where the work is tracked instead of concluding the project forgot.
+//!
+//! And a third, which §14.3 names in the same paragraph: a **quarantine** — the step exists, its
+//! tool is present, it ran, and what it needs to reach a verdict is owned by a leaf that has not
+//! delivered it. §14.3: "Quarantine requires a named issue, owner, affected claim, and bounded
+//! scope", so a quarantine is a row of [`QUARANTINES`] carrying exactly those, and nothing else
+//! can make a step's exit count as an absence (leaf `PROGRAM.10.1`).
 
 mod mutation;
 
@@ -40,9 +46,43 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::Instant;
 
-/// How many trailing lines of a failing step's output to show. Enough to carry a test failure's
-/// assertion diff, short enough that a tier's report stays readable.
-const TAIL_LINES: usize = 24;
+/// How many trailing lines of each stream of a failing step's output to show. Enough to carry a
+/// test failure's assertion diff and the doctrine driver's whole report — **32** lines of stdout
+/// with one breach, measured `2026-09-30` — short enough that a tier's report stays readable.
+const TAIL_LINES: usize = 40;
+
+/// The exit code by which a step says *I could not be run* rather than *I ran and disagreed* —
+/// the same `20` the tiers and the checker's own contract use for `incomplete`.
+const COULD_NOT_RUN: i32 = 20;
+
+/// §14.3: "Quarantine requires a named issue, owner, affected claim, and bounded scope."
+///
+/// ⛔ What a quarantine buys, and nothing more: the named step may exit [`COULD_NOT_RUN`], and the
+/// runner counts that as an absence — the tier `incomplete`, never `passed`. The same step exiting
+/// `1` is still a failure; a step no row names exiting `20` is still a failure; and the named step
+/// *passing* is refused as a stale quarantine, so the leaf that closes the gap deletes the row in
+/// the same commit instead of leaving an exemption nobody needs to notice.
+struct Quarantine {
+    /// The bounded scope: this one step, and only its exit `20`.
+    step: &'static str,
+    /// What cannot be run, and why.
+    issue: &'static str,
+    /// The task-tree leaf that lifts it.
+    owner: &'static str,
+    /// The claim that stays unproven while it stands.
+    claim: &'static str,
+}
+
+/// Every quarantine in the repository, so "what is quarantined right now?" has one answer.
+const QUARANTINES: &[Quarantine] = &[Quarantine {
+    step: "emulator",
+    issue: "QEMU is present, at the pinned release, and offers the pinned machine — but the §3.2 \
+            agreement check has nothing to compare yet: `DEVICE_TREE_FIXTURE` (leaf `M2.8.2`) and \
+            the eADL platform description it must agree with (`M2.8.3`) do not exist",
+    owner: "M2.8",
+    claim: "that `riscv-virt-up` is the platform its eADL fixture describes (§3.2) — \
+            `TARGET_VERIFIED` in `targets/riscv-virt-up.env`",
+}];
 
 /// One step of a tier.
 struct Step {
@@ -87,6 +127,31 @@ enum Outcome {
     Failed,
     Unavailable,
     NotBuilt,
+    /// Ran, exited [`COULD_NOT_RUN`], and a row of [`QUARANTINES`] names it.
+    Quarantined,
+}
+
+/// How a finished step's exit is read — pure, so the table below is tested rather than trusted.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Judgement {
+    Passed,
+    /// Passed while a quarantine still names it: the gap is closed and the exemption is not.
+    Stale,
+    Quarantined,
+    /// Exited `20` with no quarantine to say who owns the gap — a failure, with a hint.
+    Undeclared,
+    Failed,
+}
+
+/// `code` is the exit code, `None` when the process was ended by a signal.
+fn judge(code: Option<i32>, quarantined: bool) -> Judgement {
+    match (code, quarantined) {
+        (Some(0), false) => Judgement::Passed,
+        (Some(0), true) => Judgement::Stale,
+        (Some(COULD_NOT_RUN), true) => Judgement::Quarantined,
+        (Some(COULD_NOT_RUN), false) => Judgement::Undeclared,
+        _ => Judgement::Failed,
+    }
 }
 
 /// A tier's verdict, derived from its steps.
@@ -104,10 +169,12 @@ impl Verdict {
     fn of(outcomes: &[Outcome]) -> Self {
         if outcomes.contains(&Outcome::Failed) {
             Self::Failed
-        } else if outcomes
-            .iter()
-            .any(|o| matches!(o, Outcome::Unavailable | Outcome::NotBuilt))
-        {
+        } else if outcomes.iter().any(|o| {
+            matches!(
+                o,
+                Outcome::Unavailable | Outcome::NotBuilt | Outcome::Quarantined
+            )
+        }) {
             Self::Incomplete
         } else {
             Self::Passed
@@ -452,31 +519,49 @@ fn run_step(step: &Step, root: &Path) -> Outcome {
                 .stderr(Stdio::piped())
                 .output();
             let elapsed = started.elapsed().as_secs_f64();
+            let quarantine = QUARANTINES.iter().find(|q| q.step == step.name);
             match status {
-                Ok(output) if output.status.success() => {
-                    println!("  ✅ {:<18} {elapsed:>6.2}s  {}", step.name, step.proves);
-                    Outcome::Passed
-                }
-                Ok(output) => {
-                    println!("  ❌ {:<18} {elapsed:>6.2}s  FAILED", step.name);
-                    let stderr = String::from_utf8_lossy(&output.stderr);
-                    let stdout = String::from_utf8_lossy(&output.stdout);
-                    let detail = if stderr.trim().is_empty() {
-                        stdout
-                    } else {
-                        stderr
-                    };
-                    let lines: Vec<&str> = detail.lines().collect();
-                    let tail = lines.len().saturating_sub(TAIL_LINES);
-                    if tail > 0 {
-                        println!("     … {tail} earlier line(s) omitted");
+                Ok(output) => match judge(output.status.code(), quarantine.is_some()) {
+                    Judgement::Passed => {
+                        println!("  ✅ {:<18} {elapsed:>6.2}s  {}", step.name, step.proves);
+                        Outcome::Passed
                     }
-                    for line in &lines[tail..] {
-                        println!("     {line}");
+                    Judgement::Quarantined => {
+                        let q =
+                            quarantine.expect("judged quarantined only when a row names the step");
+                        println!(
+                            "  ⚠  {:<18} {elapsed:>6.2}s  QUARANTINED — could not be run; leaf {} owns the gap",
+                            step.name, q.owner
+                        );
+                        println!("     issue: {}", q.issue);
+                        println!("     unproven while it stands: {}", q.claim);
+                        print_tail(&output);
+                        Outcome::Quarantined
                     }
-                    println!("     re-run it directly: {program} {}", args.join(" "));
-                    Outcome::Failed
-                }
+                    Judgement::Stale => {
+                        let q = quarantine.expect("judged stale only when a row names the step");
+                        println!("  ❌ {:<18} {elapsed:>6.2}s  STALE QUARANTINE", step.name);
+                        println!(
+                            "     the step passed, and QUARANTINES still exempts it for leaf {} — the gap is \
+                             closed, so delete its row in xtask/src/main.rs in the same commit",
+                            q.owner
+                        );
+                        Outcome::Failed
+                    }
+                    judgement @ (Judgement::Undeclared | Judgement::Failed) => {
+                        println!("  ❌ {:<18} {elapsed:>6.2}s  FAILED", step.name);
+                        print_tail(&output);
+                        if judgement == Judgement::Undeclared {
+                            println!(
+                                "     exit {COULD_NOT_RUN} says \"could not be run\", and no row of QUARANTINES \
+                                 names this step — §14.3 needs an issue, owner, claim and scope before an \
+                                 absence is anything but a failure"
+                            );
+                        }
+                        println!("     re-run it directly: {program} {}", args.join(" "));
+                        Outcome::Failed
+                    }
+                },
                 Err(error) => {
                     // A program that will not start is not a passed check either.
                     println!("  ❌ {:<18} could not run `{program}`: {error}", step.name);
@@ -484,6 +569,34 @@ fn run_step(step: &Step, root: &Path) -> Outcome {
                 }
             }
         }
+    }
+}
+
+/// The last [`TAIL_LINES`] lines of each stream a step wrote to — stdout first, then stderr.
+///
+/// ⛔ **Both**, measured rather than anticipated, a second time: choosing stderr whenever it was
+/// non-empty left a failing `doctrines` step reporting `=== 1 doctrine breach(es) — commit
+/// blocked ===` and nothing else, because the driver writes each breach to stdout and only its
+/// summary to stderr (leaf `PROGRAM.10.1`). A step that cannot say why it failed is re-run by
+/// hand, and in CI its log is the only view there is.
+fn tail_lines(stdout: &str, stderr: &str) -> Vec<String> {
+    let mut shown = Vec::new();
+    for stream in [stdout, stderr] {
+        let lines: Vec<&str> = stream.lines().collect();
+        let omitted = lines.len().saturating_sub(TAIL_LINES);
+        if omitted > 0 {
+            shown.push(format!("… {omitted} earlier line(s) omitted"));
+        }
+        shown.extend(lines[omitted..].iter().map(|line| (*line).to_string()));
+    }
+    shown
+}
+
+fn print_tail(output: &std::process::Output) {
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    for line in tail_lines(&stdout, &stderr) {
+        println!("     {line}");
     }
 }
 
@@ -504,19 +617,26 @@ fn verify(name: &str) -> i32 {
     let count = |want: Outcome| outcomes.iter().filter(|o| **o == want).count();
     let verdict = Verdict::of(&outcomes);
     println!(
-        "tier {}: {} — {} passed, {} failed, {} unavailable, {} not built",
+        "tier {}: {} — {} passed, {} failed, {} unavailable, {} not built, {} quarantined",
         tier.name,
         verdict.slug(),
         count(Outcome::Passed),
         count(Outcome::Failed),
         count(Outcome::Unavailable),
-        count(Outcome::NotBuilt)
+        count(Outcome::NotBuilt),
+        count(Outcome::Quarantined)
     );
     if verdict == Verdict::Incomplete {
         println!(
             "  ⚠  incomplete is NOT a pass. §14.3: \"a required tool skipped or unavailable is \
              reported as such, not a passed check\"."
         );
+        if count(Outcome::Quarantined) > 0 {
+            println!(
+                "  ⚠  and a quarantine is an absence on terms. §14.3: \"Quarantine requires a named \
+                 issue, owner, affected claim, and bounded scope\" — each is printed above."
+            );
+        }
     }
     verdict.code()
 }
@@ -542,6 +662,12 @@ fn list() {
                 Action::Run { .. } => "always runnable".to_string(),
             };
             println!("  {:<18} {:<26} {}", step.name, shape, step.proves);
+            if let Some(q) = QUARANTINES.iter().find(|q| q.step == step.name) {
+                println!(
+                    "  {:<18} quarantined: exit {COULD_NOT_RUN} is an absence until leaf {}",
+                    "", q.owner
+                );
+            }
         }
         println!();
     }
@@ -600,7 +726,10 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use super::{tier, Outcome, Verdict, TIERS};
+    use super::{
+        judge, tail_lines, tier, Action, Judgement, Outcome, Verdict, QUARANTINES, TAIL_LINES,
+        TIERS,
+    };
 
     #[test]
     fn the_five_tiers_of_the_roadmap_are_the_five_tiers_here() {
@@ -656,6 +785,98 @@ mod tests {
             Verdict::of(&[Outcome::NotBuilt, Outcome::Failed]),
             Verdict::Failed
         );
+    }
+
+    #[test]
+    fn a_quarantine_is_an_absence_and_nothing_else() {
+        // ⭐ §14.3's quarantine as a table (leaf `PROGRAM.10.1`): one step, one exit code.
+        assert_eq!(judge(Some(0), false), Judgement::Passed);
+        assert_eq!(judge(Some(20), true), Judgement::Quarantined);
+        // The quarantined step disagreeing is still a failure: the exemption covers "could not
+        // be run", never "ran and found a mismatch".
+        assert_eq!(judge(Some(1), true), Judgement::Failed);
+        assert_eq!(judge(None, true), Judgement::Failed);
+        // "Could not be run" from a step no row names is a failure — otherwise any step could
+        // exempt itself by choosing its exit code.
+        assert_eq!(judge(Some(20), false), Judgement::Undeclared);
+        // A quarantined step that passes has outlived its gap.
+        assert_eq!(judge(Some(0), true), Judgement::Stale);
+        // And the tier: an absence, never a pass, and outranked by a failure.
+        assert_eq!(
+            Verdict::of(&[Outcome::Passed, Outcome::Quarantined]),
+            Verdict::Incomplete
+        );
+        assert_eq!(
+            Verdict::of(&[Outcome::Quarantined, Outcome::Failed]),
+            Verdict::Failed
+        );
+    }
+
+    #[test]
+    fn a_failing_step_shows_the_cause_on_whichever_stream_it_was_written() {
+        // The doctrine driver's shape, measured: each doctrine's line on stdout, the summary on
+        // stderr. The breach is on the stream the old view dropped.
+        let mut stdout: Vec<String> = (0..30).map(|i| format!("  ✅ DOCTRINE-{i}")).collect();
+        stdout.insert(
+            1,
+            "  ❌ MEMORY-ARCH  the first doctrine, so the earliest line".to_string(),
+        );
+        let shown = tail_lines(
+            &stdout.join("\n"),
+            "=== 1 doctrine breach(es) — commit blocked ===",
+        );
+        assert!(
+            shown.iter().any(|l| l.contains("❌ MEMORY-ARCH")),
+            "{shown:?}"
+        );
+        assert!(
+            shown.iter().any(|l| l.contains("commit blocked")),
+            "{shown:?}"
+        );
+        // …and a long stream is still bounded, saying how much it left out.
+        let long: String = (0..TAIL_LINES + 7).map(|i| format!("line {i}\n")).collect();
+        let shown = tail_lines(&long, "");
+        assert_eq!(shown.len(), TAIL_LINES + 1);
+        assert_eq!(shown[0], "… 7 earlier line(s) omitted");
+    }
+
+    #[test]
+    fn every_quarantine_carries_the_four_fields_and_names_one_step_that_runs() {
+        for q in QUARANTINES {
+            let named: Vec<&Action> = TIERS
+                .iter()
+                .flat_map(|t| t.steps)
+                .filter(|step| step.name == q.step)
+                .map(|step| &step.action)
+                .collect();
+            assert!(
+                !named.is_empty(),
+                "a quarantine names step `{}`, which no tier has",
+                q.step
+            );
+            assert!(
+                named.iter().all(|a| matches!(a, Action::Run { .. })),
+                "`{}` is not built — there is nothing to quarantine",
+                q.step
+            );
+            assert_eq!(
+                QUARANTINES.iter().filter(|o| o.step == q.step).count(),
+                1,
+                "two quarantines for `{}`",
+                q.step
+            );
+            assert!(
+                q.issue.len() > 40 && q.claim.len() > 40,
+                "`{}`'s quarantine does not say what is missing and what stays unproven",
+                q.step
+            );
+            assert!(
+                q.owner.contains('.') && q.owner.chars().next().is_some_and(char::is_uppercase),
+                "`{}`'s owner `{}` is not a leaf id",
+                q.step,
+                q.owner
+            );
+        }
     }
 
     #[test]
@@ -724,6 +945,14 @@ mod tests {
                     );
                 }
             }
+        }
+        for q in QUARANTINES {
+            assert!(
+                declared.contains(&format!("- ID: `{}`", q.owner)),
+                "the `{}` quarantine names leaf `{}`, which no tree under docs/tasks/ declares",
+                q.step,
+                q.owner
+            );
         }
     }
 
