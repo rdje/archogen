@@ -2049,12 +2049,59 @@ mdBook that is the director's window into the project.
     `docs/knowledge/a-leafs-claims-about-the-repository-are-hypotheses.md`, because it had been announced as found.
 
 - ID: `PROGRAM.10.3`
-  Status: `pending`
+  Status: `done`
   Goal: the blocking policy for `incomplete` — a recorded, reasoned answer, and a runner mode that implements it.
   Acceptance: a decision record under `docs/decisions/`; the runner can be told the environment is provisioned, so a
   missing tool is a failure of that claim rather than an absence; what remains `incomplete` is only what a leaf owns.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the checklist — `--provisioned` measured both ways on a PATH without QEMU; the policy script's 7
+  arms and four mutations; the real job run locally, which found and fixed a log its own arms were clobbering.
+  Commit: `ARCHOGEN-PROGRAM-0147 (leaf PROGRAM.10.3)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — the question stood open in the workflow, with nothing that could answer it safely:
+    ```text
+    $ git grep -n "should an \`incomplete\` verdict" HEAD -- .github/workflows/
+      HEAD:.github/workflows/rust.yml:23:  # not answered: should an `incomplete` verdict (exit 20 — nothing failed, …
+    $ git show HEAD:xtask/src/main.rs | grep -c provisioned   → 0
+    $ git ls-files docs/decisions | grep -c blocking           → 0
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — **WHY no answer was safe:** in CI, exit `20` had two sources the runner did not
+    tell apart — a gap a leaf owns (the quarantine, a step not built) and a tool the *workflow* failed to install.
+    Blocking on `20` makes CI red until `M2.8` lands; not blocking lets a provisioning mistake pass with a warning.
+    **WHERE:** `run_step` returned `Outcome::Unavailable` for a missing tool unconditionally — one site, no condition
+    on the environment:
+    ```text
+    $ git show HEAD:xtask/src/main.rs | grep -n "return Outcome::Unavailable"
+      506:                    return Outcome::Unavailable;
+    ```
+  - [x] **FIX** — `--provisioned` (`missing_tool()`: a missing tool is `Failed` there, `Unavailable` elsewhere);
+    `scripts/ci_integration.sh` maps `0` pass, `1` fail, `20` pass with a `::warning::` per owned gap and a job
+    summary, any other code fail; `docs/decisions/decision_incomplete-blocking-policy.md` records why, and what was
+    considered. **Found by running the real job and fixed here:** the script's arms, run by the tier's own
+    `self-tests` step, `tee`d into the real job's log and truncated it under the running `tee` — `od -c` showed a
+    hole of `\0` bytes, `grep` read the log as binary, and the annotation fell back to "names no gap". The arms now
+    keep their own log (`CI_INTEGRATION_LOG`), and an arm checks the real log's `cksum` is unchanged.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    $ PATH=<qemu hidden> cargo xtask verify --tier integration --provisioned   → provisioned exit=1
+        ❌ emulator  UNAVAILABLE on a provisioned environment — `qemu-system-riscv64` is not on PATH
+    $ PATH=<qemu hidden> cargo xtask verify --tier integration                 → unprovisioned exit=20
+    $ bash scripts/ci_integration.sh --self-test   → ci-integration self-test: 7 pass / 0 fail (7 arms)
+      M1 `20` blocks the job               → 3 arm(s) refused, restored (cmp)
+      M3 no job summary                    → 3 arm(s) refused, restored (cmp)
+      M2 rc from `$?` not PIPESTATUS       → 0 refused: EQUIVALENT under `set -o pipefail`, which already carries
+                                             the tier's code; with pipefail removed too → 1 pass / 5 fail
+      M4 the arms' own log seam removed    → 6 pass / 1 fail: "the arms wrote target/ci/integration.log"
+    $ bash scripts/ci_integration.sh   → exit=0
+      ::warning title=integration: incomplete, not a pass::emulator 0.12s QUARANTINED — could not be run; leaf M2.8 owns the gap
+      (the log: 0 NUL bytes, 19 lines)
+    ```
+  - [x] **NO REGRESSION** — `cargo test -q -p xtask` → `test result: ok. 18 passed; 0 failed`;
+    `bash scripts/run_self_tests.sh` → `self-tests: OK — 24 self-test(s) passed`, exit=0 (the census adds
+    `ci_integration.sh`); without `--provisioned` the local tier is unchanged — `unprovisioned exit=20` above.
+  - [x] **LOCKSTEP** — the decision record and its `INDEX.md` row; `verification.md` "What CI does with an
+    `incomplete` tier"; `TOOLBOX.md`. The workflow itself is `.10.4`'s.
 
 - ID: `PROGRAM.10.4`
   Status: `pending`
@@ -3317,7 +3364,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.10` | `in_progress` | run the `integration` tier in CI. `.10.1` quarantined the emulator step (§14.3), so the tier reads `incomplete`; `.10.2` runs every self-test as a bare runner would. Next `.10.3` — the blocking policy for `incomplete`, recorded and implemented — before `.10.4` wires the job |
+| 1 | `PROGRAM.10` | `in_progress` | run the `integration` tier in CI. `.10.1` quarantined the emulator step, `.10.2` runs the self-tests as a bare runner would, `.10.3` recorded the policy — `incomplete` passes a job loudly, and `--provisioned` makes a missing tool fail it. Next `.10.4`: the job itself, provisioning `mdbook` and QEMU at their pins |
 | 2 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **After `PROGRAM.10`**: since `.10.1` the emulator no longer fails `make integration`, so a verdict at N no longer deadlocks — but its blocking policy should be the one `.10.3` records |
 | 3 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
 | 4 | `PROGRAM.30` | `pending` | **medium** — the Rust channel, mdBook and CI actions are unpinned; found deriving the ledger's pins |
@@ -3452,6 +3499,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.20.3` / `PROGRAM.20` | a census of figure-shaped text in the live surfaces; the gate's 14 arms; eight mutations; the `S0.8` shape staged on the real tree | 96 phrases over 28 files as backlog; the added figure refused; the register's own first row refused as false; `PROGRAM.20` closed |
 | `2026-09-30` | `PROGRAM.10.1` | the emulator check against HEAD's script and the new one; its 7 arms and 3 mutations; the runner's judgement table and 2 catalogued mutations; the whole `integration` tier | HEAD exit `1`, now `20`; every arm and mutation as designed; the tier `incomplete` with the emulator quarantined under `M2.8`, a failing step now naming its cause |
 | `2026-09-30` | `PROGRAM.10.2` | every self-test under a simulated bare runner; the spine harness's identity; the runner's two new arms and one mutation | 23 of 23 pass bare — the suspected defect is not one (`repo()` sets a local identity); the bare environment kept, and shown to fire |
+| `2026-09-30` | `PROGRAM.10.3` | `--provisioned` both ways on a PATH without QEMU; the policy script's 7 arms and four mutations; the real job run locally | `1` provisioned, `20` not; one mutation equivalent under `pipefail`, the rest killed; the real run found its own arms clobbering its log — fixed, then exit `0` with the gap annotated |
 
 ## Commit Log
 
@@ -3503,6 +3551,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.20.3` → `PROGRAM.20` | `ARCHOGEN-PROGRAM-0144 (leaf PROGRAM.20.3)` | **a figure added to a live document says what keeps it true** — `FIGURE-REGISTER`, a ratchet with a classifying register. `PROGRAM.20` closed: orders, transcripts and figures each have an instrument |
 | `PROGRAM.10.1` | `ARCHOGEN-PROGRAM-0145 (leaf PROGRAM.10.1)` | **the emulator step is quarantined, not failed** — §14.3's quarantine as a runner row with its four fields; a failing step shows both streams |
 | `PROGRAM.10.2` | `ARCHOGEN-PROGRAM-0146 (leaf PROGRAM.10.2)` | **the self-tests run as a bare runner would** — the suspected identity defect falsified; the instrument kept |
+| `PROGRAM.10.3` | `ARCHOGEN-PROGRAM-0147 (leaf PROGRAM.10.3)` | **the blocking policy for `incomplete`** — recorded, and carried out by `--provisioned` and `scripts/ci_integration.sh` |
 
 ## Changelog
 

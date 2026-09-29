@@ -4,6 +4,19 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — what CI does with an incomplete tier
+
+`ARCHOGEN-PROGRAM-0147` (leaf `PROGRAM.10.3`). A recorded decision: `decision_incomplete-blocking-policy.md`.
+
+- In CI, an **incomplete** tier passes the job, visibly: every run carries a warning for each open gap and a
+  summary headed "not a pass". A **failed** tier fails the job.
+- That is safe because of one flag. CI runs the tier with `--provisioned`, so a tool the workflow forgot to
+  install fails the job. It does not pass with a warning. The only thing that can leave CI incomplete is a gap
+  a task-tree leaf owns.
+- Running the real job locally found a defect in the new script. The job runs every script's own tests, the
+  new script's included, and those tests wrote over the real job's log while it was being written. The one
+  real gap went unnamed. The tests now keep their own log, and a test checks they leave the real one alone.
+
 ## archogen — the self-tests run as a CI runner would
 
 `ARCHOGEN-PROGRAM-0146` (leaf `PROGRAM.10.2`).

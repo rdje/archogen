@@ -474,7 +474,19 @@ fn on_path(tool: &str) -> bool {
         .is_some_and(|paths| std::env::split_paths(&paths).any(|dir| dir.join(tool).is_file()))
 }
 
-fn run_step(step: &Step, root: &Path) -> Outcome {
+/// What a missing tool means. Where the environment has claimed to supply every tool the tier
+/// requires (`--provisioned`, which CI passes), a missing one is that claim failing — a broken
+/// provisioning, not an absence the tier may report as `incomplete`
+/// (`docs/decisions/decision_incomplete-blocking-policy.md`, leaf `PROGRAM.10.3`).
+const fn missing_tool(provisioned: bool) -> Outcome {
+    if provisioned {
+        Outcome::Failed
+    } else {
+        Outcome::Unavailable
+    }
+}
+
+fn run_step(step: &Step, root: &Path, provisioned: bool) -> Outcome {
     match &step.action {
         Action::NotBuilt { owner, note } => {
             println!("  ⚠  {:<18} NOT BUILT — tracked by leaf {owner}", step.name);
@@ -501,9 +513,21 @@ fn run_step(step: &Step, root: &Path) -> Outcome {
                     } else {
                         format!("`{tool}` is not on PATH")
                     };
-                    println!("  ⚠  {:<18} UNAVAILABLE — {missing}", step.name);
+                    let outcome = missing_tool(provisioned);
+                    if outcome == Outcome::Failed {
+                        println!(
+                            "  ❌ {:<18} UNAVAILABLE on a provisioned environment — {missing}",
+                            step.name
+                        );
+                        println!(
+                            "     --provisioned says this environment supplies every tool the tier \
+                             needs, so this is its provisioning failing, not an absence"
+                        );
+                    } else {
+                        println!("  ⚠  {:<18} UNAVAILABLE — {missing}", step.name);
+                    }
                     println!("     {matters}");
-                    return Outcome::Unavailable;
+                    return outcome;
                 }
             }
             let started = Instant::now();
@@ -600,7 +624,7 @@ fn print_tail(output: &std::process::Output) {
     }
 }
 
-fn verify(name: &str) -> i32 {
+fn verify(name: &str, provisioned: bool) -> i32 {
     let Some(tier) = tier(name) else {
         eprintln!("xtask: unknown tier `{name}`");
         eprintln!("  hint: {}", tier_names());
@@ -608,10 +632,13 @@ fn verify(name: &str) -> i32 {
     };
     let root = repo_root();
     println!("tier: {} — {}", tier.name, tier.when);
+    if provisioned {
+        println!("  (provisioned: a missing tool is a failure, not an absence)");
+    }
     let outcomes: Vec<Outcome> = tier
         .steps
         .iter()
-        .map(|step| run_step(step, &root))
+        .map(|step| run_step(step, &root, provisioned))
         .collect();
 
     let count = |want: Outcome| outcomes.iter().filter(|o| **o == want).count();
@@ -677,7 +704,7 @@ fn help() {
     println!("xtask — the archogen repository's tiered verification runner (ROADMAP.md §14.3)");
     println!();
     println!("USAGE:");
-    println!("    cargo xtask verify --tier <TIER>");
+    println!("    cargo xtask verify --tier <TIER> [--provisioned]");
     println!("    cargo xtask verify --list");
     println!();
     println!("TIERS:");
@@ -709,7 +736,9 @@ fn main() {
             list();
             0
         }
-        ["verify", "--tier", name] => verify(name),
+        ["verify", "--tier", name] => verify(name, false),
+        ["verify", "--tier", name, "--provisioned"]
+        | ["verify", "--provisioned", "--tier", name] => verify(name, true),
         ["mutate"] => mutation::run(&repo_root(), &[]),
         ["mutate", "--only", ids @ ..] if !ids.is_empty() => mutation::run(
             &repo_root(),
@@ -727,8 +756,8 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::{
-        judge, tail_lines, tier, Action, Judgement, Outcome, Verdict, QUARANTINES, TAIL_LINES,
-        TIERS,
+        judge, missing_tool, tail_lines, tier, Action, Judgement, Outcome, Verdict, QUARANTINES,
+        TAIL_LINES, TIERS,
     };
 
     #[test]
@@ -809,6 +838,23 @@ mod tests {
         assert_eq!(
             Verdict::of(&[Outcome::Quarantined, Outcome::Failed]),
             Verdict::Failed
+        );
+    }
+
+    #[test]
+    fn on_a_provisioned_environment_a_missing_tool_is_a_failure() {
+        // `PROGRAM.10.3`'s policy: CI passes `--provisioned`, so what can leave a tier `incomplete`
+        // there is only what a leaf owns — a quarantine or a step not built — never a tool the
+        // workflow forgot to install. Locally an absent tool stays an absence.
+        assert_eq!(missing_tool(false), Outcome::Unavailable);
+        assert_eq!(missing_tool(true), Outcome::Failed);
+        assert_eq!(
+            Verdict::of(&[Outcome::Passed, missing_tool(true)]),
+            Verdict::Failed
+        );
+        assert_eq!(
+            Verdict::of(&[Outcome::Passed, missing_tool(false)]),
+            Verdict::Incomplete
         );
     }
 

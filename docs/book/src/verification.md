@@ -191,6 +191,29 @@ $ cargo xtask mutate                        # the whole catalog
 $ cargo xtask mutate --only lcm-to-max      # one entry
 ```
 
+## What CI does with an `incomplete` tier
+
+It passes the job, and says so on every run. The policy is recorded in
+`docs/decisions/decision_incomplete-blocking-policy.md` and carried out by `scripts/ci_integration.sh`:
+
+| Tier exit | Verdict | The CI job |
+| --- | --- | --- |
+| `0` | `passed` | passes |
+| `1` | `failed` | fails |
+| `20` | `incomplete` | passes, with a warning annotation for each owned gap and a job summary headed "not a pass" |
+
+Blocking on `incomplete` would keep CI red until another leaf lands. No change to the commit under test could
+fix it, and a permanent red hides the next real failure. What makes a green `incomplete` safe is one flag. CI
+runs the tier `--provisioned`: the environment claims to supply every tool the tier needs, so a missing tool is
+that claim failing, and the job **fails**. A workflow that forgot to install `mdbook` cannot pass with a
+warning. What is left that can make CI `incomplete` is only a gap a task-tree leaf owns: a quarantine, with its
+four fields, or a step not built. Each gets there through a reviewed code change. On a developer's machine
+nothing changes: a missing tool there is an absence, reported as one.
+
+The script's arms run inside the real job, from the `self-tests` step. The first real run showed why that
+matters. While the arms shared the job's log file, they truncated it under the running job, and the one real
+gap went unnamed. They now keep their own log, and an arm checks that the real one is left untouched.
+
 ## What the `tests` step is a suite *of*
 
 The row above says "every contract test passes", and for the language that means a declared population.

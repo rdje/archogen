@@ -166,6 +166,7 @@ justifies the split — the rows below appear as that happens.
 - [`decision_eadl1-value-domain.md`](docs/decisions/decision_eadl1-value-domain.md)
 - [`decision_emulator-independence-retained.md`](docs/decisions/decision_emulator-independence-retained.md)
 - [`decision_findings-for-director-review.md`](docs/decisions/decision_findings-for-director-review.md)
+- [`decision_incomplete-blocking-policy.md`](docs/decisions/decision_incomplete-blocking-policy.md)
 - [`decision_priority-comparison-direction.md`](docs/decisions/decision_priority-comparison-direction.md)
 - [`decision_programmatic-interface.md`](docs/decisions/decision_programmatic-interface.md)
 - [`decision_push-cadence.md`](docs/decisions/decision_push-cadence.md)
