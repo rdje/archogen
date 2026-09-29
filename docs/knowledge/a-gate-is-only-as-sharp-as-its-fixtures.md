@@ -9,6 +9,7 @@ answers:
   - "My new rule's fixtures went green — would they have gone green without the rule?"
   - "I moved a self-test's scratch directory and it still passes — is it still testing anything?"
   - "My test is named for the property it guards — does it contain a case where the property could fail?"
+  - "My property run passes in a release build — could it be blind to an overflow?"
 type: knowledge
 date: 2026-09-13
 ---
@@ -110,3 +111,9 @@ act on. Mutation testing is what turns it into a measurement.
   description whose deadline exceeded its period in the 17th decimal was admitted (`M1.34`). Read the name as
   the specification and add the case that sits where the implementation's own reasoning stops. For a
   comparison, that means the values at the limits of the representation.
+- ⛔ **A release build cannot see an overflow, so a property run in one passes over it.** The fuzz step wants
+  release speed, and its first release run passed over `to_exact_string`'s unchecked power of ten. That
+  multiply panicked in a debug build and **wrapped** in release, printing a wrong decimal (`M1.36`). Two fixes,
+  one per kind of failure: run with `CARGO_PROFILE_RELEASE_OVERFLOW_CHECKS=true`, so a wrap becomes a panic;
+  and give the output a property that reads it back (`exact-text-reads-back-to-the-value`), which caught the
+  wrong value with overflow checks off. A no-panic property alone is blind to a wrong answer.

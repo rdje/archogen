@@ -109,6 +109,43 @@ $ bash scripts/extended_miri.sh --arm-only  # only the seeded dangling-pointer r
 $ bash scripts/extended_miri.sh --all       # every test target, the corpus walks included
 ```
 
+### The `fuzz` step, and what it found on its first run
+
+`scripts/extended_fuzz.sh` runs a seeded fuzz harness over the reader and the exact arithmetic
+(`crates/eadl-model/tests/fuzz.rs`). It has no dependency and does not use `cargo-fuzz`. Every run
+uses a fixed seed and a fresh one, 100,000 cases per property. Eight properties must hold:
+
+- the reader never panics, and every span it reports lies on a character boundary;
+- canonical text reads back to the same document;
+- checked arithmetic stays normalized;
+- small results are exactly right;
+- ordering agrees with equality;
+- a printed value reads back as itself;
+- for small values, the ordering is the sign of the difference;
+- and an inverse undoes its operation.
+
+The harness first **arms** itself with six claims known to be false, such as "no input contains a
+multi-byte character" and "no two values have both cross products beyond `i128`". It fails unless the
+generator refutes each one, because a property passes meaninglessly if the generator never reaches the
+inputs where it could fail.
+
+Designing it, and running it once, found three defects, each now fixed and pinned by a test:
+
+| Leaf | What was wrong | How it showed |
+| --- | --- | --- |
+| `M1.34` | two different amounts compared as **equal** | a deadline longer than its period was admitted |
+| `M1.35` | the reader **crashed** on `"a\éb"` | `archogen check` exited 101 |
+| `M1.36` | printing `1/2^100` overflowed | a panic in debug, a **wrong number** in release |
+
+Each of the three, put back as a deliberate mutation, makes this step fail on the property that
+concerns it. The step runs with overflow checks on: a release build wraps silently, and its first
+release run passed straight over the third defect.
+
+```console
+$ bash scripts/extended_fuzz.sh                 # the fixed seed and a fresh one
+$ FUZZ_SEED=42 bash scripts/extended_fuzz.sh    # a chosen seed; a failure prints its replay command
+```
+
 ## What the `tests` step is a suite *of*
 
 The row above says "every contract test passes", and for the language that means a declared population.

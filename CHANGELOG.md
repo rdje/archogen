@@ -4,6 +4,22 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the extended tier fuzzes the reader and the exact arithmetic, and found three defects first
+
+`ARCHOGEN-PROGRAM-0131` (leaf `PROGRAM.9.2`).
+
+- A seeded fuzz harness with no dependency (`crates/eadl-model/tests/fuzz.rs`) and eight properties: the
+  reader never panics and reports spans on character boundaries; canonical text reads back; arithmetic stays
+  normalized and exact; ordering agrees with equality; a printed value reads back as itself.
+- It **arms itself** with six claims known to be false, such as "no input contains a multi-byte character",
+  and fails unless the generator refutes each one. A property cannot pass without reaching the inputs it is
+  for.
+- `scripts/extended_fuzz.sh`, the `fuzz` step, runs a fixed and a fresh seed at 100,000 cases per property,
+  with overflow checks on. A release build wraps silently, and its first release run passed over a real
+  defect.
+- Before this commit it found three engine defects, each already fixed: `M1.34`, `M1.35` and `M1.36`. Each,
+  restored as a mutation, makes the step fail on its own property.
+
 ## archogen — printing a quantity never overflows
 
 `ARCHOGEN-M1-0130` (leaf `M1.36`).

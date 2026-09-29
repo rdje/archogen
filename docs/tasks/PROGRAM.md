@@ -1694,13 +1694,69 @@ mdBook that is the director's window into the project.
     `docs/knowledge/a-leafs-claims-about-the-repository-are-hypotheses.md`.
 
 - ID: `PROGRAM.9.2`
-  Status: `pending`
+  Status: `done`
   Goal: a fuzz corpus over the reader and the checked arithmetic (§13.3), within the zero-dependency
   decision — a deterministic, seeded generator in-tree rather than `cargo-fuzz` and `libfuzzer-sys`.
   Acceptance: a `fuzz` step that runs a fixed number of seeded cases per property, prints the seed of any
   failure so it replays by command, and fails on a seeded defect before its real run.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the checklist — the harness, its arms, four seeded defects and a generator attack, the step
+  on two seeds, the tier end to end.
+  Commit: `ARCHOGEN-PROGRAM-0131 (leaf PROGRAM.9.2)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — the `fuzz` step was a declared absence:
+    ```text
+    $ cargo xtask verify --tier extended      (at 39aa2fc)
+      ⚠  fuzz               NOT BUILT — tracked by leaf PROGRAM.9                            exit=20
+    $ git grep -ln "fuzz" 104ccb1 -- 'crates/*/tests/*.rs'     -> no match, rc=1
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — §13.3 names fuzzing, and the zero-dependency decision rules out
+    `cargo-fuzz` (`libfuzzer-sys`, nightly), so nothing had been built:
+    ```text
+    $ git grep -n "no fuzz target exists yet" 39aa2fc -- xtask/src/main.rs
+      39aa2fc:xtask/src/main.rs:276:                    note: "no fuzz target exists yet; §13.3 asks for property tests and fuzzing \
+    ```
+  - [x] **FIX** — `crates/eadl-model/tests/fuzz.rs`: a seeded xorshift generator, one generator per
+    `(seed, property, case)` so one case replays alone; **six arms** (known-false claims the generator must
+    refute — errors happen; multi-byte text; an escaped multi-byte character; a structured document that reads
+    cleanly; an overflowing multiply; a pair with both cross products beyond `i128`) and **eight properties**
+    over the reader and `Rational`; `fuzz_smoke` (400 cases) in the ordinary suite, `fuzz_extended` (ignored)
+    for the step. `scripts/extended_fuzz.sh` runs the fixed seed and a fresh one, 100 000 cases each, with
+    `CARGO_PROFILE_RELEASE_OVERFLOW_CHECKS=true`; the `fuzz` step runs it.
+  - [x] **ADDRESSED (verified)** — designing and first running the harness found **three engine defects**, each
+    fixed in its own commit before this one: `M1.34` (a saturating comparison: a deadline longer than its period
+    admitted), `M1.35` (the reader crashed on `"a\\éb"`, exit 101), `M1.36` (`to_exact_string`'s power of ten
+    overflowed — found on the first run, every seed). On the fixed code:
+    ```text
+    $ bash scripts/extended_fuzz.sh
+      extended-fuzz: OK — the fixed seed and seed 1790716945, 100000 case(s) per property, overflow checks on   exit=0  (2.6 s)
+    $ FUZZ_SEED={1..5} … fuzz_extended (overflow checks)  -> test result: ok. 1 passed, five times
+    ```
+    Seeded defects, each restored (tracked files by `git checkout`, matching HEAD): **F-A** the saturating
+    comparison → exit=1, `ordering-agrees-with-equality-and-is-transitive failed at case 1`; **F-B** the
+    byte-wise escape → exit=1, `reader-never-panics-and-every-span-is-on-a-boundary failed at case 2: panicked:
+    start byte index 40 is not a char boundary; it is inside 'é'`; **F-C** the unchecked power of ten → exit=1,
+    `checked-arithmetic-never-panics…` and `exact-text-reads-back-to-the-value`, and **with overflow checks
+    off** `exact-text-reads-back-to-the-value failed at case 26: … printed as 0.000…` — the wrong value caught
+    without a panic; **F-D** an ASCII-only generator → exit=1, arms `no-text-contains-a-multi-byte-character`
+    and `no-text-escapes-a-multi-byte-character` never refuted. ⚠️ F-D targeted the untracked harness: the loop's
+    `git diff` check called it "did not apply" and skipped the restore; found by grep, reverted by exact inverse
+    replacement, smoke `test result: ok` after — recorded as a lesson.
+  - [x] **NO REGRESSION** — `cargo test -q -p xtask` → `test result: ok. 9 passed`; the smoke test adds 0.01 s to
+    the suite; the doctrine driver green at the commit. The tier end to end:
+    ```text
+    $ cargo xtask verify --tier extended
+      ✅ fuzz                 3.53s  the reader and the exact arithmetic hold eight properties …
+      ✅ miri               916.73s  Miri still refuses a seeded dangling-pointer read, …   (the new test target in scope)
+      tier extended: incomplete — 2 passed, 0 failed, 0 unavailable, 1 not built        exit=20  (mutation: PROGRAM.9.3)
+    ```
+    After that run, clippy's `explicit_auto_deref` required one type annotation in the harness
+    (`rng.pick::<&str>`), which changes no behaviour; `scripts/extended_fuzz.sh` re-run after it → `extended-fuzz:
+    OK`, exit=0, and `make focused` passed.
+  - [x] **LOCKSTEP** — the book's `verification.md` gains "The `fuzz` step, and what it found on its first run"
+    with the three defects; `TOOLBOX.md` row; lessons promoted into `verify-the-mutation-applied.md` and
+    `a-gate-is-only-as-sharp-as-its-fixtures.md`.
 
 - ID: `PROGRAM.9.3`
   Status: `pending`
@@ -2663,6 +2719,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-29` | `PROGRAM.29` | a logging `mktemp` on `PATH` over the driver and the self-test runner, before and after; `git grep -c mktemp 7bf85ba` over every tracked script; `SCRATCH-LOCALITY` and its 16 arms; nine mutations S-1–S-8b; every changed script re-run against its before-state; the LS-001 precondition falsified; `cargo test --all`; a residue census | **26 of 26** calls off the volume before; **18 sites in 15 files** where the filing census had 8 in 6; after, every project-owned call under `target/`, 0 of 58 paths left; eight mutations fire, S-8 survives for a stated reason; two self-tests that the move broke — one gone partly vacuous — fixed at the cause; 602 / 0 |
 | `2026-09-29` | `PROGRAM.5` | `git grep` for URLs and ledger links at `cb8180d`; the ledger gate on the real tree and its 20 arms; fifteen mutations M-1–M-15; two falsifications on the real tree (the QEMU pin moved, a citation deleted); `mdbook build` and each entry's anchor in the HTML; `BOOK-ANCHORS` | 0 URLs and 0 ledger links before; 11 entries, 7 pins carried, 21 citations in 12 files after; every mutation fails its own arm; both real-tree falsifications refused at the named entry and line; the Rust channel, mdBook and CI actions found unpinned → `PROGRAM.30` |
 | `2026-09-29` | `PROGRAM.9.1` | the extended tier at `39aa2fc` against `cargo +nightly miri --version`; every one of 34 test targets under Miri alone (600 s cap); the tier end to end; F-1 arm without UB, F-2 stale exclusion, F-3 missing component; the probe-form test and its mutation; the home cache after the run | Miri reported unavailable while installed → found on `nightly`; 541 passed, 4 ignored, 0 failed; five corpus walks over 300 s left out on measurement; `miri` ✅ in 851 s; all three falsifications refused; sysroot under `target/` |
+| `2026-09-29` | `PROGRAM.9.2` | the harness's first runs (smoke, and 5 seeds × 20 000 with overflow checks); the step on a fixed and a fresh seed; seeded defects F-A–F-D and F-C without overflow checks; `cargo test -p xtask` | found `M1.36` on the first run (and `M1.34`, `M1.35` while designing it) — all three fixed first; then 8 properties and 6 arms green on every seed; every seeded defect fails its own property or arm; F-D's restore nearly skipped (untracked file) |
 
 ## Commit Log
 
@@ -2695,6 +2752,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.29` | `ARCHOGEN-PROGRAM-0124 (leaf PROGRAM.29)` | **scratch stays on this volume, and a gate says so.** 14 project-owned sites moved under `target/`; `SCRATCH-LOCALITY` reads every tracked script and Rust source; the scaffold's four sites recorded for its owner, not sent. The root manifest excludes `target`, so a Cargo fixture there is standalone |
 | `PROGRAM.5` | `ARCHOGEN-PROGRAM-0126 (leaf PROGRAM.5)` | **§15's ledger exists and is checked.** A book chapter of 11 external sources at the versions they are pinned to; `SOURCE-LEDGER` derives every pin and every naming document. `PROGRAM.30` filed for the unpinned toolchain |
 | `PROGRAM.9` → `PROGRAM.9.1` | `ARCHOGEN-PROGRAM-0127 (leaf PROGRAM.9.1)` | **the `miri` step runs, and proves it can fail first.** Found on `nightly` (it had been reported unavailable while installed); a seeded dangling-pointer read refused before every run; every test target timed under Miri, five corpus walks left out on measured cost; sysroot under `target/`. `PROGRAM.9` decomposed into `.9.1`–`.9.3` |
+| `PROGRAM.9.2` | `ARCHOGEN-PROGRAM-0131 (leaf PROGRAM.9.2)` | **the `extended` tier fuzzes the reader and the exact arithmetic.** A dependency-free seeded harness, six known-false arms it must refute, eight properties; a fixed and a fresh seed, overflow checks on. It found three engine defects before its own commit (`M1.34`–`M1.36`) |
 
 ## Changelog
 

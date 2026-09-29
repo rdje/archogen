@@ -270,11 +270,12 @@ const TIERS: &[Tier] = &[
         steps: &[
             Step {
                 name: "fuzz",
-                proves: "the reader and the checked arithmetic survive a fuzz corpus (§13.3)",
-                action: Action::NotBuilt {
-                    owner: "PROGRAM.9.2",
-                    note: "no fuzz target exists yet; §13.3 asks for property tests and fuzzing \
-                           over parsing, constraints, checked arithmetic and event sequences",
+                proves: "the reader and the exact arithmetic hold eight properties on a fixed and a fresh seed, after six known-false arms are refuted (§13.3)",
+                action: Action::Run {
+                    program: "scripts/extended_fuzz.sh",
+                    args: &[],
+                    requires: None,
+                    matters: "",
                 },
             },
             Step {

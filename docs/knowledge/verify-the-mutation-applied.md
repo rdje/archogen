@@ -9,6 +9,7 @@ answers:
   - "My before→after census shows no difference — did nothing change, or did I record too little?"
   - "My census sized a defect — how do I know it measured the defect and not something containing it?"
   - "The count I published came from a saved census file — was the file complete?"
+  - "My harness says a mutation did not apply — is the file really untouched, and who restores it?"
 type: knowledge
 date: 2026-09-13
 ---
@@ -172,3 +173,10 @@ Neither error announced itself; each produced a plausible number.
 - Record what the failure actually said, not that it failed. `left: 1 / right: 25` is evidence
   someone can chase; "the test went red" is a claim ([[an-oracle-is-independent-by-construction]]
   is the same standard applied to expectations).
+- ⛔ **"Did not apply" is a claim too, and its failure mode is worse: nothing restores the file.** `PROGRAM.9.2`'s
+  mutation loop decided "applied" with `git diff --quiet -- <file>`, which says "no change" for an **untracked**
+  file, whatever was written to it. The fourth mutation targeted the new, untracked harness. The loop
+  reported "did not apply", skipped the step run **and the restore**, and left the mutation in place. It was
+  noticed only because the file was grepped for the mutated line afterwards. Decide "applied" by comparing
+  against a copy taken *before* the mutation (`cmp`), never by asking version control about a file it may not
+  track. Restore from that copy, not from `git checkout`, which cannot restore an untracked file.

@@ -1,5 +1,22 @@
 # DEV_NOTES.md
 
+## _(2026-09-29)_ — a fuzz harness found three defects before its first commit, and nearly hid a fourth problem in itself
+
+- `PROGRAM.9.2`, a dependency-free seeded fuzz harness over the reader and the exact arithmetic. Designing
+  its properties found `M1.34`, a saturating comparison, and `M1.35`, a reader panic. Its first run found
+  `M1.36`, an overflowing power of ten in the printer. Each is fixed in its own `M1` commit. The harness was
+  parked in `git stash` while `M1.36` landed, so the tree was clean when it changed trees.
+- ⛔ Three of the harness's own mistakes, each caught before it could report anything:
+  - A generator literal `(2 << 30) as u64` was computed as an `i32` and sign-extended, so "small" values
+    were not small. Fixed with `u64` literals.
+  - A read-back oracle parsed into `i128`, which cannot hold a correct magnitude of exactly 2^127. Now `u128`.
+  - A mutation loop asked `git diff` whether an **untracked** file had changed, reported "did not apply",
+    and skipped the restore.
+- ⛔ The release run passed over `M1.36`, because release wraps where debug panics. The step runs with
+  overflow checks, and the read-back property catches the wrong value even without them.
+- Promoted: `docs/knowledge/verify-the-mutation-applied.md` (the untracked-file case) and
+  `docs/knowledge/a-gate-is-only-as-sharp-as-its-fixtures.md` (a release build's blindness).
+
 ## _(2026-09-29)_ — the reader crashed on `"a\éb"`: the second byte-for-character defect in one day
 
 - `M1.35`, found by reading the reader while choosing `PROGRAM.9.2`'s fuzz targets. An unknown escape was
