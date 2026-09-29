@@ -4,6 +4,15 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — every closed leaf names its commit and its checks in its own tree
+
+`ARCHOGEN-PROGRAM-0136` (leaf `PROGRAM.13`).
+
+- A census by leaf id found 22 missing log rows across `BOOTSTRAP`, `M1`, `M2` and `PROGRAM`. Each missing
+  row is now backfilled. The commit comes from `git log`, and matches the commit each leaf itself records.
+  The checks are transcribed from each leaf's own checklist and marked as backfilled; none was invented.
+- `BOOTSTRAP` had no Verification Log at all, and now has one.
+
 ## archogen — each evidence format is held to its identifier
 
 `ARCHOGEN-PROGRAM-0135` (leaf `PROGRAM.6.3`; closes `PROGRAM.6`).

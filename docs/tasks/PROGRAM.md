@@ -457,7 +457,7 @@ mdBook that is the director's window into the project.
     `PROGRAM`'s row already reads `In Progress`.
 
 - ID: `PROGRAM.13`
-  Status: `pending`
+  Status: `done`
   Goal: backfill the **Verification Log** and **Commit Log** of the three trees whose logs stopped
   after their first slices, transcribing from `git log` and from each leaf's own recorded checks —
   never inventing a row.
@@ -477,8 +477,23 @@ mdBook that is the director's window into the project.
   census command is recorded in the leaf so the result is re-runnable; no leaf's status changes.
   Priority: **medium** — no behaviour depends on it, but the memory architecture does: an unlogged
   leaf is a leaf a crashed session cannot resume from.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: closed `2026-09-30`. The census re-derived first — the filing counts were a day old and trees had
+  grown — by leaf **ID** rather than by row count, since a row count cannot say *which* leaf is unlogged:
+  ```text
+  for f in docs/tasks/*.md: for each leaf whose Status is `done`, does `## Verification Log` name `<id>` in
+  backticks, and does `## Commit Log` (to the end of the file)?
+    before: BOOTSTRAP 1 without a verification row (the tree had no Verification Log at all);
+            M1 — M1.9 without either row, M1.11 without a commit row; M2 — M2.1–M2.5 without either;
+            PROGRAM — PROGRAM.2.1, .3, .22 and .4 without either                          (22 rows owed)
+    after:  every tree 0 / 0
+  ```
+  Each row derived, never guessed: the commit subject, short hash and date from `git log --grep="leaf <id>)"` —
+  one match per leaf, each equal to the commit the leaf itself records; each Verification row transcribes the
+  leaf's own ADDRESSED box (or, for `PROGRAM.22`, its `Verification:` field), truncated with `…` and marked
+  "backfilled `2026-09-30` (`PROGRAM.13`)". No `not recorded` was needed: every leaf had recorded its checks. No
+  leaf's status changed. `BOOTSTRAP.md` gained the `## Verification Log` section it never had; its Commit Log
+  stays the bullet list it is.
+  Commit: `ARCHOGEN-PROGRAM-0136 (leaf PROGRAM.13)`
 
 - ID: `PROGRAM.14`
   Status: `pending`
@@ -2828,14 +2843,13 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.13` | `pending` | twelve closed leaves in `BOOTSTRAP`, `M2` and this tree do not name their own commit — backfill both logs from git, then `PROGRAM.14` gates it so the gap cannot reopen |
-| 2 | `PROGRAM.15` | `pending` | a feedback register row that contradicts its own issue sub-tree passes every gate today; five state transitions in six commits held only by hand-editing and a manual census |
-| 3 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
-| 4 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. ⭐ A **near-miss** worth pricing in, recorded honestly as a near-miss and not as a fourth instance: `PROGRAM.18`'s frontier row still read "ten of eighteen controls" while this leaf was being written, and was corrected in the same commit — it would have gone stale the moment the fix landed, and nothing in the tree compares a control count against the controls. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with. ⛔ An **eighth** shape landed `2026-09-29` and it falsifies the acceptance's *population* rather than adding a figure: `CHANGELOG.md` said "Newest first" and did not, one entry sitting above six newer ones for seven commits because five consecutive commits inserted at the same wrong anchor — and `CHANGELOG.md` is not one of the three live surfaces the acceptance enumerates. Two falsifications of a three-item list, so the population becomes every live surface the commit stages |
-| 5 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
-| 6 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
-| 7 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
-| 8 | `PROGRAM.30` | `pending` | **medium** — the Rust channel, mdBook and CI actions are unpinned; found deriving the ledger's pins |
+| 1 | `PROGRAM.15` | `pending` | a feedback register row that contradicts its own issue sub-tree passes every gate today; five state transitions in six commits held only by hand-editing and a manual census |
+| 2 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
+| 3 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. ⭐ A **near-miss** worth pricing in, recorded honestly as a near-miss and not as a fourth instance: `PROGRAM.18`'s frontier row still read "ten of eighteen controls" while this leaf was being written, and was corrected in the same commit — it would have gone stale the moment the fix landed, and nothing in the tree compares a control count against the controls. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with. ⛔ An **eighth** shape landed `2026-09-29` and it falsifies the acceptance's *population* rather than adding a figure: `CHANGELOG.md` said "Newest first" and did not, one entry sitting above six newer ones for seven commits because five consecutive commits inserted at the same wrong anchor — and `CHANGELOG.md` is not one of the three live surfaces the acceptance enumerates. Two falsifications of a three-item list, so the population becomes every live surface the commit stages |
+| 4 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
+| 5 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
+| 6 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
+| 7 | `PROGRAM.30` | `pending` | **medium** — the Rust channel, mdBook and CI actions are unpinned; found deriving the ledger's pins |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
@@ -2951,6 +2965,11 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.6.1` | the register gate on the real tree and its 12 arms; seven mutations V-1–V-7; `FORMAT` bumped on the real code; the book build | no register before; 7 entries and 7 declared versions after — the seventh (`idealized-zero-overhead/1`) found by the gate, missed by the planning census; every mutation fires; the bump refused at its entry |
 | `2026-09-30` | `PROGRAM.6.2` | the frozen table blessed and checked; its exit codes against `M1.36`'s binary census; the D ≤ T mutation; a new description; a stale row; the catalog entry through `cargo xtask mutate` | 120 verdicts frozen, identical to the binary census; 20 moved and named under the mutation; the new and the vanished each named; the catalog entry killed by the verdict test |
 | `2026-09-30` | `PROGRAM.6.3` / `PROGRAM.6` | both goldens blessed and checked; the lexer's own test; F-1–F-4 with restores; the two new catalog entries and the whole catalog; `cargo test --all` | 20 provenance key paths, re-derived from the renderer; the cost contract frozen; every falsification refused, blessing never overwrites; 11 of 11 mutations as expected; 620 / 0 |
+| `2026-09-13` | `PROGRAM.2.1` | backfilled `2026-09-30` (`PROGRAM.13`), transcribed from the leaf's own checklist: after the change, the scoped census git grep -c -i 'osgen' -- . ':(exclude)Cargo.lock' ':(exclude)docs/tasks/PROGRAM.md' \ ':(exclude)ROADMAP.md' ':(exclude)CHANGELOG.md' ':(exclude)MEMORY.md' returns **no output**, `rc=1`. The four … | `done` at `af4e6dc`; the full evidence is the leaf's acceptance checklist |
+| `2026-09-13` | `PROGRAM.3` | backfilled `2026-09-30` (`PROGRAM.13`), transcribed from the leaf's own checklist: five named commands, and the honest picture they produce: `cargo xtask verify --tier focused` → `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built`, `exit=0`; `--tier integration` → `incomplete — 5 passed, 0 failed, 1` … | `done` at `f7175e8`; the full evidence is the leaf's acceptance checklist |
+| `2026-09-28` | `PROGRAM.22` | backfilled `2026-09-30` (`PROGRAM.13`), transcribed from the leaf's own checklist: `git status --short` after the change → empty, with `build/riscv-virt.dtb` and `build/riscv-virt.dts` still present on disk (`git check-ignore -v build/riscv-virt.dtb` names the new rule); `make gate` → `=== all doctrines green ===` over … | `done` at `f199e1f`; the full evidence is the leaf's acceptance checklist |
+| `2026-09-13` | `PROGRAM.4` | backfilled `2026-09-30` (`PROGRAM.13`), transcribed from the leaf's own checklist: `SUMMARY.md` now carries five parts that mirror the programme (what eADL describes · writing a description · what the engine may claim · generating and running a system · using the toolchain), and `presence.md` names … | `done` at `2733efe`; the full evidence is the leaf's acceptance checklist |
+| `2026-09-30` | `PROGRAM.13` | the unlogged-leaf census by leaf ID over every tree, before and after; each derived commit against the commit its leaf records | 22 rows owed across `BOOTSTRAP`, `M1`, `M2`, `PROGRAM` → 0; every commit derived from `git log` matched its leaf's own record |
 
 ## Commit Log
 
@@ -2988,6 +3007,11 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.6` → `PROGRAM.6.1` | `ARCHOGEN-PROGRAM-0133 (leaf PROGRAM.6.1)` | **everything versioned is in one register, derived from the code.** Seven surfaces with what changes and pins each; F25's home named (`M6.4`); `VERSION-REGISTER` refuses an unannounced format, bump or stale entry. `PROGRAM.6` decomposed |
 | `PROGRAM.6.2` | `ARCHOGEN-PROGRAM-0134 (leaf PROGRAM.6.2)` | **every description keeps its frozen verdict.** The census three engine fixes ran by hand is a test: 120 descriptions, exit code and diagnostic codes; a moved verdict fails unless the table is regenerated in the same change |
 | `PROGRAM.6.3` → `PROGRAM.6` | `ARCHOGEN-PROGRAM-0135 (leaf PROGRAM.6.3)` | **each evidence format is held to its identifier** — a golden per identifier, never rewritten: the provenance's shape and the cost contract's text. `PROGRAM.6` closed: the register, frozen verdicts and format goldens |
+| `PROGRAM.2.1` | `ARCHOGEN-PROGRAM-0021 (leaf PROGRAM.2.1)` | rename the command osgen -> archogen — backfilled `2026-09-30` (`PROGRAM.13`) from `git log`, `af4e6dc` `2026-09-13` |
+| `PROGRAM.3` | `ARCHOGEN-PROGRAM-0029 (leaf PROGRAM.3)` | the five verification tiers become five commands — backfilled `2026-09-30` (`PROGRAM.13`) from `git log`, `f7175e8` `2026-09-13` |
+| `PROGRAM.22` | `ARCHOGEN-PROGRAM-0067 (leaf PROGRAM.22)` | the roadmap's own example dirtied the tree — backfilled `2026-09-30` (`PROGRAM.13`) from `git log`, `f199e1f` `2026-09-28` |
+| `PROGRAM.4` | `ARCHOGEN-PROGRAM-0033 (leaf PROGRAM.4)` | the book gets a shape, and its citations get checked — backfilled `2026-09-30` (`PROGRAM.13`) from `git log`, `2733efe` `2026-09-13` |
+| `PROGRAM.13` | `ARCHOGEN-PROGRAM-0136 (leaf PROGRAM.13)` | **every closed leaf names its commit and its checks in its own tree** — 22 rows backfilled from `git log` and the leaves' own checklists; `BOOTSTRAP` gains a Verification Log |
 
 ## Changelog
 

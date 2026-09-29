@@ -41,6 +41,12 @@ so the first commit of this project passes the same gates every later commit wil
 | --- | --- | --- | --- |
 | — | `BOOTSTRAP.1` | `done` | the bootstrap itself; nothing further belongs here |
 
+## Verification Log
+
+| Date | Leaf | Checks | Result |
+| --- | --- | --- | --- |
+| `2026-09-13` | `BOOTSTRAP.1` | backfilled `2026-09-30` (`PROGRAM.13`), transcribed from the leaf's own checklist: crate renamed to `archogen`; hooks installed: `git config core.hooksPath` → `.githooks` (`rc=0`); the Knowledge Map regenerated; the enforcer run inside this bootstrap: `=== doctrine enforcement (13 checks) ===` … `=== all doctrines green` … | `done` at `e41b139`; the full evidence is the leaf's acceptance checklist |
+
 ## Commit Log
 
 - `2026-09-13` — `BOOTSTRAP.1` — `ARCHOGEN-BOOTSTRAP-0001`: bootstrapped from bedrock.
