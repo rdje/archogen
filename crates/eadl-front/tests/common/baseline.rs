@@ -25,11 +25,20 @@ pub const BASELINE: &str = include_str!("../../../../docs/semantics/BASELINE.txt
 /// A baseline: one digest per frozen construct, keyed by construct id.
 pub type Baseline = BTreeMap<String, String>;
 
-/// Parse a baseline file, returning **every** problem found rather than the first.
+/// Parse the tracked baseline's text, returning **every** problem found rather than the first.
 ///
 /// ⛔ A malformed row is a violation and never a row to skip: a baseline that silently dropped a
 /// construct would freeze less than it says it does, and the gate built on it would report green.
 pub fn parse(text: &str) -> Result<Baseline, Vec<String>> {
+    parse_named(BASELINE_PATH, text)
+}
+
+/// Parse a baseline read from `name`, which every problem is reported against.
+///
+/// ⛔ `PROGRAM.27`: the gate parses three files that are not the tracked one — a fresh run, `HEAD`'s copy
+/// and an arm's fixture — and every message used to name `docs/semantics/BASELINE.txt` whatever it had been
+/// given, so a malformed fixture read as a defect in the tracked baseline.
+pub fn parse_named(name: &str, text: &str) -> Result<Baseline, Vec<String>> {
     let mut problems = Vec::new();
     let mut out = Baseline::new();
     let mut previous: Option<&str> = None;
@@ -40,7 +49,7 @@ pub fn parse(text: &str) -> Result<Baseline, Vec<String>> {
         }
         let Some((digest, id)) = line.split_once("  ") else {
             problems.push(format!(
-                "{BASELINE_PATH}:{number}: `{}` is not `<sha256>  <construct id>` — two spaces \
+                "{name}:{number}: `{}` is not `<sha256>  <construct id>` — two spaces \
                  separate them, and a row nothing can parse is a construct nothing freezes",
                 truncate(line)
             ));
@@ -48,31 +57,29 @@ pub fn parse(text: &str) -> Result<Baseline, Vec<String>> {
         };
         if digest.len() != 64 || !digest.chars().all(|c| c.is_ascii_hexdigit()) {
             problems.push(format!(
-                "{BASELINE_PATH}:{number}: `{}` is not a 64-character hexadecimal sha256, so the row \
+                "{name}:{number}: `{}` is not a 64-character hexadecimal sha256, so the row \
                  cannot be compared with a fresh digest",
                 truncate(digest)
             ));
         }
         if digest.chars().any(|c| c.is_ascii_uppercase()) {
             problems.push(format!(
-                "{BASELINE_PATH}:{number}: the digest carries an uppercase character, and a file two \
+                "{name}:{number}: the digest carries an uppercase character, and a file two \
                  tools produce must be byte-comparable"
             ));
         }
         if id.is_empty() {
-            problems.push(format!(
-                "{BASELINE_PATH}:{number}: the row names no construct",
-            ));
+            problems.push(format!("{name}:{number}: the row names no construct",));
         } else if let Some(existing) = out.insert(id.to_string(), digest.to_string()) {
             problems.push(format!(
-                "{BASELINE_PATH}:{number}: `{id}` appears twice, and one digest would stand for two \
+                "{name}:{number}: `{id}` appears twice, and one digest would stand for two \
                  constructs (the first was `{}`)",
                 truncate(&existing)
             ));
         } else if let Some(before) = previous {
             if before > id {
                 problems.push(format!(
-                    "{BASELINE_PATH}:{number}: `{id}` follows `{before}`, and the file is generated \
+                    "{name}:{number}: `{id}` follows `{before}`, and the file is generated \
                      sorted by id so that two runs are byte-comparable — an unsorted row means the file \
                      was edited by hand"
                 ));
@@ -84,7 +91,7 @@ pub fn parse(text: &str) -> Result<Baseline, Vec<String>> {
     }
     if out.is_empty() && problems.is_empty() {
         problems.push(format!(
-            "{BASELINE_PATH} freezes no construct at all, so a gate comparing against it would pass on \
+            "{name} freezes no construct at all, so a gate comparing against it would pass on \
              any language"
         ));
     }

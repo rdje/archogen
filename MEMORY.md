@@ -13,7 +13,7 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M1` → frontier `M1.29.2`. `PROGRAM` `.27`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
+- **Active tree:** `M1` → frontier `M1.29.2`. `PROGRAM` `.11`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
 - **Next action:** **`M1.29.2`, high — a disk-backed module loader** wired into `check` and `build` through
   the routing pair `M1.29.1` landed in `crates/archogen-cli/src/check_cmd.rs`, so §6's `module-*` codes are
   reachable from a command. ⛔ Read its two design constraints first: resolve the file by a *stated* rule
@@ -24,9 +24,9 @@
   coupled to the capability by a leg; `M1.31` — markers clipped to their line (**14 runs / 10 files → 0**),
   with a pipeline leg over the whole conformance suite. ⛔ `M1.29.1`'s published "23 of 78" was wrong both
   ways (label text counted; output truncated by `tee | head`) — corrected everywhere to **10**.
-- ⛔ **F-O → `PROGRAM.27`, high: `LANGUAGE-FREEZE`'s explicitness leg cannot fail on the real tree** —
-  with the baseline amended and **no note at all** it prints `OK`: its notes grep matches the migrations
-  `README.md`'s form template and `names_construct`'s `*all*` case reads it as covering every construct.
+- ⭐ **`PROGRAM.27` closed: `LANGUAGE-FREEZE` can fail on the real tree**, and a migration is **two
+  commits** — the note `pending` with its movement, then flipped to `applied` (the gate refuses a note `HEAD`
+  already carries as pending). `M1.29.2`'s fixtures will be its first client: read the migrations README.
 - ⭐ **`eadl/1` is frozen and gated** (`M1.13`): `BASELINE.txt` (**72** digests) + `LANGUAGE-FREEZE`, whose
   **second** leg is the one **F-O** found inert. Also closed: `M1.28`, `M1.25`, `PROGRAM.21`, `M1.20`, `M1.12`.
 - **⭐ Tree `API`** (ruled `2026-09-28`, `decision_programmatic-interface.md`): one engine API, a **wasm**

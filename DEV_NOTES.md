@@ -1,5 +1,29 @@
 # DEV_NOTES.md
 
+## _(2026-09-29)_ — an arm that expects a refusal has to say what the refusal is about
+
+- `PROGRAM.27`, making `LANGUAGE-FREEZE`'s explicitness leg able to fail. The defect was the documented
+  one — the notes directory's README read as a pending note covering every construct — and every one of
+  the gate's nine arms had been green through it, because they all pointed at a scratch notes directory.
+- ⛔ **Arming the fix found two more arms that had never tested their names.** A new arm built the same
+  way as "a construct nobody declared is refused" stayed green under a mutation that should have turned it
+  red. Debugged directly: the classifier printed *"… follows …, and the file is generated sorted by id"*
+  and exited 2 — the fixture appended its row at the end, so the whole file was refused as unreadable and
+  the arm passed on leg A's "not a readable baseline file" note. Both pre-existing arms of that shape had
+  done this since `2ae744a`.
+- ⭐ The fix to the *class* is in the oracle, not the fixture: every refusing arm now carries the text its
+  refusal must contain — the construct id, or the note file — so an arm cannot be satisfied by a refusal
+  for another reason. Mutation P-F (the unsorted fixture put back) now reports *"refused, but not about
+  `…`, so it refused for another reason"* for exactly those two arms.
+- And the message that made it slow to see: the classifier stamped every problem with
+  `docs/semantics/BASELINE.txt`, whatever file it had parsed, so a malformed scratch fixture read as a
+  defect in the tracked baseline. `parse_named` carries the real name.
+- A third hole of the same leg, measured rather than supposed: `M1.28.2`'s note stayed `status: pending`
+  for five commits, silently covering any later movement of its five constructs. The new spent-notes leg
+  refused it on its first run.
+- Promoted into `docs/knowledge/a-gate-is-only-as-sharp-as-its-fixtures.md` — two lessons (point an arm at
+  the deployed population; make a refusing arm name what it refuses) and a new `answers:` line.
+
 ## _(2026-09-29)_ — the census that sized a defect was wrong in both directions, and each error looked plausible
 
 - `M1.31`, fixing a caret that overran its line. `M1.29.1` had sized the defect by census and published

@@ -4,6 +4,8 @@ answers:
   - "My acceptance gate is green — what class of error could it still be blind to?"
   - "How do I know a fixture set is discriminating and not just complete?"
   - "Why did a wrong formula pass every test?"
+  - "Every RED arm of my gate passes — could the gate still be unable to fail on the real tree?"
+  - "My arm expects a refusal and gets one — how do I know it was refused for the reason the arm names?"
 type: knowledge
 date: 2026-09-13
 ---
@@ -70,3 +72,16 @@ act on. Mutation testing is what turns it into a measurement.
   14, not 23 → 19). The specification this came from says it outright: *"subtracting a fixed
   number from the original response is not generally valid."* The corollary is that the model
   must be a **function you can re-run**, not a table you edit.
+- ⛔ **Point at least one arm at the population the gate actually reads.** `LANGUAGE-FREEZE`'s nine arms
+  all ran against a scratch notes directory holding only their own fixture, so none of them ever read the
+  real directory's `README.md` — whose form template, `- status: pending | applied` and
+  `constructs: … — or: all`, the gate took for a pending note covering every construct. The gate printed
+  `OK` with the baseline amended and no note at all (`PROGRAM.27`). A fixture you wrote for the arm cannot
+  contain the file the directory ships for another purpose; only the deployed directory does.
+- ⛔ **Make a refusing arm name what it refuses.** An exit code and the gate's own word prove the gate
+  refused — not that it refused for the arm's reason. Two of the same gate's arms passed from the commit
+  that wrote them (`2ae744a`, twelve commits earlier) on a fixture the classifier rejected *whole* as
+  unsorted, so "a construct nobody declared is refused" never classified a construct. Once each refusing
+  arm had to find its construct id in the output, putting the unsorted fixture back turned both red
+  (`PROGRAM.27`, mutation P-F). Seed the arm with the file that actually broke, byte for byte — the
+  deployed README, not a README-shaped string.

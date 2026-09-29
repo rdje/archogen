@@ -37,7 +37,7 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM`
   Status: `active`
   Goal: own the program spine
-  Children: `PROGRAM.1` … `PROGRAM.26`, plus `PROGRAM.1.1` and `PROGRAM.2.1`
+  Children: `PROGRAM.1` … `PROGRAM.28`, plus `PROGRAM.1.1` and `PROGRAM.2.1`
 
 - ID: `PROGRAM.1`
   Status: `done`
@@ -1712,7 +1712,7 @@ mdBook that is the director's window into the project.
 
 
 - ID: `PROGRAM.27`
-  Status: `pending`
+  Status: `done`
   Goal: make `LANGUAGE-FREEZE`'s **explicitness** leg able to fail on the real tree, so a migration note
   is an enforced precondition rather than a record nobody checks.
   Reproduce / issue: **a live soundness hole in a registered doctrine gate, reproduced `2026-09-29` by
@@ -1765,17 +1765,123 @@ mdBook that is the director's window into the project.
   what a reader consults to find out what is enforced, and this row says the language definition is
   protected against silent amendment. It is sequenced ahead of `PROGRAM.11` on that reasoning: `.11`'s
   rule is preventive and has fired once and been handled, while this one is inert now.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the checklist — the false green reproduced and closed on the deployed notes directory,
+  sixteen arms (seven new), six mutations seen firing.
+  Commit: `ARCHOGEN-PROGRAM-0111 (leaf PROGRAM.27)`
+
+  ⛔ **Two further defects found while arming it, both fixed here because both are this gate's.**
+  (1) **Two pre-existing arms were vacuous.** "a construct the baseline no longer freezes is refused" and
+  "a construct nobody declared is refused" appended a row to the *end* of an otherwise sorted fixture; the
+  classifier refuses an unsorted baseline **whole**, as unreadable, so both arms passed on leg A's "not a
+  readable baseline file" note and neither ever classified a removal or an addition — from the commit
+  that wrote them (`2ae744a`, `M1.13.5`) until now. Found because a new arm of the same shape passed under
+  a mutation that should have turned it red. (2) **The classifier blamed the wrong file.**
+  `crates/eadl-front/tests/common/baseline.rs`'s `parse` stamped every message with
+  `docs/semantics/BASELINE.txt`, whatever it had been given — a fixture, a fresh run, `HEAD`'s copy — so a
+  malformed scratch file read as a defect in the tracked baseline. `parse_named(name, text)` now carries
+  the real name, and `parse(text)` stays the tracked file's convenience.
 
   ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
 
-  - [ ] **REPRODUCE / ISSUE** — `pending`
-  - [ ] **ROOT CAUSE (WHY + WHERE)** — `pending`
-  - [ ] **FIX** — `pending`
-  - [ ] **ADDRESSED (verified)** — `pending`
-  - [ ] **NO REGRESSION** — `pending`
-  - [ ] **LOCKSTEP** — `pending`
+  - [x] **REPRODUCE / ISSUE** — on the **deployed** notes directory, with the pre-`M1.28.2` baseline
+    (`git show 7f46f4d:docs/semantics/BASELINE.txt`) as `HEAD`'s side so a real amendment is in flight:
+    ```text
+    $ mv docs/semantics/migrations/eadl-1-quantity-value-type.md target/tmp/p27/      # NO note at all
+    $ LANGUAGE_FREEZE_HEAD_BASELINE=target/tmp/p27/head-before-m1282.txt bash scripts/check_language_freeze.sh
+      language-freeze: OK (72 frozen construct(s) agree with the working tree)       rc=0 — FALSE GREEN
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `scripts/check_language_freeze.sh` at `a6e8972`, three sites:
+    ```text
+    $ git show a6e8972:scripts/check_language_freeze.sh | grep -n "grep -rl '\^- status\|\*all\*\|\*\"\$id\"\*"
+    $ git show a6e8972:scripts/check_language_freeze.sh | grep -nF -e "grep -rl '^- status" -e '*all*)' -e '*"$id"*)'
+      152:  done < <(grep -rl '^- status:[[:space:]]*pending' "$NOTES" 2>/dev/null)    <- unanchored
+      169:    *all*) return 0 ;;                                                            <- substring
+      172:    *"$id"*) return 0 ;;                                                          <- substring
+    $ grep -n '^- status\|^- constructs' docs/semantics/migrations/README.md
+      35:- status: pending | applied          <- matches line 152, so the README is a pending note
+      36:- constructs: <construct id>, <construct id>   — or: all    <- matches line 169: covers everything
+    ```
+    WHY nine arms missed it: every leg-B arm set `LANGUAGE_FREEZE_NOTES=$work/notes`, a scratch directory
+    holding only the arm's own fixture, so no arm ever read the directory the gate reads. And a third
+    hole in the same leg, measured rather than supposed: `M1.28.2`'s note stayed `status: pending` from
+    `1a43973` to `a6e8972` — five commits in which it silently covered any movement of its five constructs,
+    because nothing refuses a note that stays pending after its movement lands.
+  - [x] **FIX** — a pending note is a line **exactly** `- status: pending` (`PENDING_LINE`, anchored at
+    both ends); `names_construct` parses `constructs:` as a comma-separated list compared **exactly**, with
+    `all` honoured only as the whole value; **leg C, spent notes**: a note `HEAD` already carries as pending
+    covers nothing and is refused until it says `applied` (read from git, or from `LANGUAGE_FREEZE_HEAD_NOTES`
+    in an arm); the breach summary counts breaches and no longer claims every breach is a movement. The
+    arms' oracle now also requires the construct or note the refusal is about, and every fixture is
+    written sorted. `M1.28.2`'s note flipped to `applied` — the lifecycle's first real use.
+  - [x] **ADDRESSED (verified)** — on the deployed directory, the four cases the acceptance names:
+    ```text
+    (1) the real tree after the flip                                    -> language-freeze: OK   rc=0
+    (2) amended vs 7f46f4d, README + the now-applied note only           -> rc=1, 5 constructs uncovered
+    (3) + a pending note in docs/semantics/migrations/ naming the five   -> language-freeze: OK   rc=0
+    (4) that note rewritten to the README's two template lines           -> rc=1, 5 constructs uncovered
+    (0) the real tree BEFORE the flip -> rc=1 "eadl-1-quantity-value-type.md is still `status: pending`
+        and HEAD already carries it that way"                          <- leg C on its first real instance
+    $ bash scripts/check_language_freeze.sh --self-test
+      language-freeze self-test: 16 pass / 0 fail (16 arms)
+    ```
+    **Six mutations seen firing**, each checked applied and restored from a copy proven identical by `cmp`:
+    ```text
+    P-A  status rule unanchored (hole 1 alone)   -> 14 pass / 2 fail: the exact-status arm, and "an
+                                                     agreeing baseline passes" (leg C then reads the
+                                                     committed README as a spent note)
+    P-B  constructs as a substring (hole 2 alone) -> 15 pass / 1 fail: the exact-name arm
+    P-C  both holes, leg C kept                  -> 12 pass / 4 fail
+    P-D  leg C removed                           -> 14 pass / 2 fail: both spent-note arms
+    P-E  both holes AND no leg C (as shipped)    -> 10 pass / 6 fail, INCLUDING "the deployed notes
+                                                     directory leaves an unnamed amendment uncovered"
+                                                     (expected exit 1, got 0) — the defect, on the
+                                                     population the gate reads
+    P-F  the dropped fixture unsorted (as shipped) -> 14 pass / 2 fail: "refused, but not about
+                                                     `suite/examples/s0-heartbeat/system.eadl`, so it
+                                                     refused for another reason" — the two vacuous arms
+    ```
+  - [x] **NO REGRESSION** — `make focused` → `passed — 3 passed, 0 failed, 0 unavailable` (the first run
+    failed on `fmt` alone and was fixed, not waived); `cargo test --all` → **575 passed, 0 failed over 41
+    suites**, unchanged, `language_baseline.rs` 9 / 0 after the parser change; every gate's `--self-test`
+    run: `book-anchors 6/0`, `feedback 6/6`, `gap-claims 10/10`, `language-freeze 16/0`,
+    `lesson-promotion 9/9`, `live-doc-currency 3/3`, `routing-evidence 5/5`, `s0-retirement 3/0`,
+    `table-arity 8/8`, `task-acceptance 9/0`; `scripts/check_doctrines.sh` → `=== all doctrines green ===`;
+    `check_book_anchors.sh` → `OK (19, 3)`; `mdbook build` `rc=0`.
+  - [x] **LOCKSTEP** — `docs/semantics/migrations/README.md`: what a pending note is, spent notes, exact
+    `constructs:`, and the workflow rewritten as the **two commits** it is, with both false steps
+    corrected; the quantity note flipped to `applied`; `DOCTRINE_ENFORCEMENT.md`'s row (three legs, the
+    history, no arm count); the book's `verification.md` (legs table, lifecycle, what was broken);
+    `docs/knowledge/a-gate-is-only-as-sharp-as-its-fixtures.md` gains two lessons and an `answers:` line;
+    `MEMORY.md`, `LIVE_STATUS.md`, `CHANGELOG.md`, `DEV_NOTES.md`, `docs/TASK_TREE.md`, this tree —
+    and **`PROGRAM.28`** filed below for the gap measuring the arms exposed: no tier runs any of them.
+
+- ID: `PROGRAM.28`
+  Status: `pending`
+  Goal: every gate's `--self-test` is run by a tier, so an arm that breaks — or starts passing for the wrong
+  reason — is seen by the next run and not by the next person who happens to invoke it.
+  Reproduce / issue: measured `2026-09-29` by `PROGRAM.27`, which ran them all by hand because nothing else
+  does.
+  ```text
+  census: for s in scripts/check_*.sh knowledge-map/scripts/check_knowledge_map.sh; do
+            grep -q -- '--self-test' "$s" && bash "$s" --self-test; done
+          -> 10 gates carry a --self-test, all 10 pass today
+  census: git grep -n "self-test" -- xtask .github Makefile scripts/check_doctrines.sh
+          -> no match: no tier (`make focused`, `make integration`), no CI workflow and not the doctrine
+             driver runs a single arm
+  ```
+  Impact: an arm is re-fired only when a person runs it. `PROGRAM.27`'s two vacuous arms show the
+  consequence is not hypothetical in kind — they were wrong from the commit that wrote them and every
+  commit after was green — though running them in a tier would not have caught *vacuity*, only breakage;
+  that half is what `PROGRAM.27`'s subject-naming oracle is for. `PROGRAM.18` gives the ten gates without
+  arms their arms; this leaf makes all of them run.
+  Acceptance: an `integration`-tier step (and the CI doctrine workflow) that discovers every script
+  carrying `--self-test` by census rather than by list, runs each, and fails on any arm that fails — with
+  a RED arm of its own proving a failing arm is reported; `make tiers` lists it; the book's
+  `verification.md` says what the step proves.
+  Priority: **medium** — nothing is failing today; it is the difference between an arm that was checked
+  once and one that is checked. Sequenced after `PROGRAM.18`, whose new arms it would then also run.
+  Verification: `pending`
+  Commit: `pending`
 
 ## Roadmap coverage map
 
@@ -1841,10 +1947,10 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.27` | `pending` | **high — a registered doctrine gate that cannot fail.** `LANGUAGE-FREEZE`'s explicitness leg, the one `M1.13.5` called "the one that matters" because it is what stops `--emit` being the waiver, prints `OK` on the real tree with an amended baseline and **no migration note at all**: the notes population grep matches the directory's own README (whose form template carries `- status: pending \| applied`), and `names_construct`'s `*all*` case matches that template's trailing `— or: all`, so the README permanently covers every construct. Nine RED arms missed it because all nine run against a scratch notes directory. Found by `M1.28.2`, the first leaf to run the workflow. Ahead of `.11`, whose rule is preventive and has fired once and been handled, while this one is inert now |
-| 2 | `PROGRAM.11` | `active` | the repository-boundary doctrine, **in both directions**. The rule was nowhere in the committed tree, which is how an *inbound* crossing got recorded backwards in a durable record. Priority medium: the outbound half is preventive, the inbound half fired once and was handled correctly |
-| 3 | `PROGRAM.18` | `pending` | **medium-high** — **nine** of eighteen registered controls carry no repeatable `--self-test` RED arm. ⛔ The figure this row carried was **ten**, and `PROGRAM.21` moved it: `check_task_acceptance.sh` now ships nine arms, so `PROGRAM.18` must **re-run its census** rather than reuse the number — the exact defect class `PROGRAM.20` exists to catch. Its own reason for being sequenced behind `PROGRAM.21` is discharged: arming the boxes is now meaningful because the check reads the right ones |
-| 4 | `PROGRAM.24` | `pending` | **medium-high** — the mirror direction of `BOOK-ANCHORS`, which nobody checks: does a capability the codebase has get described in the book? One live instance measured `2026-09-28`: the `rt-analysis` crate is named nowhere in `docs/book/`, and `analysis.md` — the chapter about what it establishes — cites only `ROADMAP.md` and a cost-accounting doc, passing both `BOOK-ANCHORS` legs while never telling its reader where the code is. Filed by `M1.12.5` on the director's lockstep instruction |
+| 1 | `PROGRAM.11` | `active` | the repository-boundary doctrine, **in both directions**. The rule was nowhere in the committed tree, which is how an *inbound* crossing got recorded backwards in a durable record. Priority medium: the outbound half is preventive, the inbound half fired once and was handled correctly |
+| 2 | `PROGRAM.18` | `pending` | **medium-high** — **nine** of eighteen registered controls carry no repeatable `--self-test` RED arm. ⛔ The figure this row carried was **ten**, and `PROGRAM.21` moved it: `check_task_acceptance.sh` now ships nine arms, so `PROGRAM.18` must **re-run its census** rather than reuse the number — the exact defect class `PROGRAM.20` exists to catch. Its own reason for being sequenced behind `PROGRAM.21` is discharged: arming the boxes is now meaningful because the check reads the right ones |
+| 3 | `PROGRAM.24` | `pending` | **medium-high** — the mirror direction of `BOOK-ANCHORS`, which nobody checks: does a capability the codebase has get described in the book? One live instance measured `2026-09-28`: the `rt-analysis` crate is named nowhere in `docs/book/`, and `analysis.md` — the chapter about what it establishes — cites only `ROADMAP.md` and a cost-accounting doc, passing both `BOOK-ANCHORS` legs while never telling its reader where the code is. Filed by `M1.12.5` on the director's lockstep instruction |
+| 4 | `PROGRAM.28` | `pending` | **medium** — no tier and no CI workflow runs any gate's `--self-test`: 10 gates carry one and all 10 pass today, but an arm is re-fired only when somebody runs it by hand. Found by `PROGRAM.27`, which had to. Sequenced after `PROGRAM.18`, whose new arms it would then run too |
 | 5 | `PROGRAM.5` | `pending` | the §15/§19 dependency and evidence ledger — every external source claim in the book should resolve to a row, and `BOOK-ANCHORS` now checks the *internal* ones. The director has offered a read-only external document source (ISA / RISC-V / devicetree / peripheral specifications) reachable by operator-relayed request; the ledger is where that seam gets a row |
 | 6 | `PROGRAM.9` | `pending` | the extended tier reports `incomplete` on every run until its three steps exist |
 | 7 | `PROGRAM.6` | `pending` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |
@@ -1955,6 +2061,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-29` | `PROGRAM.20` | **docs only, no code staged — an eighth shape recorded and its artifact corrected: `CHANGELOG.md`'s own ordering rule.** Found by the fourth mechanism (census the surface a change moves) while inserting an entry at the top. Four censuses rather than a read: `git show <c> -- CHANGELOG.md \| grep -m1 '^@@'` over the five suspect commits for the anchor; `git log -S` for the commit that placed the entry; `git rev-list --count b88812d..HEAD` for its age; and a `python3` inversion count over every id line in the file. The correction was verified as a **pure move** two ways rather than by eye — `collections.Counter` equality over the line multiset in the script that performed it, and the inversion census re-run over the whole file | `ARCHOGEN-M1-0092`'s entry sat **above six newer ones**, so the surface the director reads for "what just happened" opened with work seven commits old. Root cause is a mechanism and not a slip: five consecutive commits (`fc3655c`, `d0692f2`, `145baab`, `2ae744a`, `6a31da5`) all inserted at `@@ -52,6 +52,N @@`, the same anchor, because the insertion point was "just after the first entry" and the file looked identical each time — a wrong anchor that produces a plausible file is self-concealing. **74** ids, **1** out-of-order pair before the correction and **0** after, so no second misplacement was left behind; the order had been false for the **7** commits since `b88812d`. ⛔ What the instance adds is not the sequence but the **population**: `CHANGELOG.md` is a fourth live surface, named in the acceptance only as a place a figure may be legitimately *registered as a record*, and the fifth shape was the first falsification of the enumerated three. The acceptance is widened again on the leaf — every live surface the commit stages, derived from the staged diff, because a list is the thing that keeps being wrong |
 | `2026-09-29` | `PROGRAM.27` (filed) | **docs only in this tree — a registered doctrine gate reproduced failing to fail.** The reproduction is on the leaf and was taken on the real tree, not on a fixture: the pending note moved out of `docs/semantics/migrations/` entirely, the baseline left amended at 72 constructs, and `scripts/check_language_freeze.sh` re-run. Then the two causes located in the check's own source: the notes population grep and `names_construct`'s `*all*` case, each read against `docs/semantics/migrations/README.md`'s form template. Restored and proven: `diff -q` silent on the note and `language-freeze: OK (72 …)` with it back in place | `language-freeze: OK` with **no note at all** and an amended baseline — the exact waiver leg B was written to close, `--emit` and green. `grep -rl '^- status:[[:space:]]*pending' docs/semantics/migrations` → `README.md`, whose form template carries `- status: pending \| applied`; `grep -n '^- constructs:'` on it → `36:- constructs: <construct id>, <construct id>   — or: all`, which the `*all*) return 0 ;;` substring case reads as covering every construct. ⛔ Nine RED arms and none of them could see it: all nine point `LANGUAGE_FREEZE_NOTES` at `$work/notes`, a scratch directory holding only the fixture note, so the arms proved the mechanism and never the deployed population — `docs/knowledge/a-gate-is-only-as-sharp-as-its-fixtures.md` one level up. Filed at priority **high** and sequenced ahead of `PROGRAM.11`: a gate that cannot fail is worse than no gate, because the registry is what a reader consults to find out what is enforced. Two of the migration README's workflow steps are false as written and are part of the same fix, measured in all three note states (`pending` before `--emit` → leg A red, which the README calls green; `pending` after → green; `applied` after → green only because leg B is inert) |
 | `2026-09-29` | `PROGRAM.20` | **docs only, no code staged — two instances of the seventh shape routed in by `M1.31`, and the population they belong to measured.** Every `error[…]` block in `docs/book/src/*.md` classified by its first `-->`; the tracked ones re-run through `archogen check` and compared verbatim | 20 blocks: **5** over a tracked input (4 verbatim; `checking.md:93` wraps a hint and drops the verdict line), **7** over an untracked input, **8** with no `-->` at all — including `checking.md:115`, which drops the location, source and marker lines the command prints. 15 of 20 cannot be checked, and a population keyed on `-->` cannot see 8 of them |
+| `2026-09-29` | `PROGRAM.27` | the false green reproduced on `docs/semantics/migrations/` itself with `7f46f4d`'s baseline as `HEAD`'s side; four real-directory cases after the fix, and the real tree before and after the flip; `--self-test` (16 arms); six mutations P-A–P-F with `cmp` restoration; every gate's `--self-test`; `make focused`; `cargo test --all`; the doctrine driver; `mdbook build` | **rc 0 → rc 1** with no note; the four cases OK / refused / OK / refused as specified; leg C fired on `M1.28.2`'s note on its first real run; 16 / 0; P-E shows the deployed-directory arm red under the shipped logic, P-F shows the two formerly vacuous arms refused *for another reason*; ten gates' self-tests all green; **575 passed / 0 failed**; 13 doctrines green |
 
 ## Commit Log
 
@@ -1977,6 +2084,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.20` | `ARCHOGEN-PROGRAM-0101 (leaf PROGRAM.20)` | **an instance recorded and its artifact corrected, not the register built** — an eighth shape: `CHANGELOG.md`'s own "Newest first" rule, broken for **7** commits by five consecutive inserts at one wrong anchor, and invisible because each produced a plausible-looking file. Corrected as a **pure move** verified by line-multiset equality and by an inversion census over all **74** ids (1 → 0). ⛔ The instance falsifies the acceptance's *population* for the second time — `CHANGELOG.md` is none of the three live surfaces it enumerates — so the population becomes every live surface the commit stages |
 | `PROGRAM.27` | filed by `ARCHOGEN-M1-0105 (leaf M1.28.2)` | **a registered doctrine gate that cannot fail, reproduced rather than suspected.** `LANGUAGE-FREEZE`'s explicitness leg — the one `M1.13.5` called "the one that matters", because it is what stops `--emit` being the waiver — prints `OK` on the real tree with an amended baseline and no migration note at all, because the notes population grep matches the directory's own README and `names_construct`'s `*all*` substring case reads that README's template as covering every construct. Filed by the first leaf to run the workflow, at priority high and ahead of `PROGRAM.11`; two of the README's workflow steps are false as written and are inside the same fix |
 | `PROGRAM.20` | `ARCHOGEN-PROGRAM-0110 (leaf PROGRAM.20)` | **instances recorded, the register not built** — two abridged `checking.md` transcripts routed in by `M1.31`, and the first whole-population measurement of the book's rendered diagnostics: 15 of 20 blocks cannot be re-run, and 8 carry no `-->` for a population to key on |
+| `PROGRAM.27` | `ARCHOGEN-PROGRAM-0111 (leaf PROGRAM.27)` | **`LANGUAGE-FREEZE` can fail on the real tree.** A pending note is a line exactly `- status: pending`, `constructs:` a list compared exactly, and a new leg refuses a note `HEAD` already carries as pending — so a note is a permission for one commit, and `M1.28.2`'s, open for five, is flipped. Two vacuous arms found and fixed (unsorted fixtures), every refusing arm now names its subject, and the classifier names the file it parsed. `PROGRAM.28` filed: no tier runs any gate's `--self-test` |
 
 ## Changelog
 

@@ -45,25 +45,49 @@ lines are the machine-read part; the sections are what a reader gets.
 ## Which version it lands in
 ```
 
-- **`status: pending`** while the change is being made. The gate only accepts a **pending** note, so a
-  note from an earlier migration cannot cover a later one — flip it to `applied` after regenerating the
-  baseline, which is what makes the note a record rather than a permission that stays open.
-- **`constructs:`** names what the note covers, using the baseline's own ids
+- **`status: pending`** in the commit that lands the movement, and **`applied`** from the next commit on.
+  A pending note is a file here with a line that is **exactly** `- status: pending` — the value, and
+  nothing after it. That is a rule and not a filename: the form above writes `pending | applied`, which is
+  not a status, so this file is not a note (before `PROGRAM.27` it was, and through `— or: all` it covered
+  every construct there is, which left the explicitness leg unable to fail).
+- **A note `HEAD` already carries as pending is spent.** Its movement has landed, so it covers nothing,
+  and the gate refuses it until it says `applied` — a pending note left in the tree is a permission that
+  stays open, and would cover a later movement of the same constructs with nothing written down about it.
+- **`constructs:`** names what the note covers, as a comma-separated list of the baseline's own ids
   (`docs/semantics/grammar.md#ebnf`, `docs/semantics/reference.md#number-values`,
-  `suite/examples/periodic-three/system.eadl`). Every construct the gate reports must be named, or the
-  line must say `all` — and `all` is a claim that the note explains every movement, which the sections
-  below it have to support.
+  `suite/examples/periodic-three/system.eadl`), each compared **exactly** — a note naming `…#ebnf-v2` does
+  not cover `…#ebnf`. Every construct the gate reports must be named, or the whole value must be `all` —
+  a claim that the note explains every movement, which the sections below it have to support. `all`
+  inside a longer value is not that claim.
 
 ## The workflow
 
+A migration is **two commits**, and the gate enforces both.
+
 ```console
-$ scripts/check_language_freeze.sh            # says what moved, and what would cover it
+# commit 1 — the movement and its note
+$ $EDITOR docs/semantics/migrations/<version>-<slug>.md    # the note, status: pending
+$ $EDITOR <the construct>                                   # the change itself
+$ scripts/check_language_freeze.sh            # RED: the integrity leg compares the tracked baseline with a
+                                              #   fresh run and does not consult notes, so it stays red —
+                                              #   and says what moved — until the baseline is amended
 $ scripts/language_baseline.sh --print | diff docs/semantics/BASELINE.txt -   # the raw difference
-$ $EDITOR docs/semantics/migrations/<version>-<slug>.md    # write the note, status: pending
-$ scripts/check_language_freeze.sh            # green: the movement is covered
 $ scripts/language_baseline.sh --emit         # amend the baseline — the explicit act
+$ scripts/check_language_freeze.sh            # green: the amendment is covered by the pending note
+$ git commit …                                # note, construct and baseline together
+
+# commit 2 — the note becomes a record
 $ $EDITOR docs/semantics/migrations/<version>-<slug>.md    # status: applied
+$ scripts/check_language_freeze.sh            # green; while the note still said pending it was refused
+                                              #   as spent, because HEAD carries it that way
 ```
+
+⛔ **The flip cannot share commit 1.** The explicitness leg compares the working tree's baseline with
+`HEAD`'s, and an `applied` note covers nothing — so flipping in the amending commit refuses that commit.
+And it cannot be skipped: from the moment commit 1 lands, `HEAD` carries the note as pending and the gate
+refuses it until it is flipped. `eadl-1-quantity-value-type.md` is the first note to go through both
+commits: it stayed pending for five commits before `PROGRAM.27`, which is the open permission the second
+rule now closes.
 
 ## Honest limits
 

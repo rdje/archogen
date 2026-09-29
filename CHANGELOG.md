@@ -4,6 +4,31 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the language freeze can fail on the real tree, and a migration note is a permission for one commit
+
+`ARCHOGEN-PROGRAM-0111` (leaf `PROGRAM.27`). **575 passed / 0 failed** over 41 suites, unchanged.
+`LANGUAGE-FREEZE --self-test`: **16** arms (seven new), all green; six mutations seen firing.
+
+- **The false green, reproduced on the deployed notes directory.** With the baseline amended and no
+  migration note at all, `scripts/check_language_freeze.sh` printed `OK`, rc 0. The directory's own
+  `README.md` documents the note form with `- status: pending | applied` and `- constructs: … — or: all`;
+  the gate's status test was unanchored and its constructs test a substring, so the README was a pending
+  note covering every construct there is. Every leg-B arm used a scratch directory holding only its own
+  fixture, so none ever read the directory the gate reads.
+- **Fixed by rule, not by filename.** A pending note is a line exactly `- status: pending`; `constructs:`
+  is a comma-separated list compared exactly, `all` only as the whole value. A new **spent-notes** leg
+  refuses a note `HEAD` already carries as pending — a migration is two commits, and a note left open
+  after its movement lands would cover a later one silently. `M1.28.2`'s note, open for five commits, is
+  flipped to `applied`: the lifecycle's first real use.
+- **Two arms had never tested what they are named for.** Their fixture appended a row out of order, the
+  classifier refused the whole file as unreadable, and "a construct nobody declared is refused" passed
+  without classifying anything. Fixtures are now written sorted, every refusing arm must name the
+  construct or note it refuses, and one arm runs against the deployed notes directory itself. The
+  classifier now names the file it parsed instead of always blaming `docs/semantics/BASELINE.txt`.
+- `docs/semantics/migrations/README.md`'s workflow was false in two steps and is rewritten as the two
+  commits it is; `DOCTRINE_ENFORCEMENT.md` and the book's `verification.md` describe three legs.
+  `PROGRAM.28` filed: no tier and no CI workflow runs any gate's `--self-test`.
+
 ## archogen — a caret stays on the line it is drawn under
 
 `ARCHOGEN-M1-0109` (leaf `M1.31`). **575 passed / 0 failed** over 41 suites (baseline 569 / 40, delta =

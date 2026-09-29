@@ -147,18 +147,29 @@ tree. `M1.13.4.5` wrote the file and the comparator that classifies a difference
 ## The freeze, and the note it demands
 
 `LANGUAGE-FREEZE` runs with the other doctrines — on every commit, and in the `integration` tier — and has
-**two legs, because each has a hole the other closes**:
+**three legs**:
 
 | Leg | Asks | Catches |
 | --- | --- | --- |
 | integrity | does the tracked baseline agree with a fresh run over the working tree? | a frozen construct edited and the baseline left alone |
 | explicitness | does the tracked baseline agree with `HEAD`'s — or does a **pending** migration note name every construct the amendment moves? | a baseline regenerated because something moved, with nothing written down |
+| spent notes | does a note that `HEAD` already carries as pending still say `pending`? | a note left open after its movement landed, which would cover a later movement silently |
 
 The second leg is the one that makes the freeze mean something. Without it, "amend the baseline" is the
 waiver: edit the construct, re-run `--emit`, and the first leg goes green having proved nothing. So
-regeneration is an **explicit act** that fails until a note exists, and a note from an earlier migration
-cannot cover a later one — the gate accepts only `status: pending`, which the author flips to `applied`
-after regenerating.
+regeneration is an **explicit act** that fails until a note exists — and the third leg makes a note a
+permission for **one commit**: a migration is the commit that lands the movement with its note `pending`,
+then the commit that flips the note to `applied`, and the gate refuses the second commit until it does.
+
+⛔ **Until leaf `PROGRAM.27` the second leg could not fail on the real tree.** The notes directory's own
+`README.md` documents the note form with the lines `- status: pending | applied` and
+`- constructs: … — or: all`, and the gate read any line *starting* `- status: pending` as a pending note
+and any `constructs:` line *containing* `all` as covering everything. So the README was a pending note
+that covered every construct there is: with the baseline amended and no note at all, the gate printed
+`OK`. Its RED arms all used a scratch notes directory holding only their own fixture, so they proved the
+mechanism and never the directory the gate actually reads. A pending note is now a line that is exactly
+`- status: pending`, `constructs:` is a list compared exactly, and one arm runs against the deployed
+directory itself. See `docs/semantics/migrations/README.md` for the two-commit workflow.
 
 ⛔ **Any movement needs a note, including a correction.** A note may say *"correction: the specification
 was wrong and no description changes meaning"* — that is still explicit, which is the whole requirement,

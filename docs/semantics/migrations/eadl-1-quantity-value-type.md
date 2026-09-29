@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-09-29
 - leaf: M1.28.2 (`docs/tasks/M1.md`)
-- status: pending
+- status: applied
 - constructs: docs/semantics/reference.md#diagnostics, suite/docs/semantics/kinds/os-rt.eadl, suite/docs/semantics/cases/invalid-zero-clock-frequency.eadl, suite/docs/semantics/cases/invalid-quantity-without-unit.eadl, suite/docs/semantics/cases/invalid-unknown-unit.eadl
 - invalidates: none in this repository, measured; outside it, a description whose task clause carries a unit the table does not hold, or whose offered `<number> <symbol>` fact is not a readable quantity
 

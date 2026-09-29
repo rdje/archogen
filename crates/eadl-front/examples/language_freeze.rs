@@ -301,7 +301,7 @@ fn parse_baseline(path: &str) -> Result<common::baseline::Baseline, ExitCode> {
         Ok(text) => text,
         Err(error) => return Err(fail(&format!("cannot read {path}: {error}"))),
     };
-    match common::baseline::parse(&text) {
+    match common::baseline::parse_named(path, &text) {
         Ok(baseline) => Ok(baseline),
         Err(problems) => {
             for problem in &problems {
