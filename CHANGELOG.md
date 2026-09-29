@@ -4,6 +4,18 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the reader no longer crashes on an unknown escape before a multi-byte character
+
+`ARCHOGEN-M1-0129` (leaf `M1.35`).
+
+- ⛔ **A crash on user input, fixed.** A string such as `"a\éb"` made the reader panic, and `archogen check`
+  exited 101. An unknown escape was read as one byte, which left the reader inside `é`. The escaped
+  character is now read whole, and the description gets `error[read-bad-escape]` naming `\é`, exit 10.
+- Tests at the reader (a two-byte and a four-byte character) and in-process through the CLI. The old
+  byte-wise read restored as a mutation fails both. All 120 tracked descriptions keep their verdicts.
+- The second byte-for-character defect in one day, after `M1.31`, recorded as
+  `docs/knowledge/a-byte-offset-is-not-a-character.md`.
+
 ## archogen — exact comparison of quantities: a deadline longer than its period is refused at any precision
 
 `ARCHOGEN-M1-0128` (leaf `M1.34`).

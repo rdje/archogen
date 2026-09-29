@@ -259,15 +259,21 @@ impl<'a> Reader<'a> {
                 b'\\' => {
                     let escape_start = self.offset();
                     self.at += 1;
-                    let Some(escape) = self.peek() else { continue };
-                    self.at += 1;
+                    // ⛔ The escaped character is read WHOLE. It was read as one byte, and a multi-byte
+                    // one after a backslash — `"a\\éb"` — left the reader inside the character: the
+                    // diagnostic's span ended mid-character and the next step panicked slicing there
+                    // (leaf `M1.35`). The backslash is ASCII, so `at` is on a boundary here.
+                    let Some(escape) = self.raw[self.at..].chars().next() else {
+                        continue;
+                    };
+                    self.at += escape.len_utf8();
                     match escape {
-                        b'n' => value.push('\n'),
-                        b't' => value.push('\t'),
-                        b'r' => value.push('\r'),
-                        b'"' => value.push('"'),
-                        b'\\' => value.push('\\'),
-                        b'u' => {
+                        'n' => value.push('\n'),
+                        't' => value.push('\t'),
+                        'r' => value.push('\r'),
+                        '"' => value.push('"'),
+                        '\\' => value.push('\\'),
+                        'u' => {
                             if let Some(ch) = self.read_unicode_escape(escape_start) {
                                 value.push(ch);
                             }
@@ -276,13 +282,13 @@ impl<'a> Reader<'a> {
                             let end = self.offset();
                             self.diagnostics.push(Diagnostic::error(
                                 "read-bad-escape",
-                                format!("`\\{}` is not an escape sequence", other as char),
+                                format!("`\\{other}` is not an escape sequence"),
                                 Label::new(self.span(escape_start, end), "unknown escape"),
                                 "the supported escapes are \\n, \\t, \\r, \\\", \\\\ and \\u{…}",
                             ));
                             // Keep the characters literally so one typo does not cascade.
                             value.push('\\');
-                            value.push(other as char);
+                            value.push(other);
                         }
                     }
                 }
@@ -717,6 +723,44 @@ mod tests {
         let rendered = diagnostics.render(&sources);
         assert!(rendered.contains("read-bad-escape"), "{rendered}");
         assert!(rendered.contains("\\n, \\t, \\r"), "{rendered}");
+    }
+
+    #[test]
+    fn an_unknown_escape_before_a_multibyte_character_is_reported_not_a_panic() {
+        // Leaf `M1.35`: the escaped character was read as one byte, which stranded the reader inside
+        // `é` — the next slice panicked, and `archogen check` exited 101 on this text.
+        for (escaped, width) in [("é", 2), ("🙂", 4)] {
+            let text = format!("(x \"a\\{escaped}b\")");
+            let (document, diagnostics, sources) = parse(&text);
+            let bad: Vec<_> = diagnostics
+                .items()
+                .iter()
+                .filter(|d| d.code == "read-bad-escape")
+                .collect();
+            assert_eq!(bad.len(), 1, "{}", diagnostics.render(&sources));
+            assert!(
+                bad[0].message.contains(&format!("`\\{escaped}`")),
+                "{}",
+                bad[0].message
+            );
+            // The span covers the backslash and the whole character, on character boundaries.
+            let span = bad[0].primary.span;
+            assert_eq!((span.end - span.start) as usize, 1 + width, "{span:?}");
+            assert_eq!(
+                &text[span.start as usize..span.end as usize],
+                format!("\\{escaped}")
+            );
+            // The characters are kept literally, and the rest of the string survives.
+            let Form::List { items, .. } = &document.forms[0] else {
+                panic!("not a list: {:?}", document.forms[0]);
+            };
+            let expected = format!("a\\{escaped}b");
+            assert!(
+                matches!(&items[1], Form::Str { value, .. } if *value == expected),
+                "{:?}",
+                items[1]
+            );
+        }
     }
 
     #[test]

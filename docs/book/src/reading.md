@@ -163,6 +163,12 @@ either — except a tab, which is whitespace — and the reader says so with
 writable is lost by that: `\u{…}` reaches every character there is, so an unusual one costs six
 visible characters instead of one invisible byte.
 
+An escape the language does not know, such as `\q` or `\é`, is reported as `error[read-bad-escape]`,
+naming the whole character. The string keeps both characters as written, so one typo does not
+cascade into more errors. ⛔ Until leaf `M1.35`, a backslash before a character written in more than
+one byte (`"a\éb"`) crashed the reader, and `archogen check` exited 101 where the contract is a
+diagnostic and exit 10 (`crates/eadl-front/src/reader.rs`).
+
 ## Which language version a description is written in
 
 A description can say so:

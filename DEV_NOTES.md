@@ -1,5 +1,16 @@
 # DEV_NOTES.md
 
+## _(2026-09-29)_ — the reader crashed on `"a\éb"`: the second byte-for-character defect in one day
+
+- `M1.35`, found by reading the reader while choosing `PROGRAM.9.2`'s fuzz targets. An unknown escape was
+  read as one byte and the reader advanced one byte, leaving it inside `é`. The next slice panicked and
+  `archogen check` exited 101. Probed alongside with 13 other multi-byte placements; none crashed.
+- Fixed by reading the escaped character whole. Tests at the reader (`é` and `🙂`) and in-process through
+  the CLI. The byte-wise read restored as a mutation fails both, the CLI one through the real panic.
+  120 descriptions keep their verdicts.
+- The same class as `M1.31`'s `position(end - 1)`. Promoted as its own note:
+  `docs/knowledge/a-byte-offset-is-not-a-character.md`.
+
 ## _(2026-09-29)_ — a comparison that saturated, a comment that said why that was safe, and a test named for exactness
 
 - `M1.34`, found while designing `PROGRAM.9.2`'s fuzz properties. `Rational`'s `Ord` multiplied across with
