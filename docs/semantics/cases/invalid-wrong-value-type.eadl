@@ -2,4 +2,6 @@
 ; expect: invalid-description
 ; why: A task priority that is not an integer.
 ;
+(eadl-version eadl/1)
+
 (defsystem s (task t (deadline 10 ms) (priority high)))

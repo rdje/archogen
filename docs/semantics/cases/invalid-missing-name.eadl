@@ -2,4 +2,6 @@
 ; expect: invalid-description
 ; why: A declaration that carries no name, so nothing can refer to it.
 ;
+(eadl-version eadl/1)
+
 (defservice (requires (needs counter-width)))

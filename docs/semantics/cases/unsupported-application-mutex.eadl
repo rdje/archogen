@@ -3,4 +3,6 @@
 ; why: Application-level mutual exclusion, which needs a sharing protocol and a blocking term
 ;   the first profile has neither of.
 ;
+(eadl-version eadl/1)
+
 (defservice lock.mutex (requires (needs application-mutexes)))

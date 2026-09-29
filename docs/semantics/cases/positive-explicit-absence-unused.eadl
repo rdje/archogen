@@ -3,6 +3,8 @@
 ; why: A platform declares a capability absent and nothing requires it. An absence that
 ;   nothing relies on is simply a fact.
 ;
+(eadl-version eadl/1)
+
 (defblock timer.counter (offers counter-width) (absent low-power-timer))
 (defplatform soc.p (offers (core-count 1 tick)) (requires (uses timer.counter)))
 (defservice time.monotonic (requires (needs counter-width)))

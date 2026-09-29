@@ -10,6 +10,8 @@
 ; outside the description — they are evidence about a binary, a code association, and an
 ; engine-derived allocation respectively.
 
+(eadl-version eadl/1)
+
 (defblock timer.counter
   (offers
     (counter-width 32 bit)

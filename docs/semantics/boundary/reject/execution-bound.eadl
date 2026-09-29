@@ -15,6 +15,8 @@
 ; other-side: belongs in the engine build manifest: the bound, its units, origin, scope,
 ;   target and binary identity, and its evidence category
 ;
+(eadl-version eadl/1)
+
 (defsystem app.rt
   (task sensor
     (period 10 ms)

@@ -24,7 +24,7 @@ S-expressions, with spans on everything:
 
 ```console
 $ cargo run -q -p eadl-front --example diagnose -- docs/semantics/boundary/accept/counter-width-and-rate.eadl
-read cleanly: 1 top-level form(s)
+read cleanly: 2 top-level form(s)
 
 headers:
   case: counter-width-and-rate
@@ -35,8 +35,15 @@ headers:
   other-side: engine: whether to extend the epoch, how often to read, and the arithmet…
 
 canonical:
+  (eadl-version eadl/1)
   (defblock timer.counter (offers (counter-width 32 bit) (counter-modulus 4294967296) (tick-rate 10 MHz)))
 ```
+
+⭐ **Two forms, and only one of them is a declaration.** The first states the language version this
+description is written in — every description in this repository carries one, and §8 of
+`docs/semantics/reference.md` says why it is a form rather than a comment. Note what the two halves of
+this output do *not* share: the `headers:` above come from the comment block, and the `canonical:` text
+carries no comment at all, which is exactly why a version could not live in one.
 
 The reader is **purely syntactic**. `(tick-rate 10 MHz)` is a symbol, an integer and a symbol;
 that `MHz` is a unit is the model layer's business. That separation is what lets one reader
@@ -162,6 +169,15 @@ would strip the lock along with them.
 description rather than from whichever toolchain happens to be reading it. That rule carries a stated
 expiry: `eadl/1` is the last version for which absence is permitted, because a default that outlives
 the version it defaults to is how a description silently changes meaning.
+
+⭐ **And its population is a gate, not a sentence.** Every description this repository ships states its
+version — the whole conformance suite, enumerated by the tests that walk it — so the only descriptions
+relying on absence are the frozen LinkedSpec evidence files under `docs/feedback/`, whose bytes *are*
+the reproduction of another project's defect and which nothing here reads.
+`crates/eadl-front/tests/reference.rs` requires that, by
+asking the frontend rather than a text search: a nested, quoted or unread identifier does not satisfy
+it. A rule whose justifying population can grow silently is a rule that has already expired, and the
+sentence in §8 was written while 62 live descriptions contradicted it.
 
 **What is refused**, and why each is a different mistake rather than one:
 

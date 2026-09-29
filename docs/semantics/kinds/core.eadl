@@ -35,6 +35,8 @@
 ; forms at this layer and becomes a checked quantity through `quantity.rs`. Saying otherwise
 ; would be the more dangerous kind of green.
 
+(eadl-version eadl/1)
+
 (defkind defblock
   (doc "a hardware block and the functionality it offers")
   (name required)

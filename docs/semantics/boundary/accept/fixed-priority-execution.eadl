@@ -7,6 +7,8 @@
 ; other-side: engine: ready-queue structure, dispatch algorithm, save/restore code, cost
 ;   charging
 ;
+(eadl-version eadl/1)
+
 (defpolicy scheduling.fixed-priority
   (requires
     (priorities static unique)

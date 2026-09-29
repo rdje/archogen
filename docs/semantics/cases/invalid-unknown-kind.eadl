@@ -2,4 +2,6 @@
 ; expect: invalid-description
 ; why: A declaration whose head is not a registered kind.
 ;
+(eadl-version eadl/1)
+
 (deftimer x (offers counter-width))

@@ -3,4 +3,6 @@
 ; why: A refinement claim whose target is not present, so the obligation cannot be checked at
 ;   all.
 ;
+(eadl-version eadl/1)
+
 (defplatform soc.concrete (refines soc.absent-elsewhere) (offers counter-width))

@@ -3,6 +3,8 @@
 ; why: A sporadic task with a declared minimum separation and bounded jitter, which §3.1
 ;   admits.
 ;
+(eadl-version eadl/1)
+
 (defblock event.line (offers interrupt-source min-arrival-separation))
 (defplatform soc.p (offers (core-count 1 tick)) (requires (uses event.line)))
 (defservice event.release (requires (bounded-arrival true) (needs interrupt-source min-arrival-separation)))

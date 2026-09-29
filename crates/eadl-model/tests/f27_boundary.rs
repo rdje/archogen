@@ -85,7 +85,18 @@ fn corpus() -> Vec<Case> {
                 verdict: header("verdict").unwrap_or_else(|| panic!("{name}: no verdict")),
                 failing_test: header("failing-test"),
                 ambiguous: header("ambiguous").as_deref() == Some("yes"),
-                form: document.forms.into_iter().next().expect("one declaration"),
+                // ⭐ The first **declaration**, not the first form. §8 of
+                // `docs/semantics/reference.md` makes `(eadl-version eadl/1)` a top-level form that is
+                // not a declaration, and every case in this corpus states its version — so `forms`
+                // `.next()` here handed all five legs below the identifier instead of the case, and
+                // each of them failed in its own way: the classifier "accepted" every rejected case,
+                // every registered construct looked unexercised, and the seeding control spliced
+                // `(implementation …)` into the version form. One accessor, one place.
+                form: document
+                    .declarations()
+                    .next()
+                    .unwrap_or_else(|| panic!("{name}: no declaration"))
+                    .clone(),
                 name,
             });
         }

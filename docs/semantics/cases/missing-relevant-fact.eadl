@@ -2,6 +2,8 @@
 ; expect: missing-fact
 ; why: A required fact nothing describes, inside the dependency closure.
 ;
+(eadl-version eadl/1)
+
 (defblock timer.counter (offers counter-width))
 (defplatform soc.p (offers (core-count 1 tick)) (requires (uses timer.counter)))
 (defservice time.monotonic (requires (needs counter-width wrap-behavior)))

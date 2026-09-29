@@ -544,8 +544,14 @@ fn every_corpus_case_reads_without_a_single_diagnostic() {
     for (name, text) in corpus() {
         let document = parse(&name, &text);
         assert!(!document.forms.is_empty(), "{name} parsed to no forms");
+        // ⭐ **Declarations, not forms.** §8 of `docs/semantics/reference.md` makes the language-version
+        // identifier a top-level form that is *not* a declaration, and every case in this corpus states
+        // its version — `reference.rs` has a leg requiring it, because §8 rule 2's justifying sentence
+        // names the population that relies on absence and it must stay the frozen evidence only. So a
+        // count over `forms` is two for every file here, and the assertion would be about the identifier
+        // rather than about the case.
         assert_eq!(
-            document.forms.len(),
+            document.declarations().count(),
             1,
             "{name} should hold exactly one declaration"
         );

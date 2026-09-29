@@ -584,6 +584,16 @@ reading it.
    retired with a migration note. What makes the rule acceptable now is that the descriptions relying
    on it are known rather than assumed: the frozen LinkedSpec evidence under `docs/feedback/`, whose
    bytes *are* the reproduction of another project's defect and which nothing in `crates/` reads.
+   ⭐ **That population is measured, and it is a gate rather than a sentence.**
+   `crates/eadl-front/tests/reference.rs` requires every description the repository ships outside
+   `docs/feedback/` to state its version, asked of the frontend through `Document::stated_version`
+   rather than of a text search — so a nested, quoted or unread identifier does not satisfy it. The
+   rule was written while **62** live descriptions relied on absence and this sentence named only the
+   frozen evidence; `M1.13.4.2` wrote the identifier into all 62, and the leg is what stops the next
+   case added to a corpus from silently widening a population a normative rule names. Retiring the rule
+   therefore costs one migration and not two: the frozen evidence keeps reading, because nothing here
+   reads it, and what starts being refused is a *new* description that omits its version — which is the
+   entire point of the expiry.
 3. **This is not a grammar change, and that is measured rather than convenient.**
    `docs/semantics/grammar.md` fixes *shape* and names no construct vocabulary — its own table says "the
    language is extended by `defkind`, not by editing this file", and `document` already admits any
@@ -612,8 +622,9 @@ reading it.
    `module-multiple-forms`. Without that, the one file kind that most needs a locked version would be
    the one unable to carry it.
 8. ⛔ **The identifier is not a declaration, and three layers had to be told.** §7's schema layer
-   validates every top-level form against the kind registry, and `eadl-version` is not a kind — so
-   without an exemption a description that states its version reads cleanly and is then refused as
+   validates every top-level form it is given against the kind registry, and `eadl-version` is not a
+   kind — so without an exemption a description that states its version reads cleanly and is then
+   refused as
    `schema-unknown-kind`, contradicting this section from the layer furthest from it, where no frontend
    test can see it happen. Rule 7 is the same problem in miniature. The **third** is the kind registry
    itself: `crates/eadl-model/src/check.rs` reads the kind modules under `docs/semantics/kinds/` and

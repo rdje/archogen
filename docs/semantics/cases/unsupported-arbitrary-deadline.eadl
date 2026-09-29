@@ -4,6 +4,8 @@
 ;   (D ≤ T) only; with D > T more than one job of a task can be alive at once, so the
 ;   response-time recurrence no longer applies and a busy-period analysis is required instead.
 ;
+(eadl-version eadl/1)
+
 (defblock console.uart (offers (observable-output true)))
 (defplatform soc.p (offers (core-count 1 tick)) (requires (uses console.uart)))
 (defservice console.write (requires (needs observable-output)))

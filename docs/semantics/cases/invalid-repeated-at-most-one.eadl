@@ -3,4 +3,6 @@
 ; why: Two platform bindings in one system. Which one binds is not a question the toolchain
 ;   may answer by preference.
 ;
+(eadl-version eadl/1)
+
 (defsystem s (platform (uses a)) (platform (uses b)))

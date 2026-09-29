@@ -11,6 +11,8 @@
 ; other-side: engine: the register map within the region, access widths, the driver, and the
 ;   safe API over it
 ;
+(eadl-version eadl/1)
+
 (defplatform soc.memory
   (offers
     (region device.timer

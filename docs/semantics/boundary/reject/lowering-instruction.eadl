@@ -8,6 +8,8 @@
 ;   instructions".
 ; other-side: belongs in the engine: the lowering rules and the emitter's output layout
 ;
+(eadl-version eadl/1)
+
 (defsystem app.rt
   (emit
     (into "src/generated/tasks.rs")

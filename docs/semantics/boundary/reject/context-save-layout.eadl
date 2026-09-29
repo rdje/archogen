@@ -11,6 +11,8 @@
 ; other-side: belongs in engine knowledge: the architecture substrate's context layout,
 ;   derived from the selected ABI and privilege rules
 ;
+(eadl-version eadl/1)
+
 (defpolicy task.context
   (save-order (ra sp gp tp t0 t1 t2 s0 s1))
   (frame-align 16 byte))

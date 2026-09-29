@@ -12,6 +12,8 @@
 ; other-side: engine: whether to extend the epoch, how often to read, and the arithmetic that
 ;   follows from these facts
 ;
+(eadl-version eadl/1)
+
 (defblock timer.counter
   (offers
     (counter-width 32 bit)

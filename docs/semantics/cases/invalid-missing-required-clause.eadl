@@ -3,4 +3,6 @@
 ; why: `defservice` requires at least one `requires` clause: a service that requires nothing
 ;   is not a requirement.
 ;
+(eadl-version eadl/1)
+
 (defservice time.monotonic (offers something))

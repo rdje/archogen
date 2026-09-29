@@ -3,4 +3,6 @@
 ; why: A second core. The profile admits one, and no earlier timing result transfers to a
 ;   multicore profile.
 ;
+(eadl-version eadl/1)
+
 (defplatform soc.dual (offers (core-count 2 tick) multicore))

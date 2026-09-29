@@ -5,6 +5,8 @@
 ;   analysis should use — and §5.3 requires contradictory declarations to be rejected rather
 ;   than one of them silently chosen.
 ;
+(eadl-version eadl/1)
+
 (defblock console.uart (offers (observable-output true)))
 (defplatform soc.p (offers (core-count 1 tick)) (requires (uses console.uart)))
 (defservice console.write (requires (needs observable-output)))

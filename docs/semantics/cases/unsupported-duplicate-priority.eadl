@@ -4,6 +4,8 @@
 ;   set is outside the profile — equal priorities need a documented tie-break, which is a
 ;   different scheduling policy with its own analysis rather than a looser reading of this one.
 ;
+(eadl-version eadl/1)
+
 (defblock console.uart (offers (observable-output true)))
 (defplatform soc.p (offers (core-count 1 tick)) (requires (uses console.uart)))
 (defservice console.write (requires (needs observable-output)))

@@ -12,6 +12,8 @@
 ; other-side: belongs nowhere: the `atomic-observation` contract already admits every strategy
 ;   that satisfies it
 ;
+(eadl-version eadl/1)
+
 (defservice time.monotonic
   (requires (observation-coherent true))
   (permits (implementation-strategy retry-loop)))

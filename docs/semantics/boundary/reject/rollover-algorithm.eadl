@@ -10,6 +10,8 @@
 ; other-side: belongs in engine knowledge: the timer provider's epoch-extension
 ;   implementation, selected against the `time-horizon` contract
 ;
+(eadl-version eadl/1)
+
 (defservice time.monotonic
   (requires (unambiguous-horizon (at-least 60 s)))
   (implementation

@@ -8,6 +8,8 @@
 ; other-side: belongs in engine knowledge: the versioned behavioral model, selected by the
 ;   engine and checked against the feature's external contract
 ;
+(eadl-version eadl/1)
+
 (defblock timer.compare
   (model
     (state pending false)

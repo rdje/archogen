@@ -22,6 +22,8 @@
 ; sporadic releases with declared minimum separation; constrained deadlines; bounded release
 ; jitter" and excludes `dynamic-task-creation`, so there is no clause for creating one.
 
+(eadl-version eadl/1)
+
 (defkind task
   (doc "a logical task: its release behavior, priority, deadline and functional needs")
   (name required)

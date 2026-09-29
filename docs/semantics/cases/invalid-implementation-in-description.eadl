@@ -3,6 +3,8 @@
 ; why: An implementation body inside a service. The controlling boundary, refused by F27's
 ;   classifier.
 ;
+(eadl-version eadl/1)
+
 (defservice time.monotonic
   (requires (needs counter-width))
   (implementation (on-wrap (increment epoch))))

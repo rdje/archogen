@@ -2,6 +2,8 @@
 ; expect: unsupported-profile
 ; why: Inter-task queues, which `rt-static-up-v1` excludes. This is use case uc4.
 ;
+(eadl-version eadl/1)
+
 (defblock timer.counter (offers counter-width))
 (defplatform soc.p (offers (core-count 1 tick)) (requires (uses timer.counter)))
 (defservice queue.bounded (requires (queue-capacity 8 tick) (needs general-ipc)))

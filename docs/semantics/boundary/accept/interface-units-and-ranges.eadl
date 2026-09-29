@@ -6,6 +6,8 @@
 ;   numbers mean and which values are admissible.
 ; other-side: engine: scaling, rounding implementation, conversion helpers, overflow checks
 ;
+(eadl-version eadl/1)
+
 (defblock timer.counter
   (offers
     (tick-unit ns)

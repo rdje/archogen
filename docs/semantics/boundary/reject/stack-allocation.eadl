@@ -14,6 +14,8 @@
 ; other-side: belongs in the engine: the derived allocation, checked against the linked image,
 ;   with the stack bound's evidence category recorded separately
 ;
+(eadl-version eadl/1)
+
 (defsystem app.rt
   (task sensor
     (period 10 ms)

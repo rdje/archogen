@@ -2,4 +2,6 @@
 ; expect: unsupported-profile
 ; why: Creating tasks after boot. The task set is an input to the schedulability argument.
 ;
+(eadl-version eadl/1)
+
 (defsystem s (requires (uses dynamic-task-creation)))

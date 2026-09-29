@@ -9,6 +9,8 @@
 ; other-side: belongs in engine knowledge: the device access description, behavioral model and
 ;   driver
 ;
+(eadl-version eadl/1)
+
 (defblock timer.compare
   (implementation
     (program-deadline

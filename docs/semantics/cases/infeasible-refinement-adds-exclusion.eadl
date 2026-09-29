@@ -3,5 +3,7 @@
 ; why: A refinement that offers what the abstract description declares absent — the obligation
 ;   a naive "may say more" rule drops.
 ;
+(eadl-version eadl/1)
+
 (defplatform soc.abstract (offers counter-width) (absent debug-port))
 (defplatform soc.concrete (refines soc.abstract) (offers counter-width debug-port))

@@ -15,6 +15,8 @@
 ; were to weaken `absolute-deadline` into `relative-delay` here, the engine would have failed and
 ; §17's first stop/rework trigger would apply.
 
+(eadl-version eadl/1)
+
 (defblock timer.delay
   (offers
     (relative-delay true)

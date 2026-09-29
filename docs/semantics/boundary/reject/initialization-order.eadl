@@ -13,6 +13,8 @@
 ; other-side: belongs in the engine: the initialization dependency graph derived during joint
 ;   resolution
 ;
+(eadl-version eadl/1)
+
 (defsystem app.rt
   (init-order
     (first  clock.pll)

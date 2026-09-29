@@ -3,6 +3,8 @@
 ; why: An undescribed fact sits outside the dependency closure. §5.3: irrelevant unknowns do
 ;   not invalidate unrelated systems.
 ;
+(eadl-version eadl/1)
+
 (defblock timer.counter (offers counter-width))
 (defblock other.engine (offers transfer-engine) (needs descriptor-format))
 (defplatform soc.p (offers (core-count 1 tick)) (requires (uses timer.counter)))

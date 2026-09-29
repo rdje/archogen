@@ -9,6 +9,8 @@
 ; other-side: belongs in engine knowledge: the scheduler implementation record and its cost
 ;   evidence
 ;
+(eadl-version eadl/1)
+
 (defpolicy scheduling.fixed-priority
   (requires (priorities static unique))
   (implementation

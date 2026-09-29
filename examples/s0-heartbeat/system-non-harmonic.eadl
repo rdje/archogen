@@ -22,6 +22,8 @@
 ;
 ; See examples/s0-heartbeat/README.md, "What the corpus cannot see".
 
+(eadl-version eadl/1)
+
 (defblock console.uart
   (offers (observable-output true)))
 

@@ -6,6 +6,8 @@
 ;   direct privileged instruction, a trap, or a firmware ABI equally.
 ; other-side: engine: trap path, firmware ABI, privileged instructions, capability-check code
 ;
+(eadl-version eadl/1)
+
 (defservice time.deadline
   (requires
     (reachable-at-privilege supervisor)

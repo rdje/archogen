@@ -1491,6 +1491,54 @@ fn all_violations(document: &str) -> Vec<String> {
     out
 }
 
+// ── leg 10: §8 rule 2's justifying population, measured rather than asserted ─────────────────────
+
+/// Which descriptions in `population` rely on §8 rule 2's absence-denotes rule instead of stating
+/// their version.
+///
+/// ⭐ The absence rule is acceptable **only while the population relying on it is the frozen LinkedSpec
+/// evidence and nothing else**: those bytes *are* the reproduction of another project's defect, so they
+/// cannot be edited, and nothing in `crates/` reads them. `M1.13.4` measured that the reference's
+/// sentence had come loose from the tree — **62** live descriptions relied on absence while §8 named
+/// only the frozen evidence — and `M1.13.4.2` wrote the identifier into all of them, which is what made
+/// the sentence true. This leg is what keeps it true: a case added tomorrow without an identifier widens
+/// the population a normative rule names, from a file nobody reads.
+///
+/// ⛔ **Asked of the frontend, not of a regular expression**, through the same accessor §8's own rows
+/// are executed with. A nested `(eadl-version eadl/1)`, a quoted `"eadl/1"` and an unread `eadl/2` all
+/// satisfy `grep -l eadl-version` and none of them states a version (§8 rules 5 and 6), so a text search
+/// would report this leg green on a file that does not conform — the same mistake `M1.13.2`'s literal
+/// census made, and the reason that census became an instrument.
+fn absence_violations(population: &[(String, String)]) -> Vec<String> {
+    // An empty population is a breach and not a pass: "every description states its version" is true of
+    // nothing when there are no descriptions, and a walk that silently reached no files would look
+    // exactly like a suite that conforms.
+    if population.is_empty() {
+        return vec![
+            "the suite walk reached no descriptions at all, so this leg is green on an empty population \
+             and proves nothing"
+                .to_string(),
+        ];
+    }
+    let mut out = Vec::new();
+    for (name, text) in population {
+        let mut sources = SourceMap::new();
+        let Ok(id) = sources.add(name.clone(), text.clone()) else {
+            continue;
+        };
+        let (document, _) = read(&sources, id);
+        if document.stated_version() != Some(EADL_1) {
+            out.push(format!(
+                "{name} states no language version, so it relies on §8 rule 2's absence-denotes rule — \
+                 and that rule's justifying population is the frozen LinkedSpec evidence under \
+                 `docs/feedback/`, which this file is not. Write `(eadl-version {EADL_1})` as its first \
+                 top-level form, or widen §8 rule 2 and say why the population grew"
+            ));
+        }
+    }
+    out
+}
+
 // ── the green legs ─────────────────────────────────────────────────────────────────────────────
 
 #[test]
@@ -1578,6 +1626,20 @@ fn every_chapter_that_publishes_the_surface_points_at_the_reference() {
     assert!(
         wrong.is_empty(),
         "a chapter publishes the language surface and cites only half of its definition:\n\n{}",
+        wrong.join("\n\n")
+    );
+}
+
+#[test]
+fn every_description_in_the_suite_states_its_language_version() {
+    // §8 rule 2 names the population that relies on absence, and this is the leg that keeps the name
+    // accurate. The population is `corpus()` — the same walk leg 2 takes over the descriptions the
+    // repository ships — so the two legs cannot disagree about what the suite contains.
+    let wrong = absence_violations(&corpus());
+    assert!(
+        wrong.is_empty(),
+        "§8 rule 2 says the descriptions relying on absence are the frozen LinkedSpec evidence, and \
+         these are not:\n\n{}",
         wrong.join("\n\n")
     );
 }
@@ -2292,4 +2354,54 @@ fn arm_30_an_unstated_language_version_code_is_reported_by_the_census() {
          does not cover that source:\n{}",
         wrong.join("\n\n")
     );
+}
+
+#[test]
+fn arm_31_a_description_that_relies_on_absence_is_reported_by_name() {
+    // The suite itself is green — that is the point of the retrofit — so the only way to see this leg
+    // fire is to feed it a population that does not conform. One file states its version and one does
+    // not, and the complaint must name the second and only the second: an arm that asserted "some
+    // complaint mentions absence" would also pass on a leg that reported every file.
+    let population = vec![
+        (
+            "stated.eadl".to_string(),
+            "(eadl-version eadl/1)\n(defsystem s)".to_string(),
+        ),
+        ("absent.eadl".to_string(), "(defsystem s)".to_string()),
+    ];
+    let wrong = absence_violations(&population);
+    assert_reported(&wrong, 1, &["absent.eadl", "absence-denotes"]);
+    assert!(
+        !wrong[0].contains("stated.eadl"),
+        "a description that states its version was reported as relying on absence: {}",
+        wrong[0]
+    );
+}
+
+#[test]
+fn arm_32_a_spelling_grep_would_accept_does_not_satisfy_the_leg() {
+    // ⛔ The arm behind "asked of the frontend, not of a regular expression". Each of these three
+    // contains the text `eadl-version`, so `grep -l eadl-version` reports all three as stating a
+    // version, and none of them does: a nested form (§8 rule 5 — only a top-level form states one), a
+    // quoted identifier (§8 rule 6 — a string is a different atom, not a spelling of the same one),
+    // and a version this toolchain does not read (§8 rule 6 — refused, never re-interpreted).
+    let population: Vec<(String, String)> = [
+        ("nested.eadl", "(defsystem s (eadl-version eadl/1))"),
+        ("quoted.eadl", "(eadl-version \"eadl/1\")"),
+        ("unread.eadl", "(eadl-version eadl/2)"),
+    ]
+    .iter()
+    .map(|(name, text)| ((*name).to_string(), (*text).to_string()))
+    .collect();
+    let wrong = absence_violations(&population);
+    assert_reported(&wrong, 3, &["nested.eadl", "quoted.eadl", "unread.eadl"]);
+}
+
+#[test]
+fn arm_33_an_empty_population_is_reported_rather_than_passed() {
+    // A walk that reached no files is the failure this leg must not mistake for conformance: the
+    // assertion would be true of nothing, and nothing is exactly what a renamed or moved corpus root
+    // produces.
+    let wrong = absence_violations(&[]);
+    assert_reported(&wrong, 1, &["empty population"]);
 }

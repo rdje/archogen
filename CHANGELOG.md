@@ -4,6 +4,54 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — every description the repository ships now states its language version, and §8 rule 2's sentence became a measurement
+
+`ARCHOGEN-M1-0092` (leaf `M1.13.4.2`). `500 passed / 0 failed` over 37 suites (baseline 496, delta =
+four new legs and arms). 62 descriptions, 9 test legs, 4 book chapters.
+
+- ⛔ **The normative sentence this leaf exists to make true was measured false.** §8 rule 2 permits
+  absence to denote `eadl/1` and justifies that by naming the population relying on it: "the frozen
+  LinkedSpec evidence under `docs/feedback/`, whose bytes *are* the reproduction of another project's
+  defect and which nothing in `crates/` reads". At the parent commit the census said **75 of 75**
+  tracked descriptions relied on the rule. After the retrofit it says **13 of 75**, and all 13 are under
+  `docs/feedback/linkedspec/issues/*/evidence/` — exactly the population the rule names.
+- **What keeps it true is a leg, not a sentence.**
+  `every_description_in_the_suite_states_its_language_version` asks `Document::stated_version` rather
+  than a text search, with three arms: a synthetic population where one file of two relies on absence
+  (named, and the conforming one *not* named); the three spellings `grep -l eadl-version` accepts and
+  the frontend does not — nested (§8 rule 5), quoted (§8 rule 6, a string is a different atom), unread
+  (`eadl/2`); and an empty population, reported rather than passed. Mutation D — the identifier deleted
+  from one real suite file — fires it by name, restoration byte-identical.
+- **The 13 frozen evidence files are untouched**: `git status --porcelain docs/feedback` → 0 entries,
+  `FEEDBACK-SELF-CONTAINED` green. The byte-identical pair `M1.13.4` measured therefore diverges, which
+  is the point — the evidence copy reproduces a four-form description and stays one.
+- **Nine legs that read a top-level form as a declaration were adapted through the accessor**, not
+  through re-typed expectations: `corpus.rs`'s "exactly one declaration", `examples.rs`' three loops,
+  `kinds.rs`' five sites (including `forms[0]` on `core.eadl`, which was no longer the first kind), and
+  `f27_boundary.rs`'s `corpus()` — which had been handing all five of its legs the identifier instead of
+  the case, so the classifier "accepted" every rejected case and every registered construct looked
+  unexercised.
+- **Every book transcript the insertion moved was re-rendered from a real run**, never incremented by
+  hand: two `archogen check` invocations, an `archogen build` plus a run of the produced crate, the
+  malformed fixture written exactly as `s0_reader.rs` writes it, a mutated-priority copy for the
+  duplicate-priority block, `diagnose` over a boundary case, and the provenance excerpt read back out of
+  the artifact the build wrote.
+- ⛔ **Re-rendering found a block that was already false.** `s0.md`'s malformed-description transcript
+  showed `41:1` with an empty source line. Measured both ways: a fixture written with `trim_end()` —
+  what the test writes — gives `40:36` with the last line rendered, and one *keeping its trailing
+  newline* gives `41:1`, byte-for-byte what the book showed. So the block was rendered from a fixture
+  shape the test does not produce, and nothing in the repository could see it. The `--locked` block in
+  the same chapter was also abridging its hint's last sentence. Both re-rendered; the class is recorded
+  in `PROGRAM.20` as its seventh shape's first **measured false** instance.
+- **Figures that moved and figures that did not.** Symbols `1865` → `1989` (+124 = 62 files × 2 atoms);
+  integers unchanged at 194 occurrences over 24 distinct values; `decimal literals` still **0**, which
+  is `M1.13.4.3`'s subject. `(8 declaration(s))` in `checking.md` did **not** move, because
+  `M1.13.4.1`'s filter keeps that count a count of declarations — a figure the retrofit had no business
+  moving, and did not.
+- **Lockstep:** §8 rule 2 now names the gate that holds its population; rule 8's first sentence says
+  "every top-level form **it is given**", which is what the filter made true; `reading.md` carries the
+  fact for the reader with no count in it, deliberately, because `M1.13.4.3` is about to move one.
+
 ## archogen — §8's rule had a third consumer, and it was the one no description-level test could reach
 
 `ARCHOGEN-M1-0091` (leaf `M1.13.4.1`). A production defect, found by measurement and fixed with one

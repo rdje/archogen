@@ -8,6 +8,8 @@
 ; other-side: engine: barriers, cache maintenance, buffer synchronization, executable memory
 ;   and device models
 ;
+(eadl-version eadl/1)
+
 (defplatform soc.bus
   (requires
     (ordering

@@ -9,6 +9,8 @@
 ; other-side: belongs in engine configuration: the preferred-provider order and its stable
 ;   tie-breaking
 ;
+(eadl-version eadl/1)
+
 (defservice time.deadline
   (requires (absolute-deadline (supported-horizon (at-least 10 s))))
   (provider

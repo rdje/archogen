@@ -2,4 +2,6 @@
 ; expect: invalid-description
 ; why: A typo in a clause name. The suggestion is part of the contract, not decoration.
 ;
+(eadl-version eadl/1)
+
 (defservice time.monotonic (requries (needs counter-width)))

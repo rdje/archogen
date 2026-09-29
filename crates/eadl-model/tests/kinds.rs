@@ -21,6 +21,19 @@ const KIND_MODULES: &[&str] = &[
     "docs/semantics/kinds/os-rt.eadl",
 ];
 
+/// The declarations of a parsed file: every top-level form except the language-version identifier.
+///
+/// §8 of `docs/semantics/reference.md` — the identifier is a statement about the document, not a
+/// declaration. ⛔ A call through to the frontend's accessor, not a second filter here: every
+/// description in the corpus states its version, so a leg that indexed `forms[0]` was reading the
+/// *identifier* as the file's first declaration, and a leg that iterated `forms` was asking the schema
+/// to validate it. `M1.13.4.2` measured both shapes: `error[schema-unknown-kind]` on every accepted
+/// case, `schema-not-a-kind` on the first kind of `core.eadl`, and a reach census that counted the
+/// identifier as a declaration the schema could not reach.
+fn declarations(forms: &[Form]) -> Vec<&Form> {
+    eadl_front::language_version::declarations(forms).collect()
+}
+
 fn repo_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
@@ -152,7 +165,7 @@ fn every_accepted_boundary_case_validates_against_the_core_kinds() {
             path.file_name().expect("name").to_string_lossy()
         );
         let (forms, sources) = parse_file(&relative);
-        for form in &forms {
+        for form in declarations(&forms) {
             let errors = validate(&registry, form);
             assert!(
                 errors.is_empty(),
@@ -200,7 +213,7 @@ fn measure_reach() -> (Vec<String>, Vec<String>) {
             .to_string();
         let relative = format!("docs/semantics/boundary/reject/{file}");
         let (forms, _) = parse_file(&relative);
-        for form in &forms {
+        for form in declarations(&forms) {
             if validate(&registry, form).is_empty() {
                 out_of_reach.push(file.clone());
             } else {
@@ -373,7 +386,7 @@ fn an_execution_bound_inside_a_task_is_now_caught_by_the_schema_too() {
     let registry = core_registry();
     let relative = "docs/semantics/boundary/reject/execution-bound.eadl";
     let (forms, sources) = parse_file(relative);
-    let errors = validate(&registry, &forms[0]);
+    let errors = validate(&registry, declarations(&forms)[0]);
     let rendered = errors
         .iter()
         .map(|d| d.render(&sources))
@@ -393,7 +406,7 @@ fn a_missing_kind_module_is_reported_not_ignored() {
     // gap exist in the first place.
     let registry = registry_from(&["docs/semantics/kinds/core.eadl"]);
     let (system, sources) = parse_file("docs/semantics/boundary/reject/execution-bound.eadl");
-    let errors = validate(&registry, &system[0]);
+    let errors = validate(&registry, declarations(&system)[0]);
     let rendered = errors
         .iter()
         .map(|d| d.render(&sources))
@@ -413,7 +426,7 @@ fn a_forbidden_construct_gets_the_boundary_wording_not_unknown_clause() {
     let registry = core_registry();
     let relative = "docs/semantics/boundary/reject/rollover-algorithm.eadl";
     let (forms, sources) = parse_file(relative);
-    let errors = validate(&registry, &forms[0]);
+    let errors = validate(&registry, declarations(&forms)[0]);
     let rendered = errors
         .iter()
         .map(|d| d.render(&sources))
@@ -577,7 +590,9 @@ fn registering_a_kind_twice_is_refused() {
     // Silently redefining a kind is how that stops being true.
     let mut registry = core_registry();
     let (forms, _) = parse_file("docs/semantics/kinds/core.eadl");
-    let kind = read_kind(&forms[0]).expect("well-formed");
+    // The first **kind**, which is not the first form any more: `core.eadl` states its language
+    // version, and §8 says that form is not a declaration.
+    let kind = read_kind(declarations(&forms)[0]).expect("well-formed");
     let error = registry
         .register(kind)
         .expect_err("a duplicate must be refused");

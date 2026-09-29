@@ -12,6 +12,8 @@
 ; other-side: belongs in engine knowledge: the access strategy chosen per platform against the
 ;   `atomic-observation` contract
 ;
+(eadl-version eadl/1)
+
 (defservice time.monotonic
   (requires (observation-coherent true))
   (read-sequence

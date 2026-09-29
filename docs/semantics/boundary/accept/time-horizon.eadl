@@ -7,6 +7,8 @@
 ; other-side: engine: wrap handling, epoch extension, read frequency, the arithmetic, and the
 ;   proof that the requirement is met
 ;
+(eadl-version eadl/1)
+
 (defservice time.monotonic
   (requires
     (unambiguous-horizon (at-least 60 s))))

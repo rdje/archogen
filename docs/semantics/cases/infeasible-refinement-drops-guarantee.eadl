@@ -2,5 +2,7 @@
 ; expect: infeasible-configuration
 ; why: A refinement that drops a guarantee the abstract description offers.
 ;
+(eadl-version eadl/1)
+
 (defplatform soc.abstract (offers counter-width wrap-behavior))
 (defplatform soc.concrete (refines soc.abstract) (offers counter-width))

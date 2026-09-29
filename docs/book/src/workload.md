@@ -89,13 +89,13 @@ set, and that shape is checked:
 ```console
 $ archogen check system.eadl
 error[unsupported-profile]: tasks `beat` and `chime` share priority 1
-  --> system.eadl:38:15
+  --> system.eadl:40:15
    |
-38 |     (priority 1) (uses console.write) (on-overrun fault))
+40 |     (priority 1) (uses console.write) (on-overrun fault))
    |               ^ this priority is already taken
-  --> system.eadl:35:15
+  --> system.eadl:37:15
    |
-35 |     (priority 1) (uses console.write) (on-overrun fault))
+37 |     (priority 1) (uses console.write) (on-overrun fault))
    |               - first declared here
   = hint: `rt-static-up-v1` admits **static unique** task priorities. Give one of them a
           different number. Equal priorities need a documented tie-break — FIFO, round-robin —

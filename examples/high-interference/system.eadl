@@ -13,6 +13,8 @@
 ; is omitted just because it belongs to the kernel or instrumentation." The profile excludes
 ; `unmodeled-interrupt-load` for exactly this reason.
 
+(eadl-version eadl/1)
+
 (defblock timer.counter
   (offers
     (counter-width 32 bit)

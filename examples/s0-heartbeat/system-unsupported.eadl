@@ -22,6 +22,8 @@
 ;
 ; Expected refusal: expected/system-unsupported.txt, frozen before any emitter existed.
 
+(eadl-version eadl/1)
+
 (defblock console.uart
   (offers (observable-output true)))
 

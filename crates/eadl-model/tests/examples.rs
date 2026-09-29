@@ -46,6 +46,17 @@ fn parse_file(relative: &str) -> (Vec<Form>, SourceMap) {
 /// be missing. `M1.13.4.1` measured the cost of exactly that: the production loader refused a kind
 /// module stating its language version as `schema-not-a-kind`, and this helper would have refused it
 /// too, so a test suite could have stayed green on a loader that could not read the shipped files.
+/// The declarations of a parsed file: every top-level form except the language-version identifier.
+///
+/// §8 of `docs/semantics/reference.md` — the identifier is a statement about the document, not a
+/// declaration. ⛔ A call through to the frontend's own accessor and not a second filter here: a rule
+/// each consumer re-implements is a rule the next consumer lacks, and `M1.13.4.2` measured what that
+/// costs, because every example states its version and a leg that validated *forms* was handed the
+/// identifier as though it were a declaration (`error[schema-unknown-kind]`).
+fn declarations(forms: &[Form]) -> Vec<&Form> {
+    eadl_front::language_version::declarations(forms).collect()
+}
+
 fn registry() -> Registry {
     let mut sources = SourceMap::new();
     let kind_files: Vec<(String, String)> = [
@@ -85,7 +96,7 @@ fn every_use_case_example_validates_against_the_shipped_kinds() {
     for (relative, case) in EXAMPLES {
         let (forms, sources) = parse_file(relative);
         assert!(!forms.is_empty(), "{case}: {relative} has no declarations");
-        for form in &forms {
+        for form in declarations(&forms) {
             let errors = validate(&registry, form);
             assert!(
                 errors.is_empty(),
@@ -108,7 +119,7 @@ fn no_example_carries_an_execution_bound_a_code_reference_or_an_allocation() {
     // adds a WCET to an example to make an analysis pass, this is what stops them.
     for (relative, case) in EXAMPLES {
         let (forms, _) = parse_file(relative);
-        for form in &forms {
+        for form in declarations(&forms) {
             match classify(form) {
                 Classification::Accepted => {}
                 Classification::Rejected { head, .. } => panic!(
@@ -214,7 +225,7 @@ fn uc1_and_uc2_have_no_missing_facts() {
     ] {
         let (forms, sources) = parse_file(relative);
         let mut facts = FactMap::new();
-        for form in &forms {
+        for form in declarations(&forms) {
             facts.collect(form);
         }
         let report = facts.check();

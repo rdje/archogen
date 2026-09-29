@@ -7,6 +7,8 @@
 ; other-side: engine: comparator programming, delay-to-deadline adaptation, acknowledgment and
 ;   race handling
 ;
+(eadl-version eadl/1)
+
 (defservice time.deadline
   (requires
     (absolute-deadline

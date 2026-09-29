@@ -19,6 +19,8 @@
 ; The expected observation is frozen in expected/system.txt and was written before any emitter
 ; existed. The observation contract it rests on is in README.md.
 
+(eadl-version eadl/1)
+
 (defblock console.uart
   (offers (observable-output true)))
 
