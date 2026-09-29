@@ -1774,7 +1774,7 @@ mdBook that is the director's window into the project.
   Commit: `pending`
 
 - ID: `PROGRAM.24`
-  Status: `pending`
+  Status: `done`
   Goal: the **mirror direction** of `BOOK-ANCHORS`. That doctrine walks the book and asks whether what
   it cites exists; nothing walks the codebase and asks whether the book describes it. The standing
   instruction is that the roadmap, the codebase and the mdBook stay in lockstep, and the book is the
@@ -1832,8 +1832,62 @@ mdBook that is the director's window into the project.
   the tree that could have found it. Sequenced behind `PROGRAM.21` and `PROGRAM.18` only because those
   are about gates reporting that they checked something they did not, which corrupts every other
   gate's evidence including this one's.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the checklist — the strong shape built, measured on the real book (2 of 9 members
+  failing, both fixed), eight arms, four mutations.
+  Commit: `ARCHOGEN-PROGRAM-0122 (leaf PROGRAM.24)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — the leaf's own census, re-run at `4c6a715`:
+    ```text
+    $ git grep -c "rt-analysis" b9f6e22 -- docs/book/src/        -> no match, rc=1
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — every book gate starts from the book; none starts from the code:
+    ```text
+    $ git grep -l "docs/book" 4c6a715 -- scripts/ xtask/src/ 'crates/*/tests/*.rs'
+      crates/archogen-cli/tests/module_cases.rs   crates/archogen-cli/tests/module_files.rs
+      crates/eadl-front/tests/corpus.rs           crates/eadl-front/tests/reference.rs
+      crates/eadl-model/tests/kinds.rs            crates/eadl-model/tests/semantic_corpus.rs
+      crates/rt-core/tests/differential.rs        scripts/check_book_anchors.sh
+      scripts/check_readme_stability.sh           scripts/selftest_spine.sh      xtask/src/main.rs
+    ```
+    Each reads a chapter and asks about the code; none walks the workspace and asks about the book. And
+    the leaf's census **under-counted**: measured with the strong shape (a chapter naming the member beside a
+    path into it, `BOOK-ANCHORS`' notion of a citation), **2 of 9** members fail — `rt-analysis` (named
+    nowhere) and **`xtask`**, which `verification.md` names in `cargo xtask verify` and never locates:
+    ```text
+    $ bash scripts/check_book_coverage.sh      (with the two chapter fixes stashed)
+      BOOK-COVERAGE: `rt-analysis` (crates/rt-analysis) is named in no chapter of docs/book/src
+      BOOK-COVERAGE: `xtask` (xtask) is named in verification.md without a citation of a path inside xtask
+      BOOK-COVERAGE: 2 of 9 workspace member(s) described by no chapter — name each beside a path into it
+    ```
+    ⛔ A first census with the pattern `` `crates/<name>/<something>` `` reported **5** failures: it missed a
+    citation of the member's *directory* (`crates/archogen-s0`), which `BOOK-ANCHORS` accepts and which does
+    tell a reader where the crate lives — so the rule accepts the directory or anything beneath it.
+  - [x] **FIX** — the strong shape as a doctrine, `BOOK-COVERAGE` (`scripts/check_book_coverage.sh`, registered
+    in the project slot): the population is the root `Cargo.toml`'s `members` with globs expanded and each
+    package name read from its own manifest; a member passes only when **one** chapter both names it and cites
+    a path inside it; `SUMMARY.md` never counts; an empty population is a breach. `analysis.md` gains "Where it
+    lives", naming the crate and the file behind each claim, **F18** and **F29** included; `verification.md`
+    names `xtask/src/main.rs` as where the tiers are declared.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    $ bash scripts/check_book_coverage.sh
+      book-coverage: OK (9 workspace member(s), each named in a chapter beside a path into it)
+    $ bash scripts/check_book_coverage.sh --self-test
+      book-coverage self-test: 8 pass / 0 fail (8 arms)
+    ```
+    ⛔ One arm was unfailable as first written — "name in one chapter, path in another" used a member whose
+    directory equals its package name, so the path carried the name — found when it failed on a correct
+    check, and re-staged with a member whose name differs from its directory. Four mutations, restored by
+    `cmp`: **C-1** the weak, name-only shape → 5 / 3, the **appendix arm** among them; **C-2** the table of
+    contents counted → 4 / 4; **C-3** a prefix match on the directory → 7 / 1, the longer-name arm; **C-4** a
+    fixed population → 5 / 3, the glob arm and the real tree.
+  - [x] **NO REGRESSION** — `cargo test --all --no-fail-fast` → **602 passed, 0 failed over 42 suites**
+    (several legs read the book); `scripts/check_doctrines.sh` → `=== all doctrines green ===` with the new
+    doctrine; `check_book_anchors.sh` → `OK (19, 3)`; `mdbook build` `rc=0`.
+  - [x] **LOCKSTEP** — `analysis.md`, `verification.md` (the two fixes, and a section on the doctrine),
+    `DOCTRINE_ENFORCEMENT.md`, `TOOLBOX.md`, `scripts/check_doctrines.project.sh`, the live docs.
 
 - ID: `PROGRAM.25`
   Status: `done`
@@ -2196,19 +2250,18 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.24` | `pending` | **medium-high** — the mirror direction of `BOOK-ANCHORS`, which nobody checks: does a capability the codebase has get described in the book? One live instance measured `2026-09-28`: the `rt-analysis` crate is named nowhere in `docs/book/`, and `analysis.md` — the chapter about what it establishes — cites only `ROADMAP.md` and a cost-accounting doc, passing both `BOOK-ANCHORS` legs while never telling its reader where the code is. Filed by `M1.12.5` on the director's lockstep instruction |
-| 2 | `PROGRAM.28` | `pending` | **medium** — no tier and no CI workflow runs any gate's `--self-test`: 10 gates carry one and all 10 pass today, but an arm is re-fired only when somebody runs it by hand. Found by `PROGRAM.27`, which had to. Sequenced after `PROGRAM.18`, whose new arms it would then run too |
-| 3 | `PROGRAM.29` | `pending` | **medium** — six `mktemp` sites in five gate scripts and the scaffold updater put scratch in `/tmp`, against the director's data-locality rule; four are project-owned and fixable here |
-| 4 | `PROGRAM.5` | `pending` | the §15/§19 dependency and evidence ledger — every external source claim in the book should resolve to a row, and `BOOK-ANCHORS` now checks the *internal* ones. The director has offered a read-only external document source (ISA / RISC-V / devicetree / peripheral specifications) reachable by operator-relayed request; the ledger is where that seam gets a row |
-| 5 | `PROGRAM.9` | `pending` | the extended tier reports `incomplete` on every run until its three steps exist |
-| 6 | `PROGRAM.6` | `pending` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |
-| 7 | `PROGRAM.13` | `pending` | twelve closed leaves in `BOOTSTRAP`, `M2` and this tree do not name their own commit — backfill both logs from git, then `PROGRAM.14` gates it so the gap cannot reopen |
-| 8 | `PROGRAM.15` | `pending` | a feedback register row that contradicts its own issue sub-tree passes every gate today; five state transitions in six commits held only by hand-editing and a manual census |
-| 9 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
-| 10 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. ⭐ A **near-miss** worth pricing in, recorded honestly as a near-miss and not as a fourth instance: `PROGRAM.18`'s frontier row still read "ten of eighteen controls" while this leaf was being written, and was corrected in the same commit — it would have gone stale the moment the fix landed, and nothing in the tree compares a control count against the controls. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with. ⛔ An **eighth** shape landed `2026-09-29` and it falsifies the acceptance's *population* rather than adding a figure: `CHANGELOG.md` said "Newest first" and did not, one entry sitting above six newer ones for seven commits because five consecutive commits inserted at the same wrong anchor — and `CHANGELOG.md` is not one of the three live surfaces the acceptance enumerates. Two falsifications of a three-item list, so the population becomes every live surface the commit stages |
-| 11 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
-| 12 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
-| 13 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
+| 1 | `PROGRAM.28` | `pending` | **medium** — no tier and no CI workflow runs any gate's `--self-test`: 10 gates carry one and all 10 pass today, but an arm is re-fired only when somebody runs it by hand. Found by `PROGRAM.27`, which had to. Sequenced after `PROGRAM.18`, whose new arms it would then run too |
+| 2 | `PROGRAM.29` | `pending` | **medium** — six `mktemp` sites in five gate scripts and the scaffold updater put scratch in `/tmp`, against the director's data-locality rule; four are project-owned and fixable here |
+| 3 | `PROGRAM.5` | `pending` | the §15/§19 dependency and evidence ledger — every external source claim in the book should resolve to a row, and `BOOK-ANCHORS` now checks the *internal* ones. The director has offered a read-only external document source (ISA / RISC-V / devicetree / peripheral specifications) reachable by operator-relayed request; the ledger is where that seam gets a row |
+| 4 | `PROGRAM.9` | `pending` | the extended tier reports `incomplete` on every run until its three steps exist |
+| 5 | `PROGRAM.6` | `pending` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |
+| 6 | `PROGRAM.13` | `pending` | twelve closed leaves in `BOOTSTRAP`, `M2` and this tree do not name their own commit — backfill both logs from git, then `PROGRAM.14` gates it so the gap cannot reopen |
+| 7 | `PROGRAM.15` | `pending` | a feedback register row that contradicts its own issue sub-tree passes every gate today; five state transitions in six commits held only by hand-editing and a manual census |
+| 8 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
+| 9 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. ⭐ A **near-miss** worth pricing in, recorded honestly as a near-miss and not as a fourth instance: `PROGRAM.18`'s frontier row still read "ten of eighteen controls" while this leaf was being written, and was corrected in the same commit — it would have gone stale the moment the fix landed, and nothing in the tree compares a control count against the controls. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with. ⛔ An **eighth** shape landed `2026-09-29` and it falsifies the acceptance's *population* rather than adding a figure: `CHANGELOG.md` said "Newest first" and did not, one entry sitting above six newer ones for seven commits because five consecutive commits inserted at the same wrong anchor — and `CHANGELOG.md` is not one of the three live surfaces the acceptance enumerates. Two falsifications of a three-item list, so the population becomes every live surface the commit stages |
+| 10 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
+| 11 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
+| 12 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
@@ -2314,6 +2367,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-29` | `PROGRAM.11` | `git grep` for the rule in the entrypoints and for any vendor doctrine at `b9f6e22`; the real checkout's pin, local-only commits (tags excluded) and status; the naive census on one nested checkout; the new check and its `--self-test`; five mutations R-1–R-5 with `cmp` restoration; the doctrine driver | the rule absent from both entrypoints and no doctrine looking at `vendor/` → both fixed; the real checkout clean (**0** local-only commits), the naive census **4 040** on a nested one; **9 / 0** arms; every mutation fails exactly its arm, one arm found vacuous first and re-seeded; all doctrines green |
 | `2026-09-29` | `PROGRAM.18.1` | the census of armed scripts at `61e5f09`; `FROZEN-EVALUATION --self-test`; seven mutations F-1–F-7 with `cmp` restoration; the real tree; the doctrine driver | `check_task_acceptance.sh` already armed, seven registered controls not; **9 / 0** arms on synthetic cases; every mutation fails its own arm (F-5 three, the untracked arm among them); all doctrines green; `PROGRAM.29` filed for six `mktemp` sites in `/tmp` |
 | `2026-09-29` | `PROGRAM.18.2` | `bash scripts/selftest_spine.sh`; the `git grep` of the two self-locating roots; nine mutations S-1–S-9 on the real scripts with `cmp` restoration; the handoff tool after the run | **34 / 34** after one clean arm caught a stub-regex gap (first run 33 / 1); every mutation fails exactly its own arm; `handoff: OK`; `PROGRAM.18` closed |
+| `2026-09-29` | `PROGRAM.24` | the leaf's census; a strong-shape census over all nine members; the new check before and after the chapter fixes; `--self-test`; four mutations C-1–C-4; `cargo test --all --no-fail-fast`; the doctrine driver | `rt-analysis` named nowhere, and `xtask` named without a path — **2 of 9**, where a first census over-reported 5 by missing directory citations; **8 / 8** arms after one unfailable arm was re-staged; every mutation fires; **602 / 0** |
 
 ## Commit Log
 
@@ -2341,6 +2395,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.11` | `ARCHOGEN-PROGRAM-0119 (leaf PROGRAM.11)` | **every other repository is read-only, stated and gated.** The rule in `CLAUDE.md` (both directions), and `REPOSITORY-BOUNDARY` on every commit: each vendored checkout this repository pins is at its pin with nothing committed, modified or created in it. Scoped on measurement to the pins this repository owns — the vendor's documented bootstrap legitimately dirties its nested checkouts — and with tags excluded from "local-only", because the naive census counted 4 040 phantom commits |
 | `PROGRAM.18` → `PROGRAM.18.1` | `ARCHOGEN-PROGRAM-0120 (leaf PROGRAM.18.1)` | **`FROZEN-EVALUATION` is armed**: nine arms in `--self-test`, each seeding one breach in a scratch repository with synthetic case names and naming what it refuses. `PROGRAM.18` decomposed by ownership on a re-run census — the six scaffold-owned gates are armed from outside in `.18.2`, because an arm written into them is erased by the scaffold and cannot be sent upstream; `PROGRAM.29` filed |
 | `PROGRAM.18.2` → `PROGRAM.18` | `ARCHOGEN-PROGRAM-0121 (leaf PROGRAM.18.2)` | **every registered control now has repeatable RED arms.** The six scaffold-owned universal gates, both drivers and the handoff tool are armed **from outside** by `scripts/selftest_spine.sh` — each run unmodified in a scratch repository with one seeded breach, 34 arms, nine mutations each failing its own arm — so the arms survive a scaffold sync that would erase them in place. `PROGRAM.18` closed; tier registration is `PROGRAM.28`'s |
+| `PROGRAM.24` | `ARCHOGEN-PROGRAM-0122 (leaf PROGRAM.24)` | **the book is checked from the code's side too.** `BOOK-COVERAGE`: every workspace member, derived from `Cargo.toml`, is named in a chapter beside a path into it — a name alone does not count. Two members failed and are fixed: `rt-analysis` gains "Where it lives" in `analysis.md`, `xtask` its file in `verification.md` |
 
 ## Changelog
 

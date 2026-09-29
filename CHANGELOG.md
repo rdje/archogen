@@ -4,6 +4,17 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the book is checked from the code's side: every crate is named beside a path into it
+
+`ARCHOGEN-PROGRAM-0122` (leaf `PROGRAM.24`). A new doctrine, `BOOK-COVERAGE`; eight arms; four mutations.
+
+- `BOOK-ANCHORS` asks whether what the book cites exists; nothing asked whether the book describes the code.
+  `BOOK-COVERAGE` does: every workspace member, read from `Cargo.toml`'s `members`, must be named in a chapter
+  that also cites a path inside it. A name alone does not count — an appendix of crate names would pass.
+- Measured, **2 of 9** failed: `rt-analysis`, the whole scheduling checker, was in no chapter, and `xtask` was
+  named without a path. `analysis.md` now says which file holds each claim (F18, F29 included) and
+  `verification.md` where the tiers are declared.
+
 ## archogen — every registered doctrine control has repeatable RED arms, the scaffold-owned ones armed from outside
 
 `ARCHOGEN-PROGRAM-0120` and `-0121` (leaves `PROGRAM.18.1`, `.18.2`, closing `PROGRAM.18`). 43 new arms; sixteen

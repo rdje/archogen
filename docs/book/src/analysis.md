@@ -12,6 +12,19 @@ R_i^(k+1) = C_i + Σ_{j ∈ hp(i)} ⌈ R_i^(k) / T_j ⌉ · C_j
 It is small, it is exact, and — this is the part that matters — it establishes much less than it
 looks like it does.
 
+## Where it lives
+
+The checker is the `rt-analysis` crate, and each claim this chapter makes has a file behind it:
+
+| File | What it holds |
+| --- | --- |
+| `crates/rt-analysis/src/model.rs` | the admitted task model — `TaskSet::admit` is the only way to build one, and it refuses a set §7.4's conditions do not cover |
+| `crates/rt-analysis/src/response.rs` | the recurrence above, returning a conditional conclusion with its witness |
+| `crates/rt-analysis/src/cost.rs` | `cost-accounting/1`, the §7.4.1 contract, declared as data |
+| `crates/rt-analysis/src/trace.rs` | the fixed-trace simulator the F29 fixture runs |
+| `crates/rt-analysis/tests/f18_baseline.rs` | **F18** — the §13.2 baseline, with its expected bounds parsed out of `ROADMAP.md` |
+| `crates/rt-analysis/tests/f29_preemption.rs` | **F29** — the §13.4 repeated-preemption fixture |
+
 ## What it may be used for, and what it may not
 
 §7.4 is unusually direct about its own limits:

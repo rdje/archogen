@@ -1,7 +1,8 @@
 # Verifying the toolchain
 
 The project's own checks are organised into the five tiers of `ROADMAP.md` §14.3, and each one
-is a named command:
+is a named command. The runner is the workspace's `xtask` member — `xtask/src/main.rs` declares every
+tier and every step in it, and `make tiers` prints them from there:
 
 ```console
 $ cargo xtask verify --tier focused      # or: make focused
@@ -191,6 +192,19 @@ went stale for dozens of commits with every gate green. Run the command; do not 
 movement is correct, or complete, or that every description the change invalidates was found — that
 residue is review, exactly as `BOOK-ANCHORS` states its own. The gate removes the cheapest failure, a
 frozen construct edited silently, and leaves the expensive one to the reader.
+
+## Every crate is in this book
+
+`BOOK-ANCHORS` checks that what a chapter cites exists; `BOOK-COVERAGE` checks the other direction — that every
+crate of the workspace appears in some chapter **beside a path into it**, so no capability exists that this
+book never shows you. The crates are read from `Cargo.toml` rather than listed, so a new one is covered the day
+it is added. A name alone does not count: a list of crate names would pass a name-only rule and tell you
+nothing about where anything lives. When it was written, the scheduling checker — the `rt-analysis` crate —
+was in no chapter at all; [What the scheduling checker establishes](analysis.md) now says which file holds what.
+
+```console
+$ bash scripts/check_book_coverage.sh
+```
 
 ## Other repositories are read-only
 

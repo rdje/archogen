@@ -13,13 +13,13 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `PROGRAM` → frontier `PROGRAM.24`. `M1` `.29.4` (**waiting on the director**); `API` `.1`;
+- **Active tree:** `PROGRAM` → frontier `PROGRAM.28`. `M1` `.29.4` (**waiting on the director**); `API` `.1`;
   `S0` `.8`; `M2` `.8.2`.
-- **Next action:** **`PROGRAM.24`, medium-high** — the mirror of `BOOK-ANCHORS`: does a capability the codebase
-  has get described in the book? (filed on `rt-analysis` being named nowhere in `docs/book/`). Then `.28` —
-  run every `--self-test` **and `scripts/selftest_spine.sh`** in a tier — and `.29` (six `mktemp` sites put
-  gate scratch in `/tmp`). ⏳ **`M1.29.4` waits on the director's call** — `decision_findings-for-director-review.md` §7.
-- ⭐ **Closed today:** `M1.29.1`–`.3`, `M1.31`, `M1.33`, `PROGRAM.27`, `PROGRAM.11`, `PROGRAM.18` (every registered control armed) — `archogen check` elaborates **and
+- **Next action:** **`PROGRAM.28`, medium** — an `integration`-tier step (and the CI doctrine workflow) that
+  discovers every gate carrying `--self-test` **by census**, plus `scripts/selftest_spine.sh` (~30 s), runs
+  each, and fails on any failed arm — with a RED arm of its own. Then `.29` (six `mktemp` sites put gate
+  scratch in `/tmp`). ⏳ **`M1.29.4` waits on the director's call** — `decision_findings-for-director-review.md` §7.
+- ⭐ **Closed today:** `M1.29.1`–`.3`, `M1.31`, `M1.33`, `PROGRAM.27`, `PROGRAM.11`, `PROGRAM.18`, `PROGRAM.24` (every crate in the book) — `archogen check` elaborates **and
   type-checks** a module tree (§6 rules 7–10); a name is declared once (§7 rule 6), for a file and a tree.
   30 cases in `docs/semantics/modules/`. A migration is **two commits** (`pending`, then `applied` — enforced).
 - ⭐ **`eadl/1` is frozen and gated** (`M1.13`, `PROGRAM.27`): `BASELINE.txt` (**114** digests) +
