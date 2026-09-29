@@ -228,6 +228,15 @@ every step green but the quarantined emulator, the gap annotated, the summary wr
 reproduce is the runner's own userland, GNU `sed` and `awk` where this machine has BSD ones. Leaf
 `PROGRAM.10.5` reads the first real run for that, after the next push.
 
+## When a push is due
+
+The director ruled a push cadence on `2026-09-28`: push once the branch is a set number of commits ahead of
+`origin/main`. The number has one copy, the **Threshold** field of `docs/decisions/decision_push-cadence.md`,
+and `bash scripts/push_cadence.sh` reads it and reports the live distance (leaf `PROGRAM.23`). It exits `3`
+when a push is due and `2` when it cannot tell, for example with no `origin/main` or with a record that gives
+two answers. It is a report and never a gate. A push needs the director's authorization, so a check that
+refused commits at the threshold would strand the work it is meant to protect.
+
 ## What the `tests` step is a suite *of*
 
 The row above says "every contract test passes", and for the language that means a declared population.

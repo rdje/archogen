@@ -13,14 +13,14 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `PROGRAM` → frontier `PROGRAM.23`. Every other tree's frontier head is in `docs/TASK_TREE.md`;
+- **Active tree:** `PROGRAM` → frontier `PROGRAM.26`. Every other tree's frontier head is in `docs/TASK_TREE.md`;
   it is not copied here.
-- **Next action:** **`PROGRAM.23`** — the push cadence as a machine-readable threshold and a check. `PROGRAM.10.5`
-  (reading the CI `integration` job's first real run) waits on that push.
+- **Next action:** **`PROGRAM.26`** — adopt the upstream `update_scaffold.sh` without losing project content or
+  the scratch-locality fix. `PROGRAM.10.5` (the CI job's first real run) waits on the next push.
 - **In flight:** branch **`wip/m2.9`** (`758cbcd`) is a checkpoint, not a finished leaf — `M2.9` records it as
   not compiling (`crates/rt-core/tests/differential.rs` unadapted).
 - **⏳ Blockers (the director's):** `M1.29.4` — §7 of `decision_findings-for-director-review.md`; `M2.9` — §6 (a)
   and (b), two rulings on `ROADMAP` §3.1.1; `PROGRAM.31`/`.32` — §8; `M5` — no board procured.
-- **Derive, don't copy:** the test baseline is `cargo test --all -q` (must be 0 failed); the push distance is
-  `git rev-list --count origin/main..HEAD` against the cadence in `decision_push-cadence.md`; `integration` is
+- **Derive, don't copy:** the test baseline is `cargo test --all -q` (must be 0 failed); the push distance
+  and the ruled threshold are `bash scripts/push_cadence.sh`; `integration` is
   `incomplete`, its emulator step quarantined under `M2.8` (`make integration`).

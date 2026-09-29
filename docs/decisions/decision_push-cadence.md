@@ -5,13 +5,16 @@
 - **Status:** `active`
 - **Owner / source:** director ruling, `2026-09-28`, in answer to "what is N in this project?" — which
   had no answer: the layer-A template provides the field and nobody had ever filled it in
+- **Threshold:** `PUSH_AT_COMMITS_AHEAD=400` — the one machine-readable copy. `scripts/push_cadence.sh` reads it,
+  refuses a second copy in this record or a title that disagrees with it, and reports the live distance
 
 ## The decision
 
 Push when the branch reaches **400 commits** ahead of `origin/main`. The threshold lives in **one
 machine-readable place** and is reported by a check, so the number has a single producer rather than
-a copy in every document that mentions it (`PROGRAM.23` owns building that; until it lands, the
-number is recorded here and in `MEMORY.md`'s layer-A field).
+a copy in every document that mentions it. Since `PROGRAM.23` that place is this record's **Threshold**
+field, and `bash scripts/push_cadence.sh` is the check: it exits `0` below the threshold, `3` when a push is
+due, and `2` when it cannot tell.
 
 No push happens without the director's explicit authorization — this decision sets *when a push is
 due*, not a standing permission to perform one.
@@ -38,8 +41,8 @@ so a future session does not re-litigate it, and so the number is not mistaken f
 
 ## How to apply
 
-- **The threshold is one number with one producer.** `PROGRAM.23` puts it where a check can read it
-  and has `MEMORY.md` report it, rather than letting `400` be retyped into every document that
+- **The threshold is one number with one producer**, this record's field. `PROGRAM.23` put it where a check
+  reads it and has `MEMORY.md` point at the check, rather than letting `400` be retyped into every document that
   mentions pushing — which is precisely the defect `M1.23`, `M1.24` and `S0.8` each fixed, and
   [[a-moved-measurement-needs-a-census-of-its-copies]] is the card. An ungated threshold is prose:
   [[a-rule-only-in-the-prompt-is-enforced-nowhere]].
@@ -55,7 +58,8 @@ so a future session does not re-litigate it, and so the number is not mistaken f
   permits a push past it after reading what it names. The premise above is lifted for that step; any
   other failing step still blocks, as it should.
 - **The live count is never written down.** It moves with every commit, so documents point at
-  `git rev-list --count origin/main..HEAD` instead of quoting a number — the idiom `MEMORY.md`
-  already uses. This record states the *threshold*, which only moves by decision.
+  `bash scripts/push_cadence.sh` instead of quoting a number. This record states the *threshold*, which only moves by decision.
+- ⭐ **The check reports and never blocks** (`PROGRAM.23`). Nothing on the commit path or in a tier calls it, so no
+  threshold can strand a commit; "due" is its exit `3` and a loud line for whoever asks.
 - Reaching `N` is a prompt to push, not an automatic push. Read `make integration` first, and if it
   reports `incomplete`, read what it names before deciding to proceed (§14.3).

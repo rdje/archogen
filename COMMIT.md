@@ -52,7 +52,8 @@ apply to code changes.
    (= `cargo xtask verify --tier focused` — format, lints, the whole suite). Strict lint must
    pass. Before a **push**, and before closing a milestone, run `make integration` as well; it
    adds the doctrine enforcer, every gate's self-test, the book build, the `no_std` build and the
-   emulator check.
+   emulator check. Whether a push is *due* is `bash scripts/push_cadence.sh` (the ruled threshold, and the
+   live distance from `origin/main`); a due push still waits for the director's authorization.
 
    ⚠️ A tier can exit **20 = incomplete**, which is *not* a pass and *not* a failure: nothing
    broke, and something could not be run. `ROADMAP.md` §14.3 requires that outcome to be visible

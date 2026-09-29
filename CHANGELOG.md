@@ -4,6 +4,16 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — when a push is due is a report, not prose
+
+`ARCHOGEN-PROGRAM-0149` (leaf `PROGRAM.23`).
+
+- `bash scripts/push_cadence.sh` reads the push threshold the director ruled and reports how far the branch is
+  from it. The number now has one copy, in the decision record. Eight other copies were replaced with
+  pointers.
+- It only reports. A push needs the director's approval, so a check that blocked commits at the threshold
+  would strand the work it is meant to protect.
+
 ## archogen — the integration tier has a CI job
 
 `ARCHOGEN-PROGRAM-0148` (leaf `PROGRAM.10.4`).
