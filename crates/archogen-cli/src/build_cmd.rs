@@ -29,7 +29,7 @@ use eadl_front::SourceMap;
 use eadl_model::check::{check, shipped_registry};
 use eadl_model::profile;
 
-use crate::check_cmd::{embedded_modules, module_file, refuse_module_file};
+use crate::check_cmd::{elaborate_module_file, embedded_modules, is_module_file};
 use crate::cli::Parsed;
 use crate::status::Status;
 
@@ -117,8 +117,8 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
     };
 
     // The routing `archogen check` uses, so the two commands cannot disagree about a module file.
-    if let Some(module) = module_file(&sources, id) {
-        return refuse_module_file(err, path, &module);
+    if is_module_file(&sources, id) {
+        return elaborate_module_file(&mut sources, id, path, err, " — nothing was generated");
     }
 
     // The whole frontend, not a subset. A description that does not check does not build.

@@ -1,0 +1,12 @@
+; module: hw.soc
+; role: imported by the cases in this directory, which is their module path
+; why: a sub-hardware module that itself imports one, so names nest two deep
+;
+(eadl-version eadl/1)
+
+(defmodule hw.soc
+  (version 1 2)
+  (import hw.timer (as timer) (version (at-least 1 0)))
+  (export soc.bus)
+  (defplatform soc.bus
+    (offers (region device.timer (base 0x1000_0000)))))

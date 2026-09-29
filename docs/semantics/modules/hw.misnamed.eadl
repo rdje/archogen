@@ -1,0 +1,8 @@
+; module: hw.misnamed
+; role: imported by the cases in this directory, which is their module path
+; why: a file whose declared name is not the name it is read by
+;
+(eadl-version eadl/1)
+
+(defmodule hw.clock
+  (version 1 0))

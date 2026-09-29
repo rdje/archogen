@@ -13,17 +13,18 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M1` → frontier `M1.29.2`. `PROGRAM` `.11`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
-- **Next action:** **`M1.29.2`, high — a disk-backed module loader** wired into `check` and `build` through
-  the routing pair `M1.29.1` landed in `crates/archogen-cli/src/check_cmd.rs`, so §6's `module-*` codes are
-  reachable from a command. ⛔ Read its two design constraints first: resolve the file by a *stated* rule
-  from the imported name so `module-name-mismatch` stays firable, and a tracked module fixture is a
-  `docs/semantics/conformance.md` manifest decision + migration note. Then `M1.29.3` (the name rule §6
-  lacks), `M1.29.4` (parameters consumed by nothing).
-- ⭐ **Closed today:** `M1.29.1` — module files refused as `unimplemented` (exit 20, was 10), and "elaborate"
-  coupled to the capability by a leg; `M1.31` — markers clipped to their line (**14 runs / 10 files → 0**),
-  with a pipeline leg over the whole conformance suite. ⛔ `M1.29.1`'s published "23 of 78" was wrong both
-  ways (label text counted; output truncated by `tee | head`) — corrected everywhere to **10**.
+- **Active tree:** `M1` → frontier `M1.29.3`. `PROGRAM` `.11`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
+- **Next action:** ⛔ **first, flip `docs/semantics/migrations/eadl-1-module-path-and-cases.md` to
+  `status: applied`** — the freeze gate refuses every commit until it does (spent-note leg); do it in the
+  docs-only `PROGRAM.20` note (two `modules.md` transcripts it listed as unverifiable are now verified).
+  Then **`M1.29.3`, high — the name rule** an elaborated program needs: how a reference inside an instance
+  resolves and what an `export` hides — written into `docs/semantics/reference.md` §6 first — then the model
+  passes over the resolved program, F01/F02 type-checked through `archogen`, and "elaborate and type-check a
+  description" back in `crates/archogen-cli/src/spec.rs` (two coupling legs in `module_files.rs` enforce the
+  wording). The 26 cases are in `docs/semantics/modules/`; `module_cases.rs` expects `ok` cases to answer
+  `unimplemented` naming `M1.29.3` and must change with it. Then `M1.29.4` (parameters).
+- ⭐ **Closed today:** `M1.29.1`, `M1.31`, `PROGRAM.27`, and **`M1.29.2`** — `check`/`build` elaborate a module
+  tree from its module path (§6 rules 7–8), 23 of 24 `module-` codes reached from a command.
 - ⭐ **`PROGRAM.27` closed: `LANGUAGE-FREEZE` can fail on the real tree**, and a migration is **two
   commits** — the note `pending` with its movement, then flipped to `applied` (the gate refuses a note `HEAD`
   already carries as pending). `M1.29.2`'s fixtures will be its first client: read the migrations README.
@@ -40,7 +41,7 @@
 - **Also open:** `M1.26.1`, `.26.2`, `.30`, `.27`, `.32`, `.10`, `.21`, `.22`; `S0.8`; `M2.6`, `.8`; `PROGRAM.18`, `.24`, `.26`, `.13`,
   `.15`, `.17`, `.20`, `.5`, `.6`, `.9`, `.10`. ⚠️ `M1`'s open questions: `M1.13.1`'s invisible
   character, and the language's **name**.
-- **Baseline to beat:** `make focused` exit `0` at the pin — **575 passed, 0 failed** over 41 suites.
+- **Baseline to beat:** `make focused` exit `0` at the pin — **590 passed, 0 failed** over 42 suites.
   Tiers: `focused` per commit, `integration` before a push; exit **20 = incomplete** is not a pass. Push
   cadence at `400` ahead of `origin/main`, measured (`decision_push-cadence.md`). ⚠️ `integration` is
   **red** on `emulator`: QEMU **pinned** (`M2.8.1`), `TARGET_VERIFIED=no` until `M2.8.2`.

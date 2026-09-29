@@ -1,0 +1,10 @@
+; case: bad.circular-import
+; expect: invalid-description
+; code: module-circular-import
+; why: F02 — the whole chain is named, not only the fact of a cycle
+;
+(eadl-version eadl/1)
+
+(defmodule bad.circular-import
+  (version 1 0)
+  (import cycle.b))

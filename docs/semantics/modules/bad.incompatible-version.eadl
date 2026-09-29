@@ -1,0 +1,10 @@
+; case: bad.incompatible-version
+; expect: invalid-description
+; code: module-incompatible-version
+; why: a major version no newer minor can satisfy
+;
+(eadl-version eadl/1)
+
+(defmodule bad.incompatible-version
+  (version 1 0)
+  (import hw.timer (version (at-least 2 0))))

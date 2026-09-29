@@ -1,0 +1,13 @@
+; case: bad.conflicting-export
+; expect: invalid-description
+; code: module-conflicting-export
+; why: F02 — one name exported twice, both sites named
+;
+(eadl-version eadl/1)
+
+(defmodule bad.conflicting-export
+  (version 1 0)
+  (export thing)
+  (export thing)
+  (defblock thing
+    (offers (p 1 bit))))

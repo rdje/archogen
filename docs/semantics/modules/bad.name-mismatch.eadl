@@ -1,0 +1,10 @@
+; case: bad.name-mismatch
+; expect: invalid-description
+; code: module-name-mismatch
+; why: a file declares a name other than the one it was imported by
+;
+(eadl-version eadl/1)
+
+(defmodule bad.name-mismatch
+  (version 1 0)
+  (import hw.misnamed))

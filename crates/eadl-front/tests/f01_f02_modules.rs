@@ -7,7 +7,11 @@
 //! diagnostic. Likewise a conflicting export has to name *both* sites, because the author
 //! looking at one of them cannot see the other.
 
-use eadl_front::module::{elaborate, MemoryModules};
+use std::path::Path;
+
+use eadl_front::module::{
+    elaborate, elaborate_source, is_module_name, DirectoryModules, MemoryModules, ModuleSource,
+};
 use eadl_front::SourceMap;
 
 /// Elaborate `root` and return `(program, rendered diagnostics, had errors)`.
@@ -452,4 +456,181 @@ fn a_stray_form_beside_a_version_identifier_is_still_reported_against_the_stray_
         rendered.contains("defblock y"),
         "the label must point at the stray form, not at the declaration:\n{rendered}"
     );
+}
+
+// ── Leaf `M1.29.2`: the rules a command needs, stated in docs/semantics/reference.md §6 rules 7 and 8 ──
+
+#[test]
+fn a_module_name_is_one_that_can_only_mean_one_file() {
+    // §6 rule 8. The name becomes a file name, so it may not leave the module path, and it may not depend
+    // on whether a filesystem folds case.
+    for name in [
+        "platform.timer",
+        "hw.timer",
+        "a",
+        "os.rt-core",
+        "app.two-timers",
+        "x9.y_z",
+    ] {
+        assert!(is_module_name(name), "`{name}` should be a module name");
+    }
+    for name in [
+        "",
+        "../hw.timer",
+        "hw/timer",
+        "HW.Timer",
+        "hw.Timer",
+        "a..b",
+        ".a",
+        "a.",
+        "9lives",
+        "a.9b",
+        "hw timer",
+        "hw\\timer",
+    ] {
+        assert!(!is_module_name(name), "`{name}` must not be a module name");
+    }
+}
+
+#[test]
+fn an_import_naming_no_module_is_refused_before_any_file_is_looked_for() {
+    let modules = MemoryModules::new()
+        .with("root", "(defmodule root (version 1 0) (import ../escape))")
+        .with("../escape", "(defmodule ../escape (version 1 0))");
+    let (_, rendered, failed) = run(&modules, "root");
+    assert!(
+        failed,
+        "a name that could leave the module path was imported"
+    );
+    assert!(rendered.contains("module-bad-import"), "{rendered}");
+    assert!(rendered.contains("is not a module name"), "{rendered}");
+    assert!(
+        !rendered.contains("module-not-found"),
+        "the name was looked up after it was refused:\n{rendered}"
+    );
+}
+
+/// A scratch directory under `CARGO_TARGET_TMPDIR`, emptied first — on the repository's own volume.
+fn scratch(name: &str) -> std::path::PathBuf {
+    let dir = Path::new(env!("CARGO_TARGET_TMPDIR")).join(name);
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("creatable");
+    dir
+}
+
+#[test]
+fn a_directory_source_tells_a_missing_module_from_an_unreadable_one() {
+    // §6 rule 7: "not found" about a file that is there would be a false statement about the description,
+    // so an unreadable file is recorded for the caller instead.
+    let dir = scratch("directory-modules");
+    std::fs::write(
+        dir.join("hw.present.eadl"),
+        "(defmodule hw.present (version 1 0))\n",
+    )
+    .unwrap();
+    std::fs::write(dir.join("hw.garbled.eadl"), [0xff_u8, 0xfe]).unwrap();
+    let modules = DirectoryModules::new(&dir);
+
+    let (display, text) = modules
+        .load("hw.present")
+        .expect("a file that is there is found");
+    assert!(display.ends_with("hw.present.eadl"), "{display}");
+    assert!(text.contains("defmodule hw.present"));
+
+    assert!(modules.load("hw.absent").is_none());
+    assert!(modules.load("hw.garbled").is_none());
+    let unreadable = modules.unreadable();
+    assert_eq!(
+        unreadable.len(),
+        1,
+        "only the garbled file is unreadable: {unreadable:?}"
+    );
+    assert!(
+        unreadable[0].0.ends_with("hw.garbled.eadl"),
+        "{unreadable:?}"
+    );
+    assert!(
+        modules
+            .describe_missing("hw.absent")
+            .contains("hw.absent.eadl"),
+        "the repair must name the file it looked for"
+    );
+}
+
+#[test]
+fn a_directory_source_never_turns_a_non_module_name_into_a_path() {
+    // Defence in depth behind `read_import`: a root named through `elaborate` is not an import.
+    let dir = scratch("directory-modules-escape");
+    let inner = dir.join("inner");
+    std::fs::create_dir_all(&inner).unwrap();
+    std::fs::write(
+        dir.join("outside.eadl"),
+        "(defmodule outside (version 1 0))\n",
+    )
+    .unwrap();
+    let modules = DirectoryModules::new(&inner);
+    assert!(
+        modules.load("../outside").is_none(),
+        "a name left the module path"
+    );
+    assert!(modules.unreadable().is_empty());
+}
+
+#[test]
+fn the_root_is_read_not_looked_up_so_its_file_name_is_not_compared_with_its_name() {
+    // §6 rule 7's last sentence: nothing imported the root, so no importer's name is there to verify.
+    let dir = scratch("elaborate-source");
+    std::fs::write(
+        dir.join("hw.part.eadl"),
+        "(defmodule hw.part (version 1 0))\n",
+    )
+    .unwrap();
+    let root_text = "(defmodule app.whatever (version 1 0) (import hw.part))\n".to_string();
+    let mut sources = SourceMap::new();
+    let root = sources.add("some-other-name.eadl", root_text).unwrap();
+    let modules = DirectoryModules::new(&dir);
+    let (program, diagnostics) = elaborate_source(&mut sources, &modules, root);
+    assert!(
+        !diagnostics.has_errors(),
+        "{}",
+        diagnostics.render(&sources)
+    );
+    assert_eq!(program.len(), 2);
+    assert_eq!(program.root().module, "app.whatever");
+    assert_eq!(program.instances[0].path, "part");
+}
+
+#[test]
+fn a_malformed_version_is_one_mistake_and_one_message() {
+    // ⛔ Found by making this code reachable from a command: `(version one zero)` was reported twice, the
+    // second time as "declares no version" beside the clause that declares one.
+    let modules = MemoryModules::new().with("vague", "(defmodule vague (version one zero))");
+    let mut sources = SourceMap::new();
+    let (_, diagnostics) = elaborate(&mut sources, &modules, "vague");
+    let codes: Vec<&str> = diagnostics.items().iter().map(|d| d.code).collect();
+    assert_eq!(
+        codes,
+        ["module-bad-version"],
+        "{}",
+        diagnostics.render(&sources)
+    );
+}
+
+#[test]
+fn an_empty_module_is_reported_in_the_file_that_is_empty() {
+    // ⛔ Found by making this code reachable from a command: the label named source 0, which in a command
+    // is the first shipped kind module — so an author was sent to `docs/semantics/kinds/core.eadl:1:1`
+    // for a module they had written. Source 0 here is deliberately an unrelated file.
+    let modules = MemoryModules::new()
+        .with("root", "(defmodule root (version 1 0) (import hollow))")
+        .with("hollow", "(eadl-version eadl/1)\n");
+    let mut sources = SourceMap::new();
+    sources
+        .add("unrelated.eadl", "; source 0\n".to_string())
+        .unwrap();
+    let (_, diagnostics) = elaborate(&mut sources, &modules, "root");
+    let rendered = diagnostics.render(&sources);
+    assert!(rendered.contains("module-empty"), "{rendered}");
+    assert!(rendered.contains("--> hollow.eadl:1:1"), "{rendered}");
+    assert!(!rendered.contains("unrelated.eadl"), "{rendered}");
 }

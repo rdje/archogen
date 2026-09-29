@@ -1,0 +1,11 @@
+; case: bad.missing-version
+; expect: invalid-description
+; code: module-missing-version
+; why: a module with no version cannot be required by an importer
+;
+(eadl-version eadl/1)
+
+(defmodule bad.missing-version
+  (export thing)
+  (defblock thing
+    (offers (p 1 bit))))

@@ -1,0 +1,9 @@
+; module: cycle.c
+; role: imported by the cases in this directory, which is their module path
+; why: the edge that closes the cycle, back to the case that started it
+;
+(eadl-version eadl/1)
+
+(defmodule cycle.c
+  (version 1 0)
+  (import bad.circular-import))

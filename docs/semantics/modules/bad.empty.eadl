@@ -1,0 +1,10 @@
+; case: bad.empty
+; expect: invalid-description
+; code: module-empty
+; why: an imported module file with no declaration in it
+;
+(eadl-version eadl/1)
+
+(defmodule bad.empty
+  (version 1 0)
+  (import hw.nothing))

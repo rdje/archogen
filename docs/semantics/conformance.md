@@ -41,6 +41,7 @@ rather than about one.
 | `docs/semantics/boundary` | the controlling boundary: paired accept/reject cases for functionality versus implementation, each carrying its verdict and its failing test in a comment header. **F27** reads exactly these |
 | `docs/semantics/cases` | §12 M1's worked semantic cases, each declaring the §5.5 verdict it expects in its own header — positive, missing-fact, contradictory, unsupported, infeasible |
 | `docs/semantics/kinds` | the declared vocabulary itself: the `defkind` modules the registry is built from, so the language's own definitions are conformance cases of the language |
+| `docs/semantics/modules` | §6 modules and imports: a module path in the sense of §6 rule 7, holding library modules and one root per case — the file whose header carries `expect:` and, for a refusal, the one `code:` it must produce. **F01** and **F02** are its `app.*` and `bad.circular-import` / `bad.conflicting-export` cases, and every other `module-` code of §4 but one has a case, driven through `archogen check` and `archogen build` by `crates/archogen-cli/tests/module_cases.rs` |
 | `examples` | the descriptions a reader copies — the M0 use cases, the S0 fixture and the refusal fixture, each checked end to end and, for S0, built and run |
 
 ## What is outside the suite, and why

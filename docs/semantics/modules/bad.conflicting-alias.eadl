@@ -1,0 +1,11 @@
+; case: bad.conflicting-alias
+; expect: invalid-description
+; code: module-conflicting-alias
+; why: two imports under one alias
+;
+(eadl-version eadl/1)
+
+(defmodule bad.conflicting-alias
+  (version 1 0)
+  (import hw.timer (as t))
+  (import os.time (as t)))

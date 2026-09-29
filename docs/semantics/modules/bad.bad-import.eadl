@@ -1,0 +1,10 @@
+; case: bad.bad-import
+; expect: invalid-description
+; code: module-bad-import
+; why: an import that names no module
+;
+(eadl-version eadl/1)
+
+(defmodule bad.bad-import
+  (version 1 0)
+  (import (as timer)))

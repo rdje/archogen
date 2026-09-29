@@ -1,0 +1,8 @@
+; module: hw.plain
+; role: imported by the cases in this directory, which is their module path
+; why: a description, not a module, in a file an import reads
+;
+(eadl-version eadl/1)
+
+(defblock plain
+  (offers (p 1 bit)))

@@ -1,0 +1,10 @@
+; case: bad.not-found
+; expect: invalid-description
+; code: module-not-found
+; why: an import no file in the module path holds
+;
+(eadl-version eadl/1)
+
+(defmodule bad.not-found
+  (version 1 0)
+  (import hw.absent))

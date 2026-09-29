@@ -1,0 +1,10 @@
+; case: bad.missing-argument
+; expect: invalid-description
+; code: module-missing-argument
+; why: a parameter with no default, left unbound
+;
+(eadl-version eadl/1)
+
+(defmodule bad.missing-argument
+  (version 1 0)
+  (import hw.sized))

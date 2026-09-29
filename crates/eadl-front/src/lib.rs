@@ -24,6 +24,9 @@ pub mod source;
 
 pub use diagnostic::{Diagnostic, Diagnostics, Label, Severity, Verdict};
 pub use form::{Comment, Document, Form};
-pub use module::{elaborate, Instance, MemoryModules, ModuleDecl, ModuleSource, Program, Version};
+pub use module::{
+    elaborate, elaborate_source, is_module_name, DirectoryModules, Instance, MemoryModules,
+    ModuleDecl, ModuleSource, Program, Version,
+};
 pub use reader::read;
 pub use source::{Position, Source, SourceError, SourceId, SourceMap, Span};

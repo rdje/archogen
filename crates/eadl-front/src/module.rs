@@ -21,12 +21,14 @@
 //! A description with three composition problems should cost one edit cycle. The only failure
 //! that stops elaboration is a cycle, because continuing into it does not terminate.
 
+use std::cell::RefCell;
 use std::collections::BTreeMap;
+use std::path::PathBuf;
 
 use crate::diagnostic::{Diagnostic, Diagnostics, Label};
 use crate::form::{Document, Form};
 use crate::reader::read;
-use crate::source::{SourceMap, Span};
+use crate::source::{SourceId, SourceMap, Span};
 
 /// A module version: `major.minor`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -134,6 +136,92 @@ impl ModuleDecl {
 pub trait ModuleSource {
     /// Return `(display name, text)` for a module, or `None` if it is not available.
     fn load(&self, module: &str) -> Option<(String, String)>;
+
+    /// The repair direction for a module [`ModuleSource::load`] did not find — where it was looked for,
+    /// and what to do. The default names no place, because a source that is not a directory has none.
+    fn describe_missing(&self, module: &str) -> String {
+        format!("check the module name: no module named `{module}` is available")
+    }
+}
+
+/// Whether `name` is a module name, by `docs/semantics/reference.md` §6 rule 8: one or more segments
+/// joined by single dots, each a lowercase ASCII letter followed by lowercase letters, digits, `-` and `_`.
+///
+/// ⛔ The rule exists because rule 7 turns the name into a file name. A name that could leave the module
+/// path (`../x`), or that one filesystem would fold onto another spelling (`HW.Timer`), would make which
+/// file an import reads a property of the machine rather than of the description.
+#[must_use]
+pub fn is_module_name(name: &str) -> bool {
+    name.split('.').all(|segment| {
+        let mut chars = segment.chars();
+        chars.next().is_some_and(|first| first.is_ascii_lowercase())
+            && chars.all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-' || c == '_')
+    })
+}
+
+/// Modules read from one directory, by `docs/semantics/reference.md` §6 rule 7: an import of `a.b` is the
+/// file `a.b.eadl` there.
+///
+/// ⛔ A file that exists and cannot be read is **not** reported as missing: `module-not-found` would be a
+/// false statement about the description. It is recorded instead, and [`DirectoryModules::unreadable`]
+/// hands it to the caller, which answers it as the failure of the invocation it is.
+#[derive(Debug)]
+pub struct DirectoryModules {
+    dir: PathBuf,
+    unreadable: RefCell<Vec<(String, String)>>,
+}
+
+impl DirectoryModules {
+    /// Modules read from `dir`.
+    #[must_use]
+    pub fn new(dir: impl Into<PathBuf>) -> Self {
+        Self {
+            dir: dir.into(),
+            unreadable: RefCell::new(Vec::new()),
+        }
+    }
+
+    /// The file an import of `module` is read from.
+    #[must_use]
+    pub fn file_for(&self, module: &str) -> PathBuf {
+        self.dir.join(format!("{module}.eadl"))
+    }
+
+    /// Every module file that existed and could not be read, as `(path, error)`, in the order met.
+    #[must_use]
+    pub fn unreadable(&self) -> Vec<(String, String)> {
+        self.unreadable.borrow().clone()
+    }
+}
+
+impl ModuleSource for DirectoryModules {
+    fn load(&self, module: &str) -> Option<(String, String)> {
+        // Defence in depth: `read_import` refuses a name that is not a module name before it gets here,
+        // but a root named through `elaborate` is not an import, and a name that could leave the
+        // directory must never become a path.
+        if !is_module_name(module) {
+            return None;
+        }
+        let path = self.file_for(module);
+        match std::fs::read_to_string(&path) {
+            Ok(text) => Some((path.display().to_string(), text)),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
+            Err(error) => {
+                self.unreadable
+                    .borrow_mut()
+                    .push((path.display().to_string(), error.to_string()));
+                None
+            }
+        }
+    }
+
+    fn describe_missing(&self, module: &str) -> String {
+        format!(
+            "an import of `{module}` is read from `{}` (§6 rule 7), and there is no such file — check \
+             the name, or put the module there",
+            self.file_for(module).display()
+        )
+    }
 }
 
 /// Modules held in memory, keyed by name.
@@ -274,6 +362,9 @@ fn read_module(form: &Form, diagnostics: &mut Diagnostics) -> Option<ModuleDecl>
     };
 
     let mut version = None;
+    // Whether a `version` clause was written at all, well-formed or not: a malformed one has already been
+    // reported as `module-bad-version`, and "declares no version" about it would be false.
+    let mut version_written = false;
     let mut exports = Vec::new();
     let mut params: Vec<ParamDecl> = Vec::new();
     let mut imports: Vec<ImportDecl> = Vec::new();
@@ -282,6 +373,7 @@ fn read_module(form: &Form, diagnostics: &mut Diagnostics) -> Option<ModuleDecl>
     for item in items.iter().skip(2) {
         match item.head() {
             Some("version") => {
+                version_written = true;
                 let parts = item.items();
                 match (parts.get(1), parts.get(2)) {
                     (
@@ -355,6 +447,12 @@ fn read_module(form: &Form, diagnostics: &mut Diagnostics) -> Option<ModuleDecl>
     }
 
     let Some(version) = version else {
+        // ⛔ One mistake, one message (leaf `M1.29.2`, found by making this reachable from a command):
+        // `(version one zero)` used to be reported twice, the second time as "declares no version" beside
+        // the clause that declares one.
+        if version_written {
+            return None;
+        }
         diagnostics.push(Diagnostic::error(
             "module-missing-version",
             format!("module `{name}` declares no version"),
@@ -431,6 +529,19 @@ fn read_import(form: &Form, diagnostics: &mut Diagnostics) -> Option<ImportDecl>
         ));
         return None;
     };
+    // §6 rule 8: the name becomes a file name (rule 7), so a name that is not a module name names no
+    // module — the same rule as a missing one, and the same code.
+    if !is_module_name(module) {
+        diagnostics.push(Diagnostic::error(
+            "module-bad-import",
+            format!("`{module}` is not a module name"),
+            Label::new(items[1].span(), "not a module name"),
+            "a module name is dotted lowercase segments, e.g. `platform.timer`: it becomes the file name \
+             `platform.timer.eadl`, so it may not leave the module path or depend on whether a \
+             filesystem folds case (§6 rule 8)",
+        ));
+        return None;
+    }
 
     let mut alias = None;
     let mut required_version = None;
@@ -533,20 +644,25 @@ pub fn elaborate(
     modules: &dyn ModuleSource,
     root: &str,
 ) -> (Program, Diagnostics) {
-    let mut elaborator = Elaborator {
-        sources,
-        modules,
-        diagnostics: Diagnostics::new(),
-        instances: Vec::new(),
-        stack: Vec::new(),
-    };
+    let mut elaborator = Elaborator::new(sources, modules);
     elaborator.instantiate(root, String::new(), &[], None, None);
-    let Elaborator {
-        diagnostics,
-        instances,
-        ..
-    } = elaborator;
-    (Program { instances }, diagnostics)
+    elaborator.finish()
+}
+
+/// Elaborate the module held by `root` — a source already in `sources` — and everything it imports.
+///
+/// This is the form a command uses. The root is the file the command was given, so it is **read**, not
+/// looked up, and its declared name is compared with nothing (§6 rule 7); everything it imports is found
+/// through `modules`.
+#[must_use]
+pub fn elaborate_source(
+    sources: &mut SourceMap,
+    modules: &dyn ModuleSource,
+    root: SourceId,
+) -> (Program, Diagnostics) {
+    let mut elaborator = Elaborator::new(sources, modules);
+    elaborator.instantiate_source(root, None, String::new(), &[], None, None);
+    elaborator.finish()
 }
 
 struct Elaborator<'a> {
@@ -558,8 +674,27 @@ struct Elaborator<'a> {
     stack: Vec<String>,
 }
 
-impl Elaborator<'_> {
-    /// Elaborate one instance and return its id.
+impl<'a> Elaborator<'a> {
+    fn new(sources: &'a mut SourceMap, modules: &'a dyn ModuleSource) -> Self {
+        Self {
+            sources,
+            modules,
+            diagnostics: Diagnostics::new(),
+            instances: Vec::new(),
+            stack: Vec::new(),
+        }
+    }
+
+    fn finish(self) -> (Program, Diagnostics) {
+        (
+            Program {
+                instances: self.instances,
+            },
+            self.diagnostics,
+        )
+    }
+
+    /// Find an imported module by name, and elaborate it as one instance. Returns the instance's id.
     fn instantiate(
         &mut self,
         module_name: &str,
@@ -594,7 +729,7 @@ impl Elaborator<'_> {
                 "module-not-found",
                 format!("module `{module_name}` was not found"),
                 Label::new(span, "imported here"),
-                "check the module name, or add it to the module path",
+                self.modules.describe_missing(module_name),
             ));
             return None;
         };
@@ -610,6 +745,29 @@ impl Elaborator<'_> {
             return None;
         };
 
+        self.instantiate_source(
+            source_id,
+            Some(module_name),
+            path,
+            arguments,
+            required_version,
+            site,
+        )
+    }
+
+    /// Elaborate the module held by `source_id` as one instance. Returns the instance's id.
+    ///
+    /// `imported_as` is the name an importer wrote, which the module's declared name must match (§6 rule
+    /// 4); the root has none, because nothing imported it.
+    fn instantiate_source(
+        &mut self,
+        source_id: SourceId,
+        imported_as: Option<&str>,
+        path: String,
+        arguments: &[(String, Form)],
+        required_version: Option<Version>,
+        site: Option<Span>,
+    ) -> Option<usize> {
         let (document, read_diagnostics) = read(self.sources, source_id);
         let had_read_errors = read_diagnostics.has_errors();
         for item in read_diagnostics.items() {
@@ -619,8 +777,10 @@ impl Elaborator<'_> {
             return None;
         }
 
-        let declaration = single_module(&document, &mut self.diagnostics)?;
+        let declaration = single_module(&document, source_id, &mut self.diagnostics)?;
         let module = read_module(&declaration, &mut self.diagnostics)?;
+        // The name this instance is known by: the one its importer wrote, or for the root, its own.
+        let module_name = imported_as.map_or_else(|| module.name.clone(), str::to_string);
 
         if module.name != module_name {
             self.diagnostics.push(Diagnostic::error(
@@ -667,7 +827,7 @@ impl Elaborator<'_> {
 
         let bindings = self.resolve_bindings(&module, arguments, site);
 
-        self.stack.push(module_name.to_string());
+        self.stack.push(module_name.clone());
 
         // ⭐ Children are elaborated before the parent is pushed, so `instances` is in
         // dependency order: an instance's imports always have smaller ids than it does.
@@ -784,7 +944,11 @@ impl Elaborator<'_> {
     }
 }
 
-fn single_module(document: &Document, diagnostics: &mut Diagnostics) -> Option<Form> {
+fn single_module(
+    document: &Document,
+    source: SourceId,
+    diagnostics: &mut Diagnostics,
+) -> Option<Form> {
     // §8: a language-version identifier may precede the declaration and is not a stray form — §6's
     // "exactly one top-level form" is about the *declaration*. Without this filter, stating the
     // language version in a module file would be refused as `module-multiple-forms`, which would leave
@@ -798,7 +962,10 @@ fn single_module(document: &Document, diagnostics: &mut Diagnostics) -> Option<F
             diagnostics.push(Diagnostic::error(
                 "module-empty",
                 "this module file holds no declaration",
-                Label::new(Span::new(crate::source::SourceId(0), 0, 0), "empty"),
+                // ⛔ The file that is empty, not source 0 (leaf `M1.29.2`): in a command, source 0 is the
+                // first shipped kind module, so this pointed an author at
+                // `docs/semantics/kinds/core.eadl:1:1` for a module they had written.
+                Label::new(Span::at(source, 0), "this file declares nothing"),
                 "a module file holds exactly one `(defmodule …)` form",
             ));
             None

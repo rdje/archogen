@@ -1,0 +1,10 @@
+; case: bad.bad-param
+; expect: invalid-description
+; code: module-bad-param
+; why: a parameter clause that names no parameter
+;
+(eadl-version eadl/1)
+
+(defmodule bad.bad-param
+  (version 1 0)
+  (param (default 1)))

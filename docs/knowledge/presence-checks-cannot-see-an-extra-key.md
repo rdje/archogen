@@ -4,6 +4,7 @@ answers:
   - "My test suite is green but the output is wrong — what kind of assertion did I write?"
   - "How do I test a parser against a corpus so it actually catches drift?"
   - "Why assert an exact set instead of checking the fields I care about?"
+  - "My test asserts the diagnostic code is there — could the author still be reading a second, false one?"
 type: knowledge
 date: 2026-09-13
 ---
@@ -85,3 +86,16 @@ shipping. There usually is one, and it is usually already sitting in the corpus.
 
 Related: [[doctrine-seams-vs-forking-a-check]] — a check that has only ever been seen green has
 not been shown to check anything.
+
+## A second measured instance: the diagnostic nobody asked for
+
+`crates/eadl-front/tests/f01_f02_modules.rs` checked every refusal of the module elaborator with
+`rendered.contains("module-…")` — presence. `(version one zero)` passed that check for `module-bad-version`
+while the elaborator printed a **second** diagnostic beside it, `module-missing-version: … declares no
+version`, about a module that plainly declares one. And `module-empty` passed with its label pointing at
+source 0, which inside a command is `docs/semantics/kinds/core.eadl` — a file the author never wrote.
+Neither was seen until leaf `M1.29.2` drove every code through `archogen check` from a fixture whose header
+declares **the one code** it must produce, and the census compared the *set* of codes, not membership. The
+first run found 25 of 26 cases right; the 26th was the double report. The label is the other half of the
+lesson: an exact set of codes still cannot see a location, so the location got a leg of its own.
+

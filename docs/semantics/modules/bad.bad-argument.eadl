@@ -1,0 +1,10 @@
+; case: bad.bad-argument
+; expect: invalid-description
+; code: module-bad-argument
+; why: a binding not written `(<param> <value>)`
+;
+(eadl-version eadl/1)
+
+(defmodule bad.bad-argument
+  (version 1 0)
+  (import hw.timer (with 5)))

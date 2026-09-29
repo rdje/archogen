@@ -1,0 +1,13 @@
+; case: app.two-timers
+; expect: ok
+; why: F01 — one module imported twice is two instances with their own bindings
+;
+(eadl-version eadl/1)
+
+(defmodule app.two-timers
+  (version 1 0)
+  (import hw.timer (as fast) (with (tick-rate (tick-rate 100 MHz))))
+  (import hw.timer (as slow) (with (tick-rate (tick-rate 1 MHz))))
+  (export app.rt)
+  (defsystem app.rt
+    (requires (uses fast.timer.counter) (uses slow.timer.counter))))

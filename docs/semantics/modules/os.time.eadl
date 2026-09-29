@@ -1,0 +1,11 @@
+; module: os.time
+; role: imported by the cases in this directory, which is their module path
+; why: a sub-OS module at a second major version
+;
+(eadl-version eadl/1)
+
+(defmodule os.time
+  (version 2 0)
+  (export time.monotonic)
+  (defservice time.monotonic
+    (requires (unambiguous-horizon (at-least 60 s)))))

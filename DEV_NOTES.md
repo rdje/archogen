@@ -1,5 +1,29 @@
 # DEV_NOTES.md
 
+## _(2026-09-29)_ — a code a command cannot reach hides the defects its own tests assert around
+
+- `M1.29.2`, wiring the module elaborator into `archogen check` and `archogen build`. The elaborator had 24
+  codes, every one stated in §4 and asserted by a library test, and no command could reach any of them.
+- ⛔ **The first run of the fixture census found two defects those tests had asserted around since the
+  elaborator was written** (`27a7541`, `M1.4`, `2026-09-13` — 101 commits earlier).
+  The census drove 26 tracked cases through the command, each declaring the *one* code it must produce, and
+  compared the set. `(version one zero)` produced two: `module-bad-version`, and `module-missing-version:
+  … declares no version` about the clause right above it. The library test checked
+  `rendered.contains("module-bad-version")` — presence — and passed. And `module-empty` pointed at
+  `docs/semantics/kinds/core.eadl:1:1`: its label hard-coded source 0, which in a library test is whatever
+  was added first and in a command is the first shipped kind module.
+- ⭐ **Reachability is a property of the pipeline, and it is where these live.** A library test controls
+  what is in the source map and asserts the code it expects; a command decides both, and shows the author
+  every message. Neither defect could be seen from inside the library.
+- The rule had to be written before the loader, and it had one constraint worth recording: `M1.29`'s
+  acceptance asked for resolution "by declared name and not by filename". Read literally — index the
+  directory by what each file declares — §6 rule 4 (a declared name that differs from the imported one is
+  refused) can never fire. So the file is *found* by the imported name and *verified* by the declared one.
+- The freeze gate's first real client: `LANGUAGE-FREEZE` stayed red until `--emit`, went green with the
+  pending note, and went red again with the note moved out — the behaviour `PROGRAM.27` had just made real.
+- Promoted into `docs/knowledge/presence-checks-cannot-see-an-extra-key.md` as its second measured instance,
+  with an `answers:` line.
+
 ## _(2026-09-29)_ — an arm that expects a refusal has to say what the refusal is about
 
 - `PROGRAM.27`, making `LANGUAGE-FREEZE`'s explicitness leg able to fail. The defect was the documented

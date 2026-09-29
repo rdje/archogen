@@ -1,0 +1,10 @@
+; case: bad.unknown-import-clause
+; expect: invalid-description
+; code: module-unknown-import-clause
+; why: an import clause that is not `as`, `version` or `with`
+;
+(eadl-version eadl/1)
+
+(defmodule bad.unknown-import-clause
+  (version 1 0)
+  (import hw.timer (alias timer)))

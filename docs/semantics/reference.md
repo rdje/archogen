@@ -383,7 +383,7 @@ cheapest diagnostic to write is the most expensive to receive.
 | `module-bare-form` | a module holds a form that is neither a declaration nor a module clause | every item in a module is a declaration or a clause; move anything else out |
 | `module-empty` | a module file holds no declaration | a module file holds exactly one `(defmodule …)` form |
 | `module-multiple-forms` | a module file holds more than one top-level form | keep one `(defmodule …)` per file and move the rest into their own modules |
-| `module-not-found` | an import names a module the module path cannot resolve | check the name, or add the directory holding it to the module path |
+| `module-not-found` | an import names a module no file in the module path holds — `a.b` is read from `a.b.eadl` in the directory holding the description (§6 rule 7) | check the name, or put the module beside the description as `<name>.eadl` |
 | `module-name-mismatch` | the name a module declares is not the name it was imported by | make them match — a locked build cannot otherwise tell which module it locked |
 | `module-too-large` | a module has more addressable parts than an instance identifier can hold | split the module |
 | `module-circular-import` | a module imports something that imports it back | break the cycle: elaboration is children-before-parents, so a cycle has no first instance |
@@ -521,6 +521,31 @@ A module is a file holding exactly one `(defmodule …)` form. Its clauses are `
    may be left alone; one without may not, and a binding for a parameter the module does not declare is
    refused rather than ignored — a typo in a parameter name is a description that does not mean what its
    author thinks, which is the most expensive thing a toolchain can accept silently.
+7. **An import is found by a stated rule, and verified by the name the module declares.** The module
+   `(import platform.timer …)` names is read from the file `platform.timer.eadl` in the **module path**,
+   which is the directory holding the description the command was given — one directory, so no two files
+   can compete for one name and no search order has to be chosen. The file is *found* by the name the
+   importer wrote and *verified* by the name its `defmodule` declares, and a disagreement is refused by
+   rule 4: two independent statements that must agree, which is what lets a locked build say which module
+   it resolved. A file that does not exist is `module-not-found`. A file that exists and cannot be read is
+   a failure of the invocation, reported the way an unreadable description is, and not a statement about
+   the description. The description the command was given is never looked up, so its own declared name is
+   not compared with its file name. `crates/eadl-front/src/module.rs`'s `DirectoryModules` implements this
+   rule, and `crates/archogen-cli/tests/module_cases.rs` drives every case under `docs/semantics/modules/`
+   through it.
+8. **A module name is one that can only mean one file.** One or more segments joined by single dots, each
+   segment a lowercase ASCII letter followed by lowercase letters, digits, `-` and `_`: `platform.timer`,
+   `os.rt-core`. Rule 7 turns the name into a file name, so the name has to denote the same file on every
+   machine — no separator can leave the module path (`../x` names no module), no segment is empty
+   (`a..b`), and no uppercase letter exists, because on a case-insensitive filesystem `HW.Timer` and
+   `hw.timer` would be one file on one machine and two on another. An import naming anything else does not
+   name a module, which is `module-bad-import`.
+
+⚠️ **One code has no fixture, and the reason is stated rather than hidden.** `module-too-large` fires when
+a module's source cannot be given an address — at 2^32 bytes — and no tracked fixture carries a
+four-gigabyte file. Every other `module-` code in §4 is produced by a case under
+`docs/semantics/modules/` through `archogen check`. The row's own wording is finding **F-H**, owned by
+leaf `M1.26.2` in `docs/tasks/M1.md`.
 
 ## 7. Kinds, and the one primitive that is not declared in eADL
 

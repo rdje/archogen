@@ -1,0 +1,12 @@
+; module: hw.timer
+; role: imported by the cases in this directory, which is their module path
+; why: a sub-hardware module with one defaulted parameter
+;
+(eadl-version eadl/1)
+
+(defmodule hw.timer
+  (version 1 0)
+  (param tick-rate (default (tick-rate 10 MHz)))
+  (export timer.counter)
+  (defblock timer.counter
+    (offers (counter-width 32 bit))))

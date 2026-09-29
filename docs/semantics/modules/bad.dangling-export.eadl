@@ -1,0 +1,12 @@
+; case: bad.dangling-export
+; expect: invalid-description
+; code: module-dangling-export
+; why: an export the module does not declare
+;
+(eadl-version eadl/1)
+
+(defmodule bad.dangling-export
+  (version 1 0)
+  (export absent)
+  (defblock present
+    (offers (p 1 bit))))

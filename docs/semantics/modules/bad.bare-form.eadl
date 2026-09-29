@@ -1,0 +1,10 @@
+; case: bad.bare-form
+; expect: invalid-description
+; code: module-bare-form
+; why: a module item that is neither a clause nor a declaration
+;
+(eadl-version eadl/1)
+
+(defmodule bad.bare-form
+  (version 1 0)
+  stray)

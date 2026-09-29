@@ -1,0 +1,13 @@
+; case: app.system
+; expect: ok
+; why: F01 — a sub-hardware and a sub-OS module compose, names carried by their alias path; the book's opening example
+;
+(eadl-version eadl/1)
+
+(defmodule app.system
+  (version 1 0)
+  (import hw.soc  (as platform) (version (at-least 1 1)))
+  (import os.time (as clock)    (version (at-least 2 0)))
+  (export app.rt)
+  (defsystem app.rt
+    (requires (uses clock.time.monotonic))))

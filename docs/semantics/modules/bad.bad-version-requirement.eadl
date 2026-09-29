@@ -1,0 +1,10 @@
+; case: bad.bad-version-requirement
+; expect: invalid-description
+; code: module-bad-version-requirement
+; why: a version requirement not written as a relation
+;
+(eadl-version eadl/1)
+
+(defmodule bad.bad-version-requirement
+  (version 1 0)
+  (import hw.timer (version 1 0)))

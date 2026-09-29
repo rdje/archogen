@@ -22,33 +22,44 @@ namespaces, explicit exports, typed parameters and version constraints.
 
 ## What you can run today
 
-⛔ **No command elaborates a module tree yet.** Everything this chapter describes is implemented and
-tested as a library — `crates/eadl-front/src/module.rs`, driven by
-`crates/eadl-front/tests/f01_f02_modules.rs` — but neither `archogen check` nor `archogen build` calls it.
-`ROADMAP.md` §10.1 makes elaboration the pipeline's first step, and wiring it in is leaf `M1.29.2`. Hand
-either command the module above and it says so rather than pretending:
+`archogen check` **elaborates** a module file. The example above is
+`docs/semantics/modules/app.system.eadl`, and the modules it imports sit beside it — that directory is its
+**module path**:
 
 ```console
-$ archogen check app.system.eadl
-archogen: unimplemented: app.system.eadl:1:1 is a module, `(defmodule app.system …)`, and no command elaborates a module tree yet
-  hint: the module reader and elaborator exist as a library (docs/semantics/reference.md §6, docs/book/src/modules.md), but no command calls them, so this file's imports would go unresolved. Wiring them in is task-tree leaf M1.29.2 (docs/TASK_TREE.md); until then, check a description whose top-level forms are its declarations
+$ archogen check docs/semantics/modules/app.system.eadl
+archogen: unimplemented: docs/semantics/modules/app.system.eadl elaborated into 4 instance(s), and no command type-checks an elaborated module tree yet
+  instances: platform.timer = hw.timer 1.0, platform = hw.soc 1.2, clock = os.time 2.0, (root) = app.system 1.0
+  hint: every composition rule of docs/semantics/reference.md §6 held. The declarations of an elaborated tree need the name rule of task-tree leaf M1.29.3 (docs/TASK_TREE.md) before the later passes can read them — how a name written inside an imported module resolves, and what an `export` hides
 $ echo $?
 20
 ```
 
-Exit 20 is a statement about the **tool**, not about your module. Until leaf `M1.29.1` both commands
-answered this same file with `invalid-description`, exit 10 — `schema-unknown-kind` for the `defmodule`,
-then `missing-fact` for `clock.time.monotonic`, because the import that brings it in was never resolved.
-That is a verdict about a system the toolchain never read, and it would have sent you to fix a module
-that has nothing wrong with it.
+Two rules decide what an import reads, and both are normative (`docs/semantics/reference.md` §6):
 
-Three pieces of work stand between this refusal and a checked module tree, each owned by a leaf: a
-module path that finds an imported module on disk (`M1.29.2`); the rule for what a name written *inside*
-an imported module refers to, and what an `export` hides from its importer (`M1.29.3`) — §6 does not
-state it yet, and the later passes cannot read an elaborated program without it; and module parameters
-reaching the declarations they parameterize (`M1.29.4`), since today a `(with …)` binding is recorded and
-then used by nothing. The diagnostics shown below are rendered by the library; none is reachable from a
-command until `M1.29.2` lands.
+- **Rule 7 — an import is found by a stated rule and verified by the name the module declares.**
+  `(import hw.soc …)` reads `hw.soc.eadl` from the directory holding the description you gave the
+  command. The file is *found* by the name you wrote and *checked* against the name its `defmodule`
+  declares, so a file that calls itself something else is refused rather than trusted. A file that is
+  missing is `module-not-found`; one that is there and cannot be read is a failure of the invocation
+  (exit 2), exactly like an unreadable description — never "not found".
+- **Rule 8 — a module name can only mean one file.** Dotted lowercase segments: `hw.soc`, `os.rt-core`.
+  The name becomes a file name, so `../hw.soc` cannot leave the module path, and `HW.Soc` does not exist —
+  on a filesystem that folds case it would be the same file as `hw.soc` on one machine and a different
+  one on the next.
+
+**Every composition rule of §6 is enforced, and the tree is not yet type-checked.** Exit 20 is a
+statement about the tool: the four instances above are exactly what the rules produce, and what stops the
+command is the next step. The declarations of an elaborated tree need a **name rule** — how a name
+written *inside* an imported module resolves, and what an `export` hides from its importer — before the
+schema, presence and refinement passes can read them, and §6 does not state one yet. That is leaf
+`M1.29.3`; checking the tree with names nothing resolves would report missing facts that are not missing.
+Module parameters reaching the declarations they parameterize is `M1.29.4` — today a `(with …)` binding
+is recorded and then used by nothing. `archogen build` answers a module file exactly as `check` does.
+
+Every refusal this chapter shows is rendered by the command from a file in `docs/semantics/modules/`,
+which holds one case for every `module-` code a command can reach; the one code without a case,
+`module-too-large`, fires only on a four-gigabyte source.
 
 ## Elaboration produces instances, not modules
 
@@ -85,29 +96,36 @@ out of ten and is still explicit in the resulting names.
 
 ## Precise composition errors
 
-"There is a cycle" is a puzzle. `a → b → c → a` is a diagnostic.
+"There is a cycle" is a puzzle. The whole chain is a diagnostic — and it is reported at the import
+that closes it, in the file where that import is written:
 
-```text
-error[module-circular-import]: circular import: a → b → c → a
-  = hint: break the cycle by moving the shared declarations into a module that both import, or
-          by removing one edge of a → b → c → a
+```console
+$ archogen check docs/semantics/modules/bad.circular-import.eadl
+error[module-circular-import]: circular import: bad.circular-import → cycle.b → cycle.c → bad.circular-import
+  --> docs/semantics/modules/cycle.c.eadl:9:3
+  |
+9 |   (import bad.circular-import))
+  |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ this import closes the cycle
+  = hint: break the cycle by moving the shared declarations into a module that both import, or by removing one edge of bad.circular-import → cycle.b → cycle.c → bad.circular-import
+archogen: invalid-description: 1 diagnostic(s) in docs/semantics/modules/bad.circular-import.eadl
 ```
 
 A conflicting export names **both** sites, because the author looking at one of them cannot see
 the other:
 
-```text
-error[module-conflicting-export]: `thing` is exported twice by module `dup`
-  --> dup.eadl:4:20
-  |
-4 |            (export thing)
-  |                    ^^^^^ exported again here
-  --> dup.eadl:3:20
-  |
-3 |            (export thing)
-  |                    ----- first exported here
-  = hint: export each name once; two exports of one name give an importer two answers and no
-          rule for choosing between them
+```console
+$ archogen check docs/semantics/modules/bad.conflicting-export.eadl
+error[module-conflicting-export]: `thing` is exported twice by module `bad.conflicting-export`
+  --> docs/semantics/modules/bad.conflicting-export.eadl:11:11
+   |
+11 |   (export thing)
+   |           ^^^^^ exported again here
+  --> docs/semantics/modules/bad.conflicting-export.eadl:10:11
+   |
+10 |   (export thing)
+   |           ----- first exported here
+  = hint: export each name once; two exports of one name give an importer two answers and no rule for choosing between them
+archogen: invalid-description: 1 diagnostic(s) in docs/semantics/modules/bad.conflicting-export.eadl
 ```
 
 Also refused: two imports bound to the same alias (every qualified name becomes ambiguous), an
@@ -121,12 +139,22 @@ else is collected, so a description with three composition problems costs one ed
 ## Versions
 
 `(version (at-least 1 0))` means the same major version and at least that minor. A **major**
-difference is never satisfied, however much newer the module is:
+difference is never satisfied, however much newer the module is — and the refusal points at both the
+requirement and the declaration it cannot be met by:
 
-```text
-error[module-incompatible-version]: module `os.time` is version 2.0 but 1.0 or compatible is required
-  = hint: major versions differ (2 vs 1), so no minor version can satisfy this import — §15 keeps
-          a locked description's meaning, which a major bump is defined not to preserve
+```console
+$ archogen check docs/semantics/modules/bad.incompatible-version.eadl
+error[module-incompatible-version]: module `hw.timer` is version 1.0 but 2.0 or compatible is required
+  --> docs/semantics/modules/bad.incompatible-version.eadl:10:3
+   |
+10 |   (import hw.timer (version (at-least 2 0))))
+   |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ required here
+  --> docs/semantics/modules/hw.timer.eadl:7:1
+  |
+7 | (defmodule hw.timer
+  | ------------------- declared here (continues to line 12)
+  = hint: major versions differ (1 vs 2), so no minor version can satisfy this import — §15 keeps a locked description's meaning, which a major bump is defined not to preserve
+archogen: invalid-description: 1 diagnostic(s) in docs/semantics/modules/bad.incompatible-version.eadl
 ```
 
 "Newer" is not "compatible". An unversioned module is refused outright: an importer cannot state

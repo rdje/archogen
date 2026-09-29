@@ -1,0 +1,5 @@
+; module: hw.nothing
+; role: imported by the cases in this directory, which is their module path
+; why: a module file that holds no declaration
+;
+(eadl-version eadl/1)

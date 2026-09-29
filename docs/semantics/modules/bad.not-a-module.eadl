@@ -1,0 +1,10 @@
+; case: bad.not-a-module
+; expect: invalid-description
+; code: module-not-a-module
+; why: a file an import reads holds a description, not a module
+;
+(eadl-version eadl/1)
+
+(defmodule bad.not-a-module
+  (version 1 0)
+  (import hw.plain))

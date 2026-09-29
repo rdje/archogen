@@ -1,0 +1,9 @@
+; case: bad.bad-version
+; expect: invalid-description
+; code: module-bad-version
+; why: a version that is not two integers
+;
+(eadl-version eadl/1)
+
+(defmodule bad.bad-version
+  (version one zero))

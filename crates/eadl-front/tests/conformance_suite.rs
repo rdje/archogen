@@ -160,11 +160,15 @@ fn the_population_is_the_size_the_census_pins() {
     // 63 → 65 at leaf `M1.28.2`: `invalid-unknown-unit.eadl` and `invalid-quantity-without-unit.eadl`
     // joined, because the schema and the refinement pass learned to refuse a quantity they used to
     // discard, and a new rule with no worked case is a rule nothing in the suite exercises.
+    //
+    // 65 → 100 at leaf `M1.29.2`: the `docs/semantics/modules` root joined with 35 files — 26 cases, one
+    // per `module-` code a command can now reach plus F01's two compositions, and the 9 library modules
+    // they import. §6 had rules and 24 codes and no case a command could run.
     let suite = suite();
     assert_eq!(
         suite.len(),
-        65,
-        "the conformance suite holds {} descriptions and this census pins 65 — if a case was added or \
+        100,
+        "the conformance suite holds {} descriptions and this census pins 100 — if a case was added or \
          removed deliberately, update the census in the same commit and say why in the leaf; if not, a \
          root stopped being walked",
         suite.len()

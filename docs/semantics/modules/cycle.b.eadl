@@ -1,0 +1,9 @@
+; module: cycle.b
+; role: imported by the cases in this directory, which is their module path
+; why: the middle of a three-module cycle
+;
+(eadl-version eadl/1)
+
+(defmodule cycle.b
+  (version 1 0)
+  (import cycle.c))

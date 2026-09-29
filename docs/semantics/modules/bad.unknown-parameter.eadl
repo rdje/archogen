@@ -1,0 +1,10 @@
+; case: bad.unknown-parameter
+; expect: invalid-description
+; code: module-unknown-parameter
+; why: a binding for a parameter the module does not declare
+;
+(eadl-version eadl/1)
+
+(defmodule bad.unknown-parameter
+  (version 1 0)
+  (import hw.timer (with (tickrate (tick-rate 1 MHz)))))

@@ -1,38 +1,32 @@
-//! `archogen check` — type-check a description against a profile.
+//! `archogen check` — elaborate a module tree, and type-check a description, against a profile.
 //!
 //! The first command of the `ROADMAP.md` §10.2 surface to become real. It runs the frontend
 //! pipeline (`eadl_model::check`) and maps its §5.5 verdict to this process's exit code through
 //! [`Status::from_verdict`], so the number a script branches on and the word a human reads come
 //! from the same place.
 //!
-//! ⛔ **It does not elaborate.** `ROADMAP.md` §10.1 puts module elaboration first, and the elaborator
-//! exists (`eadl_front::module`), but no command calls it yet — so a module file is classified by
-//! [`module_file`] and refused by [`refuse_module_file`] rather than checked as if it were a description.
-//! Both commands route through those two functions, which is what `M1.29.2` replaces with elaboration.
+//! ⛔ **A module tree is elaborated and not yet type-checked.** `ROADMAP.md` §10.1 puts elaboration first.
+//! A file [`is_module_file`] recognises is elaborated by [`elaborate_module_file`] from the module path of
+//! `docs/semantics/reference.md` §6 rule 7, and every composition rule of §6 is enforced — but the later
+//! passes cannot read an elaborated program until the name rule of leaf `M1.29.3` exists, so a tree that
+//! elaborates cleanly is answered `unimplemented` rather than checked with names nothing resolves. Both
+//! commands route through those two functions.
 
 use std::io::Write;
+use std::path::Path;
 
-use eadl_front::{read, Form, Position, SourceId, SourceMap};
+use eadl_front::{elaborate_source, read, DirectoryModules, SourceId, SourceMap, Verdict};
 use eadl_model::check::{check, shipped_registry};
 use eadl_model::profile;
 
 use crate::cli::Parsed;
 use crate::status::Status;
 
-/// The leaf that makes a module file something `check` and `build` elaborate instead of refuse.
+/// The leaf that makes an elaborated module tree something `check` and `build` type-check.
 ///
 /// A constant rather than a literal inside the message, so a test can hold it to the task tree: the
 /// refusal names a leaf the tree declares, and it cannot outlive that leaf being closed.
-pub const MODULE_ELABORATION_OWNER: &str = "M1.29.2";
-
-/// A description file that is a module, in the sense of `docs/semantics/reference.md` §6.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ModuleFile {
-    /// The name its `(defmodule …)` declares, when it declares one.
-    pub name: Option<String>,
-    /// Where that declaration starts.
-    pub position: Position,
-}
+pub const MODULE_TYPE_CHECK_OWNER: &str = "M1.29.3";
 
 /// The kind modules shipped with the toolchain.
 ///
@@ -113,8 +107,8 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
         return Status::ToolFailure;
     };
 
-    if let Some(module) = module_file(&sources, id) {
-        return refuse_module_file(err, path, &module);
+    if is_module_file(&sources, id) {
+        return elaborate_module_file(&mut sources, id, path, err, "");
     }
 
     let outcome = check(&sources, id, &registry, active);
@@ -147,61 +141,110 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
     status
 }
 
-/// Classify the description at `id`: `Some` when it is a module file.
+/// Whether the description at `id` is a module file, in the sense of `docs/semantics/reference.md` §6.
 ///
 /// A file is a module when **any** of its declarations is a `(defmodule …)`, not only the first. §6 makes a
 /// module file hold exactly one; a file holding one beside other declarations is still a module file — a
-/// malformed one, `module-multiple-forms`, which is the elaborator's to report — and classifying by the
-/// first declaration alone would hand that file to the schema pass to be told `defmodule` is not a kind.
+/// malformed one, `module-multiple-forms`, which the elaborator reports — and classifying by the first
+/// declaration alone would hand that file to the schema pass to be told `defmodule` is not a kind.
 /// Declarations and not forms, because the language-version identifier may precede the module (§8) and is
 /// not one.
 ///
 /// A file that does not **read** is not classified at all, so the read pass reports it: a syntax error is a
 /// verdict about the bytes, whatever they were meant to be.
 #[must_use]
-pub fn module_file(sources: &SourceMap, id: SourceId) -> Option<ModuleFile> {
+pub fn is_module_file(sources: &SourceMap, id: SourceId) -> bool {
     let (document, diagnostics) = read(sources, id);
-    if diagnostics.has_errors() {
-        return None;
-    }
-    let module = document
-        .declarations()
-        .find(|form| form.head() == Some("defmodule"))?;
-    Some(ModuleFile {
-        name: module
-            .items()
-            .get(1)
-            .and_then(Form::as_symbol)
-            .map(str::to_string),
-        position: sources.get(id)?.position(module.span().start),
-    })
+    !diagnostics.has_errors()
+        && document
+            .declarations()
+            .any(|form| form.head() == Some("defmodule"))
 }
 
-/// Refuse a module file as `unimplemented`, saying what it is and which leaf makes it checkable.
+/// Elaborate the module file at `id` — already in `sources` as `path` — from its module path, and answer
+/// for it. `tail` ends the summary line, so `build` can say that nothing was generated.
 ///
-/// ⛔ Leaf `M1.29.1`. Before it, both commands handed a module file to the schema pass, which answered
-/// `schema-unknown-kind` for the `defmodule` and then `missing-fact` for the names the module imports —
-/// an `invalid-description` **verdict about the system**, exit 10, for a description that is well-formed and
-/// that the tool cannot read. The missing capability is the tool's, so the status is the process one
-/// `build --locked` returns for the same reason: a command that exists, asked for something it cannot do yet.
-pub fn refuse_module_file(err: &mut dyn Write, path: &str, module: &ModuleFile) -> Status {
-    let declared = module.name.as_deref().map_or_else(
-        || "(defmodule …)".to_string(),
-        |name| format!("(defmodule {name} …)"),
-    );
+/// Three answers, in the order that makes each one true:
+///
+/// 1. **A module file that exists and cannot be read is a failure of the invocation** (§6 rule 7): `usage`,
+///    exactly as for an unreadable description, and none of the elaborator's diagnostics — it would have
+///    called the file missing, which is a false statement about the description.
+/// 2. **A composition problem is a verdict about the description**: every diagnostic, and the verdict their
+///    codes carry through [`Verdict::of_code`], the one accessor every consumer shares.
+/// 3. **A tree that elaborates cleanly is `unimplemented`**, naming [`MODULE_TYPE_CHECK_OWNER`] and the
+///    instances it found — not checked with names nothing resolves, and not accepted either.
+pub fn elaborate_module_file(
+    sources: &mut SourceMap,
+    id: SourceId,
+    path: &str,
+    err: &mut dyn Write,
+    tail: &str,
+) -> Status {
+    // §6 rule 7: the module path is the directory holding the description the command was given.
+    let module_path = Path::new(path).parent().unwrap_or_else(|| Path::new(""));
+    let modules = DirectoryModules::new(module_path);
+    let (program, diagnostics) = elaborate_source(sources, &modules, id);
+
+    let unreadable = modules.unreadable();
+    if !unreadable.is_empty() {
+        for (file, error) in &unreadable {
+            let _ = writeln!(
+                err,
+                "archogen: {}: cannot read {file}, which {path} imports: {error}",
+                Status::Usage.slug()
+            );
+        }
+        let _ = writeln!(
+            err,
+            "  hint: the module exists and could not be read — check its permissions and that it is UTF-8 text"
+        );
+        return Status::Usage;
+    }
+
+    if diagnostics.has_errors() {
+        let verdict = diagnostics
+            .items()
+            .iter()
+            .map(|diagnostic| Verdict::of_code(diagnostic.code))
+            .max_by_key(|verdict| verdict.precedence())
+            .unwrap_or(Verdict::InvalidDescription);
+        let status = Status::from_verdict(verdict);
+        let _ = write!(err, "{}", diagnostics.render(sources));
+        let _ = writeln!(
+            err,
+            "archogen: {}: {} diagnostic(s) in {path}{tail}",
+            status.slug(),
+            diagnostics.len()
+        );
+        return status;
+    }
+
+    let instances: Vec<String> = program
+        .instances
+        .iter()
+        .map(|instance| {
+            let name = if instance.path.is_empty() {
+                "(root)"
+            } else {
+                instance.path.as_str()
+            };
+            format!("{name} = {} {}", instance.module, instance.version)
+        })
+        .collect();
     let _ = writeln!(
         err,
-        "archogen: {}: {path}:{}:{} is a module, `{declared}`, and no command elaborates a module tree yet",
+        "archogen: {}: {path} elaborated into {} instance(s), and no command type-checks an elaborated \
+         module tree yet{tail}",
         Status::Unimplemented.slug(),
-        module.position.line,
-        module.position.column
+        program.len()
     );
+    let _ = writeln!(err, "  instances: {}", instances.join(", "));
     let _ = writeln!(
         err,
-        "  hint: the module reader and elaborator exist as a library (docs/semantics/reference.md §6, \
-         docs/book/src/modules.md), but no command calls them, so this file's imports would go \
-         unresolved. Wiring them in is task-tree leaf {MODULE_ELABORATION_OWNER} (docs/TASK_TREE.md); \
-         until then, check a description whose top-level forms are its declarations"
+        "  hint: every composition rule of docs/semantics/reference.md §6 held. The declarations of an \
+         elaborated tree need the name rule of task-tree leaf {MODULE_TYPE_CHECK_OWNER} (docs/TASK_TREE.md) \
+         before the later passes can read them — how a name written inside an imported module resolves, and \
+         what an `export` hides"
     );
     Status::Unimplemented
 }

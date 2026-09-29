@@ -1,0 +1,9 @@
+; module: hw.sized
+; role: imported by the cases in this directory, which is their module path
+; why: a parameter with no default, which every import must bind
+;
+(eadl-version eadl/1)
+
+(defmodule hw.sized
+  (version 1 0)
+  (param size))

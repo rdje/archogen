@@ -1,0 +1,10 @@
+; case: bad.bad-alias
+; expect: invalid-description
+; code: module-bad-alias
+; why: an alias that is not a name
+;
+(eadl-version eadl/1)
+
+(defmodule bad.bad-alias
+  (version 1 0)
+  (import hw.timer (as "timer")))

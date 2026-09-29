@@ -1,0 +1,10 @@
+; case: bad.bad-export
+; expect: invalid-description
+; code: module-bad-export
+; why: an export that is not a name
+;
+(eadl-version eadl/1)
+
+(defmodule bad.bad-export
+  (version 1 0)
+  (export "thing"))

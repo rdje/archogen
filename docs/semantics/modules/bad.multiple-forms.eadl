@@ -1,0 +1,12 @@
+; case: bad.multiple-forms
+; expect: invalid-description
+; code: module-multiple-forms
+; why: a module file holding a second declaration
+;
+(eadl-version eadl/1)
+
+(defmodule bad.multiple-forms
+  (version 1 0))
+
+(defblock stray
+  (offers (p 1 bit)))

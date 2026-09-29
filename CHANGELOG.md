@@ -4,6 +4,31 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — `archogen check` elaborates a module tree, and every `module-` code but one has a case a command runs
+
+`ARCHOGEN-M1-0112` (leaf `M1.29.2`). **590 passed / 0 failed** over 42 suites (baseline 575 / 41, delta =
+15 new legs). Eight mutations seen firing. Conformance suite **65 → 100**; frozen baseline **72 → 107**
+under a pending migration note.
+
+- **The rule first.** `docs/semantics/reference.md` §6 rule 7: an import of `a.b` is read from `a.b.eadl` in
+  the **module path**, the directory holding the description the command was given, and *verified* by the
+  name its `defmodule` declares; a file that is there and cannot be read is a failure of the invocation,
+  never "not found". Rule 8: a module name is dotted lowercase segments, because it becomes a file name.
+  §4's `module-not-found` row no longer tells an author to add a directory to a path that is one directory.
+- **The capability.** `DirectoryModules`, `elaborate_source` (the root is read, not looked up), and one CLI
+  function both commands use: `usage` for an unreadable module, `invalid-description` with the `module-`
+  code for a composition problem, and `unimplemented` naming `M1.29.3` — with the instances listed — for a
+  tree that elaborates cleanly, because the later passes need a name rule §6 does not state yet.
+  `archogen help check` says "elaborate a module tree, and type-check a description".
+- **The cases.** `docs/semantics/modules/` is a new conformance root and a real module path: 9 library
+  modules and 26 cases — the book's two examples (F01), a cycle and a double export (F02), and one case for
+  every other code a command can reach. `crates/archogen-cli/tests/module_cases.rs` runs all of them through
+  both commands and pins each to **exactly** its one code. `module-too-large` is the stated exception.
+- **Two defects only a command could expose, fixed.** A malformed `(version one zero)` was reported twice,
+  the second time as "declares no version"; an empty module was labelled in `docs/semantics/kinds/core.eadl`.
+- Book: `modules.md`'s run-today section, and its cycle, export and version transcripts re-rendered by the
+  command over tracked files; `checking.md`; `cli.md`.
+
 ## archogen — the language freeze can fail on the real tree, and a migration note is a permission for one commit
 
 `ARCHOGEN-PROGRAM-0111` (leaf `PROGRAM.27`). **575 passed / 0 failed** over 41 suites, unchanged.

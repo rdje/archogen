@@ -1,0 +1,9 @@
+; case: bad.missing-name
+; expect: invalid-description
+; code: module-missing-name
+; why: a module that does not say what it is called
+;
+(eadl-version eadl/1)
+
+(defmodule
+  (version 1 0))
