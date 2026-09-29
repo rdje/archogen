@@ -213,10 +213,13 @@ impl Rational {
             return format!("{}/{}", self.numerator, self.denominator);
         }
         let scale = scale.max(fives);
-        let mut multiplier: i128 = 1;
-        for _ in 0..scale {
-            multiplier *= 10;
-        }
+        // ⛔ Checked: a denominator `2^a·5^b` needs `10^max(a, b)`, which passes `i128` beyond 10^38. The
+        // multiply was unchecked, so `1/2^100` panicked in a debug build and printed a wrong decimal in a release
+        // one (leaf `M1.36`, found by the fuzz step on its first run). Such a value has no `i128`-scaled decimal,
+        // so it is written as the fraction it is.
+        let Some(multiplier) = 10_i128.checked_pow(scale) else {
+            return format!("{}/{}", self.numerator, self.denominator);
+        };
         let Some(scaled) = self.numerator.checked_mul(multiplier / self.denominator) else {
             return format!("{}/{}", self.numerator, self.denominator);
         };
@@ -474,6 +477,31 @@ mod tests {
             widening_mul(0xDEAD_BEEF, 0xCAFE_F00D),
             (0, 0xDEAD_BEEF * 0xCAFE_F00D)
         );
+    }
+
+    #[test]
+    fn exact_text_survives_a_power_of_ten_beyond_i128() {
+        // Leaf `M1.36`: these needed 10^100 and 10^39, which the unchecked multiply overflowed — a panic in a
+        // debug build, a wrong decimal in a release one. They have no `i128`-scaled decimal, so they print as
+        // the fractions they are.
+        let two_100 = 1_i128 << 100;
+        assert_eq!(
+            Rational::new(1, two_100).unwrap().to_exact_string(),
+            format!("1/{two_100}")
+        );
+        let five_39 = 5_i128.pow(39);
+        assert_eq!(
+            Rational::new(1, five_39).unwrap().to_exact_string(),
+            format!("1/{five_39}")
+        );
+        // The last that still fits: 10^38 / 5^38 = 2^38, printed with all 38 decimals.
+        let text = Rational::new(1, 5_i128.pow(38)).unwrap().to_exact_string();
+        assert_eq!(text, format!("0.{:0>38}", 1_u64 << 38));
+        // A correct decimal whose digits are 2^127 — `i128::MIN`'s magnitude.
+        let text = Rational::new(-(1_i128 << 112), 5_i128.pow(15))
+            .unwrap()
+            .to_exact_string();
+        assert_eq!(text, "-170141183460469231731687.303715884105728");
     }
 
     #[test]

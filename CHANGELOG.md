@@ -4,6 +4,17 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — printing a quantity never overflows
+
+`ARCHOGEN-M1-0130` (leaf `M1.36`).
+
+- ⛔ `Rational::to_exact_string`, which prints every quantity, built its power of ten with an unchecked
+  multiply. A value like `1/2^100` panicked in a debug build and printed a **wrong decimal** in a release
+  build. It now prints as its exact fraction, the way `1/3` already did.
+- Found by the fuzz harness being built under `PROGRAM.9.2`, on its first run, on every seed.
+- A boundary test on both sides of the limit. The old multiply restored as a mutation fails it. All 120
+  tracked descriptions produce identical exit codes and identical output.
+
 ## archogen — the reader no longer crashes on an unknown escape before a multi-byte character
 
 `ARCHOGEN-M1-0129` (leaf `M1.35`).

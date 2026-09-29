@@ -38,6 +38,11 @@ something that reads like a measurement:
 0.125      exact, so written as a decimal
 ```
 
+A value whose exact decimal would need a power of ten beyond the representation, such as `1/2^100`,
+is written as its fraction too. Until leaf `M1.36` the printer multiplied that power of ten
+unchecked. It panicked in a debug build and printed a wrong decimal in a release build, and the
+fuzz step found it on its first run.
+
 Every operation is checked. Overflow returns "no result", never a wrapped one — a wrapped
 numerator turns an unschedulable system into a schedulable-looking one, and nothing in the
 output would say so.
