@@ -13,10 +13,13 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M1` → frontier `M1.29.4`. `PROGRAM` `.11`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
-- **Next action:** **`M1.29.4`, medium — module parameters** are bound and consumed by nothing (`Instance::bindings` is read
-  only by tests): state the substitution rule in §6 first, then make two instances of one module differ in a
-  declaration, not only in `bindings`. `docs/semantics/modules/app.two-timers.eadl` is the natural fixture.
+- **Active tree:** `PROGRAM` → frontier `PROGRAM.11`. `M1` `.29.4` (**waiting on the director**); `API` `.1`;
+  `S0` `.8`; `M2` `.8.2`.
+- **Next action:** **`PROGRAM.11`, medium** — the repository-boundary doctrine in **both** directions
+  (`docs/decisions/decision_repository-boundary-read-only.md`); then `PROGRAM.18` (controls with no repeatable
+  RED arm), `.24` (the mirror of `BOOK-ANCHORS`), `.28` (no tier runs any `--self-test`). ⏳ **`M1.29.4` waits
+  on the director's call** on how a declaration references a module parameter —
+  `decision_findings-for-director-review.md` §7; the value-model defect it measured lands with that choice.
 - ⭐ **Closed today:** `M1.29.1`–`.3`, `M1.31`, `M1.33`, `PROGRAM.27` — `archogen check` elaborates **and
   type-checks** a module tree (§6 rules 7–10); a name is declared once (§7 rule 6), for a file and a tree.
   30 cases in `docs/semantics/modules/`. A migration is **two commits** (`pending`, then `applied` — enforced).

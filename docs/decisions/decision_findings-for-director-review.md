@@ -5,7 +5,7 @@
 - **Status:** `active`
 - **Owner / source:** raised during the M0 + M1 build; recorded here so they survive the session
 
-Six items are recorded here so they survive the session. Three are outside an implementer's
+Seven items are recorded here so they survive the session. Three are outside an implementer's
 authority to settle; the fourth (§4) is a measurement about the programme's own evidence that you
 should see even though it is already fixed; the sixth (§6) is a review of **your own amendment**
 by the model that has never read the implementation. Each is tracked as work, so nothing here
@@ -185,6 +185,24 @@ is where this lands.
 the specification; the amendment that closed them was written by one author, and a second reader
 found gaps in *that*. The mechanism is not a one-off audit — it is worth running at every point
 where a single author's resolution gets to look like the specification.
+
+## 7. How a module declaration refers to its parameter — a surface choice on a frozen language (`2026-09-29`)
+
+`ROADMAP.md` §5.1.1 asks for **typed parameters** and §10.1 step 1 for "bounded deterministic expansion".
+Today a module parameter is bound and then consumed by nothing, and — measured — its bound value has three
+different shapes depending on whether it came from a default, a one-form argument or a two-form argument, so
+no consumer could use it as it stands (`M1.29.4` in `docs/tasks/M1.md` carries the probe output). `eadl/1` is
+frozen, so whatever lands needs a migration note, and a surface spelling is expensive to change once
+descriptions use it.
+
+**The proposal on the leaf:** a parameter binds the forms after its name; it carries a type from the schema's
+existing value types, `(param rate (holds quantity) (default 10 MHz))`; and a declaration refers to it with
+an explicit `(param-value rate)` form, spliced in place, only in clause operands. Rejected: a bare-name
+reference (captures vocabulary words, invisible to `grep`) and a sigil `$rate` (a character-level special
+case in an otherwise uniform symbol grammar).
+
+**The decision needed:** accept the proposal, or name a different spelling. `M1.29.4` waits on it; nothing
+else does, and the leaf is medium priority, so the frontier has moved past it rather than stalling.
 
 ## A note on what "done" means so far
 
