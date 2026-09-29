@@ -13,24 +13,24 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M1` → frontier `M1.26.1`. `PROGRAM` `.27`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
-- **Next action:** **`M1.26.1`** — gap (a) of `M1.26`, decomposed into two children. **16** of the
-  workspace's **76** diagnostic codes are stated by no normative document and the book renders **8**, so
-  leg 8 checks those for *existence* only. Lands a second normative document with its own declaration and
-  a both-directions census, widens leg 8 to every document's, answers **F-I**, and carries the rule
-  `M1.28.2` left enforced but unstated: `<number> <symbol>` is a quantity, a lone number a count.
+- **Active tree:** `M1` → frontier `M1.29`. `PROGRAM` `.27`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
+- **Next action:** **`M1.29`, high — nothing in production elaborates a module tree**, and three surfaces
+  claim otherwise. `git grep -n "elaborate(" -- crates` outside `src/module.rs` → two hits, both in
+  `tests/f01_f02_modules.rs`; `MemoryModules` is the only `ModuleSource`; `archogen check` on `modules.md`'s
+  own opening `(defmodule …)` answers `schema-unknown-kind`, while `spec.rs:151` — what `archogen help
+  check` prints — says "elaborate and type-check". So §10.1 step 1 does not run, **none of §6's 24
+  `module-*` codes is reachable from any command**, and F01/F02 are green at library level only. Then
+  `M1.26.1` (gap (a)), `.2` (gap (b)), `M1.30` (§5.3's metadata, computed and dropped).
 - ⭐ **`M1.28` is closed** (both children): `check` and `build` agree about a malformed quantity —
   `ValueType::Quantity`, four `task` clauses onto it, `refinement.rs` propagating not discarding,
-  `Verdict::of_code` in one place (exit **70 → 10**). 76 descriptions censused: **1** changed, **0**
-  acceptances lost; the lesson is `an-existence-census-cannot-see-a-discarded-result.md`.
+  `Verdict::of_code` in one place (exit **70 → 10**). 76 descriptions censused: **1** changed, **0** lost.
 - ⛔ **F-O → `PROGRAM.27`, high: `LANGUAGE-FREEZE`'s explicitness leg cannot fail on the real tree** —
-  with the baseline amended and **no note at all** it prints `OK`: its notes grep matches
-  `docs/semantics/migrations/README.md`'s form template, and `names_construct`'s `*all*` case reads that
-  template as covering every construct. All nine arms run against a scratch directory, so none saw it.
+  with the baseline amended and **no note at all** it prints `OK`: its notes grep matches the migrations
+  `README.md`'s form template and `names_construct`'s `*all*` case reads it as covering every construct.
 - ⭐ **`M1.13` is closed: `eadl/1` is frozen and gated** — one manifest (**no count** in it), one reader,
-  four two-sided rules, `BASELINE.txt` (**72** digests enumerated at run time), and `LANGUAGE-FREEZE`,
-  whose **second** leg is what stops `--emit` being the waiver — and is the leg **F-O** found inert. Also
-  closed: `M1.25`, `M1.13.4`, `.3`, `PROGRAM.21`, `M1.13.1`, `M1.20`, `M1.12`; F-F by `M1.13.2`.
+  four two-sided rules, `BASELINE.txt` (**72** digests enumerated at run time), and `LANGUAGE-FREEZE`, whose
+  **second** leg is what stops `--emit` being the waiver — and is the leg **F-O** found inert. Also closed:
+  `M1.25`, `M1.13.4`, `.3`, `PROGRAM.21`, `M1.13.1`, `M1.20`, `M1.12`; F-F by `M1.13.2`.
 - **⭐ Tree `API`** (ruled `2026-09-28`, `decision_programmatic-interface.md`): one engine API, a **wasm**
   binding and an **MCP server**, post-build only; `API.3`–`.7` waited on `M1.13`'s freeze, now closed, so
   the frontier order is a director's call and not a dependency. **`PROGRAM.11`** is the other active
