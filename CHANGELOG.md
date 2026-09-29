@@ -4,6 +4,23 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — every other repository is read-only, stated where agents read it and gated where it shows
+
+`ARCHOGEN-PROGRAM-0119` (leaf `PROGRAM.11`). A new doctrine, `REPOSITORY-BOUNDARY`, nine RED arms, five
+mutations seen firing; all doctrines green; 0.16 s on the pre-commit path.
+
+- **The rule was nowhere a resuming agent reads** — `CLAUDE.md` and `AGENTS.md` carried no word of it, which
+  is how a durable record once stated an inbound crossing as an outbound one. It is a non-negotiable in
+  `CLAUDE.md` now, both directions, where `AGENTS.md` already sends every agent (the scaffold updater would
+  overwrite `AGENTS.md`, not `CLAUDE.md`).
+- **The gate checks what is visible from here:** each vendored checkout this repository pins is at its pin,
+  with no local-only commit, no modified tracked file and no created file. Two measurements shaped it: the
+  naive "local commits" census counts fetched tags and reported **4 040** phantom commits in one nested
+  checkout, so tags are excluded; and the vendor's own documented bootstrap legitimately dirties its nested
+  checkouts, so the gate covers the pins this repository owns and says so.
+- `scripts/check_repository_boundary.sh`, `DOCTRINE_ENFORCEMENT.md`, `TOOLBOX.md`, the decision record, and a
+  section in the book's `verification.md`.
+
 ## archogen — a name is declared once
 
 `ARCHOGEN-M1-0116` (leaf `M1.33`). **602 passed / 0 failed** over 42 suites (baseline 596, delta = 6 new

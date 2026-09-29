@@ -42,6 +42,15 @@ human is working. Follow it exactly.
   gone. Kill stragglers AND their children — a parent's death does not propagate.
 - **A commit message ends with its own last line** — no agent/tool attribution trailers
   (`COMMIT.md`); the `commit-msg` hook refuses them.
+- **Every other git repository is read-only — in both directions.** *Outbound:* never create a
+  commit, branch, tag or file in any repository but this one, the vendored checkouts under
+  `vendor/` included; reading, fetching, checking out a published commit, building by the
+  documented route and moving **our own** submodule pin are consumption, not writes. *Inbound:* a
+  change another project's agent delivers here lands through a task-tree leaf recording who
+  authorized it, what it touched and what it preserved. The `REPOSITORY-BOUNDARY` doctrine checks
+  the part visible from here — each vendored checkout at its pin, nothing committed, modified or
+  created in it; the rest is this rule
+  (`docs/decisions/decision_repository-boundary-read-only.md`).
 
 > One rule above all: **information that exists only in the live conversation is not yet
 > saved — route it to a layer and commit it before the turn ends.**

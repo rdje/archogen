@@ -290,7 +290,7 @@ mdBook that is the director's window into the project.
   decision can be re-taken against it rather than re-argued from memory.
 
 - ID: `PROGRAM.11`
-  Status: `active`
+  Status: `done`
   Goal: state the **repository boundary in both directions** where a resuming agent actually reads
   it, and gate the part that is observable from inside this repository: no archogen agent writes
   into another repository or a vendored submodule's own history (**outbound**), and a change
@@ -327,8 +327,79 @@ mdBook that is the director's window into the project.
   only require that the inbound one land through a leaf. What it can do is put the rule where every
   agent reads it, and detect the outbound symptom visible from here: a vendored submodule carrying
   local commits or local modifications. The leaf must not claim more than that.
-  Verification: `pending`
-  Commit: `pending`
+  Scope, decided `2026-09-29` on measurement, before the check was written: the gate covers the pins
+  **this repository owns** — the top-level submodules its index records as gitlinks — and not the
+  checkouts nested inside them. Measured at `b9f6e22`: `vendor/linkedspec` itself is clean on every count
+  (checked out at its pin `2ac834913`, **0** commits reachable from `HEAD` or a local branch and from no
+  remote-tracking ref or tag, no modified tracked file, no untracked file), while its nested RGX corpora
+  under `rgx/subs/pgen/stimuli/` carry thousands of changed entries and several moved pins. Those are the
+  vendor's **own documented bootstrap** at work — `scripts/linkedspec_eval.sh prepare` runs RGX's published
+  route — which the director's rule explicitly permits ("normal documented builds and reuse of their outputs
+  are permitted"), so flagging them would make the gate refuse every commit for consumption. Two
+  measurements shaped the rules: `rev-list --all --not --remotes` **overcounts**, because `--all` includes
+  fetched tags (it reported 4 040 "local" commits in one nested checkout), so a local-only commit is one
+  reachable from `HEAD` or `refs/heads` and from no remote-tracking ref **and no tag**; and `AGENTS.md` is on
+  `scripts/update_scaffold.sh`'s overwrite list while `CLAUDE.md` is project-owned, so the rule is stated in
+  `CLAUDE.md`, where `AGENTS.md` already sends every agent — an edit the scaffold would erase is no edit.
+  Verification: see the checklist — the rule stated in `CLAUDE.md`, a registered check with nine arms, five
+  mutations seen firing, the real tree green.
+  Commit: `ARCHOGEN-PROGRAM-0119 (leaf PROGRAM.11)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — the rule was nowhere a resuming agent reads, and nothing observed the
+    outbound symptom:
+    ```text
+    $ git grep -n -i "read-only\|repository boundary" b9f6e22 -- CLAUDE.md AGENTS.md
+      (no match)                                                          rc=1
+    $ git grep -n "vendor/\|submodule" b9f6e22 -- scripts/check_doctrines.project.sh
+      (no match)                                                          rc=1 — no doctrine looks at vendor/
+      (the bare word `vendor` matches FEEDBACK-SELF-CONTAINED's "vendor register" — a phrase, not the path)
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — WHY the direction was once recorded backwards: the rule lived only in
+    a session prompt, so the tree could not answer "who may write where". WHERE the observable symptom sits,
+    measured on the real checkout and its nested ones:
+    ```text
+    $ git -C vendor/linkedspec rev-parse HEAD ; git ls-files -s vendor/linkedspec
+      2ac834913d85c32f532be9b0aab63644838a577a
+      160000 2ac834913d85c32f532be9b0aab63644838a577a 0	vendor/linkedspec
+    $ git -C vendor/linkedspec rev-list HEAD --branches --not --remotes --tags -- | wc -l   -> 0
+    $ git -C vendor/linkedspec/rgx/subs/pgen/stimuli/vhdl/subs/PoC rev-list --all --not --remotes | wc -l
+      -> 4040   (fetched tags counted as "local": the naive census is wrong)
+    ```
+    So a correct check scopes to the pins this repository owns and excludes tags from "local-only".
+  - [x] **FIX** — `CLAUDE.md` gains the non-negotiable, both directions, naming the doctrine and the decision
+    (the scaffold overwrites `AGENTS.md` but not `CLAUDE.md`, and `AGENTS.md` already routes there);
+    `scripts/check_repository_boundary.sh` checks every gitlink the index records — at its pin, no
+    local-only commit, no modified tracked file, no created file — and passes an un-checked-out submodule
+    with a note; registered as `REPOSITORY-BOUNDARY` in `scripts/check_doctrines.project.sh`; mirrored in
+    `DOCTRINE_ENFORCEMENT.md` and `TOOLBOX.md`; the decision record's follow-up item rewritten as what is
+    now enforced, with the nested-checkout limit.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    $ bash scripts/check_repository_boundary.sh
+      repository-boundary: OK (1 vendored checkout(s) at their pins, with nothing written into them)  0.16 s
+    $ bash scripts/check_repository_boundary.sh --self-test
+      repository-boundary self-test: 9 pass / 0 fail (9 arms)
+    ```
+    Five mutations, each seen failing exactly the arm named for it (restored from a copy, `cmp`-verified):
+    ```text
+    R-1 tags counted as local (the naive census)  -> 7 pass / 2 fail: the TAG arm and even the CLEAN arm
+    R-2 local branches not examined               -> 8 pass / 1 fail: the local-branch arm
+    R-3 the pin not compared                      -> 8 pass / 1 fail: the moved-off-its-pin arm
+    R-4 modified tracked files not looked for     -> 8 pass / 1 fail: the modified-file arm
+    R-5 created files not looked for              -> 8 pass / 1 fail: the created-file arm
+    ```
+    ⛔ One arm was vacuous as first written — the tag pointed at a commit `origin/main` already reached, so it
+    passed with or without the exclusion — found by asking what the arm could fail on, and re-seeded on a
+    commit only the tag reaches; R-1 then turned it red.
+  - [x] **NO REGRESSION** — `scripts/check_doctrines.sh` → `=== all doctrines green ===` with the new
+    doctrine; no Rust changed (`cargo test` not required by the change, run at the commit's focused tier);
+    `check_book_anchors.sh` → `OK (19, 3)`; `mdbook build` `rc=0`; every other gate's `--self-test`
+    unchanged.
+  - [x] **LOCKSTEP** — `CLAUDE.md`, `DOCTRINE_ENFORCEMENT.md`, `TOOLBOX.md`, the decision record, the book's
+    `verification.md` ("Other repositories are read-only"), `MEMORY.md`, `LIVE_STATUS.md`, `CHANGELOG.md`,
+    `docs/TASK_TREE.md`, this tree.
 
 - ID: `PROGRAM.12`
   Status: `done`
@@ -1957,20 +2028,19 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.11` | `active` | the repository-boundary doctrine, **in both directions**. The rule was nowhere in the committed tree, which is how an *inbound* crossing got recorded backwards in a durable record. Priority medium: the outbound half is preventive, the inbound half fired once and was handled correctly |
-| 2 | `PROGRAM.18` | `pending` | **medium-high** — **nine** of eighteen registered controls carry no repeatable `--self-test` RED arm. ⛔ The figure this row carried was **ten**, and `PROGRAM.21` moved it: `check_task_acceptance.sh` now ships nine arms, so `PROGRAM.18` must **re-run its census** rather than reuse the number — the exact defect class `PROGRAM.20` exists to catch. Its own reason for being sequenced behind `PROGRAM.21` is discharged: arming the boxes is now meaningful because the check reads the right ones |
-| 3 | `PROGRAM.24` | `pending` | **medium-high** — the mirror direction of `BOOK-ANCHORS`, which nobody checks: does a capability the codebase has get described in the book? One live instance measured `2026-09-28`: the `rt-analysis` crate is named nowhere in `docs/book/`, and `analysis.md` — the chapter about what it establishes — cites only `ROADMAP.md` and a cost-accounting doc, passing both `BOOK-ANCHORS` legs while never telling its reader where the code is. Filed by `M1.12.5` on the director's lockstep instruction |
-| 4 | `PROGRAM.28` | `pending` | **medium** — no tier and no CI workflow runs any gate's `--self-test`: 10 gates carry one and all 10 pass today, but an arm is re-fired only when somebody runs it by hand. Found by `PROGRAM.27`, which had to. Sequenced after `PROGRAM.18`, whose new arms it would then run too |
-| 5 | `PROGRAM.5` | `pending` | the §15/§19 dependency and evidence ledger — every external source claim in the book should resolve to a row, and `BOOK-ANCHORS` now checks the *internal* ones. The director has offered a read-only external document source (ISA / RISC-V / devicetree / peripheral specifications) reachable by operator-relayed request; the ledger is where that seam gets a row |
-| 6 | `PROGRAM.9` | `pending` | the extended tier reports `incomplete` on every run until its three steps exist |
-| 7 | `PROGRAM.6` | `pending` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |
-| 8 | `PROGRAM.13` | `pending` | twelve closed leaves in `BOOTSTRAP`, `M2` and this tree do not name their own commit — backfill both logs from git, then `PROGRAM.14` gates it so the gap cannot reopen |
-| 9 | `PROGRAM.15` | `pending` | a feedback register row that contradicts its own issue sub-tree passes every gate today; five state transitions in six commits held only by hand-editing and a manual census |
-| 10 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
-| 11 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. ⭐ A **near-miss** worth pricing in, recorded honestly as a near-miss and not as a fourth instance: `PROGRAM.18`'s frontier row still read "ten of eighteen controls" while this leaf was being written, and was corrected in the same commit — it would have gone stale the moment the fix landed, and nothing in the tree compares a control count against the controls. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with. ⛔ An **eighth** shape landed `2026-09-29` and it falsifies the acceptance's *population* rather than adding a figure: `CHANGELOG.md` said "Newest first" and did not, one entry sitting above six newer ones for seven commits because five consecutive commits inserted at the same wrong anchor — and `CHANGELOG.md` is not one of the three live surfaces the acceptance enumerates. Two falsifications of a three-item list, so the population becomes every live surface the commit stages |
-| 12 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
-| 13 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
-| 14 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
+| 1 | `PROGRAM.18` | `pending` | **medium-high** — **nine** of eighteen registered controls carry no repeatable `--self-test` RED arm. ⛔ The figure this row carried was **ten**, and `PROGRAM.21` moved it: `check_task_acceptance.sh` now ships nine arms, so `PROGRAM.18` must **re-run its census** rather than reuse the number — the exact defect class `PROGRAM.20` exists to catch. Its own reason for being sequenced behind `PROGRAM.21` is discharged: arming the boxes is now meaningful because the check reads the right ones |
+| 2 | `PROGRAM.24` | `pending` | **medium-high** — the mirror direction of `BOOK-ANCHORS`, which nobody checks: does a capability the codebase has get described in the book? One live instance measured `2026-09-28`: the `rt-analysis` crate is named nowhere in `docs/book/`, and `analysis.md` — the chapter about what it establishes — cites only `ROADMAP.md` and a cost-accounting doc, passing both `BOOK-ANCHORS` legs while never telling its reader where the code is. Filed by `M1.12.5` on the director's lockstep instruction |
+| 3 | `PROGRAM.28` | `pending` | **medium** — no tier and no CI workflow runs any gate's `--self-test`: 10 gates carry one and all 10 pass today, but an arm is re-fired only when somebody runs it by hand. Found by `PROGRAM.27`, which had to. Sequenced after `PROGRAM.18`, whose new arms it would then run too |
+| 4 | `PROGRAM.5` | `pending` | the §15/§19 dependency and evidence ledger — every external source claim in the book should resolve to a row, and `BOOK-ANCHORS` now checks the *internal* ones. The director has offered a read-only external document source (ISA / RISC-V / devicetree / peripheral specifications) reachable by operator-relayed request; the ledger is where that seam gets a row |
+| 5 | `PROGRAM.9` | `pending` | the extended tier reports `incomplete` on every run until its three steps exist |
+| 6 | `PROGRAM.6` | `pending` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |
+| 7 | `PROGRAM.13` | `pending` | twelve closed leaves in `BOOTSTRAP`, `M2` and this tree do not name their own commit — backfill both logs from git, then `PROGRAM.14` gates it so the gap cannot reopen |
+| 8 | `PROGRAM.15` | `pending` | a feedback register row that contradicts its own issue sub-tree passes every gate today; five state transitions in six commits held only by hand-editing and a manual census |
+| 9 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
+| 10 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. ⭐ A **near-miss** worth pricing in, recorded honestly as a near-miss and not as a fourth instance: `PROGRAM.18`'s frontier row still read "ten of eighteen controls" while this leaf was being written, and was corrected in the same commit — it would have gone stale the moment the fix landed, and nothing in the tree compares a control count against the controls. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with. ⛔ An **eighth** shape landed `2026-09-29` and it falsifies the acceptance's *population* rather than adding a figure: `CHANGELOG.md` said "Newest first" and did not, one entry sitting above six newer ones for seven commits because five consecutive commits inserted at the same wrong anchor — and `CHANGELOG.md` is not one of the three live surfaces the acceptance enumerates. Two falsifications of a three-item list, so the population becomes every live surface the commit stages |
+| 11 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
+| 12 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
+| 13 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
@@ -2073,6 +2143,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-29` | `PROGRAM.20` | **docs only, no code staged — two instances of the seventh shape routed in by `M1.31`, and the population they belong to measured.** Every `error[…]` block in `docs/book/src/*.md` classified by its first `-->`; the tracked ones re-run through `archogen check` and compared verbatim | 20 blocks: **5** over a tracked input (4 verbatim; `checking.md:93` wraps a hint and drops the verdict line), **7** over an untracked input, **8** with no `-->` at all — including `checking.md:115`, which drops the location, source and marker lines the command prints. 15 of 20 cannot be checked, and a population keyed on `-->` cannot see 8 of them |
 | `2026-09-29` | `PROGRAM.27` | the false green reproduced on `docs/semantics/migrations/` itself with `7f46f4d`'s baseline as `HEAD`'s side; four real-directory cases after the fix, and the real tree before and after the flip; `--self-test` (16 arms); six mutations P-A–P-F with `cmp` restoration; every gate's `--self-test`; `make focused`; `cargo test --all`; the doctrine driver; `mdbook build` | **rc 0 → rc 1** with no note; the four cases OK / refused / OK / refused as specified; leg C fired on `M1.28.2`'s note on its first real run; 16 / 0; P-E shows the deployed-directory arm red under the shipped logic, P-F shows the two formerly vacuous arms refused *for another reason*; ten gates' self-tests all green; **575 passed / 0 failed**; 13 doctrines green |
 | `2026-09-29` | `PROGRAM.20` | **docs only — the book population re-measured, keyed on the `$ archogen check` line.** Every `error[…]` block classified by its command line (or its first `-->` when it has none), the tracked ones re-run through the command | 20 blocks: **9** tracked (7 verbatim), **6** untracked, **5** location-free — 11 uncheckable, was 15; the movement is `M1.31`'s and `M1.29.2`'s re-rendered transcripts |
+| `2026-09-29` | `PROGRAM.11` | `git grep` for the rule in the entrypoints and for any vendor doctrine at `b9f6e22`; the real checkout's pin, local-only commits (tags excluded) and status; the naive census on one nested checkout; the new check and its `--self-test`; five mutations R-1–R-5 with `cmp` restoration; the doctrine driver | the rule absent from both entrypoints and no doctrine looking at `vendor/` → both fixed; the real checkout clean (**0** local-only commits), the naive census **4 040** on a nested one; **9 / 0** arms; every mutation fails exactly its arm, one arm found vacuous first and re-seeded; all doctrines green |
 
 ## Commit Log
 
@@ -2097,6 +2168,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.20` | `ARCHOGEN-PROGRAM-0110 (leaf PROGRAM.20)` | **instances recorded, the register not built** — two abridged `checking.md` transcripts routed in by `M1.31`, and the first whole-population measurement of the book's rendered diagnostics: 15 of 20 blocks cannot be re-run, and 8 carry no `-->` for a population to key on |
 | `PROGRAM.27` | `ARCHOGEN-PROGRAM-0111 (leaf PROGRAM.27)` | **`LANGUAGE-FREEZE` can fail on the real tree.** A pending note is a line exactly `- status: pending`, `constructs:` a list compared exactly, and a new leg refuses a note `HEAD` already carries as pending — so a note is a permission for one commit, and `M1.28.2`'s, open for five, is flipped. Two vacuous arms found and fixed (unsorted fixtures), every refusing arm now names its subject, and the classifier names the file it parsed. `PROGRAM.28` filed: no tier runs any gate's `--self-test` |
 | `PROGRAM.20` | `ARCHOGEN-PROGRAM-0113 (leaf PROGRAM.20)` | **re-measurement recorded, and `M1.29.2`'s migration note flipped to `applied`** — the second commit of the two-commit lifecycle, which the freeze gate's spent-note leg refused the tree until it happened |
+| `PROGRAM.11` | `ARCHOGEN-PROGRAM-0119 (leaf PROGRAM.11)` | **every other repository is read-only, stated and gated.** The rule in `CLAUDE.md` (both directions), and `REPOSITORY-BOUNDARY` on every commit: each vendored checkout this repository pins is at its pin with nothing committed, modified or created in it. Scoped on measurement to the pins this repository owns — the vendor's documented bootstrap legitimately dirties its nested checkouts — and with tags excluded from "local-only", because the naive census counted 4 040 phantom commits |
 
 ## Changelog
 

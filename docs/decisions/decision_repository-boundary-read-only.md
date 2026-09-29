@@ -85,8 +85,14 @@ A rule that lives only in a prompt is weaker than either.
 4. **An externally delivered change is a claim, not a result.** Give it a leaf, record the
    authorization and the files it touched, preserve what it overwrote, and never let it move a
    verdict that archogen's own measurement owns.
-5. **Owned follow-up:** `PROGRAM.11` states both directions in the durable docs a resuming agent
-   actually reads, and adds a mechanical check for the outbound symptom that is visible from here —
-   a vendored checkout carrying local commits or local modifications.
+5. **Stated and enforced since `PROGRAM.11` (`2026-09-29`).** Both directions are a non-negotiable in
+   `CLAUDE.md`, where `AGENTS.md` sends every agent, and the `REPOSITORY-BOUNDARY` doctrine
+   (`scripts/check_repository_boundary.sh`) checks the outbound symptom visible from here on every
+   commit: each vendored checkout this repository pins is **at its pin**, with **no local-only commit**
+   (reachable from `HEAD` or a local branch and from no remote-tracking ref or tag), **no modified tracked
+   file** and **no created file**. ⚠️ It covers the pins this repository owns, not the checkouts nested
+   inside them: the vendor's own documented bootstrap moves and dirties those — measured, thousands of
+   entries under `rgx/subs/pgen/stimuli/` — and a documented build is consumption. The inbound half has no
+   gate and cannot have one from here; it is the rule, and a leaf.
 
 Related: [[decision_findings-for-director-review]] (what needs the director, not an agent).

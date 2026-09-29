@@ -192,6 +192,25 @@ movement is correct, or complete, or that every description the change invalidat
 residue is review, exactly as `BOOK-ANCHORS` states its own. The gate removes the cheapest failure, a
 frozen construct edited silently, and leaves the expensive one to the reader.
 
+## Other repositories are read-only
+
+`REPOSITORY-BOUNDARY` runs with the other doctrines on every commit. It checks the one place this
+repository can see another: each vendored checkout it pins — today `vendor/linkedspec` — must be **at
+its pin**, with **no commit made there**, **no file changed** and **no file created**. Reading a vendor,
+building it by its documented route and moving our own pin to a commit it has published are all fine;
+writing into it is not, and neither is accepting a change another project's agent wrote into this one
+without a task-tree leaf that records who authorized it (`CLAUDE.md`, and
+`docs/decisions/decision_repository-boundary-read-only.md` for the one time it happened).
+
+```console
+$ bash scripts/check_repository_boundary.sh              # the gate
+$ bash scripts/check_repository_boundary.sh --self-test  # its RED arms, on scratch repositories
+```
+
+⚠️ It does not look inside the checkouts *nested* in a vendor. The vendor's own published bootstrap
+moves and dirties those — thousands of entries, measured — and running a documented build is
+consumption, so a gate that counted them would refuse every commit for doing what the rules allow.
+
 ## Why `focused` runs the whole suite
 
 §14.3 defines the focused tier as "format/type checks and **affected** contract tests", and
