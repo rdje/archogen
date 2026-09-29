@@ -267,8 +267,96 @@ const KIND_HEADER: &str = include_str!("../src/kind.rs");
 const BOOK_KINDS: &str = include_str!("../../../docs/book/src/kinds.md");
 const BOOK_WORKLOAD: &str = include_str!("../../../docs/book/src/workload.md");
 
-/// A word that marks the figure on its own line as history rather than as the current measurement.
-const HISTORY_MARKERS: &[&str] = &["was", "were", "previously", "before", "used to"];
+/// The lines that may carry a reach figure **other than** the current measurement, quoted verbatim.
+///
+/// ⛔ An explicit list, and not a scan for past-tense words. The scan this replaced excused any
+/// non-current figure on a line containing `was`, `were`, `previously`, `before` or `used to`, and
+/// `M1.24` built the same escape for a sibling gate and **measured it passing on its own defect**: the
+/// corpus index's stale line reads `…worked classification case before adoption", and the five ambiguous
+/// cases`, where the `before` belongs to a quotation of `ROADMAP.md` §4.3 seven words ahead of the wrong
+/// number. A marker scan cannot tell "this figure is history" from "this line happens to contain a
+/// past-tense word", and the coincidence is readily available in exactly the surfaces this gate reads,
+/// because each of them discusses what the reach *was*.
+///
+/// ⭐ What the list buys: history stays legal **and visible**. Adding a historical figure is a change to
+/// this file, so a reader of the gate sees every stale number the repository keeps on purpose; and
+/// rewording one of those lines fails the gate, which is the point — the line is quoted here exactly as
+/// it appears, so the two cannot drift.
+///
+/// ⚠️ Both entries, not one: `M1.25`'s leaf named `kinds.md`'s line, and the census found the same
+/// historical figure in `workload.md` too (`grep -n ' of ' docs/book/src/kinds.md docs/book/src/workload.md`).
+const HISTORICAL_REACH_LINES: &[&str] = &[
+    "tree. The measured reach was **10 of 11** rejected cases.",
+    "was **10 of 11** rejected corpus cases.",
+];
+
+/// Every way the live surfaces disagree with the measured reach.
+///
+/// A function rather than inline assertions so an arm can feed it a mutation: a gate whose only
+/// exercise is the real tree has never been seen to fire, which is the shape
+/// `docs/knowledge/a-gate-is-only-as-sharp-as-its-fixtures.md` is about.
+fn reach_violations(
+    header: &str,
+    chapters: &[(&str, &str)],
+    measured: (usize, usize),
+    historical: &[&str],
+) -> Vec<String> {
+    let mut out = Vec::new();
+
+    // ── 1. The module header carries NO figure, and routes the reader to the measurement. ──
+    // A header that states a count is a header that can go stale; a header that names the test
+    // that counts is a header that cannot.
+    for (_, n, m, line) in reach_figures(header) {
+        out.push(format!(
+            "kind.rs's module header carries a reach figure (`{n} of {m}`) — state the rule and name \
+             `the_schema_now_reaches_every_rejected_case` instead, or the figure will outlive the \
+             measurement\n  {line}"
+        ));
+    }
+    if !header.contains("the_schema_now_reaches_every_rejected_case") {
+        out.push(
+            "kind.rs's module header no longer names the test that measures the reach, so a reader has \
+             nowhere to go to check it"
+                .to_string(),
+        );
+    }
+
+    for (name, text) in chapters {
+        let figures = reach_figures(text);
+
+        // ── 2. Each book chapter publishes the measured pair as its CURRENT figure … ──
+        if !figures.iter().any(|(_, n, m, _)| (*n, *m) == measured) {
+            out.push(format!(
+                "{name} does not publish the measured reach {} of {} anywhere; the figures it carries \
+                 are {:?}",
+                measured.0,
+                measured.1,
+                figures
+                    .iter()
+                    .map(|(line, n, m, _)| format!("{line}: {n} of {m}"))
+                    .collect::<Vec<_>>()
+            ));
+        }
+
+        // ── 3. … and every OTHER figure in it is one this file lists as history. ──
+        for (line_no, n, m, line) in &figures {
+            if (*n, *m) == measured {
+                continue;
+            }
+            if historical.iter().any(|listed| *listed == line.trim()) {
+                continue;
+            }
+            out.push(format!(
+                "{name}:{line_no} states `{n} of {m}` as though it were current, but the corpus \
+                 measures {} of {}. Either update the figure, or — if it is deliberately describing an \
+                 older measurement — add the line verbatim to `HISTORICAL_REACH_LINES`, where a reader \
+                 of the gate can see it\n  {}",
+                measured.0, measured.1, line
+            ));
+        }
+    }
+    out
+}
 
 /// Every `<n> of <m>` figure in `text`, as `(line_number, n, m, the_line)`.
 ///
@@ -308,6 +396,74 @@ fn reach_figures(text: &str) -> Vec<(usize, usize, usize, String)> {
     found
 }
 
+/// The measured reach, as the pair every live surface has to publish.
+fn measured_reach() -> (usize, usize) {
+    let (refused, out_of_reach) = measure_reach();
+    (refused.len(), refused.len() + out_of_reach.len())
+}
+
+/// `kind.rs`'s module header — the `//!` block only, which is the part a reader meets first.
+fn kind_header() -> String {
+    KIND_HEADER
+        .lines()
+        .take_while(|line| line.starts_with("//!"))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+/// The two chapters that publish the reach.
+fn reach_chapters() -> [(&'static str, &'static str); 2] {
+    [
+        ("docs/book/src/kinds.md", BOOK_KINDS),
+        ("docs/book/src/workload.md", BOOK_WORKLOAD),
+    ]
+}
+
+/// Violations against the live surfaces, for the green leg.
+fn live_reach_violations() -> Vec<String> {
+    reach_violations(
+        &kind_header(),
+        &reach_chapters(),
+        measured_reach(),
+        HISTORICAL_REACH_LINES,
+    )
+}
+
+/// Violations against mutated surfaces, for an arm.
+fn violations_with(header: &str, kinds: &str, workload: &str, historical: &[&str]) -> Vec<String> {
+    reach_violations(
+        header,
+        &[
+            ("docs/book/src/kinds.md", kinds),
+            ("docs/book/src/workload.md", workload),
+        ],
+        measured_reach(),
+        historical,
+    )
+}
+
+/// Assert the gate reported exactly `expected` violations, with every `needle` among them.
+///
+/// ⛔ **The count is part of the arm, not decoration.** An arm that only checks "some complaint mentions
+/// X" also passes on a gate that started reporting *everything*, which is the vacuous-pass shape
+/// `conformance.rs` refuses for the grammar. The same helper and the same reasoning as `corpus.rs`'s.
+fn assert_reported(wrong: &[String], expected: usize, needles: &[&str]) {
+    assert_eq!(
+        wrong.len(),
+        expected,
+        "expected {expected} violation(s); the gate reported {}:\n\n{}",
+        wrong.len(),
+        wrong.join("\n\n")
+    );
+    for needle in needles {
+        assert!(
+            wrong.iter().any(|violation| violation.contains(needle)),
+            "no complaint mentions {needle:?}; the gate reported:\n\n{}",
+            wrong.join("\n\n")
+        );
+    }
+}
+
 #[test]
 fn the_live_surfaces_publish_the_measured_reach() {
     // ⛔ THE DEFECT THIS GATES. `crates/eadl-model/src/kind.rs`'s module header and
@@ -316,67 +472,119 @@ fn the_live_surfaces_publish_the_measured_reach() {
     // sibling chapter, `workload.md`, which had been updated. Nothing failed, because a number
     // copied into prose is copied out of the reach of the test that took it.
     //
-    // So the prose is now compared against the measurement instead of being trusted. Retyping the
+    // So the prose is compared against the measurement instead of being trusted. Retyping the
     // fresh number and changing nothing else is explicitly not the fix: `docs/CLAIM_VERIFICATION.md`
     // §5B calls that "correcting a stale constant to a fresh constant".
-    let (refused, out_of_reach) = measure_reach();
-    let total = refused.len() + out_of_reach.len();
-    let measured = (refused.len(), total);
-
-    // ── 1. The module header carries NO figure, and routes the reader to the measurement. ──
-    // A header that states a count is a header that can go stale; a header that names the test
-    // that counts is a header that cannot.
-    let header: Vec<&str> = KIND_HEADER
-        .lines()
-        .take_while(|line| line.starts_with("//!"))
-        .collect();
-    let header = header.join("\n");
+    let wrong = live_reach_violations();
     assert!(
-        reach_figures(&header).is_empty(),
-        "kind.rs's module header carries a reach figure again: {:?} — state the rule and name \
-         `the_schema_now_reaches_every_rejected_case` instead, or the figure will outlive the \
-         measurement",
-        reach_figures(&header)
+        wrong.is_empty(),
+        "{} way(s) in which a live surface publishes a reach figure the corpus does not measure:\n\n{}",
+        wrong.len(),
+        wrong.join("\n\n")
     );
-    assert!(
-        header.contains("the_schema_now_reaches_every_rejected_case"),
-        "kind.rs's module header no longer names the test that measures the reach, so a reader \
-         has nowhere to go to check it"
+}
+
+// ── RED arms ──────────────────────────────────────────────────────────────────────────────────
+//
+// ⛔ These arms did not exist before `M1.25`. The leaf that scheduled this work said "all five existing
+// arms are re-expressed against the new mechanism"; measured, `grep -c '^fn arm_' crates/eadl-model/tests/kinds.rs`
+// → **0** before this commit, and the seven arms it was probably thinking of belong to `corpus.rs`'s
+// *boundary-corpus* figure gate, a different gate over different surfaces. So the gate that closed
+// `M1.23` had never been seen to fire, which is a worse starting point than the leaf recorded and the
+// reason arm 1 is written first: an arm that reproduces the original defect is the one that proves the
+// gate is a gate.
+
+#[test]
+fn arm_1_a_stale_reach_figure_is_reported_in_both_chapters() {
+    // The defect that made `M1.23` exist, replayed as a fixture: one chapter retyped to a figure the
+    // corpus does not measure. Two violations and not one — the chapter stops publishing the measured
+    // pair, *and* the pair it publishes is nobody's history — which is the count this arm pins.
+    let (kinds, workload) = (BOOK_KINDS, BOOK_WORKLOAD);
+    let stale = kinds.replace("13 of 13", "12 of 13");
+    assert_ne!(stale, kinds, "the mutation did not apply — a false green");
+    let wrong = violations_with(&kind_header(), &stale, workload, HISTORICAL_REACH_LINES);
+    assert_reported(
+        &wrong,
+        2,
+        &["does not publish the measured reach", "12 of 13"],
     );
+}
 
-    // ── 2. Each book chapter publishes the measured pair as its CURRENT figure … ──
-    for (name, text) in [
-        ("docs/book/src/kinds.md", BOOK_KINDS),
-        ("docs/book/src/workload.md", BOOK_WORKLOAD),
-    ] {
-        let figures = reach_figures(text);
-        assert!(
-            figures.iter().any(|(_, n, m, _)| (*n, *m) == measured),
-            "{name} does not publish the measured reach {} of {total} anywhere; the figures it \
-             carries are {:?}",
-            measured.0,
-            figures
-                .iter()
-                .map(|(line, n, m, _)| format!("{line}: {n} of {m}"))
-                .collect::<Vec<_>>()
-        );
+#[test]
+fn arm_2_a_historical_figure_is_legal_only_while_it_is_listed() {
+    // The arm the replaced mechanism expressed as "strip the past tense off a legitimate historical
+    // figure". The same intent with a sound trigger: the line stops being listed, so the gate has to
+    // report it. Two figures over two chapters, because `workload.md` carries the same history.
+    let wrong = violations_with(&kind_header(), BOOK_KINDS, BOOK_WORKLOAD, &[]);
+    assert_reported(&wrong, 2, &["10 of 11", "HISTORICAL_REACH_LINES"]);
+}
 
-        // ── 3. … and every OTHER figure in it is marked as history on its own line. ──
-        // A figure that is neither the measurement nor marked past tense is a new stale claim.
-        for (line_no, n, m, line) in &figures {
-            if (*n, *m) == measured {
-                continue;
-            }
-            assert!(
-                HISTORY_MARKERS.iter().any(|marker| line.contains(marker)),
-                "{name}:{line_no} states `{n} of {m}` as though it were current, but the corpus \
-                 measures {} of {total}. Either update the figure, or mark the sentence as \
-                 history (`was`, `before`, …) if it is deliberately describing an older \
-                 measurement.\n  {line}",
-                measured.0
-            );
-        }
-    }
+#[test]
+fn arm_3_a_module_header_that_publishes_a_figure_is_reported() {
+    // The other half of `M1.23`'s defect: the header is where the stale figure lived for 47 commits.
+    let header = format!(
+        "{}\n//! The schema refuses 10 of 11 rejected cases.\n",
+        kind_header()
+    );
+    let wrong = violations_with(&header, BOOK_KINDS, BOOK_WORKLOAD, HISTORICAL_REACH_LINES);
+    assert_reported(&wrong, 1, &["module header carries a reach figure"]);
+}
+
+#[test]
+fn arm_4_a_module_header_that_names_no_measurement_is_reported() {
+    // A header with no figure and no pointer is a header whose reader cannot check anything, which is
+    // the state `M1.23`'s fix exists to end.
+    let header = kind_header().replace(
+        "the_schema_now_reaches_every_rejected_case",
+        "the reach test",
+    );
+    assert_ne!(
+        header,
+        kind_header(),
+        "the mutation did not apply — a false green"
+    );
+    let wrong = violations_with(&header, BOOK_KINDS, BOOK_WORKLOAD, HISTORICAL_REACH_LINES);
+    assert_reported(&wrong, 1, &["no longer names the test that measures"]);
+}
+
+#[test]
+fn arm_5_a_chapter_that_publishes_no_figure_is_reported() {
+    // Dropping the figure must not be a way to pass: an unquantified claim is the one a reader cannot
+    // check at all, which is the reasoning `corpus.rs`'s arm 6 records for the boundary corpus.
+    let vague = BOOK_KINDS.replace("13 of 13", "every one of them");
+    assert_ne!(
+        vague, BOOK_KINDS,
+        "the mutation did not apply — a false green"
+    );
+    let wrong = violations_with(
+        &kind_header(),
+        &vague,
+        BOOK_WORKLOAD,
+        HISTORICAL_REACH_LINES,
+    );
+    assert_reported(&wrong, 1, &["does not publish the measured reach"]);
+}
+
+#[test]
+fn arm_6_the_past_tense_escape_m1_24_measured_does_not_work_here() {
+    // ⭐ THE ARM THIS LEAF EXISTS FOR. `M1.24` built a marker scan for a sibling gate and measured it
+    // **passing on its own defect**: a stale figure excused because its line happened to contain
+    // `before`, seven words away from the number. This arm writes that exact line — a stale figure on a
+    // line carrying `before`, `was` and `used to` all at once — and requires it to be reported. Under
+    // the mechanism this leaf replaced, it would have been excused three times over.
+    let poisoned =
+        format!("{BOOK_KINDS}\nThe reach used to be 10 of 13 and was measured before adoption.\n");
+    assert_ne!(
+        poisoned, BOOK_KINDS,
+        "the mutation did not apply — a false green"
+    );
+    let wrong = violations_with(
+        &kind_header(),
+        &poisoned,
+        BOOK_WORKLOAD,
+        HISTORICAL_REACH_LINES,
+    );
+    assert_reported(&wrong, 1, &["10 of 13", "as though it were current"]);
 }
 
 #[test]

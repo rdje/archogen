@@ -1,5 +1,31 @@
 # DEV_NOTES.md
 
+## _(2026-09-29)_ — the arms a leaf says exist are worth counting
+
+- `M1.25`, converging the reach gate on an explicit list of historical lines instead of a past-tense
+  substring scan. The leaf's acceptance said: "all **five** existing arms are re-expressed against the
+  new mechanism — including the one that strips the past tense off a legitimate historical figure".
+- ⛔ Measured before designing: `grep -c '^fn arm_' crates/eadl-model/tests/kinds.rs` → **0**. The gate
+  this leaf was about had **no arms at all**, and the seven arms the leaf was probably describing belong
+  to `corpus.rs`'s *boundary-corpus* figure gate — a different gate, over different surfaces, written by
+  `M1.24`. So the slice was not a refactor of five arms but a build from nothing, and the gate that closed
+  `M1.23` had never been observed firing.
+- That changed what the work had to prove. Arm 1 is now the original defect replayed as a fixture, and
+  the discriminating evidence is a **meta-mutation**: putting the marker scan back makes exactly two arms
+  fail — the one for the explicit list and the one for the past-tense escape — while the other four still
+  pass, so those two arms demonstrably test the mechanism this leaf replaced rather than decorating it.
+- ⭐ Fourth instance of the same shape, which is why it is promoted this time: `M1.13.3`'s "a new
+  top-level form is a grammar change" (the grammar names no construct vocabulary), `M1.13.4`'s
+  content-identity exclusion (the frozen evidence copy was byte-identical to a suite file),
+  `M1.13.4.4`'s "minimal **glob** semantics" (a path prefix is the whole matcher), and this one. A leaf is
+  a plan written before the work; its claims about the repository are hypotheses until measured.
+- promotion: promoted (`docs/knowledge/a-leafs-claims-about-the-repository-are-hypotheses.md`, new card
+  with four measured instances in a table and an `answers:` list headed "My task leaf says the mechanism /
+  arms / figure already exists — do I trust it?". The `2026-09-27` entry declined this lesson on the
+  grounds that "verify a claim before acting on it" is the claim-verification policy — which this
+  repository had **not** adopted then and has since, and a policy document is not searchable by the
+  question a session actually has. Four instances is the recurrence the decline named as the signal.)
+
 ## _(2026-09-29)_ — an independent re-computation that disagrees is usually the one that is wrong
 
 - `M1.13.4.5`, writing `eadl/1`'s frozen-construct baseline: Rust extracts each construct's text and

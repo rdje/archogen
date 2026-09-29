@@ -26,4 +26,5 @@ dated lesson in `DEV_NOTES.md` to be promoted here (or explicitly declined in it
 | [`prove-the-artifact-was-regenerated-not-just-present.md`](prove-the-artifact-was-regenerated-not-just-present.md) | I re-ran the build at a new pin and it passed — how do I know it did not reuse the old artifacts? |
 | [`a-fix-that-adds-a-route-does-not-retire-the-old-one.md`](a-fix-that-adds-a-route-does-not-retire-the-old-one.md) | The vendor says it is fixed but my reproducer still reproduces — who is right? |
 | [`a-moved-measurement-needs-a-census-of-its-copies.md`](a-moved-measurement-needs-a-census-of-its-copies.md) | I changed a number my tests measure — what else do I have to update? |
+| [`a-leafs-claims-about-the-repository-are-hypotheses.md`](a-leafs-claims-about-the-repository-are-hypotheses.md) | My task leaf says the mechanism / arms / figure already exists — do I trust it? |
 | [`enumerate-the-population-from-the-specification.md`](enumerate-the-population-from-the-specification.md) | My two implementations agree on every input I have — which input is neither of them ever given? |

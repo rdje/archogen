@@ -52,6 +52,48 @@ four new legs and arms). 62 descriptions, 9 test legs, 4 book chapters.
   "every top-level form **it is given**", which is what the filter made true; `reading.md` carries the
   fact for the reader with no count in it, deliberately, because `M1.13.4.3` is about to move one.
 
+## archogen — history became a list you can read, and a gate gained the arms its leaf claimed it had
+
+`ARCHOGEN-M1-0099` (leaf `M1.25`). `541 passed / 0 failed` over 39 suites (baseline 535, delta = six
+arms). No figure moved and no correct prose was rewritten (`git diff --stat docs/book/` → empty).
+
+- **The defect was latent, and stays described as latent.** The gate that closed `M1.23` excused any
+  non-current `N of M` figure whose line contained `was`, `were`, `previously`, `before` or `used to`. A
+  marker scan cannot tell "this figure is history" from "this line happens to contain a past-tense word",
+  and `M1.24` had already built the same escape for a sibling gate and **measured it passing on its own
+  defect** — where the `before` belonged to a quotation of `ROADMAP.md` §4.3 seven words ahead of the
+  wrong number. Nothing published a wrong figure today; the next stale one landing on such a line would
+  have been excused, and that coincidence is readily available in all three surfaces this gate reads,
+  because each of them discusses what the reach *was*.
+- **History is now an explicit list** — `HISTORICAL_REACH_LINES`, carrying both historical lines verbatim
+  — so history stays legal **and visible**: adding one is a change to the test file, where a reader of the
+  gate sees every stale number the repository keeps on purpose, and rewording a listed line fails the
+  gate. ⛔ **Both** lines and not the one the leaf named: the census finds the same historical figure in
+  `docs/book/src/workload.md` as in `docs/book/src/kinds.md`, and listing one would have failed on the
+  other.
+- ⛔ **The leaf's own premise was false, and the census is what showed it.** Its acceptance said "all
+  **five** existing arms are re-expressed against the new mechanism"; `grep -c '^fn arm_'
+  crates/eadl-model/tests/kinds.rs` → **0**. The gate had never been observed firing, and the seven arms
+  the sentence was describing belong to `corpus.rs`'s *boundary-corpus* figure gate — a different gate,
+  over different surfaces. So the slice was a build from nothing, and arm 1 is the original defect
+  replayed as a fixture, because that is the arm that proves a gate is a gate.
+- ⭐ **The discriminating evidence is a meta-mutation.** Putting the marker scan back in place of the list
+  fails exactly two arms — the past-tense escape and the unlisted historical figure — and leaves the other
+  four green (`24 passed; 2 failed`). That is what identifies those two as testing the mechanism this leaf
+  replaced rather than decorating it; restoration byte-identical, `26 passed` again.
+- **Six arms, each pinning its violation count** in the `assert_reported` idiom, so an over-reporting gate
+  fails its own arms: the original defect (one chapter retyped → **2** violations, because it stops
+  publishing the measured pair *and* publishes nobody's history); the historical line unlisted (**2**); a
+  header publishing a figure (**1**); a header naming no measurement (**1**); a chapter publishing no
+  figure (**1**); and a stale `10 of 13` on a line carrying `used to`, `was` **and** `before` at once,
+  asserted **reported** — the line the replaced mechanism would have excused three times over.
+- **Promoted, not declined.** Fourth instance of a leaf's premise failing its census in this tree
+  (`M1.13.3`'s "a new top-level form is a grammar change", `M1.13.4`'s content-identity exclusion,
+  `M1.13.4.4`'s "minimal glob semantics", this one), so it is a new card —
+  `docs/knowledge/a-leafs-claims-about-the-repository-are-hypotheses.md`, with the four in a table. The
+  `2026-09-27` entry declined this lesson as "the claim-verification policy", which this repository had
+  not adopted then and has since; a policy document is not searchable by the question a session has.
+
 ## archogen — `eadl/1` is frozen, and the gate's second leg is the one that makes it a freeze
 
 `ARCHOGEN-M1-0098` (leaf `M1.13.5`, closing `M1.13` with it). `535 passed / 0 failed` over 39 suites.
