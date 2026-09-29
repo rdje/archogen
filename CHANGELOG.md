@@ -4,6 +4,60 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — `archogen check` accepts a description `archogen build` cannot realize, and every gate that should have seen it is an existence census
+
+`ARCHOGEN-M1-0102` (leaf `M1.28`, filed). Docs and task-tree only: no code path staged, so no test
+delta — **541 passed / 0 failed** over 39 suites stands, re-run rather than carried, and
+`scripts/check_doctrines.sh` → `=== all doctrines green ===` over 13 checks.
+
+- ⛔ **A live production defect, reproduced end to end through both commands before it was written
+  down.** `examples/s0-heartbeat/system.eadl` with `(period 10 ms)` → `(period 10 parsec)`:
+  `archogen check` prints `accepted against profile rt-static-up-v1 (4 declaration(s))` and
+  `archogen build` refuses the same bytes with `error[quantity-unknown-unit]`. A zero tick rate —
+  `ROADMAP.md` §13.1's **F03**, an M1 gate fixture — produces no diagnostic from `check` at all. The
+  command the book tells an author to run is the one that is wrong, and it is wrong in the unsafe
+  direction.
+- **Root cause is three discards and one absent notion, and each discard is locally reasonable.**
+  `crates/eadl-model/src/workload.rs:178` (`.map_err(|_| ())`), `refinement.rs:177` (`.ok()?`) and `:188`
+  (`.ok()`) read a quantity and drop what they find; `crates/archogen-s0/src/interpret.rs:200` is the only
+  consumer that propagates — the prototype `S0-RETIREMENT` exists to delete. And the schema *cannot* ask:
+  `period`, `min-separation`, `deadline` and `jitter` are declared `(holds values number symbol)`, so
+  `parsec` is a symbol and passes correctly, while `ValueType::parse` has no quantity. `workload.rs:176`
+  names "the schema/unit pass" as the reporter, and there is no such pass — the comment is why the discard
+  reads as safe.
+- ⭐ **Why every gate stayed green is the finding, not the incident.** Legs 4 and 5 pin §4's codes against
+  the sources that emit them, exactly and in both directions; leg 8 pins every code the book renders
+  against the codes a production half emits; `BOOK-ANCHORS` pins every citation. All of them are
+  **existence** censuses, and existence is a property of the *emitter*. `f03_units.rs` proves the refusal
+  exists and precedes arithmetic — the property F03 names — while driving `Quantity::read` directly, one
+  level below the fixture the gate reads. Nothing in the repository drove a description through the
+  command an author runs. Promoted to
+  `docs/knowledge/an-existence-census-cannot-see-a-discarded-result.md`, with the second census it
+  prescribes and the trap in the obvious fix.
+- **Three more instances of the same shape fell out of the same measurement, and all four are owned.**
+  **F-H** — §4's `module-too-large` row states "more addressable parts than an instance identifier can
+  hold" and `grep` finds no such limit in the elaborator; its call site fires on a source of 2^32 bytes,
+  and the one condition behind it surfaces as four codes or messages (`M1.26.2`). **F-J** —
+  `quantity-invalid`'s only site is a `map_err` catch-all over a function that returns two variants, so
+  the arm is totality and no input reaches it (`M1.26.1`). **F-K** —
+  `docs/semantics/cases/invalid-zero-clock-frequency.eadl` gets its expected `invalid-description` from
+  `schema-unknown-clause`, because `refines` is `defplatform`'s clause and the case puts it on a
+  `defblock`, so the suite's one F03 case exercises a clause-name typo and passes (`M1.28`). Plus **F-M**:
+  the refusal that does surface is verdicted `tool-failure`, which §5.5 reserves for the toolchain.
+- **`M1.28` is filed at priority high and sequenced ahead of the leaf that found it.** `M1.26.1` writes a
+  normative document for the model layer's codes and cannot state "a quantity with an unknown unit is
+  refused" over a pipeline that accepts one — that document would be *born* false rather than become
+  false later. The fix is a language change and costs a migration note: `ValueType`'s list is §4's
+  `schema-bad-value-type` repair direction and `docs/semantics/kinds/os-rt.eadl` is digested at
+  `docs/semantics/BASELINE.txt:76`. Three options are priced on the leaf, and the narrow one — propagate
+  from the three discard sites — is recorded as **worse than doing nothing**, because it reports the
+  clauses those two passes happen to read and leaves every other quantity silent, which looks fixed.
+- `docs/book/src/quantities.md` publishes two transcripts (`quantity-non-positive-frequency`,
+  `quantity-missing-unit`) over an input, `platform.eadl`, that exists nowhere tracked and that
+  `archogen check` cannot produce — leg 8's stated honest limit and `PROGRAM.20`'s seventh shape, each
+  with a live instance. `M1.28` re-renders them from a tracked command over a tracked input rather than
+  retyping them.
+
 ## archogen — the leaf that closes two gaps was decomposed on measurement, and the measurement found a false rule the two existing legs are green on
 
 `ARCHOGEN-M1-0100` (leaf `M1.26`). Docs and task-tree only: no Rust changed, so no test delta —

@@ -1,5 +1,52 @@
 # DEV_NOTES.md
 
+## _(2026-09-29)_ — every leg was an existence census, and the discard was in the caller
+
+- Found by picking up `M1.26.1`, not by looking for it. The first question a normative document forces is
+  "which pass surfaces each of these codes?", and for the eight `quantity-*` codes the answer is: one,
+  and it is the prototype.
+- ⛔ **`archogen check` accepts a description `archogen build` cannot realize.** `examples/s0-heartbeat/system.eadl`
+  with `(period 10 ms)` → `(period 10 parsec)` gives
+  `accepted against profile rt-static-up-v1 (4 declaration(s))` from `check` and
+  `error[quantity-unknown-unit]: `parsec` is not a known unit` from `build`. A zero tick rate —
+  `ROADMAP.md` §13.1's **F03** — gives no diagnostic from `check` at all.
+- Root cause is three discards and one absent notion, and each discard is locally reasonable:
+  `crates/eadl-model/src/workload.rs:178` (`.map_err(|_| ())`), `crates/eadl-model/src/refinement.rs:177`
+  (`.ok()?`) and `:188` (`.ok()`) all read a quantity and drop what they find; `crates/archogen-s0/src/interpret.rs:200`
+  is the only consumer that propagates. And the schema *cannot* ask the question: `period`,
+  `min-separation`, `deadline` and `jitter` are declared `(holds values number symbol)`, so `parsec` is a
+  symbol and passes correctly, while `ValueType::parse` (`crates/eadl-model/src/kind.rs:156`) has no
+  quantity. `workload.rs:176` names "the schema/unit pass" as the reporter — there is no such pass, and
+  the comment is why the discard reads as safe.
+- ⭐ **Why every gate stayed green, which is the lesson and not the incident.** Legs 4 and 5 of
+  `crates/eadl-front/tests/reference.rs` pin §4's codes against the sources that emit them, exactly and in
+  both directions; leg 8 pins every code the book renders against the codes a production half emits;
+  `BOOK-ANCHORS` pins every citation. All of them are **existence** censuses, and existence is a property
+  of the *emitter*. `f03_units.rs` proves the refusal exists and precedes arithmetic — the property F03
+  names — and it drives `Quantity::read` directly, one level below the fixture §13.1's gate reads. Nothing
+  in the repository drove a description through the command an author runs.
+- Three more instances of the same shape fell out of the same hour, and all four are on the leaves:
+  **F-H** (§4's `module-too-large` row states a mechanism `grep` cannot find in the elaborator, and both
+  census legs are green because they read the code literal and never its predicate), **F-J**
+  (`quantity-invalid`'s only site is a `map_err` catch-all over a function that returns two variants, so
+  the arm is totality and no input reaches it), and **F-K**
+  (`docs/semantics/cases/invalid-zero-clock-frequency.eadl` gets its expected `invalid-description` from
+  `schema-unknown-clause`, because `refines` is `defplatform`'s clause and the case puts it on a
+  `defblock` — so the suite's one F03 case exercises a clause-name typo and passes).
+- Filed as **`M1.28`**, priority **high**, and sequenced *ahead* of the leaf that found it: `M1.26.1`
+  cannot state the quantity rules normatively while `check` does not enforce them, because a normative
+  document that says "refused" over a pipeline that accepts is born false rather than becoming false.
+  The fix is a language change and costs a migration note — `ValueType`'s list is §4's
+  `schema-bad-value-type` repair direction and `docs/semantics/kinds/os-rt.eadl` is digested at
+  `docs/semantics/BASELINE.txt:76` — and the narrow fix (propagate from the three sites) is recorded on
+  the leaf as **worse than doing nothing**, because it reports the clauses those two passes happen to
+  read and leaves every other quantity silent, which looks fixed.
+- promotion: promoted (`docs/knowledge/an-existence-census-cannot-see-a-discarded-result.md`, a new card
+  with the four instances in a table and an `answers:` list headed "My gate proves every diagnostic code
+  is stated and emitted — what could still be wrong?". The prescription is a second census over the
+  **consumers** plus one input driven through the user-facing command, and the card names the trap in the
+  obvious fix)
+
 ## _(2026-09-29)_ — an existence census cannot see a rule that is stated falsely
 
 - `M1.26`'s decomposition, measuring the two gaps it inherited before writing either child. The census

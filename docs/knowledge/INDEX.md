@@ -28,3 +28,4 @@ dated lesson in `DEV_NOTES.md` to be promoted here (or explicitly declined in it
 | [`a-moved-measurement-needs-a-census-of-its-copies.md`](a-moved-measurement-needs-a-census-of-its-copies.md) | I changed a number my tests measure — what else do I have to update? |
 | [`a-leafs-claims-about-the-repository-are-hypotheses.md`](a-leafs-claims-about-the-repository-are-hypotheses.md) | My task leaf says the mechanism / arms / figure already exists — do I trust it? |
 | [`enumerate-the-population-from-the-specification.md`](enumerate-the-population-from-the-specification.md) | My two implementations agree on every input I have — which input is neither of them ever given? |
+| [`an-existence-census-cannot-see-a-discarded-result.md`](an-existence-census-cannot-see-a-discarded-result.md) | My gate proves every diagnostic code is stated and emitted — what could still be wrong? |

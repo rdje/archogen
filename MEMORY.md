@@ -13,19 +13,19 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M1` → frontier `M1.26.1`. `PROGRAM` `.11`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
-- **Next action:** **`M1.26.1`** — gap (a) of `M1.26`, `active` and **decomposed into two children**
-  (`2026-09-29`) on six censuses run first, three of which falsified a figure the leaf carried (§4 is
-  **60** rows not 55; ungoverned **16** not 15; "27 named by no test" survives, its composition does not).
-  **16** of the workspace's **76** diagnostic codes are stated by no normative document and the book
-  renders **8**, so leg 8 checks those for *existence* only. `.1` lands a second normative document with
-  its own declaration and a both-directions census, widens leg 8 to every normative document's, and
-  answers **F-I**. Then `.2` — gap (b): §4's `fires on` column — then `.27`, `.10`, `.21`, `.22`.
-- ⛔ **F-H is a live false normative sentence, owned by `M1.26.2`:** §4's `module-too-large` row says
-  "more addressable parts than an instance identifier can hold"; its only call site (`module.rs:605`)
-  fires on a source of **2^32** bytes, `grep` finds no such limit in the elaborator, and that condition
-  surfaces **four** ways. Both census legs are green on it — gap (b)'s whole argument. **F-I** (`M1.26.1`):
-  the frozen population is scoped by *file*, and nothing says why.
+- **Active tree:** `M1` → frontier `M1.28`. `PROGRAM` `.11`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
+- **Next action:** **`M1.28`, high — a live production defect.** `archogen check` **accepts** a
+  description `archogen build` cannot realize: `(period 10 parsec)` passes `check` and is refused as
+  `quantity-unknown-unit` by `build`, and a zero tick rate (§13.1's **F03**, an M1 gate fixture) draws no
+  diagnostic from `check` at all. Three consumers of `Quantity::read` discard what it finds, the only one
+  that propagates is the S0 prototype, and the schema cannot ask — `period` is `(holds values number
+  symbol)` and `ValueType` has no quantity. Costs a migration note; sequenced **ahead of `M1.26.1`**,
+  which would otherwise be born stating a rule the pipeline does not enforce. Then `M1.26.1`, `.2`.
+- ⛔ **Every gate stayed green because all of them are existence censuses** — promoted to
+  `docs/knowledge/an-existence-census-cannot-see-a-discarded-result.md` with three more instances of the
+  shape: **F-H** (`M1.26.2`) a §4 row naming a mechanism `grep` cannot find; **F-J** (`M1.26.1`) a code
+  whose only site is a totality arm; **F-K** (`M1.28`) the F03 case passing on a clause-name typo.
+  **F-I** (`M1.26.1`): the frozen population is scoped by *file*, and nothing says why.
 - ⭐ **`M1.13` is closed: `eadl/1` is frozen and gated** — one manifest (**no count** in it), one reader,
   four two-sided rules, `BASELINE.txt` (**70** digests enumerated at run time), and `LANGUAGE-FREEZE`,
   whose **second** leg compares the tracked baseline with `HEAD`'s, so `--emit` needs a pending migration
