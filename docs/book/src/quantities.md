@@ -1,6 +1,16 @@
 # Quantities and units
 
-A number in an eADL description always carries a unit, and the unit is part of its meaning.
+A number in an eADL description carries a unit whenever it *measures* something, and the unit is part of
+its meaning.
+
+⛔ **The rule is a shape, and the shape is `<number> <symbol>`.** `(tick-rate 10 MHz)` is a quantity, so
+`MHz` must be a unit the table holds. `(counter-modulus 4294967296)` is a **count** — a lone number, which
+is nobody's quantity and is accepted, and which
+`docs/semantics/boundary/accept/counter-width-and-rate.eadl` ships as a case with verdict `accept`. This
+chapter used to say "a number always carries a unit" and showed the refusal that would follow, and the
+sentence was false for that accepted case: the reason nothing noticed is that every pass which read a
+quantity **discarded** what it found, so no refusal ever reached an author. Leaf `M1.28` measured both
+halves of that.
 
 ```text
 (tick-rate 10 MHz)
@@ -50,41 +60,74 @@ is worse than one that does not. Binary prefixes only for storage: a `KiB` is 10
 
 ## F03: refusal before arithmetic
 
-Two things must fail, and §13.1 requires them to fail as a **type or constraint error before
-arithmetic**:
+`ROADMAP.md` §13.1 requires two things to fail as a **type or constraint error before arithmetic**:
+
+> Zero clock frequency or incompatible units → type/constraint error before arithmetic
+
+"Before arithmetic" is a structural property here, not a matter of ordering statements carefully. The
+dimension check happens before either magnitude is read, and the test demonstrates it rather than
+asserting it: two quantities whose magnitudes would *overflow* if touched still produce the dimension
+error. Every transcript below is a real run of `archogen check` over a tracked file in the conformance
+suite, so a reader can re-run it and get these bytes.
 
 **A zero (or negative) clock frequency.**
 
-```text
+```console
+$ archogen check docs/semantics/cases/invalid-zero-clock-frequency.eadl
 error[quantity-non-positive-frequency]: a frequency must be strictly positive
-  --> platform.eadl:3:16
+  --> docs/semantics/cases/invalid-zero-clock-frequency.eadl:9:44
   |
-3 |   (tick-rate 0 MHz)
-  |              ^^^^^^ this frequency is not positive
-  = hint: §6.2 requires a positive clock frequency: every conversion from ticks to time divides
-          by it, so zero makes the platform's time contract undefined rather than merely wrong
+9 | (defblock timer.counter (offers (tick-rate 0 MHz)))
+  |                                            ^^^^^ this frequency is not positive
+  = hint: §6.2 requires a positive clock frequency: every conversion from ticks to time divides by it, so zero makes the platform's time contract undefined rather than merely wrong
+archogen: invalid-description: 1 diagnostic(s) in docs/semantics/cases/invalid-zero-clock-frequency.eadl
 ```
 
-It is refused **at construction**, so there is no zero-frequency quantity in existence for
-anything to divide by later.
+It is refused **at construction**, so there is no zero-frequency quantity in existence for anything to
+divide by later — and it is refused at the *surface* too, which is the half leaf `M1.28` added: before
+that, the passes which read quantities discarded what they found, so this description was accepted by
+`archogen check` and the zero was only ever seen by whatever tried to use it.
 
-**Comparing things that measure different things.**
+**A unit the table does not hold.**
 
-```text
-`ms` measures time and `KiB` measures information — they cannot be compared
+```console
+$ archogen check docs/semantics/cases/invalid-unknown-unit.eadl
+error[quantity-unknown-unit]: `parsec` is not a known unit
+  --> docs/semantics/cases/invalid-unknown-unit.eadl:9:33
+  |
+9 | (defsystem s (task t (period 10 parsec) (deadline 10 ms) (priority 1)))
+  |                                 ^^^^^^ unknown unit
+  = hint: the known units are `s`, `ms`, `us`, `ns`, `Hz`, `kHz`, `MHz`, `GHz`, `bit`, `byte`, `KiB`, `MiB`, `tick`
+archogen: invalid-description: 1 diagnostic(s) in docs/semantics/cases/invalid-unknown-unit.eadl
 ```
 
-"Before arithmetic" is a structural property here, not a matter of ordering statements
-carefully. The dimension check happens before either magnitude is read, and the test
-demonstrates it rather than asserting it: two quantities whose magnitudes would *overflow* if
-touched still produce the dimension error.
+The refusal names the whole table rather than saying "wrong", because the cheapest diagnostic to write is
+the most expensive to receive. This one is the **schema**'s: `period` is declared
+`(holds values quantity)` in `docs/semantics/kinds/os-rt.eadl`, and a quantity is the one value type that
+consumes two forms, so a clause can declare that it holds a measurement rather than merely a number and a
+symbol. `(holds values number symbol)` said nothing about whether the pair measured anything — `parsec` is
+a perfectly good symbol — which is how `archogen check` came to accept this description while
+`archogen build` refused it.
 
-A bare number is not a quantity either:
+**A bare number where a bound was meant.**
 
-```text
+```console
+$ archogen check docs/semantics/cases/invalid-quantity-without-unit.eadl
 error[quantity-missing-unit]: this number has no unit
-  = hint: write the unit after the number, e.g. `10 ms` — a bare number cannot be compared with
-          anything, because nothing says what it measures
+  --> docs/semantics/cases/invalid-quantity-without-unit.eadl:9:55
+  |
+9 | (defplatform soc.abstract (offers (tick-rate (exactly 10))))
+  |                                                       ^^ a bare number is not a quantity
+  = hint: write the unit after the number, e.g. `10 ms` — a bare number cannot be compared with anything, because nothing says what it measures
+archogen: invalid-description: 1 diagnostic(s) in docs/semantics/cases/invalid-quantity-without-unit.eadl
+```
+
+**Comparing things that measure different things.** A cross-dimension comparison is refused without
+reading either magnitude, and where a refinement is the thing comparing them the author sees it as a
+violated `constraint` obligation ([Refinement](refinement.md) shows the whole rendering):
+
+```text
+`ms` measures time and `bit` measures information — they cannot be compared
 ```
 
 ## More is not better

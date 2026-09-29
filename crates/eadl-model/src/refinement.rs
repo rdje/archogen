@@ -95,7 +95,7 @@ struct Offer {
 }
 
 /// A description reduced to what refinement cares about.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct Facets {
     /// The declaration's name, for messages.
     pub name: String,
@@ -103,6 +103,30 @@ pub struct Facets {
     absent: BTreeMap<String, Span>,
     /// The name this description claims to refine, if any.
     pub refines: Option<(String, Span)>,
+    /// Whether every quantity this declaration writes could be read.
+    ///
+    /// ⛔ **An unreadable facet is neither refined nor refining, and [`check`] says nothing about it.**
+    /// An obligation whose value could not be read is not *violated*, it is *unchecked*, and reporting
+    /// "this refinement drops a guarantee" beside `quantity-non-positive-frequency` sends the author at
+    /// the wrong half of their own description. The quantity diagnostic is the whole of the report, and
+    /// the verdict it carries — `invalid-description`, because the input is ill-typed — outranks the
+    /// `infeasible-configuration` a violated obligation would have produced, so the headline was already
+    /// going to be the right one. Leaf `M1.28.2`.
+    pub readable: bool,
+}
+
+impl Default for Facets {
+    fn default() -> Self {
+        Self {
+            name: String::new(),
+            offers: BTreeMap::new(),
+            absent: BTreeMap::new(),
+            refines: None,
+            // A declaration that writes no quantity at all is readable; `false` here would make the
+            // derived default refuse every refinement in the language.
+            readable: true,
+        }
+    }
 }
 
 impl Facets {
@@ -111,8 +135,16 @@ impl Facets {
     /// Recognizes `(offers …)`, `(absent …)` and `(refines <name>)`. An offer is either a bare
     /// name, a name with a value (`(counter-width 32 bit)`), or a name with a bound
     /// (`(counter-width (at-least 32 bit))`).
+    ///
+    /// ⭐ **Returns the diagnostics it found beside the facets, and every caller has to destructure
+    /// both.** This signature is the fix, not a detail of it: it used to return `Self` and swallow what
+    /// [`Quantity::read`] refused, so `archogen check` accepted a description whose tick rate was zero and
+    /// the only consumer left that surfaced the refusal was the S0 prototype `S0-RETIREMENT` exists to
+    /// delete. A caller that wants only the facets has to write `.0`, and that `.` is where the next
+    /// reader asks what the other half was.
     #[must_use]
-    pub fn of(form: &Form) -> Self {
+    pub fn of(form: &Form) -> (Self, Vec<Diagnostic>) {
+        let mut found = Vec::new();
         let mut facets = Self {
             name: form
                 .items()
@@ -134,7 +166,12 @@ impl Facets {
                 }
                 Some("offers") => {
                     for item in clause.items().iter().skip(1) {
-                        if let Some(offer) = read_offer(item) {
+                        let (offer, diagnostics) = read_offer(item);
+                        if !diagnostics.is_empty() {
+                            facets.readable = false;
+                            found.extend(diagnostics);
+                        }
+                        if let Some(offer) = offer {
                             facets.offers.insert(offer.name.clone(), offer);
                         }
                     }
@@ -154,46 +191,100 @@ impl Facets {
                 _ => {}
             }
         }
-        facets
+        (facets, found)
     }
 }
 
-fn read_offer(item: &Form) -> Option<Offer> {
+/// Read one offered fact, returning it with every diagnostic its quantities produced.
+///
+/// ⛔ **A form that is not shaped like a quantity is not a malformed one, and the shape is
+/// `<number> <symbol>`.** Two measured cases this guard exists for, both from the shipped corpus:
+/// `(offers (region device.timer (base 0x1000_0000)))` holds a name, a symbol and a nested clause, and
+/// `(offers (counter-modulus 4294967296))` — in
+/// `docs/semantics/boundary/accept/counter-width-and-rate.eadl`, verdict `accept` — holds a **count**.
+/// `Quantity::read` refuses the first as `quantity-not-a-number` and the second as
+/// `quantity-missing-unit`, so a reader that asked about every value-path offer turned an accepted
+/// boundary case into `invalid-description`. That is measured, not anticipated: it is the one difference
+/// a census over all 76 tracked descriptions found between this change and its parent.
+///
+/// ⭐ So the rule is: **a number immediately followed by a symbol denotes a quantity**, and the symbol
+/// must be a known unit; a lone number is a count and is nobody's quantity. The bound path always asks,
+/// because `(at-least …)` is a direction wrapper and a quantity is the only thing that can follow it.
+/// `M1.26.1` carries this rule into the model layer's normative document; until then it is stated here and
+/// in `docs/book/src/quantities.md`.
+fn read_offer(item: &Form) -> (Option<Offer>, Vec<Diagnostic>) {
     match item {
-        Form::Symbol { name, span } => Some(Offer {
-            name: name.clone(),
-            bound: None,
-            value: None,
-            span: *span,
-        }),
+        Form::Symbol { name, span } => (
+            Some(Offer {
+                name: name.clone(),
+                bound: None,
+                value: None,
+                span: *span,
+            }),
+            Vec::new(),
+        ),
         Form::List { items, span } => {
-            let name = items.first()?.as_symbol()?.to_string();
-            let rest = &items[1..];
+            let (Some(head), Some(rest)) = (items.first(), items.get(1..)) else {
+                return (None, Vec::new());
+            };
+            let Some(name) = head.as_symbol() else {
+                return (None, Vec::new());
+            };
+            let name = name.to_string();
 
             // `(counter-width (at-least 32 bit))` — a bound.
             if let Some(first) = rest.first() {
                 if let Some(direction) = first.head().and_then(direction_of) {
                     let parts = first.items();
-                    let quantity = Quantity::read(parts.get(1), parts.get(2)).ok()?;
-                    return Some(Offer {
-                        name,
-                        bound: Some((direction, quantity)),
-                        value: None,
-                        span: *span,
-                    });
+                    return match Quantity::read(parts.get(1), parts.get(2)) {
+                        Ok(quantity) => (
+                            Some(Offer {
+                                name,
+                                bound: Some((direction, quantity)),
+                                value: None,
+                                span: *span,
+                            }),
+                            Vec::new(),
+                        ),
+                        Err(diagnostic) => (None, vec![*diagnostic]),
+                    };
                 }
             }
 
-            // `(counter-width 32 bit)` — a value.
-            let value = Quantity::read(rest.first(), rest.get(1)).ok();
-            Some(Offer {
-                name,
-                bound: None,
-                value,
-                span: *span,
-            })
+            // `(counter-width 32 bit)` — a value. `<number> <symbol>` and nothing else is a quantity
+            // attempt; see this function's doc for the two corpus cases that decide the shape.
+            let shaped_like_a_quantity = matches!(
+                (rest.first(), rest.get(1)),
+                (
+                    Some(Form::Integer { .. } | Form::Decimal { .. }),
+                    Some(Form::Symbol { .. })
+                )
+            );
+            if !shaped_like_a_quantity {
+                return (
+                    Some(Offer {
+                        name,
+                        bound: None,
+                        value: None,
+                        span: *span,
+                    }),
+                    Vec::new(),
+                );
+            }
+            match Quantity::read(rest.first(), rest.get(1)) {
+                Ok(value) => (
+                    Some(Offer {
+                        name,
+                        bound: None,
+                        value: Some(value),
+                        span: *span,
+                    }),
+                    Vec::new(),
+                ),
+                Err(diagnostic) => (None, vec![*diagnostic]),
+            }
         }
-        _ => None,
+        _ => (None, Vec::new()),
     }
 }
 
@@ -236,8 +327,18 @@ impl RefinementReport {
 }
 
 /// Check that `concrete` refines `abstract_`.
+///
+/// ⛔ **Returns an empty report when either side could not be read.** See [`Facets::readable`]: an
+/// obligation whose value is unreadable is unchecked, not violated, and the quantity diagnostic that
+/// made it unreadable is already on its way to the author with a verdict that outranks this pass's.
 #[must_use]
 pub fn check(abstract_: &Facets, concrete: &Facets) -> RefinementReport {
+    if !abstract_.readable || !concrete.readable {
+        return RefinementReport {
+            additions: Vec::new(),
+            violations: Vec::new(),
+        };
+    }
     let mut violations = Vec::new();
 
     // ── Obligation 1: guarantees are kept ────────────────────────────────────────────────────
@@ -393,7 +494,19 @@ mod tests {
             "{}",
             diagnostics.render(&sources)
         );
-        document.forms.iter().map(Facets::of).collect()
+        document
+            .forms
+            .iter()
+            .map(|form| {
+                let (facets, found) = Facets::of(form);
+                assert!(
+                    found.is_empty(),
+                    "these fixtures are all readable: {}",
+                    found.iter().map(|d| d.code).collect::<Vec<_>>().join(", ")
+                );
+                facets
+            })
+            .collect()
     }
 
     #[test]

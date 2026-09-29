@@ -4,6 +4,80 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the schema can now say a clause holds a quantity, so `check` and `build` stop disagreeing about the same bytes
+
+`ARCHOGEN-M1-0105` (leaf `M1.28.2`, closing `M1.28`). **559 passed / 0 failed** over 39 suites
+(baseline 545, delta = 14 new legs). Seven mutations seen firing. One migration note, five frozen
+constructs, the baseline re-emitted **70 → 72**.
+
+- **The fix is at the level that can carry the rule, not at the three call sites that discarded it.**
+  `ValueType::Quantity` joins the kind vocabulary — the one value type that consumes **two** forms, with
+  `width()` and a `spelling()` that writes `<number> <unit>` because a repair direction saying "write a
+  `<quantity>` here" would name the *declaration* vocabulary in a message about a *description*.
+  `check_values` walks a cursor instead of zipping, and propagates `crates/eadl-model/src/quantity.rs`'s
+  **own** diagnostic rather than inventing a second code for one mistake. `period`, `min-separation`,
+  `deadline` and `jitter` move onto it in `docs/semantics/kinds/os-rt.eadl`.
+- **And the other population: `refinement.rs` propagates instead of discarding.** `Facets::of` now
+  *returns* `(Self, Vec<Diagnostic>)`, so every caller has to destructure both halves and the `.0` is
+  where the next reader asks what the other one was. A quantity inside `(holds forms)` — which
+  `core.eadl` is explicit the schema does not interpret — reaches the author too. `Facets::readable`
+  makes `check()` say nothing about a facet it could not read: an obligation whose value is unreadable is
+  *unchecked*, not violated, and "this refinement drops a guarantee" beside
+  `quantity-non-positive-frequency` would send the author at the wrong half of their own description.
+  `refinements()` returns two groups so a quantity keeps `invalid-description` while a violated
+  obligation keeps `infeasible-configuration`.
+- ⛔ **The rule this needed is a shape, and the shape had to be measured.** Reading *every* offered value
+  as a quantity turned `docs/semantics/boundary/accept/counter-width-and-rate.eadl`'s
+  `(counter-modulus 4294967296)` into `quantity-missing-unit` — an accepted case with verdict `accept`
+  that F27 reads, refused. So: `<number> <symbol>` is a quantity, a lone number is a **count**. Found by a
+  hand-run census over all 76 tracked descriptions, because **no leg in `f27_boundary.rs` ran the
+  pipeline** — every one asked the classifier or the schema and neither reads a fact's value.
+  `f27_every_accepted_case_is_accepted_by_the_whole_pipeline` exists now, and mutation **F** (the guard
+  widened back) failing exactly it and the lone-number leg is the measurement that it is load-bearing.
+- ⭐ **F-N, and it is the reason the discard mattered.** `docs/book/src/quantities.md` opened "A number in
+  an eADL description **always** carries a unit" and rendered `error[quantity-missing-unit]` as the
+  refusal, while that accepted boundary case shipped a bare number. Both were true only because every pass
+  that read a quantity threw the answer away — a chapter claim and a corpus case contradicting each other
+  with nothing able to see it. The chapter is corrected, and all three of its transcripts are now
+  `archogen check` over three **tracked** cases rather than over a `platform.eadl` that exists nowhere.
+- **F-K closed:** `invalid-zero-clock-frequency.eadl` put `(refines …)` on a `defblock`, which is
+  `defplatform`'s clause, so the suite's one F03 case collected its expected `invalid-description` from
+  `schema-unknown-clause` without ever reaching a zero frequency. It is now one `defblock` offering
+  `(tick-rate 0 MHz)`, and `f03_the_suite_s_zero_frequency_case_is_refused_for_the_reason_its_header_claims`
+  pins that its **only** diagnostic is `quantity-non-positive-frequency` — so a case that drifts back to
+  passing for the wrong reason fails. Two cases joined (`invalid-unknown-unit`,
+  `invalid-quantity-without-unit`): the census pin moved 63 → 65, the book's gated figures 30 → 32 with
+  `invalid-description` 11 → 13.
+- **Measured before→after over all 76 tracked descriptions, with the instrument widened once.** The first
+  cut recorded only the last line of `archogen check` and reported *no difference at all* — F-K's case
+  kept its verdict and changed only its code — so it was re-run recording the verdict **and every code**.
+  The honest figure: **1 changed, 0 acceptances lost**. And the two commands now agree on the fixture this
+  leaf was filed on: both `invalid-description`, both exit **10**.
+- **Seven mutations E–K, every restoration byte-identical:** the declaration reverted (6 arms), the shape
+  guard widened (2), the discard restored (4 — exactly population B's), the readability guard removed (1),
+  `check_values` counting types instead of width (5), one diagnostic reported twice (3, including
+  "one mistake, one message"), and the two-verdict split collapsed (2).
+- `ValueType::ALL` now backs the `schema-bad-value-type` repair direction through `known_value_types()`,
+  so the list in the message is derived from the enumeration instead of being a copy of it — the copy said
+  six types while the code had seven. `docs/semantics/reference.md` §4's row and §7 rule 4 both name
+  `quantity` and state the width rule, because a reader of an enumeration cannot otherwise tell that one
+  type takes two values.
+- ⛔ **F-O, found by being the first leaf to run the migration workflow, filed as `PROGRAM.27` at priority
+  high:** `LANGUAGE-FREEZE`'s explicitness leg cannot fail on the real tree. With the note moved out of
+  `docs/semantics/migrations/` entirely and the baseline amended at 72 constructs, the gate prints
+  `OK` — its notes grep matches the directory's own README (whose form template carries
+  `- status: pending | applied`) and `names_construct`'s `*all*` **substring** case reads that template's
+  trailing `— or: all` as covering every construct. All nine RED arms point `LANGUAGE_FREEZE_NOTES` at a
+  scratch directory, so they proved the mechanism and never the deployed population. Two of the README's
+  workflow steps are also false as written: it says the gate goes green once a pending note exists *before*
+  `--emit`, where leg A stays red because it does not consult notes at all; and it puts the flip to
+  `applied` in the same sequence, where leg B would then refuse the commit. The lifecycle is two commits.
+- `make focused` → `passed — 3 / 0 / 0` (one clippy refusal found and fixed rather than allowed:
+  `needless_borrows_for_generic_args` on the derived list); `make integration` → `6 passed, 1 failed`, the
+  failure the pre-existing `emulator` step; `language-freeze: OK (72 frozen construct(s))` with the note
+  `pending`; `book-anchors: OK (19 chapter(s), 3 normative document(s))`; `mdbook build` `rc=0`;
+  13 doctrines green.
+
 ## archogen — a rule with three consumers had two answers, and the one facing the author was wrong
 
 `ARCHOGEN-M1-0104` (leaf `M1.28.1`). **545 passed / 0 failed** over 39 suites (baseline 541, delta = four

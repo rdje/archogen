@@ -32,8 +32,11 @@
 ; was refused by the schema.
 ;
 ; What a clause `(holds forms)` contains is NOT interpreted here. `(at-least 60 s)` is nested
-; forms at this layer and becomes a checked quantity through `quantity.rs`. Saying otherwise
-; would be the more dangerous kind of green.
+; forms at this layer and becomes a checked quantity through `quantity.rs` — which since leaf
+; `M1.28` means the refusal reaches the author, because `refinement.rs` propagates what it
+; finds instead of discarding it. The shape it reads is `<number> <symbol>`: a lone number is a
+; count and is nobody's quantity. Saying the schema interprets these itself would be the more
+; dangerous kind of green.
 
 (eadl-version eadl/1)
 

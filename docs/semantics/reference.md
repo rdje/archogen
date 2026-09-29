@@ -408,7 +408,7 @@ cheapest diagnostic to write is the most expensive to receive.
 | `schema-unknown-clause-field` | a clause declaration holds a field that is not `cardinality` or `holds` | a clause declaration holds those two |
 | `schema-bad-cardinality` | `cardinality` is not one of `one`, `at-most-one`, `one-or-more`, `any` | use one of those spellings; the diagnostic lists them |
 | `schema-bad-holds` | `holds` is not `forms`, `values <type>…` or `kind <name>` | write `(holds kind task)` to have each occurrence validated as a declaration of that kind |
-| `schema-bad-value-type` | a `holds values` type is not one the schema knows | the value types are `symbol`, `integer`, `decimal`, `number`, `string`, `any` |
+| `schema-bad-value-type` | a `holds values` type is not one the schema knows | the value types are `symbol`, `integer`, `decimal`, `number`, `string`, `any`, `quantity` |
 | `schema-unknown-referenced-kind` | a clause holds a kind that is not registered | register the module that defines it — the workload kinds live in `docs/semantics/kinds/os-rt.eadl` |
 | `schema-not-a-declaration` | a top-level form is not a declaration | declarations are written `(defservice time.monotonic …)` |
 | `schema-unknown-kind` | a declaration's head is not a registered kind | the diagnostic names the kinds that are |
@@ -546,7 +546,10 @@ and registered; `docs/semantics/kinds/core.eadl` declares the surface kinds and
    kind nobody should have to guess at.
 4. **A clause's cardinality is `one`, `at-most-one`, `one-or-more` or `any`**, and its content is
    `forms` (any nested forms), `values <type>…` (a fixed number of typed values, where a type is
-   `symbol`, `integer`, `decimal`, `number`, `string` or `any`), or `kind <name>` (each occurrence is
+   `symbol`, `integer`, `decimal`, `number`, `string`, `any` or `quantity` — and `quantity` is the one
+   type that consumes **two** values, a number and a unit, because a clause declared
+   `(holds values number symbol)` says nothing about whether the pair measures anything), or
+   `kind <name>` (each occurrence is
    itself validated as a declaration of that kind — which is what makes the schema recursive, and what
    let `(clause task (holds kind task))` close a gap the corpus had not reached).
 5. ⚠️ **What a schema does not check.** It validates the declaration *frame*: is this a known kind, does

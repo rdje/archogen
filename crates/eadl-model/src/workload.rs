@@ -138,7 +138,12 @@ fn constrained_deadline(task: &Task<'_>, out: &mut Vec<Diagnostic>) {
         return;
     };
     let (Ok(deadline_q), Ok(separation_q)) = (quantity(deadline), quantity(separation)) else {
-        // A malformed quantity is F03's business and is reported by the schema/unit pass.
+        // ⭐ Not a discard, and the difference is that the pass this names now exists. `period`,
+        // `min-separation`, `deadline` and `jitter` are declared `(holds values quantity)` in
+        // `docs/semantics/kinds/os-rt.eadl`, so the **schema** pass has already refused a malformed one
+        // with `crates/eadl-model/src/quantity.rs`'s own diagnostic before this pass runs — reporting it
+        // again here would hand the author the same refusal twice. Until leaf `M1.28` this comment named
+        // a pass that did not exist, which is why the discard read as safe.
         return;
     };
     let Ok(ordering) = deadline_q.compare(separation_q) else {

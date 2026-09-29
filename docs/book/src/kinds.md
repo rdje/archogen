@@ -62,7 +62,21 @@ A kind must also carry a `doc`. A kind nobody can explain is a kind nobody shoul
 ## What the schema checks
 
 The **declaration frame**: known kind, name present when required, known clauses, right number
-of them, right value shapes.
+of them, right value shapes. A clause declares those shapes with `(holds values …)`, and one of
+the types is `quantity` — a number **and** its unit, checked by the module that owns quantities
+rather than by a second idea of what one is:
+
+```text
+(clause period (cardinality at-most-one) (holds values quantity))
+```
+
+`period`, `min-separation`, `deadline` and `jitter` are declared that way in
+`docs/semantics/kinds/os-rt.eadl`. They used to be declared `(holds values number symbol)`, which
+says a period is a number and then a *name* — and `parsec` is a perfectly good name, so
+`archogen check` accepted `(period 10 parsec)` while `archogen build` refused it. The refusal an
+author gets is the quantity module's own, and
+[Quantities and units](quantities.md) shows it rather than this chapter repeating a transcript that
+would then have two copies to keep in step.
 
 ```text
 (defservice s (requires (x)) (requries (y)))
@@ -79,7 +93,13 @@ usually has several things wrong with it.
 ## What it does not check, and the gap that closed
 
 A clause declared `(holds forms)` is **opaque**. `(at-least 60 s)` is nested forms at this
-layer and becomes a checked quantity later.
+layer and becomes a checked quantity later — in the refinement pass, which reduces every
+declaration to the facts it offers and reads each one written `<number> <symbol>` as a quantity.
+Since leaf `M1.28` that pass **propagates** what it finds instead of discarding it, so a zero
+clock frequency in an `(offers …)` is refused at the surface rather than only by whatever tried
+to divide by it next. A lone number is a count and is nobody's quantity:
+`(counter-modulus 4294967296)` is accepted, and
+`docs/semantics/boundary/accept/counter-width-and-rate.eadl` ships it that way.
 
 That has a consequence worth naming rather than discovering: a forbidden construct nested
 *inside* an opaque clause is invisible to the schema. This was not hypothetical. The boundary

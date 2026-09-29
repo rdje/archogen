@@ -1,0 +1,9 @@
+; case: invalid-quantity-without-unit
+; expect: invalid-description
+; why: A stated bound with no unit on its magnitude. A bare number cannot be compared with
+;   anything, because nothing says what it measures — so the bound is not a weaker claim,
+;   it is no claim at all.
+;
+(eadl-version eadl/1)
+
+(defplatform soc.abstract (offers (tick-rate (exactly 10))))

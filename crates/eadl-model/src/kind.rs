@@ -54,6 +54,7 @@ use std::collections::BTreeMap;
 use eadl_front::{Diagnostic, Form, Label};
 
 use crate::boundary;
+use crate::quantity::Quantity;
 
 /// How many times a clause may appear in one declaration.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -148,9 +149,37 @@ pub enum ValueType {
     Str,
     /// Anything scalar.
     Any,
+    /// A **quantity**: a number followed by a known unit, e.g. `10 ms`.
+    ///
+    /// ⭐ The only value type that consumes **two** forms, and the reason a clause can declare that it
+    /// holds a quantity rather than merely a number and a symbol. `(holds values number symbol)` says
+    /// `parsec` is a perfectly good unit, because it is a perfectly good symbol — which is how
+    /// `archogen check` came to accept `(period 10 parsec)` while `archogen build` refused it (leaf
+    /// `M1.28`). A quantity's unit is well-formedness and not behavior, so §5.6 lets a kind declare it.
+    ///
+    /// ⛔ The refusal is `crate::quantity::Quantity::read`'s **own** diagnostic, propagated with its own
+    /// code — `quantity-unknown-unit`, `quantity-non-positive-frequency` and the rest. Inventing a second
+    /// code for the same refusal would give an author two names for one mistake and the book two
+    /// transcripts to keep in step.
+    Quantity,
 }
 
 impl ValueType {
+    /// Every value type, in the order §7 of `docs/semantics/reference.md` lists them.
+    ///
+    /// ⭐ One enumeration, and the `schema-bad-value-type` repair direction is built from it rather than
+    /// restating it. A list inside a message is a copy of the list it describes, and a copy is what goes
+    /// stale: this one said six types while the code had seven, and nothing compared them.
+    pub const ALL: &'static [Self] = &[
+        Self::Symbol,
+        Self::Integer,
+        Self::Decimal,
+        Self::Number,
+        Self::Str,
+        Self::Any,
+        Self::Quantity,
+    ];
+
     /// Parse the surface spelling.
     #[must_use]
     pub fn parse(text: &str) -> Option<Self> {
@@ -161,6 +190,7 @@ impl ValueType {
             "number" => Self::Number,
             "string" => Self::Str,
             "any" => Self::Any,
+            "quantity" => Self::Quantity,
             _ => return None,
         })
     }
@@ -175,10 +205,46 @@ impl ValueType {
             Self::Number => "number",
             Self::Str => "string",
             Self::Any => "any",
+            Self::Quantity => "quantity",
+        }
+    }
+
+    /// How many values this type consumes in a `(holds values …)` list.
+    ///
+    /// One for every type except [`Self::Quantity`], which is a number and a unit.
+    #[must_use]
+    pub const fn width(self) -> usize {
+        match self {
+            Self::Quantity => 2,
+            _ => 1,
+        }
+    }
+
+    /// How a value of this type is written, for a repair direction.
+    ///
+    /// ⭐ Not [`Self::slug`]: the slug is what a kind definition writes (`(holds values quantity)`) and
+    /// this is what an *author* writes (`(period 10 ms)`). A repair direction that said "write a
+    /// `<quantity>` here" would name the declaration vocabulary in a message about a description.
+    #[must_use]
+    pub const fn spelling(self) -> &'static str {
+        match self {
+            Self::Quantity => "<number> <unit>",
+            Self::Symbol => "<symbol>",
+            Self::Integer => "<integer>",
+            Self::Decimal => "<decimal>",
+            Self::Number => "<number>",
+            Self::Str => "<string>",
+            Self::Any => "<value>",
         }
     }
 
     /// Whether a form is this type.
+    ///
+    /// ⛔ [`Self::Quantity`] admits **no** single form, and that is a true statement rather than a hole:
+    /// a quantity is two forms, so the pair is read by [`check_values`] through
+    /// [`Quantity::read`]. A positional loop that called this method for every type would refuse every
+    /// quantity, which is why `a_quantity_value_type_consumes_two_forms_and_is_read_by_the_pair` pins
+    /// the width and the reading rather than only the acceptance.
     #[must_use]
     pub fn admits(self, form: &Form) -> bool {
         match (self, form) {
@@ -189,6 +255,8 @@ impl ValueType {
             | (Self::Decimal, Form::Decimal { .. })
             | (Self::Str, Form::Str { .. })
             | (Self::Number, Form::Integer { .. } | Form::Decimal { .. }) => true,
+            // ⛔ [`Self::Quantity`] lands here: a quantity is **two** forms, so no single one is a
+            // quantity and the pair is read by [`check_values`] instead. True, not a hole — see above.
             _ => false,
         }
     }
@@ -512,7 +580,7 @@ fn read_holds(form: &Form) -> Result<Holds, Box<Diagnostic>> {
                             "schema-bad-value-type",
                             "unknown value type",
                             Label::new(item.span(), "not a value type"),
-                            "the value types are `symbol`, `integer`, `decimal`, `number`, `string`, `any`",
+                            known_value_types(),
                         )));
                     }
                 }
@@ -523,8 +591,8 @@ fn read_holds(form: &Form) -> Result<Holds, Box<Diagnostic>> {
             "schema-bad-holds",
             "`holds` takes `forms`, `values <type>…`, or `kind <name>`",
             Label::new(form.span(), "expected `forms`, `values` or `kind`"),
-            "write `(holds forms)` for opaque nested content, `(holds values number symbol)` \
-             for a quantity, or `(holds kind task)` to validate each occurrence as a \
+            "write `(holds forms)` for opaque nested content, `(holds values quantity)` for a \
+             number and its unit, or `(holds kind task)` to validate each occurrence as a \
              declaration of that kind",
         ))),
     }
@@ -644,13 +712,16 @@ pub fn validate(registry: &Registry, form: &Form) -> Vec<Diagnostic> {
 
 fn check_values(clause: &Form, types: &[ValueType], errors: &mut Vec<Diagnostic>) {
     let values: Vec<&Form> = clause.items().iter().skip(1).collect();
-    if values.len() != types.len() {
+    // ⭐ The width, not the length: [`ValueType::Quantity`] consumes a number *and* a unit, so a clause
+    // declared `(holds values quantity)` takes two values and a positional count would say one.
+    let width: usize = types.iter().map(|kind| kind.width()).sum();
+    if values.len() != width {
         errors.push(Diagnostic::error(
             "schema-arity",
             format!(
                 "`{}` takes {} value(s), found {}",
                 clause.head().unwrap_or("clause"),
-                types.len(),
+                width,
                 values.len()
             ),
             Label::new(clause.span(), "wrong number of values"),
@@ -659,14 +730,28 @@ fn check_values(clause: &Form, types: &[ValueType], errors: &mut Vec<Diagnostic>
                 clause.head().unwrap_or("clause"),
                 types
                     .iter()
-                    .map(|t| format!("<{}>", t.slug()))
+                    .map(|kind| kind.spelling())
                     .collect::<Vec<_>>()
                     .join(" ")
             ),
         ));
         return;
     }
-    for (value, expected) in values.iter().zip(types.iter()) {
+    let mut at = 0;
+    for expected in types {
+        if *expected == ValueType::Quantity {
+            // The pair is read by the one authority on what a quantity is, and **its own diagnostic is
+            // propagated** — code, message, span and repair direction. A second code for the same refusal
+            // would give an author two names for one mistake. Arity was checked above, so both forms
+            // exist; `Quantity::read` still takes them as `Option` because every other caller reads a
+            // clause whose shape nothing has declared.
+            if let Err(diagnostic) = Quantity::read(Some(values[at]), Some(values[at + 1])) {
+                errors.push(*diagnostic);
+            }
+            at += 2;
+            continue;
+        }
+        let value = values[at];
         if !expected.admits(value) {
             errors.push(Diagnostic::error(
                 "schema-type",
@@ -675,7 +760,23 @@ fn check_values(clause: &Form, types: &[ValueType], errors: &mut Vec<Diagnostic>
                 format!("write a {} here", expected.slug()),
             ));
         }
+        at += 1;
     }
+}
+
+/// Every value type a kind definition may declare, for a diagnostic that lists the alternatives.
+///
+/// Derived from [`ValueType::ALL`] rather than typed out, so the enumeration and the message cannot
+/// disagree — the shape `crates/eadl-model/src/quantity.rs`'s `known_units()` already has for units.
+fn known_value_types() -> String {
+    format!(
+        "the value types are {}",
+        ValueType::ALL
+            .iter()
+            .map(|kind| format!("`{}`", kind.slug()))
+            .collect::<Vec<_>>()
+            .join(", ")
+    )
 }
 
 fn clause_list(kind: &KindDef) -> String {

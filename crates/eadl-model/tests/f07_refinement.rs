@@ -26,7 +26,26 @@ fn refine(text: &str) -> (RefinementReport, String) {
         "fixture did not read:\n{}",
         diagnostics.render(&sources)
     );
-    let facets: Vec<Facets> = document.forms.iter().map(Facets::of).collect();
+    // ⛔ The diagnostics half is asserted empty rather than dropped: every F07 fixture is a readable
+    // description, and a facet that could not be read makes `check` return an empty report, which would
+    // turn "no violation" into a green test for the wrong reason.
+    let facets: Vec<Facets> = document
+        .forms
+        .iter()
+        .map(|form| {
+            let (facets, found) = Facets::of(form);
+            assert!(
+                found.is_empty(),
+                "an F07 fixture must be readable, and this one is not: {}",
+                found
+                    .iter()
+                    .map(|d| d.render(&sources))
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            );
+            facets
+        })
+        .collect();
     assert_eq!(facets.len(), 2, "a refinement fixture is two declarations");
     let report = check(&facets[0], &facets[1]);
     let rendered = report

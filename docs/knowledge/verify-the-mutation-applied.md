@@ -6,6 +6,7 @@ answers:
   - "Why did my sed/python patch silently do nothing?"
   - "My mutation applied, its count assertion passed, and the arm still proves nothing — what did I miss?"
   - "My RED arm reported a pass, but did the thing it tests actually run?"
+  - "My before→after census shows no difference — did nothing change, or did I record too little?"
 type: knowledge
 date: 2026-09-13
 ---
@@ -120,6 +121,16 @@ property, or one instance of it?), and the **oracle** (does its pass condition e
 can fail to run?). A count assertion covers the first, a post-mutation assertion the second, and only an
 exact verdict covers the third. Check all three, or the arm is decoration that prints ✅.
 
+⭐⭐ **And a before→after census has a fourth part: the field it records.** `M1.28.2` measured a language
+change by driving all 76 tracked descriptions through `archogen check` at the parent commit and at the new
+one, diffing the two — and the diff was **empty**, which read as "nothing changed". The instrument recorded
+only the last line of output, which carries the *verdict*. The one description that had changed kept its
+verdict (`invalid-description`) and changed only *which code* produced it — from `schema-unknown-clause`,
+a clause-name typo, to `quantity-non-positive-frequency`, the zero clock frequency its header always
+claimed. Re-run recording the verdict **and every code**, the same census reported `1 changed, 0
+acceptances lost`, which is the figure the leaf publishes. ⛔ The failure mode is worse than a weak oracle
+because it reports *success*: a measurement that under-records does not fail, it agrees with you.
+
 ## How to apply
 
 - Never write `sed -i` / `s.replace(...)` for a mutation without a count assertion. `sed` in
@@ -131,6 +142,9 @@ exact verdict covers the third. Check all three, or the arm is decoration that p
   identifying output — never merely `rc != 0`.** An arm that accepts any non-zero exit passes on `127`
   (command not found), on a crash, and on an empty fixture: three ways to print ✅ while verifying
   nothing, and the tally still reads like partial success.
+- ⛔ **And a census you diff must record every field the change could move.** A verdict is a summary; if
+  the change can move the *reason* and leave the summary alone, record the reason too. The empty diff is
+  indistinguishable from a correct one unless you can say which fields were compared.
 - Back the file up and **restore from the copy**, then prove the restore was exact —
   `git diff --stat <paths>` must be empty. A red arm that leaves the subject modified is worse
   than no red arm.

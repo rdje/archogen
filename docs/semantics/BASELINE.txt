@@ -14,7 +14,7 @@
 #             This script writes the baseline; that check enforces it.
 729a9724bc1673d7463e6e2455ea2e71a8b09736edbe1a64ba4a3447ff638caf  docs/semantics/grammar.md#ebnf
 f43870b2252ba2f76072adefc99b328e35b32aec8c62b6a1f4c4553d33280736  docs/semantics/reference.md#comment-headers
-1fdff8699b1ed6a631d0528d37e47f745effc000a589593ff42aa53c9fc8f710  docs/semantics/reference.md#diagnostics
+270bbf4008041519636e4ccac4a039e878b7a1b98bd4d3f9a8e10e8dc2822e71  docs/semantics/reference.md#diagnostics
 24da41fe2d7949db327454ff0ee13c980263da15995636a0d20e211cccf3ec14  docs/semantics/reference.md#language-version
 95435b3138c055f0cec5127269174f50c86d0311f1f6b37e00113707ad924b7f  docs/semantics/reference.md#normative-sources
 491364023b22e9b111db659262d32c3e3a480606c7fd9df75e82daa164daf2cb  docs/semantics/reference.md#number-values
@@ -51,12 +51,14 @@ f1a98ae67be88ebdc2b58bfc47100213a6a8f54264cbd09392a0ce6a5c61db3a  suite/docs/sem
 f19cf9a62e4fa88b9a5eae2446da3f8656db6fb253ef364c0cb714b08564e3f1  suite/docs/semantics/cases/invalid-implementation-in-description.eadl
 c466466d0df1fec55dcedb7ab3f7d68939ac7dac406c21b957ce658af4cd62fc  suite/docs/semantics/cases/invalid-missing-name.eadl
 f2116bfb9e7bd81c7dfcda597b88cdbb5335cff2edb721acbc756cdf27dde9c4  suite/docs/semantics/cases/invalid-missing-required-clause.eadl
+fd88a95441b3c9f366dd403f7de417d4b9c021bf72ed7d9d3b2bc634c44d95c5  suite/docs/semantics/cases/invalid-quantity-without-unit.eadl
 1d10333cd177e56e1ea80bf966fa40e0ea63e99e5d7af2f222ee32d7c6a08ca3  suite/docs/semantics/cases/invalid-repeated-at-most-one.eadl
 6f3c2aeed2424b3ff8038a2b53731d4bf0863330addbe0304eaf25a9a95a81eb  suite/docs/semantics/cases/invalid-two-release-models.eadl
 a9569668db04547cac3a8b94cc4f65fde5cce000ee5db59638b5bc7c30c6c940  suite/docs/semantics/cases/invalid-unknown-clause.eadl
 641c00aa7513c9f37c12d2e48c55d8dfd832f40b9add878d1f0313ae6c3ea751  suite/docs/semantics/cases/invalid-unknown-kind.eadl
+f51dfe73b7ecc6cfdf465d2e559d3cb36e9c98a512e3ddfa8d70b5f6c65fb61a  suite/docs/semantics/cases/invalid-unknown-unit.eadl
 9112192b89e8355633e27c7b825a65910cd161d9b0d86ecbfa4d1fea5dca2767  suite/docs/semantics/cases/invalid-wrong-value-type.eadl
-cd027646f44817b0976dd5bc33cb5353026c4d9c236f370d51e208967d0bd7e0  suite/docs/semantics/cases/invalid-zero-clock-frequency.eadl
+5a5aa20f55ab6052b660f19f0daa155c6154ab48f487b38cd612a55b32ee4099  suite/docs/semantics/cases/invalid-zero-clock-frequency.eadl
 caa9a18a8741f694f963f64c19c560f40034118007556a45a28156c848138f75  suite/docs/semantics/cases/missing-release-model.eadl
 f0f908057dd322c2a8d19e1f1f194275713c8227902fadb81608f596518acdb0  suite/docs/semantics/cases/missing-relevant-fact.eadl
 cce680b214a9053e66aadda24946ea684cbf830a1fe1c6bbf4abc271caacd438  suite/docs/semantics/cases/positive-decimal-quantity.eadl
@@ -73,7 +75,7 @@ cd50fbb3fcad565672eef71f5bd2994c0c5577ba25397fb0c9d7a9eb77e3fbb5  suite/docs/sem
 265959fe53fb31bdeb2716984b2d046cbd1f08f5fa0e928a469814849cc7a250  suite/docs/semantics/cases/unsupported-multicore.eadl
 3b8dfa2ec48bdd120f3d25c8a4a2e318174679a432b4cfc2275a0f845982779d  suite/docs/semantics/cases/unsupported-precedence-over-missing-fact.eadl
 f3ca57d06da7e041325630224c0edc386f4d24cf84faf108d166d5356f8edf2a  suite/docs/semantics/kinds/core.eadl
-a187fba0e8e8e27d24c24d0ea7f7f8d129e03ae96918e873e5c7769c706d50b9  suite/docs/semantics/kinds/os-rt.eadl
+dd534f3f7a058cfc35cde865a6a5b89b1dc3211addcdc3e99de19cc6af389f5c  suite/docs/semantics/kinds/os-rt.eadl
 412ec282b17833728de63311bc01930ac08f8774232b6e8ef3774349b5a2f308  suite/examples/alternative-timer/system.eadl
 3cf760e8a675206a910bb4b3cf04aff8443347cc28eeffcb01f8e1aa34f885da  suite/examples/bounded-queue/system.eadl
 c6eadf71506efc03a5e73b3a96068b469f17a76e8ddae7487352359a852897e2  suite/examples/high-interference/system.eadl

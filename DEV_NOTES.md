@@ -1,5 +1,45 @@
 # DEV_NOTES.md
 
+## _(2026-09-29)_ — an empty diff from a census is a claim about the census, not about the tree
+
+- `M1.28.2`, making `archogen check` refuse a quantity it cannot read. The change was a language change, so
+  the acceptance needed "no description that reads today is refused tomorrow" — and the way to say that is
+  a census, not an argument.
+- The instrument: every tracked `.eadl` driven through `archogen check` at the parent commit and at this
+  one, the two outputs diffed. The first cut recorded `tail -1` of each run. Its diff was **empty**.
+- ⛔ **The empty diff was not a result.** The one description that had changed kept its *verdict*
+  (`invalid-description`) and changed only *which code* produced it — `schema-unknown-clause` →
+  `quantity-non-positive-frequency` — and the last line carries the verdict and a count, both of which
+  were identical. Re-run recording the verdict **and every code**, the same census reported
+  **76 descriptions, 1 changed, 0 acceptances lost**, which is the figure the leaf publishes.
+- ⭐ **Why this is worse than a weak oracle.** A weak arm fails to fire and you can see that it did not.
+  An under-recording census *succeeds*: it prints the answer you were hoping for, and the only way to
+  catch it is to ask which fields were compared. Promoted into
+  `docs/knowledge/verify-the-mutation-applied.md` as the **fourth** part of the general rule beside the
+  needle, the mutation and the oracle, with a new `answers:` line — "My before→after census shows no
+  difference — did nothing change, or did I record too little?"
+- The second lesson is the one the census was written for, and it is about *which mechanism a leg asks*.
+  Reading every offered value as a quantity refused
+  `docs/semantics/boundary/accept/counter-width-and-rate.eadl` — verdict `accept`, one of the ten F27 reads
+  — because it holds `(counter-modulus 4294967296)`, a count. No leg saw it: `f27_boundary.rs` asks the
+  **classifier** and the **schema**, and neither reads a fact's value, because `(offers …)` is
+  `(holds forms)` and `core.eadl` is explicit that this layer does not interpret it. The pipeline does, and
+  nothing ran the pipeline over that corpus. `f27_every_accepted_case_is_accepted_by_the_whole_pipeline`
+  exists now; mutation **F** (the guard widened back) fails exactly it and the lone-number leg, which is
+  what identifies them as arms rather than decoration.
+- ⛔ The discard that caused all of this was also hiding a contradiction between two shipped surfaces:
+  `quantities.md` said "a number in an eADL description **always** carries a unit" and rendered the
+  refusal, while that accepted case shipped a bare number. Both were true only because no refusal ever
+  reached an author. Filed as **F-N** and corrected in the chapter, which now re-renders all three of its
+  transcripts from `archogen check` over three **tracked** cases instead of over a `platform.eadl` that
+  exists nowhere — `PROGRAM.20`'s seventh shape, closed rather than registered.
+- promotion: promoted (`docs/knowledge/verify-the-mutation-applied.md` gains the fourth part of its general
+  rule, a worked instance, a `How to apply` bullet and an `answers:` line; the INDEX row widened to match.
+  The `f27` lesson is deliberately **not** a new card — it is the fifth instance of
+  `docs/knowledge/a-gate-is-only-as-sharp-as-its-fixtures.md` and is recorded on `M1.28.2`'s leaf beside
+  the mutation that proves the new leg bites, because a sixth card answering the same question makes the
+  retrievable layer harder to search)
+
 ## _(2026-09-29)_ — the consumer facing the author was the one that had re-implemented the rule
 
 - `M1.28.1`, closing F-M: `archogen build` classified a description defect as a toolchain failure and

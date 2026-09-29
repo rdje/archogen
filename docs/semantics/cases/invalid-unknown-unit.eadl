@@ -1,0 +1,9 @@
+; case: invalid-unknown-unit
+; expect: invalid-description
+; why: A task period whose unit the table does not hold. F03's other half: an incompatible
+;   unit is a type error, and it is one at the schema rather than at the arithmetic that
+;   would have converted it.
+;
+(eadl-version eadl/1)
+
+(defsystem s (task t (period 10 parsec) (deadline 10 ms) (priority 1)))

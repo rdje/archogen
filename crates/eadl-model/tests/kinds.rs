@@ -967,3 +967,157 @@ fn a_malformed_version_in_a_kind_module_is_still_reported() {
         "the refusal must be about the version, not about the identifier not being a kind: {codes:?}"
     );
 }
+
+// ── `quantity`: the value type that consumes two forms ──────────────────────────────────────────────
+//
+// ⛔ **Leaf `M1.28`.** `(holds values number symbol)` said `parsec` was a perfectly good unit, because it
+// is a perfectly good *symbol* — which is how `archogen check` came to accept `(period 10 parsec)` while
+// `archogen build` refused the same bytes. What a quantity is belongs to
+// `crates/eadl-model/src/quantity.rs`, and the schema **asks it and propagates its answer** rather than
+// re-implementing the question, so the refusal an author sees is `quantity-unknown-unit` and not a second
+// code for one mistake.
+
+use eadl_front::Diagnostic;
+use eadl_model::kind::{Holds, ValueType};
+
+/// Validate one inline description against the shipped registry.
+fn validate_text(text: &str) -> (Vec<Diagnostic>, String) {
+    let registry = core_registry();
+    let mut sources = SourceMap::new();
+    let id = sources.add("inline.eadl", text.to_string()).expect("small");
+    let (document, diagnostics) = read(&sources, id);
+    assert!(
+        !diagnostics.has_errors(),
+        "the fixture did not read:\n{}",
+        diagnostics.render(&sources)
+    );
+    let mut errors: Vec<Diagnostic> = Vec::new();
+    for form in declarations(&document.forms) {
+        errors.extend(validate(&registry, form));
+    }
+    let rendered = errors
+        .iter()
+        .map(|d| d.render(&sources))
+        .collect::<Vec<_>>()
+        .join("\n");
+    (errors, rendered)
+}
+
+#[test]
+fn the_shipped_task_clauses_declare_a_quantity_and_not_a_number_and_a_symbol() {
+    // ⭐ A leg over the *declaration*, because the declaration is the normative surface: a kind module
+    // reverted to `(holds values number symbol)` would leave every mechanism in `kind.rs` correct and
+    // the language unenforced again.
+    let registry = core_registry();
+    let task = registry
+        .kind("task")
+        .expect("`os-rt.eadl` declares the task kind");
+    for clause in ["period", "min-separation", "deadline", "jitter"] {
+        let declared = task
+            .clause(clause)
+            .unwrap_or_else(|| panic!("the task kind has no `{clause}` clause"));
+        assert_eq!(
+            declared.holds,
+            Holds::Values(vec![ValueType::Quantity]),
+            "`{clause}` measures something, so its kind has to say so — `number` then `symbol` is a \
+             shape, and `parsec` satisfies it"
+        );
+    }
+}
+
+#[test]
+fn a_quantity_value_type_consumes_two_forms_and_is_read_by_the_pair() {
+    // The width, the spelling, and the fact that no single form is one. `admits` answers about ONE form,
+    // so it is `false` for every form here — and a loop that zipped values against types positionally
+    // would refuse every quantity in the language. That is the bug `ValueType::width` exists to prevent.
+    assert_eq!(ValueType::Quantity.width(), 2);
+    assert_eq!(ValueType::Symbol.width(), 1);
+    assert_eq!(ValueType::Quantity.slug(), "quantity");
+    assert_eq!(ValueType::Quantity.spelling(), "<number> <unit>");
+
+    let (forms, _) = parse_file("docs/semantics/kinds/os-rt.eadl");
+    let mut probed = 0;
+    for form in &forms {
+        for item in form.items() {
+            assert!(
+                !ValueType::Quantity.admits(item),
+                "no single form is a quantity, and `{}` was admitted as one",
+                item.kind()
+            );
+            probed += 1;
+        }
+    }
+    assert!(
+        probed > 10,
+        "the kind module yielded {probed} forms to probe, so this leg proved almost nothing"
+    );
+}
+
+#[test]
+fn a_clause_declared_to_hold_a_quantity_takes_two_values() {
+    let (errors, rendered) =
+        validate_text("(defsystem s (task t (period 10) (deadline 10 ms) (priority 1)))");
+    let codes: Vec<&str> = errors.iter().map(|d| d.code).collect();
+    assert_eq!(codes, vec!["schema-arity"], "{rendered}");
+    assert!(
+        rendered.contains("takes 2 value(s), found 1"),
+        "the arity is the width and not the number of declared types: {rendered}"
+    );
+    // ⭐ The repair direction is in the AUTHOR's vocabulary: `<number> <unit>`, because "write a
+    // `<quantity>` here" would name the kind vocabulary in a message about a description.
+    assert!(rendered.contains("(period <number> <unit>)"), "{rendered}");
+}
+
+#[test]
+fn a_bad_unit_is_refused_with_the_quantity_s_own_code_and_not_a_schema_one() {
+    let (errors, rendered) =
+        validate_text("(defsystem s (task t (period 10 parsec) (deadline 10 ms) (priority 1)))");
+    let codes: Vec<&str> = errors.iter().map(|d| d.code).collect();
+    assert_eq!(
+        codes,
+        vec!["quantity-unknown-unit"],
+        "one mistake, one code, and it is `quantity.rs`'s: {rendered}"
+    );
+    assert!(
+        rendered.contains("the known units are"),
+        "the refusal has to list the table, which is the repair direction §5.5 requires: {rendered}"
+    );
+}
+
+#[test]
+fn a_value_type_a_kind_definition_does_not_know_lists_every_one_that_exists() {
+    // ⭐ The repair direction for `schema-bad-value-type` is a list, and a list inside a message is a
+    // copy of the enumeration it describes. It is now built from `ValueType::ALL`, and this leg compares
+    // the message against that enumeration rather than against a second list written here — which is the
+    // only form of the assertion that fails when a type is added and the message is not.
+    let text = "(defkind thing (doc \"d\") (name required) \
+                 (clause c (cardinality one) (holds values parsec)))";
+    let mut sources = SourceMap::new();
+    let id = sources.add("inline.eadl", text.to_string()).expect("small");
+    let (document, diagnostics) = read(&sources, id);
+    assert!(
+        !diagnostics.has_errors(),
+        "the fixture did not read:\n{}",
+        diagnostics.render(&sources)
+    );
+    let errors = read_kind(declarations(&document.forms)[0]).expect_err("must refuse");
+    let rendered = errors
+        .iter()
+        .map(|d| d.render(&sources))
+        .collect::<Vec<_>>()
+        .join("\n");
+    let codes: Vec<&str> = errors.iter().map(|d| d.code).collect();
+    assert_eq!(codes, vec!["schema-bad-value-type"], "{rendered}");
+    for kind in ValueType::ALL {
+        assert!(
+            rendered.contains(&format!("`{}`", kind.slug())),
+            "the repair direction does not list `{}`, so an author reading it cannot write one: \
+             {rendered}",
+            kind.slug()
+        );
+    }
+    assert!(
+        rendered.contains("quantity"),
+        "the type leaf `M1.28` added must be one an author is told about: {rendered}"
+    );
+}

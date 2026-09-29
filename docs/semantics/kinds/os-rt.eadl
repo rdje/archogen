@@ -29,15 +29,22 @@
   (name required)
   ; Release behavior. A periodic task states its period; a sporadic one states the minimum
   ; separation between releases. §3.1 admits both and requires the separation to be declared.
-  (clause period (cardinality at-most-one) (holds values number symbol))
-  (clause min-separation (cardinality at-most-one) (holds values number symbol))
+  ;
+  ; ⛔ `(holds values quantity)`, not `(holds values number symbol)`. A symbol is a *name* and
+  ; `parsec` is a perfectly good one, so the old declaration said nothing about whether the pair
+  ; measured anything — which is how `archogen check` came to accept `(period 10 parsec)` while
+  ; `archogen build` refused it. A quantity's unit is well-formedness and not behavior, so §5.6
+  ; lets a kind declare it, and the refusal is `crates/eadl-model/src/quantity.rs`'s own
+  ; diagnostic rather than a second code for the same mistake. Leaf `M1.28`.
+  (clause period (cardinality at-most-one) (holds values quantity))
+  (clause min-separation (cardinality at-most-one) (holds values quantity))
   ; §3.1: constrained deadlines. The reference event is explicit because §7.3 requires the
   ; "relative deadline and its reference event" — a deadline measured from an unnamed instant
   ; is not a checkable requirement.
-  (clause deadline (cardinality one) (holds values number symbol))
+  (clause deadline (cardinality one) (holds values quantity))
   (clause deadline-from (cardinality at-most-one) (holds values symbol))
   ; §3.1: bounded release jitter. Absent means zero, which is a claim the analysis relies on.
-  (clause jitter (cardinality at-most-one) (holds values number symbol))
+  (clause jitter (cardinality at-most-one) (holds values quantity))
   ; Static unique priorities (§3.1). The engine owns the ready-queue structure that realizes
   ; them; the number here is the policy, not the implementation.
   ;

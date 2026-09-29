@@ -156,11 +156,15 @@ fn the_population_is_the_size_the_census_pins() {
     // iterates over fewer files than it used to passes forever. The number is a census rather than a
     // promise — when a description is added or removed deliberately, this is the leg that says so out
     // loud, and `M1.13.5`'s freeze gate is what makes the movement require a migration note.
+    //
+    // 63 → 65 at leaf `M1.28.2`: `invalid-unknown-unit.eadl` and `invalid-quantity-without-unit.eadl`
+    // joined, because the schema and the refinement pass learned to refuse a quantity they used to
+    // discard, and a new rule with no worked case is a rule nothing in the suite exercises.
     let suite = suite();
     assert_eq!(
         suite.len(),
-        63,
-        "the conformance suite holds {} descriptions and this census pins 63 — if a case was added or \
+        65,
+        "the conformance suite holds {} descriptions and this census pins 65 — if a case was added or \
          removed deliberately, update the census in the same commit and say why in the leaf; if not, a \
          root stopped being walked",
         suite.len()

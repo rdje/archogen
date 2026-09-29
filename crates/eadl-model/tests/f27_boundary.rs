@@ -306,3 +306,76 @@ fn f27_a_refusal_is_usable_guidance_not_just_a_no() {
         );
     }
 }
+
+// ── the whole pipeline, not only the classifier and the schema ─────────────────────────────────────
+
+use eadl_front::Verdict;
+use eadl_model::check::{check, default_profile, shipped_registry};
+use eadl_model::kind::Registry;
+
+/// The registry a real invocation builds, through the production loader.
+fn registry() -> Registry {
+    let mut sources = SourceMap::new();
+    let files: Vec<(String, String)> = [
+        "docs/semantics/kinds/core.eadl",
+        "docs/semantics/kinds/os-rt.eadl",
+    ]
+    .iter()
+    .map(|relative| {
+        let path = repo_root().join(relative);
+        let text = std::fs::read_to_string(&path)
+            .unwrap_or_else(|e| panic!("cannot read {}: {e}", path.display()));
+        ((*relative).to_string(), text)
+    })
+    .collect();
+    shipped_registry(&mut sources, &files).unwrap_or_else(|errors| {
+        panic!(
+            "the shipped kind modules are malformed:\n{}",
+            errors
+                .iter()
+                .map(|d| d.message.clone())
+                .collect::<Vec<_>>()
+                .join("; ")
+        )
+    })
+}
+
+/// ⛔ **Leaf `M1.28`, and the leg this file did not have.** Every other leg here asks the *classifier*
+/// or the *schema*, and neither reads a fact's value: `(offers …)` is `(holds forms)`, which
+/// `docs/semantics/kinds/core.eadl` is explicit is not interpreted at that layer. The pipeline reads
+/// further, so a new rule about quantities can refuse a case this corpus records as `accept` while every
+/// leg below stays green. That is measured and not hypothetical — reading every offered value as a
+/// quantity turned `counter-width-and-rate.eadl`'s `(counter-modulus 4294967296)` into
+/// `quantity-missing-unit`, and the census that found it was a hand-run loop over all 76 tracked
+/// descriptions rather than anything in this file.
+#[test]
+fn f27_every_accepted_case_is_accepted_by_the_whole_pipeline() {
+    let registry = registry();
+    let profile = default_profile();
+    let mut accepted = 0;
+    for case in corpus() {
+        if case.verdict != "accept" {
+            continue;
+        }
+        accepted += 1;
+        let path = repo_root().join(&case.name);
+        let text = std::fs::read_to_string(&path)
+            .unwrap_or_else(|e| panic!("cannot read {}: {e}", path.display()));
+        let mut sources = SourceMap::new();
+        let id = sources.add(case.name.clone(), text).expect("small");
+        let outcome = check(&sources, id, &registry, profile);
+        assert!(
+            outcome.diagnostics.is_empty(),
+            "{} is recorded `accept` but the pipeline refused it:\n{}",
+            case.name,
+            outcome.render(&sources)
+        );
+        assert_eq!(
+            outcome.verdict,
+            Verdict::Ok,
+            "{} is recorded `accept`",
+            case.name
+        );
+    }
+    assert_eq!(accepted, 10, "the accept corpus changed size");
+}

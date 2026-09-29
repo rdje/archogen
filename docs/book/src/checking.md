@@ -16,11 +16,11 @@ built from it will behave — the evidence categories start after this point.
 | --- | --- | --- |
 | read | syntax and spans | `invalid-description` |
 | boundary | implementation content (F27) | `invalid-description` |
-| schema | the declaration frame | `invalid-description` |
+| schema | the declaration frame, and every quantity a clause declares | `invalid-description` |
 | profile | the capabilities the profile refuses | `unsupported-profile` |
 | workload | the task model the profile admits | `unsupported-profile`, `missing-fact`, `invalid-description` |
 | presence | offered / absent / undescribed | `missing-fact`, `infeasible-configuration`, `invalid-description` |
-| refinement | the three obligations | `infeasible-configuration` |
+| refinement | the three obligations, and the quantities they are written in | `infeasible-configuration`; a quantity it cannot read is `invalid-description` |
 
 Every pass runs. Every diagnostic is collected. A description with three problems costs one edit
 cycle, not three.
@@ -67,10 +67,12 @@ exited **70**, a status [the contract below](cli.md) reserves for the invocation
 to file a bug about the tool for a symbol they mistyped. It now exits **10**. A rule each consumer
 re-implements is a rule the next consumer lacks.
 
-⭐ It is a **classification**, not a claim that the description was checked. `archogen check` still
-accepts a quantity whose unit the table does not hold, because the passes that read quantities discard
-what they find — leaf `M1.28` owns that, and until it lands the two commands can disagree about the same
-bytes.
+⭐ It is a **classification**, and since leaf `M1.28.2` it is also a claim the pipeline honours: a task
+clause declares `(holds values quantity)`, so `(period 10 parsec)` is refused by the **schema** with
+`quantity-unknown-unit` and the verdict above, and a quantity written inside an `(offers …)` is refused by
+the refinement pass rather than silently skipped. Before that, the passes that read quantities discarded
+what they found, so `check` accepted a description `build` could not realize — and the two commands now
+agree because the one that was wrong was fixed, not because the disagreement was hidden.
 
 ## Exit codes
 
@@ -122,13 +124,13 @@ verdict about the user's description. §5.5: a tool failure is never reported as
 
 ## The semantic corpus
 
-`docs/semantics/cases/` holds 30 worked cases — §12 M1 asks for twenty — each declaring the
+`docs/semantics/cases/` holds 32 worked cases — §12 M1 asks for twenty — each declaring the
 verdict it expects in its own header, and each run through this pipeline:
 
 | Expected | Cases |
 | --- | --- |
 | `ok` | 6 |
-| `invalid-description` | 11 |
+| `invalid-description` | 13 |
 | `unsupported-profile` | 7 |
 | `infeasible-configuration` | 4 |
 | `missing-fact` | 2 |

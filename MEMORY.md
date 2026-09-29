@@ -13,24 +13,24 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M1` → frontier `M1.28.2`. `PROGRAM` `.11`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
-- **Next action:** **`M1.28.2`, high — the quantity enforcement.** `archogen check` **accepts** a
-  description `archogen build` cannot realize: `(period 10 parsec)` passes `check`, and a zero tick rate
-  (§13.1's **F03**, an M1 gate fixture) draws no diagnostic from `check` at all. Three consumers of
-  `Quantity::read` discard what it finds, the only one that propagates is the S0 prototype, and the schema
-  cannot ask — `period` is `(holds values number symbol)`, `ValueType` has no quantity. A language change,
-  so a migration note; ⛔ propagating from the three sites alone is **worse than doing nothing**. `.1` is
-  closed (`Verdict::of_code`, exit **70 → 10**). Both precede `M1.26.1`. Then `M1.26.1`, `.2`.
-- ⛔ **Every gate stayed green because all of them are existence censuses** — promoted to
-  `docs/knowledge/an-existence-census-cannot-see-a-discarded-result.md` with three more instances of the
-  shape: **F-H** (`M1.26.2`) a §4 row naming a mechanism `grep` cannot find; **F-J** (`M1.26.1`) a code
-  whose only site is a totality arm; **F-K** (`M1.28`) the F03 case passing on a clause-name typo.
-  **F-I** (`M1.26.1`): the frozen population is scoped by *file*, and nothing says why.
+- **Active tree:** `M1` → frontier `M1.26.1`. `PROGRAM` `.27`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
+- **Next action:** **`M1.26.1`** — gap (a) of `M1.26`, decomposed into two children. **16** of the
+  workspace's **76** diagnostic codes are stated by no normative document and the book renders **8**, so
+  leg 8 checks those for *existence* only. Lands a second normative document with its own declaration and
+  a both-directions census, widens leg 8 to every document's, answers **F-I**, and carries the rule
+  `M1.28.2` left enforced but unstated: `<number> <symbol>` is a quantity, a lone number a count.
+- ⭐ **`M1.28` is closed** (both children): `check` and `build` agree about a malformed quantity —
+  `ValueType::Quantity`, four `task` clauses onto it, `refinement.rs` propagating not discarding,
+  `Verdict::of_code` in one place (exit **70 → 10**). 76 descriptions censused: **1** changed, **0**
+  acceptances lost; the lesson is `an-existence-census-cannot-see-a-discarded-result.md`.
+- ⛔ **F-O → `PROGRAM.27`, high: `LANGUAGE-FREEZE`'s explicitness leg cannot fail on the real tree** —
+  with the baseline amended and **no note at all** it prints `OK`: its notes grep matches
+  `docs/semantics/migrations/README.md`'s form template, and `names_construct`'s `*all*` case reads that
+  template as covering every construct. All nine arms run against a scratch directory, so none saw it.
 - ⭐ **`M1.13` is closed: `eadl/1` is frozen and gated** — one manifest (**no count** in it), one reader,
-  four two-sided rules, `BASELINE.txt` (**70** digests enumerated at run time), and `LANGUAGE-FREEZE`,
-  whose **second** leg compares the tracked baseline with `HEAD`'s, so `--emit` needs a pending migration
-  note and is not the waiver. Also closed: `M1.25`, `M1.13.4`, `.3`, `PROGRAM.21`, `M1.13.1`, `M1.20`,
-  `M1.12`; F-F by `M1.13.2`, `decision_eadl1-value-domain.md`.
+  four two-sided rules, `BASELINE.txt` (**72** digests enumerated at run time), and `LANGUAGE-FREEZE`,
+  whose **second** leg is what stops `--emit` being the waiver — and is the leg **F-O** found inert. Also
+  closed: `M1.25`, `M1.13.4`, `.3`, `PROGRAM.21`, `M1.13.1`, `M1.20`, `M1.12`; F-F by `M1.13.2`.
 - **⭐ Tree `API`** (ruled `2026-09-28`, `decision_programmatic-interface.md`): one engine API, a **wasm**
   binding and an **MCP server**, post-build only; `API.3`–`.7` waited on `M1.13`'s freeze, now closed, so
   the frontier order is a director's call and not a dependency. **`PROGRAM.11`** is the other active

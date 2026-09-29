@@ -14,6 +14,11 @@
 //! | presence | offered / absent / undescribed (`M1.5`) | `missing-fact`, `infeasible-configuration`, `invalid-description` |
 //! | refinement | the three obligations (`M1.6`) | `infeasible-configuration` |
 //!
+//! ⛔ **The refinement row carries two verdicts and that is not sloppiness.** A violated obligation is
+//! `infeasible-configuration`; a quantity the pass could not *read* — `(tick-rate 0 MHz)` — is ill-typed
+//! input and is `invalid-description`, which §5.5 puts above it. One list of diagnostics would force one
+//! verdict over both, so `refinements` returns the two groups separately.
+//!
 //! # It does not stop at the first pass
 //!
 //! Every pass runs, and every diagnostic is collected. The **verdict** is the highest-precedence
@@ -231,11 +236,15 @@ pub fn check(
     }
 
     // ── refinement ───────────────────────────────────────────────────────────────────────────
-    push(
-        &mut findings,
-        Verdict::InfeasibleConfiguration,
-        refinements(&forms),
-    );
+    let (unreadable, obligations) = refinements(&forms);
+    for diagnostic in unreadable {
+        push(
+            &mut findings,
+            Verdict::of_code(diagnostic.code),
+            vec![diagnostic],
+        );
+    }
+    push(&mut findings, Verdict::InfeasibleConfiguration, obligations);
 
     let verdict = findings
         .iter()
@@ -320,8 +329,19 @@ fn walk(form: &Form, visit: &mut impl FnMut(&Form)) {
 }
 
 /// Check every `(refines …)` claim in the description.
-fn refinements(forms: &[Form]) -> Vec<Diagnostic> {
-    let facets: Vec<Facets> = forms.iter().map(Facets::of).collect();
+///
+/// ⭐ Returns **two** groups, because they carry different verdicts: the quantities this pass could not
+/// read, and the obligations it found violated. See the pass table above.
+fn refinements(forms: &[Form]) -> (Vec<Diagnostic>, Vec<Diagnostic>) {
+    let mut unreadable = Vec::new();
+    let facets: Vec<Facets> = forms
+        .iter()
+        .map(|form| {
+            let (facets, found) = Facets::of(form);
+            unreadable.extend(found);
+            facets
+        })
+        .collect();
     let mut errors = Vec::new();
     for (index, concrete) in facets.iter().enumerate() {
         let Some((target, span)) = &concrete.refines else {
@@ -347,7 +367,7 @@ fn refinements(forms: &[Form]) -> Vec<Diagnostic> {
         };
         errors.extend(refinement::check(abstract_, concrete).diagnostics());
     }
-    errors
+    (unreadable, errors)
 }
 
 /// The default profile: the only one this build supports.
