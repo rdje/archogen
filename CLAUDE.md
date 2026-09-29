@@ -18,7 +18,10 @@ human is working. Follow it exactly.
 5. Read `docs/CLAIM_VERIFICATION.md` — what "checked" means before a number is published:
    **re-derive · falsify · make durable**, three dimensionally different questions, and a
    missing leg is stated rather than hidden. §A restates it in this project's terms.
-6. Resume from `MEMORY.md` (the bounded layer-A resume pointer) → the active task-tree's
+6. Read `LIVE_DOCUMENT_SIZE_CONTAINMENT.md` — which live documents are bounded snapshots of *now*
+   (`MEMORY.md`, `LIVE_STATUS.md`, `docs/TASK_TREE.md`) and which are histories. A snapshot takes current
+   state, never a closure narrative: the narrative's home is the tree's Commit Log and `CHANGELOG.md`.
+7. Resume from `MEMORY.md` (the bounded layer-A resume pointer) → the active task-tree's
    frontier under `docs/tasks/`.
 
 ## The non-negotiables

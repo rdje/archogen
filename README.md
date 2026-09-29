@@ -69,6 +69,8 @@ it holds for any agent or human identically:
 - Nothing changes without a **task-tree leaf** first ([`docs/TASK_TREE.md`](docs/TASK_TREE.md)).
 - Durable facts go to [`docs/decisions/`](docs/decisions/); the resume pointer is
   [`MEMORY.md`](MEMORY.md) ([`MEMORY_ARCHITECTURE.md`](MEMORY_ARCHITECTURE.md)).
+- Which documents are bounded snapshots and which are histories:
+  [`LIVE_DOCUMENT_SIZE_CONTAINMENT.md`](LIVE_DOCUMENT_SIZE_CONTAINMENT.md).
 - Commit per [`COMMIT.md`](COMMIT.md); for any unknown, reach for a tool first
   ([`TOOLBOX.md`](TOOLBOX.md)). The enforced doctrines are listed in
   [`DOCTRINE_ENFORCEMENT.md`](DOCTRINE_ENFORCEMENT.md).

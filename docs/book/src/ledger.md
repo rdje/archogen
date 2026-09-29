@@ -135,6 +135,20 @@ the day a chapter or a decision relies on it, as Miri did.
 | Revalidation trigger | `rustc --version` differing from the one measured here; any toolchain release |
 | Named as | `rustc`, `Cargo` |
 
+## `fsmgen`
+
+| Field | Value |
+| --- | --- |
+| Source | fsmgen, a sibling repository whose live-document size-containment doctrine this project adopted |
+| Version | commit `0fa794310` for the doctrine; `727e0d086` for its adoption guide |
+| Pinned at | not pinned — the adopted copy is this repository's own `LIVE_DOCUMENT_SIZE_CONTAINMENT.md`, whose adoption note records the source revision and the digest of the copied body |
+| Retrieved | `2026-09-30` |
+| Hash | sha256 `af130de4d7bbeef6db532b0cea4ba25a07ce131c6a44511cbe25d8a91c037aa2` of the copied body (source lines 190–529) |
+| Scope | the neutral doctrine body, copied verbatim; nothing else — no threshold, path or conclusion of fsmgen's |
+| Known limitations | a template, not an upstream: a later revision there changes nothing here until it is reviewed and adopted by an owned leaf |
+| Revalidation trigger | a new fsmgen revision of the doctrine or its adoption guide |
+| Named as | `fsmgen` |
+
 ## `mdbook`
 
 | Field | Value |

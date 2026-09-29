@@ -679,7 +679,7 @@ mdBook that is the director's window into the project.
     `git grep -ln 'CLAIM_VERIFICATION' -- docs/book` → no match, `rc=1`.
 
 - ID: `PROGRAM.17`
-  Status: `pending`
+  Status: `in-progress`
   Goal: check the director-mandated **live-document size-containment guide** (§18) against what this
   repository already does and adopt what is missing — the instruction covers a *partial* adoption too,
   and this is one.
@@ -704,6 +704,51 @@ mdBook that is the director's window into the project.
   Priority: **medium** — nothing is unreadable today and the two documents a resuming session reads
   first are both capped and enforced. But "append-only by design" is a decision nobody has written
   down, and an unwritten decision is the one a future session quietly reverses.
+  Verification: `pending`
+  Commit: `pending`
+  Children: `PROGRAM.17.1`, `PROGRAM.17.2`, `PROGRAM.17.3` — decomposed `2026-09-30` after re-measuring. The guide the
+  leaf means is fsmgen's adoption bridge, `docs/LIVE_DOCUMENT_SIZE_CONTAINMENT_ADOPTION_GUIDE.md` (431 lines /
+  21 327 bytes at `727e0d086`, exactly the leaf's figure); the normative doctrine is fsmgen's root
+  `LIVE_DOCUMENT_SIZE_CONTAINMENT.md` at `0fa794310`. ⛔ The surfaces measured at filing have not held still:
+  `LIVE_STATUS.md` 3 315 → **42 110 bytes** in 21 lines, **one table row 30 256 bytes long**; `CHANGELOG.md`
+  1 464 → 3 428 lines; `MEMORY.md`'s longest line 705 bytes and `docs/TASK_TREE.md`'s 1 158 — each growing by a
+  closure note per closed leaf, this session's included. The guide's stop condition binds part of this: "stop and
+  request direction when a lifecycle choice would change what users can directly browse" — so rotating the
+  changelog or partitioning a task tree is proposed, not done.
+
+- ID: `PROGRAM.17.1`
+  Status: `done`
+  Goal: adopt the doctrine as a project-owned copy, and record the measured inventory it requires.
+  Acceptance: `LIVE_DOCUMENT_SIZE_CONTAINMENT.md` at the root — the neutral body copied verbatim with its source
+  revision and digest, and a fenced archogen adoption note; every live document listed with lifecycle class,
+  measured lines / bytes / longest line, today's bound and what enforces it, and its scaling term; `CHANGELOG.md`,
+  `DEV_NOTES.md` and the task trees each given an explicit decision; nothing written outside this repository.
+  Verification: the guide and the doctrine read at their current revisions (fsmgen `727e0d086` / `0fa794310`),
+  compared with what this repository did: two of the snapshot-class documents capped and enforced (`README.md`,
+  `MEMORY.md`), a third (`LIVE_STATUS.md`) uncapped and grown 12.7× since filing, no lifecycle declared for any
+  history, no line-width axis anywhere. The copy's body re-extracted from the committed file and compared with
+  source lines 190–529 → `cmp` identical; its sha256 `af130de4…` is the one the adoption note records. Every
+  measurement in the inventory re-derived by one `wc -l`/`wc -c`/longest-line pass on `2026-09-30`. `README-STABILITY`
+  → 84/300 lines, 4 203/16 384 bytes after the pointer. Nothing written outside this repository: fsmgen read with
+  `git -C … rev-parse`, `wc`, `shasum` and `sed -n` only.
+  Commit: `ARCHOGEN-PROGRAM-0138 (leaf PROGRAM.17.1)`
+
+- ID: `PROGRAM.17.2`
+  Status: `pending`
+  Goal: the guide's Phase 1 — the bounded snapshots (`LIVE_STATUS.md`, `MEMORY.md`, `docs/TASK_TREE.md`) hold current
+  state only, and a checker keeps them bounded on all three axes.
+  Acceptance: every closure note removed from a snapshot is first proved present in its canonical home (the leaf's
+  Commit Log row, `CHANGELOG.md`); caps set from the reviewed survivor with transaction-sized headroom; a checker with
+  RED arms, registered; `COMMIT.md` no longer asks for a snapshot edit that only restates history.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `PROGRAM.17.3`
+  Status: `pending`
+  Goal: the lifecycle decisions that change what the director browses, put to the director with evidence — the
+  changelog and development notes as rolling ledgers, and the task-tree monoliths (`M1.md` 658 KB).
+  Acceptance: a findings entry with measured sizes, the options the doctrine allows, a recommendation each, and what
+  is lost or kept by each; no rotation or partition performed without the ruling.
   Verification: `pending`
   Commit: `pending`
 
@@ -2886,7 +2931,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
+| 1 | `PROGRAM.17` | `in-progress` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
 | 2 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. ⭐ A **near-miss** worth pricing in, recorded honestly as a near-miss and not as a fourth instance: `PROGRAM.18`'s frontier row still read "ten of eighteen controls" while this leaf was being written, and was corrected in the same commit — it would have gone stale the moment the fix landed, and nothing in the tree compares a control count against the controls. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with. ⛔ An **eighth** shape landed `2026-09-29` and it falsifies the acceptance's *population* rather than adding a figure: `CHANGELOG.md` said "Newest first" and did not, one entry sitting above six newer ones for seven commits because five consecutive commits inserted at the same wrong anchor — and `CHANGELOG.md` is not one of the three live surfaces the acceptance enumerates. Two falsifications of a three-item list, so the population becomes every live surface the commit stages |
 | 3 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
 | 4 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
@@ -3013,6 +3058,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-13` | `PROGRAM.4` | backfilled `2026-09-30` (`PROGRAM.13`), transcribed from the leaf's own checklist: `SUMMARY.md` now carries five parts that mirror the programme (what eADL describes · writing a description · what the engine may claim · generating and running a system · using the toolchain), and `presence.md` names … | `done` at `2733efe`; the full evidence is the leaf's acceptance checklist |
 | `2026-09-30` | `PROGRAM.13` | the unlogged-leaf census by leaf ID over every tree, before and after; each derived commit against the commit its leaf records | 22 rows owed across `BOOTSTRAP`, `M1`, `M2`, `PROGRAM` → 0; every commit derived from `git log` matched its leaf's own record |
 | `2026-09-30` | `PROGRAM.15` | the register gate's first run on the real tree; its 15 arms; eight mutations R-1–R-8 | the cross-vendor index said 5 open / 2 blockers against a closed register — corrected; 15 / 0; every mutation fires |
+| `2026-09-30` | `PROGRAM.17.1` | the guide and doctrine at their current fsmgen revisions; a three-axis measurement of every live document; the copied body against its source | the copy byte-identical (`cmp`); `LIVE_STATUS.md` 42 110 bytes with a 30 256-byte row, `CHANGELOG.md` 3 428 lines — both recorded as debt or a decision |
 
 ## Commit Log
 
@@ -3056,6 +3102,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.4` | `ARCHOGEN-PROGRAM-0033 (leaf PROGRAM.4)` | the book gets a shape, and its citations get checked — backfilled `2026-09-30` (`PROGRAM.13`) from `git log`, `2733efe` `2026-09-13` |
 | `PROGRAM.13` | `ARCHOGEN-PROGRAM-0136 (leaf PROGRAM.13)` | **every closed leaf names its commit and its checks in its own tree** — 22 rows backfilled from `git log` and the leaves' own checklists; `BOOTSTRAP` gains a Verification Log |
 | `PROGRAM.15` | `ARCHOGEN-PROGRAM-0137 (leaf PROGRAM.15)` | **a bug register says what its issues say, and its totals are recounts** — `FEEDBACK-REGISTER`; its first run found the cross-vendor index three days stale |
+| `PROGRAM.17` → `PROGRAM.17.1` | `ARCHOGEN-PROGRAM-0138 (leaf PROGRAM.17.1)` | **the live-document size-containment doctrine is adopted, with a measured inventory** — a project-owned copy, an adoption note per surface, and the snapshots' chronology recorded as debt. `PROGRAM.17` decomposed |
 
 ## Changelog
 

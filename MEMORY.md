@@ -13,10 +13,11 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `PROGRAM` → frontier `PROGRAM.17`. `M1` `.29.4` (**waiting on the director**); `API` `.1`; `S0` `.8`;
-  `M2` `.8.2`.
-- **Next action:** **`PROGRAM.17`** — check the director-mandated **live-document size-containment guide** (§18) against what this repository already does and adopt what is missing. ⏳ **`M1.29.4` waits on the director** — §7 of
-  `decision_findings-for-director-review.md`.
+- **Active tree:** `PROGRAM` → frontier `PROGRAM.17` (child `.17.2` next). `M1` `.29.4` (**waiting on the director**);
+  `API` `.1`; `S0` `.8`; `M2` `.8.2`.
+- **Next action:** **`PROGRAM.17.2`** — make `LIVE_STATUS.md`, `MEMORY.md` and `docs/TASK_TREE.md` current-state only
+  (each removed closure note first proved present in its tree's Commit Log), then bound all three. ⏳ **`M1.29.4` waits
+  on the director** — §7 of `decision_findings-for-director-review.md`.
 - ⭐ **Closed today:** `M1.29.1`–`.3`, `M1.31`, `M1.33`, `PROGRAM.27`, `PROGRAM.11`, `PROGRAM.18`, `PROGRAM.24`, `PROGRAM.28` (gate arms run in a tier), `PROGRAM.29` (scratch on this volume, gated), `PROGRAM.5` (§15 source ledger), `PROGRAM.9.1` (Miri step armed), `PROGRAM.9.2` (fuzz step: found 3 defects), `PROGRAM.9.3` (mutation catalog; `extended` passes), `PROGRAM.6.1` (version register), `PROGRAM.6.2` (frozen verdicts), `PROGRAM.6.3` (format goldens; `PROGRAM.6` closed), `PROGRAM.13` (logs backfilled), `PROGRAM.15` (feedback register checked), `M1.34` (`Rational` ordering exact), `M1.35` (reader escape panic), `M1.36` (exact printing never overflows) — `archogen check` elaborates **and
   type-checks** a module tree (§6 rules 7–10); a name is declared once (§7 rule 6), for a file and a tree.
   30 cases in `docs/semantics/modules/`. A migration is **two commits** (`pending`, then `applied` — enforced).

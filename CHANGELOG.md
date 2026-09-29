@@ -4,6 +4,22 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the live-document size-containment doctrine is adopted, with a measured inventory
+
+`ARCHOGEN-PROGRAM-0138` (leaf `PROGRAM.17.1`).
+
+- `LIVE_DOCUMENT_SIZE_CONTAINMENT.md` at the root. The neutral body is copied verbatim from fsmgen, and its
+  digest is recorded. The project's own adoption note lists every live document with its lifecycle, its
+  measured lines, bytes and longest line, what bounds it today, and what makes it grow. No fsmgen number is
+  copied.
+- ⛔ **Measured:** `LIVE_STATUS.md` has grown from 3 315 to **42 110 bytes** in 21 lines, one table row being
+  30 256 bytes long, because each closed leaf appended a note to it. `MEMORY.md` and `docs/TASK_TREE.md` carry
+  the same growth on a smaller scale. All three are recorded as debt owned by `PROGRAM.17.2`. From this
+  commit on, a snapshot takes current state and never a closure narrative.
+- `CHANGELOG.md` and `DEV_NOTES.md` grow deliberately until the director rules on rotating them, and so do
+  the task trees (`M1.md` is 658 KB). Those choices change what is browsed, so they are put to the director
+  (`PROGRAM.17.3`) and not made here.
+
 ## archogen — a bug register says what its issues say, and its totals are recounts
 
 `ARCHOGEN-PROGRAM-0137` (leaf `PROGRAM.15`). A new doctrine, `FEEDBACK-REGISTER`.
