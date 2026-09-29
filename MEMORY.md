@@ -14,10 +14,7 @@
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M1` → frontier `M1.29.3`. `PROGRAM` `.11`; `API` `.1`; `S0` `.8`; `M2` `.8.2`.
-- **Next action:** ⛔ **first, flip `docs/semantics/migrations/eadl-1-module-path-and-cases.md` to
-  `status: applied`** — the freeze gate refuses every commit until it does (spent-note leg); do it in the
-  docs-only `PROGRAM.20` note (two `modules.md` transcripts it listed as unverifiable are now verified).
-  Then **`M1.29.3`, high — the name rule** an elaborated program needs: how a reference inside an instance
+- **Next action:** **`M1.29.3`, high — the name rule** an elaborated program needs: how a reference inside an instance
   resolves and what an `export` hides — written into `docs/semantics/reference.md` §6 first — then the model
   passes over the resolved program, F01/F02 type-checked through `archogen`, and "elaborate and type-check a
   description" back in `crates/archogen-cli/src/spec.rs` (two coupling legs in `module_files.rs` enforce the
