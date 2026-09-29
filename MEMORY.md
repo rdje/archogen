@@ -13,12 +13,12 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `PROGRAM` → frontier `PROGRAM.5`. `M1` `.29.4` (**waiting on the director**); `API` `.1`;
+- **Active tree:** `PROGRAM` → frontier `PROGRAM.9`. `M1` `.29.4` (**waiting on the director**); `API` `.1`;
   `S0` `.8`; `M2` `.8.2`.
-- **Next action:** **`PROGRAM.5`** — the §15/§19 dependency and evidence ledger; then `.9`, `.6`, … ⏳ **`M1.29.4`
-  waits on the director's call** — `decision_findings-for-director-review.md` §7. Scratch goes under `target/`
-  only (`SCRATCH-LOCALITY`); a Cargo fixture there is standalone because the root manifest excludes `target`.
-- ⭐ **Closed today:** `M1.29.1`–`.3`, `M1.31`, `M1.33`, `PROGRAM.27`, `PROGRAM.11`, `PROGRAM.18`, `PROGRAM.24`, `PROGRAM.28` (gate arms run in a tier), `PROGRAM.29` (scratch on this volume, gated) — `archogen check` elaborates **and
+- **Next action:** **`PROGRAM.9`** — the extended tier's three steps; then `.6`, `.13`, … `.30`. ⏳ **`M1.29.4`
+  waits on the director's call** — `decision_findings-for-director-review.md` §7. An outside source named in a
+  chapter or decision cites `docs/book/src/ledger.md#<id>` (`SOURCE-LEDGER`); scratch goes under `target/` only.
+- ⭐ **Closed today:** `M1.29.1`–`.3`, `M1.31`, `M1.33`, `PROGRAM.27`, `PROGRAM.11`, `PROGRAM.18`, `PROGRAM.24`, `PROGRAM.28` (gate arms run in a tier), `PROGRAM.29` (scratch on this volume, gated), `PROGRAM.5` (§15 source ledger) — `archogen check` elaborates **and
   type-checks** a module tree (§6 rules 7–10); a name is declared once (§7 rule 6), for a file and a tree.
   30 cases in `docs/semantics/modules/`. A migration is **two commits** (`pending`, then `applied` — enforced).
 - ⭐ **`eadl/1` is frozen and gated** (`M1.13`, `PROGRAM.27`): `BASELINE.txt` (**114** digests) +

@@ -2,7 +2,10 @@
 
 The project's own checks are organised into the five tiers of `ROADMAP.md` §14.3, and each one
 is a named command. The runner is the workspace's `xtask` member — `xtask/src/main.rs` declares every
-tier and every step in it, and `make tiers` prints them from there:
+tier and every step in it, and `make tiers` prints them from there. The outside tools the tiers run, and
+the versions they run at, are in [What this project relies on from outside](ledger.md): [QEMU](ledger.md#qemu),
+[mdBook](ledger.md#mdbook), the [Rust toolchain and Cargo](ledger.md#rust-toolchain) and, once adopted,
+[Miri](ledger.md#miri).
 
 ```console
 $ cargo xtask verify --tier focused      # or: make focused
@@ -260,6 +263,19 @@ fixture, now found this workspace. The second is why the root `Cargo.toml` exclu
 ```console
 $ bash scripts/check_scratch_locality.sh              # the gate
 $ bash scripts/check_scratch_locality.sh --self-test  # its RED arms, on scratch repositories
+```
+
+## What comes from outside is written down
+
+`SOURCE-LEDGER` keeps [What this project relies on from outside](ledger.md) true to the repository.
+Every version this repository pins must appear in that chapter at the same version, and a chapter or
+decision that names an outside source must link to its entry. When the check was written, no chapter
+and no decision linked to anything outside, and the pins it found showed that the Rust compiler,
+mdBook and the CI's actions are not pinned to exact versions at all (`PROGRAM.30`).
+
+```console
+$ bash scripts/check_source_ledger.sh              # the gate
+$ bash scripts/check_source_ledger.sh --self-test  # its RED arms, on scratch repositories
 ```
 
 ## Why `focused` runs the whole suite

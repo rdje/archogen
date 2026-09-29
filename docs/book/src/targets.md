@@ -11,7 +11,7 @@ comes to believe it has hardware evidence.
 
 ## The emulator is pinned
 
-QEMU's `virt` machine is a *configurable* virtual platform: its device set and the device tree
+[QEMU](ledger.md#qemu)'s `virt` machine is a *configurable* virtual platform: its device set and the device tree
 it generates depend on the release and the options. An unpinned invocation silently changes the
 platform under an unchanged description — which invalidates every observation taken against it
 without invalidating anything anyone can see.

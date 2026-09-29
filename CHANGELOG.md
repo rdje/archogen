@@ -4,6 +4,23 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — what the project relies on from outside is written down, at the version it is pinned to
+
+`ARCHOGEN-PROGRAM-0126` (leaf `PROGRAM.5`). A new book chapter, "What this project relies on from outside",
+and a new doctrine, `SOURCE-LEDGER`: 20 arms and 15 mutations.
+
+- `ROADMAP.md` §15's dependency and evidence ledger now exists, with 11 entries: QEMU, LinkedSpec, RGX,
+  PGEN, chipdoc, the bedrock scaffold, semulith, the Rust toolchain, mdBook, the CI actions and Miri.
+  Each records a version, where it is pinned, when it was read, a hash or "not captured", what it is relied
+  on for, its limits and what should trigger another look.
+- The gate derives every pin the repository holds: vendored checkouts, the emulator release, the scaffold
+  version, the toolchain channel and CI action refs. Each must sit in an entry at the same version, so a pin
+  cannot move silently. A chapter or decision that names an outside source must link to its entry. There
+  were 21 such mentions in 12 files, and none linked anywhere.
+- ⚠️ Deriving the pins showed that the Rust compiler (`stable`), mdBook and the CI actions are not pinned to
+  exact versions. This is filed as `PROGRAM.30`. chipdoc's revision was never recorded when it was read, and
+  its entry says so.
+
 ## archogen — scratch stays on this repository's volume, and a doctrine says so
 
 `ARCHOGEN-PROGRAM-0124` (leaf `PROGRAM.29`). A new doctrine, `SCRATCH-LOCALITY`, with 16 arms and nine

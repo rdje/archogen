@@ -6,6 +6,7 @@
 - **Owner / source:** director directive, `2026-09-27` — "if you ever need additional ISA / RISC-V /
   … just shout"; the mapping file is maintained on the `chipdoc` side and updated as material that
   would interest archogen is added
+- **External sources:** [chipdoc](../book/src/ledger.md#chipdoc) · [QEMU](../book/src/ledger.md#qemu) — version, scope and limits in the ledger
 
 ## The fact
 

@@ -4,6 +4,7 @@
 - **Date:** `2026-09-13`
 - **Status:** `active`
 - **Owner / source:** raised during the M0 + M1 build; recorded here so they survive the session
+- **External sources:** [QEMU](../book/src/ledger.md#qemu) — version, scope and limits in the ledger
 
 Seven items are recorded here so they survive the session. Three are outside an implementer's
 authority to settle; the fourth (§4) is a measurement about the programme's own evidence that you

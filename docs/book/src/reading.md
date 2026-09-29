@@ -191,7 +191,7 @@ the version it defaults to is how a description silently changes meaning.
 
 ⭐ **And its population is a gate, not a sentence.** Every description this repository ships states its
 version — the whole conformance suite, enumerated by the tests that walk it — so the only descriptions
-relying on absence are the frozen LinkedSpec evidence files under `docs/feedback/`, whose bytes *are*
+relying on absence are the frozen [LinkedSpec](ledger.md#linkedspec) evidence files under `docs/feedback/`, whose bytes *are*
 the reproduction of another project's defect and which nothing here reads.
 `crates/eadl-front/tests/reference.rs` requires that, by
 asking the frontend rather than a text search: a nested, quoted or unread identifier does not satisfy

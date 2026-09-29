@@ -7,6 +7,7 @@
   `2026-09-27`, and a published upstream disclosure: LinkedSpec
   `8b5b5ffd8ea415b9b6d97387da8289e8f18606f3`, "RGX-CONSUMER-BUILD-REPORTS.1.3.1 — record
   publication and repository-boundary violation", dated `2026-09-27`.
+- **External sources:** [LinkedSpec](../book/src/ledger.md#linkedspec) — version, scope and limits in the ledger
 
 ## The fact / decision
 

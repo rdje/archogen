@@ -6,6 +6,7 @@
 - **Owner / source:** director ruling, `2026-09-28` — asked "why do we need QEMU in the first place,
   can't we do without it?", heard the argument and the limits, and ruled: keep it, continue with the
   roadmap, apply the reframing below
+- **External sources:** [QEMU](../book/src/ledger.md#qemu) — version, scope and limits in the ledger
 
 ## The decision
 

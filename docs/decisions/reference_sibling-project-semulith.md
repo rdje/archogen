@@ -6,6 +6,7 @@
 - **Owner / source:** leaf `PROGRAM.25`. Filed because the fact was raised in conversation and recorded
   nowhere in the tracked tree, which §9 does not allow: a finding that lives only in a reply dies with
   the session.
+- **External sources:** [semulith](../book/src/ledger.md#semulith) · [QEMU](../book/src/ledger.md#qemu) · [LinkedSpec](../book/src/ledger.md#linkedspec) · [chipdoc](../book/src/ledger.md#chipdoc) · [bedrock](../book/src/ledger.md#bedrock) — version, scope and limits in the ledger
 
 ⛔ **This record states that the project exists and where the seam is. It is deliberately not an
 analysis of it** — that was offered and declined, and the decline is respected here. Read

@@ -37,7 +37,7 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM`
   Status: `active`
   Goal: own the program spine
-  Children: `PROGRAM.1` … `PROGRAM.29`, plus `PROGRAM.1.1`, `PROGRAM.2.1`, `PROGRAM.18.1` and `PROGRAM.18.2`
+  Children: `PROGRAM.1` … `PROGRAM.30`, plus `PROGRAM.1.1`, `PROGRAM.2.1`, `PROGRAM.18.1` and `PROGRAM.18.2`
 
 - ID: `PROGRAM.1`
   Status: `done`
@@ -1678,13 +1678,76 @@ mdBook that is the director's window into the project.
     advance is the lesson being *applied* rather than a new one.
 
 - ID: `PROGRAM.5`
-  Status: `pending`
+  Status: `done`
   Goal: implement the dependency/evidence ledger of §15 and §19 as a tracked, checkable
   record (external source versions, retrieval dates, scope, limitations, revalidation
   triggers).
   Acceptance: every external source claim in the book and decisions resolves to a ledger row.
-  Verification: `pending`
-  Commit: `pending`
+  Made mechanical `2026-09-29` (census: 0 external URLs in the book or the decisions — sources are named in
+  prose, so a claim is found by the source's **name**; 12 files name one):
+  - the ledger is a book chapter, `docs/book/src/ledger.md` — one section per source, id as its heading, and a
+    fixed field table: version, where it is pinned, retrieved (absolute date), hash or "not captured",
+    scope, known limitations, revalidation trigger, and the names documents use for it;
+  - **PINS**, derived and never listed: every gitlink, every `*_VERSION_PINNED` in a tracked `targets/*.env`,
+    `DOCTRINE_VERSION`, `rust-toolchain.toml`'s channel and every CI `uses:` ref is claimed by exactly one row
+    whose version carries the pinned value — so a pin that moves without its row is refused, and a row whose
+    pin is gone is stale;
+  - **CITATION**: every book chapter and decision record that names a ledgered source cites its row
+    (`ledger.md#<id>`), and every such citation resolves;
+  - **ROWS**: every field present, dates absolute, no version given as "latest" (§19);
+  - a `--self-test` with RED arms; ⚠️ honest limit — a claim about a source the ledger does not name at all is
+    not seen; that residue is review.
+  Verification: see the checklist — a ledger chapter of 11 entries, a gate over five kinds of pin and every naming
+  document (20 arms, 15 mutations, two falsifications on the real tree), 21 citations added across 12 files.
+  Commit: `ARCHOGEN-PROGRAM-0126 (leaf PROGRAM.5)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — no ledger, and nothing a ledger could hang from:
+    ```text
+    $ git grep -lE "https?://" cb8180d -- docs/book/src docs/decisions        -> no match, rc=1
+    $ git grep -n "ledger\.md" cb8180d -- docs/book/src docs/decisions        -> no match, rc=1
+    $ git grep -n 'channel = \|uses: ' cb8180d -- rust-toolchain.toml .github/workflows
+      cb8180d:.github/workflows/rust.yml:14:      - uses: dtolnay/rust-toolchain@stable
+      cb8180d:rust-toolchain.toml:2:channel = "stable"      (and actions/checkout@v4 twice)
+    ```
+    External sources were named in prose only — QEMU, LinkedSpec, RGX, chipdoc, bedrock, semulith, Cargo,
+    mdBook, Miri — in **12** files, with **21** uncited mentions once the gate could see them.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — §15's ledger was a roadmap sentence with no file and no check, so a
+    version lived wherever a sentence happened to state it (`decision_emulator-independence-retained.md`
+    "QEMU 11.1.1", the feedback register's commits), and a pin could move without any of them moving:
+    ```text
+    $ git grep -n "QEMU 11.1.1" cb8180d -- docs/decisions
+      cb8180d:docs/decisions/decision_emulator-independence-retained.md:41:QEMU 11.1.1 with the pinned options gives:
+    ```
+  - [x] **FIX** — `docs/book/src/ledger.md`, "What this project relies on from outside": 11 entries (`qemu`,
+    `linkedspec`, `rgx`, `pgen`, `chipdoc`, `bedrock`, `semulith`, `rust-toolchain`, `mdbook`,
+    `github-actions`, `miri`), each with version, pin locator, retrieval date, hash or "not captured", scope,
+    limits, revalidation trigger and names. A QEMU binary digest captured. ⚠️ `chipdoc`'s revision was never
+    recorded when it was read, and its entry says so. New doctrine **`SOURCE-LEDGER`**
+    (`scripts/check_source_ledger.sh`) with the three legs above; 21 citations added (inline in chapters, an
+    **External sources** header bullet in decision records).
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    $ bash scripts/check_source_ledger.sh
+      source-ledger: OK (11 entries; 7 pin(s), each carried by its entry; every naming document cites it)   exit=0  (0.44 s)
+    $ bash scripts/check_source_ledger.sh --self-test
+      source-ledger self-test: 20 pass / 0 fail (20 arms)
+    $ mdbook build docs/book  -> exit=0; all 11 ids present as anchors in ledger.html (mdBook v0.5.2)
+    ```
+    Every pin kind has an arm (gitlink via a synthetic index entry, env, file, toml, uses). Fifteen mutations
+    M-1–M-15, each restored and checked by `cmp`, and each fails its own arm. On the **real tree**: moving
+    `QEMU_VERSION_PINNED` to `11.2.0` → refused naming entry `qemu`; deleting one decision's citation →
+    refused at `decision_findings-for-director-review.md:33`; both restored by `cmp`. One false positive met
+    and fixed on the way: a `` `Cargo.*` `` glob read as a mention of Cargo — a `.` now ends a sentence only
+    before a space or the line end. First cut took 4.5 s (a process per lookup); one awk pass per document
+    brought it to 0.44 s with the arms unchanged.
+  - [x] **NO REGRESSION** — `BOOK-ANCHORS` exit=0 over the new chapter; `SCRATCH-LOCALITY` green over the new
+    script; the doctrine driver green at the commit; `make focused` passed.
+  - [x] **LOCKSTEP** — the chapter in `SUMMARY.md`; `verification.md` gains "What comes from outside is written
+    down" and links its tools' entries; `DOCTRINE_ENFORCEMENT.md` and `TOOLBOX.md` rows; the live docs.
+    **`PROGRAM.30` filed** for what deriving the pins exposed: the Rust channel, mdBook and the CI actions are
+    not pinned to exact versions.
 
 - ID: `PROGRAM.6`
   Status: `pending`
@@ -2304,6 +2367,27 @@ mdBook that is the director's window into the project.
     leaf only from a flush-left `- ID:` line, so the displaced header would have been refused when this leaf
     closed.
 
+- ID: `PROGRAM.30`
+  Status: `pending`
+  Goal: every tool a build or the book depends on is pinned to an exact version, so two machines — or one
+  machine a month apart — build with the same tools (§10.3 locked builds; §15 "exact upstream source
+  versions").
+  Reproduce / issue: found `2026-09-29` by `PROGRAM.5`, deriving the ledger's pin population:
+  ```text
+  rust-toolchain.toml         channel = "stable"            a moving channel, not a version (measured 1.95.0)
+  .github/workflows/rust.yml  dtolnay/rust-toolchain@stable a moving ref
+  .github/workflows/*.yml     actions/checkout@v4           a moving major tag, not a commit
+  mdbook                      v0.5.2 installed              pinned nowhere; the `book` step builds with whatever is on PATH
+  ```
+  Acceptance: an exact `rustc` version in `rust-toolchain.toml` and the same in CI; CI actions at commit SHAs
+  with the tag as a comment; an mdBook version stated and checked by the `book` step; each ledger row
+  (`docs/book/src/ledger.md`) updated in the same commit, which `SOURCE-LEDGER` will insist on.
+  Priority: **medium** — nothing differs today (one machine, one toolchain), which is exactly when an
+  unpinned toolchain is invisible. ⚠️ Moving to an exact `rustc` is the director's call if it constrains
+  how CI is provisioned; the leaf proposes, it does not presume.
+  Verification: `pending`
+  Commit: `pending`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -2368,16 +2452,16 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.5` | `pending` | the §15/§19 dependency and evidence ledger — every external source claim in the book should resolve to a row, and `BOOK-ANCHORS` now checks the *internal* ones. The director has offered a read-only external document source (ISA / RISC-V / devicetree / peripheral specifications) reachable by operator-relayed request; the ledger is where that seam gets a row |
-| 2 | `PROGRAM.9` | `pending` | the extended tier reports `incomplete` on every run until its three steps exist |
-| 3 | `PROGRAM.6` | `pending` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |
-| 4 | `PROGRAM.13` | `pending` | twelve closed leaves in `BOOTSTRAP`, `M2` and this tree do not name their own commit — backfill both logs from git, then `PROGRAM.14` gates it so the gap cannot reopen |
-| 5 | `PROGRAM.15` | `pending` | a feedback register row that contradicts its own issue sub-tree passes every gate today; five state transitions in six commits held only by hand-editing and a manual census |
-| 6 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
-| 7 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. ⭐ A **near-miss** worth pricing in, recorded honestly as a near-miss and not as a fourth instance: `PROGRAM.18`'s frontier row still read "ten of eighteen controls" while this leaf was being written, and was corrected in the same commit — it would have gone stale the moment the fix landed, and nothing in the tree compares a control count against the controls. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with. ⛔ An **eighth** shape landed `2026-09-29` and it falsifies the acceptance's *population* rather than adding a figure: `CHANGELOG.md` said "Newest first" and did not, one entry sitting above six newer ones for seven commits because five consecutive commits inserted at the same wrong anchor — and `CHANGELOG.md` is not one of the three live surfaces the acceptance enumerates. Two falsifications of a three-item list, so the population becomes every live surface the commit stages |
-| 8 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
-| 9 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
-| 10 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
+| 1 | `PROGRAM.9` | `pending` | the extended tier reports `incomplete` on every run until its three steps exist |
+| 2 | `PROGRAM.6` | `pending` | semantic versioning separation (§15); `cost-accounting/1` and `archogen-provenance/1` are already versioned artifacts waiting for the discipline around them |
+| 3 | `PROGRAM.13` | `pending` | twelve closed leaves in `BOOTSTRAP`, `M2` and this tree do not name their own commit — backfill both logs from git, then `PROGRAM.14` gates it so the gap cannot reopen |
+| 4 | `PROGRAM.15` | `pending` | a feedback register row that contradicts its own issue sub-tree passes every gate today; five state transitions in six commits held only by hand-editing and a manual census |
+| 5 | `PROGRAM.17` | `pending` | the §18 size-containment guide is only partly adopted: `README.md` and `MEMORY.md` are capped and enforced, while `CHANGELOG.md` (1 464 lines), `ROADMAP.md` and `DEV_NOTES.md` have no recorded budget at all |
+| 6 | `PROGRAM.20` | `pending` | a **carried-figure register** — the defect class `M1.23`, `M1.24` and `S0.8` are three separate findings of, found by three sweeps whose patterns each missed what the next one caught. ⭐ A **near-miss** worth pricing in, recorded honestly as a near-miss and not as a fourth instance: `PROGRAM.18`'s frontier row still read "ten of eighteen controls" while this leaf was being written, and was corrected in the same commit — it would have gone stale the moment the fix landed, and nothing in the tree compares a control count against the controls. Behind `PROGRAM.18`, which gives the older controls the repeatable arms this one arrives with. ⛔ An **eighth** shape landed `2026-09-29` and it falsifies the acceptance's *population* rather than adding a figure: `CHANGELOG.md` said "Newest first" and did not, one entry sitting above six newer ones for seven commits because five consecutive commits inserted at the same wrong anchor — and `CHANGELOG.md` is not one of the three live surfaces the acceptance enumerates. Two falsifications of a three-item list, so the population becomes every live surface the commit stages |
+| 7 | `PROGRAM.10` | `pending` | run the integration tier in CI **and reclassify the emulator step's verdict** — it moved from `incomplete` (exit `20`, tool absent) to `failed` (exit `1`, config unpinned) when QEMU was installed, and `COMMIT.md` step 2 permits proceeding past the first but not the second. §14.3's quarantine clause and the runner's existing `NotBuilt { owner, note }` vocabulary already supply the mechanism; this is what the push precondition is actually waiting on |
+| 8 | `PROGRAM.23` | `pending` | make the ruled push cadence (`400` commits ahead, `2026-09-28`) enforced rather than prose — one machine-readable threshold, a check reporting the live count against it, `MEMORY.md`'s layer-A field filled. **Behind `PROGRAM.10`**: a blocking verdict at N while `make integration` fails would leave the tree able neither to commit nor to push |
+| 9 | `PROGRAM.26` | `pending` | **medium** — `make update-scaffold` can currently destroy project content: this repository's `scripts/update_scaffold.sh` is `bedrock-scaffold 0.8.1` where upstream is `0.10.0`, and it `cp`s all 25 neutral spine files over the project's copies with no comparison and no refusal — including `docs/TASK_TREE.md`, whose Active Task Trees table is the index a resuming session reads first, and `COMMIT.md`, which carries this project's tier workflow. Upstream fixed exactly that shape (`BEDROCK-MAINTENANCE-0015`/`-0016`), so the fix is an adoption and not an invention. Found by `PROGRAM.19`'s third cleanup identifying a hand-made backup of the incoming files parked in `target/`. Sequenced last because it fires only on a deliberate sync and the last one was `2026-09-21`; the interim mitigation is on the leaf |
+| 10 | `PROGRAM.30` | `pending` | **medium** — the Rust channel, mdBook and CI actions are unpinned; found deriving the ledger's pins |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
@@ -2486,6 +2570,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-29` | `PROGRAM.24` | the leaf's census; a strong-shape census over all nine members; the new check before and after the chapter fixes; `--self-test`; four mutations C-1–C-4; `cargo test --all --no-fail-fast`; the doctrine driver | `rt-analysis` named nowhere, and `xtask` named without a path — **2 of 9**, where a first census over-reported 5 by missing directory citations; **8 / 8** arms after one unfailable arm was re-staged; every mutation fires; **602 / 0** |
 | `2026-09-29` | `PROGRAM.28` | `git grep` for any runner of `--self-test` at `96636ac`; the new runner and its `--self-test`; four mutations U-1–U-4; `cargo xtask verify --tier integration` and the three other tiers; `cargo test -p xtask` | nothing ran them → **14** discovered and passing in 42 s; 6 / 6 arms; every mutation fires; integration 7 passed / 1 failed (emulator, `M2.8`), the book's transcript re-rendered from it |
 | `2026-09-29` | `PROGRAM.29` | a logging `mktemp` on `PATH` over the driver and the self-test runner, before and after; `git grep -c mktemp 7bf85ba` over every tracked script; `SCRATCH-LOCALITY` and its 16 arms; nine mutations S-1–S-8b; every changed script re-run against its before-state; the LS-001 precondition falsified; `cargo test --all`; a residue census | **26 of 26** calls off the volume before; **18 sites in 15 files** where the filing census had 8 in 6; after, every project-owned call under `target/`, 0 of 58 paths left; eight mutations fire, S-8 survives for a stated reason; two self-tests that the move broke — one gone partly vacuous — fixed at the cause; 602 / 0 |
+| `2026-09-29` | `PROGRAM.5` | `git grep` for URLs and ledger links at `cb8180d`; the ledger gate on the real tree and its 20 arms; fifteen mutations M-1–M-15; two falsifications on the real tree (the QEMU pin moved, a citation deleted); `mdbook build` and each entry's anchor in the HTML; `BOOK-ANCHORS` | 0 URLs and 0 ledger links before; 11 entries, 7 pins carried, 21 citations in 12 files after; every mutation fails its own arm; both real-tree falsifications refused at the named entry and line; the Rust channel, mdBook and CI actions found unpinned → `PROGRAM.30` |
 
 ## Commit Log
 
@@ -2516,6 +2601,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.24` | `ARCHOGEN-PROGRAM-0122 (leaf PROGRAM.24)` | **the book is checked from the code's side too.** `BOOK-COVERAGE`: every workspace member, derived from `Cargo.toml`, is named in a chapter beside a path into it — a name alone does not count. Two members failed and are fixed: `rt-analysis` gains "Where it lives" in `analysis.md`, `xtask` its file in `verification.md` |
 | `PROGRAM.28` | `ARCHOGEN-PROGRAM-0123 (leaf PROGRAM.28)` | **every gate's RED arms now run in a tier and in CI.** `scripts/run_self_tests.sh` discovers every armed gate by census, plus the outside harness, and fails on any failed arm; a `self-tests` step in `integration`. The book's stale tier transcript re-rendered from a real run |
 | `PROGRAM.29` | `ARCHOGEN-PROGRAM-0124 (leaf PROGRAM.29)` | **scratch stays on this volume, and a gate says so.** 14 project-owned sites moved under `target/`; `SCRATCH-LOCALITY` reads every tracked script and Rust source; the scaffold's four sites recorded for its owner, not sent. The root manifest excludes `target`, so a Cargo fixture there is standalone |
+| `PROGRAM.5` | `ARCHOGEN-PROGRAM-0126 (leaf PROGRAM.5)` | **§15's ledger exists and is checked.** A book chapter of 11 external sources at the versions they are pinned to; `SOURCE-LEDGER` derives every pin and every naming document. `PROGRAM.30` filed for the unpinned toolchain |
 
 ## Changelog
 

@@ -28,6 +28,7 @@ PROJECT_DOCTRINES=(
   "BOOK-COVERAGE|every workspace member is named in a book chapter that also cites a path inside it — the mirror of BOOK-ANCHORS|scripts/check_book_coverage.sh"
   "REPOSITORY-BOUNDARY|every other repository is read-only — each vendored checkout this repository pins is at its pin, with no local commit, no modified file and no created file|scripts/check_repository_boundary.sh"
   "SCRATCH-LOCALITY|nothing this repository owns puts scratch off its volume — every temporary file or directory is made under target/, and no script names the system temporary directory|scripts/check_scratch_locality.sh"
+  "SOURCE-LEDGER|every external source the repository pins has a ledger entry carrying the pinned version, and every chapter or decision naming a ledgered source cites its entry|scripts/check_source_ledger.sh"
 )
 
 for entry in "${PROJECT_DOCTRINES[@]}"; do

@@ -6,6 +6,7 @@
 - **Owner / source:** leaf `M1.13.2` (tree `M1`), settling finding **F-F** that `M1.12` routed to the
   language freeze. Measured, not preferred — and re-measuring it corrected the routing twice, in both
   of the figures the routing rested on.
+- **External sources:** [LinkedSpec](../book/src/ledger.md#linkedspec) · [chipdoc](../book/src/ledger.md#chipdoc) — version, scope and limits in the ledger
 
 ## The decision
 

@@ -5,6 +5,7 @@
 - **Status:** `active`
 - **Owner / source:** the director's data-locality rule ("never default to `/tmp`, `/private/tmp`, user-home
   caches, or any other off-volume location"); measured and enforced by leaf `PROGRAM.29`
+- **External sources:** [LinkedSpec](../book/src/ledger.md#linkedspec) · [bedrock](../book/src/ledger.md#bedrock) · [the Rust toolchain](../book/src/ledger.md#rust-toolchain) — version, scope and limits in the ledger
 
 ## The fact / decision
 
