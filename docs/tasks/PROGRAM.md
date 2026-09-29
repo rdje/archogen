@@ -37,7 +37,7 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM`
   Status: `active`
   Goal: own the program spine
-  Children: `PROGRAM.1` … `PROGRAM.28`, plus `PROGRAM.1.1` and `PROGRAM.2.1`
+  Children: `PROGRAM.1` … `PROGRAM.29`, plus `PROGRAM.1.1`, `PROGRAM.2.1`, `PROGRAM.18.1` and `PROGRAM.18.2`
 
 - ID: `PROGRAM.1`
   Status: `done`
@@ -650,7 +650,19 @@ mdBook that is the director's window into the project.
   Commit: `pending`
 
 - ID: `PROGRAM.18`
-  Status: `pending`
+  Status: `active` — **decomposed `2026-09-29` into two children on a re-run census**, as the leaf itself asks.
+  Measured at `61e5f09`: `check_task_acceptance.sh` is **already armed** (nine arms, `PROGRAM.21`), so the
+  "first" this leaf names is spent. Still without a `--self-test`: **seven registered controls** — six
+  universal (`MEMORY-ARCH`, `DOCPATH`, `TASK-TREE-OWNERSHIP`, `README-STABILITY`, `WAIVER-ROUTING`,
+  `KNOWLEDGE-MAP`) and one project (`FROZEN-EVALUATION`) — plus the two drivers and the handoff tool
+  `check_no_background_jobs.sh`. ⛔ **The six universal scripts are on `scripts/update_scaffold.sh`'s
+  overwrite list, and their upstream is another repository**, so an arm written *into* them is erased by the
+  next scaffold sync and cannot be sent upstream from here (the repository boundary); `PROGRAM.21`'s edit of
+  the scaffold-owned `check_task_acceptance.sh` already carries that hazard, which is `PROGRAM.26`'s. So the
+  children split by ownership: `PROGRAM.18.1` arms the project-owned `FROZEN-EVALUATION` in place;
+  `PROGRAM.18.2` arms the scaffold-owned gates and the drivers **from outside**, in a project-owned harness
+  that runs each unmodified script inside a scratch repository holding a seeded breach.
+  Children: `PROGRAM.18.1`, `PROGRAM.18.2`.
   Goal: give the registered doctrine controls the repeatable RED arms they lack, so that "is this gate
   known to work?" stops depending on a validation somebody ran once while writing it.
   Reproduce / issue: measured by the §7.4 sweep of the claim-verification adoption (`PROGRAM.16`,
@@ -673,6 +685,75 @@ mdBook that is the director's window into the project.
   and after.
   Priority: **medium-high** — a gate nobody has seen fail is a gate whose failure mode is unknown, and
   this repository's whole claim is that its discipline is mechanical rather than remembered.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `PROGRAM.18.1`
+  Status: `done`
+  Goal: `FROZEN-EVALUATION` gains a `--self-test` whose RED arms each seed one breach of one of its three legs
+  in a scratch repository — integrity, completeness, non-contamination — and require the refusal to name the
+  case it is about, with a passing arm for a clean set, an unsealed set and an untracked mention.
+  Acceptance: every arm uses **synthetic** case names, because writing a real sealed slug anywhere tracked is
+  itself the contamination the gate exists to catch; one arm runs the real tree; mutations seen firing; the
+  registry and `DOCTRINE_ENFORCEMENT.md` say it is armed.
+  Priority: **medium-high** (the parent's).
+  Verification: see the checklist — nine arms, seven mutations each failing its own arm.
+  Commit: `ARCHOGEN-PROGRAM-0120 (leaf PROGRAM.18.1)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — the gate had never been seen failing by a repeatable arm:
+    ```text
+    $ git grep -c -- "--self-test" 61e5f09 -- scripts/check_frozen_evaluation.sh    -> no match, rc=1
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — it was written with its three legs validated once, by hand, at
+    `M0.6`, and nothing re-fires them; its legs are observable only against a *set*, so an arm needs a
+    whole repository to seed:
+    ```text
+    $ git log --diff-filter=A --format='%h %s' -- scripts/check_frozen_evaluation.sh | cut -c1-60
+      b05fadb ARCHOGEN-M0-0007 (leaf M0.6): four use cases, and a
+    ```
+    (the add commit, and no commit since has added an arm), and the line at its head is the seam:
+    ```text
+    $ git grep -n 'ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"' 61e5f09 -- scripts/check_frozen_evaluation.sh
+      61e5f09:scripts/check_frozen_evaluation.sh:31:ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
+    ```
+    — run it with its working directory inside a scratch repository and it checks that repository's set.
+  - [x] **FIX** — `--self-test` in the script: a scratch repository under `target/doctrine_scratch/` with a
+    sealed set of two synthetic cases and one other tracked file, re-created per arm; eight seeded arms
+    (intact, edited, removed, unlisted, named in a tracked file, named only in an untracked file, unsealed,
+    no seal line) and the real tree; every refusing arm must name the case or line it refuses.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    $ bash scripts/check_frozen_evaluation.sh --self-test
+      frozen-evaluation self-test: 9 pass / 0 fail (9 arms)
+    ```
+    Seven mutations, each checked applied (the file differs from its copy) and restored by `cmp`:
+    ```text
+    F-1 hashes never compared                -> 8 pass / 1 fail: the integrity arm
+    F-2 a missing case not reported          -> 8 pass / 1 fail: the removed-case arm
+    F-3 an unlisted file not reported        -> 8 pass / 1 fail: the unlisted arm
+    F-4 the contamination leg removed        -> 8 pass / 1 fail: the tracked-mention arm
+    F-5 untracked files searched too         -> 6 pass / 3 fail, the untracked-mention arm among them
+    F-6 contamination not lifted if unsealed -> 8 pass / 1 fail: the unsealed arm
+    F-7 the seal line not required           -> 8 pass / 1 fail: the no-seal arm
+    ```
+  - [x] **NO REGRESSION** — `bash scripts/check_frozen_evaluation.sh` on the real tree → exit `0`;
+    `scripts/check_doctrines.sh` → `=== all doctrines green ===`; no Rust changed.
+  - [x] **LOCKSTEP** — `DOCTRINE_ENFORCEMENT.md`'s row and `TOOLBOX.md`'s; the parent's census note; the live
+    docs; and **`PROGRAM.29` filed** for the `mktemp` scratch this script (and five others) puts in `/tmp`.
+
+- ID: `PROGRAM.18.2`
+  Status: `active`
+  Goal: arm the six scaffold-owned universal gates and the two doctrine drivers **without editing them** — a
+  project-owned harness that copies nothing of theirs, runs each unmodified script with its working
+  directory inside a scratch repository holding a seeded breach, and requires its refusal to name the
+  subject; and record `check_no_background_jobs.sh`'s disposition (armed, or needing none with the reason).
+  Acceptance: the harness is registered where a tier or the driver runs it; each arm names what it refuses;
+  a mutation of each gate's copy in the scratch area is not needed — the arms are proven against the real
+  scripts by seeding the breach, and against vacuity by a clean-fixture arm per gate; `DOCTRINE_ENFORCEMENT.md`
+  and `TOOLBOX.md` updated.
+  Priority: **medium-high**.
   Verification: `pending`
   Commit: `pending`
 
@@ -920,7 +1001,33 @@ mdBook that is the director's window into the project.
 
   ```text
   census:   awk -F'|' '/^\| \[`/{print $2, substr($4,1,14)}' docs/TASK_TREE.md, against each
-            docs/tasks/<TREE>.md "## Current Frontier" order-1 row
+            docs/tasks/<TREE>.md "- ID: `PROGRAM.29`
+  Status: `pending`
+  Goal: no gate script puts its scratch in `/tmp` — every scratch directory is derived from the repository
+  root, on its own volume, as the director's data-locality rule requires ("never default to `/tmp`").
+  Reproduce / issue: found `2026-09-29` by `PROGRAM.18.1`, reading the script it was arming:
+  ```text
+  census: grep -n mktemp scripts/*.sh knowledge-map/scripts/*.sh
+    scripts/check_frozen_evaluation.sh:59          tmp="$(mktemp -d)"            project-owned
+    scripts/check_feedback_self_contained.sh:84    tmp="$(mktemp -d)"            project-owned
+    scripts/check_s0_retirement.sh:120             tmp="$(mktemp -d)"            project-owned
+    scripts/update_scaffold.sh:16                  tmp="$(mktemp -d)"            project-owned
+    scripts/check_task_acceptance.sh:184, :358     SELF/tmp="$(mktemp -d)"       scaffold-owned
+    scripts/check_waiver_routing.sh:73, :93        "$(mktemp)"                   scaffold-owned
+  ```
+  `mktemp` with no template writes under `$TMPDIR` or `/tmp`, off the repository's volume. The newer gates
+  (`check_language_freeze.sh`, `check_repository_boundary.sh`) already use `target/doctrine_scratch/`.
+  Acceptance: the four project-owned sites moved to `target/doctrine_scratch/<gate>/`, removed on exit, and a
+  census leg that fails when a project-owned gate calls `mktemp` without a repository-derived template; the
+  two scaffold-owned sites recorded with the reason they cannot be fixed here (another repository owns them,
+  and the scaffold would erase a local edit) and the exact upstream change written down for whoever owns the
+  scaffold — never sent there by an archogen agent; a residue census showing nothing left in `/tmp` by a gate
+  run.
+  Priority: **medium** — a director directive (§13) broken in six places, none of them losing data today.
+  Verification: `pending`
+  Commit: `pending`
+
+## Current Frontier" order-1 row
             -> 10 of 12 rows AGREE, pre-correction; PROGRAM DISAGREE (index `PROGRAM.21`,
                tree `PROGRAM.11`). After this commit's correction: 11 of 12, and the only
                DISAGREE left is the artifact below.
@@ -2144,6 +2251,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-29` | `PROGRAM.27` | the false green reproduced on `docs/semantics/migrations/` itself with `7f46f4d`'s baseline as `HEAD`'s side; four real-directory cases after the fix, and the real tree before and after the flip; `--self-test` (16 arms); six mutations P-A–P-F with `cmp` restoration; every gate's `--self-test`; `make focused`; `cargo test --all`; the doctrine driver; `mdbook build` | **rc 0 → rc 1** with no note; the four cases OK / refused / OK / refused as specified; leg C fired on `M1.28.2`'s note on its first real run; 16 / 0; P-E shows the deployed-directory arm red under the shipped logic, P-F shows the two formerly vacuous arms refused *for another reason*; ten gates' self-tests all green; **575 passed / 0 failed**; 13 doctrines green |
 | `2026-09-29` | `PROGRAM.20` | **docs only — the book population re-measured, keyed on the `$ archogen check` line.** Every `error[…]` block classified by its command line (or its first `-->` when it has none), the tracked ones re-run through the command | 20 blocks: **9** tracked (7 verbatim), **6** untracked, **5** location-free — 11 uncheckable, was 15; the movement is `M1.31`'s and `M1.29.2`'s re-rendered transcripts |
 | `2026-09-29` | `PROGRAM.11` | `git grep` for the rule in the entrypoints and for any vendor doctrine at `b9f6e22`; the real checkout's pin, local-only commits (tags excluded) and status; the naive census on one nested checkout; the new check and its `--self-test`; five mutations R-1–R-5 with `cmp` restoration; the doctrine driver | the rule absent from both entrypoints and no doctrine looking at `vendor/` → both fixed; the real checkout clean (**0** local-only commits), the naive census **4 040** on a nested one; **9 / 0** arms; every mutation fails exactly its arm, one arm found vacuous first and re-seeded; all doctrines green |
+| `2026-09-29` | `PROGRAM.18.1` | the census of armed scripts at `61e5f09`; `FROZEN-EVALUATION --self-test`; seven mutations F-1–F-7 with `cmp` restoration; the real tree; the doctrine driver | `check_task_acceptance.sh` already armed, seven registered controls not; **9 / 0** arms on synthetic cases; every mutation fails its own arm (F-5 three, the untracked arm among them); all doctrines green; `PROGRAM.29` filed for six `mktemp` sites in `/tmp` |
 
 ## Commit Log
 
@@ -2169,6 +2277,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.27` | `ARCHOGEN-PROGRAM-0111 (leaf PROGRAM.27)` | **`LANGUAGE-FREEZE` can fail on the real tree.** A pending note is a line exactly `- status: pending`, `constructs:` a list compared exactly, and a new leg refuses a note `HEAD` already carries as pending — so a note is a permission for one commit, and `M1.28.2`'s, open for five, is flipped. Two vacuous arms found and fixed (unsorted fixtures), every refusing arm now names its subject, and the classifier names the file it parsed. `PROGRAM.28` filed: no tier runs any gate's `--self-test` |
 | `PROGRAM.20` | `ARCHOGEN-PROGRAM-0113 (leaf PROGRAM.20)` | **re-measurement recorded, and `M1.29.2`'s migration note flipped to `applied`** — the second commit of the two-commit lifecycle, which the freeze gate's spent-note leg refused the tree until it happened |
 | `PROGRAM.11` | `ARCHOGEN-PROGRAM-0119 (leaf PROGRAM.11)` | **every other repository is read-only, stated and gated.** The rule in `CLAUDE.md` (both directions), and `REPOSITORY-BOUNDARY` on every commit: each vendored checkout this repository pins is at its pin with nothing committed, modified or created in it. Scoped on measurement to the pins this repository owns — the vendor's documented bootstrap legitimately dirties its nested checkouts — and with tags excluded from "local-only", because the naive census counted 4 040 phantom commits |
+| `PROGRAM.18` → `PROGRAM.18.1` | `ARCHOGEN-PROGRAM-0120 (leaf PROGRAM.18.1)` | **`FROZEN-EVALUATION` is armed**: nine arms in `--self-test`, each seeding one breach in a scratch repository with synthetic case names and naming what it refuses. `PROGRAM.18` decomposed by ownership on a re-run census — the six scaffold-owned gates are armed from outside in `.18.2`, because an arm written into them is erased by the scaffold and cannot be sent upstream; `PROGRAM.29` filed |
 
 ## Changelog
 

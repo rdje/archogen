@@ -27,8 +27,81 @@
 # is lifted, because from that point the cases are supposed to be discussed.
 #
 # CONTRACT: exit code is the verdict; explains on stderr; deterministic; read-only.
+# `--self-test` runs the RED arms (leaf `PROGRAM.18.1`): each seeds one breach in a scratch repository under
+# `target/doctrine_scratch/`, runs this check there, and requires the refusal to name the case it is about.
 set -uo pipefail
+SELF="$0"
+case "$SELF" in /*) ;; *) SELF="$PWD/$SELF" ;; esac
 ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
+
+# ── RED arms ─────────────────────────────────────────────────────────────────────────────────
+# ⛔ Every case name below is SYNTHETIC. Writing a real sealed slug anywhere tracked is the contamination
+# this check exists to catch, and a self-test that did it would fail the gate it belongs to.
+self_test() {
+  local arms=0 ok=0 work="$ROOT/target/doctrine_scratch/frozen_evaluation/selftest"
+  sha() { if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | cut -d' ' -f1; else shasum -a 256 "$1" | cut -d' ' -f1; fi; }
+  # A scratch repository holding a sealed set of two synthetic cases and one other tracked file.
+  fresh() { # $1 = seal state
+    rm -rf "$work"; mkdir -p "$work/docs/evaluation/frozen" "$work/docs/notes"
+    git -C "$work" init -q
+    printf 'arm case one\n' > "$work/docs/evaluation/frozen/zz-01-arm-alpha.md"
+    printf 'arm case two\n' > "$work/docs/evaluation/frozen/zz-02-arm-beta.md"
+    { printf '# seal: %s\n' "$1"
+      printf '%s  zz-01-arm-alpha.md\n' "$(sha "$work/docs/evaluation/frozen/zz-01-arm-alpha.md")"
+      printf '%s  zz-02-arm-beta.md\n' "$(sha "$work/docs/evaluation/frozen/zz-02-arm-beta.md")"
+    } > "$work/docs/evaluation/frozen/MANIFEST.txt"
+    printf 'nothing about the set here\n' > "$work/docs/notes/plan.md"
+    git -C "$work" add -A
+  }
+  arm() { # $1 = name, $2 = expected rc, $3 = text a refusal must carry ("" for a pass)
+    local name="$1" want="$2" must="$3" out rc
+    arms=$((arms + 1))
+    out="$(cd "$work" && bash "$SELF" 2>&1)"; rc=$?
+    if [ "$rc" -ne "$want" ]; then
+      echo "SELF-TEST: $name — expected exit $want, got $rc" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
+    fi
+    if [ "$want" -ne 0 ] && ! printf '%s' "$out" | grep -q 'FROZEN-EVALUATION'; then
+      echo "SELF-TEST: $name — exit $rc but the check never spoke" >&2; return
+    fi
+    if [ -n "$must" ] && ! printf '%s' "$out" | grep -qF -- "$must"; then
+      echo "SELF-TEST: $name — refused, but not about \`$must\`, so it refused for another reason:" >&2
+      printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
+    fi
+    ok=$((ok + 1)); echo "  ✅ $name"
+  }
+
+  fresh sealed; arm "an intact sealed set passes" 0 ""
+  fresh sealed; printf 'rewritten\n' > "$work/docs/evaluation/frozen/zz-02-arm-beta.md"
+  arm "a sealed case edited after sealing is refused (integrity)" 1 "sealed case 'zz-02-arm-beta.md' was modified"
+  fresh sealed; rm "$work/docs/evaluation/frozen/zz-01-arm-alpha.md"
+  arm "a sealed case removed is refused (completeness)" 1 "'zz-01-arm-alpha.md' is missing"
+  fresh sealed; printf 'extra\n' > "$work/docs/evaluation/frozen/zz-03-arm-gamma.md"
+  arm "a file added to the set unlisted is refused (completeness)" 1 "unlisted file 'zz-03-arm-gamma.md'"
+  fresh sealed; printf 'we discussed zz-01-arm-alpha today\n' > "$work/docs/notes/plan.md"; git -C "$work" add -A
+  arm "a sealed case named in a tracked file is refused (non-contamination)" 1 "sealed case 'zz-01-arm-alpha' is named outside"
+  fresh sealed; printf 'we discussed zz-01-arm-alpha today\n' > "$work/docs/notes/scratch.md"
+  arm "a sealed case named only in an untracked file passes — the repository cannot see it" 0 ""
+  fresh unsealed; printf 'we discussed zz-01-arm-alpha today\n' > "$work/docs/notes/plan.md"; git -C "$work" add -A
+  arm "an unsealed set may be discussed" 0 ""
+  fresh sealed; sed -i.bak '/^# seal:/d' "$work/docs/evaluation/frozen/MANIFEST.txt" && rm -f "$work/docs/evaluation/frozen/MANIFEST.txt.bak"
+  arm "a manifest that declares no seal state is refused" 1 "has no '# seal: sealed|unsealed' line"
+  rm -rf "$work"
+
+  # The real tree, unchanged.
+  arms=$((arms + 1))
+  if bash "$SELF" >/dev/null 2>&1; then
+    ok=$((ok + 1)); echo "  ✅ the real sealed set passes"
+  else
+    echo "SELF-TEST: the real sealed set is refused — run the check to see why" >&2
+  fi
+
+  echo "frozen-evaluation self-test: $ok pass / $((arms - ok)) fail ($arms arms)"
+  [ "$ok" -eq "$arms" ]
+}
+if [ "${1:-}" = "--self-test" ]; then
+  self_test
+  exit $?
+fi
 
 DIR="docs/evaluation/frozen"
 MANIFEST="$DIR/MANIFEST.txt"

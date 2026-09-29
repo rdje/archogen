@@ -13,13 +13,13 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `PROGRAM` → frontier `PROGRAM.18`. `M1` `.29.4` (**waiting on the director**); `API` `.1`;
+- **Active tree:** `PROGRAM` → frontier `PROGRAM.18.2`. `M1` `.29.4` (**waiting on the director**); `API` `.1`;
   `S0` `.8`; `M2` `.8.2`.
-- **Next action:** **`PROGRAM.18`, medium-high** — registered doctrine controls with no repeatable
-  `--self-test` RED arm; **re-run its census** (`for s in scripts/check_*.sh; do grep -q -- '--self-test' "$s"
-  || echo "$s"; done`) rather than reuse the leaf's figure, and do `check_task_acceptance` first. Then `.24`
-  (the mirror of `BOOK-ANCHORS`), `.28` (no tier runs any `--self-test`). ⏳ **`M1.29.4` waits on the
-  director's call** — `decision_findings-for-director-review.md` §7.
+- **Next action:** **`PROGRAM.18.2`, medium-high** — arm the six scaffold-owned universal gates and the two
+  drivers **from outside**: a project-owned harness that runs each *unmodified* script with its working
+  directory in a scratch repository holding a seeded breach (editing them is erased by `update_scaffold.sh`,
+  and their upstream is read-only). Then `PROGRAM.29` (six `mktemp` sites put gate scratch in `/tmp`),
+  `.24`, `.28`. ⏳ **`M1.29.4` waits on the director's call** — `decision_findings-for-director-review.md` §7.
 - ⭐ **Closed today:** `M1.29.1`–`.3`, `M1.31`, `M1.33`, `PROGRAM.27`, `PROGRAM.11` (repository boundary gated) — `archogen check` elaborates **and
   type-checks** a module tree (§6 rules 7–10); a name is declared once (§7 rule 6), for a file and a tree.
   30 cases in `docs/semantics/modules/`. A migration is **two commits** (`pending`, then `applied` — enforced).
