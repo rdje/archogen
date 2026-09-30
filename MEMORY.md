@@ -16,9 +16,10 @@
 - **Active tree:** `M2` → frontier `M2.10.1`. `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API`'s is
   `API.6`; `M1`'s only open leaf, `M1.29.4`, is blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** run **`M2.10.1`**'s round 9 in a new read-only context; it closes on a round with no defect
-  live for the `/1` slice. `M2.7.1` is closed. Then `M2.7.3`, the
-  catalog crate, `M2.7.6`, `M2.7.4`, `M2.7.5`, `M2.11`, then `API.6`. `docs/decisions/` is near its cap.
+- **Next action:** `M2.10.1`'s round 9 is in review in a read-only context; answer it, and close the leaf on a
+  round with no defect live for the `/1` slice. `M2.7.1` is closed. `M2.7.3`, the catalog crate, is under way:
+  `M2.7.3.2` (hashes) next, then `.3`–`.6`, `M2.7.6`, `M2.7.4`, `M2.7.5`, `M2.11`, then `API.6`.
+  `docs/decisions/` is near its cap.
 - **In flight:** branch **`wip/m2.9`** (`758cbcd`) is a checkpoint, not a finished leaf — `M2.9` records it as
   not compiling (`crates/rt-core/tests/differential.rs` unadapted).
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of

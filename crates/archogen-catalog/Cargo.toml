@@ -1,0 +1,20 @@
+# The catalog of engine knowledge (ROADMAP.md §9; docs/decisions/catalog/decision_catalog-records.md).
+#
+# A separate crate because no ROADMAP.md §4.2 component owns the catalog: it is the engine's knowledge about
+# implementations, platforms and costs, read by the analyses and, later, by resolution and planning. It depends
+# only on the reader that reads a record (eadl-front), the profile registry a record names (eadl-model), and the
+# evidence vocabulary its costs become (archogen-evidence). It is I/O-free: its caller gives it every byte.
+[package]
+name = "archogen-catalog"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "Catalog records: reading, hashing, derived evidence status, the lock, and claim admission"
+
+[lints]
+workspace = true
+
+[dependencies]
+archogen-evidence = { path = "../archogen-evidence" }
+eadl-front = { path = "../eadl-front" }
+eadl-model = { path = "../eadl-model" }

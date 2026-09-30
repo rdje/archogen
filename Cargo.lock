@@ -11,6 +11,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "archogen-catalog"
+version = "0.1.0"
+dependencies = [
+ "archogen-evidence",
+ "eadl-front",
+ "eadl-model",
+]
+
+[[package]]
 name = "archogen-cli"
 version = "0.1.0"
 dependencies = [

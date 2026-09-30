@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog's code begins: a record read and checked
+
+`ARCHOGEN-M2-0245` (leaf `M2.7.3.1`).
+
+- A new crate, `archogen-catalog`, reads one catalog record and refuses anything that breaks the accepted design's
+  rules for a single file: its bytes, its one form, every field in order, and the grammar of every name, version,
+  locator and review. Each refusal carries the one code the design gives it, with the file, the field and the line.
+- One valid record, and one change of it for each rule, are its tests. To show each rule is really tested, each
+  check was removed in turn: 45 of 46 removals made a test fail. The one that did not is a final check that
+  nothing can reach, since every field it looks at has been checked already; it stays as a guard.
+- Next: the design's hashes, with its worked example's 23 values as the test.
+
 ## archogen — the composition's eighth review is answered
 
 `ARCHOGEN-M2-0243` (leaf `M2.10.1`, a ninth checkpoint).
