@@ -176,6 +176,38 @@ as it stands". No answer changes a derived line, so the example's digests stand.
 | E20 | ambiguity | whether a bless could answer a rejection it ledgers | no: a rejection is answerable once at `HEAD` (§5) |
 | E21 | nit | §8's "as they were" against its own exemption; the summary's reached files; §5's "of that facet"; §13's "verdicts" and "unreviewed"; the ledger's "two" and "three" | each corrected |
 
+**Round 6**, `2026-09-30`: all 22 values matched by two routes, and the reviewer re-measured the record's facts
+about the tree: every tracked path in normal form, every manifest inside the dialect, `.cargo/config.toml` holding
+only `[alias]`, the target's `.env` inside its grammar. C2 and D3 were judged closed; C5, C7, C9, D4, E1 and E2
+partial, the last three with defect-level constructions. There were 16 new findings, 5 of them defects, and the
+verdict was "cannot be accepted as it stands". Most of the defects assumed control of the build machine or the
+hosting, and the defect count over six rounds (6, 10, 7, 4, 2, 5) was not falling. So the director was asked, and
+ruled that the record states a threat model: it is §0 now, and later rounds are judged against it. No answer
+changes a derived line, so the example's digests stand; a worked forms digest is added.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| C5, C7, C9 | partial | through F4, F5, F6, F8 and F13 | as those rows |
+| D4 | partial, defect-level | a stale, rewritten or absent `origin/main` | as F2 |
+| E1 | partial, defect-level | the sysroot, `.incbin` and smudge filters | as F4, F5 and F6 |
+| E2 | partial, defect-level | nothing checked `covers` lines at load | as F1 |
+| F1 | defect | a bypassed commit, left on `main` though CI failed, ledgered a rejection with no items, which nothing recomputed | in scope, and removed at the root: items, answers and lineage are no longer written. They are read from the commit that ledgered each review, so there is nothing to strip. That CI blocks `main` is premise 3 (§0, §5, §9) |
+| F2 | defect | `origin/main` stale, rewritten by hand or by a force-push, or absent | a clone with no `origin/main` is refused; the claim records the `main` commit it was checked against, and §10 flags a claim whose commit has left `main`'s history. A ref set by hand is premise 2, a force-push premise 3 (§0, §4, §7, §10, §13) |
+| F3 | ambiguity | recomputing a push as one state refused the normal reject-then-fix workflow | the gate and CI replay every commit from the base, each against its own parents (§9) |
+| F4 | defect | a `#[path]` into the writable sysroot | the `path` attribute is refused, and so is every source path outside the written index, the sysroot's included; measured, no workspace crate's dependency information names one. Editing an installed toolchain file is premise 1 (§3) |
+| F5 | defect | a renamed `global_asm` import, and a module read from a non-`.rs` file | the identifiers `asm`, `global_asm` and `naked_asm` are refused anywhere, as are `#[path]` and `include!`, so every Rust source is a tracked `*.rs` file (§3) |
+| F6 | defect | a smudge filter or line-ending setting changed the bytes the gate compiled | the gate writes each file from its blob, with no checkout, and compares each source's bytes with its blob after the build; case-colliding paths are refused. Git's local state is premise 2 (§0, §3) |
+| F7 | gap | which paths an image may read beyond the closure | the image's closure joins every record whose package it compiled; generated code and application inputs are named with their hashes, and make a production claim `not-established` until `M4` rules on them; any other path refuses the claim (§7) |
+| F8 | gap | the compiler was not checked against the pin; rustup overrides | `RUSTUP_TOOLCHAIN` is set to the pinned channel, `rustc -vV` must name it, the build record carries it, and an index without the toolchain file is refused (§0, §3, §7) |
+| F9 | ambiguity | a config file's tables were not held to a dialect | config files are held to the manifest dialect, every key path beginning `alias` (§3) |
+| F10 | ambiguity | `exclude`'s meaning, and an outer workspace cargo could reach | `exclude` is a path prefix, as cargo's is, and `cargo metadata` must report the written index's root as the workspace root (§3) |
+| F11 | gap | `.env` values a shell reads differently, and a file named without `/` | values are restricted to characters with no shell meaning, and any value naming a tracked file is a path (§3) |
+| F12 | gap | §10 named no tree | the commit read and `origin/main`, both recorded (§10) |
+| F13 | gap | a macro-assembled foreign block, symbol interposition, global hooks | `extern` is refused except in `extern crate` and `extern "…" fn`, and `no_mangle`, `export_name`, `link_section`, `used`, `panic_handler`, `global_allocator` and `alloc_error_handler` are refused; `rt-core` passes (§3) |
+| F14 | gap | a cost moved with its target renamed | cost items also match a cost's name on a target whose files hash the same (§5) |
+| F15 | ambiguity | seven details | (a) timing code facts follow the timing locator rule (§2); (b) an `unknown` supplies its name (§12); (c) a claim with no target needs every closure record to be `any` (§7); (d) dependency paths are resolved lexically, then held to §4 (§3); (e) a review's date is checked against its ledgering commit's committer date (§5); (f) no sysroot path is admitted (§3); (g) premise 3 (§0) |
+| F16 | nit | the summary's closure; identical forms not listed as an over-approximation; no worked forms digest; the variant's note; a refusal that could not fire | each fixed; the forms digest is in §3's example, and the variant's ownership note names the fourth task fact |
+
 ## Why
 
 The decision record states the design as it stands. Its reviews are its history: every round appends a table,

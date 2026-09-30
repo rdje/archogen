@@ -64,7 +64,9 @@ engine's" or "the platform's" (`J^release` above, condition 7 in §4, and "Why")
 `decision_catalog-records.md` §12 assigns. `C_i`, `CS_i`, `J^release` and `J_s` are composite, and the caller
 supplies them until `M2.10`. So does `C_s` without its `no-application-code` fact. The enabled set and interrupt
 priorities are the plan's. Condition 8 is each catalog cost's `holds-under-preemption`, plus the application's
-declaration for its own figures. What each input **means** is unchanged, and so is the model, `/1`. A conclusion
+declaration for its own figures. The platform fact that sections mask every interrupt is the conjunction of the catalog's
+fact for the kernel's sections and a fourth task fact, that no task masks other than through the runtime API
+(`decision_catalog-records.md` §12); `M2.7.5` composes them. What each input **means** is unchanged, and so is the model, `/1`. A conclusion
 names every input the caller supplied, whatever its category, and none of them can back a production claim
 (`decision_catalog-records.md` §7). `M2.7.5` implements that naming.
 

@@ -39,11 +39,12 @@ A facet's **evidence status is derived, never written**. It comes from reviews, 
 - a rejection stands, whatever the content becomes, until a later review answers it by name. It binds the facet,
   every record that supersedes the rejected one, and any facet of the same kind that holds content it covered: the
   same fact or cost, the same source entry, a file with the same bytes, or the same forms;
-- every review is kept in an append-only ledger with its facet, verdict and hash, and so are the lineage and the
-  items each rejection covered. None can be taken back, reordered or renamed away.
+- every review is kept in an append-only ledger with its facet, verdict and hash. What a rejection covered, what
+  a review answered and which record succeeded which are read from the commits that ledgered them, never written
+  a second time. None can be taken back, reordered or renamed away.
 
 A claim's citations are **computed from what it read**. Its closure is exactly the facets whose hashes enter
-those it read, and the result records each one's bound hash and status. That is how a later change, rejection or
+those it read, with each of their records' contracts, and the result records each one's bound hash and status. That is how a later change, rejection or
 demotion is traced to it.
 
 A **production claim** is admitted only when every catalog input comes from a production record, the claim's
@@ -56,6 +57,33 @@ live in the production namespace only while each of its four facets is `producti
 The behavioral and timing models are separate facets with separate versions, and neither's hash covers the
 other. So a change to one invalidates only the claims that read it. Both rest on their record's contract, so a
 change to the contract invalidates both.
+
+What this defends against, and what it assumes, is §0.
+
+### 0. What it defends against
+
+The director ruled this model on `2026-09-30` (leaf `M2.7.1`), after six review rounds whose later findings mostly
+assumed control of the build machine or the hosting.
+
+- **In scope: every change that reaches the catalog through the repository.** Tracked files, the lock, commits,
+  merges and pushes, made by anyone, an author who bypasses the local gate or edits the lock by hand included.
+  Each such change is refused, or makes the affected reviews stale and the affected claims affected (§10). A
+  construction of that kind that succeeds is a defect in this record.
+- **Premises.** Each is named with the check the gate runs where a cheap one exists. A construction that needs a
+  premise broken is outside the model: it is answered where the answer is cheap, and §13 lists what remains.
+  1. **The toolchain is the pinned release, unmodified.** Checked: the gate runs with `RUSTUP_TOOLCHAIN` set to
+     the channel `rust-toolchain.toml` pins, so no rustup override applies, and refuses when `rustc -vV` names
+     another release; an image's build record carries the same line (§7). Not checked: that the installed files
+     are the release's bytes.
+  2. **Git's local state reports the repository as it is.** No replace object, no remote-tracking ref set by hand.
+     Checked: every reader sets `GIT_NO_REPLACE_OBJECTS`, and the gate writes each file from its blob itself, so
+     no filter, attribute or line-ending setting applies (§3).
+  3. **The published main line is protected.** CI runs on every push to `main`, a failing run blocks it, and
+     `main` is never force-pushed. Not checked here: it is a hosting setting, which the director confirms. A claim
+     records the `main` commit it was checked against, so a reader sees what it rests on, and §10 flags a claim
+     whose commit has left `main`'s history.
+  4. **The machine running a check is not working against it.** Its sysroot, rustup's settings and its `PATH` are
+     as installed. Premise 1's checks catch an honest mismatch, not a deliberate one.
 
 ### 1. Where a record lives and how it is written
 
@@ -123,7 +151,9 @@ does not exist, and why, and it is reviewed like any other statement (§5).
   cost is derived from, beyond the record's dependency closure. Each must resolve.
 - An empty list names none.
 - **A code fact** is one that §12 lists as about code. Its locator is a `code` locator into the code the fact is
-  about: the record's own implementation, or a `describes` record's.
+  about, as the locator rule below admits it for the fact's facet: in a behavioral model, the record's own
+  implementation or a `describes` record's; in a timing model, `eager-switching` included, also a record in its
+  dependency closure or a `measured-with` record.
 
 **A fact** is `(fact <name> yes|no (locator …) (basis "…"))`, or `(fact <name> (unknown "why"))`.
 
@@ -271,20 +301,26 @@ reached set. A path under `catalog/` is refused, since a record could otherwise 
   `workspace = true`;
 - a `path` key of `[lib]`, `[[bin]]`, `[[test]]`, `[[example]]` or `[[bench]]` leaves its directory;
 - its workspace manifest has a `[patch]` or `[replace]` table;
-- a config or toolchain file on its ancestor path is present but untracked, or a config file there holds any
-  table but `[alias]`. Build flags, linkers and linker scripts are the build's, and `/1` admits none;
+- a config or toolchain file on its ancestor path is present but untracked, or a config file there is outside the
+  manifest dialect below or holds a key whose path does not begin with `alias`, whether written under a header,
+  dotted or as an inline table. Build flags, linkers and linker scripts are the build's, and `/1` admits none;
 - its manifest or its workspace manifest has a `cargo-features` key, or a `rustflags` key in any table. Either
   passes the compiler flags that `/1` admits none of;
 - a Rust source file of the package holds, **as tokens** (comments and the contents of literals are not tokens):
-  - a foreign block, which is `extern`, then an optional string literal, then `{`. An `extern "C" fn` definition
-    and a function-pointer type are not foreign blocks;
-  - an attribute whose path is exactly `link`, which `#[link_section]` is not;
-  - an invocation of `asm!`, `global_asm!` or `naked_asm!`.
+  - the identifier `extern`, except in `extern crate` and when followed by an optional string literal and `fn`.
+    So a foreign block is refused, and so is one a macro would assemble from an `extern` passed to it, while an
+    `extern "C" fn` definition and a function-pointer type are not;
+  - the identifier `asm`, `global_asm` or `naked_asm`, anywhere, so a renamed import of one is refused too;
+  - the macro `include!`, and an attribute whose path is exactly one of `path`, `link`, `no_mangle`, `export_name`,
+    `link_section`, `used`, `panic_handler`, `global_allocator` or `alloc_error_handler`.
 
-  Code that a symbol reaches only at link time, a native library, and a file an assembler directive reads are in
-  no source set and in no dependency information, so `/1` admits none of them. Architecture code that needs
-  assembly waits for a record format that admits it with `sym` operands only; nothing in the slice `M2.7.4`
-  records needs it.
+  A Rust source file is every tracked `*.rs` file under the package's directory. With `#[path]` and `include!`
+  refused, they are the only Rust sources the compiler can read. What the refused forms reach — code a symbol
+  reaches only at link time, a native library, a file an assembler directive reads, and a global hook or symbol
+  another package could supply in its place — is in no source set and, for some, in no dependency information,
+  so `/1` admits none of them. `#![feature]` needs a nightly compiler, which premise 1 and the environment below
+  rule out. Architecture code that needs assembly waits for a record format that admits it with `sym` operands
+  only; nothing in the slice `M2.7.4` records needs any of these. Every package in the repository today passes.
 
 **The manifest dialect** is the part of TOML these manifests use. A line is blank; a comment; a table header,
 which is `[` or `[[`, then one or more bare keys joined by `.`, then `]` or `]]`, where a bare key is ASCII
@@ -294,31 +330,43 @@ escape, an integer, `true` or `false`, an array of those, or an inline table `{ 
 quoted key, a literal or multi-line string, a value continued on the next line, a float or a date is outside it.
 Every manifest in the repository is inside it as of `2026-09-30`.
 
-These rules are necessary, not sufficient. What the compiler reads is decided by `#[path]`, `cfg_attr`, renamed
-include macros and `env!`, and no lexical rule catches them all. So **the gate (`M2.7.4`) builds every package
-in every source set** and reads the compiler's dependency information:
+These rules are necessary, not sufficient: what the compiler reads is decided by `cfg_attr`, `env!` and the
+module rules, and no lexical rule sees all of it. So **the gate (`M2.7.4`) builds every package in every source
+set** and reads the compiler's dependency information:
 
-- **What it builds from.** A checkout of the git index, in the repository's own `target/`. Each build runs in its
-  package's own directory.
+- **What it builds from.** The git index, written file by file from each blob's bytes into a directory of its own
+  under the repository's `target/`, with `GIT_NO_REPLACE_OBJECTS` set. It is not a checkout, so no filter,
+  attribute or line-ending setting of git's can change a byte. Two tracked paths that differ only in ASCII case
+  are refused, since a case-insensitive file system cannot hold both. Each build runs in its package's own
+  directory.
 - **What configuration it lets cargo read.** Cargo reads every `.cargo/config` and `.cargo/config.toml` from the
   build's directory up to the file system's root, and those under `CARGO_HOME`. So before building, the gate
   lists every such file on that path and refuses (`catalog-source`):
   - one inside the checkout that is not a tracked file this section hashes;
   - one outside the checkout, except the repository's own tracked copies, whose working-tree bytes must equal the
     index's. `target/.cargo` is outside the checkout and is refused, and so is anything above the repository.
-- **Its environment is an allowlist:** `PATH`, `HOME`, `RUSTUP_HOME`, `CARGO_HOME` set to an empty directory of
-  the gate's own, since a workspace of path dependencies needs no registry, and the gate's own `CARGO_TARGET_DIR`,
-  and nothing else. A list of variables to clear would miss the next one that changes a build.
+- **Its environment is an allowlist:** `PATH`, `HOME`, `RUSTUP_HOME`, `RUSTUP_TOOLCHAIN` set to the channel
+  `rust-toolchain.toml` pins, `CARGO_HOME` set to an empty directory of the gate's own, since a workspace of path
+  dependencies needs no registry, and the gate's own `CARGO_TARGET_DIR`, and nothing else. A list of variables to
+  clear would miss the next one that changes a build. `RUSTUP_TOOLCHAIN` outranks every rustup override, and
+  `rustc -vV` must then name the pinned release, or the gate refuses (premise 1). An index with no
+  `rust-toolchain.toml` is refused.
+- **Which workspace cargo sees.** `cargo metadata --no-deps` must report, as each package's workspace root, the
+  root of the written index. An `exclude` entry excludes every package whose directory is the entry or lies under
+  it, as cargo's does, and §3's membership rule reads it so.
 - **The build matrix.** The dev and release profiles. An implementation package is built for the host and for
   each target's `RUST_TARGET`, for every target the record names in its contract or costs, where `any` means
-  every target under `targets/`. A target it must build for that gives no `RUST_TARGET` is refused. A package
+  every target under `targets/`. A package
   that is only in a model's sets runs on the host, and is built for the host alone. There is no feature axis,
   because `/1` refuses features.
 - **What it refuses:**
   - a package that does not build under the matrix;
-  - every path in the compiler's dependency information that is in neither set and not under the toolchain's
-    sysroot (`rustc --print sysroot`). A path is read relative to the checkout's root, and one outside the
-    checkout that is not under the sysroot is refused;
+  - every source path in the compiler's dependency information that is in neither set. A path is resolved
+    lexically against the written index's root, `.` and `..` included, and must then satisfy §4's grammar. One
+    outside the written index is refused, the toolchain's sysroot included: no package's own sources live there,
+    and measured on `2026-09-30` no workspace crate's dependency information names one. `M2.7.4` measures that
+    again before relying on it;
+  - a source path whose bytes after the build differ from its blob's;
   - every environment dependency except `CARGO_PKG_*`, `CARGO_CRATE_NAME`, `CARGO_MANIFEST_DIR` and
     `CARGO_MANIFEST_PATH`.
 
@@ -354,10 +402,12 @@ as a value. A value that holds `/` is a path: it must be tracked and in §4's no
 refused. A value without `/`, such as a program's name or a triple, is not a path.
 
 **A `.env` is lines** of three kinds: blank; a comment, whose first character is `#`; or `KEY=value`. A key is an
-uppercase ASCII letter, then uppercase letters, digits and `_`. The value is the rest of the line, and is
-unquoted: it holds no quote character, and neither starts nor ends with a space. There is no `export`. Each key
-appears at most once. Any other line refuses the target (`catalog-field`), so no reader can take a different
-value from the one the shell that sources the file takes. The **dependency closure** of
+uppercase ASCII letter, then uppercase letters, digits and `_`. The value is the rest of the line: ASCII letters,
+digits, `.`, `_`, `-`, `/`, `+`, `:` and `,`, and nothing else, so it holds no character a shell treats specially.
+There is no `export`. Each key appears at most once. Any other line refuses the target (`catalog-field`), so no
+reader can take a different value from the one the shell that sources the file takes. A value that names a
+tracked file, from the repository's root or from `targets/`, is a path whether or not it holds `/`, and that file
+is a target file. The **dependency closure** of
 a record is its dependencies, transitively.
 
 | Facet | Derived lines |
@@ -502,6 +552,15 @@ line, with the hash in full:
 (review (facet behavior-model) (hash "sha256:2c55cee38e3334519e295600e799644bea64552d89930c11662eafa7bca43813") (verdict production) (by independent-context "the worked example") (date "2026-09-30") (basis "the model file says one processor"))
 ```
 
+`example.base`'s timing model has a forms hash (§5) of
+`sha256:ee76ffe0061191590403b973d6360a4c9fc5d9d5de5f64561b95e705f2e1f2d3`, over:
+
+```text
+archogen-catalog/1
+forms timing-model
+(timing-model (none "the costs of a machine are its devices'"))
+```
+
 ### 4. Paths, "tracked", and what reads the files
 
 - **A path** is relative to the repository root and written in normal form: segments of ASCII letters, digits,
@@ -525,8 +584,10 @@ line, with the hash in full:
   - The gate and an exploratory claim read the **index**. The gate checks what is about to be committed.
   - A production claim reads a **commit**, `HEAD` unless one is named, and records it. Its ledger must hold every
     line of every ancestor commit's ledger and of the published main line's, `origin/main` as last fetched, with
-    its ancestors (§9). So a line dropped with the gate bypassed is seen, and so is a rejection published after the
-    commit's branch forked. A shallow history is refused, since its ancestors cannot be read.
+    its ancestors (§9). The claim records that `main` commit too. So a line dropped with the gate bypassed is seen,
+    and so is a rejection published after the commit's branch forked, as far as the clone has fetched (premise 3).
+    A shallow history is refused, since its ancestors cannot be read, and so is a clone with no `origin/main`.
+  - Every reader sets `GIT_NO_REPLACE_OBJECTS` (premise 2).
   - The gate also lists the untracked files under `catalog/` and refuses them (`catalog-layout`), since no reader
     of the index can see them.
 - **Without git.** A §10.3 package carries no index. Loading a catalog there needs the package's own manifest of
@@ -545,25 +606,34 @@ position of reviews in the file decides nothing:
 | `stale` | otherwise, when some review names the facet |
 | `unreviewed` | otherwise |
 
-**The rejections a facet inherits** are read from the ledger alone (§9):
+**The commit that ledgered a review** is, in the ancestry of the commit being read, a commit whose lock holds the
+review's line and none of whose parents' locks does. There may be more than one, if two branches ledgered it; what
+follows is read from each, and joined. The review's form, its `answers` included, is read from its record there,
+and so is what the facet held, since the review named the facet's bound hash at that commit.
+
+**The rejections a facet inherits** are read from the ledger and the commits that ledgered it:
 
 1. its record's own rejections of that facet, at any hash;
-2. that facet's rejections of every id its record supersedes, directly or through a chain of ledgered lineage;
-3. those whose **items** the facet holds. Blessing records a rejection's items when it ledgers it, from the facet
-   as the review saw it:
-   - each fact's name, and each cost's name and target;
+2. that facet's rejections of every id its record supersedes, directly or through a chain. The **lineage** is every
+   `supersedes` any ancestor commit's record held, so a lineage once committed cannot be dropped;
+3. those whose **items** the facet holds. A rejection's items are read from the facet as the commit that ledgered
+   it held it:
+   - each fact's name; each cost's name and target, and the cost's name with the hash of its target's files;
    - each source entry, as written;
    - the hash of each own-set file's bytes;
-   - the hash of the facet's forms with every `version` form removed.
+   - the facet's forms hash: §3's hash over `archogen-catalog/1`, `forms <facet>` and `E` of each of the facet's
+     forms, with every `version` form removed.
 
-   A facet of the same kind, in any record, inherits the rejection when it supplies the same fact name or cost
-   name and target, names the same source entry, holds a file with the same bytes, or has forms that hash the
-   same. So content that moves takes the rejection with it, whether its directory was renamed or not, and so does
-   a contract or a `none` statement copied under another id.
+   A facet of the same kind, in any record, inherits the rejection when it supplies the same fact name, the same
+   cost name and target or the same cost name on a target whose files hash the same, names the same source entry,
+   holds a file with the same bytes, or has forms that hash the same. So content that moves takes the rejection with
+   it, whether its directory or its target was renamed or not, and so does a contract or a `none` statement copied
+   under another id. Nothing about items is written, so nothing about them can be edited away.
 
-Items over-approximate. A rejection of one cost in a package reaches every record that names the package, and a
-file whose bytes an unrelated facet also holds, an empty one for instance, carries the rejection there. A reviewer
-answers it there. An `answers` may name any rejection the facet inherits.
+Items over-approximate. A rejection of one cost in a package reaches every record that names the package; a file
+whose bytes an unrelated facet also holds, an empty one for instance, carries the rejection there; and so do the
+same forms, such as an empty behavioral model or a common `none` statement. A reviewer answers it there. An
+`answers` may name any rejection the facet inherits.
 
 **Order, weakest first:** `rejected`, `unreviewed`, `stale`, `production`. A record's status is its weakest
 facet's.
@@ -598,14 +668,15 @@ beyond that.
   answer, and the order a bless processes reviews in decides nothing;
 - its `who` is empty or equals the maintainer's tree id;
 - its `basis` is empty;
-- its date is not a real calendar date, or is later than the day it is ledgered, in UTC.
+- its date is not a real calendar date, or is later than the committer date, in UTC, of the commit that ledgers
+  it. That date is in the commit, so a check that replays the commit later gets the same answer.
 
 A ledgered review is not re-checked when fields around it change later.
 
 **Reviews cannot be taken back.** Every review is in the lock's append-only ledger with its facet, verdict and
 hash (§9), and a present record must contain every review the ledger holds for its id. A rejection therefore
-survives the record being deleted and re-added. It survives a rename or a split through the ledgered lineage
-(§2), and content that moves without lineage through its items. Editing a review counts as removing one, and is
+survives the record being deleted and re-added. It survives a rename or a split through the lineage, and content
+that moves without lineage through its items, both read from history. Editing a review counts as removing one, and is
 refused the same way.
 
 **A review covers everything the bound hash covers**, `none` statements included.
@@ -661,7 +732,8 @@ facet instead.
   `production`. It also states the image it is about, when an engine-made build (`M4`) gives it one. A caller
   cannot supply the image.
 - **A claim result carries:**
-  - its strength, profile, target and image;
+  - its strength, profile, target and image, the commit it read, and the `origin/main` commit it was checked
+    against;
   - its closure, as `(id, facet, version, bound hash, status)` lines;
   - its reads, as `(facet, name) → id`, and the lookups that found nothing, each with its selection;
   - every input it took from outside the catalog and the description, named, with the caller or application as
@@ -670,7 +742,8 @@ facet instead.
     a precondition is one.
 - **Admission, strongest verdict first:**
   1. `unsupported-profile`: the claim's target is not a named target (§2); or a record in the closure omits the
-     claim's profile, or its `targets` does not admit the claim's target.
+     claim's profile, or its `targets` does not admit the claim's target. A claim with no target is admitted only
+     when every record in its closure names `(targets any)`.
   2. `not-established`, for a **production** claim only, naming each cause:
      - a facet in the closure belongs to an `experimental` record (named, with its status);
      - an input came from the caller or the application. Before `M4` gives such inputs their own evidence rules,
@@ -682,14 +755,23 @@ facet instead.
        fails this for every cost that is not `independent`;
      - the closure holds an implementation that is not `none`, and the claim has no image, or an image not built
        from the reviewed code the way the gate builds it. The image's build record (`M4`) must name, for each
-       implementation facet in the closure, the bound hash the closure holds; for each package it compiled, the
-       profile and target of the gate's matrix it was built in, with no other flag and no other `cfg`; and the
-       compiler's dependency information of that build, every path of which lies in a closure facet's sets or
-       under the sysroot. A cost measured on an image is that image's code, and a fact is reviewed at the
-       closure's, so the two must be the same code, built the same way. A closure whose implementations are all
-       `none` needs no image;
+       package it compiled, the profile and target of the gate's matrix it was built in, with no other flag and no
+       other `cfg`; the `rustc -vV` of its compiler, which must name the pinned release; and the compiler's
+       dependency information of that build, each source path with the hash of the bytes compiled. **The image's
+       closure** is the claim's closure joined with the implementation facet, and its closure, of every record
+       whose package the image compiled, so a package the claim never read, such as a console driver, is held to
+       the same rule. Every source path must then be one of:
+       - a file of an implementation in the image's closure, at the bound hash the closure holds;
+       - generated code, named by the plan (§7.5) that generated it, with its hash;
+       - an application input of §10.3, named with its hash.
+
+       Any other path refuses the claim. Generated code and application inputs are named in the claim, and until
+       `M4` gives them their own evidence rules, either makes a production claim `not-established`, as a caller's
+       input does. A cost measured on an image is that image's code, and a fact is reviewed at the closure's, so
+       the two must be the same code, built the same way. A closure whose implementations are all `none` needs no
+       image;
      - the catalog was not read from a commit whose ledger holds every line of every ancestor's and of the
-       published main line's (§4, §9).
+       published main line's, or the clone has no `origin/main` (§4, §9).
 
   As in the runtime variant's admission, the strongest verdict is reported with every reason that reaches it.
   What an analysis does with a value it could not read is the analysis's verdict, not admission's (§12).
@@ -737,22 +819,15 @@ facet instead.
 
 ### 9. Versions, the lock and the review ledger
 
-- **What `catalog/catalog.lock` holds** is everything status needs, so status is computable for a record that no
-  longer exists:
+- **What `catalog/catalog.lock` holds:**
   - one line per facet version ever blessed, `<id> <facet> <version> sha256:<own hash>`;
   - one line per review ever blessed, `<id> review sha256:<ledger hash> <facet> <verdict> sha256:<the bound hash
-    it names>` (§3);
-  - one line per answer, `<id> answers sha256:<answering review's ledger hash> sha256:<answered rejection's
-    ledger hash>`;
-  - one line per item of each rejection (§5): `<id> covers sha256:<rejection's ledger hash>`, then `fact <name>`,
-    `cost <name> <target>`, `source <path>`, `file sha256:<hash of a file's bytes>` or `forms sha256:<hash>`. The
-    forms hash is §3's hash over `archogen-catalog/1`, `forms <facet>` and `E` of each of the facet's forms,
-    `version` forms removed;
-  - one line per lineage, `<id> supersedes <old-id>`.
+    it names>` (§3).
 
-  Lines are sorted bytewise by id, then by kind in the order contract, implementation, behavior-model,
-  timing-model, review, answers, covers, supersedes. Versions are in semantic-version order, and the other kinds
-  are in bytewise order of their line.
+  With the history of the commit being read, that is everything status needs, for a record that no longer exists
+  too: each review's form, and the facet it saw, are in the commit that ledgered it (§5). Lines are sorted
+  bytewise by id, then by kind in the order contract, implementation, behavior-model, timing-model, review.
+  Versions are in semantic-version order, and reviews in bytewise order of their line.
 - **It is append-only.**
   - A line, once committed, is never changed or removed.
   - The gate compares the lock with its version at every parent of the commit being made, both of a merge's. CI,
@@ -762,21 +837,23 @@ facet instead.
     `origin/main` and its ancestors (§4), so a line that history or the published main line holds, and the commit
     lacks, is seen even when the gate was bypassed.
   - Each refuses a lock that dropped or altered a line its base holds.
-  - **Every new line is recomputed.** The gate, and CI against each of its bases, compute every line the base
-    lacks as blessing would write it, the review, answer, item and lineage lines included, and refuse a line that
-    differs, is missing, or is one blessing would not write. So a lock edited by hand is caught whether the edit
-    drops, alters or adds.
+  - **Every new line is recomputed, commit by commit.** The gate, and CI against each of its bases, replay every
+    commit between the base and the head, oldest first: each commit's lines are computed from that commit's own
+    tree, against its own parents, as blessing would have written them, and a line that differs, is missing, or is
+    one blessing would not write is refused. So a lock edited by hand is caught whether the edit drops, alters or
+    adds, and a rejection fixed or answered in a later commit of the same push is judged in the commit that made
+    it.
   - A retired record's lines stay behind as history, so its versions cannot be reused and its reviews cannot be
     shed.
 - **Checks at load:**
 
   | Code | When |
   | --- | --- |
-  | `catalog-lock-missing` | a facet's current version, a review in a record, or a `supersedes` in a record has no line. The repair is to bless |
+  | `catalog-lock-missing` | a facet's current version, or a review in a record, has no line. The repair is to bless |
   | `catalog-lock-unbumped` | a line has the same id, facet and version as a current facet, but a different own hash: changed without a version bump |
   | `catalog-lock-downgrade` | a facet's current version is below a version the lock holds for it |
-  | `catalog-lock-review` | a present record lacks a review the ledger holds for its id; a review's form disagrees with its line's facet, verdict or hash, or its `answers` with the answer lines |
-  | `catalog-lock-retired` | a retired id has a rejection that no production review of a record superseding it answers, and no present record supersedes it; a present record takes a superseded id; a present record lacks a `supersedes` its lineage lines hold |
+  | `catalog-lock-review` | a present record lacks a review the ledger holds for its id; a review's form disagrees with its line's facet, verdict or hash, or with its form in the commit that ledgered it |
+  | `catalog-lock-retired` | a retired id has a rejection that no production review of a record superseding it answers, and no present record supersedes it; a present record takes a superseded id; a present record lacks a `supersedes` the lineage holds for it |
   | `catalog-conflict` | for some profile and target the catalog names, or for a claim with no target, two records supply the same name under §12's selection |
 
 - **Own hashes, not bound ones.** The lock pins **own** hashes, so a facet's version moves when its own forms or
@@ -788,8 +865,6 @@ facet instead.
   - recomputes every line that is not at `HEAD` from the current records, and keeps every line that is. A review
     added and then edited before a commit leaves no trace, and nothing committed can be undone;
   - checks each review it ledgers against §5, its hash against the facet's current bound hash included;
-  - writes the answer, item and lineage lines of what it ledgers. A rejection's items are the facet's at the time,
-    which is the content the review saw, since its hash is the current one;
   - refuses `catalog-lock-unbumped`, `catalog-lock-downgrade`, `catalog-lock-review` and
     `catalog-lock-retired`.
 
@@ -814,6 +889,10 @@ facet instead.
   A recorded read is **affected** when the same lookup, under the same selection, would now return another
   record, or the catalog no longer loads. A recorded lookup that found nothing is affected when it now finds a
   record, since the claim took that input from elsewhere, or went without it.
+- **What "now" is.** The check reads a commit, `HEAD` unless one is named, with its ledger joined with
+  `origin/main`'s as admission does (§4), and records both commits. A production claim is also affected when the
+  `main` commit it recorded is no longer an ancestor of `origin/main`: the history it was checked against has been
+  rewritten (premise 3).
 - **Over the recorded closure, not today's graph.** A dependency that has since left the graph is still checked.
 - **It runs even when the catalog does not load.** Hashes are computed without the lock, and anything that cannot
   be read or computed counts as affected. The answer errs toward too many and never too few.
@@ -833,7 +912,7 @@ Every refusal names its record, its field and the field's source location, and h
 | `catalog-version` | a version or a requirement breaks §2's form |
 | `catalog-field` | one of the following: <br>• an empty string where §2 requires text <br>• an unknown catalog, profile, target, unit, category, role, verdict or `TARGET_KIND` <br>• a target without `TARGET_KIND` or `RUST_TARGET`, whose stem breaks §2's grammar, or whose `.env` breaks §3's grammar <br>• a `.env` value holding `/` that is not a tracked path in normal form <br>• a fact §12 co-locates with a cost, in a record that does not supply that cost <br>• no guarantees <br>• a malformed fact or cost <br>• a negative integer <br>• a safety factor that does not pad, has a term outside `u32`, or whose `value` is not the padded observation <br>• a known cost that `Bound::validate` refuses <br>• a cost on a target the contract does not admit <br>• `independent` outside its two names, or on a target that is not a board <br>• a variant name of the wrong kind or in the wrong facet |
 | `catalog-locator` | a `file` locator outside the facet's own set; a `code` locator outside its record's implementation own set, or naming a record §2 does not allow; a code fact without a `code` locator; a `ledger` anchor the ledger does not hold, or holds twice; a missing locator where §2 requires one |
-| `catalog-source` | one of the following: <br>• §3's package rules, manifest dialect and workspace rule, and §4's path rules <br>• a `cargo-features` or `rustflags` key; a foreign block, a `link` attribute or an assembly macro, as tokens <br>• a cargo configuration file the gate may not let cargo read <br>• a path under `catalog/` <br>• a directory entry with a package below it, or a package with a package below it <br>• a file in two own sets of different kinds (§8) <br>• a package that does not build under the gate's matrix <br>• a compiler-read path or environment dependency outside the sets (the gate) |
+| `catalog-source` | one of the following: <br>• §3's package rules, manifest dialect and workspace rule, and §4's path rules <br>• a `cargo-features` or `rustflags` key; a refused identifier, macro or attribute, as tokens <br>• a cargo configuration file the gate may not let cargo read, or one outside the dialect <br>• two tracked paths that differ only in case; a compiler that is not the pinned release; a workspace root cargo reports elsewhere <br>• a source path outside the written index, or whose bytes differ from its blob <br>• a path under `catalog/` <br>• a directory entry with a package below it, or a package with a package below it <br>• a file in two own sets of different kinds (§8) <br>• a package that does not build under the gate's matrix <br>• a compiler-read path or environment dependency outside the sets (the gate) |
 | `catalog-dependency` | a `depends`, `describes`, `measured-with` or `supersedes` id that is unresolved, unmatched by its one candidate's version, or listed twice; a cycle in the graph of §3's derived facet lines, which is the only acyclicity hashing needs; a `supersedes` id with a present record or no ledger lines |
 | `catalog-review` | §5's review rules |
 | `catalog-production` | §6 |
@@ -909,7 +988,8 @@ The variant's condition 8 for catalog costs is each cost's own `holds-under-pree
   named.
 - **Each name comes from exactly one record.** Two records that supply a name under the same selection are
   refused at load, for every profile and target the catalog names and for a claim with no target
-  (`catalog-conflict`), rather than reconciled, since §9 says "Cross-validation investigates source conflicts
+  (`catalog-conflict`), rather than reconciled. An `unknown` supplies its name: it is a record's statement, and a
+  lookup that meets it returns it, since §9 says "Cross-validation investigates source conflicts
   rather than averaging them". A fact this table co-locates with a cost, `eager-switching` with `switch` and each
   `.<source>` fact with `service.<source>`, in a record that does not supply that cost is refused at load too
   (`catalog-field`).
@@ -949,6 +1029,8 @@ The variant's condition 8 for catalog costs is each cost's own `holds-under-pree
   - the installed compiler's bits (the channel in `rust-toolchain.toml` is covered);
   - cargo configuration outside the repository. The gate refuses any it would read and gives cargo an empty
     `CARGO_HOME` (§3); the build of an image is `M4`'s to hold to the same rule, which §7's build record shows;
+  - the installed toolchain's files, git's local configuration and refs, and the hosting's protection of `main`.
+    These are §0's premises, each with what is checked of it;
   - the meaning of a profile. A record names a profile by its id, and a changed meaning moves the id (§15), which
     the version register records;
   - `--config` flags;
@@ -963,10 +1045,12 @@ The variant's condition 8 for catalog costs is each cost's own `holds-under-pree
   that no item of §5 matches, whether a name, an entry, a file's bytes or the forms, is new content for review. The
   ledger is where a reviewer of related content looks, and nothing forces the look.
 - **Unpublished history can be rewritten.** A rejection committed and never pushed disappears with a reset. One
-  that reached `origin/main` binds every production claim, whatever branch the claim reads (§4).
-- **The token refusals are of what is written.** A macro that expands to a foreign block, a `link` attribute or
-  assembly is not seen. For an image, the compiler's dependency information in its build record covers the files
-  it read, and costs are measured on the image itself.
+  that reached `origin/main` binds every production claim made from a clone that has fetched it, whatever branch
+  the claim reads (§4), and while `main` is protected (premise 3).
+- **The token refusals are of what is written.** They refuse the identifiers a macro would need to produce a
+  refused form (`extern`, the assembly macros), so a macro defined in the package cannot assemble one. A macro
+  from outside the package is the reached set's, held to the same rules. For an image, the dependency information
+  in its build record covers every Rust source it compiled, each with its hash.
 - **A code locator is necessary, not sufficient.** It proves that a fact points into code its bound hash covers.
   That the fact depends on no other code is the review's to check.
 - **Where evidence was obtained is the review's to check.** Admission refuses costs on a target that is not a
@@ -1066,3 +1150,4 @@ design as it stands, and that one keeps how it got here.
 | 3 | 24 | 7 | "cannot yet be accepted" |
 | 4 | 14, and 2 found while answering | 4, C2 still open, and the 2 found while answering | "not acceptable as it stands" |
 | 5 | 21 | 2, and a defect-level construction against D4's answer | "cannot be accepted as it stands" |
+| 6 | 16 | 5, most needing control of the machine or the hosting; the director then ruled §0's threat model | "cannot be accepted as it stands" |

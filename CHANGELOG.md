@@ -4,6 +4,24 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the catalog design states what it defends against, and its sixth review is answered
+
+`ARCHOGEN-M2-0206` (leaf `M2.7.1`, a fourth checkpoint).
+
+- The sixth review found five more defects, and most of them assumed someone who controls the build machine or
+  GitHub's settings. Asked, the director ruled that the design states what it defends against. It now does, in a
+  new first section:
+  - every change that reaches the catalog through the repository must be caught, including someone skipping the
+    local check or editing the review record by hand;
+  - it assumes, and names, that the installed compiler is untampered, that git's local settings don't alter
+    files, and that the main branch is protected. Where a cheap check exists, the check is made.
+- The biggest change removes a whole class of problem. What a rejection covered, what a review answered, and
+  which entry replaced which are no longer written down separately. They are read from the commit where each
+  review was first recorded, so there is nothing to edit away.
+- The build check now writes every file exactly as git stores it, confirms the compiler is the pinned release, and
+  refuses more ways for code to reach what was never reviewed.
+- A seventh review is next, judged against the stated threat model.
+
 ## archogen — a web page that checks a description
 
 `ARCHOGEN-API-0205` (leaf `API.5.4`).
