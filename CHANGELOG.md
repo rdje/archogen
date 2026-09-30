@@ -4,6 +4,17 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — a third reader of the grammar, and what it found at once
+
+`ARCHOGEN-M1-0167` (leaf `M1.22`).
+
+- archogen's grammar had two checkers, both written here. A third now runs beside them: LinkedSpec's independent
+  recognizer, as an outside program. A script compares it with archogen's reader on every tracked description.
+  Any change in whether they agree fails the script.
+- They agreed on 119 of 120. On the last one archogen's reader was wrong, not the outsider: it accepted a string
+  directly followed by a symbol, which archogen's own grammar forbids. Neither existing checker had noticed.
+  The fix is filed as `M1.37`.
+
 ## archogen — LS-008: the cost of following LinkedSpec's failure procedure
 
 `ARCHOGEN-M1-0166` (leaf `M1.21`).

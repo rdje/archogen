@@ -246,6 +246,23 @@ which writes the crate it generates, and `eadl-front`, whose module loader reads
 one a browser needs most, and its reads already go through one `ModuleSource` implementation, so the wasm
 binding (`API.5`) can supply its own.
 
+## A third reader
+
+`docs/semantics/grammar.md` defines what a well-formed description is, and until `2026-09-30` it had two
+opinions about that: archogen's reader, and a recognizer the conformance suite derives from the grammar. Both
+are this project's code. `scripts/third_opinion.sh` adds a third that nobody here wrote: LinkedSpec's
+`SExprDocumentV1` recognizer, run as an outside program (leaf `M1.22`). Each side is reduced to the same
+shape, the forms of a document as raw source text and nesting. The script records, for every tracked
+description, whether they agree. It compares token boundaries and whether the document is complete. It
+never compares values: whether `-1` is an integer is eADL's own rule.
+
+The first run agreed on every description but one. That one was a bug report's evidence file,
+`(a" b"[c]{d})`, which the other recognizer refuses and archogen's reader accepted. The grammar-derived
+recognizer sides with the outsider: the grammar requires a delimiter after every atom, and a string
+followed directly by `[` has none. So archogen's reader had been more permissive than its own grammar, and
+neither of the two existing opinions could see it. The fix is leaf `M1.37`. The record
+(`docs/semantics/third-opinion.txt`) fails the script the moment any document's agreement changes.
+
 ## The product runs nothing
 
 archogen describes, checks and generates, and it executes nothing. `archogen build` writes a crate and stops.
