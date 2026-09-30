@@ -3648,7 +3648,7 @@ mdBook that is the director's window into the project.
     leaf, `PROGRAM.32`, the frontier and both logs; the snapshots; `CHANGELOG.md`.
 
 - ID: `PROGRAM.32`
-  Status: `pending` — unblocked `2026-09-30` by the director's ruling on §10 of
+  Status: `active` — unblocked `2026-09-30` by the director's ruling on §10 of
   `docs/decisions/decision_findings-for-director-review.md`: the hold covers only the 17 template files archogen has
   not changed. The new check, and the change to `TASK-ACCEPTANCE` (`check_task_acceptance.sh`, changed by
   `PROGRAM.21`), are archogen's. The held checks that read leaves must keep working unchanged: `WAIVER-ROUTING`,
@@ -3659,6 +3659,44 @@ mdBook that is the director's window into the project.
   which follows `PROGRAM.31`.
   Acceptance (if accepted): `TASK-ACCEPTANCE` and every gate that reads a leaf still finds it (sealed text included);
   a check proving sealed bodies unchanged; the tree's live graph complete; no line lost.
+  Children: `PROGRAM.32.1` … `PROGRAM.32.4` — decomposed `2026-09-30`, after a read-only audit of every check that
+  reads a leaf.
+  Verification: through its children
+  Commit: `pending`
+
+- ID: `PROGRAM.32.1`
+  Status: `done`
+  Goal: the design, decided before any code: `docs/decisions/decision_task-tree-sealing.md`.
+  - The unit is a closed subtree.
+  - Its leaves move byte for byte to `docs/task-history/<TREE>/<SUBTREE>.md`, each leaving a two-line stub.
+  - An append-only index carries each file's digest.
+  - A reconstruction proof runs before anything is written, and the gate `TASK-HISTORY` runs after.
+  - The destination is outside `docs/tasks/` so that no held check mistakes moved text for new text.
+  Verification: the audit of `2026-09-30`, quoted in the record's "Why", measured each check against a sealing
+  commit, including `M1` and `PROGRAM`'s closed subtrees: 37 of 39 and 32 of 39.
+  Commit: `ARCHOGEN-PROGRAM-0224 (leaf PROGRAM.32.1)`
+
+- ID: `PROGRAM.32.2`
+  Status: `pending`
+  Goal: `scripts/check_task_history.sh`: the gate, `--seal <TREE>` with its reconstruction proof, and `--self-test`
+  with RED arms for each of the gate's four checks. It is registered as `TASK-HISTORY` in
+  `scripts/check_doctrines.project.sh`. `TASK-ACCEPTANCE`'s refusal names a sealed owner as closed.
+  Acceptance: every arm refused and then passed; the spine's own self-tests green; no held file changed.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `PROGRAM.32.3`
+  Status: `pending`
+  Goal: `M1` and `PROGRAM` sealed. `docs/task-history/` gets its row, and `docs/tasks/`' debt cells become measured
+  ceilings. The inventory, the book's verification chapter and `docs/TASK_TREE.md` are updated.
+  Acceptance: the reconstruction proven byte for byte for both trees; every check green in the sealing commit; the
+  trees' live leaves, frontier and logs unchanged.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `PROGRAM.32.4`
+  Status: `pending`
+  Goal: an independent read-only review of the tool and the sealed result, every finding answered.
   Verification: `pending`
   Commit: `pending`
 
@@ -3990,7 +4028,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.32` | `pending` | closed leaves sealed out of the task trees, ruled on §8; unblocked by the ruling on the hold's scope, working around the 17 held template files |
+| 1 | `PROGRAM.32` | `active` | closed subtrees sealed out of the task trees (§8); the design decided (`.32.1`), the tool next (`.32.2`) |
 | 2 | `PROGRAM.39` | `pending` | the decisions folder partitioned by subject, adding no capacity; starts at 36 files or 360 000 bytes, or sooner |
 | 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 | 4 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
@@ -4133,6 +4171,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.36` | the breach reproduced with the ceiling restored; the move's digest against `HEAD`'s; `README-ROUTES`; the doctrine enforcer; the book built | rc=1, then rc=0 with 20 destinations governed; digests equal; all green; rc=0 |
 | `2026-09-30` | `PROGRAM.37` | the move against `HEAD`'s tail; review sections measured by section; `README-ROUTES`; the doctrine enforcer | identical; 13 482 bytes moved, the rest summaries; rc=0, 318 625 bytes; all green |
 | `2026-09-30` | `PROGRAM.38` | the folder at `HEAD` and at `38d8634`; the independent review of the raise; what grew, by file; `README-ROUTES`; the doctrine enforcer | 324 165 over 28, against 250 243 over 23; 18 findings, 4 defects, all answered; the reviewed designs from 72 269 to 136 093 bytes; rc=0; all green |
+| `2026-09-30` | `PROGRAM.32.1` | a read-only audit of every script that reads `docs/tasks/`, each against a sealing commit; closed subtrees measured in `M1` and `PROGRAM` | the four held checks pass it; `TASK-ACCEPTANCE`, `README-ROUTES` and `LESSON-PROMOTION` shaped the design; 37 of 39 and 32 of 39 subtrees closed |
 
 ## Commit Log
 
@@ -4197,6 +4236,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.36` | `ARCHOGEN-PROGRAM-0211 (leaf PROGRAM.36)` | **the review histories get a home of their own** — `docs/reviews/`, registered as the decisions folder's overflow with its own ceilings; the debt `ARCHOGEN-M2-0210` recorded is paid |
 | `PROGRAM.37` | `ARCHOGEN-PROGRAM-0218 (leaf PROGRAM.37)` | **the runtime variant's review history joins the others** in `docs/reviews/`; the debt `ARCHOGEN-M2-0217` recorded is paid |
 | `PROGRAM.38` | `ARCHOGEN-PROGRAM-0222 (leaf PROGRAM.38)` | **the decisions folder's ceiling raised once**, to 40 files and 384 KiB, as the director's reviewed exception; `PROGRAM.39` owns the partition that replaces it |
+| `PROGRAM.32.1` | `ARCHOGEN-PROGRAM-0224 (leaf PROGRAM.32.1)` | **the sealing design** — `docs/decisions/decision_task-tree-sealing.md`; the tool next |
 
 ## Changelog
 

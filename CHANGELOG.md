@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — how finished work leaves the task trees is decided
+
+`ARCHOGEN-PROGRAM-0224` (leaf `PROGRAM.32.1`).
+
+- Most of the two largest task trees is finished work: over three quarters of each file is leaves marked done. The
+  director's ruling asked for finished work to be moved out, whole, with a line left in its place.
+- A new decision record fixes how.
+  - When every item under a heading of the tree is finished, those items move, unchanged, into one file per heading
+    in a new folder, `docs/task-history/`.
+  - Each item leaves two lines behind, its name and a link.
+  - An index records each file's fingerprint, and a check on every commit proves nothing sealed ever changes.
+- A read-only audit checked every script that reads the task trees against such a move first. The design keeps all
+  of them working, including the project template's scripts that must stay unchanged. The tool is next.
+
 ## archogen — the catalog design's ninth review is answered
 
 `ARCHOGEN-M2-0223` (leaf `M2.7.1`, an eighth checkpoint).
