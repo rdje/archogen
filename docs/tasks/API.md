@@ -560,10 +560,10 @@ agent can drive. The server is a capability of the built binary, spawned per ins
 | 2 | `API.6` | `pending` | the MCP server — the point of the tree, and last because everything above is what makes it safe to hand to an arbitrary agent |
 | 3 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6` |
 
-⛔ **This tree does not displace the project's main line.** `M1.13` is the frontier in
-[`M1.md`](M1.md), and `API.3`–`API.7` are sequenced behind it by the director's ruling. `API.1` and
-`API.2` are the only unblocked slices, and both are measurements or gates rather than features — taking
-them early is cheap and makes the rest estimable.
+⛔ **This tree does not displace the project's main line.** The director's ruling sequenced `API.3`–`API.7`
+behind `M1.13`, the language freeze, which closed on `2026-09-29`; `API.3` and `API.4` followed it. The main
+line is now `M2` ([`M2.md`](M2.md), frontier `M2.6`), and a slice of this tree is taken when it does not
+delay that.
 
 ## Decisions
 
