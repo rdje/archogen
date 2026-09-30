@@ -624,3 +624,14 @@ from
 to
         let Some(mut w) = task.computation.checked_add(0) else {
 end
+
+mutation f17-unmodelled-interrupt-admitted
+file crates/rt-analysis/src/runtime.rs
+test -p rt-analysis --test f17_refusal
+expect killed
+why M2.6.4, F17: an interrupt the build enables and nobody declared is interference the analysis cannot see. Admitting the set anyway is the silent downgrade F17 forbids; the fixture must refuse it as unmodeled-interrupt-load.
+from
+                if !undeclared.is_empty() {
+to
+                if false && !undeclared.is_empty() {
+end

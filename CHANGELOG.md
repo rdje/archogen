@@ -4,6 +4,18 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the real-time analysis refuses what it cannot know (F17)
+
+`ARCHOGEN-M2-0188` (leaf `M2.6.4`).
+
+- The roadmap's case F17 is now checked. Take a system the analysis accepts, then break one thing at a time: an
+  interrupt nobody described, a cost nobody knows, interrupts that nest, a task that waits on itself or locks the
+  scheduler. The analysis refuses every one with a stated reason, and never quietly gives a weaker answer.
+- The simpler analysis that ignores overheads cannot be mistaken for the real one: its result names a different
+  model and always says "no overhead".
+- This completes the runtime timing analysis step. What it still needs before it can be cited for a real system
+  is the catalog of real costs and platform facts, the next step.
+
 ## archogen — the real-time analysis agrees with results worked out independently
 
 `ARCHOGEN-M2-0187` (leaf `M2.6.3`).

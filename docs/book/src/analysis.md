@@ -209,5 +209,16 @@ variant, §13.4's repeated-preemption fixture gives a bound of 9 for H, which ho
 established against either of the fixture's deadlines. The exact timeline gives 5 and 23. The variant is safe, and
 pessimistic by design.
 
-⚠️ It still cannot be cited for a real system. Its inputs, the costs and the platform facts, come from the catalog
-(leaf `M2.7`), which does not exist yet, and F17's refusal path is leaf `M2.6.4`.
+**F17 holds on the analysis side** (leaf `M2.6.4`, `crates/rt-analysis/tests/f17_refusal.rs`). Take a complete set the
+variant admits and give it one defect at a time. An interrupt the build enables and nobody declared, a source or
+timer cost nobody knows, nesting, a task that suspends itself or locks the scheduler: each is refused, as
+`unsupported-profile` or `analysis-inconclusive`, and never answered. The idealized baseline cannot stand in for the
+refused answer, because its conclusion names another model and always carries "no overhead".
+
+**What the variant may claim:** that the deadlines hold in `fixed-priority-with-overheads/1`, under its admission
+conditions, with every input not analytically established named as an assumption. When its bound exceeds a
+deadline it may claim only `not-established`.
+
+⚠️ **It still cannot be cited for a real system.** Its inputs, the costs and the platform facts, come from the catalog
+(leaf `M2.7`), which does not exist yet. F17's runtime half, a running system refusing what it cannot bound, is
+`M4`'s.
