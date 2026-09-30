@@ -4,6 +4,20 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the real-time analysis for a running system is designed, and reviewed three times
+
+`ARCHOGEN-M2-0185` (leaf `M2.6.1`).
+
+- The timing analysis archogen has today assumes that switching tasks, interrupts and critical sections cost
+  nothing, so it cannot be cited for a real system. The analysis that does account for them is now designed in
+  a decision record. It covers release jitter, interrupt and timer interference, context-switch costs, and the cost
+  of state a preemption destroys. Every cost and platform fact must be supplied, and none defaults to zero.
+- Three independent reviewers, none of whom wrote it, went through the design before any code. Each round found a
+  way the analysis could have claimed a deadline is met when it is not. All 49 findings are answered in the record.
+- It refuses what it cannot model, such as unknown interrupt sources or nesting interrupts, instead of guessing.
+  When its bound exceeds a deadline it says "not established", never "the deadline is missed", because the bound
+  is an over-estimate.
+
 ## archogen — one request to the engine API has a cost limit
 
 `ARCHOGEN-API-0183` (leaf `API.4.2`).

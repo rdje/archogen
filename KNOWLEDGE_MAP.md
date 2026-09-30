@@ -173,6 +173,7 @@ justifies the split — the rows below appear as that happens.
 - [`decision_programmatic-interface.md`](docs/decisions/decision_programmatic-interface.md)
 - [`decision_push-cadence.md`](docs/decisions/decision_push-cadence.md)
 - [`decision_repository-boundary-read-only.md`](docs/decisions/decision_repository-boundary-read-only.md)
+- [`decision_runtime-analysis-variant.md`](docs/decisions/decision_runtime-analysis-variant.md)
 - [`decision_runtime-contract-gaps.md`](docs/decisions/decision_runtime-contract-gaps.md)
 - [`decision_s0-retirement.md`](docs/decisions/decision_s0-retirement.md)
 - [`decision_scaffold-updater-adopted.md`](docs/decisions/decision_scaffold-updater-adopted.md)
