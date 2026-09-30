@@ -4,6 +4,21 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — every diagnostic row names an input that fires it
+
+`ARCHOGEN-M1-0161` (leaf `M1.26.2.2`, with `ARCHOGEN-M1-0160`, `M1.26.2.1`).
+
+- Both normative documents' diagnostics tables gained a column, `fires on`: a small input that triggers the
+  error, run through the real toolchain on every build. A row whose error nothing can trigger any more now
+  fails the build. Until now it just kept stating a rule the toolchain no longer enforced.
+- It found such a row at once. `module-too-large` described a limit that exists nowhere in the code. The real
+  limit is a module file over 4 GiB. The row now says so and states that no test input can reach it; two
+  other rows state the same kind of limit, each with its reason.
+- A deliberate code change proved the point. It made one error unreachable while leaving its code in place.
+  The old checks stayed green, and the new column failed.
+- The table is part of the frozen language, so the change comes with a migration note. No description
+  changes meaning.
+
 ## archogen — the engine's verdicts have a normative home
 
 `ARCHOGEN-M1-0159` (leaf `M1.26.1`).

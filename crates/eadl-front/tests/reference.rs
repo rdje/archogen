@@ -776,12 +776,13 @@ fn census_violations_of(path: &str, document: &str) -> Vec<String> {
     for (line, cells) in &rows {
         let Some(code) = cells.first() else { continue };
         stated.insert(code.clone());
-        if cells.len() != 3 {
+        // Four since `M1.26.2.2`: the fourth is `fires on`, an input `crates/archogen-cli/tests/fires_on.rs` runs.
+        if cells.len() != 4 {
             out.push(violation_in(
                 path,
                 *line,
                 format!(
-                    "the row for `{code}` has {} cell(s) and the table's header has 3",
+                    "the row for `{code}` has {} cell(s) and the table's header has 4",
                     cells.len()
                 ),
             ));
@@ -2062,7 +2063,7 @@ fn arm_10_a_code_the_reference_states_but_nothing_emits_is_reported() {
     let mutated = replacing_line(
         REFERENCE,
         "| `read-number-overflow` |",
-        "| `read-number-overflowed` | a well-formed literal whose value lies outside the range | reduce the digits |",
+        "| `read-number-overflowed` | a well-formed literal whose value lies outside the range | reduce the digits | `check (a 9223372036854775808)` |",
     );
     assert_reported(
         &census_violations(&mutated),
@@ -2139,7 +2140,7 @@ fn arm_13_a_diagnostic_with_no_repair_direction_is_reported() {
     let mutated = replacing_line(
         REFERENCE,
         "| `read-unexpected-close` |",
-        "| `read-unexpected-close` | a `)` appears with no list open | — |",
+        "| `read-unexpected-close` | a `)` appears with no list open | — | `check (a))` |",
     );
     assert_reported(
         &census_violations(&mutated),
@@ -2694,11 +2695,14 @@ fn arm_m1_a_model_code_the_document_does_not_state_is_reported_once() {
 
 #[test]
 fn arm_m2_a_rotted_model_row_is_reported() {
+    let real = MODEL
+        .lines()
+        .find(|line| line.starts_with("| `quantity-missing` |"))
+        .expect("the row");
     let mutated = replacing_line(
         MODEL,
         "| `quantity-missing` |",
-        "| `quantity-missing` | a quantity is expected and nothing is written (§1) | write one |\n\
-         | `quantity-imaginary` | never | nothing |",
+        &format!("{real}\n| `quantity-imaginary` | never | nothing | `none: a fixture` |"),
     );
     assert_reported(
         &census_violations_of(MODEL_PATH, &mutated),

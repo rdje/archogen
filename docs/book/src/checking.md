@@ -33,7 +33,10 @@ the engine's verdicts on a description that does read. Those come from the bound
 presence and refinement passes, and from the quantities every clause is written in (leaf `M1.26.1`).
 `crates/eadl-front/tests/reference.rs` checks both documents against the code that emits their codes,
 in both directions. It also checks every diagnostic this book shows against the document that states
-its rule.
+its rule. And each row of either document's diagnostics table carries an input that fires its code, run
+on every build (`crates/archogen-cli/tests/fires_on.rs`, leaf `M1.26.2`), so no row can describe a
+refusal the toolchain can no longer reach. A row no input can reach says so, with the reason: a file
+over 4 GiB, or a catch-all kept for a refusal the code does not make yet.
 
 ⭐ **A module tree gets exactly these passes.** A file that declares a `(defmodule …)` is elaborated first
 (`ROADMAP.md` §10.1 step 1) from its module path, by `docs/semantics/reference.md` §6 rule 7 — an import

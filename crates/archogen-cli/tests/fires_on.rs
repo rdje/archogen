@@ -11,8 +11,9 @@
 //! - `check <text>` — the text is a description, checked by `archogen check` from a scratch directory;
 //! - `modules <text> <mod NAME> <text> …` — a description, and each `<mod NAME>` segment a module file
 //!   `NAME.eadl` beside it; five `module-*` codes fire only over two or more modules;
-//! - `kinds <text>` — a kind module, every form read as a `defkind` and registered in order. The CLI registers
-//!   only the kinds it embeds, so no description can reach a `defkind`-level `schema-*` code;
+//! - `kinds <text>` — a kind module, loaded by `shipped_registry`, the loader `archogen check` uses. The CLI
+//!   registers only the kinds it embeds, so no description can reach a `defkind`-level `schema-*` code. After
+//!   an optional `<validate>`, declarations are validated against the registry that module built;
 //! - `none: <reason>` — no writable input fires the code. The reason is review, and it may not be empty.
 //!
 //! `<0xNN>` names a character, decoded by the same `reference_table` reader the reference's other tables use —
@@ -24,7 +25,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use archogen_cli::run;
 use eadl_front::SourceMap;
-use eadl_model::kind::{read_kind, Registry};
+use eadl_model::check::shipped_registry;
+use eadl_model::kind::validate;
 
 #[allow(dead_code)]
 #[path = "../../eadl-front/tests/common/reference_table.rs"]
@@ -37,7 +39,8 @@ use reference_table::{machine_table, source_text};
 enum Probe {
     Check(String),
     Modules(String, Vec<(String, String)>),
-    Kinds(String),
+    /// A kind module, and the declarations validated against the registry it builds (`<validate>`).
+    Kinds(String, String),
     Limit(String),
 }
 
@@ -64,7 +67,10 @@ fn parse_cell(cell: &str) -> Result<Probe, String> {
     };
     match verb {
         "check" => Ok(Probe::Check(decode(rest)?)),
-        "kinds" => Ok(Probe::Kinds(decode(rest)?)),
+        "kinds" => {
+            let (module, declarations) = rest.split_once("<validate>").unwrap_or((rest, ""));
+            Ok(Probe::Kinds(decode(module)?, decode(declarations)?))
+        }
         "modules" => {
             let mut segments = rest.split("<mod ");
             let root = decode(segments.next().unwrap_or(""))?;
@@ -147,31 +153,27 @@ fn fire(probe: &Probe) -> BTreeSet<String> {
             }
             checked_codes(&path)
         }
-        Probe::Kinds(text) => {
+        Probe::Kinds(module, declarations) => {
+            // The production loader itself — the one `archogen check` builds its registry with — so a kind
+            // module's codes fire exactly as they would for a shipped one. Then each declaration after
+            // `<validate>` is validated against that registry, which is the only door to a code that fires on
+            // a kind a clause names and no registry holds: no description can register a kind.
             let mut sources = SourceMap::new();
-            let id = sources
-                .add("kinds.eadl", text.clone())
-                .expect("a small text");
-            let (document, diagnostics) = eadl_front::read(&sources, id);
-            let mut codes: BTreeSet<String> = diagnostics
-                .items()
-                .iter()
-                .map(|d| d.code.to_string())
-                .collect();
-            let mut registry = Registry::new();
-            for form in &document.forms {
-                match read_kind(form) {
-                    Ok(kind) => {
-                        if let Err(diagnostic) = registry.register(kind) {
-                            codes.insert(diagnostic.code.to_string());
-                        }
+            match shipped_registry(&mut sources, &[("kinds.eadl".to_string(), module.clone())]) {
+                Err(diagnostics) => diagnostics.iter().map(|d| d.code.to_string()).collect(),
+                Ok(registry) => {
+                    let id = sources
+                        .add("declarations.eadl", declarations.clone())
+                        .expect("a small text");
+                    let (document, read) = eadl_front::read(&sources, id);
+                    let mut codes: BTreeSet<String> =
+                        read.items().iter().map(|d| d.code.to_string()).collect();
+                    for form in &document.forms {
+                        codes.extend(validate(&registry, form).iter().map(|d| d.code.to_string()));
                     }
-                    Err(diagnostics) => {
-                        codes.extend(diagnostics.iter().map(|d| d.code.to_string()))
-                    }
+                    codes
                 }
             }
-            codes
         }
     }
 }
@@ -280,6 +282,15 @@ fn a_kinds_cell_runs_the_kind_loader() {
 }
 
 #[test]
+fn declarations_after_validate_are_checked_against_the_module_s_registry() {
+    // A kind whose clause names a kind nothing registers: only validation of a declaration can see it.
+    let doc = table(&[
+        "| `schema-unknown-referenced-kind` | … | … | `kinds (defkind defthing (doc \"a thing\") (name required) (clause c (cardinality one) (holds kind nosuch))) <validate>(defthing x (c (y)))` |",
+    ]);
+    assert_reported(&fires_violations("fixture.md", &doc), 0, &[]);
+}
+
+#[test]
 fn a_stated_limit_passes_and_an_empty_one_is_reported() {
     let doc = table(&[
         "| `module-too-large` | … | … | `none: a module over 4 GiB, which no fixture can be` |",
@@ -328,5 +339,57 @@ fn a_document_with_no_diagnostics_table_is_reported() {
         &fires_violations("fixture.md", "no table here"),
         1,
         &["carries no diagnostics table"],
+    );
+}
+
+// ── the column over the real documents (leaf `M1.26.2.2`) ───────────────────────────────────────────
+
+/// Every normative document under `docs/semantics/` that carries a diagnostics table — derived, so a third
+/// document is walked the day it is written.
+fn normative_documents() -> Vec<(String, String)> {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(Path::parent)
+        .expect("crates/<name>/ is two levels below the root")
+        .to_path_buf();
+    let mut out: Vec<(String, String)> = std::fs::read_dir(root.join("docs/semantics"))
+        .expect("docs/semantics")
+        .flatten()
+        .map(|entry| entry.path())
+        .filter(|path| path.extension().is_some_and(|e| e == "md"))
+        .filter_map(|path| {
+            let text = std::fs::read_to_string(&path).ok()?;
+            text.contains("<!-- machine-read: diagnostics -->")
+                .then(|| {
+                    (
+                        path.strip_prefix(&root)
+                            .expect("under the root")
+                            .display()
+                            .to_string(),
+                        text,
+                    )
+                })
+        })
+        .collect();
+    out.sort();
+    out
+}
+
+#[test]
+fn every_row_of_every_normative_diagnostics_table_fires_its_code() {
+    let documents = normative_documents();
+    assert!(
+        documents.len() >= 2,
+        "found {documents:?} — the walk is broken, not the documents"
+    );
+    let mut wrong = Vec::new();
+    for (path, text) in &documents {
+        wrong.extend(fires_violations(path, text));
+    }
+    assert!(
+        wrong.is_empty(),
+        "{} row(s) whose input does not fire its code:\n\n{}",
+        wrong.len(),
+        wrong.join("\n\n")
     );
 }

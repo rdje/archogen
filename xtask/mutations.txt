@@ -259,3 +259,29 @@ from
 to
         if paths.len() > 2 {
 end
+
+mutation escape-refusal-built-and-dropped
+file crates/eadl-front/src/reader.rs
+test -p archogen-cli --test fires_on every_row_of_every_normative_diagnostics_table_fires_its_code
+expect killed
+why M1.26.2.2: the arm the column exists for — a call site still in the production half, so the census stays green, and no input reaches it any more. Only an executed `fires on` cell can see that.
+from
+                                self.diagnostics.push(Diagnostic::error(
+                                    "read-bad-escape",
+to
+                                let _dropped = (Diagnostic::error(
+                                    "read-bad-escape",
+end
+
+mutation escape-refusal-dropped-census-blind
+file crates/eadl-front/src/reader.rs
+test -p eadl-front --test reference the_reference_states_every_diagnostic_its_declared_sources_can_emit
+expect survives
+why M1.26.2.2: the control — the same mutation is invisible to the census, which scans for the constructor and asks nothing of an input. That blind spot is why the column exists.
+from
+                                self.diagnostics.push(Diagnostic::error(
+                                    "read-bad-escape",
+to
+                                let _dropped = (Diagnostic::error(
+                                    "read-bad-escape",
+end

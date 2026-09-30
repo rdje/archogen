@@ -91,6 +91,21 @@ one, and `crates/eadl-front/tests/conformance.rs` is what requires it.
 A string's **decoded value** column is written in the language's own escape notation, so it is
 unambiguous: a backslash in that column is always the start of one of the escapes this file defines.
 
+⭐ **§4's `fires on` column is an input, and it is run** (leaf `M1.26.2`). A row whose code no input can
+reach any more would otherwise read exactly like a live rule, because the census only asks whether a source
+still contains the constructor. So each cell names a door into the toolchain and what to feed it, and
+`crates/archogen-cli/tests/fires_on.rs` executes every one and requires the row's code among what fires:
+
+| Verb | Means |
+| --- | --- |
+| `check T` | `T` is a description, checked as `archogen check` checks one |
+| `modules T <mod N> U …` | `T` is a description, and each `<mod N>` segment is the module file `N.eadl` beside it |
+| `kinds K <validate> D` | `K` is a kind module, loaded as the toolchain loads its own; then each declaration in `D` is validated against the registry `K` built |
+| `none: R` | no writable input fires the code, for the reason `R`, which may not be empty |
+
+The `<0xNN>` marker works in these cells as in a source cell. A cell nothing can parse is a violation, and
+never a skipped row.
+
 ## 1. Numbers are exact
 
 A numeric literal denotes an exact rational number. There is no floating-point value in the language,
@@ -361,70 +376,70 @@ repair direction: a refusal that does not say what to do costs an author an edit
 cheapest diagnostic to write is the most expensive to receive.
 
 <!-- machine-read: diagnostics -->
-| code | when it fires | what to do |
-| --- | --- | --- |
-| `read-unclosed-list` | a `(` is never matched and the input ends inside it | add the matching `)`; the diagnostic also labels where the list opened |
-| `read-unexpected-close` | a `)` appears with no list open | remove it, or add the `(` that was meant to open a list |
-| `read-unexpected-character` | a byte that can start nothing **between forms**, which in practice means a stray control character; inside a string the same byte is `read-control-character` | delete it — a form is a list `(…)`, a symbol, a number or a string |
-| `read-unterminated-string` | a `"` is not closed before the end of its line, or before the end of the input | close the string on its own line, or escape the newline as `\n`; there is no multi-line string (§2 rule 3) |
-| `read-bad-escape` | a backslash inside a string is followed by anything other than the escapes §2 defines, including a `\u` escape that is not shaped like one | use one of those; the diagnostic names the set |
-| `read-control-character` | a **raw** control character inside a string: anything in Unicode `Cc` except tab, which is whitespace the grammar names (§2 rule 2) | write the escape instead — `\n`, `\t`, `\r`, or `\u{…}` for any other character |
-| `read-escape-out-of-range` | a **well-formed** `\u{…}` escape that names no Unicode scalar value — a surrogate, or a code point past `10ffff` (§2 rule 2) | write a code point that denotes a character; a surrogate denotes one only inside a UTF-16 encoding |
-| `read-malformed-number` | an atom that begins with a digit, or with a sign and a digit, and is not a number — a second decimal point, an exponent, a unit glued to the magnitude, `0x` with no digits after it, or a separator leading them | write an integer or a decimal; a unit goes in a following atom, `10 ms` |
-| `read-number-overflow` | a **well-formed** literal whose value lies outside the 64-bit signed range, which §1 rule 9 makes a property of this version of the language rather than of an implementation | reduce the magnitude or change its units; an address with its most significant bit set is writable as the negative value it is two's-complement equal to (§1 rule 10) |
-| `module-not-a-module` | a file resolved as a module does not begin with a `defmodule` declaration | write `(defmodule <name> (version <major> <minor>) …)` |
-| `module-missing-name` | a `defmodule` carries no name | write `(defmodule platform.timer (version 1 0) …)` |
-| `module-bad-version` | `version` is not a major and a minor integer | write `(version 1 0)` |
-| `module-missing-version` | a module declares no version | write `(version 1 0)` — an unversioned module cannot be required by an importer, and §15 needs a version to lock |
-| `module-bad-param` | a `param` clause does not name its parameter | write `(param tick-rate (default 10 MHz))` |
-| `module-bad-export` | an `export` entry is not a name | write `(export timer.counter timer.compare)` |
-| `module-conflicting-export` | one name is exported twice by one module | export each name once — two exports give an importer two answers and no rule for choosing |
-| `module-dangling-export` | a module exports a name it does not declare | export only what the module declares, or declare it |
-| `module-bare-form` | a module holds a form that is neither a declaration nor a module clause | every item in a module is a declaration or a clause; move anything else out |
-| `module-empty` | a module file holds no declaration | a module file holds exactly one `(defmodule …)` form |
-| `module-multiple-forms` | a module file holds more than one top-level form | keep one `(defmodule …)` per file and move the rest into their own modules |
-| `module-not-found` | an import names a module no file in the module path holds — `a.b` is read from `a.b.eadl` in the directory holding the description (§6 rule 7) | check the name, or put the module beside the description as `<name>.eadl` |
-| `module-name-mismatch` | the name a module declares is not the name it was imported by | make them match — a locked build cannot otherwise tell which module it locked |
-| `module-too-large` | a module has more addressable parts than an instance identifier can hold | split the module |
-| `module-circular-import` | a module imports something that imports it back | break the cycle: elaboration is children-before-parents, so a cycle has no first instance |
-| `module-bad-import` | an `import` does not name a module | write `(import platform.timer (as timer))` |
-| `module-unknown-import-clause` | an import holds a clause that is not `as`, `version` or `with` | an import holds `as`, `version` and `with` |
-| `module-bad-alias` | `as` is not given a namespace name | write `(as timer)` |
-| `module-conflicting-alias` | two imports in one module bind the same alias | give one a different namespace, e.g. `(as timer_2)` — one alias for two imports makes every qualified name ambiguous |
-| `module-bad-version-requirement` | an import's `version` is not `(version (at-least <major> <minor>))` | write `(version (at-least 1 0))` |
-| `module-incompatible-version` | the module found does not satisfy the requirement | the majors must be equal and the minor at least the required one; a major bump is never silently accepted |
-| `module-unknown-parameter` | an import binds a parameter the module does not declare | the diagnostic lists the parameters it does declare |
-| `module-missing-argument` | an import leaves a parameter that has no default unbound | add `(with (<param> <value>))` to the import |
-| `module-bad-argument` | a `with` binding is not written `(<param> <value>)` | write `(with (tick-rate 20 MHz))` |
-| `module-not-exported` | a name written through an import's alias is not one that import's module exports (§6 rule 10) | export it from that module, or name one of its exports — the diagnostic lists them |
-| `schema-not-a-kind` | a form read as a kind definition is not a `defkind` | write `(defkind <head> (doc "…") (name …) (clause …) …)` |
-| `schema-missing-kind-head` | a `defkind` does not name the declaration head it defines | write `(defkind defservice …)` |
-| `schema-duplicate-kind` | one declaration head is defined twice | remove one — redefining a kind would silently change what already-written descriptions mean |
-| `schema-missing-doc` | a kind definition does not say what the kind is for | write `(doc "one line saying what this kind describes")` |
-| `schema-bad-doc` | `doc` is not one quoted string | write `(doc "what this kind is for")` |
-| `schema-unknown-kind-field` | a kind definition holds a field that is not `doc`, `name` or `clause` | it holds those and nothing else, because it defines well-formedness rather than behavior |
-| `schema-bad-name-rule` | `name` is neither `required` nor `forbidden` | write `(name required)` when the declaration is written `(<head> <name> …)` |
-| `schema-missing-clause-head` | a `clause` does not name the clause it declares | write `(clause <name> (cardinality …) (holds …))` |
-| `schema-duplicate-clause` | one clause is declared twice in a kind | declare each once, and use `(cardinality any)` to allow repetition in a description |
-| `schema-duplicate-name` | two declarations carry one name — in a module tree, after §6 rule 9 has named them (§7 rule 6) | rename one: a name means one declaration, and the diagnostic names both sites |
-| `schema-unknown-clause-field` | a clause declaration holds a field that is not `cardinality` or `holds` | a clause declaration holds those two |
-| `schema-bad-cardinality` | `cardinality` is not one of `one`, `at-most-one`, `one-or-more`, `any` | use one of those spellings; the diagnostic lists them |
-| `schema-bad-holds` | `holds` is not `forms`, `values <type>…` or `kind <name>` | write `(holds kind task)` to have each occurrence validated as a declaration of that kind |
-| `schema-bad-value-type` | a `holds values` type is not one the schema knows | the value types are `symbol`, `integer`, `decimal`, `number`, `string`, `any`, `quantity` |
-| `schema-unknown-referenced-kind` | a clause holds a kind that is not registered | register the module that defines it — the workload kinds live in `docs/semantics/kinds/os-rt.eadl` |
-| `schema-not-a-declaration` | a top-level form is not a declaration | declarations are written `(defservice time.monotonic …)` |
-| `schema-unknown-kind` | a declaration's head is not a registered kind | the diagnostic names the kinds that are |
-| `schema-missing-name` | a declaration of a kind that requires a name carries none | write `(<head> <name> …)` |
-| `schema-not-a-clause` | a declaration holds a form that is not one of its kind's clauses | the diagnostic lists the clauses that are |
-| `schema-unknown-clause` | a declaration holds a clause its kind does not define | the diagnostic lists the clauses it does define |
-| `schema-cardinality` | a clause appears a number of times its kind's cardinality forbids | keep the number of `(clause …)` occurrences the cardinality allows |
-| `schema-arity` | a clause does not hold the number of values its kind requires | the diagnostic names the clause, the number required and the number found |
-| `schema-type` | a value in a clause is not of the type the kind declares for it | write a value of the declared type |
-| `language-version-unknown` | a **well-formed** `(eadl-version …)` names a version this toolchain does not read (§8 rule 6) | write `(eadl-version eadl/1)`; a description is never silently re-read as another version |
-| `language-version-not-an-identifier` | the identifier is not a bare symbol — a string, a number or a list (§8 rule 5) | write `(eadl-version eadl/1)`; `"eadl/1"` is a string and is not the same atom |
-| `language-version-missing` | an `(eadl-version …)` form carries no identifier at all | write `(eadl-version eadl/1)` |
-| `language-version-extra-argument` | an `(eadl-version …)` form carries more than the one identifier | keep `(eadl-version eadl/1)` and delete what follows it |
-| `language-version-duplicated` | a description states its language version more than once (§8 rule 5) | keep one `(eadl-version eadl/1)` and delete the other |
+| code | when it fires | what to do | fires on |
+| --- | --- | --- | --- |
+| `read-unclosed-list` | a `(` is never matched and the input ends inside it | add the matching `)`; the diagnostic also labels where the list opened | `check (defsystem heartbeat` |
+| `read-unexpected-close` | a `)` appears with no list open | remove it, or add the `(` that was meant to open a list | `check (defsystem heartbeat))` |
+| `read-unexpected-character` | a byte that can start nothing **between forms**, which in practice means a stray control character; inside a string the same byte is `read-control-character` | delete it — a form is a list `(…)`, a symbol, a number or a string | `check (defsystem heartbeat)<0x1b>` |
+| `read-unterminated-string` | a `"` is not closed before the end of its line, or before the end of the input | close the string on its own line, or escape the newline as `\n`; there is no multi-line string (§2 rule 3) | `check (defsystem heartbeat (doc "no end))` |
+| `read-bad-escape` | a backslash inside a string is followed by anything other than the escapes §2 defines, including a `\u` escape that is not shaped like one | use one of those; the diagnostic names the set | `check (defsystem heartbeat (doc "\q"))` |
+| `read-control-character` | a **raw** control character inside a string: anything in Unicode `Cc` except tab, which is whitespace the grammar names (§2 rule 2) | write the escape instead — `\n`, `\t`, `\r`, or `\u{…}` for any other character | `check (defsystem heartbeat (doc "a<0x07>b"))` |
+| `read-escape-out-of-range` | a **well-formed** `\u{…}` escape that names no Unicode scalar value — a surrogate, or a code point past `10ffff` (§2 rule 2) | write a code point that denotes a character; a surrogate denotes one only inside a UTF-16 encoding | `check (defsystem heartbeat (doc "\u{d800}"))` |
+| `read-malformed-number` | an atom that begins with a digit, or with a sign and a digit, and is not a number — a second decimal point, an exponent, a unit glued to the magnitude, `0x` with no digits after it, or a separator leading them | write an integer or a decimal; a unit goes in a following atom, `10 ms` | `check (defsystem heartbeat (priority 1.2.3))` |
+| `read-number-overflow` | a **well-formed** literal whose value lies outside the 64-bit signed range, which §1 rule 9 makes a property of this version of the language rather than of an implementation | reduce the magnitude or change its units; an address with its most significant bit set is writable as the negative value it is two's-complement equal to (§1 rule 10) | `check (defsystem heartbeat (priority 9223372036854775808))` |
+| `module-not-a-module` | a file resolved as a module does not begin with a `defmodule` declaration | write `(defmodule <name> (version <major> <minor>) …)` | `modules (defmodule app (version 1 0) (import hw.plain)) <mod hw.plain>(defblock plain (offers (p 1 bit)))` |
+| `module-missing-name` | a `defmodule` carries no name | write `(defmodule platform.timer (version 1 0) …)` | `check (defmodule (version 1 0))` |
+| `module-bad-version` | `version` is not a major and a minor integer | write `(version 1 0)` | `check (defmodule app (version one zero))` |
+| `module-missing-version` | a module declares no version | write `(version 1 0)` — an unversioned module cannot be required by an importer, and §15 needs a version to lock | `check (defmodule app (export thing) (defblock thing (offers (p 1 bit))))` |
+| `module-bad-param` | a `param` clause does not name its parameter | write `(param tick-rate (default 10 MHz))` | `check (defmodule app (version 1 0) (param (default 1)))` |
+| `module-bad-export` | an `export` entry is not a name | write `(export timer.counter timer.compare)` | `check (defmodule app (version 1 0) (export "thing"))` |
+| `module-conflicting-export` | one name is exported twice by one module | export each name once — two exports give an importer two answers and no rule for choosing | `check (defmodule app (version 1 0) (export thing) (export thing) (defblock thing (offers (p 1 bit))))` |
+| `module-dangling-export` | a module exports a name it does not declare | export only what the module declares, or declare it | `check (defmodule app (version 1 0) (export absent) (defblock present (offers (p 1 bit))))` |
+| `module-bare-form` | a module holds a form that is neither a declaration nor a module clause | every item in a module is a declaration or a clause; move anything else out | `check (defmodule app (version 1 0) stray)` |
+| `module-empty` | a module file holds no declaration | a module file holds exactly one `(defmodule …)` form | `modules (defmodule app (version 1 0) (import hw.nothing)) <mod hw.nothing>(eadl-version eadl/1)` |
+| `module-multiple-forms` | a module file holds more than one top-level form | keep one `(defmodule …)` per file and move the rest into their own modules | `check (defmodule app (version 1 0)) (defblock stray (offers (p 1 bit)))` |
+| `module-not-found` | an import names a module no file in the module path holds — `a.b` is read from `a.b.eadl` in the directory holding the description (§6 rule 7) | check the name, or put the module beside the description as `<name>.eadl` | `check (defmodule app (version 1 0) (import hw.absent))` |
+| `module-name-mismatch` | the name a module declares is not the name it was imported by | make them match — a locked build cannot otherwise tell which module it locked | `modules (defmodule app (version 1 0) (import hw.misnamed)) <mod hw.misnamed>(defmodule hw.clock (version 1 0))` |
+| `module-too-large` | a module's text is larger than a span can address: over 4 GiB, because a span is a 32-bit byte offset (`SourceMap::add`) | split the module | `none: a module text over 4 GiB, which a span, a 32-bit byte offset, cannot address; no fixture of any sane size carries one (SourceMap::add in crates/eadl-front/src/source.rs)` |
+| `module-circular-import` | a module imports something that imports it back | break the cycle: elaboration is children-before-parents, so a cycle has no first instance | `modules (defmodule app (version 1 0) (import cycle.b)) <mod cycle.b>(defmodule cycle.b (version 1 0) (import cycle.c)) <mod cycle.c>(defmodule cycle.c (version 1 0) (import cycle.b))` |
+| `module-bad-import` | an `import` does not name a module | write `(import platform.timer (as timer))` | `check (defmodule app (version 1 0) (import (as timer)))` |
+| `module-unknown-import-clause` | an import holds a clause that is not `as`, `version` or `with` | an import holds `as`, `version` and `with` | `modules (defmodule app (version 1 0) (import hw.timer (alias timer))) <mod hw.timer>(defmodule hw.timer (version 1 0))` |
+| `module-bad-alias` | `as` is not given a namespace name | write `(as timer)` | `modules (defmodule app (version 1 0) (import hw.timer (as "timer"))) <mod hw.timer>(defmodule hw.timer (version 1 0))` |
+| `module-conflicting-alias` | two imports in one module bind the same alias | give one a different namespace, e.g. `(as timer_2)` — one alias for two imports makes every qualified name ambiguous | `modules (defmodule app (version 1 0) (import hw.timer (as t)) (import os.time (as t))) <mod hw.timer>(defmodule hw.timer (version 1 0)) <mod os.time>(defmodule os.time (version 1 0))` |
+| `module-bad-version-requirement` | an import's `version` is not `(version (at-least <major> <minor>))` | write `(version (at-least 1 0))` | `modules (defmodule app (version 1 0) (import hw.timer (version 1 0))) <mod hw.timer>(defmodule hw.timer (version 1 0))` |
+| `module-incompatible-version` | the module found does not satisfy the requirement | the majors must be equal and the minor at least the required one; a major bump is never silently accepted | `modules (defmodule app (version 1 0) (import hw.timer (version (at-least 2 0)))) <mod hw.timer>(defmodule hw.timer (version 1 0))` |
+| `module-unknown-parameter` | an import binds a parameter the module does not declare | the diagnostic lists the parameters it does declare | `modules (defmodule app (version 1 0) (import hw.timer (with (tickrate (tick-rate 1 MHz))))) <mod hw.timer>(defmodule hw.timer (version 1 0) (param tick-rate (default (tick-rate 10 MHz))))` |
+| `module-missing-argument` | an import leaves a parameter that has no default unbound | add `(with (<param> <value>))` to the import | `modules (defmodule app (version 1 0) (import hw.sized)) <mod hw.sized>(defmodule hw.sized (version 1 0) (param size))` |
+| `module-bad-argument` | a `with` binding is not written `(<param> <value>)` | write `(with (tick-rate 20 MHz))` | `modules (defmodule app (version 1 0) (import hw.timer (with 5))) <mod hw.timer>(defmodule hw.timer (version 1 0) (param tick-rate (default (tick-rate 10 MHz))))` |
+| `module-not-exported` | a name written through an import's alias is not one that import's module exports (§6 rule 10) | export it from that module, or name one of its exports — the diagnostic lists them | `modules (defmodule app (version 1 0) (import hw.private (as parts)) (defsystem app.rt (requires (uses parts.private.part)))) <mod hw.private>(defmodule hw.private (version 1 0) (export public.part) (defblock public.part (offers (p 1 bit))) (defblock private.part (offers (p 1 bit))))` |
+| `schema-not-a-kind` | a form read as a kind definition is not a `defkind` | write `(defkind <head> (doc "…") (name …) (clause …) …)` | `kinds (defservice x)` |
+| `schema-missing-kind-head` | a `defkind` does not name the declaration head it defines | write `(defkind defservice …)` | `kinds (defkind (doc "a thing") (name required))` |
+| `schema-duplicate-kind` | one declaration head is defined twice | remove one — redefining a kind would silently change what already-written descriptions mean | `kinds (defkind defthing (doc "a thing") (name required)) (defkind defthing (doc "a thing") (name required))` |
+| `schema-missing-doc` | a kind definition does not say what the kind is for | write `(doc "one line saying what this kind describes")` | `kinds (defkind defthing (name required))` |
+| `schema-bad-doc` | `doc` is not one quoted string | write `(doc "what this kind is for")` | `kinds (defkind defthing (doc 42) (name required))` |
+| `schema-unknown-kind-field` | a kind definition holds a field that is not `doc`, `name` or `clause` | it holds those and nothing else, because it defines well-formedness rather than behavior | `kinds (defkind defthing (doc "a thing") (name required) (colour red))` |
+| `schema-bad-name-rule` | `name` is neither `required` nor `forbidden` | write `(name required)` when the declaration is written `(<head> <name> …)` | `kinds (defkind defthing (doc "a thing") (name sometimes))` |
+| `schema-missing-clause-head` | a `clause` does not name the clause it declares | write `(clause <name> (cardinality …) (holds …))` | `kinds (defkind defthing (doc "a thing") (name required) (clause (cardinality one) (holds forms)))` |
+| `schema-duplicate-clause` | one clause is declared twice in a kind | declare each once, and use `(cardinality any)` to allow repetition in a description | `kinds (defkind defthing (doc "a thing") (name required) (clause c (cardinality one) (holds forms)) (clause c (cardinality one) (holds forms)))` |
+| `schema-duplicate-name` | two declarations carry one name — in a module tree, after §6 rule 9 has named them (§7 rule 6) | rename one: a name means one declaration, and the diagnostic names both sites | `check (defblock b (offers (p 1 bit))) (defblock b (offers (p 1 bit)))` |
+| `schema-unknown-clause-field` | a clause declaration holds a field that is not `cardinality` or `holds` | a clause declaration holds those two | `kinds (defkind defthing (doc "a thing") (name required) (clause c (cardinality one) (holds forms) (colour red)))` |
+| `schema-bad-cardinality` | `cardinality` is not one of `one`, `at-most-one`, `one-or-more`, `any` | use one of those spellings; the diagnostic lists them | `kinds (defkind defthing (doc "a thing") (name required) (clause c (cardinality lots) (holds forms)))` |
+| `schema-bad-holds` | `holds` is not `forms`, `values <type>…` or `kind <name>` | write `(holds kind task)` to have each occurrence validated as a declaration of that kind | `kinds (defkind defthing (doc "a thing") (name required) (clause c (cardinality one) (holds everything)))` |
+| `schema-bad-value-type` | a `holds values` type is not one the schema knows | the value types are `symbol`, `integer`, `decimal`, `number`, `string`, `any`, `quantity` | `kinds (defkind defthing (doc "a thing") (name required) (clause c (cardinality one) (holds values colour)))` |
+| `schema-unknown-referenced-kind` | a clause holds a kind that is not registered | register the module that defines it — the workload kinds live in `docs/semantics/kinds/os-rt.eadl` | `kinds (defkind defthing (doc "a thing") (name required) (clause c (cardinality one) (holds kind nosuch))) <validate>(defthing x (c (y)))` |
+| `schema-not-a-declaration` | a top-level form is not a declaration | declarations are written `(defservice time.monotonic …)` | `check stray` |
+| `schema-unknown-kind` | a declaration's head is not a registered kind | the diagnostic names the kinds that are | `check (defthing x)` |
+| `schema-missing-name` | a declaration of a kind that requires a name carries none | write `(<head> <name> …)` | `check (defservice (requires (needs counter-width)))` |
+| `schema-not-a-clause` | a declaration holds a form that is not one of its kind's clauses | the diagnostic lists the clauses that are | `check (defservice time.monotonic stray)` |
+| `schema-unknown-clause` | a declaration holds a clause its kind does not define | the diagnostic lists the clauses it does define | `check (defservice time.monotonic (requries (needs counter-width)))` |
+| `schema-cardinality` | a clause appears a number of times its kind's cardinality forbids | keep the number of `(clause …)` occurrences the cardinality allows | `check (defblock b (absent debug-port))` |
+| `schema-arity` | a clause does not hold the number of values its kind requires | the diagnostic names the clause, the number required and the number found | `check (defsystem s (task t (period 10 ms) (deadline 10 ms) (priority 1 2)))` |
+| `schema-type` | a value in a clause is not of the type the kind declares for it | write a value of the declared type | `check (defsystem s (task t (period 10 ms) (deadline 10 ms) (priority fast)))` |
+| `language-version-unknown` | a **well-formed** `(eadl-version …)` names a version this toolchain does not read (§8 rule 6) | write `(eadl-version eadl/1)`; a description is never silently re-read as another version | `check (eadl-version eadl/9)` |
+| `language-version-not-an-identifier` | the identifier is not a bare symbol — a string, a number or a list (§8 rule 5) | write `(eadl-version eadl/1)`; `"eadl/1"` is a string and is not the same atom | `check (eadl-version "eadl/1")` |
+| `language-version-missing` | an `(eadl-version …)` form carries no identifier at all | write `(eadl-version eadl/1)` | `check (eadl-version)` |
+| `language-version-extra-argument` | an `(eadl-version …)` form carries more than the one identifier | keep `(eadl-version eadl/1)` and delete what follows it | `check (eadl-version eadl/1 eadl/2)` |
+| `language-version-duplicated` | a description states its language version more than once (§8 rule 5) | keep one `(eadl-version eadl/1)` and delete the other | `check (eadl-version eadl/1) (eadl-version eadl/1)` |
 
 ### The rules those rows state
 
