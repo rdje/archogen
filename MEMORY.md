@@ -19,12 +19,13 @@
 - **Next action:** **`M2.7.1`**. Run round 6 of the independent review of `docs/decisions/decision_catalog-records.md`
   in a new read-only context; round 5 is answered, and the history is in `decision_catalog-records-reviews.md`.
   Close the leaf when a round finds no defect; its "To close" says what round 6 must re-check. Then
-  `M2.7.3`–`M2.7.5`, then `API.5`.
+  `M2.7.3`–`M2.7.5`, then `API.6`.
 - **In flight:** branch **`wip/m2.9`** (`758cbcd`) is a checkpoint, not a finished leaf — `M2.9` records it as
   not compiling (`crates/rt-core/tests/differential.rs` unadapted).
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M2.9` — §6 (a)
-  and (b), two rulings on `ROADMAP` §3.1.1; `PROGRAM.31`/`.32` — §8; `M5` — no board procured.
+  and (b), two rulings on `ROADMAP` §3.1.1; `PROGRAM.31`/`.32` — §8; `M5` — no board procured;
+  `API.5.5` — the page run in a browser (a session with browser tools, or the director).
 - **Derive, don't copy:** the test baseline is `cargo test --all -q` (must be 0 failed); the push distance
   and the ruled threshold are `bash scripts/push_cadence.sh`; the integration tier is
   `cargo xtask verify --tier integration`.

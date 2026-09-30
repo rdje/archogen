@@ -511,8 +511,9 @@ agent can drive. The server is a capability of the built binary, spawned per ins
 
 - ID: `API.5`
   Status: `active`
-  Children: `API.5.1`, `API.5.2`, `API.5.3`, `API.5.4` — decomposed `2026-09-30`: the design decided first, then the
-  crate tested on the host, then the artifact checked against the CLI, then the page and the book
+  Children: `API.5.1`, `API.5.2`, `API.5.3`, `API.5.4`, `API.5.5` — decomposed `2026-09-30`: the design decided
+  first, then the crate tested on the host, then the artifact checked against the CLI, then the page and the book,
+  then the page run in a real browser
   ⚠️ From `API.1`'s measurement: the crates this binding needs most do I/O today — `eadl-front`'s module loader reads
   files through `DirectoryModules` (the `ModuleSource` trait is the seam to supply another), and `archogen-s0`'s
   emitter writes the generated crate to a directory. Both compile for wasm32; neither would work there as written.
@@ -638,11 +639,56 @@ agent can drive. The server is a capability of the built binary, spawned per ins
     leaf, the frontier, both logs and `CHANGELOG.md`.
 
 - ID: `API.5.4`
-  Status: `pending`
+  Status: `done`
   Goal: the page and the book — a page that loads the artifact, checks a description typed into it and shows the
   verdict; the book documents the binding and how to open the page.
   Acceptance: the page's loader is the one `API.5.3` checks; the chapter's transcript is reproduced by a test;
   `make integration` exit `0` or naming what is incomplete.
+  Verification: see the checklist. ⚠️ The page has not been run in a browser: that is `API.5.5`, filed rather than
+  claimed.
+  Commit: `ARCHOGEN-API-0205 (leaf API.5.4)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — the artifact existed and was checked, and no page loaded it:
+    `git ls-files crates/archogen-wasm/page` → nothing, and the book said "the page and its instructions come last".
+  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE the page can drift from what is checked: its request, its display and
+    its loader. So all three are shared rather than restated. `page.mjs` exports `request` and `show`, which
+    `node scripts/wasm_binding.mjs show` imports, and it loads the binding through `js/archogen.mjs`, which
+    `API.5.3` checks. WHY the book's transcript shows an accepted description: a block holding an `error[` line is
+    claimed by `crates/archogen-cli/tests/book_transcripts.rs`, whose backlog of unreproducible blocks may not grow,
+    and a refused answer's diagnostics are already byte-identical to the command line's for every tracked
+    description (`API.5.3`). `cargo test -q -p archogen-cli --test book_transcripts` → `6 passed` with the new
+    section in place.
+  - [x] **FIX** — `crates/archogen-wasm/page/index.html` and `page.mjs` (`request`, `show`, `wire`); the book's "The
+    binding a web page loads" with "Opening the page" and a marked transcript; `scripts/wasm_binding.sh`'s fourth
+    leg, which types the transcript's input into the page's logic and requires the chapter's answer, with five new
+    RED arms, and its fifth, which runs the page's own wiring.
+  - [x] **ADDRESSED (verified)** — `bash scripts/wasm_binding.sh` → rc=0, `… the book's page transcript is what the page
+    shows`. RED on the real tree: the book's answer edited to `2 declaration(s)` → rc=1 with the difference shown,
+    then restored → rc=0. `bash scripts/wasm_binding.sh --self-test` → `11 pass / 0 fail (11 arms)`. The page's
+    own wiring is the harness's fifth leg (`node scripts/wasm_binding.mjs page`): `page.mjs` exports `wire`, which
+    is run against a stand-in document whose `fetch` reads the file the page's relative URL names. It must fetch
+    the module under test, show `index.html`'s default description's answer on load (`invalid-description
+    (exit 10)` with its `parsec` diagnostic), and show the book's answer after Check. Its first run failed
+    (rc=1, `ENOENT … open ''`): the harness's static import had loaded `page.mjs` before the stand-in existed, so
+    the page never wired itself. Hence `wire` is exported and called, not triggered by a global. RED: the wiring
+    edited to show raw JSON → rc=1, `on load the page showed: …`, then restored → rc=0.
+    Served by the book's own command (`python3 -m http.server`, Python 3.14.7), `curl` → the page `200 text/html`,
+    both modules `200 text/javascript`, the artifact `200 application/wasm`; the server was stopped afterwards.
+  - [x] **NO REGRESSION** — `cargo xtask verify --tier integration` → `tier integration: passed — 11 passed, 0 failed,
+    0 unavailable`; `cargo test -q -p eadl-front --test reference` → `55 passed`; `check_book_anchors.sh` → OK.
+  - [x] **LOCKSTEP** — `docs/book/src/engine-api.md`; `TOOLBOX.md`'s browser-module row; this leaf, `API.5.5`, the
+    frontier, both logs and `CHANGELOG.md`.
+
+- ID: `API.5.5`
+  Status: `blocked` — on a browser: this session had no browser tools, and the page has never run in one
+  Goal: the page run in a real browser, as `API.5`'s acceptance asks: "a worked example checks a real description in
+  a browser and shows the verdict".
+  Acceptance: the book's "Opening the page" followed in a browser; the answer on load is the default description's
+  `invalid-description (exit 10)` with its `parsec` diagnostic; after Check with the book's description, the
+  book's transcript; the browser's name and version recorded here.
+  Unblocked by: a session with browser tools, or the director running those steps and reporting what the page shows.
   Verification: `pending`
   Commit: `pending`
 
@@ -677,7 +723,7 @@ agent can drive. The server is a capability of the built binary, spawned per ins
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `API.5` | `active` | the wasm binding: designed, built, and its artifact checked against the host build and the CLI (`API.5.1`–`API.5.3`); the page and the book (`API.5.4`) next |
+| 1 | `API.5` | `active` | the wasm binding, built, checked and documented with its page (`API.5.1`–`API.5.4`); only a run in a real browser remains (`API.5.5`, blocked on a browser) |
 | 2 | `API.6` | `pending` | the MCP server — the point of the tree, and last because everything above is what makes it safe to hand to an arbitrary agent |
 | 3 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6` |
 
@@ -747,6 +793,7 @@ this tree is taken when it does not delay that.
 | `2026-09-30` | `API.5.1` | a throwaway `cdylib` for `wasm32-unknown-unknown` on the pinned toolchain, read by `WebAssembly.Module`; `#[no_mangle]` under `deny(unsafe_code)`; the module-file rule read from `eadl-front` | no imports; `memory`, the functions and two linker globals exported; the lint refuses each unmangled export; `<dir>/<module>.eadl` |
 | `2026-09-30` | `API.5.2` | the host tests; the same tests under Miri; two catalogued mutations; the shape golden blessed once; the focused tier, the wasm build and the gates | 8 of 8, and 8 of 8 under Miri; both mutations killed; the golden passes unblessed; all green |
 | `2026-09-30` | `API.5.3` | the artifact inspected by `WebAssembly.Module`; every tracked description through the loader, against the host build and `archogen check`; six RED arms; a broken loader on the real tree; the integration tier | no imports, the decided exports; 108 of 108 byte-identical, each exit equal; 6 of 6; refused, then green when restored; 11 of 11 |
+| `2026-09-30` | `API.5.4` | the book's page transcript through the page's own logic; five new RED arms and a real-tree RED; the page's wiring against a stand-in document; the book's serving command read with `curl`; the integration tier | reproduced; 11 of 11 arms, refused then green; both answers as expected; every file with its right content type; 11 of 11 — no browser run (`API.5.5`) |
 
 ## Commit Log
 
@@ -764,6 +811,7 @@ this tree is taken when it does not delay that.
 | `API.5.1` | `ARCHOGEN-API-0201 (leaf API.5.1)` | **the wasm binding decided** — three exports, a framed request, a versioned JSON response, no imports as the authority test |
 | `API.5.2` | `ARCHOGEN-API-0202 (leaf API.5.2)` | **the wasm binding, built and tested on the host** — `crates/archogen-wasm`, its framing, its encoding and its three exports |
 | `API.5.3` | `ARCHOGEN-API-0203 (leaf API.5.3)` | **the browser module answers as the command line does** — the `wasm-binding` tier step, the loader and the harness |
+| `API.5.4` | `ARCHOGEN-API-0205 (leaf API.5.4)` | **the page** — `crates/archogen-wasm/page/`, documented with a transcript the tier reproduces; `API.5.5` filed for the browser run this session could not make |
 
 ## Changelog
 

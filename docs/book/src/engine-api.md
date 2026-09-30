@@ -126,9 +126,9 @@ language's limits still apply to it, because they belong to the language.
 - **They say the same thing.** Over every description in the repository, the command line's exit
   code, diagnostic codes and notes equal the API's status, diagnostic codes and notes.
 
-## The binding a web page will load
+## The binding a web page loads
 
-A page will reach the API through `archogen-wasm` (`crates/archogen-wasm/src/lib.rs`), a module built for
+A page reaches the API through `archogen-wasm` (`crates/archogen-wasm/src/lib.rs`), a module built for
 `wasm32-unknown-unknown` (`docs/decisions/decision_wasm-binding.md`). A page asks it three things: a buffer for
 its request, an answer, and where the answer is. The request carries the description, its profile and its
 modules as length-prefixed text. The answer is JSON in one fixed encoding, and it carries every field of the
@@ -141,12 +141,37 @@ API's response, including the diagnostics rendered exactly as the command line p
 
 The instance, not the page, sets what one request may cost, so a page cannot raise the budget above. A request
 the module cannot read is answered `usage`, with a note naming the field and the byte where it went wrong, and
-nothing is judged.
+nothing is judged. The module imports nothing, so whatever page loads it, it cannot read a file or send anything
+anywhere. [Verifying the toolchain](verification.md) shows how that, and its answers, are checked.
 
-What exists today is the crate and its tests on the host (`crates/archogen-wasm/tests/binding.rs`). The tests
-compare each answer with the API's field by field, and freeze the answer's shape under its format name. The
-module itself will be checked against the command line (leaf `API.5.3`), and the page and its instructions come
-last (leaf `API.5.4`).
+### Opening the page
+
+`crates/archogen-wasm/page/index.html` is a page that checks a description typed into it. A browser loads
+modules only over HTTP, so build the module and serve the repository's root:
+
+```console
+$ cargo build --release -p archogen-wasm --target wasm32-unknown-unknown
+$ python3 -m http.server 8000
+```
+
+Then open `http://localhost:8000/crates/archogen-wasm/page/`. The page loads the module through
+`crates/archogen-wasm/js/archogen.mjs`, the same loader the checks use, and answers each time Check is pressed.
+It shows the outcome and its exit code first. For a description that is refused, it then shows the diagnostics
+exactly as `archogen check` prints them. For one that is accepted, it shows what the description was judged
+under. Typed into the page, this description:
+
+<!-- wasm-page-transcript: the harness (scripts/wasm_binding.sh) types the first block into the page's logic and
+     compares its answer with the second -->
+```eadl
+(defblock console.uart (offers observable-output))
+```
+
+is answered:
+
+```text
+ok (exit 0)
+accepted against profile rt-static-up-v1 (eadl/1), 1 declaration(s)
+```
 
 ## What is outside it
 

@@ -1,0 +1,40 @@
+<!doctype html>
+<!-- archogen's description checker in a web page (leaf `API.5.4`, docs/decisions/decision_wasm-binding.md).
+     Serve the repository root over HTTP and open this file: a browser loads ES modules and the module over HTTP
+     only. The book's engine-API chapter says how. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archogen check</title>
+<style>
+  :root { --ink: #1d1d1f; --paper: #fbfbf8; --line: #c9c7bd; --muted: #5d5b54; }
+  @media (prefers-color-scheme: dark) { :root { --ink: #ecebe6; --paper: #1b1b1a; --line: #45443f; --muted: #a8a69d; } }
+  body { margin: 0 auto; max-width: 60rem; padding: 1.5rem 1rem; background: var(--paper); color: var(--ink);
+         font: 16px/1.5 system-ui, sans-serif; }
+  h1 { font-size: 1.25rem; margin: 0 0 0.25rem; }
+  p { color: var(--muted); margin: 0 0 1rem; }
+  label { display: block; font-weight: 600; margin: 0.75rem 0 0.25rem; }
+  textarea, input, pre { box-sizing: border-box; width: 100%; font: 14px/1.4 ui-monospace, monospace;
+                         color: var(--ink); background: transparent; border: 1px solid var(--line);
+                         border-radius: 4px; padding: 0.5rem; }
+  textarea { min-height: 12rem; resize: vertical; }
+  pre { white-space: pre-wrap; overflow-wrap: anywhere; min-height: 4rem; }
+  button { margin-top: 0.75rem; font: inherit; padding: 0.4rem 1rem; }
+</style>
+</head>
+<body>
+<h1>archogen check</h1>
+<p>Checks an eADL description against a profile, in this page. The module imports nothing, so it reads no file
+and sends nothing anywhere.</p>
+<label for="description">Description</label>
+<textarea id="description" spellcheck="false">(defblock timer.counter (offers (tick-rate 10 parsec)))
+</textarea>
+<label for="profile">Profile (empty for the default)</label>
+<input id="profile" value="">
+<button id="check" type="button">Check</button>
+<label for="output">Answer</label>
+<pre id="output" aria-live="polite">Loading the module…</pre>
+<script type="module" src="./page.mjs"></script>
+</body>
+</html>

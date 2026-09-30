@@ -10,7 +10,11 @@
 #   2. for every description in the population, the artifact's response, reached through
 #      crates/archogen-wasm/js/archogen.mjs as a page reaches it, is byte-identical to the host build's
 #      (`cargo run -p archogen-wasm --example answers`);
-#   3. for every description, the response's `exit` equals `archogen check`'s exit code for the same file.
+#   3. for every description, the response's `exit` equals `archogen check`'s exit code for the same file;
+#   4. the book's transcript of the page (docs/book/src/engine-api.md, the blocks after its
+#      `wasm-page-transcript` marker) is what the page's own logic shows for that input (leaf `API.5.4`);
+#   5. the page's own wiring, run against a stand-in document, fetches this artifact by its relative URL and shows
+#      its default description's answer on load, and the transcript input's answer after Check.
 # THE POPULATION is derived on every run: every tracked `*.eadl` outside `docs/feedback/` (the vendors' own
 # reproduction inputs).
 #
@@ -48,6 +52,29 @@ compare() {
     }' "$1"
 }
 
+CHAPTER="docs/book/src/engine-api.md"
+
+# The page transcript of chapter $1: its input into $2 and its answer into $3, from the first two fenced blocks
+# after the `wasm-page-transcript` marker. Exit 1 when the chapter shows none.
+page_transcript() {
+  awk -v input="$2" -v answer="$3" '
+    /<!-- wasm-page-transcript/ { marked = 1; next }
+    marked && /^```/ {
+      if (inside) { inside = 0; blocks++; if (blocks == 2) exit; next }
+      inside = 1; next
+    }
+    marked && inside { print > (blocks == 0 ? input : answer) }
+    END { if (blocks < 2) exit 1 }' "$1"
+}
+
+# Compare the page's answer $2 with the chapter's $1; print the difference and exit 1 when they differ.
+compare_page() {
+  if diff -u "$1" "$2" >/dev/null; then return 0; fi
+  echo "the book's page transcript ($CHAPTER) is not what the page shows for its input:"
+  diff -u "$1" "$2" | sed -n '3,12p'
+  return 1
+}
+
 self_test() {
   local arms=0 ok=0 work="$SCRATCH/selftest"
   rm -rf "$work"; mkdir -p "$work"
@@ -78,6 +105,16 @@ self_test() {
   head -1 "$work/wasm" > "$work/wasm-short"
   arm "a description the artifact did not answer is refused" 1 \
     "the artifact gave no response for b.eadl" compare "$work/list" "$work/native" "$work/wasm-short" "$work/cli"
+  printf 'text\n<!-- wasm-page-transcript -->\n```eadl\n(defblock a.b)\n```\n\nis answered:\n\n```text\nok (exit 0)\n```\n' \
+    > "$work/chapter.md"
+  arm "a chapter's page transcript is read: its input, then its answer" 0 "" page_transcript "$work/chapter.md" "$work/in" "$work/out"
+  arm "the transcript's input is the first block" 0 "(defblock a.b)" cat "$work/in"
+  printf 'ok (exit 0)\n' > "$work/shown"
+  arm "a page that shows the chapter's answer passes" 0 "" compare_page "$work/out" "$work/shown"
+  printf 'invalid-description (exit 10)\n' > "$work/shown-differs"
+  arm "a page that shows something else is refused" 1 "is not what the page shows" compare_page "$work/out" "$work/shown-differs"
+  printf 'no marker here\n' > "$work/unmarked.md"
+  arm "a chapter that shows no page transcript is refused" 1 "" page_transcript "$work/unmarked.md" "$work/in2" "$work/out2"
   if command -v node >/dev/null 2>&1; then
     # Minimal modules written byte by byte: the magic and version, a type section with one `() -> ()`, then
     #   an import of `env.f` (section 2), or
@@ -127,10 +164,18 @@ while IFS= read -r path; do
   echo "$?" >> "$SCRATCH/cli"
 done < "$SCRATCH/list"
 
-if result="$(compare "$SCRATCH/list" "$SCRATCH/native" "$SCRATCH/wasm" "$SCRATCH/cli")"; then
-  echo "wasm-binding: OK — the artifact imports nothing and exports what the record lists; $result answered byte for byte as the host build answers them, each with archogen check's exit code ($(node --version))"
-  exit 0
+if ! result="$(compare "$SCRATCH/list" "$SCRATCH/native" "$SCRATCH/wasm" "$SCRATCH/cli")"; then
+  printf '%s\n' "$result" | sed 's/^/wasm-binding: /' >&2
+  note "the artifact disagrees with the host build or the command line"
+  exit 1
 fi
-printf '%s\n' "$result" | sed 's/^/wasm-binding: /' >&2
-note "the artifact disagrees with the host build or the command line"
-exit 1
+page_transcript "$CHAPTER" "$SCRATCH/page-input" "$SCRATCH/page-answer" ||
+  { note "$CHAPTER shows no page transcript after a wasm-page-transcript marker"; exit 1; }
+node scripts/wasm_binding.mjs show "$WASM" "$SCRATCH/page-input" > "$SCRATCH/page-shown" || exit 1
+if ! page="$(compare_page "$SCRATCH/page-answer" "$SCRATCH/page-shown")"; then
+  printf '%s\n' "$page" | sed 's/^/wasm-binding: /' >&2
+  exit 1
+fi
+node scripts/wasm_binding.mjs page "$WASM" "$SCRATCH/page-input" || { note "the page's wiring did not answer as its logic does"; exit 1; }
+echo "wasm-binding: OK — the artifact imports nothing and exports what the record lists; $result answered byte for byte as the host build answers them, each with archogen check's exit code; the book's page transcript is what the page shows, and the page's wiring shows it ($(node --version))"
+exit 0

@@ -4,6 +4,21 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — a web page that checks a description
+
+`ARCHOGEN-API-0205` (leaf `API.5.4`).
+
+- `crates/archogen-wasm/page/` is a web page: type an eADL description, press Check, and it shows the verdict and
+  the diagnostics exactly as `archogen check` would. The engine-API chapter of the book says how to open it: build
+  the module, serve the repository, open the page.
+- The book shows what the page answers for an example, and the integration check reproduces that answer on every
+  run, so the chapter cannot drift from the page.
+- The page's own code, including how it loads the module and responds to the button, is run on every check against
+  a stand-in for the browser. Its first run caught a real mistake in how the check started the page, fixed before
+  commit.
+- Not done yet: the page has never been opened in a real browser, because this session had no browser tools. That
+  is filed as its own task (`API.5.5`) rather than claimed.
+
 ## archogen — the catalog design's fifth review answered
 
 `ARCHOGEN-M2-0204` (leaf `M2.7.1`, a third checkpoint).

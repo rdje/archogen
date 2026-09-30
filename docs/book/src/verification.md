@@ -260,6 +260,11 @@ page uses (`crates/archogen-wasm/js/archogen.mjs`). It checks three things:
 - **and the same verdict as the command line.** Each response's exit code equals what `archogen check` exits
   with for that file.
 
+It also runs the page's own code (`crates/archogen-wasm/page/page.mjs`) against a stand-in for the browser's
+document. The page must load this module, answer its default description on load, and show exactly what the
+engine-API chapter says it shows for that chapter's example. A browser has not run the page yet; that is still
+owed (leaf `API.5.5`).
+
 ```console
 $ bash scripts/wasm_binding.sh              # the step
 $ bash scripts/wasm_binding.sh --self-test  # its RED arms: a module with an import, one with an unlisted export,
