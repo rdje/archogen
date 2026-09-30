@@ -4,6 +4,20 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the fourth artifact cleanup: 2.2 GB of build residue released
+
+`ARCHOGEN-PROGRAM-0196` (leaf `PROGRAM.19`, fourth run under the standing owner).
+
+- The build directory had grown from under 1 GB to 6.3 GB in a day. Most of it was the source and build tree left
+  behind when the CI provisioner compiled the pinned emulator (1.7 GB), and the CI rehearsal's throwaway checkout
+  (517 MB). Neither is read once the emulator is installed. Both, the doctrine gate's scratch and the finished
+  leaves' probe files were deleted: 6.3 GB → 4.1 GB.
+- Each deletion was checked first. Every scratch name was looked up in the tracked tree, and the leaf that made it
+  was read. The one probe directory whose leaf is still open (`M1.29`) was kept. So were the tools, the caches and
+  the build outputs the tiers use. The debug cache's growth was measured, and it is cargo's normal retention.
+- Verified from cold: the emulator and book tool are still in place, the focused tier passes, and the whole suite
+  reports 742 passed and 0 failed over 62 suites.
+
 ## archogen — how the engine's knowledge is recorded, designed and under review
 
 `ARCHOGEN-M2-0195` (leaf `M2.7.1`, a checkpoint).

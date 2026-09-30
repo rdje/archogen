@@ -1190,6 +1190,66 @@ mdBook that is the director's window into the project.
     reason the first run recorded: `git grep -ln 'app-data' -- docs/book` → no match, and the book
     documents eADL and the engine, not the repository's scratch directories.
 
+  ### Run `2026-09-30` — the fourth cleanup
+
+  - **Trigger, read off the commit.** `git log -1 --format=%ci -- docs/ARTIFACT_CLEANUP.md` →
+    `2026-09-29 11:29:00 +0200`, against a session clock of `2026-09-30 12:19 +0200`: 24 h 50 min.
+  - **Inventory before touching anything.** `target` **6.3 GB**, up from 949 MB a day earlier:
+    `target/debug` 2.8 GB, `target/ci` 2.7 GB, `target/miri` 458 MB, `target/wasm32-unknown-unknown`
+    144 MB, `target/doctrine_scratch` 112 MB, `target/miri-sysroot` 108 MB, `target/tmp` 40 MB in 192
+    entries; **2 766** `.bin` and **25** `.log` files under `target`. `.app-data` 2.2 GB, unchanged. `build/`
+    2.7 MB. Each entry of `target/tmp` and `target/doctrine_scratch` was censused against the tracked tree
+    (`git grep -l -F <name> -- scripts crates xtask Makefile .githooks` for a regenerating owner,
+    `-- docs '*.md'` for a citation), and every leaf its name points at was read for its status.
+  - **Deleted, each with a tracked regeneration path or a closed owner.**
+    1. `target/ci/build`, 1.7 GB: the QEMU source and build tree `scripts/ci_provision.sh` unpacks to
+       compile the pinned emulator. Once the tool is installed under `target/ci/tools/`, the script
+       returns `already in place` without reading it, and a rebuild `rm -rf`s it before unpacking the
+       digest-checked tarball again. `git grep -n 'ci/build'` → only the provisioner itself.
+    2. `target/ci/rehearsal`, 517 MB: `scripts/ci_rehearse.sh` `rm -rf`s it at the start of every run.
+       With it, `provision_run.txt` and `rehearse_run.txt`, hand-captured outputs of `PROGRAM.10.4`,
+       which is `done` and carries the transcript (`ci_rehearse.sh → exit=0 (18f55e4 …)`).
+    3. `target/doctrine_scratch`, 112 MB, of which 100 MB was `api4`, `API.4`'s cost-probe chains.
+       Every subdirectory a script uses is recreated by that script; every other entry is a closed
+       leaf's captured output (`api-*`, `m1-*`, `m2-*`, `s0b`, `m110*.py`, …), and no tracked file
+       cites any of them.
+    4. `target/tmp`, all but one entry. The test scratch (`f28`, `fires-on`, `s0-*`, `module-*`, …) is
+       recreated by `cargo test`; the rest is probe scratch of leaves that are all `done`: `M1.13.4.1`,
+       `.2`, `.3` and `.5`, `M1.13.5`, `M1.25`, `M1.26`–`M1.26.2`, `M1.34`–`M1.36`, `PROGRAM.5`,
+       `.6.1`–`.6.3`, `.9`, `.9.2`, `.9.3`, `.13`, `.15`, `.17.1`–`.17.3`, `.20.1`–`.20.3`, `.27`–`.29`. Four
+       leaves cite an input there by path (`m1261/s0-badunit.eadl`, `m129/app.system.eadl`,
+       `p27/dup-decl.eadl`, `p27/head-before-m1282.txt`), and each leaf states how its input was made
+       from tracked sources, so none of those files is the only copy of anything. `m29_*`, from the
+       blocked `M2.9`, were two copies of the doctrine driver's output; the work is on `wip/m2.9`.
+
+    `target` 6.3 GB → 4.1 GB; `.bin` 2 766 → 2 212; `.log` 25 → 3. **Residue census: all ten sampled paths
+    report `gone`, none `STILL PRESENT`**, and `git status --porcelain` → empty.
+  - **Retained, each on evidence.**
+    1. `target/tmp/m129`, 744 KB: `M1.29` is still `active`, since `M1.29.4` waits on the director.
+    2. `target/ci/tools` 357 MB, `downloads` 145 MB, `venv` 14 MB: the installed pinned tools the
+       rehearsal links in; the digest-verified tarball a rebuild would otherwise fetch over the network;
+       and the `ninja` a local QEMU build needs (`PATH=<venv ninja>:$PATH bash scripts/ci_provision.sh`,
+       `PROGRAM.10.3`), which no tracked script creates. `target/ci/integration.log` is the CI job's kept
+       report.
+    3. `target/debug`, 2.8 GB. Its growth from 794 MB is measured, and it is cargo's own retention rather
+       than residue: 378 incremental crate directories, **none** above four `s-*` generations (127 hold 2,
+       1 holds 3, 250 hold 4). `deps` holds 131 executables, up to 8 hash variants of one name, which are
+       the build configurations the tiers use.
+    4. `target/miri` and `target/miri-sysroot`, 566 MB: the `extended` tier's cache, about 14 minutes
+       to rebuild. `target/wasm32-unknown-unknown`, `target/riscv64imac-unknown-none-elf`,
+       `target/release` (the fuzz step's build) and `target/spike`: live products of tier steps.
+    5. `target/s0-demo` and `build/`, for the reasons the third run recorded, which still stand. `build/`
+       also holds `heartbeat` and `s0`, the working files of `docs/book/src/s0.md`'s transcripts.
+    6. `.app-data`, unchanged, for the reasons the second and third runs recorded.
+  - **Verified cold.** `bash scripts/ci_provision.sh` → `mdbook v0.5.2 already in place`, `QEMU emulator
+    version 11.1.1 already in place`, exit `0`, with the build tree gone. `make focused` → `tier focused:
+    passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, exit `0`.
+    `cargo test --all -q` → **742 passed, 0 failed over 62 suites**, the recorded baseline.
+    `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`, and `target/doctrine_scratch`
+    exists again afterwards.
+  - **Lockstep.** `docs/ARTIFACT_CLEANUP.md` overwritten with this run only; this section; `CHANGELOG.md`.
+    No snapshot changes: no status, frontier or blocker moved (`LIVE_DOCUMENT_SIZE_CONTAINMENT.md`).
+
 - ID: `PROGRAM.20`
   Status: `done`
   Goal: a **carried-figure register**, so a figure no measurement watches is a breach at the commit
