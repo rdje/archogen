@@ -3843,7 +3843,7 @@ mdBook that is the director's window into the project.
     `KNOWLEDGE_MAP.md`, `CHANGELOG.md`.
 
 - ID: `PROGRAM.37`
-  Status: `pending`
+  Status: `done`
   Goal: `docs/decisions/` back under its total-bytes ceiling (327 680), by moving the review history still kept
   inside a decision record to `docs/reviews/`, the rule `PROGRAM.36` set.
   Why: on `2026-09-30`, `M2.7.1`'s seventh checkpoint staged §12 of the catalog record as a companion record, and
@@ -3854,8 +3854,30 @@ mdBook that is the director's window into the project.
   Acceptance: that section moved byte for byte to `docs/reviews/decision_runtime-analysis-variant-reviews.md`,
   indexed there, with a summary and a link left in the record; `docs/decisions/`' debt cell back to 327 680;
   `README-ROUTES` and the doctrine enforcer green.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the checklist — the move checked against `HEAD`; the directory 9 055 bytes under its ceiling.
+  Commit: `ARCHOGEN-PROGRAM-0218 (leaf PROGRAM.37)`
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE** — the staged run of `ARCHOGEN-M2-0217`: `bash scripts/check_readme_routes.sh` → rc=1 with the
+    cell at its ceiling, "`docs/decisions/: 331050 bytes in total, over its ceiling of 327680`", which that commit
+    recorded as this leaf's debt.
+  - [x] **ROOT CAUSE** — new decisions, not a stray file: the composition record (`M2.10.1`) and §12's companion
+    (`M2.7.1`) added their bytes to a directory still holding a review history that `PROGRAM.36`'s rule had
+    placed elsewhere. Measured by section with `awk` over every record, the variant's `## Review` was 13 482 bytes,
+    the largest left; the next were 1 400 and 540 bytes, both of them summary tables.
+  - [x] **FIX** — the section moved to `docs/reviews/decision_runtime-analysis-variant-reviews.md`, unchanged,
+    under a header and a closing note like its siblings'. The record keeps a four-row summary and a link. The
+    history is indexed as closed with `M2.6`, and the debt cell is 327 680 again.
+  - [x] **ADDRESSED** — the moved text compared with `git show HEAD:docs/decisions/decision_runtime-analysis-variant.md`'s
+    tail: identical. `bash scripts/check_readme_routes.sh` → rc=0, "`readme-routes: OK (20 destination(s)
+    governed; recorded as debt, owned by: PROGRAM.32)`". `docs/decisions/` is 318 625 bytes over 28 files, and
+    `docs/reviews/` 65 128 bytes over 4 files, longest line 600, all within their rows.
+  - [x] **NO REGRESSION** — `bash scripts/check_doctrines.sh` → `=== all doctrines green ===` (`SOURCE-LEDGER`, since
+    the history names QEMU and carries its link; `MEMORY-ARCH`; `KNOWLEDGE-MAP` after regeneration). No Rust and
+    no script changed.
+  - [x] **LOCKSTEP** — `README_POLICY.md`, `LIVE_DOCUMENT_SIZE_CONTAINMENT.md` (both rows);
+    `docs/reviews/INDEX.md`; this leaf, the frontier and both logs; `LIVE_STATUS.md`, `docs/TASK_TREE.md`,
+    `MEMORY.md`, `KNOWLEDGE_MAP.md`, `CHANGELOG.md`.
 
 ## Roadmap coverage map
 
@@ -3921,10 +3943,9 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.37` | `pending` | `docs/decisions/` over its total ceiling again, as debt this leaf owns: the runtime variant's review history moves to `docs/reviews/` |
-| 2 | `PROGRAM.32` | `blocked` | closed leaves sealed out of the task trees, ruled on §8; waits on the director's hold on `scripts/`, since its check and the gates that read leaves live there |
-| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
-| 4 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
+| 1 | `PROGRAM.32` | `blocked` | closed leaves sealed out of the task trees, ruled on §8; waits on the director's hold on `scripts/`, since its check and the gates that read leaves live there |
+| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 3 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
@@ -4062,6 +4083,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.35.2` | the derived population on the real tree; six mutations of the real registry; the gate's 16 arms; every self-test bare; scratch locality; the project doctrines | 18 destinations governed, two debt owners; each mutation refused with one named breach, and restored green; 16 of 16; 32 self-tests passed; OK; OK |
 | `2026-09-30` | `PROGRAM.31` | the seal with its own proof; an independent rebuild in Python against the files saved before; the ordering defect traced to the initial commit and its move proved; 13 RED arms; the routes and the other gates | both ledgers byte for byte, twice; the template block carried verbatim; 13 of 13; 19 destinations, debt only `PROGRAM.32` |
 | `2026-09-30` | `PROGRAM.36` | the breach reproduced with the ceiling restored; the move's digest against `HEAD`'s; `README-ROUTES`; the doctrine enforcer; the book built | rc=1, then rc=0 with 20 destinations governed; digests equal; all green; rc=0 |
+| `2026-09-30` | `PROGRAM.37` | the move against `HEAD`'s tail; review sections measured by section; `README-ROUTES`; the doctrine enforcer | identical; 13 482 bytes moved, the rest summaries; rc=0, 318 625 bytes; all green |
 
 ## Commit Log
 
@@ -4124,6 +4146,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.35.2` → `PROGRAM.35` | `ARCHOGEN-PROGRAM-0198 (leaf PROGRAM.35.2)` | **every route out of the README registered and bounded, or its debt owned** — `README-ROUTES` derives the routes from the page's links and its guards' actual hints; `PROGRAM.35` closed |
 | `PROGRAM.31` | `ARCHOGEN-PROGRAM-0207 (leaf PROGRAM.31)` | **the changelog and the development notes are rolling ledgers** — sealed by entry count into digest-checked segments under `docs/history/`, as ruled on §8 by delegation |
 | `PROGRAM.36` | `ARCHOGEN-PROGRAM-0211 (leaf PROGRAM.36)` | **the review histories get a home of their own** — `docs/reviews/`, registered as the decisions folder's overflow with its own ceilings; the debt `ARCHOGEN-M2-0210` recorded is paid |
+| `PROGRAM.37` | `ARCHOGEN-PROGRAM-0218 (leaf PROGRAM.37)` | **the runtime variant's review history joins the others** in `docs/reviews/`; the debt `ARCHOGEN-M2-0217` recorded is paid |
 
 ## Changelog
 

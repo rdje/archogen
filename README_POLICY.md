@@ -52,7 +52,7 @@ leaf. "Overflows to" is where that destination's own guard sends what does not f
 | `docs/book/` | navigation + overflow | `PROGRAM` | maintained_reference | 32 | 750 | 49152 | 1024 | 294912 | — |
 | `docs/history/` | overflow | `PROGRAM.31` | archive_terminal | HISTORY-LEDGERS | 1200 | 131072 | 256 | HISTORY-LEDGERS | — |
 | `docs/reviews/` | overflow | `PROGRAM.36` | partitioned_canonical | 16 | 1200 | 131072 | 1024 | 262144 | — |
-| `docs/decisions/` | navigation + overflow | `PROGRAM` | partitioned_canonical | 32 | 1200 | 98304 | 1536 | debt: `PROGRAM.37` | `docs/reviews/` |
+| `docs/decisions/` | navigation + overflow | `PROGRAM` | partitioned_canonical | 32 | 1200 | 98304 | 1536 | 327680 | `docs/reviews/` |
 | `docs/tasks/` | overflow | `PROGRAM.32` | partitioned_canonical | 20 | debt: `PROGRAM.32` | debt: `PROGRAM.32` | debt: `PROGRAM.32` | debt: `PROGRAM.32` | — |
 <!-- README-POLICY-LOCAL-ADOPTION:END -->
 

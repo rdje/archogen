@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the runtime analysis design's review history joins the others, and the decisions folder fits again
+
+`ARCHOGEN-PROGRAM-0218` (leaf `PROGRAM.37`).
+
+- This pays the debt the previous commit recorded. The runtime analysis design still carried its four reviews
+  inside it, 13 482 bytes, the largest review history left among the decisions. It moved, unchanged, to the review
+  folder, and the design keeps a four-line summary and a link.
+- The decisions folder is at 318 625 bytes, against a limit of 327 680 that was not raised.
+
 ## archogen — the catalog design's section on the runtime analysis's inputs gets a file of its own
 
 `ARCHOGEN-M2-0217` (leaf `M2.7.1`, a seventh checkpoint).
