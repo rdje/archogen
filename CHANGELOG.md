@@ -4,6 +4,18 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — how the first real target is described and checked, decided
+
+`ARCHOGEN-M2-0189` (leaf `M2.8.3.1`).
+
+- The emulated RISC-V board archogen targets will be described in eADL, in the words the language already has.
+  It states one fact for each thing the supported profile requires: one core, a timer, somewhere to print, and
+  memory to run from.
+- A check will compare each fact with the hardware description the emulator itself reports, matching each by what
+  the device is, not just its address. The target is marked verified only when that check passes on a fresh
+  reading.
+- It claims nothing it cannot check. The instruction set, the interrupt timings and the unused devices stay out.
+
 ## archogen — the real-time analysis refuses what it cannot know (F17)
 
 `ARCHOGEN-M2-0188` (leaf `M2.6.4`).
