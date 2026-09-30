@@ -5,6 +5,22 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the task-history tool is hardened after its independent review
+
+`ARCHOGEN-PROGRAM-0228` (leaf `PROGRAM.32.4`; `PROGRAM.32` closed).
+
+- An independent review rebuilt the two task trees from what was moved out, with its own code. It found the move
+  correct and lossless, and every fingerprint right. It also showed that the checking tool could be fooled:
+  - a hand-made move of unfinished work passed;
+  - so did an edited moved item;
+  - so did a moved file forged together with its index line and committed, which the automated check on the
+    server would have missed.
+- The tool now checks that every moved item is exactly what its tree held just before the move. It checks every
+  moved file against the commit that first added it, so the server's check catches a forgery too. It refuses to
+  move an item it cannot slice cleanly, and undoes a move its own check rejects.
+- Some figures published with the first move were measured at the wrong moment, and are corrected. The check on
+  the changelog and development notes has the same blind spot on the server, and is next.
+
 ## archogen — the catalog's tenth review and the composition's third are answered
 
 `ARCHOGEN-M2-0227` (leaf `M2.7.1`, a ninth checkpoint; with `M2.10.1`'s fourth).

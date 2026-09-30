@@ -23,11 +23,15 @@ A task tree keeps its live work readable by sealing out what is finished.
 
   ```text
   - ID: `M1.13.2`
-    Status: `done` — sealed in [`M1/M1.13.md`](../task-history/M1/M1.13.md); commit `ARCHOGEN-M1-0123`
+    Status: `done` — sealed in [`M1/M1.13.md`](../task-history/M1/M1.13.md); commit `ARCHOGEN-M1-0082`
   ```
 
   The `ID` and `Status` lines are what every check that reads a leaf needs. The commit is the first work-unit id
-  the leaf's `Commit:` field names, or `not recorded`.
+  the leaf's `Commit:` field names. Failing that, it is `in the tree's Commit Log` when that log has a row for the
+  leaf, and `not recorded` otherwise; the seal warns about a `done` leaf whose field names no commit.
+- **A sealed body is its `ID` line and indented or blank lines only.** The seal refuses a leaf with a line at
+  column 0 after its `ID`, a fence, a heading or prose, because the line slicing every check shares would tear it.
+  It writes nothing, and names each such line.
 - **What stays live:** the tree's root leaf, every open leaf, every subtree with an open leaf, and the sections
   around the leaves: the goal, the Current Frontier, the decisions, the logs and the changelog.
 - **`docs/task-history/INDEX.md`** has one table per tree, with one row per sealed file: the subtree, its leaf
@@ -36,14 +40,20 @@ A task tree keeps its live work readable by sealing out what is finished.
 
 **Sealing is done by a tool**, `bash scripts/check_task_history.sh --seal <TREE>`. It proves that the tree, with
 every stub replaced by its body from its sealed file, reconstructs the tree as it stood, byte for byte. If it does
-not, it writes nothing. Then it runs the gate.
+not, it writes nothing. Then it runs the gate on what it wrote, and rolls everything back if the gate refuses.
 
-**The gate**, `TASK-HISTORY`, runs on every commit. It checks:
-1. every sealed file's lines, bytes and sha256 against its row;
-2. that sealed files and rows correspond one to one;
-3. that every sealed file and every row at `HEAD` is unchanged;
-4. that every leaf in a sealed file has exactly one stub in its tree, with status `done` and a link to that file,
-   and that every stub links to a file that holds its leaf.
+**The gate**, `TASK-HISTORY`, runs on every commit, in CI as in the pre-commit hook. It checks:
+1. every sealed file's leaves, lines, bytes and sha256 against its row;
+2. that sealed files and rows correspond one to one, and that nothing else is under `docs/task-history/`;
+3. **across history**: that every row any committed version of the index held is still there, unchanged, and that
+   every sealed file is byte for byte what the commit that added it wrote. So CI, where `HEAD` is the commit under
+   test, catches a forged file and row as surely as the hook does;
+4. that every leaf in a sealed file has exactly one stub, in its own tree, with status `done` and a link to that
+   file; that every stub links a file that holds its leaf; and that a leaf sits in its own subtree's file;
+5. **provenance**: that every sealed leaf is, byte for byte, the leaf its tree held just before the commit that
+   sealed it (`HEAD`, for a seal not yet committed), `done` there, and sealed with the rest of its subtree. So a
+   seal made by hand, or a body edited on its way in, is refused;
+6. that no live leaf sits in a subtree that is sealed.
 
 **What else changes:**
 - **`TASK-ACCEPTANCE`**, archogen's since `PROGRAM.21`: when a commit names a sealed leaf as its owner, the
@@ -83,11 +93,28 @@ not, it writes nothing. Then it runs the gate.
 
 - **Sealing:**
   - after a subtree closes, run `bash scripts/check_task_history.sh --seal <TREE>` and commit its result;
-  - a sealing commit seals and changes nothing else;
+  - the sealing commit may also close the leaf that ran it, as the first one did. Every sealed leaf is proven
+    against its tree as it stood just before that commit (leg 5), so other edits in the same commit do not weaken
+    the proof;
   - a leaf in a sealed file is never edited. A correction is a new entry in the tree's changelog.
+- **Reopening:** a sealed subtree is never reopened. New work under its heading opens a new top-level subtree, and
+  a live leaf inside a sealed subtree is refused (leg 6).
+- **Size:** each sealed file is bounded by `README-ROUTES`. The folder's file count and total are not, by design:
+  an `archive_terminal` grows with what is finished, and no mandatory read includes it.
 - **Reading:** follow the stub, or open `docs/task-history/INDEX.md`.
 - **A change needs an open leaf.** A sealed leaf cannot own one.
 - **Trees:** `M1` and `PROGRAM` first, as ruled. Then any tree whose closed subtrees are the larger part of it, by
   the same tool.
 - Related: [[decision_history-ledgers]], [[decision_findings-for-director-review]] §8 and §10,
   `LIVE_DOCUMENT_SIZE_CONTAINMENT.md`.
+
+## Review
+
+An independent read-only context reviewed the tool, its gate and the first seal (`PROGRAM.32.4`). It accepted the
+seal: lossless, exactly the closed subtrees, every digest matching. It found that the tool needed hardening before
+another tree is sealed. The findings, and the answer to each, are in
+[`decision_task-tree-sealing-reviews.md`](../reviews/decision_task-tree-sealing-reviews.md).
+
+| Round | Findings | Defects | Verdict |
+| --- | --- | --- | --- |
+| 1 | 10 | 3 (the record's fallback text unlike the build's; a sealing commit that was not seal-only; figures that did not reproduce), with the seal not fail-closed and the gate not re-proving a seal as the gaps to fix first | the seal "correct and lossless"; the tool to be hardened before another tree is sealed |

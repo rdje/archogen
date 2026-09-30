@@ -21,4 +21,5 @@ empty rather than with a false claim.
 | `docs/book/src/verification.md` | four members | record | measured `2026-09-30` by `scripts/wasm_build.sh --list`; the sentence gives its date, and the step re-derives the set on every run |
 | `docs/book/src/modules.md` | 100 bytes | record | measured `2026-09-30` by leaf `M1.39`'s fan-out probe, before the module limits; the sentence places it before the leaf, and `crates/eadl-front/tests/module_limits.rs` holds the limits that ended it |
 | `docs/semantics/reference.md` | 100 bytes | record | measured `2026-09-30` by leaf `M1.39`'s fan-out probe; §6 rule 11 says it was taken before the rule existed |
+| `docs/book/src/verification.md` | 633 lines | record | `M1.md`'s 7 633 lines before its seal, measured `2026-09-30` at `940baf1`'s parent with `git show … \| wc -l`, leaf `PROGRAM.32.4`; the sentence names the sealing commit |
 | `docs/book/src/verification.md` | two lines | not-a-count | the stub's form, a definition `TASK-HISTORY` enforces, not a carried measurement |

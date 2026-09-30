@@ -588,13 +588,15 @@ A task tree records every leaf of its work, with its checklist and evidence. Mos
   work, the list of what is next and the logs stay where they were.
 - **The proof.** Before anything is written, the tool checks that putting every leaf back would give the tree as it
   was, byte for byte (`docs/decisions/decision_task-tree-sealing.md`).
-- **The first seal**, on `2026-09-30`: 112 leaves left `M1` and `PROGRAM`. `M1.md` went from 7 633 lines to 2 278, and
-  `PROGRAM.md` to 948.
+- **The first seal**, on `2026-09-30`: 112 leaves left `M1` and `PROGRAM`. At the sealing commit, `M1.md` went
+  from 7 633 lines to 2 278, and `PROGRAM.md` from 4 280 to 978.
 
-`TASK-HISTORY` checks on every commit:
-- that no sealed file has changed;
-- that `docs/task-history/INDEX.md` lists every sealed file and has lost no line;
-- that every sealed leaf has exactly one two-line placeholder in its tree, linking the file that holds it.
+`TASK-HISTORY` checks on every commit, in CI as well as before a commit:
+- that no sealed file has changed since the commit that sealed it;
+- that `docs/task-history/INDEX.md` lists every sealed file and has lost or changed no row it ever held;
+- that every sealed leaf has exactly one two-line placeholder in its tree, linking the file that holds it;
+- that every sealed leaf is, byte for byte, what its tree held just before it was sealed, so a hand-made or edited
+  seal is refused.
 
 ```console
 $ bash scripts/check_task_history.sh                  # the gate

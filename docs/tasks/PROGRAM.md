@@ -546,7 +546,7 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.31.md`](../task-history/PROGRAM/PROGRAM.31.md); commit `ARCHOGEN-PROGRAM-0207`
 
 - ID: `PROGRAM.32`
-  Status: `active` — unblocked `2026-09-30` by the director's ruling on §10 of
+  Status: `done` — unblocked `2026-09-30` by the director's ruling on §10 of
   `docs/decisions/decision_findings-for-director-review.md`: the hold covers only the 17 template files archogen has
   not changed. The new check, and the change to `TASK-ACCEPTANCE` (`check_task_acceptance.sh`, changed by
   `PROGRAM.21`), are archogen's. The held checks that read leaves must keep working unchanged: `WAIVER-ROUTING`,
@@ -559,8 +559,9 @@ mdBook that is the director's window into the project.
   a check proving sealed bodies unchanged; the tree's live graph complete; no line lost.
   Children: `PROGRAM.32.1` … `PROGRAM.32.4` — decomposed `2026-09-30`, after a read-only audit of every check that
   reads a leaf.
-  Verification: through its children
-  Commit: `pending`
+  Verification: through its children — the design, the tool, the seal of `M1` and `PROGRAM`, and an independent
+  review whose findings hardened the tool.
+  Commit: `ARCHOGEN-PROGRAM-0228` closes it; its children's commits are in the log below.
 
 - ID: `PROGRAM.32.1`
   Status: `done`
@@ -653,12 +654,64 @@ mdBook that is the director's window into the project.
     open leaf are untouched, since the reconstruction is byte for byte. `STATED-ORDER` reads the stubs' status lines.
   - [x] **LOCKSTEP** — `README_POLICY.md`, `LIVE_DOCUMENT_SIZE_CONTAINMENT.md`, `docs/book/src/verification.md`,
     `docs/TASK_TREE.md`; this leaf, the frontier and both logs; `LIVE_STATUS.md`, `MEMORY.md`, `CHANGELOG.md`.
+  ⚠️ *Corrected by `PROGRAM.32.4`.* Some figures above were not taken at the commits they name:
+  - `PROGRAM.md` was 384 721 bytes and 4 280 lines at `15c61b4`; 381 216 had been measured at `8b9a770`;
+  - at `940baf1` it was 978 lines and 113 467 bytes, since the 948 lines and 110 662 bytes were measured before
+    this leaf's own closure edits;
+  - the commit changed neither `KNOWLEDGE_MAP.md` nor `MEMORY.md`, which its message and the list above name.
 
 - ID: `PROGRAM.32.4`
-  Status: `pending`
+  Status: `done`
   Goal: an independent read-only review of the tool and the sealed result, every finding answered.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the checklist. The review accepted the seal, "correct and lossless", and asked for the tool to
+  be hardened before another tree is sealed. That is done: 25 RED arms, and the real history passes every leg.
+  Commit: `ARCHOGEN-PROGRAM-0228 (leaf PROGRAM.32.4)`
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE** — the reviewer's constructions, each rebuilt as an arm in `scripts/check_task_history.sh`'s
+    self-test, refused none of them before this change:
+    - a seal made by hand of `T.2.1` from its open subtree;
+    - a body edited together with its row;
+    - a stub moved into another tree;
+    - a forged file and row, committed.
+
+    A leaf holding a column-0 fence was sealed torn.
+  - [x] **ROOT CAUSE** — three designs of the first tool:
+    - its gate compared with `HEAD` only, which is the commit itself in CI;
+    - it never re-derived a sealed leaf from the tree it came from;
+    - its seal sliced by lines without refusing what the slicing cannot hold.
+
+    The first, shown by `git show 940baf1:scripts/check_task_history.sh | grep -n head_index`:
+    ```text
+    296:  if git cat-file -e "HEAD:docs/task-history/INDEX.md" 2>/dev/null; then
+    297:    git show "HEAD:docs/task-history/INDEX.md" > "$SCRATCH/head-index.md" && printf '%s' "$SCRATCH/head-index.md"
+    ```
+    It read only `HEAD`'s index. The other two, by the review's 25-case mutation run, rebuilt here as arms.
+  - [x] **FIX** — the gate's legs:
+    - leg 3 is history-wide: every row any committed index held, and every sealed file against the commit that
+      added it;
+    - leg 4 ties each stub to its tree and each leaf to its subtree's file;
+    - leg 5 re-proves every sealed leaf against its tree just before its seal;
+    - leg 6 refuses a live leaf in a sealed subtree.
+
+    The seal refuses a leaf with a column-0 line after its `ID`, and rolls back if the gate refuses what it wrote.
+    Unreadable input is a named breach. The fallback commit text is checked against the Commit Log. The decision
+    record, the book and the inventory now match the build and the commits, and the review history is in
+    `docs/reviews/`.
+  - [x] **ADDRESSED** — `bash scripts/check_task_history.sh --self-test` → rc=0, `task-history self-test: 25 pass /
+    0 fail (25 arms)`. `bash scripts/check_task_history.sh` on the real repository → rc=0, "69 sealed file(s), each
+    against its row and its sealing commit … 112 stub(s) … every sealed leaf proven against its tree before its
+    seal".
+  - [x] **NO REGRESSION** — the mutations, the enforcer and the self-tests:
+    - with leg 5 disabled, the self-test goes to `23 pass / 2 fail`;
+    - with leg 3's file check disabled, it goes to `24 pass / 1 fail`;
+    - `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`;
+    - `bash scripts/run_self_tests.sh` → rc=0, `self-tests: OK — 35 self-test(s) passed`.
+
+    No held file changed. `HISTORY-LEDGERS` shares leg 3's old blind spot, and `PROGRAM.40` owns it.
+  - [x] **LOCKSTEP** — `docs/decisions/decision_task-tree-sealing.md`, `docs/reviews/`, `DOCTRINE_ENFORCEMENT.md`,
+    `docs/book/src/verification.md`, `LIVE_DOCUMENT_SIZE_CONTAINMENT.md`; `PROGRAM.32.3`'s corrected figures; the
+    frontier and both logs; `LIVE_STATUS.md`, `docs/TASK_TREE.md`, `MEMORY.md`, `CHANGELOG.md`.
 
 - ID: `PROGRAM.35`
   Status: `done` — sealed in [`PROGRAM/PROGRAM.35.md`](../task-history/PROGRAM/PROGRAM.35.md); commit `ARCHOGEN-PROGRAM-0197`
@@ -691,6 +744,16 @@ mdBook that is the director's window into the project.
   - `knowledge-map/subsystems.md` links each sub-folder's index;
   - the findings register's settled items considered for sealing, with stubs kept for their section numbers;
   - the first candidates are the catalog design's four records.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `PROGRAM.40`
+  Status: `pending`
+  Goal: `HISTORY-LEDGERS` catches in CI what it catches before a commit. Its leg 3 compares the index with `HEAD`,
+  which is the commit under test in CI, so a segment and its row forged together and committed pass there; the
+  review of `PROGRAM.32.4` found it (P4), and `TASK-HISTORY` now checks the same across history.
+  Acceptance: every row any committed index held still present, and every segment byte for byte what the commit that
+  added it wrote, with RED arms for a committed forgery; the book and `DOCTRINE_ENFORCEMENT.md` updated.
   Verification: `pending`
   Commit: `pending`
 
@@ -758,7 +821,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.32` | `active` | closed subtrees sealed out of the task trees (§8); `M1` and `PROGRAM` sealed (`.32.3`); an independent review of the tool and the result next (`.32.4`) |
+| 1 | `PROGRAM.40` | `pending` | `HISTORY-LEDGERS` checked across history, as `TASK-HISTORY` now is, so CI catches a committed forgery |
 | 2 | `PROGRAM.39` | `pending` | the decisions folder partitioned by subject, adding no capacity; starts at 36 files or 360 000 bytes, or sooner |
 | 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 | 4 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
@@ -904,6 +967,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.32.1` | a read-only audit of every script that reads `docs/tasks/`, each against a sealing commit; closed subtrees measured in `M1` and `PROGRAM` | the four held checks pass it; `TASK-ACCEPTANCE`, `README-ROUTES` and `LESSON-PROMOTION` shaped the design; 37 of 39 and 32 of 39 subtrees closed |
 | `2026-09-30` | `PROGRAM.32.2` | both self-tests; a dry run sealing copies of `M1` and `PROGRAM`, then the gate; a code change owned by a sealed leaf; two mutations; every self-test; the enforcer | 14 of 14 and 10 of 10; byte-for-byte reconstruction, 69 files and 112 stubs; refused as sealed; each mutation red; 35 of 35; all green |
 | `2026-09-30` | `PROGRAM.32.3` | the seal of `M1` and `PROGRAM` with its proof; an independent re-derivation of both trees from `HEAD`; `shasum` over 69 files; `README-ROUTES`; the enforcer | byte for byte, 69 files and 112 stubs; equal; 0 mismatched; 21 destinations, no debt; all green |
+| `2026-09-30` | `PROGRAM.32.4` | an independent review of the tool and the seal; the tool rebuilt; 25 arms; two mutations; the real history through every leg; the figures re-measured at their commits | the seal accepted, 10 findings, all answered; 25 of 25; each mutation red; 69 files and 112 stubs proven; corrected |
 
 ## Commit Log
 
@@ -971,6 +1035,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.32.1` | `ARCHOGEN-PROGRAM-0224 (leaf PROGRAM.32.1)` | **the sealing design** — `docs/decisions/decision_task-tree-sealing.md`; the tool next |
 | `PROGRAM.32.2` | `ARCHOGEN-PROGRAM-0225 (leaf PROGRAM.32.2)` | **the sealing tool and its gate** — `scripts/check_task_history.sh`, registered as `TASK-HISTORY`; `TASK-ACCEPTANCE` names a sealed owner as closed |
 | `PROGRAM.32.3` | `ARCHOGEN-PROGRAM-0226 (leaf PROGRAM.32.3)` | **`M1` and `PROGRAM` sealed**: 112 leaves in 69 files under `docs/task-history/`; `docs/tasks/` bounded, its debt paid |
+| `PROGRAM.32.4` | `ARCHOGEN-PROGRAM-0228 (leaf PROGRAM.32.4)` | **the sealing tool hardened** after its review: history-wide immutability, provenance, fail-closed slicing, no reopening; `PROGRAM.32` closed |
 
 ## Changelog
 
