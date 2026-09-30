@@ -63,6 +63,8 @@ self_test() {
     rm -rf "$work"; mkdir -p "$work/targets" "$work/bin"
     git -C "$work" init -q
     cp "$ROOT/$ENV_FILE" "$work/$ENV_FILE"
+    # Every arm states the verification it tests, rather than inheriting the real flag (leaf `M2.8.3.4`).
+    sed -i.bak "s|^TARGET_VERIFIED=.*|TARGET_VERIFIED=no|" "$work/$ENV_FILE"; rm -f "$work/$ENV_FILE.bak"
     cat > "$work/bin/qemu-system-riscv64" <<'STUB'
 #!/usr/bin/env bash
 case "$*" in
@@ -104,8 +106,16 @@ STUB
   arm "a platform that differs from its fixture is a mismatch, and names the line" 1 "presented, and not recorded:   compatible = \"ns16550a\""
   fresh; fixture; set_env QEMU_VERSION_PINNED 11.1.0
   arm "a release mismatch is reported before any dump is compared" 1 "PINNED RELEASE MISMATCH"
+  describe() { cp "$ROOT/targets/riscv-virt-up.eadl" "$work/targets/riscv-virt-up.eadl"; }
   fresh; set_env TARGET_VERIFIED yes; fixture
-  arm "verified, pinned, offered and matching its fixture: passes" 0 "the platform presented matches"
+  arm "verified and matching its fixture, with no description to agree with, is refused" 1 "the §3.2 agreement did not run"
+  fresh; set_env TARGET_VERIFIED yes; fixture; describe
+  arm "verified, pinned, offered, matching its fixture and agreeing with its description: passes" 0 "the §3.2 agreement holds"
+  fresh; set_env TARGET_VERIFIED yes; fixture; describe
+  sed -i.bak 's/(size 128 MiB)/(size 64 MiB)/' "$work/targets/riscv-virt-up.eadl"; rm -f "$work/targets/riscv-virt-up.eadl.bak"
+  arm "a description that disagrees with the platform is a mismatch, and names the fact" 1 "REQUIRES_EXECUTABLE_RAM"
+  fresh; fixture; describe
+  arm "an unverified target whose agreement holds still could not be declared verified" 20 "leaf M2.8.3.4 flips the flag"
   fresh; set_env QEMU_BINARY qemu-system-nowhere
   arm "an emulator that is not installed could not be run" 20 "required tool unavailable: qemu-system-nowhere"
   rm -rf "$work"
@@ -189,6 +199,10 @@ case "${1:-}" in
       [ "$rc" -eq 0 ] && rc=20
     elif [ ! -f "$DEVICE_TREE_FIXTURE" ]; then
       note "TARGET_VERIFIED=yes, and $DEVICE_TREE_FIXTURE does not exist — a verification with nothing behind it"
+      rc=1
+    elif [ "$rc" -eq 0 ] && [ "${agreement:-}" != holds ]; then
+      # A flag that says verified needs the comparison that verifies it to have run and held (leaf `M2.8.3.4`).
+      note "TARGET_VERIFIED=yes, and the §3.2 agreement did not run — no PLATFORM_DESCRIPTION to compare with"
       rc=1
     fi
     exit "$rc"

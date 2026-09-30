@@ -59,38 +59,32 @@ Rendered from a run, not retyped:
 ```console
 $ cargo xtask verify --tier integration
 tier: integration — before a push, and before closing a milestone
-  ✅ fmt                  0.26s  every Rust source is in canonical format
-  ✅ clippy               0.13s  no lint fires anywhere, including in tests and examples
-  ✅ tests                5.57s  every contract test passes, F28 and the semantic corpus included
-  ✅ doctrines            8.92s  every repository invariant holds on the working tree
-  ✅ self-tests          83.88s  every doctrine gate's RED arms still fire — a gate that stopped being able to fail is caught here
-  ✅ book                 0.17s  the mdBook builds, with its pinned release — it is the director's window, so a broken book is a broken deliverable
-  ✅ no-std-build         0.21s  the runtime core compiles for a bare-metal target (§14.3's "compile targets")
-  ✅ wasm-build           0.41s  the engine's I/O-free crates, derived from the workspace, compile for the browser target
-  ⚠  emulator             0.23s  QUARANTINED — could not be run; leaf M2.8 owns the gap
-     issue: QEMU is present, at the pinned release, offers the pinned machine, and presents exactly the device tree its fixture records (`M2.8.2`) — but the §3.2 agreement check has nothing to compare that platform with yet: the eADL platform description (`M2.8.3`) is not written
-     unproven while it stands: that `riscv-virt-up` is the platform its eADL fixture describes (§3.2) — `TARGET_VERIFIED` in `targets/riscv-virt-up.env`
-     target-emulator: found: QEMU emulator version 11.1.1
-     target-emulator: the platform presented matches docs/targets/riscv-virt-up.dtb.summary.md
-     target-emulator: TARGET_VERIFIED=no — this configuration is still a PROPOSAL
-     target-emulator:   the §3.2 agreement check could not be run: the eADL platform description it compares against is not written
-     target-emulator:   leaf M2.8 owns flipping it, with the evidence that justifies it
-tier integration: incomplete — 8 passed, 0 failed, 0 unavailable, 0 not built, 1 quarantined
-  ⚠  incomplete is NOT a pass. §14.3: "a required tool skipped or unavailable is reported as such, not a passed check".
-  ⚠  and a quarantine is an absence on terms. §14.3: "Quarantine requires a named issue, owner, affected claim, and bounded scope" — each is printed above.
+  ✅ fmt                  0.22s  every Rust source is in canonical format
+  ✅ clippy               0.09s  no lint fires anywhere, including in tests and examples
+  ✅ tests                7.07s  every contract test passes, F28 and the semantic corpus included
+  ✅ doctrines            8.64s  every repository invariant holds on the working tree
+  ✅ self-tests          55.61s  every doctrine gate's RED arms still fire — a gate that stopped being able to fail is caught here
+  ✅ book                 0.10s  the mdBook builds, with its pinned release — it is the director's window, so a broken book is a broken deliverable
+  ✅ no-std-build         0.05s  the runtime core compiles for a bare-metal target (§14.3's "compile targets")
+  ✅ wasm-build           0.27s  the engine's I/O-free crates, derived from the workspace, compile for the browser target
+  ✅ emulator             0.15s  the pinned riscv-virt-up configuration renders and its toolchain is present (§3.2)
+tier integration: passed — 9 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined
 $ echo $?
-20
+0
 ```
 
-The one absence is honest and owned. QEMU is installed and pinned, so the emulator step *runs*: it finds
-the pinned release and the pinned machine, dumps the device tree and finds it identical to the recorded one
-(`M2.8.2`). Then it cannot reach a verdict, because the §3.2 agreement check has nothing to compare that
-platform with yet: the eADL platform description is `M2.8.3`'s to write, and the configuration says
-`TARGET_VERIFIED=no` until it exists. A tier that turned that into a pass
-would be claiming a target nobody has verified. Until `PROGRAM.10.1` it was reported as a *failure*, which
-was wrong the other way: nothing had disagreed, and `COMMIT.md` treats the two differently — it permits
-proceeding past an `incomplete` tier after reading what it names, and not past a `failed` one. A release
-other than the pin, or a machine QEMU does not offer, is still a failure: that is a comparison that ran.
+Nothing is absent, and nothing is owed. The emulator step runs against the installed QEMU:
+- it finds the pinned release and the pinned machine;
+- it dumps the device tree and finds it identical to the recorded one (`M2.8.2`);
+- it finds the target's eADL description in agreement with that tree (`M2.8.3.2`);
+- it finds `TARGET_VERIFIED=yes`, which leaf `M2.8.3.4` set on that evidence.
+
+Until then the step was **quarantined**. It had run, nothing had disagreed, and the agreement it needed was not
+written. So the tier said `incomplete`, exit `20`, and named the owning leaf. That was right both ways: a pass
+would have claimed a target nobody had verified, and a failure would have called a missing comparison a
+disagreement. `COMMIT.md` permits proceeding past `incomplete` after reading what it names, and never past
+`failed`. When the gap closed, the quarantine row went with it in the same change, because a quarantined step
+that passes is refused as a stale quarantine.
 
 ⭐ **The `self-tests` step is the newest, and it answers a different question from `doctrines`.** The
 doctrines say the tree is clean; the self-tests say each doctrine gate can still *fail* — the RED arms of

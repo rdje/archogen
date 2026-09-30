@@ -96,15 +96,7 @@ fn resolve_requirement(root: &Path, requirement: &str) -> Result<String, String>
 }
 
 /// Every quarantine in the repository, so "what is quarantined right now?" has one answer.
-const QUARANTINES: &[Quarantine] = &[Quarantine {
-    step: "emulator",
-    issue: "QEMU is present, at the pinned release, offers the pinned machine, presents exactly the \
-            device tree its fixture records (`M2.8.2`), and agrees with its eADL description \
-            (`M2.8.3.2`) — but `TARGET_VERIFIED` is still `no` until its leaf records that run as its evidence",
-    owner: "M2.8.3.4",
-    claim: "that `riscv-virt-up` is the platform its eADL fixture describes (§3.2) — \
-            `TARGET_VERIFIED` in `targets/riscv-virt-up.env`",
-}];
+const QUARANTINES: &[Quarantine] = &[];
 
 /// One step of a tier.
 struct Step {

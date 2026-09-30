@@ -33,8 +33,11 @@ against the eADL platform fixture. That is the difference between "we described 
 
 ## Absence is reported, never skipped
 
+QEMU is installed here. This is the same `--check` run with it left off `PATH`, which is how a machine without it
+sees the step:
+
 ```console
-$ scripts/target_emulator.sh --check
+$ PATH=/usr/bin:/bin:/usr/sbin:/sbin:$HOME/.cargo/bin bash scripts/target_emulator.sh --check
 target-emulator: required tool unavailable: qemu-system-riscv64 is not on PATH
 target-emulator:   the riscv-virt-up environment cannot be exercised on this machine
 target-emulator:   install it, then re-run; do NOT record an emulator result without it
@@ -45,16 +48,15 @@ $ echo $?
 A required tool that is unavailable is reported as unavailable. It never becomes a passed
 check by way of a skipped one.
 
-The configuration also carries `TARGET_VERIFIED=no` until an installed QEMU has confirmed it.
-A proposal recorded as a proposal is a fact about what is known; the same line marked verified
-with nothing behind it would be a fabricated fact.
+The configuration carries `TARGET_VERIFIED`. It was `no` until an installed QEMU had confirmed everything, and it
+has been `yes` since leaf `M2.8.3.4`. `--check` keeps its answers apart:
+- A release other than the pin, a machine the emulator does not offer, a device tree that differs from the one
+  recorded, or a description that disagrees with the platform is a comparison that ran and disagreed: exit `1`.
+- `yes` with no description to agree with is refused too, exit `1`: a flag that says verified needs the comparison
+  that verifies it to have run.
+- A target whose agreement holds but whose flag is still `no` could not be declared verified: exit `20`.
 
-With QEMU installed, `--check` keeps two answers apart. A release other than the pin, a machine
-the emulator does not offer, or a device tree that differs from the one recorded is a comparison
-that ran and disagreed: exit `1`. A
-configuration that matches and agrees, but whose `TARGET_VERIFIED` is not yet flipped, could not be
-declared verified: exit `20`, the same code as the absent tool. The runner accepts that only because a
-quarantine names its owner, `M2.8.3.4`. [The verification chapter](verification.md) has the terms.
+[The verification chapter](verification.md) has the terms.
 
 The recorded device tree is `docs/targets/riscv-virt-up.dtb.summary.md` (leaf `M2.8.2`). It was
 dumped from the pinned emulator, rendered as text by `cargo xtask dtb-summary`, and kept beside the

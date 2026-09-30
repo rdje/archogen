@@ -4,6 +4,19 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the emulated board is verified, and the full verification tier passes
+
+`ARCHOGEN-M2-0193` (leaf `M2.8.3.4`).
+
+- The emulated RISC-V board is now marked verified. The pinned emulator presents exactly the hardware
+  description on record, and that description agrees with the board's eADL description. Every check repeats all
+  of this on a fresh reading.
+- The last open gap in the full verification tier is closed. It now passes outright: nine steps passed, none
+  set aside.
+- Flipping the flag exposed a hole, now closed. "Verified" could be claimed without the comparison having run.
+  The check now refuses that, and its own tests cover it.
+- The pages that still said the emulator was missing or unverified are corrected, from real runs.
+
 ## archogen — the board's compiler target is written down where the board is
 
 `ARCHOGEN-M2-0192` (leaf `M2.8.3.3`).

@@ -7,7 +7,7 @@ or pretending an emulator is hardware.
 | Environment | Purpose | Limitation | Status here |
 | --- | --- | --- | --- |
 | `hosted-playground` | fast deterministic testing of shared runtime logic and explicit device models | host execution speed gives no target WCET guarantee; simulated preemption covers defined boundaries only | available — the default development target |
-| `riscv-virt-up` | early execution of target binaries, startup code, interrupt paths and MMIO contracts in an independent emulator | a virtual platform, not a physical board and not a cycle-accurate timing reference | **release pinned (QEMU 11.1.1) and installed; `TARGET_VERIFIED=no` — the §3.2 agreement check does not exist yet** |
+| `riscv-virt-up` | early execution of target binaries, startup code, interrupt paths and MMIO contracts in an independent emulator | a virtual platform, not a physical board and not a cycle-accurate timing reference | **verified: QEMU 11.1.1 installed and pinned, its device tree recorded, and in agreement with `targets/riscv-virt-up.eadl`; `TARGET_VERIFIED=yes` (`M2.8.3.4`)** |
 | `board-first` | the same OS profile on a named physical processor and device revision | selection and timing evidence must be documented before any hardware claim | **no board procured — decision recorded below** |
 
 ## `riscv-virt-up` — installed and pinned, **unverified**
@@ -37,35 +37,32 @@ payload.
    $ scripts/target_emulator.sh --check
    target-emulator: found: QEMU emulator version 11.1.1
    target-emulator: the platform presented matches docs/targets/riscv-virt-up.dtb.summary.md
-   target-emulator: TARGET_VERIFIED=no — this configuration is still a PROPOSAL
-   target-emulator:   the §3.2 agreement check could not be run: the eADL platform description it compares against is not written
-   target-emulator:   leaf M2.8 owns flipping it, with the evidence that justifies it
+   target-emulator: the §3.2 agreement holds: targets/riscv-virt-up.eadl agrees with the platform presented
    $ echo $?
-   20
+   0
    ```
 
-   Exit `20`, not `1`, since `PROGRAM.10.1`: the configuration matches, and the agreement check it
-   needs could not be run — §14.3's quarantine, owned by `M2.8`. A mismatch still exits `1`. Since
-   `M2.8.2` the check also re-dumps the device tree and compares it with
-   [`riscv-virt-up.dtb.summary.md`](riscv-virt-up.dtb.summary.md); what is left is the eADL side
-   (`M2.8.3`).
+   Exit `0` since `M2.8.3.4` (`2026-09-30`). The check finds the pinned release and machine, re-dumps the device
+   tree and compares it with [`riscv-virt-up.dtb.summary.md`](riscv-virt-up.dtb.summary.md) (`M2.8.2`), and
+   compares the target's eADL description with the same dump (`M2.8.3.2`). A mismatch in any of them exits `1`.
+   Before the description existed, the check exited `20`, §14.3's quarantine, owned by `M2.8`.
 
    §14.3 still governs the absent case, and the tool still honours it: on a machine without
    `qemu-system-riscv64` this exits `20` and says so, because "a required tool skipped or unavailable
    is reported as such, not a passed check".
 
-2. **`TARGET_VERIFIED=no`, and pinning did not change that.** A pinned release is a fact about the
-   *tool*; verification is a claim about the *platform*, and §3.2 says what would justify it —
-   "inspect the produced hardware description, and verify agreement with the eADL platform fixture".
-   ⛔ **Neither side of that comparison exists yet.** `DEVICE_TREE_FIXTURE`
-   (`docs/targets/riscv-virt-up.dtb.summary.md`) is named at `targets/riscv-virt-up.env:45` and is not
-   on disk — `ls docs/targets/` returns only this file — and no eADL description of this target exists
-   either: `git grep -ln 'riscv|virt|qemu' -- '*.eadl'` returns a single boundary *rejection* case,
-   and every `defplatform` in the repository is a semantic fixture (`host.playground`, `soc.abstract`,
-   `soc.concrete`, `soc.p`). `M2.8.2` writes the fixture from a measured dump and makes re-dumping it
-   a test; `M2.8.3` writes the description and the agreement test, and flips the flag only on that
-   evidence. Recording the configuration as a proposal is a fact about our knowledge; recording it as
-   verified with nothing behind it would be a fabricated fact, which §9 forbids.
+2. **`TARGET_VERIFIED=yes`, on the comparison §3.2 names.** A pinned release is a fact about the *tool*.
+   Verification is a claim about the *platform*, and §3.2 says what justifies it: "inspect the produced hardware
+   description, and verify agreement with the eADL platform fixture". Both sides exist now:
+   - [`riscv-virt-up.dtb.summary.md`](riscv-virt-up.dtb.summary.md), the device tree the pinned QEMU presents,
+     from a measured dump (`M2.8.2`);
+   - `targets/riscv-virt-up.eadl`, the target in eADL
+     (`decision_target-platform-description.md`, `M2.8.3.2`).
+
+   `cargo xtask target-agreement` compares them fact by fact, and every `--check` runs it on a fresh dump. The flag
+   was flipped on that evidence (`M2.8.3.4`), and `--check` refuses `yes` whenever the agreement did not run. Until
+   `2026-09-30` the flag was `no`, and neither side existed. A configuration recorded as verified with nothing
+   behind it would have been a fabricated fact, which §9 forbids.
 
 ### The agreement check this enables
 
