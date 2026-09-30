@@ -4,6 +4,18 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the command line checks through the engine API
+
+`ARCHOGEN-API-0176` (leaf `API.3.3`).
+
+- `archogen check` and `archogen build` no longer judge a description themselves. They read the file, ask the
+  engine API, and print its answer. Every output, exit code and book transcript is unchanged, which the
+  existing tests confirm.
+- Three new checks keep the two from drifting apart. The command line may not call the engine's checking code
+  except through the API. The API offers exactly the commands that run, minus `build`, which the roadmap keeps
+  out. And over every description in the repository, the command line and the API report the same outcome,
+  the same diagnostics and the same notes.
+
 ## archogen — the engine API exists
 
 `ARCHOGEN-API-0175` (leaf `API.3.2`).

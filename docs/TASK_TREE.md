@@ -55,7 +55,7 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 | [`S0`](tasks/S0.md) | `done` | — every leaf closed; F28 green, and the chapter's counts are measured (`S0.8`) | repo-local |
 | [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.34` — nested vendored checkouts off their pins, awaiting the director's yes to restore; `.10.5` waits on the next push, `.31`/`.32` on the director | repo-local |
 | [`M1`](tasks/M1.md) | `active` | `M1.29.4` — blocked: module parameters wait on the director's call (findings §7); every other leaf is closed | repo-local |
-| [`API`](tasks/API.md) | `active` | `API.3.3` — the CLI judges through `archogen-api`, and parity is gated three ways; then the book (`API.3.4`) | repo-local |
+| [`API`](tasks/API.md) | `active` | `API.3.4` — the book documents the engine API, and `API.3` closes with its version fixed at `1.0` | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |
 | [`M2`](tasks/M2.md) | `active` | `M2.6` — the runtime-applicable analysis; `M2.8.3` (the eADL side of the §3.2 agreement) is a design act, `M2.9` waits on the director | repo-local |
 | [`M3`](tasks/M3.md) | `pending` | `M3.1` — candidate enumeration and substitutability | repo-local |

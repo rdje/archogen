@@ -11,9 +11,9 @@
 //!
 //! 1. Resolve the profile. A system built under a profile nobody supports has not been built.
 //! 2. Refuse `--locked`, which the S0 path cannot honor (see below).
-//! 3. Run the **whole frontend** — the same `eadl_model::check` that `archogen check` runs,
-//!    behind the same module-file routing. A description that does not check does not build, and
-//!    the build reports the *check's* verdict rather than inventing one of its own.
+//! 3. Ask the **engine API** — the same `archogen_api::check` that `archogen check` asks, with the
+//!    same module path. A description that does not check does not build, and the build reports the
+//!    *check's* verdict rather than inventing one of its own.
 //! 4. Interpret into an S0 plan, which is where a valid, in-profile description can still be
 //!    refused for want of an engine realization.
 //! 5. Emit.
@@ -25,11 +25,8 @@ use std::io::Write;
 use std::path::Path;
 
 use archogen_s0::{emit, interpret};
-use eadl_front::SourceMap;
-use eadl_model::check::shipped_registry;
-use eadl_model::profile;
 
-use crate::check_cmd::{embedded_modules, frontend, Frontend};
+use crate::check_cmd::{ask, report_not_judged};
 use crate::cli::Parsed;
 use crate::status::Status;
 
@@ -44,26 +41,17 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
         .value("out")
         .expect("the parser guarantees `--out` is required");
 
-    let requested = parsed.value("profile").unwrap_or("rt-static-up-v1");
-    let Some(active) = profile::supported(requested) else {
-        let known: Vec<&str> = profile::SUPPORTED.iter().map(|p| p.id).collect();
-        let _ = writeln!(
-            err,
-            "archogen: {}: `{requested}` is not a supported profile",
-            Status::UnsupportedProfile.slug()
-        );
-        let _ = writeln!(err, "  hint: this build supports {}", known.join(", "));
-        return Status::UnsupportedProfile;
-    };
-
-    // ⛔ `--locked` is refused rather than accepted-and-ignored. Its contract is "fail on any
-    // missing or mismatched locked input", and the S0 path has no lock data to compare against —
-    // so honoring it is impossible and *appearing* to honor it is the worse outcome: a user who
-    // asked for a reproducible build would get an ordinary one that claimed to be locked. §10.3
-    // makes lock data a build output, and leaf `M4.1` owns producing it.
-    // S0-ASSUMPTION: no-lock-data — the S0 path emits none, so `--locked` cannot be honored and
-    // is refused rather than accepted and ignored. `M4.1` produces the lock data.
-    if parsed.flag("locked") {
+    let refuse_locked = |err: &mut dyn Write| -> Option<Status> {
+        // ⛔ `--locked` is refused rather than accepted-and-ignored. Its contract is "fail on any
+        // missing or mismatched locked input", and the S0 path has no lock data to compare against —
+        // so honoring it is impossible and *appearing* to honor it is the worse outcome: a user who
+        // asked for a reproducible build would get an ordinary one that claimed to be locked. §10.3
+        // makes lock data a build output, and leaf `M4.1` owns producing it.
+        // S0-ASSUMPTION: no-lock-data — the S0 path emits none, so `--locked` cannot be honored and
+        // is refused rather than accepted and ignored. `M4.1` produces the lock data.
+        if !parsed.flag("locked") {
+            return None;
+        }
         let _ = writeln!(
             err,
             "archogen: {}: `--locked` is not implemented on the experimental S0 build path",
@@ -76,66 +64,29 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
              build wearing a locked build's label. Lock data is ROADMAP.md §10.3 and task-tree \
              leaf M4.1. Re-run without `--locked` for an experimental build"
         );
-        return Status::Unimplemented;
-    }
-
-    let text = match std::fs::read_to_string(path) {
-        Ok(text) => text,
-        Err(error) => {
-            let _ = writeln!(
-                err,
-                "archogen: {}: cannot read {path}: {error}",
-                Status::Usage.slug()
-            );
-            let _ = writeln!(err, "  hint: give the path of an eADL description");
-            return Status::Usage;
-        }
+        Some(Status::Unimplemented)
     };
-
-    let mut sources = SourceMap::new();
-    let registry = match shipped_registry(&mut sources, &embedded_modules()) {
-        Ok(registry) => registry,
-        Err(diagnostics) => {
-            let _ = writeln!(
-                err,
-                "archogen: {}: the shipped kind modules could not be loaded",
-                Status::ToolFailure.slug()
-            );
-            for diagnostic in &diagnostics {
-                let _ = write!(err, "{}", diagnostic.render(&sources));
-            }
-            return Status::ToolFailure;
-        }
+    // The whole of `archogen check`, through the one engine API: a description that does not check does not
+    // build, and the two commands cannot disagree about a description or a module tree.
+    let response = match ask(path, parsed.value("profile"), refuse_locked, err) {
+        Ok(response) => response,
+        Err(status) => return status,
     };
-    let Ok(id) = sources.add(path.clone(), text) else {
-        let _ = writeln!(
-            err,
-            "archogen: {}: {path} is too large to address",
-            Status::ToolFailure.slug()
-        );
-        return Status::ToolFailure;
+    let Some(judged) = &response.judged else {
+        return report_not_judged(&response, err);
     };
-
-    // The whole frontend, not a subset — the same function `archogen check` calls, so the two commands
-    // cannot disagree about a description or a module tree. A description that does not check does not
-    // build.
-    let outcome = match frontend(&mut sources, id, path, &registry, active, err) {
-        Frontend::Failed(status) => return status,
-        Frontend::Checked { outcome, .. } => outcome,
-    };
-    if !outcome.is_ok() {
-        let status = Status::from_verdict(outcome.verdict);
-        let _ = write!(err, "{}", outcome.render(&sources));
+    if !response.is_ok() {
+        let _ = write!(err, "{}", response.render_diagnostics());
         let _ = writeln!(
             err,
             "archogen: {}: {} diagnostic(s) in {path} — nothing was generated",
-            status.slug(),
-            outcome.diagnostics.len()
+            response.status.slug(),
+            response.diagnostics.len()
         );
-        return status;
+        return response.status;
     }
 
-    let plan = match interpret(&outcome.declarations, id) {
+    let plan = match interpret(&judged.declarations, judged.description) {
         Ok(plan) => plan,
         Err(diagnostic) => {
             // ⭐ The verdict comes from the diagnostic's own code through the one accessor every consumer
@@ -145,7 +96,7 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
             // told the author to file a bug about the toolchain for a symbol they mistyped — leaf
             // `M1.28.1`.
             let status = Status::from_verdict(eadl_front::Verdict::of_code(diagnostic.code));
-            let _ = write!(err, "{}", diagnostic.render(&sources));
+            let _ = write!(err, "{}", diagnostic.render(&response.sources));
             let _ = writeln!(
                 err,
                 "archogen: {}: the S0 path cannot realize {path}, though the check pipeline accepted \
@@ -157,7 +108,7 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
     };
 
     let dir = Path::new(out_dir);
-    let generated = match emit(&plan, &sources, dir) {
+    let generated = match emit(&plan, &response.sources, dir) {
         Ok(generated) => generated,
         Err(error) => {
             let _ = writeln!(

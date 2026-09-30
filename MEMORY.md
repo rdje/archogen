@@ -13,11 +13,11 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `API` → frontier `API.3.3`. `M1`'s only open leaf, `M1.29.4`, and `PROGRAM`'s frontier are
+- **Active tree:** `API` → frontier `API.3.4`. `M1`'s only open leaf, `M1.29.4`, and `PROGRAM`'s frontier are
   blocked (on a push, and on the director). Every other tree's frontier head is in `docs/TASK_TREE.md`;
   it is not copied here.
-- **Next action:** **`API.3.3`** — `check` and `build` judge through `archogen_api::check`, parity gated; then
-  `API.3.4`; then `M2.6`, and `M2.8.3` (the eADL side of the §3.2 agreement, a design act).
+- **Next action:** **`API.3.4`** — the book documents the engine API; `API.3` closes, version fixed at `1.0`; then
+  `API.4`, or `M2.6` and `M2.8.3` (the eADL side of the §3.2 agreement, a design act).
 - **In flight:** branch **`wip/m2.9`** (`758cbcd`) is a checkpoint, not a finished leaf — `M2.9` records it as
   not compiling (`crates/rt-core/tests/differential.rs` unadapted).
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of

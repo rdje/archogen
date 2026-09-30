@@ -10,7 +10,7 @@
 
 use std::path::{Path, PathBuf};
 
-use archogen_cli::check_cmd::KIND_MODULE_OWNER;
+use archogen_api::KIND_MODULE_OWNER;
 use archogen_cli::{run, Status};
 
 fn repo_root() -> PathBuf {

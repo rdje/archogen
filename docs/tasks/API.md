@@ -265,15 +265,57 @@ agent can drive. The server is a capability of the built binary, spawned per ins
     the snapshots.
 
 - ID: `API.3.3`
-  Status: `pending`
+  Status: `done`
   Goal: the CLI becomes the API's first consumer — `check` and `build` judge through `archogen_api::check`
   and nothing else — and parity is gated.
   Acceptance: `check_cmd.rs` and `build_cmd.rs` call the API, and the duplicated routing is gone; the three
   parity legs of the decision (structural, by operation against `spec.rs`, by behaviour over every tracked
   description), each with a RED arm; every CLI transcript the book shows unchanged; `make focused` exit `0`.
   Priority: **high**.
-  Verification: `pending`
-  Commit: `pending`
+  **Closed `2026-09-30`.** `check_cmd.rs` reads the file, picks the module path (§6 rule 7), asks
+  `archogen_api::check`, and prints the `Response`. `build_cmd.rs` asks the same function through the same helper,
+  then interprets and emits from the response's judgement. The routing that lived in the CLI is gone: `frontend`,
+  `Frontend`, `KindModule`, `kind_module`, `refuse_kind_module` and `embedded_modules`. `archogen_api::refuse_profile`
+  keeps the profile refusal before the file is read, with one wording for both commands.
+  ⛔ Two things this move broke, each caught. `Response::render_diagnostics` concatenated where `Outcome::render`
+  joins, and it now joins the same way. Three catalogue entries were anchored in text that moved (M1.30's closure
+  entry, and M1.32's two); they are retargeted and killed again.
+  Verification: see the checklist.
+  Commit: `ARCHOGEN-API-0176 (leaf API.3.3)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — the CLI judged descriptions itself, beside the API:
+    ```text
+    $ git grep -n "shipped_registry(\|check_program(\|elaborate_source(" HEAD -- crates/archogen-cli/src
+      build_cmd.rs:96 · check_cmd.rs:90 · check_cmd.rs:299 · check_cmd.rs:348
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `API.3.2` built the API beside the CLI's own path, so two
+    implementations of one judgement existed: `git grep -n "pub fn frontend" HEAD -- crates/archogen-cli/src` →
+    `check_cmd.rs`, shared by both commands.
+  - [x] **FIX** — the CLI as consumer (`ask`, `report_not_judged`), and `refuse_profile` in the API.
+    `crates/archogen-cli/tests/api_parity.rs` has three legs with a RED arm each: structural (no CLI production
+    line names `eadl_model::check`, `shipped_registry`, `check_program` or `elaborate_source`), by operation
+    (`OPERATIONS` equals the commands `spec.rs` runs, less `build` with its §10.4 reason), and by behaviour
+    (over every description, the CLI's status, codes and notes equal the API's). Three parity mutations are
+    catalogued, and three entries retargeted.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    $ cargo test -q -p archogen-cli --test api_parity → test result: ok. 6 passed
+    $ cargo run -q -p xtask -- mutate --only cli-reaches-the-engine-directly cli-drops-the-first-note \
+        api-offers-an-excluded-command → each killed by the leg it targets; mutate: OK — 3 mutation(s)
+    $ cargo run -q -p xtask -- mutate --only closure-computed-and-dropped kind-module-not-routed \
+        kind-module-classified-by-its-first-declaration → mutate: OK — 3 mutation(s)
+    $ cargo run -q -p xtask -- mutate → mutate: OK — 38 mutation(s), each killed or surviving exactly as the
+      catalog expects; rc=0 (the whole catalogue, after the move)
+    ```
+  - [x] **NO REGRESSION** — `cargo test -q --workspace --no-fail-fast` → 690 passed / 0 failed over 55 suites
+    after the move and before the parity file, rc=0: every book transcript (`book_transcripts`, the kind-module
+    transcript), every frozen verdict (`verdicts`) and every CLI test unchanged by it. With the parity file:
+    696 passed / 0 failed over 56 suites, rc=0. `cargo clippy -q --all-targets --all-features -- -D warnings`
+    exit=0; `cargo fmt --all -- --check` exit=0.
+  - [x] **LOCKSTEP** — `build_cmd.rs`'s order-of-operations doc; the frontier, both logs, the changelog and the
+    snapshots. The book's API chapter is `API.3.4`.
 
 - ID: `API.3.4`
   Status: `pending`
@@ -347,12 +389,11 @@ agent can drive. The server is a capability of the built binary, spawned per ins
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `API.3.3` | `pending` | the CLI as the API's first consumer, and parity gated three ways |
-| 2 | `API.3.4` | `pending` | the book documents the API; `API.3` closes and fixes the version at `1.0` |
-| 3 | `API.4` | `pending` | the instance model and the resource limits an untrusted consumer makes necessary. New architecture, not a binding — archogen is stateless over files today |
-| 4 | `API.5` | `pending` | the wasm binding, behind `API.1` and `API.3` |
-| 5 | `API.6` | `pending` | the MCP server — the point of the tree, and last because everything above is what makes it safe to hand to an arbitrary agent |
-| 6 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6` |
+| 1 | `API.3.4` | `pending` | the book documents the API; `API.3` closes and fixes the version at `1.0` |
+| 2 | `API.4` | `pending` | the instance model and the resource limits an untrusted consumer makes necessary. New architecture, not a binding — archogen is stateless over files today |
+| 3 | `API.5` | `pending` | the wasm binding, behind `API.1` and `API.3` |
+| 4 | `API.6` | `pending` | the MCP server — the point of the tree, and last because everything above is what makes it safe to hand to an arbitrary agent |
+| 5 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6` |
 
 ⛔ **This tree does not displace the project's main line.** `M1.13` is the frontier in
 [`M1.md`](M1.md), and `API.3`–`API.7` are sequenced behind it by the director's ruling. `API.1` and
@@ -413,6 +454,7 @@ them early is cheap and makes the rest estimable.
 | `2026-09-30` | `API.2` | the gate on the product; nine arms and two mutations; `wasm_build.sh` on the same rule | 44 production files, none spawns; the naive test-half rule shown leaking and replaced in both scripts |
 | `2026-09-30` | `API.3.1` | a read of `archogen check`'s judging path (`check_cmd.rs`, `build_cmd.rs`), `ModuleSource` and `ROADMAP.md` §10.4 and §15 | the path's parts and their one shared routing point, `frontend`; `MemoryModules` already exists; the ruling's wording and §10.4's differ, flagged as findings §9 |
 | `2026-09-30` | `API.3.2` | the crate's eight legs; the wasm build and its derived set; the subprocess gate; three mutations; the whole suite; `make focused` | all pass; `archogen-api` compiles for wasm32; 690 passed / 0 failed over 55 suites; each mutation killed |
+| `2026-09-30` | `API.3.3` | the three parity legs and their arms; six mutations; the whole catalogue; the whole suite | 6 pass; each mutation killed by its leg; 38 of 38 as expected; every transcript and frozen verdict unchanged |
 
 ## Commit Log
 
@@ -423,6 +465,7 @@ them early is cheap and makes the rest estimable.
 | `API.2` | `ARCHOGEN-API-0158 (leaf API.2)` | **the product runs nothing, and a gate says so** — `NO-SUBPROCESS` |
 | `API.3.1` | `ARCHOGEN-API-0174 (leaf API.3.1)` | **the engine API's design, recorded** — a crate, one outcome vocabulary, a version promise, parity three ways; `API.3` decomposed |
 | `API.3.2` | `ARCHOGEN-API-0175 (leaf API.3.2)` | **the engine API exists** — `archogen-api`: `check`, `Response`, `Status` moved into it, `VERSION`; compiles for wasm32 |
+| `API.3.3` | `ARCHOGEN-API-0176 (leaf API.3.3)` | **the CLI checks through the API** — its own routing removed; parity gated structurally, by operation and by behaviour |
 
 ## Changelog
 

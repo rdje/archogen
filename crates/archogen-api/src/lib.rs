@@ -153,13 +153,15 @@ impl Response {
         self.status == Status::Ok
     }
 
-    /// Every diagnostic, rendered with its source excerpt.
+    /// Every diagnostic, rendered with its source excerpt and joined as `eadl_model::check::Outcome::render`
+    /// joins them, so a consumer that prints it prints what the CLI always has.
     #[must_use]
     pub fn render_diagnostics(&self) -> String {
         self.diagnostics
             .iter()
             .map(|diagnostic| diagnostic.render(&self.sources))
-            .collect()
+            .collect::<Vec<_>>()
+            .join("\n")
     }
 
     fn not_judged(
@@ -217,18 +219,12 @@ impl Response {
 /// (`docs/semantics/reference.md` §6 rule 7). A kind module is not judged at all (leaf `M1.32`).
 #[must_use]
 pub fn check(request: &Request<'_>) -> Response {
+    if let Some(refused) = refuse_profile(request.profile) {
+        return refused;
+    }
     let mut sources = SourceMap::new();
-    let requested = request.profile.unwrap_or(default_profile().id);
-    let Some(active) = profile::supported(requested) else {
-        let known: Vec<&str> = profile::SUPPORTED.iter().map(|p| p.id).collect();
-        return Response::not_judged(
-            Status::UnsupportedProfile,
-            sources,
-            vec![format!("`{requested}` is not a supported profile")],
-            Some(format!("this build supports {}", known.join(", "))),
-            Vec::new(),
-        );
-    };
+    let active = profile::supported(request.profile.unwrap_or(default_profile().id))
+        .expect("refuse_profile answered None, so the profile is supported");
     let registry = match shipped_registry(&mut sources, &kind_modules()) {
         Ok(registry) => registry,
         // A broken language definition is a fault in the toolchain, not a verdict about the description.
@@ -317,6 +313,29 @@ pub fn check(request: &Request<'_>) -> Response {
         .collect();
     let outcome = check_program(&program, &registry, active);
     Response::judged(outcome, Some(instances), active, id, sources)
+}
+
+/// The response for a profile nobody supports, or `None` when `requested` names one this build supports —
+/// `None` itself names the default profile.
+///
+/// [`check`] asks it first, because a description checked against a profile nobody supports has not been
+/// checked. It is public for a consumer that must refuse before doing anything else: the CLI asks before it
+/// reads a file, since an unreadable file reported after an unsupported profile would send the author to fix
+/// the wrong thing. Either way the refusal has one wording.
+#[must_use]
+pub fn refuse_profile(requested: Option<&str>) -> Option<Response> {
+    let requested = requested.unwrap_or(default_profile().id);
+    if profile::supported(requested).is_some() {
+        return None;
+    }
+    let known: Vec<&str> = profile::SUPPORTED.iter().map(|p| p.id).collect();
+    Some(Response::not_judged(
+        Status::UnsupportedProfile,
+        SourceMap::new(),
+        vec![format!("`{requested}` is not a supported profile")],
+        Some(format!("this build supports {}", known.join(", "))),
+        Vec::new(),
+    ))
 }
 
 /// Whether the description at `id` is a module file, in the sense of `docs/semantics/reference.md` §6.

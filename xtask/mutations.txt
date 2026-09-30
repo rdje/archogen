@@ -292,9 +292,9 @@ test -p archogen-cli --test closure_report every_accepted_description_reports_it
 expect killed
 why M1.30: the shape the leaf found — the presence pass computes the closure boundary and nothing shows it. Dropping it from the report must fail the build, not pass silently.
 from
-        for line in closure_report(&outcome.closure) {
+        for line in closure_report(&judged.closure) {
 to
-        for line in closure_report(&eadl_model::check::Closure::default()).into_iter().take(0) {
+        for line in closure_report(&archogen_api::Closure::default()).into_iter().take(0) {
 end
 
 mutation string-delimiter-unchecked
@@ -357,18 +357,18 @@ to
 end
 
 mutation kind-module-not-routed
-file crates/archogen-cli/src/check_cmd.rs
+file crates/archogen-api/src/lib.rs
 test -p archogen-cli --test kind_modules
 expect killed
 why M1.32: without the routing, `check` reads a kind module as a description and answers invalid-description, exit 10 — a verdict about a system the tool never read, for its own language definition.
 from
-            if let Some(kind) = kind_module(sources, id) {
+            if let Some(kind) = kind_module(&sources, id) {
 to
-            if let Some(kind) = kind_module(sources, id).filter(|_| false) {
+            if let Some(kind) = kind_module(&sources, id).filter(|_| false) {
 end
 
 mutation kind-module-classified-by-its-first-declaration
-file crates/archogen-cli/src/check_cmd.rs
+file crates/archogen-api/src/lib.rs
 test -p archogen-cli --test kind_modules
 expect killed
 why M1.32: a kind declared after another declaration is still a kind module. Classifying by the first declaration hands the file to the schema pass, the reason is_module_file looks at every declaration.
@@ -434,4 +434,39 @@ from
         if !unreadable.is_empty() {
 to
         if false && !unreadable.is_empty() {
+end
+
+mutation cli-reaches-the-engine-directly
+file crates/archogen-cli/src/check_cmd.rs
+test -p archogen-cli --test api_parity
+expect killed
+why API.3.3: a CLI that imports the engine's registry can judge a description its own way, a capability behind one surface and not the other (§10.4). The structural leg must see the import.
+from
+    use archogen_api::{Closure, Request, Response};
+to
+    use archogen_api::{Closure, Request, Response};
+    #[allow(unused_imports)]
+    use eadl_model::check::shipped_registry;
+end
+
+mutation cli-drops-the-first-note
+file crates/archogen-cli/src/check_cmd.rs
+test -p archogen-cli --test api_parity
+expect killed
+why API.3.3: the CLI printing less than the API answered — here the first note of a request it did not judge — is a disagreement the behaviour leg must see over the real corpus, where the kind modules carry one.
+from
+        for note in &response.notes {
+to
+        for note in response.notes.iter().skip(1) {
+end
+
+mutation api-offers-an-excluded-command
+file crates/archogen-api/src/lib.rs
+test -p archogen-cli --test api_parity
+expect killed
+why API.3.3: `build` is outside the programmatic interface by §10.4. An API that offered it would hand a remote consumer a filesystem authority; the operation leg must refuse it.
+from
+    pub const OPERATIONS: &[&str] = &["check"];
+to
+    pub const OPERATIONS: &[&str] = &["check", "build"];
 end
