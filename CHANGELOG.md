@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the two older sealing checks had the same blind spot, now closed
+
+`ARCHOGEN-PROGRAM-0239` (leaf `PROGRAM.42`).
+
+- The review of the newest sealing check found that a particular kind of git merge could hide a seal from it. The
+  two older checks read history the same way, so the same merge was tried on each, in a throwaway repository.
+- Both were fooled. The task trees' check passed after a sealed task was edited again. The changelog's check passed
+  after twenty old entries were dropped outright.
+- Both now read the whole history, and both refuse a shallow copy of the repository or a history read that fails.
+  Each has the merge and a shallow copy as test cases, proven by removing the fix and watching the case fail.
+- The folders holding sealed history are now exempt from line-ending conversion, so a checkout on another system
+  cannot make them look changed.
+
 ## archogen — the decisions folder's sealing check, hardened after its review
 
 `ARCHOGEN-PROGRAM-0238` (leaf `PROGRAM.41.1`; filed by `ARCHOGEN-PROGRAM-0236`).

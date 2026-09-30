@@ -167,8 +167,13 @@ check_one() { # name file dir pattern window
   # Append-only across history: every row any committed index held, not only HEAD's, since HEAD is the commit under
   # test in CI and a comparison with it alone sees nothing there.
   mkdir -p "$SCRATCH"
-  local current headrow commit; current="$(rows "$name")"
-  for commit in $(GIT_NO_REPLACE_OBJECTS=1 git log --format=%H -- "$INDEX" 2>/dev/null); do
+  # Both history reads take --full-history, so a merge that keeps only a side that never sealed cannot hide a seal,
+  # and a failed read is a breach, never an empty history (PROGRAM.42).
+  local current headrow commit log; current="$(rows "$name")"
+  if ! log="$(GIT_NO_REPLACE_OBJECTS=1 git log --full-history --format=%H -- "$INDEX" 2>/dev/null)"; then
+    note "\`git log\` of $INDEX failed, so the append-only leg cannot hold"; log=""
+  fi
+  for commit in $log; do
     GIT_NO_REPLACE_OBJECTS=1 git show "$commit:$INDEX" > "$SCRATCH/old-index.md" 2>/dev/null || continue
     while IFS= read -r headrow; do
       [ -n "$headrow" ] || continue
@@ -180,7 +185,7 @@ check_one() { # name file dir pattern window
   local added
   for seg in $listed; do
     [ -f "$dir/$seg.md" ] || continue
-    added="$(GIT_NO_REPLACE_OBJECTS=1 git log --diff-filter=A --format=%H -- "$dir/$seg.md" 2>/dev/null | tail -n 1)"
+    added="$(GIT_NO_REPLACE_OBJECTS=1 git log --full-history --diff-filter=A --format=%H -- "$dir/$seg.md" 2>/dev/null | tail -n 1)"
     [ -n "$added" ] || continue
     GIT_NO_REPLACE_OBJECTS=1 git show "$added:$dir/$seg.md" 2>/dev/null | cmp -s - "$dir/$seg.md" ||
       note "$dir/$seg.md is not what ${added:0:12} wrote when it sealed it — a sealed segment changed"
@@ -207,6 +212,11 @@ check_one() { # name file dir pattern window
       note "$name's dates rise somewhere across $file and its segments — the order is newest first"
   fi
   checked=$((checked + 1))
+}
+
+shallow_check() { # a shallow clone would hide the commits the history legs read
+  [ "$(GIT_NO_REPLACE_OBJECTS=1 git rev-parse --is-shallow-repository 2>/dev/null)" = false ] ||
+    note "the repository is shallow, or git cannot say, so the commits the history legs read may be missing — fetch the full history"
 }
 
 run_all() { # $1 = check | seal
@@ -283,6 +293,26 @@ PYF
   sed -i.bak 's|docs/history/INDEX.md|older notes elsewhere|' "$work/DEV_NOTES.md"; rm -f "$work/DEV_NOTES.md.bak"
   arm "a live header that does not name the index is refused" 1 "does not name docs/history/INDEX.md"
   git -C "$work" checkout -q -- DEV_NOTES.md
+  # A merge that keeps only a side that never sealed and dropped the oldest entries itself (PROGRAM.42): git's
+  # default simplification hid the seal, and twenty entries were lost with every leg green.
+  local main out; main="$(git -C "$work" symbolic-ref --short HEAD)"
+  git -C "$work" checkout -q -b other HEAD~1
+  python3 - "$work" <<'PYF'
+import sys
+w = sys.argv[1]
+for name, cut in (("CHANGELOG.md", "## archogen — entry 20\n"), ("DEV_NOTES.md", "## _(2026-09-10)_ — note 10\n")):
+    p = w + "/" + name; s = open(p).read(); open(p, "w").write(s[:s.index(cut)].rstrip("\n") + "\n")
+PYF
+  commit
+  git -C "$work" -c user.name=t -c user.email=t@t merge -q -s ours -m "drop the seal" "$main"
+  arm "a merge that keeps only a side that never sealed cannot hide the seal" 1 "the index is append-only"
+  git -C "$work" checkout -q "$main"; git -C "$work" branch -q -D other
+  git clone -q --depth 1 "file://$work" "$work-shallow" 2>/dev/null
+  arms=$((arms + 1))
+  if out="$(cd "$work-shallow" && bash "$SELF" 2>&1)"; then echo "SELF-TEST: a shallow clone passed" >&2
+  elif printf '%s' "$out" | grep -qF "the repository is shallow"; then ok=$((ok + 1)); echo "  ✅ a shallow clone is refused"
+  else echo "SELF-TEST: a shallow clone was refused for another reason" >&2; fi
+  rm -rf "$work-shallow"
   { head -n 4 "$work/CHANGELOG.md"; for i in $(seq 65 -1 46); do printf '## archogen — entry %s\n\n`ARCHOGEN-T-%04d` (leaf T.%s).\n\n- a line\n\n' "$i" "$i" "$i"; done; tail -n +5 "$work/CHANGELOG.md"; } > "$work/c"
   mv "$work/c" "$work/CHANGELOG.md"
   arm "twenty more entries require the next rollover" 1 "a rollover is required"
@@ -298,8 +328,8 @@ PYF
 
 case "${1:-}" in
   --self-test) self_test; exit $? ;;
-  --seal) run_all seal || exit 1; checked=0; run_all check ;;
-  "") checked=0; run_all check ;;
+  --seal) run_all seal || exit 1; checked=0; shallow_check; run_all check ;;
+  "") checked=0; shallow_check; run_all check ;;
   *) echo "usage: bash scripts/check_history_ledgers.sh [--seal | --self-test]" >&2; exit 2 ;;
 esac
 if [ "$fail" -ne 0 ]; then

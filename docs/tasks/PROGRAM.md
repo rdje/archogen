@@ -896,15 +896,42 @@ mdBook that is the director's window into the project.
 
 
 - ID: `PROGRAM.42`
-  Status: `pending`
+  Status: `done`
   Goal: `TASK-HISTORY` and `HISTORY-LEDGERS` checked for `DECISION-HISTORY`'s D1. Both read history with `git log`
   under its default simplification (`check_task_history.sh`, `check_history_ledgers.sh`), so a merge that drops a
   seal's commit from the simplified history may hide it the same way. The review did not test them.
   Acceptance: the construction reproduced on each gate or shown not to apply, by a scratch repository; where it
   applies, `--full-history` and a RED arm; line endings of the sealed folders pinned in `.gitattributes`, as the
-  review's D14 asks of `docs/decision-history/`.
-  Verification: `pending`
-  Commit: `pending`
+  review's D14 asks of `docs/decision-history/`. Widened while reproducing: both gates also read a failed history
+  command as an empty history, D5's class, so a shallow repository and a failed read are refused too.
+  Verification: see the checklist.
+  Commit: `ARCHOGEN-PROGRAM-0239 (leaf PROGRAM.42)`
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE** — scratch repositories under `target/tmp/p42/`, the seal on one branch, then
+    `git merge -s ours` from a branch that never sealed. `TASK-HISTORY` at the merge → rc=0, `task-history: OK (0
+    sealed file(s) …)`, and again after the sealed leaf is edited live. `HISTORY-LEDGERS`, whose other side dropped
+    the oldest twenty entries itself so the window leg stays quiet → rc=0, `history-ledgers: OK (2 ledger(s) …)`:
+    twenty entries lost, every leg green. Both apply.
+  - [x] **ROOT CAUSE** — `git show 3526848:scripts/check_task_history.sh | grep -n 'git("log"'` → lines 232 and
+    241, and `git show 3526848:scripts/check_history_ledgers.sh | grep -n 'git log'` → lines 171 and 183: every
+    history read uses git's default simplification, which follows one side of a merge that is TREESAME to it and
+    never visits the seal. Each also read a failed command as no history (`or b""`, `2>/dev/null`).
+  - [x] **FIX** — `--full-history` on all four reads; a shallow repository refused; a failed read a breach. Each
+    self-test gains the merge and a shallow clone as RED arms. `.gitattributes` marks `docs/task-history/` and
+    `docs/history/` `-text`, all 83 of their files measured `i/lf` first.
+  - [x] **ADDRESSED** — the same constructions with the fix → rc=1, "`T.1`, committed in `415761b824ba`, is gone or
+    changed" and "row `0001`, committed in `fecbdf577beb`, is gone or changed"; `bash scripts/check_task_history.sh
+    --self-test` → `27 pass / 0 fail (27 arms)`; `bash scripts/check_history_ledgers.sh --self-test` → `17 pass / 0
+    fail (17 arms)`. Mutations on copies: without `--full-history` the merge arm turns red in each (`26 pass / 1
+    fail`, `16 pass / 1 fail`); without the shallow check its arm turns red in each.
+  - [x] **NO REGRESSION** — both gates on the real trees → rc=0, `task-history: OK (69 sealed file(s) …)` and
+    `history-ledgers: OK (2 ledger(s) …)`; `bash scripts/run_self_tests.sh` → rc=0, `self-tests: OK — 37 self-test(s)
+    passed`; `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`.
+  - [x] **LOCKSTEP** — `docs/decisions/decision_task-tree-sealing.md`, `docs/decisions/decision_history-ledgers.md`,
+    `DOCTRINE_ENFORCEMENT.md`, `.gitattributes`; this leaf, the frontier and both logs; `LIVE_STATUS.md`,
+    `docs/TASK_TREE.md`, `MEMORY.md`, `CHANGELOG.md`.
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -969,9 +996,8 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.42` | `pending` | the same merge construction tried on `TASK-HISTORY` and `HISTORY-LEDGERS` |
-| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
-| 3 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
+| 1 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 2 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
@@ -1119,6 +1145,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.39` | the folder measured; the records moved and every path rewritten; `DECISION-INDEX` and `README-ROUTES` with their self-tests; the crate's tests; every self-test; the enforcer | 358 185 before; no stale path left; 5 of 5 and 20 of 20; 34 passed; 36 of 36; all green |
 | `2026-09-30` | `PROGRAM.41` | the folder measured at `b8448c6`; the seal with its reconstruction proof; the gate and its self-test; four mutations on a copy; `README-ROUTES` with the new row; every self-test; the enforcer | 376 904 before, 368 643 after; `02 04 08 10, 9745 bytes`; `20 pass / 0 fail`; each mutation red on its own arm, the proof reached by none; all green |
 | `2026-09-30` | `PROGRAM.41.1` | the gate rewritten against the review's D1–D18; its self-test; a matrix of 42 mutations on a copy; the real history; every self-test; the enforcer | `54 pass / 0 fail`; 41 of 42 red, the 42nd unreachable apart from the rows leg; `decision-history: OK (4 sealed section(s) …)`; 37 self-tests passed; all green |
+| `2026-09-30` | `PROGRAM.42` | the `-s ours` merge built on both gates in scratch repositories, before and after the fix; both self-tests; four mutations on copies; both gates on the real trees; every self-test; the enforcer | both passed the merge before and refuse it after; `27 pass / 0 fail`, `17 pass / 0 fail`; each mutation red on its own arm; `task-history: OK`, `history-ledgers: OK`; 37 self-tests passed; all green |
 
 ## Commit Log
 
@@ -1192,6 +1219,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.41` | `ARCHOGEN-PROGRAM-0234 (leaf PROGRAM.41)` | **settled sections sealed out of the decisions folder**: the findings register's §2, §4, §8 and §10 in `docs/decision-history/`, each heading kept above its stub; `DECISION-HISTORY`; opened by `ARCHOGEN-PROGRAM-0232` |
 | `PROGRAM.41.1` | `ARCHOGEN-PROGRAM-0236 (leaf PROGRAM.41.1)` | the review filed as work: `PROGRAM.41` reopened, `PROGRAM.41.1` and `PROGRAM.42` filed |
 | `PROGRAM.41.1` | `ARCHOGEN-PROGRAM-0238 (leaf PROGRAM.41.1)` | **`DECISION-HISTORY` hardened**: `--full-history`, CommonMark fences, rollback on any refusal, shallow clones refused, 54 arms each proven by a mutation; `PROGRAM.41` closed again |
+| `PROGRAM.42` | `ARCHOGEN-PROGRAM-0239 (leaf PROGRAM.42)` | **`TASK-HISTORY` and `HISTORY-LEDGERS` read history whole**: `--full-history`, shallow clones and failed reads refused, the merge and a shallow clone as RED arms; the sealed folders kept from line-ending conversion |
 
 ## Changelog
 

@@ -34,7 +34,9 @@ move, unchanged, into numbered segments that are never edited again.
   1. every segment's lines, bytes, entry count and sha256 against its row;
   2. that segments and rows correspond one to one, numbered without a gap;
   3. across history, that every row any committed version of the index held is unchanged, and that every segment
-     is what the commit that added it wrote, so CI catches a forgery too (`PROGRAM.40`);
+     is what the commit that added it wrote, so CI catches a forgery too (`PROGRAM.40`). History is read with
+     `--full-history`, so a merge that keeps only a side that never sealed cannot hide a seal, and a shallow
+     repository is refused (`PROGRAM.42`);
   4. that the live file holds fewer than twice its window, or else that a rollover is required;
   5. that the live header names the index, once a segment exists;
   6. that the order continues across the live file and the segments: work-unit numbers strictly fall in the

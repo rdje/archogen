@@ -13,8 +13,9 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M2` → frontier `M2.7.1`. `PROGRAM`'s frontier is `PROGRAM.42`; `API`'s is `API.6`; `M1`'s only
-  open leaf, `M1.29.4`, is blocked on the director. Every other tree's frontier head is in `docs/TASK_TREE.md`.
+- **Active tree:** `M2` → frontier `M2.7.1`. `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API`'s is
+  `API.6`; `M1`'s only open leaf, `M1.29.4`, is blocked on the director. Every other tree's frontier head is in
+  `docs/TASK_TREE.md`.
 - **Next action:** run **`M2.7.1`**'s round 14 and **`M2.10.1`**'s round 7, each in a new read-only context, over
   `docs/decisions/catalog/`. Each closes on a round with no defect live for the `/1` slice (its closure rule). Their
   first launch stopped at once on the account's weekly usage limit, so neither has run; relaunch after it resets.

@@ -23,7 +23,8 @@
 #   2. sealed files and rows correspond one to one, and nothing else is under docs/task-history/;
 #   3. HISTORY-WIDE, every row any committed version of the index held is still there, unchanged, and every sealed file
 #      is byte for byte what the commit that added it wrote — so CI, where HEAD is the commit under test, catches a
-#      forgery as the pre-commit hook does (P4);
+#      forgery as the pre-commit hook does (P4). Both reads take `--full-history`, so a merge that keeps only a side
+#      that never sealed cannot hide the seal, and a shallow repository, or a failed read, is a breach (`PROGRAM.42`);
 #   4. every leaf in a sealed file has exactly one stub, in its own tree, `done`, linking that file, and every stub links
 #      a sealed file that holds its leaf; a stub is exactly its two lines; a leaf sits in its own subtree's file;
 #   5. PROVENANCE: every sealed leaf is, byte for byte, the leaf its tree held just before the commit that sealed it
@@ -194,6 +195,9 @@ def add_rows(tree_name, new_rows):
 
 def gate():
     """The six legs; returns the number of sealed files checked and of stubs."""
+    shallow = git("rev-parse", "--is-shallow-repository")
+    if shallow is None or shallow.decode().strip() != "false":
+        note("the repository is shallow, or git cannot say, so the commits legs 3 and 5 read may be missing — fetch the full history")
     index = rows(read(INDEX), INDEX) if os.path.exists(INDEX) else {}
     checked, held = 0, {}  # held: leaf id -> sealed file path
     files = {}             # sealed file path -> (tree, subtree)
@@ -229,7 +233,10 @@ def gate():
                 note("%s is neither the index nor a tree's folder" % p)
     # Leg 3, history-wide: every row any committed index held, and every sealed file as the commit that added it wrote it.
     current = {t: set(r) for t, r in index.items()}
-    for commit in (git("log", "--format=%H", "--", INDEX) or b"").decode().split():
+    index_log = git("log", "--full-history", "--format=%H", "--", INDEX)
+    if index_log is None:
+        note("`git log` of %s failed, so leg 3 cannot hold — a failed read is never an empty history" % INDEX)
+    for commit in (index_log or b"").decode().split():
         old = at(commit, INDEX)
         if old is None:
             continue
@@ -238,7 +245,9 @@ def gate():
                 if r not in current.get(tname, set()):
                     note("%s's %s row `%s`, committed in %s, is gone or changed — the index is append-only" % (INDEX, tname, r[0], commit[:12]))
     added = {}
-    log = git("log", "--diff-filter=A", "--format=@%H", "--name-only", "--", HIST)
+    log = git("log", "--full-history", "--diff-filter=A", "--format=@%H", "--name-only", "--", HIST)
+    if log is None:
+        note("`git log` of %s failed, so legs 3 and 5 cannot hold — a failed read is never an empty history" % HIST)
     commit = None
     for line in (log or b"").decode().split("\n"):
         if line.startswith("@"):
@@ -536,6 +545,19 @@ PY
   commit
   arm "a sealed file and its row forged together and committed are refused" 1 "is not what"
   git -C "$work" reset -q --hard HEAD~1
+  # A merge that keeps only a side that never sealed (PROGRAM.42): git's default simplification hid the seal.
+  local main; main="$(git -C "$work" symbolic-ref --short HEAD)"
+  git -C "$work" checkout -q -b other HEAD~1
+  printf 'unrelated\n' > "$work/notes.md"; commit
+  git -C "$work" -c user.name=t -c user.email=t@t merge -q -s ours -m "drop the seal" "$main"
+  arm "a merge that keeps only a side that never sealed cannot hide the seal" 1 "the index is append-only"
+  git -C "$work" checkout -q "$main"; git -C "$work" branch -q -D other
+  git clone -q --depth 1 "file://$work" "$work-shallow" 2>/dev/null
+  arms=$((arms + 1))
+  if out="$(cd "$work-shallow" && bash "$SELF" 2>&1)"; then echo "SELF-TEST: a shallow clone passed" >&2
+  elif printf '%s' "$out" | grep -qF "the repository is shallow"; then ok=$((ok + 1)); echo "  ✅ a shallow clone is refused"
+  else echo "SELF-TEST: a shallow clone was refused for another reason" >&2; fi
+  rm -rf "$work-shallow"
   sub docs/tasks/T.md '^- ID: `T\.1\.2`\n  Status: .*\n' ''
   arm "a sealed leaf with no stub is refused" 1 "has no stub in its tree"
   restore

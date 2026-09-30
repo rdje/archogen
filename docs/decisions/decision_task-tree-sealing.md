@@ -47,7 +47,9 @@ not, it writes nothing. Then it runs the gate on what it wrote, and rolls everyt
 2. that sealed files and rows correspond one to one, and that nothing else is under `docs/task-history/`;
 3. **across history**: that every row any committed version of the index held is still there, unchanged, and that
    every sealed file is byte for byte what the commit that added it wrote. So CI, where `HEAD` is the commit under
-   test, catches a forged file and row as surely as the hook does;
+   test, catches a forged file and row as surely as the hook does. History is read with `--full-history`, so a
+   merge that keeps only a side that never sealed cannot hide a seal, and a shallow repository is refused
+   (`PROGRAM.42`);
 4. that every leaf in a sealed file has exactly one stub, in its own tree, with status `done` and a link to that
    file; that every stub links a file that holds its leaf; and that a leaf sits in its own subtree's file;
 5. **provenance**: that every sealed leaf is, byte for byte, the leaf its tree held just before the commit that

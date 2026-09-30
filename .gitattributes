@@ -1,2 +1,4 @@
-# Sealed history is compared byte for byte: no line-ending conversion on checkout (PROGRAM.41.1).
+# Sealed history is compared byte for byte: no line-ending conversion on checkout (PROGRAM.41.1, PROGRAM.42).
 docs/decision-history/** -text
+docs/task-history/** -text
+docs/history/** -text
