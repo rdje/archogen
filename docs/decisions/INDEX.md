@@ -7,6 +7,7 @@ A design's review history, appended round by round, is under [`docs/reviews/`](.
 
 | Record | Type | One-line hook |
 | --- | --- | --- |
+| [`decision_decisions-folder-ceiling.md`](decision_decisions-folder-ceiling.md) | `decision` | this folder's ceiling raised once, to 40 files and 384 KiB, as the director's reviewed exception; the partition that replaces it is `PROGRAM.39`, and it adds no capacity |
 | [`decision_eadl-engine-boundary.md`](decision_eadl-engine-boundary.md) | `decision` | eADL describes functionality and contains no implementation — the three tests, the eight worked cases, and what the boundary rules out |
 | [`decision_eadl1-value-domain.md`](decision_eadl1-value-domain.md) | `decision` | `eadl/1`'s integers are exact signed 64-bit and widening is deferred, because a widening is backward compatible and costs one corpus row — settled on a census (0 of the corpus's literals reach the limit) and the pinned ISA spec; ⛔ corrects two figures it was routed on, and names the high-half-address trigger that would make it wrong |
 | [`decision_emulator-independence-retained.md`](decision_emulator-independence-retained.md) | `decision` | the independent emulator stays: it is the only thing that can contradict a catalog fact, and no timing claim rests on it — `M2.8` reframed as making the platform facts *checked* rather than asserted |

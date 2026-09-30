@@ -3880,6 +3880,52 @@ mdBook that is the director's window into the project.
     `docs/reviews/INDEX.md`; this leaf, the frontier and both logs; `LIVE_STATUS.md`, `docs/TASK_TREE.md`,
     `MEMORY.md`, `KNOWLEDGE_MAP.md`, `CHANGELOG.md`.
 
+- ID: `PROGRAM.38`
+  Status: `done`
+  Goal: `docs/decisions/`' ceiling raised once, to 40 files and 393 216 bytes, as the director ruled on
+  `2026-09-30` ("Raise, reviewed"), by a decision an independent context reviewed before it landed.
+  Why: the folder was at 324 165 of 327 680 bytes, the next catalog answers needed about 5 KB, and a partition waits
+  on a project gate the held template checks make necessary (findings §10).
+  Acceptance: `docs/decisions/decision_decisions-folder-ceiling.md` reviewed and every finding answered; the row, the
+  inventory row, the index rows and the knowledge map in one commit; `PROGRAM.39` opened; `README-ROUTES` and the
+  doctrine enforcer green.
+  Verification: see the checklist.
+  Commit: `ARCHOGEN-PROGRAM-0222 (leaf PROGRAM.38)`
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE** — at `HEAD` `7a628a0`, `git ls-files -z docs/decisions | xargs -0 cat | wc -c` → 324 165 over
+    28 files. With the record untracked in the working tree the reviewer measured 327 974, over the ceiling before
+    its index row.
+  - [x] **ROOT CAUSE** — measured with `git ls-tree -r -l 38d8634 docs/decisions`: the ceiling was derived at
+    `38d8634` from 23 files and 250 243 bytes. Since then two normative designs under open review reached 136 093
+    bytes over four records, against one record of 72 269, after their histories moved out. No append-only
+    content was left to move except the findings register's settled items (about 9.7 KB), which the reviewer found.
+  - [x] **FIX** — the record, rewritten against its review's 18 findings, and the row with 40 files, 393 216 bytes
+    and owner `PROGRAM.39`. The inventory row, both index rows, the review history in `docs/reviews/`, and
+    `PROGRAM.39` land with it.
+  - [x] **ADDRESSED** — `bash scripts/check_readme_routes.sh` → rc=0 with the row at its new ceilings; the folder,
+    measured with this change staged, 332 029 bytes over 29 files, 61 187 bytes and 11 files under them.
+  - [x] **NO REGRESSION** — `bash scripts/check_doctrines.sh` → `=== all doctrines green ===` (`MEMORY-ARCH` finds the
+    new record in the index; `KNOWLEDGE-MAP` after regeneration). No Rust and no script changed.
+  - [x] **LOCKSTEP** — `README_POLICY.md`, `LIVE_DOCUMENT_SIZE_CONTAINMENT.md`, `docs/decisions/INDEX.md`,
+    `docs/reviews/INDEX.md`; this leaf, `PROGRAM.39`, the frontier and both logs; `LIVE_STATUS.md`,
+    `docs/TASK_TREE.md`, `MEMORY.md`, `KNOWLEDGE_MAP.md`, `CHANGELOG.md`.
+
+- ID: `PROGRAM.39`
+  Status: `pending` — starts at the warning, 36 files or 360 000 bytes in `docs/decisions/`, or sooner
+  Goal: `docs/decisions/` partitioned into sub-folders by subject, with no capacity added, as
+  `decision_decisions-folder-ceiling.md` requires.
+  Acceptance:
+  - each sub-folder has a row, reachable through the parent's "Overflows to";
+  - `README-ROUTES` leaves out of a parent's figures what a deeper row governs. It refuses a set of rows whose totals
+    exceed 40 files or 393 216 bytes, and a ceiling above the one a decision names, with RED arms for each;
+  - a project gate extends index completeness to sub-folders, since the held template check reads the folder flat;
+  - `knowledge-map/subsystems.md` links each sub-folder's index;
+  - the findings register's settled items considered for sealing, with stubs kept for their section numbers;
+  - the first candidates are the catalog design's four records.
+  Verification: `pending`
+  Commit: `pending`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -3945,8 +3991,9 @@ roadmap item X live?".
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
 | 1 | `PROGRAM.32` | `pending` | closed leaves sealed out of the task trees, ruled on §8; unblocked by the ruling on the hold's scope, working around the 17 held template files |
-| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
-| 3 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
+| 2 | `PROGRAM.39` | `pending` | the decisions folder partitioned by subject, adding no capacity; starts at 36 files or 360 000 bytes, or sooner |
+| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 4 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
@@ -4085,6 +4132,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.31` | the seal with its own proof; an independent rebuild in Python against the files saved before; the ordering defect traced to the initial commit and its move proved; 13 RED arms; the routes and the other gates | both ledgers byte for byte, twice; the template block carried verbatim; 13 of 13; 19 destinations, debt only `PROGRAM.32` |
 | `2026-09-30` | `PROGRAM.36` | the breach reproduced with the ceiling restored; the move's digest against `HEAD`'s; `README-ROUTES`; the doctrine enforcer; the book built | rc=1, then rc=0 with 20 destinations governed; digests equal; all green; rc=0 |
 | `2026-09-30` | `PROGRAM.37` | the move against `HEAD`'s tail; review sections measured by section; `README-ROUTES`; the doctrine enforcer | identical; 13 482 bytes moved, the rest summaries; rc=0, 318 625 bytes; all green |
+| `2026-09-30` | `PROGRAM.38` | the folder at `HEAD` and at `38d8634`; the independent review of the raise; what grew, by file; `README-ROUTES`; the doctrine enforcer | 324 165 over 28, against 250 243 over 23; 18 findings, 4 defects, all answered; the reviewed designs from 72 269 to 136 093 bytes; rc=0; all green |
 
 ## Commit Log
 
@@ -4148,6 +4196,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.31` | `ARCHOGEN-PROGRAM-0207 (leaf PROGRAM.31)` | **the changelog and the development notes are rolling ledgers** — sealed by entry count into digest-checked segments under `docs/history/`, as ruled on §8 by delegation |
 | `PROGRAM.36` | `ARCHOGEN-PROGRAM-0211 (leaf PROGRAM.36)` | **the review histories get a home of their own** — `docs/reviews/`, registered as the decisions folder's overflow with its own ceilings; the debt `ARCHOGEN-M2-0210` recorded is paid |
 | `PROGRAM.37` | `ARCHOGEN-PROGRAM-0218 (leaf PROGRAM.37)` | **the runtime variant's review history joins the others** in `docs/reviews/`; the debt `ARCHOGEN-M2-0217` recorded is paid |
+| `PROGRAM.38` | `ARCHOGEN-PROGRAM-0222 (leaf PROGRAM.38)` | **the decisions folder's ceiling raised once**, to 40 files and 384 KiB, as the director's reviewed exception; `PROGRAM.39` owns the partition that replaces it |
 
 ## Changelog
 

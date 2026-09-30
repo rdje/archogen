@@ -167,6 +167,7 @@ justifies the split — the rows below appear as that happens.
 - [`decision_catalog-records-example.md`](docs/decisions/decision_catalog-records-example.md)
 - [`decision_catalog-records-variant-inputs.md`](docs/decisions/decision_catalog-records-variant-inputs.md)
 - [`decision_catalog-records.md`](docs/decisions/decision_catalog-records.md)
+- [`decision_decisions-folder-ceiling.md`](docs/decisions/decision_decisions-folder-ceiling.md)
 - [`decision_eadl-engine-boundary.md`](docs/decisions/decision_eadl-engine-boundary.md)
 - [`decision_eadl1-value-domain.md`](docs/decisions/decision_eadl1-value-domain.md)
 - [`decision_emulator-independence-retained.md`](docs/decisions/decision_emulator-independence-retained.md)

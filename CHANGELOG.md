@@ -5,6 +5,26 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the decisions folder's size limit is raised once, as a reviewed exception
+
+`ARCHOGEN-PROGRAM-0222` (leaf `PROGRAM.38`).
+
+- The decisions folder had reached its limit, and the catalog design's next answers need a little more room. The
+  usual fix, splitting the folder into sub-folders, would hide those records from two of the project template's
+  checks that archogen may not change yet. Asked, the director chose a one-time raise, reviewed first.
+- An independent review found four defects in the first draft:
+  - it argued that the content was in the right place, not the policy's own test, which is that the folder's role
+    grew;
+  - it wrongly said no append-only content was left;
+  - its promise to split later contradicted its reason for not splitting now;
+  - a later split, as planned, would have added room a second time.
+- The rewritten record answers each:
+  - the folder's role did grow. Its designs under review went from one record of 72 KB to four records of 136 KB;
+  - the raise is stated plainly as the director's exception;
+  - the split is a leaf of its own, `PROGRAM.39`, which starts well before the new limit and adds no room;
+  - only a new ruling by the director can raise the limit again.
+- The limit is now 40 files and 384 KiB. With this change the folder holds 29 files, and has about 61 KB of room.
+
 ## archogen — the director rules how far the hold on the scripts folder reaches
 
 `ARCHOGEN-PROGRAM-0221` (leaf `PROGRAM.32`, unblocked).
