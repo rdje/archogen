@@ -10,10 +10,10 @@ jobs:
   focused:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt, clippy
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0, what v4 resolved to on 2026-09-30
+      # The toolchain rust-toolchain.toml pins, with its components and target: the one place the version is written.
+      - name: The pinned Rust toolchain
+        run: rustup toolchain install --no-self-update
       # ROADMAP.md §14.3 focused tier: format, lints, and the whole contract suite.
       - name: Focused tier
         run: cargo xtask verify --tier focused
@@ -26,14 +26,12 @@ jobs:
     # A named image rather than ubuntu-latest: the package names below are this release's.
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0, what v4 resolved to on 2026-09-30
         with:
           # the doctrine step reads history, as the doctrines workflow does
           fetch-depth: 0
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt, clippy
-          targets: riscv64imac-unknown-none-elf
+      - name: The pinned Rust toolchain
+        run: rustup toolchain install --no-self-update
       # What building the pinned QEMU needs from the image. QEMU itself is built at its pin, below: the image's
       # own package is another release, and target_emulator.sh --check refuses a release other than the pin.
       - name: Build dependencies for the pinned QEMU
@@ -42,7 +40,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends
           ninja-build pkg-config libglib2.0-dev libpixman-1-dev flex bison python3-venv
       # The pinned tools, kept between runs. The key moves with any file that pins them or checks their digests.
-      - uses: actions/cache@v4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0, what v4 resolved to on 2026-09-30
         with:
           path: target/ci/tools
           key: ci-tools-${{ runner.os }}-${{ hashFiles('.github/ci-tools.env', 'targets/riscv-virt-up.env', 'scripts/ci_provision.sh') }}

@@ -53,7 +53,7 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 | Tree | Status | Frontier (next leaf) | Owner |
 | --- | --- | --- | --- |
 | [`S0`](tasks/S0.md) | `active` | `S0.8` — the book's S0 chapter says three descriptions where the directory holds four | repo-local |
-| [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.30` — pinning the toolchain and the CI actions; `.10.5` waits on the next push for the `integration` job's first run, `.31`/`.32` on the director | repo-local |
+| [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.10` — **blocked**: `.10.5` waits on the next push for the `integration` job's first run; `.31`/`.32` wait on the director | repo-local |
 | [`M1`](tasks/M1.md) | `active` | `M1.29.4` — module parameters get a consumer; **waiting on the director** (`docs/decisions/decision_findings-for-director-review.md` §7) | repo-local |
 | [`API`](tasks/API.md) | `active` | `API.1` — **measure** whether the engine compiles for `wasm32-unknown-unknown` before anything is promised | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |

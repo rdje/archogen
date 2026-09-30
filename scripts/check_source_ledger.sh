@@ -26,7 +26,9 @@
 #
 # ⚠️ HONEST LIMIT: a claim is found by its source's NAME. A claim about a source the ledger does not name at
 # all is not seen — that residue is review. And a version is checked against the pin, not against the world:
-# an installed tool that drifted from an unpinned entry is not seen either (`PROGRAM.30`).
+# whether the installed tool matches its pin is the job of the tool that uses it — rustup reads
+# `rust-toolchain.toml`, `scripts/build_book.sh` refuses another mdBook, `target_emulator.sh --check` another
+# QEMU (`PROGRAM.30`).
 #
 # CONTRACT: exit code is the verdict; explains on stderr; read-only. `--self-test` runs the RED arms in scratch
 # repositories under `target/doctrine_scratch/`.

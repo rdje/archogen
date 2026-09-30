@@ -4,6 +4,17 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the build environment is named, not dated
+
+`ARCHOGEN-PROGRAM-0151` (leaf `PROGRAM.30`).
+
+- The Rust toolchain is pinned to `1.95.0`, where it was the moving channel `stable`. It was not a theoretical
+  risk: this machine's `stable` was 1.95.0 while CI's would have taken the newest. CI now installs the toolchain
+  from `rust-toolchain.toml` itself, so the version is written in one place.
+- The CI actions are referenced by commit, not by a tag that moves. The book is built only with the pinned
+  mdBook, because every link into the ledger depends on how mdBook names a heading.
+- Rust 1.98.0 was measured passing the same checks and all tests, so a future upgrade starts from evidence.
+
 ## archogen — the scaffold updater never overwrites
 
 `ARCHOGEN-PROGRAM-0150` (leaf `PROGRAM.26`). The spine is now `bedrock-scaffold 0.10.0`.

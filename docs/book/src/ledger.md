@@ -126,13 +126,13 @@ the day a chapter or a decision relies on it, as Miri did.
 | Field | Value |
 | --- | --- |
 | Source | the Rust toolchain: `rustc`, Cargo, rustfmt and clippy |
-| Version | channel `stable`; measured `rustc 1.95.0 (59807616e 2026-04-14)` and `cargo 1.95.0 (f2d3ce0bd 2026-03-21)` |
-| Pinned at | `toml:rust-toolchain.toml:channel` |
-| Retrieved | `2026-09-29` |
+| Version | `1.95.0` — `rustc 1.95.0 (59807616e 2026-04-14)`, `cargo 1.95.0 (f2d3ce0bd 2026-03-21)` |
+| Pinned at | `toml:rust-toolchain.toml:channel` — with its components (`rustfmt`, `clippy`) and target (`riscv64imac-unknown-none-elf`); CI installs exactly that file (`rustup toolchain install`) |
+| Retrieved | `2026-09-29`; pinned `2026-09-30` (`PROGRAM.30`) |
 | Hash | not captured |
 | Scope | every build and test. Also Cargo's workspace discovery, which the root `Cargo.toml`'s `exclude` relies on: Cargo keeps walking up past a workspace that excludes a package. That was measured on Cargo 1.95.0 by the arms of `LS-001`'s re-measurement |
-| Known limitations | ⚠️ `stable` is a moving channel, not a version: two machines, or one machine a month apart, build with different compilers (`PROGRAM.30`) |
-| Revalidation trigger | `rustc --version` differing from the one measured here; any toolchain release |
+| Known limitations | not the newest release: on `2026-09-30` CI's former `@stable` would have taken a newer compiler than this machine's `stable`. `1.98.0` was measured passing the same `fmt`, `clippy -D warnings` and test suite that day, which is where a bump starts |
+| Revalidation trigger | the channel line changing; a toolchain release worth adopting |
 | Named as | `rustc`, `Cargo` |
 
 ## `fsmgen`
@@ -155,11 +155,11 @@ the day a chapter or a decision relies on it, as Miri did.
 | --- | --- |
 | Source | mdBook, which builds this book |
 | Version | `v0.5.2`, measured; `0.5.2` pinned for CI |
-| Pinned at | `env:.github/ci-tools.env:MDBOOK_VERSION_PINNED` — in CI only: `scripts/ci_provision.sh` installs that release (`PROGRAM.10.4`), and a developer's `book` step still builds with whatever is installed (`PROGRAM.30`) |
+| Pinned at | `env:.github/ci-tools.env:MDBOOK_VERSION_PINNED` — CI installs that release (`scripts/ci_provision.sh`, `PROGRAM.10.4`), and the `book` step everywhere refuses any other (`scripts/build_book.sh`, `PROGRAM.30`) |
 | Retrieved | `2026-09-29`; the release assets `2026-09-30` |
 | Hash | sha256 of the release tarballs, recorded in `.github/ci-tools.env` and checked before use: `084e4342…1f6d` (`x86_64-unknown-linux-gnu`), `da2f5565…4222` (`aarch64-apple-darwin`) — each equal to the digest GitHub publishes for the asset |
 | Scope | the `book` step of the `integration` tier |
-| Known limitations | pinned in CI, not locally. A release that changes how heading anchors are derived would silently break every `ledger.md#…` link on this page |
+| Known limitations | a release that changes how heading anchors are derived would silently break every `ledger.md#…` link on this page — which is why the `book` step checks the version rather than trusting it |
 | Revalidation trigger | `mdbook --version` changing; `MDBOOK_VERSION_PINNED` moving |
 | Named as | `mdBook` |
 
@@ -168,14 +168,14 @@ the day a chapter or a decision relies on it, as Miri did.
 | Field | Value |
 | --- | --- |
 | Source | the actions the CI workflows run |
-| Version | `actions/checkout@v4`; `dtolnay/rust-toolchain@stable`; `actions/cache@v4` |
-| Pinned at | `uses:actions/checkout`, `uses:dtolnay/rust-toolchain`, `uses:actions/cache` |
-| Retrieved | `2026-09-13`; `actions/cache` `2026-09-30` |
-| Hash | not captured — all three are tags, not commits |
-| Scope | the CI runs in `.github/workflows/`; `actions/cache` keeps the `integration` job's pinned tools between runs, keyed on the files that pin them |
-| Known limitations | a tag moves, so a CI run is not reproducible from its commit alone (`PROGRAM.30`) |
-| Revalidation trigger | any tag moving; any workflow edit |
-| Named as | `actions/checkout`, `dtolnay/rust-toolchain`, `actions/cache` |
+| Version | `actions/checkout@11d5960a326750d5838078e36cf38b85af677262` (`v4.4.0`); `actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830` (`v4.3.0`) — what the moving `v4` tags resolved to on `2026-09-30` |
+| Pinned at | `uses:actions/checkout`, `uses:actions/cache` |
+| Retrieved | `2026-09-30`, by `git ls-remote` of each action's tags |
+| Hash | the commit ids above: an action is referenced by commit, not by tag (`PROGRAM.30`) |
+| Scope | the CI runs in `.github/workflows/`; `actions/cache` keeps the `integration` job's pinned tools between runs, keyed on the files that pin them. The Rust toolchain is no longer an action: each job runs `rustup toolchain install`, which reads `rust-toolchain.toml` |
+| Known limitations | a commit does not move, so a newer release of an action arrives only by a deliberate edit. The runner image itself is named (`ubuntu-24.04` for `integration`) but not pinned to a build |
+| Revalidation trigger | any workflow edit; a security advisory for either action |
+| Named as | `actions/checkout`, `actions/cache` |
 
 ## `miri`
 

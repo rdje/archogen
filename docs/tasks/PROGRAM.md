@@ -2200,7 +2200,9 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM.10.5`
   Status: `blocked` — on the next push, which the ruled cadence decides (`bash scripts/push_cadence.sh`)
   Goal: read the first real run of the `integration` job, and fix what the runner's userland finds.
-  Acceptance: the run's verdict and log are recorded here. ⚠️ It cannot happen before the next push, which the ruled
+  Acceptance: the run's verdict and log are recorded here — and two assumptions `PROGRAM.30` could not test from
+  here: the runner's rustup installs from `rust-toolchain.toml` (rustup ≥ 1.28), and the commit-pinned actions
+  resolve. ⚠️ It cannot happen before the next push, which the ruled
   cadence (`decision_push-cadence.md`; `bash scripts/push_cadence.sh` for the distance) decides; until then the job's evidence is a rehearsal
   on macOS, not a run on the runner's GNU userland, and the parent says so rather than closing on it.
   Verification: `pending`
@@ -3389,7 +3391,7 @@ mdBook that is the director's window into the project.
     closed.
 
 - ID: `PROGRAM.30`
-  Status: `pending`
+  Status: `done`
   Goal: every tool a build or the book depends on is pinned to an exact version, so two machines — or one
   machine a month apart — build with the same tools (§10.3 locked builds; §15 "exact upstream source
   versions").
@@ -3406,8 +3408,53 @@ mdBook that is the director's window into the project.
   Priority: **medium** — nothing differs today (one machine, one toolchain), which is exactly when an
   unpinned toolchain is invisible. ⚠️ Moving to an exact `rustc` is the director's call if it constrains
   how CI is provisioned; the leaf proposes, it does not presume.
-  Verification: `pending`
-  Commit: `pending`
+  ⭐ **The caution above, resolved by measurement rather than deferred.** An exact `rustc` does not constrain how CI
+  is provisioned: CI now installs from the same `rust-toolchain.toml` this machine reads (`rustup toolchain
+  install`), and `ROADMAP.md` §10.3 already asks for "the same pinned build environment". And the unpinned state was
+  not hypothetical: this machine's `stable` was `1.95.0` while `1.98.0` was installed beside it, so CI's `@stable`
+  would have built with a newer compiler than every recorded measurement here.
+  Verification: see the checklist — the pins derived and held by `SOURCE-LEDGER` (9); the toolchain installed from its
+  file; `scripts/build_book.sh`'s 4 arms and 2 mutations; the `integration` tier unchanged; `1.98.0` measured too.
+  Commit: `ARCHOGEN-PROGRAM-0151 (leaf PROGRAM.30)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — three moving references, and a measured divergence behind the first:
+    ```text
+    $ git show HEAD:rust-toolchain.toml | grep channel           → channel = "stable"
+    $ git show HEAD:.github/workflows/rust.yml | grep -n "uses:" → actions/checkout@v4 · dtolnay/rust-toolchain@stable ·
+                                                                   actions/cache@v4 (and doctrines.yml: actions/checkout@v4)
+    $ rustup run stable rustc --version  → rustc 1.95.0 (59807616e 2026-04-14)
+    $ rustup run 1.98.0 rustc --version  → rustc 1.98.0 (88d9e12ae 2026-08-18)   — installed beside it; CI's @stable is the newest
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — a channel and a tag name *a pointer*, not a release: `stable` and `v4` resolve to
+    whatever they point at on the day of the run, so the build environment was a function of the date. **WHERE:** the
+    four refs above, and the `book` step, which ran `mdbook` with no version at all (`git show HEAD:xtask/src/main.rs |
+    grep -n 'program: "mdbook"'` → `program: "mdbook",`).
+  - [x] **FIX** — `rust-toolchain.toml`: `channel = "1.95.0"`, with its components and the riscv target; every job
+    runs `rustup toolchain install --no-self-update`, so the version is written once and `dtolnay/rust-toolchain` is no
+    longer used; `actions/checkout` and `actions/cache` referenced by commit (`v4.4.0`, `v4.3.0`, what `v4` resolved
+    to by `git ls-remote`), the tag in a comment; `scripts/build_book.sh` builds only with `MDBOOK_VERSION_PINNED` and
+    is the `book` step and `make book`; the three ledger entries moved with their pins.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    $ rustup toolchain install --no-self-update
+      info: the active toolchain `1.95.0-aarch64-apple-darwin` has been installed   (the riscv target added by the file)
+    $ bash scripts/check_source_ledger.sh      → source-ledger: OK (12 entries; 9 pin(s), each carried by its entry; …)
+    $ bash scripts/build_book.sh --self-test   → build-book self-test: 4 pass / 0 fail (4 arms)
+      M1 the version matched as a prefix → 1 refused · M2 the version not checked → 2 refused   (both restored)
+    ```
+  - [x] **NO REGRESSION** — the tier and the suite on the pinned toolchain, and on the newer one for the next bump:
+    ```text
+    $ cargo xtask verify --tier integration   → incomplete — 7 passed, 0 failed, 0 unavailable, 0 not built, 1 quarantined
+    $ cargo +1.95.0 test --all -q  → 625 passed, 0 failed, 48 suites
+    $ cargo +1.98.0 test --all -q  → 625 passed, 0 failed, 48 suites   (fmt exit=0, clippy -D warnings exit=0)
+    ```
+  - [x] **LOCKSTEP** — `ledger.md` (three entries), `verification.md`, `DOCTRINE_ENFORCEMENT.md`, the ledger gate's
+    honest-limit comment, `Makefile`. ⚠️ Two things only a real run shows, added to `.10.5`: whether the runner's rustup
+    installs from the file (it needs rustup ≥ 1.28), and the pinned actions resolving. ⚠️ Side effect, reported: the
+    first `rustup toolchain install` here ran without `--no-self-update` and updated this machine's rustup, `1.29.0` →
+    `1.29.1` — outside the repository, and not asked for.
 
 - ID: `PROGRAM.31`
   Status: `blocked`
@@ -3494,10 +3541,9 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.30` | `pending` | **medium** — the Rust channel and CI actions are unpinned, and mdBook outside CI (the `integration` job pins it since `PROGRAM.10.4`); found deriving the ledger's pins |
-| 2 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
-| 3 | `PROGRAM.31` | `blocked` | on the director's ruling on the findings record's §8 — the changelog and development notes as rolling ledgers |
-| 4 | `PROGRAM.32` | `blocked` | on the same ruling — closed leaves sealed out of the task trees |
+| 1 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
+| 2 | `PROGRAM.31` | `blocked` | on the director's ruling on the findings record's §8 — the changelog and development notes as rolling ledgers |
+| 3 | `PROGRAM.32` | `blocked` | on the same ruling — closed leaves sealed out of the task trees |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
@@ -3628,6 +3674,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.10.4` | the pinned tools installed here from verified downloads, QEMU built from source; the provisioner's arms, three mutations and a real refused digest; the job rehearsed from a fresh checkout | QEMU `11.1.1` built and offering `virt`; every arm and mutation as designed; the rehearsal passes, `incomplete` with the emulator annotated — the runner's own userland still unobserved (`.10.5`) |
 | `2026-09-30` | `PROGRAM.23` | the threshold's copies before and after; the check's 10 arms and three mutations; the real distance | 8 copies outside the record, now 0; every arm and mutation as designed; a push not yet due |
 | `2026-09-30` | `PROGRAM.26` | a census of every neutral file against upstream and its base; two dry runs on clones; five spine arms against the adopted and the replaced updater; `make gate` | 21 identical, 7 project-carrying, only the updater and the version behind; nothing of ours modified by either run; the arms pass on the adopted updater and all five fail on the old one |
+| `2026-09-30` | `PROGRAM.30` | the moving refs at HEAD; the installed toolchains; the pins held by the ledger; the book builder's arms and mutations; the tier and the suite on `1.95.0` and `1.98.0` | three moving refs, and a newer compiler waiting in CI; all pinned, 9 pins held; the tier unchanged; both toolchains pass the same suite |
 
 ## Commit Log
 
@@ -3683,6 +3730,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.10.4` | `ARCHOGEN-PROGRAM-0148 (leaf PROGRAM.10.4)` | **the `integration` job** — its tools built and installed at their pins from digest-checked downloads; rehearsed from a fresh checkout |
 | `PROGRAM.23` | `ARCHOGEN-PROGRAM-0149 (leaf PROGRAM.23)` | **the push cadence is a report, not prose** — one copy of the threshold, the distance on demand, never a gate |
 | `PROGRAM.26` | `ARCHOGEN-PROGRAM-0150 (leaf PROGRAM.26)` | **the scaffold updater never overwrites** — upstream's at `bedrock` `5af0c1c` plus one hunk; the spine at `0.10.0` |
+| `PROGRAM.30` | `ARCHOGEN-PROGRAM-0151 (leaf PROGRAM.30)` | **the build environment is named, not dated** — `rustc 1.95.0`, actions by commit, the book's mdBook checked |
 
 ## Changelog
 

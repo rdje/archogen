@@ -47,7 +47,7 @@ test:
 	cargo test --all
 
 book:
-	mdbook build docs/book
+	scripts/build_book.sh
 
 hooks:
 	git config core.hooksPath .githooks

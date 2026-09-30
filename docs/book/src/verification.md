@@ -113,7 +113,7 @@ The workspace contains no `unsafe` code, so a Miri run over it that passes looks
 in which Miri saw nothing at all. `scripts/extended_miri.sh` therefore starts by building a
 throwaway crate under `target/` whose one test reads through a dangling pointer. If Miri does not
 refuse that test, the step fails before touching the real code. Miri comes from the `nightly`
-toolchain, and until this step existed the tier asked the pinned `stable` toolchain for it and
+toolchain, and until this step existed the tier asked the repository's own toolchain (then the `stable` channel) for it and
 reported Miri **unavailable** on a machine where it was installed.
 
 Every test target was measured under Miri on its own: 34 targets, **541 tests passed, 4 ignored,
@@ -427,6 +427,15 @@ mdBook and the CI's actions are not pinned to exact versions at all (`PROGRAM.30
 $ bash scripts/check_source_ledger.sh              # the gate
 $ bash scripts/check_source_ledger.sh --self-test  # its RED arms, on scratch repositories
 ```
+
+
+Three of those pins were once moving targets: the Rust channel `stable`, the CI actions' `v4` tags and whatever
+mdBook was installed. Each now names one release (leaf `PROGRAM.30`). `rust-toolchain.toml` says `1.95.0`, with
+the components and the bare-metal target the tiers use, and CI installs exactly that file with
+`rustup toolchain install`, so the version is written once. The actions are referenced by commit. The `book` step
+builds only with the pinned mdBook, because every `ledger.md#…` link depends on how mdBook derives a heading's
+anchor. The day the Rust pin was set, `1.98.0` passed the same format check, lints and test suite, so a bump
+starts from evidence rather than from hope.
 
 ## What is versioned is written down
 

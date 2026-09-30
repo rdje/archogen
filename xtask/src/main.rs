@@ -289,10 +289,10 @@ const TIERS: &[Tier] = &[
             SELF_TESTS,
             Step {
                 name: "book",
-                proves: "the mdBook builds — it is the director's window, so a broken book is a broken deliverable",
+                proves: "the mdBook builds, with its pinned release — it is the director's window, so a broken book is a broken deliverable",
                 action: Action::Run {
-                    program: "mdbook",
-                    args: &["build", "docs/book"],
+                    program: "scripts/build_book.sh",
+                    args: &[],
                     requires: Some("mdbook"),
                     matters: "the book is the project's public surface and is required to stay in \
                               lockstep with the code; `cargo install mdbook`",

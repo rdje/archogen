@@ -1,3 +1,8 @@
+# The Rust toolchain this repository builds with: an exact release, not a channel (leaf `PROGRAM.30`; ROADMAP.md
+# §10.3, "the same pinned build environment"). CI installs it from this file with `rustup toolchain install`, so
+# this is the one place the version is written, with the components and the bare-metal target the tiers use.
+# Bumping it is a change here, the tiers re-run, and the `rust-toolchain` ledger entry moved with it.
 [toolchain]
-channel = "stable"
+channel = "1.95.0"
 components = ["rustfmt", "clippy"]
+targets = ["riscv64imac-unknown-none-elf"]
