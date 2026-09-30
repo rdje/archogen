@@ -38,7 +38,6 @@ agree docs/semantics/boundary/reject/simulator-model-body.eadl
 agree docs/semantics/boundary/reject/stack-allocation.eadl
 agree docs/semantics/cases/infeasible-refinement-adds-exclusion.eadl
 agree docs/semantics/cases/infeasible-refinement-drops-guarantee.eadl
-agree docs/semantics/cases/infeasible-refinement-target-missing.eadl
 agree docs/semantics/cases/infeasible-required-absence.eadl
 agree docs/semantics/cases/invalid-contradictory-presence.eadl
 agree docs/semantics/cases/invalid-duplicate-name.eadl
@@ -54,6 +53,7 @@ agree docs/semantics/cases/invalid-unknown-kind.eadl
 agree docs/semantics/cases/invalid-unknown-unit.eadl
 agree docs/semantics/cases/invalid-wrong-value-type.eadl
 agree docs/semantics/cases/invalid-zero-clock-frequency.eadl
+agree docs/semantics/cases/missing-refinement-target.eadl
 agree docs/semantics/cases/missing-release-model.eadl
 agree docs/semantics/cases/missing-relevant-fact.eadl
 agree docs/semantics/cases/positive-decimal-quantity.eadl

@@ -624,12 +624,14 @@ fn arm_5_a_verdict_the_table_omits_is_reported_rather_than_skipped() {
     // has, so the leg has to census the corpus against the table and not only the table against the
     // corpus.
     let measured = measured_verdict_counts();
-    let row = "| `missing-fact` | 2 |\n";
+    // The row as the corpus measures it, not a copy of it: `M1.26.3` moved a case between verdicts and
+    // a hardcoded count stopped this arm from running at all.
+    let row = format!("| `missing-fact` | {} |\n", measured["missing-fact"]);
     assert!(
         BOOK_CHECKING.contains(row.trim_end()),
         "the fixture row this arm deletes is not in the chapter — the arm would pass on nothing"
     );
-    let without = BOOK_CHECKING.replace(row, "");
+    let without = BOOK_CHECKING.replace(&row, "");
     assert_ne!(
         without, BOOK_CHECKING,
         "the mutation did not apply — a false green"

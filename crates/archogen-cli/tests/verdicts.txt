@@ -39,7 +39,6 @@
 10 boundary-implementation-in-description docs/semantics/boundary/reject/stack-allocation.eadl
 13 refinement-violated docs/semantics/cases/infeasible-refinement-adds-exclusion.eadl
 13 refinement-violated docs/semantics/cases/infeasible-refinement-drops-guarantee.eadl
-13 infeasible-configuration docs/semantics/cases/infeasible-refinement-target-missing.eadl
 13 infeasible-configuration docs/semantics/cases/infeasible-required-absence.eadl
 10 invalid-description docs/semantics/cases/invalid-contradictory-presence.eadl
 10 schema-duplicate-name docs/semantics/cases/invalid-duplicate-name.eadl
@@ -55,6 +54,7 @@
 10 quantity-unknown-unit docs/semantics/cases/invalid-unknown-unit.eadl
 10 missing-fact,schema-type docs/semantics/cases/invalid-wrong-value-type.eadl
 10 quantity-non-positive-frequency docs/semantics/cases/invalid-zero-clock-frequency.eadl
+11 missing-fact docs/semantics/cases/missing-refinement-target.eadl
 11 missing-fact docs/semantics/cases/missing-release-model.eadl
 11 missing-fact docs/semantics/cases/missing-relevant-fact.eadl
 0 - docs/semantics/cases/positive-decimal-quantity.eadl

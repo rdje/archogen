@@ -378,3 +378,27 @@ to
             .next()
             .filter(|form| form.head() == Some("defkind"))?;
 end
+
+mutation undeclared-target-judged-infeasible
+file crates/eadl-model/src/check.rs
+test -p eadl-model --test semantic_corpus
+expect killed
+why M1.26.3: an undeclared refinement target is missing-fact. Pushed under infeasible-configuration, the verdict names §2 rule 2 again for a rule it is not.
+from
+            Verdict::MissingFact,
+            found.undeclared_targets,
+to
+            Verdict::InfeasibleConfiguration,
+            found.undeclared_targets,
+end
+
+mutation undeclared-target-keeps-the-old-code
+file crates/eadl-model/src/check.rs
+test -p archogen-cli --test verdicts
+expect killed
+why M1.26.3: the verdict right and the code wrong — `infeasible-configuration` printed under a missing-fact verdict. The frozen verdicts record codes as well as exits, so they must see it.
+from
+                    "missing-fact",
+to
+                    "infeasible-configuration",
+end

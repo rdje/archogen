@@ -23,7 +23,7 @@ built from it will behave — the evidence categories start after this point.
 | profile | the capabilities the profile refuses | `unsupported-profile` |
 | workload | the task model the profile admits | `unsupported-profile`, `missing-fact`, `invalid-description` |
 | presence | offered / absent / undescribed | `missing-fact`, `infeasible-configuration`, `invalid-description` |
-| refinement | the three obligations, and the quantities they are written in | `infeasible-configuration`; a quantity it cannot read is `invalid-description` |
+| refinement | the three obligations, the target they are owed to, and the quantities they are written in | `infeasible-configuration`; a target the description does not declare is `missing-fact`; a quantity it cannot read is `invalid-description` |
 
 Every pass runs. Every diagnostic is collected. A description with three problems costs one edit
 cycle, not three.
@@ -194,8 +194,8 @@ verdict it expects in its own header, and each run through this pipeline:
 | `ok` | 6 |
 | `invalid-description` | 14 |
 | `unsupported-profile` | 7 |
-| `infeasible-configuration` | 4 |
-| `missing-fact` | 2 |
+| `infeasible-configuration` | 3 |
+| `missing-fact` | 3 |
 
 The expectation lives **in the case**, not in the driver. A driver that computed what to expect
 would agree with itself forever.

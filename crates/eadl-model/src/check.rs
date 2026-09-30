@@ -13,12 +13,15 @@
 //! | profile | the capabilities the profile refuses (`M0.4`) | `unsupported-profile` |
 //! | workload | the task model the profile admits (`M1.9`) | `unsupported-profile`, `missing-fact`, `invalid-description` |
 //! | presence | offered / absent / undescribed (`M1.5`) | `missing-fact`, `infeasible-configuration`, `invalid-description` |
-//! | refinement | the three obligations (`M1.6`) | `infeasible-configuration` |
+//! | refinement | the three obligations, and the target they are owed to (`M1.6`, `M1.26.3`) | `infeasible-configuration`, `missing-fact`, `invalid-description` |
 //!
-//! ⛔ **The refinement row carries two verdicts and that is not sloppiness.** A violated obligation is
-//! `infeasible-configuration`; a quantity the pass could not *read* — `(tick-rate 0 MHz)` — is ill-typed
-//! input and is `invalid-description`, which §5.5 puts above it. One list of diagnostics would force one
-//! verdict over both, so `refinements` returns the two groups separately.
+//! ⛔ **The refinement row carries three verdicts and that is not sloppiness.** A violated obligation is
+//! `infeasible-configuration`. A target the description does not declare is `missing-fact`: the contract the
+//! obligations are owed to is described nowhere, so none of them can be checked (`docs/semantics/model.md` §3
+//! rule 4; until `M1.26.3` it was `infeasible-configuration`, a code that then named two rules). A quantity the
+//! pass could not *read* — `(tick-rate 0 MHz)` — is ill-typed input and is `invalid-description`, which §5.5
+//! puts above both. One list of diagnostics would force one verdict over all of them, so `refinements` returns
+//! the three groups separately.
 //!
 //! # It does not stop at the first pass
 //!
@@ -388,15 +391,24 @@ fn passes(
     }
 
     // ── refinement ───────────────────────────────────────────────────────────────────────────
-    let (unreadable, obligations) = refinements(&forms);
-    for diagnostic in unreadable {
+    let found = refinements(&forms);
+    for diagnostic in found.unreadable {
         push(
             &mut findings,
             Verdict::of_code(diagnostic.code),
             vec![diagnostic],
         );
     }
-    push(&mut findings, Verdict::InfeasibleConfiguration, obligations);
+    push(
+        &mut findings,
+        Verdict::MissingFact,
+        found.undeclared_targets,
+    );
+    push(
+        &mut findings,
+        Verdict::InfeasibleConfiguration,
+        found.violated,
+    );
 
     let verdict = findings
         .iter()
@@ -481,11 +493,18 @@ fn walk(form: &Form, visit: &mut impl FnMut(&Form)) {
     }
 }
 
+/// What the refinement pass found, in groups that carry different verdicts. See the pass table above.
+struct Refinements {
+    /// Quantities the pass could not read: `invalid-description`.
+    unreadable: Vec<Diagnostic>,
+    /// Targets the description does not declare: `missing-fact`.
+    undeclared_targets: Vec<Diagnostic>,
+    /// Obligations a concrete platform breaks: `infeasible-configuration`.
+    violated: Vec<Diagnostic>,
+}
+
 /// Check every `(refines …)` claim in the description.
-///
-/// ⭐ Returns **two** groups, because they carry different verdicts: the quantities this pass could not
-/// read, and the obligations it found violated. See the pass table above.
-fn refinements(forms: &[Form]) -> (Vec<Diagnostic>, Vec<Diagnostic>) {
+fn refinements(forms: &[Form]) -> Refinements {
     let mut unreadable = Vec::new();
     let facets: Vec<Facets> = forms
         .iter()
@@ -495,7 +514,8 @@ fn refinements(forms: &[Form]) -> (Vec<Diagnostic>, Vec<Diagnostic>) {
             facets
         })
         .collect();
-    let mut errors = Vec::new();
+    let mut undeclared_targets = Vec::new();
+    let mut violated = Vec::new();
     for (index, concrete) in facets.iter().enumerate() {
         let Some((target, span)) = &concrete.refines else {
             continue;
@@ -506,8 +526,8 @@ fn refinements(forms: &[Form]) -> (Vec<Diagnostic>, Vec<Diagnostic>) {
             .find(|(other, f)| *other != index && &f.name == target)
             .map(|(_, f)| f)
         else {
-            errors.push(Diagnostic::error(
-                "infeasible-configuration",
+            undeclared_targets.push(Diagnostic::error(
+                "missing-fact",
                 format!(
                     "`{}` refines `{target}`, which is not declared here",
                     concrete.name
@@ -518,9 +538,13 @@ fn refinements(forms: &[Form]) -> (Vec<Diagnostic>, Vec<Diagnostic>) {
             ));
             continue;
         };
-        errors.extend(refinement::check(abstract_, concrete).diagnostics());
+        violated.extend(refinement::check(abstract_, concrete).diagnostics());
     }
-    (unreadable, errors)
+    Refinements {
+        unreadable,
+        undeclared_targets,
+        violated,
+    }
 }
 
 /// The default profile: the only one this build supports.

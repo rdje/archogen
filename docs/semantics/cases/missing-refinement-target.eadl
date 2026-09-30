@@ -1,5 +1,5 @@
-; case: infeasible-refinement-target-missing
-; expect: infeasible-configuration
+; case: missing-refinement-target
+; expect: missing-fact
 ; why: A refinement claim whose target is not present, so the obligation cannot be checked at
 ;   all.
 ;

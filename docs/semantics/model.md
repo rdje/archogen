@@ -101,10 +101,11 @@ violated: `refinement-violated`.
 3. **An absence is kept.** A fact the abstract platform declares absent is not offered by the concrete
    one. An explicit absence is a constraint something relies on, not an omission to fill in.
 4. **The target is declared.** A refinement names the platform it refines, and that platform must be
-   present in the description (`crates/eadl-model/src/check.rs`). ⚠️ Today this is refused as
-   `infeasible-configuration`, which is §2 rule 2's code. An undeclared name is not an infeasibility, so
-   the code names more than one rule here. That is a filed finding, `M1.26.3`, not something to split silently:
-   changing what the engine emits changes what the book renders and what an author sees.
+   present in the description (`crates/eadl-model/src/check.rs`). A target described nowhere is
+   `missing-fact`: the contract the obligations are owed to is unavailable, so none of them can be
+   checked, and the repair is to supply it. Until `M1.26.3` (`2026-09-30`) it was refused as
+   `infeasible-configuration`, §2 rule 2's code, which then named more than one rule. An undeclared name is not an
+   infeasibility. The change moved one exit code, `13` to `11`.
 
 ## 4. A profile admits a workload, or says what it would take
 
@@ -153,8 +154,8 @@ the one code that names more than one rule today says so.
 | `quantity-overflow` | a decimal is too precise to represent exactly (§1 rule 5) | reduce the precision, or change the unit so fewer digits are needed | `check (defblock timer.counter (offers (tick-rate 0.0000000000000000000000000000000000000001 MHz)))` |
 | `quantity-invalid` | no input today: the totality arm for a refusal `Quantity::new` may grow (§1 rule 6) | write a quantity as a number followed by a known unit | `none: the catch-all arm of Quantity::read, for a refusal Quantity::new may grow later; today it refuses only what the frequency and duration rows state, and each has its own code (section 1 rule 6)` |
 | `invalid-description` | a description contradicts itself: a fact both offered and absent (§2 rule 1), or a task with two release models (§4 rule 1) | remove one of the two declarations; only the author knows which was meant | `check (defblock b (offers counter-width) (absent counter-width))` |
-| `infeasible-configuration` | a required fact is declared absent (§2 rule 2) — and, today, a refinement names a target that is not declared (§3 rule 4, finding `M1.26.3`) | correct the requirement or the platform; for a refinement, import the module that declares the target or correct its name | `check (defblock timer.counter (offers counter-width) (absent low-power-timer)) (defservice time.lowpower (requires (needs low-power-timer))) (defsystem s (requires (uses time.lowpower)))` |
-| `missing-fact` | something the system requires is described nowhere: a required fact (§2 rule 3), or a task's release model (§4 rule 1) | declare the fact offered or absent on the platform; give a task a `period` or a `min-separation` | `check (defservice time.monotonic (requires (needs wrap-behavior))) (defsystem s (requires (uses time.monotonic)))` |
+| `infeasible-configuration` | a required fact is declared absent (§2 rule 2) | correct the requirement or the platform | `check (defblock timer.counter (offers counter-width) (absent low-power-timer)) (defservice time.lowpower (requires (needs low-power-timer))) (defsystem s (requires (uses time.lowpower)))` |
+| `missing-fact` | something the system requires is described nowhere: a required fact (§2 rule 3), a task's release model (§4 rule 1), or the platform a refinement names (§3 rule 4) | declare the fact offered or absent on the platform; give a task a `period` or a `min-separation`; for a refinement, import the module that declares the target, or correct its name | `check (defservice time.monotonic (requires (needs wrap-behavior))) (defsystem s (requires (uses time.monotonic)))` |
 | `refinement-violated` | a concrete platform breaks an obligation of the abstract one it refines (§3 rules 1–3) | honour the obligation the diagnostic names: offer the guarantee, give the bounded value, or drop what the abstract declares absent | `check (defplatform soc.abstract (offers counter-width) (absent debug-port)) (defplatform soc.concrete (refines soc.abstract) (offers counter-width debug-port))` |
 | `unsupported-profile` | the description asks for something the active profile does not admit (§4 rules 2–4) | request a profile that supports it, or change the description to fit this one; nothing is silently weakened | `check (defsystem s (task a (period 10 ms) (deadline 10 ms) (priority 1)) (task b (period 10 ms) (deadline 10 ms) (priority 1)))` |
 | `tool-failure` | the toolchain could not proceed (§4 rule 5) | this is a failure of the toolchain, not a verdict about the description; report it | `none: only a shipped kind module over 4 GiB reaches it, and the kind modules are embedded in the toolchain (shipped_registry in crates/eadl-model/src/check.rs)` |

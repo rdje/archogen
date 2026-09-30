@@ -4,6 +4,17 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — a refinement to an undeclared platform is a missing fact
+
+`ARCHOGEN-M1-0172` (leaf `M1.26.3`).
+
+- A refinement naming a platform the description does not declare was refused as `infeasible-configuration`, the
+  code for a requirement the platform rules out. It is now `missing-fact`: the platform it refines is described
+  nowhere, so nothing can be checked against it. The exit code for that case moves from `13` to `11`.
+- The conformance case for it is renamed to match its verdict, under a migration note, and the book's counts
+  move with it.
+- With this, M1 has one open leaf, and it waits on the director.
+
 ## archogen — `check` on a kind module says what the file is
 
 `ARCHOGEN-M1-0171` (leaf `M1.32`).
