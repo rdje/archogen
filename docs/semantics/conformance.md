@@ -50,6 +50,7 @@ rather than about one.
 | excluded path | why it is not a conformance case |
 | --- | --- |
 | `docs/feedback` | outbound bug reports to another project. Every description under it is a **frozen reproducer**: its bytes are the reproduction, `FEEDBACK-SELF-CONTAINED` seals them, and some are deliberately malformed — which is what makes them evidence. A suite that swept them in would make one project's bug reports into conformance cases of a language version, and a malformed one would fail the accept legs for a reason that is not a language defect |
+| `targets` | a target's platform description, beside the `.env` that pins the target. Its facts are the platform's, not the language's: it changes when a pinned emulator or board does, so freezing its canonical form as a conformance case would tie a language version to a QEMU release. It is checked where its meaning is: `cargo xtask target-agreement` compares every fact with the device tree and requires `archogen check` to admit it (`docs/decisions/decision_target-platform-description.md`), and the frozen-verdict table and the third reader hold it as they hold every description |
 
 ⛔ **An exclusion is a path prefix, and the matcher has no glob grammar.** A pattern matches a path when
 the pattern's path segments are the leading segments of the path's, so `docs/feedback` excludes

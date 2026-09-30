@@ -52,9 +52,9 @@ with nothing behind it would be a fabricated fact.
 With QEMU installed, `--check` keeps two answers apart. A release other than the pin, a machine
 the emulator does not offer, or a device tree that differs from the one recorded is a comparison
 that ran and disagreed: exit `1`. A
-configuration that matches, whose §3.2 agreement check has nothing to compare against yet, could
-not be run: exit `20`, the same code as the absent tool, and the runner accepts it only because a
-quarantine names its owner, `M2.8` — [the verification chapter](verification.md) has the terms.
+configuration that matches and agrees, but whose `TARGET_VERIFIED` is not yet flipped, could not be
+declared verified: exit `20`, the same code as the absent tool. The runner accepts that only because a
+quarantine names its owner, `M2.8.3.4`. [The verification chapter](verification.md) has the terms.
 
 The recorded device tree is `docs/targets/riscv-virt-up.dtb.summary.md` (leaf `M2.8.2`). It was
 dumped from the pinned emulator, rendered as text by `cargo xtask dtb-summary`, and kept beside the
@@ -65,6 +65,42 @@ the platform under the pinned options would fail the check rather than silently 
 measured against it. One property is left out of the comparison, by name: a random seed QEMU writes
 at every boot. The file also records a deliberate gap. The hart offers floating point, and archogen
 builds for `riscv64imac`, without it.
+
+## The target, described in eADL, and checked against the device tree
+
+§3.2 asks for agreement between the target and its "eADL platform fixture". That fixture is
+`targets/riscv-virt-up.eadl` (leaf `M2.8.3.2`, `docs/decisions/decision_target-platform-description.md`). It uses
+only words the language already has, and states one fact for each thing the profile requires of a target:
+
+```text
+(defblock target.timer
+  (offers (tick-rate 10 MHz) (region target.timer (base 0x0200_0000) (size 64 KiB))))
+(defblock target.console
+  (offers (observable-output true) (region target.console (base 0x1000_0000) (size 256 byte))))
+(defplatform target.riscv-virt-up
+  (offers (core-count 1 tick) (region target.ram (base 0x8000_0000) (size 128 MiB) (executable true)))
+  (requires (uses target.timer target.console)))
+```
+
+`cargo xtask target-agreement` compares each fact with the device-tree node it names, and matches the node by
+what it is, not by address alone:
+- the core count with the harts under `/cpus`;
+- the executable region with the `memory` node;
+- the timer's region with the CLINT, and its tick rate with the timebase;
+- the console's region with the node `/chosen`'s `stdout-path` names.
+
+A region that no rule compares is a disagreement too. `archogen check` must also admit the file. Every `--check`
+runs the agreement on the same fresh dump it compared with the recorded tree:
+
+```console
+$ bash scripts/target_emulator.sh --check
+target-emulator: found: QEMU emulator version 11.1.1
+target-emulator: the platform presented matches docs/targets/riscv-virt-up.dtb.summary.md
+target-emulator: the §3.2 agreement holds: targets/riscv-virt-up.eadl agrees with the platform presented
+```
+
+The description claims no instruction set, no interrupt route and no other device. Those would be facts
+nothing checks, and the interrupt timings the runtime analysis needs are the catalog's, with their evidence.
 
 ## There is no board
 

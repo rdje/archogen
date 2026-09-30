@@ -1,0 +1,27 @@
+; The `riscv-virt-up` target, as eADL describes it (leaf `M2.8.3.2`).
+;
+; One fact for each requirement `targets/riscv-virt-up.env` names, in the corpus's own vocabulary, and nothing
+; the agreement does not check (`docs/decisions/decision_target-platform-description.md`).
+; `cargo xtask target-agreement` compares every fact here with the device tree the pinned QEMU presents, and
+; `TARGET_VERIFIED` follows that comparison, not this file.
+
+(eadl-version eadl/1)
+
+; REQUIRES_TIMER: the CLINT, counting at the hart's timebase.
+(defblock target.timer
+  (offers
+    (tick-rate 10 MHz)
+    (region target.timer (base 0x0200_0000) (size 64 KiB))))
+
+; REQUIRES_OBSERVABLE_OUTPUT: the UART `/chosen`'s `stdout-path` names.
+(defblock target.console
+  (offers
+    (observable-output true)
+    (region target.console (base 0x1000_0000) (size 256 byte))))
+
+; REQUIRES_CORES and REQUIRES_EXECUTABLE_RAM: one hart, and the RAM `-bios none` starts the image in.
+(defplatform target.riscv-virt-up
+  (offers
+    (core-count 1 tick)
+    (region target.ram (base 0x8000_0000) (size 128 MiB) (executable true)))
+  (requires (uses target.timer target.console)))

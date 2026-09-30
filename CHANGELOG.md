@@ -4,6 +4,16 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the emulated board is described in eADL, and matches what the emulator reports
+
+`ARCHOGEN-M2-0190` (leaf `M2.8.3.2`).
+
+- The emulated RISC-V board now has its eADL description, `targets/riscv-virt-up.eadl`, with one core, a timer,
+  a console, and memory to run from. archogen's own checker accepts it.
+- A new check compares each of those facts with the hardware description the emulator reports, matching each by
+  what the device is. It runs every time the emulator is checked, on a fresh reading, and today everything matches.
+- The target is not yet marked verified. That flip is the next step but one, with this run as its evidence.
+
 ## archogen — how the first real target is described and checked, decided
 
 `ARCHOGEN-M2-0189` (leaf `M2.8.3.1`).

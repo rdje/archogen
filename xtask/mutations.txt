@@ -635,3 +635,14 @@ from
 to
                 if false && !undeclared.is_empty() {
 end
+
+mutation target-agreement-ignores-sizes
+file xtask/src/target.rs
+test -p xtask target::
+expect killed
+why M2.8.3.2: an agreement that compared base addresses only would call a 64 MiB RAM or a 512-byte console window a match. Every compared fact is compared whole.
+from
+            Some((base, size)) if (base, size) == (r.base, r.size) => {}
+to
+            Some((base, _)) if base == r.base => {}
+end

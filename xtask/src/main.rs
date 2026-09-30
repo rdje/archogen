@@ -42,6 +42,7 @@
 
 mod dtb;
 mod mutation;
+mod target;
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
@@ -77,10 +78,10 @@ struct Quarantine {
 /// Every quarantine in the repository, so "what is quarantined right now?" has one answer.
 const QUARANTINES: &[Quarantine] = &[Quarantine {
     step: "emulator",
-    issue: "QEMU is present, at the pinned release, offers the pinned machine, and presents exactly \
-            the device tree its fixture records (`M2.8.2`) — but the §3.2 agreement check has nothing \
-            to compare that platform with yet: the eADL platform description (`M2.8.3`) is not written",
-    owner: "M2.8",
+    issue: "QEMU is present, at the pinned release, offers the pinned machine, presents exactly the \
+            device tree its fixture records (`M2.8.2`), and agrees with its eADL description \
+            (`M2.8.3.2`) — but `TARGET_VERIFIED` is still `no` until its leaf records that run as its evidence",
+    owner: "M2.8.3.4",
     claim: "that `riscv-virt-up` is the platform its eADL fixture describes (§3.2) — \
             `TARGET_VERIFIED` in `targets/riscv-virt-up.env`",
 }];
@@ -699,6 +700,54 @@ fn dtb_summary(file: &str) -> i32 {
     }
 }
 
+/// `cargo xtask target-agreement <target.env> <file.dtb>`: the target's eADL description against the device tree —
+/// 0 agree, 1 disagree (leaf `M2.8.3.2`, `docs/decisions/decision_target-platform-description.md`).
+fn target_agreement(env_file: &str, dtb_file: &str) -> i32 {
+    let env = match std::fs::read_to_string(env_file) {
+        Ok(text) => target::env(&text),
+        Err(reason) => {
+            eprintln!("xtask target-agreement: {env_file}: {reason}");
+            return 1;
+        }
+    };
+    let Some(description_file) = env.get("PLATFORM_DESCRIPTION").cloned() else {
+        eprintln!("xtask target-agreement: {env_file} names no PLATFORM_DESCRIPTION");
+        return 1;
+    };
+    // Relative to where the command runs, as the `.env`'s own paths are: the repository root for the tier step and
+    // for a person, a scratch repository for `target_emulator.sh`'s self-test.
+    let description = match std::fs::read_to_string(&description_file) {
+        Ok(text) => text,
+        Err(reason) => {
+            eprintln!("xtask target-agreement: {description_file}: {reason}");
+            return 1;
+        }
+    };
+    let root = match std::fs::read(dtb_file)
+        .map_err(|e| e.to_string())
+        .and_then(|b| dtb::parse(&b))
+    {
+        Ok(root) => root,
+        Err(reason) => {
+            eprintln!("xtask target-agreement: {dtb_file}: {reason}");
+            return 1;
+        }
+    };
+    let wrong = target::disagreements(&env, &description, &description_file, &root);
+    if wrong.is_empty() {
+        println!("target-agreement: {description_file} agrees with the device tree in {dtb_file}");
+        return 0;
+    }
+    eprintln!(
+        "target-agreement: {description_file} disagrees with {dtb_file} in {} way(s):",
+        wrong.len()
+    );
+    for line in &wrong {
+        eprintln!("  {line}");
+    }
+    1
+}
+
 /// `cargo xtask dtb-check <file.dtb> <fixture.md>`: the dump against the fixture — 0 agree, 1 disagree.
 fn dtb_check(file: &str, fixture: &str) -> i32 {
     let fresh = match std::fs::read(file)
@@ -811,6 +860,7 @@ fn main() {
         | ["verify", "--provisioned", "--tier", name] => verify(name, true),
         ["dtb-summary", file] => dtb_summary(file),
         ["dtb-check", file, fixture] => dtb_check(file, fixture),
+        ["target-agreement", env, dtb] => target_agreement(env, dtb),
         ["mutate"] => mutation::run(&repo_root(), &[]),
         ["mutate", "--only", ids @ ..] if !ids.is_empty() => mutation::run(
             &repo_root(),

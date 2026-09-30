@@ -13,11 +13,11 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M2` → frontier `M2.8.3.2`. `API`'s frontier is `API.5`; `M1`'s only open leaf, `M1.29.4`, and
+- **Active tree:** `M2` → frontier `M2.8.3.3`. `API`'s frontier is `API.5`; `M1`'s only open leaf, `M1.29.4`, and
   `PROGRAM`'s frontier are blocked (on a push, and on the director). Every other tree's frontier head is in
   `docs/TASK_TREE.md`; it is not copied here.
-- **Next action:** **`M2.8.3.2`** — `targets/riscv-virt-up.eadl` and `cargo xtask target-agreement`, per
-  `decision_target-platform-description.md`; then `M2.8.3.3`, `M2.8.3.4`, and `M2.7`.
+- **Next action:** **`M2.8.3.3`** — the triple and ISA set into the `.env`, read by `xtask`; then `M2.8.3.4` (flip
+  `TARGET_VERIFIED`, lift the quarantine, correct the stale surfaces) and `M2.7`.
 - **In flight:** branch **`wip/m2.9`** (`758cbcd`) is a checkpoint, not a finished leaf — `M2.9` records it as
   not compiling (`crates/rt-core/tests/differential.rs` unadapted).
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of

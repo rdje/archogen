@@ -57,7 +57,7 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 | [`M1`](tasks/M1.md) | `active` | `M1.29.4` — blocked: module parameters wait on the director's call (findings §7); every other leaf is closed | repo-local |
 | [`API`](tasks/API.md) | `active` | `API.5` — the wasm binding over the declared API; `API.4` bounded what a request may cost | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |
-| [`M2`](tasks/M2.md) | `active` | `M2.8.3.2` — `targets/riscv-virt-up.eadl` and `cargo xtask target-agreement`; then the triple into the `.env` and `TARGET_VERIFIED`; `M2.9` waits on the director | repo-local |
+| [`M2`](tasks/M2.md) | `active` | `M2.8.3.3` — the Rust target triple and ISA set into `targets/riscv-virt-up.env`; then `TARGET_VERIFIED=yes` (`M2.8.3.4`) and `M2.7`; `M2.9` waits on the director | repo-local |
 | [`M3`](tasks/M3.md) | `pending` | `M3.1` — candidate enumeration and substitutability | repo-local |
 | [`M4`](tasks/M4.md) | `pending` | `M4.1` — the typed runtime/build plan | repo-local |
 | [`M5`](tasks/M5.md) | `blocked` | — **no board procured** (`M0.5`, 2026-09-13) | repo-local |

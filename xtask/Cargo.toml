@@ -14,3 +14,5 @@ publish = false
 workspace = true
 
 [dependencies]
+archogen-api = { path = "../crates/archogen-api" }
+eadl-front = { path = "../crates/eadl-front" }
