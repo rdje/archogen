@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog derives evidence status
+
+`ARCHOGEN-M2-0251` (leaf `M2.7.3.4.1`).
+
+- The catalog now works out, from its history, whether each part of each component is fit for production. A
+  rejection sticks to what it rejected: to the component, to anything that replaced it, and to any other component
+  that copies the same facts, files, costs or promises. It lifts only where a reviewer answered it having seen
+  everything of it the component now holds.
+- A component is production-ready only where a review approves exactly its current content, and an approval never
+  outlives a rejection of that same content. A repair that §9 allows can lower a status but never raise one.
+
 ## archogen — the composition's tenth review is answered
 
 `ARCHOGEN-M2-0250` (leaf `M2.10.1`, an eleventh checkpoint).

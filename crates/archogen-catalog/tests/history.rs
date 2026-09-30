@@ -506,7 +506,13 @@ fn each_branch_that_ledgered_a_review_is_verified() {
         "(behavior-model (version \"0.1.0\")",
         "(behavior-model (version \"0.1.1\")",
     );
-    add(&mut h, &n('b'), &[&root], std::slice::from_ref(&moved), Locked::Blessed);
+    add(
+        &mut h,
+        &n('b'),
+        &[&root],
+        std::slice::from_ref(&moved),
+        Locked::Blessed,
+    );
     let r = refused(replay(&h, &[&root], &n('b')));
     assert!(r.message.contains("does not verify"), "{r}");
     add(

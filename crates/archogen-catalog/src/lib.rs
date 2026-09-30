@@ -13,7 +13,8 @@
 //! nothing but the file (`M2.7.3.1`); [`hash::Catalog`], which reads a tree's records and computes §3's hashes
 //! (`M2.7.3.2`); [`lock`], which reads §9's lock and checks it against one tree's records (`M2.7.3.3.1`); and
 //! [`history`] and [`replay`], which check the lock over history: append-only, every new line recomputed commit by
-//! commit, each review verified where it was ledgered, and each waiver judged (`M2.7.3.3.2`).
+//! commit, each review verified where it was ledgered, and each waiver judged (`M2.7.3.3.2`); and [`status`], which
+//! derives §5's evidence status of every facet and record (`M2.7.3.4.1`).
 
 pub mod grammar;
 pub mod hash;
@@ -23,6 +24,7 @@ pub mod manifest;
 pub mod record;
 pub mod refusal;
 pub mod replay;
+pub mod status;
 pub mod tree;
 
 pub use record::{classify, read_record, CatalogPath, Namespace, Record};

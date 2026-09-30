@@ -158,7 +158,7 @@ pub fn verification(history: &History, name: &str, line: &Line) -> Result<Option
 }
 
 /// Every lock among `commits`, as sets of lines, an absent lock holding none.
-fn locks(
+pub(crate) fn locks(
     history: &History,
     commits: &BTreeSet<String>,
     known: &[u64],
@@ -173,7 +173,7 @@ fn locks(
 }
 
 /// The commits among `locks` that ledgered `line` (§5): each holds it, and none of its parents does.
-fn ledgering(
+pub(crate) fn ledgering(
     history: &History,
     locks: &BTreeMap<String, BTreeSet<Line>>,
     line: &Line,
@@ -195,7 +195,7 @@ fn ledgering(
 }
 
 /// Whether review line `(id, ledger)` is ledgered by some line of `lines`.
-fn ledgers(
+pub(crate) fn ledgers(
     lines: &BTreeSet<Line>,
     id: &str,
     ledger: &archogen_evidence::sha256::Digest,
