@@ -134,7 +134,9 @@ before any arithmetic.
 1. There is one processor.
 2. Priorities are distinct and fixed. Preemption happens at every point outside a masked section, a service, or a
    transition: no scheduler lock and no deferred preemption (a platform fact).
-3. Deadlines are constrained, `D_i ≤ T_i`, and `C_i > 0`, `T_i > 0`, `T_s > 0`.
+3. Deadlines are constrained, `D_i ≤ T_i`, and `C_i > 0`, `T_i > 0`, `T_s > 0`. The set holds at least one task: an
+   empty set would hold vacuously, which is what §7.1 exists to prevent (`decision_runtime-contract-gaps.md`, gap 2;
+   added by `M2.6.2`, which found the record silent on it).
 4. No task suspends itself, locks the scheduler or defers preemption, or shares data outside masked sections,
    kernel or application, each bounded and declared in `CS`. These are §1's task facts. There is no resource
    protocol in the model.

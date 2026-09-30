@@ -547,3 +547,69 @@ from
 to
             if let Some((module, size, left)) = budgeted.over.into_inner().filter(|_| false) {
 end
+
+mutation runtime-timer-term-over-hp-only
+file crates/rt-analysis/src/runtime.rs
+test -p rt-analysis --test runtime_variant
+expect killed
+why M2.6.2: the record's timer term runs over EVERY task, because each release is a timer service that preempts whatever runs. Charging only higher-priority releases under-counts — the second review's finding 4.
+from
+        for k in &set.tasks {
+to
+        for k in &set.tasks[..index] {
+end
+
+mutation runtime-jitter-left-out-of-the-ceiling
+file crates/rt-analysis/src/runtime.rs
+test -p rt-analysis --test runtime_variant
+expect killed
+why M2.6.2: jitter belongs inside the ceiling of every interfering task (Tindell–Burns–Wellings); without it a jittered higher-priority release is counted too late.
+from
+            let arrivals = ceil_div(w.checked_add(j.jitter)?, j.separation);
+to
+            let arrivals = ceil_div(w, j.separation);
+end
+
+mutation runtime-interfering-job-without-its-switches
+file crates/rt-analysis/src/runtime.rs
+test -p rt-analysis --test runtime_variant
+expect killed
+why M2.6.2: each interfering job is charged 2S, its transition in and the return to what it preempted (record §3); dropping it leaves both transitions charged nowhere.
+from
+                .checked_add(two_s)?
+to
+                .checked_add(0)?
+end
+
+mutation runtime-early-release-unchecked
+file crates/rt-analysis/src/runtime.rs
+test -p rt-analysis --test runtime_variant
+expect killed
+why M2.6.2: the third review's counterexample — a kernel that releases tasks early misses a deadline the analysis says holds. The fact must be checked, not assumed.
+from
+            facts.no_early_release,
+to
+            Some(true),
+end
+
+mutation runtime-release-floor-unchecked
+file crates/rt-analysis/src/runtime.rs
+test -p rt-analysis --test runtime_variant
+expect killed
+why M2.6.2: a declared release delay below the longest contiguous masked run cannot be true (record condition 7); accepting it lets an under-declared jitter through.
+from
+                    if u128::from(*jitter_release) < floor {
+to
+                    if false && u128::from(*jitter_release) < floor {
+end
+
+mutation runtime-utilisation-precheck-skipped
+file crates/rt-analysis/src/runtime.rs
+test -p rt-analysis --test runtime_variant
+expect killed
+why M2.6.2: at utilisation one there is no fixed point; the record decides it before iterating, so a pseudo-polynomial run never starts.
+from
+            Some((num, den)) if num >= den => {
+to
+            Some((num, den)) if false && num >= den => {
+end

@@ -4,6 +4,18 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the real-time analysis for a running system is built
+
+`ARCHOGEN-M2-0186` (leaf `M2.6.2`).
+
+- The timing analysis designed and reviewed in the previous entry now exists in code. It checks every condition of
+  its design before computing anything. It refuses what it cannot model, names every input that rests on
+  measurement rather than proof, and never turns an over-estimate into a claimed deadline miss.
+- Its tests check numbers worked out by hand from the design, including the reviewer's example that exposed the
+  early-release problem. Six deliberate breakages of the code are each caught.
+- It is not yet citable. Its expected results must still be worked out independently, by someone who never reads
+  the code.
+
 ## archogen — the real-time analysis for a running system is designed, and reviewed three times
 
 `ARCHOGEN-M2-0185` (leaf `M2.6.1`).

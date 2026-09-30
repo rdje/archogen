@@ -194,10 +194,14 @@ result is acceptable. That is leaf `M2.6`, and its control is fixture **F29** (�
 specified repeated-preemption trace whose ledger totals 23, built so that an omitted interrupt or
 resume cost turns a real miss into a false pass.
 
-The variant is decided but not built (leaf `M2.6.1`, `docs/decisions/decision_runtime-analysis-variant.md`). It is a
+The variant is decided (leaf `M2.6.1`, `docs/decisions/decision_runtime-analysis-variant.md`) and built
+(`crates/rt-analysis/src/runtime.rs`, leaf `M2.6.2`). It is a
 response-time analysis with release jitter, interrupt and timer interference, a charge for every context switch,
 and a charge for state a preemption destroys, `fixed-priority-with-overheads/1`. Its costs and platform facts are
 engine knowledge, and none of them defaults. A task set outside its model is refused before any arithmetic, and a
 bound past a deadline is `not-established`, never a counterexample. Three independent reviews went through the
 design before any code. Each one found something that could have under-estimated a response time: the first two
-in what the analysis is given, and the third in an admission rule that let a kernel release a task early.
+in what the analysis is given, and the third in an admission rule that let a kernel release a task early. The
+implementation's tests check values derived by hand from the record, and six deliberate breakages are each caught.
+⚠️ It still may not be cited. §7.4 asks for expected results obtained independently, and that is leaf `M2.6.3`: a
+context that reads the record and never the code derives them.
