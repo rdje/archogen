@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog reads its lock and checks it against the records
+
+`ARCHOGEN-M2-0248` (leaf `M2.7.3.3.1`).
+
+- The catalog's lock pins every reviewed version and keeps every review for good. The crate now reads it, writes
+  it back unchanged, and refuses a lock that disagrees with the records beside it: a component changed without its
+  version moving, a version going backwards, a version or a review never locked, and a review taken back out of
+  its record or misquoted in the lock.
+- The worked example's lock is read, checked and rewritten byte for byte, and what blessing would write for its
+  record is exactly that lock. Checking the lock across a project's history is the next step.
+
 ## archogen — the composition's ninth review is answered
 
 `ARCHOGEN-M2-0247` (leaf `M2.10.1`, a tenth checkpoint).

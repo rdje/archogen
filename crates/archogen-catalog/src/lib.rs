@@ -9,11 +9,13 @@
 //! history, the commits. That is what lets every rule be a test built in memory, and what keeps the product free of
 //! git and of processes (`NO-SUBPROCESS`); the repository's own tooling, under `xtask/`, is the caller that runs git.
 //!
-//! Built so far (`M2.7.3.1`): [`record::read_record`], which reads one record and checks every rule of §1 and §2
-//! that needs nothing but the file.
+//! Built so far: [`record::read_record`], which reads one record and checks every rule of §1 and §2 that needs
+//! nothing but the file (`M2.7.3.1`); [`hash::Catalog`], which reads a tree's records and computes §3's hashes
+//! (`M2.7.3.2`); and [`lock`], which reads §9's lock and checks it against one tree's records (`M2.7.3.3.1`).
 
 pub mod grammar;
 pub mod hash;
+pub mod lock;
 pub mod manifest;
 pub mod record;
 pub mod refusal;

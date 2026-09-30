@@ -15,7 +15,10 @@ use eadl_front::Form;
 
 use crate::grammar;
 use crate::manifest::{self, Value};
-use crate::record::{Content, Cost, FacetKind, Fact, FactValue, Locator, Record, Review, Targets};
+use crate::record::{
+    classify, read_record, CatalogPath, Content, Cost, FacetKind, Fact, FactValue, Locator, Record,
+    Review, Targets,
+};
 use crate::refusal::{Code, Refusal};
 use crate::tree::{self, Tree};
 
@@ -179,6 +182,36 @@ impl Catalog {
             tree,
             records: records.into_iter().map(|r| (r.id.clone(), r)).collect(),
         }
+    }
+
+    /// The catalog a tracked set holds (§1): every path under `catalog/` classified and each record read.
+    ///
+    /// # Errors
+    ///
+    /// `catalog-layout` for a file under `catalog/` that is neither the lock nor a record in a namespace directory;
+    /// the first refusal reading a record meets; `catalog-id` for an id used twice, which with the file stem rule
+    /// means one id in both namespaces.
+    pub fn read(tree: Tree) -> Result<Self, Refusal> {
+        let mut records: BTreeMap<String, Record> = BTreeMap::new();
+        for path in tree.under("catalog") {
+            if let CatalogPath::Record(..) = classify(path)? {
+                let record = read_record(path, tree.get(path).unwrap_or_default())?;
+                if let Some(first) = records.get(&record.id) {
+                    return Err(Refusal::new(
+                        Code::Id,
+                        path,
+                        "(file)",
+                        None,
+                        format!(
+                            "the id `{}` is used twice, here and in `{}`",
+                            record.id, first.path
+                        ),
+                    ));
+                }
+                records.insert(record.id.clone(), record);
+            }
+        }
+        Ok(Self { tree, records })
     }
 
     /// The named targets (§2): stems with both `targets/<t>.env` and `targets/<t>.eadl`, directly under

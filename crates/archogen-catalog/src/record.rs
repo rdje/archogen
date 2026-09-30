@@ -361,6 +361,25 @@ pub enum Verdict {
     Rejected,
 }
 
+impl Verdict {
+    /// The verdict as written.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Production => "production",
+            Self::Rejected => "rejected",
+        }
+    }
+
+    /// The verdict named by `text`.
+    #[must_use]
+    pub fn parse(text: &str) -> Option<Self> {
+        [Self::Production, Self::Rejected]
+            .into_iter()
+            .find(|v| v.as_str() == text)
+    }
+}
+
 /// A reviewer's role (§5).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Role {
@@ -595,6 +614,19 @@ pub fn read_record(path: &str, bytes: &[u8]) -> Result<Record, Refusal> {
 
 fn to_u32(n: usize) -> u32 {
     u32::try_from(n).unwrap_or(u32::MAX)
+}
+
+/// Where `form`, one of the forms of the record read from `bytes`, begins: what a check made after reading, such as
+/// the lock's (§9), points at.
+#[must_use]
+pub fn position(path: &str, bytes: &[u8], form: &Form) -> Option<At> {
+    let mut sources = SourceMap::new();
+    let source = sources.add(path, core::str::from_utf8(bytes).ok()?).ok()?;
+    let p = sources.get(source)?.position(form.span().start);
+    Some(At {
+        line: p.line,
+        column: p.column,
+    })
 }
 
 /// What every check needs: the file and its source map, for positions.
@@ -1576,18 +1608,15 @@ impl Ctx<'_> {
             ));
         }
         let verdict_form = self.only("verdict", slots[2][0])?;
-        let verdict = match self.symbol("verdict", verdict_form)? {
-            "production" => Verdict::Production,
-            "rejected" => Verdict::Rejected,
-            other => {
-                return Err(self.refuse(
-                    Code::Field,
-                    field,
-                    Some(verdict_form),
-                    format!("`{other}` is not a verdict"),
-                ))
-            }
-        };
+        let written = self.symbol("verdict", verdict_form)?;
+        let verdict = Verdict::parse(written).ok_or_else(|| {
+            self.refuse(
+                Code::Field,
+                field,
+                Some(verdict_form),
+                format!("`{written}` is not a verdict"),
+            )
+        })?;
         let mut answers = Vec::new();
         if let Some(a) = slots[3].first() {
             if verdict == Verdict::Rejected {
