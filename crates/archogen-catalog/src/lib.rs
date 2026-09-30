@@ -14,11 +14,13 @@
 //! (`M2.7.3.2`); [`lock`], which reads §9's lock and checks it against one tree's records (`M2.7.3.3.1`); and
 //! [`history`] and [`replay`], which check the lock over history: append-only, every new line recomputed commit by
 //! commit, each review verified where it was ledgered, and each waiver judged (`M2.7.3.3.2`); and [`status`], which
-//! derives §5's evidence status of every facet and record (`M2.7.3.4.1`).
+//! derives §5's evidence status of every facet and record (`M2.7.3.4.1`); and [`ledger`], the checks §5 re-applies
+//! at each ledgering commit and §9's retired ids, which the replay and the load run (`M2.7.3.4.2`).
 
 pub mod grammar;
 pub mod hash;
 pub mod history;
+pub mod ledger;
 pub mod lock;
 pub mod manifest;
 pub mod record;

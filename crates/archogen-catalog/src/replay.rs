@@ -9,8 +9,10 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::hash::{review_ledger_hash, Catalog};
 use crate::history::History;
+use crate::ledger;
 use crate::lock::{self, blessed, Line, Lock, KNOWN_VERSIONS};
 use crate::refusal::{At, Code, Refusal};
+use crate::status::Reader;
 
 /// A refusal about the lock at commit `name`, at line `line` of it when there is one.
 fn refuse(code: Code, name: &str, line: Option<usize>, message: impl Into<String>) -> Refusal {
@@ -297,6 +299,7 @@ pub fn replay_under(
             floor = floor.max(Some(lock.version));
         }
     }
+    let mut reader = Reader::new(history);
     for name in history.between(bases, head)? {
         let commit = history.get(&name)?;
         let catalog = Catalog::read(commit.tree.clone()).map_err(|r| at_commit(&name, r))?;
@@ -360,7 +363,9 @@ pub fn replay_under(
                     ),
                 ));
             }
+            ledger::at_ledgering(&mut reader, &name, line, known)?;
         }
+        ledger::retired(&mut reader, &name, known)?;
     }
     Ok(())
 }
@@ -389,6 +394,7 @@ pub fn check_history_under(history: &History, head: &str, known: &[u64]) -> Resu
     let ancestry = history.ancestry(head)?;
     let all = locks(history, &ancestry, known)?;
     let lines: BTreeSet<Line> = lock.lines.iter().cloned().collect();
+    let mut reader = Reader::new(history);
     let mut waived: BTreeMap<(&str, _), Vec<&Line>> = BTreeMap::new();
     for line in &lock.lines {
         if let Line::Waiver { id, ledger, .. } = line {
@@ -442,6 +448,7 @@ pub fn check_history_under(history: &History, head: &str, known: &[u64]) -> Resu
                     ),
                 ));
             }
+            ledger::at_ledgering(&mut reader, commit, line, known)?;
         }
     }
     for (key, waivers) in &waived {
@@ -457,5 +464,5 @@ pub fn check_history_under(history: &History, head: &str, known: &[u64]) -> Resu
             ));
         }
     }
-    Ok(())
+    ledger::retired(&mut reader, head, known)
 }

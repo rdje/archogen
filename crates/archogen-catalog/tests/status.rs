@@ -7,7 +7,7 @@
 use std::collections::BTreeSet;
 
 use archogen_catalog::hash::{review_ledger_hash, Catalog};
-use archogen_catalog::history::{Commit, History};
+use archogen_catalog::history::{Commit, CommitterDate, History};
 use archogen_catalog::lock::{self, blessed, Line, Lock};
 use archogen_catalog::read_record;
 use archogen_catalog::record::FacetKind;
@@ -123,7 +123,11 @@ fn add(history: &mut History, name: &str, parents: &[&str], mut tree: Tree, lock
         name,
         Commit {
             parents: parents.iter().map(|p| (*p).to_owned()).collect(),
-            date: Default::default(),
+            // 2026-10-01T00:00:00Z, the day after the example's reviews.
+            date: CommitterDate {
+                seconds: 1_790_812_800,
+                offset_minutes: 0,
+            },
             tree,
         },
     );
@@ -827,7 +831,10 @@ fn an_answer_lifts_a_rejection_only_for_its_own_records_facet() {
         tree(&[&wrong_facet], &[]),
         None,
     );
-    let s = load(&g, &[&n('1')], &n('2'));
+    // The gate refuses such an answer (`M2.7.3.4.2`); a bypassed one still leaves the rejection standing.
+    let refused = replay(&g, &[&n('1')], &n('2')).unwrap_err();
+    assert_eq!(refused.code, archogen_catalog::Code::Review, "{refused}");
+    let s = statuses(&g, &n('2')).unwrap();
     assert_eq!(
         s.facets[&("example.base".to_owned(), TIMING)],
         Status::Rejected,

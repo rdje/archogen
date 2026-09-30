@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog checks each review where it was recorded
+
+`ARCHOGEN-M2-0252` (leaf `M2.7.3.4.2`).
+
+- A review can no longer be dated after the commit that recorded it, read in that commit's own time zone, so a
+  reviewer east of UTC is not refused before UTC's midnight. A review can answer only a rejection that actually
+  reaches what it reviews, and a component's own rejection only once it has been recorded earlier.
+- Deleting a rejected component no longer sheds its rejection: its successor inherits it, or the deletion is
+  refused. A retired name cannot be reused, and a successor cannot drop where it came from.
+
 ## archogen — the catalog derives evidence status
 
 `ARCHOGEN-M2-0251` (leaf `M2.7.3.4.1`).

@@ -8,7 +8,7 @@
 use std::collections::BTreeSet;
 
 use archogen_catalog::hash::Catalog;
-use archogen_catalog::history::{Commit, History};
+use archogen_catalog::history::{Commit, CommitterDate, History};
 use archogen_catalog::lock::{self, blessed, Line, Lock};
 use archogen_catalog::replay::{check_history, compare, replay, replay_under};
 use archogen_catalog::tree::Tree;
@@ -137,7 +137,11 @@ fn add(
         name,
         Commit {
             parents: parents.iter().map(|p| (*p).to_owned()).collect(),
-            date: Default::default(),
+            // 2026-10-01T00:00:00Z, the day after the example's reviews.
+            date: CommitterDate {
+                seconds: 1_790_812_800,
+                offset_minutes: 0,
+            },
             tree,
         },
     );
