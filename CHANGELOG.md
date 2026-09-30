@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — sealing closed task-tree leaves waits on the director's hold on the scripts folder
+
+`ARCHOGEN-PROGRAM-0212` (leaf `PROGRAM.32`, status only).
+
+- Sealing closed leaves out of the task trees needs a new check and changes to the checks that read leaves, and all
+  of those live in `scripts/`, which the director has asked to be left alone for now. The leaf is marked blocked on
+  that hold, so the status board says why it is not moving. Nothing else changed.
+
 ## archogen — review histories get a folder of their own, and the decisions folder is back under its limit
 
 `ARCHOGEN-PROGRAM-0211` (leaf `PROGRAM.36`).

@@ -18,15 +18,15 @@
 - **Next action:** **`M2.7.1`**. Run round 8 of the independent review of `docs/decisions/decision_catalog-records.md`
   and its `-example.md` in a new read-only context, judged against its §0 threat model (the director's ruling);
   rounds 1–7 are answered in `docs/reviews/decision_catalog-records-reviews.md`. Close the leaf when a round finds
-  no defect. Then `PROGRAM.32`,
-  then `M2.7.3`–`M2.7.5`, then `API.6`.
+  no defect. While a round runs, `M2.10`'s design. Then `M2.7.3`–`M2.7.5`, then `API.6`.
 - **In flight:** branch **`wip/m2.9`** (`758cbcd`) is a checkpoint, not a finished leaf — `M2.9` records it as
   not compiling (`crates/rt-core/tests/differential.rs` unadapted).
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M2.9` — §6 (a)
   and (b), two rulings on `ROADMAP` §3.1.1; `M5` — no board procured;
-  `API.5.5` — the director saw the Check answer match; the answer on load and the browser's name and version remain; `TEMPLATE-REFS` —
-  postponed, and nothing under `scripts/` is touched until the director says the template's reworked spine is ready.
+  `API.5.5` — the director saw the Check answer match; the answer on load and the browser's name and version remain;
+  `TEMPLATE-REFS` — postponed; **nothing under `scripts/` is touched** until the director says so, which also holds
+  `PROGRAM.32`.
 - **Derive, don't copy:** the test baseline is `cargo test --all -q` (must be 0 failed); the push distance
   and the ruled threshold are `bash scripts/push_cadence.sh`; the integration tier is
   `cargo xtask verify --tier integration`.

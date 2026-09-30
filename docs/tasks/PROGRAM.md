@@ -3648,7 +3648,9 @@ mdBook that is the director's window into the project.
     leaf, `PROGRAM.32`, the frontier and both logs; the snapshots; `CHANGELOG.md`.
 
 - ID: `PROGRAM.32`
-  Status: `pending`
+  Status: `blocked` — on the director's hold on `scripts/` (`2026-09-30`: "leave the files under scripts alone, just
+  for now"). Its acceptance needs a new check proving sealed bodies unchanged, and gates that read leaves, the
+  template's `TASK-ACCEPTANCE` among them, finding sealed text; both are changes under `scripts/`.
   Goal: seal closed leaves out of the task trees — each `done` leaf's body moved byte for byte to a sealed per-subtree
   file with its digest, the tree keeping one line per closed leaf with its commit and a link; `M1` and `PROGRAM` first.
   Unblocked `2026-09-30` by the ruling on §8 of `docs/decisions/decision_findings-for-director-review.md` (option C),
@@ -3903,7 +3905,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.32` | `pending` | unblocked by the same ruling: closed leaves sealed out of the task trees, `M1` and `PROGRAM` first |
+| 1 | `PROGRAM.32` | `blocked` | closed leaves sealed out of the task trees, ruled on §8; waits on the director's hold on `scripts/`, since its check and the gates that read leaves live there |
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 | 3 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
 
