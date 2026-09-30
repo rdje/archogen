@@ -240,7 +240,7 @@ fn a_description_with_no_system_says_there_is_nothing_to_build() {
 /// the committed S0 description with one symbol changed — `(period 10 ms)` → `(period 10 parsec)` — so
 /// `interpret` refuses it with `quantity-unknown-unit`, a code that is **not** a §5.5 verdict slug.
 /// `build_cmd.rs` used to classify that as `ToolFailure` and exit **70**, which
-/// `crates/archogen-cli/src/status.rs:8` reserves for a failure of the invocation, so an author who
+/// `crates/archogen-api/src/status.rs:13` reserves for a failure of the invocation, so an author who
 /// mistyped a unit was told the toolchain had broken.
 ///
 /// ⚠️ **What this arm does and does not pin.** It pins the *classification*, not the reachability of the

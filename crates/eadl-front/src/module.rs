@@ -142,6 +142,15 @@ pub trait ModuleSource {
     fn describe_missing(&self, module: &str) -> String {
         format!("check the module name: no module named `{module}` is available")
     }
+
+    /// Every module that exists and could not be read, as `(where, why)`, in the order met. A consumer
+    /// answers these as the failure of its request rather than as a verdict, because `module-not-found`
+    /// would be a false statement about the description. Empty by default: a source that holds its modules
+    /// in memory has nothing that can fail to read. Leaf `API.3.2` put it on the trait, so the engine API
+    /// can ask any source without knowing what a directory is.
+    fn unreadable(&self) -> Vec<(String, String)> {
+        Vec::new()
+    }
 }
 
 /// Whether `name` is a module name, by `docs/semantics/reference.md` §6 rule 8: one or more segments
@@ -163,8 +172,8 @@ pub fn is_module_name(name: &str) -> bool {
 /// file `a.b.eadl` there.
 ///
 /// ⛔ A file that exists and cannot be read is **not** reported as missing: `module-not-found` would be a
-/// false statement about the description. It is recorded instead, and [`DirectoryModules::unreadable`]
-/// hands it to the caller, which answers it as the failure of the invocation it is.
+/// false statement about the description. It is recorded instead, and [`ModuleSource::unreadable`] hands
+/// it to the caller, which answers it as the failure of the invocation it is.
 #[derive(Debug)]
 pub struct DirectoryModules {
     dir: PathBuf,
@@ -186,15 +195,14 @@ impl DirectoryModules {
     pub fn file_for(&self, module: &str) -> PathBuf {
         self.dir.join(format!("{module}.eadl"))
     }
-
-    /// Every module file that existed and could not be read, as `(path, error)`, in the order met.
-    #[must_use]
-    pub fn unreadable(&self) -> Vec<(String, String)> {
-        self.unreadable.borrow().clone()
-    }
 }
 
 impl ModuleSource for DirectoryModules {
+    /// Every module file that existed and could not be read, as `(path, error)`, in the order met.
+    fn unreadable(&self) -> Vec<(String, String)> {
+        self.unreadable.borrow().clone()
+    }
+
     fn load(&self, module: &str) -> Option<(String, String)> {
         // Defence in depth: `read_import` refuses a name that is not a module name before it gets here,
         // but a root named through `elaborate` is not an import, and a name that could leave the

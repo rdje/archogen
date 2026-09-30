@@ -246,6 +246,12 @@ which writes the crate it generates, and `eadl-front`, whose module loader reads
 one a browser needs most, and its reads already go through one `ModuleSource` implementation, so the wasm
 binding (`API.5`) can supply its own.
 
+The engine API (`archogen-api`, `crates/archogen-api/src/lib.rs`, leaf `API.3.2`) joined the compiled set the
+day it was written, derived
+like the rest. It depends on `eadl-front`, which still compiles for wasm32 as its dependency. It never
+calls the directory loader: a caller hands it a `ModuleSource`, and an in-memory one is what a browser
+would pass.
+
 ## A third reader
 
 `docs/semantics/grammar.md` defines what a well-formed description is, and until `2026-09-30` it had two

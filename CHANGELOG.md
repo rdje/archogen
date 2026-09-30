@@ -4,6 +4,19 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the engine API exists
+
+`ARCHOGEN-API-0175` (leaf `API.3.2`).
+
+- A new library, `archogen-api`, checks a description given as text against a profile and answers with a
+  structured result. That result always carries an outcome. The outcome is the description's verdict when it
+  was judged, and otherwise the reason it was not: a profile nobody supports, a kind module, or an import that
+  exists but cannot be read.
+- It does no file access. A caller supplies where imports come from, so a browser can pass them from memory.
+  It compiles for the browser target, measured by the same step that measures the rest of the engine.
+- The command line's list of outcomes and exit codes moved into it unchanged. Next, the command line will
+  check through it.
+
 ## archogen — the engine API's design is decided
 
 `ARCHOGEN-API-0174` (leaf `API.3.1`).

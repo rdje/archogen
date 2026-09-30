@@ -1,0 +1,16 @@
+# The engine API: ROADMAP.md §10.4, docs/decisions/decision_engine-api.md. Every consumer — the CLI, the wasm
+# binding, the MCP server — judges a description through this crate and no other way. It does no I/O, and it
+# depends only on its engine siblings: see docs/decisions/decision_zero-dependency-engine-core.md.
+[package]
+name = "archogen-api"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "The engine API of the archogen eADL-to-OS generation toolchain"
+
+[lints]
+workspace = true
+
+[dependencies]
+eadl-front = { path = "../eadl-front" }
+eadl-model = { path = "../eadl-model" }

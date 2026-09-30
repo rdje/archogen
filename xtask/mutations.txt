@@ -402,3 +402,36 @@ from
 to
                     "infeasible-configuration",
 end
+
+mutation api-status-not-the-verdict
+file crates/archogen-api/src/lib.rs
+test -p archogen-api --test check
+expect killed
+why API.3.2: a judged response whose status is not its verdict is the failure §10.4 exists to prevent — an unanswered question read as established. Here every judged response says ok.
+from
+                status: Status::from_verdict(outcome.verdict),
+to
+                status: Status::Ok,
+end
+
+mutation api-kind-module-judged
+file crates/archogen-api/src/lib.rs
+test -p archogen-api --test check
+expect killed
+why API.3.2: a kind module judged as a description gets a verdict about a system nobody described (M1.32), now behind the API as well as the CLI.
+from
+            if let Some(kind) = kind_module(&sources, id) {
+to
+            if let Some(kind) = kind_module(&sources, id).filter(|_| false) {
+end
+
+mutation api-unreadable-import-called-missing
+file crates/archogen-api/src/lib.rs
+test -p archogen-api --test check
+expect killed
+why API.3.2: an import that exists and cannot be read, ignored, reaches the elaborator's module-not-found, a false statement about the description (§6 rule 7).
+from
+        if !unreadable.is_empty() {
+to
+        if false && !unreadable.is_empty() {
+end

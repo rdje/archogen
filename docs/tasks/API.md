@@ -213,7 +213,7 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   Commit: `ARCHOGEN-API-0174 (leaf API.3.1)`
 
 - ID: `API.3.2`
-  Status: `pending`
+  Status: `done`
   Goal: the crate — `crates/archogen-api` with `Request`, `Response`, `Status`, `VERSION` and `check`, the shipped
   kind modules embedded in it, and `ModuleSource::unreadable`.
   Acceptance: `check` answers every outcome the CLI's check path does today, each with its status: judged
@@ -222,8 +222,47 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   type; the crate in `scripts/wasm_build.sh`'s derived pure set and under `NO-SUBPROCESS`; unit tests for each
   outcome; `make focused` exit `0`.
   Priority: **high** — the load-bearing slice.
-  Verification: `pending`
-  Commit: `pending`
+  **Closed `2026-09-30`.** `crates/archogen-api` exists: `check(&Request) -> Response`, `Status` moved into it
+  whole with its tests, `VERSION` (1.0, not yet fixed), `OPERATIONS`, the shipped kind modules, and the routing
+  (`is_module_file`, `kind_module`). `ModuleSource::unreadable` is on the trait. The CLI re-exports `Status` and
+  takes its kind modules from the API. Its own routing stays until `API.3.3` moves it onto `check`.
+  ⛔ One expectation of mine was wrong. I wrote a module tree's instances root first, but the engine lists them
+  children before parents, the elaboration order §6 relies on. The test now states the engine's order and why.
+  Verification: see the checklist.
+  Commit: `ARCHOGEN-API-0175 (leaf API.3.2)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — no API, and the judging path lived in the CLI:
+    ```text
+    $ git ls-tree -r --name-only HEAD crates/archogen-api | wc -l → 0
+    $ git grep -n "pub fn frontend\|^const KIND_MODULES\|pub enum Status" HEAD -- crates/
+      HEAD:crates/archogen-cli/src/check_cmd.rs:31 (KIND_MODULES) · :294 (frontend) · crates/archogen-cli/src/status.rs:19
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — the CLI was the only composer of registry, profile, routing and engine, so
+    there was nothing for another consumer to call (`decision_engine-api.md`):
+    `git grep -n "shipped_registry(" HEAD -- crates/ | grep /src/` → `archogen-cli/src/build_cmd.rs:96`,
+    `archogen-cli/src/check_cmd.rs:106`, and the definition, `eadl-model/src/check.rs:116`.
+  - [x] **FIX** — the crate as the decision fixed it, and a `ModuleSource::unreadable` default. `tests/check.rs`
+    has eight legs: acceptance, every case's declared verdict, an unsupported profile, a kind module, an unreadable
+    import, a module tree in memory, a description that does not read, and the version with the operations. Each
+    checks the judged/not-judged invariant. Three mutations are catalogued. The citation in `s0_build.rs` is
+    repointed to the moved file.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    $ cargo test -q -p archogen-api → test result: ok. 6 passed (Status) · test result: ok. 8 passed (check)
+    $ bash scripts/wasm_build.sh --list → archogen-api in the derived pure set, no list edited
+    $ bash scripts/wasm_build.sh → compiling for wasm32-unknown-unknown: archogen-api eadl-model … rc=0
+    $ bash scripts/check_no_subprocess.sh → no-subprocess: OK (45 production source file(s) …)
+    $ cargo run -q -p xtask -- mutate --only api-status-not-the-verdict api-kind-module-judged \
+        api-unreadable-import-called-missing → mutate: OK — 3 mutation(s), each killed …
+    ```
+  - [x] **NO REGRESSION** — `cargo test -q --workspace --no-fail-fast` → 690 passed / 0 failed over 55 suites,
+    rc=0, from 682: the eight new legs, and the six `Status` tests moved, not added. `cargo clippy -q --all-targets
+    --all-features -- -D warnings` exit=0; `cargo fmt --all -- --check` exit=0; `make focused` exit=0 (`tier
+    focused: passed — 3 passed, 0 failed`).
+  - [x] **LOCKSTEP** — `verification.md`'s wasm paragraph names the API; the frontier, both logs, the changelog and
+    the snapshots.
 
 - ID: `API.3.3`
   Status: `pending`
@@ -308,13 +347,12 @@ agent can drive. The server is a capability of the built binary, spawned per ins
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `API.3.2` | `pending` | **the load-bearing slice** — the crate the decision (`API.3.1`) fixed: `Request`, `Response`, the outcome vocabulary, `check` |
-| 2 | `API.3.3` | `pending` | the CLI as the API's first consumer, and parity gated three ways |
-| 3 | `API.3.4` | `pending` | the book documents the API; `API.3` closes and fixes the version at `1.0` |
-| 4 | `API.4` | `pending` | the instance model and the resource limits an untrusted consumer makes necessary. New architecture, not a binding — archogen is stateless over files today |
-| 5 | `API.5` | `pending` | the wasm binding, behind `API.1` and `API.3` |
-| 6 | `API.6` | `pending` | the MCP server — the point of the tree, and last because everything above is what makes it safe to hand to an arbitrary agent |
-| 7 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6` |
+| 1 | `API.3.3` | `pending` | the CLI as the API's first consumer, and parity gated three ways |
+| 2 | `API.3.4` | `pending` | the book documents the API; `API.3` closes and fixes the version at `1.0` |
+| 3 | `API.4` | `pending` | the instance model and the resource limits an untrusted consumer makes necessary. New architecture, not a binding — archogen is stateless over files today |
+| 4 | `API.5` | `pending` | the wasm binding, behind `API.1` and `API.3` |
+| 5 | `API.6` | `pending` | the MCP server — the point of the tree, and last because everything above is what makes it safe to hand to an arbitrary agent |
+| 6 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6` |
 
 ⛔ **This tree does not displace the project's main line.** `M1.13` is the frontier in
 [`M1.md`](M1.md), and `API.3`–`API.7` are sequenced behind it by the director's ruling. `API.1` and
@@ -374,6 +412,7 @@ them early is cheap and makes the rest estimable.
 | `2026-09-30` | `API.1` | the five I/O-free crates built for wasm32; the derivation's arms; the integration tier | all compile; the first cut of the detection matched nothing and the arms caught it; tier `incomplete`, 8 passed, the emulator quarantined |
 | `2026-09-30` | `API.2` | the gate on the product; nine arms and two mutations; `wasm_build.sh` on the same rule | 44 production files, none spawns; the naive test-half rule shown leaking and replaced in both scripts |
 | `2026-09-30` | `API.3.1` | a read of `archogen check`'s judging path (`check_cmd.rs`, `build_cmd.rs`), `ModuleSource` and `ROADMAP.md` §10.4 and §15 | the path's parts and their one shared routing point, `frontend`; `MemoryModules` already exists; the ruling's wording and §10.4's differ, flagged as findings §9 |
+| `2026-09-30` | `API.3.2` | the crate's eight legs; the wasm build and its derived set; the subprocess gate; three mutations; the whole suite; `make focused` | all pass; `archogen-api` compiles for wasm32; 690 passed / 0 failed over 55 suites; each mutation killed |
 
 ## Commit Log
 
@@ -383,6 +422,7 @@ them early is cheap and makes the rest estimable.
 | `API.1` | `ARCHOGEN-API-0157 (leaf API.1)` | **the engine compiles for the browser** — measured by a derived `wasm-build` step; four members excluded by the I/O they do, each named |
 | `API.2` | `ARCHOGEN-API-0158 (leaf API.2)` | **the product runs nothing, and a gate says so** — `NO-SUBPROCESS` |
 | `API.3.1` | `ARCHOGEN-API-0174 (leaf API.3.1)` | **the engine API's design, recorded** — a crate, one outcome vocabulary, a version promise, parity three ways; `API.3` decomposed |
+| `API.3.2` | `ARCHOGEN-API-0175 (leaf API.3.2)` | **the engine API exists** — `archogen-api`: `check`, `Response`, `Status` moved into it, `VERSION`; compiles for wasm32 |
 
 ## Changelog
 

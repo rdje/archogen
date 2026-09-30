@@ -14,7 +14,7 @@ use std::io::Write;
 use std::path::Path;
 
 use eadl_front::{
-    elaborate_source, read, DirectoryModules, Position, SourceId, SourceMap, Verdict,
+    elaborate_source, read, DirectoryModules, ModuleSource, Position, SourceId, SourceMap, Verdict,
 };
 use eadl_model::check::{check, check_program, shipped_registry, Outcome};
 use eadl_model::kind::Registry;
@@ -22,22 +22,6 @@ use eadl_model::profile::{self, Profile};
 
 use crate::cli::Parsed;
 use crate::status::Status;
-
-/// The kind modules shipped with the toolchain.
-///
-/// Embedded at compile time rather than read from the working directory: `archogen` must behave
-/// identically wherever it is run from, and a language definition that could be shadowed by a
-/// file in the current directory is a language definition an accident can change.
-const KIND_MODULES: &[(&str, &str)] = &[
-    (
-        "docs/semantics/kinds/core.eadl",
-        include_str!("../../../docs/semantics/kinds/core.eadl"),
-    ),
-    (
-        "docs/semantics/kinds/os-rt.eadl",
-        include_str!("../../../docs/semantics/kinds/os-rt.eadl"),
-    ),
-];
 
 /// The closure boundary as report lines: what is inside and what pulled each fact in, then what is outside.
 pub fn closure_report(closure: &eadl_model::check::Closure) -> Vec<String> {
@@ -366,12 +350,10 @@ pub fn frontend(
     }
 }
 
-/// The shipped kind modules, owned so a `SourceMap` can take them.
+/// The shipped kind modules, owned so a `SourceMap` can take them — the engine API's, which embeds the one
+/// language definition every consumer checks against (leaf `API.3.2`).
 ///
 /// Shared with `build`, which runs the same frontend: one language definition, loaded one way.
 pub fn embedded_modules() -> Vec<(String, String)> {
-    KIND_MODULES
-        .iter()
-        .map(|(name, text)| ((*name).to_string(), (*text).to_string()))
-        .collect()
+    archogen_api::kind_modules()
 }

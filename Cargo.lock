@@ -3,9 +3,18 @@
 version = 4
 
 [[package]]
+name = "archogen-api"
+version = "0.1.0"
+dependencies = [
+ "eadl-front",
+ "eadl-model",
+]
+
+[[package]]
 name = "archogen-cli"
 version = "0.1.0"
 dependencies = [
+ "archogen-api",
  "archogen-s0",
  "eadl-front",
  "eadl-model",
