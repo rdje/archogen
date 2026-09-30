@@ -15,9 +15,9 @@
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M2` → frontier `M2.7.1`. `PROGRAM`'s frontier is `PROGRAM.32`, `API`'s `API.5`; `M1`'s only
   open leaf, `M1.29.4`, is blocked on the director. Every other tree's frontier head is in `docs/TASK_TREE.md`.
-- **Next action:** **`M2.7.1`**. Run round 8 of the independent review of `docs/decisions/decision_catalog-records.md`
+- **Next action:** **`M2.7.1`**. Run round 9 of the independent review of `docs/decisions/decision_catalog-records.md`
   and its `-example.md` in a new read-only context, judged against its §0 threat model (the director's ruling);
-  rounds 1–7 are answered in `docs/reviews/decision_catalog-records-reviews.md`. Close the leaf when a round finds
+  rounds 1–8 are answered in `docs/reviews/decision_catalog-records-reviews.md`. Close the leaf when a round finds
   no defect. `M2.10.1`'s composition record awaits its own independent review. Then `M2.7.3`–`M2.7.5`, then `API.6`.
 - **In flight:** branch **`wip/m2.9`** (`758cbcd`) is a checkpoint, not a finished leaf — `M2.9` records it as
   not compiling (`crates/rt-core/tests/differential.rs` unadapted).

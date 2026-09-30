@@ -5,6 +5,25 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog design's eighth review is answered
+
+`ARCHOGEN-M2-0215` (leaf `M2.7.1`, a sixth checkpoint).
+
+- The eighth independent review confirmed every digest of the worked example and every fact the design states
+  about the repository. It found one defect: Cargo can build a procedural macro from a manifest spelling the design
+  did not refuse, and such a macro can put forms the rules forbid into compiled code without their appearing in
+  any source.
+- The design now refuses every such spelling. Before building, it also asks Cargo itself which packages the build
+  will use, and refuses any procedural macro, build script or downloaded package, or any disagreement with the
+  design's own reading of the manifests.
+- Three more problems were close to defects, and are fixed:
+  - dependency lists written in unusual but valid ways were missed;
+  - a rejection could be lost when a branch was squashed or rebased. Catalog changes now reach the main branch by
+    merge commits, and a rejection binds for good once it is there;
+  - two fields of a review's ledger line were never checked.
+- Fifteen smaller gaps and wording problems are answered too. The design is now close to its file's size limit,
+  so its section on the runtime analysis's inputs moves to a record of its own at the next checkpoint.
+
 ## archogen — the director is asked how far the hold on the scripts folder reaches
 
 `ARCHOGEN-PROGRAM-0214` (leaf `PROGRAM.32`, a question recorded).

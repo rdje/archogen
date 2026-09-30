@@ -241,6 +241,43 @@ one key keeps to the new key rule, so its digests stand.
 | G14 | nit | a new target is not a contract edit for a `(targets any)` record | stated: only the behavioral review goes stale, and a cost on the new target is a timing edit (§8) |
 | G15 | nits | "checkout" for the written index; shell-special `.env` keys; where a `/` value resolves; a committer date the author controls | "written index" throughout; keys take one of six prefixes no shell variable has; a `/` value resolves from the root only; the date check's reach is a limit (§3, §13) |
 
+**Round 8**, `2026-09-30`: all 23 values matched by two routes. Route A was hand-typed inputs through `shasum`, then a
+second full run through `openssl`. Route B was a separate parser of the example's text through `hashlib`. The
+reviewer re-measured the record's claims about the tree and found them all true: `rt-core`'s attributes and its
+plain build's dependency information, the 538 tracked paths, the 14 manifests, and the target's keys. Round 7's G1,
+G3 and G4, the row found while answering, and E2, F1 and F5 were judged closed. G2, C5, C9 and E1 were judged
+partial at defect level through H1, and G5, C7 and F7 partial and latent. There were 19 new findings. One was a
+defect, H1: a procedural macro under a spelling the record did not refuse. H2, H4 and H6 were at defect level. None
+needs a §0 premise broken. The verdict was "cannot be accepted as it stands". No answer changes a hash input, so the
+example's digests stand. The facts the answers rest on were measured: `cargo metadata --offline --locked` sees 11
+packages, none with a `proc-macro` or `custom-build` target and none with a non-path source, and `rt-core`'s
+graph of normal and build dependencies reaches no other package; `rt-core` holds no `debugger_visualizer`; the
+repository is not shallow and has no `info/grafts`; none of the target's 19 slash-free values names a tracked file.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| G2, C5, C9, E1 | partial, defect-level | through H1 | as H1 |
+| G5, C7, F7 | partial, latent | through H7, H8 and H19 | as those rows |
+| H1 | defect | `crate-type = ["proc-macro"]` or `proc_macro = true` makes a procedural macro that §3 did not refuse, which can emit refused forms from string literals and read files no hash covers | the keys `proc-macro`, `proc_macro`, `crate-type` and `crate_type` are refused in any table, whatever their value. Before anything is built, `cargo metadata --offline --locked` must show no `proc-macro` or `custom-build` target, no non-path source, and the same packages §3's reading reached, both ways. Builds run offline and locked (§3, §11, §13) |
+| H2 | gap, defect-level | a squash or rebase re-ledgers a rejection where its hash is stale, and the only way through the gate was to delete it | catalog changes reach `main` by merge commits, and the replay's refusal of a re-ledgered stale rejection is the rule's mechanism. A rejection binds for good once in `main`'s history, and is merged there in its own commit before its facet changes (§9, §13, How to apply) |
+| H3 | gap | a rejection that reaches a production record through items could land only by demoting it | a rejection a facet inherits only through items may be answered in the commit that ledgers it. The facet's own rejections, and those it inherits through lineage, still need a parent's ledger (§5) |
+| H4 | ambiguity, defect-level | dependency tables named only as headers; dotted, nested and underscore spellings were missed | dependency tables are read by TOML's meaning, Cargo's underscore aliases included, and `cargo metadata`'s graph checks the reading both ways (§3) |
+| H5 | gap | an amend passes the gate against the wrong parents, then fails verification for good | stated: the gate's verdict on an amend is advisory, `M2.7.4` re-runs it after the commit against the commit as made and reports a mismatch at once, and CI's replay decides. "Can only refuse more" was wrong and is withdrawn (§4) |
+| H6 | ambiguity, defect-level | a line's facet and verdict were never checked once the record was gone | verification also checks the line's facet and verdict against the form, and status reads facet, verdict and answers from the form only (§5, §11) |
+| H7 | gap, latent | the image's closure skipped step 1 | step 1 applies to the image's closure (§7) |
+| H8 | gap, latent | the image's build record left out the environment and environment dependencies | it carries the environment, which must be the gate's allowlist with its values, and each environment dependency, held to the gate's rule (§7) |
+| H9 | ambiguity | who runs §3's build checks, and over which units | the gate; CI on every replayed commit that changes a file those checks read; a production claim on the commit it reads; each over every unit the build compiles (§3) |
+| H10 | ambiguity | a `.env` value under `catalog/` would make the lock a target file | refused (§3, §11) |
+| H11 | gap | a contract's only item was its forms hash, which a copy with a new `origin` escaped | a contract's guarantees and preconditions are items, and its forms item leaves out `source`, `maintainer` and `supersedes` (§5) |
+| H12 | ambiguity | §8 understated what a change to a production record moves | it names the whole set, every facet whose derived lines reach the edited one, each reviewed in the same commit or its record demoted (§8) |
+| H13 | gap | shallow history, grafts and the commit-graph file | every reader refuses a shallow repository and an `info/grafts` file, and reads parents with `core.commitGraph=false`; CI checks out the full history (§4, §11) |
+| H14 | gap | the claim did not record which repository `origin` is | it records `origin`'s URL and refuses one other than the canonical URL its tooling holds (§4, §7) |
+| H15 | nit | `debugger_visualizer` also reads a file named in an attribute | refused as a word; the sentence now covers any file an attribute or macro made the compiler read (§3) |
+| H16 | nit | "in the ledger at `HEAD`" does not fit a merge or the replay | "a parent's ledger" (§5) |
+| H17 | nit | a UTC date refused honest reviewers east of UTC | the date is compared in the offset the ledgering commit records (§5) |
+| H18 | nit | a slash-free value naming any tracked file turned it into a target file | such a value is refused; a file a target reads is named with its path (§3, §11) |
+| H19 | nits | "no caller reads the working tree"; whether reached-set files are "a file of an implementation"; a lone `.env`; the closure's definition inside the `.env` paragraph; a legacy `rust-toolchain` file | the one working-tree read is named; own or reached set; a lone `.env` or `.eadl` is refused; the definition has its own paragraph; the legacy file is refused (§3, §4, §7, §11) |
+
 ## Why
 
 The decision record states the design as it stands. Its reviews are its history: every round appends a table,
