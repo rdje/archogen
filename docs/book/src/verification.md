@@ -263,8 +263,9 @@ page uses (`crates/archogen-wasm/js/archogen.mjs`). It checks three things:
 It also runs the page's own code (`crates/archogen-wasm/page/page.mjs`) against a stand-in for the browser's
 document. The page must load this module, answer its default description on load, and show exactly what the
 engine-API chapter says it shows for that chapter's example. The director has since opened the page in a real
-browser: after Check with that example, it showed the chapter's answer line for line. The answer on load and the
-browser's name and version are still to be reported (leaf `API.5.5`).
+browser, Chrome `154.0.8037.58`. On load it showed `invalid-description (exit 10)` for the page's default
+description, and after Check with the chapter's example it showed the chapter's answer line for line (leaf
+`API.5.5`).
 
 ```console
 $ bash scripts/wasm_binding.sh              # the step

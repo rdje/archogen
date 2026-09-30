@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the web page is confirmed in a real browser, and the browser binding is complete
+
+`ARCHOGEN-API-0220` (leaf `API.5.5`; `API.5` closed).
+
+- The director reported the rest of the browser run. When the page first loads, it shows `invalid-description
+  (exit 10)` for its built-in example, as the book says. The browser was Chrome 154.0.8037.58 on arm64. With the
+  earlier report of the answer after Check, both steps of the book's walkthrough are now confirmed in a real
+  browser.
+- That completes the browser binding. It needs no files and runs no programs. On every tracked description it
+  gives the same answer as the command line. And a web page runs it as the book describes.
+
 ## archogen — the second review of how the four shared inputs are built is answered
 
 `ARCHOGEN-M2-0219` (leaf `M2.10.1`, a third checkpoint).
