@@ -20,6 +20,39 @@ pub struct ProfileDecision {
     pub concern: &'static str,
     /// The decision taken for this profile.
     pub decision: &'static str,
+    /// Each rule the decision states, and where it is enforced (leaf `M1.10`). A row usually states several
+    /// rules, and they are enforced in different places, so a row is classified part by part.
+    pub parts: &'static [Part],
+}
+
+/// One rule of a profile decision, and the stage that enforces it.
+pub struct Part {
+    /// The rule, in the decision's own words.
+    pub rule: &'static str,
+    /// Where it is enforced.
+    pub stage: Stage,
+}
+
+/// Where a profile rule is enforced (leaf `M1.10`).
+///
+/// ⭐ This is what turned "thirteen rows, one enforced" from a number into a routed list. A rule is enforced
+/// **now** — by `archogen check` or by a verification step on the engine — or it belongs to a stage not yet
+/// built, which names the leaf that builds it, or it is not a rule a description or a system can break at all.
+/// A test holds every exclusion slug and every owner named here to something that exists.
+pub enum Stage {
+    /// `archogen check` refuses a description that breaks it; the mechanism, with any exclusion as `` `slug` ``.
+    Check(&'static str),
+    /// A verification step on the engine enforces it; which one.
+    Tier(&'static str),
+    /// A later stage enforces it; which stage, and the task-tree leaf that builds it.
+    Later {
+        /// The pipeline stage: resolution, build or analysis.
+        stage: &'static str,
+        /// The leaf that builds it.
+        owner: &'static str,
+    },
+    /// Not a property a description or a generated system can break; why.
+    NotARule(&'static str),
 }
 
 /// One capability this profile does not admit.
@@ -71,54 +104,208 @@ pub const RT_STATIC_UP_V1: Profile = Profile {
         ProfileDecision {
             concern: "Processor",
             decision: "one active core; one execution context runs at a time",
+            parts: &[
+                Part {
+                    rule: "one active core",
+                    stage: Stage::Check("the `multicore` and `task-migration` exclusions"),
+                },
+                Part {
+                    rule: "one execution context runs at a time",
+                    stage: Stage::Later { stage: "build", owner: "M4.1" },
+                },
+            ],
         },
         ProfileDecision {
             concern: "Scheduling",
             decision: "static unique task priorities; preemption at the target's supported interrupt points; bounded kernel critical sections",
+            parts: &[
+                Part {
+                    rule: "static unique task priorities",
+                    stage: Stage::Check("`crate::workload`: a priority two tasks share is refused"),
+                },
+                Part {
+                    rule: "preemption at the target's supported interrupt points",
+                    stage: Stage::Later { stage: "build", owner: "M4.6" },
+                },
+                Part {
+                    rule: "bounded kernel critical sections",
+                    stage: Stage::Later { stage: "analysis", owner: "M2.6" },
+                },
+            ],
         },
         ProfileDecision {
             concern: "Workload",
             decision: "finite static task set; periodic or sporadic releases with declared minimum separation; constrained deadlines; bounded release jitter",
+            parts: &[
+                Part {
+                    rule: "finite static task set",
+                    stage: Stage::Check("the `dynamic-task-creation` exclusion"),
+                },
+                Part {
+                    rule: "periodic or sporadic releases with declared minimum separation",
+                    stage: Stage::Check("`crate::workload`: one release model per task"),
+                },
+                Part {
+                    rule: "constrained deadlines",
+                    stage: Stage::Check("`crate::workload`: a deadline longer than its separation is refused"),
+                },
+                Part {
+                    rule: "bounded release jitter",
+                    stage: Stage::Later { stage: "analysis", owner: "M2.6" },
+                },
+            ],
         },
         ProfileDecision {
             concern: "Task execution",
             decision: "separate statically allocated task stacks; bounded jobs; no self-suspension within a job",
+            parts: &[
+                Part {
+                    rule: "separate statically allocated task stacks",
+                    stage: Stage::Later { stage: "build", owner: "M4.4" },
+                },
+                Part {
+                    rule: "bounded jobs",
+                    stage: Stage::Later { stage: "analysis", owner: "M2.6" },
+                },
+                Part {
+                    rule: "no self-suspension within a job",
+                    stage: Stage::Later { stage: "build", owner: "M4.2" },
+                },
+            ],
         },
         ProfileDecision {
             concern: "Resources",
             decision: "static task and kernel objects; no runtime heap allocation; no application mutexes",
+            parts: &[
+                Part {
+                    rule: "static task and kernel objects",
+                    stage: Stage::Check("the `dynamic-task-creation` and `runtime-loaded-drivers` exclusions"),
+                },
+                Part {
+                    rule: "no runtime heap allocation",
+                    stage: Stage::Check("the `runtime-heap` exclusion"),
+                },
+                Part {
+                    rule: "no application mutexes",
+                    stage: Stage::Check("the `application-mutexes` exclusion"),
+                },
+            ],
         },
         ProfileDecision {
             concern: "Communication",
             decision: "no general IPC; task-to-task queues require a later profile amendment with bounded semantics",
+            parts: &[
+                Part {
+                    rule: "no general IPC",
+                    stage: Stage::Check("the `general-ipc` exclusion"),
+                },
+                Part {
+                    rule: "task-to-task queues require a later profile amendment",
+                    stage: Stage::NotARule("a statement about a future profile, not a rule of this one; `general-ipc` refuses a queue today"),
+                },
+            ],
         },
         ProfileDecision {
             concern: "Interrupts",
             decision: "timer interrupt plus explicitly modeled bounded sources; unknown or uncontrolled interrupt load is unsupported for timing assurance",
+            parts: &[
+                Part {
+                    rule: "timer interrupt plus explicitly modeled bounded sources",
+                    stage: Stage::Later { stage: "analysis", owner: "M2.6" },
+                },
+                Part {
+                    rule: "unknown or uncontrolled interrupt load is unsupported",
+                    stage: Stage::Check("the `unmodeled-interrupt-load` exclusion"),
+                },
+            ],
         },
         ProfileDecision {
             concern: "Time",
             decision: "fixed clock configuration; explicit counter modulus, conversion rules, and interrupt delivery bounds",
+            parts: &[
+                Part {
+                    rule: "fixed clock configuration",
+                    stage: Stage::Check("the `dynamic-clock-scaling` exclusion"),
+                },
+                Part {
+                    rule: "explicit counter modulus, conversion rules",
+                    stage: Stage::Later { stage: "resolution", owner: "M3.2" },
+                },
+                Part {
+                    rule: "interrupt delivery bounds",
+                    stage: Stage::Later { stage: "build", owner: "M4.5" },
+                },
+            ],
         },
         ProfileDecision {
             concern: "Isolation",
             decision: "trusted application components in one address space; no claim of isolation from malicious tasks",
+            parts: &[
+                Part {
+                    rule: "trusted application components in one address space",
+                    stage: Stage::Check("the `memory-isolation` exclusion"),
+                },
+                Part {
+                    rule: "no claim of isolation from malicious tasks",
+                    stage: Stage::NotARule("a limit on what the toolchain claims, not a property a description can break; the assurance report states it"),
+                },
+            ],
         },
         ProfileDecision {
             concern: "Fault response",
             decision: "defined overrun, unexpected-trap, stack-guard, and assertion failure policy; bounded diagnostic handling",
+            parts: &[
+                Part {
+                    rule: "defined overrun, unexpected-trap, stack-guard, and assertion failure policy",
+                    stage: Stage::Later { stage: "build", owner: "M4.6" },
+                },
+                Part {
+                    rule: "bounded diagnostic handling",
+                    stage: Stage::Later { stage: "build", owner: "M4.6" },
+                },
+            ],
         },
         ProfileDecision {
             concern: "Devices",
             decision: "timer and minimal observable output first; no filesystem, network stack, DMA driver, or general virtio dependency",
+            parts: &[
+                Part {
+                    rule: "timer and minimal observable output first",
+                    stage: Stage::NotARule("an order of work, not a rule a description can break"),
+                },
+                Part {
+                    rule: "no filesystem, network stack, DMA driver",
+                    stage: Stage::Check("the `filesystem`, `network-stack` and `dma` exclusions"),
+                },
+                Part {
+                    rule: "general virtio dependency",
+                    stage: Stage::Later { stage: "resolution", owner: "M3.1" },
+                },
+            ],
         },
         ProfileDecision {
             concern: "Runtime",
             decision: "Rust no_std core with narrow architecture and MMIO boundaries",
+            parts: &[
+                Part {
+                    rule: "Rust no_std core",
+                    stage: Stage::Tier("the `integration` tier's `no-std-build` step"),
+                },
+                Part {
+                    rule: "narrow architecture and MMIO boundaries",
+                    stage: Stage::Later { stage: "build", owner: "M4.2" },
+                },
+            ],
         },
         ProfileDecision {
             concern: "Host support",
             decision: "Linux and macOS development first; Windows after the primary pipeline works",
+            parts: &[
+                Part {
+                    rule: "Linux and macOS development first; Windows after the primary pipeline works",
+                    stage: Stage::NotARule("where the toolchain is developed first, not a property of a description or of a system"),
+                },
+            ],
         },
     ],
     exclusions: &[

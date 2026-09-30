@@ -4,6 +4,17 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — every profile decision says where it is enforced
+
+`ARCHOGEN-M1-0164` (leaf `M1.10`).
+
+- The profile's thirteen decisions were counted as "one enforced, twelve prose". Each is now split into the rules
+  it states, and each rule says where it is enforced. Some are refused by `archogen check` today, most through
+  a profile exclusion. One is checked by a build step. Some belong to a stage not built yet, and name the task
+  that builds it. The rest are not rules a description can break, and say why.
+- A test checks the classification against the code. Every exclusion it names must exist, every task it names
+  must be real, and every rule must be quoted from its decision.
+
 ## archogen — the author sees what their description depends on
 
 `ARCHOGEN-M1-0163` (leaf `M1.30`).

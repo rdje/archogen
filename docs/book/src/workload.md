@@ -110,11 +110,14 @@ the requested guarantee", so the refusal says what admitting it would cost: equa
 a tie-break policy, and `D > T` needs a busy-period analysis rather than the response-time
 recurrence.
 
-⚠️ **These four rules are the profile's *Workload* row, and that row is one of thirteen.** The
-other twelve are still prose that nothing consults. That is not twelve defects — "Rust `no_std`
-core" is a property of the engine, not of a description — but it was twelve rows nobody had
-counted, and a test now counts them so the number cannot drift quietly. Classifying each by the
-stage that can enforce it is tracked as leaf `M1.10`.
+⚠️ **These four rules are the profile's *Workload* row, and that row is one of thirteen.** Every row
+is now classified rule by rule, beside its text in `crates/eadl-model/src/profile.rs` (leaf `M1.10`).
+A rule is enforced by `archogen check` now, usually through an exclusion such as `runtime-heap`, or by
+a verification step, as "Rust `no_std` core" is. Otherwise it belongs to a stage not yet built, and
+names the leaf that builds it: the analysis in `M2.6`, the build in `M4`. The rest are not rules a
+description can break, and each says why. A test holds every exclusion and every leaf the
+classification names to something that exists, so a rule cannot be routed to a leaf that is not
+there.
 
 ## The examples
 

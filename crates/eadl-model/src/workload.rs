@@ -36,11 +36,11 @@
 //!
 //! "Finite static task set" and "bounded release jitter" need no check: the task set is whatever
 //! the description lists, and `dynamic-task-creation` is already an exclusion; an absent `jitter`
-//! clause means zero, which is bounded. The remaining twelve `decisions` rows are **counted** by
-//! this module's `how_many_profile_decisions_are_still_prose` test and **classified** by leaf
-//! `M1.10`, which decides for each one whether it is enforceable here, enforceable at a later
-//! stage, or not a checkable rule at all. Twelve unenforced rows is not twelve defects — but
-//! twelve rows nobody had counted was the state this module exists to leave behind.
+//! clause means zero, which is bounded. Every `decisions` row is now **classified**, part by part, beside
+//! its text in [`crate::profile`] (leaf `M1.10`): enforced by this checker, enforced by a verification step,
+//! owned by the leaf that builds a later stage, or not a rule at all, with the reason. This module's
+//! `every_profile_decision_is_classified_by_the_stage_that_enforces_it` test holds each exclusion and each
+//! owner the classification names to something that exists.
 
 use std::collections::BTreeMap;
 
@@ -367,26 +367,69 @@ mod tests {
     }
 
     #[test]
-    fn how_many_profile_decisions_are_still_prose() {
-        // ⭐ The census this module exists to stop being unknown. `decisions` has thirteen rows;
-        // this module enforces the Workload row. If a later leaf enforces another, this number
-        // moves and the test says so rather than letting the gap drift silently.
-        assert_eq!(
-            crate::profile::RT_STATIC_UP_V1.decisions.len(),
-            13,
-            "the profile's decision table changed size — re-count what is enforced"
-        );
-        let enforced = ["Workload"];
-        let unenforced: Vec<&str> = crate::profile::RT_STATIC_UP_V1
-            .decisions
-            .iter()
-            .map(|row| row.concern)
-            .filter(|concern| !enforced.contains(concern))
+    fn every_profile_decision_is_classified_by_the_stage_that_enforces_it() {
+        // ⭐ Leaf `M1.10`. This test used to count the rows still prose; it now checks the routing that replaced
+        // the count. Every rule is quoted from its row, every exclusion it names exists, every stage not yet built
+        // names a leaf a tree declares, and a rule that is not a rule says why.
+        use crate::profile::{Stage, RT_STATIC_UP_V1};
+        let trees = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .and_then(std::path::Path::parent)
+            .expect("crates/<name>/ is two levels below the root")
+            .join("docs/tasks");
+        let declared: String = std::fs::read_dir(&trees)
+            .expect("the task trees")
+            .flatten()
+            .filter_map(|entry| std::fs::read_to_string(entry.path()).ok())
             .collect();
-        assert_eq!(
-            unenforced.len(),
-            12,
-            "still prose, classified by leaf M1.10: {unenforced:?}"
-        );
+        let mut wrong = Vec::new();
+        for row in RT_STATIC_UP_V1.decisions {
+            if row.parts.is_empty() {
+                wrong.push(format!("`{}` is not classified", row.concern));
+            }
+            for part in row.parts {
+                if !row.decision.contains(part.rule) {
+                    wrong.push(format!(
+                        "`{}`: `{}` is not in the decision's own words",
+                        row.concern, part.rule
+                    ));
+                }
+                match &part.stage {
+                    Stage::Check(how) => {
+                        // Each `slug` named is an exclusion of this profile, or a path into this crate.
+                        for slug in how.split('`').skip(1).step_by(2) {
+                            if !slug.contains("::") && RT_STATIC_UP_V1.exclusion(slug).is_none() {
+                                wrong.push(format!(
+                                    "`{}` names `{slug}`, which is no exclusion of this profile",
+                                    row.concern
+                                ));
+                            }
+                        }
+                    }
+                    Stage::Tier(step) => {
+                        if !step.contains("step") {
+                            wrong.push(format!("`{}`: a tier part names no step", row.concern));
+                        }
+                    }
+                    Stage::Later { owner, .. } => {
+                        if !declared.contains(&format!("- ID: `{owner}`")) {
+                            wrong.push(format!(
+                                "`{}`: `{owner}` is no leaf a tree declares",
+                                row.concern
+                            ));
+                        }
+                    }
+                    Stage::NotARule(why) => {
+                        if why.len() < 20 {
+                            wrong.push(format!(
+                                "`{}`: `{}` is not a rule, and says too little why",
+                                row.concern, part.rule
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+        assert!(wrong.is_empty(), "{}", wrong.join("\n"));
     }
 }
