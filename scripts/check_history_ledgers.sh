@@ -17,14 +17,16 @@
 # THE GATE'S LEGS, per ledger:
 #   1. every segment's lines, bytes, entry count and sha256 are its index row's, so a sealed segment cannot change;
 #   2. the segments and the rows correspond one to one, numbered from 0001 without a gap;
-#   3. every row the index holds at HEAD is still there, unchanged: the index is append-only;
+#   3. ACROSS HISTORY, every row any committed version of the index held is still there, unchanged, and every
+#      segment is byte for byte what the commit that added it wrote — so CI, where HEAD is the commit under test,
+#      catches a segment and its row forged together as the pre-commit hook does (leaf `PROGRAM.40`);
 #   4. the live file holds fewer than twice its window of entries, or a rollover is required;
 #   5. once a segment exists, the live header names docs/history/INDEX.md;
 #   6. the order is continuous: work-unit numbers strictly fall, and dates never rise, from the live file's first
 #      entry through the newest segment to the oldest.
 #
-# ⚠️ HONEST LIMIT: a row and its segment edited together are caught only against HEAD (leg 3); a first commit that
-# seals and forges at once is the review's to see, as the catalog's lock is (decision_catalog-records.md §0).
+# ⚠️ HONEST LIMIT: a first commit that seals and forges at once is the review's to see, as the catalog's lock is
+# (decision_catalog-records.md §0); history rewritten under the gate is premise 2 and 3's there too.
 set -uo pipefail
 SELF="$0"
 case "$SELF" in /*) ;; *) SELF="$PWD/$SELF" ;; esac
@@ -162,16 +164,27 @@ check_one() { # name file dir pattern window
   for f in $(ls "$dir" 2>/dev/null); do
     case " $listed " in *" ${f%.md} "*) ;; *) note "$dir/$f is in no row of $INDEX — a segment must be listed" ;; esac
   done
-  # Append-only against HEAD.
-  if git cat-file -e "HEAD:$INDEX" 2>/dev/null; then
-    mkdir -p "$SCRATCH"; git show "HEAD:$INDEX" > "$SCRATCH/head-index.md"
-    local current headrow; current="$(rows "$name")"
+  # Append-only across history: every row any committed index held, not only HEAD's, since HEAD is the commit under
+  # test in CI and a comparison with it alone sees nothing there.
+  mkdir -p "$SCRATCH"
+  local current headrow commit; current="$(rows "$name")"
+  for commit in $(GIT_NO_REPLACE_OBJECTS=1 git log --format=%H -- "$INDEX" 2>/dev/null); do
+    GIT_NO_REPLACE_OBJECTS=1 git show "$commit:$INDEX" > "$SCRATCH/old-index.md" 2>/dev/null || continue
     while IFS= read -r headrow; do
       [ -n "$headrow" ] || continue
       printf '%s\n' "$current" | grep -qxF -- "$headrow" ||
-        note "$INDEX's $name row \`${headrow%%$'\t'*}\` is not as HEAD has it — the index is append-only"
-    done < <(rows "$name" "$SCRATCH/head-index.md")
-  fi
+        note "$INDEX's $name row \`${headrow%%$'\t'*}\`, committed in ${commit:0:12}, is gone or changed — the index is append-only"
+    done < <(rows "$name" "$SCRATCH/old-index.md")
+  done
+  # Every segment is what the commit that added it wrote.
+  local added
+  for seg in $listed; do
+    [ -f "$dir/$seg.md" ] || continue
+    added="$(GIT_NO_REPLACE_OBJECTS=1 git log --diff-filter=A --format=%H -- "$dir/$seg.md" 2>/dev/null | tail -n 1)"
+    [ -n "$added" ] || continue
+    GIT_NO_REPLACE_OBJECTS=1 git show "$added:$dir/$seg.md" 2>/dev/null | cmp -s - "$dir/$seg.md" ||
+      note "$dir/$seg.md is not what ${added:0:12} wrote when it sealed it — a sealed segment changed"
+  done
   local live; live=$(count_entries "$file" "$pattern")
   [ "$live" -lt $(( 2 * window )) ] ||
     note "$file holds $live entries, and twice its window is $(( 2 * window )): a rollover is required — bash scripts/check_history_ledgers.sh --seal"
@@ -247,6 +260,20 @@ self_test() {
   sed -i.bak '/^| `0001` |/ s/| `[0-9-]*` |$/| `1999-01-01` |/' "$work/docs/history/INDEX.md"; rm -f "$work/docs/history/INDEX.md.bak"
   arm "a committed row that changed is refused as not append-only" 1 "the index is append-only"
   git -C "$work" checkout -q -- docs/history/INDEX.md
+  # A segment and its row forged together, and committed: the check a CI run makes, where HEAD is the forgery.
+  printf 'forged\n' >> "$work/docs/history/changelog/0001.md"
+  python3 - "$work" <<'PYF'
+import hashlib, re, sys
+w = sys.argv[1]
+s = open(w + "/docs/history/changelog/0001.md", "rb").read()
+i = w + "/docs/history/INDEX.md"
+t = open(i).read()
+t = re.sub(r"^(\| `0001` \|(?: [^|]* \|){3}) \d+ \| \d+ \| `[0-9a-f]+` \|", lambda m: "%s %d | %d | `%s` |" % (m.group(1), s.count(b"\n"), len(s), hashlib.sha256(s).hexdigest()), t, count=1, flags=re.M)
+open(i, "w").write(t)
+PYF
+  commit
+  arm "a segment and its row forged together and committed are refused" 1 "is not what"
+  git -C "$work" reset -q --hard HEAD~1
   sed -i.bak 's/`ARCHOGEN-T-0025`/`ARCHOGEN-T-0002`/' "$work/CHANGELOG.md"; rm -f "$work/CHANGELOG.md.bak"
   arm "entries out of order across the live file and its segments are refused" 1 "not strictly newest first"
   git -C "$work" checkout -q -- CHANGELOG.md

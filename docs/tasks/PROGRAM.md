@@ -748,14 +748,34 @@ mdBook that is the director's window into the project.
   Commit: `pending`
 
 - ID: `PROGRAM.40`
-  Status: `pending`
+  Status: `done`
   Goal: `HISTORY-LEDGERS` catches in CI what it catches before a commit. Its leg 3 compares the index with `HEAD`,
   which is the commit under test in CI, so a segment and its row forged together and committed pass there; the
   review of `PROGRAM.32.4` found it (P4), and `TASK-HISTORY` now checks the same across history.
   Acceptance: every row any committed index held still present, and every segment byte for byte what the commit that
   added it wrote, with RED arms for a committed forgery; the book and `DOCTRINE_ENFORCEMENT.md` updated.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the checklist.
+  Commit: `ARCHOGEN-PROGRAM-0229 (leaf PROGRAM.40)`
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE** — the new arm, "a segment and its row forged together and committed are refused", built a
+    forgery in a scratch repository and committed it. Against the old leg 3 it passes, since `HEAD` is the forgery
+    itself. With the new segment check mutated off, `bash scripts/check_history_ledgers.sh --self-test` →
+    `history-ledgers self-test: 14 pass / 1 fail (15 arms)`, that arm red.
+  - [x] **ROOT CAUSE** — leg 3 compared the index only with `HEAD`, as `git show faa9d2b^:scripts/check_history_ledgers.sh`
+    shows (`git cat-file -e "HEAD:$INDEX"`). In CI, `HEAD` is the commit under test, so a forged segment and row
+    matched themselves.
+  - [x] **FIX** — leg 3 reads every committed version of the index (`git log --format=%H -- docs/history/INDEX.md`)
+    and requires each of its rows still present and unchanged. Each segment must equal, byte for byte, what the
+    commit that added it wrote (`git log --diff-filter=A`). The honest limit is restated.
+  - [x] **ADDRESSED** — `bash scripts/check_history_ledgers.sh --self-test` → rc=0,
+    `history-ledgers self-test: 15 pass / 0 fail (15 arms)`; `bash scripts/check_history_ledgers.sh` on the real
+    ledgers → rc=0, `history-ledgers: OK (2 ledger(s) …)`.
+  - [x] **NO REGRESSION** — `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`;
+    `bash scripts/run_self_tests.sh` → rc=0, `self-tests: OK — 35 self-test(s) passed`. No held file changed.
+  - [x] **LOCKSTEP** — `docs/decisions/decision_history-ledgers.md`, `DOCTRINE_ENFORCEMENT.md`,
+    `docs/book/src/verification.md`; this leaf, the frontier and both logs; `LIVE_STATUS.md`, `docs/TASK_TREE.md`,
+    `MEMORY.md`, `CHANGELOG.md`.
 
 ## Roadmap coverage map
 
@@ -821,10 +841,9 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.40` | `pending` | `HISTORY-LEDGERS` checked across history, as `TASK-HISTORY` now is, so CI catches a committed forgery |
-| 2 | `PROGRAM.39` | `pending` | the decisions folder partitioned by subject, adding no capacity; starts at 36 files or 360 000 bytes, or sooner |
-| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
-| 4 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
+| 1 | `PROGRAM.39` | `pending` | the decisions folder partitioned by subject, adding no capacity; starts at 36 files or 360 000 bytes, or sooner |
+| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 3 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
@@ -968,6 +987,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.32.2` | both self-tests; a dry run sealing copies of `M1` and `PROGRAM`, then the gate; a code change owned by a sealed leaf; two mutations; every self-test; the enforcer | 14 of 14 and 10 of 10; byte-for-byte reconstruction, 69 files and 112 stubs; refused as sealed; each mutation red; 35 of 35; all green |
 | `2026-09-30` | `PROGRAM.32.3` | the seal of `M1` and `PROGRAM` with its proof; an independent re-derivation of both trees from `HEAD`; `shasum` over 69 files; `README-ROUTES`; the enforcer | byte for byte, 69 files and 112 stubs; equal; 0 mismatched; 21 destinations, no debt; all green |
 | `2026-09-30` | `PROGRAM.32.4` | an independent review of the tool and the seal; the tool rebuilt; 25 arms; two mutations; the real history through every leg; the figures re-measured at their commits | the seal accepted, 10 findings, all answered; 25 of 25; each mutation red; 69 files and 112 stubs proven; corrected |
+| `2026-09-30` | `PROGRAM.40` | a committed forgery in a scratch repository; the self-test; a mutation; the real ledgers; the enforcer and every self-test | refused; 15 of 15; the arm red when mutated; OK; all green, 35 of 35 |
 
 ## Commit Log
 
@@ -1036,6 +1056,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.32.2` | `ARCHOGEN-PROGRAM-0225 (leaf PROGRAM.32.2)` | **the sealing tool and its gate** — `scripts/check_task_history.sh`, registered as `TASK-HISTORY`; `TASK-ACCEPTANCE` names a sealed owner as closed |
 | `PROGRAM.32.3` | `ARCHOGEN-PROGRAM-0226 (leaf PROGRAM.32.3)` | **`M1` and `PROGRAM` sealed**: 112 leaves in 69 files under `docs/task-history/`; `docs/tasks/` bounded, its debt paid |
 | `PROGRAM.32.4` | `ARCHOGEN-PROGRAM-0228 (leaf PROGRAM.32.4)` | **the sealing tool hardened** after its review: history-wide immutability, provenance, fail-closed slicing, no reopening; `PROGRAM.32` closed |
+| `PROGRAM.40` | `ARCHOGEN-PROGRAM-0229 (leaf PROGRAM.40)` | **the history ledgers checked across history**, so CI catches a committed forgery as the hook does |
 
 ## Changelog
 

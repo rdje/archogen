@@ -13,11 +13,11 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M2` → frontier `M2.7.1`. `PROGRAM`'s frontier is `PROGRAM.40`, `API`'s `API.6`; `M1`'s only
+- **Active tree:** `M2` → frontier `M2.7.1`. `PROGRAM`'s frontier is `PROGRAM.39`, `API`'s `API.6`; `M1`'s only
   open leaf, `M1.29.4`, is blocked on the director. Every other tree's frontier head is in `docs/TASK_TREE.md`.
 - **Next action:** first **`PROGRAM.39`**: `docs/decisions/` is at its partition warning, so it is partitioned
   before more is added. Then **`M2.7.1`**'s round 11 and **`M2.10.1`**'s round 4, each in a new read-only context,
-  with their histories in `docs/reviews/`; both rounds are running. Then `PROGRAM.40`. Then
+  with their histories in `docs/reviews/`; both rounds are running. Then
   `M2.7.3`–`M2.7.5`, then `API.6`.
 - **In flight:** branch **`wip/m2.9`** (`758cbcd`) is a checkpoint, not a finished leaf — `M2.9` records it as
   not compiling (`crates/rt-core/tests/differential.rs` unadapted).

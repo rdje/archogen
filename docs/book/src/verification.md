@@ -569,7 +569,7 @@ twice its window of entries, its oldest window is moved, byte for byte, into the
 `docs/history/`, and `docs/history/INDEX.md` lists each such file with its range, its size and a fingerprint.
 Nothing is rewritten. Reading the live file and then the sealed files, newest first, gives the whole history
 exactly as it was written (`docs/decisions/decision_history-ledgers.md`). `HISTORY-LEDGERS` checks on every commit
-that no sealed file has changed, that the index lists every one and has lost no line, that the order runs on
+that no sealed file has changed since it was sealed, that the index lists every one and has lost or changed no row it ever held, that the order runs on
 unbroken, and that neither live file has outgrown its window.
 
 ```console

@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the check on the changelog's sealed history now holds on the server too
+
+`ARCHOGEN-PROGRAM-0229` (leaf `PROGRAM.40`).
+
+- The check that keeps the changelog's and development notes' sealed history unchanged compared the index only
+  with the last commit. On the server, the last commit is the one being checked, so a sealed file and its index
+  line forged together would have compared equal to themselves.
+- It now checks every version of the index ever committed, and every sealed file against the commit that first
+  added it, as the task-history check does since the previous change. A new test commits such a forgery and is
+  refused.
+
 ## archogen — the task-history tool is hardened after its independent review
 
 `ARCHOGEN-PROGRAM-0228` (leaf `PROGRAM.32.4`; `PROGRAM.32` closed).
