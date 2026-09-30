@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-09-30
 - leaf: M1.38 (`docs/tasks/M1.md`)
-- status: pending
+- status: applied
 - constructs: docs/semantics/reference.md#diagnostics
 - invalidates: a description with a list opened inside 256 others; the deepest tracked description nests 6 levels, so none in this repository
 
