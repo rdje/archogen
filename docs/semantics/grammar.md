@@ -113,6 +113,7 @@ symbol_start    = symbol_char - digit ;
 | what each escape **denotes** | [`docs/semantics/reference.md`](reference.md) §2 | a grammar says what is shaped like an escape, not what it means |
 | that comments are **retained** | the language reference (`M1.12.4`) | a grammar says what is skipped, not what is kept |
 | canonical form | [`docs/semantics/reference.md`](reference.md) §3 | it is a property of printing, not of parsing |
+| how deep a list may nest | [`docs/semantics/reference.md`](reference.md) §4, `read-nesting-too-deep` | a grammar says what is shaped right, not how far a reader must follow it; the limit, 256, is `eadl/1`'s, stated where the reader's refusals are (`M1.38`) |
 
 ⭐ **Two spellings were reconciled with the reference by `M1.12.2`, and the mechanism that reconciled
 them is permanent.** `hexadecimal`'s prefix now admits `0X` as well as `0x`, because its digits were

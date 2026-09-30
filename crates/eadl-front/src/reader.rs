@@ -13,6 +13,17 @@ use crate::diagnostic::{Diagnostic, Diagnostics, Label};
 use crate::form::{Comment, Document, Form};
 use crate::source::{SourceId, SourceMap, Span};
 
+/// How many lists may be open at once: the 257th `(` inside 256 others is `read-nesting-too-deep`.
+///
+/// ⛔ **A limit of this version of the language, not of a machine** (leaf `M1.38`). The reader recursed once per
+/// level with nothing to stop it, and ten thousand nested parentheses — a 20 KB file — overflowed its stack and
+/// aborted the process, exit 134, outside the exit contract. Every pass that walks a form recurses the same way,
+/// so the limit is enforced here, where the depth is first seen, and nothing after the reader meets a deeper
+/// form. The deepest description the repository holds nests 6 levels, and the crash came past 6 000 in a debug
+/// build, so 256 is far from both. Stating it as a property of `eadl/1`, as §1 rule 9 states the value domain,
+/// means every conforming reader refuses the same descriptions rather than whichever its stack cannot hold.
+pub const MAX_NESTING: usize = 256;
+
 /// Read one source into a document.
 ///
 /// Returns the document and every diagnostic produced. A document is returned even when there
@@ -46,6 +57,8 @@ struct Reader<'a> {
     at: usize,
     diagnostics: Diagnostics,
     comments: Vec<Comment>,
+    /// How many lists are open where the reader stands.
+    depth: usize,
 }
 
 /// What closed a list-reading loop.
@@ -65,6 +78,7 @@ impl<'a> Reader<'a> {
             at: 0,
             diagnostics: Diagnostics::new(),
             comments: Vec::new(),
+            depth: 0,
         }
     }
 
@@ -160,6 +174,62 @@ impl<'a> Reader<'a> {
 
     fn read_list(&mut self) -> Option<Form> {
         let open = self.offset();
+        if self.depth == MAX_NESTING {
+            return self.refuse_too_deep(open);
+        }
+        self.depth += 1;
+        let list = self.read_list_body(open);
+        self.depth -= 1;
+        list
+    }
+
+    /// Refuse the list opening at `open`, which is nested past [`MAX_NESTING`], and step over it without
+    /// recursing: a loop that counts parentheses to the one that closes it, stepping over strings and
+    /// comments as the reader would, so a `)` inside either does not end it early. Nothing inside is read.
+    fn refuse_too_deep(&mut self, open: u32) -> Option<Form> {
+        self.diagnostics.push(Diagnostic::error(
+            "read-nesting-too-deep",
+            format!("this list opens inside {MAX_NESTING} others, deeper than eADL reads"),
+            Label::new(self.span(open, open + 1), "nested past the limit"),
+            format!(
+                "flatten the description: a list may nest at most {MAX_NESTING} deep, and no construct \
+                 of the language nests more than a few levels"
+            ),
+        ));
+        let mut depth = 0usize;
+        while let Some(byte) = self.peek() {
+            self.at += 1;
+            match byte {
+                b'(' => depth += 1,
+                b')' => {
+                    depth -= 1;
+                    if depth == 0 {
+                        break;
+                    }
+                }
+                // A string ends at its closing quote or, unterminated, at the end of its line (§2 rule 3).
+                b'"' => {
+                    while let Some(inner) = self.peek() {
+                        self.at += 1;
+                        match inner {
+                            b'\\' => self.at = (self.at + 1).min(self.text.len()),
+                            b'"' | b'\n' => break,
+                            _ => {}
+                        }
+                    }
+                }
+                b';' => {
+                    while self.peek().is_some_and(|inner| inner != b'\n') {
+                        self.at += 1;
+                    }
+                }
+                _ => {}
+            }
+        }
+        None
+    }
+
+    fn read_list_body(&mut self, open: u32) -> Option<Form> {
         self.at += 1; // consume '('
         let mut items = Vec::new();
 
@@ -626,7 +696,7 @@ fn signed(magnitude: i128, negative: bool) -> Option<i64> {
 
 #[cfg(test)]
 mod tests {
-    use super::read;
+    use super::{read, MAX_NESTING};
     use crate::form::Form;
     use crate::source::SourceMap;
 
@@ -1098,6 +1168,69 @@ mod tests {
         let rendered = diagnostics.render(&sources);
         assert!(rendered.contains("read-unexpected-character"), "{rendered}");
         assert!(!rendered.contains("read-missing-delimiter"), "{rendered}");
+    }
+
+    #[test]
+    fn a_list_at_the_nesting_limit_is_read_and_one_past_it_is_refused() {
+        let at = format!("{}{}", "(".repeat(MAX_NESTING), ")".repeat(MAX_NESTING));
+        parse_ok(&at);
+        let past = format!(
+            "{}{}",
+            "(".repeat(MAX_NESTING + 1),
+            ")".repeat(MAX_NESTING + 1)
+        );
+        let (_, diagnostics, _) = parse(&past);
+        let codes: Vec<&str> = diagnostics.items().iter().map(|d| d.code).collect();
+        assert_eq!(codes, ["read-nesting-too-deep"]);
+        // Pointed at the `(` that went past the limit.
+        let span = diagnostics.items()[0].primary.span;
+        assert_eq!(span.start as usize, MAX_NESTING);
+    }
+
+    #[test]
+    fn nesting_far_past_the_limit_is_one_refusal_and_not_a_stack_overflow() {
+        // ⛔ The input that aborted the process before `M1.38`, a hundred times over.
+        let deep = 1_000_000;
+        let text = format!("{}{}(after)", "(".repeat(deep), ")".repeat(deep));
+        let (document, diagnostics, _) = parse(&text);
+        let codes: Vec<&str> = diagnostics.items().iter().map(|d| d.code).collect();
+        assert_eq!(codes, ["read-nesting-too-deep"]);
+        assert_eq!(
+            document.forms.len(),
+            2,
+            "reading goes on after the refused list"
+        );
+    }
+
+    #[test]
+    fn a_paren_in_a_string_or_a_comment_does_not_end_the_refused_list_early() {
+        let open = "(".repeat(MAX_NESTING + 1);
+        let close = ")".repeat(MAX_NESTING + 1);
+        let text = format!("{open}\")\" ; )\n \"\\\")\"{close}\n(after)");
+        let (document, diagnostics, _) = parse(&text);
+        let codes: Vec<&str> = diagnostics.items().iter().map(|d| d.code).collect();
+        assert_eq!(codes, ["read-nesting-too-deep"], "{text}");
+        assert_eq!(document.forms.len(), 2);
+    }
+
+    #[test]
+    fn an_unclosed_input_nested_past_the_limit_reports_a_bounded_number_of_problems() {
+        let (_, diagnostics, _) = parse(&"(".repeat(100_000));
+        let deep = diagnostics
+            .items()
+            .iter()
+            .filter(|d| d.code == "read-nesting-too-deep")
+            .count();
+        let unclosed = diagnostics
+            .items()
+            .iter()
+            .filter(|d| d.code == "read-unclosed-list")
+            .count();
+        assert_eq!(deep, 1);
+        assert_eq!(
+            unclosed, MAX_NESTING,
+            "one per list still open, and no more"
+        );
     }
 
     #[test]

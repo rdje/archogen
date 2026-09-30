@@ -142,6 +142,13 @@ terminal and pointed at nothing. `crates/eadl-model/tests/rendering.rs` now rend
 Reading does not stop at the first error: three malformed numbers cost one edit cycle, not
 three.
 
+A list may nest at most 256 deep (leaf `M1.38`). The deepest description in the repository nests six
+levels, so the limit only ever meets input that is not a description. Such input used to crash the
+reader. Ten thousand nested parentheses, a 20 KB file, overflowed its stack and aborted the process with
+no verdict at all. Now the first list past the limit is `read-nesting-too-deep`, the reader steps over it
+without descending, and nothing after the reader meets the depth. The limit belongs to `eadl/1`, like the
+64-bit value domain, so every reader refuses the same descriptions.
+
 ## Comments survive
 
 They are semantically inert to the language and are kept anyway, with their spans, because the

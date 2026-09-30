@@ -392,6 +392,9 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   Priority: **medium** — archogen is stateless over files today and has no such concept, so this is new
   architecture rather than a binding. It is also the precondition for the server being safe to spawn
   per instance, which is the deployment model the director described.
+  ⚠️ Measured `2026-09-30` before starting: ten thousand nested parentheses crashed the reader with a stack
+  overflow. That was a defect for every consumer, not only an untrusted one, so it was fixed at its source as
+  `M1.38` (a nesting limit of 256, `read-nesting-too-deep`). This leaf's limits start from there.
   Verification: `pending`
   Commit: `pending`
 

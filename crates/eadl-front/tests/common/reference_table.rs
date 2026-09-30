@@ -128,21 +128,43 @@ impl StringValue {
 /// this reason, and `M1.26`'s gap (b) inherits the deferral. `<0x1b>` names the character instead, so
 /// the document stays readable and the row stays executable.
 ///
+/// `<N*C>` repeats the one character `C` `N` times (leaf `M1.38`), for an input whose point is its size:
+/// `read-nesting-too-deep` fires on 257 nested parentheses, and a cell holding 514 of them would be
+/// unreadable and uncheckable by eye. `N` is decimal, at least 1, and `C` is exactly one character.
+///
 /// `None` is a **violation**, never a reason to skip the row: a cell nothing can decode is a rule
 /// nothing checks, which is the same contract `Value::parse` holds.
 pub fn source_text(cell: &str) -> Option<String> {
     let mut out = String::new();
     let mut rest = cell;
-    while let Some(start) = rest.find("<0x") {
+    while let Some(start) = next_marker(rest) {
         out.push_str(&rest[..start]);
-        let (digits, tail) = rest[start + 3..].split_once('>')?;
-        // `char::from_u32` refuses a surrogate and anything past the last scalar value, so a marker
-        // that names no character is a document defect rather than a silently dropped row.
-        out.push(char::from_u32(u32::from_str_radix(digits, 16).ok()?)?);
+        let (body, tail) = rest[start + 1..].split_once('>')?;
+        if let Some(digits) = body.strip_prefix("0x") {
+            // `char::from_u32` refuses a surrogate and anything past the last scalar value, so a
+            // marker that names no character is a document defect rather than a silently dropped row.
+            out.push(char::from_u32(u32::from_str_radix(digits, 16).ok()?)?);
+        } else {
+            let (count, repeated) = body.split_once('*')?;
+            let count: usize = count.parse().ok().filter(|n| *n >= 1)?;
+            let mut chars = repeated.chars();
+            let (Some(ch), None) = (chars.next(), chars.next()) else {
+                return None;
+            };
+            out.extend(std::iter::repeat_n(ch, count));
+        }
         rest = tail;
     }
     out.push_str(rest);
     Some(out)
+}
+
+/// Where the next marker begins: a `<` followed by `0x`, or by a decimal digit (a repetition).
+fn next_marker(text: &str) -> Option<usize> {
+    text.match_indices('<').map(|(at, _)| at).find(|at| {
+        let after = &text[at + 1..];
+        after.starts_with("0x") || after.starts_with(|c: char| c.is_ascii_digit())
+    })
 }
 
 /// Decode the reference's value notation into characters.

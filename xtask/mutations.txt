@@ -470,3 +470,14 @@ from
 to
     pub const OPERATIONS: &[&str] = &["check", "build"];
 end
+
+mutation nesting-unbounded
+file crates/eadl-front/src/reader.rs
+test -p eadl-front --lib
+expect killed
+why M1.38: without the depth check the reader recurses once per level again, and ten thousand nested parentheses overflow its stack and abort the process, exit 134 — outside the exit contract, for a 16 KB file.
+from
+            if self.depth == MAX_NESTING {
+to
+            if false && self.depth == MAX_NESTING {
+end

@@ -63,7 +63,12 @@ fn parse_cell(cell: &str) -> Result<Probe, String> {
         .ok_or_else(|| format!("`{cell}` names no verb and no input"))?;
     let decode = |text: &str| {
         source_text(text.trim())
-            .ok_or_else(|| format!("`{text}` holds a `<0x…>` marker that names no character"))
+            .ok_or_else(|| {
+                format!(
+                    "`{text}` holds a marker that decodes to nothing — `<0xNN>` must name a character, \
+                     and `<N*C>` one character, at least once"
+                )
+            })
     };
     match verb {
         "check" => Ok(Probe::Check(decode(rest)?)),
@@ -310,16 +315,34 @@ fn a_cell_that_is_not_an_input_is_a_violation_never_a_skip() {
         "| `read-bad-escape` | … | … | `` |",
         "| `read-bad-escape` | … | … | `check (a)<0xd800>` |",
         "| `module-not-found` | … | … | `modules (import a (as a))` |",
+        "| `read-nesting-too-deep` | … | … | `check <0*(>` |",
+        "| `read-nesting-too-deep` | … | … | `check <3*()>` |",
     ]);
     assert_reported(
         &fires_violations("fixture.md", &doc),
-        4,
+        6,
         &[
             "`parse` is not a verb",
             "names no verb",
-            "names no character",
+            "decodes to nothing",
             "names no module",
+            "`<0*(>` holds a marker",
+            "`<3*()>` holds a marker",
         ],
+    );
+}
+
+#[test]
+fn a_repetition_marker_is_decoded_by_the_shared_reader() {
+    // Nesting past the limit is the input `read-nesting-too-deep` fires on, and 514 parentheses in a cell
+    // could be read by nobody. One fewer level is under the limit and fires nothing, so the count is exact.
+    let doc = table(&["| `read-nesting-too-deep` | … | … | `check <257*(><257*)>` |"]);
+    assert_reported(&fires_violations("fixture.md", &doc), 0, &[]);
+    let doc = table(&["| `read-nesting-too-deep` | … | … | `check <256*(><256*)>` |"]);
+    assert_reported(
+        &fires_violations("fixture.md", &doc),
+        1,
+        &["read-nesting-too-deep"],
     );
 }
 

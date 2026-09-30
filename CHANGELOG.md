@@ -4,6 +4,16 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — deeply nested input no longer crashes the checker
+
+`ARCHOGEN-M1-0178` (leaf `M1.38`).
+
+- A file of nothing but nested parentheses, ten thousand deep, made `archogen check` crash with a stack
+  overflow. There was no verdict and no error message, and the exit code was outside the documented ones.
+- Lists may now nest at most 256 deep. The first one past that is refused with its own error, at any depth, and
+  checking goes on. No real description comes near the limit: the deepest in the repository nests six levels.
+- Found while measuring what an untrusted user of the engine API could do to it.
+
 ## archogen — the engine API is documented, and its version is fixed at 1.0
 
 `ARCHOGEN-API-0177` (leaf `API.3.4`).

@@ -72,6 +72,7 @@ the frontend. A table without that comment is prose and checks nothing.
 | `error C` | **not well-formed**, and refused with a diagnostic whose code is `C` |
 | `refused C` | well-formed, but its value is outside the domain the language can hold; refused with code `C` |
 | `<0xNN>` | in a **source** cell only: the single character whose code point is `NN` in hexadecimal |
+| `<N*C>` | in a **source** cell only: the one character `C`, `N` times, for an input whose point is its size — `<3*(>` is `(((` |
 | `—` | no canonical text, because the literal yields no value |
 
 ⭐ **Why a source cell needs `<0xNN>`.** A row about a raw control byte cannot otherwise be written:
@@ -103,7 +104,7 @@ still contains the constructor. So each cell names a door into the toolchain and
 | `kinds K <validate> D` | `K` is a kind module, loaded as the toolchain loads its own; then each declaration in `D` is validated against the registry `K` built |
 | `none: R` | no writable input fires the code, for the reason `R`, which may not be empty |
 
-The `<0xNN>` marker works in these cells as in a source cell. A cell nothing can parse is a violation, and
+The `<0xNN>` and `<N*C>` markers work in these cells as in a source cell. A cell nothing can parse is a violation, and
 never a skipped row.
 
 ## 1. Numbers are exact
@@ -379,6 +380,7 @@ cheapest diagnostic to write is the most expensive to receive.
 | code | when it fires | what to do | fires on |
 | --- | --- | --- | --- |
 | `read-unclosed-list` | a `(` is never matched and the input ends inside it | add the matching `)`; the diagnostic also labels where the list opened | `check (defsystem heartbeat` |
+| `read-nesting-too-deep` | a list opens inside 256 others. The reader refuses it and reads nothing inside it, so no later pass meets the depth. No construct of the language nests more than a few levels, and the limit is a property of this version of the language, as the value domain is (§1 rule 9), so every reader refuses the same descriptions | flatten the description: a list may nest at most 256 deep | `check <257*(><257*)>` |
 | `read-unexpected-close` | a `)` appears with no list open | remove it, or add the `(` that was meant to open a list | `check (defsystem heartbeat))` |
 | `read-unexpected-character` | a byte that can start nothing **between forms**, which in practice means a stray control character; inside a string the same byte is `read-control-character` | delete it — a form is a list `(…)`, a symbol, a number or a string | `check (defsystem heartbeat)<0x1b>` |
 | `read-missing-delimiter` | a string is followed directly by a character a symbol may contain, with no delimiter between them. The grammar requires a delimiter after every atom, and a symbol or a number runs until one, so a string is the only atom that can end without one. A byte that can start nothing there is `read-unexpected-character` instead | separate the two with a space, or move the text inside the string | `check (defsystem heartbeat (doc "a"b))` |
