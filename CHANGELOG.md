@@ -4,6 +4,16 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the product runs nothing, and a check says so
+
+`ARCHOGEN-API-0158` (leaf `API.2`).
+
+- archogen describes, checks and generates, and it never starts another program. That property makes it safe
+  to hand archogen to an agent that did not write the description. It was true, but written down nowhere and
+  checked by nothing. A new doctrine, `NO-SUBPROCESS`, now refuses any product code that starts a process.
+- Only a test module is exempt. A test-only marker on a single helper function no longer hides the code below
+  it. The browser-build step from `API.1` had exactly that weakness, and it is fixed there too.
+
 ## archogen — the engine compiles for the browser
 
 `ARCHOGEN-API-0157` (leaf `API.1`).

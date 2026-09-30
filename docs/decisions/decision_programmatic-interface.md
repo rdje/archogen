@@ -100,6 +100,10 @@ Both are exactly the things an API's types and its string encoding depend on.
   handing archogen to an arbitrary agent safe, and a `Command::new` added to a product crate tomorrow
   would pass every gate in the tree. `API.2` owns it; the scanner shape already exists in
   `crates/eadl-front/tests/reference.rs`'s legs 4 and 5.
+  *Since `2026-09-30` it is stated and gated:* **no production code under `crates/*/src` spawns a process or
+  executes anything.** `NO-SUBPROCESS` (`scripts/check_no_subprocess.sh`) refuses `Command::new`, any path to
+  `process::Command`, `.spawn(`, `exec` and `fork` there on every commit. `ExitCode` and `process::exit` pass,
+  and so do test modules, `tests/`, `xtask/` and `scripts/`, which drive a toolchain on purpose.
 - **The surface is thin today and must not be advertised otherwise.** Per `docs/book/src/cli.md`, only
   `check` is built; `build` is experimental over the S0 path; `resolve`, `analyze`, `verify`, `explain`
   and `replay` are unimplemented (`M3.4`, `M2.6`, `PROGRAM.3`, `M3.4`, `M4.7`). An MCP server shipping

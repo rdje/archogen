@@ -34,6 +34,7 @@ PROJECT_DOCTRINES=(
   "LIVE-SNAPSHOTS|every live document that shows current state stays within its ceilings on lines, bytes and longest line, and every snapshot the inventory declares is bounded|scripts/check_live_snapshots.sh"
   "STATED-ORDER|every restated order agrees with its source — frontier tables with their leaves, snapshot heads and successor lists with their trees, the changelog newest-first|scripts/check_stated_order.sh"
   "FIGURE-REGISTER|a commit may not add an unclassified figure to a live document — gated by a test that reads it, a dated record, or not a count, per docs/figures.md|scripts/check_figure_register.sh"
+  "NO-SUBPROCESS|the product spawns no process and executes nothing — no production code under crates/*/src names Command, spawn, exec or fork (§10.4)|scripts/check_no_subprocess.sh"
 )
 
 for entry in "${PROJECT_DOCTRINES[@]}"; do

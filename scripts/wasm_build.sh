@@ -7,8 +7,9 @@
 # `integration` tier, in the shape of `no-std-build`.
 #
 # THE CRATE SET IS DERIVED, never listed: every workspace member (`cargo metadata`) whose production code names
-# none of `std::fs`, `std::process`, `std::net` or `std::env`. Production code is each `src/**/*.rs` up to its
-# first `#[cfg(test)]` line. A member excluded by that rule is named, with the line that excluded it. A new crate
+# none of `std::fs`, `std::process`, `std::net` or `std::env`. Production code is each `src/**/*.rs` up to a
+# `#[cfg(test)]` that opens a module — not merely the first `#[cfg(test)]`, which on a lone helper would hide every
+# line below it (the rule `NO-SUBPROCESS` states, adopted here by leaf `API.2`). A member excluded by that rule is named, with the line that excluded it. A new crate
 # is in scope the day it is added, without anyone editing this file.
 #
 # ⚠️ HONEST LIMIT: the rule reads text. A path written some other way (an alias, a re-export, a macro) is not seen,
@@ -37,10 +38,21 @@ for p in json.load(sys.stdin)["packages"]:
 }
 
 # The first production line of $1 (a crate directory) that does I/O, as "file:line: text", or nothing.
+# The production lines of $1, as "line: text": everything before a `#[cfg(test)]` that opens a module.
+production() {
+  awk '
+    pending && /^[[:space:]]*(#\[|$)/ { held = held "\n" FNR ": " $0; next }
+    pending && /^[[:space:]]*(pub[[:space:]]+)?mod[[:space:]]/ { exit }
+    pending { printf "%s\n", substr(held, 2); pending = 0; held = "" }
+    /^[[:space:]]*#\[cfg\(test\)\][[:space:]]*$/ { pending = 1; held = FNR ": " $0; next }
+    { print FNR ": " $0 }
+    END { if (pending) printf "%s\n", substr(held, 2) }' "$1"
+}
+
 first_io() {
   local file hit
   while IFS= read -r file; do
-    hit="$(awk '/^[[:space:]]*#\[cfg\(test\)\]/ { exit } { print FNR ": " $0 }' "$file" | grep -m 1 -E -- "$IO")"
+    hit="$(production "$file" | grep -m 1 -E -- "$IO")"
     if [ -n "$hit" ]; then printf '%s:%s\n' "${file#"$ROOT"/}" "$hit"; return; fi
   done < <(find "$1/src" -name '*.rs' 2>/dev/null | sort)
 }
@@ -87,6 +99,8 @@ self_test() {
   arm "a grouped import of fs is seen too" "pure" "use std::{fs, io};"
   fresh; crate reads 'pub fn f() {}\n#[cfg(test)]\nmod tests { #[test] fn t() { let _ = std::fs::read("x"); } }\n'
   arm "I/O inside the test module does not exclude a crate" "pure,reads" ""
+  fresh; crate reads '#[cfg(test)]\nfn helper() {}\npub fn load(p: &str) -> String { std::fs::read_to_string(p).unwrap_or_default() }\n'
+  arm "a cfg(test) on a lone function does not hide the I/O below it" "pure" "excluded reads"
   fresh; crate pure 'pub fn run() { let _ = std::process::id(); }\n'
   arm "a process call excludes, as a file read does" "" "excluded pure"
   fresh; printf '[workspace]\nmembers = ["pure", "reads", "later"]\nresolver = "2"\n' > "$work/Cargo.toml"; crate later 'pub fn g() {}\n'

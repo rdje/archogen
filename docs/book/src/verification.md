@@ -246,6 +246,16 @@ which writes the crate it generates, and `eadl-front`, whose module loader reads
 one a browser needs most, and its reads already go through one `ModuleSource` implementation, so the wasm
 binding (`API.5`) can supply its own.
 
+## The product runs nothing
+
+archogen describes, checks and generates, and it executes nothing. `archogen build` writes a crate and stops.
+Nothing in the product compiles, links or runs what it wrote, and nothing it does starts another process. That
+is the property that makes it safe to hand archogen to an agent that did not write the description. The
+`NO-SUBPROCESS` doctrine (`scripts/check_no_subprocess.sh`, leaf `API.2`) holds it on every commit: no
+production code under `crates/*/src` may name `Command`, `spawn`, `exec` or `fork`. Test modules, `tests/`,
+`xtask/` and `scripts/` compile and run things on purpose, and they are outside what it reads. A
+`#[cfg(test)]` on a lone helper does not hide the lines below it. Only one that opens a test module does.
+
 ## When a push is due
 
 The director ruled a push cadence on `2026-09-28`: push once the branch is a set number of commits ahead of

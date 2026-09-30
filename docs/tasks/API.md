@@ -119,7 +119,7 @@ agent can drive. The server is a capability of the built binary, spawned per ins
     `COMMIT.md` step 2, `TOOLBOX.md`, the `rust-toolchain` ledger entry, `docs/figures.md`.
 
 - ID: `API.2`
-  Status: `pending`
+  Status: `done`
   Goal: state and gate the invariant that makes handing archogen to an arbitrary agent safe — **no
   product code spawns a subprocess or executes anything.**
   Reproduce / issue: measured `2026-09-28`. `git grep -niE 'spawns? no|no subprocess|does not
@@ -137,8 +137,44 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   Priority: **medium-high** — cheap, unblocked by the freeze, and it is the property §10.4's safety
   argument rests on. A `Command::new` added to a product crate tomorrow passes every gate in the tree
   today.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the checklist — the gate green on 44 production files, nine arms, two mutations; the same
+  production-half rule adopted by `wasm_build.sh`, with its own arm.
+  Commit: `ARCHOGEN-API-0158 (leaf API.2)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — the property held and nothing held it:
+    ```text
+    $ git show HEAD:scripts/check_doctrines.project.sh | grep -c "NO-SUBPROCESS"   → 0
+    $ git grep -niE 'spawns? no|no subprocess|does not execute|never executes|no child process' HEAD
+      → only CHANGELOG.md and the decision record describing its absence — no statement of it, and no gate
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — §10.4's safety argument was reasoned from a measurement
+    (`decision_programmatic-interface.md`, `2026-09-28`) and never turned into a check, so it lived at the level of
+    "true today". **WHERE the rule's first shape would have leaked:** "production code ends at the first
+    `#[cfg(test)]`" — the rule `API.1`'s `wasm_build.sh` shipped with — lets one attribute on an early helper silence
+    every line below it (`git show HEAD:scripts/wasm_build.sh | grep -n 'cfg\\(test'` →
+    `43:    hit="$(awk '/^[[:space:]]*#\[cfg\(test\)\]/ { exit } …`, an exit at the first match).
+  - [x] **FIX** — `scripts/check_no_subprocess.sh` (**`NO-SUBPROCESS`**, registered in the project slot): every
+    tracked `crates/*/src/**/*.rs`, derived; the test half starts only at a `#[cfg(test)]` opening a `mod`; refuses
+    `Command::new`, `process::Command` (imports too), `.spawn(`, `exec`, `fork`, and passes `ExitCode` and
+    `process::exit`. The invariant stated in the decision record and in `verification.md`. `wasm_build.sh` adopts
+    the same production-half rule.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    $ bash scripts/check_no_subprocess.sh → no-subprocess: OK (44 production source file(s) under crates/*/src; …)
+      (44 = git ls-files 'crates/*/src/*.rs' | wc -l = find crates/*/src -name '*.rs' | wc -l)
+    $ bash scripts/check_no_subprocess.sh --self-test → no-subprocess self-test: 9 pass / 0 fail (9 arms)
+      a real spawn → refused with its line · an import of Command → refused · ExitCode, process::exit → pass
+      a spawn in the test module → pass · cfg(test) on a lone fn → the spawn below it refused
+      tests/ and xtask/ → outside the population · .spawn( → refused · no product source → a breach
+    M1 the naive rule (the first cfg(test) ends production) → 1 refused: "a cfg(test) on a lone function…", restored
+    M2 .spawn( dropped from the pattern → 1 refused, restored
+    $ bash scripts/wasm_build.sh --self-test → wasm-build self-test: 6 pass / 0 fail (6 arms), the new arm among them
+    ```
+  - [x] **NO REGRESSION** — `bash scripts/check_doctrines.project.sh` → `no-subprocess: OK …`, slot rc=0; the
+    `wasm_build.sh --list` set unchanged (the five crates, the four exclusions with the same lines).
+  - [x] **LOCKSTEP** — the decision record, `DOCTRINE_ENFORCEMENT.md`, `verification.md` "The product runs nothing".
 
 - ID: `API.3`
   Status: `pending`
@@ -217,11 +253,10 @@ agent can drive. The server is a capability of the built binary, spawned per ins
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `API.2` | `pending` | state and gate the no-subprocess invariant, also unblocked by the freeze and also cheap. §10.4's whole safety argument rests on a property that is currently written down nowhere |
-| 2 | `API.3` | `pending` | **the load-bearing leaf, and blocked on `M1.13`.** Declaring an API over an unfrozen language means declaring it twice: the freeze settles the integer domain and the escape set, which are the API's numeric types and its string encoding |
-| 3 | `API.4` | `pending` | the instance model and the resource limits an untrusted consumer makes necessary. New architecture, not a binding — archogen is stateless over files today |
-| 4 | `API.5` | `pending` | the wasm binding, behind `API.1` and `API.3` |
-| 5 | `API.6` | `pending` | the MCP server — the point of the tree, and last because everything above is what makes it safe to hand to an arbitrary agent |
+| 1 | `API.3` | `pending` | **the load-bearing leaf; its prerequisite, `M1.13`'s freeze, is `done`.** Declaring an API over an unfrozen language would have meant declaring it twice: the freeze settles the integer domain and the escape set, which are the API's numeric types and its string encoding |
+| 2 | `API.4` | `pending` | the instance model and the resource limits an untrusted consumer makes necessary. New architecture, not a binding — archogen is stateless over files today |
+| 3 | `API.5` | `pending` | the wasm binding, behind `API.1` and `API.3` |
+| 4 | `API.6` | `pending` | the MCP server — the point of the tree, and last because everything above is what makes it safe to hand to an arbitrary agent |
 | 7 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6` |
 
 ⛔ **This tree does not displace the project's main line.** `M1.13` is the frontier in
@@ -279,6 +314,7 @@ them early is cheap and makes the rest estimable.
 | --- | --- | --- | --- |
 | `2026-09-28` | `API` | tree seeded from the director's ruling and a feasibility census; no code | the census is recorded in `docs/decisions/decision_programmatic-interface.md`: six of eight crates I/O-free in production, two already `no_std`, zero third-party dependencies, no `Command::new` in any production half |
 | `2026-09-30` | `API.1` | the five I/O-free crates built for wasm32; the derivation's arms; the integration tier | all compile; the first cut of the detection matched nothing and the arms caught it; tier `incomplete`, 8 passed, the emulator quarantined |
+| `2026-09-30` | `API.2` | the gate on the product; nine arms and two mutations; `wasm_build.sh` on the same rule | 44 production files, none spawns; the naive test-half rule shown leaking and replaced in both scripts |
 
 ## Commit Log
 
@@ -286,6 +322,7 @@ them early is cheap and makes the rest estimable.
 | --- | --- | --- |
 | `API` | `ARCHOGEN-API-0078 (leaf API)` | tree seeded: `ROADMAP.md` §10.4, the decision record and its index row, seven leaves, three of the four open questions routed to a named owner |
 | `API.1` | `ARCHOGEN-API-0157 (leaf API.1)` | **the engine compiles for the browser** — measured by a derived `wasm-build` step; four members excluded by the I/O they do, each named |
+| `API.2` | `ARCHOGEN-API-0158 (leaf API.2)` | **the product runs nothing, and a gate says so** — `NO-SUBPROCESS` |
 
 ## Changelog
 
