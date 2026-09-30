@@ -57,7 +57,7 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 | [`M1`](tasks/M1.md) | `active` | `M1.29.4` — module parameters get a consumer; **waiting on the director** (`docs/decisions/decision_findings-for-director-review.md` §7) | repo-local |
 | [`API`](tasks/API.md) | `active` | `API.1` — **measure** whether the engine compiles for `wasm32-unknown-unknown` before anything is promised | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |
-| [`M2`](tasks/M2.md) | `active` | `M2.8.2` — the device-tree fixture for the pinned emulator, and re-dumping it a test | repo-local |
+| [`M2`](tasks/M2.md) | `active` | `M2.6` — the runtime-applicable analysis; `M2.8.3` (the eADL side of the §3.2 agreement) is a design act, `M2.9` waits on the director | repo-local |
 | [`M3`](tasks/M3.md) | `pending` | `M3.1` — candidate enumeration and substitutability | repo-local |
 | [`M4`](tasks/M4.md) | `pending` | `M4.1` — the typed runtime/build plan | repo-local |
 | [`M5`](tasks/M5.md) | `blocked` | — **no board procured** (`M0.5`, 2026-09-13) | repo-local |

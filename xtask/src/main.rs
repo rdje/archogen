@@ -40,6 +40,7 @@
 //! scope", so a quarantine is a row of [`QUARANTINES`] carrying exactly those, and nothing else
 //! can make a step's exit count as an absence (leaf `PROGRAM.10.1`).
 
+mod dtb;
 mod mutation;
 
 use std::path::{Path, PathBuf};
@@ -76,9 +77,9 @@ struct Quarantine {
 /// Every quarantine in the repository, so "what is quarantined right now?" has one answer.
 const QUARANTINES: &[Quarantine] = &[Quarantine {
     step: "emulator",
-    issue: "QEMU is present, at the pinned release, and offers the pinned machine — but the §3.2 \
-            agreement check has nothing to compare yet: `DEVICE_TREE_FIXTURE` (leaf `M2.8.2`) and \
-            the eADL platform description it must agree with (`M2.8.3`) do not exist",
+    issue: "QEMU is present, at the pinned release, offers the pinned machine, and presents exactly \
+            the device tree its fixture records (`M2.8.2`) — but the §3.2 agreement check has nothing \
+            to compare that platform with yet: the eADL platform description (`M2.8.3`) is not written",
     owner: "M2.8",
     claim: "that `riscv-virt-up` is the platform its eADL fixture describes (§3.2) — \
             `TARGET_VERIFIED` in `targets/riscv-virt-up.env`",
@@ -668,6 +669,60 @@ fn verify(name: &str, provisioned: bool) -> i32 {
     verdict.code()
 }
 
+/// `cargo xtask dtb-summary <file.dtb>`: the device tree as the fixture records it (leaf `M2.8.2`).
+fn dtb_summary(file: &str) -> i32 {
+    match std::fs::read(file)
+        .map_err(|e| e.to_string())
+        .and_then(|b| dtb::parse(&b))
+    {
+        Ok(root) => {
+            print!("{}", dtb::render(&root));
+            0
+        }
+        Err(reason) => {
+            eprintln!("xtask dtb-summary: {file}: {reason}");
+            1
+        }
+    }
+}
+
+/// `cargo xtask dtb-check <file.dtb> <fixture.md>`: the dump against the fixture — 0 agree, 1 disagree.
+fn dtb_check(file: &str, fixture: &str) -> i32 {
+    let fresh = match std::fs::read(file)
+        .map_err(|e| e.to_string())
+        .and_then(|b| dtb::parse(&b))
+    {
+        Ok(root) => dtb::render(&root),
+        Err(reason) => {
+            eprintln!("xtask dtb-check: {file}: {reason}");
+            return 1;
+        }
+    };
+    let recorded = match std::fs::read_to_string(fixture) {
+        Ok(text) => text,
+        Err(reason) => {
+            eprintln!("xtask dtb-check: {fixture}: {reason}");
+            return 1;
+        }
+    };
+    let wrong = dtb::disagreements(&fresh, &recorded);
+    if wrong.is_empty() {
+        println!("dtb-check: the platform presents exactly what {fixture} records");
+        return 0;
+    }
+    eprintln!(
+        "dtb-check: the platform disagrees with {fixture} in {} way(s):",
+        wrong.len()
+    );
+    for line in &wrong {
+        eprintln!("  {line}");
+    }
+    eprintln!(
+        "  a QEMU that presents another platform under the pinned options is another target (§3.2)"
+    );
+    1
+}
+
 fn tier_names() -> String {
     TIERS
         .iter()
@@ -706,6 +761,8 @@ fn help() {
     println!("USAGE:");
     println!("    cargo xtask verify --tier <TIER> [--provisioned]");
     println!("    cargo xtask verify --list");
+    println!("    cargo xtask dtb-summary <file.dtb>");
+    println!("    cargo xtask dtb-check <file.dtb> <fixture.md>");
     println!();
     println!("TIERS:");
     for tier in TIERS {
@@ -739,6 +796,8 @@ fn main() {
         ["verify", "--tier", name] => verify(name, false),
         ["verify", "--tier", name, "--provisioned"]
         | ["verify", "--provisioned", "--tier", name] => verify(name, true),
+        ["dtb-summary", file] => dtb_summary(file),
+        ["dtb-check", file, fixture] => dtb_check(file, fixture),
         ["mutate"] => mutation::run(&repo_root(), &[]),
         ["mutate", "--only", ids @ ..] if !ids.is_empty() => mutation::run(
             &repo_root(),

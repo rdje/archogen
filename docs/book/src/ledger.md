@@ -32,9 +32,9 @@ the day a chapter or a decision relies on it, as Miri did.
 | Pinned at | `env:targets/riscv-virt-up.env:QEMU_VERSION_PINNED` |
 | Retrieved | `2026-09-28` |
 | Hash | sha256 `03725d89f81f327c7e95dd6129dc7e9a6440d49d7158ade0d558efa9d6bd56f3` of the installed binary, captured `2026-09-29` on this machine. Another machine's build of the same release differs, which is why `scripts/target_emulator.sh --check` compares the version and not the digest. What CI builds from is fixed instead: the release's source tarball, sha256 `079ffbff…2482`, recorded in `.github/ci-tools.env` on `2026-09-30` and checked before the build (`PROGRAM.10.4`) — one derivation, over HTTPS from download.qemu.org; its GPG signature is not checked |
-| Scope | independent execution of the `riscv-virt-up` target's binaries, and the device tree it generates, compared with the platform fixture by `M2.8` |
+| Scope | independent execution of the `riscv-virt-up` target's binaries, and the device tree it generates: kept as `docs/targets/riscv-virt-up.dtb`, rendered into `docs/targets/riscv-virt-up.dtb.summary.md`, and re-dumped and compared on every `--check` (`M2.8.2`) |
 | Known limitations | a virtual platform: not a board and not a timing reference (§19). It is an independent *implementation*, not independent truth, because it reads the same specifications this project does (`docs/decisions/decision_emulator-independence-retained.md`). Its own `virt` machine documentation is not yet held (`REQ-007`, requested) |
-| Revalidation trigger | `scripts/target_emulator.sh --check` reporting a mismatch against the pin; any QEMU upgrade; `TARGET_VERIFIED` changing |
+| Revalidation trigger | `scripts/target_emulator.sh --check` reporting a mismatch against the pin or the device-tree fixture; any QEMU upgrade; `TARGET_VERIFIED` changing |
 | Named as | `QEMU`, `qemu-system-riscv64` |
 
 ## `linkedspec`

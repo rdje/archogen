@@ -49,11 +49,22 @@ The configuration also carries `TARGET_VERIFIED=no` until an installed QEMU has 
 A proposal recorded as a proposal is a fact about what is known; the same line marked verified
 with nothing behind it would be a fabricated fact.
 
-With QEMU installed, `--check` keeps two answers apart. A release other than the pin, or a
-machine the emulator does not offer, is a comparison that ran and disagreed: exit `1`. A
+With QEMU installed, `--check` keeps two answers apart. A release other than the pin, a machine
+the emulator does not offer, or a device tree that differs from the one recorded is a comparison
+that ran and disagreed: exit `1`. A
 configuration that matches, whose §3.2 agreement check has nothing to compare against yet, could
 not be run: exit `20`, the same code as the absent tool, and the runner accepts it only because a
 quarantine names its owner, `M2.8` — [the verification chapter](verification.md) has the terms.
+
+The recorded device tree is `docs/targets/riscv-virt-up.dtb.summary.md` (leaf `M2.8.2`). It was
+dumped from the pinned emulator, rendered as text by `cargo xtask dtb-summary`, and kept beside the
+dump it came from, with a short account of which nodes the runtime stands on. Those are the one
+hart, the RAM at `0x8000_0000`, the CLINT timer and its route to the hart, and the `ns16550a`
+console. Every `--check` dumps the tree again and compares it with the file. So a QEMU that changed
+the platform under the pinned options would fail the check rather than silently invalidate what was
+measured against it. One property is left out of the comparison, by name: a random seed QEMU writes
+at every boot. The file also records a deliberate gap. The hart offers floating point, and archogen
+builds for `riscv64imac`, without it.
 
 ## There is no board
 

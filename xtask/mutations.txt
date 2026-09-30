@@ -215,3 +215,25 @@ from
 to
                 let _ = index;
 end
+
+mutation device-tree-seed-not-masked
+file xtask/src/dtb.rs
+test -p xtask two_boots_that_differ_only_in_the_seed_render_the_same
+expect killed
+why M2.8.2: QEMU writes a fresh /chosen/rng-seed at every boot; unmasked, every re-dump disagrees with the fixture and the check becomes one that always fails.
+from
+                    .any(|(path, property)| *path == node.path && property == name);
+to
+                    .any(|_| false);
+end
+
+mutation device-tree-prose-paths-unchecked
+file xtask/src/dtb.rs
+test -p xtask prose_naming_a_node_the_platform_lacks_is_a_disagreement
+expect killed
+why M2.8.2: the fixture's prose names the nodes rt-static-up-v1 stands on; unchecked, it could name a device the platform no longer presents while the generated block moved on.
+from
+            if !paths.contains(&cited) {
+to
+            if paths.is_empty() {
+end

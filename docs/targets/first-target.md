@@ -36,15 +36,19 @@ payload.
    ```console
    $ scripts/target_emulator.sh --check
    target-emulator: found: QEMU emulator version 11.1.1
+   target-emulator: the platform presented matches docs/targets/riscv-virt-up.dtb.summary.md
    target-emulator: TARGET_VERIFIED=no — this configuration is still a PROPOSAL
-   target-emulator:   the §3.2 agreement check could not be run: docs/targets/riscv-virt-up.dtb.summary.md does not exist
+   target-emulator:   the §3.2 agreement check could not be run: the eADL platform description it compares against is not written
    target-emulator:   leaf M2.8 owns flipping it, with the evidence that justifies it
    $ echo $?
    20
    ```
 
    Exit `20`, not `1`, since `PROGRAM.10.1`: the configuration matches, and the agreement check it
-   needs could not be run — §14.3's quarantine, owned by `M2.8`. A mismatch still exits `1`.
+   needs could not be run — §14.3's quarantine, owned by `M2.8`. A mismatch still exits `1`. Since
+   `M2.8.2` the check also re-dumps the device tree and compares it with
+   [`riscv-virt-up.dtb.summary.md`](riscv-virt-up.dtb.summary.md); what is left is the eADL side
+   (`M2.8.3`).
 
    §14.3 still governs the absent case, and the tool still honours it: on a machine without
    `qemu-system-riscv64` this exits `20` and says so, because "a required tool skipped or unavailable

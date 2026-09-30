@@ -34,6 +34,19 @@ note() { printf 'target-emulator: %s\n' "$1" >&2; }
 # shellcheck source=/dev/null
 set -a; . "$ENV_FILE"; set +a
 
+# The dumped device tree is compared by `cargo xtask dtb-check` (leaf `M2.8.2`). The manifest is a seam for the
+# self-test, whose scratch repositories have no xtask of their own.
+XTASK_MANIFEST="${TARGET_EMULATOR_XTASK_MANIFEST:-$ROOT/xtask/Cargo.toml}"
+
+# Write the device tree QEMU generates under the pinned options to $1.
+dump_dtb() {
+  # shellcheck disable=SC2086  # QEMU_DISPLAY is a pinned option string, deliberately split
+  "$QEMU_BINARY" -machine "$QEMU_MACHINE,$QEMU_DTB_DUMP_OPTION=$1" \
+    -cpu "$QEMU_CPU" -smp "$QEMU_SMP" -m "$QEMU_MEMORY" -bios "$QEMU_BIOS" $QEMU_DISPLAY \
+    >/dev/null 2>&1
+  [ -s "$1" ]
+}
+
 invocation() {
   local image="${1:-<image.elf>}"
   printf '%s -machine %s -cpu %s -smp %s -m %s -bios %s %s -kernel %s' \
@@ -55,6 +68,7 @@ self_test() {
 case "$*" in
   --version) echo "QEMU emulator version 11.1.1" ;;
   "-machine help") printf 'Supported machines are:\nvirt                 RISC-V VirtIO board\n' ;;
+  *dumpdtb=*) for a in "$@"; do case "$a" in *dumpdtb=*) cp "$STUB_DTB" "${a#*dumpdtb=}" ;; esac; done ;;
 esac
 STUB
     chmod +x "$work/bin/qemu-system-riscv64"
@@ -63,7 +77,8 @@ STUB
   arm() { # $1 = name, $2 = expected rc, $3 = text the output must carry
     local name="$1" want="$2" must="$3" out rc
     arms=$((arms + 1))
-    out="$(cd "$work" && PATH="$work/bin:$PATH" bash "$SELF" --check 2>&1)"; rc=$?
+    out="$(cd "$work" && PATH="$work/bin:$PATH" STUB_DTB="$ROOT/docs/targets/riscv-virt-up.dtb" \
+      TARGET_EMULATOR_XTASK_MANIFEST="$ROOT/xtask/Cargo.toml" bash "$SELF" --check 2>&1)"; rc=$?
     if [ "$rc" -ne "$want" ]; then
       echo "SELF-TEST: $name — expected exit $want, got $rc" >&2; printf '%s\n' "$out" | sed -n '1,4p' | sed 's/^/    /' >&2; return
     fi
@@ -82,8 +97,15 @@ STUB
   arm "no pin at all is a mismatch, not an absence" 1 "NO RELEASE IS PINNED YET"
   fresh; set_env TARGET_VERIFIED yes
   arm "verified with no fixture behind it is refused" 1 "a verification with nothing behind it"
-  fresh; set_env TARGET_VERIFIED yes; mkdir -p "$work/docs/targets"; : > "$work/$DEVICE_TREE_FIXTURE"
-  arm "verified, pinned, offered and with its fixture: passes" 0 "found: QEMU emulator version 11.1.1"
+  fixture() { mkdir -p "$work/docs/targets"; cp "$ROOT/$DEVICE_TREE_FIXTURE" "$work/$DEVICE_TREE_FIXTURE"; }
+  fresh; fixture
+  arm "the platform matches its fixture, and the agreement is still unbuilt: could not be run" 20 "the platform presented matches"
+  fresh; fixture; sed -i.bak 's/  compatible = "ns16550a"/  compatible = "ns16550"/' "$work/$DEVICE_TREE_FIXTURE"; rm -f "$work/$DEVICE_TREE_FIXTURE.bak"
+  arm "a platform that differs from its fixture is a mismatch, and names the line" 1 "presented, and not recorded:   compatible = \"ns16550a\""
+  fresh; fixture; set_env QEMU_VERSION_PINNED 11.1.0
+  arm "a release mismatch is reported before any dump is compared" 1 "PINNED RELEASE MISMATCH"
+  fresh; set_env TARGET_VERIFIED yes; fixture
+  arm "verified, pinned, offered and matching its fixture: passes" 0 "the platform presented matches"
   fresh; set_env QEMU_BINARY qemu-system-nowhere
   arm "an emulator that is not installed could not be run" 20 "required tool unavailable: qemu-system-nowhere"
   rm -rf "$work"
@@ -123,14 +145,34 @@ case "${1:-}" in
       rc=1
     fi
 
+    # The platform QEMU presents, against the one the fixture records (leaf `M2.8.2`) — a comparison that RUNS, so a
+    # disagreement is a failure. Only when nothing above has disagreed: a dump from another release, or from a
+    # machine not offered, says nothing about the pinned one.
+    if [ "$rc" -eq 0 ] && [ -f "$DEVICE_TREE_FIXTURE" ]; then
+      dump="$ROOT/target/doctrine_scratch/target_emulator/check.dtb"
+      mkdir -p "$(dirname "$dump")"; rm -f "$dump"
+      if ! dump_dtb "$dump"; then
+        note "QEMU wrote no device tree to compare against $DEVICE_TREE_FIXTURE"
+        rc=1
+      elif out="$(cargo run -q --manifest-path "$XTASK_MANIFEST" -- dtb-check "$dump" "$DEVICE_TREE_FIXTURE" 2>&1)"; then
+        note "the platform presented matches $DEVICE_TREE_FIXTURE"
+      else
+        printf '%s\n' "$out" | sed 's/^/target-emulator: /' >&2
+        rc=1
+      fi
+    fi
+
     # ⭐ Two different reasons not to say "verified", kept apart (PROGRAM.10.1). Everything above
     # is a comparison that RAN — a disagreement is a failure. What follows is a comparison that
     # cannot run yet, because its inputs are owned by a leaf that has not delivered them: §14.3
     # calls that a quarantine, and the runner accepts exit 20 for it only from this step.
     if [ "$TARGET_VERIFIED" != "yes" ]; then
       note "TARGET_VERIFIED=$TARGET_VERIFIED — this configuration is still a PROPOSAL"
-      [ -f "$DEVICE_TREE_FIXTURE" ] ||
+      if [ -f "$DEVICE_TREE_FIXTURE" ]; then
+        note "  the §3.2 agreement check could not be run: the eADL platform description it compares against is not written"
+      else
         note "  the §3.2 agreement check could not be run: $DEVICE_TREE_FIXTURE does not exist"
+      fi
       note "  leaf $TARGET_VERIFIED_BY owns flipping it, with the evidence that justifies it"
       [ "$rc" -eq 0 ] && rc=20
     elif [ ! -f "$DEVICE_TREE_FIXTURE" ]; then
@@ -147,10 +189,7 @@ case "${1:-}" in
       || die "required tool unavailable: $QEMU_BINARY is not on PATH" 20
     # QEMU writes the generated device tree and exits. This is the §3.2 agreement input: the
     # platform the emulator actually presents, not the one we assumed it would.
-    "$QEMU_BINARY" -machine "$QEMU_MACHINE,$QEMU_DTB_DUMP_OPTION=$out" \
-      -cpu "$QEMU_CPU" -smp "$QEMU_SMP" -m "$QEMU_MEMORY" -bios "$QEMU_BIOS" $QEMU_DISPLAY \
-      >/dev/null 2>&1
-    [ -s "$out" ] || die "no device tree was written to $out" 1
+    dump_dtb "$out" || die "no device tree was written to $out" 1
     note "device tree written to $out — compare it against $DEVICE_TREE_FIXTURE"
     ;;
 

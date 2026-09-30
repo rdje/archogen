@@ -59,19 +59,20 @@ Rendered from a run, not retyped:
 ```console
 $ cargo xtask verify --tier integration
 tier: integration — before a push, and before closing a milestone
-  ✅ fmt                  0.24s  every Rust source is in canonical format
-  ✅ clippy               0.13s  no lint fires anywhere, including in tests and examples
-  ✅ tests                5.14s  every contract test passes, F28 and the semantic corpus included
-  ✅ doctrines            8.29s  every repository invariant holds on the working tree
-  ✅ self-tests          57.84s  every doctrine gate's RED arms still fire — a gate that stopped being able to fail is caught here
-  ✅ book                 0.10s  the mdBook builds — it is the director's window, so a broken book is a broken deliverable
+  ✅ fmt                  0.25s  every Rust source is in canonical format
+  ✅ clippy               1.81s  no lint fires anywhere, including in tests and examples
+  ✅ tests                4.19s  every contract test passes, F28 and the semantic corpus included
+  ✅ doctrines            8.77s  every repository invariant holds on the working tree
+  ✅ self-tests          59.31s  every doctrine gate's RED arms still fire — a gate that stopped being able to fail is caught here
+  ✅ book                 0.12s  the mdBook builds, with its pinned release — it is the director's window, so a broken book is a broken deliverable
   ✅ no-std-build         0.04s  the runtime core compiles for a bare-metal target (§14.3's "compile targets")
-  ⚠  emulator             0.06s  QUARANTINED — could not be run; leaf M2.8 owns the gap
-     issue: QEMU is present, at the pinned release, and offers the pinned machine — but the §3.2 agreement check has nothing to compare yet: `DEVICE_TREE_FIXTURE` (leaf `M2.8.2`) and the eADL platform description it must agree with (`M2.8.3`) do not exist
+  ⚠  emulator             0.13s  QUARANTINED — could not be run; leaf M2.8 owns the gap
+     issue: QEMU is present, at the pinned release, offers the pinned machine, and presents exactly the device tree its fixture records (`M2.8.2`) — but the §3.2 agreement check has nothing to compare that platform with yet: the eADL platform description (`M2.8.3`) is not written
      unproven while it stands: that `riscv-virt-up` is the platform its eADL fixture describes (§3.2) — `TARGET_VERIFIED` in `targets/riscv-virt-up.env`
      target-emulator: found: QEMU emulator version 11.1.1
+     target-emulator: the platform presented matches docs/targets/riscv-virt-up.dtb.summary.md
      target-emulator: TARGET_VERIFIED=no — this configuration is still a PROPOSAL
-     target-emulator:   the §3.2 agreement check could not be run: docs/targets/riscv-virt-up.dtb.summary.md does not exist
+     target-emulator:   the §3.2 agreement check could not be run: the eADL platform description it compares against is not written
      target-emulator:   leaf M2.8 owns flipping it, with the evidence that justifies it
 tier integration: incomplete — 7 passed, 0 failed, 0 unavailable, 0 not built, 1 quarantined
   ⚠  incomplete is NOT a pass. §14.3: "a required tool skipped or unavailable is reported as such, not a passed check".
@@ -81,9 +82,10 @@ $ echo $?
 ```
 
 The one absence is honest and owned. QEMU is installed and pinned, so the emulator step *runs*: it finds
-the pinned release and the pinned machine, and then cannot reach a verdict, because the §3.2 agreement check
-has nothing to compare yet — the device-tree fixture and the eADL platform description are `M2.8`'s to
-write, and the configuration says `TARGET_VERIFIED=no` until they exist. A tier that turned that into a pass
+the pinned release and the pinned machine, dumps the device tree and finds it identical to the recorded one
+(`M2.8.2`). Then it cannot reach a verdict, because the §3.2 agreement check has nothing to compare that
+platform with yet: the eADL platform description is `M2.8.3`'s to write, and the configuration says
+`TARGET_VERIFIED=no` until it exists. A tier that turned that into a pass
 would be claiming a target nobody has verified. Until `PROGRAM.10.1` it was reported as a *failure*, which
 was wrong the other way: nothing had disagreed, and `COMMIT.md` treats the two differently — it permits
 proceeding past an `incomplete` tier after reading what it names, and not past a `failed` one. A release

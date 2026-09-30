@@ -4,6 +4,19 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the emulator's platform is recorded and re-checked
+
+`ARCHOGEN-M2-0155` (leaf `M2.8.2`).
+
+- The device tree QEMU gives the guest is now kept in the repository, together with a readable rendering:
+  `docs/targets/riscv-virt-up.dtb.summary.md`. The rendering says which parts the runtime depends on (one core,
+  RAM, the timer and its interrupt route, the serial console). It also records that the chip offers floating
+  point, which archogen deliberately does not use.
+- Every emulator check dumps the tree again and compares it with the file. A QEMU that presented a different
+  platform would now fail the check. One value is excluded, by name: a random seed QEMU writes at every boot.
+- The comparison is done by a new device-tree reader in `xtask`, which needs no other tool. It agrees with
+  `dtc` on every node. The emulator step stays quarantined only for the eADL side, `M2.8.3`.
+
 ## archogen — the S0 chapter's test no longer races itself
 
 `ARCHOGEN-S0-0154` (leaf `S0.8`, follow-up).

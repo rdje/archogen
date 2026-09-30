@@ -13,10 +13,10 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M2` → frontier `M2.8.2`; `PROGRAM`'s frontier is all blocked (on a push, and on the director). Every other tree's frontier head is in `docs/TASK_TREE.md`;
+- **Active tree:** `API` → frontier `API.1`; `PROGRAM`'s frontier is all blocked (on a push, and on the director). Every other tree's frontier head is in `docs/TASK_TREE.md`;
   it is not copied here.
-- **Next action:** **`M2.8.2`** — the device-tree fixture for the pinned emulator, the first half of lifting the
-  `integration` tier's quarantine; then `API.1`. `PROGRAM.10.5` (the CI job's first real run) waits on the next push.
+- **Next action:** **`API.1`** — measure whether the engine compiles for `wasm32-unknown-unknown`; then `M2.6`, and
+  `M2.8.3` (the eADL side of the §3.2 agreement, a design act). `PROGRAM.10.5` (the CI job's first real run) waits on the next push.
 - **In flight:** branch **`wip/m2.9`** (`758cbcd`) is a checkpoint, not a finished leaf — `M2.9` records it as
   not compiling (`crates/rt-core/tests/differential.rs` unadapted).
 - **⏳ Blockers (the director's):** `M1.29.4` — §7 of `decision_findings-for-director-review.md`; `M2.9` — §6 (a)
