@@ -188,3 +188,28 @@ pub fn ledger(record: &str) -> String {
     .unwrap_or_else(|e| panic!("{e}"));
     review_ledger_hash(&read.id, read.reviews.last().unwrap()).to_string()
 }
+
+/// `id` implementing package `crates/<package>`, with a timing fact `f` located in it.
+pub fn packaged(id: &str, package: &str) -> String {
+    edit(
+        &edit(
+            &copy(id),
+            "(implementation (version \"0.1.0\") (none \"a machine has no code\"))",
+            &format!("(implementation (version \"0.1.0\") (sources \"crates/{package}\"))"),
+        ),
+        "(timing-model (version \"0.1.0\") (none \"the costs of a machine are its devices'\"))",
+        &format!(
+            "(timing-model (version \"0.1.0\") (sources) (measured-with)\n    (facts (fact f yes (locator (code {id} \
+             \"crates/{package}/src/lib.rs\")) (basis \"see the code\"))) (costs))"
+        ),
+    )
+}
+
+/// A workspace of one package, `crates/p`.
+pub fn package() -> Vec<(&'static str, &'static str)> {
+    vec![
+        ("Cargo.toml", "[workspace]\nmembers = [\"crates/*\"]\n"),
+        ("crates/p/Cargo.toml", "[package]\nname = \"p\"\n"),
+        ("crates/p/src/lib.rs", "//! p\n"),
+    ]
+}

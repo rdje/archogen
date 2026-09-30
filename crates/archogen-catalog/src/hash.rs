@@ -250,6 +250,38 @@ impl Catalog {
         Ok(out)
     }
 
+    /// One facet's hashes (§3), computing only what its bound hash rests on and checking only its own record's
+    /// references: what invalidation needs when the catalog as a whole does not load (§10).
+    ///
+    /// # Errors
+    ///
+    /// `catalog-dependency` for an id with no record; the refusals of [`Catalog::hashes`] met on the way.
+    pub fn facet_hash(&self, id: &str, facet: FacetKind) -> Result<FacetHash, Refusal> {
+        let mut computer = Computer {
+            catalog: self,
+            targets: self.named_targets()?,
+            hashes: Hashes::default(),
+            stack: Vec::new(),
+        };
+        let missing = || {
+            Refusal::new(
+                Code::Dependency,
+                "(catalog)",
+                "(record)",
+                None,
+                format!("there is no record `{id}`"),
+            )
+        };
+        let record = computer.record(id).ok_or_else(missing)?;
+        computer.references(record)?;
+        computer.bound(id, facet)?;
+        computer
+            .hashes
+            .facet(id, facet)
+            .cloned()
+            .ok_or_else(missing)
+    }
+
     /// Every hash of every record (§3).
     ///
     /// # Errors

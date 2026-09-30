@@ -17,7 +17,9 @@ at the commit that ledgered it, and accepts a waiver only where §9 allows one. 
 facet's evidence status: rejected while a rejection reaches it unanswered, by its own record, its lineage or
 content it shares, production only where a review names its current hash, stale or unreviewed otherwise. At each
 commit that recorded a review it checks the review's date against the commit's and that every answer names a
-rejection the facet inherits, and it keeps a deleted record's rejection from being shed. The rest of the crate, the
+rejection the facet inherits, and it keeps a deleted record's rejection from being shed. Given what a claim
+recorded, it names every line and lookup that no longer holds, even when the catalog no longer loads. The rest of
+the crate, the
 gate, the check that protects it and the first records are the next leaves (`M2.7.3` to `M2.7.6`). Until they
 land, nothing loads a catalog, and `catalog/` is empty.
 
@@ -123,8 +125,8 @@ found them right.
 ## What it does not do yet
 
 - **Nothing loads a catalog.** `catalog/` is empty. The crate reads records, computes their hashes and checks the
-  lock, over one tree and over a history, derives evidence status and checks each review where it was recorded so
-  far; invalidation and claims are the rest of `M2.7.3`, and the gate that gives it the history is `M2.7.4`'s.
+  lock, over one tree and over a history, derives evidence status, checks each review where it was recorded and
+  traces invalidation so far; the namespaces, lookups and claims are the rest of `M2.7.3`, and the gate that gives it the history is `M2.7.4`'s.
 - **The port's facts are unknown.** The architecture port is assembly, which no record can hold yet, so every
   analysis of the runtime variant over the catalog is inconclusive until `M2.12` gives the port's code a record
   format.

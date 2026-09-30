@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog says which results a change invalidates
+
+`ARCHOGEN-M2-0253` (leaf `M2.7.3.4.3`).
+
+- Given what a result relied on, each component's content and review status, and each lookup it made, the catalog
+  now names what no longer holds: a component gone or unreadable, content changed, a review since given, or a
+  lookup that would now find something else. It errs toward too many, never too few.
+- It keeps working when the catalog itself no longer loads, judging each component on its own, which is exactly
+  when knowing what broke matters most.
+
 ## archogen — the catalog checks each review where it was recorded
 
 `ARCHOGEN-M2-0252` (leaf `M2.7.3.4.2`).
