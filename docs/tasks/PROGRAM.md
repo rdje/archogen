@@ -2208,6 +2208,33 @@ mdBook that is the director's window into the project.
   Verification: `pending`
   Commit: `pending`
 
+- ID: `PROGRAM.34`
+  Status: `pending`
+  Goal: every repository nested inside a vendored checkout is at the commit its parent records, and the boundary
+  gate can see whether it is.
+  Reproduce / issue: found `2026-09-30` while preparing `M1.21`, reading `vendor/linkedspec` read-only.
+  ```text
+  $ git -C vendor/linkedspec status --short                       → (clean: the level REPOSITORY-BOUNDARY checks)
+  $ git -C vendor/linkedspec/rgx/subs/pgen submodule status | grep -c "^+"   → 9 of 17 nested repositories off
+    their recorded commit — stimuli/sv/subs/{Cores-VeeR-EL2,slang,sv-tests,verible,verilator} and
+    stimuli/vhdl/subs/{Interfaces,OsvvmLibraries,PoC,ghdl}, with 35 to 13 834 changed paths each
+  $ git -C …/stimuli/sv/subs/slang reflog -1 --date=iso
+    97a2b64cb HEAD@{2026-09-27 15:16:02 +0200}: clone: from https://github.com/MikePopoloski/slang
+  ```
+  All nine were cloned between 15:16 and 15:21 on `2026-09-27`, the day `M1.19.1` adopted LinkedSpec `2ac834913`,
+  and each is at its upstream's tip rather than at the commit PGEN records (`slang` at `97a2b64cb`, recorded
+  `4106501b`), with an index that does not match its `HEAD`. They are PGEN's grammar test corpora; nothing
+  archogen builds, measures or reports reads them (`LS-001`…`LS-007` exercise RGX and PGEN's Rust, never
+  `stimuli/`). So no evidence is affected, and the repository-boundary rule is: the vendored checkout is not
+  wholly at its pin, and `REPOSITORY-BOUNDARY` checks only the first level, as its header states.
+  Acceptance: the nested checkouts restored to their recorded commits by the vendor's own route, which is
+  consumption, not a write; `REPOSITORY-BOUNDARY` walks nested gitlinks, with a self-test arm that seeds a nested
+  repository off its pin. ⚠️ **Awaiting the director:** the restore discards the working-tree state of nine
+  third-party repositories. That is hard to undo and was not ours to create, so it is not done without a yes.
+  Priority: **low** — no evidence depends on the corpora; the gap is in what the gate can see.
+  Verification: `pending`
+  Commit: `pending`
+
 - ID: `PROGRAM.33`
   Status: `done`
   Goal: the book-transcript backlog is keyed by what a transcript *is*, not by the line it sits on.
@@ -3587,9 +3614,10 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
-| 2 | `PROGRAM.31` | `blocked` | on the director's ruling on the findings record's §8 — the changelog and development notes as rolling ledgers |
-| 3 | `PROGRAM.32` | `blocked` | on the same ruling — closed leaves sealed out of the task trees |
+| 1 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 2 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
+| 3 | `PROGRAM.31` | `blocked` | on the director's ruling on the findings record's §8 — the changelog and development notes as rolling ledgers |
+| 4 | `PROGRAM.32` | `blocked` | on the same ruling — closed leaves sealed out of the task trees |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
