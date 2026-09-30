@@ -12,7 +12,7 @@ No bootstrap read includes this directory.
 
 | Review history | Design record | Rounds | Status |
 | --- | --- | --- | --- |
-| [`decision_catalog-records-reviews.md`](decision_catalog-records-reviews.md) | [`decision_catalog-records.md`](../decisions/catalog/decision_catalog-records.md) | 15 | open (`M2.7.1`) |
+| [`decision_catalog-records-reviews.md`](decision_catalog-records-reviews.md) | [`decision_catalog-records.md`](../decisions/catalog/decision_catalog-records.md) | 16 | closed: the record met its closure rule on round 16 (`M2.7.1`) |
 | [`decision_decisions-folder-ceiling-reviews.md`](decision_decisions-folder-ceiling-reviews.md) | [`decision_decisions-folder-ceiling.md`](../decisions/decision_decisions-folder-ceiling.md) | 1 | closed: answered before the raise landed (`PROGRAM.38`) |
 | [`decision-history-reviews.md`](decision-history-reviews.md) | `DECISION-HISTORY`: the header of `scripts/check_decision_history.sh`, and [`decision_decisions-folder-ceiling.md`](../decisions/decision_decisions-folder-ceiling.md)'s sealing bullet | 1 | closed: answered with the gate's hardening (`PROGRAM.41.1`) |
 | [`decision_task-tree-sealing-reviews.md`](decision_task-tree-sealing-reviews.md) | [`decision_task-tree-sealing.md`](../decisions/decision_task-tree-sealing.md) | 1 | closed: answered with the tool's hardening (`PROGRAM.32.4`) |

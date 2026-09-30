@@ -63,7 +63,8 @@ there is nothing else.
     past to an outer workspace (the ledger's `rust-toolchain` scope): `/1` does not follow it;
   - from the package's directory and every ancestor up to the repository root, each of `.cargo/config.toml`,
     `.cargo/config` and `rust-toolchain.toml` that exists. A `rust-toolchain` file without the extension there is
-    refused: the pin is one file, and rustup reads the legacy one too.
+    refused, and so is a `rust-toolchain.toml` anywhere but the repository root: the pin is one file, and rustup
+    reads the legacy one too.
 
   A change to the workspace manifest or the toolchain therefore makes reviews stale, but moves no version.
 
@@ -140,14 +141,15 @@ These rules are necessary, not sufficient: what the compiler reads is decided by
 module rules, and no lexical rule sees all of it. So **the gate (`M2.7.4`) builds every package in every source
 set** and reads the compiler's dependency information:
 
-- **What it builds from.** The git index, written file by file from each blob's bytes into a directory of its own
-  under the repository's `target/`, with `GIT_NO_REPLACE_OBJECTS` set. It is not a checkout, so no filter,
-  attribute or line-ending setting of git's can change a byte. Two tracked paths that differ only in ASCII case
-  are refused, since a case-insensitive file system cannot hold both. So is a tracked path whose last segments
-  equal `.cargo/config`, `.cargo/config.toml`, `rust-toolchain`, `rust-toolchain.toml`, `Cargo.toml`, `Cargo.lock`
-  or `build.rs` in ASCII case but are spelled otherwise, since such a file system would let cargo or rustup read
-  it under the name it expects. Each build runs in its package's own
-  directory.
+- **What it builds from.** The git index, each entry of mode `100644` or `100755` written file by file from its
+  blob's bytes into a directory of its own under the repository's `target/`, with `GIT_NO_REPLACE_OBJECTS` set. A
+  gitlink is not written, and no set may reach it. A tree with any tracked path outside §4's grammar, reached or
+  not, is refused, and that grammar is ASCII, so no file system's Unicode folding can make one name another. It is
+  not a checkout, so no filter, attribute or line-ending setting of git's can change a byte. Two tracked paths that
+  differ only in ASCII case are refused, since a case-insensitive file system cannot hold both. So is a tracked path
+  whose last segments equal `.cargo/config`, `.cargo/config.toml`, `rust-toolchain`, `rust-toolchain.toml`,
+  `Cargo.toml`, `Cargo.lock` or `build.rs` in ASCII case but are spelled otherwise, since such a file system would
+  let cargo or rustup read it under the name it expects. Each build runs in its package's own directory.
 - **What configuration it lets cargo read.** Cargo reads every `.cargo/config` and `.cargo/config.toml` from the
   build's directory up to the file system's root, and those under `CARGO_HOME`. So before any cargo command runs
   on a tree, `cargo metadata` included, the gate lists every such file on that command's directory path, and holds
@@ -165,11 +167,11 @@ set** and reads the compiler's dependency information:
   next one that changes a build. `RUSTUP_TOOLCHAIN` outranks every rustup override, and `rustc -vV` must then name
   the pinned release, or the gate refuses (premise 1).
 - **The pin** is the `channel` of the `rust-toolchain.toml` at the written index's root, which holds only a
-  `[toolchain]` table with the keys `channel`, `components`, `targets` and `profile`, so no `path` toolchain is
-  named. The channel must be a release number: three decimal numbers, `MAJOR.MINOR.PATCH`, each `0` or without a
-  leading zero. A named channel such as `stable`, `beta` or `nightly`, a dated or suffixed one, or an index with no
-  `rust-toolchain.toml`, is refused. A moving channel would change the compiler under an unchanged hash, and a
-  nightly one admits `#![feature]`.
+  `[toolchain]` table whose keys are `channel`, which is required, and any of `components`, `targets` and `profile`,
+  so no `path` toolchain is named. The channel must be a release number: three decimal numbers, `MAJOR.MINOR.PATCH`,
+  each `0` or without a leading zero. A named channel such as `stable`, `beta` or `nightly`, a dated or suffixed
+  one, or an index with no `rust-toolchain.toml`, is refused. A moving channel would change the compiler under an
+  unchanged hash, and a nightly one admits `#![feature]`.
 - **What cargo resolves, before anything is built.** `cargo metadata --offline --locked --format-version 1`, in
   the environment above, must report the root of the written index as its `workspace_root`. It resolves the whole
   workspace, so every member's dependencies must be path ones, a package no record reaches included, dev

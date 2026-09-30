@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog design is accepted, after sixteen reviews
+
+`ARCHOGEN-M2-0242` (leaf `M2.7.1`, closed).
+
+- **The sixteenth review found nothing that blocks.** The catalog's own rules held once more, every one of the
+  worked example's 23 hashes checked out by two independent routes, and every fact the design states about the
+  repository was true. Its ten small findings are answered in this change.
+- **So the design is accepted.** It says what a catalog record holds, how its content is hashed, how its evidence
+  status is worked out rather than written, when a claim may rest on it, and what it defends against. Sixteen
+  reviews, each by a fresh reader trying to break it, took it there.
+- **The book has a chapter on it**, "Where the engine's knowledge comes from: the catalog", written from the design
+  as accepted.
+- **Next:** the catalog's code (`M2.7.3`), the protection of its check (`M2.7.6`), and the first records
+  (`M2.7.4`). The composition's eighth review is still running.
+
 ## archogen — the catalog's fifteenth review and the composition's seventh are answered
 
 `ARCHOGEN-M2-0241` (leaf `M2.7.1`, a fourteenth checkpoint; with `M2.10.1`'s eighth).

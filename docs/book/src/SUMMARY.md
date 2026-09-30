@@ -23,6 +23,7 @@
 
 - [What a report may claim](evidence.md)
 - [What the scheduling checker establishes](analysis.md)
+- [Where the engine's knowledge comes from: the catalog](catalog.md)
 
 # Generating and running a system
 

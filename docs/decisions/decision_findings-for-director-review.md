@@ -209,8 +209,9 @@ that push. Blocking needs:
 no merge ever. The project commits directly to `main` and pushes in batches. No catalog record exists yet
 (`catalog/` is empty), so nothing depends on the premise now. It binds from the first record, which `M2.7.4` writes.
 
-The design already checks what it cheaply can: a production claim refuses a catalog change that reached `main`
-other than by a merge commit, and the loader re-checks every review where it was ledgered.
+The design already checks what it cheaply can: a production claim refuses any first-parent commit of `main`
+after the named commit that is not a merge the hosting made and signed, and the loader re-checks every review
+where it was ledgered.
 
 **The decision needed, before `M2.7.4`:** turn on those settings for `main` (recommended), which changes the
 commit workflow to branches merged by pull request; or rule a weaker premise 3 that records CI's verdict after the

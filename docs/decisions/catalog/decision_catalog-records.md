@@ -85,13 +85,17 @@ assumed control of the build machine or the hosting.
      - the required checks run on the merge result, with branches up to date or a merge queue;
      - merge commits are the only merge method;
      - `main` is never force-pushed and never deleted;
-     - the required checks are named in those settings, pinned to the CI provider's own app, so a status another
-       source posts under the same name does not satisfy them;
-     - **the check is protected from everything it judges.** No code or file a pull request controls runs in the
-       check, lies on the path of anything the check builds or runs, or reaches the check's credentials, and
-       nothing but the check can post its verdict. The checker is built from the base commit, the one the pull
-       request merges into. Its closure, what the check builds from the base to make it with the files that
-       decide how, is reviewed by code owners other than the author: measured on `2026-09-30`, `xtask` reaches
+     - the required check is a workflow the hosting's ruleset requires, pinned outside the pull request's tree,
+       with its job name reserved, since every workflow a pull request runs reports from the same app;
+     - **the check is protected from everything it judges.** No code a pull request controls runs in the check
+       or reaches its credentials, no file of it lies on the path of anything the check builds from the base or
+       runs, and nothing but the check can post its verdict. **The judged tree is data:** the check reads its
+       catalog, history and files, builds its record packages only under §3's rules, after §3's configuration and
+       manifest checks, into target directories of their own, and runs nothing it builds from it. The checker is
+       built from the base commit, the one the pull request merges into. Its closure is the packages it is built
+       from, as `cargo metadata` resolves them at the base, with the root manifest, `Cargo.lock`,
+       `rust-toolchain.toml`, `.cargo/`, `.github/` and `scripts/`. Code owners other than the author review it,
+       and the claim-side checks below compare that set: measured on `2026-09-30`, `xtask` reaches
        `archogen-api`, `eadl-front` and `eadl-model`, and the catalog crate and `archogen-evidence` join them with
        `M2.7.3`. One identity commits every commit here today (§13), so until the director names a second, the
        premise is unmet (findings §11).
@@ -111,8 +115,9 @@ assumed control of the build machine or the hosting.
      - until that commit exists, a production claim is `not-established`, naming that premise 3 has no named
        commit (§7);
      - a production claim is `not-established` when a first-parent commit of `origin/main` after that commit is
-       not a merge commit the hosting made: committed as the hosting and signed with its key, which the claim
-       tooling holds as a constant beside the canonical URL (§7);
+       not a merge commit the hosting made: committed as the hosting and signed with one of its keys, which the
+       claim tooling holds as constants beside the canonical URL, each with the first-parent range it signs. A key
+       the hosting rotates in is added by a reviewed change (§7);
      - a production claim's tooling is built under §3's environment and configuration rule from a written tree of
        a first-parent commit of `origin/main` at or after the named commit, never from a working tree, and records
        that commit. The claim is `not-established` when the checker's closure changed along `origin/main`'s
@@ -911,3 +916,4 @@ the design as it stands, and that one keeps how it got here.
 | 13 | 14 | 1 live (S1, the checker built through packages premise 3 did not list); S2 and S3, routes the answers left impossible, fail closed | "does not yet meet the closure rule"; nothing else live at defect level once S1 is fixed, S2 and S3 answered and S4's sentence added |
 | 14 | 15 | none by construction; 2 ambiguities at defect level, live (T1, cargo configuration read before §3's refusals; T15, where the two trees sit) | "does not yet meet the closure rule"; "one short revision from acceptable" |
 | 15 | 14 | none by construction; 3 ambiguities at defect level, live, all in the check's protection (U1, U2, U5); the catalog's mechanics held | "does not meet the closure rule"; the check's mechanism then made `M2.7.6`'s, with premise 3 stating the property |
+| 16 | 10, and 3 for `M2.7.6` | none, and none at defect level; the catalog's mechanics held | "The record meets the closure rule"; accepted in the change that answered it, which closed `M2.7.1` |

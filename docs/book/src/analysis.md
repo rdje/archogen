@@ -219,6 +219,6 @@ refused answer, because its conclusion names another model and always carries "n
 conditions, with every input not analytically established named as an assumption. When its bound exceeds a
 deadline it may claim only `not-established`.
 
-⚠️ **It still cannot be cited for a real system.** Its inputs, the costs and the platform facts, come from the catalog
-(leaf `M2.7`), which does not exist yet. F17's runtime half, a running system refusing what it cannot bound, is
-`M4`'s.
+⚠️ **It still cannot be cited for a real system.** Its inputs, the costs and the platform facts, come from the
+catalog, whose design is decided (see [the catalog chapter](catalog.md)) and whose code and records do not exist yet
+(`M2.7.3` to `M2.7.6`). F17's runtime half, a running system refusing what it cannot bound, is `M4`'s.

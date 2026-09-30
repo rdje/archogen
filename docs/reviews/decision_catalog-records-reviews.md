@@ -505,6 +505,28 @@ its own, with a test for every construction these rounds found. The closure rule
 | U13 | ambiguity, fails closed | a package reached only through dependencies was not scanned | "a package in a source set or a reached set" (§3) |
 | U14 | nits | `M2.7`'s children; §4's wording; "runs on the host" | fixed (`M2.7`; §4; §3) |
 
+**Round 16**, `2026-09-30`, the last: all 23 values matched by two routes, every measured claim held, and the
+catalog's mechanics held again. U6–U8, U13 and U14 were closed; U1–U5 and U12 were moved to `M2.7.6`, as round 15
+decided; U9 and U10 were closed in the record, with `M2.7.3` behind (V2), and U11 partial (V4). There were 10
+findings against the record, none a defect and none at defect level, and 3 against `M2.7.6`'s mechanism, reported
+apart as the closure rule asks. The verdict: "The record meets the closure rule." Its findings are answered in the
+change that closed `M2.7.1` (`ARCHOGEN-M2-0242`), except V7, two nits in the composition record, which land with
+that record's round 8. This file is frozen with it.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| V1 | ambiguity, live | the property forbade the builds §3 requires of the judged tree | "the judged tree is data", its record packages built under §3 into target directories of their own and never run (§0) |
+| V2 | gap, live | `M2.7.3`'s acceptance kept round 14's claim-side wording, and no leaf verified the hosting's signature | `M2.7.3` restated from §7, with the signature verified in-process; findings §11's sentence updated |
+| V3 | ambiguity, fails closed | the toolchain file's keys read as all four required | `channel` required, the others optional (§3) |
+| V4 | gap, latent (`M4`) | a non-ASCII name a Unicode-folding file system equates with a special one | any tracked path outside §4's ASCII grammar refuses the tree (§3) |
+| V5 | ambiguity | pinning to the provider's app does not stop a pull request's own workflow posting the check's name | the check is a ruleset-required workflow pinned outside the pull request's tree, its job name reserved (§0) |
+| V6 | ambiguity, low | the closure's file set left unnamed | named, and the claim-side checks compare it (§0) |
+| V7 | nits | the composition record's §5 and §2 lacked `one-claim-per-trap` and the `no` exception | with the composition record's round 8 |
+| V8 | nit | the gitlink in the index | only entries of mode `100644` or `100755` are written; no set may reach a gitlink (§3) |
+| V9 | nit, latent (`M4`) | a toolchain file below the root | refused (§3) |
+| V10 | nit, latent | a rotation of the hosting's signing key | each key held with the first-parent range it signs, a new one added by a reviewed change (§0) |
+| W1–W3 | for `M2.7.6` | a pull request's own copy of the check's workflow; artifacts of other runs; queue-merge signatures | in `M2.7.6`'s list and tests |
+
 ## Why
 
 The decision record states the design as it stands. Its reviews are its history: every round appends a table,
