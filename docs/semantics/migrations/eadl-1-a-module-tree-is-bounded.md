@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-09-30
 - leaf: M1.39 (`docs/tasks/M1.md`)
-- status: pending
+- status: applied
 - constructs: docs/semantics/reference.md#diagnostics
 - invalidates: a module tree past either limit; the largest tracked tree has 4 instances and a chain of 3, so none in this repository
 
