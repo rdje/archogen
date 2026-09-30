@@ -140,7 +140,8 @@ old one. The old golden stays behind as the record of what the old identifier me
 These surfaces have no version yet because they do not exist yet. Each is named with the tree that
 owns it, so the gap is visible rather than implied:
 
-- **Catalogs proper**, the engine knowledge that realizes descriptions, belong to `M6`. F25, "a locked
-  rebuild after a catalog update", lives at `M6.4`.
+- **Catalog records**, the engine knowledge that realizes descriptions, are being designed in `M2.7`:
+  `docs/decisions/decision_catalog-records.md`, under independent review, versions each part of a record apart.
+  Catalogs at scale belong to `M6`. F25, "a locked rebuild after a catalog update", lives at `M6.4`.
 - **Device and timing models** belong to `M2`.
 - **The build plan and its identity**, the plan hash and the binary hash, belong to `M4.7`.

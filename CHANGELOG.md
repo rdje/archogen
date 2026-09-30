@@ -4,6 +4,25 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — how the engine's knowledge is recorded, designed and under review
+
+`ARCHOGEN-M2-0195` (leaf `M2.7.1`, a checkpoint).
+
+- The engine will keep what it knows as a **catalog**: how its scheduler behaves, what a context switch costs, how
+  a timer fires. There is now a written design for a catalog entry, covering:
+  - what it records;
+  - how it is fingerprinted;
+  - who has checked it;
+  - when it may back a claim someone will rely on.
+- "Checked" cannot go stale unnoticed. An entry's reviewed status is worked out from reviews tied to the exact
+  content they saw, never typed in. Change one line, of the entry or of the code under it, and the review no
+  longer applies. A rejection stays until someone answers it.
+- The design was checked by independent reviewers, round after round. Each round found real holes, and the
+  design was reworked each time. The next round is still to run.
+- One consequence goes back to the timing analysis. Four of its inputs mix engine, application and build
+  knowledge, and no single owner can supply them. They stay with the caller for now, and a new step is filed to
+  work out how to put them together without under-counting.
+
 ## archogen — the first program runs on the emulated board
 
 `ARCHOGEN-M2-0194` (leaf `M2.8.4`).

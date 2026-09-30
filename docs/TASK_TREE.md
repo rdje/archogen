@@ -57,7 +57,7 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 | [`M1`](tasks/M1.md) | `active` | `M1.29.4` — blocked: module parameters wait on the director's call (findings §7); every other leaf is closed | repo-local |
 | [`API`](tasks/API.md) | `active` | `API.5` — the wasm binding over the declared API; `API.4` bounded what a request may cost | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |
-| [`M2`](tasks/M2.md) | `active` | `M2.7` — the catalog records the runtime analysis variant takes its inputs from; `M2.9` waits on the director | repo-local |
+| [`M2`](tasks/M2.md) | `active` | `M2.7.1` — the catalog record, written and under independent review; then `M2.7.2`–`M2.7.5` and `M2.10`; `M2.9` waits on the director | repo-local |
 | [`M3`](tasks/M3.md) | `pending` | `M3.1` — candidate enumeration and substitutability | repo-local |
 | [`M4`](tasks/M4.md) | `pending` | `M4.1` — the typed runtime/build plan | repo-local |
 | [`M5`](tasks/M5.md) | `blocked` | — **no board procured** (`M0.5`, 2026-09-13) | repo-local |
