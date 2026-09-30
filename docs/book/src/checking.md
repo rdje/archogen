@@ -170,6 +170,20 @@ a file in the current directory is a language definition an accident can change.
 If those embedded modules ever fail to load, the result is `tool-failure` (exit 70) — never a
 verdict about the user's description. §5.5: a tool failure is never reported as a valid system.
 
+Given a kind module itself, `check` and `build` say what the file is rather than judging it as a
+system (leaf `M1.32`):
+
+```console
+$ archogen check docs/semantics/kinds/os-rt.eadl ; echo $?
+archogen: unimplemented: docs/semantics/kinds/os-rt.eadl:27:1 declares a kind, `(defkind task …)`, and no command loads a kind module a user writes yet
+  hint: the kinds a description may use are the ones this toolchain ships, embedded in the binary and checked on every run (docs/semantics/kinds/). Loading a kind you write is task-tree leaf M6.3 (docs/TASK_TREE.md); until then, check a description that uses the shipped kinds
+20
+```
+
+The toolchain loads only the kind modules it ships. Loading one you write is leaf `M6.3`, the first
+extension experiment. Checking such a file on its own would not be enough: a kind that redefines a
+shipped one is well-formed by itself, and the clash shows only when the two are loaded together.
+
 ## The semantic corpus
 
 `docs/semantics/cases/` holds 33 worked cases — §12 M1 asks for twenty — each declaring the

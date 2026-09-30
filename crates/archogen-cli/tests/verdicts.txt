@@ -70,8 +70,8 @@
 12 unsupported-profile docs/semantics/cases/unsupported-general-ipc.eadl
 12 unsupported-profile docs/semantics/cases/unsupported-multicore.eadl
 12 missing-fact,unsupported-profile docs/semantics/cases/unsupported-precedence-over-missing-fact.eadl
-10 schema-unknown-kind docs/semantics/kinds/core.eadl
-10 schema-unknown-kind docs/semantics/kinds/os-rt.eadl
+20 - docs/semantics/kinds/core.eadl
+20 - docs/semantics/kinds/os-rt.eadl
 0 - docs/semantics/modules/app.sibling.eadl
 0 - docs/semantics/modules/app.system.eadl
 0 - docs/semantics/modules/app.two-timers.eadl

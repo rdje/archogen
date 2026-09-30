@@ -13,10 +13,10 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M1` → frontier `M1.32`; `PROGRAM`'s frontier is all blocked (on a push, and on the director). Every other tree's frontier head is in `docs/TASK_TREE.md`;
+- **Active tree:** `M1` → frontier `M1.26.3`; `PROGRAM`'s frontier is all blocked (on a push, and on the director). Every other tree's frontier head is in `docs/TASK_TREE.md`;
   it is not copied here.
-- **Next action:** **`M1.32`** — `archogen check` on a kind module is refused as what it is; then `API.3`, `M2.6`,
-  and `M2.8.3` (the eADL side of the §3.2 agreement, a design act).
+- **Next action:** **`M1.26.3`** — `infeasible-configuration` names one rule; then `API.3`, `M2.6`, and `M2.8.3`
+  (the eADL side of the §3.2 agreement, a design act).
 - **In flight:** branch **`wip/m2.9`** (`758cbcd`) is a checkpoint, not a finished leaf — `M2.9` records it as
   not compiling (`crates/rt-core/tests/differential.rs` unadapted).
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of

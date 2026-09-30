@@ -13,7 +13,9 @@
 use std::io::Write;
 use std::path::Path;
 
-use eadl_front::{elaborate_source, read, DirectoryModules, SourceId, SourceMap, Verdict};
+use eadl_front::{
+    elaborate_source, read, DirectoryModules, Position, SourceId, SourceMap, Verdict,
+};
 use eadl_model::check::{check, check_program, shipped_registry, Outcome};
 use eadl_model::kind::Registry;
 use eadl_model::profile::{self, Profile};
@@ -194,6 +196,72 @@ pub fn is_module_file(sources: &SourceMap, id: SourceId) -> bool {
             .any(|form| form.head() == Some("defmodule"))
 }
 
+/// The leaf that loads a kind module a user writes (`ROADMAP.md` §5.6 rule 1): extension experiment 1, a new
+/// kind built from the existing declaration constructs.
+pub const KIND_MODULE_OWNER: &str = "M6.3";
+
+/// The first `(defkind …)` of a file that declares one: the kind it names, and where.
+#[derive(Debug)]
+pub struct KindModule {
+    /// The kind's head symbol, when the declaration names one.
+    pub name: Option<String>,
+    /// Where the `(defkind …)` begins.
+    pub position: Position,
+}
+
+/// The first kind the description at `id` declares, if it declares any (leaf `M1.32`).
+///
+/// A file is a kind module when **any** of its declarations is a `(defkind …)`, by the rule
+/// [`is_module_file`] uses and for its reason: classifying by the first declaration alone would hand a
+/// file that declares a kind beside other declarations to the schema pass, to be told `defkind` is not a
+/// kind. A file that does not read is not classified, so the read pass reports it.
+#[must_use]
+pub fn kind_module(sources: &SourceMap, id: SourceId) -> Option<KindModule> {
+    let (document, diagnostics) = read(sources, id);
+    if diagnostics.has_errors() {
+        return None;
+    }
+    let form = document
+        .declarations()
+        .find(|form| form.head() == Some("defkind"))?;
+    let source = sources.get(id)?;
+    Some(KindModule {
+        name: form
+            .items()
+            .get(1)
+            .and_then(|name| name.as_symbol())
+            .map(str::to_string),
+        position: source.position(form.span().start),
+    })
+}
+
+/// Refuse a kind module as what it is: the toolchain loads only the kind modules it ships (leaf `M1.32`).
+///
+/// ⛔ Not a verdict. Before this, `check` read the file as a description and answered
+/// `invalid-description` — `defkind` is not a known kind — which is a statement about a system the tool never
+/// read. Nor is it validated alone: a kind that redefines a shipped one is well-formed by itself and clashes
+/// only when both are loaded, so a standalone "ok" would be one the tool cannot stand behind.
+pub fn refuse_kind_module(err: &mut dyn Write, path: &str, kind: &KindModule) -> Status {
+    let declared = kind.name.as_deref().map_or_else(
+        || "(defkind …)".to_string(),
+        |name| format!("(defkind {name} …)"),
+    );
+    let _ = writeln!(
+        err,
+        "archogen: {}: {path}:{}:{} declares a kind, `{declared}`, and no command loads a kind module a user writes yet",
+        Status::Unimplemented.slug(),
+        kind.position.line,
+        kind.position.column
+    );
+    let _ = writeln!(
+        err,
+        "  hint: the kinds a description may use are the ones this toolchain ships, embedded in the binary and \
+         checked on every run (docs/semantics/kinds/). Loading a kind you write is task-tree leaf \
+         {KIND_MODULE_OWNER} (docs/TASK_TREE.md); until then, check a description that uses the shipped kinds"
+    );
+    Status::Unimplemented
+}
+
 /// What the frontend concluded about the file a command was given.
 #[derive(Debug)]
 pub enum Frontend {
@@ -232,6 +300,9 @@ pub fn frontend(
     err: &mut dyn Write,
 ) -> Frontend {
     if !is_module_file(sources, id) {
+        if let Some(kind) = kind_module(sources, id) {
+            return Frontend::Failed(refuse_kind_module(err, path, &kind));
+        }
         return Frontend::Checked {
             outcome: check(sources, id, registry, active),
             instances: None,

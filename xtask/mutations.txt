@@ -355,3 +355,26 @@ from
 to
                                     drop(fired);
 end
+
+mutation kind-module-not-routed
+file crates/archogen-cli/src/check_cmd.rs
+test -p archogen-cli --test kind_modules
+expect killed
+why M1.32: without the routing, `check` reads a kind module as a description and answers invalid-description, exit 10 — a verdict about a system the tool never read, for its own language definition.
+from
+            if let Some(kind) = kind_module(sources, id) {
+to
+            if let Some(kind) = kind_module(sources, id).filter(|_| false) {
+end
+
+mutation kind-module-classified-by-its-first-declaration
+file crates/archogen-cli/src/check_cmd.rs
+test -p archogen-cli --test kind_modules
+expect killed
+why M1.32: a kind declared after another declaration is still a kind module. Classifying by the first declaration hands the file to the schema pass, the reason is_module_file looks at every declaration.
+from
+            .find(|form| form.head() == Some("defkind"))?;
+to
+            .next()
+            .filter(|form| form.head() == Some("defkind"))?;
+end

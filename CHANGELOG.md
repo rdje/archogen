@@ -4,6 +4,14 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — `check` on a kind module says what the file is
+
+`ARCHOGEN-M1-0171` (leaf `M1.32`).
+
+- `archogen check` given one of the toolchain's own kind modules answered "invalid description", as if it were a
+  broken system. It, and `archogen build`, now say the file declares a kind, where, and that loading a kind a
+  user writes is leaf `M6.3`. The exit code is `20`, not implemented, and `build` writes nothing.
+
 ## archogen — "every production is exercised" is now checked, not just claimed
 
 `ARCHOGEN-M1-0170` (leaf `M1.27`).
