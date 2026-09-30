@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-09-30
 - leaf: M1.26.2.2 (`docs/tasks/M1.md`)
-- status: pending
+- status: applied
 - constructs: docs/semantics/reference.md#diagnostics
 - invalidates: none — no description changes meaning; the table gained a column, and one row's account of when it fires was corrected to what the code does
 
