@@ -156,6 +156,16 @@ case "${1:-}" in
         rc=1
       elif out="$(cargo run -q --manifest-path "$XTASK_MANIFEST" -- dtb-check "$dump" "$DEVICE_TREE_FIXTURE" 2>&1)"; then
         note "the platform presented matches $DEVICE_TREE_FIXTURE"
+        # The §3.2 agreement itself (leaf `M2.8.3.2`): the eADL description against the same fresh dump.
+        if [ -n "${PLATFORM_DESCRIPTION:-}" ] && [ -f "$PLATFORM_DESCRIPTION" ]; then
+          if out="$(cargo run -q --manifest-path "$XTASK_MANIFEST" -- target-agreement "$ENV_FILE" "$dump" 2>&1)"; then
+            agreement=holds
+            note "the §3.2 agreement holds: $PLATFORM_DESCRIPTION agrees with the platform presented"
+          else
+            printf '%s\n' "$out" | sed 's/^/target-emulator: /' >&2
+            rc=1
+          fi
+        fi
       else
         printf '%s\n' "$out" | sed 's/^/target-emulator: /' >&2
         rc=1
@@ -168,8 +178,10 @@ case "${1:-}" in
     # calls that a quarantine, and the runner accepts exit 20 for it only from this step.
     if [ "$TARGET_VERIFIED" != "yes" ]; then
       note "TARGET_VERIFIED=$TARGET_VERIFIED — this configuration is still a PROPOSAL"
-      if [ -f "$DEVICE_TREE_FIXTURE" ]; then
-        note "  the §3.2 agreement check could not be run: the eADL platform description it compares against is not written"
+      if [ "${agreement:-}" = holds ]; then
+        note "  the §3.2 agreement holds on this fresh dump; leaf $TARGET_VERIFIED_BY flips the flag with a run like this as its evidence"
+      elif [ -f "$DEVICE_TREE_FIXTURE" ]; then
+        note "  the §3.2 agreement check could not be run: no PLATFORM_DESCRIPTION names the eADL description it compares against"
       else
         note "  the §3.2 agreement check could not be run: $DEVICE_TREE_FIXTURE does not exist"
       fi
