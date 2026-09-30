@@ -53,6 +53,34 @@ entry `riscv-privileged` was written, and that settled the variant's own open qu
 | K18 | nit | platform-local interrupts and the Advanced Interrupt Architecture can reorder the timer | `every-source-external` puts them outside; the ledger entry quotes AIA §4.1 (§2) |
 | K19 | nit | a future primitive that returns masked or unmasks would be missed | the new-primitive rule classifies each before it is costed (How to apply) |
 
+**Round 2**, `2026-09-30`: K1, K3–K12 and K14–K19 were judged closed, and K2 and K13 partial. The reviewer
+confirmed §12's names, owners, co-location pairs and fact kinds against the record, and re-read the privileged
+specification's two sentences. It also noted the clause that mattered: trap conditions are evaluated "in a bounded
+amount of time" after an interrupt becomes pending, and immediately only after `xRET` or an explicit CSR write.
+
+It simulated the record's model, 1 991 admitted sets per setting:
+- no violation when masking cannot overtake a pending interrupt, or when there is no latency after the unmask;
+- violations in 1 529 sets when both can happen, each at most the second part of `δ`. That is L1.
+
+There were 11 findings, 1 of them a defect, and the verdict was "cannot be accepted as it stands"; nothing else
+under-charges once L1 is fixed. The answer to L1 was checked on the reviewer's own example. There, `B_s = L + 2δ`
+gives 24 against the true 23, and task B's bound becomes 30 against its deadline of 24, so the miss is no longer
+reported as holding.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| L1 | defect | an interrupt pending while code runs unmasked; the code masks before the trap, and delivery is paid again after the unmask, so `B = L + δ` misses up to the second part of `δ` (a deadline miss reported as holding) | `B_timer = ρ + L + 2δ`, `B_s = L + 2δ`. §2 says delivery is time, not a barrier, and §4's step 2 bounds the wait by `2δ + L` before the queue (§2, §3, §4) |
+| L2 | gap | three image-wide facts are owned by code facts whose locators reach only catalog code | the application task fact `leaves-interrupt-hardware-alone`, and the caller's declaration of it for a service's application code, composed with the kernel's facts (§2, §5, §6) |
+| L3 | ambiguity | a run that ends at `unmask` on one path and at completion on another | each ending is an alternative, with its own figures (§1, §3) |
+| L4 | ambiguity | `rt-core`'s `complete` leaves the mask depth raised | `releases-never-latched` covers a completion entered with the depth raised: the port lowers it, inside `completion` (§2) |
+| L5 | ambiguity | the variant's "entry" against the trap; a caller's `C_s` bound only to entry | "entry" is the trap being taken, and a caller-supplied `C_s` begins there (§2, §6) |
+| L6 | gap | no verdict for an overflow while composing `C_i`, `CS_i`, `L` or `B` | `not-established` for `C_i`; every interrupt stopped as by its own overflow for the others (§3, §6) |
+| L7 | gap | a stop leaves the whole set unbounded; interrupts behind a lower-precedence stop went unchecked; a real fixed point past the bound was discarded | stated; each interrupt behind a stop is checked through `B_y`; a fixed point reached is a value, which the variant judges (§3, §6) |
+| L8 | nit | `T_s` is an arrival assumption, not configuration | named as one in the conclusion (§6) |
+| L9 | nit | where `pending-taken-after-unmask` comes from differed from §12 | aligned; no rule pairs two facts yet, which the catalog record's round 9 takes up (§5) |
+| L10 | nit | §12's `J` row omits the description's parts | taken to §12 with the catalog record's round-9 answers |
+| L11 | nit | the timer mapping's wording | a release due at the raising that the service performs, so the mapping is one to one (§4) |
+
 ## Why
 
 The record states the composition as it stands, and this file keeps how it got there, as for the catalog record.

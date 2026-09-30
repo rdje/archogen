@@ -14,4 +14,4 @@ No bootstrap read includes this directory.
 | --- | --- | --- | --- |
 | [`decision_catalog-records-reviews.md`](decision_catalog-records-reviews.md) | [`decision_catalog-records.md`](../decisions/decision_catalog-records.md) | 8 | open (`M2.7.1`) |
 | [`decision_runtime-analysis-variant-reviews.md`](decision_runtime-analysis-variant-reviews.md) | [`decision_runtime-analysis-variant.md`](../decisions/decision_runtime-analysis-variant.md) | 4 | closed: the record is implemented (`M2.6`) |
-| [`decision_runtime-composite-inputs-reviews.md`](decision_runtime-composite-inputs-reviews.md) | [`decision_runtime-composite-inputs.md`](../decisions/decision_runtime-composite-inputs.md) | 1 | open (`M2.10.1`) |
+| [`decision_runtime-composite-inputs-reviews.md`](decision_runtime-composite-inputs-reviews.md) | [`decision_runtime-composite-inputs.md`](../decisions/decision_runtime-composite-inputs.md) | 2 | open (`M2.10.1`) |

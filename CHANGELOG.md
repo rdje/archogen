@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the second review of how the four shared inputs are built is answered
+
+`ARCHOGEN-M2-0219` (leaf `M2.10.1`, a third checkpoint).
+
+- The second independent review found one more way the composed waiting time could fall short. An interrupt can
+  become pending while a task is running with interrupts enabled. Before the processor takes it, the task can
+  switch interrupts off, and the delivery delay is then paid again afterwards.
+- The reviewer's simulation reproduced the gap, and gave an example in which a missed deadline would have been
+  reported as met. The waiting time now counts the delivery delay twice, and on that same example the analysis no
+  longer claims the deadline holds.
+- Ten smaller findings are answered too. Among them: the application must promise not to touch the timer or the
+  interrupt controller itself; a masked section may end in more than one way; and every way the calculation can
+  fail now has a stated verdict.
+
 ## archogen — the runtime analysis design's review history joins the others, and the decisions folder fits again
 
 `ARCHOGEN-PROGRAM-0218` (leaf `PROGRAM.37`).
