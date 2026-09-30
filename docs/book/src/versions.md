@@ -101,6 +101,28 @@ this page changing too.
 | Pinned by | the exhaustive reading of `Response` and `Judgement` in `crates/archogen-api/tests/check.rs`, which stops compiling when a field is added or removed and names the version its shape belongs to; the three parity legs of `crates/archogen-cli/tests/api_parity.rs`. The bump itself is the author's act: nothing can tell a new field from a renamed one |
 | Keeps | within a major, what a consumer reads from a response stays true, and its outcome vocabulary only grows |
 
+## `wasm-request-format`
+
+| Field | Value |
+| --- | --- |
+| Surface | the request a page writes to the wasm binding: length-prefixed fields for the description, its profile and its modules ([The engine API](engine-api.md), `docs/decisions/decision_wasm-binding.md` §4) |
+| Version | `archogen-wasm-request/1` |
+| Declared at | `const:crates/archogen-wasm/src/lib.rs:REQUEST_FORMAT` |
+| Changes when | a field is added, removed, reordered or reinterpreted. A request naming another format is answered `usage`, never read |
+| Pinned by | the framing tests of `crates/archogen-wasm/tests/binding.rs`: a request reads back as it was framed, and each refusal names its field and byte offset |
+| Keeps | a loader that writes `archogen-wasm-request/1` is read the same way by every module that accepts it |
+
+## `wasm-response-format`
+
+| Field | Value |
+| --- | --- |
+| Surface | the JSON the wasm binding answers with, one fixed encoding of the engine API's response (`docs/decisions/decision_wasm-binding.md` §6) |
+| Version | `archogen-wasm-response/1` |
+| Declared at | `const:crates/archogen-wasm/src/lib.rs:RESPONSE_FORMAT` |
+| Changes when | a key is added, removed, renamed or re-typed, or the encoding of a value changes |
+| Pinned by | its shape — every key path and the kinds of value at it — frozen in `crates/archogen-wasm/tests/goldens/archogen-wasm-response-1.golden` and compared by `crates/archogen-wasm/tests/binding.rs`, never rewritten; the same test compares every field with the API's response |
+| Keeps | a page that reads `archogen-wasm-response/1` finds every key where it was, with the same kind of value |
+
 ## How an engine change is held to what descriptions mean
 
 The engine changes more often than the language. Each time it does, every description in the

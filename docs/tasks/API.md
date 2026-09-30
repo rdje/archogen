@@ -543,13 +543,50 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   Commit: `ARCHOGEN-API-0201 (leaf API.5.1)`
 
 - ID: `API.5.2`
-  Status: `pending`
+  Status: `done`
   Goal: `crates/archogen-wasm` — the exported functions, the request framing and the response encoder — tested on
   the host, where no wasm toolchain is needed.
   Acceptance: every framing refusal constructible; the encoder's output parsed back by an independent JSON reader
   and equal field by field to the API's response; the book-coverage, version-register and wasm-build gates green.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the checklist — 8 tests on the host and under Miri, two catalogued mutations, the shape frozen.
+  Commit: `ARCHOGEN-API-0202 (leaf API.5.2)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — no transport existed: `git ls-files crates/archogen-wasm` → nothing, and
+    `git grep -n "RESPONSE_FORMAT\|archogen_check" -- crates` → no match before this leaf. The engine API returns
+    structure, and `decision_engine-api.md` §4 leaves its serialization to a transport crate.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: between `archogen_api::check_with` and a page there was no byte
+    format in either direction; `decision_wasm-binding.md` §4 and §6 now define both. WHY each piece has its own
+    test, measured on this leaf's own first run rather than assumed: the first blessed shape
+    (`ARCHOGEN_BLESS_FORMATS=1 cargo test -p archogen-wasm --test binding` → `test result: ok. 8 passed`, then the
+    golden read back) listed `diagnostics[].secondary: array` and no `diagnostics[].secondary[]` path, because none
+    of the four cases produced a secondary label, so the golden would not have pinned that label's shape. A case
+    that does, a name declared twice (`archogen check` shows `first declared here`), was added, and the uncommitted
+    golden was deleted and blessed again with the six `secondary[]` paths.
+  - [x] **FIX** — `src/request.rs` reads and writes the framing and refuses each §4 breach with its field and byte
+    offset; `src/json.rs` writes §6's encoding; `src/lib.rs` holds the two format constants, `INPUT_CAP`, the pure
+    `answer`, and the three `#[no_mangle]` exports over thread-local buffers, with `deny(unsafe_code)` and no
+    `unsafe` block. `tests/binding.rs` holds a strict RFC 8259 reader written for the purpose, the field-by-field
+    comparison with the API's `Response` over five cases (accepted; refused; not judged; a secondary label; a
+    module tree read from `docs/semantics/modules`), the exact escaping of every character below `0x20`, every
+    framing refusal, the exports driven with raw writes as the loader drives them, and the shape golden.
+  - [x] **ADDRESSED (verified)** — `cargo test -p archogen-wasm` → `test result: ok. 8 passed; 0 failed`. The
+    golden was blessed once, deliberately (`ARCHOGEN_BLESS_FORMATS=1 cargo test -p archogen-wasm --test binding`),
+    and passes unblessed. `cargo +nightly miri test -p archogen-wasm` → `test result: ok. 8 passed; 0 failed`, the
+    raw-write exports test among them, rc=0. The book's JSON excerpt equals the binding's real answer for the same
+    description. Mutations:
+    ```text
+    cargo xtask mutate --only wasm-json-long-escape               → killed by every_control_character_…
+    cargo xtask mutate --only wasm-framing-accepts-a-module-twice → killed by every_framing_refusal_…
+    ```
+  - [x] **NO REGRESSION** — `make focused` → `tier focused: passed — 3 passed, 0 failed`, rc=0;
+    `bash scripts/wasm_build.sh` → rc=0, `archogen-wasm` compiled for `wasm32-unknown-unknown` with the pure set;
+    `bash scripts/check_no_subprocess.sh` → `51 production source file(s)`, OK; `check_version_register.sh` →
+    `10 entries; 10 declared version(s)`; `check_book_coverage.sh` → `11 workspace member(s)`, OK.
+  - [x] **LOCKSTEP** — `docs/book/src/engine-api.md` gains "The binding a web page will load";
+    `docs/book/src/versions.md` gains `wasm-request-format` and `wasm-response-format`; `xtask/mutations.txt` gains
+    two entries; `Cargo.lock` gains the package; this leaf, the frontier, both logs and `CHANGELOG.md`.
 
 - ID: `API.5.3`
   Status: `pending`
@@ -602,7 +639,7 @@ agent can drive. The server is a capability of the built binary, spawned per ins
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `API.5` | `active` | the wasm binding: the design is decided (`API.5.1`, `decision_wasm-binding.md`); the crate on the host (`API.5.2`) next |
+| 1 | `API.5` | `active` | the wasm binding: designed (`API.5.1`) and built and tested on the host (`API.5.2`); the artifact checked against the CLI (`API.5.3`) next |
 | 2 | `API.6` | `pending` | the MCP server — the point of the tree, and last because everything above is what makes it safe to hand to an arbitrary agent |
 | 3 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6` |
 
@@ -670,6 +707,7 @@ this tree is taken when it does not delay that.
 | `2026-09-30` | `API.4.1` | the determinism test; the register before and after the bump; the manifests' history; the whole suite | the same request answers identically; the register refused 1.1 until its entry moved; every manifest version ever written is 0.1.0; 708 passed / 0 failed over 58 suites |
 | `2026-09-30` | `API.4.2` | the cost per byte measured; the budget's five legs; three mutations; the wasm build; the whole suite; the doctrines | about 75 bytes held per byte sent; both edges hold through the description and the modules; each mutation killed; 713 passed / 0 failed over 59 suites |
 | `2026-09-30` | `API.5.1` | a throwaway `cdylib` for `wasm32-unknown-unknown` on the pinned toolchain, read by `WebAssembly.Module`; `#[no_mangle]` under `deny(unsafe_code)`; the module-file rule read from `eadl-front` | no imports; `memory`, the functions and two linker globals exported; the lint refuses each unmangled export; `<dir>/<module>.eadl` |
+| `2026-09-30` | `API.5.2` | the host tests; the same tests under Miri; two catalogued mutations; the shape golden blessed once; the focused tier, the wasm build and the gates | 8 of 8, and 8 of 8 under Miri; both mutations killed; the golden passes unblessed; all green |
 
 ## Commit Log
 
@@ -685,6 +723,7 @@ this tree is taken when it does not delay that.
 | `API.4.1` | `ARCHOGEN-API-0182 (leaf API.4.1)` | **an instance defined** — one build, no state between requests; every response names its engine; API `1.1` |
 | `API.4.2` | `ARCHOGEN-API-0183 (leaf API.4.2)` | **a byte budget per request** — 1 MiB by default, set by the instance; `tool-failure` past it, never partial; `API.4` closed |
 | `API.5.1` | `ARCHOGEN-API-0201 (leaf API.5.1)` | **the wasm binding decided** — three exports, a framed request, a versioned JSON response, no imports as the authority test |
+| `API.5.2` | `ARCHOGEN-API-0202 (leaf API.5.2)` | **the wasm binding, built and tested on the host** — `crates/archogen-wasm`, its framing, its encoding and its three exports |
 
 ## Changelog
 

@@ -126,6 +126,28 @@ language's limits still apply to it, because they belong to the language.
 - **They say the same thing.** Over every description in the repository, the command line's exit
   code, diagnostic codes and notes equal the API's status, diagnostic codes and notes.
 
+## The binding a web page will load
+
+A page will reach the API through `archogen-wasm` (`crates/archogen-wasm/src/lib.rs`), a module built for
+`wasm32-unknown-unknown` (`docs/decisions/decision_wasm-binding.md`). A page asks it three things: a buffer for
+its request, an answer, and where the answer is. The request carries the description, its profile and its
+modules as length-prefixed text. The answer is JSON in one fixed encoding, and it carries every field of the
+API's response, including the diagnostics rendered exactly as the command line prints them:
+
+```text
+{"format":"archogen-wasm-response/1","api":"1.2","engine":"0.1.0","status":"ok","exit":0,"notes":[],"hint":null,
+ "diagnostics":[],"rendered":"","judged":{"verdict":"ok","language":"eadl/1","profile":"rt-static-up-v1", …}}
+```
+
+The instance, not the page, sets what one request may cost, so a page cannot raise the budget above. A request
+the module cannot read is answered `usage`, with a note naming the field and the byte where it went wrong, and
+nothing is judged.
+
+What exists today is the crate and its tests on the host (`crates/archogen-wasm/tests/binding.rs`). The tests
+compare each answer with the API's field by field, and freeze the answer's shape under its format name. The
+module itself will be checked against the command line (leaf `API.5.3`), and the page and its instructions come
+last (leaf `API.5.4`).
+
 ## What is outside it
 
 - **`archogen build`.** Generation writes a crate tree. §10.4 keeps it a human or CI action, since a

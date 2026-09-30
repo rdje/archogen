@@ -4,6 +4,21 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the web-page binding built and tested
+
+`ARCHOGEN-API-0202` (leaf `API.5.2`).
+
+- The module a web page will load now exists as the crate `archogen-wasm`. A page hands it a description, and gets
+  back JSON carrying the same verdict and diagnostics the command line would print.
+- Every answer is checked field by field against the engine's own answer, by a separate JSON reader written for
+  the purpose. The answer's shape is frozen under its format name, so it cannot change without the name changing.
+- The part where a page writes into the module's memory was run under Miri, a checker for memory misuse, and
+  passed.
+- Two deliberate mistakes, a string written a second valid way and a module accepted twice, are each caught by
+  their own test and kept in the mutation catalogue.
+- Next: building the module for the browser, and checking that every description in the repository gets the same
+  answer from it as from the command line.
+
 ## archogen — how archogen will run in a web page, decided
 
 `ARCHOGEN-API-0201` (leaf `API.5.1`).

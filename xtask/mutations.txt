@@ -690,3 +690,25 @@ from
 to
         0x428a_2f99,
 end
+
+mutation wasm-json-long-escape
+file crates/archogen-wasm/src/json.rs
+test -p archogen-wasm --test binding every_control_character
+expect killed
+why API.5.2: the record's §6 fixes one spelling per string, so `\f` written as `\u000c` is still valid JSON and still a different response; two builds of the same answer must write the same bytes.
+from
+                    '\u{0c}' => self.0.push_str("\\f"),
+to
+                    '\u{0c}' => self.0.push_str("\\u000c"),
+end
+
+mutation wasm-framing-accepts-a-module-twice
+file crates/archogen-wasm/src/request.rs
+test -p archogen-wasm --test binding every_framing_refusal
+expect killed
+why API.5.2: a module named twice would be resolved by whichever copy the module source kept, so the request is refused rather than read.
+from
+            if modules.iter().any(|(seen, _)| *seen == module) {
+to
+            if false {
+end

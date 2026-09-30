@@ -33,6 +33,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "archogen-wasm"
+version = "0.1.0"
+dependencies = [
+ "archogen-api",
+ "eadl-front",
+]
+
+[[package]]
 name = "eadl-front"
 version = "0.1.0"
 
