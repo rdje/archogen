@@ -84,19 +84,25 @@ days, not a lasting allowance. That is why the partition is opened now, with a w
 
 ## How to apply
 
-- **The warning, before the ceiling.** When the folder reaches 36 files or 360 000 bytes, `PROGRAM.39` starts
-  before anything else adds to the folder. That leaves room for its own commit and one more review round.
-- **The partition (`PROGRAM.39`)** names each sub-folder by subject. The first candidates are the catalog design's
-  four records: `decision_catalog-records.md`, `-example.md`, `-variant-inputs.md` and
-  `decision_runtime-composite-inputs.md`. It also:
-  - gives each sub-folder a row, reachable through the parent's "Overflows to" cell so `README-ROUTES` does not
-    refuse it as stale;
-  - changes `README-ROUTES` so a parent's figures leave out what a deeper row governs, and refuses a set of rows
-    whose totals exceed 40 files and 393 216 bytes, the conservation rule above;
-  - adds the project gate for index completeness in sub-folders, and the curated map links.
-- **Until then**, a record still goes in its canonical home, and a review history still goes to `docs/reviews/`.
-- **Enforcement of "only once"** is `PROGRAM.39`'s too: `README-ROUTES` gains a refusal of a ceiling above the one
-  a decision names. Until it does, the ruling is the rule.
+- **The warning, before the ceiling.** When the folder reaches 36 files or 360 000 bytes, the partition starts
+  before anything else adds to the folder.
+- **The partition, done by `PROGRAM.39` on `2026-09-30`**, before the warning was crossed:
+  - `docs/decisions/catalog/` holds the catalog design's four records: `decision_catalog-records.md`, `-example.md`,
+    `-variant-inputs.md` and `decision_runtime-composite-inputs.md`;
+  - the sub-folder has a row of its own, reached through the parent's "Overflows to" cell;
+  - `README-ROUTES` holds a partition's files to its own row's per-file ceilings. The parent's file count and total
+    still count everything beneath it, which is the conservation rule;
+  - `DECISION-INDEX` finds every record by its path from the index, partitions included, where the template's
+    `MEMORY-ARCH` reads the folder flat;
+  - `knowledge-map/subsystems.md` links the partition, which the generated map, reading the folder flat, does not
+    reach.
+- **A record** still goes in its canonical home, a sub-folder when its subject has one, and a review history still
+  goes to `docs/reviews/`.
+- **"Only once" is enforced.** `README_POLICY.md`'s table `### Ceilings a decision fixes` holds this record's 40
+  files and 393 216 bytes, and `README-ROUTES` refuses a row whose cell is above them.
+- **The findings register's settled items** were considered for sealing, and left in place. Their section numbers
+  are cited across the task trees, so each would need a stub, and the partition, not a seal, was what the warning
+  needed. They are the next compaction when the folder nears its ceiling again.
 - Related: `README_POLICY.md` (the row), `LIVE_DOCUMENT_SIZE_CONTAINMENT.md` (the inventory row),
   [[decision_findings-for-director-review]] §10 (the hold), [[decision_history-ledgers]].
 

@@ -1,6 +1,6 @@
 //! SHA-256 (FIPS 180-4), the content hash every catalog record is identified by (leaf `M2.7.2`).
 //!
-//! `docs/decisions/decision_catalog-records.md` §3 hashes each facet of a record with SHA-256, and a review holds
+//! `docs/decisions/catalog/decision_catalog-records.md` §3 hashes each facet of a record with SHA-256, and a review holds
 //! only at the hash it names, so this function decides whether a review still holds. It is written here rather
 //! than taken from a crate, because the engine depends on nothing outside `std`
 //! (`decision_zero-dependency-engine-core.md`), and rather than run as the system's `shasum`, because the product

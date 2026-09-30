@@ -10,7 +10,7 @@ one of those changes, and only then. What each closed leaf did lives in its tree
 | Discipline spine (`bedrock`) | Done | memory architecture · task-trees · commit workflow · doctrine enforcement · **claim verification** (adopted `2026-09-27`) · mdBook skeleton |
 | Roadmap seeded into task-trees | Done | eleven trees: `PROGRAM`, `API`, `M0`, `S0`, `M1`–`M7`; F01–F30 each owned |
 | `API` — programmatic interface (§10.4) | In Progress | `API.5` done: the wasm binding answers as the CLI does, and its page ran in Chrome 154 as the book says; frontier `API.6`, the MCP server, behind the main line |
-| `PROGRAM` — workspace, tiers, book, ledger | In Progress | frontier `PROGRAM.39`, the decisions folder's partition; `.32` and `.40` done: finished leaves sealed, both history checks hold across history; `.34` awaits the director |
+| `PROGRAM` — workspace, tiers, book, ledger | In Progress | `.32`, `.39`, `.40` done: finished leaves sealed, the decisions folder partitioned, both history checks hold across history; frontier `PROGRAM.34`, which awaits the director |
 | `M0` — charter, boundary, profile, target | Done | all seven leaves closed; F27 green. The board remains a recorded blocker, not a passed gate |
 | `S0` — early executable generation (F28) | Done | **F28 green**; every leaf closed — `S0.8` made the book chapter's counts and corpus table measured |
 | `M1` — eADL description foundation | Mostly Done | §12 M1's exit gate met; every leaf closed but `M1.29.4`, which waits on the director (findings §7) |

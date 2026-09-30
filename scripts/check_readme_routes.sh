@@ -21,9 +21,14 @@
 #   2. each row's Route cell is exactly the set of route classes derived for it;
 #   3. each dimension a row must control carries a control: an inclusive ceiling that the destination is within
 #      (a file's lines, bytes and longest line; a directory's tracked files, largest file's lines and bytes, longest
-#      line and total bytes), a registered doctrine that owns that dimension, or `debt: <leaf>` naming an open leaf;
+#      line and total bytes), a registered doctrine that owns that dimension, or `debt: <leaf>` naming an open leaf.
+#      A PARTITION is a directory row under another: its files meet their own row's per-file ceilings and not the
+#      parent's, while the parent's tracked files and total count everything beneath it, sub-folders included, so a
+#      partition adds no capacity (`docs/decisions/decision_decisions-folder-ceiling.md`, leaf `PROGRAM.39`);
 #   4. every onward destination has a row, and no chain of onward routes is a cycle;
-#   5. an empty registry, a guard that prints no hint, or a malformed cell is a breach, not a pass.
+#   5. an empty registry, a guard that prints no hint, or a malformed cell is a breach, not a pass;
+#   6. no ceiling is above the maximum a decision fixes for it, in the table under `### Ceilings a decision fixes`, and
+#      every decision that table names exists.
 #
 # ⚠️ HONEST LIMITS: a deferral to a doctrine is checked to name a registered doctrine, not that the doctrine bounds
 # this file; the onward routes of a registered row are declared, and compared with nothing but the registry; every
@@ -235,16 +240,21 @@ scan() {
     if [ "${dest%/}" != "$dest" ]; then
       local listed; listed="$(git ls-files -- "$dest")"
       if [ -z "$listed" ]; then note "\`$dest\` is registered, and nothing under it is tracked"; continue; fi
-      local n=0 ml=0 mb=0 tb=0 l b f
+      # Per-file figures over the files this row governs; the file count and total over everything beneath it, a
+      # partition's files included, so a partition adds no capacity to its parent.
+      local n=0 ml=0 mb=0 tb=0 l b f own=""
       while IFS= read -r f; do
-        n=$((n + 1)); l=$(wc -l < "$f" | tr -d ' '); b=$(wc -c < "$f" | tr -d ' ')
-        [ "$l" -gt "$ml" ] && ml=$l; [ "$b" -gt "$mb" ] && mb=$b; tb=$((tb + b))
+        n=$((n + 1)); b=$(wc -c < "$f" | tr -d ' '); tb=$((tb + b))
+        [ "$(governing_row "$f")" = "$dest" ] || continue
+        own="$own$f"$'\n'
+        l=$(wc -l < "$f" | tr -d ' ')
+        [ "$l" -gt "$ml" ] && ml=$l; [ "$b" -gt "$mb" ] && mb=$b
       done <<< "$listed"
       control "$dest" "tracked files" "$files" "$n"
       control "$dest" "lines in its largest file" "$lines" "$ml"
       control "$dest" "bytes in its largest file" "$bytes" "$mb"
       # shellcheck disable=SC2086
-      control "$dest" "bytes on its longest line" "$width" "$(longest $listed)"
+      control "$dest" "bytes on its longest line" "$width" "$( [ -n "$own" ] && longest $own || echo 0 )"
       control "$dest" "bytes in total" "$total" "$tb"
     else
       if ! git ls-files --error-unmatch -- "$dest" >/dev/null 2>&1; then note "\`$dest\` is registered, and it is not a tracked file"; continue; fi
@@ -256,6 +266,34 @@ scan() {
     fi
     checked=$((checked + 1))
   done <<< "$rows"
+
+  # 6. Ceilings a decision fixes: no row's cell above its maximum, and every decision named exists.
+  local cdest ccol cmax cdec cell col
+  while IFS=$'\t' read -r cdest ccol cmax cdec; do
+    cdest="${cdest//\`/}"; cdec="${cdec//\`/}"
+    [ -n "$cdest" ] || continue
+    [ -f "$cdec" ] || note "the ceiling of \`$cdest\`'s $ccol is fixed by \`$cdec\`, which does not exist"
+    case "$ccol" in
+      Files) col=5 ;; Lines) col=6 ;; Bytes) col=7 ;; "Longest line") col=8 ;; "Total bytes") col=9 ;;
+      *) note "\`### Ceilings a decision fixes\` names a column '$ccol' the registry does not have"; continue ;;
+    esac
+    cell="$(printf '%s\n' "$rows" | awk -F'\t' -v d="\`$cdest\`" -v c="$col" '$1 == d { print $c }')"
+    if [ -z "$cell" ]; then note "\`### Ceilings a decision fixes\` names \`$cdest\`, which no row registers"; continue; fi
+    case "$cell" in
+      *[!0-9]*) ;;
+      *) [ "$cell" -le "$cmax" ] || note "\`$cdest\`'s $ccol ceiling is $cell, above the $cmax that \`$cdec\` fixes — raising it needs a new ruling" ;;
+    esac
+  done < <(CAPS="Ceilings a decision fixes" awk '
+    $0 == "### " ENVIRON["CAPS"] { on = 1; next }
+    on && /^#/ { exit }
+    on && /^\|/ {
+      if ($0 !~ /[A-Za-z0-9]/) next
+      line = $0; sub(/^\|[[:space:]]*/, "", line); sub(/[[:space:]]*\|[[:space:]]*$/, "", line)
+      n = split(line, cells, /[[:space:]]*\|[[:space:]]*/)
+      if (!header_seen) { header_seen = 1; next }
+      out = cells[1]; for (i = 2; i <= n; i++) out = out "\t" cells[i]
+      print out
+    }' "$POLICY")
 }
 
 self_test() {
@@ -346,6 +384,22 @@ SH
   arm "an empty registry is a breach, not a pass" 1 "an empty registry is a breach"
   fresh; printf '#!/usr/bin/env bash\nexit 0\n' > "$work/scripts/check_readme_stability.sh"; git -C "$work" add -A
   arm "a guard that prints no hint is refused, not read as no routes" 1 "README-STABILITY exited 0 with its line cap at 0"
+  # A partition: docs/tasks/sub/ has its own row, reached through docs/tasks/'s onward cell, with larger per-file
+  # ceilings. Its file is over the parent's per-file bytes and within its own, and the parent's total still counts it.
+  partition() {
+    edit README_POLICY.md 's/^\(| `docs\/tasks\/` .*| 4000 |\) — |$/\1 `docs\/tasks\/sub\/` |/'
+    edit README_POLICY.md '/^| `docs\/tasks\/` |/a\
+| `docs/tasks/sub/` | overflow | W | partitioned_canonical | 4 | 100 | 3000 | 200 | 6000 | — |'
+    mkdir -p "$work/docs/tasks/sub"
+  }
+  fresh; partition; for i in $(seq 50); do printf '%049d\n' 0; done > "$work/docs/tasks/sub/S.md"; git -C "$work" add -A
+  arm "a partition's file meets its own row's per-file ceilings, not its parent's" 0 ""
+  fresh; partition; for f in S R; do for i in $(seq 45); do printf '%049d\n' 0; done > "$work/docs/tasks/sub/$f.md"; done; git -C "$work" add -A
+  arm "a partition adds no capacity: its files count toward the parent's total" 1 "docs/tasks/: 4562 bytes in total, over its ceiling of 4000"
+  fresh; printf 'a decision\n' > "$work/D.md"; printf '\n### Ceilings a decision fixes\n\n| Destination | Column | Maximum | Decision |\n| --- | --- | --- | --- |\n| `docs/tasks/` | Total bytes | 3000 | `D.md` |\n' >> "$work/README_POLICY.md"; git -C "$work" add -A
+  arm "a ceiling above the maximum a decision fixes is refused" 1 "above the 3000 that \`D.md\` fixes"
+  fresh; printf '\n### Ceilings a decision fixes\n\n| Destination | Column | Maximum | Decision |\n| --- | --- | --- | --- |\n| `docs/tasks/` | Total bytes | 9000 | `NO-SUCH.md` |\n' >> "$work/README_POLICY.md"; git -C "$work" add -A
+  arm "a cap whose decision does not exist is refused" 1 "which does not exist"
   rm -rf "$work"
   arms=$((arms + 1))
   if bash "$SELF" >/dev/null 2>&1; then ok=$((ok + 1)); echo "  ✅ the real README's routes are all governed"

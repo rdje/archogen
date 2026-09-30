@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the decisions folder is split by subject, without adding room
+
+`ARCHOGEN-PROGRAM-0230` (leaf `PROGRAM.39`).
+
+- The decisions folder was a step away from its warning point, with more review answers waiting. The catalog
+  design's four records, the largest and fastest-growing part, moved together into a sub-folder,
+  `docs/decisions/catalog/`.
+- The split adds no room. The sub-folder has its own per-file limits, but everything in it still counts toward
+  the folder's single total. The one-time ceiling the director allowed is now written in a table that the size
+  check reads, so raising it again needs a new ruling.
+- Two of the project template's checks read the folder only at its top level, and must stay unchanged. So a new
+  check makes sure every record in a sub-folder is still listed in the folder's index. The knowledge map links the
+  sub-folder by hand.
+
 ## archogen — the check on the changelog's sealed history now holds on the server too
 
 `ARCHOGEN-PROGRAM-0229` (leaf `PROGRAM.40`).

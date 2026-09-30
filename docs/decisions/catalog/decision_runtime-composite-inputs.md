@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-09-30`
 - **Status:** `active`
-- **External sources:** [the RISC-V privileged specification](../book/src/ledger.md#riscv-privileged) — its version,
+- **External sources:** [the RISC-V privileged specification](../../book/src/ledger.md#riscv-privileged) — its version,
   the two sentences relied on, and its limits are in the ledger
 - **Owner / source:** leaf `M2.10.1` (`docs/tasks/M2.md`). [[decision_catalog-records]] §12 left four of the
   runtime variant's inputs whole, `C_i`, `CS_i`, `J_i^release` and `J_s`, because each includes what no single
@@ -381,7 +381,7 @@ This record names what §12 gains; the catalog record's own review checks the wo
 
 `M2.10.1`'s acceptance is a review by a context that did not write this record, finding no composite that
 under-charges against the variant's §1 definitions. The findings, and the answer to each, are in
-[`decision_runtime-composite-inputs-reviews.md`](../reviews/decision_runtime-composite-inputs-reviews.md).
+[`decision_runtime-composite-inputs-reviews.md`](../../reviews/decision_runtime-composite-inputs-reviews.md).
 
 | Round | Findings | Defects | Verdict |
 | --- | --- | --- | --- |

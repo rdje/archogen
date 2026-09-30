@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-09-30`
 - **Status:** `active`
-- **External sources:** [the Rust toolchain](../book/src/ledger.md#rust-toolchain) — `rustc`, `cargo` and
+- **External sources:** [the Rust toolchain](../../book/src/ledger.md#rust-toolchain) — `rustc`, `cargo` and
   `rustup`, whose version, scope and limits are in the ledger
 - **Owner / source:** leaf `M2.7.1` (`docs/tasks/M2.md`), deciding what `ROADMAP.md` §9 requires of a catalog entry
   before any code for it is written: "an ID, semantic version, content hash, source/license metadata, maintainer,
@@ -1139,7 +1139,7 @@ lookup selects them.
 relies")
 
 Every round was a new read-only context that had not written the record. The findings, and the answer to each, are
-kept in [`decision_catalog-records-reviews.md`](../reviews/decision_catalog-records-reviews.md). This record states
+kept in [`decision_catalog-records-reviews.md`](../../reviews/decision_catalog-records-reviews.md). This record states
 the design as it stands, and that one keeps how it got here.
 
 | Round | Findings | Defects | Verdict |

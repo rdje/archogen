@@ -613,7 +613,11 @@ links and from what its two checks actually print. It follows each place on to w
 sends overflow, and holds each one to the ceiling registered for it in the policy. The changelog and the
 development notes are bounded as rolling ledgers (above). A design's review history, which grows by a round at a
 time, overflows from the decisions folder to `docs/reviews/`, which has ceilings of its own. The task trees are
-bounded too, and their finished parts overflow to `docs/task-history/` (above).
+bounded too, and their finished parts overflow to `docs/task-history/` (above). A folder grown too large is split by
+subject into sub-folders, each with ceilings of its own, while the folder's own limits still count everything in them,
+so a split adds no room; and no ceiling may rise above what a decision fixes, which the policy lists and the check
+enforces. The decisions folder was split this way on `2026-09-30`, and `DECISION-INDEX` keeps every record in a
+sub-folder listed in its index.
 
 ```console
 $ bash scripts/check_readme_routes.sh              # the gate
