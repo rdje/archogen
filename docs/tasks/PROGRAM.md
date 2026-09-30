@@ -812,7 +812,7 @@ mdBook that is the director's window into the project.
     `MEMORY.md`, `CHANGELOG.md`.
 
 - ID: `PROGRAM.41`
-  Status: `pending` — starts when `docs/decisions/` passes 380 000 bytes, or sooner
+  Status: `done`
   Goal: the next compaction of `docs/decisions/`, named by `docs/decisions/decision_decisions-folder-ceiling.md`. The
   findings register's settled items, §2, §4, §8 and §10, about 9.7 KB, are sealed out of it the way closed leaves
   are: moved byte for byte, with a stub per item keeping its section number, since the numbers are cited across the
@@ -822,8 +822,35 @@ mdBook that is the director's window into the project.
   Acceptance: the items moved and stubbed, every citation of their section numbers still resolving; a digest and
   a check that the moved text never changes, reusing `TASK-HISTORY`'s pattern or a register of its own; the
   folder's measurement in the inventory.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the checklist.
+  Commit: `ARCHOGEN-PROGRAM-0234 (leaf PROGRAM.41)`
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE** — after `ARCHOGEN-M2-0233`, `git ls-tree -r --name-only b8448c6 docs/decisions | xargs -I{}
+    git show b8448c6:{} | wc -c` → 376904, short of the trigger by 3 096 bytes, with catalog round 13's and
+    composition round 6's answers still to come.
+  - [x] **ROOT CAUSE** — the folder grows by every review round's answers, and the ceiling cannot rise without a new
+    ruling. The compaction was named in advance: `git show b8448c6:docs/decisions/decision_decisions-folder-ceiling.md
+    | grep -n "next compaction"` → line 105, the findings register's settled items. They are cited by number across
+    the trees, so they could not move without a stub under each heading.
+  - [x] **FIX** — `scripts/check_decision_history.sh`, `DECISION-HISTORY`: `TASK-HISTORY`'s pattern for numbered
+    sections. `--seal` moved §2, §4, §8 and §10 into `docs/decision-history/decision_findings-for-director-review/`,
+    each heading kept above a one-line stub, with the reconstruction proven before writing. The gate's five legs:
+    rows, one to one, across history, stubs, provenance. `README_POLICY.md` routes the folder, `archive_terminal`.
+  - [x] **ADDRESSED** — the seal printed `sealed section(s) 02 04 08 10, 9745 bytes; the reconstruction is byte for
+    byte`; `bash scripts/check_decision_history.sh` → rc=0, `decision-history: OK (4 sealed section(s) …)`;
+    `bash scripts/check_decision_history.sh --self-test` → rc=0, `decision-history self-test: 20 pass / 0 fail (20
+    arms)`. The folder is 368 643 bytes, the register's intro and the ceiling record included. Mutations on a copy:
+    removing leg 3's file check, leg 5's comparison, the history rows or the live-again check each turns its own arm
+    red (`19 pass / 1 fail`). Removing the seal's reconstruction proof turns none red: no arm reaches it without a
+    fault in the seal's own code, as for `TASK-HISTORY`.
+  - [x] **NO REGRESSION** — `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`; `bash
+    scripts/run_self_tests.sh` → rc=0, `self-tests: OK — 37 self-test(s) passed`. No held file changed; every
+    citation of §2, §4, §8 and §10 still finds its heading.
+  - [x] **LOCKSTEP** — `docs/decisions/decision_decisions-folder-ceiling.md` and the register's intro,
+    `README_POLICY.md`, `LIVE_DOCUMENT_SIZE_CONTAINMENT.md`, `DOCTRINE_ENFORCEMENT.md`,
+    `docs/book/src/verification.md`; this leaf, the frontier and both logs; `LIVE_STATUS.md`, `docs/TASK_TREE.md`,
+    `MEMORY.md`, `CHANGELOG.md`.
 
 ## Roadmap coverage map
 
@@ -889,9 +916,8 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.41` | `pending` | the decisions folder's next compaction, the findings register's settled items, before it passes 380 000 bytes |
-| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
-| 3 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
+| 1 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 2 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
@@ -1037,6 +1063,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.32.4` | an independent review of the tool and the seal; the tool rebuilt; 25 arms; two mutations; the real history through every leg; the figures re-measured at their commits | the seal accepted, 10 findings, all answered; 25 of 25; each mutation red; 69 files and 112 stubs proven; corrected |
 | `2026-09-30` | `PROGRAM.40` | a committed forgery in a scratch repository; the self-test; a mutation; the real ledgers; the enforcer and every self-test | refused; 15 of 15; the arm red when mutated; OK; all green, 35 of 35 |
 | `2026-09-30` | `PROGRAM.39` | the folder measured; the records moved and every path rewritten; `DECISION-INDEX` and `README-ROUTES` with their self-tests; the crate's tests; every self-test; the enforcer | 358 185 before; no stale path left; 5 of 5 and 20 of 20; 34 passed; 36 of 36; all green |
+| `2026-09-30` | `PROGRAM.41` | the folder measured at `b8448c6`; the seal with its reconstruction proof; the gate and its self-test; four mutations on a copy; `README-ROUTES` with the new row; every self-test; the enforcer | 376 904 before, 368 643 after; `02 04 08 10, 9745 bytes`; `20 pass / 0 fail`; each mutation red on its own arm, the proof reached by none; all green |
 
 ## Commit Log
 
@@ -1107,6 +1134,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.32.4` | `ARCHOGEN-PROGRAM-0228 (leaf PROGRAM.32.4)` | **the sealing tool hardened** after its review: history-wide immutability, provenance, fail-closed slicing, no reopening; `PROGRAM.32` closed |
 | `PROGRAM.40` | `ARCHOGEN-PROGRAM-0229 (leaf PROGRAM.40)` | **the history ledgers checked across history**, so CI catches a committed forgery as the hook does |
 | `PROGRAM.39` | `ARCHOGEN-PROGRAM-0230 (leaf PROGRAM.39)` | **the decisions folder partitioned**: the catalog design in `docs/decisions/catalog/`, `DECISION-INDEX`, partition-aware `README-ROUTES` and its cap table |
+| `PROGRAM.41` | `ARCHOGEN-PROGRAM-0234 (leaf PROGRAM.41)` | **settled sections sealed out of the decisions folder**: the findings register's §2, §4, §8 and §10 in `docs/decision-history/`, each heading kept above its stub; `DECISION-HISTORY`; opened by `ARCHOGEN-PROGRAM-0232` |
 
 ## Changelog
 

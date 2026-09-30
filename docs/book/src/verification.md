@@ -604,20 +604,34 @@ $ bash scripts/check_task_history.sh --seal M1        # seal what has closed in 
 $ bash scripts/check_task_history.sh --self-test      # its RED arms, on scratch repositories
 ```
 
+The decisions folder is kept the same way. A numbered section of a decision record that is settled, such as a
+finding the director has ruled on, moves byte for byte into `docs/decision-history/`. Its heading stays in the
+record, above one line linking the sealed file, so a citation of the section by its number still finds it.
+`DECISION-HISTORY` checks what `TASK-HISTORY` checks, for sections: every sealed file against its row and the
+commit that sealed it, the index append-only, one placeholder per sealed section, and every sealed section what its
+record held just before. The first seal, on `2026-09-30`, took four settled items of the director's findings
+register out of the decisions folder (`PROGRAM.41`).
+
+```console
+$ bash scripts/check_decision_history.sh                                   # the gate
+$ bash scripts/check_decision_history.sh --seal <RECORD> <N>...            # seal settled sections, with the proof
+$ bash scripts/check_decision_history.sh --self-test                       # its RED arms, on scratch repositories
+```
+
 ## Where the landing page sends things
 
 A size limit on `README.md` does not remove the need to write things down; it moves it somewhere else. So
-`README_POLICY.md` also asks that every place the README points a reader to, and every place its checks tell
-an author to move detail to, is itself kept in bounds. `README-ROUTES` works that list out from the README's
-links and from what its two checks actually print. It follows each place on to wherever that place's own check
-sends overflow, and holds each one to the ceiling registered for it in the policy. The changelog and the
-development notes are bounded as rolling ledgers (above). A design's review history, which grows by a round at a
-time, overflows from the decisions folder to `docs/reviews/`, which has ceilings of its own. The task trees are
-bounded too, and their finished parts overflow to `docs/task-history/` (above). A folder grown too large is split by
-subject into sub-folders, each with ceilings of its own, while the folder's own limits still count everything in them,
-so a split adds no room; and no ceiling may rise above what a decision fixes, which the policy lists and the check
-enforces. The decisions folder was split this way on `2026-09-30`, and `DECISION-INDEX` keeps every record in a
-sub-folder listed in its index.
+`README_POLICY.md` also asks that every place the README points a reader to, and every place its checks tell an
+author to move detail to, is itself kept in bounds. `README-ROUTES` works that list out from the README's links and
+from what its two checks actually print. It follows each place on to wherever that place's own check sends overflow,
+and holds each one to the ceiling registered for it in the policy. The changelog and the development notes are
+bounded as rolling ledgers (above). A design's review history, which grows by a round at a time, overflows from the
+decisions folder to `docs/reviews/`, which has ceilings of its own. The task trees are bounded too, and their
+finished parts overflow to `docs/task-history/`, as settled sections of a decision record do to
+`docs/decision-history/` (above). A folder grown too large is split by subject into sub-folders, each with ceilings
+of its own, while the folder's own limits still count everything in them, so a split adds no room; and no ceiling
+may rise above what a decision fixes, which the policy lists and the check enforces. The decisions folder was split
+this way on `2026-09-30`, and `DECISION-INDEX` keeps every record in a sub-folder listed in its index.
 
 ```console
 $ bash scripts/check_readme_routes.sh              # the gate

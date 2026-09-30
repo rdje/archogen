@@ -39,6 +39,7 @@ PROJECT_DOCTRINES=(
   "HISTORY-LEDGERS|the changelog and the development notes are rolling ledgers — every sealed segment unchanged against its index row, the index complete and append-only, the order continuous, and each live window below twice its size|scripts/check_history_ledgers.sh"
   "DECISION-INDEX|every decision record, in the folder or in a partition of it, is linked from docs/decisions/INDEX.md by its own path, and every link the index holds resolves — the partition-aware counterpart of the template's flat index check|scripts/check_decision_index.sh"
   "TASK-HISTORY|closed subtrees sealed out of the task trees stay sealed — every sealed file unchanged against its index row, the index complete and append-only, and every sealed leaf with exactly one two-line stub in its tree that links it|scripts/check_task_history.sh"
+  "DECISION-HISTORY|settled sections sealed out of decision records stay sealed — every sealed file unchanged against its index row and against its record before the seal, the index complete and append-only across history, and every sealed section with exactly one stub under its own heading|scripts/check_decision_history.sh"
 )
 
 for entry in "${PROJECT_DOCTRINES[@]}"; do

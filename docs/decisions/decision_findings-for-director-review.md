@@ -10,7 +10,8 @@ Eleven items are recorded here so they survive the session. Three are outside an
 authority to settle; the fourth (§4) is a measurement about the programme's own evidence that you
 should see even though it is already fixed; the sixth (§6) is a review of **your own amendment**
 by the model that has never read the implementation. Each is tracked as work, so nothing here
-depends on this file being read.
+depends on this file being read. The settled items, §2, §4, §8 and §10, are sealed in
+`docs/decision-history/`, each under its heading here (`PROGRAM.41`).
 
 ## 1. No physical board — the one M0 obligation that cannot be closed in software
 
@@ -33,28 +34,7 @@ sooner is cheaper.
 
 ## 2. QEMU RISC-V is not installed on this machine — **RESOLVED `2026-09-27`; the pin remains**
 
-⛔ **Resolved. The heading and the original text below are kept as the record rather than
-rewritten**, because a register that silently edits its own history cannot be audited. Measured on
-`2026-09-27`: `qemu-system-riscv64` resolves on `PATH`, and `scripts/target_emulator.sh --check`
-reports `found: QEMU emulator version 11.1.1` and exits **`1`** with `NO RELEASE IS PINNED YET
-(QEMU_VERSION_PINNED=none-yet)` — not exit `20`.
-
-**So the dependency on something outside the repository is discharged, and what remains is inside
-it:** pinning the release in `targets/riscv-virt-up.env`, and the §3.2 check that QEMU's generated
-device tree agrees with the eADL platform fixture. Both are `M2.8`'s own work and need no ruling,
-which is why this item is no longer one of the director's. `M2.8` does have one external dependency
-left: `REQ-007`, the QEMU `virt` machine documentation and its device-tree bindings, requested from
-the source described in [[reference_external-document-source-chipdoc]] and recorded in that
-repository's ledger as `requested`.
-
-Original finding, unchanged:
-
-> `scripts/target_emulator.sh --check` exits `20`. The configuration is pinned as data and carries
-> `TARGET_VERIFIED=no` until an installed QEMU confirms it.
->
-> **What it blocks:** `M2.8`'s emulator spike and `M4.9`. **Cheap to resolve** — install it, then
-> pin the release in `targets/riscv-virt-up.env`. Flagged only because it is a dependency on
-> something outside the repository.
+Sealed, byte for byte, in [`decision_findings-for-director-review/02.md`](../decision-history/decision_findings-for-director-review/02.md) — settled, and never edited again.
 
 ## 3. A spine gate has no seam for cross-tree documentation
 
@@ -70,25 +50,7 @@ change. No judgement needed unless you want it prioritised.
 
 ## 4. F28 was green and could not see a whole class of error — found, fixed, worth knowing
 
-⚠️ **Not a decision to make; a calibration to carry.** The S0 gate (F28) generates, compiles and
-runs a described system and compares its output to an observation frozen before the emitter
-existed. It passed. It also could not distinguish a **hyperperiod** from a **longest period**.
-
-Both original fixtures are *harmonic* — periods 10 and 30, then 10 and 20 — so one period divides
-the other and `lcm` equals `max` on both. Replacing the least common multiple with the maximum in
-`crates/archogen-s0` left **all twelve oracle tests green**. It was found only because the fix was
-mutation-tested rather than assumed correct.
-
-**Fixed in the same leaf (`S0.4`):** a unit test on a non-harmonic set (`lcm(10, 15) = 30` against
-a longest period of `15`), and an end-to-end case,
-`examples/s0-heartbeat/system-non-harmonic.eadl`, that the same mutation now fails.
-
-**Why it is worth your attention anyway.** The generalisation is not about hyperperiods. A fixture
-set can be *complete against its own specification* and *blind to a class of error*, and a green
-gate says nothing about which. The programme's acceptance matrix is thirty such fixtures, and
-§13.1 is careful to call them "a minimum practical corpus, not a proof of completeness" — this is
-the first measured instance of what that sentence costs. The habit it argues for is mutation
-testing at every gate, which §13.3 already lists and which is otherwise easy to defer forever.
+Sealed, byte for byte, in [`decision_findings-for-director-review/04.md`](../decision-history/decision_findings-for-director-review/04.md) — settled, and never edited again.
 
 ## 5. Five runtime-semantics questions the contract does not decide — **your call on four**
 
@@ -207,51 +169,7 @@ else does, and the leaf is medium priority, so the frontier has moved past it ra
 
 ## 8. The histories grow without a lifecycle — the changelog, the development notes, the task trees (`2026-09-30`)
 
-The live-document size-containment doctrine you mandated, adopted as `LIVE_DOCUMENT_SIZE_CONTAINMENT.md` by
-`PROGRAM.17`, forbids one thing outright: a document that is both a growing history and something every
-session must read. Nothing here does that today. None of these files is in the bootstrap reads, and the three
-status pages that had turned into histories are fixed and bounded (`PROGRAM.17.2`). But these documents are
-what you browse, they grow fast, and nothing bounds them. Measured over the 82 commits since `2026-09-27`:
-
-| Document | Lines then → now | What is growing |
-| --- | --- | --- |
-| `CHANGELOG.md` | 1 464 → 3 459 | about 24 lines per commit |
-| `DEV_NOTES.md` | 687 → 1 602 | one entry per lesson, each also promoted to `docs/knowledge/` |
-| `docs/tasks/M1.md` | 1 864 → 6 928 | closed leaves: **5 328 of the 6 928 lines** are the bodies of its 55 closed leaves |
-| `docs/tasks/PROGRAM.md` | 796 → 3 158 | closed leaves: 2 375 of 3 158 lines, 33 leaves |
-
-The doctrine offers three answers, and each changes what you see when you open these files. Its adoption
-guide says to stop and ask before making a change like that, so it is waiting for you:
-
-- **(A) Keep them growing.** This is the status quo, and it is recorded as a decision rather than left to
-  drift. The cost is that the files you open keep lengthening. `M1.md` is already mostly finished work.
-- **(B) The changelog and the development notes as rolling ledgers.** At each month's end, the finished
-  month moves, byte for byte, into a sealed file such as `docs/history/changelog/2026-09.md`, with its digest
-  recorded. `CHANGELOG.md` keeps the current month and a short index of the sealed ones. A check proves that
-  sealed months never change and that the index lists all of them. Nothing is deleted, and a past month is
-  one click away.
-- **(C) Seal closed leaves out of the task trees.** A finished leaf's body, its checklist and evidence, moves
-  byte for byte to a sealed file per subtree, with a digest. The tree keeps one line per closed leaf naming
-  its commit and linking to the sealed text. Open leaves, the Current Frontier and the logs stay where they
-  are. `M1.md` would drop from 6 928 lines to roughly 1 600 of live work, with a closed leaf one click away.
-
-**The recommendation:** (B) for both the changelog and the development notes, monthly; (C) for the task
-trees, starting with `M1` and `PROGRAM`. Both are lossless and checked mechanically, and both change what you
-browse, which is why neither has been done. **The decision needed:** accept, amend (a different rotation
-period, or trees kept whole), or keep (A). The work is filed as `PROGRAM.31` (B) and `PROGRAM.32` (C), both
-`blocked` on this ruling.
-
-**Ruled `2026-09-30`, by delegation.** The director asked the engineer to decide and act, to the state of the art
-and at sign-off quality. The decision, and why it departs from the recommendation above:
-
-- **(B), with an entry-count boundary instead of a monthly one.** Measured that day, the whole history is one
-  month, at up to 75 commits a day. A monthly window would seal nothing now and bound nothing later. So the oldest
-  block of 20 changelog entries, or 10 development notes, is sealed, byte for byte, into the next numbered segment
-  under `docs/history/` whenever the live file reaches twice that. An index lists each segment with its range,
-  counts and digest, and a gate proves segments unchanged, the index complete and append-only, the order continuous
-  and the window bounded. `PROGRAM.31` does it, and `docs/decisions/decision_history-ledgers.md` records it.
-- **(C) as recommended**, after (B): closed leaves sealed out of the task trees, `M1` and `PROGRAM` first
-  (`PROGRAM.32`).
+Sealed, byte for byte, in [`decision_findings-for-director-review/08.md`](../decision-history/decision_findings-for-director-review/08.md) — settled, and never edited again.
 
 ## 9. "Every programmatic response carries §5.5's verdict" — how the engine API reads it (`2026-09-30`)
 
@@ -275,48 +193,7 @@ fixed at `API.3`'s close.
 
 ## 10. How far the hold on `scripts/` reaches (`2026-09-30`) — **ruled the same day**
 
-On `2026-09-30` you asked for the files under `scripts/` to be left alone "just for now", while the template's
-spine is reworked, so that its files here can later be updated from it wherever they have not been amended
-locally. That is being followed literally: nothing under `scripts/` has changed since.
-
-**What it holds up:**
-- `PROGRAM.32`, sealing closed leaves out of the task trees (your §8 ruling). It needs a new check, and changes to
-  the checks that read leaves.
-- Any new gate, such as a check that a review history under `docs/reviews/` is only ever appended to. For now that
-  stays a convention.
-
-**Why it may be narrower than it reads.** `scripts/` holds two kinds of file:
-- the template's own, among them `bootstrap.sh`, `update_scaffold.sh` and the spine's checks, which the doctrine
-  run already reports as "scaffold-owned";
-- archogen's own, among them `check_doctrines.project.sh`, `check_readme_routes.sh`, `check_history_ledgers.sh`,
-  `wasm_binding.sh` and the other project checks. The template has no copy of these, so a template update would
-  not reach them.
-
-**The decision needed:** does the hold cover archogen's own files under `scripts/`, or only the template's?
-Recommended: the template's only. That protects the update you described, and lets `PROGRAM.32` and new project
-gates proceed.
-
-**Ruled `2026-09-30`:** "only [template] inherited script you haven't modified. Those you modified are yours now. Even
-an update_scaffold won't touch them."
-
-**What that holds, measured the same day.** A file is held when it was in the template's initial import (`32e6b14`)
-and no later commit has changed it (`git log -- <path>`). That is 17 files:
-- `bootstrap.sh`;
-- the checks `check_docpaths.sh`, `check_doctrines.sh`, `check_gap_claims.sh`, `check_lesson_promotion.sh`,
-  `check_live_doc_currency.sh`, `check_memory_architecture.sh`, `check_no_background_jobs.sh`,
-  `check_readme_stability.sh`, `check_routing_evidence.sh`, `check_table_arity.sh`,
-  `check_task_tree_ownership.sh` and `check_waiver_routing.sh`, all under `scripts/`;
-- `knowledge-map/scripts/gen_knowledge_map.sh` and `check_knowledge_map.sh`;
-- `.githooks/pre-commit` and `.githooks/commit-msg`.
-
-Everything else is archogen's to change:
-- the template files archogen has already changed: `check_task_acceptance.sh` (`PROGRAM.21`),
-  `check_doctrines.project.sh` and `update_scaffold.sh`;
-- the 36 files archogen created.
-
-`bootstrap.sh` and `update_scaffold.sh` stay in place, as you asked on the same day. `PROGRAM.32` is unblocked: its
-new check and its change to `TASK-ACCEPTANCE` are archogen's files. It must work with the held checks that read
-leaves left as they are.
+Sealed, byte for byte, in [`decision_findings-for-director-review/10.md`](../decision-history/decision_findings-for-director-review/10.md) — settled, and never edited again.
 
 ## 11. The catalog's premise 3 needs `main` protected, and that is not how this project commits today (`2026-09-30`)
 

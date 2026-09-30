@@ -100,9 +100,11 @@ days, not a lasting allowance. That is why the partition is opened now, with a w
   goes to `docs/reviews/`.
 - **"Only once" is enforced.** `README_POLICY.md`'s table `### Ceilings a decision fixes` holds this record's 40
   files and 393 216 bytes, and `README-ROUTES` refuses a row whose cell is above them.
-- **The findings register's settled items** were considered for sealing, and left in place. Their section numbers
-  are cited across the task trees, so each would need a stub, and the partition, not a seal, was what the warning
-  needed. They are the next compaction when the folder nears its ceiling again.
+- **The findings register's settled items, §2, §4, §8 and §10, are sealed**, the next compaction this record
+  named, done by `PROGRAM.41` on `2026-09-30` as the folder neared 380 000 bytes. Each moved byte for byte into
+  `docs/decision-history/`, and its heading stayed in the register above a one-line stub, so every citation of its
+  number still finds it. `DECISION-HISTORY` proves each move against the register as it stood before the seal, and
+  holds the sealed files unchanged across history. Sealing is compaction, not a raise: the ceilings stay.
 - Related: `README_POLICY.md` (the row), `LIVE_DOCUMENT_SIZE_CONTAINMENT.md` (the inventory row),
   [[decision_findings-for-director-review]] §10 (the hold), [[decision_history-ledgers]].
 

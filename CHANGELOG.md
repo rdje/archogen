@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — settled findings leave the decisions folder, their headings kept
+
+`ARCHOGEN-PROGRAM-0234` (leaf `PROGRAM.41`).
+
+- The decisions folder had reached 376 904 of the 380 000 bytes at which its next compaction was due. That
+  compaction was named in advance: the four settled items of the director's findings register, one resolved, one
+  for information and two ruled.
+- Each moved, byte for byte, to `docs/decision-history/`. Its heading stays in the register above one line that
+  links it, so every place that cites an item by its number still finds it. The folder is now 368 643 bytes.
+- A new check, `DECISION-HISTORY`, holds the sealed items unchanged for good. It checks each against the register
+  as it stood just before the seal, so an item edited on its way out is refused, and it catches a forgery committed
+  later, in CI as before a commit. It is the task trees' sealing, applied to sections.
+
 ## archogen — the catalog's twelfth review and the composition's fifth are answered
 
 `ARCHOGEN-M2-0233` (leaf `M2.7.1`, an eleventh checkpoint; with `M2.10.1`'s sixth).
