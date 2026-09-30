@@ -17,14 +17,16 @@
 //! derives §5's evidence status of every facet and record (`M2.7.3.4.1`); and [`ledger`], the checks §5 re-applies
 //! at each ledgering commit and §9's retired ids, which the replay and the load run (`M2.7.3.4.2`); and
 //! [`invalidation`], which judges a claim's recorded closure and reads against the catalog now (`M2.7.3.4.3`); and
-//! [`selection`], §12's lookups, conflicts and groups (`M2.7.3.5.2`); and [`production`], §6's namespace rules
-//! (`M2.7.3.5.3`).
+//! [`selection`], §12's lookups, conflicts and groups (`M2.7.3.5.2`); [`production`], §6's namespace rules
+//! (`M2.7.3.5.3`); and [`load`] and [`claim`], every check composed, and §7's claims (`M2.7.3.6.1`).
 
+pub mod claim;
 pub mod grammar;
 pub mod hash;
 pub mod history;
 pub mod invalidation;
 pub mod ledger;
+pub mod load;
 pub mod lock;
 pub mod manifest;
 pub mod production;

@@ -7,6 +7,7 @@ use archogen_catalog::history::History;
 use archogen_catalog::invalidation::{
     affected_lines, affected_reads, Affected, Cause, ClosureLine, Read,
 };
+use archogen_catalog::lock::current_version;
 use archogen_catalog::record::FacetKind;
 use archogen_catalog::status::{statuses, Status};
 use archogen_catalog::tree::Tree;
@@ -30,6 +31,7 @@ fn record(history: &History, head: &str, facets: &[(&str, FacetKind)]) -> Vec<Cl
         .map(|(id, facet)| ClosureLine {
             id: (*id).to_owned(),
             facet: *facet,
+            version: current_version(&catalog.records[*id], *facet),
             bound: hashes.facet(id, *facet).unwrap().bound,
             status: now.facets[&((*id).to_owned(), *facet)],
         })

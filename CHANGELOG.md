@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — claims cite what they read, and say why they fall short
+
+`ARCHOGEN-M2-0258` (leaf `M2.7.3.6.1`).
+
+- A result that relies on the catalog now reads it only through lookups, so what it cites is exactly what it read,
+  and what it rests on follows from that by construction; nobody writes a list of sources that could leave one out.
+- A result claimed as production-grade is refused with every reason that applies: unreviewed components, inputs
+  from outside the catalog, timing not measured on real hardware, code with no built image, a history that lacks
+  what the main line recorded, and, until the director turns it on, the main line's protection.
+- A result resting on a timing model is untouched when a behavioral model changes, and the other way round.
+
 ## archogen — the catalog holds its production namespace
 
 `ARCHOGEN-M2-0257` (leaf `M2.7.3.5.3`).

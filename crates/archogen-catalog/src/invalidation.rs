@@ -9,6 +9,7 @@
 
 use archogen_evidence::sha256::Digest;
 
+use crate::grammar::Version;
 use crate::hash::Catalog;
 use crate::history::History;
 use crate::record::{classify, read_record, CatalogPath, Content, FacetKind, Namespace, Record};
@@ -22,6 +23,8 @@ pub struct ClosureLine {
     pub id: String,
     /// The facet.
     pub facet: FacetKind,
+    /// Its version when the claim was made.
+    pub version: Version,
     /// Its bound hash when the claim was made.
     pub bound: Digest,
     /// Its status when the claim was made.
