@@ -4,6 +4,17 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — "every production is exercised" is now checked, not just claimed
+
+`ARCHOGEN-M1-0170` (leaf `M1.27`).
+
+- A test was named for covering every production of archogen's grammar, but it only checked that each probe was
+  accepted. The grammar checker now reports which productions each accepted input used. The test maps every
+  production to the probes that reach it, and fails if one has none, including a production added later without
+  a probe.
+- One production appears in the grammar only as something excluded. It is reached by a probe it refuses, a raw
+  control character inside a string, added here.
+
 ## archogen — a string must be followed by a delimiter
 
 `ARCHOGEN-M1-0168` (leaf `M1.37`).

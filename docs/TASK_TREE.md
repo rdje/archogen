@@ -54,7 +54,7 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 | --- | --- | --- | --- |
 | [`S0`](tasks/S0.md) | `done` | — every leaf closed; F28 green, and the chapter's counts are measured (`S0.8`) | repo-local |
 | [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.34` — nested vendored checkouts off their pins, awaiting the director's yes to restore; `.10.5` waits on the next push, `.31`/`.32` on the director | repo-local |
-| [`M1`](tasks/M1.md) | `active` | `M1.27` — each conformance probe mapped to the productions it reaches; `M1.29.4` waits on the director (findings §7) | repo-local |
+| [`M1`](tasks/M1.md) | `active` | `M1.32` — `archogen check` on a kind module is refused as what it is; `M1.29.4` waits on the director (findings §7) | repo-local |
 | [`API`](tasks/API.md) | `active` | `API.3` — declare the engine API; `API.1` measured the wasm build, `API.2` gates the no-subprocess invariant | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |
 | [`M2`](tasks/M2.md) | `active` | `M2.6` — the runtime-applicable analysis; `M2.8.3` (the eADL side of the §3.2 agreement) is a design act, `M2.9` waits on the director | repo-local |

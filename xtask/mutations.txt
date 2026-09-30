@@ -303,9 +303,9 @@ test -p eadl-front --test conformance
 expect killed
 why M1.37, found by M1.22's third reader: a string followed directly by a symbol character was read as two atoms, which the grammar refuses. The conformance suite's malformed probes must see it.
 from
-                    if self.peek().is_some_and(is_symbol_byte) {
+                        if self.peek().is_some_and(is_symbol_byte) {
 to
-                    if false && self.peek().is_some_and(is_symbol_byte) {
+                        if false && self.peek().is_some_and(is_symbol_byte) {
 end
 
 mutation missing-delimiter-label-one-byte
@@ -314,7 +314,44 @@ test -p eadl-front --lib
 expect killed
 why M1.37's first cut labelled one byte after the string; on `"b"é` that split a character, and the fuzz smoke caught it (`read-missing-delimiter span 148..149 is not on character boundaries`). The reader's own test pins the span now.
 from
-                            .map_or(1, char::len_utf8) as u32;
+                                .map_or(1, char::len_utf8) as u32;
 to
-                            .map_or(1, |_| 1) as u32;
+                                .map_or(1, |_| 1) as u32;
+end
+
+mutation reach-keeps-an-abandoned-production
+file crates/eadl-front/tests/conformance.rs
+test -p eadl-front --test conformance
+expect killed
+why M1.27: without the rollback in the rule arm, a production tried and abandoned counts as reached — `sign` on `(a -)`. The coverage leg would be satisfied by a branch no derivation kept.
+from
+                                trace.rollback(mark);
+                                false
+to
+                                false
+end
+
+mutation reach-keeps-a-lookahead-that-led-nowhere
+file crates/eadl-front/tests/conformance.rs
+test -p eadl-front --test conformance
+expect killed
+why M1.27: a lookahead's continuation answers true whatever follows, so only its own rollback removes what it recorded when the rest fails. The shipped grammar cannot show it; a synthetic one does.
+from
+                    } else {
+                        trace.rollback(mark);
+                        false
+to
+                    } else {
+                        false
+end
+
+mutation reach-ignores-exclusions
+file crates/eadl-front/tests/conformance.rs
+test -p eadl-front --test conformance
+expect killed
+why M1.27: `control` is only ever an exclusion. A reach that counted only accepted derivations would leave it unreached, and the leg must say so rather than pass.
+from
+                                    trace.exclusions.borrow_mut().extend(fired);
+to
+                                    drop(fired);
 end

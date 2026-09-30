@@ -12,6 +12,10 @@
 > and agree on where every token begins and ends, or the build fails — and the reference's tables are
 > read back out of the document and run against the reader row by row, so a value it states and a
 > value the reader produces cannot disagree quietly.
+>
+> The probes behind the first check reach every production of the grammar, and that is measured: the
+> recognizer reports the productions of each derivation it accepts, and a production no probe reaches
+> fails the build.
 
 
 Before anything can be checked, resolved or generated, it has to be read — and when it cannot

@@ -151,7 +151,7 @@ of this one — and its §1 states the value of every literal form as a table th
 ## Conformance
 
 A description **conforms** when the recognizer derived from this file accepts it *and* segments it
-into the same tokens the reader does. `crates/eadl-front/tests/conformance.rs` checks four things:
+into the same tokens the reader does. `crates/eadl-front/tests/conformance.rs` checks these:
 
 | Check | Over |
 | --- | --- |
@@ -159,6 +159,7 @@ into the same tokens the reader does. `crates/eadl-front/tests/conformance.rs` c
 | both reject | the malformed fixtures |
 | both produce the **same token spans** | every description in that suite |
 | both accept | the probe set `conformance.rs` carries, and every literal row `reference.md` states |
+| every production is **reached** | the probe set: each production is used by some probe's accepted derivation, or, if it is only ever an exclusion, fires on a malformed probe it refuses |
 
 ⛔ **No count belongs in that table, and one used to.** The population is walked from the manifest's
 roots, so a figure here is a figure nothing re-derives — this file already published one that went
@@ -183,6 +184,17 @@ forms this file and the reader disagreed about — `0X10`, `0x_10` and `\0` — 
 description in the repository contains, so no check here could reach them. The census is in
 `docs/tasks/M1.md`; `M1.12.2` derives the probe set from the reference's literal table so the gap
 cannot reopen.
+
+⭐ **"Every production is reached" is measured, not named.** Until `M1.27` the test that says so asserted
+only that each probe is accepted, and nothing connected a probe to a production. The recognizer now
+reports the productions of the derivation it accepted, and the test maps each production in the fence
+above to the probes that reach it. A production no probe reaches fails it, and so does one added to
+this file without a probe. `control` is the one production no accepted input can contain, because it
+appears only after a `-`. It is reached when its exclusion fires, on a probe that has a raw control
+character inside a string. `cargo test -p eadl-front --test conformance
+the_conformance_probes_exercise_every_production -- --nocapture` prints the map. ⚠️ Reached is a
+floor. One probe per production never combines two, and the reference's literal rows are what
+cover combinations.
 
 ⚠️ **Honest limit.** This establishes that the two agree on the language and on where tokens
 begin and end. It does **not** establish that the reader builds the right *tree* from those

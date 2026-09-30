@@ -28,7 +28,7 @@
 //! language reference, leaf `M1.12`.
 
 use std::cell::RefCell;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use eadl_front::{read, Form, SourceMap};
@@ -328,6 +328,18 @@ impl Grammar {
     /// reader "accepting" the file. Two implementations can agree on the *language* and disagree
     /// on the *tokens*, and the second disagreement is the one that changes what a system means.
     fn segment(&self, input: &str) -> Option<Vec<(usize, usize)>> {
+        let recognition = self.recognize(input);
+        recognition.accepted.then_some(recognition.atoms)
+    }
+
+    /// Recognize `input` and report what the recognition reached (leaf `M1.27`): the atoms and the
+    /// productions of the **accepted** derivation, and every production that fired as an exclusion.
+    ///
+    /// ⭐ Two kinds of reach, because the grammar has two kinds of production. Most are *used*: they
+    /// match text in the derivation that wins. `control` is only ever *excluded*
+    /// (`any - quote - "\\" - control`), so no accepted derivation can contain it. It is reached when
+    /// the exclusion fires — when it matches the very text the base matched, and so refuses it.
+    fn recognize(&self, input: &str) -> Recognition {
         let chars: Vec<char> = input.chars().collect();
         // The recognizer indexes characters; the reader reports byte offsets.
         let mut byte_at: Vec<usize> = Vec::with_capacity(chars.len() + 1);
@@ -338,25 +350,40 @@ impl Grammar {
         }
         byte_at.push(offset);
 
-        let atoms: RefCell<Vec<(usize, usize)>> = RefCell::new(Vec::new());
+        let trace = Trace::default();
         // `document` ends with `end`, so full consumption is the grammar's requirement rather
         // than this function's.
-        let ok = self.matches(
+        let accepted = self.matches(
             &Expr::Rule("document".into()),
             &chars,
             0,
             &mut |_| true,
-            &atoms,
+            &trace,
         );
-        ok.then(|| {
-            let mut spans: Vec<(usize, usize)> = atoms
-                .borrow()
-                .iter()
-                .map(|(start, end)| (byte_at[*start], byte_at[*end]))
-                .collect();
-            spans.sort_unstable();
-            spans
-        })
+        let mut atoms: Vec<(usize, usize)> = trace
+            .atoms
+            .borrow()
+            .iter()
+            .map(|(start, end)| (byte_at[*start], byte_at[*end]))
+            .collect();
+        atoms.sort_unstable();
+        let used = if accepted {
+            trace.rules.borrow().iter().map(|r| r.to_string()).collect()
+        } else {
+            BTreeSet::new()
+        };
+        let excluded = trace
+            .exclusions
+            .borrow()
+            .iter()
+            .map(|r| r.to_string())
+            .collect();
+        Recognition {
+            accepted,
+            atoms,
+            used,
+            excluded,
+        }
     }
 
     /// Match `expr` at `at`, calling `k` with **every** end position it could produce, and
@@ -370,13 +397,13 @@ impl Grammar {
     /// red arm that weakened `symbol_start` did not fire, which is how the defect was found. A
     /// recognizer whose language differs from the document's is worse than no recognizer, because
     /// the document is normative and nothing would have been checking it.
-    fn matches(
-        &self,
+    fn matches<'g>(
+        &'g self,
         expr: &Expr,
         input: &[char],
         at: usize,
         k: &mut dyn FnMut(usize) -> bool,
-        atoms: &RefCell<Vec<(usize, usize)>>,
+        trace: &Trace<'g>,
     ) -> bool {
         match expr {
             Expr::Any => at < input.len() && k(at + 1),
@@ -391,62 +418,73 @@ impl Grammar {
                 matches!(input.get(at), Some(c) if low <= c && c <= high) && k(at + 1)
             }
             Expr::Rule(name) => {
-                let rule = self
+                let (name, rule) = self
                     .rules
-                    .get(name)
+                    .get_key_value(name)
                     .unwrap_or_else(|| panic!("the grammar references an undefined rule `{name}`"));
-                if name != "atom" {
-                    return self.matches(rule, input, at, k, atoms);
-                }
-                // Record the atom only while the parse that contains it is still alive: push
-                // before continuing, pop if the continuation ultimately fails. Without the pop a
-                // backtracked branch would leave phantom tokens behind.
+                // Record the production, and the atom if it is one, only while the parse that
+                // contains it is still alive: push before continuing, roll back if the continuation
+                // ultimately fails. Without the rollback a backtracked branch would leave phantom
+                // tokens behind, and phantom coverage: `sign` tried on `-` and abandoned for
+                // `symbol` would count as reached.
                 self.matches(
                     rule,
                     input,
                     at,
                     &mut |end| {
-                        atoms.borrow_mut().push((at, end));
+                        let mark = trace.mark();
+                        trace.rules.borrow_mut().push(name);
+                        if name == "atom" {
+                            trace.atoms.borrow_mut().push((at, end));
+                        }
                         if k(end) {
                             true
                         } else {
-                            atoms.borrow_mut().pop();
+                            trace.rollback(mark);
                             false
                         }
                     },
-                    atoms,
+                    trace,
                 )
             }
-            Expr::Seq(items) => self.match_seq(items, input, at, k, atoms),
+            Expr::Seq(items) => self.match_seq(items, input, at, k, trace),
             Expr::Choice(alts) => alts
                 .iter()
-                .any(|alt| self.matches(alt, input, at, k, atoms)),
+                .any(|alt| self.matches(alt, input, at, k, trace)),
             // Greedy first, then empty — with full backtracking the order only decides which
             // successful parse is found first, never whether one is found.
-            Expr::Optional(inner) => self.matches(inner, input, at, k, atoms) || k(at),
-            Expr::Repeat(inner) => self.match_repeat(inner, input, at, k, atoms),
+            Expr::Optional(inner) => self.matches(inner, input, at, k, trace) || k(at),
+            Expr::Repeat(inner) => self.match_repeat(inner, input, at, k, trace),
             Expr::Except(base, forbidden) => self.matches(
                 base,
                 input,
                 at,
                 &mut |end| {
                     let mut excluded = false;
+                    let mark = trace.mark();
                     self.matches(
                         forbidden,
                         input,
                         at,
                         &mut |bad| {
-                            excluded |= bad == end;
+                            if bad == end {
+                                excluded = true;
+                                // What refused the text: the productions of the forbidden match.
+                                let fired = trace.rules.borrow()[mark.0..].to_vec();
+                                trace.exclusions.borrow_mut().extend(fired);
+                            }
                             false
                         },
-                        atoms,
+                        trace,
                     );
                     !excluded && k(end)
                 },
-                atoms,
+                trace,
             ),
-            // Consumes nothing, and only needs ONE way to match.
+            // Consumes nothing, and only needs ONE way to match. Its continuation answers `true`
+            // whatever follows, so what it recorded is rolled back here if what follows fails.
             Expr::Lookahead(inner) => {
+                let mark = trace.mark();
                 let mut ok = false;
                 self.matches(
                     inner,
@@ -456,20 +494,25 @@ impl Grammar {
                         ok = true;
                         true
                     },
-                    atoms,
+                    trace,
                 );
-                ok && k(at)
+                if ok && k(at) {
+                    true
+                } else {
+                    trace.rollback(mark);
+                    false
+                }
             }
         }
     }
 
-    fn match_seq(
-        &self,
+    fn match_seq<'g>(
+        &'g self,
         items: &[Expr],
         input: &[char],
         at: usize,
         k: &mut dyn FnMut(usize) -> bool,
-        atoms: &RefCell<Vec<(usize, usize)>>,
+        trace: &Trace<'g>,
     ) -> bool {
         match items.split_first() {
             None => k(at),
@@ -477,19 +520,19 @@ impl Grammar {
                 head,
                 input,
                 at,
-                &mut |next| self.match_seq(rest, input, next, k, atoms),
-                atoms,
+                &mut |next| self.match_seq(rest, input, next, k, trace),
+                trace,
             ),
         }
     }
 
-    fn match_repeat(
-        &self,
+    fn match_repeat<'g>(
+        &'g self,
         inner: &Expr,
         input: &[char],
         at: usize,
         k: &mut dyn FnMut(usize) -> bool,
-        atoms: &RefCell<Vec<(usize, usize)>>,
+        trace: &Trace<'g>,
     ) -> bool {
         // More first, then stop. The `next > at` guard is what keeps a nullable body from
         // looping forever.
@@ -497,11 +540,45 @@ impl Grammar {
             inner,
             input,
             at,
-            &mut |next| next > at && self.match_repeat(inner, input, next, k, atoms),
-            atoms,
+            &mut |next| next > at && self.match_repeat(inner, input, next, k, trace),
+            trace,
         );
         more || k(at)
     }
+}
+
+/// What one recognition leaves behind, kept only while the derivation that made it is alive.
+#[derive(Default)]
+struct Trace<'g> {
+    /// Every atom of the live derivation, as character offsets.
+    atoms: RefCell<Vec<(usize, usize)>>,
+    /// Every production the live derivation completed, in completion order.
+    rules: RefCell<Vec<&'g str>>,
+    /// Every production that matched the text an exclusion refused. Never rolled back: a firing
+    /// is a firing, whether or not the recognition went on to accept.
+    exclusions: RefCell<BTreeSet<&'g str>>,
+}
+
+impl Trace<'_> {
+    fn mark(&self) -> (usize, usize) {
+        (self.rules.borrow().len(), self.atoms.borrow().len())
+    }
+
+    fn rollback(&self, (rules, atoms): (usize, usize)) {
+        self.rules.borrow_mut().truncate(rules);
+        self.atoms.borrow_mut().truncate(atoms);
+    }
+}
+
+/// The verdict on one input, and what reaching it reached.
+struct Recognition {
+    accepted: bool,
+    /// The atoms of the accepted derivation, as byte spans in source order; empty if refused.
+    atoms: Vec<(usize, usize)>,
+    /// The productions of the accepted derivation; empty if refused.
+    used: BTreeSet<String>,
+    /// The productions that fired as an exclusion anywhere in the recognition.
+    excluded: BTreeSet<String>,
 }
 
 fn repo_root() -> PathBuf {
@@ -607,24 +684,94 @@ fn the_grammar_and_the_reader_agree_on_the_whole_corpus() {
     });
 }
 
+/// Inputs both the grammar and the reader must refuse. Each also reaches what refuses it: the
+/// control-character probe is the one that fires `control`'s exclusion (`M1.27`).
+const MALFORMED: &[(&str, &str)] = &[
+    ("unclosed list", "(defblock a"),
+    ("stray close", "(defblock a))"),
+    ("unterminated string", "(a \"unfinished)"),
+    ("digit-initial symbol", "(period 10ms)"),
+    ("bare number with unit glued", "(counter-width 32bit)"),
+    ("unterminated string at eof", "(a \""),
+    ("string glued to a symbol", "(\"b\"c)"),
+    ("string glued to a number", "(a \"b\"1)"),
+    ("raw control character in a string", "(s \"a\u{7}b\")"),
+];
+
+/// The well-formed probes: a coverage floor the corpus is not (see the test that runs them).
+const PROBES: &[(&str, &str)] = &[
+    ("empty document", ""),
+    ("comment only", "; nothing here\n"),
+    ("comment without a newline at eof", "; unterminated comment"),
+    ("empty list", "()"),
+    ("nested lists", "(a (b (c)))"),
+    ("symbol with punctuation", "(a.b-c/d:e)"),
+    ("operator-shaped symbols", "(= >= <= != *)"),
+    ("plain integer", "(n 42)"),
+    ("signed integers", "(n -1 +2)"),
+    ("integer with separators", "(n 1_000_000)"),
+    ("decimal", "(n 1.5)"),
+    ("decimal with separators", "(n 1_0.0_5)"),
+    ("signed decimal", "(n -0.25)"),
+    ("hexadecimal", "(n 0xff)"),
+    ("hexadecimal with separators", "(n 0x1000_0000)"),
+    ("uppercase hexadecimal", "(n 0xDEADBEEF)"),
+    ("empty string", "(s \"\")"),
+    ("string with escapes", "(s \"a\\\"b\\\\c\\nd\\te\")"),
+    ("string with a general escape", "(s \"a\\u{1b}b\")"),
+    ("raw tab inside a string", "(s \"a\tb\")"),
+    ("string containing delimiters", "(s \"(;)\")"),
+    ("adjacent strings", "(s \"a\"\"b\")"),
+    ("a string then a list", "(s \"a\"(b))"),
+    ("crlf line endings", "(a)\r\n(b)\r\n"),
+    ("tabs as whitespace", "(a\tb)"),
+    ("comment inside a list", "(a ; why\n b)"),
+    ("top-level atom", "bare"),
+];
+
+/// Every production of `grammar`, with the probes that reach it (`M1.27`). A well-formed probe
+/// reaches the productions its accepted derivation uses and any exclusion that fired on the way; a
+/// malformed one reaches only the exclusions that fired, since a refused input has no derivation.
+/// A production no probe reaches maps to an empty list.
+fn reach(
+    grammar: &Grammar,
+    probes: &[(&str, &str)],
+    malformed: &[(&str, &str)],
+) -> BTreeMap<String, Vec<String>> {
+    let mut reach: BTreeMap<String, Vec<String>> = grammar
+        .rules
+        .keys()
+        .map(|name| (name.clone(), Vec::new()))
+        .collect();
+    for (why, text) in probes.iter().chain(malformed) {
+        let recognition = grammar.recognize(text);
+        for name in recognition.used.iter().chain(&recognition.excluded) {
+            let probes = reach.get_mut(name).expect("a production the grammar has");
+            if !probes.iter().any(|p| p == why) {
+                probes.push(why.to_string());
+            }
+        }
+    }
+    reach
+}
+
+/// The productions `reach` found no probe for.
+fn unreached(reach: &BTreeMap<String, Vec<String>>) -> Vec<&str> {
+    reach
+        .iter()
+        .filter(|(_, probes)| probes.is_empty())
+        .map(|(name, _)| name.as_str())
+        .collect()
+}
+
 #[test]
 fn the_grammar_and_the_reader_agree_on_malformed_input() {
     with_deep_stack(|| {
         // Acceptance agreement is half the claim; both must also reject the same things, or the
         // grammar is merely permissive enough to have agreed by accident.
         let grammar = Grammar::load();
-        let malformed = [
-            ("unclosed list", "(defblock a"),
-            ("stray close", "(defblock a))"),
-            ("unterminated string", "(a \"unfinished)"),
-            ("digit-initial symbol", "(period 10ms)"),
-            ("bare number with unit glued", "(counter-width 32bit)"),
-            ("unterminated string at eof", "(a \""),
-            ("string glued to a symbol", "(\"b\"c)"),
-            ("string glued to a number", "(a \"b\"1)"),
-        ];
         let mut wrong = Vec::new();
-        for (why, text) in malformed {
+        for (why, text) in MALFORMED {
             let by_grammar = grammar.accepts(text);
             let by_reader = reader_accepts("malformed", text);
             if by_grammar || by_reader {
@@ -757,37 +904,8 @@ fn the_conformance_probes_exercise_every_production() {
     // are the suite proper; the corpus is the regression set.
     with_deep_stack(|| {
         let grammar = Grammar::load();
-        let probes: &[(&str, &str)] = &[
-            ("empty document", ""),
-            ("comment only", "; nothing here\n"),
-            ("comment without a newline at eof", "; unterminated comment"),
-            ("empty list", "()"),
-            ("nested lists", "(a (b (c)))"),
-            ("symbol with punctuation", "(a.b-c/d:e)"),
-            ("operator-shaped symbols", "(= >= <= != *)"),
-            ("plain integer", "(n 42)"),
-            ("signed integers", "(n -1 +2)"),
-            ("integer with separators", "(n 1_000_000)"),
-            ("decimal", "(n 1.5)"),
-            ("decimal with separators", "(n 1_0.0_5)"),
-            ("signed decimal", "(n -0.25)"),
-            ("hexadecimal", "(n 0xff)"),
-            ("hexadecimal with separators", "(n 0x1000_0000)"),
-            ("uppercase hexadecimal", "(n 0xDEADBEEF)"),
-            ("empty string", "(s \"\")"),
-            ("string with escapes", "(s \"a\\\"b\\\\c\\nd\\te\")"),
-            ("string with a general escape", "(s \"a\\u{1b}b\")"),
-            ("raw tab inside a string", "(s \"a\tb\")"),
-            ("string containing delimiters", "(s \"(;)\")"),
-            ("adjacent strings", "(s \"a\"\"b\")"),
-            ("a string then a list", "(s \"a\"(b))"),
-            ("crlf line endings", "(a)\r\n(b)\r\n"),
-            ("tabs as whitespace", "(a\tb)"),
-            ("comment inside a list", "(a ; why\n b)"),
-            ("top-level atom", "bare"),
-        ];
         let mut wrong = Vec::new();
-        for (why, text) in probes {
+        for (why, text) in PROBES {
             let by_grammar = grammar.accepts(text);
             let by_reader = reader_accepts("probe", text);
             if !by_grammar || !by_reader {
@@ -803,6 +921,41 @@ fn the_conformance_probes_exercise_every_production() {
             "conformance probes that should be well-formed were not accepted:\n{}",
             wrong.join("\n")
         );
+
+        // ⭐ The name's claim, measured (`M1.27`): until this leg the test asserted only that each
+        // probe is accepted, and nothing connected a probe to a production.
+        let reach = reach(&grammar, PROBES, MALFORMED);
+        assert!(!reach.is_empty(), "the grammar has no productions to reach");
+        // The map itself, for `--nocapture`: the evidence a reviewer reads, not a figure to copy.
+        for (production, probes) in &reach {
+            println!("reach: {production:<16} {}", probes.join(" · "));
+        }
+        let missing = unreached(&reach);
+        assert!(
+            missing.is_empty(),
+            "{} of {} productions are reached by no probe — add one that uses each, or for an \
+             exclusion one it refuses: {missing:?}",
+            missing.len(),
+            reach.len()
+        );
+    });
+}
+
+#[test]
+fn a_production_tried_and_abandoned_is_not_reached() {
+    with_deep_stack(|| {
+        // `-` alone is a symbol: `number` tries `sign` on it, finds no digit, and gives it up.
+        // Without the rollback in `Grammar::matches` that abandoned `sign` would count as reached,
+        // and the coverage leg would be satisfied by a branch no derivation kept.
+        let grammar = Grammar::load();
+        let alone = grammar.recognize("(a -)");
+        assert!(alone.accepted);
+        assert!(alone.used.contains("symbol"), "{:?}", alone.used);
+        assert!(!alone.used.contains("sign"), "{:?}", alone.used);
+        let signed = grammar.recognize("(a -1)");
+        assert!(signed.used.contains("sign"), "{:?}", signed.used);
+        // …and a refused input has no derivation, so nothing is used by it.
+        assert!(grammar.recognize("(a").used.is_empty());
     });
 }
 
@@ -1076,4 +1229,87 @@ fn arm_5_a_grammar_that_drops_the_general_escape_is_reported() {
             .all(|each| each.contains("is well-formed")),
         "a violation that is not about well-formedness means the count is right for the wrong reason"
     );
+}
+
+#[test]
+fn a_lookahead_that_leads_nowhere_is_not_reached() {
+    with_deep_stack(|| {
+        // The shipped grammar cannot show this: its one lookahead is `? delimiter`, whose productions
+        // every accepted probe reaches anyway. A lookahead's continuation answers `true` whatever
+        // follows, so only the rollback in `Expr::Lookahead` removes `peek` when `"ab"` then fails
+        // and the second alternative is the one that accepts.
+        let grammar = Grammar::from_document(
+            "```ebnf\ndocument = ( ? peek , \"ab\" , end ) | ( \"a\" , \"c\" , end ) ;\npeek = \"a\" ;\n```",
+        );
+        let recognition = grammar.recognize("ac");
+        assert!(recognition.accepted);
+        assert!(!recognition.used.contains("peek"), "{:?}", recognition.used);
+        assert!(grammar.recognize("ab").used.contains("peek"));
+    });
+}
+
+#[test]
+fn arm_6_a_production_that_loses_its_only_probe_is_reported() {
+    with_deep_stack(|| {
+        // `unicode_escape` is reached by one probe. Deleting it must leave the production
+        // unreached, or the coverage leg is satisfied by something else and proves nothing.
+        let grammar = Grammar::load();
+        let without: Vec<(&str, &str)> = PROBES
+            .iter()
+            .copied()
+            .filter(|(why, _)| *why != "string with a general escape")
+            .collect();
+        assert_eq!(
+            without.len() + 1,
+            PROBES.len(),
+            "the probe this arm deletes is gone"
+        );
+        let missing = unreached(&reach(&grammar, &without, MALFORMED)).join(" ");
+        assert_eq!(missing, "unicode_escape");
+    });
+}
+
+#[test]
+fn arm_7_an_exclusion_that_loses_its_refused_probe_is_reported() {
+    with_deep_stack(|| {
+        // `control` is only ever an exclusion, reached by the one malformed probe it refuses.
+        let grammar = Grammar::load();
+        let without: Vec<(&str, &str)> = MALFORMED
+            .iter()
+            .copied()
+            .filter(|(why, _)| *why != "raw control character in a string")
+            .collect();
+        assert_eq!(
+            without.len() + 1,
+            MALFORMED.len(),
+            "the probe this arm deletes is gone"
+        );
+        let missing = unreached(&reach(&grammar, PROBES, &without)).join(" ");
+        assert_eq!(missing, "control");
+    });
+}
+
+#[test]
+fn arm_8_a_production_added_without_a_probe_is_reported() {
+    with_deep_stack(|| {
+        // A grammar that grows a production no probe reaches must fail the leg: the population is
+        // the grammar's own productions, never a list kept beside them.
+        let number = "number          = hexadecimal | decimal | integer ;";
+        assert!(
+            GRAMMAR_DOCUMENT.contains(number),
+            "the line this arm mutates moved"
+        );
+        let mutated = GRAMMAR_DOCUMENT.replace(
+            number,
+            "number          = binary | hexadecimal | decimal | integer ;\n\
+             binary          = \"0b\" , ( \"0\" | \"1\" ) , { \"0\" | \"1\" } ;",
+        );
+        let grammar = Grammar::from_document(&mutated);
+        assert!(
+            grammar.rules.contains_key("binary"),
+            "the mutation did not apply"
+        );
+        let missing = unreached(&reach(&grammar, PROBES, MALFORMED)).join(" ");
+        assert_eq!(missing, "binary");
+    });
 }
