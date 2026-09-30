@@ -16,10 +16,10 @@
 - **Active tree:** `M2` → frontier `M2.7.1`. `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API`'s is
   `API.6`; `M1`'s only open leaf, `M1.29.4`, is blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** answer **`M2.10.1`**'s round 7, in flight in a read-only context, then run **`M2.7.1`**'s round
-  15 and `M2.10.1`'s round 8 over `docs/decisions/catalog/`. Each closes on a round with no defect live for the `/1`
-  slice (its closure rule). `docs/decisions/` is near the cap only the director can raise.
-  Then `M2.7.3`, `M2.7.6` (the check's protection), `M2.7.4`, `M2.7.5`, `M2.11`, then `API.6`.
+- **Next action:** run **`M2.7.1`**'s round 16 and **`M2.10.1`**'s round 8, each in a new read-only context, over
+  `docs/decisions/catalog/`. Each closes on a round with no defect live for the `/1` slice (its closure rule); how
+  the catalog check is protected is now `M2.7.6`'s. `docs/decisions/` is near the cap only the director can raise.
+  Then `M2.7.3`, `M2.7.6`, `M2.7.4`, `M2.7.5`, `M2.11`, then `API.6`.
 - **In flight:** branch **`wip/m2.9`** (`758cbcd`) is a checkpoint, not a finished leaf — `M2.9` records it as
   not compiling (`crates/rt-core/tests/differential.rs` unadapted).
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of

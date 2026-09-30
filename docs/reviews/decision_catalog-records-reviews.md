@@ -477,6 +477,34 @@ would have taken this record past its ceiling, and checked the move by diff: onl
 | T13 | ambiguity, premise 3 | a merge queue runs the workflow at the group commit | with a queue, the check is a ruleset-required workflow pinned outside the pull request's tree (§0; findings §11) |
 | T14 | gap, premise 4 | a shared runner or cache lets a pull request's job plant state | the check runs on the hosting's ephemeral runners, restoring no cache such a job can write (§0; findings §11) |
 
+**Round 15**, `2026-09-30`: all 23 values matched by two routes, every measured claim held, and the catalog's
+mechanics held again: hashing, the ledger, status, items, admission and §12. It diffed the moved §3 against its
+parent and found two edits, T1's and T15's, where round 14's paragraph above says only T1's; the record and §3's
+header now say both. There were 14 findings, none a defect by construction; three ambiguities at defect level were
+live, all in premise 3's check-protection mechanism, the area rounds 12 to 14 blocked on too, and the verdict was
+that the record "does not meet the closure rule". The answering context judged that prose does not converge on a
+mechanism: premise 3 now states the property, and `M2.7.6` owns the mechanism as a design of its own, reviewed on
+its own, with a test for every construction these rounds found. The closure rule says so (`M2.7.1`).
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| T15, T3 | partial, defect-level | through U1 and U2 | as those rows |
+| T9 | partial, nit | through U14 | as U14 |
+| U1 | ambiguity, defect-level, live | a record package's binary named like the checker could overwrite it in a shared target directory | `M2.7.6`: the checker in a target directory of its own, run only from there; record builds in fresh ones, never run (§0) |
+| U2 | ambiguity, defect-level, live | where `CODEOWNERS` lives, and what "assign" means | `M2.7.6`: `.github/CODEOWNERS` alone, in the closure, read by the hosting's rules, owners the director named (§0) |
+| U3 | gap, premise 3 | approvals survive a new push | stale approvals dismissed, and the last push approved by someone other than its pusher (findings §11; `M2.7.6`) |
+| U4 | gap, premise 3, defect-level unless the token is read-only | a workflow running pull-request code holds a token that can post the check's verdict | a read-only token by default, `contents: read` and no persisted credentials, enforced by a doctrine check (`M2.7.6`; findings §11) |
+| U5 | ambiguity, defect-level, live | rustup reads a judged tree's toolchain file whenever `RUSTUP_TOOLCHAIN` is unset | the pin read from its blob and installed from outside every judged tree, `RUSTUP_TOOLCHAIN` always set (`M2.7.6`); the toolchain file held to four keys, no `path` (§3) |
+| U6 | ambiguity, fails closed | the root cargo configuration while no record reaches it | a configuration file inside the tree is refused only when it is not held to the content rules (§3) |
+| U7 | gap, fails closed | a waived line could bind records the waiver's commit could not demote | the waiver's commit may demote every production record the catalog, with the waiver applied, leaves short of §6 (§9) |
+| U8 | nit | round 14's move was called verbatim, and the size figures | the move stated with its two edits; the figures as measured (§3's header, the record, `M2.7.1`'s log) |
+| U9 | ambiguity, latent (`M4`) | the tooling's commit off the read commit's chain; the tooling's own build rules | measured along `origin/main`'s first-parent chain to the recorded `origin/main` commit; built under §3's rules (§0, §7) |
+| U10 | gap, premise 3 | a merge commit crafted locally passes "a merge commit" | every first-parent commit after the named commit is a merge the hosting made and signed (§0, §7; findings §11) |
+| U11 | gap, latent (`M4`), low for the gate | a case-insensitive file system reads `.cargo/Config.toml` as configuration | a tracked path spelled otherwise than those names, but equal in ASCII case, is refused (§3) |
+| U12 | gap, fails closed | a checkout applies the base's `.gitattributes`, outside the closure | `M2.7.6`: the base written from its blobs |
+| U13 | ambiguity, fails closed | a package reached only through dependencies was not scanned | "a package in a source set or a reached set" (§3) |
+| U14 | nits | `M2.7`'s children; §4's wording; "runs on the host" | fixed (`M2.7`; §4; §3) |
+
 ## Why
 
 The decision record states the design as it stands. Its reviews are its history: every round appends a table,

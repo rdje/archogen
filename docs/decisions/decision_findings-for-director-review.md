@@ -233,6 +233,11 @@ identity makes every commit here today, so it needs a second reviewer identity, 
 check must run on the hosting's own ephemeral runners, restoring no cache a pull request's job can write. And with
 a merge queue, the check must be a ruleset-required workflow pinned outside the pull request's tree.
 
+The fifteenth added three settings: a new push dismisses stale approvals, and the most recent push needs approval
+from someone other than its pusher; the workflow token is read-only by default; and only the hosting makes merge
+commits on `main`, signed with its key. How the check itself is protected is now `M2.7.6`'s design, with a test for
+every construction the reviews found.
+
 Until the named commit exists, no production claim can be made. One new role is yours: a ledger line that fails its
 check, through a defect in the checker for instance, is repaired only by a waiver you rule on, and a waiver can
 only weaken what the catalog says.

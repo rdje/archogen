@@ -184,6 +184,30 @@ specification's claim sentences at their source, and put QEMU's behaviour in the
 | P9 | nit, latent | a stale MTIP at the first enabling | `raised-only-when-due`'s basis covers initialisation's first enabling too (the catalog's §12) |
 | P10 | nit | "no external source" against "no external interrupt"; `one-external-controller`'s vacuous case | aligned, and stated in the record (§2; the catalog's §12) |
 
+**Round 7**, `2026-09-30`: its first launch stopped at once on the account's weekly usage limit, and a relaunch
+ran. P1, P5–P7, P9 and P10 were closed, and P2–P4 and P8 partial. It read QEMU 11.1.1's `cpu.c`, `cpu_helper.c`,
+`sifive_plic.c`, `serial.c` and `goldfish_rtc.c`, and simulated the model: no violation with external interrupts
+first, and 276 of 609 admitted sets over-run `J_s` under QEMU's order composed as if it were the specification's.
+`C_i` and `CS_i` were sound, and `J^release` and `J_s` sound where external interrupts come first once Q2 is fixed.
+There were 11 findings, 1 a defect. The answering context fetched `target/riscv/cpu.c` and
+`target/riscv/tcg/cpu_helper.c` at `v11.1.1` and confirmed the order at lines 880–883 and 368–373, checked that the
+target's device tree offers no `smaia`, and put the order in the ledger.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| P2, P3, P4, P8 | partial | through Q2, Q4, Q9 and Q3 | as those rows |
+| Q1 | gap, live | QEMU 11.1.1 without Smaia takes the timer before external interrupts, so `external-before-timer` is `no` on the emulator and `/1` composed nothing there | `no` admitted with the port fact `one-claim-per-trap`; the premise that the hart takes external interrupts first corrected; QEMU's order in the ledger (§1, §2, Why; the catalog's §12) |
+| Q2 | defect, live | a declared source's device registers were governed by no fact, and QEMU's UART re-raises on an enable write | only the source's service and initialisation access them; initialisation leaves no request pending at the first enabling that no arrival made; `sifive_plic`'s basis restated (§2; the catalog's §12) |
+| Q3 | ambiguity | step 1 read "the earliest release not yet performed" into `timer-event-driven` | stated of `reprograms-only-in-service`, and cited from it (§2, §4) |
+| Q4 | gap, a lost release | an arrival between the trap and the claim merges into the pending request | a PLIC source states `acknowledge-at-entry` `no`, so its no-loss limit is the at-exit one (the catalog's §12) |
+| Q5 | nit | claims had no caller's role; the port's dispatch | writes, claims and releases take the caller's role; the dispatch acts in its service's (§2) |
+| Q6 | nit | a task calling the completion path broke the task fact | the completion path allowed (§2; the catalog's §12) |
+| Q7 | nit | `mscratch` in transitions | allowed there (§2) |
+| Q8 | nit | "in the variant as here" | "outside this composition" (How to apply) |
+| Q9 | ambiguity | the start-up assumption read as holding for the whole run | scoped to firmware's and the boot loader's leftovers; what code does is the facts' (§2) |
+| Q10 | nit | the fault path's masked run in no term | assumed: no fault trap is taken (§2) |
+| Q11 | nit, latent | Sstc's registers | `stimecmp` and `menvcfg.STCE` in the hart's interrupt state; the timer is the one the timer-service record programs (§2) |
+
 ## Why
 
 The record states the composition as it stands, and this file keeps how it got there, as for the catalog record.

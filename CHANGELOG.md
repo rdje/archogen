@@ -5,6 +5,23 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog's fifteenth review and the composition's seventh are answered
+
+`ARCHOGEN-M2-0241` (leaf `M2.7.1`, a fourteenth checkpoint; with `M2.10.1`'s eighth).
+
+- **The composition's seventh review** found that the emulator does not order interrupts as the RISC-V
+  specification says. Without an optional extension, QEMU takes a pending timer interrupt before a pending
+  external one. That was checked in QEMU's own source and is now in the ledger. The design had assumed the
+  specification's order, and would have refused the emulator altogether. It now admits the emulator's order, given
+  a fact about the port that makes the model's formulas hold.
+  - One real gap is closed as well: nothing stopped code from writing a device's registers in a way that raises a
+    request no event caused. Now only the device's own service and start-up code may.
+- **The catalog's fifteenth review** held the catalog's own rules sound again, and once more found holes only in how
+  the check that guards it is protected: four rounds running, each in the same area. So the design now states what
+  that protection must achieve, and the protection itself becomes its own piece of work, `M2.7.6`, with a test for
+  every attack the reviews found. The reviews of the catalog no longer carry it.
+- **Both reviews run again.**
+
 ## archogen — the catalog's fourteenth review is answered
 
 `ARCHOGEN-M2-0240` (leaf `M2.7.1`, a thirteenth checkpoint).

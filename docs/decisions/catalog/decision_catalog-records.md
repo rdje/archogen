@@ -87,27 +87,21 @@ assumed control of the build machine or the hosting.
      - `main` is never force-pushed and never deleted;
      - the required checks are named in those settings, pinned to the CI provider's own app, so a status another
        source posts under the same name does not satisfy them;
-     - **the check runs a checker the pull request cannot change.** A required workflow or ruleset kept outside
-       the pull request builds the checker from the base commit, the one the pull request merges into, with §3's
-       allowlisted environment and an empty `CARGO_HOME`, in a checkout where no file of the merge result is on
-       cargo's directory path. It writes the merge result where only that tree's own tracked configuration is on
-       the path, and reads its catalog, history and files as data. It builds each replayed commit's record
-       packages only under §3's rules, which check every cargo configuration before any cargo command runs and
-       refuse build scripts and procedural macros before anything is built, and it runs none of them. With a merge
-       queue, the workflow is a ruleset-required one pinned outside the pull request's tree;
-     - **the check runs on the hosting's own ephemeral runners**, which no job running pull-request code has used,
-       and it restores no cache that such a job can write;
-     - **the checker's closure is reviewed by code owners other than its author.** The closure is what the check
-       builds from the base to make the checker: the normal and build dependency closure, as `cargo metadata`
-       resolves it there, of the checker's packages, with the root manifest, `Cargo.lock`, `rust-toolchain.toml`,
-       `.cargo/`, `.github/`, `scripts/` and whatever else the check runs. Measured on `2026-09-30`, `xtask`
-       reaches `archogen-api`, `eadl-front` and `eadl-model`, and the catalog crate and `archogen-evidence` join
-       them with `M2.7.3`. The check builds nothing else from the base. Approval comes from an identity other than
-       the author's, and one identity commits every commit here today (§13), so until the director names a second,
-       the premise is unmet (findings §11).
+     - **the check is protected from everything it judges.** No code or file a pull request controls runs in the
+       check, lies on the path of anything the check builds or runs, or reaches the check's credentials, and
+       nothing but the check can post its verdict. The checker is built from the base commit, the one the pull
+       request merges into. Its closure, what the check builds from the base to make it with the files that
+       decide how, is reviewed by code owners other than the author: measured on `2026-09-30`, `xtask` reaches
+       `archogen-api`, `eadl-front` and `eadl-model`, and the catalog crate and `archogen-evidence` join them with
+       `M2.7.3`. One identity commits every commit here today (§13), so until the director names a second, the
+       premise is unmet (findings §11).
 
-     So no pull request's code runs in its own check, and a change to the checker judges only what merges after
-     it.
+     **How the check achieves that is `M2.7.6`'s design**, reviewed on its own and tested adversarially: every
+     construction the catalog's reviews found against it is a test whose program must never run. They are build
+     scripts and cargo configuration in a judged tree, where the base and judged trees sit, a target directory
+     shared with the record builds, where the ownership file lives and what it means, rustup's toolchain file, the
+     workflow's token, stale approvals, a merge queue, and shared runners and caches (rounds 12 to 15). A
+     construction that gets past it is a failure of premise 3, and a defect of `M2.7.6`, not of this record.
 
      The premise holds from a named commit of `main`, the first after those settings were confirmed. The director's
      confirmation names it (findings §11), and the claim tooling holds it as a constant beside the canonical URL
@@ -116,13 +110,13 @@ assumed control of the build machine or the hosting.
      Checked where it is cheap:
      - until that commit exists, a production claim is `not-established`, naming that premise 3 has no named
        commit (§7);
-     - the check computes the checker's closure at the merge result too, after §3's configuration check, and
-       refuses one holding a path that the merge result's `CODEOWNERS` does not assign to its code owners;
      - a production claim is `not-established` when a first-parent commit of `origin/main` after that commit is
-       not a merge commit (§7);
-     - a production claim's tooling is built from a written tree of a first-parent commit of `origin/main` at or
-       after the named commit, never from a working tree, and records that commit. The claim is `not-established`
-       when a first-parent commit after it, up to the commit the claim reads, changed the checker's closure (§7);
+       not a merge commit the hosting made: committed as the hosting and signed with its key, which the claim
+       tooling holds as a constant beside the canonical URL (§7);
+     - a production claim's tooling is built under §3's environment and configuration rule from a written tree of
+       a first-parent commit of `origin/main` at or after the named commit, never from a working tree, and records
+       that commit. The claim is `not-established` when the checker's closure changed along `origin/main`'s
+       first-parent chain between that commit and the `origin/main` commit the claim records (§7);
      - the loader re-applies §5's ledger-time checks at every ledgering commit, so a review that CI failed to check
        is still refused (§5).
 
@@ -288,9 +282,10 @@ it refuses (§12).
 ### 3. Hashes: a normative byte grammar
 
 This section is kept in [`decision_catalog-records-hashes.md`](decision_catalog-records-hashes.md). It moved there
-verbatim when this record neared its size ceiling. It is part of this record, normative and reviewed with it: the
-byte grammar every hash is computed over, what each facet's own and bound hash covers, the package rules and the
-manifest dialect, what the gate builds and lets cargo read, and the worked example that pins them.
+when this record neared its size ceiling, with round 14's T1 and T15 edits and nothing else. It is part of this
+record, normative and reviewed with it: the byte grammar every hash is computed over, what each facet's own and
+bound hash covers, the package rules and the manifest dialect, what the gate builds and lets cargo read, and the
+worked example that pins them.
 
 ### 4. Paths, "tracked", and what reads the files
 
@@ -324,7 +319,7 @@ manifest dialect, what the gate builds and lets cargo read, and the worked examp
     gate sees one parent; `M2.7.4` measures which. Until measured, a catalog merge is made with
     `git merge --no-commit` and then `git commit`, whose `pre-commit` sees both parents, and the gate's verdict from
     `pre-merge-commit` is advisory. Rebase, cherry-pick, `am` and revert make commits without running either hook.
-    For them, as for a bypassed gate, CI's replay decides. A pre-commit hook cannot tell an amend from a new
+    For them, as for a bypassed gate, premise 3's check decides. A pre-commit hook cannot tell an amend from a new
     commit. For an amend, the real parents are
     those of the commit it replaces, so the gate's verdict is advisory: it can pass a commit that its real parents
     make a ledgering commit that fails verification. `M2.7.4` runs the gate again after the commit, against the
@@ -334,7 +329,7 @@ manifest dialect, what the gate builds and lets cargo read, and the worked examp
   or `git ls-tree -r -z`, and each file's bytes from its blob, so line-ending conversion on checkout does not matter.
   The gate's working-tree reads are four, each named where it is made:
   - it compares the repository's own cargo configuration files with the index (§3);
-  - it lists the cargo configuration files on the build's directory path (§3);
+  - it lists the cargo configuration files on each cargo command's directory path (§3);
   - it tests whether a configuration or toolchain file on a package's ancestor path is present but untracked (§3);
   - it lists the untracked files under `catalog/` (below).
   Tests give files in memory.
@@ -597,10 +592,10 @@ facet instead.
        compile. A fact about code must be about the code the image holds, so the closure is a
        subset of what the image compiled, as well as the image's sources being a subset of the image's closure's
        sets;
-     - premise 3 has no named commit yet; a first-parent commit of `origin/main` after it is not a merge commit;
-       or the claim's tooling was not built from a written tree of a first-parent commit of `origin/main` at or
-       after the named commit, or a first-parent commit after that one, up to the commit the claim reads, changed
-       the checker's closure (premise 3).
+     - premise 3 has no named commit yet; a first-parent commit of `origin/main` after it is not a merge commit
+       the hosting made; or the claim's tooling was not built from a written tree of a first-parent commit of
+       `origin/main` at or after the named commit, or the checker's closure changed along `origin/main`'s
+       first-parent chain between that commit and the `origin/main` commit the claim records (premise 3).
 
   As in the runtime variant's admission, the strongest verdict is reported with every reason that reaches it.
   What an analysis does with a value it could not read is the analysis's verdict, not admission's (§12).
@@ -712,9 +707,9 @@ facet instead.
 - **A waiver repairs a review line that fails verification**, which would otherwise stop the catalog loading for
   good (§13). Bless never writes one. It is added by hand on the director's ruling, recorded in the findings
   record, and reaches `main` by a merge commit. Its commit holds the waiver lines and may do two things more, and
-  nothing else under `catalog/`, which `M2.7.4`'s replay checks: move to `experimental` each record that a waived
-  production review leaves short of §6, directly or through §6's third item, and remove the waived reviews' forms
-  from their records. The replay accepts a waiver, as the one line blessing would not
+  nothing else under `catalog/`, which `M2.7.4`'s replay checks: move to `experimental` every production record
+  that the catalog, with the waiver applied, leaves short of §6, whatever the cause, and remove the waived reviews'
+  forms from their records. The replay accepts a waiver, as the one line blessing would not
   write, only when the review line it names is in a parent's lock and fails §5's verification at the commit it
   names, which ledgered that line. At load, a waived line is exempt from every check that ties a line to its form:
   it is not verified, its record need not hold its form, and a form it still holds is not compared with it. It
@@ -915,3 +910,4 @@ the design as it stands, and that one keeps how it got here.
 | 12, the first under the closure rule | 12 | 1 live (R1, a pull request changing the checker that judges it), 1 latent (R3, forms items across rules versions); §3–§9 held | "does not yet meet the closure rule"; nothing else live at defect level once R1 is fixed and R2, R4 and R5 are answered |
 | 13 | 14 | 1 live (S1, the checker built through packages premise 3 did not list); S2 and S3, routes the answers left impossible, fail closed | "does not yet meet the closure rule"; nothing else live at defect level once S1 is fixed, S2 and S3 answered and S4's sentence added |
 | 14 | 15 | none by construction; 2 ambiguities at defect level, live (T1, cargo configuration read before §3's refusals; T15, where the two trees sit) | "does not yet meet the closure rule"; "one short revision from acceptable" |
+| 15 | 14 | none by construction; 3 ambiguities at defect level, live, all in the check's protection (U1, U2, U5); the catalog's mechanics held | "does not meet the closure rule"; the check's mechanism then made `M2.7.6`'s, with premise 3 stating the property |

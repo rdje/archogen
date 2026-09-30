@@ -6,7 +6,8 @@
 - **External sources:** [the Rust toolchain](../../book/src/ledger.md#rust-toolchain) — `rustc`, `cargo` and
   `rustup`, whose version, scope and limits are in the ledger
 - **Owner / source:** leaf `M2.7.1` (`docs/tasks/M2.md`). This is §3 of [[decision_catalog-records]], moved out of it
-  verbatim on `2026-09-30`, in the change that answered its fourteenth review, when that record held 95 522 of the
+  on `2026-09-30`, in the change that answered its fourteenth review, with that review's T1 and T15 edits and
+  nothing else, when that record held 95 522 of the
   98 304 bytes `README-ROUTES` allows a file. It is part of that record: normative, numbered as its §3, and reviewed
   with it. That change's edits to §3 are in the review history. Its worked example is
   [`decision_catalog-records-example.md`](decision_catalog-records-example.md).
@@ -142,13 +143,16 @@ set** and reads the compiler's dependency information:
 - **What it builds from.** The git index, written file by file from each blob's bytes into a directory of its own
   under the repository's `target/`, with `GIT_NO_REPLACE_OBJECTS` set. It is not a checkout, so no filter,
   attribute or line-ending setting of git's can change a byte. Two tracked paths that differ only in ASCII case
-  are refused, since a case-insensitive file system cannot hold both. Each build runs in its package's own
+  are refused, since a case-insensitive file system cannot hold both. So is a tracked path whose last segments
+  equal `.cargo/config`, `.cargo/config.toml`, `rust-toolchain`, `rust-toolchain.toml`, `Cargo.toml`, `Cargo.lock`
+  or `build.rs` in ASCII case but are spelled otherwise, since such a file system would let cargo or rustup read
+  it under the name it expects. Each build runs in its package's own
   directory.
 - **What configuration it lets cargo read.** Cargo reads every `.cargo/config` and `.cargo/config.toml` from the
   build's directory up to the file system's root, and those under `CARGO_HOME`. So before any cargo command runs
   on a tree, `cargo metadata` included, the gate lists every such file on that command's directory path, and holds
   each to the content rules above, and refuses (`catalog-source`), running nothing:
-  - one inside the written index that is not a tracked file this section hashes;
+  - one inside the written index that is not a tracked file held to the content rules above;
   - one outside the written index, except the tracked copies of the tree being judged, whose bytes on disk must
     equal that tree's. `target/.cargo` is outside the written index and is refused, and so is anything above the
     repository.
@@ -160,10 +164,12 @@ set** and reads the compiler's dependency information:
   registry, and the gate's own `CARGO_TARGET_DIR`, and nothing else. A list of variables to clear would miss the
   next one that changes a build. `RUSTUP_TOOLCHAIN` outranks every rustup override, and `rustc -vV` must then name
   the pinned release, or the gate refuses (premise 1).
-- **The pin** is the `channel` of the `rust-toolchain.toml` at the written index's root, and it must be a release
-  number: three decimal numbers, `MAJOR.MINOR.PATCH`, each `0` or without a leading zero. A named channel such as
-  `stable`, `beta` or `nightly`, a dated or suffixed one, or an index with no `rust-toolchain.toml`, is refused.
-  A moving channel would change the compiler under an unchanged hash, and a nightly one admits `#![feature]`.
+- **The pin** is the `channel` of the `rust-toolchain.toml` at the written index's root, which holds only a
+  `[toolchain]` table with the keys `channel`, `components`, `targets` and `profile`, so no `path` toolchain is
+  named. The channel must be a release number: three decimal numbers, `MAJOR.MINOR.PATCH`, each `0` or without a
+  leading zero. A named channel such as `stable`, `beta` or `nightly`, a dated or suffixed one, or an index with no
+  `rust-toolchain.toml`, is refused. A moving channel would change the compiler under an unchanged hash, and a
+  nightly one admits `#![feature]`.
 - **What cargo resolves, before anything is built.** `cargo metadata --offline --locked --format-version 1`, in
   the environment above, must report the root of the written index as its `workspace_root`. It resolves the whole
   workspace, so every member's dependencies must be path ones, a package no record reaches included, dev
@@ -185,10 +191,11 @@ set** and reads the compiler's dependency information:
 - **The build matrix.** The dev and release profiles. An implementation package is built for the host and for
   each target's `RUST_TARGET`, for every target the record names in its contract or costs, where `any` means
   every target under `targets/`. A package
-  that is only in a model's sets runs on the host, and is built for the host alone. There is no feature axis,
+  that is only in a model's sets is host code, and is built for the host alone. There is no feature axis,
   because `/1` refuses features.
 - **Who runs these checks.** The gate, on the commit being made. CI, on every commit it replays that changes
-  anything under `catalog/`, a tracked file under a package directory in any source set, a manifest,
+  anything under `catalog/`, a tracked file under the directory of any package in a source set or a reached set,
+  a manifest,
   `Cargo.lock`, a cargo configuration file, a toolchain file or a target file. Records under `catalog/` decide the
   source sets, targets and costs, so this covers every change to what is built, and a commit made with the gate
   bypassed is built too. A production claim runs them on the
