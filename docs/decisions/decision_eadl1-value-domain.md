@@ -66,7 +66,8 @@ measurement 1 says the project writes 2^32. A memory-mapped base address in the 
 *physical* address space is writable, which is what F-F's original impact claim doubted.
 
 ⭐ **Both base ISA widths are measured, not only the one the emulator target uses.** archogen builds
-`riscv64imac-unknown-none-elf` today (`xtask/src/main.rs`), but `board-first` names no processor yet —
+`riscv64imac-unknown-none-elf` today (`RUST_TARGET` in `targets/riscv-virt-up.env` since `M2.8.3.3`; `xtask/src/main.rs`
+before it), but `board-first` names no processor yet —
 every §3.2 row in `docs/targets/first-target.md` is `unrecorded` — and the first board candidate whose
 documents are actually in hand is a SiFive FE310 family part ([[reference_external-document-source-chipdoc]],
 `REQ-006` fulfilled). Its ISA width is stated in those datasheets and is deliberately **not** restated

@@ -75,6 +75,15 @@ type-checked, boundary-classified `ACCEPT`, and wrong, and nothing in the fronte
 
 ## How to apply
 
+*Amended `2026-09-30`: the four deliverables below are delivered.*
+- *The release was pinned by `M2.8.1`.*
+- *The device-tree fixture was written by `M2.8.2`.*
+- *The description and the agreement test came with `M2.8.3.2` (`decision_target-platform-description.md`).*
+- *The triple and the ISA set moved into the `.env` with `M2.8.3.3`.*
+
+*`TARGET_VERIFIED` flips in `M2.8.3.4`. The text below is the plan as written.*
+
+
 - `M2.8` delivers: the release pinned in `targets/riscv-virt-up.env`; the Rust target triple and ISA
   feature set moved there out of `xtask/src/main.rs`; **`docs/targets/riscv-virt-up.dtb.summary.md`
   written from the measured device tree** — it is named by `DEVICE_TREE_FIXTURE` at line 45 of the

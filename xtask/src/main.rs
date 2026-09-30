@@ -75,6 +75,26 @@ struct Quarantine {
     claim: &'static str,
 }
 
+/// The runtime core's Rust target: a `target-env:<file>:<key>` requirement, resolved from the pinned target's `.env`
+/// when the step runs, so the triple is declared once, there (leaf `M2.8.3.3`).
+const RUST_TARGET_REQUIREMENT: &str = "target-env:targets/riscv-virt-up.env:RUST_TARGET";
+
+/// A step's requirement as the checks below read it: a `target-env:<file>:<key>` form becomes `target:<value>`, the
+/// value read from `<file>` under `root`. Anything else is returned as it is.
+fn resolve_requirement(root: &Path, requirement: &str) -> Result<String, String> {
+    let Some((file, key)) = requirement
+        .strip_prefix("target-env:")
+        .and_then(|rest| rest.split_once(':'))
+    else {
+        return Ok(requirement.to_string());
+    };
+    let text = std::fs::read_to_string(root.join(file)).map_err(|e| format!("{file}: {e}"))?;
+    target::env(&text)
+        .get(key)
+        .map(|value| format!("target:{value}"))
+        .ok_or_else(|| format!("{file} declares no {key}"))
+}
+
 /// Every quarantine in the repository, so "what is quarantined right now?" has one answer.
 const QUARANTINES: &[Quarantine] = &[Quarantine {
     step: "emulator",
@@ -304,20 +324,14 @@ const TIERS: &[Tier] = &[
                 name: "no-std-build",
                 proves: "the runtime core compiles for a bare-metal target (§14.3's \"compile targets\")",
                 action: Action::Run {
-                    program: "cargo",
-                    args: &[
-                        "build",
-                        "--quiet",
-                        "-p",
-                        "rt-core",
-                        "--target",
-                        "riscv64imac-unknown-none-elf",
-                    ],
-                    requires: Some("target:riscv64imac-unknown-none-elf"),
+                    // The triple is the pinned target's, declared once in its `.env` (leaf `M2.8.3.3`).
+                    program: "scripts/no_std_build.sh",
+                    args: &[],
+                    requires: Some(RUST_TARGET_REQUIREMENT),
                     matters: "§3.1 fixes the runtime as a \"Rust no_std core\", and `#![no_std]` \
                               being active in a host build is evidence that it *can* be, not that \
-                              it *does* build for a target. `rustup target add \
-                              riscv64imac-unknown-none-elf`",
+                              it *does* build for a target. `rustup target add` the `RUST_TARGET` of \
+                              `targets/riscv-virt-up.env`",
                 },
             },
             Step {
@@ -514,7 +528,18 @@ fn run_step(step: &Step, root: &Path, provisioned: bool) -> Outcome {
             requires,
             matters,
         } => {
-            if let Some(tool) = requires {
+            if let Some(requirement) = requires {
+                let tool = match resolve_requirement(root, requirement) {
+                    Ok(tool) => tool,
+                    Err(reason) => {
+                        println!(
+                            "  ❌ {:<18} FAILED — its requirement cannot be read: {reason}",
+                            step.name
+                        );
+                        return Outcome::Failed;
+                    }
+                };
+                let tool = tool.as_str();
                 if !on_path(tool) {
                     // A rustup target is not an executable, and telling a reader it is "not on
                     // PATH" sends them to fix the wrong thing.
@@ -1165,6 +1190,11 @@ mod tests {
                         })
                     } else if let Some(triple) = tool.strip_prefix("target:") {
                         !triple.is_empty() && !triple.contains(':')
+                    } else if let Some(rest) = tool.strip_prefix("target-env:") {
+                        // `target-env:<file>:<key>`, resolved from the file when the step runs (leaf `M2.8.3.3`).
+                        rest.split_once(':').is_some_and(|(file, key)| {
+                            !file.is_empty() && !key.is_empty() && !key.contains(':')
+                        })
                     } else {
                         !tool.is_empty() && !tool.contains(':') && !tool.contains('/')
                     };
@@ -1176,5 +1206,80 @@ mod tests {
                 }
             }
         }
+    }
+}
+
+/// The runtime core's Rust target is declared once, in the pinned target's `.env` (leaf `M2.8.3.3`).
+#[cfg(test)]
+mod rust_target {
+    use super::{repo_root, resolve_requirement, target, RUST_TARGET_REQUIREMENT};
+
+    fn declared() -> std::collections::BTreeMap<String, String> {
+        target::env(
+            &std::fs::read_to_string(repo_root().join("targets/riscv-virt-up.env"))
+                .expect("the .env"),
+        )
+    }
+
+    #[test]
+    fn the_step_s_requirement_is_the_env_s_triple() {
+        let env = declared();
+        assert_eq!(
+            resolve_requirement(&repo_root(), RUST_TARGET_REQUIREMENT),
+            Ok(format!("target:{}", env["RUST_TARGET"]))
+        );
+    }
+
+    #[test]
+    fn the_isa_feature_set_is_the_triple_s_own() {
+        // The triple's architecture part names the base and the extensions the ISA key does; the two keys are one fact
+        // written twice for two readers, so they are held together.
+        let env = declared();
+        let arch = env["RUST_TARGET"].split('-').next().expect("a triple");
+        let extensions = arch
+            .strip_prefix("riscv64")
+            .expect("a 64-bit RISC-V triple");
+        assert_eq!(env["RUST_TARGET_ISA"], format!("rv64{extensions}"));
+    }
+
+    #[test]
+    fn the_toolchain_file_installs_the_triple_and_nothing_else_declares_it() {
+        let env = declared();
+        let triple = &env["RUST_TARGET"];
+        let toolchain = std::fs::read_to_string(repo_root().join("rust-toolchain.toml"))
+            .expect("the toolchain file");
+        assert!(
+            toolchain.contains(&format!("\"{triple}\"")),
+            "rust-toolchain.toml does not install {triple}"
+        );
+        // No second declaration in the runner. Built at run time, so this file does not contain it either.
+        let needle = format!("riscv64{}", "imac-unknown-none-elf");
+        for file in [
+            "xtask/src/main.rs",
+            "xtask/src/target.rs",
+            "scripts/no_std_build.sh",
+        ] {
+            let text = std::fs::read_to_string(repo_root().join(file)).expect(file);
+            assert!(
+                !text.contains(&needle),
+                "{file} declares the triple again; read RUST_TARGET instead"
+            );
+        }
+    }
+
+    #[test]
+    fn a_requirement_whose_key_is_missing_cannot_be_read() {
+        let dir = repo_root().join("target/doctrine_scratch/rust_target");
+        std::fs::create_dir_all(&dir).expect("scratch");
+        std::fs::write(dir.join("x.env"), "OTHER=1\n").expect("written");
+        let resolved = resolve_requirement(
+            &repo_root(),
+            "target-env:target/doctrine_scratch/rust_target/x.env:RUST_TARGET",
+        );
+        assert_eq!(
+            resolved,
+            Err("target/doctrine_scratch/rust_target/x.env declares no RUST_TARGET".into())
+        );
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

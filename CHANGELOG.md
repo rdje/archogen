@@ -4,6 +4,15 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the board's compiler target is written down where the board is
+
+`ARCHOGEN-M2-0192` (leaf `M2.8.3.3`).
+
+- The Rust target the runtime is built for, and the instruction-set extensions it assumes, were written only
+  inside the verification tool. They now sit in the target's own settings file, the one place a reader looks, and
+  the build step reads them from there.
+- Tests make sure nothing else declares them again, and that the compiler toolchain file installs that target.
+
 ## archogen — the emulated board is described in eADL, and matches what the emulator reports
 
 `ARCHOGEN-M2-0190` (leaf `M2.8.3.2`).

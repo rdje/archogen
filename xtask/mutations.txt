@@ -646,3 +646,14 @@ from
 to
             Some((base, _)) if base == r.base => {}
 end
+
+mutation rust-target-not-read-from-the-env
+file xtask/src/main.rs
+test -p xtask rust_target
+expect killed
+why M2.8.3.3: the no-std-build step's target comes from the pinned target's .env; a resolver that answered its own triple would build for a target nobody pinned, and the tier would still say "compiles for a bare-metal target".
+from
+            .map(|value| format!("target:{value}"))
+to
+            .map(|_| "target:riscv64gc-unknown-none-elf".to_string())
+end
