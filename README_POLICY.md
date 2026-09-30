@@ -35,10 +35,10 @@ leaf. "Overflows to" is where that destination's own guard sends what does not f
 | Destination | Route | Owner | Lifecycle | Files | Lines | Bytes | Longest line | Total bytes | Overflows to |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `AGENTS.md` | navigation | `PROGRAM` | maintained_reference | — | 24 | 2048 | 200 | — | — |
-| `CHANGELOG.md` | navigation + overflow | `PROGRAM.31` | rolling_ledger, proposed | — | debt: `PROGRAM.31` | debt: `PROGRAM.31` | 256 | — | — |
+| `CHANGELOG.md` | navigation + overflow | `PROGRAM.31` | rolling_ledger | — | HISTORY-LEDGERS | HISTORY-LEDGERS | 256 | — | `docs/history/` |
 | `CLAUDE.md` | navigation | `PROGRAM` | maintained_reference | — | 90 | 6144 | 200 | — | — |
 | `COMMIT.md` | navigation | `PROGRAM` | maintained_reference | — | 160 | 9216 | 200 | — | — |
-| `DEV_NOTES.md` | navigation | `PROGRAM.31` | rolling_ledger, proposed | — | debt: `PROGRAM.31` | debt: `PROGRAM.31` | 200 | — | — |
+| `DEV_NOTES.md` | navigation | `PROGRAM.31` | rolling_ledger | — | HISTORY-LEDGERS | HISTORY-LEDGERS | 200 | — | `docs/history/` |
 | `DOCTRINE_ENFORCEMENT.md` | navigation | `PROGRAM` | maintained_reference | — | 140 | 36864 | 3072 | — | — |
 | `LIVE_DOCUMENT_SIZE_CONTAINMENT.md` | navigation + overflow | `PROGRAM.17` | maintained_reference | — | 480 | 36864 | 512 | — | — |
 | `LIVE_STATUS.md` | navigation | `PROGRAM.17.2` | bounded_snapshot | — | LIVE-SNAPSHOTS | LIVE-SNAPSHOTS | LIVE-SNAPSHOTS | — | `CHANGELOG.md`, `docs/tasks/` |
@@ -50,6 +50,7 @@ leaf. "Overflows to" is where that destination's own guard sends what does not f
 | `VISIBILITY.md` | navigation | `PROGRAM` | maintained_reference | — | 90 | 5120 | 200 | — | — |
 | `docs/TASK_TREE.md` | navigation + overflow | `PROGRAM.17.2` | bounded_snapshot | — | LIVE-SNAPSHOTS | LIVE-SNAPSHOTS | LIVE-SNAPSHOTS | — | `CHANGELOG.md`, `docs/tasks/` |
 | `docs/book/` | navigation + overflow | `PROGRAM` | maintained_reference | 32 | 750 | 49152 | 1024 | 294912 | — |
+| `docs/history/` | overflow | `PROGRAM.31` | archive_terminal | HISTORY-LEDGERS | 1200 | 131072 | 256 | HISTORY-LEDGERS | — |
 | `docs/decisions/` | navigation + overflow | `PROGRAM` | partitioned_canonical | 32 | 1200 | 98304 | 1536 | 327680 | — |
 | `docs/tasks/` | overflow | `PROGRAM.32` | partitioned_canonical | 20 | debt: `PROGRAM.32` | debt: `PROGRAM.32` | debt: `PROGRAM.32` | debt: `PROGRAM.32` | — |
 <!-- README-POLICY-LOCAL-ADOPTION:END -->

@@ -3590,20 +3590,69 @@ mdBook that is the director's window into the project.
     `1.29.1` — outside the repository, and not asked for.
 
 - ID: `PROGRAM.31`
-  Status: `blocked`
-  Goal: `CHANGELOG.md` and `DEV_NOTES.md` as rolling ledgers — each finished month sealed byte for byte into
-  `docs/history/<ledger>/<YYYY-MM>.md` with its digest, the live file keeping the current month and a bounded index.
-  Blocked on: the director's ruling on §8 of `docs/decisions/decision_findings-for-director-review.md` (option B).
-  Acceptance (if accepted): the doctrine's atomic protocol — boundary, digests, a check proving sealed segments
-  unchanged and the index complete; no entry lost (`cmp` of the concatenation against the pre-rotation file).
-  Verification: `pending`
-  Commit: `pending`
+  Status: `done`
+  Goal: `CHANGELOG.md` and `DEV_NOTES.md` as rolling ledgers, as ruled on `2026-09-30` (§8 of
+  `docs/decisions/decision_findings-for-director-review.md`, by delegation): whenever a live ledger holds twice its
+  window of entries, its oldest window-full is sealed byte for byte into the next numbered segment under
+  `docs/history/<ledger>/`, listed in `docs/history/INDEX.md` with its range, counts and digest. The window is 20
+  entries for the changelog and 10 for the development notes. The project template's own entries, which it had
+  shipped into both files, are removed, on the director's word that archogen keeps no reference to that template.
+  Acceptance: the doctrine's atomic protocol — a deterministic boundary, byte-exact segments, recorded counts and
+  digests, and a reconstruction proved byte for byte (`cmp` of the live entries followed by the segments, newest
+  first, against the pre-rotation file); a gate, with RED arms, proving each segment unchanged, the index complete,
+  append-only against `HEAD` and in order, and the live window bounded; the seal done by a tool, not by hand; the
+  ceilings `README-ROUTES` held as debt replaced by what the gate enforces; nothing lost.
+  Verification: see the checklist — two ledgers sealed and proved byte for byte twice over, an ordering defect found
+  and corrected on the way, 13 RED arms, every gate green.
+  Commit: `ARCHOGEN-PROGRAM-0207 (leaf PROGRAM.31)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — nothing bounded either history: `wc -c CHANGELOG.md DEV_NOTES.md` → 327 233 and
+    135 158 bytes, 17 days after the first commit; `git log --format=%ad --date=short | uniq -c` → up to 75 commits
+    in a day. `README-ROUTES` carried both as `debt: PROGRAM.31`.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: both files are `rolling_ledger`s in `LIVE_DOCUMENT_SIZE_CONTAINMENT.md`'s
+    inventory with no containment, waiting on §8's ruling. WHY a count boundary: the same `git log` census shows the
+    whole history in one month, so a monthly boundary seals nothing. And WHY the first transition was undone and
+    redone: the gate's first run over the sealed result refused (`bash scripts/check_history_ledgers.sh --seal` → rc=1,
+    `dev-notes's dates rise somewhere`). An `awk` over the headings found `2026-09-13` below `2026-09-04` at line
+    1287, and `git log -S"a template's trial must include the first commit" -- DEV_NOTES.md` → `32e6b14 Initial
+    commit`: the project template's two notes and its header paragraph had stayed mid-file, with archogen's notes
+    added above and below them. So the defect was in the ledger, not the seal. The director then ruled it template
+    residue, a defect since fixed in the template, and archogen free of any reference to it: that block, and the
+    template's release notes at the end of the changelog, were removed rather than sealed.
+  - [x] **FIX** — `scripts/check_history_ledgers.sh`: `--seal` (rollover with its own reconstruction proof), the gate's six
+    legs, and 14 RED arms; named `check_*` so the spine harness's driver arm stubs it (its first name,
+    `history_ledgers.sh`, failed `bash scripts/run_self_tests.sh` with rc=1: `the project driver: every gate passing
+    exits 0 — expected exit 0, got 1`); `HISTORY-LEDGERS` registered; `docs/history/INDEX.md` and the segments;
+    `docs/decisions/decision_history-ledgers.md`; both live headers name the index.
+  - [x] **ADDRESSED (verified)** — `bash scripts/check_history_ledgers.sh --seal` → `CHANGELOG.md — sealed 0007 … 0001 and
+    kept 20 entries; the reconstruction is byte for byte`, `DEV_NOTES.md — sealed 0004 … 0001 and kept 19 entries`,
+    rc=0. An independent rebuild in Python, the live entries then the segments from the highest down, against the
+    files saved before the seal with the template's lines cut at their separator: `live + segments == every
+    archogen entry before the seal: True` for both, the lines removed being exactly the template's (161 in the
+    changelog, 20 in the development notes, the moved block included). The move of that block to the end, before
+    its removal, was proved the same way: `block carried verbatim: True`, `the rest in order, unchanged: True`.
+    `wc -c` after: `CHANGELOG.md` 21 200, `DEV_NOTES.md` 42 240. `--self-test` → `14 pass / 0 fail (14 arms)`: a
+    ledger due for rollover, the seal and its proof, an idempotent second seal, a byte added to a segment, a
+    segment without a row, a committed row changed, entries out of order, a note whose date rises, a header
+    without the index, and the next rollover in sequence.
+  - [x] **NO REGRESSION** — `bash scripts/check_readme_routes.sh` → `19 destination(s) governed; recorded as debt,
+    owned by: PROGRAM.32`, the two ledgers moved from debt to `HISTORY-LEDGERS` and `docs/history/` registered as
+    an archive; `bash scripts/run_self_tests.sh` → rc=0, `self-tests: OK — 34 self-test(s) passed`, the new gate's
+    14 arms and the spine harness's driver arms among them; `check_stated_order.sh`, `check_book_anchors.sh`,
+    `check_figure_register.sh`, `check_table_arity.sh` and `check_memory_architecture.sh` → OK; the knowledge map
+    regenerated for the new decision record; the doctrine gate on commit.
+  - [x] **LOCKSTEP** — the findings record's §8 ruling; the decisions index; `DOCTRINE_ENFORCEMENT.md`, `TOOLBOX.md`,
+    `COMMIT.md`; the containment inventory; `README_POLICY.md`'s routes; the book's verification chapter; this
+    leaf, `PROGRAM.32`, the frontier and both logs; the snapshots; `CHANGELOG.md`.
 
 - ID: `PROGRAM.32`
-  Status: `blocked`
+  Status: `pending`
   Goal: seal closed leaves out of the task trees — each `done` leaf's body moved byte for byte to a sealed per-subtree
   file with its digest, the tree keeping one line per closed leaf with its commit and a link; `M1` and `PROGRAM` first.
-  Blocked on: the director's ruling on §8 of `docs/decisions/decision_findings-for-director-review.md` (option C).
+  Unblocked `2026-09-30` by the ruling on §8 of `docs/decisions/decision_findings-for-director-review.md` (option C),
+  which follows `PROGRAM.31`.
   Acceptance (if accepted): `TASK-ACCEPTANCE` and every gate that reads a leaf still finds it (sealed text included);
   a check proving sealed bodies unchanged; the tree's live graph complete; no line lost.
   Verification: `pending`
@@ -3806,10 +3855,9 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
-| 2 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
-| 3 | `PROGRAM.31` | `blocked` | on the director's ruling on the findings record's §8 — the changelog and development notes as rolling ledgers |
-| 4 | `PROGRAM.32` | `blocked` | on the same ruling — closed leaves sealed out of the task trees |
+| 1 | `PROGRAM.32` | `pending` | unblocked by the same ruling: closed leaves sealed out of the task trees, `M1` and `PROGRAM` first |
+| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 3 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
@@ -3945,6 +3993,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.19` (fourth run) | the trigger off the record's commit timestamp; a full inventory; each scratch name censused against the tracked tree and its leaf's status read; a residue census; the provisioner, the focused tier, the whole suite and the gate, cold | 6.3 GB → 4.1 GB; ten of ten paths `gone`; both CI tools `already in place`; `passed — 3 passed`; 742 passed / 0 failed over 62 suites; all green — rows added by `ARCHOGEN-PROGRAM-0197`, since `0196` omitted them |
 | `2026-09-30` | `PROGRAM.35.1` | the body `cmp`'d and digested against fsmgen's; the page reviewed against the contract; 19 links resolved; `LIVE-SNAPSHOTS` one below the survivor on each axis, at equality and at the ceilings, on the real tree | body identical, `77a1e934…`; one duplication removed; 84 / 4 173 / 125 → ceilings 110 / 6 144 / 200; rc 1, 1, 0, 0 |
 | `2026-09-30` | `PROGRAM.35.2` | the derived population on the real tree; six mutations of the real registry; the gate's 16 arms; every self-test bare; scratch locality; the project doctrines | 18 destinations governed, two debt owners; each mutation refused with one named breach, and restored green; 16 of 16; 32 self-tests passed; OK; OK |
+| `2026-09-30` | `PROGRAM.31` | the seal with its own proof; an independent rebuild in Python against the files saved before; the ordering defect traced to the initial commit and its move proved; 13 RED arms; the routes and the other gates | both ledgers byte for byte, twice; the template block carried verbatim; 13 of 13; 19 destinations, debt only `PROGRAM.32` |
 
 ## Commit Log
 
@@ -4005,6 +4054,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.19` | `ARCHOGEN-PROGRAM-0196 (leaf PROGRAM.19, fourth run)` | **≈2.2 GB released** — the QEMU build tree the provisioner leaves after installing, the CI rehearsal's checkout, the doctrine scratch and closed leaves' probe files; every deletion looked up first, one active leaf's scratch kept |
 | `PROGRAM.35.1` | `ARCHOGEN-PROGRAM-0197 (leaf PROGRAM.35.1)` | **fsmgen's README policy adopted, and the caps derived from the page** — 110 lines and 6 144 bytes held by `LIVE-SNAPSHOTS`, where the template's 300 / 16 384 had never been fitted |
 | `PROGRAM.35.2` → `PROGRAM.35` | `ARCHOGEN-PROGRAM-0198 (leaf PROGRAM.35.2)` | **every route out of the README registered and bounded, or its debt owned** — `README-ROUTES` derives the routes from the page's links and its guards' actual hints; `PROGRAM.35` closed |
+| `PROGRAM.31` | `ARCHOGEN-PROGRAM-0207 (leaf PROGRAM.31)` | **the changelog and the development notes are rolling ledgers** — sealed by entry count into digest-checked segments under `docs/history/`, as ruled on §8 by delegation |
 
 ## Changelog
 

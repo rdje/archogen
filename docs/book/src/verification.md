@@ -560,6 +560,22 @@ $ bash scripts/check_live_snapshots.sh              # the gate
 $ bash scripts/check_live_snapshots.sh --self-test  # its RED arms, on scratch repositories
 ```
 
+## The histories are sealed as they grow
+
+`CHANGELOG.md` and `DEV_NOTES.md` gain an entry with nearly every commit. They are rolling ledgers: once one holds
+twice its window of entries, its oldest window is moved, byte for byte, into the next numbered file under
+`docs/history/`, and `docs/history/INDEX.md` lists each such file with its range, its size and a fingerprint.
+Nothing is rewritten. Reading the live file and then the sealed files, newest first, gives the whole history
+exactly as it was written (`docs/decisions/decision_history-ledgers.md`). `HISTORY-LEDGERS` checks on every commit
+that no sealed file has changed, that the index lists every one and has lost no line, that the order runs on
+unbroken, and that neither live file has outgrown its window.
+
+```console
+$ bash scripts/check_history_ledgers.sh              # the gate
+$ bash scripts/check_history_ledgers.sh --seal       # a rollover the gate asks for, with its proof
+$ bash scripts/check_history_ledgers.sh --self-test  # its RED arms, on scratch repositories
+```
+
 ## Where the landing page sends things
 
 A size limit on `README.md` does not remove the need to write things down; it moves it somewhere else. So

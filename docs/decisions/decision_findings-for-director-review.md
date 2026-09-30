@@ -241,6 +241,18 @@ browse, which is why neither has been done. **The decision needed:** accept, ame
 period, or trees kept whole), or keep (A). The work is filed as `PROGRAM.31` (B) and `PROGRAM.32` (C), both
 `blocked` on this ruling.
 
+**Ruled `2026-09-30`, by delegation.** The director asked the engineer to decide and act, to the state of the art
+and at sign-off quality. The decision, and why it departs from the recommendation above:
+
+- **(B), with an entry-count boundary instead of a monthly one.** Measured that day, the whole history is one
+  month, at up to 75 commits a day. A monthly window would seal nothing now and bound nothing later. So the oldest
+  block of 20 changelog entries, or 10 development notes, is sealed, byte for byte, into the next numbered segment
+  under `docs/history/` whenever the live file reaches twice that. An index lists each segment with its range,
+  counts and digest, and a gate proves segments unchanged, the index complete and append-only, the order continuous
+  and the window bounded. `PROGRAM.31` does it, and `docs/decisions/decision_history-ledgers.md` records it.
+- **(C) as recommended**, after (B): closed leaves sealed out of the task trees, `M1` and `PROGRAM` first
+  (`PROGRAM.32`).
+
 ## 9. "Every programmatic response carries §5.5's verdict" — how the engine API reads it (`2026-09-30`)
 
 Your ruling of `2026-09-28` says every programmatic response carries §5.5's verdict. `ROADMAP.md` §10.4 says

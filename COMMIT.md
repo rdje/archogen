@@ -33,7 +33,9 @@ apply to code changes.
   `Mostly Done`, `In Progress`, `Not Started`. Review before every commit; summarize the
   snapshot in the completion message and state whether the task changed it.
 - `MEMORY.md` — the bounded layer-A resume pointer. Overwrite the "current state" block.
-- `CHANGELOG.md` — changelog-style summary of completed work + validation.
+- `CHANGELOG.md` — changelog-style summary of completed work + validation. A rolling ledger: when `HISTORY-LEDGERS`
+  reports a rollover required, run `bash scripts/check_history_ledgers.sh --seal` in the same commit
+  (`docs/decisions/decision_history-ledgers.md`); `DEV_NOTES.md` likewise.
 - `DEV_NOTES.md` — detailed technical notes: root cause, implementation, validation.
 - `docs/decisions/` — add/supersede a decision record (+ its INDEX entry) when a durable
   cross-cutting fact/decision was established.

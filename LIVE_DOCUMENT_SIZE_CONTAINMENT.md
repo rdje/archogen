@@ -24,8 +24,9 @@ Sizes are lines / bytes / longest line in bytes.
 | `LIVE_STATUS.md` — the status board | `bounded_snapshot` | 21 / **42 110** / **30 256** | none | a closure note is appended to a tree's row for each closed leaf; one row holds 30 256 bytes | was **transition debt at adoption**; done: current state only, bounded on three axes (`PROGRAM.17.2`) |
 | `docs/TASK_TREE.md` — the tree index | `bounded_snapshot` | 73 / 7 199 / 1 158 | none | a "Closed" list inside each row grows per closed leaf | done: current state only, bounded (`PROGRAM.17.2`) |
 | `README.md` — the landing page | `bounded_snapshot` | 82 / 4 062 / 125 | ≤ 110 lines, ≤ 6 144 bytes and ≤ 200 bytes per line, by `LIVE-SNAPSHOTS`; `README-STABILITY`'s template 300 / 16 384 is a backstop | none observed | retain; longest line bounded (`PROGRAM.17.2`); lines and bytes derived from the reviewed survivor (`PROGRAM.35.1`, `README_POLICY.md`) |
-| `CHANGELOG.md` | `rolling_ledger`, proposed | 3 428 / 277 796 / 185 | none | one entry per commit: 1 464 lines when `PROGRAM.17` was filed | **grow deliberately until the director rules** (`PROGRAM.17.3`); it is in no bootstrap read |
-| `DEV_NOTES.md` | `rolling_ledger`, proposed | 1 602 / 135 158 / 132 | none | one entry per lesson, each promoted to `docs/knowledge/` (`LESSON-PROMOTION`) | as for the changelog (`PROGRAM.17.3`) |
+| `CHANGELOG.md` | `rolling_ledger` | 3 428 / 277 796 / 185 | 20 to 39 entries, by `HISTORY-LEDGERS` | one entry per commit: 1 464 lines when `PROGRAM.17` was filed | sealed by entry count into `docs/history/changelog/` (`PROGRAM.31`, ruled on §8 by delegation); 21 200 bytes live after the first seal |
+| `DEV_NOTES.md` | `rolling_ledger` | 1 602 / 135 158 / 132 | 10 to 19 notes, by `HISTORY-LEDGERS` | one entry per lesson, each promoted to `docs/knowledge/` (`LESSON-PROMOTION`) | sealed into `docs/history/dev-notes/` as for the changelog (`PROGRAM.31`) |
+| `docs/history/` — the sealed segments and their index | `archive_terminal` | 12 files / 390 301 bytes at the first seal | every segment against its digest, the index append-only, by `HISTORY-LEDGERS` | one segment per 20 changelog entries or 10 notes | retain: immutable, indexed, read as files, in no bootstrap read (`PROGRAM.31`) |
 | `docs/tasks/*.md` — 13 task trees | `partitioned_canonical`, one tree per file, the largest monolithic | 12 785 / 1 111 924 in aggregate; `M1.md` 6 928 / 658 307 / 2 524 | none | every leaf, checklist and log row | partitioning a tree changes what is browsed: put to the director (`PROGRAM.17.3`) |
 | `ROADMAP.md` | `maintained_reference`, owned by the director | 953 / 104 333 / 623 | none; it changes with the program's scope | scope | retain; not archogen's to restructure |
 | `KNOWLEDGE_MAP.md` | `generated_projection` | 178 / 14 491 / 113 | freshness, by `KNOWLEDGE-MAP` | one card per promoted lesson | retain; it is generated, never edited |
@@ -53,10 +54,11 @@ role grew; editing this table alone does not authorize it.
 
 Two decisions are recorded rather than left to drift:
 
-- **`CHANGELOG.md` and `DEV_NOTES.md` grow deliberately for now.** The core invariant forbids a surface that is
-  both an indefinitely growing history and a mandatory current read. Neither is a mandatory read: neither is in
-  `CLAUDE.md`'s bootstrap list, and a resuming session reads `MEMORY.md`. Rotating either into sealed segments
-  would change what the director browses, so that choice is proposed in `PROGRAM.17.3` and not made here.
+- **`CHANGELOG.md` and `DEV_NOTES.md` are rolling ledgers** (`PROGRAM.31`, `2026-09-30`). They first grew
+  deliberately while the choice waited on the director, since rotating them changes what the director browses. The
+  director delegated the ruling, and the boundary chosen is a count of entries, not a month, because the whole
+  history was one month (`docs/decisions/decision_history-ledgers.md`). The task trees' closed leaves follow in
+  `PROGRAM.32`.
 - **The three snapshots were transition debt, now paid** (`PROGRAM.17.2`, `2026-09-30`). Each had grown a
   chronology duplicating the canonical record, the tree's Commit Log and the changelog. Before anything was
   removed, every leaf the snapshots mentioned (60, 43 and 39 distinct ids) was checked to be declared by its
