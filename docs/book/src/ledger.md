@@ -228,7 +228,7 @@ the day a chapter or a decision relies on it, as Miri did.
 | Pinned at | not pinned — read on `2026-09-30`; no build or check reads it |
 | Retrieved | `2026-09-30` |
 | Hash | the file's sha256 above; no figure is adopted |
-| Scope | the sentences `decision_runtime-composite-inputs.md`'s `no-empty-claim` rests on (`M2.10.1`): interrupt notifications "might take some time to be received at the targets"; "The value in an interrupt notification is only guaranteed to hold an EIP value that was valid at some point in the past"; and a claim returns "zero if there is no pending interrupt" |
+| Scope | the sentences `decision_runtime-composite-inputs.md`'s `no-empty-claim` rests on (`M2.10.1`): interrupt notifications "might take some time to be received at the targets"; "The value in an interrupt notification is only guaranteed to hold an EIP value that was valid at some point in the past"; and a claim returns "zero if there is no pending interrupt". And the sentence `one-request-per-arrival.<source>` rests on (round 5 of the same review): on a completion message, "if the interrupt is level-triggered and the interrupt is still asserted, a new interrupt request will be forwarded to the PLIC core" |
 | Known limitations | a specification says what a conforming controller does, and says nothing of how long a notification takes. Whether a platform's port waits for the notification to reflect its last claim is the fact a catalog record states and a review checks |
 | Revalidation trigger | a newer ratified release of the PLIC, or a target with another external interrupt controller |
 | Named as | `PLIC specification` |

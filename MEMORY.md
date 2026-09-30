@@ -15,9 +15,9 @@
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M2` → frontier `M2.7.1`. `PROGRAM`'s frontier is `PROGRAM.41`, `API`'s `API.6`; `M1`'s only
   open leaf, `M1.29.4`, is blocked on the director. Every other tree's frontier head is in `docs/TASK_TREE.md`.
-- **Next action:** run **`M2.7.1`**'s round 12 and **`M2.10.1`**'s round 5, each in a new read-only context, over
-  `docs/decisions/catalog/`. `M2.7.1` closes on a round with no defect live for the `/1` slice (its closure rule).
-  Then `M2.7.3`–`M2.7.5`, `M2.11`, then `API.6`.
+- **Next action:** run **`M2.7.1`**'s round 13 and **`M2.10.1`**'s round 6, each in a new read-only context, over
+  `docs/decisions/catalog/`. Each closes on a round with no defect live for the `/1` slice (its closure rule).
+  `PROGRAM.41` alongside: `docs/decisions/` is near its trigger. Then `M2.7.3`–`M2.7.5`, `M2.11`, then `API.6`.
 - **In flight:** branch **`wip/m2.9`** (`758cbcd`) is a checkpoint, not a finished leaf — `M2.9` records it as
   not compiling (`crates/rt-core/tests/differential.rs` unadapted).
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of

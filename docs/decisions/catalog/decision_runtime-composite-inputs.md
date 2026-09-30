@@ -66,28 +66,50 @@ composition covers: `unsupported-profile`, naming it. The one exception is `exte
 value the model covers: the timer is then taken before every source (§1). A fact that cannot be read leaves
 undeclared the composites it gates, `analysis-inconclusive`, naming it:
 - the timer's facts gate `J^release` of every timer-released task, and every `J` behind the timer;
-- the interrupt and hardware facts gate every `J`;
+- the interrupt and hardware facts, each source's `one-request-per-arrival.<source>` among them, gate every `J`;
 - `pending-taken-after-unmask`, `releases-never-latched`, `primitives-out-of-line` and every
   `runtime-discipline.<id>` gate every composite;
 - `leaves-interrupt-hardware-alone` is a task fact, so its absence is the variant's own condition 9.
 
 | Fact | Kind | Says | Why the composition needs it |
 | --- | --- | --- | --- |
-| `reprograms-only-in-service` | code | the compare is written only by the timer service, after its due check, and during initialisation, before the first unmask of the running system, and the counter is never written after initialisation | a late write then lands inside a service, and a counter moved back would delay every release |
-| `releases-after-initialisation` | code | every nominal release is at or after the end of initialisation, the first unmask of the running system | initialisation's masked run, and its compare write, are then over before any release they could delay |
+| `reprograms-only-in-service` | code | the compare is written only by the timer service, after its due check, and by this record's code during initialisation, before the first enabling of interrupts. The timer facts and `compare-rounding` hold of every compare write, initialisation's first included. The counter is never written after initialisation | a late write then lands inside a service, and a counter moved back would delay every release. A first compare value rounded otherwise, or set for another instant, would delay the first release or raise a service that no release pays for |
+| `releases-after-initialisation` | code | every nominal release is at or after the end of initialisation, the first enabling of interrupts | initialisation's masked run, and its compare write, are then over before any release they could delay |
 | `pending-taken-after-unmask` | code, with the hardware's half established in its basis | a pending interrupt is taken before the instruction that follows any unmask, a task's included | two masked runs separated by an unmask stay separate. RISC-V's privileged specification requires interrupt conditions to be evaluated immediately after an explicit write to `mstatus` or `mie` |
 | `releases-never-latched` | code | no service runs while the runtime's mask depth is raised: the port masks the hardware before raising it, and lowers it before unmasking the hardware. A completion entered with the depth raised lowers it before the transition that follows unmasks, and that work is inside `completion`. `rt-core`'s `complete` leaves the depth as it is, so this is the port's to do and the runtime record's review to check | `rt-core` latches a release that arrives while the depth is raised and delivers it on `unmask`. On the target that path is then never taken, so no `unmask` makes a task ready and no part has to charge the decision and switch that would follow |
 | `primitives-out-of-line` | code | each primitive is compiled out of line, and its masking and unmasking instructions are compiler barriers | a call's boundaries, and a run's, are then instructions. The compiler cannot move the task's own code into a primitive or across a masking instruction |
 | `external-before-timer` | hardware | whether the hardware takes a pending machine external interrupt before a pending machine timer interrupt, however the controller is configured | the timer's place in the order is the hardware's, not the plan's. RISC-V takes machine external interrupts before machine timer interrupts |
 | `external.<source>` | hardware, one per source, from the record that supplies `service.<source>` | the source reaches the hart as a machine external interrupt, through the controller's context for the hart's machine mode, whose priorities the plan sets. A source routed through a supervisor context is taken below the machine timer, and states `no` | the plan's order holds only for such sources. A source with `no`, such as a platform-defined local interrupt, a software interrupt, or one a priority scheme places among the timer, is outside the composition. A catalog reviewer sees the source's own wiring, never a description's list of sources |
-| `no-empty-claim` | code, with the hardware's half established in its basis, in the `switch` group | an external trap always finds a pending arrival to claim: the port's service exit waits until the controller's notification to the hart reflects the last claim, so a notification the controller sent before that claim cannot trap the hart again | the PLIC specification lets a notification "take some time to be received", holding a value "valid at some point in the past", and a claim then returns zero. Such a trap is a service that no arrival pays for, and repeated it can keep the timer from ever being taken |
+| `no-empty-claim` | code, with the hardware's half established in its basis, in the `switch` group | every external trap finds a pending request to claim. How is the basis's to show: for example, the port's service exit waits until the controller's notification to the hart reflects the last claim, so a notification sent before that claim cannot trap the hart again. It is `yes` on a target with no external source | the PLIC specification lets a notification "take some time to be received", holding a value "valid at some point in the past", and a claim then returns zero. Such a trap is a service that no request pays for, and repeated it can keep the timer from ever being taken |
+| `one-request-per-arrival.<source>` | code, one per source, with the hardware's half established in its basis, from the record that supplies `service.<source>` | each arrival of the source makes at most one request that a service claims: the source is edge-triggered, with one edge per arrival, or its service clears the device's request before it completes the claim | the PLIC specification forwards a new request on a completion "if the interrupt is level-triggered and the interrupt is still asserted". A level-triggered source completed before its device is cleared is then served twice for one arrival, and step 4 counts services by arrivals. The trigger type is the source's wiring, and the order of clearing and completing is its service's code, so both are in that record's review |
 | `one-external-controller` | hardware, about the target, in no group | every external interrupt of the target reaches the processor through one controller | two controllers would each order their own sources, and no strict order the plan gives would be the hardware's. A reviewer of one source's wiring cannot see the others, so this is stated once, of the target |
-| `leaves-interrupt-hardware-alone` | application task fact, and the caller's declaration for a service's application code | no task, and no application code in a service, writes the timer's counter or compare, or the interrupt controller's configuration or claim and complete registers; no service calls a runtime primitive; and no application code releases a task or calls a runtime function other than the runtime API record's primitives | `reprograms-only-in-service`, the plan's order and `releases-never-latched` are statements about the whole image, and a code fact's locator reaches only catalog code. Each holds for the image only with this one, as `sections-mask-every-interrupt` holds only with the fourth task fact |
-| `runtime-discipline.<id>` | code, one per record, stated by each record about every package its implementation's own and reached sets hold | that code writes the timer's counter or compare, or the controller's configuration or claim and complete registers, and releases a task, only in the role §12 gives it: the timer service writes the compare and releases its due timer tasks; a source's service claims and completes its own source and releases the tasks bound to it; initialisation, before the first unmask of the running system, writes the counter's and the compare's first values and the controller's configuration as the plan sets it. No service in it calls a runtime primitive | the image-wide facts above rest on locators into their owners' code. Every other record compiled into the image, a driver or a service among them, states the same about itself, so no compiled code is covered by nothing. It is required `yes` from every record with an implementation that is not `none` in the claim's closure, and from `M4` in the image's. Reading one adds its record's behavioral model to the closure, so the set is computed to a fixed point. Generated code is in no record: from `M4` the plan's generator states the same of it, and until then the conclusion names generated code, and any record compiled but outside the closure, as assumptions |
+| `leaves-interrupt-hardware-alone` | application task fact, and the caller's declaration for a service's application code | no task, and no application code in a service, writes the timer's counter or compare, the interrupt controller's configuration or claim and complete registers, or the hart's interrupt state other than through the runtime API's masking primitives; no service calls a runtime primitive; and no application code releases a task or calls a runtime function other than the runtime API record's primitives. A runtime function is any function of a catalog record's implementation, a driver's included | `reprograms-only-in-service`, the plan's order and `releases-never-latched` are statements about the whole image, and a code fact's locator reaches only catalog code. Each holds for the image only with this one, as `sections-mask-every-interrupt` holds only with the fourth task fact |
+| `runtime-discipline.<id>` | code, one per record, stated by each record about every package its implementation's own and reached sets hold | that code writes the timer's counter or compare, the controller's configuration or claim and complete registers, or the hart's interrupt state, and releases a task, only in a role listed below this table. No service in it calls a runtime primitive | the image-wide facts above rest on locators into their owners' code. Every other record compiled into the image, a driver or a service among them, states the same about itself, so no compiled code is covered by nothing. It is required `yes` from every record whose implementation facet, not `none`, is in the claim's closure, and from `M4` in the image's. Reading one adds its record's behavioral model to the closure, so the set is computed to a fixed point. Generated code is in no record: from `M4` the plan's generator states the same of it, and until then the conclusion names generated code, and any record compiled but outside the closure, as assumptions |
+
+**The roles `runtime-discipline.<id>` allows.** A function's writes and releases take the role of the context that
+calls it, so a runtime function called from a service acts in that service's role:
+- the timer service writes the compare and releases its due timer tasks;
+- a source's service claims and completes its own source, and releases the tasks bound to it;
+- the runtime API's primitives, and the port's trap entry and exit, mask and unmask;
+- initialisation, before the first enabling of interrupts, writes the counter's first value, and the controller's
+  configuration and the hart's interrupt state as the plan sets them. It may claim and complete requests left
+  pending from before it. The compare's first value is written only by code of the record that supplies
+  `timer-service` (`reprograms-only-in-service`).
+
+A path that another fact of this section makes unreachable is named in the basis with that fact. `rt-core`'s
+`unmask` delivers a latched release, which is unreachable by `releases-never-latched`. Its `release` of a task whose
+job is late, under `SkipLateJob`, is a release in the caller's role.
+
+**The hart's interrupt state** is its global enable `mstatus.MIE`, its enables `mie`, its delegation `mideleg`, the
+software interrupt `msip`, and any hart-local priority, such as the Advanced Interrupt Architecture's `iprio`.
+`external-before-timer` is about the hart's order however these are set: a hart whose local priorities can place
+the timer among external interrupts writes it `unknown`.
 
 **Assumed of the environment**, named in the conclusion as arrival assumptions, like `T_s` (§6): no source arrives
-before the first unmask of the running system. An arrival during initialisation would wait out initialisation's
-masked run, which `L` does not hold, and no catalog fact can vouch for when the environment's arrivals come.
+before the first enabling of interrupts, and a request left pending by firmware or a boot loader, which
+initialisation does not claim and complete, counts as such an arrival. An arrival during initialisation would wait
+out initialisation's masked run, which `L` does not hold, and no catalog fact can vouch for when the environment's
+arrivals come.
 
 **Boundaries the catalog's costs keep:**
 
@@ -204,9 +226,11 @@ everything that runs inside it:
 **`J_i^release` for a timer-released task, and `J_s`.** Take nominal release `t`.
 
 1. **The compare matches by `t + ρ + C_rel + S`.** `releases-after-initialisation` puts `t` after initialisation,
-   and `reprograms-only-in-service` puts every later compare write inside the timer service. The due check sees `t`
-   only from `⌈t⌉ = t + ρ`, since it rounds as the compare does (`due-check-matches-compare`). Two cases:
-   - the compare was written for `t` before `⌈t⌉`: it has level semantics, so it matches by `⌈t⌉`;
+   and `reprograms-only-in-service` puts every later compare write inside the timer service, under the timer facts
+   that hold of initialisation's first write too. The due check sees `t` only from `⌈t⌉ ≤ t + ρ`, since it rounds as
+   the compare does (`due-check-matches-compare`). Two cases:
+   - at `⌈t⌉` the compare holds at most `⌈t⌉`, written for `t` or for an earlier release: it has level semantics,
+     so it matches by `⌈t⌉`;
    - a timer service that did not release `t`, because its due check came before `⌈t⌉`, writes the compare late.
      A compare written in the past matches at once, and the write lies inside that service, which started before
      `⌈t⌉` and ends, with its transition, within `C_rel + S` of its start.
@@ -235,10 +259,15 @@ everything that runs inside it:
    No release is latched on the way (`releases-never-latched`), so no `unmask` does a service's work.
 4. **Services of `q` that start in the window come from arrivals at most `J_q` before it,** so there are at most
    `⌈(Δ + J_q)/T_q⌉` of them.
+   - For a source, every service claims a request (`no-empty-claim`), and each arrival makes at most one
+     (`one-request-per-arrival.<q>`), so no more services start than arrivals.
    - For the timer ahead of a source, each timer service maps to a release that was due when its interrupt was
-     raised (raised only when due) and that the service performs. No release is performed twice, so the mapping is
-     one to one. That release's nominal instant lies at most `J_k` before the service starts. So there are no more
-     services than such releases, `Σ_k ⌈(Δ + J_k)/T_k⌉`.
+     raised (raised only when due) and that the service performs. "Raised" covers an interrupt still pending after a
+     service has moved the compare on, which the specification allows, since MTIP follows the comparison
+     "eventually, but not necessarily immediately". So the fact's basis establishes the hardware's half: the timer
+     service does not return while MTIP still reflects a compare value it has replaced. No release is performed
+     twice, so the mapping is one to one. That release's nominal instant lies at most `J_k` before the service
+     starts. So there are no more services than such releases, `Σ_k ⌈(Δ + J_k)/T_k⌉`.
 5. **A compare written late is written inside the timer service**, and step 1 charges that service's remaining time
    apart from `L`, because the stretch step 2 counts may follow it.
 
@@ -250,7 +279,8 @@ The least fixed point is therefore an upper bound on how late the service can st
 - services queued ahead are counted in `J` and again in `w`, the variant's last listed deviation;
 - `mask` and `unmask` are charged whole inside a run;
 - a transition `S` is charged after every queued service, whether it switched or not;
-- the timer is counted once per release, not once per service;
+- the timer is counted once per release, not once per service: one service can perform several releases, and
+  `raised-only-when-due` rules out one that performs none (step 4);
 - `δ` includes the latency before an interrupt is pending, which the variant's own `δ` does not;
 - `δ` is charged twice in `B_x`, although a stretch that begins after the interrupt is pending can only overlap the
   first `δ`'s later part;
@@ -267,10 +297,10 @@ The least fixed point is therefore an upper bound on how late the service can st
   checked per selection.
 - **The application's task fact `leaves-interrupt-hardware-alone`**, and the caller's declaration of it for a
   service's application code.
-- **`runtime-discipline.<id>`**, which each record states about the packages it compiles, and `no-empty-claim` in
-  the `switch` group.
-- **Hardware facts** `external-before-timer` and `one-external-controller`, and `external.<source>` in each
-  `service.<source>` group.
+- **`runtime-discipline.<id>`**, which each record states about every package its implementation's own and
+  reached sets hold, and `no-empty-claim` in the `switch` group.
+- **Hardware facts** `external-before-timer` and `one-external-controller`, and in each `service.<source>` group
+  `external.<source>` and the code fact `one-request-per-arrival.<source>`.
 - **§2's boundaries:** where delivery ends and a service begins, and where `switch` ends.
 - **What these costs' `holds-under-preemption yes` means:** the bound also holds from any state the code before it
   leaves.
@@ -318,9 +348,9 @@ This record names what §12 gains; the catalog record's own review checks the wo
   queue are composed, and the conclusion names the caller's figure as such. That figure begins at the trap (§2),
   and the caller declares `leaves-interrupt-hardware-alone` for the service's application code.
 - **Every declared source needs a record that anchors `service.<source>`.** A caller's `C_s` exists only when that
-  record states `no-application-code.<source>` `no`, with its cost `unknown` if it has none. The record still
-  states `acknowledge-at-entry`, `defers-nothing` and `external.<source>`. With no such record, the source's facts
-  cannot be read, and every `J` is undeclared, naming it.
+  record states `no-application-code.<source>` `no`, with its cost `unknown` if it has none. The record still states
+  `acknowledge-at-entry`, `defers-nothing`, `one-request-per-arrival` and `external.<source>`. With no such record,
+  the source's facts cannot be read, and every `J` is undeclared, naming it.
 - **An enabled source the plan leaves undeliverable**, below the controller's threshold for the hart's machine-mode
   context, is `unsupported-profile`, as the variant's condition 5 reads "enabled". A plan that does not state its
   sources deliverable is `analysis-inconclusive`, like a missing order.
@@ -339,6 +369,10 @@ This record names what §12 gains; the catalog record's own review checks the wo
 - **`ρ` below its worst case when releases fall on ticks** is not composed in `/1`. It needs the timer's resolution
   as a number and the release epoch's alignment, which the catalog's yes-or-no facts cannot state. Taking the
   worst case is conservative, and is recorded here as conservatism, not as a gap.
+- **A task's call into another record's code**, a driver's for example. `leaves-interrupt-hardware-alone` counts
+  that code as a runtime function (§2), so a task that makes such a call is outside the composition,
+  `unsupported-profile`, naming the fact: no part covers that code's execution or its masked runs. Giving such calls
+  parts of their own is a later leaf's.
 
 ## Why
 
@@ -378,8 +412,8 @@ This record names what §12 gains; the catalog record's own review checks the wo
   - whether it can unmask, which would close one.
 
   A primitive that does either needs this record's run definition extended before it is costed.
-- **A new kind of release, nested interrupts, or a source whose `external.<source>` is `no`** is outside `/1`, in the
-  variant as here.
+- **A new kind of release, nested interrupts, or a source whose `external.<source>` or
+  `one-request-per-arrival.<source>` is `no`** is outside `/1`, in the variant as here.
 - Related:
   - [[decision_runtime-analysis-variant]]: its §1 names each composite and points here;
   - [[decision_catalog-records]]: its §12 owns the catalog's parts and facts.
@@ -396,3 +430,4 @@ under-charges against the variant's §1 definitions. The findings, and the answe
 | 2 | 11 | 1 (L1, a masked stretch beginning while delivery is under way, which a simulation reproduced) | "cannot be accepted as it stands"; nothing else under-charges once L1 is fixed |
 | 3 | 13 | 1 (M1, a late compare write letting a full masked stretch in before the interrupt is pending again, reproduced by hand and by simulation) | "cannot be accepted as it stands"; nothing else under-charges once M1 is fixed and M2–M5 and M8 are stated |
 | 4 | 9 | 2 (N1, a late write by a service that started before the due check could see the release; N2, a trap that claims nothing, which the PLIC specification allows) | "cannot be accepted as it stands"; `C_i` and `CS_i` sound, and nothing else under-charges once N1 and N2 are fixed and N3 is stated |
+| 5 | 8 | 1, latent (O1, a level-triggered source completed before its device is cleared, served twice per arrival, which the PLIC specification allows); O3 live, an ambiguity | "cannot be accepted as it stands"; `C_i`, `CS_i` and `B_timer` sound, and nothing else under-charges once O1 is fixed and O2 and O3 are stated |

@@ -15,7 +15,13 @@ gives it. The section numbers are that record's.
 
 Each round was a new context, read-only, which had not written the record. Each was given `ROADMAP.md` §7.2–§7.5,
 §9, §10.3, §14.4 and §15, the runtime variant's §1, `Bound`, the reader's forms and the profile registry, and was
-barred from any other implementation.
+barred from any other implementation. Later rounds were given more as the record grew:
+- from round 6, the repository's manifests, targets, toolchain pin and read-only git, to test the record's measured
+  claims about them;
+- from round 7, §0 to judge against, and `crates/rt-core`;
+- from round 8, the worked example in its own file, and the compiler's dependency files;
+- from round 9, §12 in its own file, and from round 10 the composition record, to check that the two agree;
+- from round 12, §13 in its own file, and the closure rule, with each finding marked live or latent.
 
 **Round 1**, `2026-09-30`: 22 findings, 6 of them defects, and the verdict that the record "should not be
 accepted as it stands". Acceptance sentence (2) failed by construction, and sentence (1) held only for what the
@@ -382,6 +388,34 @@ board or `M4`, and could be accepted as stated limits. The answering context set
 | Q12 | nit | "did not compile its packages" | every one of its packages; the image's closure's sets (§7) |
 | Q13 | nit | branch deletion; a second remote's refspec | `main` never deleted; no refspec of any other remote (§0, §4) |
 | Q14 | nits | one identity; `one-external-controller` with no external interrupt; the record's size | the template's initial commit excepted; `yes` there; §13 moved to its own record (§13, §12) |
+
+**Round 12**, `2026-09-30`, the first judged under the closure rule: all 23 values matched by two routes, and every
+measured claim was true but one line count, among them 620 tracked paths, 14 manifests, the pin, and
+`origin/main` still the initial commit with local `main` 238 commits ahead and no merge. §3–§9 held again. Q1–Q4
+and Q7–Q14 were closed, and Q5 and Q6 partial. There were 12 findings, 8 live and 4 latent. One defect was live:
+R1, a pull request that changes the checker judging it, which every listed setting of premise 3 allowed. The
+verdict was that the record "does not yet meet the closure rule"; with R1 fixed and R2, R4 and R5 answered, the
+reviewer found nothing else live at defect level. It also noted that R3 bites only at a second rules version, and
+R6 and R7 only once `M2.12` lets the port's facts be stated, horizons the closure rule did not yet name. The
+answering context added them to the rule, and re-read the PLIC gateway sentence that the composition's round 5
+cited, at its source, for the ledger.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| Q5 | partial | through R2 and R3 | as those rows |
+| Q6, J7 | partial, defect-level | through R1, R4 and R5 | as those rows |
+| R1 | defect, live | premise 3 protected `.github/` and `scripts/` only, so a pull request could change the loader, `xtask/` or what they build with, and pass its own check | every path the check builds or runs is protected, and CI refuses a change range touching both those paths and `catalog/`; the checker's reach stated in §13 (§0, §13) |
+| R2 | ambiguity, live | the lock's version line had no grammar, place in the sort, refusal or rule for replacing it | exactly one first line, written by bless, outside the sorted lines, replaced only by a known later version; a missing, malformed, unknown or lower one is `catalog-lock-review` (§9, §5) |
+| R3 | defect, latent (a second rules version) | a forms item never matches across versions, and one identifier names both grammar and checks | a forms item is compared under its rejection's identifier, which later versions keep computable; any later version moves every hash, and its migration note says how earlier lines compare (§5) |
+| R4 | gap, live, premise 3 | before the named commit exists the claim-side check is vacuous, and where the commit is read from was unsaid | a production claim is `not-established` until it exists; the claim tooling holds it as a constant and refuses one off `origin/main`'s first-parent chain (§0, §7) |
+| R5 | gap, live, fails closed | a verifier defect is a second cause of an irreparable line, with no repair | the cause named; a director-ruled waiver line, which the replay accepts only for a line that fails, and which can only lower a status (§9, §5, §13) |
+| R6 | gap, latent (`M2.12`) | initialisation's first compare write was under no timer fact | the first write belongs to the timer-service record's code, and the timer facts and `compare-rounding` hold of every compare write (§12; the composition record's §2) |
+| R7 | ambiguity, latent (`M2.12`) | "runtime function" undefined | any function of a catalog record's implementation; a task calling another record's code is outside the composition in `/1` (§12; the composition record's §2 and §7) |
+| R8 | ambiguity, fails closed | "a record with an implementation that is not `none` in the closure" | "whose implementation facet, not `none`, is in the closure" (§7, §12; the composition record's §2) |
+| R9 | gap, live, low | the port's facts `unknown` in `/1` rested on honesty, and the list omitted `preemptive-everywhere` | a known value of those facts is refused in `/1`, and the port's half of `preemptive-everywhere` listed (§13, §11) |
+| R10 | nit, premise 2 | a second refspec of `origin` itself | "no other refspec, of `origin` or of any other remote" (§4) |
+| R11 | nits | 1 181 lines; `ROADMAP.md`'s §15 and §9 read as the record's; §12's table title | 1 182; those references say `ROADMAP.md`; the table retitled (§13, §12) |
+| R12 | nits | `M2.7.1`'s "To close" and this file's opening paragraph described early rounds | both brought to the current round |
 
 ## Why
 

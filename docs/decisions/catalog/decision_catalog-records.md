@@ -86,13 +86,21 @@ assumed control of the build machine or the hosting.
      - `main` is never force-pushed and never deleted;
      - the required checks are named in those settings, pinned to the CI provider's own app, so a status another
        source posts under the same name does not satisfy them;
-     - the checks' definitions are protected from the pull request they judge: a required workflow or ruleset kept
-       outside it, or code-owner review of `.github/` and `scripts/`, so a pull request cannot empty its own check.
+     - the checks' definitions, and everything they build or run, are protected from the pull request they judge:
+       `.github/`, `scripts/`, `xtask/`, the catalog crate and every package it depends on, the root manifest,
+       `Cargo.lock`, `rust-toolchain.toml` and `.cargo/`, by a required workflow or ruleset kept outside the pull
+       request, or by code-owner review of those paths. So a pull request can neither empty its own check nor
+       change the code that runs it.
 
-     The premise holds from a named commit of `main`, the first after those settings were confirmed, recorded
-     beside this record when the director confirms them (findings §11). Nothing before it is judged by it.
+     The premise holds from a named commit of `main`, the first after those settings were confirmed. The director's
+     confirmation names it (findings §11), and the claim tooling holds it as a constant beside the canonical URL
+     (§4), refusing one that is not on `origin/main`'s first-parent chain. Nothing before it is judged by it.
 
      Checked where it is cheap:
+     - until that commit exists, a production claim is `not-established`, naming that premise 3 has no named
+       commit (§7);
+     - CI refuses a change range that touches both the paths above and `catalog/`, so a change to the checker lands,
+       reviewed, before any catalog change it judges (§13);
      - a production claim is `not-established` when a first-parent commit of `origin/main` after that commit
        changes `catalog/` and is not a merge commit (§7);
      - the loader re-applies §5's ledger-time checks at every ledgering commit, so a review that CI failed to check
@@ -578,10 +586,10 @@ each record hash, a review's ledger hash and lock lines, and a forms digest. `M2
     origin`, and refuses one that is not the repository's canonical URL, which the claim tooling holds as a
     constant. URLs are compared as repositories, not as strings: `https` and `ssh` forms of the same host and path
     are equal, with or without a trailing `.git`. So a fork's `main`, which premise 3 does not protect, is not taken
-    for this one. `origin`'s fetch refspec must map `refs/heads/main` to `refs/remotes/origin/main`, no refspec of
-    any other remote may map to it, no negative refspec may exclude it, and no `url.*.insteadOf` may rewrite
-    `origin`'s URL. Otherwise another branch or another repository could stand behind a canonical-looking
-    `origin/main`.
+    for this one. `origin`'s fetch refspec must map `refs/heads/main` to `refs/remotes/origin/main`, no other
+    refspec, of `origin` or of any other remote, may map to it, no negative refspec may exclude it, and no
+    `url.*.insteadOf` may rewrite `origin`'s URL. Otherwise another branch or another repository could stand behind
+    a canonical-looking `origin/main`.
   - **Every reader reads history as it is** (premise 2, with its cheap checks). Each runs git with an environment
     allowlist, as the builds do: `PATH`, `HOME`, the `GIT_DIR`, `GIT_INDEX_FILE` and `GIT_WORK_TREE` a hook is
     given, and `GIT_NO_REPLACE_OBJECTS` set, and nothing else, so no `GIT_GRAFT_FILE`, `GIT_SHALLOW_FILE` or object
@@ -616,18 +624,22 @@ line has one. There may be more than one, if two branches ledgered it.
 **Each ledgering commit is verified before anything is read from it.** There, the review's form in its record must
 hash to the line's ledger hash, the line's facet and verdict must be the form's, and the facet's bound hash must
 equal the one the line names. A ledgering commit that fails any of these is a lock edited by hand, and the catalog
-does not load (`catalog-lock-review`). Every ledgering commit therefore held the same review and the same facet
-content. The review's form, its `answers` included, and what the facet held are read from any of them, with the
-same result. **Status reads a review's facet, verdict and answers from its form**, never from the line, whose
-copies are an index. **The loader also re-applies the ledger-time checks below at each ledgering commit**, with
-that commit's record, parents' ledgers and committer date. So a review that a bypassed gate and a neutered CI let
-through is refused at load (`catalog-review`), not only when it was ledgered.
+does not load (`catalog-lock-review`), unless a waiver names the line (§9). Every ledgering commit therefore held
+the same review and the same facet content. The review's form, its `answers` included, and what the facet held are
+read from any of them, with the same result. **Status reads a review's facet, verdict and answers from its form**,
+never from the line, whose copies are an index. **The loader also re-applies the ledger-time checks below at each
+ledgering commit**, with that commit's record, parents' ledgers and committer date. So a review that a bypassed gate
+and a neutered CI let through is refused at load (`catalog-review`), not only when it was ledgered, unless a waiver
+names it.
 
-**Each ledgering commit is verified under the rules it was ledgered under.** The lock's first line names them,
-`# archogen-catalog/1`, and that names both §3's grammar and these ledger-time checks. A later version is a new
-first line, written by the change that brings the new rules in, with a migration note as `ROADMAP.md` §15 asks. A
-line ledgered under `/1` is verified under `/1` for good, so a rule tightened later never refuses history that was
-honest when it was made.
+**Each ledgering commit is verified under the rules it was ledgered under**, those its lock's first line names
+(§9). `# archogen-catalog/1` names both §3's grammar and these ledger-time checks. A later version replaces that
+line, in the change that brings the new rules in, with a migration note as `ROADMAP.md` §15 asks. A line ledgered
+under `/1` is verified under `/1` for good, so a rule tightened later never refuses history that was honest when it
+was made. A corrected implementation of the same rule is not a tightening, and §9's waiver is its repair. **One
+identifier names the grammar and the checks**, and every hash begins with it. So any later version, of either,
+moves every hash and makes every review stale, and its migration note says how each earlier line is compared under
+it. A version that changes the checks alone may first split the identifier in two.
 
 **The rejections a facet inherits** are read from the ledger and the commits that ledgered it:
 
@@ -642,9 +654,11 @@ honest when it was made.
    - the hash of each own-set file's bytes;
    - for a contract, each guarantee and each precondition, compared by `E` of the string, so by its decoded value
      and not by how an escape spells it;
-   - the facet's forms hash: §3's hash over `archogen-catalog/1`, `forms <facet>` and `E` of each of the facet's
-     forms, with every `version` form removed, and for a contract its `source`, `maintainer` and `supersedes`
-     forms too, which change with who copied it rather than with what it promises.
+   - the facet's forms hash: §3's hash over the identifier the ledgering commit's lock names, `archogen-catalog/1`
+     in `/1`, `forms <facet>` and `E` of each of the facet's forms, with every `version` form removed, and for a
+     contract its `source`, `maintainer` and `supersedes` forms too, which change with who copied it rather than
+     with what it promises. The facet it is compared with is hashed under the same identifier, whatever version
+     the catalog has reached since, and every later version keeps each earlier one's forms hash computable.
 
    A facet of the same kind, in any record, inherits the rejection when it supplies the same fact name, the same
    cost name and target or the same cost name on a target of the same kind and Rust target, names the same source
@@ -816,12 +830,12 @@ facet instead.
        image;
      - the catalog was not read from a commit whose ledger holds every line of every ancestor's and of the
        published main line's, or the clone has no `origin/main` (§4, §9);
-     - a record in the claim's closure has an implementation that is not `none`, and the image did not compile
-       every one of its packages. A fact about code must be about the code the image holds, so the closure is a
+     - a record whose implementation facet, not `none`, is in the claim's closure has a package the image did not
+       compile. A fact about code must be about the code the image holds, so the closure is a
        subset of what the image compiled, as well as the image's sources being a subset of the image's closure's
        sets;
-     - a first-parent commit of `origin/main`, after premise 3's named commit, changes `catalog/` and is not a merge
-       commit (premise 3).
+     - premise 3 has no named commit yet, or a first-parent commit of `origin/main` after it changes `catalog/` and
+       is not a merge commit (premise 3).
 
   As in the runtime variant's admission, the strongest verdict is reported with every reason that reaches it.
   What an analysis does with a value it could not read is the analysis's verdict, not admission's (§12).
@@ -886,15 +900,22 @@ facet instead.
 ### 9. Versions, the lock and the review ledger
 
 - **What `catalog/catalog.lock` holds:**
+  - **its first line, exactly one, naming the rules version**, `# archogen-catalog/1` (§5). Bless writes it when it
+    creates the lock, and it stands outside the sorted lines below. It changes only to a version the loader knows
+    and that is later. A lock whose first line is missing, malformed, or names a version the loader does not know
+    or one lower than a parent's lock names, is refused (`catalog-lock-review`): nothing is verified under no
+    version;
   - one line per facet version ever blessed, `<id> <facet> <version> sha256:<own hash>`;
   - one line per review ever blessed, `<id> review sha256:<ledger hash> <facet> <verdict> sha256:<the bound hash
-    it names>` (§3).
+    it names>` (§3);
+  - one line per waiver, `<id> waiver sha256:<ledger hash> <commit>`, naming a review line and the commit that
+    ledgered it (below).
 
   With the history of the commit being read, and of the published main line's for a production claim (§5), that is
   everything status needs, for a record that no longer exists too: each review's form, and the facet it saw, are in
   the commit that ledgered it (§5). Lines are sorted bytewise by id, then by kind in the order contract,
-  implementation, behavior-model, timing-model, review. Versions are in semantic-version order, and reviews in
-  bytewise order of their line.
+  implementation, behavior-model, timing-model, review, waiver. Versions are in semantic-version order, and
+  reviews and waivers in bytewise order of their line.
 - **It is append-only.**
   - A line, once committed, is never changed or removed.
   - The gate compares the lock with its version at every parent of the commit being made, both of a merge's. CI,
@@ -918,6 +939,18 @@ facet instead.
     commit that made it.
   - A retired record's lines stay behind as history, so its versions cannot be reused and its reviews cannot be
     shed.
+- **A waiver repairs a review line that fails verification**, which would otherwise stop the catalog loading for
+  good (§13). Bless never writes one. It is added by hand, in a commit of its own, on the director's ruling
+  recorded in the findings record, and reaches `main` by a merge commit. The replay accepts it, as the one line
+  blessing would not write, only when the review line it names is in a parent's lock and fails §5's verification
+  at the commit it names, which ledgered that line. A waived line is not verified at load, and it can only lower a
+  status:
+  - a production review it names establishes nothing;
+  - when its line or its form at that commit says `rejected`, it binds each facet either names, with the items of
+    that form when there is one, until a review answers it by its ledger hash.
+
+  So a waiver never lifts a rejection or grants a verdict. A facet that loses a production review to one is
+  reviewed again. Like every line, a waiver is never removed.
 - **Checks at load:**
 
   | Code | When |
@@ -925,7 +958,7 @@ facet instead.
   | `catalog-lock-missing` | a facet's current version, or a review in a record, has no line. The repair is to bless |
   | `catalog-lock-unbumped` | a line has the same id, facet and version as a current facet, but a different own hash: changed without a version bump |
   | `catalog-lock-downgrade` | a facet's current version is below a version the lock holds for it |
-  | `catalog-lock-review` | a present record lacks a review the ledger holds for its id; a review's form disagrees with its line's facet, verdict or hash, or with its form in the commit that ledgered it; at a ledgering commit, the review's form does not hash to the line's ledger hash, the line's facet or verdict is not the form's, or the facet's bound hash is not the one the line names (§5) |
+  | `catalog-lock-review` | the lock's first line missing, malformed, naming an unknown version or one lower than a parent's; a waiver naming a line that verifies, or a commit that did not ledger it; a present record lacks a review the ledger holds for its id; a review's form disagrees with its line's facet, verdict or hash, or with its form in the commit that ledgered it; at a ledgering commit, the review's form does not hash to the line's ledger hash, the line's facet or verdict is not the form's, or the facet's bound hash is not the one the line names (§5) |
   | `catalog-lock-retired` | a retired id has a rejection that no production review of a record superseding it answers, and no present record supersedes it; a present record takes a superseded id; a present record lacks a `supersedes` the lineage holds for it |
   | `catalog-conflict` | for some profile and target the catalog names, or for a claim with no target, two records supply the same name under §12's selection |
 
@@ -986,7 +1019,7 @@ Every refusal names its record, its field and the field's source location, and h
 | `catalog-shape` | not exactly one `catalog-record` form; a field or subform missing, unknown, duplicated or out of order; a repeated name; a decimal |
 | `catalog-id` | the id breaks §1's grammar, differs from the file stem, or is used twice |
 | `catalog-version` | a version or a requirement breaks §2's form |
-| `catalog-field` | one of the following: <br>• an empty string where §2 requires text <br>• an unknown catalog, profile, target, unit, category, role, verdict or `TARGET_KIND` <br>• a target without `TARGET_KIND` or `RUST_TARGET`, whose stem breaks §2's grammar, or whose `.env` breaks §3's grammar <br>• a `.env` value holding `/` that is not a tracked path in normal form, one without `/` that names a tracked file, or a target file under `catalog/` <br>• a `.env` or `.eadl` directly under `targets/` without its pair <br>• a group name supplied under some selection by a record other than the one that supplies the group's anchor there (§12); a fact in a facet the facts table does not give it; a cost named `api.completion`; a self-statement named with another record's id <br>• no guarantees <br>• a malformed fact or cost <br>• a negative integer <br>• a safety factor that does not pad, has a term outside `u32`, or whose `value` is not the padded observation <br>• a known cost that `Bound::validate` refuses <br>• a cost on a target the contract does not admit <br>• `independent` outside its two names, or on a target that is not a board <br>• a variant name of the wrong kind or in the wrong facet |
+| `catalog-field` | one of the following: <br>• an empty string where §2 requires text <br>• an unknown catalog, profile, target, unit, category, role, verdict or `TARGET_KIND` <br>• a target without `TARGET_KIND` or `RUST_TARGET`, whose stem breaks §2's grammar, or whose `.env` breaks §3's grammar <br>• a `.env` value holding `/` that is not a tracked path in normal form, one without `/` that names a tracked file, or a target file under `catalog/` <br>• a `.env` or `.eadl` directly under `targets/` without its pair <br>• a group name supplied under some selection by a record other than the one that supplies the group's anchor there (§12); a fact in a facet the facts table does not give it; a cost named `api.completion`; a self-statement named with another record's id <br>• no guarantees <br>• a malformed fact or cost <br>• a negative integer <br>• a safety factor that does not pad, has a term outside `u32`, or whose `value` is not the padded observation <br>• a known cost that `Bound::validate` refuses <br>• a cost on a target the contract does not admit <br>• `independent` outside its two names, or on a target that is not a board <br>• a variant name of the wrong kind or in the wrong facet <br>• in `/1`, a known value of a fact about the port's code (§13) |
 | `catalog-locator` | a `file` locator outside the facet's own set; a `code` locator outside its record's implementation own set, or naming a record §2 does not allow; a code fact without a `code` locator; a `ledger` anchor the ledger does not hold, or holds twice; a missing locator where §2 requires one |
 | `catalog-source` | one of the following: <br>• §3's package rules, manifest dialect and workspace rule, and §4's path rules <br>• a `proc-macro`, `proc_macro`, `crate-type` or `crate_type` key; a legacy `rust-toolchain` file <br>• in what `cargo metadata` resolves: a procedural-macro or build-script target, a source that is not a path, or a package §3's reading did not reach, or reached and cargo does not hold <br>• a `cargo-features` or `rustflags` key; a refused identifier, keyword or attribute word, as tokens; a non-ASCII identifier; a compiler-read source path that does not end in `.rs` <br>• a cargo configuration file the gate may not let cargo read, or one outside the dialect <br>• two tracked paths that differ only in case; a pin that is not a release number; a compiler that is not the pinned release; a workspace root cargo reports elsewhere <br>• a source path outside the written index, or whose bytes differ from its blob <br>• a path under `catalog/` <br>• a directory entry with a package below it, or a package with a package below it <br>• a file in two own sets of different kinds (§8) <br>• a package that does not build under the gate's matrix <br>• a compiler-read path or environment dependency outside the sets (the gate) |
 | `catalog-dependency` | a `depends`, `describes`, `measured-with` or `supersedes` id that is unresolved, unmatched by its one candidate's version, or listed twice; a cycle in the graph of §3's derived facet lines, which is the only acyclicity hashing needs; a `supersedes` id with a present record or no ledger lines |
@@ -1101,3 +1134,4 @@ the design as it stands, and that one keeps how it got here.
 | 9 | 20 | none; 4 at defect level (I1–I4), all in §12's new composition names; §3–§9 held | "cannot be accepted as it stands" |
 | 10 | 18 | 1 (J1, code facts ungrouped from the costs whose code they state, and an image that need not compile the closure); J2–J4 near it | "cannot be accepted as it stands" |
 | 11 | 14 | 2 latent (Q1, `compare-rounding` not tied to the timer service's code; Q2, releases by code no statement covered), with Q3 near them; §3–§9 held | "cannot be accepted as it stands"; all three latent until a board or `M4` |
+| 12, the first under the closure rule | 12 | 1 live (R1, a pull request changing the checker that judges it), 1 latent (R3, forms items across rules versions); §3–§9 held | "does not yet meet the closure rule"; nothing else live at defect level once R1 is fixed and R2, R4 and R5 are answered |

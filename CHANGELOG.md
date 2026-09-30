@@ -5,6 +5,29 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog's twelfth review and the composition's fifth are answered
+
+`ARCHOGEN-M2-0233` (leaf `M2.7.1`, an eleventh checkpoint; with `M2.10.1`'s sixth).
+
+- **The catalog's twelfth review**, the first judged by its closure rule, found one weakness that matters now: a
+  change could alter the code that checks it, because the design protected only the check's definitions. Now
+  everything the check builds or runs is protected, and a change to the checker lands on its own, reviewed, before
+  any catalog change it judges.
+  - The rules version at the head of the catalog's lock is fully specified, so a hand edit to it is refused.
+  - No production claim can be made until the director has confirmed how `main` is protected.
+  - A ledger line that fails its check, through a bug in the checker for instance, can be repaired by a waiver the
+    director rules on. A waiver can only weaken what the catalog says, never strengthen it.
+  - The review named two later horizons, a second rules version and the port's assembly (`M2.12`), and the
+    closure rule now names them too.
+- **The composition's fifth review** found its sums and its timer margin sound across 5 900 simulated task sets.
+  Its one under-count matters only on a real board: a level-triggered device acknowledged before it is cleared is
+  served twice per event, which the interrupt controller's specification allows. A new platform fact must rule it
+  out, and the specification's sentence was checked at its source. The runtime analysis shares the blind spot, and
+  `M2.11` now covers it too.
+  - Also stated: code acts in the role of whoever calls it, and the processor's own interrupt settings are held
+    like the timer's.
+- **Both reviews run again.** The composition now closes by the same rule as the catalog.
+
 ## archogen — the decisions folder's next compaction is scheduled
 
 `ARCHOGEN-PROGRAM-0232` (leaf `PROGRAM.41`, opened).

@@ -137,6 +137,29 @@ was renamed `runtime-discipline.<id>`, since it now covers releases; the rows ab
 | N8 | nit | §12's "whose implementation the claim reads" | the record's wording (§12) |
 | N9 | nit | deliverability missing from §12's plan row, and no verdict when omitted | in the row; an omitted statement is `analysis-inconclusive` (§12, §6) |
 
+**Round 5**, `2026-09-30`: N1 and N3–N9 were closed, and N2 partial. The reviewer simulated the model with rounding
+up to 31 units, late writes, writes passing above the counter, overtaking, idle wake and sources on either side of
+the timer: no violation in 5 900 admitted sets. It read the PLIC specification's source and QEMU's controller for
+O1. `C_i`, `CS_i` and `B_timer` were judged sound. There were 8 findings, 1 of them a defect, latent: a board's
+conforming gateway re-forwards a level-triggered request on completion, which QEMU's does not. The verdict was
+"cannot be accepted as it stands"; nothing else under-charges once O1 is fixed and O2 and O3 are stated. The
+answering context re-read the gateway sentence at its source, `riscv-plic.adoc` at `f8ec1b7`, and added it to the
+ledger entry `riscv-plic`. It set the leaf a closure rule like the catalog record's (`M2.10.1`). The catalog's
+round 12 changed this record in the same change: the compare's first write belongs to the timer-service record,
+and "runtime function" is defined.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| N2 | partial | a trap that claims a request no arrival made | through O1 |
+| O1 | defect, latent | a level-triggered source completed before its device is cleared gets a second request, so it is served twice per arrival: a true 27 against 10 | the code fact `one-request-per-arrival.<source>` in each `service.<source>` group, cited in step 4 and the gating list; `no-empty-claim` about requests; the variant's same omission joins `M2.11` (§2, §4, §5) |
+| O2 | ambiguity, latent | MTIP can stay high after a compare write moves forward, so a timer service releases nothing: s1 served at 18 against 12, and s2 starved | "raised" covers an interrupt still pending after the compare moved on, and the fact's basis shows the hardware's half; the conservatism bullet qualified (§4; the catalog's §12) |
+| O3 | ambiguity, live | the roles are stated of code, but `rt-core`'s `release`, `unmask` and `fault` act on a caller's behalf | a function's writes and releases take its caller's role; a path another fact makes unreachable is named in the basis with that fact (§2) |
+| O4 | gap, latent | the hart's interrupt state was in no role | `mstatus.MIE`, `mie`, `mideleg`, `msip` and hart-local priorities are in the roles and the task fact; a hart whose local priorities can reorder the timer writes `external-before-timer` `unknown` (§2) |
+| O5 | nit | initialisation could not drain requests left by firmware; "unmask" named two things | initialisation may claim and complete before the first enabling of interrupts, and a request left pending counts as an arrival otherwise (§2) |
+| O6 | nit | `⌈t⌉ = t + ρ`, and step 1's cases | `≤`, and the first case stated so the two cover every timeline (§4) |
+| O7 | nit | `no-empty-claim` stated a mechanism software cannot observe | the property stated, the mechanism the basis's, and `yes` with no external source (§2; the catalog's §12) |
+| O8 | nit | §5's "the packages it compiles" | §2's wording (§5) |
+
 ## Why
 
 The record states the composition as it stands, and this file keeps how it got there, as for the catalog record.

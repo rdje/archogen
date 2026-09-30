@@ -6,7 +6,7 @@
 - **External sources:** [the Rust toolchain](../../book/src/ledger.md#rust-toolchain) — `rustc`, `cargo` and
   `rustup`, whose version, scope and limits are in the ledger
 - **Owner / source:** leaf `M2.7.1` (`docs/tasks/M2.md`). This is §13 of [[decision_catalog-records]], moved out of it
-  in the change that answered its eleventh review, which took that record to 1 181 of the 1 200 lines
+  in the change that answered its eleventh review, which took that record to 1 182 of the 1 200 lines
   `README-ROUTES` allows a file. It is part of that record: normative, numbered as its §13, and reviewed with it. That
   change's edits to §13 are in the review history.
 
@@ -17,9 +17,9 @@
 - **Reviewer independence is asserted, not verified.** Roles and task trees cannot coincide, and `who` cannot be
   the maintainer. That is all the structure guarantees. Git authorship cannot help, because one identity commits
   every commit in this repository but the template's initial one. What a later reader checks is the review's `basis`.
-- **§9's admission evidence per catalog**, beyond which facets are present and not empty, is an obligation of the
-  production review's basis: the tests, the reference behavior, the exact revisions and the conformance evidence.
-  Nothing checks it mechanically.
+- **`ROADMAP.md` §9's admission evidence per catalog**, beyond which facets are present and not empty, is an
+  obligation of the production review's basis: the tests, the reference behavior, the exact revisions and the
+  conformance evidence. Nothing checks it mechanically.
 - **Bump size is not checked.** A patch-level bump over a breaking change passes. The lock checks that a version
   moved, not by how much.
 - **Hashes over-approximate.** Any of these voids reviews that its bound hashes reach, which is sound and costs a
@@ -41,8 +41,8 @@
     `CARGO_HOME` (§3); the build of an image is `M4`'s to hold to the same rule, which §7's build record shows;
   - the installed toolchain's files, git's local configuration and refs, and the hosting's protection of `main`.
     These are §0's premises, each with what is checked of it;
-  - the meaning of a profile. A record names a profile by its id, and a changed meaning moves the id (§15), which
-    the version register records;
+  - the meaning of a profile. A record names a profile by its id, and a changed meaning moves the id (`ROADMAP.md`
+    §15), which the version register records;
   - `--config` flags;
   - rustup's per-directory overrides;
   - `Cargo.lock`. With every dependency a path one, it adds nothing the sets lack, and §3 refuses the first
@@ -54,15 +54,26 @@
 - **A rejection binds items, not meaning.** Content moved into another record without lineage, and changed so
   that no item of §5 matches, whether a name, an entry, a file's bytes or the forms, is new content for review. The
   ledger is where a reviewer of related content looks, and nothing forces the look.
-- **The port's facts are `unknown` in `/1`.** §3 refuses assembly, so the port's trap entry and exit, its transitions
-  and its masking instructions cannot be in any record. An honest `/1` record writes the facts about that code
-  `unknown`: the `switch` group's, and the port's half of `sections-mask-every-interrupt`, `releases-never-latched`
-  and `primitives-out-of-line`. Every analysis of the runtime variant over the catalog is then
-  `analysis-inconclusive`, naming them. `M2.12` owns a record format that admits the port's assembly, with `sym`
-  operands only, and lifts it.
-- **A bad line on `main` cannot be repaired.** The lock is append-only and `main` is never rewritten, so a line that
-  fails verification, landed through a failure of premise 3, stops the catalog loading for good in every clone that
-  fetches it. The premise, its named commit and its checks are what keep that from happening.
+- **The port's facts are `unknown` in `/1`.** §3 refuses assembly, so the port's trap entry and exit, its
+  transitions and its masking instructions cannot be in any record. Every fact about that code is therefore
+  `unknown` in `/1`: the `switch` group's, and the port's half of `preemptive-everywhere` (the trap exit that
+  performs a decided switch), `sections-mask-every-interrupt`, `releases-never-latched` and
+  `primitives-out-of-line`. The loader holds it: a known value of any of these facts is refused in `/1`
+  (`catalog-field`), since no hash covers the code it would be about. Every analysis of the runtime variant over the
+  catalog is then `analysis-inconclusive`, naming them. `M2.12` owns a record format that admits the port's
+  assembly, with `sym` operands only, and lifts it.
+- **A bad line on `main` is repaired only by a waiver.** The lock is append-only and `main` is never rewritten, so a
+  line that fails verification would stop the catalog loading for good in every clone that fetches it. It has two
+  causes. One is a failure of premise 3. The other is a defect in the `/1` verifier: its fix refuses every line the
+  faulty one passed, lines landed before premise 3's named commit included, and "a rule tightened later" (§5) does
+  not cover a corrected implementation of the same rule. The repair is §9's waiver, which lets the catalog load and
+  can only lower a status. Premise 3 and its checks keep the first cause away, and the verifier's tests (`M2.7.3`,
+  `M2.7.4`) the second.
+- **The checker is the repository's own code.** The loader, the gate, CI and what they are built with judge every
+  catalog change, and a pull request can change them. Premise 3 protects those paths by review, and CI refuses a
+  change range that touches both them and `catalog/`, so a checker change is reviewed and lands on its own before
+  any catalog change it judges. A checker change reviewed in error judges every catalog change after it: the
+  protection reaches as far as premise 3's review, and no further.
 - **A rejection binds for good once it is in `main`'s history.** Until then it binds the branch it is on, and is
   lost with it: a reset of an unpushed branch, or a pushed branch deleted and pushed again as new. So a reviewer's
   rejection is merged to `main` in its own commit before the facet it names changes (How to apply). One that
@@ -104,5 +115,5 @@ naming, so they are kept apart, like §12, and a reviewer of the record is given
 
 ## How to apply
 
-- A section number here is the catalog record's.
+- A bare section number here is the catalog record's. One that is `ROADMAP.md`'s says so.
 - A limit that a later leaf lifts names that leaf, and leaves this section when the leaf closes.
