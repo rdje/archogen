@@ -4,6 +4,24 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the browser module gives the command line's answers
+
+`ARCHOGEN-API-0203` (leaf `API.5.3`).
+
+- The module a web page will load is now built and run on every integration check, the way a page runs it: through
+  the same small loader file, in a JavaScript runtime (Node).
+- It imports nothing, as read from the compiled module itself. A WebAssembly module can only reach the outside
+  world through its imports, so this one cannot touch files, the network or a clock, whatever page loads it.
+- Every description the repository tracks goes through it. Each answer is byte-for-byte what the same code gives
+  when built normally, and each verdict is what `archogen check` gives for the same file. The descriptions cover
+  six different verdicts.
+- The check was shown able to fail. A loader deliberately broken to ask the wrong question was refused on every
+  description. Hand-made modules, one that imports something and one that exports the wrong things, are each
+  refused.
+- Node now has an entry in the book's ledger of outside tools. The entry for Miri was re-checked, because its
+  stated trigger, the first raw-pointer code in the project, has now happened (in a test), and that test passes
+  under Miri.
+
 ## archogen — the web-page binding built and tested
 
 `ARCHOGEN-API-0202` (leaf `API.5.2`).

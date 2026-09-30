@@ -177,6 +177,20 @@ the day a chapter or a decision relies on it, as Miri did.
 | Revalidation trigger | any workflow edit; a security advisory for either action |
 | Named as | `actions/checkout`, `actions/cache` |
 
+## `node`
+
+| Field | Value |
+| --- | --- |
+| Source | Node.js, the JavaScript runtime in which the `integration` tier's `wasm-binding` step runs the browser artifact |
+| Version | `v26.8.1` on the machine that wrote this entry |
+| Pinned at | not pinned — the step uses only `WebAssembly`, `TextEncoder`, `TextDecoder` and `node:fs`, which every maintained release provides; on CI it is the runner image's own Node |
+| Retrieved | `2026-09-30` |
+| Hash | not captured |
+| Scope | `scripts/wasm_binding.mjs` and the loader `crates/archogen-wasm/js/archogen.mjs`: reading the artifact's imports and exports with `WebAssembly.Module`, and running it as a page runs it (`API.5.3`) |
+| Known limitations | a browser's engine is not Node's. The loader uses only interfaces both provide, and the page (`API.5.4`) is where a browser runs it |
+| Revalidation trigger | the loader or the harness using an interface beyond those four; a runner image without Node |
+| Named as | `Node` |
+
 ## `miri`
 
 | Field | Value |
@@ -187,6 +201,6 @@ the day a chapter or a decision relies on it, as Miri did.
 | Retrieved | `2026-09-29` |
 | Hash | not captured |
 | Scope | the `extended` tier's `miri` step (`scripts/extended_miri.sh`): every test target of every workspace crate that finished within 300 s under Miri when measured (29 of 34), after a seeded dangling-pointer read has been refused by the same wiring |
-| Known limitations | §19: it checks the executions the tests drive, for the undefined behaviour it can detect; passing does not establish soundness. This workspace has no `unsafe` code, so today a pass says little beyond "the standard library was used soundly on these paths", which is why the step arms itself first |
-| Revalidation trigger | a `nightly` update; the first `unsafe` block in the workspace |
+| Known limitations | §19: it checks the executions the tests drive, for the undefined behaviour it can detect; passing does not establish soundness. The product holds no `unsafe` block. The first in the workspace is test code: `crates/archogen-wasm/tests/binding.rs` writes into the binding's buffer through a raw pointer, as a page writes into its memory, and on `2026-09-30` that test passed under this Miri (`API.5.2`). Beyond it, a pass says little more than "the standard library was used soundly on these paths", which is why the step arms itself first |
+| Revalidation trigger | a `nightly` update; an `unsafe` block in production code |
 | Named as | `Miri` |

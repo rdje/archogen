@@ -59,17 +59,18 @@ Rendered from a run, not retyped:
 ```console
 $ cargo xtask verify --tier integration
 tier: integration — before a push, and before closing a milestone
-  ✅ fmt                  0.26s  every Rust source is in canonical format
-  ✅ clippy               0.12s  no lint fires anywhere, including in tests and examples
-  ✅ tests                6.65s  every contract test passes, F28 and the semantic corpus included
-  ✅ doctrines            7.98s  every repository invariant holds on the working tree
-  ✅ self-tests          55.30s  every doctrine gate's RED arms still fire — a gate that stopped being able to fail is caught here
-  ✅ book                 0.16s  the mdBook builds, with its pinned release — it is the director's window, so a broken book is a broken deliverable
-  ✅ no-std-build         0.16s  the runtime core compiles for a bare-metal target (§14.3's "compile targets")
-  ✅ wasm-build           0.28s  the engine's I/O-free crates, derived from the workspace, compile for the browser target
-  ✅ emulator             0.19s  the pinned riscv-virt-up configuration renders and its toolchain is present (§3.2)
-  ✅ spike                0.15s  code runs on the verified target: boot, a timer interrupt taken and returned from, the context preserved, output on the UART — and a clobbered context is caught (M2.8.4)
-tier integration: passed — 10 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined
+  ✅ fmt                  0.37s  every Rust source is in canonical format
+  ✅ clippy               1.37s  no lint fires anywhere, including in tests and examples
+  ✅ tests                9.60s  every contract test passes, F28 and the semantic corpus included
+  ✅ doctrines           20.13s  every repository invariant holds on the working tree
+  ✅ self-tests          72.95s  every doctrine gate's RED arms still fire — a gate that stopped being able to fail is caught here
+  ✅ book                 0.13s  the mdBook builds, with its pinned release — it is the director's window, so a broken book is a broken deliverable
+  ✅ no-std-build         0.08s  the runtime core compiles for a bare-metal target (§14.3's "compile targets")
+  ✅ wasm-build           0.62s  the engine's I/O-free crates, derived from the workspace, compile for the browser target
+  ✅ wasm-binding         0.79s  the browser artifact imports nothing, exports what its record lists, and answers every tracked description byte for byte as the host build does, with archogen check's exit code
+  ✅ emulator             0.20s  the pinned riscv-virt-up configuration renders and its toolchain is present (§3.2)
+  ✅ spike                0.14s  code runs on the verified target: boot, a timer interrupt taken and returned from, the context preserved, output on the UART — and a clobbered context is caught (M2.8.4)
+tier integration: passed — 11 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined
 $ echo $?
 0
 ```
@@ -242,7 +243,30 @@ On `2026-09-30` the measured answer was yes: `eadl-model`, `archogen-evidence`, 
 and `rt-reference` compile. Four members are excluded: the command-line tool, the runner, the S0 emitter,
 which writes the crate it generates, and `eadl-front`, whose module loader reads files. The last is the
 one a browser needs most, and its reads already go through one `ModuleSource` implementation, so the wasm
-binding (`API.5`) can supply its own.
+binding (`API.5`) can supply its own. It does: the engine API, `archogen-api`, and the binding, `archogen-wasm`, have since joined the set, and
+the binding hands `eadl-front` its modules from memory.
+
+## The browser module answers as the command line does
+
+Compiling is not running. The `wasm-binding` step builds the module a web page loads
+(`docs/decisions/decision_wasm-binding.md`) and runs it in [Node](ledger.md#node), through the same loader a
+page uses (`crates/archogen-wasm/js/archogen.mjs`). It checks three things:
+
+- **the module imports nothing.** A WebAssembly module can reach the outside world only through its imports,
+  so one with none cannot touch a file, the network or a clock, whatever page loads it. This is read from the
+  compiled module by the runtime's own parser, not from the source;
+- **every tracked description gets the same answer.** Each one's response from the module is compared byte for
+  byte with the one the same code gives when built for this machine;
+- **and the same verdict as the command line.** Each response's exit code equals what `archogen check` exits
+  with for that file.
+
+```console
+$ bash scripts/wasm_binding.sh              # the step
+$ bash scripts/wasm_binding.sh --self-test  # its RED arms: a module with an import, one with an unlisted export,
+                                            # a response that differs, an exit that differs, a missing answer
+```
+
+Without Node the step is unavailable, which the tier reports and never counts as a pass.
 
 The engine API (`archogen-api`, `crates/archogen-api/src/lib.rs`, leaf `API.3.2`) joined the compiled set the
 day it was written, derived like the rest. It depends on `eadl-front`, which still compiles for wasm32 as its dependency. It never

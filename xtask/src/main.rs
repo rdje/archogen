@@ -340,6 +340,19 @@ const TIERS: &[Tier] = &[
                 },
             },
             Step {
+                name: "wasm-binding",
+                proves: "the browser artifact imports nothing, exports what its record lists, and answers every tracked \
+                         description byte for byte as the host build does, with archogen check's exit code",
+                action: Action::Run {
+                    program: "scripts/wasm_binding.sh",
+                    args: &[],
+                    requires: Some("node"),
+                    matters: "the wasm binding (leaf `API.5.3`) is checked on the artifact a page loads, through the \
+                              loader a page uses, and a JavaScript runtime is what runs it. Without one, nothing \
+                              shows that the compiled module agrees with the host build or the command line",
+                },
+            },
+            Step {
                 name: "emulator",
                 proves: "the pinned riscv-virt-up configuration renders and its toolchain is present (§3.2)",
                 action: Action::Run {

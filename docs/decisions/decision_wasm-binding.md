@@ -4,7 +4,7 @@
 - **Date:** `2026-09-30`
 - **Status:** `active`
 - **External sources:** [the Rust toolchain](../book/src/ledger.md#rust-toolchain), for the `wasm32-unknown-unknown`
-  target it already pins
+  target it already pins; [Node](../book/src/ledger.md#node), which runs the artifact in the tier (`API.5.3`)
 - **Owner / source:** leaf `API.5.1` (`docs/tasks/API.md`), deciding the transport that
   [[decision_programmatic-interface]] names and [[decision_engine-api]] leaves open: "Serialization is a transport
   concern, and a dependency for it would live in the transport crate."
@@ -135,7 +135,8 @@ not with a reading of the source. That the crate names no `std::fs`, `std::proce
 - An ES module in the crate, `crates/archogen-wasm/js/archogen.mjs`. It exports `instantiate(bytes)`, whose result
   has `check({ name, text, profile, modules })`. `modules` maps a module's name to its text.
 - It encodes the request, calls the three exports, and decodes the response with `JSON.parse`.
-- It uses only `WebAssembly`, `TextEncoder` and `TextDecoder`, which browsers and Node both provide. The page
+- It uses only `WebAssembly`, `TextEncoder` and `TextDecoder`, which browsers and [Node](../book/src/ledger.md#node)
+  both provide. The page
   (`API.5.4`) and the harness (`API.5.3`) load this one file, so what is checked is what a page runs.
 
 ### 10. Versions

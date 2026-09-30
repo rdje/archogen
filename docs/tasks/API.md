@@ -589,15 +589,53 @@ agent can drive. The server is a capability of the built binary, spawned per ins
     two entries; `Cargo.lock` gains the package; this leaf, the frontier, both logs and `CHANGELOG.md`.
 
 - ID: `API.5.3`
-  Status: `pending`
+  Status: `done`
   Goal: the artifact — built for `wasm32-unknown-unknown` in a tier step, its imports and exports checked by the
   platform's own `WebAssembly.Module`, and every tracked description run through it and compared with the CLI.
   Acceptance: an artifact with no imports and exactly the decided exports; for the whole population, JSON
   byte-identical to the host build's and an `exit` equal to `archogen check`'s (`decision_wasm-binding.md` §8); a
   JavaScript runtime that is absent makes the step unavailable, never passed; that runtime gets a ledger entry at
   the version the step uses, since the tier then relies on it.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the checklist — 108 descriptions, six exit statuses among them, agreeing both ways; six RED
+  arms and a broken loader refused on the real tree; the integration tier 11 of 11.
+  Commit: `ARCHOGEN-API-0203 (leaf API.5.3)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — after `API.5.2` the module had only been compiled, never run: `wasm-build`
+    compiles the pure set and executes nothing, and `git ls-files 'crates/archogen-wasm/js/*' 'scripts/wasm_binding*'`
+    → nothing. Whether the artifact imports nothing, and answers as the host build does, was unmeasured.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: the three things only the artifact can show are the compilation to
+    WebAssembly, the transport through linear memory, and the loader. WHY the comparison is two-sided: the byte
+    comparison with the host build isolates exactly those three, and `archogen check`'s exit code ties the answer
+    to the command line, which reaches the same API through a directory source. The harness reproduces that
+    source's rule, `DirectoryModules::file_for` → `<dir>/<module>.eadl`, read from `eadl-front`, so both sides ask
+    the same question. Measured on the first run: `bash scripts/wasm_binding.sh` → rc=0 over the population,
+    whose exit codes span six statuses (`cut -d, -f5` of the responses: 34 × `0`, 57 × `10`, 3 × `11`, 8 × `12`,
+    4 × `13`, 2 × `20`).
+  - [x] **FIX** — `crates/archogen-wasm/js/archogen.mjs`, the loader: it frames the request, reads addresses
+    unsigned (`>>> 0`, since wasm32's `usize` reaches JavaScript as a signed `i32`), and takes a new view of memory
+    after every call, since a call that grows memory detaches older views. `crates/archogen-wasm/examples/answers.rs`,
+    the host side. `scripts/wasm_binding.mjs`, which inspects the artifact with `WebAssembly.Module` and answers
+    through the loader. `scripts/wasm_binding.sh`, which builds the artifact, derives the population
+    (`git ls-files '*.eadl'` outside `docs/feedback/`), compares the three sides, and holds six RED arms. The
+    `wasm-binding` step of `integration`, requiring `node`. The ledger's `node` entry.
+  - [x] **ADDRESSED (verified)** — `bash scripts/wasm_binding.sh` → `OK — the artifact imports nothing and exports
+    what the record lists; 108 description(s) answered byte for byte as the host build answers them, each with
+    archogen check's exit code (v26.8.1)`, rc=0. RED on the real tree: the loader edited to send a profile nobody
+    supports → rc=1, all 108 descriptions named as differing, then restored (`cmp`) → rc=0.
+    `bash scripts/wasm_binding.sh --self-test` → `6 pass / 0 fail (6 arms)`: agreeing sides pass; a differing
+    response, a differing exit and a missing answer are each refused naming the description; a hand-written module
+    importing `env.f`, and one exporting `x` and none of the record's functions, are each refused.
+  - [x] **NO REGRESSION** — `cargo xtask verify --tier integration` → `tier integration: passed — 11 passed, 0 failed,
+    0 unavailable`, the new step and `self-tests` among them; `cargo test -q -p archogen-cli --test book_transcripts`
+    → `6 passed`; `cargo test -q -p eadl-front --test reference` → `55 passed`; `check_source_ledger.sh` →
+    `13 entries`, OK; `check_book_anchors.sh` → OK.
+  - [x] **LOCKSTEP** — `docs/book/src/verification.md`: the tier's transcript re-rendered from this run, the
+    browser section brought up to date, and "The browser module answers as the command line does";
+    `docs/book/src/ledger.md`: `node` added, and `miri` revalidated, since its trigger, the first `unsafe` block in
+    the workspace, fired with `API.5.2`'s test; `decision_wasm-binding.md` cites Node's entry; `TOOLBOX.md`; this
+    leaf, the frontier, both logs and `CHANGELOG.md`.
 
 - ID: `API.5.4`
   Status: `pending`
@@ -639,7 +677,7 @@ agent can drive. The server is a capability of the built binary, spawned per ins
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `API.5` | `active` | the wasm binding: designed (`API.5.1`) and built and tested on the host (`API.5.2`); the artifact checked against the CLI (`API.5.3`) next |
+| 1 | `API.5` | `active` | the wasm binding: designed, built, and its artifact checked against the host build and the CLI (`API.5.1`–`API.5.3`); the page and the book (`API.5.4`) next |
 | 2 | `API.6` | `pending` | the MCP server — the point of the tree, and last because everything above is what makes it safe to hand to an arbitrary agent |
 | 3 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6` |
 
@@ -708,6 +746,7 @@ this tree is taken when it does not delay that.
 | `2026-09-30` | `API.4.2` | the cost per byte measured; the budget's five legs; three mutations; the wasm build; the whole suite; the doctrines | about 75 bytes held per byte sent; both edges hold through the description and the modules; each mutation killed; 713 passed / 0 failed over 59 suites |
 | `2026-09-30` | `API.5.1` | a throwaway `cdylib` for `wasm32-unknown-unknown` on the pinned toolchain, read by `WebAssembly.Module`; `#[no_mangle]` under `deny(unsafe_code)`; the module-file rule read from `eadl-front` | no imports; `memory`, the functions and two linker globals exported; the lint refuses each unmangled export; `<dir>/<module>.eadl` |
 | `2026-09-30` | `API.5.2` | the host tests; the same tests under Miri; two catalogued mutations; the shape golden blessed once; the focused tier, the wasm build and the gates | 8 of 8, and 8 of 8 under Miri; both mutations killed; the golden passes unblessed; all green |
+| `2026-09-30` | `API.5.3` | the artifact inspected by `WebAssembly.Module`; every tracked description through the loader, against the host build and `archogen check`; six RED arms; a broken loader on the real tree; the integration tier | no imports, the decided exports; 108 of 108 byte-identical, each exit equal; 6 of 6; refused, then green when restored; 11 of 11 |
 
 ## Commit Log
 
@@ -724,6 +763,7 @@ this tree is taken when it does not delay that.
 | `API.4.2` | `ARCHOGEN-API-0183 (leaf API.4.2)` | **a byte budget per request** — 1 MiB by default, set by the instance; `tool-failure` past it, never partial; `API.4` closed |
 | `API.5.1` | `ARCHOGEN-API-0201 (leaf API.5.1)` | **the wasm binding decided** — three exports, a framed request, a versioned JSON response, no imports as the authority test |
 | `API.5.2` | `ARCHOGEN-API-0202 (leaf API.5.2)` | **the wasm binding, built and tested on the host** — `crates/archogen-wasm`, its framing, its encoding and its three exports |
+| `API.5.3` | `ARCHOGEN-API-0203 (leaf API.5.3)` | **the browser module answers as the command line does** — the `wasm-binding` tier step, the loader and the harness |
 
 ## Changelog
 
