@@ -3791,6 +3791,25 @@ mdBook that is the director's window into the project.
     `docs/TASK_TREE.md`, `MEMORY.md`, `CHANGELOG.md`.
 
 
+- ID: `PROGRAM.36`
+  Status: `pending`
+  Goal: `docs/decisions/` back under its total-bytes ceiling (327 680, `README_POLICY.md`'s routed destinations), by
+  giving the append-only review histories a home of their own rather than by raising the ceiling.
+  Why: on `2026-09-30`, `M2.7.1`'s fifth checkpoint took the directory to 329 428 bytes, measured by the staged
+  `README-ROUTES` run that refused that commit. The largest growth there is review history: rounds of an independent
+  review, appended and never edited, which the policy's table classes as append-only history, not as a partitioned
+  canonical record. The policy's route for a destination over its ceiling is "Record its current measured ceiling
+  as debt, stop further growth there, and open a separately owned partition/compaction task". Raising the ceiling
+  "needs the same explicit review as raising the README cap". This leaf is that task, and the total is recorded as
+  debt it owns.
+  Acceptance: the review histories (`decision_catalog-records-reviews.md` first) moved byte for byte to a destination
+  with append-only controls, registered in `README_POLICY.md` with its own ceilings and lifecycle; every link to
+  them and the knowledge map updated; the debt cell back to a number the directory is under; `README-ROUTES` and the
+  doctrine enforcer green. Until it closes, `docs/decisions/` grows only by what `M2.7.1`'s open review adds, and this
+  leaf goes before the next round is answered.
+  Verification: `pending`
+  Commit: `pending`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -3855,9 +3874,10 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.32` | `pending` | unblocked by the same ruling: closed leaves sealed out of the task trees, `M1` and `PROGRAM` first |
-| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
-| 3 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
+| 1 | `PROGRAM.36` | `pending` | `docs/decisions/` is over its total-bytes ceiling, recorded as debt this leaf owns: the review histories moved to an append-only home, before `M2.7.1`'s next round adds to it |
+| 2 | `PROGRAM.32` | `pending` | unblocked by the same ruling: closed leaves sealed out of the task trees, `M1` and `PROGRAM` first |
+| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 4 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,

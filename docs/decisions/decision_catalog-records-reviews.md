@@ -208,6 +208,39 @@ changes a derived line, so the example's digests stand; a worked forms digest is
 | F15 | ambiguity | seven details | (a) timing code facts follow the timing locator rule (§2); (b) an `unknown` supplies its name (§12); (c) a claim with no target needs every closure record to be `any` (§7); (d) dependency paths are resolved lexically, then held to §4 (§3); (e) a review's date is checked against its ledgering commit's committer date (§5); (f) no sysroot path is admitted (§3); (g) premise 3 (§0) |
 | F16 | nit | the summary's closure; identical forms not listed as an over-approximation; no worked forms digest; the variant's note; a refusal that could not fire | each fixed; the forms digest is in §3's example, and the variant's ownership note names the fourth task fact |
 
+**Round 7**, `2026-09-30`, the first judged against §0: all 22 values of the worked example matched again by two
+routes, hand-typed inputs through `shasum` and `openssl`, and a separate parser of the record's text through
+`hashlib` and `sha256sum`. D4, F2, F3, F4 and F6 were judged closed, and F8 closed under premise 1. C5, C7, C9, E1,
+E2, F1, F5 and F7 were judged partial or open. There were 15 new findings: 3 defects (G1, G2, G4), G5, a defect
+that bites only once `M4` gives images, and G3, an ambiguity at defect level. None of them needs a §0 premise
+broken. The verdict was "cannot be accepted as it stands". Answering G9 found one more: F14's answer matched a
+cost moved with its target renamed by a hash of the target's files, but a target's own id is in its `.env` and
+its `.eadl`, so no rename could ever match. No answer changes a hash input of the worked example, whose target's
+one key keeps to the new key rule, so its digests stand.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| C5, E1, F5 | partial, defect-level | through G1 and G3 | as those rows |
+| C7, F7 | partial | through G5 | as G5 |
+| C9, F13 | partial, defect-level | through G2 | as G2 |
+| E2, F1 | partial, defect-level | through G4 | as G4 |
+| G1 | defect | a `path` attribute written inside `cfg_attr(…)`, or produced by a local macro, loads a module from a non-`.rs` file that is never scanned, so an assembler include inside it reads bytes no hash covers | the scan covers every source path the compiler's dependency information lists, each of which must end in `.rs`; `path`, `link` and `used` are refused inside an attribute at any depth, within `cfg_attr` and `unsafe` too; `include_str!` and `include_bytes!` are refused with `include!`. Measured: a plain build of `rt-core` lists only its three `.rs` sources (§3) |
+| G2 | defect | a local macro takes `no_mangle` or a whole `extern "…" fn` as an argument and emits the attribute or a foreign block | a catalog package defines no macro: `macro_rules` and `macro` are refused. The attribute words are refused inside any macro invocation's arguments, and so is `extern`, whose exemption holds only outside them. The words that name importable attribute macros are refused anywhere, so a renamed import is caught too; `rt-core` passes (§3, §13) |
+| G3 | ambiguity, defect-level | whether `r#asm` is `asm` | an identifier is compared by its name, without `r#`, and a non-ASCII identifier is refused, since Rust's NFC normalization could turn one into a refused name (§3) |
+| G4 | defect | on an unpublished branch, a hand-copied lock line makes a branch commit the only ledgering commit in the claim's ancestry, so a rejection's items are read from substitute content | ledgering commits are searched in `origin/main`'s ancestry too, for a production claim and for §10, and each is verified before anything is read from it: the review's form must hash to the line's ledger hash, and the facet's bound hash must be the one the line names, or the catalog does not load. So every ledgering commit holds the same content (§5, §9, §11) |
+| G5 | defect, latent until `M4` | the image's closure was held only to the source-path rule, and the claim result did not record it | every not-established cause applies to the image's closure, which the claim result records and §10 checks (§7, §10) |
+| G6 | gap | nothing refused a nightly or moving channel in `rust-toolchain.toml` | the pin must be a release number, `MAJOR.MINOR.PATCH`; the repository's is `1.95.0` (§0, §3) |
+| G7 | gap | the loader's inputs lacked history; the gate's pending commit and its date were undefined; how a product reads history was undecided | the loader is given a history, from the repository's tooling under `xtask/`, outside `NO-SUBPROCESS`'s population; how a product reads history is `M4`'s. The gate's pending commit has `HEAD`, and `MERGE_HEAD` in a merge, as parents, and the gate's start time as its date (§4, §13) |
+| G8 | ambiguity | at a merge, whether a line is new against the first parent or all of them | against every parent, in the replay and in blessing, as the ledgering commit is defined (§9) |
+| G9 | gap | no byte grammar for the hash of a target's files, which cost items used | the item is replaced: a cost's name with its target's `TARGET_KIND` and `RUST_TARGET`, which a rename keeps. This also answers the defect found while answering (§5, §13) |
+| found while answering | defect | F14's hash of a target's files holds the target's own id, so a renamed target never matched | as G9 |
+| G10 | ambiguity | §12's γ said "one preemption", the variant's says "one preemption or service" | aligned with the variant (§12) |
+| G11 | gap | a timing change under a production record fails §6, so §8's independence holds only when the change lands with its review | stated, with the demotion route and its effect on claims, and for `.env`, workspace-manifest and toolchain edits too (§8) |
+| G12 | nit | §2 named a lineage line the lock does not hold; the summary read lineage from ledgering commits | both corrected: lineage is read from every earlier commit's records (§2, summary) |
+| G13 | nit | "every package in the repository passes" was false: the spike declares `[features]` | the rules bind only packages a record reaches, and the measurement is of `rt-core`, the one the slice names (§3) |
+| G14 | nit | a new target is not a contract edit for a `(targets any)` record | stated: only the behavioral review goes stale, and a cost on the new target is a timing edit (§8) |
+| G15 | nits | "checkout" for the written index; shell-special `.env` keys; where a `/` value resolves; a committer date the author controls | "written index" throughout; keys take one of six prefixes no shell variable has; a `/` value resolves from the root only; the date check's reach is a limit (§3, §13) |
+
 ## Why
 
 The decision record states the design as it stands. Its reviews are its history: every round appends a table,

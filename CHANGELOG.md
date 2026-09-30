@@ -5,6 +5,30 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog design's seventh review is answered, the first under its threat model
+
+`ARCHOGEN-M2-0210` (leaf `M2.7.1`, a fifth checkpoint).
+
+- The seventh independent review was the first judged against the stated threat model. It found three defects,
+  and none needed a premise broken:
+  - a module could be loaded from a file whose name does not end in `.rs`, and so escape the source scan;
+  - a macro written in the package could re-create a refused attribute or foreign block;
+  - a review line copied by hand onto an unpublished branch could decide what a published rejection covered.
+- The fixes:
+  - the scan now covers every file the compiler actually read;
+  - a package the catalog relies on may not define macros;
+  - every commit a review is read from is first checked against the review's recorded line, in the published
+    history too;
+  - the packages an image compiles are held to the same rules as the ones a claim read, and are recorded.
+- While answering, a weakness was found in an earlier answer: a rejected cost was meant to follow its target
+  through a rename, but it could never match, because a target's files hold its own name. It now follows the
+  target's kind and instruction set.
+- The worked example of the hash grammar moved, unchanged, into a record of its own, because the design had
+  outgrown its file's size limit. All 23 of its digests were recomputed.
+- With the example in its own file, the decisions folder as a whole went just over its size limit, 329 428 bytes
+  against 327 680. The limit was not raised. The overrun is recorded as owned debt, and a new leaf, `PROGRAM.36`,
+  moves the review histories, which only ever grow, to a home of their own before the next review round.
+
 ## archogen — the web page answers in a real browser as the book says
 
 `ARCHOGEN-API-0209` (leaf `API.5.5`, partial).
