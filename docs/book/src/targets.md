@@ -104,6 +104,35 @@ target-emulator: the §3.2 agreement holds: targets/riscv-virt-up.eadl agrees wi
 The description claims no instruction set, no interrupt route and no other device. Those would be facts
 nothing checks, and the interrupt timings the runtime analysis needs are the catalog's, with their evidence.
 
+## The first code on the target
+
+`M2.8` asks for an architecture spike: startup, a timer interrupt, the return from it, observable output, and
+context preservation, run in the emulator. `targets/riscv-virt-up/spike/` is that image (leaf `M2.8.4`). It is a
+small bare-metal program built for the `.env`'s `RUST_TARGET`, with no dependencies. It stays off the generation
+path; nothing archogen generates depends on it. Every address it touches is one the recorded device tree names:
+the RAM, the CLINT, the UART and the test device that powers the machine off.
+
+It starts in machine mode, installs a trap handler, arms the CLINT one millisecond ahead, and waits. The wait holds
+a known value in every register it can, callee-saved and caller-saved alike, because an interrupt can arrive
+between any two instructions and the handler must restore all of them. When the interrupt returns, it compares
+every one. Then it powers off through the test device, so QEMU's own exit status is the verdict.
+
+A context check that had never seen a corrupted context would pass for a handler that restored nothing. So the
+same image, built with its `clobber` feature, corrupts one register on the way out of the trap, and must be caught.
+`scripts/target_spike.sh` builds and runs both, with every QEMU option from the pinned `.env`, and is the `spike`
+step of the `integration` tier:
+
+```console
+$ bash scripts/target_spike.sh
+target-spike: spike: boot on riscv-virt-up
+target-spike: spike: timer armed
+target-spike: spike: machine-timer interrupt taken
+target-spike: spike: interrupt returned
+target-spike: spike: context preserved in 23 registers
+target-spike: spike: ok
+target-spike: the negative control was caught: a clobbered register reports `context CLOBBERED`, status 2
+```
+
 ## There is no board
 
 **No physical board has been selected or procured.** Physical-target evidence is blocked, and

@@ -4,6 +4,18 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the first program runs on the emulated board
+
+`ARCHOGEN-M2-0194` (leaf `M2.8.4`).
+
+- A tiny program now runs on the emulated RISC-V board. It starts up, sets a timer, takes the timer interrupt and
+  returns from it, checks that none of the values it was holding were disturbed, prints each step, and switches
+  the machine off, which tells the emulator it passed.
+- It proves its own check can fail. A deliberately broken copy, which spoils one value on the way back from the
+  interrupt, must be caught, and is caught every time it runs.
+- It is now a step of the full verification tier, which passes 10 of 10. This completes the emulator part of the
+  step. Running on a real board waits for a board.
+
 ## archogen — the emulated board is verified, and the full verification tier passes
 
 `ARCHOGEN-M2-0193` (leaf `M2.8.3.4`).

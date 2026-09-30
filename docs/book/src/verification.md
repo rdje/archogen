@@ -16,7 +16,7 @@ $ cargo xtask verify --list              # or: make tiers
 | Tier | When | What it covers |
 | --- | --- | --- |
 | `focused` | each edit loop, and every ordinary commit | format, lints, the whole contract suite |
-| `integration` | before a push, and before closing a milestone | the above, plus the doctrine enforcer, every doctrine gate's own RED arms, the book build, the `no_std` build, the browser (`wasm32`) build and the pinned emulator |
+| `integration` | before a push, and before closing a milestone | the above, plus the doctrine enforcer, every doctrine gate's own RED arms, the book build, the `no_std` build, the browser (`wasm32`) build, the pinned emulator, and the architecture spike run on it |
 | `extended` | scheduled, or when a change touches parsing, arithmetic or event ordering | fuzzing, mutation, Miri |
 | `hardware` | a change to target support, and every release gate | board regressions and timing observations |
 | `assurance` | every supported release | trust inventory, claim completeness, source and binary identity |
@@ -59,16 +59,17 @@ Rendered from a run, not retyped:
 ```console
 $ cargo xtask verify --tier integration
 tier: integration — before a push, and before closing a milestone
-  ✅ fmt                  0.22s  every Rust source is in canonical format
-  ✅ clippy               0.09s  no lint fires anywhere, including in tests and examples
-  ✅ tests                7.07s  every contract test passes, F28 and the semantic corpus included
-  ✅ doctrines            8.64s  every repository invariant holds on the working tree
-  ✅ self-tests          55.61s  every doctrine gate's RED arms still fire — a gate that stopped being able to fail is caught here
-  ✅ book                 0.10s  the mdBook builds, with its pinned release — it is the director's window, so a broken book is a broken deliverable
-  ✅ no-std-build         0.05s  the runtime core compiles for a bare-metal target (§14.3's "compile targets")
-  ✅ wasm-build           0.27s  the engine's I/O-free crates, derived from the workspace, compile for the browser target
-  ✅ emulator             0.15s  the pinned riscv-virt-up configuration renders and its toolchain is present (§3.2)
-tier integration: passed — 9 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined
+  ✅ fmt                  0.26s  every Rust source is in canonical format
+  ✅ clippy               0.12s  no lint fires anywhere, including in tests and examples
+  ✅ tests                6.65s  every contract test passes, F28 and the semantic corpus included
+  ✅ doctrines            7.98s  every repository invariant holds on the working tree
+  ✅ self-tests          55.30s  every doctrine gate's RED arms still fire — a gate that stopped being able to fail is caught here
+  ✅ book                 0.16s  the mdBook builds, with its pinned release — it is the director's window, so a broken book is a broken deliverable
+  ✅ no-std-build         0.16s  the runtime core compiles for a bare-metal target (§14.3's "compile targets")
+  ✅ wasm-build           0.28s  the engine's I/O-free crates, derived from the workspace, compile for the browser target
+  ✅ emulator             0.19s  the pinned riscv-virt-up configuration renders and its toolchain is present (§3.2)
+  ✅ spike                0.15s  code runs on the verified target: boot, a timer interrupt taken and returned from, the context preserved, output on the UART — and a clobbered context is caught (M2.8.4)
+tier integration: passed — 10 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined
 $ echo $?
 0
 ```
@@ -78,6 +79,9 @@ Nothing is absent, and nothing is owed. The emulator step runs against the insta
 - it dumps the device tree and finds it identical to the recorded one (`M2.8.2`);
 - it finds the target's eADL description in agreement with that tree (`M2.8.3.2`);
 - it finds `TARGET_VERIFIED=yes`, which leaf `M2.8.3.4` set on that evidence.
+
+The `spike` step then runs code on that target (leaf `M2.8.4`,
+[Where generated systems run](targets.md)).
 
 Until then the step was **quarantined**. It had run, nothing had disagreed, and the agreement it needed was not
 written. So the tier said `incomplete`, exit `20`, and named the owning leaf. That was right both ways: a pass

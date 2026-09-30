@@ -1,0 +1,30 @@
+# The `riscv-virt-up` architecture spike (leaf `M2.8.4`): the first code run on the verified target.
+#
+# Not a workspace member, and not on the generation path: it is a measurement of the target, built and run by
+# `scripts/target_spike.sh` for the `.env`'s `RUST_TARGET` under the pinned QEMU. No dependencies, like everything
+# under `crates/` (docs/decisions/decision_zero-dependency-engine-core.md).
+[package]
+name = "riscv-virt-spike"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "spike"
+path = "src/main.rs"
+test = false
+bench = false
+
+[features]
+# The negative control: the trap return corrupts `t1` (see `src/main.rs`).
+clobber = []
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+opt-level = "s"
+
+# Its own workspace root, so the repository's workspace does not claim it.
+[workspace]

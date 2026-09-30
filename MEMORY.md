@@ -13,11 +13,11 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M2` → frontier `M2.8.4`. `API`'s frontier is `API.5`; `M1`'s only open leaf, `M1.29.4`, and
+- **Active tree:** `M2` → frontier `M2.7`. `API`'s frontier is `API.5`; `M1`'s only open leaf, `M1.29.4`, and
   `PROGRAM`'s frontier are blocked (on a push, and on the director). Every other tree's frontier head is in
   `docs/TASK_TREE.md`; it is not copied here.
-- **Next action:** **`M2.8.4`** — the architecture spike: boot, a timer interrupt and its return, context preserved,
-  output on the UART, in the verified emulator; then `M2.7`, the catalog records.
+- **Next action:** **`M2.7`** — the catalog records (§9): the source of every cost, platform fact and interrupt
+  the runtime analysis variant takes; then `API.5` (the wasm binding).
 - **In flight:** branch **`wip/m2.9`** (`758cbcd`) is a checkpoint, not a finished leaf — `M2.9` records it as
   not compiling (`crates/rt-core/tests/differential.rs` unadapted).
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of

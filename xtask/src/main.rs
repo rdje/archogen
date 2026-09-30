@@ -352,6 +352,19 @@ const TIERS: &[Tier] = &[
                               docs/decisions/decision_findings-for-director-review.md",
                 },
             },
+            Step {
+                name: "spike",
+                proves: "code runs on the verified target: boot, a timer interrupt taken and returned from, the \
+                         context preserved, output on the UART — and a clobbered context is caught (M2.8.4)",
+                action: Action::Run {
+                    program: "scripts/target_spike.sh",
+                    args: &[],
+                    requires: Some("qemu-system-riscv64"),
+                    matters: "M2.8's architecture spike: the first binary run on `riscv-virt-up`, the \
+                              mechanisms the runtime rests on exercised on the emulated hardware, with a \
+                              negative control built in so the context check is shown able to fail",
+                },
+            },
         ],
     },
     Tier {
