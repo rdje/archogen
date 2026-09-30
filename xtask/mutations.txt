@@ -193,3 +193,25 @@ from
 to
         for stream in [if stderr.trim().is_empty() { stdout } else { stderr }] {
 end
+
+mutation transcript-backlog-keyed-by-line
+file crates/archogen-cli/tests/book_transcripts.rs
+test -p archogen-cli --test book_transcripts arm_1_an_edit_above_a_backlog_block_moves_nothing
+expect killed
+why PROGRAM.33: the backlog named a transcript by `chapter:line`, so a paragraph added above one (S0.8) read as a new transcript and a vanished one for unchanged bytes.
+from
+                    key,
+to
+                    key: format!("{name}:{}", i + 1),
+end
+
+mutation transcript-backlog-as-a-set
+file crates/archogen-cli/tests/book_transcripts.rs
+test -p archogen-cli --test book_transcripts arm_5_a_second_copy_of_a_backlog_block_is_new
+expect killed
+why PROGRAM.33: a set comparison lets a second copy of a listed transcript through, because its key is already there.
+from
+                entries.remove(index);
+to
+                let _ = index;
+end

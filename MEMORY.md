@@ -13,10 +13,10 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `PROGRAM` → frontier `PROGRAM.33`; `S0` is closed. Every other tree's frontier head is in `docs/TASK_TREE.md`;
+- **Active tree:** `M2` → frontier `M2.8.2`; `PROGRAM`'s frontier is all blocked (on a push, and on the director). Every other tree's frontier head is in `docs/TASK_TREE.md`;
   it is not copied here.
-- **Next action:** **`PROGRAM.33`** — key the book-transcript backlog by content, not line; then `M2.8.2` (the
-  device-tree fixture) and `API.1`. `PROGRAM.10.5` (the CI job's first real run) waits on the next push.
+- **Next action:** **`M2.8.2`** — the device-tree fixture for the pinned emulator, the first half of lifting the
+  `integration` tier's quarantine; then `API.1`. `PROGRAM.10.5` (the CI job's first real run) waits on the next push.
 - **In flight:** branch **`wip/m2.9`** (`758cbcd`) is a checkpoint, not a finished leaf — `M2.9` records it as
   not compiling (`crates/rt-core/tests/differential.rs` unadapted).
 - **⏳ Blockers (the director's):** `M1.29.4` — §7 of `decision_findings-for-director-review.md`; `M2.9` — §6 (a)

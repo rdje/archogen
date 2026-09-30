@@ -2209,7 +2209,7 @@ mdBook that is the director's window into the project.
   Commit: `pending`
 
 - ID: `PROGRAM.33`
-  Status: `pending`
+  Status: `done`
   Goal: the book-transcript backlog is keyed by what a transcript *is*, not by the line it sits on.
   Reproduce / issue: routed from `S0.8` (its ROUTING EVIDENCE has the measurement). `BACKLOG` in
   `crates/archogen-cli/tests/book_transcripts.rs` names each unreproducible transcript as `chapter:line`, so a
@@ -2220,8 +2220,37 @@ mdBook that is the director's window into the project.
   unreproducible transcript refused, a fixed one's entry required to go); arms for an edit above a backlog block
   (passes) and for a changed block (its entry no longer matches).
   Priority: **low** — a false failure that names its own fix, never a false pass.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the checklist — the eleven entries re-keyed by content, five arms, two catalogued mutations.
+  Commit: `ARCHOGEN-PROGRAM-0153 (leaf PROGRAM.33)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — measured by `S0.8`, whose paragraph above `s0.md`'s backlog block failed the test for
+    a block whose bytes had not changed:
+    ```text
+    $ cargo test -q -p archogen-cli --test book_transcripts
+      new transcript(s) over an input no reader can rebuild: ["s0.md:224"] — name a file in the repository
+      backlog entries that are no longer there: ["s0.md:214"] — delete them from BACKLOG
+      test result: FAILED. 0 passed; 1 failed
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — the key was the block's position, `format!("{name}:{}", i + 1)`, and
+    positions move with every edit above them: `git show HEAD~1:crates/archogen-cli/tests/book_transcripts.rs | grep -n
+    '"s0.md:'` → `40:    "s0.md:214",` in the version before `S0.8`, all eleven entries in that form.
+  - [x] **FIX** — the key is `<chapter>: <first error[ line>` plus ` @ <first --> location>` when the block has one;
+    the eleven entries re-keyed (unique, checked); the ratchet is a pure `backlog_problems()` comparing multisets.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    $ cargo test -q -p archogen-cli --test book_transcripts   → test result: ok. 6 passed; 0 failed
+      arm 1 an edit above a backlog block → its line moves, its key does not, no problem
+      arm 2 a changed block → 2 problems (new, and no longer there) · arm 3 a new block → 1 · arm 4 a fixed block → 1
+      arm 5 a second copy of a listed block → 1 (a set would have let it through)
+    $ cargo xtask mutate --only transcript-backlog-keyed-by-line transcript-backlog-as-a-set
+      mutate: OK — 2 mutation(s), each killed or surviving exactly as the catalog expects
+    ```
+  - [x] **NO REGRESSION** — the real book still passes, every checked transcript still compared exactly:
+    `cargo test -q -p archogen-cli --test book_transcripts` → `test result: ok. 6 passed; 0 failed`, the main test among
+    them; the whole suite at the commit.
+  - [x] **LOCKSTEP** — `verification.md`'s transcript section says how an entry is named, and why.
 
 - ID: `PROGRAM.9`
   Status: `done`
@@ -3556,10 +3585,9 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.33` | `pending` | **low** — the book-transcript backlog is keyed by line, so an edit above a backlog block fails the test for unchanged bytes; routed from `S0.8` |
-| 2 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
-| 3 | `PROGRAM.31` | `blocked` | on the director's ruling on the findings record's §8 — the changelog and development notes as rolling ledgers |
-| 4 | `PROGRAM.32` | `blocked` | on the same ruling — closed leaves sealed out of the task trees |
+| 1 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
+| 2 | `PROGRAM.31` | `blocked` | on the director's ruling on the findings record's §8 — the changelog and development notes as rolling ledgers |
+| 3 | `PROGRAM.32` | `blocked` | on the same ruling — closed leaves sealed out of the task trees |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
@@ -3691,6 +3719,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.23` | the threshold's copies before and after; the check's 10 arms and three mutations; the real distance | 8 copies outside the record, now 0; every arm and mutation as designed; a push not yet due |
 | `2026-09-30` | `PROGRAM.26` | a census of every neutral file against upstream and its base; two dry runs on clones; five spine arms against the adopted and the replaced updater; `make gate` | 21 identical, 7 project-carrying, only the updater and the version behind; nothing of ours modified by either run; the arms pass on the adopted updater and all five fail on the old one |
 | `2026-09-30` | `PROGRAM.30` | the moving refs at HEAD; the installed toolchains; the pins held by the ledger; the book builder's arms and mutations; the tier and the suite on `1.95.0` and `1.98.0` | three moving refs, and a newer compiler waiting in CI; all pinned, 9 pins held; the tier unchanged; both toolchains pass the same suite |
+| `2026-09-30` | `PROGRAM.33` | the backlog re-keyed by content; five arms; two catalogued mutations | the edit that broke `S0.8`'s run now moves nothing; a changed, new, fixed or copied block each caught; both mutations killed |
 
 ## Commit Log
 
@@ -3747,6 +3776,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.23` | `ARCHOGEN-PROGRAM-0149 (leaf PROGRAM.23)` | **the push cadence is a report, not prose** — one copy of the threshold, the distance on demand, never a gate |
 | `PROGRAM.26` | `ARCHOGEN-PROGRAM-0150 (leaf PROGRAM.26)` | **the scaffold updater never overwrites** — upstream's at `bedrock` `5af0c1c` plus one hunk; the spine at `0.10.0` |
 | `PROGRAM.30` | `ARCHOGEN-PROGRAM-0151 (leaf PROGRAM.30)` | **the build environment is named, not dated** — `rustc 1.95.0`, actions by commit, the book's mdBook checked |
+| `PROGRAM.33` | `ARCHOGEN-PROGRAM-0153 (leaf PROGRAM.33)` | **the transcript backlog names what a block is** — not the line it sits on |
 
 ## Changelog
 

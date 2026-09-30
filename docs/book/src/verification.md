@@ -517,7 +517,10 @@ nothing shortened or re-wrapped (`crates/archogen-cli/tests/book_transcripts.rs`
 five of the twelve checkable examples differed from a real run. Two had silently dropped the "first
 declared here" label that the text around them said was there. All five are re-rendered from runs.
 Eleven older examples use a file that is not in the repository, so no one can re-run them. They are
-listed in the test, and the list may shrink but never grow.
+listed in the test, and the list may shrink but never grow. Each is listed by what it shows, its first
+error and its first location, and not by the line it sits on. The first version used line numbers, and a
+paragraph added above one of them made the test fail for an example that had not changed (leaf
+`PROGRAM.33`).
 
 ## Why `focused` runs the whole suite
 

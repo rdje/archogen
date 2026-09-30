@@ -4,6 +4,16 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — a book example is known by what it shows, not where it sits
+
+`ARCHOGEN-PROGRAM-0153` (leaf `PROGRAM.33`).
+
+- Some examples in the book cannot be re-run, because their input file is not in the repository. The test
+  lists them by what they show, the first error and its location. It used to list them by line number, so
+  adding a paragraph above one broke the test.
+- New tests cover the list: an edit above an example changes nothing; a changed, new, removed or copied
+  example is each caught.
+
 ## archogen — the S0 chapter counts what is there
 
 `ARCHOGEN-S0-0152` (leaf `S0.8`; closes `S0` again).
