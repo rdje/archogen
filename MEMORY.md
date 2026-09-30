@@ -18,7 +18,7 @@
 - **Next action:** **`M2.7.1`**. Run round 8 of the independent review of `docs/decisions/decision_catalog-records.md`
   and its `-example.md` in a new read-only context, judged against its §0 threat model (the director's ruling);
   rounds 1–7 are answered in `docs/reviews/decision_catalog-records-reviews.md`. Close the leaf when a round finds
-  no defect. While a round runs, `M2.10`'s design. Then `M2.7.3`–`M2.7.5`, then `API.6`.
+  no defect. `M2.10.1`'s composition record awaits its own independent review. Then `M2.7.3`–`M2.7.5`, then `API.6`.
 - **In flight:** branch **`wip/m2.9`** (`758cbcd`) is a checkpoint, not a finished leaf — `M2.9` records it as
   not compiling (`crates/rt-core/tests/differential.rs` unadapted).
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of

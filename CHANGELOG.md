@@ -5,6 +5,23 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — how the runtime analysis's four shared inputs are built from their parts
+
+`ARCHOGEN-M2-0213` (leaf `M2.10.1`, a checkpoint: written, review pending).
+
+- The runtime timing analysis takes four inputs that no single party knows whole. A task's execution time is part
+  the application's code and part the kernel's. How long a task can be masked mixes both. How late a release's
+  service can start depends on the kernel, the hardware and the order interrupts are taken in. Until now the
+  caller had to supply each whole.
+- A new decision record says how each is built from parts, and who owns each part:
+  - execution time adds the task's own code, each call into the runtime and the completion path;
+  - the longest masked stretch is the longest of the task's masked runs, each adding up everything inside it;
+  - a release's lateness is a fixed point: rounding, whatever masked work is in progress, delivery, and every
+    interrupt service that can be taken first.
+- The rule throughout is the definition's own shape: parts that run one after another are added, never replaced
+  by the larger of them, which is the under-charge an earlier review warned about.
+- The record now goes to an independent review, and is implemented once the catalog code exists.
+
 ## archogen — sealing closed task-tree leaves waits on the director's hold on the scripts folder
 
 `ARCHOGEN-PROGRAM-0212` (leaf `PROGRAM.32`, status only).

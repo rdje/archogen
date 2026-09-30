@@ -61,8 +61,9 @@ analytically established bound.
 
 ⛔ *Ownership amended `2026-09-30` by leaf `M2.7.1`.* Where this record calls an input "engine knowledge", "the
 engine's" or "the platform's" (`J^release` above, condition 7 in §4, and "Why"), the input's **owner** is the one
-`decision_catalog-records.md` §12 assigns. `C_i`, `CS_i`, `J^release` and `J_s` are composite, and the caller
-supplies them until `M2.10`. So does `C_s` without its `no-application-code` fact. The enabled set and interrupt
+`decision_catalog-records.md` §12 assigns. `C_i`, `CS_i`, `J^release` and `J_s` are composite. How they are composed
+from parts is decided in `decision_runtime-composite-inputs.md` (`M2.10.1`), and the caller supplies them whole until
+`M2.10.2` implements it. So does `C_s` without its `no-application-code` fact. The enabled set and interrupt
 priorities are the plan's. Condition 8 is each catalog cost's `holds-under-preemption`, plus the application's
 declaration for its own figures. The platform fact that sections mask every interrupt is the conjunction of the catalog's
 fact for the kernel's sections and a fourth task fact, that no task masks other than through the runtime API
