@@ -2,7 +2,8 @@
 
 This document defines the repo-local task-tree workflow. A step-by-step setup guide is in
 [TASK_TREE_README.md](TASK_TREE_README.md). Individual trees live under
-[`tasks/`](tasks/); the leaf template is [`tasks/TEMPLATE.md`](tasks/TEMPLATE.md).
+[`tasks/`](tasks/); the leaf template is [`tasks/TEMPLATE.md`](tasks/TEMPLATE.md). A closed subtree's leaves are sealed to
+[`task-history/`](task-history/INDEX.md), each leaving a two-line stub in its tree.
 
 ## Purpose
 
@@ -53,7 +54,7 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 | Tree | Status | Frontier (next leaf) | Owner |
 | --- | --- | --- | --- |
 | [`S0`](tasks/S0.md) | `done` | — every leaf closed; F28 green, and the chapter's counts are measured (`S0.8`) | repo-local |
-| [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.32` — closed leaves sealed out of the task trees, as ruled on §8, around the 17 held template files; then `PROGRAM.39`, the decisions folder's partition; `.34` awaits the director's yes, `.10.5` the next push | repo-local |
+| [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.32` — `M1` and `PROGRAM` sealed to `task-history/`, its independent review next; then `PROGRAM.39`, the decisions folder's partition; `.34` awaits the director's yes, `.10.5` the next push | repo-local |
 | [`M1`](tasks/M1.md) | `active` | `M1.29.4` — blocked: module parameters wait on the director's call (findings §7); every other leaf is closed | repo-local |
 | [`API`](tasks/API.md) | `active` | `API.6` — the MCP server, behind the main line; `API.5`, the wasm binding and its page, done and run in a browser | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |

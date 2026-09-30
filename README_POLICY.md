@@ -53,7 +53,8 @@ leaf. "Overflows to" is where that destination's own guard sends what does not f
 | `docs/history/` | overflow | `PROGRAM.31` | archive_terminal | HISTORY-LEDGERS | 1200 | 131072 | 256 | HISTORY-LEDGERS | — |
 | `docs/reviews/` | overflow | `PROGRAM.36` | partitioned_canonical | 16 | 1200 | 131072 | 1024 | 262144 | — |
 | `docs/decisions/` | navigation + overflow | `PROGRAM.39` | partitioned_canonical | 40 | 1200 | 98304 | 1536 | 393216 | `docs/reviews/` |
-| `docs/tasks/` | overflow | `PROGRAM.32` | partitioned_canonical | 20 | debt: `PROGRAM.32` | debt: `PROGRAM.32` | debt: `PROGRAM.32` | debt: `PROGRAM.32` | — |
+| `docs/tasks/` | overflow | `PROGRAM.32` | partitioned_canonical | 20 | 3000 | 327680 | 3072 | 819200 | `docs/task-history/` |
+| `docs/task-history/` | overflow | `PROGRAM.32` | archive_terminal | TASK-HISTORY | 1800 | 163840 | 2048 | TASK-HISTORY | — |
 <!-- README-POLICY-LOCAL-ADOPTION:END -->
 
 ---

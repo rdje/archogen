@@ -578,6 +578,30 @@ $ bash scripts/check_history_ledgers.sh --seal       # a rollover the gate asks 
 $ bash scripts/check_history_ledgers.sh --self-test  # its RED arms, on scratch repositories
 ```
 
+## Finished work leaves the task trees
+
+A task tree records every leaf of its work, with its checklist and evidence. Most of it is finished work: on
+`2026-09-30`, 77% of `docs/tasks/M1.md` and 79% of `docs/tasks/PROGRAM.md`.
+- **What moves.** Once every leaf of one of a tree's top-level parts is done, those leaves move, byte for byte, into
+  one file under `docs/task-history/`.
+- **What stays.** Each leaf leaves two lines in the tree, its name and a link to where its text now is. The live
+  work, the list of what is next and the logs stay where they were.
+- **The proof.** Before anything is written, the tool checks that putting every leaf back would give the tree as it
+  was, byte for byte (`docs/decisions/decision_task-tree-sealing.md`).
+- **The first seal**, on `2026-09-30`: 112 leaves left `M1` and `PROGRAM`. `M1.md` went from 7 633 lines to 2 278, and
+  `PROGRAM.md` to 948.
+
+`TASK-HISTORY` checks on every commit:
+- that no sealed file has changed;
+- that `docs/task-history/INDEX.md` lists every sealed file and has lost no line;
+- that every sealed leaf has exactly one two-line placeholder in its tree, linking the file that holds it.
+
+```console
+$ bash scripts/check_task_history.sh                  # the gate
+$ bash scripts/check_task_history.sh --seal M1        # seal what has closed in a tree, with its proof
+$ bash scripts/check_task_history.sh --self-test      # its RED arms, on scratch repositories
+```
+
 ## Where the landing page sends things
 
 A size limit on `README.md` does not remove the need to write things down; it moves it somewhere else. So
@@ -586,9 +610,8 @@ an author to move detail to, is itself kept in bounds. `README-ROUTES` works tha
 links and from what its two checks actually print. It follows each place on to wherever that place's own check
 sends overflow, and holds each one to the ceiling registered for it in the policy. The changelog and the
 development notes are bounded as rolling ledgers (above). A design's review history, which grows by a round at a
-time, overflows from the decisions folder to `docs/reviews/`, which has ceilings of its own. Only the task trees are
-not bounded yet. They are recorded as debt owned by an open task, which the director's ruling on how the histories
-are kept has unblocked.
+time, overflows from the decisions folder to `docs/reviews/`, which has ceilings of its own. The task trees are
+bounded too, and their finished parts overflow to `docs/task-history/` (above).
 
 ```console
 $ bash scripts/check_readme_routes.sh              # the gate

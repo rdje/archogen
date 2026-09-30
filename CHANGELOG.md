@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — finished work moves out of the two largest task trees
+
+`ARCHOGEN-PROGRAM-0226` (leaf `PROGRAM.32.3`).
+
+- 112 finished items moved, unchanged, out of `M1.md` and `PROGRAM.md` into 69 files under `docs/task-history/`.
+  Each left two lines behind with a link. `M1.md` went from 7 633 lines to 2 278, and `PROGRAM.md` from 381 KB to
+  111 KB. What is still open, the list of what is next, and the logs did not change.
+- The move was checked twice. The tool proved it before writing anything. Then separate code rebuilt both files
+  from the placeholders and the moved files, and got the originals byte for byte. Every moved file's fingerprint
+  was checked again with a second tool.
+- The task-tree folder now has real size limits instead of recorded debt. The new folder has its own limits, and is
+  checked on every commit.
+
 ## archogen — the tool that moves finished work out of the task trees, and the check that keeps it there
 
 `ARCHOGEN-PROGRAM-0225` (leaf `PROGRAM.32.2`).

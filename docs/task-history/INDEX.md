@@ -1,0 +1,89 @@
+# docs/task-history/INDEX.md — closed subtrees sealed out of the task trees
+
+Each file below holds the leaves of one of a task tree's top-level subtrees, moved here byte for byte by
+`bash scripts/check_task_history.sh --seal <TREE>` once every leaf under it was `done`, and never edited again
+(`docs/decisions/decision_task-tree-sealing.md`). Each leaf left a two-line stub in its tree that links here. A row
+records the file's leaf count, lines, bytes and sha256, and the day it was sealed. The rows are append-only, and
+`TASK-HISTORY` checks every file against its row, and every leaf against its stub, on every commit.
+
+To read a closed leaf, follow its stub. To prove a file, compare `sha256sum docs/task-history/<TREE>/<SUBTREE>.md`
+with its row.
+
+## `M1`
+
+| Subtree | Leaves | Lines | Bytes | sha256 | Sealed |
+| --- | --- | --- | --- | --- | --- |
+| `M1.1` | 1 | 46 | 3463 | `3449b538fb7f8c7a31433fec669cbf111a7f9f12cf68c04d12fd02158733478b` | `2026-09-30` |
+| `M1.2` | 1 | 47 | 3545 | `9d32c26f32d70de04af6244a671742c245db0ff1ff34d6351217486d499e404b` | `2026-09-30` |
+| `M1.3` | 1 | 42 | 3084 | `0202e2d3ed4edff2f68a034aaae6ef25af46a569c9fd6cd704d649b3852d0110` | `2026-09-30` |
+| `M1.4` | 1 | 43 | 3131 | `0813acb48914b555a326902c74890c5bc8da001ad4e7699c32ec263b2b810bf7` | `2026-09-30` |
+| `M1.5` | 1 | 43 | 3182 | `53a937a3471937de40f2651b5bd9d00c09ba61e9c98de421453792677f4653b9` | `2026-09-30` |
+| `M1.6` | 1 | 38 | 2679 | `fba14c88bc6003e19fc518aa98d6b48f22ed6ed7237d72580846e9066245ffa2` | `2026-09-30` |
+| `M1.7` | 1 | 51 | 3979 | `668f41d17a980002a6e25f02c69f3606d965b33289832d0a4c9a74414a93c082` | `2026-09-30` |
+| `M1.8` | 1 | 52 | 4136 | `352ba08459304d5dcdd049c1116cd6849f902f7ef8cfc7e10c73b6a758a315d8` | `2026-09-30` |
+| `M1.9` | 1 | 61 | 4898 | `2ba65f414efa9f42f3e6e429b787fe25a02ddbda035cfaf6fbf49d8995b366da` | `2026-09-30` |
+| `M1.10` | 1 | 45 | 3350 | `a4b0a5ce2d998e7ef339af691d8141f081325bbc841bec637c632146b1a766d5` | `2026-09-30` |
+| `M1.11` | 1 | 88 | 6941 | `37707e032b3593b15a1f50de3367719e633196711fb7a193097218d199ed9808` | `2026-09-30` |
+| `M1.13` | 11 | 1511 | 138922 | `eb8ed49c6877183084497ca3fcf9943b6d513113728dae8cf2a77b9d4d2f1e07` | `2026-09-30` |
+| `M1.14` | 1 | 67 | 5152 | `bfa45fbc875f0c1cc7ababbbefbbe8c862b296f33a580f70a1152995e31d1110` | `2026-09-30` |
+| `M1.15` | 1 | 50 | 3709 | `99196ff8c626753c50a1cdfe6a9dc8b5ca9a60c04efd9bf753c2e8a790efbef7` | `2026-09-30` |
+| `M1.16` | 1 | 61 | 4904 | `0b5ef32772bec963905c6dfdb1ddde5170db1219e42026611c25f9e02a72f70f` | `2026-09-30` |
+| `M1.17` | 1 | 63 | 4545 | `e567da4aeb7727e16bdb4e6aac1feddef30b5f4cfb21cf230e96329c589515fb` | `2026-09-30` |
+| `M1.18` | 1 | 22 | 1909 | `5a47d57c1abf42d50196d3f3ab5b50654a45d1aa85d9dfa18b96a4996fdbd56c` | `2026-09-30` |
+| `M1.19` | 2 | 136 | 10626 | `796c687e98da12f9c8162f8d189ba531498a5c236bfcb162db1e6ba2aeb73ff5` | `2026-09-30` |
+| `M1.20` | 8 | 630 | 53428 | `a2d802bd9b951bebc7744906c7fcb56d738e96c86b740bf475c114be066c38e4` | `2026-09-30` |
+| `M1.21` | 1 | 72 | 5577 | `188384c97b5a65cdbbad8090759b88cf56d7722059a865e7958e1725bc81d23c` | `2026-09-30` |
+| `M1.22` | 1 | 66 | 5696 | `7ea3db2998e7edaf458b1d574e1a766bf20b1b6773f8b2490cb79768ea4933bc` | `2026-09-30` |
+| `M1.23` | 1 | 114 | 9866 | `bbc1371d404ff5fc1906ce6dff6bc8fd3da26687d238ca8403ee42b05de8bb5a` | `2026-09-30` |
+| `M1.24` | 1 | 192 | 17204 | `c65f120eadf6c92dc13faad858dbcb61d230a0cbcd24963841fe51618e06552a` | `2026-09-30` |
+| `M1.25` | 1 | 101 | 9083 | `71b8e8c541f2b081ecd386512f7d2db566397b6b37237a0ed3721eb0b1433fac` | `2026-09-30` |
+| `M1.26` | 6 | 543 | 46400 | `75c73dfd8cb1af34aff7fc1cd624b4401eac385e981d45d6b15df6f91b6d67fa` | `2026-09-30` |
+| `M1.37` | 1 | 61 | 5391 | `8718925c474efb2b69139aaee751272b95c4faad0a1beca120c1c37d76c98ae8` | `2026-09-30` |
+| `M1.38` | 1 | 61 | 5029 | `660dd1084f7a697fe87243303450f8dbfebdcf28b57fd9e0c1be1b2d32f8bbbe` | `2026-09-30` |
+| `M1.39` | 1 | 65 | 5275 | `e73260421d9e085b200366483e53d6043a66dc9bf4117ad56972373ff6ff336e` | `2026-09-30` |
+| `M1.27` | 1 | 95 | 7672 | `39cd26d738db6a0a7e3033b612ecd6e48fe2d4cd88d9e38bca12d877214b9d9f` | `2026-09-30` |
+| `M1.28` | 3 | 462 | 38673 | `5faf05df98645944d300144cdc4a5126beecf65432d9253333c0bccb1c6cf4a7` | `2026-09-30` |
+| `M1.30` | 1 | 90 | 7263 | `2a610972c62443db34b450072c3e0ab99b72c690cbfd59d50f97f4acc33e55e5` | `2026-09-30` |
+| `M1.31` | 1 | 129 | 10244 | `908a5c60581ecf6024a5f904a478c27cdad66e00477e071d32b45a2e1cd63e4c` | `2026-09-30` |
+| `M1.32` | 1 | 66 | 5061 | `3756547974169ae6c47f6395a76d4978a911f7b7227405c51662af2389be1c99` | `2026-09-30` |
+| `M1.33` | 1 | 94 | 7334 | `5cd6b59b7561c00dad3c8a3d28493ce5b5b494b8abaade3d62a1ed7e20a72459` | `2026-09-30` |
+| `M1.34` | 1 | 79 | 5951 | `5d9380c10973c76413fc6fe7f033173f3a84a7c9af65fc411cadb4d04aa83b63` | `2026-09-30` |
+| `M1.35` | 1 | 59 | 4327 | `17717d936b433db97038ef183479ce332fe710dd8c92d067dc54f19fb43492fb` | `2026-09-30` |
+| `M1.36` | 1 | 60 | 4278 | `898292c31082ece82232b2f3e2138e52fad71714a9a806967c886daa503dc6f5` | `2026-09-30` |
+
+## `PROGRAM`
+
+| Subtree | Leaves | Lines | Bytes | sha256 | Sealed |
+| --- | --- | --- | --- | --- | --- |
+| `PROGRAM.1` | 2 | 39 | 2615 | `93001611f38f8e3b363d827e31bc729241968020fdfcc82795614866b7d0bf82` | `2026-09-30` |
+| `PROGRAM.2` | 2 | 124 | 8310 | `26bf0f5e269d77da9ac9b3d1cec7891d0e42c005f423c237ecda38e4cfda4525` | `2026-09-30` |
+| `PROGRAM.3` | 1 | 84 | 6209 | `057ffc2b2c7deb74b583c8ea3abe6696f2e8e5cfc8a7d77e05e8374bcd97533e` | `2026-09-30` |
+| `PROGRAM.11` | 1 | 111 | 8845 | `ef4203ed02e2009365dffccbd8eb5e0c6b233f670bf3c6c8374af032c127c685` | `2026-09-30` |
+| `PROGRAM.12` | 1 | 54 | 4357 | `d03814e36e1ee672b29fa34c270611aa375cf93b6a54dfc2a18f2d4ba4ea692e` | `2026-09-30` |
+| `PROGRAM.13` | 1 | 38 | 3093 | `d8702d3a7cdcf7b28eee70f1bd90d50c42cf78460827f6a2c6abb262086d3b8e` | `2026-09-30` |
+| `PROGRAM.15` | 1 | 70 | 5564 | `ff66972611f2996b5f399880c35cb2bd44eb5f3c118b9c0a4099936fb542d0d7` | `2026-09-30` |
+| `PROGRAM.16` | 1 | 92 | 8236 | `ed661ea8b44b38b047fee38ff880fa6d6fd190bb571e3a4fe042b5e766f95fe7` | `2026-09-30` |
+| `PROGRAM.17` | 4 | 131 | 11305 | `5e54b16e78a735b71346324c5b90e53b79dd2638f6579947e855689e4dfc94db` | `2026-09-30` |
+| `PROGRAM.18` | 3 | 167 | 12701 | `3dbd7dec9445df82ba470f2746d76afdd59d57b45ec5390a2dbca55d2602cee4` | `2026-09-30` |
+| `PROGRAM.19` | 1 | 271 | 24096 | `5f40a6e7cf570884520a29abab66c3a0863f78b1f890556134184da06b411c97` | `2026-09-30` |
+| `PROGRAM.20` | 4 | 396 | 32731 | `f132de104d975077c0fe16078314c1bb3c433f10d6ca507a2ae58dc9fea50619` | `2026-09-30` |
+| `PROGRAM.21` | 1 | 246 | 20149 | `bc464cbfe1bf4c7dcd608b10081554e64ac5ba65cec8006c68ad61e42b3176a4` | `2026-09-30` |
+| `PROGRAM.22` | 1 | 28 | 2274 | `266afcead639a3e0fd6f341f0b9a36bcf10f57124694ad86938da83e4fe4c11e` | `2026-09-30` |
+| `PROGRAM.23` | 1 | 68 | 5564 | `8d536ec738b8ab492da300261ad04c145f1fe0fc5fcf84b2a72b3b7152fa5c7d` | `2026-09-30` |
+| `PROGRAM.33` | 1 | 45 | 3607 | `e9df92ef94741c93d46b86f32d4121841c80dcf75482ec39ecc465c2602f4aaf` | `2026-09-30` |
+| `PROGRAM.9` | 4 | 219 | 17122 | `4b5d87c5ec01bf66c9ec00af430ea357b2fae8ca88bfe044f018a143649e9839` | `2026-09-30` |
+| `PROGRAM.4` | 1 | 55 | 4224 | `fe2175796bfd4dd82088b24ecf83bf5711f1a5f230985899a85ac297ddbcedf6` | `2026-09-30` |
+| `PROGRAM.5` | 1 | 71 | 5564 | `f52e97e65d91f2666b458504417be4b0719e52340a5d2c9ce87b723a6597e9f1` | `2026-09-30` |
+| `PROGRAM.6` | 4 | 180 | 13634 | `e8fde3eaf80c3446e4935249e83e92b390e6d1f765506eaad44af2ee977869ce` | `2026-09-30` |
+| `PROGRAM.24` | 1 | 115 | 9074 | `59713a35643461fc79901c7aa694b857abd4e24cfa4a4a5d29f4742c9ea9805c` | `2026-09-30` |
+| `PROGRAM.25` | 1 | 65 | 5014 | `28b0af0eda3d70e5ef6c5067796f5664199ed95157ce3186775fdb1cf6fd70bb` | `2026-09-30` |
+| `PROGRAM.26` | 1 | 105 | 8691 | `6ecc14d7931f4a8e850bbc8b85ffe4ac01d86212b90be14d52fa39b258614fdd` | `2026-09-30` |
+| `PROGRAM.27` | 1 | 143 | 12132 | `b6005432ae053e6f3ea7926aab45915a0290dae8aeb86f3be161a067ed782c7e` | `2026-09-30` |
+| `PROGRAM.28` | 1 | 68 | 4887 | `eb29ab230b1bbbea29f882c7d67c36d4afba5f4afc52c74a83369b9ae6854608` | `2026-09-30` |
+| `PROGRAM.29` | 1 | 100 | 8694 | `69bb4535d2169eb0221d54b8cd1b145e92963f42819826d3e0ea08f5916f4909` | `2026-09-30` |
+| `PROGRAM.30` | 1 | 65 | 5466 | `b7a549042664366d2158a716d8516664f84a5563a7b47ae9985425999d05e312` | `2026-09-30` |
+| `PROGRAM.31` | 1 | 57 | 5677 | `a5cdcc1fb3dea756ff54bc369378958d6800244578264e1a0412f908fa2dc9f9` | `2026-09-30` |
+| `PROGRAM.35` | 3 | 132 | 11454 | `00df0e47c37aa56d86a5d8b8ce4b2f23ed56117ef3e3d94f374d5f32d42b4c69` | `2026-09-30` |
+| `PROGRAM.36` | 1 | 47 | 4446 | `d53beefbf5f999328b0a89d7fc67db472c00178252c71d026e79e0d6933bd10d` | `2026-09-30` |
+| `PROGRAM.37` | 1 | 36 | 3164 | `f3a78bc0d84f6b48a70be1a46ccb11cb7465788b44febd33d0279b8e7b7d9b82` | `2026-09-30` |
+| `PROGRAM.38` | 1 | 30 | 2522 | `8cd5f44b860435fb4c1e3f05d98c10aeb2e0d7642d56135dc91431a238b02979` | `2026-09-30` |
