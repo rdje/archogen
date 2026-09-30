@@ -16,10 +16,10 @@
 - **Active tree:** `M2` → frontier `M2.7.1`. `API`'s frontier is `API.5`; `M1`'s only open leaf, `M1.29.4`, and
   `PROGRAM`'s frontier are blocked (on a push, and on the director). Every other tree's frontier head is in
   `docs/TASK_TREE.md`; it is not copied here.
-- **Next action:** **`M2.7.1`**. Round 4 of the independent review of `docs/decisions/decision_catalog-records.md`
-  was launched `2026-09-30`; if its findings are not in the record's `## Review`, run it again in a new read-only
-  context. Answer every finding in the record, and close the leaf when a round finds no defect; the leaf's
-  checkpoint says what a round must re-check. Then `M2.7.2`–`M2.7.5`, then `API.5`.
+- **Next action:** **`M2.7.1`**. Run round 5 of the independent review of `docs/decisions/decision_catalog-records.md`
+  in a new read-only context; round 4 is answered in the record. Answer every finding in the record, and close the
+  leaf when a round finds no defect; the leaf's "To close" says what round 5 must re-check. Then `M2.7.2`–`M2.7.5`,
+  then `API.5`.
 - **In flight:** branch **`wip/m2.9`** (`758cbcd`) is a checkpoint, not a finished leaf — `M2.9` records it as
   not compiling (`crates/rt-core/tests/differential.rs` unadapted).
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of

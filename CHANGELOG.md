@@ -4,6 +4,25 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the catalog design's fourth review answered: a rejection now follows the content it rejected
+
+`ARCHOGEN-M2-0199` (leaf `M2.7.1`, a second checkpoint).
+
+- A fourth independent reviewer went through the catalog design and found four ways for a rejected or unreviewed
+  entry to back a claim someone relies on. It also showed that an earlier fix, for renaming an entry to escape a
+  rejection, could still be got round. Every finding is now answered in the design, and so are two more found
+  while answering.
+- A rejection now follows the content it rejected. If a rejected cost or piece of code moves to another entry, or
+  the entry is renamed, the rejection moves with it until a reviewer answers it. Put back content that was
+  rejected, and it does not become approved again.
+- Changing what an entry promises now sends both of its models back for review. So does adding a new target, for
+  entries that claim to hold on every target.
+- A claim that someone will rely on must now read committed history, check that no record of a review has been
+  removed from it, and rest on a system image built from exactly the reviewed code.
+- The design's worked example was recomputed by a separate implementation of the hashing rules. It first
+  reproduced every value from before the change, then gave the new ones, and three standard tools agree on them.
+  A fifth review is next.
+
 ## archogen — every place the README sends things is registered and bounded, or named as owned debt
 
 `ARCHOGEN-PROGRAM-0198` (leaf `PROGRAM.35.2`; `PROGRAM.35` closes).

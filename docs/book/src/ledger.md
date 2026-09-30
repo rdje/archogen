@@ -125,15 +125,15 @@ the day a chapter or a decision relies on it, as Miri did.
 
 | Field | Value |
 | --- | --- |
-| Source | the Rust toolchain: `rustc`, Cargo, rustfmt and clippy |
+| Source | the Rust toolchain: `rustc`, Cargo, rustup, rustfmt and clippy |
 | Version | `1.95.0` — `rustc 1.95.0 (59807616e 2026-04-14)`, `cargo 1.95.0 (f2d3ce0bd 2026-03-21)` |
 | Pinned at | `toml:rust-toolchain.toml:channel` — with its components (`rustfmt`, `clippy`) and targets (`riscv64imac-unknown-none-elf`, `wasm32-unknown-unknown`); CI installs exactly that file (`rustup toolchain install`) |
 | Retrieved | `2026-09-29`; pinned `2026-09-30` (`PROGRAM.30`) |
 | Hash | not captured |
-| Scope | every build and test. Also Cargo's workspace discovery, which the root `Cargo.toml`'s `exclude` relies on: Cargo keeps walking up past a workspace that excludes a package. That was measured on Cargo 1.95.0 by the arms of `LS-001`'s re-measurement |
-| Known limitations | not the newest release: on `2026-09-30` CI's former `@stable` would have taken a newer compiler than this machine's `stable`. `1.98.0` was measured passing the same `fmt`, `clippy -D warnings` and test suite that day, which is where a bump starts |
+| Scope | every build and test. Also Cargo's workspace discovery, which the root `Cargo.toml`'s `exclude` relies on: Cargo keeps walking up past a workspace that excludes a package. That was measured on Cargo 1.95.0 by the arms of `LS-001`'s re-measurement. The catalog gate (`decision_catalog-records.md` §3, leaf `M2.7.4`) rests on two claims about it: that `rustc`'s dependency information names every source file the compiler read, and that `rustc --print sysroot` names the toolchain's own files; and on rustup and Cargo discovering `rust-toolchain.toml` and `.cargo/config.toml` from the working directory upward. None of the three is measured yet: `M2.7.4` measures each before the gate relies on it |
+| Known limitations | the dependency information does not name a native library reached through `#[link]` or a linker argument, nor code a symbol reaches only at link time, which is why the catalog refuses both lexically. Not the newest release: on `2026-09-30` CI's former `@stable` would have taken a newer compiler than this machine's `stable`. `1.98.0` was measured passing the same `fmt`, `clippy -D warnings` and test suite that day, which is where a bump starts |
 | Revalidation trigger | the channel line changing; a toolchain release worth adopting |
-| Named as | `rustc`, `Cargo` |
+| Named as | `rustc`, `Cargo`, `rustup` |
 
 ## `fsmgen`
 
