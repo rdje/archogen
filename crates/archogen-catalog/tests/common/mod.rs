@@ -49,12 +49,17 @@ pub fn bare() -> String {
     format!("{})\n", record[..start].trim_end())
 }
 
-/// `example.base` as another record, `id`, with its reviews gone.
+/// `example.base` as another record, `id`, with its reviews gone, on `twin-target`: under its own selection, so
+/// the two never supply one name there (§12's `catalog-conflict`).
 pub fn copy(id: &str) -> String {
     edit(
-        &bare(),
-        "(catalog-record example.base",
-        &format!("(catalog-record {id}"),
+        &edit(
+            &bare(),
+            "(catalog-record example.base",
+            &format!("(catalog-record {id}"),
+        ),
+        "(targets example-target)",
+        "(targets twin-target)",
     )
 }
 
@@ -105,6 +110,14 @@ pub fn tree(records: &[&str], extra: &[(&str, &str)]) -> Tree {
         ),
         (
             "targets/example-target.eadl".to_owned(),
+            b"(platform)\n".to_vec(),
+        ),
+        (
+            "targets/twin-target.env".to_owned(),
+            b"TARGET_ID=twin-target\n".to_vec(),
+        ),
+        (
+            "targets/twin-target.eadl".to_owned(),
             b"(platform)\n".to_vec(),
         ),
     ]);
@@ -191,9 +204,14 @@ pub fn ledger(record: &str) -> String {
 
 /// `id` implementing package `crates/<package>`, with a timing fact `f` located in it.
 pub fn packaged(id: &str, package: &str) -> String {
+    let record = if id == "example.base" {
+        bare()
+    } else {
+        copy(id)
+    };
     edit(
         &edit(
-            &copy(id),
+            &record,
             "(implementation (version \"0.1.0\") (none \"a machine has no code\"))",
             &format!("(implementation (version \"0.1.0\") (sources \"crates/{package}\"))"),
         ),

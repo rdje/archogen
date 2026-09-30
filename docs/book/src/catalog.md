@@ -10,18 +10,19 @@ This chapter explains the design that answers it. The design is decided, and it 
 times before it was accepted. Its code is being built in the `archogen-catalog` crate (`M2.7.3`). So far that crate
 reads a record and refuses what breaks the design's rules for a single file, and computes every hash the design
 defines, reproducing the worked example's 23 values. It also reads the catalog's lock and checks it against the
-records of one tree: a changed facet without a version bump, a version going backwards, a missing line, and a
-review line that disagrees with its review or was taken out of its record. Over a history given in memory, it
-holds the lock append-only, recomputes every commit's new lines as blessing would write them, verifies each review
-at the commit that ledgered it, and accepts a waiver only where §9 allows one. From that history it derives each
-facet's evidence status: rejected while a rejection reaches it unanswered, by its own record, its lineage or
-content it shares, production only where a review names its current hash, stale or unreviewed otherwise. At each
-commit that recorded a review it checks the review's date against the commit's and that every answer names a
-rejection the facet inherits, and it keeps a deleted record's rejection from being shed. Given what a claim
-recorded, it names every line and lookup that no longer holds, even when the catalog no longer loads. The rest of
-the crate, the
-gate, the check that protects it and the first records are the next leaves (`M2.7.3` to `M2.7.6`). Until they
-land, nothing loads a catalog, and `catalog/` is empty.
+records of one tree: a changed facet without a version bump, a version going backwards, a missing line, and a review
+line that disagrees with its review or was taken out of its record. Over a history given in memory, it holds the
+lock append-only, recomputes every commit's new lines as blessing would write them, verifies each review at the
+commit that ledgered it, and accepts a waiver only where §9 allows one. From that history it derives each facet's
+evidence status: rejected while a rejection reaches it unanswered, by its own record, its lineage or content it
+shares, production only where a review names its current hash, stale or unreviewed otherwise. At each commit that
+recorded a review it checks the review's date against the commit's and that every answer names a rejection the facet
+inherits, and it keeps a deleted record's rejection from being shed. Given what a claim recorded, it names every
+line and lookup that no longer holds, even when the catalog no longer loads. It answers the analysis's lookups by
+profile and target, refuses a name that more than one record supplies, and reads each fact grouped with a cost only
+from the record that supplies the cost. The rest of the crate, the gate, the check that protects it and the first
+records are the next leaves (`M2.7.3` to `M2.7.6`). Until they land, nothing loads a catalog, and `catalog/` is
+empty.
 
 ## The records that hold it
 
@@ -133,7 +134,7 @@ specification's. Round 11 found none live, and the record was accepted. Its hist
 
 - **Nothing loads a catalog.** `catalog/` is empty. The crate reads records, computes their hashes and checks the
   lock, over one tree and over a history, derives evidence status, checks each review where it was recorded and
-  traces invalidation so far; the namespaces, lookups and claims are the rest of `M2.7.3`, and the gate that gives it the history is `M2.7.4`'s.
+  traces invalidation, and answers lookups so far; the production namespace and claims are the rest of `M2.7.3`, and the gate that gives it the history is `M2.7.4`'s.
 - **The port's facts are unknown.** The architecture port is assembly, which no record can hold yet, so every
   analysis of the runtime variant over the catalog is inconclusive until `M2.12` gives the port's code a record
   format.

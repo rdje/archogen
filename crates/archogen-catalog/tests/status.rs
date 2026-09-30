@@ -88,6 +88,14 @@ fn tree(records: &[&str], extra: &[(&str, &str)]) -> Tree {
             "targets/example-target.eadl".to_owned(),
             b"(platform)\n".to_vec(),
         ),
+        (
+            "targets/twin-target.env".to_owned(),
+            b"TARGET_ID=twin-target\n".to_vec(),
+        ),
+        (
+            "targets/twin-target.eadl".to_owned(),
+            b"(platform)\n".to_vec(),
+        ),
     ]);
     for (path, bytes) in extra {
         tree.insert(*path, bytes.as_bytes());
@@ -166,12 +174,17 @@ fn ledger(record: &str) -> String {
     review_ledger_hash(&read.id, read.reviews.last().unwrap()).to_string()
 }
 
-/// `example.base` as another record, `id`, with its reviews gone.
+/// `example.base` as another record, `id`, with its reviews gone, on `twin-target`: under its own selection, so
+/// the two never supply one name there (§12's `catalog-conflict`).
 fn copy(id: &str) -> String {
     edit(
-        &bare(),
-        "(catalog-record example.base",
-        &format!("(catalog-record {id}"),
+        &edit(
+            &bare(),
+            "(catalog-record example.base",
+            &format!("(catalog-record {id}"),
+        ),
+        "(targets example-target)",
+        "(targets twin-target)",
     )
 }
 
@@ -459,14 +472,39 @@ fn a_rejected_cost_reaches_the_same_cost_on_its_target_and_on_a_target_of_the_sa
     };
     let files: Vec<(&str, &str)> = files.iter().map(|(p, b)| (*p, *b)).collect();
     let with_scope = |r: String| edit(&r, "(scope \"one switch\")", "(scope \"one other switch\")");
-    // With the example's `.env`, which gives neither key, the name and target alone reach.
-    assert_eq!(
-        reached(
-            TIMING,
-            costed("example-target"),
-            with_scope(other("example-target")),
-            &[]
+    // With the example's `.env`, which gives neither key, the name and target alone reach. Two records cannot
+    // both supply `switch` on one target, so the rejected record's cost is renamed before the other takes it up.
+    let base_cost = costed("example-target");
+    let t0 = tree(&[&base_cost], &[]);
+    let rejected = with(
+        &base_cost,
+        &review(TIMING, &bound(&t0, "example.base", TIMING), "rejected", &[]),
+    );
+    let renamed = edit(
+        &edit(&rejected, "(cost switch", "(cost dispatch"),
+        "(timing-model (version \"0.1.0\")",
+        "(timing-model (version \"0.1.1\")",
+    );
+    let taker = edit(
+        &edit(
+            &with_scope(other("example-target")),
+            "(fact one-processor yes",
+            "(fact compare-level yes",
         ),
+        "(basis \"the model says so\")",
+        "(basis \"another model\")",
+    );
+    let mut h = History::default();
+    add(&mut h, &n('1'), &[], tree(&[&rejected], &[]), None);
+    add(
+        &mut h,
+        &n('2'),
+        &[&n('1')],
+        tree(&[&renamed, &taker], &[]),
+        None,
+    );
+    assert_eq!(
+        load(&h, &[&n('1')], &n('2')).facets[&(other_id(), TIMING)],
         Status::Rejected,
         "the same name and target"
     );
@@ -933,9 +971,14 @@ fn a_waived_line_binds_through_its_line_and_its_form() {
 
 /// `id` implementing package `crates/<package>`, with a timing fact `f` located in it.
 fn packaged(id: &str, package: &str) -> String {
+    let record = if id == "example.base" {
+        bare()
+    } else {
+        copy(id)
+    };
     edit(
         &edit(
-            &copy(id),
+            &record,
             "(implementation (version \"0.1.0\") (none \"a machine has no code\"))",
             &format!("(implementation (version \"0.1.0\") (sources \"crates/{package}\"))"),
         ),

@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog answers the analysis's lookups, one source per name
+
+`ARCHOGEN-M2-0256` (leaf `M2.7.3.5.2`).
+
+- The analysis asks the catalog for a fact or a cost by name, for a profile and a target. Exactly one component may
+  answer; two that disagree, or even agree, are refused as a conflict to investigate rather than averaged.
+- A fact about the code of a measured cost is read only from the component that supplies that cost, so one review
+  always sees the fact and the code together.
+
 ## archogen — the catalog reader knows the facts the analysis reads
 
 `ARCHOGEN-M2-0255` (leaf `M2.7.3.5.1`).

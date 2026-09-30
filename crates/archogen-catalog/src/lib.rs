@@ -16,7 +16,8 @@
 //! commit, each review verified where it was ledgered, and each waiver judged (`M2.7.3.3.2`); and [`status`], which
 //! derives §5's evidence status of every facet and record (`M2.7.3.4.1`); and [`ledger`], the checks §5 re-applies
 //! at each ledgering commit and §9's retired ids, which the replay and the load run (`M2.7.3.4.2`); and
-//! [`invalidation`], which judges a claim's recorded closure and reads against the catalog now (`M2.7.3.4.3`).
+//! [`invalidation`], which judges a claim's recorded closure and reads against the catalog now (`M2.7.3.4.3`); and
+//! [`selection`], §12's lookups, conflicts and groups (`M2.7.3.5.2`).
 
 pub mod grammar;
 pub mod hash;
@@ -28,6 +29,7 @@ pub mod manifest;
 pub mod record;
 pub mod refusal;
 pub mod replay;
+pub mod selection;
 pub mod status;
 pub mod tree;
 

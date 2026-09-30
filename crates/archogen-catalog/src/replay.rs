@@ -304,6 +304,9 @@ pub fn replay_under(
         let commit = history.get(&name)?;
         let catalog = Catalog::read(commit.tree.clone()).map_err(|r| at_commit(&name, r))?;
         let hashes = catalog.hashes().map_err(|r| at_commit(&name, r))?;
+        catalog
+            .check_selections()
+            .map_err(|r| at_commit(&name, r))?;
         let lock = lock_at(history, &name, known)?;
         match &lock {
             Some(lock) => lock::check(lock, &catalog, &hashes),
