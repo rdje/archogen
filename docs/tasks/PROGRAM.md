@@ -811,6 +811,20 @@ mdBook that is the director's window into the project.
     `docs/book/src/verification.md`; this leaf, the frontier and both logs; `LIVE_STATUS.md`, `docs/TASK_TREE.md`,
     `MEMORY.md`, `CHANGELOG.md`.
 
+- ID: `PROGRAM.41`
+  Status: `pending` — starts when `docs/decisions/` passes 380 000 bytes, or sooner
+  Goal: the next compaction of `docs/decisions/`, named by `docs/decisions/decision_decisions-folder-ceiling.md`. The
+  findings register's settled items, §2, §4, §8 and §10, about 9.7 KB, are sealed out of it the way closed leaves
+  are: moved byte for byte, with a stub per item keeping its section number, since the numbers are cited across the
+  trees.
+  Why: after the partition (`PROGRAM.39`), the folder was 366 543 bytes on `2026-09-30` against a cap of 393 216.
+  Each review round of the catalog design adds several kilobytes, and only a new ruling can raise the cap.
+  Acceptance: the items moved and stubbed, every citation of their section numbers still resolving; a digest and
+  a check that the moved text never changes, reusing `TASK-HISTORY`'s pattern or a register of its own; the
+  folder's measurement in the inventory.
+  Verification: `pending`
+  Commit: `pending`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -875,8 +889,9 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
-| 2 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
+| 1 | `PROGRAM.41` | `pending` | the decisions folder's next compaction, the findings register's settled items, before it passes 380 000 bytes |
+| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 3 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,

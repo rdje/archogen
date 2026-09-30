@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the decisions folder's next compaction is scheduled
+
+`ARCHOGEN-PROGRAM-0232` (leaf `PROGRAM.41`, opened).
+
+- After its split, the decisions folder holds 366 543 of the 393 216 bytes it may hold, and each catalog review adds
+  a few kilobytes. The ceiling record names the next compaction: sealing the settled items of the director's
+  findings register, about 9.7 KB, with each keeping its section number.
+- It is now a task of its own, due before the folder passes 380 000 bytes, so the limit is not met by surprise.
+
 ## archogen — the catalog's eleventh review and the composition's fourth are answered
 
 `ARCHOGEN-M2-0231` (leaf `M2.7.1`, a tenth checkpoint; with `M2.10.1`'s fifth).

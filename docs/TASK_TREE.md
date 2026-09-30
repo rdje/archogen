@@ -54,7 +54,7 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 | Tree | Status | Frontier (next leaf) | Owner |
 | --- | --- | --- | --- |
 | [`S0`](tasks/S0.md) | `done` | — every leaf closed; F28 green, and the chapter's counts are measured (`S0.8`) | repo-local |
-| [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.34` — awaits the director's yes; `.10.5` the next push | repo-local |
+| [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.41` — the decisions folder's next compaction, due before its limit; `.34` awaits the director's yes, `.10.5` the next push | repo-local |
 | [`M1`](tasks/M1.md) | `active` | `M1.29.4` — blocked: module parameters wait on the director's call (findings §7); every other leaf is closed | repo-local |
 | [`API`](tasks/API.md) | `active` | `API.6` — the MCP server, behind the main line; `API.5`, the wasm binding and its page, done and run in a browser | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |
