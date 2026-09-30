@@ -10,6 +10,9 @@
 # THE POPULATION is derived from the code, never listed here:
 #   - every `pub const X: &str = "<name>/<n>…"` under `crates/*/src` — a format identifier;
 #   - every `pub const X_VERSION: &str = "<x.y.z>"` — a version constant;
+#   - every `pub const X: Version = Version { major: <n>, minor: <n> }` — an API version, as `<n>.<n>` (leaf
+#     `API.3.4`: the engine API's is a major and a minor, and a shape the register could not see would let a
+#     bump land unrecorded);
 #   - every `id: "<name>-v<n>"` under `crates/*/src` — a profile id;
 #   - the engine version, `version = "…"` in every workspace member's manifest, which must all agree.
 # Each is claimed by exactly one register entry (`Declared at`: `const:<file>:<NAME>`, `profile:<file>:<id>`,
@@ -62,6 +65,8 @@ declared() {
     sed -nE 's/^[[:space:]]*pub const ([A-Z0-9_]+): &str = "([a-z][a-z0-9-]*\/[0-9]+)[^"]*";.*/\1\t\2/p' "$f" |
       while IFS=$'\t' read -r name value; do printf 'const:%s:%s\t%s\n' "$f" "$name" "$value"; done
     sed -nE 's/^[[:space:]]*pub const ([A-Z0-9_]*VERSION): &str = "([0-9]+\.[0-9]+\.[0-9]+)";.*/\1\t\2/p' "$f" |
+      while IFS=$'\t' read -r name value; do printf 'const:%s:%s\t%s\n' "$f" "$name" "$value"; done
+    sed -nE 's/^[[:space:]]*pub const ([A-Z0-9_]+): Version = Version \{ major: ([0-9]+), minor: ([0-9]+) \};.*/\1\t\2.\3/p' "$f" |
       while IFS=$'\t' read -r name value; do printf 'const:%s:%s\t%s\n' "$f" "$name" "$value"; done
     sed -nE 's/^[[:space:]]*id: "([a-z0-9-]+-v[0-9]+)",.*/\1/p' "$f" |
       while IFS= read -r id; do printf 'profile:%s:%s\t%s\n' "$f" "$id" "$id"; done
@@ -141,11 +146,12 @@ self_test() {
     printf '[package]\nname = "a"\nversion = "1.2.3"\n' > "$work/crates/a/Cargo.toml"
     printf '[package]\nname = "b"\nversion = "1.2.3"\n' > "$work/crates/b/Cargo.toml"
     printf 'pub const FORMAT: &str = "thing/1";\npub const IMPL_VERSION: &str = "0.4.0";\n' > "$work/crates/a/src/lib.rs"
-    printf 'const P: Profile = Profile {\n    id: "core-v1",\n};\n' > "$work/crates/b/src/lib.rs"
+    printf 'const P: Profile = Profile {\n    id: "core-v1",\n};\npub const API: Version = Version { major: 2, minor: 1 };\n' > "$work/crates/b/src/lib.rs"
     { printf '# Versions\n'
       entry format '`thing/1`' '`const:crates/a/src/lib.rs:FORMAT`'
       entry impl '`0.4.0`' '`const:crates/a/src/lib.rs:IMPL_VERSION`'
       entry profile '`core-v1`' '`profile:crates/b/src/lib.rs:core-v1`'
+      entry api '`2.1`' '`const:crates/b/src/lib.rs:API`'
       entry engine '`1.2.3`' '`manifests`'
       printf '\n## Not versioned yet\n\n- models\n'
     } > "$work/$REGISTER"
@@ -170,6 +176,10 @@ self_test() {
   arm "a new format identifier with no entry is refused" 1 "const:crates/a/src/lib.rs:WIRE = 'wire/1'"
   fresh; printf 'pub const PLAN_VERSION: &str = "2.0.0";\n' >> "$work/crates/b/src/lib.rs"
   arm "a new version constant with no entry is refused" 1 "const:crates/b/src/lib.rs:PLAN_VERSION = '2.0.0'"
+  fresh; sed -i.bak 's/minor: 1 }/minor: 2 }/' "$work/crates/b/src/lib.rs"; rm -f "$work/crates/b/src/lib.rs.bak"
+  arm "an API minor bumped without its entry is refused" 1 "the code says '2.2'"
+  fresh; printf 'pub const WIRE_API: Version = Version { major: 1, minor: 0 };\n' >> "$work/crates/a/src/lib.rs"
+  arm "a new API version with no entry is refused" 1 "const:crates/a/src/lib.rs:WIRE_API = '1.0'"
   fresh; sed -i.bak 's/core-v1/core-v2/' "$work/crates/b/src/lib.rs"; rm -f "$work/crates/b/src/lib.rs.bak"
   arm "a profile id changed without its entry is refused" 1 "profile:crates/b/src/lib.rs:core-v2"
   fresh; sed -i.bak 's/1.2.3/1.3.0/' "$work/crates/b/Cargo.toml"; rm -f "$work/crates/b/Cargo.toml.bak"

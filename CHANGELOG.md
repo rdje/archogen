@@ -4,6 +4,18 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the engine API is documented, and its version is fixed at 1.0
+
+`ARCHOGEN-API-0177` (leaf `API.3.4`).
+
+- The book has a new chapter, "The engine API". It covers what the API takes and returns, the outcomes it can
+  give, a small program that checks three descriptions held in memory, the version and what it promises, and
+  what stays outside the API. A test runs the program and compares its output with the chapter.
+- The API's version, `1.0`, is fixed and listed with the project's other versions. The check that keeps that
+  list honest could not see this kind of version declaration, so it was taught to, and a version bump can no
+  longer land unrecorded.
+- With this, the engine API step is complete.
+
 ## archogen — the command line checks through the engine API
 
 `ARCHOGEN-API-0176` (leaf `API.3.3`).

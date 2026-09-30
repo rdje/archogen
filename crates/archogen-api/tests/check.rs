@@ -243,3 +243,36 @@ fn the_version_and_the_operations_are_declared() {
     assert_eq!(VERSION.to_string(), "1.0");
     assert_eq!(OPERATIONS, ["check"]);
 }
+
+/// The version the response's shape below belongs to.
+const SHAPE_OF: archogen_api::Version = archogen_api::Version { major: 1, minor: 0 };
+
+#[test]
+fn the_response_shape_is_the_one_its_version_declares() {
+    // ⛔ Exhaustive on purpose: no `..`. A field added to or removed from `Response` or `Judgement` stops this
+    // compiling, here, beside the version the shape belongs to. Adding one is a minor (`VERSION` and `SHAPE_OF`
+    // move together); removing one or changing its meaning is a new major (`docs/decisions/decision_engine-api.md`).
+    let response = check_file("examples/periodic-three/system.eadl", None);
+    let Response {
+        version,
+        status: _,
+        notes: _,
+        hint: _,
+        diagnostics: _,
+        sources: _,
+        judged,
+    } = response;
+    let archogen_api::Judgement {
+        verdict: _,
+        language: _,
+        profile: _,
+        description: _,
+        declarations: _,
+        instances: _,
+        closure: _,
+    } = judged.expect("judged");
+    assert_eq!(
+        version, SHAPE_OF,
+        "the response's shape was recorded for {SHAPE_OF}"
+    );
+}

@@ -41,8 +41,9 @@ judge a description any other way.
    major, an operation is never removed, a response field is never removed or given a new meaning, and the
    status vocabulary only grows. Adding an operation or a field is a minor. Anything else is a new major. A
    description whose verdict changes under the same language version is not an API change. It is a
-   language change, and it goes through `docs/semantics/migrations/`. The first version is `1.0`. It is
-   fixed when `API.3` closes; until then its children may still change the shape.
+   language change, and it goes through `docs/semantics/migrations/`. The first version is `1.0`.
+   *Fixed `2026-09-30`, when `API.3` closed (leaf `API.3.4`). It is registered in `docs/book/src/versions.md`,
+   whose gate learned the API version's shape so that a bump cannot land unrecorded.*
 6. **Parity, both ways, gated** (`ROADMAP.md` §10.4: "a capability that exists only behind the CLI does not
    exist programmatically, and the reverse"):
    - *structurally:* the CLI's source calls no judging entry point of the engine (`check`,
@@ -76,7 +77,8 @@ judge a description any other way.
 - A new operation lands in the API first and in the CLI as its consumer. A command that judges a
   description any other way fails the structural parity leg.
 - A new response field or operation bumps `VERSION`'s minor in the same change. Removing or redefining
-  one is a major. Until `API.3` closes, the shape may change without a bump.
+  one is a major. The exhaustive reading of the response in `crates/archogen-api/tests/check.rs` stops
+  compiling when a field moves, beside the version its shape belongs to.
 - `archogen build` stays outside: it calls the API's `check`, and its generation is the CLI's alone
   (§10.4, [[programmatic-interface]] ruling 3).
 - The owning children are `API.3.2` (the crate), `API.3.3` (the CLI as its consumer, and the parity legs)

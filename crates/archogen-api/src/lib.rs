@@ -34,7 +34,7 @@ pub use status::Status;
 /// a response field is never removed or given a new meaning, and the status vocabulary only grows. Adding an
 /// operation or a field is a minor; anything else is a new major. A description whose verdict changes under
 /// the same language version is a language change, recorded in `docs/semantics/migrations/`, not an API
-/// change. ⚠️ `1.0` is fixed when leaf `API.3` closes; until then its children may still change the shape.
+/// change. `1.0` was fixed `2026-09-30`, when leaf `API.3` closed; `docs/book/src/versions.md` registers it.
 pub const VERSION: Version = Version { major: 1, minor: 0 };
 
 /// A major and a minor version.

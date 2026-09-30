@@ -177,7 +177,7 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   - [x] **LOCKSTEP** — the decision record, `DOCTRINE_ENFORCEMENT.md`, `verification.md` "The product runs nothing".
 
 - ID: `API.3`
-  Status: `active`
+  Status: `done`
   Children: `API.3.1`, `API.3.2`, `API.3.3`, `API.3.4`
   Goal: declare the **engine API** — the transport-neutral contract every binding consumes, and the one
   the CLI becomes a consumer of.
@@ -195,8 +195,22 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   shares `frontend`. Declaring the API means moving all of that behind one entry point, moving the
   outcome vocabulary with it, and gating parity. That is one design record and three slices, each
   reviewable on its own.
-  Verification: closed by its children
-  Commit: `pending`
+  Verification: closed `2026-09-30` by its children, and the acceptance re-checked criterion by criterion:
+  - **an in-memory entry point, text and profile in, a structured result out:** `archogen_api::check(&Request)`;
+    `crates/archogen-api/tests/check.rs` → `test result: ok. 9 passed`, one of them a module tree held in memory.
+  - **every result carries §5.5's verdict and the diagnostics with codes, spans and repairs:** the status is
+    always present, a judged response's status is its verdict (asserted on every leg), and the diagnostics are
+    the engine's own. The reading of "carries the verdict" for a request not judged is findings §9, for the
+    director.
+  - **versioned under §15 with a stated promise:** `VERSION` 1.0, registered in `versions.md` and gated by
+    `VERSION-REGISTER` (`version-register self-test: 14 pass / 0 fail`).
+  - **the CLI's check path calls it, and a test asserts a capability cannot exist behind one surface and not the
+    other:** `crates/archogen-cli/tests/api_parity.rs` → `test result: ok. 6 passed`, three legs, each with a
+    mutation killed.
+  - **the book documents it:** `docs/book/src/engine-api.md`, its example held to a run.
+  - **`make focused` exit `0`:** `tier focused: passed — 3 passed, 0 failed`.
+  Commit: closed by `ARCHOGEN-API-0174 (leaf API.3.1)`, `ARCHOGEN-API-0175 (leaf API.3.2)`,
+  `ARCHOGEN-API-0176 (leaf API.3.3)` and `ARCHOGEN-API-0177 (leaf API.3.4)`
 
 - ID: `API.3.1`
   Status: `done`
@@ -318,14 +332,53 @@ agent can drive. The server is a capability of the built binary, spawned per ins
     snapshots. The book's API chapter is `API.3.4`.
 
 - ID: `API.3.4`
-  Status: `pending`
+  Status: `done`
   Goal: the book documents the engine API — what it takes, what it returns, the outcome vocabulary, the version
   and its promise, and what is outside it and why.
   Acceptance: a chapter or section under `docs/book/src/` with an example that runs; `API.7` builds the full
   programmatic-interface chapter on it and does not restate it; `API.3` closes with the version fixed at `1.0`.
   Priority: **high** — the director reads the book.
-  Verification: `pending`
-  Commit: `pending`
+  **Closed `2026-09-30`.** `docs/book/src/engine-api.md` covers what the API takes and gives, its one outcome
+  vocabulary, an example that runs, the version and its promise, how the CLI is held to it, and what is outside it.
+  Its transcript is held to the example by `crates/archogen-api/tests/book_example.rs`. The version is fixed at
+  `1.0` and registered in `versions.md`.
+  ⛔ Found on the way: `VERSION-REGISTER` derives versions from three code shapes, and a `Version { major, minor }`
+  constant is none of them. The API's version was a versioned surface the register could not see, so a bump
+  would have landed unrecorded. The gate learned the shape, with two RED arms. An exhaustive reading of
+  `Response` and `Judgement` in `tests/check.rs` now stops compiling when a field moves.
+  ⛔ And one false sentence of my own, caught on rereading. The chapter said every response names the API, the
+  language and the profile versions, but a response that was not judged names only the API's.
+  Verification: see the checklist.
+  Commit: `ARCHOGEN-API-0177 (leaf API.3.4)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — the book had no page for the API, and the register could not see its version:
+    ```text
+    $ git ls-tree -r --name-only HEAD docs/book/src | grep -c engine-api → 0
+    $ bash scripts/check_version_register.sh (before the gate learned the shape) → version-register: OK (7 entries;
+      7 declared version(s)) — archogen_api::VERSION among none of them
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `scripts/check_version_register.sh`'s `declared()` knew format identifiers,
+    `*_VERSION` strings and profile ids: `git grep -n "sed -nE" HEAD -- scripts/check_version_register.sh` → three
+    patterns, none for a struct constant.
+  - [x] **FIX** — the chapter and its `SUMMARY.md` entry; `examples/in_memory.rs` and `tests/book_example.rs`;
+    the register's fourth shape, with two arms (a minor bumped without its entry, a new API version with none);
+    the `engine-api` entry in `versions.md`; the shape test; `VERSION`'s comment and the decision say `1.0` is
+    fixed.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    $ cargo run -q -p archogen-api --example in_memory → the three responses the chapter shows
+    $ cargo test -q -p archogen-api → test result: ok (check 9, book_example 1, status 6)
+    the chapter's transcript edited by one word → the_books_example_is_what_the_example_prints FAILED (restored)
+    $ bash scripts/check_version_register.sh --self-test → version-register self-test: 14 pass / 0 fail (14 arms)
+    $ bash scripts/check_version_register.sh → version-register: OK (8 entries; 8 declared version(s) …)
+    ```
+  - [x] **NO REGRESSION** — `cargo test -q --workspace --no-fail-fast` → 698 passed / 0 failed over 57 suites,
+    rc=0, from 696: the two tests this leaf adds. `cargo clippy -q --all-targets --all-features -- -D warnings`
+    exit=0; `cargo fmt --all -- --check` exit=0; `make focused` exit=0.
+  - [x] **LOCKSTEP** — `engine-api.md`, `versions.md`, `verification.md` (a stray line break), the decision record;
+    the frontier, both logs, the changelog and the snapshots.
 
 - ID: `API.4`
   Status: `pending`
@@ -389,11 +442,10 @@ agent can drive. The server is a capability of the built binary, spawned per ins
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `API.3.4` | `pending` | the book documents the API; `API.3` closes and fixes the version at `1.0` |
-| 2 | `API.4` | `pending` | the instance model and the resource limits an untrusted consumer makes necessary. New architecture, not a binding — archogen is stateless over files today |
-| 3 | `API.5` | `pending` | the wasm binding, behind `API.1` and `API.3` |
-| 4 | `API.6` | `pending` | the MCP server — the point of the tree, and last because everything above is what makes it safe to hand to an arbitrary agent |
-| 5 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6` |
+| 1 | `API.4` | `pending` | the instance model and the resource limits an untrusted consumer makes necessary. New architecture, not a binding — archogen is stateless over files today |
+| 2 | `API.5` | `pending` | the wasm binding, behind `API.1` and `API.3` |
+| 3 | `API.6` | `pending` | the MCP server — the point of the tree, and last because everything above is what makes it safe to hand to an arbitrary agent |
+| 4 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6` |
 
 ⛔ **This tree does not displace the project's main line.** `M1.13` is the frontier in
 [`M1.md`](M1.md), and `API.3`–`API.7` are sequenced behind it by the director's ruling. `API.1` and
@@ -455,6 +507,7 @@ them early is cheap and makes the rest estimable.
 | `2026-09-30` | `API.3.1` | a read of `archogen check`'s judging path (`check_cmd.rs`, `build_cmd.rs`), `ModuleSource` and `ROADMAP.md` §10.4 and §15 | the path's parts and their one shared routing point, `frontend`; `MemoryModules` already exists; the ruling's wording and §10.4's differ, flagged as findings §9 |
 | `2026-09-30` | `API.3.2` | the crate's eight legs; the wasm build and its derived set; the subprocess gate; three mutations; the whole suite; `make focused` | all pass; `archogen-api` compiles for wasm32; 690 passed / 0 failed over 55 suites; each mutation killed |
 | `2026-09-30` | `API.3.3` | the three parity legs and their arms; six mutations; the whole catalogue; the whole suite | 6 pass; each mutation killed by its leg; 38 of 38 as expected; every transcript and frozen verdict unchanged |
+| `2026-09-30` | `API.3.4` | the example and its transcript test; the register's self-test and real tree; the shape test; the whole suite; `make focused` | the transcript holds and fails when edited; 14 of 14 arms, 8 entries; 698 passed / 0 failed over 57 suites |
 
 ## Commit Log
 
@@ -466,6 +519,7 @@ them early is cheap and makes the rest estimable.
 | `API.3.1` | `ARCHOGEN-API-0174 (leaf API.3.1)` | **the engine API's design, recorded** — a crate, one outcome vocabulary, a version promise, parity three ways; `API.3` decomposed |
 | `API.3.2` | `ARCHOGEN-API-0175 (leaf API.3.2)` | **the engine API exists** — `archogen-api`: `check`, `Response`, `Status` moved into it, `VERSION`; compiles for wasm32 |
 | `API.3.3` | `ARCHOGEN-API-0176 (leaf API.3.3)` | **the CLI checks through the API** — its own routing removed; parity gated structurally, by operation and by behaviour |
+| `API.3.4` | `ARCHOGEN-API-0177 (leaf API.3.4)` | **the book documents the engine API** — `engine-api.md`, its example held to a run; version `1.0` fixed and registered; `API.3` closed |
 
 ## Changelog
 

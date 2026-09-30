@@ -8,8 +8,8 @@ version, what refuses an unannounced change, and what a description or artifact 
 rely on.
 
 `VERSION-REGISTER` (`scripts/check_version_register.sh`) keeps this page in step with the code. It reads
-every version the code declares: each format identifier, each version constant, each profile id, and the
-engine version in the workspace's manifests. Each one must belong to an entry below with the same value,
+every version the code declares: each format identifier, each version constant, each profile id, the
+engine API's version, and the engine version in the workspace's manifests. Each one must belong to an entry below with the same value,
 and every entry's declaration must still exist. A new format, or a bump, therefore cannot land without
 this page changing too.
 
@@ -89,6 +89,17 @@ this page changing too.
 | Changes when | a cost term is added, removed or reinterpreted |
 | Pinned by | everything it says — its kinds of total, ledger categories, seven identifications and the table a ledger renders as — frozen in `crates/rt-analysis/tests/goldens/cost-accounting-1.golden` and compared by `crates/rt-analysis/tests/format_golden.rs`; never rewritten |
 | Keeps | a bound computed under `cost-accounting/1` counts the same costs every time |
+
+## `engine-api`
+
+| Field | Value |
+| --- | --- |
+| Surface | the engine API: the one contract every consumer judges a description through, the CLI today and the wasm and MCP bindings to come ([The engine API](engine-api.md)) |
+| Version | `1.0` |
+| Declared at | `const:crates/archogen-api/src/lib.rs:VERSION` |
+| Changes when | an operation or a response field is added, which is a minor; an operation or a field removed, or a field given a new meaning, which is a new major |
+| Pinned by | the exhaustive reading of `Response` and `Judgement` in `crates/archogen-api/tests/check.rs`, which stops compiling when a field is added or removed and names the version its shape belongs to; the three parity legs of `crates/archogen-cli/tests/api_parity.rs`. The bump itself is the author's act: nothing can tell a new field from a renamed one |
+| Keeps | within a major, what a consumer reads from a response stays true, and its outcome vocabulary only grows |
 
 ## How an engine change is held to what descriptions mean
 
