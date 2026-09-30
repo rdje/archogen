@@ -79,8 +79,9 @@ assumed control of the build machine or the hosting.
   2. **Git's local state reports the repository as it is.** No replace object, no remote-tracking ref set by hand.
      Checked: every reader sets `GIT_NO_REPLACE_OBJECTS`, and the gate writes each file from its blob itself, so
      no filter, attribute or line-ending setting applies (§3).
-  3. **The published main line is protected.** CI runs on every push to `main`, a failing run blocks it, and
-     `main` is never force-pushed. Not checked here: it is a hosting setting, which the director confirms. A claim
+  3. **The published main line is protected.** CI runs on every push to `main`, a failing run blocks it, `main`
+     is never force-pushed, and it accepts catalog changes only as merge commits (§9). Not checked here: these are
+     hosting settings, which the director confirms. A claim
      records the `main` commit it was checked against, so a reader sees what it rests on, and §10 flags a claim
      whose commit has left `main`'s history.
   4. **The machine running a check is not working against it.** Its sysroot, rustup's settings and its `PATH` are
@@ -172,7 +173,8 @@ does not exist, and why, and it is reviewed like any other statement (§5).
   that the value holds for. The timer service's cost, for instance, grows with the tasks it releases.
 - **`holds-under-preemption`** is the runtime variant's condition 8 for this one value: whether it holds under
   any preemption pattern. The statement sits on the value it vouches for, so no other record's fact can vouch
-  for it.
+  for it. For the costs the composition of the variant's inputs adds, it also says the value holds from any state
+  the code before it leaves (§12).
 - **`binary`** takes one of three forms, and §7 decides which of them may back a production claim:
   - `(binary "sha256:<hex>")`, the image the value was obtained on;
   - `(binary unbuilt)`, when there was no image;
@@ -387,8 +389,11 @@ set** and reads the compiler's dependency information:
   `stable`, `beta` or `nightly`, a dated or suffixed one, or an index with no `rust-toolchain.toml`, is refused.
   A moving channel would change the compiler under an unchanged hash, and a nightly one admits `#![feature]`.
 - **What cargo resolves, before anything is built.** `cargo metadata --offline --locked --format-version 1`, in
-  the environment below, must report, as each package's workspace root, the root of the written index. The gate
-  refuses (`catalog-source`), in the graph of normal and build dependencies of every package in a source set:
+  the environment above, must report the root of the written index as its `workspace_root`. It resolves the whole
+  workspace, so every member's dependencies must be path ones, a package no record reaches included, as
+  `decision_zero-dependency-engine-core.md` already has it. A member with any other dependency is refused on its
+  own (`catalog-source`), naming that member, rather than failing the offline resolution with a message about the
+  registry. In the graph of normal and build dependencies of every package in a source set, the gate also refuses:
   - a package with a target of kind `proc-macro` or `custom-build`;
   - a package whose `source` is not null, which is any dependency that is not a path one;
   - a package the graph holds that §3's reading of the manifests did not reach, or one it reached that the graph
@@ -405,9 +410,11 @@ set** and reads the compiler's dependency information:
   every target under `targets/`. A package
   that is only in a model's sets runs on the host, and is built for the host alone. There is no feature axis,
   because `/1` refuses features.
-- **Who runs these checks.** The gate, on the commit being made. CI, on every commit it replays that changes a
-  tracked file under a package directory in any source set, a manifest, a cargo configuration file, a toolchain
-  file or a target file, so a commit made with the gate bypassed is built too. A production claim runs them on the
+- **Who runs these checks.** The gate, on the commit being made. CI, on every commit it replays that changes
+  anything under `catalog/`, a tracked file under a package directory in any source set, a manifest,
+  `Cargo.lock`, a cargo configuration file, a toolchain file or a target file. Records under `catalog/` decide the
+  source sets, targets and costs, so this covers every change to what is built, and a commit made with the gate
+  bypassed is built too. A production claim runs them on the
   commit it reads. Each reads the dependency information of every unit the build compiles, not only the packages a
   record names.
 - **What it refuses:**
@@ -459,7 +466,8 @@ key is one the shell gives a meaning to. The value is the rest of the line: ASCI
 digits, `.`, `_`, `-`, `/`, `+`, `:` and `,`, and nothing else, so it holds no character a shell treats specially.
 There is no `export`. Each key appears at most once. Any other line refuses the target (`catalog-field`), so no
 reader can take a different value from the one the shell that sources the file takes. A value without `/` that
-names a tracked file, from the repository's root or from `targets/`, is refused: a file a target reads is named
+names a tracked file (a file, not a directory with tracked files under it), from the repository's root or from
+`targets/`, is refused: a file a target reads is named
 with its path, so a word such as `yes` never turns a file added later into a target file. A `.env` or `.eadl`
 directly under `targets/` without its pair is refused too, so every target under `targets/` is a named target (§2).
 
@@ -521,28 +529,42 @@ each record hash, a review's ledger hash and lock lines, and a forms digest. `M2
   population, since no product crate spawns a process. How a product reads history is `M4`'s, and until then a
   production claim is made only by that tooling and by tests (§13). Tests give a history in memory.
   - **The gate's pending commit.** The gate reads the index, so the commit being read does not exist yet. Its
-    parents are `HEAD`, and `MERGE_HEAD` too while a merge is in progress. Its committer date is the time the gate
-    starts, in UTC. A pre-commit hook cannot tell an amend from a new commit. For an amend, the real parents are
+    parents are `HEAD`, and `MERGE_HEAD` too while a merge is in progress. Its committer date and time-zone offset
+    are those `git var GIT_COMMITTER_IDENT` gives when the gate starts, so the gate reads a review's date as CI's
+    replay will (§5). The gate runs from both `pre-commit` and `pre-merge-commit`, since a merge that git records
+    without conflicts runs only the second, and §9 routes catalog changes to `main` by merges. A pre-commit hook
+    cannot tell an amend from a new commit. For an amend, the real parents are
     those of the commit it replaces, so the gate's verdict is advisory: it can pass a commit that its real parents
     make a ledgering commit that fails verification. `M2.7.4` runs the gate again after the commit, against the
     commit as made, and reports a mismatch at once; the repair is to reset to the commit the amend replaced. CI's
     replay, which judges each commit as it was made (§9), decides.
 - **No caller reads a catalog input from the working tree.** Each takes the tracked set from `git ls-files -s -z`
   or `git ls-tree -r -z`, and each file's bytes from its blob, so line-ending conversion on checkout does not matter.
-  The one working-tree read is the gate's comparison of the repository's own cargo configuration files with the
-  index (§3).
+  The gate's working-tree reads are four, each named where it is made:
+  - it compares the repository's own cargo configuration files with the index (§3);
+  - it lists the cargo configuration files on the build's directory path (§3);
+  - it tests whether a configuration or toolchain file on a package's ancestor path is present but untracked (§3);
+  - it lists the untracked files under `catalog/` (below).
   Tests give files in memory.
   - The gate and an exploratory claim read the **index**. The gate checks what is about to be committed.
   - A production claim reads a **commit**, `HEAD` unless one is named, and records it. Its ledger must hold every
     line of every ancestor commit's ledger and of the published main line's, `origin/main` as last fetched, with
     its ancestors (§9). The claim records that `main` commit too. So a line dropped with the gate bypassed is seen,
     and so is a rejection published after the commit's branch forked, as far as the clone has fetched (premise 3).
-    A clone with no `origin/main` is refused. The claim also records `origin`'s URL, and refuses one other than
-    the repository's canonical URL, which the claim tooling holds as a constant, so a fork's `main`, which
-    premise 3 does not protect, is not taken for this one.
-  - **Every reader reads history as it is** (premise 2, with its cheap checks). Each sets `GIT_NO_REPLACE_OBJECTS`,
-    refuses a shallow repository and an `info/grafts` file, and reads parents with `core.commitGraph=false`. A
-    shallow boundary would be a false ledgering commit for every line. CI checks out the full history.
+    A clone with no `origin/main` is refused. The claim also records `origin`'s URL, read with
+    `git remote get-url origin`, and refuses one that is not the repository's canonical URL, which the claim
+    tooling holds as a constant. URLs are compared as repositories, not as strings: `https` and `ssh` forms of the
+    same host and path are equal, with or without a trailing `.git`. So a fork's `main`, which premise 3 does not
+    protect, is not taken for this one. `origin`'s fetch refspec must map `refs/heads/main` to
+    `refs/remotes/origin/main`, and no `url.*.insteadOf` may rewrite `origin`'s URL. Otherwise another branch or
+    another repository could stand behind a canonical-looking `origin/main`.
+  - **Every reader reads history as it is** (premise 2, with its cheap checks). Each runs git with an environment
+    allowlist, as the builds do: `PATH`, `HOME`, the `GIT_DIR`, `GIT_INDEX_FILE` and `GIT_WORK_TREE` a hook is
+    given, and `GIT_NO_REPLACE_OBJECTS` set, and nothing else, so no `GIT_GRAFT_FILE`, `GIT_SHALLOW_FILE` or object
+    directory override applies. It refuses a shallow repository (`git rev-parse --is-shallow-repository`) and a
+    grafts file wherever git would read it (`git rev-parse --git-path info/grafts`), and reads parents with
+    `core.commitGraph=false`. A shallow boundary would be a false ledgering commit for every line. CI checks out
+    the full history.
   - The gate also lists the untracked files under `catalog/` and refuses them (`catalog-layout`), since no reader
     of the index can see them.
 - **Without git.** A §10.3 package carries no index. Loading a catalog there needs the package's own manifest of
@@ -556,7 +578,7 @@ position of reviews in the file decides nothing:
 
 | Status | When |
 | --- | --- |
-| `rejected` | the facet inherits a rejection that no production review of the facet answers. The rejection may be at any hash |
+| `rejected` | the facet inherits a rejection that no production review of the facet answers for every item of the rejection the facet now holds. The rejection may be at any hash |
 | `production` | otherwise, when a production review names the facet's current bound hash `h`, and every rejection of the facet that names `h` is answered by a production review that also names `h` |
 | `stale` | otherwise, when some review names the facet |
 | `unreviewed` | otherwise |
@@ -585,7 +607,8 @@ copies are an index.
      `RUST_TARGET`, as that commit's `.env` gave them;
    - each source entry, as written;
    - the hash of each own-set file's bytes;
-   - for a contract, each guarantee and each precondition, as written;
+   - for a contract, each guarantee and each precondition, compared by `E` of the string, so by its decoded value
+     and not by how an escape spells it;
    - the facet's forms hash: §3's hash over `archogen-catalog/1`, `forms <facet>` and `E` of each of the facet's
      forms, with every `version` form removed, and for a contract its `source`, `maintainer` and `supersedes`
      forms too, which change with who copied it rather than with what it promises.
@@ -600,8 +623,15 @@ copies are an index.
 Items over-approximate. A rejection of one cost in a package reaches every record that names the package; a
 rejected cost reaches the same-named cost on every target of the same kind and Rust target; a file
 whose bytes an unrelated facet also holds, an empty one for instance, carries the rejection there; and so do the
-same forms, such as an empty behavioral model or a common `none` statement. A reviewer answers it there. An
+same forms, such as an empty behavioral model or a common `none` statement; and so does a common guarantee or
+precondition sentence, such as "one processor", to every contract that states it. A reviewer answers it there. An
 `answers` may name any rejection the facet inherits.
+
+**An answer covers the items the answering review saw.** It lifts the rejection for the items of it that the facet
+held at the hash the answering review names. If the facet later holds an item of the rejection that it did not
+hold then, the rejection binds again, until a review at a hash that holds that item answers it. So an answer given
+where a rejection reached a facet only through an empty file does not let the rejected cost itself move there
+unseen.
 
 **Order, weakest first:** `rejected`, `unreviewed`, `stale`, `production`. A record's status is its weakest
 facet's.
@@ -731,8 +761,9 @@ facet instead.
        from the reviewed code the way the gate builds it. The image's build record (`M4`) must name, for each
        package it compiled, the profile and target of the gate's matrix it was built in, with no other flag and no
        other `cfg`; the `rustc -vV` of its compiler, which must name the pinned release; the environment the build
-       ran in, which must be the gate's allowlist with the gate's values, so `RUSTC_BOOTSTRAP` or a
-       `CARGO_PROFILE_*` override is seen; and the compiler's dependency information of that build, each source path
+       ran in, whose variables must be the gate's allowlist and nothing else, with `RUSTUP_TOOLCHAIN` the pin and
+       `CARGO_HOME` an empty directory of the build's own, so `RUSTC_BOOTSTRAP` or a `CARGO_PROFILE_*` override is
+       seen; and the compiler's dependency information of that build, each source path
        with the hash of the bytes compiled and each environment dependency held to the gate's rule (§3). **The
        image's closure** is the claim's closure joined with the implementation facet, and its closure, of every
        record whose package the image compiled, so a package the claim never read, such as a console driver, is held
@@ -783,10 +814,11 @@ facet instead.
   too. This is §9's reason: "their changes invalidate different claims". `M2.7.3` tests both
   directions.
 - **For a production record, that holds when the change lands with its reviews.** A change moves the bound hash of
-  the facet it edits and of every facet whose derived lines reach that one, transitively. For a timing model, that
-  is every dependent's timing model and every record that names it in `measured-with`. For code, it is both models
-  of every record that describes, measures or depends on it. Each moved facet of a production record leaves that
-  record failing §6, and the catalog does not load. So the change lands in one of two ways:
+  every facet one of whose bound-hash inputs it changes, directly or through derived lines, transitively. For a
+  timing model, that is every dependent's timing model and every record that names it in `measured-with`. For code,
+  it is both models of every record that describes or measures it or depends on it, and, through reached sets, every
+  facet whose packages reach the changed package, a catalog `depends` or not. Each moved facet of a production
+  record leaves that record failing §6, and the catalog does not load. So the change lands in one of two ways:
   - with a production review of every moved facet in the same commit. The gate lists them. Every claim whose
     closure holds none of them stands;
   - or with each record whose facet moved, and did not get its review, moved to `experimental`. Every production
@@ -829,8 +861,9 @@ facet instead.
   - **Catalog changes reach `main` by merge commits.** A squash or a rebase re-ledgers each review line in a new
     commit, where a rejection's hash is generally no longer the facet's current one, so the replay refuses it. The
     refusal is the rule's mechanism. The way through is a merge, which keeps the original ledgering commit in
-    `main`'s history. Deleting the rejection is not a way through: the ledger is append-only against every base the
-    branch was pushed from.
+    `main`'s history. Deleting the rejection on the same branch is not a way through: the ledger is append-only
+    against every base the branch was pushed from. A new branch forked from `main`, or a hosting squash that drops
+    the line, is compared with bases that never held it, which is §13's limit on a rejection not yet in `main`.
   - A production claim compares the lock at the commit it reads with the lock at every ancestor and at
     `origin/main` and its ancestors (§4), so a line that history or the published main line holds, and the commit
     lacks, is seen even when the gate was bypassed.
@@ -924,10 +957,11 @@ command loads the catalog (`M3` onward), it exits `tool-failure`. A claim's outc
 
 ### 12. What the runtime variant takes, and from whom
 
-This section is kept in [`decision_catalog-records-variant-inputs.md`](decision_catalog-records-variant-inputs.md),
-moved there verbatim when this record neared its size ceiling. It is part of this record, normative and reviewed
-with it: every input of the runtime variant with its one owner, the names and facets the catalog supplies them
-under, the facts the composition of the variant's composite inputs needs, and how a lookup selects them.
+This section is kept in [`decision_catalog-records-variant-inputs.md`](decision_catalog-records-variant-inputs.md).
+It moved there verbatim when this record neared its size ceiling, and was extended there by `M2.10.1`. It is part of
+this record, normative and reviewed with it: every input of the runtime variant with its one owner, the names and
+facets the catalog supplies them under, the facts the composition of the variant's composite inputs needs, and how a
+lookup selects them.
 
 ### 13. Limits
 
@@ -950,7 +984,8 @@ under, the facts the composition of the variant's composite inputs needs, and ho
   - a model package that depends on another model's package, which moves both bound hashes;
   - a record moved to `experimental`, which affects every production claim that read it;
   - a file whose bytes an unrelated facet also holds, which carries a rejection to it (§5);
-  - a rejected cost, which reaches the same-named cost on every target of the same kind and Rust target (§5).
+  - a rejected cost, which reaches the same-named cost on every target of the same kind and Rust target (§5);
+  - a rejected contract, which reaches every contract that states one of its guarantees or preconditions (§5).
 - **What no hash covers:**
   - the installed compiler's bits (the channel in `rust-toolchain.toml` is covered);
   - cargo configuration outside the repository. The gate refuses any it would read and gives cargo an empty
@@ -1041,8 +1076,9 @@ under, the facts the composition of the variant's composite inputs needs, and ho
   rejection was about is what must not return unexamined.
 - **A production claim reads a commit**, because the index is not history, and the ledger's permanence is a
   property of history.
-- **Composite inputs left whole rather than composed badly.** A catalog figure that silently omits the
-  application's share is the under-charge §7.4 exists to prevent (§12).
+- **Composite inputs composed from owned parts, never taken whole from one owner.** A catalog figure that
+  silently omits the application's share is the under-charge §7.4 exists to prevent. So §12 names the catalog's
+  parts, and `decision_runtime-composite-inputs.md` adds them to the application's.
 - **Rejected: the hash written inside the record.** A record that contains its own hash needs a rule for the
   bytes it skips, and invites a hand-edited hash.
 
@@ -1090,3 +1126,4 @@ the design as it stands, and that one keeps how it got here.
 | 6 | 16 | 5, most needing control of the machine or the hosting; the director then ruled §0's threat model | "cannot be accepted as it stands" |
 | 7, the first judged against §0 | 15, and 1 found while answering | 3 (G1, G2, G4), a latent one (G5), one at defect level (G3), and the one found while answering; none needs a premise broken | "cannot be accepted as it stands" |
 | 8 | 19 | 1 (H1, a procedural macro under another spelling), and H2, H4 and H6 at defect level; none needs a premise broken | "cannot be accepted as it stands" |
+| 9 | 20 | none; 4 at defect level (I1–I4), all in §12's new composition names; §3–§9 held | "cannot be accepted as it stands" |

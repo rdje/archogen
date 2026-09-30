@@ -38,7 +38,7 @@ No composite ever takes the maximum of things its definition adds.
 
 | Part | Symbol | Owner | What it bounds |
 | --- | --- | --- | --- |
-| a primitive's cost | `api.p`, for each primitive `p` a task can call | catalog: timing cost `api.<p>` of the record that supplies the runtime API | one call, from its first instruction to its last (§2's `primitives-out-of-line`), on the caller's behalf, excluding any service taken during the call or right after it |
+| a primitive's cost | `api.p`, for each primitive `p` a task can call | catalog: timing cost `api.<p>` of the runtime API record, the one that supplies `completion` (the catalog record's §12 groups) | one call, from its first instruction to its last (§2's `primitives-out-of-line`), on the caller's behalf, excluding any service taken during the call or right after it |
 | a primitive's masked run | `masked.p` | catalog: timing cost `masked.<p>` | the longest contiguous masked stretch inside one call of `p` made with interrupts unmasked |
 | the completion path | `completion` | catalog: timing cost `completion` | from the job's last instruction of its own code to the decided switch that follows, the scheduling decision included |
 | the completion path's masked run | `masked.completion` | catalog: timing cost `masked.completion` | the longest contiguous masked stretch in the completion path, up to the decided switch. The transition that follows it is added by `L`, as it is today |
@@ -58,8 +58,9 @@ The parts the catalog already supplies keep their names: `ρ` `compare-rounding`
 
 ### 2. What the composition assumes
 
-The composition is sound only on a platform where the following hold. Each is a catalog fact, with a `code`
-locator for a code fact (§12 of the catalog record). A fact declared `no` puts the platform outside what the
+The composition is sound only on a platform where the following hold. Each catalog fact below is a behavioral
+fact (the behavior-model facet), with a `code` locator for a code fact. It comes from the record that the groups
+in the catalog record's §12 name, checked per selection. A fact declared `no` puts the platform outside what the
 composition covers: `unsupported-profile`, naming it. A fact that cannot be read leaves the composites undeclared:
 `analysis-inconclusive`, naming it.
 
@@ -71,7 +72,7 @@ composition covers: `unsupported-profile`, naming it. A fact that cannot be read
 | `releases-never-latched` | code | no service runs while the runtime's mask depth is raised: the port masks the hardware before raising it, and lowers it before unmasking the hardware. A completion entered with the depth raised lowers it before the transition that follows unmasks, and that work is inside `completion`. `rt-core`'s `complete` leaves the depth as it is, so this is the port's to do and the runtime record's review to check | `rt-core` latches a release that arrives while the depth is raised and delivers it on `unmask`. On the target that path is then never taken, so no `unmask` makes a task ready and no part has to charge the decision and switch that would follow |
 | `primitives-out-of-line` | code | each primitive is compiled out of line, and its masking and unmasking instructions are compiler barriers | a call's boundaries, and a run's, are then instructions. The compiler cannot move the task's own code into a primitive or across a masking instruction |
 | `external-before-timer` | hardware | whether the hardware takes a pending external interrupt before a pending timer interrupt, however the controller is configured | the timer's place in the order is the hardware's, not the plan's. RISC-V takes machine external interrupts before machine timer interrupts |
-| `every-source-external` | hardware | every declared source reaches the processor as an external interrupt through one controller, whose priorities the plan sets | the order among sources is then the plan's. A platform-defined local interrupt, or a priority scheme that places the timer among the controller's sources, is outside it |
+| `external.<source>` | hardware, one per source, from the record that supplies `service.<source>` | the source reaches the processor as an external interrupt through the controller whose priorities the plan sets | the plan's order holds only for such sources. A source with `no`, such as a platform-defined local interrupt, a software interrupt, or one a priority scheme places among the timer, is outside the composition. A catalog reviewer sees the source's own wiring, never a description's list of sources |
 | `leaves-interrupt-hardware-alone` | application task fact, and the caller's declaration for a service's application code | no task, and no application code in a service, writes the timer's compare or the interrupt controller's configuration, and no service calls a runtime primitive | `reprograms-only-in-service`, the plan's order and `releases-never-latched` are statements about the whole image, and a code fact's locator reaches only catalog code. Each holds for the image only with this one, as `sections-mask-every-interrupt` holds only with the fourth task fact |
 
 **Boundaries the catalog's costs keep:**
@@ -231,17 +232,15 @@ The least fixed point is therefore an upper bound on how late the service can st
 ### 5. What the catalog's §12 gains
 
 - **Timing costs** `api.<p>` and `masked.<p>` for each primitive a task can call, and `completion` and
-  `masked.completion`. Each comes from the record that supplies the runtime API, and each is image-specific, like
-  `switch`.
+  `masked.completion`. Each comes from the runtime API record, the one that supplies `completion`, and each is
+  image-specific, like `switch`.
 - **Code facts** `reprograms-only-in-service` and `releases-after-initialisation`, from the record that supplies
-  `timer-service`; and `releases-never-latched` and `primitives-out-of-line`, from the record that supplies the
-  runtime API.
-- **The fact `pending-taken-after-unmask`**, a code fact like the eleven §12 lists. Its natural home is the record
-  that supplies `pending-taken-and-transitions-unmasked`, but no load-time rule pairs two facts, and one record
-  supplies it (`catalog-conflict`).
+  `timer-service`; and `releases-never-latched` and `primitives-out-of-line`, from the runtime API record. Every
+  fact is behavioral, and every pairing is one of the catalog record's §12 groups, checked per selection.
+- **The fact `pending-taken-after-unmask`**, in the group anchored on `pending-taken-and-transitions-unmasked`.
 - **The application's task fact `leaves-interrupt-hardware-alone`**, and the caller's declaration of it for a
   service's application code.
-- **Hardware facts** `external-before-timer` and `every-source-external`.
+- **Hardware facts** `external-before-timer`, and `external.<source>` in each `service.<source>` group.
 - **§2's boundaries:** where delivery ends and a service begins, and where `switch` ends.
 - **What these costs' `holds-under-preemption yes` means:** the bound also holds from any state the code before it
   leaves.
@@ -339,7 +338,7 @@ This record names what §12 gains; the catalog record's own review checks the wo
   - whether it can unmask, which would close one.
 
   A primitive that does either needs this record's run definition extended before it is costed.
-- **A new kind of release, nested interrupts, or a source outside `every-source-external`** is outside `/1`, in the
+- **A new kind of release, nested interrupts, or a source whose `external.<source>` is `no`** is outside `/1`, in the
   variant as here.
 - Related:
   - [[decision_runtime-analysis-variant]]: its §1 names each composite and points here;

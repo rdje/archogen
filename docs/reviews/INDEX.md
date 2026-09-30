@@ -12,7 +12,7 @@ No bootstrap read includes this directory.
 
 | Review history | Design record | Rounds | Status |
 | --- | --- | --- | --- |
-| [`decision_catalog-records-reviews.md`](decision_catalog-records-reviews.md) | [`decision_catalog-records.md`](../decisions/decision_catalog-records.md) | 8 | open (`M2.7.1`) |
+| [`decision_catalog-records-reviews.md`](decision_catalog-records-reviews.md) | [`decision_catalog-records.md`](../decisions/decision_catalog-records.md) | 9 | open (`M2.7.1`) |
 | [`decision_decisions-folder-ceiling-reviews.md`](decision_decisions-folder-ceiling-reviews.md) | [`decision_decisions-folder-ceiling.md`](../decisions/decision_decisions-folder-ceiling.md) | 1 | closed: answered before the raise landed (`PROGRAM.38`) |
 | [`decision_runtime-analysis-variant-reviews.md`](decision_runtime-analysis-variant-reviews.md) | [`decision_runtime-analysis-variant.md`](../decisions/decision_runtime-analysis-variant.md) | 4 | closed: the record is implemented (`M2.6`) |
 | [`decision_runtime-composite-inputs-reviews.md`](decision_runtime-composite-inputs-reviews.md) | [`decision_runtime-composite-inputs.md`](../decisions/decision_runtime-composite-inputs.md) | 2 | open (`M2.10.1`) |

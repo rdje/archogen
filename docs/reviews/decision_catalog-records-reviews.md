@@ -278,6 +278,49 @@ repository is not shallow and has no `info/grafts`; none of the target's 19 slas
 | H18 | nit | a slash-free value naming any tracked file turned it into a target file | such a value is refused; a file a target reads is named with its path (§3, §11) |
 | H19 | nits | "no caller reads the working tree"; whether reached-set files are "a file of an implementation"; a lone `.env`; the closure's definition inside the `.env` paragraph; a legacy `rust-toolchain` file | the one working-tree read is named; own or reached set; a lone `.env` or `.eadl` is refused; the definition has its own paragraph; the legacy file is refused (§3, §4, §7, §11) |
 
+**Round 9**, `2026-09-30`: all 23 values matched by two routes. Route A was hand-typed inputs through `shasum`. Route B
+was a separate parser of the example's text through `hashlib`, which also re-derived the printed hash inputs and lock
+lines. The reviewer re-measured every claim the record makes about the tree:
+- 542 tracked paths in normal form, with no case collisions;
+- every manifest inside the dialect;
+- `rt-core`'s tokens, attributes and plain-build dependency information;
+- `cargo metadata`'s 11 packages;
+- the history neither shallow nor grafted;
+- no slash-free `.env` value naming a file.
+
+All were true except the §12 pointer's "verbatim", which I15 corrects. Round 8's defect-level answers, H1, H2, H4
+and H6, were closed, and so were G2, C5, C9 and E1. G5, C7 and F7 were closed, latent until `M4`. There were 20 new
+findings, none of them a defect. Four ambiguities and gaps at defect level, I1–I4, were all in §12's new composition
+names, and none needs a premise broken. The verdict was "cannot be accepted as it stands", with "§3–§9 held". No
+answer changes a hash input, so the example's digests stand. The answers to I1–I4 regroup §12's composition names,
+and the composition record changes with them (`M2.10.1`).
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| H8, H12, H17, H19 | partial, nits | through I19, I10, I9 and I13 | as those rows |
+| H9 | partial, gap | through I6 | as I6 |
+| H13, H14 | partial, premise 2 | through I8 | as I8 |
+| I1 | ambiguity, defect-level | §12 fixed no facet for the composition's seven facts, so a hardware fact in a timing model escaped the target's files | one table in §12 lists every fact the variant and the composition read, with its facet (behavioral, apart from `eager-switching`), what it is about and its group; a fact in another facet is refused (§12) |
+| I2 | ambiguity, defect-level | co-location was checked per record, not per selection, so a fact from one record could meet a cost from another | groups, each with an anchor, checked under every selection; the analysis reads a group's names only from the anchor's record (§12) |
+| I3 | gap, defect-level | "the record that supplies the runtime API" was undefined, several names had no pair, and a fact–fact pair was not enforced | the runtime API record is the one that supplies `completion`, and its group holds every `api.<p>` and `masked.<p>`, `masked.completion` and the four API facts; `pending-taken-after-unmask` has its own group (§12) |
+| I4 | ambiguity, defect-level | `every-source-external` quantified over a description's sources, which no catalog reviewer sees | replaced by `external.<source>`, a hardware fact per source in its `service.<source>` group; a source with `no` is outside the composition (§12; the composition record's §2) |
+| I5 | gap | an answer lifted a rejection for good, whatever items the facet held later | an answer covers the items the facet held at the answering review's hash; a new item binds the rejection again (§5) |
+| I6 | gap | CI's build trigger missed record, target and `Cargo.lock` changes | CI builds every replayed commit that changes anything under `catalog/`, `Cargo.lock`, or a file the checks read (§3) |
+| I7 | gap | a registry dependency in a member no record reaches blocks every gate run | the whole workspace is path-only, and a member that is not is refused by name (§3) |
+| I8 | gap, premise 2 | `GIT_GRAFT_FILE`, a fetch refspec, `insteadOf`, and URL forms | git readers run with an environment allowlist; grafts are found with `git rev-parse --git-path`; the refspec and `insteadOf` are checked; URLs are compared as repositories (§4) |
+| I9 | nit | the gate dated its pending commit in UTC | date and offset from `git var GIT_COMMITTER_IDENT` (§4) |
+| I10 | nit | §8 left out couplings through reached sets | every facet one of whose bound-hash inputs moved (§8) |
+| I11 | nit | "deleting the rejection is not a way through" held only on one branch; merge-only was not a premise | reworded, citing §13; premise 3 names merge commits (§0, §9) |
+| I12 | nit | a clean merge runs `pre-merge-commit`, not `pre-commit` | the gate runs from both (§4) |
+| I13 | nit | more than one working-tree read | the four are named (§4) |
+| I14 | nit | "the environment below"; one `workspace_root` | corrected (§3) |
+| I15 | nit | §12's pointer said "verbatim", and "Why" still said the composites were left whole | both corrected (§12, Why) |
+| I16 | nit | a primitive named `completion` would collide with `masked.completion` | the name is reserved (§12) |
+| I17 | nit | guarantee items compared as written; the over-approximation unlisted | compared by `E` of the string; listed in §5 and §13 |
+| I18 | nit | §2 did not point to §12's extension of `holds-under-preemption` | it does (§2) |
+| I19 | nit | "the gate's values" cannot hold for the build's own directories | the variables must be the allowlist, with the pin and an empty `CARGO_HOME` (§7) |
+| I20 | nit | "names a tracked file" should exclude a directory | said so (§3) |
+
 ## Why
 
 The decision record states the design as it stands. Its reviews are its history: every round appends a table,

@@ -81,6 +81,15 @@ reported as holding.
 | L10 | nit | §12's `J` row omits the description's parts | taken to §12 with the catalog record's round-9 answers |
 | L11 | nit | the timer mapping's wording | a release due at the raising that the service performs, so the mapping is one to one (§4) |
 
+**Between rounds 2 and 3**, `2026-09-30`: the catalog record's round 9 found four defect-level items in the names
+§12 had taken from this record (I1–I4). Its answers changed this record too:
+- `every-source-external`, which spoke of a description's sources, is now `external.<source>`, a hardware fact per
+  source in that source's `service.<source>` group;
+- every fact here is behavioral, and every pairing is one of §12's groups, checked per selection;
+- "the record that supplies the runtime API" is the one that supplies `completion`.
+
+Round 3 re-checks this record with those changes.
+
 ## Why
 
 The record states the composition as it stands, and this file keeps how it got there, as for the catalog record.

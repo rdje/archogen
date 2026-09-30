@@ -5,6 +5,25 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog design's ninth review is answered
+
+`ARCHOGEN-M2-0223` (leaf `M2.7.1`, an eighth checkpoint).
+
+- The ninth independent review found no defect in the catalog's rules. Everything the eighth review had reopened
+  now holds. It again confirmed every digest of the worked example and every fact the design states about the
+  repository.
+- Four problems came close, all in the names the new composition design had just added to the catalog. They are
+  fixed:
+  - one table now says where each fact lives in a record;
+  - names that must come from the same record are grouped, and the grouping is checked for every profile and
+    target, not just record by record;
+  - "the runtime record" is defined;
+  - a hardware fact that spoke about a description's interrupt sources is replaced by one per source, which a
+    catalog reviewer can actually check.
+- Sixteen smaller findings are answered too. Among them: an answer to a rejection now covers only what its
+  reviewer saw; the build is re-checked on any change to the catalog; and history is read with git's environment
+  fixed.
+
 ## archogen — the decisions folder's size limit is raised once, as a reviewed exception
 
 `ARCHOGEN-PROGRAM-0222` (leaf `PROGRAM.38`).
