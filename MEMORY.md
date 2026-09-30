@@ -15,15 +15,15 @@
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M2` → frontier `M2.7.1`. `PROGRAM`'s frontier is `PROGRAM.32`, `API`'s `API.6`; `M1`'s only
   open leaf, `M1.29.4`, is blocked on the director. Every other tree's frontier head is in `docs/TASK_TREE.md`.
-- **Next action:** **`M2.7.1`**. Run round 10 of the independent review of `docs/decisions/decision_catalog-records.md`
-  and its `-example.md` in a new read-only context, judged against its §0 threat model (the director's ruling);
-  rounds 1–9 are answered in `docs/reviews/decision_catalog-records-reviews.md`. Close the leaf when a round finds
-  no defect. `M2.10.1`'s composition record awaits its own independent review. Then `M2.7.3`–`M2.7.5`, then `API.6`.
+- **Next action:** first **`PROGRAM.39`**: `docs/decisions/` is at its partition warning, so it is partitioned
+  before more is added. Then **`M2.7.1`**'s round 11 and **`M2.10.1`**'s round 4, each in a new read-only context,
+  with their histories in `docs/reviews/`. `PROGRAM.32.4`'s review of the task-tree seal is running. Then
+  `M2.7.3`–`M2.7.5`, then `API.6`.
 - **In flight:** branch **`wip/m2.9`** (`758cbcd`) is a checkpoint, not a finished leaf — `M2.9` records it as
   not compiling (`crates/rt-core/tests/differential.rs` unadapted).
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M2.9` — §6 (a)
-  and (b), two rulings on `ROADMAP` §3.1.1; `M5` — no board procured;
+  and (b), two rulings on `ROADMAP` §3.1.1; `M5` — no board procured; `M2.7.4` — findings §11, `main`'s protection;
   `TEMPLATE-REFS` — postponed. **The 17 template files archogen has not changed are never edited** (findings §10,
   ruled `2026-09-30`); every other script is archogen's.
 - **Derive, don't copy:** the test baseline is `cargo test --all -q` (must be 0 failed); the push distance

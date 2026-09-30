@@ -79,11 +79,21 @@ assumed control of the build machine or the hosting.
   2. **Git's local state reports the repository as it is.** No replace object, no remote-tracking ref set by hand.
      Checked: every reader sets `GIT_NO_REPLACE_OBJECTS`, and the gate writes each file from its blob itself, so
      no filter, attribute or line-ending setting applies (§3).
-  3. **The published main line is protected.** CI runs on every push to `main`, a failing run blocks it, `main`
-     is never force-pushed, and it accepts catalog changes only as merge commits (§9). Not checked here: these are
-     hosting settings, which the director confirms. A claim
-     records the `main` commit it was checked against, so a reader sees what it rests on, and §10 flags a claim
-     whose commit has left `main`'s history.
+  3. **The published main line is protected.** The hosting settings this means, which the director confirms:
+     - changes reach `main` only through pull requests, administrators included;
+     - the required checks run on the merge result, with branches up to date or a merge queue;
+     - merge commits are the only merge method;
+     - `main` is never force-pushed;
+     - the required checks are named in those settings, so a pushed commit cannot remove them.
+
+     Checked where it is cheap:
+     - a production claim is `not-established` when a first-parent commit of `origin/main` that changes `catalog/`
+       is not a merge commit (§7);
+     - the loader re-applies §5's ledger-time checks at every ledgering commit, so a review that CI failed to check
+       is still refused (§5).
+
+     A claim records the `main` commit it was checked against, so a reader sees what it rests on, and §10 flags a
+     claim whose commit has left `main`'s history.
   4. **The machine running a check is not working against it.** Its sysroot, rustup's settings and its `PATH` are
      as installed. Premise 1's checks catch an honest mismatch, not a deliberate one.
 
@@ -390,8 +400,9 @@ set** and reads the compiler's dependency information:
   A moving channel would change the compiler under an unchanged hash, and a nightly one admits `#![feature]`.
 - **What cargo resolves, before anything is built.** `cargo metadata --offline --locked --format-version 1`, in
   the environment above, must report the root of the written index as its `workspace_root`. It resolves the whole
-  workspace, so every member's dependencies must be path ones, a package no record reaches included, as
-  `decision_zero-dependency-engine-core.md` already has it. A member with any other dependency is refused on its
+  workspace, so every member's dependencies must be path ones, a package no record reaches included, dev
+  dependencies too. That tightens `decision_zero-dependency-engine-core.md`, which admits an external crate
+  through a reviewed decision; the tightening is recorded there. A member with any other dependency is refused on its
   own (`catalog-source`), naming that member, rather than failing the offline resolution with a message about the
   registry. In the graph of normal and build dependencies of every package in a source set, the gate also refuses:
   - a package with a target of kind `proc-macro` or `custom-build`;
@@ -530,10 +541,16 @@ each record hash, a review's ledger hash and lock lines, and a forms digest. `M2
   production claim is made only by that tooling and by tests (§13). Tests give a history in memory.
   - **The gate's pending commit.** The gate reads the index, so the commit being read does not exist yet. Its
     parents are `HEAD`, and `MERGE_HEAD` too while a merge is in progress. Its committer date and time-zone offset
-    are those `git var GIT_COMMITTER_IDENT` gives when the gate starts, so the gate reads a review's date as CI's
-    replay will (§5). The gate runs from both `pre-commit` and `pre-merge-commit`, since a merge that git records
-    without conflicts runs only the second, and §9 routes catalog changes to `main` by merges. A pre-commit hook
-    cannot tell an amend from a new commit. For an amend, the real parents are
+    are those `git var GIT_COMMITTER_IDENT` gives when the gate starts, run in the hook's own environment rather
+    than the history readers' allowlist, since it reads no history and needs `TZ` and `GIT_COMMITTER_DATE`. So the
+    gate reads a review's date as CI's replay will (§5). The gate runs from both `pre-commit` and
+    `pre-merge-commit`, since a merge that git records without conflicts runs only the second, and §9 routes
+    catalog changes to `main` by merges. `pre-merge-commit` may run before git writes `MERGE_HEAD`, and then the
+    gate sees one parent; `M2.7.4` measures which. Until measured, a catalog merge is made with
+    `git merge --no-commit` and then `git commit`, whose `pre-commit` sees both parents, and the gate's verdict from
+    `pre-merge-commit` is advisory. Rebase, cherry-pick, `am` and revert make commits without running either hook.
+    For them, as for a bypassed gate, CI's replay decides. A pre-commit hook cannot tell an amend from a new
+    commit. For an amend, the real parents are
     those of the commit it replaces, so the gate's verdict is advisory: it can pass a commit that its real parents
     make a ledgering commit that fails verification. `M2.7.4` runs the gate again after the commit, against the
     commit as made, and reports a mismatch at once; the repair is to reset to the commit the amend replaced. CI's
@@ -556,7 +573,8 @@ each record hash, a review's ledger hash and lock lines, and a forms digest. `M2
     tooling holds as a constant. URLs are compared as repositories, not as strings: `https` and `ssh` forms of the
     same host and path are equal, with or without a trailing `.git`. So a fork's `main`, which premise 3 does not
     protect, is not taken for this one. `origin`'s fetch refspec must map `refs/heads/main` to
-    `refs/remotes/origin/main`, and no `url.*.insteadOf` may rewrite `origin`'s URL. Otherwise another branch or
+    `refs/remotes/origin/main`, no other refspec may map to it, no negative refspec may exclude it, and no
+    `url.*.insteadOf` may rewrite `origin`'s URL. Otherwise another branch or
     another repository could stand behind a canonical-looking `origin/main`.
   - **Every reader reads history as it is** (premise 2, with its cheap checks). Each runs git with an environment
     allowlist, as the builds do: `PATH`, `HOME`, the `GIT_DIR`, `GIT_INDEX_FILE` and `GIT_WORK_TREE` a hook is
@@ -565,8 +583,9 @@ each record hash, a review's ledger hash and lock lines, and a forms digest. `M2
     grafts file wherever git would read it (`git rev-parse --git-path info/grafts`), and reads parents with
     `core.commitGraph=false`. A shallow boundary would be a false ledgering commit for every line. CI checks out
     the full history.
-  - The gate also lists the untracked files under `catalog/` and refuses them (`catalog-layout`), since no reader
-    of the index can see them.
+  - The gate also lists the untracked files under `catalog/`, ignored ones included (`git ls-files --others`
+    without `--exclude-standard`), and refuses them (`catalog-layout`), since no reader of the index can see them
+    and a `.gitignore` could otherwise hide a stray record.
 - **Without git.** A §10.3 package carries no index. Loading a catalog there needs the package's own manifest of
   files, which is `M4`'s. Until then, the catalog loads only from a repository.
 
@@ -578,7 +597,7 @@ position of reviews in the file decides nothing:
 
 | Status | When |
 | --- | --- |
-| `rejected` | the facet inherits a rejection that no production review of the facet answers for every item of the rejection the facet now holds. The rejection may be at any hash |
+| `rejected` | the facet inherits a rejection, at any hash, and no single production review of the facet answers it while covering every item of the rejection that the facet now holds |
 | `production` | otherwise, when a production review names the facet's current bound hash `h`, and every rejection of the facet that names `h` is answered by a production review that also names `h` |
 | `stale` | otherwise, when some review names the facet |
 | `unreviewed` | otherwise |
@@ -594,7 +613,9 @@ equal the one the line names. A ledgering commit that fails any of these is a lo
 does not load (`catalog-lock-review`). Every ledgering commit therefore held the same review and the same facet
 content. The review's form, its `answers` included, and what the facet held are read from any of them, with the
 same result. **Status reads a review's facet, verdict and answers from its form**, never from the line, whose
-copies are an index.
+copies are an index. **The loader also re-applies the ledger-time checks below at each ledgering commit**, with
+that commit's record, parents' ledgers and committer date. So a review that a bypassed gate and a neutered CI let
+through is refused at load (`catalog-review`), not only when it was ledgered.
 
 **The rejections a facet inherits** are read from the ledger and the commits that ledgered it:
 
@@ -780,7 +801,11 @@ facet instead.
        the two must be the same code, built the same way. A closure whose implementations are all `none` needs no
        image;
      - the catalog was not read from a commit whose ledger holds every line of every ancestor's and of the
-       published main line's, or the clone has no `origin/main` (§4, §9).
+       published main line's, or the clone has no `origin/main` (§4, §9);
+     - a record in the claim's closure has an implementation that is not `none`, and the image did not compile
+       its packages. A fact about code must be about the code the image holds, so the closure is a subset of what
+       the image compiled, as well as the image's sources being a subset of the closure's sets;
+     - a first-parent commit of `origin/main` that changes `catalog/` is not a merge commit (premise 3).
 
   As in the runtime variant's admission, the strongest verdict is reported with every reason that reaches it.
   What an analysis does with a value it could not read is the analysis's verdict, not admission's (§12).
@@ -816,8 +841,9 @@ facet instead.
 - **For a production record, that holds when the change lands with its reviews.** A change moves the bound hash of
   every facet one of whose bound-hash inputs it changes, directly or through derived lines, transitively. For a
   timing model, that is every dependent's timing model and every record that names it in `measured-with`. For code,
-  it is both models of every record that describes or measures it or depends on it, and, through reached sets, every
-  facet whose packages reach the changed package, a catalog `depends` or not. Each moved facet of a production
+  it is the behavioral model of each record that describes it, the timing model of each that measures it, both
+  models of each that depends on it, and, through reached sets, every facet whose packages reach the changed
+  package, a catalog `depends` or not. Each moved facet of a production
   record leaves that record failing §6, and the catalog does not load. So the change lands in one of two ways:
   - with a production review of every moved facet in the same commit. The gate lists them. Every claim whose
     closure holds none of them stands;
@@ -944,7 +970,7 @@ Every refusal names its record, its field and the field's source location, and h
 | `catalog-shape` | not exactly one `catalog-record` form; a field or subform missing, unknown, duplicated or out of order; a repeated name; a decimal |
 | `catalog-id` | the id breaks §1's grammar, differs from the file stem, or is used twice |
 | `catalog-version` | a version or a requirement breaks §2's form |
-| `catalog-field` | one of the following: <br>• an empty string where §2 requires text <br>• an unknown catalog, profile, target, unit, category, role, verdict or `TARGET_KIND` <br>• a target without `TARGET_KIND` or `RUST_TARGET`, whose stem breaks §2's grammar, or whose `.env` breaks §3's grammar <br>• a `.env` value holding `/` that is not a tracked path in normal form, one without `/` that names a tracked file, or a target file under `catalog/` <br>• a `.env` or `.eadl` directly under `targets/` without its pair <br>• a fact §12 co-locates with a cost, in a record that does not supply that cost <br>• no guarantees <br>• a malformed fact or cost <br>• a negative integer <br>• a safety factor that does not pad, has a term outside `u32`, or whose `value` is not the padded observation <br>• a known cost that `Bound::validate` refuses <br>• a cost on a target the contract does not admit <br>• `independent` outside its two names, or on a target that is not a board <br>• a variant name of the wrong kind or in the wrong facet |
+| `catalog-field` | one of the following: <br>• an empty string where §2 requires text <br>• an unknown catalog, profile, target, unit, category, role, verdict or `TARGET_KIND` <br>• a target without `TARGET_KIND` or `RUST_TARGET`, whose stem breaks §2's grammar, or whose `.env` breaks §3's grammar <br>• a `.env` value holding `/` that is not a tracked path in normal form, one without `/` that names a tracked file, or a target file under `catalog/` <br>• a `.env` or `.eadl` directly under `targets/` without its pair <br>• a group name supplied under some selection by a record other than the one that supplies the group's anchor there (§12); a fact in a facet the facts table does not give it; a cost named `api.completion`; a self-statement named with another record's id <br>• no guarantees <br>• a malformed fact or cost <br>• a negative integer <br>• a safety factor that does not pad, has a term outside `u32`, or whose `value` is not the padded observation <br>• a known cost that `Bound::validate` refuses <br>• a cost on a target the contract does not admit <br>• `independent` outside its two names, or on a target that is not a board <br>• a variant name of the wrong kind or in the wrong facet |
 | `catalog-locator` | a `file` locator outside the facet's own set; a `code` locator outside its record's implementation own set, or naming a record §2 does not allow; a code fact without a `code` locator; a `ledger` anchor the ledger does not hold, or holds twice; a missing locator where §2 requires one |
 | `catalog-source` | one of the following: <br>• §3's package rules, manifest dialect and workspace rule, and §4's path rules <br>• a `proc-macro`, `proc_macro`, `crate-type` or `crate_type` key; a legacy `rust-toolchain` file <br>• in what `cargo metadata` resolves: a procedural-macro or build-script target, a source that is not a path, or a package §3's reading did not reach, or reached and cargo does not hold <br>• a `cargo-features` or `rustflags` key; a refused identifier, keyword or attribute word, as tokens; a non-ASCII identifier; a compiler-read source path that does not end in `.rs` <br>• a cargo configuration file the gate may not let cargo read, or one outside the dialect <br>• two tracked paths that differ only in case; a pin that is not a release number; a compiler that is not the pinned release; a workspace root cargo reports elsewhere <br>• a source path outside the written index, or whose bytes differ from its blob <br>• a path under `catalog/` <br>• a directory entry with a package below it, or a package with a package below it <br>• a file in two own sets of different kinds (§8) <br>• a package that does not build under the gate's matrix <br>• a compiler-read path or environment dependency outside the sets (the gate) |
 | `catalog-dependency` | a `depends`, `describes`, `measured-with` or `supersedes` id that is unresolved, unmatched by its one candidate's version, or listed twice; a cycle in the graph of §3's derived facet lines, which is the only acyclicity hashing needs; a `supersedes` id with a present record or no ledger lines |
@@ -1127,3 +1153,4 @@ the design as it stands, and that one keeps how it got here.
 | 7, the first judged against §0 | 15, and 1 found while answering | 3 (G1, G2, G4), a latent one (G5), one at defect level (G3), and the one found while answering; none needs a premise broken | "cannot be accepted as it stands" |
 | 8 | 19 | 1 (H1, a procedural macro under another spelling), and H2, H4 and H6 at defect level; none needs a premise broken | "cannot be accepted as it stands" |
 | 9 | 20 | none; 4 at defect level (I1–I4), all in §12's new composition names; §3–§9 held | "cannot be accepted as it stands" |
+| 10 | 18 | 1 (J1, code facts ungrouped from the costs whose code they state, and an image that need not compile the closure); J2–J4 near it | "cannot be accepted as it stands" |

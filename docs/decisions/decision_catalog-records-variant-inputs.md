@@ -27,14 +27,14 @@
 | `T_s` | description | the minimum separation of a source's arrivals is a property of its environment |
 | `C_i`, `CS_i` | **composite**: the application's parts (the task's own code, its calls to each primitive, its masked runs and each way each can end) and the catalog's (the primitives' and the completion path's costs below) | composed from those parts as `decision_runtime-composite-inputs.md` §3 says; the caller supplies each whole until `M2.10.2` implements it |
 | `J_i^release`, `J_s` | **composite**: the description's periods, jitters and what releases each task; the catalog's costs and facts; the application's masked runs through `CS`; and the plan's order among sources | composed as a least fixed point, as `decision_runtime-composite-inputs.md` §3 says; the caller supplies each whole until `M2.10.2` |
-| task facts | application | whether a task suspends, locks the scheduler, shares data outside its sections, or masks other than through the runtime API, plus condition 8 for its own figures, which for the composition also says they hold from any entry state; each way each masked run can end, at an `unmask` or at the job's completion; and `leaves-interrupt-hardware-alone`, that no task writes the timer's compare or the interrupt controller's configuration. The runtime API record's behavioral facts `no-suspension-primitive` and `no-scheduler-lock-primitive` support the first two for a task the application declares uses only that API |
+| task facts | application | whether a task suspends, locks the scheduler, shares data outside its sections, or masks other than through the runtime API, plus condition 8 for its own figures, which for the composition also says they hold from any entry state; each way each masked run can end, at an `unmask` or at the job's completion; and `leaves-interrupt-hardware-alone`, that no task writes the timer's counter or compare, or the interrupt controller's configuration or claim and complete registers. The caller declares the same of any application code in a service, and that no service calls a runtime primitive. The runtime API record's behavioral facts `no-suspension-primitive` and `no-scheduler-lock-primitive` support the first two for a task the application declares uses only that API |
 | `C_rel` | catalog | `timer-service`, a timing cost |
-| `C_s` | catalog, only with the code fact `no-application-code.<source>` `yes` from the same record | `service.<source>`, a timing cost. The record that supplies it supplies the source's behavioral code facts too: `no-application-code`, `acknowledge-at-entry` and `defers-nothing`, each suffixed `.<source>`. So a change to that record's code, which is what could add application code to the service, makes the fact's review stale. Without the fact `yes`, the service runs application code, so `C_s` is composite, and the caller's |
+| `C_s` | catalog, only with the code fact `no-application-code.<source>` `yes` from the same record | `service.<source>`, a timing cost. The record that supplies it supplies the source's behavioral code facts too: `no-application-code`, `acknowledge-at-entry` and `defers-nothing`, each suffixed `.<source>`. So a change to that record's code, which is what could add application code to the service, makes the fact's review stale. Without the fact `yes`, the service runs application code, so `C_s` is composite, and the caller's. Every declared source needs a record that supplies `service.<source>`, with its cost `unknown` when it has none, and that states the source's facts and `external.<source>`; without one the source's facts cannot be read, and its inputs are undeclared |
 | acknowledge point, deferred work | catalog | behavioral code facts `acknowledge-at-entry.<source>` (`no` means at exit) and `defers-nothing.<source>`, from the record that supplies `service.<source>`. A task that runs deferred work is named by the description |
 | interrupt priority, the enabled set | the plan | — |
 | `S`, `W_wake`, `γ`, `ρ`, `δ` | catalog | timing costs `switch`, `wake`, `preemption-delay`, `compare-rounding` and `delivery` |
 | the composition's parts | catalog | timing costs `api.<p>` and `masked.<p>` for each primitive `p` a task can call, and `completion` and `masked.completion`, all from the runtime API record: the one record that supplies `completion` under the selection (the groups below; `decision_runtime-composite-inputs.md` §1) |
-| the composition's preconditions | catalog | behavioral facts, each with its group in the facts table below: the code facts `reprograms-only-in-service`, `releases-after-initialisation`, `releases-never-latched`, `primitives-out-of-line` and `pending-taken-after-unmask`; the hardware fact `external-before-timer`; and, for each source, the hardware fact `external.<source>` (`decision_runtime-composite-inputs.md` §2) |
+| the composition's preconditions | catalog | behavioral facts, each with its group in the facts table below: the code facts `reprograms-only-in-service`, `releases-after-initialisation`, `releases-never-latched`, `primitives-out-of-line` and `pending-taken-after-unmask`; the hardware facts `external-before-timer` and `one-external-controller`; for each source, the hardware fact `external.<source>`; and, from every record whose implementation the claim reads, `interrupt-hardware-discipline.<id>` about its own code (`decision_runtime-composite-inputs.md` §2) |
 | the order among sources | the plan | the controller's priorities, a strict order over the sources whose `external.<source>` is `yes`; the timer's place is `external-before-timer`'s |
 | the platform facts | catalog | behavioral facts, one per condition of the variant's `PlatformFacts` (listed below). **Code facts** carry a `code` locator into the code they are about (§2). **Hardware facts** are `one-processor` and `compare-level`. The timing fact `eager-switching` must come from the record that supplies `switch`: `yes` means the variant's condition holds for that `switch`, that switching is eager or that `S` includes every deferred save and restore, and its basis says which |
 
@@ -62,10 +62,12 @@ the group, if any, that fixes which record supplies it:
 
 | Fact | Facet | About | Group anchor |
 | --- | --- | --- | --- |
-| the ten conditions above other than `pending-taken-and-transitions-unmasked` | behavior-model | code | — |
-| `pending-taken-and-transitions-unmasked` | behavior-model | code | the anchor of its own group |
-| `pending-taken-after-unmask` | behavior-model | code, with the hardware's half established in its basis | `pending-taken-and-transitions-unmasked` |
-| `one-processor`, `compare-level`, `external-before-timer` | behavior-model | hardware | — |
+| `timer-event-driven`, `compare-rounds-up`, `due-check-matches-compare`, `no-early-release`, `raised-only-when-due`, `only-timer-releases-timer-tasks` | behavior-model | code: the timer service's | `timer-service` |
+| `preemptive-everywhere`, `sections-mask-every-interrupt` | behavior-model | code: the runtime's scheduler and sections | `completion` |
+| `interrupts-do-not-nest`, `services-preempt-every-task`, `pending-taken-and-transitions-unmasked` | behavior-model | code: the port's trap entry and exit and its transitions | `switch` |
+| `pending-taken-after-unmask` | behavior-model | code, with the hardware's half established in its basis | `switch` |
+| `one-processor`, `compare-level`, `external-before-timer`, `one-external-controller` | behavior-model | hardware, about the target | — |
+| `interrupt-hardware-discipline.<id>` | behavior-model | code: the stating record's own | the record `<id>` itself; a statement named with another record's id is refused |
 | `no-application-code.<source>`, `acknowledge-at-entry.<source>`, `defers-nothing.<source>` | behavior-model | code | `service.<source>` |
 | `external.<source>` | behavior-model | hardware: the source reaches the processor as an external interrupt through the controller whose priorities the plan sets | `service.<source>` |
 | `reprograms-only-in-service`, `releases-after-initialisation` | behavior-model | code | `timer-service` |
@@ -113,24 +115,35 @@ target's `.env` or `.eadl` makes its review stale.
   (`catalog-conflict`), rather than reconciled. An `unknown` supplies its name: it is a record's statement, and a
   lookup that meets it returns it, since §9 says "Cross-validation investigates source conflicts
   rather than averaging them".
-- **Groups.** Some names must come from one record together, so that one review sees them together. Each group
-  has an anchor, given in the facts table and below. The rule applies under every selection: every profile and
-  target the catalog names, and a claim with no target. Each name of a group that some record supplies must be
-  supplied by the record that supplies the group's anchor under that selection. Otherwise the catalog is refused
-  at load (`catalog-field`). The analysis reads a group's names only from the id its anchor's lookup returned, so
-  a fact is never combined with a cost from another record. The groups are:
-  - `switch`: `eager-switching`;
-  - `service.<source>`: its three `.<source>` code facts and `external.<source>`;
-  - `timer-service`: `reprograms-only-in-service` and `releases-after-initialisation`;
-  - `completion`: every `api.<p>` and `masked.<p>`, `masked.completion`, `no-suspension-primitive`,
-    `no-scheduler-lock-primitive`, `releases-never-latched` and `primitives-out-of-line`. That record is **the
-    runtime API record**. No primitive may be named `completion`, so `masked.completion` is always the completion
-    path's;
-  - `pending-taken-and-transitions-unmasked`: `pending-taken-after-unmask`.
+- **Groups.** A code fact is about the code of the cost it is grouped with, and must come from the record that
+  supplies that cost, so one review sees the fact and the code together. Each group has an anchor, given in the
+  facts table and below.
+  - **Where the rule is checked.** Under every target selection, meaning a profile and a named target under
+    `targets/`, a target admitted only through `any` included, in which some record supplies the group's anchor.
+    There, each name of the group that some record supplies must be supplied by the anchor's record. Otherwise the
+    catalog is refused at load (`catalog-field`).
+  - **Where it is not.** Under a selection where no record supplies the anchor, the group's names are not read,
+    and whatever needs them is undeclared. A claim with no target reads no cost, so no cost-anchored group is
+    checked or read for it.
+  - **How the analysis reads them.** Only from the id its anchor's lookup returned, so a fact is never combined
+    with a cost from another record.
 
-  A claim with no target reads no cost, so it reads no group whose anchor is a cost.
+  The groups are:
+  - `switch`: `eager-switching`, `interrupts-do-not-nest`, `services-preempt-every-task`,
+    `pending-taken-and-transitions-unmasked` and `pending-taken-after-unmask`, the port's;
+  - `service.<source>`: its three `.<source>` code facts and `external.<source>`;
+  - `timer-service`: the six timer facts, `reprograms-only-in-service` and `releases-after-initialisation`;
+  - `completion`: every `api.<p>` and `masked.<p>`, `masked.completion`, `no-suspension-primitive`,
+    `no-scheduler-lock-primitive`, `preemptive-everywhere`, `sections-mask-every-interrupt`,
+    `releases-never-latched` and `primitives-out-of-line`. That record is **the runtime API record**. No
+    primitive may be named `completion`: a cost named `api.completion` is refused at load (`catalog-field`), so
+    `masked.completion` is always the completion path's.
+
+  A hardware fact is about the target, sits where the target's files enter its bound hash (§3), and is in no
+  group.
 - **The code facts** are those the facts table marks as about code, and each takes a `code` locator (§2). The
-  hardware facts are `one-processor`, `compare-level`, `external-before-timer` and each `external.<source>`.
+  hardware facts are `one-processor`, `compare-level`, `external-before-timer`, `one-external-controller` and each
+  `external.<source>`.
 - **What the variant does with a value it could not read.** Three cases reach the variant as an undeclared
   input: a name no record supplies, an `unknown`, and a cost outside its `holds-for` (more tasks, or more declared
   sources other than the timer). The variant refuses with its own verdict, `analysis-inconclusive` (the variant's

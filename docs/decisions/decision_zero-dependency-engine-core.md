@@ -55,6 +55,10 @@ is covered by its own fixtures.
   independent derivation (§4.4), and neither does a copy-paste.
 - When this decision is eventually relaxed for a specific crate, supersede this record rather
   than editing it, so the audit trail shows what was traded and when.
+- **Tightened `2026-09-30` for the catalog's gate** (`decision_catalog-records.md` §3, leaf `M2.7.1`). The gate
+  resolves the whole workspace offline with `cargo metadata`, so every member, dev dependencies included, must
+  depend only by path. A crate admitted under this record anywhere in the workspace now also needs that rule
+  amended in the same change.
 
 Related: [[doctrine-seams-vs-forking-a-check]] — the same instinct applied to tooling: state
 where a thing belongs instead of bending what enforces it.

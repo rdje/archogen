@@ -90,6 +90,30 @@ reported as holding.
 
 Round 3 re-checks this record with those changes.
 
+**Round 3**, `2026-09-30`: L1, L3–L8, L10 and L11 were closed, and L2 and L9 partial. The cross-file check against
+§12 agreed on every name, owner, kind, facet and group, apart from M5. It found 13 findings, one a defect, M1, and
+the verdict was "cannot be accepted as it stands". The reviewer read the privileged specification's timer section
+from the manual's source, since the pinned rendering stops before it. Its simulation, biased toward late writes,
+found 183 and 240 violating sets of 1 500, and none with fix (a). The answering context re-derived M1's
+counterexample by hand: a true 60 against a composed 42, and 74 with the fix. It re-read the specification's
+sentence at the manual's `main`, commit `51c1291`, line 2566, and added it to the ledger entry `riscv-privileged`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| M1 | defect | a late compare write passing through a value above the counter drops the interrupt until after the service, so a full masked stretch fits before it is pending again | `B_timer = max(ρ, C_rel + S) + L + 2δ`; steps 1, 2 and 5 restated; the specification's "eventually, not necessarily immediately" in the ledger (§3, §4) |
+| M2 | gap | an arrival during initialisation waits out its masked run | an arrival assumption, named like `T_s`: no source arrives before the first unmask (§2) |
+| M3 | gap | the timer's counter and the controller's claim registers were covered by no fact | both facts widened to the counter and the claim and complete registers (§2) |
+| M4 | gap | catalog code in records other than the facts' owners, drivers and services, was covered by nothing | `interrupt-hardware-discipline.<id>`, stated by every record about its own code, required from every closure implementation, and from `M4` the image's (§2) |
+| M5 | gap | §12 held the application's fact more narrowly | §12 takes the full wording and the caller's declaration (catalog round 10, J4) |
+| M6 | ambiguity | `external-before-timer`'s `no` against the `no` rule | exempted (§2) |
+| M7 | ambiguity | a caller's `C_s` with no record anchoring `service.<source>` | every declared source needs such a record, with its cost `unknown` if it has none; otherwise undeclared (§6) |
+| M8 | gap | an enabled source never delivered | the plan states every source deliverable; one that is not is `unsupported-profile` (§1, §6) |
+| M9 | nit | a numerator overflowing while the quotient is small | numerators formed as the variant's §2 forms them (§3) |
+| M10 | nit | the order of the fixed-point and refusal tests | fixed point first (§3) |
+| M11 | nit | `pending-taken-after-unmask`'s kind worded unlike §12 | aligned (§2) |
+| M12 | nit | the ledger still named `every-source-external` | renamed (the ledger) |
+| M13 | nit | which composites an unreadable fact gates | listed (§2) |
+
 ## Why
 
 The record states the composition as it stands, and this file keeps how it got there, as for the catalog record.

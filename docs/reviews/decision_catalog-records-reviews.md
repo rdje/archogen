@@ -321,6 +321,41 @@ and the composition record changes with them (`M2.10.1`).
 | I19 | nit | "the gate's values" cannot hold for the build's own directories | the variables must be the allowlist, with the pin and an empty `CARGO_HOME` (§7) |
 | I20 | nit | "names a tracked file" should exclude a directory | said so (§3) |
 
+**Round 10**, `2026-09-30`: all 23 values matched by two routes, the second a separate parser of the example with its
+own reader and encoder. Every measured claim about the tree was true, and the reviewer added: `origin` and its
+refspec as the record requires, and no `insteadOf`. I1, I3–I8, I10, I11, I13–I15 and I17–I20 were closed; I2,
+I9, I12 and I16 partial. There were 18 findings. One was a defect, J1: the eleven platform code facts were
+ungrouped, so two honestly reviewed records could put one record's timer facts beside another's costs. And from
+`M4`, an image need not compile the implementations the facts were about. The verdict was "cannot be accepted as
+it stands". J7 and J8 need premise 3 broken, and each came with a missing cheap check. The answering context
+measured `main`'s history for J7 (`origin/main` is the initial commit alone, and local `main` is 232 commits ahead
+with no merge) and put premise 3's hosting settings to the director (findings §11). No answer changes a hash input.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| I2 | partial, defect-level | through J1 and J2 | as those rows |
+| I9, H17 | partial, nit | through J6 | as J6 |
+| I12 | partial, gap | through J5 | as J5 |
+| I16 | partial, gap | through J12 | as J12 |
+| J1 | defect | platform code facts ungrouped from the costs whose code they state; an image need not compile the closure | the six timer facts go with `timer-service`, the scheduler and sections facts with `completion`, and the trap and transition facts with `switch`; a claim is `not-established` when a closure implementation is not compiled into the image (§7, §12) |
+| J2 | ambiguity, fails closed | the group rule under the no-target selection and under targets with no anchor made natural catalogs unloadable | the rule is checked only under target selections where the anchor is supplied, over every named target, `any` ones included; with no anchor the names are unread (§12) |
+| J3 | gap | nothing stated that all sources share one controller | the target-level hardware fact `one-external-controller` (§12; the composition record's §2) |
+| J4 | gap | §12 held only the task half of `leaves-interrupt-hardware-alone` | the full wording and the caller's declaration (§12) |
+| J5 | gap, fails closed | `pre-merge-commit` may run before `MERGE_HEAD` exists | `M2.7.4` measures it; until then catalog merges use `--no-commit` then `git commit`, and the `pre-merge-commit` verdict is advisory (§4) |
+| J6 | ambiguity | `git var` under the history allowlist loses `TZ` and `GIT_COMMITTER_DATE` | it runs in the hook's own environment (§4) |
+| J7 | gap, premise 3 | the premise named properties, not settings; `main` has never been merged into | the settings named; a claim refuses a non-merge catalog commit on `origin/main` (§0, §7); the settings put to the director (findings §11) |
+| J8 | gap, premise 3 | §5's ledger-time checks ran only in bless, the gate and CI | the loader re-applies them at every ledgering commit (§0, §5) |
+| J9 | ambiguity | one review or several to cover a rejection's items | a single covering review (§5) |
+| J10 | ambiguity | `external-before-timer`'s `no` against the `no` rule | exempted in the composition record (§2) |
+| J11 | nit | §11's co-location wording predates groups | reworded by groups, facets, the reserved name and self-statements (§11) |
+| J12 | gap | "no primitive named `completion`" enforced nowhere | a cost `api.completion` is refused, and the composition refuses such a primitive (§11, §12) |
+| J13 | nit | §8's moved set overstated | each describer's behavioral model, each measurer's timing model, both of each dependent (§8) |
+| J14 | nit | the path-only rule is a tightening, not a restatement | said so, and recorded in `decision_zero-dependency-engine-core.md` (§3) |
+| J15 | nit | ignored files under `catalog/` | listed with `git ls-files --others`, no exclusions (§4) |
+| J16 | nit, premise 2 | other refspecs mapping to `origin/main`, negative refspecs | refused (§4) |
+| J17 | nit | rebase, cherry-pick, `am` and revert run no hook | said so; CI's replay decides (§4) |
+| J18 | nit | a caller's `C_s` against the grouped source facts | every declared source needs a record anchoring its service (§12; the composition record's §6) |
+
 ## Why
 
 The decision record states the design as it stands. Its reviews are its history: every round appends a table,

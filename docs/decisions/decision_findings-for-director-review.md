@@ -6,7 +6,7 @@
 - **Owner / source:** raised during the M0 + M1 build; recorded here so they survive the session
 - **External sources:** [QEMU](../book/src/ledger.md#qemu) — version, scope and limits in the ledger
 
-Ten items are recorded here so they survive the session. Three are outside an implementer's
+Eleven items are recorded here so they survive the session. Three are outside an implementer's
 authority to settle; the fourth (§4) is a measurement about the programme's own evidence that you
 should see even though it is already fixed; the sixth (§6) is a review of **your own amendment**
 by the model that has never read the implementation. Each is tracked as work, so nothing here
@@ -317,6 +317,27 @@ Everything else is archogen's to change:
 `bootstrap.sh` and `update_scaffold.sh` stay in place, as you asked on the same day. `PROGRAM.32` is unblocked: its
 new check and its change to `TASK-ACCEPTANCE` are archogen's files. It must work with the held checks that read
 leaves left as they are.
+
+## 11. The catalog's premise 3 needs `main` protected, and that is not how this project commits today (`2026-09-30`)
+
+The catalog design's threat model, which you ruled, assumes that the published main line is protected (§0, premise
+3). Its tenth review showed what that takes on the hosting side. CI that runs after a push to `main` cannot block
+that push. Blocking needs:
+- pull requests required for `main`, administrators included;
+- required checks on the merge result, with branches up to date or a merge queue;
+- merge commits as the only merge method;
+- force-pushes disabled.
+
+**Measured today:** `origin/main` holds the initial commit alone, and local `main` is 232 commits ahead of it, with
+no merge ever. The project commits directly to `main` and pushes in batches. No catalog record exists yet
+(`catalog/` is empty), so nothing depends on the premise now. It binds from the first record, which `M2.7.4` writes.
+
+The design already checks what it cheaply can: a production claim refuses a catalog change that reached `main`
+other than by a merge commit, and the loader re-checks every review where it was ledgered.
+
+**The decision needed, before `M2.7.4`:** turn on those settings for `main` (recommended), which changes the
+commit workflow to branches merged by pull request; or rule a weaker premise 3 that records CI's verdict after the
+fact, whose limit the design would then state.
 
 ## A note on what "done" means so far
 
