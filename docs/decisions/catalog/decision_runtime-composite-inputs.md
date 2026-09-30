@@ -63,9 +63,10 @@ The composition is sound only on a platform where the following hold. Each catal
 (the behavior-model facet), with a `code` locator for a code fact. It comes from the record that the groups in the
 catalog record's §12 name, checked per selection. A fact that is read and declared `no` puts the platform outside
 what the composition covers: `unsupported-profile`, naming it. The one exception is `external-before-timer`, whose
-`no` is covered when `one-claim-per-trap` is `yes` (its row). A fact that cannot be read leaves undeclared the
-composites it gates, `analysis-inconclusive`, naming it:
-- the timer's facts gate `J^release` of every timer-released task, and every `J` behind the timer;
+`no` is covered when `one-claim-per-trap` is `yes`, and leaves every `J` undeclared when that fact cannot be read
+(its row). A fact that cannot be read leaves undeclared the composites it gates, `analysis-inconclusive`, naming it:
+- the timer's facts and `releases-after-initialisation` gate `J^release` of every timer-released task, and every
+  `J` behind the timer;
 - the interrupt and hardware facts, each source's `one-request-per-arrival.<source>` among them, gate every `J`,
   and so does `one-claim-per-trap` when `external-before-timer` is `no`;
 - `pending-taken-after-unmask`, `releases-never-latched`, `primitives-out-of-line`, `starts-by-transition` and
@@ -75,19 +76,19 @@ composites it gates, `analysis-inconclusive`, naming it:
 | Fact | Kind | Says | Why the composition needs it |
 | --- | --- | --- | --- |
 | `reprograms-only-in-service` | code | the compare is written only by the timer service, after its due check, and by the timer-service record's code during initialisation, before the first enabling of interrupts. Each write sequence leaves the compare at the rounded earliest nominal release not yet performed, or at its largest value when none remains. The timer facts and `compare-rounding` hold of every compare write, initialisation's first included. The counter is written only by this record's code during initialisation, before the compare's first write, and never after | a late write then lands inside a service, and a counter moved back would delay every release. A first compare value rounded otherwise, or set for another instant, would delay the first release or raise a service that no release pays for |
-| `releases-after-initialisation` | code | every nominal release is at or after the end of initialisation, the first enabling of interrupts | initialisation's masked run, and its compare write, are then over before any release they could delay |
+| `releases-after-initialisation` | the caller's declaration, until `M4.10` orders initialisation in the plan | every nominal release is at or after the first enabling of interrupts | initialisation's masked run, and its compare write, are then over before any release they could delay. That instant is the port's transition, after every record's initialisation and the application's, which no one record's code sees |
 | `pending-taken-after-unmask` | code, with the hardware's half established in its basis | a pending interrupt is taken before the instruction that follows any unmask, a task's included | two masked runs separated by an unmask stay separate. RISC-V's privileged specification requires interrupt conditions to be evaluated immediately after an explicit write to `mstatus` or `mie` |
 | `releases-never-latched` | code | no service runs while the runtime's mask depth is raised: the port masks the hardware before raising it, and lowers it before unmasking the hardware. A completion entered with the depth raised lowers it before the transition that follows unmasks, and that work is inside `completion`. `rt-core`'s `complete` leaves the depth as it is, so this is the port's to do and the runtime record's review to check | `rt-core` latches a release that arrives while the depth is raised and delivers it on `unmask`. On the target that path is then never taken, so no `unmask` makes a task ready and no part has to charge the decision and switch that would follow |
 | `primitives-out-of-line` | code | each primitive is compiled out of line, and its masking and unmasking instructions are compiler barriers | a call's boundaries, and a run's, are then instructions. The compiler cannot move the task's own code into a primitive or across a masking instruction |
-| `external-before-timer` | hardware | whether the hardware takes a pending machine external interrupt before a pending machine timer interrupt, however the controller is configured | the timer's place in the order is the hardware's, not the plan's. The privileged specification takes machine external interrupts before machine timer interrupts; QEMU 11.1.1, without the Advanced Interrupt Architecture, takes the lowest pending cause first, the timer before external interrupts (the ledger's `qemu`), so the emulator target states `no`. With `no` the timer is ahead of every source (§1), and §3's queue for a source counts it. That holds only if each external trap serves one request and returns, since a port that claims again before returning, as the PLIC specification lets a handler do, would run several services while the timer waits: so `no` needs `one-claim-per-trap` `yes`, and is `unsupported-profile` without it |
+| `external-before-timer` | hardware | whether the hardware takes a pending machine external interrupt before a pending machine timer interrupt, however the controller is configured | the timer's place in the order is the hardware's, not the plan's. The privileged specification takes machine external interrupts before machine timer interrupts; QEMU 11.1.1, without the Advanced Interrupt Architecture, takes the lowest pending cause first, the timer before external interrupts (the ledger's `qemu`), so the emulator target states `no`. With `no` the timer is ahead of every source (§1), and §3's queue for a source counts it. That holds only if each external trap serves one request and returns, since a port that claims again before returning, as the PLIC specification lets a handler do, would run several services while the timer waits: so `no` needs `one-claim-per-trap` `yes`: it is `unsupported-profile` when that fact is read and declared `no`, and leaves every `J` undeclared when it cannot be read |
 | `one-claim-per-trap` | code, in the `switch` group | every trap taken for an interrupt serves exactly that interrupt: a timer trap claims nothing, and an external trap claims one request, runs its service and returns; an exception trap serves no interrupt. So an interrupt taken before external ones is taken between two source services, and nothing else is served between a service and its trap's return | read only when `external-before-timer` is `no`, where a claim loop would put several services ahead of the timer that §3's queue counts behind it |
 | `external.<source>` | hardware, one per source, from the record that supplies `service.<source>` | the source reaches the hart as a machine external interrupt, through the controller's context for the hart's machine mode, whose priorities the plan sets. A source routed through a supervisor context is taken below the machine timer, and states `no` | the plan's order holds only for such sources. A source with `no`, such as a platform-defined local interrupt, a software interrupt, or one a priority scheme places among the timer, is outside the composition. A catalog reviewer sees the source's own wiring, never a description's list of sources |
 | `no-empty-claim` | code, with the hardware's half established in its basis, in the `switch` group | every external trap finds a pending request to claim. How is the basis's to show: for example, the port's service exit waits until the controller's notification to the hart reflects the last claim, so a notification sent before that claim cannot trap the hart again. It is `yes` on a target with no external source, once `M2.12` lets a port fact be stated | the PLIC specification lets a notification "take some time to be received", holding a value "valid at some point in the past", and a claim then returns zero. Such a trap is a service that no request pays for, and repeated it can keep the timer from ever being taken |
 | `one-request-per-arrival.<source>` | code, one per source, with the hardware's half established in its basis, from the record that supplies `service.<source>` | every request a service of the source claims was made by an arrival, and each arrival makes at most one. The basis shows it for the target's controller: for a PLIC gateway, that the source is edge-triggered with one edge per arrival, or that its level is deasserted at the gateway before the completion arrives there; for QEMU's `sifive_plic`, which pends a request on every raise of a source's line, even while the source is claimed, that from the first enabling of interrupts, and from each claim, until the source's next arrival, the line is raised only by that arrival, or while the request it raised is still pending and unclaimed | the PLIC specification forwards a new request on a completion "if the interrupt is level-triggered and the interrupt is still asserted", and QEMU pends one on any raise of the line. Either way a source can be served twice for one arrival, and step 4 counts services by arrivals. How the controller turns the line into requests is the source's wiring, and when its service lowers or raises the line is that service's code, so both are in that record's review |
-| `starts-by-transition` | code, in the `switch` group | interrupts are first enabled by the transition into the first task's job or into idle, and no code that ran before it runs again. That transition is "the first enabling of interrupts" every other fact names | an application's `main` that carried on after it, or initialisation that ran on, would mask where no term of `L` counts it |
+| `starts-by-transition` | code, in the `switch` group | interrupts are first enabled by the transition into idle, which does not return: no frame of initialisation's is resumed, and a function initialisation called runs again only in a role (below). That transition is "the first enabling of interrupts" every other fact names | an application's `main` that carried on after it, or initialisation that ran on, would mask where no term of `L` counts it |
 | `one-external-controller` | hardware, about the target, in no group | every external interrupt of the target reaches the processor through one controller. It is `yes` on a target with no external source | two controllers would each order their own sources, and no strict order the plan gives would be the hardware's. A reviewer of one source's wiring cannot see the others, so this is stated once, of the target |
 | `leaves-interrupt-hardware-alone` | application fact, covering its tasks and its initialisation, and the caller's declaration for a service's application code | after the first enabling of interrupts, application code runs only as a declared task's job or as a service's application code; and no application code, a task's, a service's or application initialisation's, writes the timer's counter or compare, the interrupt controller's configuration, or the hart's interrupt or trap state other than through the runtime API's masking primitives, or reads or writes the controller's claim and complete registers, a read of which claims, or a declared source's device registers; no service calls a runtime primitive; and no application code releases a task or calls a runtime function other than the runtime API record's primitives and its completion path. A runtime function is any function of a catalog record's implementation, a driver's included, called after the first enabling of interrupts; before it, application initialisation reaches that hardware only through catalog functions, which `runtime-discipline.<id>` covers | `reprograms-only-in-service`, the plan's order, `releases-never-latched`, `no-empty-claim` and each `one-request-per-arrival.<source>` are statements about the whole image, and a code fact's locator reaches only catalog code. Each holds for the image only with this one, as `sections-mask-every-interrupt` holds only with the fourth task fact |
-| `runtime-discipline.<id>` | code, one per record, stated by each record about every package its implementation's own and reached sets hold | that code writes the timer's counter or compare, the controller's configuration, or the hart's interrupt or trap state, reads or writes the controller's claim and complete registers or a declared source's device registers, and releases a task, only in a role listed below this table. No service in it calls a runtime primitive | the image-wide facts above rest on locators into their owners' code. Every other record compiled into the image, a driver or a service among them, states the same about itself, so no compiled code is covered by nothing. It is required `yes` from every record whose implementation facet, not `none`, is in the claim's closure, and from `M4` in the image's. Reading one adds its record's behavioral model to the closure, so the set is computed to a fixed point. Generated code is in no record: from `M4` the plan's generator states the same of it, and until then the conclusion names generated code, and any record compiled but outside the closure, as assumptions |
+| `runtime-discipline.<id>` | code, one per record, stated by each record about every package its implementation's own and reached sets hold | that code writes the timer's counter or compare, the controller's configuration, or the hart's interrupt or trap state, reads or writes the controller's claim and complete registers or those of any device wired to the external controller, and releases a task, only in a role listed below this table, a device's registers in the roles of the record that supplies its source's service, whether or not the application declares it a source. No service in it calls a runtime primitive | the image-wide facts above rest on locators into their owners' code. Every other record compiled into the image, a driver or a service among them, states the same about itself, so no compiled code is covered by nothing. It is required `yes` from every record whose implementation facet, not `none`, is in the claim's closure, and from `M4` in the image's. Reading one adds its record's behavioral model to the closure, so the set is computed to a fixed point. Generated code is in no record: from `M4` the plan's generator states the same of it, and until then the conclusion names generated code, and any record compiled but outside the closure, as assumptions |
 
 **The roles `runtime-discipline.<id>` allows.** A function's writes, claims and releases take the role of the
 context that calls it, so a runtime function called from a service acts in that service's role, and the port's
@@ -98,14 +99,15 @@ dispatch, which claims before it knows the source, acts in the role of the servi
 - the runtime API's primitives, and the port's trap entry and exit, its transitions, its idle wake and its fault
   path, mask and unmask; the port's trap path and its transitions use `mscratch` where it keeps a stack there;
 - initialisation, before the first enabling of interrupts, writes the controller's configuration and the hart's
-  interrupt and trap state as the plan sets them. It may claim and complete requests left pending from before it,
-  and it leaves none pending at the first enabling of interrupts that no arrival made. Two writes are one record's
-  alone, so the facts that depend on them are reviewed with the code that makes them: the counter's first value,
-  and the compare's, are written only by code of the record that supplies `timer-service`
-  (`reprograms-only-in-service`); and a declared source's device is read and written only by code of the record
-  that supplies `service.<source>`, in initialisation as at run time, whose `one-request-per-arrival.<source>`
-  basis covers that configuration. Which record writes the controller's configuration and the hart's state is not
-  fixed in `/1`; checking what the image wrote against the plan is `M4`'s (`M4.10`).
+  interrupt state as the plan sets them. It may claim and complete requests left pending from before it, and it
+  leaves none pending at the first enabling of interrupts that no arrival made. Two writes are one record's alone,
+  so the facts that depend on them are reviewed with the code that makes them: the counter's first value, and the
+  compare's, are written only by code of the record that supplies `timer-service` (`reprograms-only-in-service`);
+  and a declared source's device is read and written only by code of the record that supplies `service.<source>`, in
+  initialisation as at run time, whose `one-request-per-arrival.<source>` basis covers that configuration. The
+  hart's trap state is written only by code of the record that supplies `switch`, whose facts are about the code it
+  points traps at. Which record writes the controller's configuration and the hart's interrupt state is not fixed in
+  `/1`; checking what the image wrote against the plan is `M4`'s (`M4.10`).
 
 A path that another fact of this section makes unreachable is named in the basis with that fact. `rt-core`'s
 `unmask` delivers a latched release, which is unreachable by `releases-never-latched`. Its `release` of a task whose
@@ -245,9 +247,9 @@ everything that runs inside it:
 1. **The compare matches by `t + ρ + C_rel + S`.** `releases-after-initialisation` puts `t` after initialisation,
    and `reprograms-only-in-service` puts every later compare write inside the timer service, under the timer facts
    that hold of initialisation's first write too. The due check sees `t` only from `⌈t⌉ ≤ t + ρ`, since it rounds as
-   the compare does (`due-check-matches-compare`). After each write, the compare holds the earliest release not yet
-   performed (`reprograms-only-in-service`), so apart from a service that starts before `⌈t⌉` and still releases `t`
-   on time, two cases cover every timeline:
+   the compare does (`due-check-matches-compare`). After each write sequence, the compare holds the rounded earliest
+   release not yet performed, or its largest value (`reprograms-only-in-service`), so apart from a service that
+   starts before `⌈t⌉` and still releases `t` on time, two cases cover every timeline:
    - at `⌈t⌉` the compare holds at most `⌈t⌉`, written for `t` or for an earlier release: it has level semantics,
      so it matches by `⌈t⌉`;
    - a timer service that did not release `t`, because its due check came before `⌈t⌉`, writes the compare late.
@@ -280,10 +282,10 @@ everything that runs inside it:
    `⌈(Δ + J_q)/T_q⌉` of them.
    - For a source, every service claims a request (`no-empty-claim`), every request was made by an arrival and each
      arrival makes at most one (`one-request-per-arrival.<q>`), so no more services start than arrivals. A claim
-     takes the highest request pending when it is read, so a service can serve a request that arrived after its trap
-     was taken. The count still holds: a request it displaces is served next, inside the window, where its arrival
-     is counted; and the claim comes within `C_q` of the trap, with `C_q ≤ L` (step 2), so the interrupt's own later
-     request adds no service the ceiling misses.
+     takes the highest request pending when it is read, so a service can serve a request that arrived after its
+     trap. Such a service either started before the window, and is the stretch step 2 counts, since `C_q + S ≤ L`
+     by `L`'s definition, or started inside it, and then that arrival is inside the window and the ceiling counts
+     it. A displaced request is served after every interrupt ahead of it, and is counted by its own arrival.
    - For the timer ahead of a source, each timer service maps to a release that was due when its
      interrupt was raised (raised only when due) and that the service performs. "Raised" covers an interrupt still
      pending after a service has moved the compare on, which the specification allows, since MTIP follows the
@@ -314,12 +316,12 @@ The least fixed point is therefore an upper bound on how late the service can st
 - **Timing costs** `api.<p>` and `masked.<p>` for each primitive a task can call, and `completion` and
   `masked.completion`. Each comes from the runtime API record, the one that supplies `completion`, and each is
   image-specific, like `switch`.
-- **Code facts** `reprograms-only-in-service` and `releases-after-initialisation`, in the `timer-service` group;
+- **Code facts** `reprograms-only-in-service`, in the `timer-service` group;
   `releases-never-latched` and `primitives-out-of-line`, in the `completion` group; and `pending-taken-after-unmask`,
   `one-claim-per-trap` and `starts-by-transition`, in the `switch` group. Every fact is behavioral, and every
   pairing is one of the catalog record's §12 groups, checked per selection.
 - **The application's fact `leaves-interrupt-hardware-alone`**, which covers its initialisation too, and the
-  caller's declaration of it for a service's application code.
+  caller's declaration of it for a service's application code, and of `releases-after-initialisation`.
 - **`runtime-discipline.<id>`**, which each record states about every package its implementation's own and
   reached sets hold, and `no-empty-claim` in the `switch` group.
 - **Hardware facts** `external-before-timer` and `one-external-controller`, and in each `service.<source>` group
@@ -351,8 +353,8 @@ This record names what §12 gains; the catalog record's own review checks the wo
   order among its sources. It is the variant's `analysis-inconclusive`, with the part named. §12's rule for a value
   it could not read applies unchanged.
 - **A declared value outside what the composition covers** is `unsupported-profile`, as the variant's §5 treats one
-  outside `/1`. That covers a §2 fact that is read and declared `no`, `external-before-timer` apart when
-  `one-claim-per-trap` is `yes`, and a plan whose order among sources is not strict.
+  outside `/1`. That covers a §2 fact that is read and declared `no`, `external-before-timer` apart unless
+  `one-claim-per-trap` is read and declared `no`, and a plan whose order among sources is not strict.
 - **The stops of §3:**
   - **For a source:** no fixed point, an overflow, or passing its no-loss limit. Each means `J_s` cannot be bounded
     below the limit, which is condition 7's no-loss failure, so the verdict is `unsupported-profile`, naming the
@@ -439,8 +441,8 @@ This record names what §12 gains; the catalog record's own review checks the wo
   A primitive that does either needs this record's run definition extended before it is costed.
 - **A new kind of release, nested interrupts, a source whose `external.<source>` or
   `one-request-per-arrival.<source>` is `no`, or a platform whose `external-before-timer` and
-  `one-claim-per-trap` are both `no`** is outside this composition in `/1`; one of these facts `unknown` leaves
-  every `J` undeclared.
+  `one-claim-per-trap` are both `no`** is outside this composition in `/1`; one of these facts `unknown`,
+  `one-claim-per-trap` only when `external-before-timer` is `no`, leaves every `J` undeclared.
 - Related:
   - [[decision_runtime-analysis-variant]]: its §1 names each composite and points here;
   - [[decision_catalog-records]]: its §12 owns the catalog's parts and facts.
@@ -462,3 +464,4 @@ under-charges against the variant's §1 definitions. The findings, and the answe
 | 7 | 11 | 1 live (Q2, a declared source's device registers ungoverned, which QEMU's UART re-raises on); Q1, the emulator taking the timer before external interrupts, so `/1` composed nothing there | "not met in substance"; `C_i` and `CS_i` sound, `J^release` and `J_s` sound where external interrupts come first once Q2 is fixed |
 | 8 | 8 | 3 live on the emulator, all in the facts' wording (R1, a timer trap that drains sources; R3, application initialisation unbound; R4, a request no arrival made) | "does not meet its closure rule"; the model sound under both interrupt orders in simulation, QEMU's timer-first order included |
 | 9 | 8 | 2 live on the emulator, in the facts' coverage (S1, application code masking after the first enabling outside any task; S2, another record's initialisation writing the counter or a device) | "not met"; the model sound under both orders in simulation, claims of later arrivals included, and nothing else under-charges once S1 and S2 are fixed and S3 and S4 stated |
+| 10 | 10 | 0; T3 live under a loose reading (a handler another record points `mtvec` at, 15 against 9), and T1 a live false refusal | "met on the rubric's terms", not accepted as it stands; the model sound under both orders in simulation, with negative controls that find each earlier defect |

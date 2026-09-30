@@ -248,6 +248,28 @@ context restated each in the record and in the catalog's §12, and checked S2's 
 | S7 | nit, latent | `no` of an unread fact refused; "not `yes`" in How to apply | "read and declared `no`"; `unknown` leaves every `J` undeclared (§2, §6, How to apply) |
 | S8 | nit, latent | "each write sets" is false of RV32's intermediate store | "each write sequence leaves" (§2) |
 
+**Round 10**, `2026-09-30`: S1 and S3–S6 were closed, and S2, S7 and S8 partial. The reviewer read QEMU 11.1.1's
+`sifive_plic.c`, `riscv_aclint.c` and `cpu_helper.c` again, and simulated the model under both orders, 700 admitted
+sets each, with claims at any point in a service: no violation, the bound tight to one unit, and about 2 000 claims
+per order serving a request that arrived after its trap. Negative controls found L1, Q1 and R1 again. There were 10
+findings and no defect; the verdict was the closure rule "met on the rubric's terms", with the caveat that T3, read
+as round 9's deferral allows, is a live under-charge. So the record was not accepted as it stood, and the answering
+context re-derived T2's and T3's counterexamples, 17 against 50 and 9 against 15.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| S2, S7, S8 | partial | through T1, T3, T4, T6 and T9 | as those rows |
+| T1 | ambiguity, live, a false refusal | `external-before-timer` `no` with `one-claim-per-trap` unreadable fell to the general rule, `unsupported-profile`, against the gating list and the limits record | undeclared when that fact cannot be read, `unsupported-profile` only when it is read and declared `no`; How to apply reads `one-claim-per-trap` only under `no` (§2, §6, How to apply) |
+| T2 | gap, live in principle | `releases-after-initialisation` was a timer-service code fact, and no one record's code sees when initialisation ends | the caller's declaration until `M4.10` orders initialisation in the plan; it gates `J^release` (§2, §5; the catalog's §12; `M4.10`) |
+| T3 | ambiguity, live under one reading | no plan sets `mtvec`, so any record's initialisation could point traps at a handler the port's facts never see: 15 against 9 | the hart's trap state is written only by the `switch` record's code; the plan sets its interrupt state (§2) |
+| T4 | gap, latent | `M4.10` did not carry the check round 9 deferred to it | `M4.10` checks what initialisation writes against the plan |
+| T5 | ambiguity, a false refusal | "no code that ran before it runs again" is false of shared functions; no release precedes the first job | the transition into idle does not return: no frame of initialisation's is resumed, and a function it called runs again only in a role (§2) |
+| T6 | nit, latent | step 1 kept "after each write" | §2's wording (§4) |
+| T7 | nit | step 4's new paragraph was loose | restated: before the window, the stretch step 2 counts; inside it, an arrival the ceiling counts (§4) |
+| T8 | nit | §12 worded three facts more narrowly | §12 cites §2's wording (the catalog's §12) |
+| T9 | ambiguity, latent | "a declared source's device" is the application's choice, which a record's reviewer never sees | every device wired to the controller, touched only in its source's service record's roles, declared or not; refining it to the plan's sources is `M4.10`'s (§2) |
+| T10 | nit | `M2.10.1`'s commit field named `-0243` | updated |
+
 ## Why
 
 The record states the composition as it stands, and this file keeps how it got there, as for the catalog record.
