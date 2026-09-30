@@ -122,6 +122,13 @@ leaf of its own. Round 16 found no defect live for the slice, and the design was
 answered it. Every round recomputed the worked example's 23 hashes by two independent routes, and every round
 found them right.
 
+The composition of four of the analysis's inputs from catalog, application and plan parts,
+`docs/decisions/catalog/decision_runtime-composite-inputs.md`, was reviewed the same way under the same closure
+rule. Its rounds found defects in which platform facts the composition needs and how they are worded, several of
+them live on the emulator, whose interrupt order [QEMU](ledger.md#qemu)'s source showed differs from the
+specification's. Round 11 found none live, and the record was accepted. Its history is kept in
+`docs/reviews/decision_runtime-composite-inputs-reviews.md`.
+
 ## What it does not do yet
 
 - **Nothing loads a catalog.** `catalog/` is empty. The crate reads records, computes their hashes and checks the

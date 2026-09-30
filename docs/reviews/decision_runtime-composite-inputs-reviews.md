@@ -270,6 +270,23 @@ context re-derived T2's and T3's counterexamples, 17 against 50 and 9 against 15
 | T9 | ambiguity, latent | "a declared source's device" is the application's choice, which a record's reviewer never sees | every device wired to the controller, touched only in its source's service record's roles, declared or not; refining it to the plan's sources is `M4.10`'s (§2) |
 | T10 | nit | `M2.10.1`'s commit field named `-0243` | updated |
 
+**Round 11**, `2026-10-01`: T1–T10 were closed, T4 with a residue. The reviewer read QEMU 11.1.1's
+`sifive_plic.c`, `cpu_helper.c`, `cpu.c`, `virt.c`, `fw_cfg.c` and `memory.c`, and simulated the model under both
+orders with late claims and stretches begun while an interrupt was pending but untaken: no violation, a hill-climb
+over about 500 parameter sets reaching the bound in about 140 and exceeding it in none, and the negative controls
+finding L1, Q1 and R1 again. Its report was cut short once, and the rest was asked for and given whole. It finished
+an inquiry into writes by DMA and other bus masters: each is armed by a write the facts govern, a wired device not
+declared is either enabled, which condition 5 refuses, or masked, and a write straggling past a service is the late
+write already charged apart from `L`. There were 3 findings, none live, and no ambiguity with an under-charging
+reading on the emulator; the verdict was that the record "meets its closure rule" and "can be accepted as it
+stands". `M2.10.1` closed on this round, and this history is frozen.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| U1 | ambiguity, latent, a false refusal | no role named the `switch` record's own write of the trap state before the first enabling | in initialisation as on its trap path (§2) |
+| U2 | gap, latent | `M4.10` did not check that the image's trap state points at the `switch` record's code | added to `M4.10` |
+| U3 | nit | §2's opening called every row a catalog fact | the table also holds the application's fact and the caller's declaration (§2) |
+
 ## Why
 
 The record states the composition as it stands, and this file keeps how it got there, as for the catalog record.

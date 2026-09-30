@@ -61,10 +61,11 @@ The parts the catalog already supplies keep their names: `ρ` `compare-rounding`
 
 The composition is sound only on a platform where the following hold. Each catalog fact below is a behavioral fact
 (the behavior-model facet), with a `code` locator for a code fact. It comes from the record that the groups in the
-catalog record's §12 name, checked per selection. A fact that is read and declared `no` puts the platform outside
-what the composition covers: `unsupported-profile`, naming it. The one exception is `external-before-timer`, whose
-`no` is covered when `one-claim-per-trap` is `yes`, and leaves every `J` undeclared when that fact cannot be read
-(its row). A fact that cannot be read leaves undeclared the composites it gates, `analysis-inconclusive`, naming it:
+catalog record's §12 name, checked per selection; the table also holds the application's fact and the caller's
+declaration, as their kind says. A fact that is read and declared `no` puts the platform outside what the
+composition covers: `unsupported-profile`, naming it. The one exception is `external-before-timer`, whose `no` is
+covered when `one-claim-per-trap` is `yes`, and leaves every `J` undeclared when that fact cannot be read (its row).
+A fact that cannot be read leaves undeclared the composites it gates, `analysis-inconclusive`, naming it:
 - the timer's facts and `releases-after-initialisation` gate `J^release` of every timer-released task, and every
   `J` behind the timer;
 - the interrupt and hardware facts, each source's `one-request-per-arrival.<source>` among them, gate every `J`,
@@ -105,9 +106,10 @@ dispatch, which claims before it knows the source, acts in the role of the servi
   compare's, are written only by code of the record that supplies `timer-service` (`reprograms-only-in-service`);
   and a declared source's device is read and written only by code of the record that supplies `service.<source>`, in
   initialisation as at run time, whose `one-request-per-arrival.<source>` basis covers that configuration. The
-  hart's trap state is written only by code of the record that supplies `switch`, whose facts are about the code it
-  points traps at. Which record writes the controller's configuration and the hart's interrupt state is not fixed in
-  `/1`; checking what the image wrote against the plan is `M4`'s (`M4.10`).
+  hart's trap state is written only by code of the record that supplies `switch`, in initialisation as on its trap
+  path, whose facts are about the code it points traps at. Which record writes the controller's configuration and
+  the hart's interrupt state is not fixed in `/1`; checking what the image wrote against the plan is `M4`'s
+  (`M4.10`).
 
 A path that another fact of this section makes unreachable is named in the basis with that fact. `rt-core`'s
 `unmask` delivers a latched release, which is unreachable by `releases-never-latched`. Its `release` of a task whose
@@ -465,3 +467,4 @@ under-charges against the variant's §1 definitions. The findings, and the answe
 | 8 | 8 | 3 live on the emulator, all in the facts' wording (R1, a timer trap that drains sources; R3, application initialisation unbound; R4, a request no arrival made) | "does not meet its closure rule"; the model sound under both interrupt orders in simulation, QEMU's timer-first order included |
 | 9 | 8 | 2 live on the emulator, in the facts' coverage (S1, application code masking after the first enabling outside any task; S2, another record's initialisation writing the counter or a device) | "not met"; the model sound under both orders in simulation, claims of later arrivals included, and nothing else under-charges once S1 and S2 are fixed and S3 and S4 stated |
 | 10 | 10 | 0; T3 live under a loose reading (a handler another record points `mtvec` at, 15 against 9), and T1 a live false refusal | "met on the rubric's terms", not accepted as it stands; the model sound under both orders in simulation, with negative controls that find each earlier defect |
+| 11 | 3 | 0, and no ambiguity with an under-charging reading; writes by DMA and other bus masters checked and found covered | "meets its closure rule" and "can be accepted as it stands"; the leaf closed on it |

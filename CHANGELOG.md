@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the composition of the analysis's inputs is accepted, after eleven reviews
+
+`ARCHOGEN-M2-0254` (leaf `M2.10.1`, closed).
+
+- The design for putting four of the timing analysis's inputs together from their parts, each part with one owner,
+  passed its eleventh independent review with nothing live left to fix. The review simulated it under both
+  interrupt orders, proved the simulation can find the earlier faults, and checked writes by devices that move data
+  on their own.
+- Its three last findings, all about later milestones or wording, are answered. Building it waits on the catalog
+  crate, which is well under way.
+
 ## archogen — the catalog says which results a change invalidates
 
 `ARCHOGEN-M2-0253` (leaf `M2.7.3.4.3`).
