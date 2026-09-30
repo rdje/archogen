@@ -4,6 +4,23 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — how archogen will run in a web page, decided
+
+`ARCHOGEN-API-0201` (leaf `API.5.1`).
+
+- archogen's description checker will be loadable by a web page, as a WebAssembly module. The design is now fixed
+  in `docs/decisions/decision_wasm-binding.md`. A page hands the module a description, and gets back the same
+  verdict and the same diagnostics the command line prints, as JSON.
+- The module will be built from archogen's own code alone, with no generated glue and no outside library.
+- It will import nothing. A WebAssembly module can only reach the outside world through what it imports, so this
+  means it cannot touch files, the network or anything else, whatever page loads it. The check for that will be the
+  browser engine's own reading of the module, not a reading of the source.
+- It will be checked against the command line: every description in the repository, run through the module, must
+  give the same answer.
+- Two facts the design rests on were measured on the pinned compiler rather than assumed: what such a module
+  imports and exports by default, and that the compiler treats exporting a function by a fixed name as unsafe code,
+  which the design therefore names as its one exception.
+
 ## archogen — the catalog's fingerprint, computed inside the engine and checked three ways
 
 `ARCHOGEN-M2-0200` (leaf `M2.7.2`).

@@ -510,7 +510,9 @@ agent can drive. The server is a capability of the built binary, spawned per ins
     and the snapshots.
 
 - ID: `API.5`
-  Status: `pending`
+  Status: `active`
+  Children: `API.5.1`, `API.5.2`, `API.5.3`, `API.5.4` — decomposed `2026-09-30`: the design decided first, then the
+  crate tested on the host, then the artifact checked against the CLI, then the page and the book
   ⚠️ From `API.1`'s measurement: the crates this binding needs most do I/O today — `eadl-front`'s module loader reads
   files through `DirectoryModules` (the `ModuleSource` trait is the seam to supply another), and `archogen-s0`'s
   emitter writes the generated crate to a directory. Both compile for wasm32; neither would work there as written.
@@ -522,6 +524,50 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   the book documents it; `make integration` exit `0` or naming what is incomplete.
   Priority: **medium** — behind `API.1` (which measures whether this is possible at all) and `API.3`
   (which decides what it exposes).
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `API.5.1`
+  Status: `done`
+  Goal: the binding decided in a durable record: where it lives, what it exports, how a request crosses into the
+  module and a response out, the response's versioned format, who sets the budget, what "no ambient authority"
+  means as something a test can check, and what the binding is checked against.
+  Acceptance: `docs/decisions/decision_wasm-binding.md`; no dependency and no `unsafe`, or a stated reason for
+  either; nothing left to the implementation that changes what a page receives.
+  Verification: the record, with its two facts about the toolchain measured on a throwaway `cdylib` built under
+  `target/` for `wasm32-unknown-unknown` with the pinned rustc 1.95.0, then removed:
+  `WebAssembly.Module.imports` → `[]`; `WebAssembly.Module.exports` → `memory`, the functions, `__data_end` and
+  `__heap_base`; and `#[no_mangle]` under `deny(unsafe_code)` → `error: declaration of a no_mangle function`, so the
+  record states that exception rather than promising no unsafe code at all. The module-file rule the harness
+  must reproduce was read from `eadl-front` (`DirectoryModules::file_for` → `<dir>/<module>.eadl`).
+  Commit: `ARCHOGEN-API-0201 (leaf API.5.1)`
+
+- ID: `API.5.2`
+  Status: `pending`
+  Goal: `crates/archogen-wasm` — the exported functions, the request framing and the response encoder — tested on
+  the host, where no wasm toolchain is needed.
+  Acceptance: every framing refusal constructible; the encoder's output parsed back by an independent JSON reader
+  and equal field by field to the API's response; the book-coverage, version-register and wasm-build gates green.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `API.5.3`
+  Status: `pending`
+  Goal: the artifact — built for `wasm32-unknown-unknown` in a tier step, its imports and exports checked by the
+  platform's own `WebAssembly.Module`, and every tracked description run through it and compared with the CLI.
+  Acceptance: an artifact with no imports and exactly the decided exports; for the whole population, JSON
+  byte-identical to the host build's and an `exit` equal to `archogen check`'s (`decision_wasm-binding.md` §8); a
+  JavaScript runtime that is absent makes the step unavailable, never passed; that runtime gets a ledger entry at
+  the version the step uses, since the tier then relies on it.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `API.5.4`
+  Status: `pending`
+  Goal: the page and the book — a page that loads the artifact, checks a description typed into it and shows the
+  verdict; the book documents the binding and how to open the page.
+  Acceptance: the page's loader is the one `API.5.3` checks; the chapter's transcript is reproduced by a test;
+  `make integration` exit `0` or naming what is incomplete.
   Verification: `pending`
   Commit: `pending`
 
@@ -556,14 +602,14 @@ agent can drive. The server is a capability of the built binary, spawned per ins
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `API.5` | `pending` | the wasm binding, behind `API.1` and `API.3` |
+| 1 | `API.5` | `active` | the wasm binding: the design is decided (`API.5.1`, `decision_wasm-binding.md`); the crate on the host (`API.5.2`) next |
 | 2 | `API.6` | `pending` | the MCP server — the point of the tree, and last because everything above is what makes it safe to hand to an arbitrary agent |
 | 3 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6` |
 
 ⛔ **This tree does not displace the project's main line.** The director's ruling sequenced `API.3`–`API.7`
 behind `M1.13`, the language freeze, which closed on `2026-09-29`; `API.3` and `API.4` followed it. The main
-line is now `M2` ([`M2.md`](M2.md), frontier `M2.6`), and a slice of this tree is taken when it does not
-delay that.
+line is now `M2` ([`M2.md`](M2.md); its frontier is in [`docs/TASK_TREE.md`](../TASK_TREE.md)), and a slice of
+this tree is taken when it does not delay that.
 
 ## Decisions
 
@@ -623,6 +669,7 @@ delay that.
 | `2026-09-30` | `API.3.4` | the example and its transcript test; the register's self-test and real tree; the shape test; the whole suite; `make focused` | the transcript holds and fails when edited; 14 of 14 arms, 8 entries; 698 passed / 0 failed over 57 suites |
 | `2026-09-30` | `API.4.1` | the determinism test; the register before and after the bump; the manifests' history; the whole suite | the same request answers identically; the register refused 1.1 until its entry moved; every manifest version ever written is 0.1.0; 708 passed / 0 failed over 58 suites |
 | `2026-09-30` | `API.4.2` | the cost per byte measured; the budget's five legs; three mutations; the wasm build; the whole suite; the doctrines | about 75 bytes held per byte sent; both edges hold through the description and the modules; each mutation killed; 713 passed / 0 failed over 59 suites |
+| `2026-09-30` | `API.5.1` | a throwaway `cdylib` for `wasm32-unknown-unknown` on the pinned toolchain, read by `WebAssembly.Module`; `#[no_mangle]` under `deny(unsafe_code)`; the module-file rule read from `eadl-front` | no imports; `memory`, the functions and two linker globals exported; the lint refuses each unmangled export; `<dir>/<module>.eadl` |
 
 ## Commit Log
 
@@ -637,6 +684,7 @@ delay that.
 | `API.3.4` | `ARCHOGEN-API-0177 (leaf API.3.4)` | **the book documents the engine API** — `engine-api.md`, its example held to a run; version `1.0` fixed and registered; `API.3` closed |
 | `API.4.1` | `ARCHOGEN-API-0182 (leaf API.4.1)` | **an instance defined** — one build, no state between requests; every response names its engine; API `1.1` |
 | `API.4.2` | `ARCHOGEN-API-0183 (leaf API.4.2)` | **a byte budget per request** — 1 MiB by default, set by the instance; `tool-failure` past it, never partial; `API.4` closed |
+| `API.5.1` | `ARCHOGEN-API-0201 (leaf API.5.1)` | **the wasm binding decided** — three exports, a framed request, a versioned JSON response, no imports as the authority test |
 
 ## Changelog
 
