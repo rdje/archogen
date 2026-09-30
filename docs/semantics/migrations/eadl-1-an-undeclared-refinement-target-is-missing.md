@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-09-30
 - leaf: M1.26.3 (`docs/tasks/M1.md`)
-- status: pending
+- status: applied
 - constructs: suite/docs/semantics/cases/infeasible-refinement-target-missing.eadl, suite/docs/semantics/cases/missing-refinement-target.eadl
 - invalidates: none — no description changes whether it is accepted; a refinement naming an undeclared target is refused with `missing-fact`, exit 11, where it was `infeasible-configuration`, exit 13
 
