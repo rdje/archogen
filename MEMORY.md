@@ -18,7 +18,7 @@
   `docs/TASK_TREE.md`.
 - **Next action:** run **`M2.7.1`**'s round 13 and **`M2.10.1`**'s round 6, each in a new read-only context, over
   `docs/decisions/catalog/`. Each closes on a round with no defect live for the `/1` slice (its closure rule).
-  Then `M2.7.3`–`M2.7.5`, `M2.11`, then `API.6`.
+  Then `M2.7.3`, `M2.7.6` (the check's protection), `M2.7.4`, `M2.7.5`, `M2.11`, then `API.6`.
 - **In flight:** branch **`wip/m2.9`** (`758cbcd`) is a checkpoint, not a finished leaf — `M2.9` records it as
   not compiling (`crates/rt-core/tests/differential.rs` unadapted).
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
