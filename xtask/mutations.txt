@@ -237,3 +237,25 @@ from
 to
             if paths.is_empty() {
 end
+
+mutation model-codes-governed-by-prefix-only
+file crates/eadl-front/tests/reference.rs
+test -p eadl-front --test reference arm_m4_a_rendered_model_code_the_model_document_does_not_state_is_reported
+expect killed
+why M1.26.1: a model-layer code with no shared prefix (`missing-fact`) is governed because the model document's sources emit it; by prefix alone the book could render it with no normative statement, as before M1.26.1.
+from
+                        || emitted.contains(&code);
+to
+                        || false;
+end
+
+mutation one-rule-two-homes
+file crates/eadl-front/tests/reference.rs
+test -p eadl-front --test reference arm_m6_a_code_stated_by_two_documents_is_reported
+expect killed
+why M1.26.1: a code stated by two normative documents is two statements of one rule that can disagree.
+from
+        if paths.len() > 1 {
+to
+        if paths.len() > 2 {
+end

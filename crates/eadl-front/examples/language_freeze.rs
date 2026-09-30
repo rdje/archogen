@@ -63,6 +63,14 @@ use common::suite::{population, MANIFEST_PATH};
 /// changes which `suite/…` constructs exist, so the baseline moves anyway. Freezing the manifest's own
 /// tables as well would make adding a corpus root a language change requiring a migration note, which is
 /// a decision for `M1.13.5`'s director and not something to slip in here.
+///
+/// ⛔ Not `docs/semantics/model.md` either, and this is `F-I`'s decision, recorded here because this is where
+/// the next reader looks (leaf `M1.26.1`). The reference's codes are the **language's** refusals: what a
+/// description *is* and what its literals are *worth*, which is exactly what `eadl/1` promises not to move.
+/// The model document's codes are the **engine's** verdicts on a description that reads. They grow with every
+/// profile and knowledge base `ROADMAP.md` §12 admits later. Freezing them at `eadl/1` would make adding a
+/// profile a language migration. Their tables are still executed, both directions, by
+/// `crates/eadl-front/tests/reference.rs`: not frozen does not mean unchecked.
 const TABLE_DOCUMENTS: &[&str] = &["docs/semantics/reference.md"];
 
 /// The document whose EBNF fence is frozen.

@@ -26,6 +26,15 @@ built from it will behave — the evidence categories start after this point.
 Every pass runs. Every diagnostic is collected. A description with three problems costs one edit
 cycle, not three.
 
+The rules these passes enforce are written down in two normative documents, and each diagnostic code
+has exactly one home. `docs/semantics/reference.md` states the language's own refusals: what the read,
+resolve and schema passes reject, a description that does not read. `docs/semantics/model.md` states
+the engine's verdicts on a description that does read. Those come from the boundary, profile, workload,
+presence and refinement passes, and from the quantities every clause is written in (leaf `M1.26.1`).
+`crates/eadl-front/tests/reference.rs` checks both documents against the code that emits their codes,
+in both directions. It also checks every diagnostic this book shows against the document that states
+its rule.
+
 ⭐ **A module tree gets exactly these passes.** A file that declares a `(defmodule …)` is elaborated first
 (`ROADMAP.md` §10.1 step 1) from its module path, by `docs/semantics/reference.md` §6 rule 7 — an import
 problem is refused there with its `module-` code, because a tree that did not compose has nothing to

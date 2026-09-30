@@ -301,7 +301,8 @@ them early is cheap and makes the rest estimable.
 - **Does the API surface the model layer's diagnostics, and with what normative statement behind them?**
   `M1.26` owns the fact that those codes are stated normatively nowhere. An API that returns them to an
   agent returns rules no document states. Owner: `M1.26`, and `API.3` must not close before it is
-  answered or explicitly accepted.
+  answered or explicitly accepted. **Answered `2026-09-30` by `M1.26.1`:** `docs/semantics/model.md` states
+  every model-layer code but the S0 prototype's `analysis-inconclusive`, whose exclusion it states.
 
 ## Blockers
 

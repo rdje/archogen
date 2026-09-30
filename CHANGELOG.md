@@ -4,6 +4,21 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the engine's verdicts have a normative home
+
+`ARCHOGEN-M1-0159` (leaf `M1.26.1`).
+
+- A second normative document, `docs/semantics/model.md`, states the rules behind the engine's verdicts on a
+  description that reads: quantities and units, what is offered or absent, refinement, what a profile admits,
+  and the implementation boundary. The language reference already stated the refusals of a description that
+  does not read. Of the diagnostic codes, 16 were stated by no document; now one is, the S0 prototype's, and
+  the document says why.
+- The same test that checks the reference now checks the new document against the code, in both directions.
+  Every diagnostic the book shows is now checked for meaning, not only for existence. A code stated in both
+  documents is refused.
+- Stating each rule showed that `infeasible-configuration` is used for two different mistakes. That is filed
+  as `M1.26.3` rather than changed quietly.
+
 ## archogen — the product runs nothing, and a check says so
 
 `ARCHOGEN-API-0158` (leaf `API.2`).

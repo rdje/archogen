@@ -61,12 +61,11 @@
 //! owns those — and §6's and §7's rules are prose that cites the tests enforcing them, because a
 //! module elaboration or a schema check is not a row in a table of literals.
 //!
-//! ⚠️ **Two gaps this file cannot close, both measured and both owned rather than noted.** They are
-//! named here without a count, because a figure in a header is a figure nothing re-derives — the
-//! censuses live on the leaves that own them, beside the commands that reproduce them:
-//! - leg 8's "is this code stated" rule reaches only the prefixes §4's declaration governs. The book
-//!   also renders the model layer's codes, which no normative document states, and those are checked
-//!   for *existence* only — the gap is meaning, not rot. Leaf `M1.26`.
+//! ⚠️ **One gap this file cannot close, measured and owned rather than noted.** It is named here without a
+//! count, because a figure in a header is a figure nothing re-derives — the census lives on the leaf that
+//! owns it, beside the command that reproduces it. (A second, leg 8 reaching only §4's prefixes, was closed
+//! by `M1.26.1`: `docs/semantics/model.md` states the model layer's codes, and leg 8 reads every normative
+//! document's declaration.)
 //! - legs 4 and 5 pin §4's code set against the sources that emit it, and nothing pins it against an
 //!   *input*. A code whose call site can no longer be reached is still emitted as far as a scan of the
 //!   production half can tell. Leaf `M1.26`, which is where `M1.12.3`'s deferred `fires on` column
@@ -90,6 +89,8 @@ use common::reference_table::{
 /// surfaces: if the reference moves or is deleted, this crate **stops compiling** instead of silently
 /// gating nothing.
 const REFERENCE: &str = include_str!("../../../docs/semantics/reference.md");
+/// The model layer's normative document (leaf `M1.26.1`): the engine's verdicts on a description that reads.
+const MODEL: &str = include_str!("../../../docs/semantics/model.md");
 
 // ── the value notation, and reading the tables out of the document ─────────────────────────────
 //
@@ -100,6 +101,11 @@ const REFERENCE: &str = include_str!("../../../docs/semantics/reference.md");
 /// One violation, phrased so the failure names the row and both sides.
 fn violation(line: usize, message: String) -> String {
     format!("docs/semantics/reference.md:{line}: {message}")
+}
+
+/// One violation on a line of the named document — the census runs over either normative document.
+fn violation_in(path: &str, line: usize, message: String) -> String {
+    format!("{path}:{line}: {message}")
 }
 
 // ── running a literal through the frontend ─────────────────────────────────────────────────────
@@ -716,24 +722,54 @@ fn declared_sources(document: &str) -> Vec<(usize, String)> {
         .collect()
 }
 
-/// Legs 4 and 5 — every code the declared sources emit is stated, and every code stated is emitted.
+/// The section a document's diagnostics table sits in, as `§N` — read from the heading above the table, so
+/// a message names the section a reader will look in, in either normative document.
+fn diagnostics_section(document: &str) -> String {
+    let lines: Vec<&str> = document.lines().collect();
+    let Some(at) = lines
+        .iter()
+        .position(|line| line.contains("<!-- machine-read: diagnostics -->"))
+    else {
+        return "its diagnostics table".to_string();
+    };
+    lines[..at]
+        .iter()
+        .rev()
+        .find_map(|line| {
+            let heading = line.strip_prefix("## ")?;
+            let (number, _) = heading.split_once(". ")?;
+            number
+                .chars()
+                .all(|ch| ch.is_ascii_digit())
+                .then(|| format!("§{number}"))
+        })
+        .unwrap_or_else(|| "its diagnostics table".to_string())
+}
+
+/// Legs 4 and 5 over the reference.
 fn census_violations(document: &str) -> Vec<String> {
+    census_violations_of(REFERENCE_PATH, document)
+}
+
+/// Legs 4 and 5 — every code a normative document's declared sources emit is stated, and every code it
+/// states is emitted. One reader for both documents (leaf `M1.26.1`): two parsers for one table shape are
+/// two things that can disagree about what a rule says.
+fn census_violations_of(path: &str, document: &str) -> Vec<String> {
     let mut out = Vec::new();
+    let section = diagnostics_section(document);
     let sources = declared_sources(document);
     if sources.is_empty() {
-        out.push(
-            "docs/semantics/reference.md declares no normative source, so the diagnostic census has \
-             no population and proves nothing"
-                .to_string(),
-        );
+        out.push(format!(
+            "{path} declares no normative source, so the diagnostic census has no population and \
+             proves nothing"
+        ));
     }
     let rows = machine_table(document, "diagnostics");
     if rows.is_empty() {
-        out.push(
-            "docs/semantics/reference.md carries no `<!-- machine-read: diagnostics -->` table, so no \
-             diagnostic code is stated anywhere in it"
-                .to_string(),
-        );
+        out.push(format!(
+            "{path} carries no `<!-- machine-read: diagnostics -->` table, so no diagnostic code is \
+             stated anywhere in it"
+        ));
     }
 
     let mut stated = BTreeSet::new();
@@ -741,7 +777,8 @@ fn census_violations(document: &str) -> Vec<String> {
         let Some(code) = cells.first() else { continue };
         stated.insert(code.clone());
         if cells.len() != 3 {
-            out.push(violation(
+            out.push(violation_in(
+                path,
                 *line,
                 format!(
                     "the row for `{code}` has {} cell(s) and the table's header has 3",
@@ -751,7 +788,8 @@ fn census_violations(document: &str) -> Vec<String> {
         } else if cells[2].trim().is_empty() || cells[2].trim() == "—" {
             // §5.5 requires a repair direction, and a table is where that requirement can be checked
             // instead of merely stated.
-            out.push(violation(
+            out.push(violation_in(
+                path,
                 *line,
                 format!(
                     "`{code}` states no repair direction, which §5.5 requires of every diagnostic — \
@@ -762,15 +800,16 @@ fn census_violations(document: &str) -> Vec<String> {
     }
 
     let mut emitted: BTreeSet<String> = BTreeSet::new();
-    for (line, path) in &sources {
-        let full = repo_root().join(path);
+    for (line, source) in &sources {
+        let full = repo_root().join(source);
         let text = match std::fs::read_to_string(&full) {
             Ok(text) => text,
             Err(error) => {
-                out.push(violation(
+                out.push(violation_in(
+                    path,
                     *line,
                     format!(
-                        "`{path}` is declared as a normative source and cannot be read: {error}"
+                        "`{source}` is declared as a normative source and cannot be read: {error}"
                     ),
                 ));
                 continue;
@@ -778,20 +817,22 @@ fn census_violations(document: &str) -> Vec<String> {
         };
         for (severity, code) in emitted_diagnostics(&text) {
             if severity != "error" {
-                out.push(violation(
+                out.push(violation_in(
+                path,
                     *line,
                     format!(
-                        "`{path}` emits `{code}` at severity `{severity}`, and §4 rule 1 states that \
-                         every diagnostic the frontend emits is an error"
+                        "`{source}` emits `{code}` at severity `{severity}`, and the reference's §4 \
+                         rule 1 states that every diagnostic the toolchain emits is an error"
                     ),
                 ));
             }
             if emitted.insert(code.clone()) && !stated.contains(&code) {
-                out.push(violation(
+                out.push(violation_in(
+                    path,
                     *line,
                     format!(
-                        "`{path}` can emit `{code}` and §4 does not state it — a rule the frontend \
-                         enforces and this reference does not"
+                        "`{source}` can emit `{code}` and {section} does not state it — a rule the \
+                         engine enforces and {path} does not"
                     ),
                 ));
             }
@@ -800,11 +841,12 @@ fn census_violations(document: &str) -> Vec<String> {
     for (line, cells) in &rows {
         let Some(code) = cells.first() else { continue };
         if !emitted.contains(code) {
-            out.push(violation(
+            out.push(violation_in(
+                path,
                 *line,
                 format!(
-                    "§4 states `{code}` and no declared source emits it — a renamed or removed code \
-                     leaves a rotted row that reads exactly like a live rule"
+                    "{section} states `{code}` and no declared source emits it — a renamed or \
+                     removed code leaves a rotted row that reads exactly like a live rule"
                 ),
             ));
         }
@@ -1011,6 +1053,10 @@ fn header_violations(document: &str) -> Vec<String> {
 
 /// The two normative documents, and the halves of one definition they are.
 const REFERENCE_PATH: &str = "docs/semantics/reference.md";
+const MODEL_PATH: &str = "docs/semantics/model.md";
+
+/// Every normative document that states diagnostics, with its text — the population leg 8 reads.
+const NORMATIVE: [(&str, &str); 2] = [(REFERENCE_PATH, REFERENCE), (MODEL_PATH, MODEL)];
 const GRAMMAR_PATH: &str = "docs/semantics/grammar.md";
 
 /// The severities a rendered diagnostic can carry.
@@ -1184,24 +1230,25 @@ fn workspace_codes() -> BTreeMap<String, Vec<String>> {
 /// Leg 8 — every diagnostic the book renders is one the toolchain can actually produce, and every one
 /// whose code §4 governs is a row of §4.
 ///
-/// Three rules, each closing a different way the book can drift from the engine:
+/// Four rules, each closing a different way the book can drift from the engine:
 ///
-/// 1. a **governed** code the reference does not state — the book is publishing a rule the normative
-///    document has not written down;
+/// 1. a **governed** code its normative document does not state — the book is publishing a rule the
+///    normative document has not written down;
 /// 2. **any** rendered code no production source emits — a renamed or removed code leaves the book
 ///    showing a diagnostic that can no longer happen, which reads exactly like one that can;
 /// 3. a rendered severity other than `error` — §4 rule 1 says there is no warning and no note
 ///    *anywhere* in the toolchain's diagnostics, and the book is where the director would learn
-///    otherwise.
+///    otherwise;
+/// 4. a code stated by **two** normative documents — one rule has one home (leaf `M1.26.1`).
 ///
-/// ⚠️ **HONEST LIMIT, MEASURED.** Rules 2 and 3 cover every rendered diagnostic; rule 1 covers only
-/// the governed ones. `M1.12.3` censused the book with a prefix-shaped pattern — `(read|module|schema)-…`
-/// — and reported seven citations, which is seven *of a population it could not see the rest of*: the
-/// chapters also render the model layer's codes, and no normative document states those, because the
-/// reference governs the surface and they are not surface rules. So a model-layer code the book shows
-/// is checked for existence and not for meaning. Leaf `M1.26` owns closing that, and the census is
-/// recorded there rather than only here.
-fn book_code_violations(document: &str, chapters: &[(String, String)]) -> Vec<String> {
+/// ⭐ **Rule 1 reads every normative document** (`NORMATIVE`). A code is governed by a document when its
+/// declaration names the code's prefix, or when one of its declared sources emits the code — the second
+/// is what reaches `missing-fact` and the other model-layer codes, which share no prefix. Before `M1.26.1`
+/// the book's model-layer diagnostics were checked for existence only, because no normative document
+/// stated them; `docs/semantics/model.md` now does, and arms `m4` and `m5` pin both halves of the scoping.
+/// ⚠️ What stays ungoverned is stated there: the S0 prototype's `analysis-inconclusive`, deliberately
+/// undeclared.
+fn book_code_violations(documents: &[(&str, &str)], chapters: &[(String, String)]) -> Vec<String> {
     let mut out = Vec::new();
     if chapters.is_empty() {
         out.push(
@@ -1211,18 +1258,52 @@ fn book_code_violations(document: &str, chapters: &[(String, String)]) -> Vec<St
         );
         return out;
     }
-    let governed = governed_prefixes(document);
-    if governed.is_empty() {
-        out.push(
-            "docs/semantics/reference.md's declaration names no code prefix, so the book leg has no \
-             governed population and would pass on any chapter at all"
-                .to_string(),
-        );
+    // What each normative document governs: the code prefixes its declaration names, and every code its
+    // declared sources can emit — so a code with no shared prefix, `missing-fact`, is governed by the
+    // document whose sources emit it (leaf `M1.26.1`).
+    let mut scopes = Vec::new();
+    for (path, document) in documents {
+        let prefixes = governed_prefixes(document);
+        if prefixes.is_empty() {
+            out.push(format!(
+                "{path}'s declaration names no code prefix, so the book leg has no governed population \
+                 by prefix and would pass on any chapter the census cannot see"
+            ));
+        }
+        let emitted: BTreeSet<String> = declared_sources(document)
+            .iter()
+            .filter_map(|(_, source)| std::fs::read_to_string(repo_root().join(source)).ok())
+            .flat_map(|text| emitted_diagnostics(&text).into_iter().map(|(_, code)| code))
+            .collect();
+        let stated: BTreeSet<String> = machine_table(document, "diagnostics")
+            .iter()
+            .filter_map(|(_, cells)| cells.first().cloned())
+            .collect();
+        scopes.push((
+            *path,
+            diagnostics_section(document),
+            prefixes,
+            emitted,
+            stated,
+        ));
     }
-    let stated: BTreeSet<String> = machine_table(document, "diagnostics")
-        .iter()
-        .filter_map(|(_, cells)| cells.first().cloned())
-        .collect();
+    // ⛔ One rule, one home. A code two documents state is two statements of one rule, which is two things
+    // that can disagree — and the reader would not know which one binds.
+    let mut homes: BTreeMap<&String, Vec<&str>> = BTreeMap::new();
+    for (path, _, _, _, stated) in &scopes {
+        for code in stated {
+            homes.entry(code).or_default().push(path);
+        }
+    }
+    for (code, paths) in homes {
+        if paths.len() > 1 {
+            out.push(format!(
+                "`{code}` is stated by {} — one rule has one home, and two statements of it are two \
+                 things that can disagree",
+                paths.join(" and ")
+            ));
+        }
+    }
     let emittable = workspace_codes();
 
     let mut rendered = 0;
@@ -1240,16 +1321,19 @@ fn book_code_violations(document: &str, chapters: &[(String, String)]) -> Vec<St
                     ),
                 ));
             }
-            if governed.iter().any(|prefix| code.starts_with(prefix)) && !stated.contains(&code) {
-                out.push(chapter_violation(
-                    chapter,
-                    line,
-                    format!(
-                        "renders `{code}`, whose prefix the reference declares itself normative over, \
-                         and §4 does not state it — the book is publishing a rule the normative \
-                         document has not written down"
-                    ),
-                ));
+            for (path, section, prefixes, emitted, stated) in &scopes {
+                let governed = prefixes.iter().any(|prefix| code.starts_with(prefix))
+                    || emitted.contains(&code);
+                if governed && !stated.contains(&code) {
+                    out.push(chapter_violation(
+                        chapter,
+                        line,
+                        format!(
+                            "renders `{code}`, which {path} governs, and {section} does not state it — \
+                             the book is publishing a rule the normative document has not written down"
+                        ),
+                    ));
+                }
             }
             if !emittable.contains_key(&code) {
                 out.push(chapter_violation(
@@ -1675,7 +1759,7 @@ fn the_reference_header_table_is_the_frontend_s_verdict() {
 
 #[test]
 fn every_diagnostic_the_book_renders_is_one_the_toolchain_can_produce() {
-    let wrong = book_code_violations(REFERENCE, &book_chapters());
+    let wrong = book_code_violations(&NORMATIVE, &book_chapters());
     assert!(
         wrong.is_empty(),
         "the book shows the director a diagnostic the engine does not have:\n\n{}\n\n\
@@ -1746,6 +1830,26 @@ fn assert_reported(wrong: &[String], expected: usize, needles: &[&str]) {
             wrong.join("\n\n")
         );
     }
+}
+
+/// Delete one whole line of the document, asserting it was there. Blanking it instead would end a table
+/// early, and every row below it would silently leave the population.
+fn without_line(document: &str, needle: &str) -> String {
+    assert_eq!(
+        document
+            .lines()
+            .filter(|line| line.contains(needle))
+            .count(),
+        1,
+        "{needle:?} is not exactly one line of the document"
+    );
+    let mut out: String = document
+        .lines()
+        .filter(|line| !line.contains(needle))
+        .collect::<Vec<_>>()
+        .join("\n");
+    out.push('\n');
+    out
 }
 
 /// Replace one whole line of the document, asserting the line was there to replace.
@@ -2203,10 +2307,10 @@ fn arm_19_a_governed_code_the_book_renders_and_section_4_does_not_state_is_repor
         "error[read-malformed-numbers]",
     );
     assert_reported(
-        &book_code_violations(REFERENCE, &chapters),
+        &book_code_violations(&NORMATIVE, &chapters),
         2,
         &[
-            "whose prefix the reference declares itself normative over",
+            "which docs/semantics/reference.md governs",
             "no production source in `crates/` emits it",
             "reading.md",
         ],
@@ -2215,20 +2319,18 @@ fn arm_19_a_governed_code_the_book_renders_and_section_4_does_not_state_is_repor
 
 #[test]
 fn arm_20_an_ungoverned_code_nothing_emits_is_still_reported() {
-    // ⭐ The scoping cuts one way only. `quantity-` is not a prefix §4 governs, so rule 1 stays
-    // silent — and rule 2 fires anyway, because "the book shows a diagnostic the toolchain cannot
-    // produce" does not get narrower because the reference does not govern the emitter. One
-    // violation, not two, which is the same scoping arm 19 pins from the other side.
-    let chapters = edited(
-        "docs/book/src/quantities.md",
-        "error[quantity-missing-unit]",
-        "error[quantity-missing-units]",
-    );
+    // ⭐ The scoping cuts one way only. `analysis-` is a prefix no normative document governs — only the
+    // S0 prototype emits it, and `docs/semantics/model.md` says why it is not declared — so rule 1 stays
+    // silent, and rule 2 fires anyway: "the book shows a diagnostic the toolchain cannot produce" does not
+    // get narrower because no document governs the emitter. One violation, not two. (Until `M1.26.1` this
+    // arm used `quantity-`, which the model document now governs.)
+    let chapters =
+        one_chapter("```text\nerror[analysis-inconclusives]: the hyperperiod overflows\n```\n");
     assert_reported(
-        &book_code_violations(REFERENCE, &chapters),
+        &book_code_violations(&NORMATIVE, &chapters),
         1,
         &[
-            "quantity-missing-units",
+            "analysis-inconclusives",
             "no production source in `crates/` emits it",
         ],
     );
@@ -2244,7 +2346,7 @@ fn arm_21_a_rendered_severity_other_than_error_is_reported() {
         "warning[read-unclosed-list]",
     );
     assert_reported(
-        &book_code_violations(REFERENCE, &chapters),
+        &book_code_violations(&NORMATIVE, &chapters),
         1,
         &["warning[read-unclosed-list]", "§4 rule 1"],
     );
@@ -2256,9 +2358,11 @@ fn arm_22_an_ungoverned_code_the_workspace_does_emit_is_not_reported() {
     // model-layer diagnostic the book renders — which would be a leg demanding the reference govern
     // rules that are not language rules, and teaching authors to route around it. The honest limit in
     // `book_code_violations` is executable here rather than only prose.
-    let chapters =
-        one_chapter("```text\nerror[quantity-missing-unit]: `period` has no unit\n```\n");
-    assert_reported(&book_code_violations(REFERENCE, &chapters), 0, &[]);
+    // Since `M1.26.1` the model layer's codes are governed, so the ungoverned code is S0's.
+    let chapters = one_chapter(
+        "```text\nerror[analysis-inconclusive]: the hyperperiod of this task set overflows\n```\n",
+    );
+    assert_reported(&book_code_violations(&NORMATIVE, &chapters), 0, &[]);
 }
 
 #[test]
@@ -2276,7 +2380,10 @@ fn arm_23_a_declaration_that_names_no_code_prefix_is_reported_rather_than_skippe
         "the declaration still yields a governed prefix after the mutation"
     );
     assert_reported(
-        &book_code_violations(&mutated, &book_chapters()),
+        &book_code_violations(
+            &[(REFERENCE_PATH, &mutated), (MODEL_PATH, MODEL)],
+            &book_chapters(),
+        ),
         1,
         &["declaration names no code prefix"],
     );
@@ -2539,4 +2646,127 @@ fn arm_36_an_empty_population_is_reported_rather_than_passed() {
     // leg says which situation it is in instead.
     let wrong = category_violations(&[]);
     assert_reported(&wrong, 1, &["no descriptions at all"]);
+}
+
+// ── the model layer's normative document (leaf `M1.26.1`) ────────────────────────────────────────
+
+#[test]
+fn the_model_document_states_every_diagnostic_its_declared_sources_can_emit() {
+    let wrong = census_violations_of(MODEL_PATH, MODEL);
+    assert!(
+        wrong.is_empty(),
+        "the model layer's census disagrees with docs/semantics/model.md:\n\n{}",
+        wrong.join("\n\n")
+    );
+}
+
+#[test]
+fn every_repository_path_the_model_document_cites_resolves() {
+    let wrong = citation_violations(MODEL);
+    assert!(
+        wrong.is_empty(),
+        "docs/semantics/model.md cites something that is not there:\n\n{}",
+        wrong.join("\n\n")
+    );
+}
+
+#[test]
+fn the_s0_prototype_is_not_declared_and_the_document_says_why() {
+    // A prototype with an expiry is not a normative surface; declaring it would freeze what
+    // `S0-RETIREMENT` exists to delete. The exclusion is written down, not merely absent.
+    assert!(!declared_sources(MODEL)
+        .iter()
+        .any(|(_, source)| source.contains("archogen-s0")));
+    assert!(MODEL.contains("`crates/archogen-s0/src/interpret.rs` is deliberately not declared"));
+    assert!(MODEL.contains("`analysis-inconclusive`"));
+}
+
+#[test]
+fn arm_m1_a_model_code_the_document_does_not_state_is_reported_once() {
+    // `missing-fact` is emitted from two declared sources; it is one missing row, reported once.
+    let mutated = without_line(MODEL, "| `missing-fact` |");
+    assert_reported(
+        &census_violations_of(MODEL_PATH, &mutated),
+        1,
+        &["can emit `missing-fact` and §6 does not state it"],
+    );
+}
+
+#[test]
+fn arm_m2_a_rotted_model_row_is_reported() {
+    let mutated = replacing_line(
+        MODEL,
+        "| `quantity-missing` |",
+        "| `quantity-missing` | a quantity is expected and nothing is written (§1) | write one |\n\
+         | `quantity-imaginary` | never | nothing |",
+    );
+    assert_reported(
+        &census_violations_of(MODEL_PATH, &mutated),
+        1,
+        &["§6 states `quantity-imaginary` and no declared source emits it"],
+    );
+}
+
+#[test]
+fn arm_m3_a_model_document_that_declares_no_source_is_a_breach_not_a_pass() {
+    // With no declared source every stated row is rotted and the population is empty: both are reported,
+    // and the count is derived from the table rather than typed, so a new row does not break the arm.
+    let mut mutated = MODEL.to_string();
+    for (_, source) in declared_sources(MODEL) {
+        mutated = without_line(&mutated, &format!("| `{source}` |"));
+    }
+    let rows = machine_table(MODEL, "diagnostics").len();
+    assert_reported(
+        &census_violations_of(MODEL_PATH, &mutated),
+        1 + rows,
+        &["docs/semantics/model.md declares no normative source"],
+    );
+}
+
+#[test]
+fn arm_m4_a_rendered_model_code_the_model_document_does_not_state_is_reported() {
+    // Leg 8's widened scoping, the reporting half: `missing-fact` has no shared prefix, so it is governed
+    // because the model document's declared sources emit it — and with its row gone, the book is showing a
+    // rule no normative document states.
+    let mutated = without_line(MODEL, "| `missing-fact` |");
+    let chapters = one_chapter("```text\nerror[missing-fact]: `wrap-behavior` is required\n```\n");
+    assert_reported(
+        &book_code_violations(&[(REFERENCE_PATH, REFERENCE), (MODEL_PATH, &mutated)], &chapters),
+        1,
+        &["renders `missing-fact`, which docs/semantics/model.md governs, and §6 does not state it"],
+    );
+}
+
+#[test]
+fn arm_m5_a_rendered_model_code_the_model_document_states_is_not_reported() {
+    // …and the silent half: before `M1.26.1` this code was checked for existence only.
+    let chapters = one_chapter("```text\nerror[missing-fact]: `wrap-behavior` is required\n```\n");
+    assert_reported(&book_code_violations(&NORMATIVE, &chapters), 0, &[]);
+}
+
+#[test]
+fn arm_m6_a_code_stated_by_two_documents_is_reported() {
+    // One rule, one home: the reference stating a model-layer code as well is two statements that can
+    // disagree about what the rule says.
+    let mutated = replacing_line(
+        REFERENCE,
+        "| `read-unclosed-list` |",
+        &format!(
+            "{}\n| `missing-fact` | a required fact nothing describes | describe it |",
+            REFERENCE
+                .lines()
+                .find(|line| line.starts_with("| `read-unclosed-list` |"))
+                .expect("the row")
+        ),
+    );
+    let chapters =
+        one_chapter("```text\nerror[read-unclosed-list]: this list is never closed\n```\n");
+    assert_reported(
+        &book_code_violations(
+            &[(REFERENCE_PATH, &mutated), (MODEL_PATH, MODEL)],
+            &chapters,
+        ),
+        1,
+        &["`missing-fact` is stated by docs/semantics/reference.md and docs/semantics/model.md"],
+    );
 }
