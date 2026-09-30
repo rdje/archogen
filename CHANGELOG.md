@@ -4,6 +4,19 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the S0 chapter counts what is there
+
+`ARCHOGEN-S0-0152` (leaf `S0.8`; closes `S0` again).
+
+- The book's S0 chapter said there were three example descriptions. There are four. Its table of cases had
+  no row for the fourth, which was added to catch a hyperperiod error the other three cannot see. That
+  row is now there, measured from real runs, with a paragraph on why the case exists.
+- A test now compares the chapter's counts and both of its tables with the directory and with what a real
+  build writes. On the old chapter it found the wrong count and the missing row. The count had been wrong
+  for 127 commits.
+- A fragility found along the way is filed as `PROGRAM.33`. The list of book examples that cannot be
+  re-run identifies each example by its line number, so a paragraph added above one breaks the test.
+
 ## archogen — the build environment is named, not dated
 
 `ARCHOGEN-PROGRAM-0151` (leaf `PROGRAM.30`).

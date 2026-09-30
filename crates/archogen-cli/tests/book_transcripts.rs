@@ -37,7 +37,7 @@ const BACKLOG: &[&str] = &[
     "reading.md:102",
     "refinement.md:31",
     "refinement.md:62",
-    "s0.md:214",
+    "s0.md:224", // moved from :214 by `S0.8`'s paragraph above it — the key is a line (`PROGRAM.33`)
     "workload.md:67",
     "workload.md:89",
 ];

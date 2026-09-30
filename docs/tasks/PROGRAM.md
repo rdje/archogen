@@ -2208,6 +2208,21 @@ mdBook that is the director's window into the project.
   Verification: `pending`
   Commit: `pending`
 
+- ID: `PROGRAM.33`
+  Status: `pending`
+  Goal: the book-transcript backlog is keyed by what a transcript *is*, not by the line it sits on.
+  Reproduce / issue: routed from `S0.8` (its ROUTING EVIDENCE has the measurement). `BACKLOG` in
+  `crates/archogen-cli/tests/book_transcripts.rs` names each unreproducible transcript as `chapter:line`, so a
+  paragraph added above one fails the test twice — a "new" transcript and a "vanished" one — for bytes that did not
+  change. `S0.8` moved its entry by hand; every other entry is exposed the same way.
+  Acceptance: an entry names the chapter and the block's own content (its first `error[` line and first `-->`
+  location, or a digest), so an edit above a block does not move it; the two ratchet directions still hold (a new
+  unreproducible transcript refused, a fixed one's entry required to go); arms for an edit above a backlog block
+  (passes) and for a changed block (its entry no longer matches).
+  Priority: **low** — a false failure that names its own fix, never a false pass.
+  Verification: `pending`
+  Commit: `pending`
+
 - ID: `PROGRAM.9`
   Status: `done`
   Goal: build what the **extended** tier declares but cannot run — a fuzz corpus over the reader
@@ -3541,9 +3556,10 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
-| 2 | `PROGRAM.31` | `blocked` | on the director's ruling on the findings record's §8 — the changelog and development notes as rolling ledgers |
-| 3 | `PROGRAM.32` | `blocked` | on the same ruling — closed leaves sealed out of the task trees |
+| 1 | `PROGRAM.33` | `pending` | **low** — the book-transcript backlog is keyed by line, so an edit above a backlog block fails the test for unchanged bytes; routed from `S0.8` |
+| 2 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
+| 3 | `PROGRAM.31` | `blocked` | on the director's ruling on the findings record's §8 — the changelog and development notes as rolling ledgers |
+| 4 | `PROGRAM.32` | `blocked` | on the same ruling — closed leaves sealed out of the task trees |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
