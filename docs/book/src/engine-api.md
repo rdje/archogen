@@ -27,6 +27,7 @@ A `Response` holds:
 | Field | What it is |
 | --- | --- |
 | `version` | the API version that answered |
+| `engine` | the engine version that answered: with `version`, the build the response came from |
 | `status` | the outcome, always present |
 | `diagnostics` | every finding, each with its code, the spans it points at, and a repair direction |
 | `sources` | the texts those spans point into, so any consumer can render them |
@@ -59,12 +60,12 @@ one judged and refused, and one the API does not judge.
 
 ```console
 $ cargo run -q -p archogen-api --example in_memory
-api 1.0 · status ok
+api 1.1 · engine 0.1.0 · status ok
   judged under eadl/1, profile rt-static-up-v1: 1 declaration(s)
-api 1.0 · status invalid-description
+api 1.1 · engine 0.1.0 · status invalid-description
   judged under eadl/1, profile rt-static-up-v1: 1 declaration(s)
   quantity-unknown-unit: `parsec` is not a known unit
-api 1.0 · status unsupported-profile
+api 1.1 · engine 0.1.0 · status unsupported-profile
   not judged: `rt-dynamic-mp` is not a supported profile
 ```
 
@@ -73,13 +74,25 @@ above, so this page cannot go on showing output the API no longer gives.
 
 ## The version and what it promises
 
-The API's version is `1.0`, apart from the language's (`eadl/1`) and the profile's, as §15 requires.
-Every response names the API version, and a judged one also names the language version and the
-profile it was judged under. Within a major, an operation is never removed, a response field
+The API's version is `1.1`, apart from the language's (`eadl/1`) and the profile's, as §15 requires.
+Every response names the API version and the engine version, and a judged one also names the language
+version and the profile it was judged under. `1.0` was fixed when the API was declared, and `1.1` added
+the engine version, a new field, so a minor, as the promise below says. Within a major, an operation is never removed, a response field
 is never removed or given a new meaning, and the outcome vocabulary only grows. Adding an operation
 or a field is a minor. A description whose verdict changes under the same language version is not an
 API change: it is a language change, and it goes through the migration notes
 ([What is versioned](versions.md)).
+
+## What an instance is
+
+A consumer does not talk to a library. It talks to an **instance**: an MCP server it spawned, a wasm module
+a page loaded, or, for the shortest life, one run of the command line
+(`docs/decisions/decision_api-instance.md`). An instance is bound to the build it came from: the engine
+version, the API version, the language it reads, the profiles it supports, and the kind modules built
+into it. It keeps nothing between requests. So a response depends on two things only: its request (the
+description, the profile, and the module texts it loaded) and the build, which the response names.
+Asking the same instance the same question twice gives the same answer, and
+`crates/archogen-api/tests/check.rs` asks twice and compares the whole response.
 
 ## How the command line is held to it
 

@@ -34,8 +34,14 @@ pub use status::Status;
 /// a response field is never removed or given a new meaning, and the status vocabulary only grows. Adding an
 /// operation or a field is a minor; anything else is a new major. A description whose verdict changes under
 /// the same language version is a language change, recorded in `docs/semantics/migrations/`, not an API
-/// change. `1.0` was fixed `2026-09-30`, when leaf `API.3` closed; `docs/book/src/versions.md` registers it.
-pub const VERSION: Version = Version { major: 1, minor: 0 };
+/// change. `1.0` was fixed `2026-09-30`, when leaf `API.3` closed; `1.1` added [`Response::engine`] (leaf
+/// `API.4.1`). `docs/book/src/versions.md` registers it.
+pub const VERSION: Version = Version { major: 1, minor: 1 };
+
+/// The engine version: the one the workspace's members share, which `archogen --version` reports and
+/// `docs/book/src/versions.md` registers as `engine`. With [`VERSION`] it names the build a response came from
+/// (`docs/decisions/decision_api-instance.md`).
+pub const ENGINE: &str = env!("CARGO_PKG_VERSION");
 
 /// A major and a minor version.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -111,6 +117,8 @@ impl ModuleSource for NoModules {
 pub struct Response {
     /// The API version that produced this response.
     pub version: Version,
+    /// The engine version that produced it: with `version`, the build a response is reproducible against.
+    pub engine: &'static str,
     /// The outcome: a §5.5 verdict when the description was judged, and otherwise what happened to the
     /// request. Always present.
     pub status: Status,
@@ -173,6 +181,7 @@ impl Response {
     ) -> Self {
         Self {
             version: VERSION,
+            engine: ENGINE,
             status,
             notes,
             hint,
@@ -191,6 +200,7 @@ impl Response {
     ) -> Self {
         Self {
             version: VERSION,
+            engine: ENGINE,
             status: Status::from_verdict(outcome.verdict),
             notes: Vec::new(),
             hint: None,

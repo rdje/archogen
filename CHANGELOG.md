@@ -4,6 +4,19 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — what an archogen instance is, and every answer names its build
+
+`ARCHOGEN-API-0182` (leaf `API.4.1`).
+
+- A new record defines an "instance": one running copy of one archogen build, such as the future MCP server, a
+  browser module, or a single command-line run. It remembers nothing between requests, so an answer depends only
+  on the question and the build.
+- Every engine API answer now names the engine version as well as the API version. That is a new field, so the
+  API version moves from 1.0 to 1.1, as its compatibility promise requires. A test asks the same question twice
+  and checks the answers are identical.
+- A limit is stated plainly in the record. The engine version has never been bumped from 0.1.0, so "which build"
+  is only precise for release builds.
+
 ## archogen — a few small module files can no longer exhaust memory
 
 `ARCHOGEN-M1-0180` (leaf `M1.39`).

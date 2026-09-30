@@ -6,7 +6,7 @@
 
 use std::io::Write;
 
-use archogen_api::{check, NoModules, Request, Response, VERSION};
+use archogen_api::{check, NoModules, Request, Response};
 
 /// Three requests: one accepted, one judged and refused, one the API does not judge.
 pub fn run(out: &mut dyn Write) {
@@ -37,7 +37,13 @@ pub fn run(out: &mut dyn Write) {
 
 /// One line for the outcome, then what the response says about it.
 fn show(out: &mut dyn Write, response: &Response) {
-    let _ = writeln!(out, "api {VERSION} · status {}", response.status.slug());
+    let _ = writeln!(
+        out,
+        "api {} · engine {} · status {}",
+        response.version,
+        response.engine,
+        response.status.slug()
+    );
     if let Some(judged) = &response.judged {
         let _ = writeln!(
             out,

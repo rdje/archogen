@@ -381,7 +381,8 @@ agent can drive. The server is a capability of the built binary, spawned per ins
     the frontier, both logs, the changelog and the snapshots.
 
 - ID: `API.4`
-  Status: `pending`
+  Status: `active`
+  Children: `API.4.1`, `API.4.2`
   Goal: define an **instance** — lifecycle, identity, what a server is bound to, and what a response is
   reproducible against — and put resource limits under an untrusted consumer's input.
   Acceptance: "instance" is defined in a durable record rather than implied by an implementation; a
@@ -397,6 +398,64 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   `M1.38` (a nesting limit of 256, `read-nesting-too-deep`). The next measurement found the module system's two:
   a fan-out of 19 small modules held 1.8 GB, and a 3 000-link import chain overflowed the stack. Both are fixed at
   their source as `M1.39` (1 024 instances, 16-module chains). This leaf's limits start from there.
+  **Decomposed `2026-09-30`, after measuring what is left.** With `M1.38` and `M1.39`, nesting, instances and
+  import chains are bounded in the language. The remaining dimension is input size, and work is linear in it:
+  a system with 50 000 required services, 5 MB, checks in 1.97 s against 0.35 s for a fifth of it (debug build). So
+  one byte budget per request bounds time and memory. The instance definition is a design act of its own.
+  Verification: closed by its children
+  Commit: `pending`
+
+- ID: `API.4.1`
+  Status: `done`
+  Goal: define an instance in a durable record, and make every response attributable to the build that produced it.
+  Acceptance: a record under `docs/decisions/` stating an instance's lifecycle, its identity, what it is bound to,
+  and what a response is reproducible against; the response names the engine version beside the API version,
+  which is a minor bump under the promise; a test that the same request answers identically twice; the book says
+  what an instance is.
+  **Closed `2026-09-30`.** [`decision_api-instance.md`](../decisions/decision_api-instance.md) defines an instance:
+  one running copy of one build, stateless between requests, bound to its build, and reproducible from its
+  request and that build. `Response::engine` (`archogen_api::ENGINE`) names the engine version beside `VERSION`,
+  which moves to `1.1` as a minor, the promise's first use. The version register refused the bump until its
+  entry moved. A test asks the same request twice and compares the whole response. The book gains "What an
+  instance is".
+  ⚠️ Stated in the record, found checking it: identity by version numbers holds only for a build made at a release.
+  Every crate manifest's `version` line, over the whole history, reads `0.1.0`.
+  Verification: see the checklist.
+  Commit: `ARCHOGEN-API-0182 (leaf API.4.1)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — no definition, and a response that named the API but not the build:
+    ```text
+    $ git grep -n "needs a definition" HEAD -- docs/decisions/decision_programmatic-interface.md → line 78,
+      "\"Instance\" needs a definition before it needs an implementation", and no record gives one
+    $ git show HEAD:crates/archogen-api/src/lib.rs | grep -c "pub engine" → 0
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `API.3` declared the contract, and nothing yet said what serves it or what a
+    response is reproducible against: `git ls-tree -r --name-only HEAD docs/decisions | grep -c instance` → 0.
+  - [x] **FIX** — the record and its index row; `ENGINE` and `Response::engine`; `VERSION` 1.1; the shape test
+    (`SHAPE_OF` 1.1); the determinism test; the example prints the engine; `engine-api.md` and `versions.md`.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    $ cargo test -q -p archogen-api → test result: ok (check 10, book_example 1, status 6)
+    $ bash scripts/check_version_register.sh (before the entry moved) → the code says '1.1'; move the entry with
+      the code — exit 1; after → version-register: OK (8 entries; 8 declared version(s) …)
+    $ git log -G '^version = ' -- 'crates/*/Cargo.toml' → every version line ever written: 0.1.0
+    ```
+  - [x] **NO REGRESSION** — `cargo test -q --workspace --no-fail-fast` → 708 passed / 0 failed over 58 suites,
+    rc=0, from 707. `cargo clippy -q --all-targets --all-features -- -D warnings` exit=0; `cargo fmt --all --
+    --check` exit=0.
+  - [x] **LOCKSTEP** — the records, `engine-api.md`, `versions.md`; the frontier, both logs, the changelog and the
+    snapshots.
+
+- ID: `API.4.2`
+  Status: `pending`
+  Goal: a byte budget per request, over the description and every module text elaboration loads, which a consumer
+  handing the API text it did not write can rely on.
+  Acceptance: a stated default budget; a request over it answers `tool-failure`, with a note naming the budget and
+  no diagnostic about the description, never a partial result; RED arms for a request over the budget and one
+  exactly at it, through the description and through the modules; the CLI's behaviour stated (it is its own
+  trusted consumer); the book says what an untrusted consumer can rely on; `make focused` exit `0`.
   Verification: `pending`
   Commit: `pending`
 
@@ -447,7 +506,7 @@ agent can drive. The server is a capability of the built binary, spawned per ins
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `API.4` | `pending` | the instance model and the resource limits an untrusted consumer makes necessary. New architecture, not a binding — archogen is stateless over files today |
+| 1 | `API.4.2` | `pending` | a byte budget per request: the one resource left unbounded once `M1.38` and `M1.39` bounded the language |
 | 2 | `API.5` | `pending` | the wasm binding, behind `API.1` and `API.3` |
 | 3 | `API.6` | `pending` | the MCP server — the point of the tree, and last because everything above is what makes it safe to hand to an arbitrary agent |
 | 4 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6` |
@@ -513,6 +572,7 @@ them early is cheap and makes the rest estimable.
 | `2026-09-30` | `API.3.2` | the crate's eight legs; the wasm build and its derived set; the subprocess gate; three mutations; the whole suite; `make focused` | all pass; `archogen-api` compiles for wasm32; 690 passed / 0 failed over 55 suites; each mutation killed |
 | `2026-09-30` | `API.3.3` | the three parity legs and their arms; six mutations; the whole catalogue; the whole suite | 6 pass; each mutation killed by its leg; 38 of 38 as expected; every transcript and frozen verdict unchanged |
 | `2026-09-30` | `API.3.4` | the example and its transcript test; the register's self-test and real tree; the shape test; the whole suite; `make focused` | the transcript holds and fails when edited; 14 of 14 arms, 8 entries; 698 passed / 0 failed over 57 suites |
+| `2026-09-30` | `API.4.1` | the determinism test; the register before and after the bump; the manifests' history; the whole suite | the same request answers identically; the register refused 1.1 until its entry moved; every manifest version ever written is 0.1.0; 708 passed / 0 failed over 58 suites |
 
 ## Commit Log
 
@@ -525,8 +585,11 @@ them early is cheap and makes the rest estimable.
 | `API.3.2` | `ARCHOGEN-API-0175 (leaf API.3.2)` | **the engine API exists** — `archogen-api`: `check`, `Response`, `Status` moved into it, `VERSION`; compiles for wasm32 |
 | `API.3.3` | `ARCHOGEN-API-0176 (leaf API.3.3)` | **the CLI checks through the API** — its own routing removed; parity gated structurally, by operation and by behaviour |
 | `API.3.4` | `ARCHOGEN-API-0177 (leaf API.3.4)` | **the book documents the engine API** — `engine-api.md`, its example held to a run; version `1.0` fixed and registered; `API.3` closed |
+| `API.4.1` | `ARCHOGEN-API-0182 (leaf API.4.1)` | **an instance defined** — one build, no state between requests; every response names its engine; API `1.1` |
 
 ## Changelog
 
 - `2026-09-28`: Created task tree from the director's ruling of the same date and `ROADMAP.md` §10.4.
 - `2026-09-30`: `API.3` decomposed into `API.3.1`–`API.3.4` after its design was recorded.
+- `2026-09-30`: `API.4` decomposed into `API.4.1` (the instance) and `API.4.2` (a request budget), after `M1.38` and
+  `M1.39` bounded the language.

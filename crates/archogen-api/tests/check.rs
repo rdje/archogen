@@ -240,12 +240,12 @@ fn a_description_that_does_not_read_gets_the_read_pass_verdict() {
 
 #[test]
 fn the_version_and_the_operations_are_declared() {
-    assert_eq!(VERSION.to_string(), "1.0");
+    assert_eq!(VERSION.to_string(), "1.1");
     assert_eq!(OPERATIONS, ["check"]);
 }
 
 /// The version the response's shape below belongs to.
-const SHAPE_OF: archogen_api::Version = archogen_api::Version { major: 1, minor: 0 };
+const SHAPE_OF: archogen_api::Version = archogen_api::Version { major: 1, minor: 1 };
 
 #[test]
 fn the_response_shape_is_the_one_its_version_declares() {
@@ -255,6 +255,7 @@ fn the_response_shape_is_the_one_its_version_declares() {
     let response = check_file("examples/periodic-three/system.eadl", None);
     let Response {
         version,
+        engine: _,
         status: _,
         notes: _,
         hint: _,
@@ -275,4 +276,22 @@ fn the_response_shape_is_the_one_its_version_declares() {
         version, SHAPE_OF,
         "the response's shape was recorded for {SHAPE_OF}"
     );
+}
+
+#[test]
+fn the_same_request_answers_the_same_twice_and_names_the_build() {
+    // An instance holds no state between requests (`docs/decisions/decision_api-instance.md`), so a response is
+    // a function of its request and the build. Compared whole, through `Debug`: status, notes, every diagnostic
+    // and span, the sources, and the judgement.
+    for relative in [
+        "examples/periodic-three/system.eadl",
+        "docs/semantics/cases/missing-refinement-target.eadl",
+        "docs/semantics/kinds/os-rt.eadl",
+    ] {
+        let first = check_file(relative, None);
+        let second = check_file(relative, None);
+        assert_eq!(format!("{first:?}"), format!("{second:?}"), "{relative}");
+        assert_eq!(first.engine, archogen_api::ENGINE);
+        assert_eq!(first.engine, env!("CARGO_PKG_VERSION"));
+    }
 }

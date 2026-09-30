@@ -43,7 +43,8 @@ judge a description any other way.
    description whose verdict changes under the same language version is not an API change. It is a
    language change, and it goes through `docs/semantics/migrations/`. The first version is `1.0`.
    *Fixed `2026-09-30`, when `API.3` closed (leaf `API.3.4`). It is registered in `docs/book/src/versions.md`,
-   whose gate learned the API version's shape so that a bump cannot land unrecorded.*
+   whose gate learned the API version's shape so that a bump cannot land unrecorded. `1.1` added the response's
+   engine version (leaf `API.4.1`, [[api-instance]]), a field, so a minor.*
 6. **Parity, both ways, gated** (`ROADMAP.md` §10.4: "a capability that exists only behind the CLI does not
    exist programmatically, and the reverse"):
    - *structurally:* the CLI's source calls no judging entry point of the engine (`check`,
