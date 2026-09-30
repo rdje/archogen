@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the composition's ninth review is answered
+
+`ARCHOGEN-M2-0247` (leaf `M2.10.1`, a tenth checkpoint).
+
+- The ninth review found the model sound again under both interrupt orders. Its two real findings were about what
+  the platform facts left uncovered: application code that kept running outside any task once interrupts were on,
+  and start-up code of one component touching a timer or a device whose rules another component's review vouches
+  for. Each is now owned: after start-up only tasks and services run, a new fact of the port says when start-up
+  ends, and the timer's counter and each device are set up only by the component answerable for them. The
+  interrupt controller's set-up is left to the check planned for real images.
+- The tenth review runs next.
+
 ## archogen — the catalog computes its hashes, and the worked example agrees
 
 `ARCHOGEN-M2-0246` (leaf `M2.7.3.2`).

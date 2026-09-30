@@ -229,6 +229,25 @@ rounds, `M2.7.1` having closed; catalog round 16's V7 landed with them.
 | R7 | gap, a false refusal | initialisation's role could not read a device | it reads and writes each declared source's device to configure it (§2) |
 | R8 | nit | §5 lacked `one-claim-per-trap`, and §12 filed its kind apart | listed in §5, and placed with the port's trap facts in §12 (§5; the catalog's §12) |
 
+**Round 9**, `2026-09-30`: R1, R2 and R5–R8 were closed, and R3 and R4 partial. The reviewer read QEMU 11.1.1's
+`sifive_plic.c`, `riscv_aclint.c`, `serial.c`, `cpu.c` and `cpu_helper.c`, and simulated the model under both
+interrupt orders, with claims that take the highest request pending when read: no violation in 2 800 admitted sets,
+7 700 claims serving a request that arrived after its trap. There were 8 findings, 2 of them defects live on the
+emulator, both in the facts' coverage, and the verdict was "not met"; `C_i` and `CS_i` are sound. The answering
+context restated each in the record and in the catalog's §12, and checked S2's QEMU lines itself.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R3, R4 | partial | through S1 and S2 | as those rows |
+| S1 | defect, live | nothing kept application code to tasks and services after the first enabling, so a `main` that carried on masked where no term of `L` counts it: 30 against 8. "The first enabling" was undefined | after it, application code runs only as a task's job or a service's application code; the port's `starts-by-transition` defines it as the transition into the first job or idle, after which no earlier code runs (§2, §5; the catalog's §12) |
+| S2 | defect, live | any record's initialisation could write the counter or configure a device, which the dependent facts' reviews never see: at least 91 against 19, and 31 against 27 | the counter's first value is the timer-service record's, before the compare's; a source's device is only its service record's, in initialisation too, under `one-request-per-arrival.<source>`'s basis; the controller and `mtvec` left to `M4.10` (§2) |
+| S3 | gap, no under-charge | a claim can serve a request that arrived after its trap | stated in step 4, with why the count holds (§4) |
+| S4 | ambiguity, a false refusal | "every trap" covered exception traps | every trap taken for an interrupt serves that one; an exception trap serves none (§2; the catalog's §12) |
+| S5 | nit | "a service ends at its trap's return" put `S` inside the service | nothing else is served between a service and its trap's return (§2) |
+| S6 | nit | two owners for application initialisation | the application's fact covers it, named in §5 (§2, §5; the catalog's §12) |
+| S7 | nit, latent | `no` of an unread fact refused; "not `yes`" in How to apply | "read and declared `no`"; `unknown` leaves every `J` undeclared (§2, §6, How to apply) |
+| S8 | nit, latent | "each write sets" is false of RV32's intermediate store | "each write sequence leaves" (§2) |
+
 ## Why
 
 The record states the composition as it stands, and this file keeps how it got there, as for the catalog record.
