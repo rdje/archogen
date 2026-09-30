@@ -812,7 +812,7 @@ mdBook that is the director's window into the project.
     `MEMORY.md`, `CHANGELOG.md`.
 
 - ID: `PROGRAM.41`
-  Status: `done`
+  Status: `active` — reopened `2026-09-30` by its independent review; `PROGRAM.41.1` hardens the gate
   Goal: the next compaction of `docs/decisions/`, named by `docs/decisions/decision_decisions-folder-ceiling.md`. The
   findings register's settled items, §2, §4, §8 and §10, about 9.7 KB, are sealed out of it the way closed leaves
   are: moved byte for byte, with a stub per item keeping its section number, since the numbers are cited across the
@@ -852,6 +852,31 @@ mdBook that is the director's window into the project.
     `docs/book/src/verification.md`; this leaf, the frontier and both logs; `LIVE_STATUS.md`, `docs/TASK_TREE.md`,
     `MEMORY.md`, `CHANGELOG.md`.
 
+
+- ID: `PROGRAM.41.1`
+  Status: `active`
+  Goal: `DECISION-HISTORY` hardened after its independent review (`2026-09-30`), which accepted the first seal as
+  correct and lossless and found the gate not yet sound enough to seal more. Its findings, D1–D18, and the answer to
+  each are in `docs/reviews/decision-history-reviews.md`. The two it names first:
+  - D1: history simplification hides a seal behind a merge (`git merge -s ours`), and the gate then passes an edit
+    to the settled text;
+  - D2: a fence model that toggles on backticks alone lets a seal swallow a live section or tear one.
+  Acceptance: each finding answered in the script, its header or the records; a RED arm for each construction the
+  review gave, each failing for its stated reason; every leg the review's mutation matrix found unarmed armed, or
+  said why it cannot be; the gate and every self-test green.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `PROGRAM.42`
+  Status: `pending`
+  Goal: `TASK-HISTORY` and `HISTORY-LEDGERS` checked for `DECISION-HISTORY`'s D1. Both read history with `git log`
+  under its default simplification (`check_task_history.sh`, `check_history_ledgers.sh`), so a merge that drops a
+  seal's commit from the simplified history may hide it the same way. The review did not test them.
+  Acceptance: the construction reproduced on each gate or shown not to apply, by a scratch repository; where it
+  applies, `--full-history` and a RED arm; line endings of the sealed folders pinned in `.gitattributes`, as the
+  review's D14 asks of `docs/decision-history/`.
+  Verification: `pending`
+  Commit: `pending`
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -916,8 +941,10 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
-| 2 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
+| 1 | `PROGRAM.41.1` | `active` | `DECISION-HISTORY` hardened after its review: a seal hidden behind a merge (D1), a fence model that can seal a live section (D2) |
+| 2 | `PROGRAM.42` | `pending` | the same merge construction tried on `TASK-HISTORY` and `HISTORY-LEDGERS` |
+| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 4 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
@@ -1140,3 +1167,4 @@ a clean `git status` means what the handoff rule says it means.
 
 - `2026-09-13`: Created task tree; seeded the milestone trees from `ROADMAP.md` revision 2.0.
 - `2026-09-30`: `PROGRAM.35` filed and decomposed into `.35.1` and `.35.2`: the README policy the standing instruction names had never been adopted at its revision, and the caps never fitted.
+- `2026-09-30`: `PROGRAM.41` reopened by its independent review; `PROGRAM.41.1` and `PROGRAM.42` filed.
