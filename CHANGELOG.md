@@ -4,6 +4,25 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the catalog design's fifth review answered
+
+`ARCHOGEN-M2-0204` (leaf `M2.7.1`, a third checkpoint).
+
+- A fifth independent reviewer found two more ways the catalog design could let unreviewed content back a claim
+  someone relies on, and a third through a branch made before a rejection was published. All are now answered:
+  - a claim someone relies on must now show, from the build of the system image itself, that the compiler read
+    only reviewed files;
+  - the record of reviews can no longer be quietly edited by hand, because every new line is recomputed and
+    compared;
+  - a rejection published on the main line now binds claims made from any branch.
+- A rejection now follows content by what it is as well as by where it is: the same file bytes, or the same
+  statements, carry it even after a rename.
+- The rules for what the build may read were tightened: no assembly code or compiler flags in this first version,
+  and no build configuration the check has not seen.
+- The design and its review history are now two records. The history had grown to the point of crowding out the
+  design, and would have passed the size limit the README policy set for decision records.
+- A sixth review is next.
+
 ## archogen — the browser module gives the command line's answers
 
 `ARCHOGEN-API-0203` (leaf `API.5.3`).
