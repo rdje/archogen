@@ -208,6 +208,27 @@ target's device tree offers no `smaia`, and put the order in the ledger.
 | Q10 | nit | the fault path's masked run in no term | assumed: no fault trap is taken (§2) |
 | Q11 | nit, latent | Sstc's registers | `stimecmp` and `menvcfg.STCE` in the hart's interrupt state; the timer is the one the timer-service record programs (§2) |
 
+**Round 8**, `2026-09-30`: Q3–Q11 were closed, and Q1 and Q2 partial. The reviewer read QEMU 11.1.1's
+`riscv_aclint.c` and `serial.c` besides the files before it, and simulated the model under QEMU's timer-first
+order: no violation in 6 300 admitted sets, with late writes, coarse rounding, commitment at the trap or at
+delivery, dense sources and QEMU's latch. Every counterexample came through a fact's wording. There were 8
+findings, 3 of them defects live on the emulator, and the verdict was that the record "does not meet its closure
+rule"; once they are restated, `C_i` and `CS_i` are sound and `J^release` and `J_s` sound under both orders. The
+answering context restated each in the record and in the catalog's §12, which changes now through this record's
+rounds, `M2.7.1` having closed; catalog round 16's V7 landed with them.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| Q1, Q2 | partial | through R1, R2, R3 and R4 | as those rows |
+| R1 | defect, live | `one-claim-per-trap` bound external traps only, and a timer trap whose exit drains the controller put services ahead of the timer: 22 against 14 | every trap serves exactly one interrupt, a timer trap claiming nothing; a service ends at its trap's return (§2; the catalog's §12) |
+| R2 | ambiguity, live, a false refusal | §2's opening, §6 and step 4 still put `no` outside `/1` | the exception stated in both general rules, and step 4's phrase dropped (§2, §4, §6) |
+| R3 | defect, live | application initialisation was bound by nothing, and could reorder the controller: 21 against 13 | the task fact binds all application code, initialisation included, which reaches the hardware only through catalog functions (§2; the catalog's §12) |
+| R4 | defect, live in principle | the fact bounded requests per arrival, not requests no arrival made: 32 against 24 | every request a service claims was made by an arrival, and each arrival makes at most one; QEMU's window starts at the first enabling too; step 4 cites both halves (§2, §4) |
+| R5 | nit, a false refusal | no compare value when no release remains; step 1's "always" | or its largest value; "after each write" (§2, §4) |
+| R6 | gap | the no-fault assumption was not named in the conclusion | named beside `T_s` and the start-up assumption (§6) |
+| R7 | gap, a false refusal | initialisation's role could not read a device | it reads and writes each declared source's device to configure it (§2) |
+| R8 | nit | §5 lacked `one-claim-per-trap`, and §12 filed its kind apart | listed in §5, and placed with the port's trap facts in §12 (§5; the catalog's §12) |
+
 ## Why
 
 The record states the composition as it stands, and this file keeps how it got there, as for the catalog record.

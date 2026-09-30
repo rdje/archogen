@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the composition's eighth review is answered
+
+`ARCHOGEN-M2-0243` (leaf `M2.10.1`, a ninth checkpoint).
+
+- The eighth review simulated the model under the emulator's own interrupt order and found it sound, in over six
+  thousand task sets. Its three real findings were in how three platform facts were worded, each leaving a way for
+  a service to run that nothing paid for: a timer interrupt that went on to serve devices, start-up code of the
+  application that nothing constrained, and a device request that no event had made. Each is reworded to close it.
+- The catalog's last small finding on this record lands here too. The ninth review runs next.
+
 ## archogen — the catalog design is accepted, after sixteen reviews
 
 `ARCHOGEN-M2-0242` (leaf `M2.7.1`, closed).
