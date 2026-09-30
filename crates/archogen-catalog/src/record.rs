@@ -595,6 +595,7 @@ pub fn read_record(path: &str, bytes: &[u8]) -> Result<Record, Refusal> {
     let behavior_model = ctx.behavior_model(one(11))?;
     let timing_model = ctx.timing_model(one(12))?;
     ctx.names(&behavior_model, &timing_model)?;
+    ctx.section_12(&id, [one(11), one(12)], &behavior_model, &timing_model)?;
     let reviews = slots[13]
         .iter()
         .map(|review| ctx.review(review, &contract.maintainer))
@@ -627,6 +628,97 @@ pub fn position(path: &str, bytes: &[u8], form: &Form) -> Option<At> {
         line: p.line,
         column: p.column,
     })
+}
+
+/// The facts §12's facts table names that take any `.<suffix>`: a source's, or a record's id for
+/// `runtime-discipline`.
+const TABLED_FAMILIES: [(&str, FacetKind, bool); 6] = [
+    ("runtime-discipline.", FacetKind::BehaviorModel, true),
+    ("no-application-code.", FacetKind::BehaviorModel, true),
+    ("acknowledge-at-entry.", FacetKind::BehaviorModel, true),
+    ("defers-nothing.", FacetKind::BehaviorModel, true),
+    ("one-request-per-arrival.", FacetKind::BehaviorModel, true),
+    ("external.", FacetKind::BehaviorModel, false),
+];
+
+/// Every other fact §12's facts table names, with its facet and whether it is about code.
+const TABLED: [(&str, FacetKind, bool); 25] = [
+    ("timer-event-driven", FacetKind::BehaviorModel, true),
+    ("compare-rounds-up", FacetKind::BehaviorModel, true),
+    ("due-check-matches-compare", FacetKind::BehaviorModel, true),
+    ("no-early-release", FacetKind::BehaviorModel, true),
+    ("raised-only-when-due", FacetKind::BehaviorModel, true),
+    (
+        "only-timer-releases-timer-tasks",
+        FacetKind::BehaviorModel,
+        true,
+    ),
+    ("preemptive-everywhere", FacetKind::BehaviorModel, true),
+    (
+        "sections-mask-every-interrupt",
+        FacetKind::BehaviorModel,
+        true,
+    ),
+    ("interrupts-do-not-nest", FacetKind::BehaviorModel, true),
+    (
+        "services-preempt-every-task",
+        FacetKind::BehaviorModel,
+        true,
+    ),
+    (
+        "pending-taken-and-transitions-unmasked",
+        FacetKind::BehaviorModel,
+        true,
+    ),
+    ("one-claim-per-trap", FacetKind::BehaviorModel, true),
+    ("starts-by-transition", FacetKind::BehaviorModel, true),
+    ("pending-taken-after-unmask", FacetKind::BehaviorModel, true),
+    ("no-empty-claim", FacetKind::BehaviorModel, true),
+    ("one-processor", FacetKind::BehaviorModel, false),
+    ("compare-level", FacetKind::BehaviorModel, false),
+    ("external-before-timer", FacetKind::BehaviorModel, false),
+    ("one-external-controller", FacetKind::BehaviorModel, false),
+    ("reprograms-only-in-service", FacetKind::BehaviorModel, true),
+    ("no-suspension-primitive", FacetKind::BehaviorModel, true),
+    (
+        "no-scheduler-lock-primitive",
+        FacetKind::BehaviorModel,
+        true,
+    ),
+    ("releases-never-latched", FacetKind::BehaviorModel, true),
+    ("primitives-out-of-line", FacetKind::BehaviorModel, true),
+    ("eager-switching", FacetKind::TimingModel, true),
+];
+
+/// The facts about the port's code, `unknown` in `/1` since no record can hold that code (§13).
+const PORT_FACTS: [&str; 12] = [
+    "eager-switching",
+    "interrupts-do-not-nest",
+    "services-preempt-every-task",
+    "pending-taken-and-transitions-unmasked",
+    "pending-taken-after-unmask",
+    "no-empty-claim",
+    "one-claim-per-trap",
+    "starts-by-transition",
+    "preemptive-everywhere",
+    "sections-mask-every-interrupt",
+    "releases-never-latched",
+    "primitives-out-of-line",
+];
+
+/// The facet §12's facts table gives fact `name`, and whether it is about code; `None` for a fact it does not name.
+#[must_use]
+pub fn tabled(name: &str) -> Option<(FacetKind, bool)> {
+    TABLED
+        .iter()
+        .find(|(n, ..)| *n == name)
+        .or_else(|| {
+            TABLED_FAMILIES.iter().find(|(prefix, ..)| {
+                name.strip_prefix(prefix)
+                    .is_some_and(|rest| !rest.is_empty())
+            })
+        })
+        .map(|(_, facet, code)| (*facet, *code))
 }
 
 /// What every check needs: the file and its source map, for positions.
@@ -1521,6 +1613,102 @@ impl Ctx<'_> {
             }
             _ => Err(malformed()),
         }
+    }
+
+    /// The rules of §12 and §13 a record's own text shows (`M2.7.3.5.1`): a fact the facts table names, in a facet
+    /// the table does not give it; a code fact whose locator is not `code`; in `/1`, a known value of a fact about
+    /// the port's code; a `runtime-discipline.<id>` statement named with another record's id; a cost named
+    /// `api.completion`, which would make `masked.completion` ambiguous.
+    fn section_12(
+        &self,
+        id: &str,
+        forms: [&Form; 2],
+        behavior: &Facet<BehaviorModel>,
+        timing: &Facet<TimingModel>,
+    ) -> Result<(), Refusal> {
+        let behavior_facts = match &behavior.content {
+            Content::Present(m) => m.facts.as_slice(),
+            Content::None(_) => &[],
+        };
+        let (timing_facts, costs) = match &timing.content {
+            Content::Present(m) => (m.facts.as_slice(), m.costs.as_slice()),
+            Content::None(_) => (&[][..], &[][..]),
+        };
+        for (facet, holder, facts) in [
+            (FacetKind::BehaviorModel, forms[0], behavior_facts),
+            (FacetKind::TimingModel, forms[1], timing_facts),
+        ] {
+            for fact in facts {
+                let form = holder
+                    .items()
+                    .iter()
+                    .filter(|f| f.head() == Some("facts"))
+                    .flat_map(|f| f.items().iter().skip(1))
+                    .find(|f| matches!(f.items().get(1), Some(Form::Symbol { name, .. }) if *name == fact.name));
+                let field = format!("{} fact[{}]", facet.as_str(), fact.name);
+                let refuse = |code: Code, message: String| self.refuse(code, &field, form, message);
+                if let Some((given, code)) = tabled(&fact.name) {
+                    if given != facet {
+                        return Err(refuse(
+                            Code::Field,
+                            format!(
+                                "§12's facts table gives `{}` the {} facet",
+                                fact.name,
+                                given.as_str()
+                            ),
+                        ));
+                    }
+                    if let FactValue::Known { locator, .. } = &fact.value {
+                        if code && !matches!(locator, Locator::Code { .. }) {
+                            return Err(refuse(
+                                Code::Locator,
+                                format!(
+                                    "`{}` is a fact about code, which takes a `code` locator",
+                                    fact.name
+                                ),
+                            ));
+                        }
+                    }
+                }
+                if PORT_FACTS.contains(&fact.name.as_str())
+                    && matches!(fact.value, FactValue::Known { .. })
+                {
+                    return Err(refuse(
+                        Code::Field,
+                        format!(
+                            "in `/1`, `{}` is about the port's code, which no record can hold, so it is `unknown` (§13)",
+                            fact.name
+                        ),
+                    ));
+                }
+                if let Some(named) = fact.name.strip_prefix("runtime-discipline.") {
+                    if named != id {
+                        return Err(refuse(
+                            Code::Field,
+                            format!(
+                                "a record states `runtime-discipline.{id}` about itself, not `{}`",
+                                fact.name
+                            ),
+                        ));
+                    }
+                }
+            }
+        }
+        if let Some(cost) = costs.iter().find(|c| c.name == "api.completion") {
+            let form = forms[1]
+                .items()
+                .iter()
+                .filter(|f| f.head() == Some("costs"))
+                .flat_map(|f| f.items().iter().skip(1))
+                .find(|f| matches!(f.items().get(1), Some(Form::Symbol { name, .. }) if *name == cost.name));
+            return Err(self.refuse(
+                Code::Field,
+                "timing-model cost[api.completion]",
+                form,
+                "no primitive is named `completion`, so `masked.completion` is always the completion path's (§12)",
+            ));
+        }
+        Ok(())
     }
 
     /// Facts and costs share one name space per record: a fact name once, a cost name once per target (§2).

@@ -33,7 +33,7 @@ fn valid() -> String {
   (implementation (version "0.1.0") (sources "crates/rt-core"))
   (behavior-model (version "0.2.0") (sources "docs/models/sched.txt") (describes)
     (facts
-      (fact preemptive-everywhere yes (locator (code rt.scheduler "crates/rt-core/src/scheduler.rs")) (basis "decide picks the highest ready task"))
+      (fact no-suspension-primitive yes (locator (code rt.scheduler "crates/rt-core/src/scheduler.rs")) (basis "no primitive suspends a task"))
       (fact interrupts-do-not-nest (unknown "the port's code is assembly"))))
   (timing-model (version "0.1.0") (sources "docs/models/dispatch.txt") (measured-with) (facts)
     (costs
@@ -577,7 +577,7 @@ fn section_2_names() {
     refused(
         &mutated(
             "(fact interrupts-do-not-nest",
-            "(fact preemptive-everywhere",
+            "(fact no-suspension-primitive",
         ),
         Code::Shape,
         "a fact name appears once per record",

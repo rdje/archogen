@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog reader knows the facts the analysis reads
+
+`ARCHOGEN-M2-0255` (leaf `M2.7.3.5.1`).
+
+- Each fact the timing analysis reads has one place in a catalog record, and one kind of evidence: a fact about
+  code must point into code. A record that files one elsewhere, or backs a code fact with a document, is refused.
+- Until the processor-specific assembly can be catalogued, every fact about it must be stated as unknown, so no
+  review can vouch for code no record holds.
+
 ## archogen — the composition of the analysis's inputs is accepted, after eleven reviews
 
 `ARCHOGEN-M2-0254` (leaf `M2.10.1`, closed).

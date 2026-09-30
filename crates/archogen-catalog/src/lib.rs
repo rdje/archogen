@@ -10,7 +10,7 @@
 //! git and of processes (`NO-SUBPROCESS`); the repository's own tooling, under `xtask/`, is the caller that runs git.
 //!
 //! Built so far: [`record::read_record`], which reads one record and checks every rule of §1 and §2 that needs
-//! nothing but the file (`M2.7.3.1`); [`hash::Catalog`], which reads a tree's records and computes §3's hashes
+//! nothing but the file (`M2.7.3.1`), and those of §12 and §13 its text shows (`M2.7.3.5.1`); [`hash::Catalog`], which reads a tree's records and computes §3's hashes
 //! (`M2.7.3.2`); [`lock`], which reads §9's lock and checks it against one tree's records (`M2.7.3.3.1`); and
 //! [`history`] and [`replay`], which check the lock over history: append-only, every new line recomputed commit by
 //! commit, each review verified where it was ledgered, and each waiver judged (`M2.7.3.3.2`); and [`status`], which
