@@ -260,7 +260,9 @@ The first run agreed on every description but one. That one was a bug report's e
 `(a" b"[c]{d})`, which the other recognizer refuses and archogen's reader accepted. The grammar-derived
 recognizer sides with the outsider: the grammar requires a delimiter after every atom, and a string
 followed directly by `[` has none. So archogen's reader had been more permissive than its own grammar, and
-neither of the two existing opinions could see it. The fix is leaf `M1.37`. The record
+neither of the two existing opinions could see it. Since leaf `M1.37` the reader refuses it with
+`read-missing-delimiter`, a conformance probe holds both of them to that, and all three readers agree on
+every tracked description. The record
 (`docs/semantics/third-opinion.txt`) fails the script the moment any document's agreement changes.
 
 ## The product runs nothing

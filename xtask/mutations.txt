@@ -296,3 +296,25 @@ from
 to
         for line in closure_report(&eadl_model::check::Closure::default()).into_iter().take(0) {
 end
+
+mutation string-delimiter-unchecked
+file crates/eadl-front/src/reader.rs
+test -p eadl-front --test conformance
+expect killed
+why M1.37, found by M1.22's third reader: a string followed directly by a symbol character was read as two atoms, which the grammar refuses. The conformance suite's malformed probes must see it.
+from
+                    if self.peek().is_some_and(is_symbol_byte) {
+to
+                    if false && self.peek().is_some_and(is_symbol_byte) {
+end
+
+mutation missing-delimiter-label-one-byte
+file crates/eadl-front/src/reader.rs
+test -p eadl-front --lib
+expect killed
+why M1.37's first cut labelled one byte after the string; on `"b"é` that split a character, and the fuzz smoke caught it (`read-missing-delimiter span 148..149 is not on character boundaries`). The reader's own test pins the span now.
+from
+                            .map_or(1, char::len_utf8) as u32;
+to
+                            .map_or(1, |_| 1) as u32;
+end

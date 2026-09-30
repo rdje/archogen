@@ -4,6 +4,18 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — a string must be followed by a delimiter
+
+`ARCHOGEN-M1-0168` (leaf `M1.37`).
+
+- archogen's reader read `("b"c)` as two atoms. Its own grammar refuses it: every atom must be followed by a space,
+  a parenthesis, a quote, a `;` or the end. The reader now refuses it too, with the new code
+  `read-missing-delimiter`, and says where to put the space.
+- One tracked file changes verdict: a bug report's evidence, never a system description. Every other description
+  reads as before. The change is recorded as a migration note, since the frozen diagnostics table gained a row.
+- The fuzz tests caught the first version of the fix pointing at half of a two-byte character. It now points at the
+  whole character, and a test holds it there.
+
 ## archogen — a third reader of the grammar, and what it found at once
 
 `ARCHOGEN-M1-0167` (leaf `M1.22`).

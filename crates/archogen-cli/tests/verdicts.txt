@@ -13,7 +13,7 @@
 10 schema-unknown-kind docs/feedback/linkedspec/issues/LS-003-token-kind-erasure/evidence/04-quoted-string.eadl
 10 schema-unknown-kind docs/feedback/linkedspec/issues/LS-003-token-kind-erasure/evidence/05-bare-symbol.eadl
 10 schema-unknown-kind docs/feedback/linkedspec/issues/LS-006-hex-underscore-withdrawn/evidence/02-hex-literal-underscore.eadl
-10 schema-unknown-kind docs/feedback/linkedspec/issues/LS-007-adjacent-fragment-join/evidence/11-adjacent-fragment-join.eadl
+10 read-missing-delimiter docs/feedback/linkedspec/issues/LS-007-adjacent-fragment-join/evidence/11-adjacent-fragment-join.eadl
 0 - docs/semantics/boundary/accept/absolute-deadline-service.eadl
 0 - docs/semantics/boundary/accept/access-authority.eadl
 0 - docs/semantics/boundary/accept/addressable-region.eadl

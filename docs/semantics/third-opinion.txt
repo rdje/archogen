@@ -12,7 +12,7 @@ agree docs/feedback/linkedspec/issues/LS-003-token-kind-erasure/evidence/03-numb
 agree docs/feedback/linkedspec/issues/LS-003-token-kind-erasure/evidence/04-quoted-string.eadl
 agree docs/feedback/linkedspec/issues/LS-003-token-kind-erasure/evidence/05-bare-symbol.eadl
 agree docs/feedback/linkedspec/issues/LS-006-hex-underscore-withdrawn/evidence/02-hex-literal-underscore.eadl
-recognizer-stricter docs/feedback/linkedspec/issues/LS-007-adjacent-fragment-join/evidence/11-adjacent-fragment-join.eadl
+agree docs/feedback/linkedspec/issues/LS-007-adjacent-fragment-join/evidence/11-adjacent-fragment-join.eadl
 agree docs/semantics/boundary/accept/absolute-deadline-service.eadl
 agree docs/semantics/boundary/accept/access-authority.eadl
 agree docs/semantics/boundary/accept/addressable-region.eadl

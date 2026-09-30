@@ -620,6 +620,8 @@ fn the_grammar_and_the_reader_agree_on_malformed_input() {
             ("digit-initial symbol", "(period 10ms)"),
             ("bare number with unit glued", "(counter-width 32bit)"),
             ("unterminated string at eof", "(a \""),
+            ("string glued to a symbol", "(\"b\"c)"),
+            ("string glued to a number", "(a \"b\"1)"),
         ];
         let mut wrong = Vec::new();
         for (why, text) in malformed {
@@ -777,6 +779,8 @@ fn the_conformance_probes_exercise_every_production() {
             ("string with a general escape", "(s \"a\\u{1b}b\")"),
             ("raw tab inside a string", "(s \"a\tb\")"),
             ("string containing delimiters", "(s \"(;)\")"),
+            ("adjacent strings", "(s \"a\"\"b\")"),
+            ("a string then a list", "(s \"a\"(b))"),
             ("crlf line endings", "(a)\r\n(b)\r\n"),
             ("tabs as whitespace", "(a\tb)"),
             ("comment inside a list", "(a ; why\n b)"),

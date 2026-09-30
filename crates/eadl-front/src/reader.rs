@@ -238,9 +238,33 @@ impl<'a> Reader<'a> {
             match byte {
                 b'"' => {
                     self.at += 1;
+                    let close = self.offset();
+                    // ⛔ The grammar's `atom , ? delimiter` holds after a string too. A symbol or a
+                    // number runs until a delimiter, so a string is the one atom that can end with
+                    // none: `("b"c)` was read as two atoms, and the grammar refuses it (`M1.37`).
+                    // A byte that can start nothing is left to `read-unexpected-character`.
+                    if self.peek().is_some_and(is_symbol_byte) {
+                        // The label covers the whole next character, which may be several bytes.
+                        let width = self.raw[close as usize..]
+                            .chars()
+                            .next()
+                            .map_or(1, char::len_utf8) as u32;
+                        self.diagnostics.push(
+                            Diagnostic::error(
+                                "read-missing-delimiter",
+                                "a string is followed directly by another atom",
+                                Label::new(
+                                    self.span(close, close + width),
+                                    "no delimiter before this",
+                                ),
+                                "separate them with a space, or put the text inside the string",
+                            )
+                            .with_secondary(Label::new(self.span(open, close), "this string")),
+                        );
+                    }
                     return Some(Form::Str {
                         value,
-                        span: self.span(open, self.offset()),
+                        span: self.span(open, close),
                     });
                 }
                 b'\n' => {
@@ -1043,6 +1067,37 @@ mod tests {
         let (_, diagnostics, sources) = parse("(a \u{7} b)");
         let rendered = diagnostics.render(&sources);
         assert!(rendered.contains("read-unexpected-character"), "{rendered}");
+    }
+
+    #[test]
+    fn a_string_followed_directly_by_another_atom_is_refused() {
+        for glued in ["(\"b\"c)", "(a \"b\"1)", "(a \"b\"é)", "\"b\"-"] {
+            let (_, diagnostics, sources) = parse(glued);
+            let rendered = diagnostics.render(&sources);
+            assert!(
+                rendered.contains("read-missing-delimiter"),
+                "{glued:?}: {rendered}"
+            );
+        }
+        // The label covers the whole character after the string, not its first byte: `é` is two.
+        let (_, diagnostics, _) = parse("(a \"b\"é)");
+        let span = diagnostics.items()[0].primary.span;
+        assert_eq!(&"(a \"b\"é)"[span.start as usize..span.end as usize], "é");
+        // A quote, a parenthesis, a comment and the end of the input are delimiters.
+        for delimited in [
+            "(\"a\"\"b\")",
+            "(a \"b\"(c))",
+            "(\"b\")",
+            "\"b\";c\n",
+            "\"b\"",
+        ] {
+            parse_ok(delimited);
+        }
+        // A byte that can start nothing keeps its own code, and only that one.
+        let (_, diagnostics, sources) = parse("(\"b\"\u{7})");
+        let rendered = diagnostics.render(&sources);
+        assert!(rendered.contains("read-unexpected-character"), "{rendered}");
+        assert!(!rendered.contains("read-missing-delimiter"), "{rendered}");
     }
 
     #[test]
