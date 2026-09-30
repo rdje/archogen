@@ -240,18 +240,20 @@ fn a_description_that_does_not_read_gets_the_read_pass_verdict() {
 
 #[test]
 fn the_version_and_the_operations_are_declared() {
-    assert_eq!(VERSION.to_string(), "1.1");
+    assert_eq!(VERSION.to_string(), "1.2");
     assert_eq!(OPERATIONS, ["check"]);
 }
 
-/// The version the response's shape below belongs to.
+/// The version that last changed the response's shape below: `1.1` added `engine`. `1.2` added an operation, not a
+/// field, so it left the shape alone.
 const SHAPE_OF: archogen_api::Version = archogen_api::Version { major: 1, minor: 1 };
 
 #[test]
 fn the_response_shape_is_the_one_its_version_declares() {
     // ⛔ Exhaustive on purpose: no `..`. A field added to or removed from `Response` or `Judgement` stops this
-    // compiling, here, beside the version the shape belongs to. Adding one is a minor (`VERSION` and `SHAPE_OF`
-    // move together); removing one or changing its meaning is a new major (`docs/decisions/decision_engine-api.md`).
+    // compiling, here, beside the version that last changed the shape. Adding one is a minor (`VERSION` moves, and
+    // `SHAPE_OF` moves to it); removing one or changing its meaning is a new major
+    // (`docs/decisions/decision_engine-api.md`).
     let response = check_file("examples/periodic-three/system.eadl", None);
     let Response {
         version,
@@ -272,9 +274,10 @@ fn the_response_shape_is_the_one_its_version_declares() {
         instances: _,
         closure: _,
     } = judged.expect("judged");
-    assert_eq!(
-        version, SHAPE_OF,
-        "the response's shape was recorded for {SHAPE_OF}"
+    assert!(
+        version.major == SHAPE_OF.major && version.minor >= SHAPE_OF.minor,
+        "the response's shape was recorded at {SHAPE_OF}, and the API says {version}: a shape recorded after the \
+         version it belongs to, or across a major, is a field added without its bump"
     );
 }
 

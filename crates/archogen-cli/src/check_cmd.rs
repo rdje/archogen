@@ -9,7 +9,7 @@
 use std::io::Write;
 use std::path::Path;
 
-use archogen_api::{Closure, Request, Response};
+use archogen_api::{Closure, Limits, Request, Response};
 use eadl_front::DirectoryModules;
 
 use crate::cli::Parsed;
@@ -86,12 +86,18 @@ pub(crate) fn ask(
         }
     };
     let modules = DirectoryModules::new(Path::new(path).parent().unwrap_or_else(|| Path::new("")));
-    Ok(archogen_api::check(&Request {
-        name: path,
-        text: &text,
-        profile: requested,
-        modules: &modules,
-    }))
+    // No budget: the command line is its own consumer, and trusts the files it was given. The budget protects an
+    // instance's host from a consumer it does not control (`docs/decisions/decision_api-instance.md`); the list,
+    // module and elaboration limits of the language still apply, because they are the language's.
+    Ok(archogen_api::check_with(
+        &Request {
+            name: path,
+            text: &text,
+            profile: requested,
+            modules: &modules,
+        },
+        Limits::NONE,
+    ))
 }
 
 /// Run `archogen check`.

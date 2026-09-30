@@ -95,7 +95,7 @@ this page changing too.
 | Field | Value |
 | --- | --- |
 | Surface | the engine API: the one contract every consumer judges a description through, the CLI today and the wasm and MCP bindings to come ([The engine API](engine-api.md)) |
-| Version | `1.1` — `1.0` fixed `2026-09-30` when leaf `API.3` closed; `1.1` added the response's engine version (`API.4.1`) |
+| Version | `1.2` — `1.0` fixed `2026-09-30` when leaf `API.3` closed; `1.1` added the response's engine version (`API.4.1`); `1.2` added `check_with` and its `Limits` (`API.4.2`) |
 | Declared at | `const:crates/archogen-api/src/lib.rs:VERSION` |
 | Changes when | an operation or a response field is added, which is a minor; an operation or a field removed, or a field given a new meaning, which is a new major |
 | Pinned by | the exhaustive reading of `Response` and `Judgement` in `crates/archogen-api/tests/check.rs`, which stops compiling when a field is added or removed and names the version its shape belongs to; the three parity legs of `crates/archogen-cli/tests/api_parity.rs`. The bump itself is the author's act: nothing can tell a new field from a renamed one |

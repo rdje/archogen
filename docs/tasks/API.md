@@ -381,7 +381,7 @@ agent can drive. The server is a capability of the built binary, spawned per ins
     the frontier, both logs, the changelog and the snapshots.
 
 - ID: `API.4`
-  Status: `active`
+  Status: `done`
   Children: `API.4.1`, `API.4.2`
   Goal: define an **instance** — lifecycle, identity, what a server is bound to, and what a response is
   reproducible against — and put resource limits under an untrusted consumer's input.
@@ -402,8 +402,22 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   import chains are bounded in the language. The remaining dimension is input size, and work is linear in it:
   a system with 50 000 required services, 5 MB, checks in 1.97 s against 0.35 s for a fifth of it (debug build). So
   one byte budget per request bounds time and memory. The instance definition is a design act of its own.
-  Verification: closed by its children
-  Commit: `pending`
+  Verification: closed `2026-09-30` by its children and by `M1.38` and `M1.39`, which its measurement filed, with
+  the acceptance re-checked criterion by criterion:
+  - **"instance" defined in a durable record:** `docs/decisions/decision_api-instance.md`.
+  - **a response attributable to the description and profile that produced it:** every response names the API
+    and engine versions, a judged one the language and profile, and its `sources` hold the request's texts;
+    `the_same_request_answers_the_same_twice_and_names_the_build` → part of `test result: ok. 10 passed`.
+  - **no exhaustion without a stated limit and a verdict that says so, `tool-failure` and never partial:** the
+    language bounds nesting (`read-nesting-too-deep`), instances and import chains (`module-too-many-instances`,
+    `module-import-too-deep`). The request budget bounds the rest, which is linear. Its refusal is
+    `tool-failure` with no diagnostic (`budget.rs`, `test result: ok. 5 passed`).
+  - **RED arms for a limit exceeded and one not:** both edges of the budget, through the description and the
+    modules; both edges of each module limit (`module_limits.rs`, `test result: ok. 4 passed`); the nesting
+    limit at 256 and 257.
+  - **`make focused` exit `0`:** exit=0.
+  Commit: closed by `ARCHOGEN-API-0182 (leaf API.4.1)` and `ARCHOGEN-API-0183 (leaf API.4.2)`, with
+  `ARCHOGEN-M1-0178 (leaf M1.38)` and `ARCHOGEN-M1-0180 (leaf M1.39)`
 
 - ID: `API.4.1`
   Status: `done`
@@ -449,15 +463,51 @@ agent can drive. The server is a capability of the built binary, spawned per ins
     snapshots.
 
 - ID: `API.4.2`
-  Status: `pending`
+  Status: `done`
   Goal: a byte budget per request, over the description and every module text elaboration loads, which a consumer
   handing the API text it did not write can rely on.
   Acceptance: a stated default budget; a request over it answers `tool-failure`, with a note naming the budget and
   no diagnostic about the description, never a partial result; RED arms for a request over the budget and one
   exactly at it, through the description and through the modules; the CLI's behaviour stated (it is its own
   trusted consumer); the book says what an untrusted consumer can rely on; `make focused` exit `0`.
-  Verification: `pending`
-  Commit: `pending`
+  **Closed `2026-09-30`.** `archogen_api::Limits` with `DEFAULT_BYTES` (1 MiB), and `check_with(request, limits)`,
+  which `check` calls with the default. The budget counts the description and every module text elaboration
+  loads, each instance's reload included, through a counting `ModuleSource` wrapper. Over it, the answer is
+  `tool-failure` with a note naming the budget and what went past it, and no diagnostic. Within it, the answer
+  is exactly the unbudgeted one. The CLI asks with `Limits::NONE`, trusting its own files, and the language's
+  limits still apply to it. API `1.2`.
+  Verification: see the checklist.
+  Commit: `ARCHOGEN-API-0183 (leaf API.4.2)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — no budget, and work linear in an unbounded input:
+    ```text
+    $ git show HEAD:crates/archogen-api/src/lib.rs | grep -c "Limits\|budget" → 0
+    1 MB description: 0.36 s, 81 805 312 maximum resident set size · 5 MB: 1.95 s, 382 959 616 (debug);
+    release, 5 MB: 0.31 s, 390 070 272 — about 75 bytes held per byte sent
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `check` judged whatever it was handed:
+    `git show HEAD:crates/archogen-cli/src/check_cmd.rs | grep -n "archogen_api::check("` → 89. The only bound was
+    `SourceMap::add`'s 4 GiB, a span's width.
+  - [x] **FIX** — `DEFAULT_BYTES`, `Limits`, `Budgeted`, `check_with`, `over_budget` and `judge`; the CLI on
+    `Limits::NONE`; `crates/archogen-api/tests/budget.rs`, five legs (both edges through the description, both
+    through the modules, reloads counted, within budget equal to unbudgeted, `check`'s default); `VERSION` 1.2, the
+    shape rule restated ("last changed the shape"); `engine-api.md` "What one request may cost"; `versions.md`;
+    three catalogued mutations.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    $ cargo test -q -p archogen-api --test budget → test result: ok. 5 passed
+    $ cargo run -q -p xtask -- mutate --only budget-ignores-the-description budget-ignores-the-modules \
+        budget-returns-a-partial-result → mutate: OK — 3 mutation(s), each killed …
+    $ bash scripts/check_version_register.sh → version-register: OK (8 entries; 8 declared version(s) …)
+    $ bash scripts/wasm_build.sh → rc=0, archogen-api among the compiled set
+    ```
+  - [x] **NO REGRESSION** — `cargo test -q --workspace --no-fail-fast` → 713 passed / 0 failed over 59 suites,
+    rc=0, from 708. `make focused` exit=0; `cargo clippy -q --all-targets --all-features -- -D warnings` exit=0;
+    `cargo fmt --all -- --check` exit=0; `bash scripts/check_doctrines.sh` → all doctrines green.
+  - [x] **LOCKSTEP** — `engine-api.md`, `versions.md`, the decision record; the frontier, both logs, the changelog
+    and the snapshots.
 
 - ID: `API.5`
   Status: `pending`
@@ -506,10 +556,9 @@ agent can drive. The server is a capability of the built binary, spawned per ins
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `API.4.2` | `pending` | a byte budget per request: the one resource left unbounded once `M1.38` and `M1.39` bounded the language |
-| 2 | `API.5` | `pending` | the wasm binding, behind `API.1` and `API.3` |
-| 3 | `API.6` | `pending` | the MCP server — the point of the tree, and last because everything above is what makes it safe to hand to an arbitrary agent |
-| 4 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6` |
+| 1 | `API.5` | `pending` | the wasm binding, behind `API.1` and `API.3` |
+| 2 | `API.6` | `pending` | the MCP server — the point of the tree, and last because everything above is what makes it safe to hand to an arbitrary agent |
+| 3 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6` |
 
 ⛔ **This tree does not displace the project's main line.** `M1.13` is the frontier in
 [`M1.md`](M1.md), and `API.3`–`API.7` are sequenced behind it by the director's ruling. `API.1` and
@@ -573,6 +622,7 @@ them early is cheap and makes the rest estimable.
 | `2026-09-30` | `API.3.3` | the three parity legs and their arms; six mutations; the whole catalogue; the whole suite | 6 pass; each mutation killed by its leg; 38 of 38 as expected; every transcript and frozen verdict unchanged |
 | `2026-09-30` | `API.3.4` | the example and its transcript test; the register's self-test and real tree; the shape test; the whole suite; `make focused` | the transcript holds and fails when edited; 14 of 14 arms, 8 entries; 698 passed / 0 failed over 57 suites |
 | `2026-09-30` | `API.4.1` | the determinism test; the register before and after the bump; the manifests' history; the whole suite | the same request answers identically; the register refused 1.1 until its entry moved; every manifest version ever written is 0.1.0; 708 passed / 0 failed over 58 suites |
+| `2026-09-30` | `API.4.2` | the cost per byte measured; the budget's five legs; three mutations; the wasm build; the whole suite; the doctrines | about 75 bytes held per byte sent; both edges hold through the description and the modules; each mutation killed; 713 passed / 0 failed over 59 suites |
 
 ## Commit Log
 
@@ -586,6 +636,7 @@ them early is cheap and makes the rest estimable.
 | `API.3.3` | `ARCHOGEN-API-0176 (leaf API.3.3)` | **the CLI checks through the API** — its own routing removed; parity gated structurally, by operation and by behaviour |
 | `API.3.4` | `ARCHOGEN-API-0177 (leaf API.3.4)` | **the book documents the engine API** — `engine-api.md`, its example held to a run; version `1.0` fixed and registered; `API.3` closed |
 | `API.4.1` | `ARCHOGEN-API-0182 (leaf API.4.1)` | **an instance defined** — one build, no state between requests; every response names its engine; API `1.1` |
+| `API.4.2` | `ARCHOGEN-API-0183 (leaf API.4.2)` | **a byte budget per request** — 1 MiB by default, set by the instance; `tool-failure` past it, never partial; `API.4` closed |
 
 ## Changelog
 

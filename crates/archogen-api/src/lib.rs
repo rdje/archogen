@@ -18,6 +18,7 @@
 
 mod status;
 
+use std::cell::{Cell, RefCell};
 use std::fmt;
 
 use eadl_front::{elaborate_source, read, Position, Verdict};
@@ -35,8 +36,8 @@ pub use status::Status;
 /// operation or a field is a minor; anything else is a new major. A description whose verdict changes under
 /// the same language version is a language change, recorded in `docs/semantics/migrations/`, not an API
 /// change. `1.0` was fixed `2026-09-30`, when leaf `API.3` closed; `1.1` added [`Response::engine`] (leaf
-/// `API.4.1`). `docs/book/src/versions.md` registers it.
-pub const VERSION: Version = Version { major: 1, minor: 1 };
+/// `API.4.1`); `1.2` added [`check_with`] and [`Limits`] (leaf `API.4.2`). `docs/book/src/versions.md` registers it.
+pub const VERSION: Version = Version { major: 1, minor: 2 };
 
 /// The engine version: the one the workspace's members share, which `archogen --version` reports and
 /// `docs/book/src/versions.md` registers as `engine`. With [`VERSION`] it names the build a response came from
@@ -88,6 +89,66 @@ pub fn kind_modules() -> Vec<(String, String)> {
         .iter()
         .map(|(name, text)| ((*name).to_string(), (*text).to_string()))
         .collect()
+}
+
+/// The default budget for one request: 1 MiB of text, the description and every module elaboration loads
+/// counted together (leaf `API.4.2`).
+///
+/// ⭐ **Why one number is enough.** The language bounds the shapes that multiply work — list nesting (`M1.38`),
+/// module instances and import chains (`M1.39`) — and what is left is linear in the input. Measured `2026-09-30`
+/// on a debug build: 1 MB of description checked in 0.36 s holding 82 MB, and 5 MB in 1.95 s holding 383 MB. So a
+/// byte budget bounds a request's time and memory. The largest description the repository holds is 5 KB.
+pub const DEFAULT_BYTES: usize = 1024 * 1024;
+
+/// What an instance lets one request cost. The **instance** sets it, never the consumer: its purpose is to protect
+/// the host from what a consumer sends (`docs/decisions/decision_api-instance.md`).
+///
+/// A budget only ever changes an answer into `tool-failure`: a request within it gets exactly the answer it would
+/// get with no budget, so a response that is not a refusal does not depend on it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Limits {
+    /// The most text one request may bring, the description and its modules together; `None` is no budget.
+    pub bytes: Option<usize>,
+}
+
+impl Limits {
+    /// The budget [`check`] applies: [`DEFAULT_BYTES`].
+    pub const DEFAULT: Self = Self {
+        bytes: Some(DEFAULT_BYTES),
+    };
+    /// No budget: for a consumer that trusts what it sends, as the CLI does with the files it was given.
+    pub const NONE: Self = Self { bytes: None };
+}
+
+/// A module source that counts what it hands out against a budget, and stops handing out past it.
+struct Budgeted<'a> {
+    inner: &'a dyn ModuleSource,
+    remaining: Cell<usize>,
+    /// The first module that would have gone past the budget: its name, its size, and what was left.
+    over: RefCell<Option<(String, usize, usize)>>,
+}
+
+impl ModuleSource for Budgeted<'_> {
+    fn load(&self, module: &str) -> Option<(String, String)> {
+        if self.over.borrow().is_some() {
+            return None;
+        }
+        let (name, text) = self.inner.load(module)?;
+        if text.len() > self.remaining.get() {
+            *self.over.borrow_mut() = Some((module.to_string(), text.len(), self.remaining.get()));
+            return None;
+        }
+        self.remaining.set(self.remaining.get() - text.len());
+        Some((name, text))
+    }
+
+    fn describe_missing(&self, module: &str) -> String {
+        self.inner.describe_missing(module)
+    }
+
+    fn unreadable(&self) -> Vec<(String, String)> {
+        self.inner.unreadable()
+    }
 }
 
 /// What a consumer asks: one description, the profile to judge it against, and where its imports resolve.
@@ -229,6 +290,60 @@ impl Response {
 /// (`docs/semantics/reference.md` §6 rule 7). A kind module is not judged at all (leaf `M1.32`).
 #[must_use]
 pub fn check(request: &Request<'_>) -> Response {
+    check_with(request, Limits::DEFAULT)
+}
+
+/// [`check`], within `limits`, which the instance chooses (leaf `API.4.2`). A request that would bring more text
+/// than the budget is `tool-failure`: a note names the budget and what went past it, and nothing is said about the
+/// description, because a judgement cut short is not one.
+#[must_use]
+pub fn check_with(request: &Request<'_>, limits: Limits) -> Response {
+    if let Some(budget) = limits.bytes {
+        if request.text.len() > budget {
+            return over_budget(format!(
+                "{} is {} bytes, over this instance's budget of {budget} bytes for one request",
+                request.name,
+                request.text.len()
+            ));
+        }
+        let budgeted = Budgeted {
+            inner: request.modules,
+            remaining: Cell::new(budget - request.text.len()),
+            over: RefCell::new(None),
+        };
+        let response = judge(&Request {
+            modules: &budgeted,
+            ..*request
+        });
+        if let Some((module, size, left)) = budgeted.over.into_inner() {
+            return over_budget(format!(
+                "the modules {} imports come to more than this instance's budget of {budget} bytes for one \
+                 request: `{module}` is {size} bytes, and {left} were left",
+                request.name
+            ));
+        }
+        return response;
+    }
+    judge(request)
+}
+
+/// The response for a request over its budget: `tool-failure`, never a partial result.
+fn over_budget(note: String) -> Response {
+    Response::not_judged(
+        Status::ToolFailure,
+        SourceMap::new(),
+        vec![note],
+        Some(
+            "this says nothing about the description: the instance declined to spend more on it. Split it, \
+             or ask an instance with a larger budget"
+                .to_string(),
+        ),
+        Vec::new(),
+    )
+}
+
+/// The judgement itself, with no budget.
+fn judge(request: &Request<'_>) -> Response {
     if let Some(refused) = refuse_profile(request.profile) {
         return refused;
     }

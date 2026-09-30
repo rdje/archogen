@@ -514,3 +514,36 @@ from
 to
             if false && self.exhausted {
 end
+
+mutation budget-ignores-the-description
+file crates/archogen-api/src/lib.rs
+test -p archogen-api --test budget
+expect killed
+why API.4.2: a budget that never looks at the description's own size lets any consumer hand an instance as much text as it likes.
+from
+            if request.text.len() > budget {
+to
+            if false && request.text.len() > budget {
+end
+
+mutation budget-ignores-the-modules
+file crates/archogen-api/src/lib.rs
+test -p archogen-api --test budget
+expect killed
+why API.4.2: modules loaded without counting are text past the budget — and each instance reloads its module, so a hundred imports of one module are a hundred loads.
+from
+            if text.len() > self.remaining.get() {
+to
+            if false && text.len() > self.remaining.get() {
+end
+
+mutation budget-returns-a-partial-result
+file crates/archogen-api/src/lib.rs
+test -p archogen-api --test budget
+expect killed
+why API.4.2: a request whose modules went past the budget, answered with the judgement anyway, is a partial result — the module that was not loaded reads as module-not-found, a false statement about the description.
+from
+            if let Some((module, size, left)) = budgeted.over.into_inner() {
+to
+            if let Some((module, size, left)) = budgeted.over.into_inner().filter(|_| false) {
+end

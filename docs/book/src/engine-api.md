@@ -60,12 +60,12 @@ one judged and refused, and one the API does not judge.
 
 ```console
 $ cargo run -q -p archogen-api --example in_memory
-api 1.1 · engine 0.1.0 · status ok
+api 1.2 · engine 0.1.0 · status ok
   judged under eadl/1, profile rt-static-up-v1: 1 declaration(s)
-api 1.1 · engine 0.1.0 · status invalid-description
+api 1.2 · engine 0.1.0 · status invalid-description
   judged under eadl/1, profile rt-static-up-v1: 1 declaration(s)
   quantity-unknown-unit: `parsec` is not a known unit
-api 1.1 · engine 0.1.0 · status unsupported-profile
+api 1.2 · engine 0.1.0 · status unsupported-profile
   not judged: `rt-dynamic-mp` is not a supported profile
 ```
 
@@ -74,10 +74,10 @@ above, so this page cannot go on showing output the API no longer gives.
 
 ## The version and what it promises
 
-The API's version is `1.1`, apart from the language's (`eadl/1`) and the profile's, as §15 requires.
+The API's version is `1.2`, apart from the language's (`eadl/1`) and the profile's, as §15 requires.
 Every response names the API version and the engine version, and a judged one also names the language
-version and the profile it was judged under. `1.0` was fixed when the API was declared, and `1.1` added
-the engine version, a new field, so a minor, as the promise below says. Within a major, an operation is never removed, a response field
+version and the profile it was judged under. `1.0` was fixed when the API was declared. `1.1` added the
+engine version, a new field, and `1.2` added `check_with`, below. Both are minors, as the promise says. Within a major, an operation is never removed, a response field
 is never removed or given a new meaning, and the outcome vocabulary only grows. Adding an operation
 or a field is a minor. A description whose verdict changes under the same language version is not an
 API change: it is a language change, and it goes through the migration notes
@@ -93,6 +93,26 @@ into it. It keeps nothing between requests. So a response depends on two things 
 description, the profile, and the module texts it loaded) and the build, which the response names.
 Asking the same instance the same question twice gives the same answer, and
 `crates/archogen-api/tests/check.rs` asks twice and compares the whole response.
+
+## What one request may cost
+
+The language already bounds the shapes that multiply work. A list nests at most 256 deep, and a module tree
+has at most 1 024 instances and 16-module import chains ([Reading a description](reading.md),
+[Modules and composition](modules.md)). What is left grows with the text, and in proportion to it: measured
+on a debug build, 1 MB of description checked in 0.36 s and held 82 MB, and 5 MB took 1.95 s and 383 MB.
+
+So an instance gives each request a **byte budget**, counted over the description and every module text
+elaboration loads. Each instance reloads its module, so a module imported a hundred times counts a hundred
+times. `check` applies the default, 1 MiB, which is two hundred times the largest description in the
+repository. `check_with(request, limits)` applies the budget the instance chose. The instance sets it and
+the consumer cannot, because its purpose is to protect the host from what a consumer sends. A request over
+its budget is `tool-failure`, with a note naming the budget and what went past it, and nothing about the
+description, because a judgement cut short is not one. A request within its budget gets exactly the answer
+it would get with no budget. `crates/archogen-api/tests/budget.rs` pins both edges, through the description
+and through the modules.
+
+The command line asks with no budget. It is its own consumer and trusts the files it was given. The
+language's limits still apply to it, because they belong to the language.
 
 ## How the command line is held to it
 
@@ -116,6 +136,6 @@ Asking the same instance the same question twice gives the same answer, and
 - **The commands not built yet.** They are no operation. The command table
   (`crates/archogen-cli/src/spec.rs`) names the leaf that owns each one, and the MCP server (leaf
   `API.6`) will report that leaf rather than failing.
-- **Limits on an untrusted description.** A consumer handing the API text it did not write has no
-  memory or time limit to rely on yet. That is leaf `API.4`, and until it lands the API is safe only
-  for descriptions its caller trusts.
+- **Wall-clock time.** The budget bounds the work, and the work is linear in it. A host that needs a
+  deadline as well enforces it around the instance. The API reads no clock, and on `wasm32-unknown-unknown`
+  the standard library has none to read.

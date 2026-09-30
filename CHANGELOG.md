@@ -4,6 +4,19 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — one request to the engine API has a cost limit
+
+`ARCHOGEN-API-0183` (leaf `API.4.2`).
+
+- Whoever runs the engine API, such as a future server, now caps how much text one request may bring: the
+  description plus every module it loads. The default is 1 MiB, two hundred times the largest real description.
+  The limit is set by whoever runs the API, never by the caller, because it protects the machine from the caller.
+- A request over the limit gets a "tool failure" that names the limit and says nothing about the description.
+  It never gets a half-finished result. A request under the limit gets exactly the answer it would get with no
+  limit.
+- The command line has no such cap, since it trusts the files it is given. The language's own limits on nesting
+  and module trees still apply everywhere. With this, the engine API's safety step is complete.
+
 ## archogen — what an archogen instance is, and every answer names its build
 
 `ARCHOGEN-API-0182` (leaf `API.4.1`).
