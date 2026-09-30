@@ -4,6 +4,17 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — LS-008: the cost of following LinkedSpec's failure procedure
+
+`ARCHOGEN-M1-0166` (leaf `M1.21`).
+
+- A new report is filed in the LinkedSpec tracker. One successful run of the published preparation writes a
+  784 MB log of 4 008 986 lines. The integration guide says to keep the full log when that command fails.
+  Almost all of it, 99%, is the parser generator's own progress output. The report offers two remedies, a
+  quieter mode or a documented size, and leaves the choice to LinkedSpec.
+- The figure was measured again rather than copied, because two earlier records disagreed: one said 41 lines.
+  The fresh run matched the other record exactly. The earlier report's evidence carries a dated correction.
+
 ## archogen — every profile decision says where it is enforced
 
 `ARCHOGEN-M1-0164` (leaf `M1.10`).

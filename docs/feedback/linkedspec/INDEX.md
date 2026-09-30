@@ -56,12 +56,13 @@ All five (`LS-005`, `LS-001`, `LS-004`, `LS-002`, `LS-003`) were re-measured at 
 | [LS-005](issues/LS-005-guide-ordering/) | "Add and pin" commands alone never produce a buildable tree | Docs | Minor | `verified` | `2026-09-20` | `2026-09-27` |
 | [LS-006](issues/LS-006-hex-underscore-withdrawn/) | Hex literal underscores corrupted by atom joining | Correctness | — | `withdrawn` | `2026-09-20` | `2026-09-20` |
 | [LS-007](issues/LS-007-adjacent-fragment-join/) | Adjacent fragments join into a single atom | Correctness | Informational | `no-action` | `2026-09-20` | `2026-09-20` |
+| [LS-008](issues/LS-008-preparation-log-volume/) | One successful preparation writes a 784 MB log, and the guide says to keep it | Cost | Minor | `open` | `2026-09-30` | `2026-09-30` |
 
 ## Totals by state
 
 | State | Count | IDs |
 | --- | --- | --- |
-| `open` | 0 | — |
+| `open` | 1 | LS-008 |
 | `acknowledged` | 0 | — |
 | `by-design` | 0 | — |
 | `fixed-upstream` | 0 | — |
@@ -90,12 +91,11 @@ Three standing facts a consumer of this pin needs, each recorded where it cannot
 - `LS-004`'s preparation must be **regenerated** after a pin move. `make bootstrap` is idempotent on
   existence, so a checkout carrying the previous pin's parser exits `0` having done nothing.
 
-⚠️ **One new finding is being filed, and it is not part of any verdict above.** Re-measuring
-`LS-004` measured the cost of the published preparation interface as well as its correctness: one
-successful run wrote a 753 MB log of 4 008 986 lines, while the guide instructs a consumer to
-preserve the full log when the command fails. It is recorded inside `LS-004`'s re-measurement and is
-being raised as its own row, because it is a property of the interface rather than evidence about
-the reported defect.
+⚠️ **One finding is filed as its own row, `LS-008`, and it is not part of any verdict above.**
+Re-measuring `LS-004` measured the cost of the published preparation interface as well as its
+correctness: one successful run wrote a 784 MB log of 4 008 986 lines, while the guide instructs a
+consumer to preserve the full log when the command fails. It was measured again on `2026-09-30` at the
+same revisions, with the same figures, and the proposed remedy is LinkedSpec's to choose.
 
 ## Totals by severity, open only
 
@@ -106,12 +106,12 @@ the reported defect.
 | Blocker | 0 |
 | Major | 0 |
 | Moderate | 0 |
-| Minor | 0 |
+| Minor | 1 |
 
 ## Reproducibility
 
-Every row has a runnable reproducer whose exit code is its verdict, and every one of the seven
-was executed on the revision above. No row rests on reading upstream documentation.
+Every row has a runnable reproducer whose exit code is its verdict, and each was executed on the
+revision above. No row rests on reading upstream documentation.
 
 A row that has been **re-measured** also carries a `remeasure.sh`, whose exit code answers the
 opposite question — *is the reported defect gone at this revision?* — and whose `--self-test`
@@ -126,6 +126,7 @@ over on its own.
 | Instrument needs | IDs |
 | --- | --- |
 | A LinkedSpec checkout only | LS-001, LS-004, LS-005 (`repro.sh`), LS-001 and LS-005 (`remeasure.sh`) |
+| A captured preparation log, or a prepared checkout and room for most of a gigabyte of log | LS-008 (`repro.sh --log` or `--run`) |
 | A prepared checkout, and network for the fresh-preparation arm | LS-004 (`remeasure.sh`) |
 | A built `lispish_file` (each issue's own `SETUP.md` describes the build) | LS-002, LS-003, LS-006, LS-007 (`repro.sh`) |
 | Both built consumers, and `python3` to read the tagged result | LS-002 and LS-003 (`remeasure.sh`) |

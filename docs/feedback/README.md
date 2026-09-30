@@ -11,7 +11,7 @@ state and history in the issue — so a report stays live instead of becoming a 
 
 | Vendor | Tracker | Component | Bugs | Open | Blockers |
 | --- | --- | --- | --- | --- | --- |
-| LinkedSpec | [`linkedspec/`](linkedspec/INDEX.md) | Rust backend + shipped Lispish grammar | 7 | 0 | 0 |
+| LinkedSpec | [`linkedspec/`](linkedspec/INDEX.md) | Rust backend + shipped Lispish grammar | 8 | 1 | 0 |
 
 **Open** counts the bugs not yet resolved from archogen's side: `open`, `acknowledged` or
 `fixed-upstream`. **Blockers** counts the open ones of severity Blocker. Per-vendor detail, meaning

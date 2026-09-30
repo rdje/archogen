@@ -194,6 +194,9 @@ REUSE ARM rc=0
 
 == 6. what the fresh preparation cost, including its log ==
   The successful run's full log was 753M and 41 lines, of which 1151376 were [PGEN][DBG]
+  [ERRATUM 2026-09-30: "41 lines" is a transcription error in this prose, which no instrument printed.
+  The log had 4008986 lines, as this issue's README states; a fresh run at the same revisions, filed as
+  LS-008, measured 4008986 lines, 1151376 of them [PGEN][DBG], in 784062751 bytes (753M by du -h).]
   progress lines from the generator. The vendor's guide tells a consumer that if this command fails
   it must "stop before building the application and preserve its exit status and full log" — and a
   SUCCESSFUL run's log is three quarters of a gigabyte. That is a separate finding about the

@@ -1,0 +1,54 @@
+# LS-008 — the measurement, frozen
+#
+# Taken 2026-09-30 by archogen on one fresh run of RGX's published preparation interface,
+#   make -C <checkout>/rgx bootstrap, through the documented storage wrapper, with generated/ and
+#   rust/target removed first as the published contract says after a pin change.
+# LinkedSpec 2ac834913 / RGX f6e5acdc9 / PGEN d9d41c28, rustc 1.95.0, Darwin arm64. The run exited 0.
+# The log itself (784 062 751 bytes) is not kept here; this is what the reproducer measured on it:
+#   bash repro.sh --log <the-log> --exit 0
+# In the excerpts, <checkout> stands for the LinkedSpec checkout's absolute path and <pgen>/ for PGEN's
+# directory inside it, where the log printed a path relative to PGEN's rust/ directory.
+
+  exit code of the run ......... 0
+  log size ..................... 784062751 bytes (784 MB)
+  log lines .................... 4008986
+  [PGEN][DBG] lines ............ 1151376
+LS-008: REPRODUCED — one successful preparation wrote 784 MB of log
+(exit 0)
+
+== the log's first 8 lines ==
+[rgx] Generating the PGEN regex parser (one-time bootstrap)...
+🚀 Bootstrap regex parser from cold clone...
+🌱 Seeding generated/ebnf.rs (one-time bootstrap, Rust frontend)...
+  Step A: build ast_pipeline (compiles without generated/ebnf.rs
+          because the cross-check is gated on has_generated_ebnf_parser)...
+warning: file `<checkout>/rgx/subs/pgen/rust/src/main.rs` found to be present in multiple build targets:
+  * `bin` target `ast_pipeline`
+  * `bin` target `ast_pipeline_bootstrap`
+
+== its last 6 lines ==
+[PGEN][DBG] 🧠 [src/ast_pipeline/ast_based_generator.rs:567] [pgen::ast_pipeline::ast_based_generator::AstBasedGenerator::generate_parser]
+SOTA parser generated: <pgen>/generated/regex_parser.rs
+Return-annotation inventory: <pgen>/generated/regex_return_annotations.json (240 entries)
+✅ Generated: <pgen>/generated/regex_parser.rs
+✅ Regex parser generated successfully!
+✅ Bootstrap complete. generated/regex_parser.rs is ready for --features generated_parsers builds.
+
+== the lines that are not [PGEN][DBG] progress, by first word (the 12 most frequent) ==
+1344333 [PGEN][LOW]
+1157200 [PGEN][HIGH]
+ 318896 [PGEN][MED]
+  14066 |
+   4864 warning:
+   4849 -->
+   4849 
+   1193 =
+    276 '
+    203 }
+    164 type:
+    149 Compiling
+
+== every line PGEN tags as its own progress, whatever the level ==
+  lines beginning [PGEN][ ...... 3971805
+  bytes in those lines ......... 782326257
+  every other line ............. 37181

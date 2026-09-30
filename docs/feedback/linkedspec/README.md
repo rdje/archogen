@@ -6,8 +6,9 @@ upstream integration guide names ARCHOGEN in its own example, so this is offered
 the guide invites: the first real consumer reporting what the first integration actually did.
 
 > **The register of every reported bug and its state is [`INDEX.md`](INDEX.md).**
-> Currently **7 issues — all 5 reported defects `verified` by archogen's own reruns at the adopted
-> pin, including both blockers**, plus 1 withdrawn and 1 no-action. Nothing rests on the vendor's
+> Currently **8 issues — all 5 reported defects `verified` by archogen's own reruns at the adopted
+> pin, including both blockers**, plus 1 withdrawn, 1 no-action, and 1 `open`: `LS-008`, a cost of the
+> published preparation interface rather than a defect in it. Nothing rests on the vendor's
 > word. The [completion notice](issues/LS-004-bootstrap-false-success/UPSTREAM.md) names the
 > published revision and adoption steps.
 
