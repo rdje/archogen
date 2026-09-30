@@ -5,6 +5,22 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the first review of how the four shared inputs are built is answered
+
+`ARCHOGEN-M2-0216` (leaf `M2.10.1`, a second checkpoint).
+
+- An independent review found the arithmetic sound. A simulation of 1 920 random task sets found no case where the
+  composed values fell short. It also found three situations the design had missed, each with a worked
+  counterexample:
+  - a task that finishes while interrupts are still masked;
+  - a timer written during start-up;
+  - inconsistent verdicts when a value cannot be bounded.
+- All three are fixed. The design now also states the seven platform facts it relies on, such as that a waiting
+  interrupt is taken as soon as a task unmasks. Each is a reviewed catalog fact, checked when the composition
+  runs, so the analysis itself stays as it was reviewed.
+- Two sentences of the RISC-V privileged specification were checked against the ratified text and given an entry in
+  the book's list of outside sources. One of them settled a question the analysis's design had left open.
+
 ## archogen — the catalog design's eighth review is answered
 
 `ARCHOGEN-M2-0215` (leaf `M2.7.1`, a sixth checkpoint).

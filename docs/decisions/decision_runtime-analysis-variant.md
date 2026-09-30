@@ -261,10 +261,10 @@ fixture's exact timeline, where H responds in 5 and L in 23.
   non-preemptive fixed-priority analysis in its corrected CAN form (Davis, Burns, Bril and Lukkien, 2007). It would
   need the masked run as blocking, the timer as a queue member whose arrivals are every release, and the residue
   above as extra items;
-- whether RISC-V takes an interrupt pending at `mret` before any instruction of the resumed context. **Not settled
-  from the sources read.** The deriving context recalls that the privileged specification evaluates
-  interrupt-trap conditions immediately after an `xRET`, which would settle it for a conforming hart, but it did
-  not check the text. Whether the target and QEMU conform is a separate fact. `/1` keeps it a declared platform fact
+- whether RISC-V takes an interrupt pending at `mret` before any instruction of the resumed context. **Settled
+  `2026-09-30` for a conforming hart** (`M2.10.1`): the [privileged specification](../book/src/ledger.md#riscv-privileged)
+  says interrupt-trap conditions "must also be evaluated immediately following the execution of an xRET
+  instruction". Whether the target and QEMU conform is a separate fact. `/1` keeps it a declared platform fact
   (condition 5).
 
 ## Why

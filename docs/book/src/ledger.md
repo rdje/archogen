@@ -204,3 +204,17 @@ the day a chapter or a decision relies on it, as Miri did.
 | Known limitations | §19: it checks the executions the tests drive, for the undefined behaviour it can detect; passing does not establish soundness. The product holds no `unsafe` block. The first in the workspace is test code: `crates/archogen-wasm/tests/binding.rs` writes into the binding's buffer through a raw pointer, as a page writes into its memory, and on `2026-09-30` that test passed under this Miri (`API.5.2`). Beyond it, a pass says little more than "the standard library was used soundly on these paths", which is why the step arms itself first |
 | Revalidation trigger | a `nightly` update; an `unsafe` block in production code |
 | Named as | `Miri` |
+
+## `riscv-privileged`
+
+| Field | Value |
+| --- | --- |
+| Source | The RISC-V Instruction Set Manual, Volume II, Privileged Architecture: its Machine-Level ISA chapter, read on the RISC-V ratified specifications library |
+| Version | Machine-Level ISA, Version 1.13, in the library's `v20260120` release, the release `chipdoc` holds as `risc-v/isa/pinned/v20260120` |
+| Pinned at | not pinned — read at `https://docs.riscv.org/reference/isa/v20260120/priv/machine.html`; no build or check reads it |
+| Retrieved | `2026-09-30` |
+| Hash | not captured — two sentences are quoted, and no figure is adopted |
+| Scope | two sentences that `decision_runtime-composite-inputs.md` (`M2.10.1`) and the variant's §6 rest on: "Multiple simultaneous interrupts destined for M-mode are handled in the following decreasing priority order: MEI, MSI, MTI, SEI, SSI, STI, LCOFI"; and interrupt-trap conditions "must also be evaluated immediately following the execution of an xRET instruction or an explicit write to a CSR on which these interrupt trap conditions expressly depend (including mip, mie, mstatus, and mideleg)" |
+| Known limitations | a specification says what a conforming hart does. Whether the target's hart and QEMU conform is a platform fact that the catalog states and a review checks. The Advanced Interrupt Architecture, v1.0 §4.1, read the same day, lets `iprio` give a major interrupt "nominally the same priority as a machine-level external interrupt with priority number" n. So the default order holds only without it, which is why `every-source-external` is a fact of its own |
+| Revalidation trigger | a newer ratified release of the privileged architecture; a target whose interrupts go through the Advanced Interrupt Architecture or platform-local causes |
+| Named as | `privileged specification` |

@@ -13,3 +13,4 @@ No bootstrap read includes this directory.
 | Review history | Design record | Rounds | Status |
 | --- | --- | --- | --- |
 | [`decision_catalog-records-reviews.md`](decision_catalog-records-reviews.md) | [`decision_catalog-records.md`](../decisions/decision_catalog-records.md) | 8 | open (`M2.7.1`) |
+| [`decision_runtime-composite-inputs-reviews.md`](decision_runtime-composite-inputs-reviews.md) | [`decision_runtime-composite-inputs.md`](../decisions/decision_runtime-composite-inputs.md) | 1 | open (`M2.10.1`) |

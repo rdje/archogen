@@ -3,11 +3,13 @@
 - **Type:** `decision`
 - **Date:** `2026-09-30`
 - **Status:** `active`
+- **External sources:** [the RISC-V privileged specification](../book/src/ledger.md#riscv-privileged) — its version,
+  the two sentences relied on, and its limits are in the ledger
 - **Owner / source:** leaf `M2.10.1` (`docs/tasks/M2.md`). [[decision_catalog-records]] §12 left four of the
   runtime variant's inputs whole, `C_i`, `CS_i`, `J_i^release` and `J_s`, because each includes what no single
   owner knows. It also left them to the caller until this leaf, because a composition that took the larger of two
   parts where the definition needs their sum would under-charge (that record's second review, findings B2 and B3).
-  This record decides the composition. The review it needs, by a context that did not write it, is the last section.
+  This record decides the composition. Its independent reviews are summarised in the last section.
 
 ## The fact / decision
 
@@ -15,11 +17,12 @@ The engine composes each of the four inputs from parts, and each part has one ow
 
 - **the catalog:** kernel code and the platform, as reviewed timing costs and behavioral facts;
 - **the application:** the task's own code, one of `ROADMAP.md` §10.3's "separately supplied application inputs";
-- **the plan:** `ROADMAP.md` §7.5's resolved plan, which orders the interrupts;
+- **the plan:** `ROADMAP.md` §7.5's resolved plan, which sets the interrupt controller's priorities;
 - **the description:** its periods, jitters and what releases each task, as before.
 
-The variant's §1 definitions are unchanged, and so is its model, `fixed-priority-with-overheads/1`. This record is
-how a value that meets each definition is put together.
+The variant's §1 definitions, its conditions and its model, `fixed-priority-with-overheads/1`, are unchanged. This
+record is how a value that meets each definition is put together, and §2 states what the composition itself
+assumes, beyond the variant's conditions.
 
 **The rule is the definition's own shape:**
 
@@ -35,31 +38,62 @@ No composite ever takes the maximum of things its definition adds.
 
 | Part | Symbol | Owner | What it bounds |
 | --- | --- | --- | --- |
-| a primitive's cost | `api.p`, for each primitive `p` a task can call | catalog: timing cost `api.<p>` of the record that supplies the runtime API | one call, from the call to its return, on the caller's behalf. It excludes any service taken during the call or right after it. A release latched while masked is delivered by the pending interrupt's service, which is `C_rel`, not by `unmask` |
+| a primitive's cost | `api.p`, for each primitive `p` a task can call | catalog: timing cost `api.<p>` of the record that supplies the runtime API | one call, from its first instruction to its last (§2's `primitives-out-of-line`), on the caller's behalf, excluding any service taken during the call or right after it |
 | a primitive's masked run | `masked.p` | catalog: timing cost `masked.<p>` | the longest contiguous masked stretch inside one call of `p` made with interrupts unmasked |
 | the completion path | `completion` | catalog: timing cost `completion` | from the job's last instruction of its own code to the decided switch that follows, the scheduling decision included |
 | the completion path's masked run | `masked.completion` | catalog: timing cost `masked.completion` | the longest contiguous masked stretch in the completion path, up to the decided switch. The transition that follows it is added by `L`, as it is today |
-| where the compare is written | — | catalog: behavioral code fact `reprograms-only-in-service` | the compare is written only by the timer service, after its due check, and at initialisation |
 | the task's own code | `C_i^app` | application, per task | the most one job executes of the task's own code, from its first instruction after the transition in to its last. It excludes every primitive's execution and every service, and includes the application's own instrumentation |
 | how often it calls each primitive | `n_{i,p}` | application, per task | the most calls to `p` one job makes: §7.3's "allowed OS calls", with a count |
-| the task's masked runs | for each run `r`: `CS_{i,r}^app`, and `n_{r,p}` | application, per task | a run is a stretch from a `mask` call to the `unmask` call that ends it. `CS_{i,r}^app` is the most the task's own code executes inside it, and `n_{r,p}` is the calls to each primitive inside it, other than the `mask` and `unmask` that delimit it |
-| the order pending interrupts are taken in | `ahead(x)` | plan | a strict order over the timer and every declared source. `ahead(x)` is every interrupt taken before `x` when both are pending |
+| the task's masked runs | for each run `r`: `CS_{i,r}^app`, `n_{r,p}`, and how it ends | application, per task | a run is a stretch from a `mask` call to the `unmask` call that ends it, or to the job's completion when no `unmask` does. The application says which. `CS_{i,r}^app` is the most the task's own code executes inside the run, and `n_{r,p}` counts the calls to each primitive inside it, other than the `mask` and `unmask` that delimit it |
+| the order among sources | `ahead(x)` for two sources | plan | a strict order over the declared sources, the interrupt controller's as the plan configures it: its priorities, with its own rule for ties |
+| where the timer stands | `ahead(x)` between the timer and a source | catalog: hardware fact `external-before-timer` (§2) | `yes`: every source is taken before the timer when both are pending; `no`: the timer before every source |
+
+`ahead(x)` is every interrupt taken before `x` when both are pending.
 
 The runtime API a task calls today (`crates/rt-core`, `Scheduler`) is `mask` and `unmask`, and its completion
-path is `complete` followed by `decide`. The primitives are whatever the runtime API record's contract lists. A
-task that calls one the catalog does not cost cannot be composed (§5).
+path is `complete` followed by `decide`. The primitives are whatever the runtime API record's contract lists.
 
 The parts the catalog already supplies keep their names: `ρ` `compare-rounding`, `δ` `delivery`, `S` `switch`,
 `W_wake` `wake`, `C_rel` `timer-service`, and `C_s` `service.<source>` with its `no-application-code` fact.
 
-### 2. The composition
+### 2. What the composition assumes
+
+The composition is sound only on a platform where the following hold. Each is a catalog fact, with a `code`
+locator for a code fact (§12 of the catalog record). A fact declared `no` puts the platform outside what the
+composition covers: `unsupported-profile`, naming it. A fact that cannot be read leaves the composites undeclared:
+`analysis-inconclusive`, naming it.
+
+| Fact | Kind | Says | Why the composition needs it |
+| --- | --- | --- | --- |
+| `reprograms-only-in-service` | code | the compare is written only by the timer service, after its due check, and during initialisation | a late write then lands inside a service, whose time `L` already holds |
+| `releases-after-initialisation` | code | every nominal release is at or after the end of initialisation, the first unmask of the running system | initialisation's masked run, and its compare write, are then over before any release they could delay |
+| `pending-taken-after-unmask` | hardware and code | a pending interrupt is taken before the instruction that follows any unmask, a task's included | two masked runs separated by an unmask stay separate. RISC-V's privileged specification requires interrupt conditions to be evaluated immediately after an explicit write to `mstatus` or `mie` |
+| `releases-never-latched` | code | no service runs while the runtime's mask depth is raised: the port masks the hardware before raising it, and lowers it before unmasking the hardware | `rt-core` latches a release that arrives while the depth is raised and delivers it on `unmask`. On the target that path is then never taken, so no `unmask` makes a task ready and no part has to charge the decision and switch that would follow |
+| `primitives-out-of-line` | code | each primitive is compiled out of line, and its masking and unmasking instructions are compiler barriers | a call's boundaries, and a run's, are then instructions. The compiler cannot move the task's own code into a primitive or across a masking instruction |
+| `external-before-timer` | hardware | whether the hardware takes a pending external interrupt before a pending timer interrupt, however the controller is configured | the timer's place in the order is the hardware's, not the plan's. RISC-V takes machine external interrupts before machine timer interrupts |
+| `every-source-external` | hardware | every declared source reaches the processor as an external interrupt through one controller, whose priorities the plan sets | the order among sources is then the plan's. A platform-defined local interrupt, or a priority scheme that places the timer among the controller's sources, is outside it |
+
+**Boundaries the catalog's costs keep:**
+
+- **Delivery ends where a service begins.** `δ` bounds two latencies, added together: from the arrival or compare
+  match to the interrupt being pending, and from its being pending and unmasked to the processor taking the trap.
+  `C_rel` and `C_s` begin when the trap is taken. So everything masked after the processor commits to the trap is
+  inside a service, where `L` counts it. For the variant's own use, this `δ` is at least the δ it defines, which
+  keeps its floors safe.
+- **Where `switch` ends.** It ends at the incoming context's first instruction: the job's first instruction of its
+  own code for a transition in, and the resumed instruction for a return to a preempted job.
+- **From any entry state.** Each part cost's `holds-under-preemption yes` means its bound also holds from any state
+  the code before it leaves. The application's condition-8 declaration for its own figures says the same of them.
+
+### 3. The composition
 
 Exact integers, in the variant's unit, rounded as its §1 rounds. Every sum and product is checked.
 
 ```text
 C_i  = C_i^app + Σ_p n_{i,p} · api.p + completion
 
-CS_i = max( max_r ( CS_{i,r}^app + api.mask + api.unmask + Σ_p n_{r,p} · api.p ),
+CS_i = max( max_{r ending at unmask}     ( CS_{i,r}^app + api.mask + Σ_p n_{r,p} · api.p + api.unmask ),
+            max_{r ending at completion} ( CS_{i,r}^app + api.mask + Σ_p n_{r,p} · api.p + completion ),
             max_{p : n_{i,p} > 0} masked.p,
             masked.completion )
 
@@ -78,54 +112,60 @@ n_q(Δ)  = Σ_{k released by the timer} ⌈(Δ + J_k) / T_k⌉      for the time
 
 and then:
 
-- `J_i^release = Δ_timer` for every task the timer releases;
+- `J_i^release = Δ_timer` for every task the timer releases. With no such task, `Δ_timer` is not computed, and the
+  timer counts nothing ahead of any source;
 - `J_s = Δ_s` for every source;
 - `J_i^release = J_s` for a task released by source `s`, whose nominal release is the arrival.
 
-`Δ_x` needs only `J_q` for `q` ahead of `x`. So computing the interrupts in the plan's order, first taken first,
-never needs a value that is not yet known.
+`Δ_x` needs only `J_q` for `q` ahead of `x`. So computing the interrupts in order, first taken first, never needs a
+value that is not yet known.
 
 **The iteration** starts at `B_x`. Each step either reaches the fixed point or grows by at least one unit. It stops
-in four ways:
+without a value in four ways:
 
-- when `Σ_{q ∈ ahead(x)} (δ + C_q + S) · r_q ≥ 1`, compared exactly in reduced rationals, where `r_q` is `1/T_q`
-  for a source and `Σ_k 1/T_k` for the timer. There is then no fixed point, since what queues ahead of `x` can
-  arrive at least as fast as it is served. This is checked before iterating;
-- when `Δ` passes the value past which the variant must refuse anyway. For a source that is `T_x`, since
-  condition 7 needs `J_s < T_s`. For the timer it is the largest `T_k` of a timer-released task, past which every
-  such task meets the variant's busy-period stop;
-- when a value overflows;
-- after 1 000 000 steps.
+- **No fixed point.** When `Σ_{q ∈ ahead(x)} (δ + C_q + S) · r_q ≥ 1`, compared exactly in reduced rationals, where
+  `r_q` is `1/T_q` for a source and `Σ_k 1/T_k` for the timer. What queues ahead of `x` can then arrive at least as
+  fast as it is served. This is checked before iterating.
+- **Past the refusal bound,** beyond which the variant must refuse anyway:
+  - for a source, its no-loss limit from condition 7: `T_s` when it is acknowledged at entry, and `T_s − C_s − S`
+    when it is acknowledged at exit;
+  - for the timer, the largest `T_k` of a timer-released task, past which every such task meets the variant's
+    busy-period stop.
+- **An overflow.**
+- **A limit:** 1 000 000 steps, or an exact sum of the pre-check that does not fit a 128-bit numerator and
+  denominator.
 
-§5 gives each stop its verdict.
+§6 gives each stop its verdict. **A stopped interrupt has no value**: no iterate is ever passed on as one. Every
+interrupt behind it needs its `J`, so none of them is composed either, and each is named under the stop.
 
-### 3. Why none of it under-charges
+### 4. Why none of it under-charges
 
 **`C_i`.** The variant's `C_i` is everything the job executes from its transition in up to the decided switch that
 follows its completion, services excluded.
 
 - **The parts partition it.** Every instruction in that span is the task's own code, is inside a primitive call
-  (at most `n_{i,p}` calls to each `p`), or is on the completion path, and the parts meet at points with nothing
-  between them. Those points are each call and return, the job's last instruction of its own code, and the end of
-  the transition in. The catalog defines `switch` to end at the job's first instruction of its own code (§4 below).
+  (at most `n_{i,p}` calls to each `p`), or is on the completion path. The parts meet at instructions with
+  nothing between them: each primitive's first and last instruction (`primitives-out-of-line`), the job's last
+  instruction of its own code, and the end of the transition in (§2).
 - **Instrumentation** lands in whichever part runs it.
 - **So the sum bounds it:** a sum of each part's maximum is at least the maximum of the sum.
-- **The sum is only a bound if each part's figure holds from whatever state the code before it left.** `γ`
-  charges state lost to a preemption, not state that the job's own earlier code disturbed. So this is each
-  part's own obligation:
-  - the catalog meets it through the part cost's `holds-under-preemption yes`, whose meaning §12 extends to "and
-    from any state the code before it leaves" for these costs;
-  - the application meets it for its own figures through its condition-8 declaration, extended the same way.
+- **The sum is only a bound if each part's figure holds from whatever state the code before it left.** `γ` charges
+  state lost to a preemption, not state that the job's own earlier code disturbed. So this is each part's own
+  obligation (§2, "from any entry state").
 
-**`CS_i`.** The variant's `CS_i` is the longest section the task executes masked. That is a maximum over sections,
-so the composition takes a maximum over the task's masked stretches, and each stretch is a sum of everything that
-runs inside it:
+**`CS_i`.** The variant's `CS_i` is the longest section the task executes masked. That is a maximum over
+sections, so the composition takes a maximum over the task's masked stretches, and each stretch is a sum of
+everything that runs inside it:
 
-- **An application run** holds its own code, the rest of `mask` after it masks and the start of `unmask` before it
-  unmasks, and every primitive called inside the run, each counted whole. Charging `mask` and `unmask` whole
+- **A run ending at `unmask`** holds the rest of `mask` after it masks, the task's own code, every primitive called
+  inside the run, and the start of `unmask` before it unmasks. `mask` and `unmask` are charged whole, which
   over-covers.
-- **The runs the application declares are all its runs.** The fourth task fact, that no task masks except through
-  the runtime API, makes its masked runs exactly its `mask`…`unmask` stretches.
+- **A run ending at completion** holds the same, but in place of `unmask` it holds the completion path, masked up
+  to the decided switch. `L`'s `+ S` then covers the switch.
+- **The runs the application declares are all its runs,** for three reasons:
+  - the fourth task fact makes its masked stretches start only at a `mask` call;
+  - `pending-taken-after-unmask` keeps stretches split by an `unmask` apart;
+  - a stretch not ended by an `unmask` ends at completion.
 - **A kernel section the task runs while unmasked** is inside one call, and is bounded by `masked.p`, or by
   `masked.completion` on the completion path.
 - **A primitive that unmasks inside an application's run** would split the run into shorter ones. The composition
@@ -133,70 +173,96 @@ runs inside it:
 
 **`J_i^release` for a timer-released task, and `J_s`.** Take nominal release `t`.
 
-1. **The compare fires by `t + ρ`**, because it rounds up and has level semantics. From then the timer interrupt is
-   pending.
-2. **At that instant at most one masked stretch is in progress, and what remains of it is at most `L`.** Condition
-   5 makes the stretches separate: a pending interrupt is taken before the resumed context executes an instruction,
-   and every transition ends unmasked.
-3. **When that stretch ends, pending interrupts are taken back to back, in the plan's order, before any task runs
-   an instruction.** So until the timer's service starts, only these run:
+1. **The compare matches by `t + ρ`**, because it rounds up and has level semantics. `releases-after-initialisation`
+   puts `t` after initialisation, and `reprograms-only-in-service` puts every later compare write inside the timer
+   service.
+2. **When the interrupt becomes pending and unmasked, at most one masked stretch is in progress, and what remains
+   of it is at most `L`.** Stretches are separate:
+   - a pending interrupt is taken before the instruction after any unmask (`pending-taken-after-unmask`);
+   - it is taken before a resumed context executes an instruction (condition 5);
+   - every transition ends unmasked (condition 5).
+
+   Once the processor commits to a trap, what follows is a service (§2's boundary), so the stretch in progress
+   is a task's, a service's with its transition, or the idle wake, each within `L`.
+3. **When that stretch ends, pending interrupts are taken back to back, in order, before any task runs an
+   instruction.** So until the timer's service starts, only these run:
    - the services of interrupts ahead of the timer, each preceded by its delivery `δ` and followed by at most one
      transition `S`;
    - then the timer's own delivery `δ`.
+
+   No release is latched on the way (`releases-never-latched`), so no `unmask` does a service's work.
 4. **Services of `q` that start in the window come from arrivals at most `J_q` before it,** so there are at most
    `⌈(Δ + J_q)/T_q⌉` of them.
-   - When the timer is ahead of a source, each timer service releases at least one task (no early release; raised
-     only when due). So there are no more timer services than releases, `Σ_k ⌈(Δ + J_k)/T_k⌉`.
-5. **A compare written late is written inside the timer service** (`reprograms-only-in-service`). So its lateness
-   is inside the `C_rel + S` that `L` already holds.
+   - For the timer ahead of a source, each timer service maps to the release that was due when its interrupt was
+     raised (raised only when due). That release's nominal instant lies at most `J_k` before the service starts.
+     So there are no more services than such releases, `Σ_k ⌈(Δ + J_k)/T_k⌉`.
+5. **A compare written late is written inside the timer service**, so its lateness is inside the `C_rel + S` that
+   `L` holds.
 
-The least fixed point is therefore the most by which the service can start. The same argument without `ρ` gives
-`J_s`. Condition 7's floors hold by construction, since `Δ_x ≥ B_x`.
+The least fixed point is therefore an upper bound on how late the service can start. The same argument without
+`ρ` gives `J_s`. Condition 7's floors hold by construction, since `Δ_x ≥ B_x`.
 
 **Charged twice, and declared conservative** (the variant's §3 records its own the same way):
 
 - services queued ahead are counted in `J` and again in `w`, the variant's last listed deviation;
 - `mask` and `unmask` are charged whole inside a run;
 - a transition `S` is charged after every queued service, whether it switched or not;
-- the timer is counted once per release, not once per service.
+- the timer is counted once per release, not once per service;
+- `δ` includes the latency before an interrupt is pending, which the variant's own `δ` does not.
 
-### 4. What the catalog's §12 gains
+### 5. What the catalog's §12 gains
 
-- The timing costs `api.<p>` and `masked.<p>` for each primitive a task can call, and `completion` and
-  `masked.completion`. Each comes from the record that supplies the runtime API, and is image-specific, like
+- **Timing costs** `api.<p>` and `masked.<p>` for each primitive a task can call, and `completion` and
+  `masked.completion`. Each comes from the record that supplies the runtime API, and each is image-specific, like
   `switch`.
-- The behavioral code fact `reprograms-only-in-service`, from the record that supplies `timer-service`.
-- **Boundaries.** `switch` ends at the job's first instruction of its own code, and `completion` begins after its
-  last.
-- **What these costs' `holds-under-preemption yes` means:** the bound also holds from any state the code before
-  it leaves.
+- **Code facts** `reprograms-only-in-service` and `releases-after-initialisation`, from the record that supplies
+  `timer-service`; and `releases-never-latched` and `primitives-out-of-line`, from the record that supplies the
+  runtime API.
+- **The fact `pending-taken-after-unmask`**, from the record that supplies the platform's other interrupt facts.
+- **Hardware facts** `external-before-timer` and `every-source-external`.
+- **§2's boundaries:** where delivery ends and a service begins, and where `switch` ends.
+- **What these costs' `holds-under-preemption yes` means:** the bound also holds from any state the code before it
+  leaves.
+- **The application's task facts gain** the same entry-state statement for its own figures, and, for each masked
+  run, how it ends.
 
-Until §12 names them, nothing supplies them, and the composite stays the caller's. This record names what §12
-gains; that record's own review checks the wording it takes.
+This record names what §12 gains; the catalog record's own review checks the wording it takes.
 
-### 5. What the variant receives, and when composition fails
+### 6. What the variant receives, and when composition fails
 
 - **The variant receives the composed values, never the parts.** Its §1, §2 and §4 read them unchanged.
 - **The conclusion names each composed input with its parts, their owners and their evidence categories.**
-  - The composed value's category is the weakest of its parts', in §7.3's order: analytically established, then
-    externally supplied, then observed maximum, then assumed.
-  - An observed maximum with a safety factor remains an empirical assumption (§7.3).
-- **A part that cannot be read makes its composite undeclared.** That covers a name no record supplies, an
-  `unknown`, a cost outside its `holds-for`, a primitive the catalog does not cost, and no strict order from the
-  plan. It is the variant's `analysis-inconclusive`, with the part named. §12's rule for a value it could not read
-  applies unchanged.
-- **The four stops of §2:**
-  - no fixed point, or an overflow: `not-established`, naming the interrupt. These are the variant's own verdicts
-    for utilisation at or above one and for overflow;
-  - passing the refusal bound: the value that passed it is handed to the variant, whose condition 7 or
-    busy-period stop refuses it with its own verdict;
-  - the step budget: `analysis-inconclusive`, a named resource limit.
+  - **The composite's category is the weakest of its parts' categories.** The order runs, from strongest:
+    analytically established, externally supplied, observed maximum, assumed. `ROADMAP.md` §7.3 lists the four
+    categories without ranking them, so the order is this record's choice. The catalog record leaves evidence
+    strength to the analysis to state (its §7).
+  - §7.3's rule stands: an observed maximum with a safety factor remains an empirical assumption "unless a valid
+    argument establishes a bound".
+  - The description's periods and jitters and the plan's order are requirements and configuration, not evidence.
+    They carry no category and lower none.
+- **A part or fact that cannot be read** makes the composites that need it undeclared. That covers a name no record
+  supplies, an `unknown`, a cost outside its `holds-for`, a primitive the catalog does not cost, and a plan with no
+  order among its sources. It is the variant's `analysis-inconclusive`, with the part named. §12's rule for a value
+  it could not read applies unchanged.
+- **A declared value outside what the composition covers** is `unsupported-profile`, as the variant's §5 treats one
+  outside `/1`. That covers a §2 fact declared `no`, and a plan whose order among sources is not strict.
+- **The stops of §3:**
+  - **For a source:** no fixed point, an overflow, or passing its no-loss limit. Each means `J_s` cannot be bounded
+    below the limit, which is condition 7's no-loss failure, so the verdict is `unsupported-profile`, naming the
+    source;
+  - **For the timer:** no fixed point, an overflow, or passing the largest `T_k`. Each is the variant's own
+    `not-established`, which it gives for utilisation at or above one and for overflow;
+  - **A limit:** the step budget, or the pre-check's sum outside 128 bits. Each is `analysis-inconclusive`, a named
+    resource limit, as in the variant;
+  - every interrupt behind a stopped one is named under the stop, with no value.
+- **A caller-supplied `C_s`** (§7) does not stop the composition. The composites built on it through `L` and the
+  queue are composed, and the conclusion names the caller's figure as such.
 - **Production claims.** Every application part is an application input, so a claim that rests on a composite
   stays `not-established` for a production claim until `M4` gives application inputs their own evidence rules
-  ([[decision_catalog-records]] §7). What composition changes is who supplies what: the caller then states only
-  the task's own figures, never a kernel or platform figure, and every kernel figure is a reviewed catalog cost.
+  ([[decision_catalog-records]] §7). What composition changes is who supplies what: the caller then states only the
+  task's own figures, never a kernel or platform figure, and every kernel figure is a reviewed catalog cost.
 
-### 6. What stays whole in `/1`
+### 7. What stays whole in `/1`
 
 - **`C_s` of a service that runs application code**, with no `no-application-code` fact, stays the caller's, as §12
   says. `rt-static-up-v1` runs deferred work as a declared task, so the runtime offers no way to run application
@@ -211,7 +277,11 @@ gains; that record's own review checks the wording it takes.
   definition: parts in sequence are added, alternatives are maximised, and everything that runs first is
   counted.
 - **One owner per part.** A kernel figure the application supplied would be unreviewed. An application figure the
-  catalog supplied would claim what no reviewer of the kernel saw.
+  catalog supplied would claim what no reviewer of the kernel saw. Where the hardware fixes something, such as the
+  timer's place among interrupts, the owner is the catalog's hardware fact, not the plan.
+- **The composition's assumptions are its own.** They sit in §2 and are checked when it runs, so the variant's
+  record and its code (`PlatformFacts`) stay as reviewed. A caller who supplies the four inputs whole is not held to
+  them. The caller's figures carry their own evidence, as before.
 - **Queued services as a fixed point, not one arrival each.** A source that arrives faster than the window is long
   would otherwise be under-counted.
 - **Rejected alternatives:**
@@ -221,23 +291,36 @@ gains; that record's own review checks the wording it takes.
     primitive call inside it: B3's under-charge.
   - **An extra `γ` at every primitive boundary instead of the entry-state obligation.** `γ` is defined per
     preemption, and its evidence would not cover a boundary.
-  - **A joint fixed point over interrupts with no order.** A strict order exists on the targets `/1` admits.
-    RISC-V's privileged specification takes machine external interrupts before timer interrupts, and the external
-    controller orders its sources. Without an order, the plan's input is missing, which is named rather than
-    guessed.
+  - **A joint fixed point over interrupts with no order.** A strict order exists on the platforms `/1` covers:
+    - RISC-V's privileged specification takes machine external interrupts before timer interrupts;
+    - the external controller orders its sources by the priorities the plan sets.
+
+    Without an order, the plan's input is missing, which is named rather than guessed.
+  - **Handing the variant an iterate that passed a refusal bound.** It is not a bound, and interrupts behind it
+    would be composed from it.
 
 ## How to apply
 
 - **The caller**, until `M2.10.2` implements this, still supplies the four inputs whole, as the variant's ownership
   note says. After it, the caller supplies only the application's parts, and the engine composes them.
 - **A new primitive** in the runtime API needs its `api.<p>` and `masked.<p>` costs in the catalog before any task
-  that calls it can be composed.
-- **A new kind of release, or nested interrupts,** is outside `/1`, in the variant as here.
+  that calls it can be composed. It must also be classified:
+  - whether it can return with interrupts masked, which would open a run;
+  - whether it can unmask, which would close one.
+
+  A primitive that does either needs this record's run definition extended before it is costed.
+- **A new kind of release, nested interrupts, or a source outside `every-source-external`** is outside `/1`, in the
+  variant as here.
 - Related:
   - [[decision_runtime-analysis-variant]]: its §1 names each composite and points here;
-  - [[decision_catalog-records]]: its §12 owns the catalog's parts.
+  - [[decision_catalog-records]]: its §12 owns the catalog's parts and facts.
 
 ## Review
 
-Pending: `M2.10.1`'s acceptance is a review by a context that did not write this record. It must show, or refute
-by counterexample, that no composite under-charges against the variant's §1 definitions.
+`M2.10.1`'s acceptance is a review by a context that did not write this record, finding no composite that
+under-charges against the variant's §1 definitions. The findings, and the answer to each, are in
+[`decision_runtime-composite-inputs-reviews.md`](../reviews/decision_runtime-composite-inputs-reviews.md).
+
+| Round | Findings | Defects | Verdict |
+| --- | --- | --- | --- |
+| 1 | 19 | 3 (K1, a job completing masked; K3, a compare written in initialisation; K5, inconsistent stop verdicts) | "Not acceptable as it stands" |
