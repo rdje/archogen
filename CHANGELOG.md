@@ -4,6 +4,24 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the README policy adopted at its source's revision, and the landing page's limits measured
+
+`ARCHOGEN-PROGRAM-0197` (leaf `PROGRAM.35.1`).
+
+- The policy that keeps `README.md` a short landing page is now the revision the director's standing instruction
+  names: fsmgen's `README_POLICY.md`, copied byte for byte and checked against its source, under a note that says
+  where it came from and who owns it here. The copy it replaces was an older version from the project template.
+- The landing page's size limits are now measured from the page itself: 110 lines and 6,144 bytes, about a third
+  more than the page holds today. Before, they were the template's defaults, 300 lines and 16,384 bytes, which
+  would have let the page nearly quadruple before anything noticed. Pushing the page one line or one byte past
+  its limit now fails the commit, as measured.
+- One sentence left the page, because the status board already says it in more detail: that the roadmap is
+  split into task trees and the discipline rules are enforced. The link to the status board stays.
+- Still to do (`PROGRAM.35.2`): the policy also asks that every place the README sends detail is itself kept
+  under control, so a size limit here cannot just push the growth into a neighbouring file. The changelog is
+  one such place.
+- This commit also adds the log rows the previous commit, the fourth artifact cleanup, left out of its task tree.
+
 ## archogen — the fourth artifact cleanup: 2.2 GB of build residue released
 
 `ARCHOGEN-PROGRAM-0196` (leaf `PROGRAM.19`, fourth run under the standing owner).

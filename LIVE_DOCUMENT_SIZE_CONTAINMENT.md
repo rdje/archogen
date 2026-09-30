@@ -23,7 +23,7 @@ Sizes are lines / bytes / longest line in bytes.
 | `MEMORY.md` — the resume pointer | `bounded_snapshot` | 41 / 3 980 / 705 | ≤ 50 lines and ≤ 7 168 bytes, by `MEMORY-ARCH`; no line-width bound | its "Closed today" line grows by one entry per closed leaf | done: chronology removed, longest line bounded (`PROGRAM.17.2`) |
 | `LIVE_STATUS.md` — the status board | `bounded_snapshot` | 21 / **42 110** / **30 256** | none | a closure note is appended to a tree's row for each closed leaf; one row holds 30 256 bytes | was **transition debt at adoption**; done: current state only, bounded on three axes (`PROGRAM.17.2`) |
 | `docs/TASK_TREE.md` — the tree index | `bounded_snapshot` | 73 / 7 199 / 1 158 | none | a "Closed" list inside each row grows per closed leaf | done: current state only, bounded (`PROGRAM.17.2`) |
-| `README.md` — the landing page | `bounded_snapshot` | 82 / 4 062 / 125 | ≤ 300 lines and ≤ 16 384 bytes, by `README-STABILITY` | none observed | retain; longest line bounded (`PROGRAM.17.2`) |
+| `README.md` — the landing page | `bounded_snapshot` | 82 / 4 062 / 125 | ≤ 110 lines, ≤ 6 144 bytes and ≤ 200 bytes per line, by `LIVE-SNAPSHOTS`; `README-STABILITY`'s template 300 / 16 384 is a backstop | none observed | retain; longest line bounded (`PROGRAM.17.2`); lines and bytes derived from the reviewed survivor (`PROGRAM.35.1`, `README_POLICY.md`) |
 | `CHANGELOG.md` | `rolling_ledger`, proposed | 3 428 / 277 796 / 185 | none | one entry per commit: 1 464 lines when `PROGRAM.17` was filed | **grow deliberately until the director rules** (`PROGRAM.17.3`); it is in no bootstrap read |
 | `DEV_NOTES.md` | `rolling_ledger`, proposed | 1 602 / 135 158 / 132 | none | one entry per lesson, each promoted to `docs/knowledge/` (`LESSON-PROMOTION`) | as for the changelog (`PROGRAM.17.3`) |
 | `docs/tasks/*.md` — 13 task trees | `partitioned_canonical`, one tree per file, the largest monolithic | 12 785 / 1 111 924 in aggregate; `M1.md` 6 928 / 658 307 / 2 524 | none | every leaf, checklist and log row | partitioning a tree changes what is browsed: put to the director (`PROGRAM.17.3`) |
@@ -39,8 +39,9 @@ Sizes are lines / bytes / longest line in bytes.
 The inclusive enforcement ceilings `LIVE-SNAPSHOTS` (`scripts/check_live_snapshots.sh`) holds. A file equal to a
 ceiling passes; one byte more fails. Each ceiling was set on `2026-09-30` from the reviewed survivor, after
 `PROGRAM.17.2` returned the file to current state, plus room for one ordinary change: a new tree's row, or a
-longer frontier sentence. A dimension another doctrine already owns is marked with that doctrine and not
-repeated here. Lowering a ceiling is free. Raising one needs a new decision record that shows the surface's
+longer frontier sentence. `README.md`'s lines and bytes were set the same way by `PROGRAM.35.1`, from the page
+that survived `README_POLICY.md`'s review, and replace the scaffold's template defaults. A dimension another
+doctrine already owns is marked with that doctrine and not repeated here. Lowering a ceiling is free. Raising one needs a new decision record that shows the surface's
 role grew; editing this table alone does not authorize it.
 
 | Surface | Lines | Bytes | Longest line | Survivor measured |
@@ -48,7 +49,7 @@ role grew; editing this table alone does not authorize it.
 | `LIVE_STATUS.md` | 32 | 4096 | 320 | 22 / 2 324 / 220 |
 | `docs/TASK_TREE.md` | 96 | 6144 | 320 | 73 / 4 469 / 189 |
 | `MEMORY.md` | MEMORY-ARCH | MEMORY-ARCH | 200 | 26 / 1 770 / 120 |
-| `README.md` | README-STABILITY | README-STABILITY | 200 | 84 / 4 203 / 125 |
+| `README.md` | 110 | 6144 | 200 | 84 / 4 173 / 125 |
 
 Two decisions are recorded rather than left to drift:
 

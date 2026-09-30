@@ -16,9 +16,8 @@ with their own contracts and acceptance evidence.
 
 ## Status
 
-Early. The roadmap is seeded into task-trees and the discipline spine is enforced; the
-engine is being built one milestone gate at a time. Nothing here claims a verified OS —
-see the assurance model in the roadmap before reading any result as a guarantee.
+Early. Nothing here claims a verified OS — see the assurance model in the roadmap before
+reading any result as a guarantee.
 
 Current progress: [`LIVE_STATUS.md`](LIVE_STATUS.md). Next action:
 [`MEMORY.md`](MEMORY.md).

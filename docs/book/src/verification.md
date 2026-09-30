@@ -522,7 +522,9 @@ something else. Each finished task appended a note to its area's row, until `LIV
 its tree's Commit Log and in `CHANGELOG.md`, so the rows were cut back to status, next task and any
 blocker, after checking that every task they mentioned had its own record. `LIVE-SNAPSHOTS` now
 bounds these pages, `MEMORY.md` and `README.md` on lines, bytes and longest line. The longest line is
-counted separately because a page can keep a short line count while one row grows without limit.
+counted separately because a page can keep a short line count while one row grows without limit. The
+landing page's limits were measured from the page itself, after a review against `README_POLICY.md`,
+rather than taken from the generous defaults the project's template started with.
 
 ```console
 $ bash scripts/check_live_snapshots.sh              # the gate
