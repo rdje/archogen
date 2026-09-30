@@ -11,7 +11,9 @@ times before it was accepted. Its code is being built in the `archogen-catalog` 
 reads a record and refuses what breaks the design's rules for a single file, and computes every hash the design
 defines, reproducing the worked example's 23 values. It also reads the catalog's lock and checks it against the
 records of one tree: a changed facet without a version bump, a version going backwards, a missing line, and a
-review line that disagrees with its review or was taken out of its record. The rest of the crate, the
+review line that disagrees with its review or was taken out of its record. Over a history given in memory, it
+holds the lock append-only, recomputes every commit's new lines as blessing would write them, verifies each review
+at the commit that ledgered it, and accepts a waiver only where §9 allows one. The rest of the crate, the
 gate, the check that protects it and the first records are the next leaves (`M2.7.3` to `M2.7.6`). Until they
 land, nothing loads a catalog, and `catalog/` is empty.
 
@@ -117,7 +119,8 @@ found them right.
 ## What it does not do yet
 
 - **Nothing loads a catalog.** `catalog/` is empty. The crate reads records, computes their hashes and checks the
-  lock against one tree so far; the lock over history, status and claims are the rest of `M2.7.3`.
+  lock, over one tree and over a history, so far; status and claims are the rest of `M2.7.3`, and the gate that
+  gives it the history is `M2.7.4`'s.
 - **The port's facts are unknown.** The architecture port is assembly, which no record can hold yet, so every
   analysis of the runtime variant over the catalog is inconclusive until `M2.12` gives the port's code a record
   format.

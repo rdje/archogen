@@ -11,14 +11,18 @@
 //!
 //! Built so far: [`record::read_record`], which reads one record and checks every rule of §1 and §2 that needs
 //! nothing but the file (`M2.7.3.1`); [`hash::Catalog`], which reads a tree's records and computes §3's hashes
-//! (`M2.7.3.2`); and [`lock`], which reads §9's lock and checks it against one tree's records (`M2.7.3.3.1`).
+//! (`M2.7.3.2`); [`lock`], which reads §9's lock and checks it against one tree's records (`M2.7.3.3.1`); and
+//! [`history`] and [`replay`], which check the lock over history: append-only, every new line recomputed commit by
+//! commit, each review verified where it was ledgered, and each waiver judged (`M2.7.3.3.2`).
 
 pub mod grammar;
 pub mod hash;
+pub mod history;
 pub mod lock;
 pub mod manifest;
 pub mod record;
 pub mod refusal;
+pub mod replay;
 pub mod tree;
 
 pub use record::{classify, read_record, CatalogPath, Namespace, Record};

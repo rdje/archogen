@@ -215,6 +215,16 @@ impl Lock {
     /// line that matches none of the lock's forms, an empty one or a last one without its line feed included; a line
     /// out of order, a repeated one included; and a second line for one review, sorted beside the first.
     pub fn parse(bytes: &[u8]) -> Result<Self, Refusal> {
+        Self::parse_under(bytes, &KNOWN_VERSIONS)
+    }
+
+    /// Read a lock's bytes as a loader that knows the rules versions `known` would: what a later loader, which knows
+    /// more than one, sees, and what a test of §9's never-decreasing first line needs, since this loader knows one.
+    ///
+    /// # Errors
+    ///
+    /// As [`Lock::parse`].
+    pub fn parse_under(bytes: &[u8], known: &[u64]) -> Result<Self, Refusal> {
         let refuse = |line: usize, message: String| {
             Refusal::new(
                 Code::LockReview,
@@ -262,7 +272,7 @@ impl Lock {
                 format!("`{first}` is not `# archogen-catalog/<version>`: nothing is verified under no version"),
             )
         })?;
-        if !KNOWN_VERSIONS.contains(&version) {
+        if !known.contains(&version) {
             return Err(refuse(
                 1,
                 format!("rules version `archogen-catalog/{version}` is not one this loader knows"),

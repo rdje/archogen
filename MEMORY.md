@@ -18,7 +18,7 @@
   `docs/TASK_TREE.md`.
 - **Next action:** `M2.10.1`'s round 10 is in review in a read-only context; answer it, and close the leaf on a
   round with no defect live for the `/1` slice. `M2.7.1` is closed. `M2.7.3`, the catalog crate, is under way:
-  `M2.7.3.3.2` (the lock over history) next, then `.4`–`.7`, `M2.7.6`, `M2.7.4`, `M2.7.5`, `M2.11`, then `API.6`.
+  `M2.7.3.4` (status and invalidation) next, then `.5`–`.7`, `M2.7.6`, `M2.7.4`, `M2.7.5`, `M2.11`, then `API.6`.
   `docs/decisions/` is near its cap.
 - **In flight:** branch **`wip/m2.9`** (`758cbcd`) is a checkpoint, not a finished leaf — `M2.9` records it as
   not compiling (`crates/rt-core/tests/differential.rs` unadapted).

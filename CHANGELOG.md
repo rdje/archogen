@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog checks its lock across history
+
+`ARCHOGEN-M2-0249` (leaf `M2.7.3.3.2`).
+
+- Given a project's history, the catalog now holds its lock to being append-only, recomputes every commit's new
+  lines exactly as blessing would have written them, and checks each review at the commit that first recorded it.
+  So a lock edited by hand is caught whether a line was dropped, changed or added, and a review that was wrong when
+  it was recorded is caught later, even if the local check was bypassed at the time.
+- The one repair §9 allows, a waiver, is accepted only for a recorded review that really fails where it was
+  recorded, named at the commit that recorded it.
+
 ## archogen — the catalog reads its lock and checks it against the records
 
 `ARCHOGEN-M2-0248` (leaf `M2.7.3.3.1`).
