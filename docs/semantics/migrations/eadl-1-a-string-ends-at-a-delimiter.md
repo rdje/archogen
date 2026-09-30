@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-09-30
 - leaf: M1.37 (`docs/tasks/M1.md`)
-- status: pending
+- status: applied
 - constructs: docs/semantics/reference.md#diagnostics
 - invalidates: a description with a string followed directly by a symbol character; the tracked corpus holds one, a bug report's evidence file, and no system description
 
