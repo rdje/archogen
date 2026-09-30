@@ -5,6 +5,24 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the decisions folder's sealing check, hardened after its review
+
+`ARCHOGEN-PROGRAM-0238` (leaf `PROGRAM.41.1`; filed by `ARCHOGEN-PROGRAM-0236`).
+
+- An independent review confirmed the first seal of four settled findings: every file is exactly what the register
+  held, and nothing was lost. It also found the check not yet safe for more seals. A particular kind of git merge
+  could hide a seal from it, after which the settled text could be edited unseen. And its reading of code blocks
+  was simple enough that a seal could take a live section with it.
+- Both are fixed, along with sixteen smaller findings. The check reads the whole history, whatever a merge did. It
+  reads code blocks as Markdown does. It refuses a shallow copy of the repository, and undoes a seal completely
+  whenever it refuses one.
+- Each of its 54 test cases was proven by breaking the rule it guards and watching that case fail. One of 42 such
+  breaks goes unnoticed, and the review file says why: no construction reaches it that another rule does not
+  catch first.
+- The two older sealing checks read history the same way; `PROGRAM.42` tries the same merge on them next.
+- The catalog's fourteenth review and the composition's seventh have not run: their launch stopped at once on the
+  account's weekly usage limit.
+
 ## archogen — the catalog's thirteenth review and the composition's sixth are answered
 
 `ARCHOGEN-M2-0237` (leaf `M2.7.1`, a twelfth checkpoint; with `M2.10.1`'s seventh). Before it, `ARCHOGEN-M2-0235`

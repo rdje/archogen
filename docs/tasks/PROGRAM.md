@@ -812,7 +812,7 @@ mdBook that is the director's window into the project.
     `MEMORY.md`, `CHANGELOG.md`.
 
 - ID: `PROGRAM.41`
-  Status: `active` — reopened `2026-09-30` by its independent review; `PROGRAM.41.1` hardens the gate
+  Status: `done`
   Goal: the next compaction of `docs/decisions/`, named by `docs/decisions/decision_decisions-folder-ceiling.md`. The
   findings register's settled items, §2, §4, §8 and §10, about 9.7 KB, are sealed out of it the way closed leaves
   are: moved byte for byte, with a stub per item keeping its section number, since the numbers are cited across the
@@ -854,7 +854,7 @@ mdBook that is the director's window into the project.
 
 
 - ID: `PROGRAM.41.1`
-  Status: `active`
+  Status: `done`
   Goal: `DECISION-HISTORY` hardened after its independent review (`2026-09-30`), which accepted the first seal as
   correct and lossless and found the gate not yet sound enough to seal more. Its findings, D1–D18, and the answer to
   each are in `docs/reviews/decision-history-reviews.md`. The two it names first:
@@ -864,8 +864,36 @@ mdBook that is the director's window into the project.
   Acceptance: each finding answered in the script, its header or the records; a RED arm for each construction the
   review gave, each failing for its stated reason; every leg the review's mutation matrix found unarmed armed, or
   said why it cannot be; the gate and every self-test green.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the checklist.
+  Commit: `ARCHOGEN-PROGRAM-0238 (leaf PROGRAM.41.1)`
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE** — each defect the review built, rebuilt as an arm and run against the gate with the fix
+    mutated out on a copy (`target/tmp/p411/mutate.py`): without `--full-history` on the rows read, the `-s ours`
+    merge passes (`decision-history self-test: 53 pass / 1 fail (54 arms)`); with backtick-only fences, a tilde
+    fence's `## ` line is sealed (`53 pass / 1 fail`); with any closing run accepted, a fence holding a shorter one
+    tears the section (`52 pass / 2 fail`).
+  - [x] **ROOT CAUSE** — `git show 4973e33:scripts/check_decision_history.sh | grep -n 'git("log"'` shows both
+    history reads without `--full-history`, so git's default simplification follows one side of a merge that is
+    TREESAME to it and never visits the seal. The same file's `sections()` toggled a fence on any line starting
+    with three backticks, so a longer fence, or a tilde one, was misread. The rest were legs with no arm and limits
+    left unsaid.
+  - [x] **FIX** — the gate rewritten: `--full-history` on both reads; CommonMark fences; the seal refusing a section
+    with another `## ` line or ending inside a fence, a record with a carriage return or no final newline, a
+    malformed or repeated number; rollback on any refusal; a shallow repository and a failed history read refused;
+    the index's header, every stub line outside a fence, and the row's date checked; the folder listed by git; the
+    honest limits stated. `.gitattributes` keeps the folder from line-ending conversion.
+  - [x] **ADDRESSED** — `bash scripts/check_decision_history.sh --self-test` → rc=0, `decision-history self-test: 54
+    pass / 0 fail (54 arms)`; the mutation matrix → 41 of 42 mutations turn an arm red, the 42nd the added-files
+    read whose only construction the rows leg refuses first; `bash scripts/check_decision_history.sh` → rc=0,
+    `decision-history: OK (4 sealed section(s) …)`.
+  - [x] **NO REGRESSION** — `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`;
+    `bash scripts/run_self_tests.sh` → rc=0, `self-tests: OK — 37 self-test(s) passed`. The first seal is unchanged;
+    no held file changed.
+  - [x] **LOCKSTEP** — `docs/reviews/decision-history-reviews.md` and its index row, `DOCTRINE_ENFORCEMENT.md`,
+    `docs/decisions/decision_decisions-folder-ceiling.md`, `LIVE_DOCUMENT_SIZE_CONTAINMENT.md`, `.gitattributes`;
+    this leaf, the frontier and both logs; `LIVE_STATUS.md`, `docs/TASK_TREE.md`, `MEMORY.md`, `CHANGELOG.md`.
+
 
 - ID: `PROGRAM.42`
   Status: `pending`
@@ -941,10 +969,9 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.41.1` | `active` | `DECISION-HISTORY` hardened after its review: a seal hidden behind a merge (D1), a fence model that can seal a live section (D2) |
-| 2 | `PROGRAM.42` | `pending` | the same merge construction tried on `TASK-HISTORY` and `HISTORY-LEDGERS` |
-| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
-| 4 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
+| 1 | `PROGRAM.42` | `pending` | the same merge construction tried on `TASK-HISTORY` and `HISTORY-LEDGERS` |
+| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 3 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
@@ -1091,6 +1118,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.40` | a committed forgery in a scratch repository; the self-test; a mutation; the real ledgers; the enforcer and every self-test | refused; 15 of 15; the arm red when mutated; OK; all green, 35 of 35 |
 | `2026-09-30` | `PROGRAM.39` | the folder measured; the records moved and every path rewritten; `DECISION-INDEX` and `README-ROUTES` with their self-tests; the crate's tests; every self-test; the enforcer | 358 185 before; no stale path left; 5 of 5 and 20 of 20; 34 passed; 36 of 36; all green |
 | `2026-09-30` | `PROGRAM.41` | the folder measured at `b8448c6`; the seal with its reconstruction proof; the gate and its self-test; four mutations on a copy; `README-ROUTES` with the new row; every self-test; the enforcer | 376 904 before, 368 643 after; `02 04 08 10, 9745 bytes`; `20 pass / 0 fail`; each mutation red on its own arm, the proof reached by none; all green |
+| `2026-09-30` | `PROGRAM.41.1` | the gate rewritten against the review's D1–D18; its self-test; a matrix of 42 mutations on a copy; the real history; every self-test; the enforcer | `54 pass / 0 fail`; 41 of 42 red, the 42nd unreachable apart from the rows leg; `decision-history: OK (4 sealed section(s) …)`; 37 self-tests passed; all green |
 
 ## Commit Log
 
@@ -1162,6 +1190,8 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.40` | `ARCHOGEN-PROGRAM-0229 (leaf PROGRAM.40)` | **the history ledgers checked across history**, so CI catches a committed forgery as the hook does |
 | `PROGRAM.39` | `ARCHOGEN-PROGRAM-0230 (leaf PROGRAM.39)` | **the decisions folder partitioned**: the catalog design in `docs/decisions/catalog/`, `DECISION-INDEX`, partition-aware `README-ROUTES` and its cap table |
 | `PROGRAM.41` | `ARCHOGEN-PROGRAM-0234 (leaf PROGRAM.41)` | **settled sections sealed out of the decisions folder**: the findings register's §2, §4, §8 and §10 in `docs/decision-history/`, each heading kept above its stub; `DECISION-HISTORY`; opened by `ARCHOGEN-PROGRAM-0232` |
+| `PROGRAM.41.1` | `ARCHOGEN-PROGRAM-0236 (leaf PROGRAM.41.1)` | the review filed as work: `PROGRAM.41` reopened, `PROGRAM.41.1` and `PROGRAM.42` filed |
+| `PROGRAM.41.1` | `ARCHOGEN-PROGRAM-0238 (leaf PROGRAM.41.1)` | **`DECISION-HISTORY` hardened**: `--full-history`, CommonMark fences, rollback on any refusal, shallow clones refused, 54 arms each proven by a mutation; `PROGRAM.41` closed again |
 
 ## Changelog
 

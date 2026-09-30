@@ -104,7 +104,9 @@ days, not a lasting allowance. That is why the partition is opened now, with a w
   named, done by `PROGRAM.41` on `2026-09-30` as the folder neared 380 000 bytes. Each moved byte for byte into
   `docs/decision-history/`, and its heading stayed in the register above a one-line stub, so every citation of its
   number still finds it. `DECISION-HISTORY` proves each move against the register as it stood before the seal, and
-  holds the sealed files unchanged across history. Sealing is compaction, not a raise: the ceilings stay.
+  holds the sealed files unchanged across history. Sealing is compaction, not a raise: the ceilings stay. Which
+  sections are settled is the sealing leaf's judgement, which nothing checks, so sealing is a route around the
+  ceiling that only review guards.
 - Related: `README_POLICY.md` (the row), `LIVE_DOCUMENT_SIZE_CONTAINMENT.md` (the inventory row),
   [[decision_findings-for-director-review]] §10 (the hold), [[decision_history-ledgers]].
 
