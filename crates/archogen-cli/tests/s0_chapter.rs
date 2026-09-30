@@ -17,6 +17,7 @@
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 
 use archogen_cli::run;
 
@@ -49,7 +50,16 @@ fn measured_descriptions() -> BTreeSet<String> {
 }
 
 /// Every file `archogen build` writes for the base description, relative to its output directory.
-fn measured_emitted_files() -> BTreeSet<String> {
+///
+/// ⛔ Built **once** per test binary. Two tests called this, and tests run in parallel: while each removed and
+/// rebuilt the same directory, one walked it as the other deleted it — `arm_5` failed 4 runs in 40, measured
+/// after `S0.8`'s commit. A shared measurement belongs in a `OnceLock`, not in a directory both reset.
+fn measured_emitted_files() -> &'static BTreeSet<String> {
+    static EMITTED: OnceLock<BTreeSet<String>> = OnceLock::new();
+    EMITTED.get_or_init(build_and_list)
+}
+
+fn build_and_list() -> BTreeSet<String> {
     let dir = Path::new(env!("CARGO_TARGET_TMPDIR")).join("s0-chapter");
     let _ = std::fs::remove_dir_all(&dir);
     let (mut out, mut err) = (Vec::new(), Vec::new());
@@ -224,7 +234,7 @@ fn file_violations(chapter: &str, emitted: &BTreeSet<String>) -> Vec<String> {
 #[test]
 fn the_chapter_states_what_the_corpus_and_the_build_measure() {
     let mut wrong = description_violations(CHAPTER, &measured_descriptions());
-    wrong.extend(file_violations(CHAPTER, &measured_emitted_files()));
+    wrong.extend(file_violations(CHAPTER, measured_emitted_files()));
     assert!(
         wrong.is_empty(),
         "{} way(s) the S0 chapter disagrees with what it describes:\n\n{}",
@@ -305,7 +315,7 @@ fn arm_4_a_chapter_that_stops_counting_is_reported_rather_than_skipped() {
 #[test]
 fn arm_5_the_file_figure_and_table_follow_the_build() {
     let emitted = measured_emitted_files();
-    assert!(file_violations(CHAPTER, &emitted).is_empty());
+    assert!(file_violations(CHAPTER, emitted).is_empty());
     let fewer: BTreeSet<String> = emitted
         .iter()
         .filter(|f| *f != "provenance.json")

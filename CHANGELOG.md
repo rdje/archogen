@@ -4,6 +4,14 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the S0 chapter's test no longer races itself
+
+`ARCHOGEN-S0-0154` (leaf `S0.8`, follow-up).
+
+- The new S0 chapter test failed about one run in ten. Two of its tests rebuilt the same directory at the same
+  time. It now builds once and shares the result, and it passed 60 runs out of 60. A search of the other test
+  suites found no other directory shared that way.
+
 ## archogen — a book example is known by what it shows, not where it sits
 
 `ARCHOGEN-PROGRAM-0153` (leaf `PROGRAM.33`).

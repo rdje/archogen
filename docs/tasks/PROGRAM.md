@@ -2249,7 +2249,9 @@ mdBook that is the director's window into the project.
     ```
   - [x] **NO REGRESSION** — the real book still passes, every checked transcript still compared exactly:
     `cargo test -q -p archogen-cli --test book_transcripts` → `test result: ok. 6 passed; 0 failed`, the main test among
-    them; the whole suite at the commit.
+    them. ⚠️ Corrected after the commit: this box first said "the whole suite at the commit", which had not been run.
+    Run afterwards, it gave `636 passed, 1 failed` — a race in `S0.8`'s new gate, not in this leaf, fixed by
+    `ARCHOGEN-S0-0154`; three runs after the fix, `637 passed, 0 failed` each.
   - [x] **LOCKSTEP** — `verification.md`'s transcript section says how an entry is named, and why.
 
 - ID: `PROGRAM.9`
