@@ -356,6 +356,33 @@ with no merge) and put premise 3's hosting settings to the director (findings §
 | J17 | nit | rebase, cherry-pick, `am` and revert run no hook | said so; CI's replay decides (§4) |
 | J18 | nit | a caller's `C_s` against the grouped source facts | every declared source needs a record anchoring its service (§12; the composition record's §6) |
 
+**Round 11**, `2026-09-30`: all 23 values matched by two routes, and every measured claim about the tree was true,
+among them 617 tracked paths, the pin, `cargo metadata`'s 11 packages, and `origin/main` still the initial commit.
+§3–§9 held again. J2–J6, J8 and J10–J18 were closed, and J1, J7, J9 and J16 partial. There were 14 findings, 2 of
+them latent defects, both of round 10's class, a value or an "only" whose truth rests on code no review of it sees.
+The verdict was "cannot be accepted as it stands". The reviewer noted that all three blockers are latent until a
+board or `M4`, and could be accepted as stated limits. The answering context set the leaf's closure rule accordingly
+(`M2.7.1`, "The closure rule"), and answered every finding. §13 moved to its own record in the same change.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| J1, J9, J16 | partial | through Q1–Q2, Q10 and Q13 | as those rows |
+| J7 | partial, fails closed | through Q6 | as Q6 |
+| Q1 | defect, latent | `compare-rounding` was in no group, so its value was tied to no code, though the timer service's code does the rounding | it joins the `timer-service` group; `independent` stays open on a board, with its review citing that code (§12) |
+| Q2 | defect, latent | "only the timer releases timer tasks" rested on one record's code while `release` is public | the self-statement covers releases by role, and the application's task fact that no application code releases a task or calls a runtime function beyond the API's primitives (§12; the composition record's §2) |
+| Q3 | gap, latent | reached packages compiled into an image were covered by no statement | the statement covers every package of a record's implementation's own and reached sets (§12) |
+| Q4 | gap, fails closed | in `/1` no record can hold the port's assembly, so its facts can only be `unknown` | stated in §13, with `M2.12` owning the record format that lifts it |
+| Q5 | gap | today's rules re-applied to all history with no version | the lock's first line names the rules, `# archogen-catalog/1`; each ledgering commit is verified under the version it was ledgered under (§5) |
+| Q6 | gap, fails closed | a pull request can empty its own required check; no start commit for premise 3; a bad line is irreparable | the checks pinned to the CI app and their definitions protected from the pull request; premise 3 holds from a named commit; the irreparable line stated in §13 (§0, §7) |
+| Q7 | ambiguity | the self-statement's roles had no initialisation | initialisation's roles before the first unmask (the composition record's §2) |
+| Q8 | ambiguity | "a hardware fact is in no group" against `external.<source>` | the exception named (§12) |
+| Q9 | ambiguity | §12's "whose implementation the claim reads"; the fixed point | the composition record's wording, and the fixed point stated (§12) |
+| Q10 | ambiguity | answers item by item against one covering review | a single review covering every item (§5) |
+| Q11 | nit | "checked once, when it is ledgered" against the loader's re-check | checked against the ledgering commit by every reader (§5) |
+| Q12 | nit | "did not compile its packages" | every one of its packages; the image's closure's sets (§7) |
+| Q13 | nit | branch deletion; a second remote's refspec | `main` never deleted; no refspec of any other remote (§0, §4) |
+| Q14 | nits | one identity; `one-external-controller` with no external interrupt; the record's size | the template's initial commit excepted; `yes` there; §13 moved to its own record (§13, §12) |
+
 ## Why
 
 The decision record states the design as it stands. Its reviews are its history: every round appends a table,

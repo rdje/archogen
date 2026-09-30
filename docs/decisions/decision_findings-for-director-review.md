@@ -337,7 +337,12 @@ other than by a merge commit, and the loader re-checks every review where it was
 
 **The decision needed, before `M2.7.4`:** turn on those settings for `main` (recommended), which changes the
 commit workflow to branches merged by pull request; or rule a weaker premise 3 that records CI's verdict after the
-fact, whose limit the design would then state.
+fact, whose limit the design would then state. The catalog's eleventh review added two points the settings need:
+- the required checks pinned to the CI provider's app, with their definitions protected from the pull request they
+  judge;
+- `main` never deleted.
+
+The design now holds premise 3 from a named commit, the first after you confirm the settings, which is recorded then.
 
 ## A note on what "done" means so far
 

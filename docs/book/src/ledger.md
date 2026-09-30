@@ -218,3 +218,17 @@ the day a chapter or a decision relies on it, as Miri did.
 | Known limitations | a specification says what a conforming hart does. Whether the target's hart and QEMU conform is a platform fact that the catalog states and a review checks. The Advanced Interrupt Architecture, v1.0 §4.1, read the same day, lets `iprio` give a major interrupt "nominally the same priority as a machine-level external interrupt with priority number" n. So the default order holds only without it, which is why each source's `external.<source>` and the target's `one-external-controller` are facts of their own. A third sentence, which the pinned rendering cuts off before its timer section, was read on `2026-09-30` from the manual's source, `src/priv/machine.adoc` at `51c1291` on `main` (line 2566, file sha256 `d5a817c8…`): "If the result of the comparison between `mtime` and `mtimecmp` changes, it is guaranteed to be reflected in MTIP eventually, but not necessarily immediately." It is why a late compare write is charged apart from `L` |
 | Revalidation trigger | a newer ratified release of the privileged architecture; a target whose interrupts go through the Advanced Interrupt Architecture or platform-local causes |
 | Named as | `privileged specification` |
+
+## `riscv-plic`
+
+| Field | Value |
+| --- | --- |
+| Source | The RISC-V Platform-Level Interrupt Controller Specification |
+| Version | 1.0.0, dated 3/2023, read as `riscv-plic.adoc` at commit `f8ec1b7` of `riscv/riscv-plic-spec`, file sha256 `7209e2d8…` |
+| Pinned at | not pinned — read on `2026-09-30`; no build or check reads it |
+| Retrieved | `2026-09-30` |
+| Hash | the file's sha256 above; no figure is adopted |
+| Scope | the sentences `decision_runtime-composite-inputs.md`'s `no-empty-claim` rests on (`M2.10.1`): interrupt notifications "might take some time to be received at the targets"; "The value in an interrupt notification is only guaranteed to hold an EIP value that was valid at some point in the past"; and a claim returns "zero if there is no pending interrupt" |
+| Known limitations | a specification says what a conforming controller does, and says nothing of how long a notification takes. Whether a platform's port waits for the notification to reflect its last claim is the fact a catalog record states and a review checks |
+| Revalidation trigger | a newer ratified release of the PLIC, or a target with another external interrupt controller |
+| Named as | `PLIC specification` |

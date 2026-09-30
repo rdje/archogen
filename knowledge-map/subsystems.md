@@ -144,7 +144,8 @@ justifies the split — the rows below appear as that happens.
 - `docs/decisions/catalog/` — the catalog design, a partition of the decision records (`PROGRAM.39`), which the
   generated list of decisions below does not reach, since it reads the folder flat:
   [the catalog record](docs/decisions/catalog/decision_catalog-records.md), with its
-  [worked example](docs/decisions/catalog/decision_catalog-records-example.md) and its §12,
+  [worked example](docs/decisions/catalog/decision_catalog-records-example.md), its §13,
+  [the limits](docs/decisions/catalog/decision_catalog-records-limits.md), and its §12,
   [what the runtime variant takes](docs/decisions/catalog/decision_catalog-records-variant-inputs.md); and
   [the composition of the variant's inputs](docs/decisions/catalog/decision_runtime-composite-inputs.md).
   Their reviews are in `docs/reviews/`. `DECISION-INDEX` keeps every record in a partition linked from

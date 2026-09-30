@@ -1,0 +1,108 @@
+# Catalog records: the limits
+
+- **Type:** `decision`
+- **Date:** `2026-09-30`
+- **Status:** `active`
+- **External sources:** [the Rust toolchain](../../book/src/ledger.md#rust-toolchain) — `rustc`, `cargo` and
+  `rustup`, whose version, scope and limits are in the ledger
+- **Owner / source:** leaf `M2.7.1` (`docs/tasks/M2.md`). This is §13 of [[decision_catalog-records]], moved out of it
+  in the change that answered its eleventh review, which took that record to 1 181 of the 1 200 lines
+  `README-ROUTES` allows a file. It is part of that record: normative, numbered as its §13, and reviewed with it. That
+  change's edits to §13 are in the review history.
+
+## The fact / decision
+
+### 13. Limits
+
+- **Reviewer independence is asserted, not verified.** Roles and task trees cannot coincide, and `who` cannot be
+  the maintainer. That is all the structure guarantees. Git authorship cannot help, because one identity commits
+  every commit in this repository but the template's initial one. What a later reader checks is the review's `basis`.
+- **§9's admission evidence per catalog**, beyond which facets are present and not empty, is an obligation of the
+  production review's basis: the tests, the reference behavior, the exact revisions and the conformance evidence.
+  Nothing checks it mechanically.
+- **Bump size is not checked.** A patch-level bump over a breaking change passes. The lock checks that a version
+  moved, not by how much.
+- **Hashes over-approximate.** Any of these voids reviews that its bound hashes reach, which is sound and costs a
+  review:
+  - a comment change in a package;
+  - a workspace lint;
+  - any edit to a target's `.env`, including `TARGET_VERIFIED_BY`, which voids every review on that target;
+  - a ledger section's wording;
+  - a contract edit, which voids both models' reviews;
+  - a new target, which voids the behavioral reviews of every `any` record;
+  - a model package that depends on another model's package, which moves both bound hashes;
+  - a record moved to `experimental`, which affects every production claim that read it;
+  - a file whose bytes an unrelated facet also holds, which carries a rejection to it (§5);
+  - a rejected cost, which reaches the same-named cost on every target of the same kind and Rust target (§5);
+  - a rejected contract, which reaches every contract that states one of its guarantees or preconditions (§5).
+- **What no hash covers:**
+  - the installed compiler's bits (the channel in `rust-toolchain.toml` is covered);
+  - cargo configuration outside the repository. The gate refuses any it would read and gives cargo an empty
+    `CARGO_HOME` (§3); the build of an image is `M4`'s to hold to the same rule, which §7's build record shows;
+  - the installed toolchain's files, git's local configuration and refs, and the hosting's protection of `main`.
+    These are §0's premises, each with what is checked of it;
+  - the meaning of a profile. A record names a profile by its id, and a changed meaning moves the id (§15), which
+    the version register records;
+  - `--config` flags;
+  - rustup's per-directory overrides;
+  - `Cargo.lock`. With every dependency a path one, it adds nothing the sets lack, and §3 refuses the first
+    non-path dependency;
+  - the invocation scripts of an emulator target (the files its `.env` names are covered).
+
+  A claim's image is what covers these for a built system. So §7 lets only `independent` costs, and costs from
+  the claim's own engine-made image, back a production claim. Before `M4`, no claim has an image.
+- **A rejection binds items, not meaning.** Content moved into another record without lineage, and changed so
+  that no item of §5 matches, whether a name, an entry, a file's bytes or the forms, is new content for review. The
+  ledger is where a reviewer of related content looks, and nothing forces the look.
+- **The port's facts are `unknown` in `/1`.** §3 refuses assembly, so the port's trap entry and exit, its transitions
+  and its masking instructions cannot be in any record. An honest `/1` record writes the facts about that code
+  `unknown`: the `switch` group's, and the port's half of `sections-mask-every-interrupt`, `releases-never-latched`
+  and `primitives-out-of-line`. Every analysis of the runtime variant over the catalog is then
+  `analysis-inconclusive`, naming them. `M2.12` owns a record format that admits the port's assembly, with `sym`
+  operands only, and lifts it.
+- **A bad line on `main` cannot be repaired.** The lock is append-only and `main` is never rewritten, so a line that
+  fails verification, landed through a failure of premise 3, stops the catalog loading for good in every clone that
+  fetches it. The premise, its named commit and its checks are what keep that from happening.
+- **A rejection binds for good once it is in `main`'s history.** Until then it binds the branch it is on, and is
+  lost with it: a reset of an unpushed branch, or a pushed branch deleted and pushed again as new. So a reviewer's
+  rejection is merged to `main` in its own commit before the facet it names changes (How to apply). One that
+  reached `origin/main` binds every production claim made from a clone that has fetched it, whatever branch the
+  claim reads (§4), and while `main` is protected (premise 3).
+- **The token refusals are of what is written, and what is written is what is compiled.** No package in the build
+  defines a macro: `macro_rules` and `macro` are refused as words, and a procedural macro by its manifest and by
+  what `cargo metadata` resolves. A macro invocation's arguments hold none of the refused words, and the scan
+  covers every file the compiler's dependency information lists (§3). What they rest on
+  beyond that is premise 1: the toolchain's own macros and attributes are the pinned release's. For an image, the
+  dependency information in its build record covers every Rust source it compiled, each with its hash.
+- **A review's date is checked against a date its author sets.** A committer date is the committer's to choose, so
+  the check (§5) catches a date that is malformed or later than its commit, not a commit dated falsely.
+- **A code locator is necessary, not sufficient.** It proves that a fact points into code its bound hash covers.
+  That the fact depends on no other code is the review's to check.
+- **Where evidence was obtained is the review's to check.** Admission refuses costs on a target that is not a
+  board. A fact, or a cost labelled with a board, whose evidence came from an emulator shows only in its basis.
+- **One image per target at a time.** A cost name appears once per target. So only the image its costs came from
+  can hold production claims on that target, and the next image's measurement replaces them. Keying costs by
+  image is `M4`'s.
+- **No surface makes a production claim yet.** Strength is a parameter of admission (`M2.7.3`), and the runtime
+  variant passes it through (`M2.7.5`). The report that states a production claim to a user is `M4`'s, and so is
+  how a product reads history (§4). Until then the production rule is exercised by tests and the repository's
+  tooling.
+- **Review granularity is the facet.** One reviewed cost and one unreviewed cost in a single timing model leave
+  the facet without a production review at its hash. Splitting the record is the way to review part of it, and
+  `supersedes` carries its rejections across; a production verdict never crosses, since a review names its id.
+- **Nothing stores a claim yet** besides tests. §10's answer is only as good as the closure a stored claim keeps.
+- **`C_i`, `CS_i`, `J^release`, `J_s`, and `C_s` without its fact, are not the catalog's in `/1`** (§12). The
+  first four are composed from the parts §12 names (`decision_runtime-composite-inputs.md`). Until `M2.10.2`
+  implements that, and for `C_s` without its fact in any case, the variant's soundness for them rests on the
+  caller's figures. No production claim can
+  rest on those figures (§7).
+
+## Why
+
+A design's limits are what it states it does not do. They grow with each review round that finds a residue worth
+naming, so they are kept apart, like §12, and a reviewer of the record is given both.
+
+## How to apply
+
+- A section number here is the catalog record's.
+- A limit that a later leaf lifts names that leaf, and leaves this section when the leaf closes.

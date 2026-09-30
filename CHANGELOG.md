@@ -5,6 +5,30 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog's eleventh review and the composition's fourth are answered
+
+`ARCHOGEN-M2-0231` (leaf `M2.7.1`, a tenth checkpoint; with `M2.10.1`'s fifth).
+
+- **The catalog's eleventh review** found its core rules sound again. It found two weaknesses that matter only once
+  a physical board or built images exist: the timer's rounding cost was tied to no code, and nothing covered code
+  releasing tasks outside its role. Both are fixed.
+  - The rules each review is checked under are now versioned, so a stricter rule later cannot make honest history
+    unreadable.
+  - The protection of `main` the design assumes now names what keeps its checks from being emptied by the change
+    they judge.
+- **The composition's fourth review** found two real under-counts in how late the timer can start.
+  - One is a timer service that starts just before a release is visible, then rewrites the timer late: 102
+    against 83.
+  - The other is an interrupt controller that tells the processor about an interrupt after it has been taken, so
+    the processor looks and finds nothing. The controller's specification allows it, and repeated it can keep the
+    timer from ever running.
+  - Both are fixed: the first by a larger margin, the second by a platform fact that must hold. The specification's
+    sentences were checked at their source and recorded.
+  - The runtime analysis itself has the same blind spot, now a task of its own, `M2.11`.
+- **The catalog design has had eleven reviews.** The last two found only weaknesses for boards and built images,
+  which come later. So it will close on the first review that finds nothing affecting the current, simulator-only
+  stage; anything found after that for later stages is fixed and owned there.
+
 ## archogen — the decisions folder is split by subject, without adding room
 
 `ARCHOGEN-PROGRAM-0230` (leaf `PROGRAM.39`).

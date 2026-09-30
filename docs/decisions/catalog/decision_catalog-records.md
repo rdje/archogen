@@ -83,12 +83,18 @@ assumed control of the build machine or the hosting.
      - changes reach `main` only through pull requests, administrators included;
      - the required checks run on the merge result, with branches up to date or a merge queue;
      - merge commits are the only merge method;
-     - `main` is never force-pushed;
-     - the required checks are named in those settings, so a pushed commit cannot remove them.
+     - `main` is never force-pushed and never deleted;
+     - the required checks are named in those settings, pinned to the CI provider's own app, so a status another
+       source posts under the same name does not satisfy them;
+     - the checks' definitions are protected from the pull request they judge: a required workflow or ruleset kept
+       outside it, or code-owner review of `.github/` and `scripts/`, so a pull request cannot empty its own check.
+
+     The premise holds from a named commit of `main`, the first after those settings were confirmed, recorded
+     beside this record when the director confirms them (findings §11). Nothing before it is judged by it.
 
      Checked where it is cheap:
-     - a production claim is `not-established` when a first-parent commit of `origin/main` that changes `catalog/`
-       is not a merge commit (§7);
+     - a production claim is `not-established` when a first-parent commit of `origin/main` after that commit
+       changes `catalog/` and is not a merge commit (§7);
      - the loader re-applies §5's ledger-time checks at every ledgering commit, so a review that CI failed to check
        is still refused (§5).
 
@@ -565,17 +571,17 @@ each record hash, a review's ledger hash and lock lines, and a forms digest. `M2
   Tests give files in memory.
   - The gate and an exploratory claim read the **index**. The gate checks what is about to be committed.
   - A production claim reads a **commit**, `HEAD` unless one is named, and records it. Its ledger must hold every
-    line of every ancestor commit's ledger and of the published main line's, `origin/main` as last fetched, with
-    its ancestors (§9). The claim records that `main` commit too. So a line dropped with the gate bypassed is seen,
-    and so is a rejection published after the commit's branch forked, as far as the clone has fetched (premise 3).
-    A clone with no `origin/main` is refused. The claim also records `origin`'s URL, read with
-    `git remote get-url origin`, and refuses one that is not the repository's canonical URL, which the claim
-    tooling holds as a constant. URLs are compared as repositories, not as strings: `https` and `ssh` forms of the
-    same host and path are equal, with or without a trailing `.git`. So a fork's `main`, which premise 3 does not
-    protect, is not taken for this one. `origin`'s fetch refspec must map `refs/heads/main` to
-    `refs/remotes/origin/main`, no other refspec may map to it, no negative refspec may exclude it, and no
-    `url.*.insteadOf` may rewrite `origin`'s URL. Otherwise another branch or
-    another repository could stand behind a canonical-looking `origin/main`.
+    line of every ancestor commit's ledger and of the published main line's, `origin/main` as last fetched, with its
+    ancestors (§9). The claim records that `main` commit too. So a line dropped with the gate bypassed is seen, and
+    so is a rejection published after the commit's branch forked, as far as the clone has fetched (premise 3). A
+    clone with no `origin/main` is refused. The claim also records `origin`'s URL, read with `git remote get-url
+    origin`, and refuses one that is not the repository's canonical URL, which the claim tooling holds as a
+    constant. URLs are compared as repositories, not as strings: `https` and `ssh` forms of the same host and path
+    are equal, with or without a trailing `.git`. So a fork's `main`, which premise 3 does not protect, is not taken
+    for this one. `origin`'s fetch refspec must map `refs/heads/main` to `refs/remotes/origin/main`, no refspec of
+    any other remote may map to it, no negative refspec may exclude it, and no `url.*.insteadOf` may rewrite
+    `origin`'s URL. Otherwise another branch or another repository could stand behind a canonical-looking
+    `origin/main`.
   - **Every reader reads history as it is** (premise 2, with its cheap checks). Each runs git with an environment
     allowlist, as the builds do: `PATH`, `HOME`, the `GIT_DIR`, `GIT_INDEX_FILE` and `GIT_WORK_TREE` a hook is
     given, and `GIT_NO_REPLACE_OBJECTS` set, and nothing else, so no `GIT_GRAFT_FILE`, `GIT_SHALLOW_FILE` or object
@@ -617,6 +623,12 @@ copies are an index. **The loader also re-applies the ledger-time checks below a
 that commit's record, parents' ledgers and committer date. So a review that a bypassed gate and a neutered CI let
 through is refused at load (`catalog-review`), not only when it was ledgered.
 
+**Each ledgering commit is verified under the rules it was ledgered under.** The lock's first line names them,
+`# archogen-catalog/1`, and that names both §3's grammar and these ledger-time checks. A later version is a new
+first line, written by the change that brings the new rules in, with a migration note as `ROADMAP.md` §15 asks. A
+line ledgered under `/1` is verified under `/1` for good, so a rule tightened later never refuses history that was
+honest when it was made.
+
 **The rejections a facet inherits** are read from the ledger and the commits that ledgered it:
 
 1. its record's own rejections of that facet, at any hash;
@@ -650,7 +662,8 @@ precondition sentence, such as "one processor", to every contract that states it
 
 **An answer covers the items the answering review saw.** It lifts the rejection for the items of it that the facet
 held at the hash the answering review names. If the facet later holds an item of the rejection that it did not
-hold then, the rejection binds again, until a review at a hash that holds that item answers it. So an answer given
+hold then, the rejection binds again, until a single review at a hash that holds every item of it the facet now
+holds answers it. So an answer given
 where a rejection reached a facet only through an empty file does not let the rejected cost itself move there
 unseen.
 
@@ -676,7 +689,8 @@ facet's.
 A maintainer is a task tree, and no role is a task tree. §13's first limit says what independence rests on
 beyond that.
 
-**A review is checked once, when it is ledgered** (§9), and refused when:
+**A review is checked against the commit that ledgered it**, by bless, the gate, CI's replay and every load (§9),
+and refused when:
 
 - its facet is not one of the four;
 - its hash is not written as §3 requires, or is not the facet's bound hash when it is ledgered. A review is of
@@ -803,9 +817,11 @@ facet instead.
      - the catalog was not read from a commit whose ledger holds every line of every ancestor's and of the
        published main line's, or the clone has no `origin/main` (§4, §9);
      - a record in the claim's closure has an implementation that is not `none`, and the image did not compile
-       its packages. A fact about code must be about the code the image holds, so the closure is a subset of what
-       the image compiled, as well as the image's sources being a subset of the closure's sets;
-     - a first-parent commit of `origin/main` that changes `catalog/` is not a merge commit (premise 3).
+       every one of its packages. A fact about code must be about the code the image holds, so the closure is a
+       subset of what the image compiled, as well as the image's sources being a subset of the image's closure's
+       sets;
+     - a first-parent commit of `origin/main`, after premise 3's named commit, changes `catalog/` and is not a merge
+       commit (premise 3).
 
   As in the runtime variant's admission, the strongest verdict is reported with every reason that reaches it.
   What an analysis does with a value it could not read is the analysis's verdict, not admission's (§12).
@@ -991,79 +1007,9 @@ lookup selects them.
 
 ### 13. Limits
 
-- **Reviewer independence is asserted, not verified.** Roles and task trees cannot coincide, and `who` cannot be
-  the maintainer. That is all the structure guarantees. Git authorship cannot help, because one identity commits
-  everything in this repository. What a later reader checks is the review's `basis`.
-- **§9's admission evidence per catalog**, beyond which facets are present and not empty, is an obligation of the
-  production review's basis: the tests, the reference behavior, the exact revisions and the conformance evidence.
-  Nothing checks it mechanically.
-- **Bump size is not checked.** A patch-level bump over a breaking change passes. The lock checks that a version
-  moved, not by how much.
-- **Hashes over-approximate.** Any of these voids reviews that its bound hashes reach, which is sound and costs a
-  review:
-  - a comment change in a package;
-  - a workspace lint;
-  - any edit to a target's `.env`, including `TARGET_VERIFIED_BY`, which voids every review on that target;
-  - a ledger section's wording;
-  - a contract edit, which voids both models' reviews;
-  - a new target, which voids the behavioral reviews of every `any` record;
-  - a model package that depends on another model's package, which moves both bound hashes;
-  - a record moved to `experimental`, which affects every production claim that read it;
-  - a file whose bytes an unrelated facet also holds, which carries a rejection to it (§5);
-  - a rejected cost, which reaches the same-named cost on every target of the same kind and Rust target (§5);
-  - a rejected contract, which reaches every contract that states one of its guarantees or preconditions (§5).
-- **What no hash covers:**
-  - the installed compiler's bits (the channel in `rust-toolchain.toml` is covered);
-  - cargo configuration outside the repository. The gate refuses any it would read and gives cargo an empty
-    `CARGO_HOME` (§3); the build of an image is `M4`'s to hold to the same rule, which §7's build record shows;
-  - the installed toolchain's files, git's local configuration and refs, and the hosting's protection of `main`.
-    These are §0's premises, each with what is checked of it;
-  - the meaning of a profile. A record names a profile by its id, and a changed meaning moves the id (§15), which
-    the version register records;
-  - `--config` flags;
-  - rustup's per-directory overrides;
-  - `Cargo.lock`. With every dependency a path one, it adds nothing the sets lack, and §3 refuses the first
-    non-path dependency;
-  - the invocation scripts of an emulator target (the files its `.env` names are covered).
-
-  A claim's image is what covers these for a built system. So §7 lets only `independent` costs, and costs from
-  the claim's own engine-made image, back a production claim. Before `M4`, no claim has an image.
-- **A rejection binds items, not meaning.** Content moved into another record without lineage, and changed so
-  that no item of §5 matches, whether a name, an entry, a file's bytes or the forms, is new content for review. The
-  ledger is where a reviewer of related content looks, and nothing forces the look.
-- **A rejection binds for good once it is in `main`'s history.** Until then it binds the branch it is on, and is
-  lost with it: a reset of an unpushed branch, or a pushed branch deleted and pushed again as new. So a reviewer's
-  rejection is merged to `main` in its own commit before the facet it names changes (How to apply). One that
-  reached `origin/main` binds every production claim made from a clone that has fetched it, whatever branch the
-  claim reads (§4), and while `main` is protected (premise 3).
-- **The token refusals are of what is written, and what is written is what is compiled.** No package in the build
-  defines a macro: `macro_rules` and `macro` are refused as words, and a procedural macro by its manifest and by
-  what `cargo metadata` resolves. A macro invocation's arguments hold none of the refused words, and the scan
-  covers every file the compiler's dependency information lists (§3). What they rest on
-  beyond that is premise 1: the toolchain's own macros and attributes are the pinned release's. For an image, the
-  dependency information in its build record covers every Rust source it compiled, each with its hash.
-- **A review's date is checked against a date its author sets.** A committer date is the committer's to choose, so
-  the check (§5) catches a date that is malformed or later than its commit, not a commit dated falsely.
-- **A code locator is necessary, not sufficient.** It proves that a fact points into code its bound hash covers.
-  That the fact depends on no other code is the review's to check.
-- **Where evidence was obtained is the review's to check.** Admission refuses costs on a target that is not a
-  board. A fact, or a cost labelled with a board, whose evidence came from an emulator shows only in its basis.
-- **One image per target at a time.** A cost name appears once per target. So only the image its costs came from
-  can hold production claims on that target, and the next image's measurement replaces them. Keying costs by
-  image is `M4`'s.
-- **No surface makes a production claim yet.** Strength is a parameter of admission (`M2.7.3`), and the runtime
-  variant passes it through (`M2.7.5`). The report that states a production claim to a user is `M4`'s, and so is
-  how a product reads history (§4). Until then the production rule is exercised by tests and the repository's
-  tooling.
-- **Review granularity is the facet.** One reviewed cost and one unreviewed cost in a single timing model leave
-  the facet without a production review at its hash. Splitting the record is the way to review part of it, and
-  `supersedes` carries its rejections across; a production verdict never crosses, since a review names its id.
-- **Nothing stores a claim yet** besides tests. §10's answer is only as good as the closure a stored claim keeps.
-- **`C_i`, `CS_i`, `J^release`, `J_s`, and `C_s` without its fact, are not the catalog's in `/1`** (§12). The
-  first four are composed from the parts §12 names (`decision_runtime-composite-inputs.md`). Until `M2.10.2`
-  implements that, and for `C_s` without its fact in any case, the variant's soundness for them rests on the
-  caller's figures. No production claim can
-  rest on those figures (§7).
+This section is kept in [`decision_catalog-records-limits.md`](decision_catalog-records-limits.md). It is part of this
+record, normative and reviewed with it: what the structure guarantees and what it leaves to review, what no hash
+covers, where a rejection binds, and the limits of `/1` that later leaves lift.
 
 ## Why
 
@@ -1154,3 +1100,4 @@ the design as it stands, and that one keeps how it got here.
 | 8 | 19 | 1 (H1, a procedural macro under another spelling), and H2, H4 and H6 at defect level; none needs a premise broken | "cannot be accepted as it stands" |
 | 9 | 20 | none; 4 at defect level (I1–I4), all in §12's new composition names; §3–§9 held | "cannot be accepted as it stands" |
 | 10 | 18 | 1 (J1, code facts ungrouped from the costs whose code they state, and an image that need not compile the closure); J2–J4 near it | "cannot be accepted as it stands" |
+| 11 | 14 | 2 latent (Q1, `compare-rounding` not tied to the timer service's code; Q2, releases by code no statement covered), with Q3 near them; §3–§9 held | "cannot be accepted as it stands"; all three latent until a board or `M4` |

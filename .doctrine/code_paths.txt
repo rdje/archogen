@@ -18,7 +18,9 @@
 (^|/)crates/
 (^|/)xtask/
 (^|/)scripts/
-(^|/)catalog/
+# `catalog/` is anchored at the root, where the catalog's records live (decision_catalog-records.md §1): the same
+# any-depth trap as `src` classified `docs/decisions/catalog/`, a folder of design records, as code (2026-09-30).
+^catalog/
 \.(rs|sh)$
 (^|/)Makefile$
 (^|/)Cargo\.(toml|lock)$

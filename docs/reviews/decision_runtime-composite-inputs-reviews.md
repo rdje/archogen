@@ -114,6 +114,29 @@ sentence at the manual's `main`, commit `51c1291`, line 2566, and added it to th
 | M12 | nit | the ledger still named `every-source-external` | renamed (the ledger) |
 | M13 | nit | which composites an unreadable fact gates | listed (§2) |
 
+**Round 4**, `2026-09-30`: M2, M3 and M5–M12 were closed, and M1, M4 and M13 partial. The reviewer simulated the
+model with the compare's rounding at its full width, and a late write dropping the interrupt: 28 of 1 500 biased sets
+exceeded the record's `B_timer`, none the summed form. It read the PLIC specification 1.0.0 for N2. `C_i` and `CS_i`
+were judged sound. There were 9 findings, 2 of them defects, and the verdict was "cannot be accepted as it stands";
+nothing else under-charges once N1 and N2 are fixed and N3 is stated. The answering context checked the new base term
+against both counterexamples: 115 against a true 102, and 74 against 60. It re-read the PLIC sentences at their
+source, `riscv-plic.adoc` at `f8ec1b7`, and gave the specification a ledger entry, `riscv-plic`. The self-statement
+was renamed `runtime-discipline.<id>`, since it now covers releases; the rows above keep its earlier name.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| M1 | partial | `max(ρ, C_rel + S)` is wrong when `ρ > 0` | through N1 |
+| M4, M13 | partial | generated code uncovered; the gating list incomplete | through N4 and N6 |
+| N1 | defect | a service that starts before `⌈t⌉` does not release `t`, then writes the compare late: a true 102 against 83 | `B_timer = ρ + C_rel + S + L + 2δ`, with step 1 split on `⌈t⌉` (§3, §4) |
+| N2 | defect | a notification that lags a claim makes a trap that claims nothing, which no arrival pays for, and can starve the timer | the port fact `no-empty-claim`, in the `switch` group, with the PLIC specification in the ledger; the variant's same omission filed as `M2.11` (§2) |
+| N3 | gap | "external interrupt" named no privilege level, and a supervisor-routed source is taken below the timer | machine external interrupts, through the controller's machine-mode context, in both facts and in deliverability (§2) |
+| N4 | gap | generated code is in no record | from `M4` the plan's generator states the self-statement of it; until then the conclusion names it, and compiled records outside the closure, as assumptions (§2) |
+| N5 | ambiguity | the self-statement had no initialisation role | initialisation's roles before the first unmask (§2) |
+| N6 | nit | the gating list omitted two facts | both placed (§2) |
+| N7 | nit | §12's "a hardware fact is in no group" | the exception named (§12) |
+| N8 | nit | §12's "whose implementation the claim reads" | the record's wording (§12) |
+| N9 | nit | deliverability missing from §12's plan row, and no verdict when omitted | in the row; an omitted statement is `analysis-inconclusive` (§12, §6) |
+
 ## Why
 
 The record states the composition as it stands, and this file keeps how it got there, as for the catalog record.
