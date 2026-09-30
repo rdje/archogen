@@ -165,7 +165,6 @@ justifies the split — the rows below appear as that happens.
 
 - [`decision_api-instance.md`](docs/decisions/decision_api-instance.md)
 - [`decision_catalog-records-example.md`](docs/decisions/decision_catalog-records-example.md)
-- [`decision_catalog-records-reviews.md`](docs/decisions/decision_catalog-records-reviews.md)
 - [`decision_catalog-records.md`](docs/decisions/decision_catalog-records.md)
 - [`decision_eadl-engine-boundary.md`](docs/decisions/decision_eadl-engine-boundary.md)
 - [`decision_eadl1-value-domain.md`](docs/decisions/decision_eadl1-value-domain.md)

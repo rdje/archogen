@@ -583,9 +583,11 @@ A size limit on `README.md` does not remove the need to write things down; it mo
 `README_POLICY.md` also asks that every place the README points a reader to, and every place its checks tell
 an author to move detail to, is itself kept in bounds. `README-ROUTES` works that list out from the README's
 links and from what its two checks actually print. It follows each place on to wherever that place's own check
-sends overflow, and holds each one to the ceiling registered for it in the policy. The changelog, the
-development notes and the task trees are not bounded yet. Each is recorded as debt owned by an open task, and
-those tasks wait on the director's decision about how these histories should be kept.
+sends overflow, and holds each one to the ceiling registered for it in the policy. The changelog and the
+development notes are bounded as rolling ledgers (above). A design's review history, which grows by a round at a
+time, overflows from the decisions folder to `docs/reviews/`, which has ceilings of its own. Only the task trees are
+not bounded yet. They are recorded as debt owned by an open task, which the director's ruling on how the histories
+are kept has unblocked.
 
 ```console
 $ bash scripts/check_readme_routes.sh              # the gate

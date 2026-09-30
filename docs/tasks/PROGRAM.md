@@ -3792,7 +3792,7 @@ mdBook that is the director's window into the project.
 
 
 - ID: `PROGRAM.36`
-  Status: `pending`
+  Status: `done`
   Goal: `docs/decisions/` back under its total-bytes ceiling (327 680, `README_POLICY.md`'s routed destinations), by
   giving the append-only review histories a home of their own rather than by raising the ceiling.
   Why: on `2026-09-30`, `M2.7.1`'s fifth checkpoint took the directory to 329 428 bytes, measured by the staged
@@ -3807,8 +3807,37 @@ mdBook that is the director's window into the project.
   them and the knowledge map updated; the debt cell back to a number the directory is under; `README-ROUTES` and the
   doctrine enforcer green. Until it closes, `docs/decisions/` grows only by what `M2.7.1`'s open review adds, and this
   leaf goes before the next round is answered.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the checklist — the breach reproduced and gone; the file moved with its digest unchanged; 20
+  destinations governed; the book built.
+  Commit: `ARCHOGEN-PROGRAM-0211 (leaf PROGRAM.36)`
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE** — with the debt cell set back to the ceiling, `bash scripts/check_readme_routes.sh` → rc=1,
+    "`docs/decisions/: 329428 bytes in total, over its ceiling of 327680`"; the file restored after.
+  - [x] **ROOT CAUSE** — a design's review history was kept in `docs/decisions/`, a partition of records, though it
+    is append-only history that grows a round at a time. `git show HEAD:docs/decisions/decision_catalog-records-reviews.md | wc -c`
+    → 36 283 of the directory's 329 428 bytes, the third-largest file there. The example moved out of the design
+    record in `ARCHOGEN-M2-0210` was only what tipped it over.
+  - [x] **FIX** — the file moved to `docs/reviews/`, unchanged (`git mv`, a 100 % rename). There, an index lists
+    each review history with its design record, its rounds and its status, and says how a round is added and when a
+    history is frozen. `README_POLICY.md` registers `docs/reviews/` as `docs/decisions/`' overflow, with ceilings
+    from the measurement plus headroom (16 files; 1 200 lines, 131 072 bytes and 1 024-byte lines a file; 262 144 in
+    total), and `docs/decisions/`' total is a number again. Links from the design record, `M2.7.1` and the decisions
+    index follow the file.
+  - [x] **ADDRESSED** — `bash scripts/check_readme_routes.sh` → rc=0, "`readme-routes: OK (20 destination(s)
+    governed; recorded as debt, owned by: PROGRAM.32)`": `docs/decisions/` at 292 983 bytes, 34 697 under its
+    ceiling, and `docs/reviews/` at 37 295. `git show HEAD:docs/decisions/decision_catalog-records-reviews.md | shasum -a 256`
+    and `shasum -a 256 docs/reviews/decision_catalog-records-reviews.md` → both `ece719ec…fd5e39`.
+  - [x] **NO REGRESSION** — `bash scripts/check_doctrines.sh` → `=== all doctrines green ===` (`MEMORY-ARCH`'s
+    index check, `BOOK-ANCHORS`, `KNOWLEDGE-MAP` after regeneration, `LIVE-SNAPSHOTS`); `mdbook build docs/book` →
+    rc=0, the edited chapter naming `docs/reviews/`. No Rust and no script changed. Not mechanized: that a review
+    history is only appended to. That needs a script, and the director has asked for `scripts/` to be left alone for
+    now, so it stays a convention, as it was in `docs/decisions/`.
+  - [x] **LOCKSTEP** — `README_POLICY.md`, `LIVE_DOCUMENT_SIZE_CONTAINMENT.md` (both rows);
+    `docs/book/src/verification.md`, whose routing paragraph still called the changelog and the development notes
+    unbounded, stale since `PROGRAM.31` and corrected here; `docs/decisions/INDEX.md`, `docs/reviews/INDEX.md`; this
+    leaf, the frontier and both logs; `M2.7.1`'s close-out; `LIVE_STATUS.md`, `docs/TASK_TREE.md`, `MEMORY.md`,
+    `KNOWLEDGE_MAP.md`, `CHANGELOG.md`.
 
 ## Roadmap coverage map
 
@@ -3874,10 +3903,9 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.36` | `pending` | `docs/decisions/` is over its total-bytes ceiling, recorded as debt this leaf owns: the review histories moved to an append-only home, before `M2.7.1`'s next round adds to it |
-| 2 | `PROGRAM.32` | `pending` | unblocked by the same ruling: closed leaves sealed out of the task trees, `M1` and `PROGRAM` first |
-| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
-| 4 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
+| 1 | `PROGRAM.32` | `pending` | unblocked by the same ruling: closed leaves sealed out of the task trees, `M1` and `PROGRAM` first |
+| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 3 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
@@ -4014,6 +4042,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.35.1` | the body `cmp`'d and digested against fsmgen's; the page reviewed against the contract; 19 links resolved; `LIVE-SNAPSHOTS` one below the survivor on each axis, at equality and at the ceilings, on the real tree | body identical, `77a1e934…`; one duplication removed; 84 / 4 173 / 125 → ceilings 110 / 6 144 / 200; rc 1, 1, 0, 0 |
 | `2026-09-30` | `PROGRAM.35.2` | the derived population on the real tree; six mutations of the real registry; the gate's 16 arms; every self-test bare; scratch locality; the project doctrines | 18 destinations governed, two debt owners; each mutation refused with one named breach, and restored green; 16 of 16; 32 self-tests passed; OK; OK |
 | `2026-09-30` | `PROGRAM.31` | the seal with its own proof; an independent rebuild in Python against the files saved before; the ordering defect traced to the initial commit and its move proved; 13 RED arms; the routes and the other gates | both ledgers byte for byte, twice; the template block carried verbatim; 13 of 13; 19 destinations, debt only `PROGRAM.32` |
+| `2026-09-30` | `PROGRAM.36` | the breach reproduced with the ceiling restored; the move's digest against `HEAD`'s; `README-ROUTES`; the doctrine enforcer; the book built | rc=1, then rc=0 with 20 destinations governed; digests equal; all green; rc=0 |
 
 ## Commit Log
 
@@ -4075,6 +4104,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.35.1` | `ARCHOGEN-PROGRAM-0197 (leaf PROGRAM.35.1)` | **fsmgen's README policy adopted, and the caps derived from the page** — 110 lines and 6 144 bytes held by `LIVE-SNAPSHOTS`, where the template's 300 / 16 384 had never been fitted |
 | `PROGRAM.35.2` → `PROGRAM.35` | `ARCHOGEN-PROGRAM-0198 (leaf PROGRAM.35.2)` | **every route out of the README registered and bounded, or its debt owned** — `README-ROUTES` derives the routes from the page's links and its guards' actual hints; `PROGRAM.35` closed |
 | `PROGRAM.31` | `ARCHOGEN-PROGRAM-0207 (leaf PROGRAM.31)` | **the changelog and the development notes are rolling ledgers** — sealed by entry count into digest-checked segments under `docs/history/`, as ruled on §8 by delegation |
+| `PROGRAM.36` | `ARCHOGEN-PROGRAM-0211 (leaf PROGRAM.36)` | **the review histories get a home of their own** — `docs/reviews/`, registered as the decisions folder's overflow with its own ceilings; the debt `ARCHOGEN-M2-0210` recorded is paid |
 
 ## Changelog
 

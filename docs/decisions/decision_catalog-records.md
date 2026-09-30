@@ -1089,7 +1089,7 @@ The variant's condition 8 for catalog costs is each cost's own `holds-under-pree
 relies")
 
 Every round was a new read-only context that had not written the record. The findings, and the answer to each,
-are kept in [`decision_catalog-records-reviews.md`](decision_catalog-records-reviews.md). This record states the
+are kept in [`decision_catalog-records-reviews.md`](../reviews/decision_catalog-records-reviews.md). This record states the
 design as it stands, and that one keeps how it got here.
 
 | Round | Findings | Defects | Verdict |

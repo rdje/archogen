@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — review histories get a folder of their own, and the decisions folder is back under its limit
+
+`ARCHOGEN-PROGRAM-0211` (leaf `PROGRAM.36`).
+
+- The previous commit took the decisions folder just over its size limit and recorded that as debt. This pays it.
+  Most of the growth there was a review history: the catalog design's seven rounds of independent review, which
+  only ever get longer.
+- Review histories now live in `docs/reviews/`, one file per reviewed design, with a short index and size limits of
+  their own. The catalog design's history moved there unchanged, checked by its fingerprint. The decisions folder is
+  at 292 983 bytes, against a limit of 327 680 that was not raised.
+- The book's page on where the landing page sends things still said the changelog and the development notes were
+  unbounded, which stopped being true when they became rolling ledgers. It now says what is bounded and by what.
+
 ## archogen — the catalog design's seventh review is answered, the first under its threat model
 
 `ARCHOGEN-M2-0210` (leaf `M2.7.1`, a fifth checkpoint).
