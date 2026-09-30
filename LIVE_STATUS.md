@@ -20,3 +20,4 @@ one of those changes, and only then. What each closed leaf did lives in its tree
 | `M5` — physical execution evidence | Not Started | **blocked: no board procured** (2026-09-13) — director decision |
 | `M6` — reuse and extension | Not Started | gated on `M4` |
 | `M7` — first supported release | Not Started | gated on `M5`, `M6` |
+| `TEMPLATE-REFS` — no reference to the project template | Not Started | frontier `TEMPLATE-REFS.1`: **postponed by the director** (2026-09-30); `scripts/` left alone until the template's reworked spine can be taken |

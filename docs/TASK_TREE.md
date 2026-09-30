@@ -63,6 +63,7 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 | [`M5`](tasks/M5.md) | `blocked` | — **no board procured** (`M0.5`, 2026-09-13) | repo-local |
 | [`M6`](tasks/M6.md) | `pending` | `M6.1` — three materially different systems | repo-local |
 | [`M7`](tasks/M7.md) | `pending` | `M7.4` — the F01–F30 mandatory-case audit | repo-local |
+| [`TEMPLATE-REFS`](tasks/TEMPLATE-REFS.md) | `blocked` | `TEMPLATE-REFS.1` — no reference to the project template; postponed by the director until its reworked spine can be taken | repo-local |
 | [`BOOTSTRAP`](tasks/BOOTSTRAP.md) | `done` | — | repo-local |
 
 ## Keeping this index true

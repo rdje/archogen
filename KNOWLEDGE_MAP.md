@@ -159,6 +159,7 @@ justifies the split — the rows below appear as that happens.
 - [`M7.md`](docs/tasks/M7.md)
 - [`PROGRAM.md`](docs/tasks/PROGRAM.md)
 - [`S0.md`](docs/tasks/S0.md)
+- [`TEMPLATE-REFS.md`](docs/tasks/TEMPLATE-REFS.md)
 
 ## Decision records
 

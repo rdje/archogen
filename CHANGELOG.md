@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — removing the project template's references is filed, and postponed
+
+`ARCHOGEN-TEMPLATE-REFS-0208` (tree `TEMPLATE-REFS`).
+
+- The director ruled that archogen should carry no reference to the project template it was created from, then
+  postponed the work: the template's own files are being reworked, and will soon be updatable here wherever they
+  have not been changed locally.
+- A new task tree holds the work until then: a fresh count of every reference, the live documents, the template's
+  functional files taken through its own update route, a ruling on the history, and a check that refuses a new
+  reference. When it was filed there were 134 references in 30 files.
+- Nothing under `scripts/` is touched before the director says so, the setup script and the template updater
+  included.
+
 ## archogen — the changelog and the development notes stop growing without bound
 
 `ARCHOGEN-PROGRAM-0207` (leaf `PROGRAM.31`).
