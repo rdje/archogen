@@ -808,13 +808,33 @@ impl<'r> Request<'r> {
     }
 }
 
+/// How many instances a module tree may elaborate into: the 1 025th import is `module-too-many-instances`.
+///
+/// ⛔ **A property of `eadl/1`, not of a machine** (leaf `M1.39`). Every import makes an instance, and each instance
+/// reads and parses its module again, so a module imported twice by each link of a chain doubles the work at every
+/// link. Measured `2026-09-30`: 19 files of about 100 bytes elaborated into 524 287 instances, took 12.8 s and held
+/// 1.8 GB. The largest tree the repository holds elaborates into 4. Stated in the language, like the list-nesting
+/// limit, so every elaborator refuses the same trees.
+pub const MAX_INSTANCES: usize = 1024;
+
+/// How long an import chain may be, the root included: a module 17 deep is `module-import-too-deep`.
+///
+/// ⛔ Elaboration recurses once per link, and a chain of 3 000 modules overflowed the stack and aborted the process
+/// (leaf `M1.39`). The longest chain the repository holds is 3 modules.
+pub const MAX_IMPORT_DEPTH: usize = 16;
+
 struct Elaborator<'a> {
     sources: &'a mut SourceMap,
     modules: &'a dyn ModuleSource,
     diagnostics: Diagnostics,
     instances: Vec<Instance>,
-    /// The chain of modules currently being elaborated, for cycle detection.
+    /// The chain of modules currently being elaborated, for cycle detection and the depth limit.
     stack: Vec<String>,
+    /// Instances begun, finished or not: what [`MAX_INSTANCES`] bounds.
+    started: usize,
+    /// Set by the first limit reached. Elaboration stops there: every later import is dropped without a word,
+    /// because one refusal explains them all and anything more is work the limit exists to prevent.
+    exhausted: bool,
 }
 
 impl<'a> Elaborator<'a> {
@@ -825,6 +845,8 @@ impl<'a> Elaborator<'a> {
             diagnostics: Diagnostics::new(),
             instances: Vec::new(),
             stack: Vec::new(),
+            started: 0,
+            exhausted: false,
         }
     }
 
@@ -840,6 +862,44 @@ impl<'a> Elaborator<'a> {
     /// Find an imported module by name, and elaborate it as one instance. Returns the instance's id.
     fn instantiate(&mut self, module_name: &str, request: Request<'_>) -> Option<usize> {
         let site = request.site;
+        if self.exhausted {
+            return None;
+        }
+        // Checked before the module is loaded, so nothing past a limit is read, parsed or kept.
+        let span = site.unwrap_or_else(|| Span::new(crate::source::SourceId(0), 0, 0));
+        if self.stack.len() >= MAX_IMPORT_DEPTH {
+            self.exhausted = true;
+            self.diagnostics.push(Diagnostic::error(
+                "module-import-too-deep",
+                format!(
+                    "importing `{module_name}` here makes a chain of {} modules, longer than eADL elaborates",
+                    self.stack.len() + 1
+                ),
+                Label::new(span, "the chain goes past the limit here"),
+                format!(
+                    "shorten the chain: an import chain may be at most {MAX_IMPORT_DEPTH} modules long, the \
+                     root included — {}",
+                    self.stack.join(" → ")
+                ),
+            ));
+            return None;
+        }
+        if self.started >= MAX_INSTANCES {
+            self.exhausted = true;
+            self.diagnostics.push(Diagnostic::error(
+                "module-too-many-instances",
+                format!(
+                    "importing `{module_name}` here makes instance {}, more than eADL elaborates",
+                    self.started + 1
+                ),
+                Label::new(span, "the tree grows past the limit here"),
+                format!(
+                    "import a module once and share it, rather than again at every level: a module tree may \
+                     elaborate into at most {MAX_INSTANCES} instances, and each import makes one"
+                ),
+            ));
+            return None;
+        }
         // ⛔ The one failure that must stop rather than collect: continuing into a cycle does
         // not terminate. The whole chain is reported, because "there is a cycle" without the
         // path is a puzzle rather than a diagnostic.
@@ -902,6 +962,7 @@ impl<'a> Elaborator<'a> {
             required_version,
             site,
         } = request;
+        self.started += 1;
         let (document, read_diagnostics) = read(self.sources, source_id);
         let had_read_errors = read_diagnostics.has_errors();
         for item in read_diagnostics.items() {

@@ -83,6 +83,13 @@ so.
 Instances come out in dependency order, children before parents. Every later pass —
 initialization order, resolution, emission — relies on that.
 
+Instances have a cost, though, and it compounds. A module imported twice at every link of a chain doubles
+the tree at every link. Before leaf `M1.39`, 19 module files of about 100 bytes elaborated into half a
+million instances and held 1.8 GB, and a chain of 3 000 modules crashed the elaborator. So a tree is bounded
+(`docs/semantics/reference.md` §6 rule 11). It may have at most 1 024 instances, and an import chain at most
+16 modules, the root included. Elaboration stops at the first import past either limit, with one error,
+`module-too-many-instances` or `module-import-too-deep`. The largest tree in the repository has 4 instances.
+
 ## Names carry their whole path
 
 **Rule 9.** A declaration in an imported instance is named by the path of aliases that reached it, and the

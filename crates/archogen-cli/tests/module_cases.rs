@@ -18,11 +18,22 @@ use std::path::{Path, PathBuf};
 use archogen_cli::{run, Status};
 use eadl_front::{read, SourceMap, Verdict};
 
-/// The one `module-` code no tracked fixture reaches, and why — `docs/semantics/reference.md` §6 states it.
-const UNREACHED: &[(&str, &str)] = &[(
-    "module-too-large",
-    "fires only on a module source of 2^32 bytes, which no tracked fixture carries",
-)];
+/// The `module-` codes no tracked fixture reaches, and why — `docs/semantics/reference.md` §6 states it.
+const UNREACHED: &[(&str, &str)] = &[
+    (
+        "module-too-large",
+        "fires only on a module source of 2^32 bytes, which no tracked fixture carries",
+    ),
+    (
+        "module-import-too-deep",
+        "fires on a chain of 17 modules, generated in §4's fires-on cell and executed by fires_on.rs",
+    ),
+    (
+        "module-too-many-instances",
+        "fires on a tree of 11 modules each imported twice, generated in §4's fires-on cell and executed by \
+         fires_on.rs",
+    ),
+];
 
 fn repo_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))

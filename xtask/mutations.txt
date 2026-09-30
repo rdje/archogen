@@ -481,3 +481,36 @@ from
 to
             if false && self.depth == MAX_NESTING {
 end
+
+mutation import-depth-unbounded
+file crates/eadl-front/src/module.rs
+test -p eadl-front --test module_limits
+expect killed
+why M1.39: without the depth check, elaboration recurses once per import link again, and a chain of 3 000 modules overflows the stack and aborts the process.
+from
+            if self.stack.len() >= MAX_IMPORT_DEPTH {
+to
+            if false && self.stack.len() >= MAX_IMPORT_DEPTH {
+end
+
+mutation instances-unbounded
+file crates/eadl-front/src/module.rs
+test -p eadl-front --test module_limits
+expect killed
+why M1.39: without the instance check, a module imported twice at every link doubles the tree at every link — 19 small files became half a million instances and 1.8 GB.
+from
+            if self.started >= MAX_INSTANCES {
+to
+            if false && self.started >= MAX_INSTANCES {
+end
+
+mutation elaboration-goes-on-past-a-limit
+file crates/eadl-front/src/module.rs
+test -p eadl-front --test module_limits
+expect killed
+why M1.39: a limit that refuses one import and lets the next ones through keeps doing the work it exists to prevent, and says so once per import.
+from
+            if self.exhausted {
+to
+            if false && self.exhausted {
+end

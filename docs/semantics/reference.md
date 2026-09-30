@@ -405,6 +405,8 @@ cheapest diagnostic to write is the most expensive to receive.
 | `module-name-mismatch` | the name a module declares is not the name it was imported by | make them match — a locked build cannot otherwise tell which module it locked | `modules (defmodule app (version 1 0) (import hw.misnamed)) <mod hw.misnamed>(defmodule hw.clock (version 1 0))` |
 | `module-too-large` | a module's text is larger than a span can address: over 4 GiB, because a span is a 32-bit byte offset (`SourceMap::add`) | split the module | `none: a module text over 4 GiB, which a span, a 32-bit byte offset, cannot address; no fixture of any sane size carries one (SourceMap::add in crates/eadl-front/src/source.rs)` |
 | `module-circular-import` | a module imports something that imports it back | break the cycle: elaboration is children-before-parents, so a cycle has no first instance | `modules (defmodule app (version 1 0) (import cycle.b)) <mod cycle.b>(defmodule cycle.b (version 1 0) (import cycle.c)) <mod cycle.c>(defmodule cycle.c (version 1 0) (import cycle.b))` |
+| `module-import-too-deep` | an import makes a chain of more than 16 modules, the root included. Elaboration stops there and imports nothing more. A property of this version of the language (§6 rule 11): elaboration recurses once per link, and a longer chain would exhaust a stack on one host and not another | shorten the chain: import from nearer the root, or merge modules that only pass an import along | `modules (defmodule a0 (version 1 0) (import a1 (as n))) <mod a1>(defmodule a1 (version 1 0) (import a2 (as n))) <mod a2>(defmodule a2 (version 1 0) (import a3 (as n))) <mod a3>(defmodule a3 (version 1 0) (import a4 (as n))) <mod a4>(defmodule a4 (version 1 0) (import a5 (as n))) <mod a5>(defmodule a5 (version 1 0) (import a6 (as n))) <mod a6>(defmodule a6 (version 1 0) (import a7 (as n))) <mod a7>(defmodule a7 (version 1 0) (import a8 (as n))) <mod a8>(defmodule a8 (version 1 0) (import a9 (as n))) <mod a9>(defmodule a9 (version 1 0) (import a10 (as n))) <mod a10>(defmodule a10 (version 1 0) (import a11 (as n))) <mod a11>(defmodule a11 (version 1 0) (import a12 (as n))) <mod a12>(defmodule a12 (version 1 0) (import a13 (as n))) <mod a13>(defmodule a13 (version 1 0) (import a14 (as n))) <mod a14>(defmodule a14 (version 1 0) (import a15 (as n))) <mod a15>(defmodule a15 (version 1 0) (import a16 (as n)))` |
+| `module-too-many-instances` | a module tree elaborates into more than 1 024 instances. Each import makes one, so a module imported twice at every link of a chain doubles the tree at every link. Elaboration stops there and imports nothing more (§6 rule 11) | import a module once where it is needed and share it, rather than again at every level | `modules (defmodule f0 (version 1 0) (import f1 (as x)) (import f1 (as y))) <mod f1>(defmodule f1 (version 1 0) (import f2 (as x)) (import f2 (as y))) <mod f2>(defmodule f2 (version 1 0) (import f3 (as x)) (import f3 (as y))) <mod f3>(defmodule f3 (version 1 0) (import f4 (as x)) (import f4 (as y))) <mod f4>(defmodule f4 (version 1 0) (import f5 (as x)) (import f5 (as y))) <mod f5>(defmodule f5 (version 1 0) (import f6 (as x)) (import f6 (as y))) <mod f6>(defmodule f6 (version 1 0) (import f7 (as x)) (import f7 (as y))) <mod f7>(defmodule f7 (version 1 0) (import f8 (as x)) (import f8 (as y))) <mod f8>(defmodule f8 (version 1 0) (import f9 (as x)) (import f9 (as y))) <mod f9>(defmodule f9 (version 1 0) (import f10 (as x)) (import f10 (as y))) <mod f10>(defmodule f10 (version 1 0))` |
 | `module-bad-import` | an `import` does not name a module | write `(import platform.timer (as timer))` | `check (defmodule app (version 1 0) (import (as timer)))` |
 | `module-unknown-import-clause` | an import holds a clause that is not `as`, `version` or `with` | an import holds `as`, `version` and `with` | `modules (defmodule app (version 1 0) (import hw.timer (alias timer))) <mod hw.timer>(defmodule hw.timer (version 1 0))` |
 | `module-bad-alias` | `as` is not given a namespace name | write `(as timer)` | `modules (defmodule app (version 1 0) (import hw.timer (as "timer"))) <mod hw.timer>(defmodule hw.timer (version 1 0))` |
@@ -577,14 +579,24 @@ A module is a file holding exactly one `(defmodule …)` form. Its clauses are `
     `crates/eadl-model/src/check.rs`'s `check_program` applies this rule and then runs every pass a single
     description gets, so a module tree is judged by exactly the same rules.
 
+11. **A module tree is bounded: at most 1 024 instances, and import chains at most 16 modules long, the root
+    included.** Elaboration stops at the first import past either limit, refuses it (`module-too-many-instances`,
+    `module-import-too-deep`), and imports nothing more, so the work past a limit is none. Both are properties of
+    this version of the language, like the list-nesting limit and the value domain: every elaborator refuses the
+    same trees. Before them (leaf `M1.39`), 19 module files of about 100 bytes elaborated into 524 287 instances
+    and held 1.8 GB, and a chain of 3 000 modules overflowed the stack. The largest tree the repository holds
+    has 4 instances, and its longest chain is 3 modules.
+
 ⚠️ **Rule 9 does not by itself make a name mean one declaration**: a module that declares `inner.x` and
 also imports a module as `inner` that declares `x` gives both the name `p.inner.x`. That is refused by §7
 rule 6 — a name is declared once — which covers a single description and a module tree alike.
 
-⚠️ **One code has no fixture, and the reason is stated rather than hidden.** `module-too-large` fires when
-a module's source cannot be given an address — at 2^32 bytes — and no tracked fixture carries a
-four-gigabyte file. Every other `module-` code in §4 is produced by a case under
-`docs/semantics/modules/` through `archogen check`. The row's own wording is finding **F-H**, owned by
+⚠️ **Three codes have no tracked fixture, and the reason is stated rather than hidden.** `module-too-large`
+fires when a module's source cannot be given an address — at 2^32 bytes — and no tracked fixture carries a
+four-gigabyte file. `module-import-too-deep` and `module-too-many-instances` fire on trees that exist only to
+be long, so each is written once, generated, in its `fires on` cell, and executed there.
+Every other `module-` code in §4 is produced by a case under `docs/semantics/modules/` through
+`archogen check`. The row's own wording is finding **F-H**, owned by
 leaf `M1.26.2` in `docs/tasks/M1.md`.
 
 ## 7. Kinds, and the one primitive that is not declared in eADL

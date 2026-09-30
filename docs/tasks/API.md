@@ -394,7 +394,9 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   per instance, which is the deployment model the director described.
   ⚠️ Measured `2026-09-30` before starting: ten thousand nested parentheses crashed the reader with a stack
   overflow. That was a defect for every consumer, not only an untrusted one, so it was fixed at its source as
-  `M1.38` (a nesting limit of 256, `read-nesting-too-deep`). This leaf's limits start from there.
+  `M1.38` (a nesting limit of 256, `read-nesting-too-deep`). The next measurement found the module system's two:
+  a fan-out of 19 small modules held 1.8 GB, and a 3 000-link import chain overflowed the stack. Both are fixed at
+  their source as `M1.39` (1 024 instances, 16-module chains). This leaf's limits start from there.
   Verification: `pending`
   Commit: `pending`
 

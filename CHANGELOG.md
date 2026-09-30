@@ -4,6 +4,15 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — a few small module files can no longer exhaust memory
+
+`ARCHOGEN-M1-0180` (leaf `M1.39`).
+
+- Each import makes a new copy of a module, so a module imported twice at every step of a chain doubles the work
+  at every step. Nineteen tiny files took 13 seconds and 1.8 GB. A long chain of imports crashed the checker.
+- A module tree may now have at most 1 024 copies, and an import chain at most 16 modules. Past either limit,
+  the checker stops at once with one clear error. The largest real tree in the repository has 4 copies.
+
 ## archogen — deeply nested input no longer crashes the checker
 
 `ARCHOGEN-M1-0178` (leaf `M1.38`).
