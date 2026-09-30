@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog design's section on the runtime analysis's inputs gets a file of its own
+
+`ARCHOGEN-M2-0217` (leaf `M2.7.1`, a seventh checkpoint).
+
+- The catalog design had reached 1 167 of the 1 200 lines its folder allows a file. Its section on what the runtime
+  analysis takes from the catalog moved, unchanged, into a companion record. It is still part of the design, and it
+  is reviewed with it.
+- That section then took the names the new composition design needs: the costs of each runtime call and of a
+  task's completion, the seven platform facts the composition relies on, and where delivery ends and a context
+  switch ends. The catalog's next review checks them.
+- With the new records, the decisions folder went over its total size limit again, 331 050 bytes against 327 680.
+  The limit was not raised. A new leaf moves the runtime analysis design's review history into the review folder,
+  which pays it with room to spare.
+
 ## archogen — the first review of how the four shared inputs are built is answered
 
 `ARCHOGEN-M2-0216` (leaf `M2.10.1`, a second checkpoint).
