@@ -29,6 +29,7 @@
 
 pub mod bound;
 pub mod claim;
+pub mod sha256;
 pub mod trust;
 
 pub use bound::{Bound, BoundDefect, BoundOrigin, SafetyFactor};

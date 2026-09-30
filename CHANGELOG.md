@@ -4,6 +4,21 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the catalog's fingerprint, computed inside the engine and checked three ways
+
+`ARCHOGEN-M2-0200` (leaf `M2.7.2`).
+
+- Every entry in the engine's knowledge catalog will be identified by a SHA-256 fingerprint, and a review will hold
+  only for the fingerprint it names. The engine now computes SHA-256 itself (`archogen_evidence::sha256`), because
+  it depends on no outside code and runs no other program.
+- It is checked three ways, none of which is its own code: it reproduces the standard's published examples; its
+  internal constants are recomputed from their mathematical definition; and for every message length that puts
+  the padding somewhere different, it gives the same answer as the system's own tool.
+- The third check matters most. A deliberately planted off-by-one in the padding passes every published example,
+  because none of them is the one length that exposes it. It fails the length-by-length comparison. Both results
+  are kept in the mutation catalogue, so the gap in the published examples stays documented and the bug stays
+  caught.
+
 ## archogen — the catalog design's fourth review answered: a rejection now follows the content it rejected
 
 `ARCHOGEN-M2-0199` (leaf `M2.7.1`, a second checkpoint).

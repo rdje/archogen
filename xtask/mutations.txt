@@ -657,3 +657,36 @@ from
 to
             .map(|_| "target:riscv64gc-unknown-none-elf".to_string())
 end
+
+mutation sha256-padding-boundary
+file crates/archogen-evidence/src/sha256.rs
+test -p archogen-evidence --test sha256
+expect killed
+why M2.7.2: a message of exactly 55 bytes mod 64 leaves the 0x80 at byte 55, with room for the length; `>=` pads an extra block there. The system tool's digests for every length 0..=129 must see it.
+from
+            if self.filled > 56 {
+to
+            if self.filled >= 56 {
+end
+
+mutation sha256-padding-boundary-against-the-published-examples
+file crates/archogen-evidence/src/sha256.rs
+test -p archogen-evidence --test sha256 -- --skip every_boundary_length
+expect survives
+why The blind spot itself, kept as a reproduction: FIPS 180-4's published messages are 0, 3, 56 and 112 bytes long and one million, none of them 55 mod 64, so they cannot see this padding bug. That is why the boundary fixture exists.
+from
+            if self.filled > 56 {
+to
+            if self.filled >= 56 {
+end
+
+mutation sha256-round-constant
+file crates/archogen-evidence/src/sha256.rs
+test -p archogen-evidence --lib sha256
+expect killed
+why M2.7.2: the round constants are derived from their definition, the cube roots of the first 64 primes, in exact integer arithmetic; one flipped bit in K must fail that derivation.
+from
+        0x428a_2f98,
+to
+        0x428a_2f99,
+end

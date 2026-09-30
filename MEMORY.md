@@ -18,7 +18,7 @@
   `docs/TASK_TREE.md`; it is not copied here.
 - **Next action:** **`M2.7.1`**. Run round 5 of the independent review of `docs/decisions/decision_catalog-records.md`
   in a new read-only context; round 4 is answered in the record. Answer every finding in the record, and close the
-  leaf when a round finds no defect; the leaf's "To close" says what round 5 must re-check. Then `M2.7.2`–`M2.7.5`,
+  leaf when a round finds no defect; the leaf's "To close" says what round 5 must re-check. Then `M2.7.3`–`M2.7.5`,
   then `API.5`.
 - **In flight:** branch **`wip/m2.9`** (`758cbcd`) is a checkpoint, not a finished leaf — `M2.9` records it as
   not compiling (`crates/rt-core/tests/differential.rs` unadapted).
