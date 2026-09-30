@@ -3648,10 +3648,11 @@ mdBook that is the director's window into the project.
     leaf, `PROGRAM.32`, the frontier and both logs; the snapshots; `CHANGELOG.md`.
 
 - ID: `PROGRAM.32`
-  Status: `blocked` — on the director's hold on `scripts/` (`2026-09-30`: "leave the files under scripts alone, just
-  for now"). Its acceptance needs a new check proving sealed bodies unchanged, and gates that read leaves, the
-  template's `TASK-ACCEPTANCE` among them, finding sealed text; both are changes under `scripts/`. Whether the hold
-  covers archogen's own scripts is asked in §10 of `docs/decisions/decision_findings-for-director-review.md`.
+  Status: `pending` — unblocked `2026-09-30` by the director's ruling on §10 of
+  `docs/decisions/decision_findings-for-director-review.md`: the hold covers only the 17 template files archogen has
+  not changed. The new check, and the change to `TASK-ACCEPTANCE` (`check_task_acceptance.sh`, changed by
+  `PROGRAM.21`), are archogen's. The held checks that read leaves must keep working unchanged: `WAIVER-ROUTING`,
+  `GAP-CLAIM-CENSUS`, `TASK-TREE-OWNERSHIP` and `LIVE-DOC-CURRENCY`.
   Goal: seal closed leaves out of the task trees — each `done` leaf's body moved byte for byte to a sealed per-subtree
   file with its digest, the tree keeping one line per closed leaf with its commit and a link; `M1` and `PROGRAM` first.
   Unblocked `2026-09-30` by the ruling on §8 of `docs/decisions/decision_findings-for-director-review.md` (option C),
@@ -3943,7 +3944,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.32` | `blocked` | closed leaves sealed out of the task trees, ruled on §8; waits on the director's hold on `scripts/`, since its check and the gates that read leaves live there |
+| 1 | `PROGRAM.32` | `pending` | closed leaves sealed out of the task trees, ruled on §8; unblocked by the ruling on the hold's scope, working around the 17 held template files |
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 | 3 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
 

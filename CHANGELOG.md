@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the director rules how far the hold on the scripts folder reaches
+
+`ARCHOGEN-PROGRAM-0221` (leaf `PROGRAM.32`, unblocked).
+
+- The director ruled that the hold covers only the project template's scripts that archogen has never changed. A
+  script archogen has changed is archogen's own, and a template update will not touch it.
+- Measured against the history, that is 17 files: 15 scripts and the two git hooks, all unchanged since the
+  template was imported. Everything else is archogen's, including the three template files it has already
+  changed and the 36 it created.
+- Sealing closed task-tree leaves is unblocked, because what it needs to change is archogen's. It has to work with
+  the 17 held files as they are.
+
 ## archogen — the web page is confirmed in a real browser, and the browser binding is complete
 
 `ARCHOGEN-API-0220` (leaf `API.5.5`; `API.5` closed).

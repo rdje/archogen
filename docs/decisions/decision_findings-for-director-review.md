@@ -273,7 +273,7 @@ rule that a response the API did not judge must still carry a §5.5 verdict, and
 on the reading. Changing it later is a change to one enum and its projection, before the version is
 fixed at `API.3`'s close.
 
-## 10. How far the hold on `scripts/` reaches (`2026-09-30`)
+## 10. How far the hold on `scripts/` reaches (`2026-09-30`) — **ruled the same day**
 
 On `2026-09-30` you asked for the files under `scripts/` to be left alone "just for now", while the template's
 spine is reworked, so that its files here can later be updated from it wherever they have not been amended
@@ -295,6 +295,28 @@ locally. That is being followed literally: nothing under `scripts/` has changed 
 **The decision needed:** does the hold cover archogen's own files under `scripts/`, or only the template's?
 Recommended: the template's only. That protects the update you described, and lets `PROGRAM.32` and new project
 gates proceed.
+
+**Ruled `2026-09-30`:** "only [template] inherited script you haven't modified. Those you modified are yours now. Even
+an update_scaffold won't touch them."
+
+**What that holds, measured the same day.** A file is held when it was in the template's initial import (`32e6b14`)
+and no later commit has changed it (`git log -- <path>`). That is 17 files:
+- `bootstrap.sh`;
+- the checks `check_docpaths.sh`, `check_doctrines.sh`, `check_gap_claims.sh`, `check_lesson_promotion.sh`,
+  `check_live_doc_currency.sh`, `check_memory_architecture.sh`, `check_no_background_jobs.sh`,
+  `check_readme_stability.sh`, `check_routing_evidence.sh`, `check_table_arity.sh`,
+  `check_task_tree_ownership.sh` and `check_waiver_routing.sh`, all under `scripts/`;
+- `knowledge-map/scripts/gen_knowledge_map.sh` and `check_knowledge_map.sh`;
+- `.githooks/pre-commit` and `.githooks/commit-msg`.
+
+Everything else is archogen's to change:
+- the template files archogen has already changed: `check_task_acceptance.sh` (`PROGRAM.21`),
+  `check_doctrines.project.sh` and `update_scaffold.sh`;
+- the 36 files archogen created.
+
+`bootstrap.sh` and `update_scaffold.sh` stay in place, as you asked on the same day. `PROGRAM.32` is unblocked: its
+new check and its change to `TASK-ACCEPTANCE` are archogen's files. It must work with the held checks that read
+leaves left as they are.
 
 ## A note on what "done" means so far
 

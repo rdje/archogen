@@ -24,8 +24,8 @@
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M2.9` — §6 (a)
   and (b), two rulings on `ROADMAP` §3.1.1; `M5` — no board procured;
-  `TEMPLATE-REFS` — postponed; **nothing under `scripts/` is touched** until the director says so, which also holds
-  `PROGRAM.32` (its scope asked: findings §10).
+  `TEMPLATE-REFS` — postponed. **The 17 template files archogen has not changed are never edited** (findings §10,
+  ruled `2026-09-30`); every other script is archogen's.
 - **Derive, don't copy:** the test baseline is `cargo test --all -q` (must be 0 failed); the push distance
   and the ruled threshold are `bash scripts/push_cadence.sh`; the integration tier is
   `cargo xtask verify --tier integration`.

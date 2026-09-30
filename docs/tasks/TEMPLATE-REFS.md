@@ -16,10 +16,11 @@ template. This tree owns doing it, once the director says the template's reworke
 
 ## Non-Goals
 
-- **Nothing under `scripts/` is changed before the director says so.** The template's spine is being reworked and
-  debugged, and its files here, `scripts/bootstrap.sh` and `scripts/update_scaffold.sh` among them, will soon be
-  updatable from it wherever they have not been amended locally. Removing or editing them now would make that
-  update harder, so the director ruled them left alone "just for now".
+- **The 17 template files archogen has not changed are not touched before the director says so.** The template's
+  spine is being reworked and debugged, and those files will soon be updatable from it. The director ruled on
+  `2026-09-30` that the hold covers only them: "Those you modified are yours now." The list is in §10 of
+  `docs/decisions/decision_findings-for-director-review.md`. `scripts/bootstrap.sh` and `scripts/update_scaffold.sh`
+  stay in place either way.
 - No reference is removed by this tree before it is unblocked. The one removal already made, the template's own
   entries in the changelog and the development notes, was part of `PROGRAM.31`, on the director's word that they
   were a defect of the template, since fixed there.
