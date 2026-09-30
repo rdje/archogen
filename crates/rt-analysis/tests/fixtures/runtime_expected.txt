@@ -1,0 +1,162 @@
+fixture f13_4_d22
+platform S=2 W_wake=0 gamma=0 C_rel=1 rho=0 delta=0 enabled=timer facts=all
+task H prio=1 C=2 T=10 D=10 Jevent=0 Jrelease=3 CS=0 released=timer
+task L prio=2 C=8 T=100 D=22 Jevent=0 Jrelease=3 CS=0 released=timer
+# admit: masked-run L=max(CS+S=2, C_rel+S=3, W_wake=0)=3; timer floor rho+delta+L=3 <= Jrelease 3 (both). J_H=J_L=3. hp cost C_H+2S+g=6; timer C_rel+g=1 per task.
+# H: U=1/10+1/100=11/100<1. w0=2+2=4 (J+w0=7<=10); w1=4+ceil(7/10)*1+ceil(7/100)*1=6 (J+w=9); w2=4+ceil(9/10)+ceil(9/100)=6. R=3+6=9<=10.
+# L: U=6/10+1/10+1/100=71/100<1. w0=8+2=10 (J+w0=13<=100); w1=10+ceil(13/10)*6+ceil(13/10)*1+ceil(13/100)*1=10+12+2+1=25; w2=10+ceil(28/10)*6+3+ceil(28/100)=10+18+3+1=32; w3=10+ceil(35/10)*6+4+1=39; w4=10+ceil(42/10)*6+5+1=46; w5=10+ceil(49/10)*6+5+1=46. R=3+46=49>22.
+expect H holds R=9 w=4,6,6
+expect L not-established past-deadline R=49 w=10,25,32,39,46,46
+end
+fixture f13_4_d23
+platform S=2 W_wake=0 gamma=0 C_rel=1 rho=0 delta=0 enabled=timer facts=all
+task H prio=1 C=2 T=10 D=10 Jevent=0 Jrelease=3 CS=0 released=timer
+task L prio=2 C=8 T=100 D=23 Jevent=0 Jrelease=3 CS=0 released=timer
+# identical arithmetic to f13_4_d22 (D is not used in the recurrence); R_L=49>23.
+expect H holds R=9 w=4,6,6
+expect L not-established past-deadline R=49 w=10,25,32,39,46,46
+end
+fixture basic
+platform S=1 W_wake=1 gamma=0 C_rel=1 rho=0 delta=0 enabled=timer facts=all
+task H prio=1 C=2 T=10 D=10 Jevent=0 Jrelease=2 CS=0 released=timer
+task L prio=2 C=3 T=20 D=20 Jevent=0 Jrelease=2 CS=0 released=timer
+# admit: L=max(CS+S=1, C_rel+S=2, W_wake=1)=2, floor 2<=2. J_H=J_L=2. hp cost 2+2+0=4; timer 1 per task.
+# H: U=1/10+1/20=3/20<1. w0=3 (J+w0=5); w1=3+ceil(5/10)+ceil(5/20)=5; w2=3+ceil(7/10)+ceil(7/20)=5. R=2+5=7<=10.
+# L: U=4/10+3/20=11/20<1. w0=4 (J+w0=6); w1=4+ceil(6/10)*4+ceil(6/10)+ceil(6/20)=10; w2=4+ceil(12/10)*4+ceil(12/10)+ceil(12/20)=4+8+2+1=15; w3=4+ceil(17/10)*4+2+ceil(17/20)=15. R=2+15=17<=20.
+expect H holds R=7 w=3,5,5
+expect L holds R=17 w=4,10,15,15
+end
+fixture source
+platform S=1 W_wake=1 gamma=0 C_rel=1 rho=0 delta=0 enabled=timer,uart facts=all
+source uart C=2 T=25 J=3 ack=entry priority=1 deferred=nothing
+task H prio=1 C=2 T=10 D=10 Jevent=0 Jrelease=3 CS=0 released=timer
+task E prio=2 C=1 T=25 D=25 Jevent=0 Jrelease=3 CS=0 released=uart:every
+# admit: enabled {timer,uart} = {uart}+timer; E every-arrival T_E=25<=T_s=25; L=max(1, 2, C_s+S=3, 1)=3; H floor 0+0+3<=3; J_s=3>=delta+L=3; E Jrelease 3>=J_s=3; ack entry J_s=3<T_s=25.
+# J_H=J_E=J_s=3. timer 1 per task (E charged C_rel though it has no timer service, record s3); uart C_s+g=2 per arrival; hp cost H 4.
+# H: U=1/10+1/25+2/25=11/50<1. w0=3 (J+w0=6); w1=3+ceil(6/10)*1+ceil(6/25)*1+ceil(6/25)*2=7 (J+w=10, not >10); w2=3+ceil(10/10)+ceil(10/25)+ceil(10/25)*2=7. R=3+7=10<=10.
+# E: U=4/10+7/50+4/50=31/50<1. w0=2 (J+w0=5); w1=2+ceil(5/10)*4+ceil(5/10)+ceil(5/25)+ceil(5/25)*2=10; w2=2+ceil(13/10)*4+ceil(13/10)+ceil(13/25)+ceil(13/25)*2=2+8+2+1+2=15; w3=2+ceil(18/10)*4+2+1+2=15. R=3+15=18<=25.
+expect H holds R=10 w=3,7,7
+expect E holds R=18 w=2,10,15,15
+end
+fixture event_jitter
+platform S=1 W_wake=1 gamma=0 C_rel=1 rho=0 delta=0 enabled=timer facts=all
+task H prio=1 C=2 T=10 D=10 Jevent=3 Jrelease=2 CS=0 released=timer
+task L prio=2 C=4 T=40 D=40 Jevent=0 Jrelease=2 CS=0 released=timer
+# admit: L=2, floor 2<=2 (floor applies to Jrelease only). J_H=3+2=5, J_L=2; J_k=Jevent+Jrelease in every ceiling, timer term included.
+# H: U=1/10+1/40=1/8<1. w0=3 (J+w0=8); w1=3+ceil(8/10)+ceil(5/40)=5 (J+w=10); w2=3+ceil(10/10)+ceil(7/40)=5. R=5+5=10<=10.
+# L: U=4/10+1/8=21/40<1. w0=5 (J+w0=7); w1=5+ceil(10/10)*4+ceil(10/10)+ceil(7/40)=11; w2=5+ceil(16/10)*4+ceil(16/10)+ceil(13/40)=5+8+2+1=16; w3=5+ceil(21/10)*4+3+ceil(18/40)=5+12+3+1=21; w4=5+ceil(26/10)*4+3+ceil(23/40)=21. R=2+21=23<=40.
+expect H holds R=10 w=3,5,5
+expect L holds R=23 w=5,11,16,21,21
+end
+fixture gamma
+platform S=1 W_wake=1 gamma=1 C_rel=1 rho=0 delta=0 enabled=timer facts=all
+task H prio=1 C=2 T=10 D=10 Jevent=0 Jrelease=2 CS=0 released=timer
+task M prio=2 C=3 T=20 D=20 Jevent=0 Jrelease=2 CS=0 released=timer
+task L prio=3 C=5 T=50 D=50 Jevent=0 Jrelease=2 CS=0 released=timer
+# admit: L=max(1,2,1)=2, floor 2<=2. J=2 all. hp cost C_j+2S+g=C_j+3; timer C_rel+g=2 per task.
+# H: U=2/10+2/20+2/50=17/50<1. w0=3 (J+w0=5); w1=3+ceil(5/10)*2+ceil(5/20)*2+ceil(5/50)*2=9; J+w1=11>T=10 -> stop.
+# M: U=5/10+17/50=21/25<1. w0=4 (J+w0=6); w1=4+ceil(6/10)*5+ceil(6/10)*2+ceil(6/20)*2+ceil(6/50)*2=15 (J+w=17); w2=4+ceil(17/10)*5+ceil(17/10)*2+ceil(17/20)*2+ceil(17/50)*2=4+10+4+2+2=22; J+w2=24>20 -> stop.
+# L: U=5/10+6/20+17/50=57/50>=1 -> no iteration.
+expect H not-established busy-period w=3,9
+expect M not-established busy-period w=4,15,22
+expect L not-established utilisation
+end
+fixture sections
+platform S=1 W_wake=1 gamma=0 C_rel=1 rho=0 delta=0 enabled=timer facts=all
+task H prio=1 C=2 T=10 D=10 Jevent=0 Jrelease=5 CS=0 released=timer
+task L prio=2 C=4 T=40 D=40 Jevent=0 Jrelease=5 CS=4 released=timer
+# admit: L=max(CS_H+S=1, CS_L+S=5, C_rel+S=2, W_wake=1)=5, floor 5<=5. J_H=J_L=5. CS enters only the floor (no blocking term).
+# H: U=1/10+1/40=1/8<1. w0=3 (J+w0=8); w1=3+ceil(8/10)+ceil(8/40)=5 (J+w=10); w2=3+ceil(10/10)+ceil(10/40)=5. R=5+5=10<=10.
+# L: U=4/10+1/8=21/40<1. w0=5 (J+w0=10); w1=5+ceil(10/10)*4+ceil(10/10)+ceil(10/40)=11; w2=5+ceil(16/10)*4+2+ceil(16/40)=16; w3=5+ceil(21/10)*4+3+ceil(21/40)=21; w4=5+ceil(26/10)*4+3+ceil(26/40)=21. R=5+21=26<=40.
+expect H holds R=10 w=3,5,5
+expect L holds R=26 w=5,11,16,21,21
+end
+fixture utilisation
+platform S=1 W_wake=1 gamma=0 C_rel=5 rho=0 delta=0 enabled=timer facts=all
+task A prio=1 C=1 T=10 D=10 Jevent=0 Jrelease=6 CS=0 released=timer
+task B prio=2 C=1 T=10 D=10 Jevent=0 Jrelease=6 CS=0 released=timer
+# admit: L=max(1, C_rel+S=6, 1)=6, floor 6<=6. timer C_rel+g=5 per task.
+# A: U=5/10+5/10=1>=1 (exact boundary) -> no iteration.  B: U=(1+2+0)/10+1=13/10>=1 -> no iteration.
+expect A not-established utilisation
+expect B not-established utilisation
+end
+fixture busy
+platform S=1 W_wake=1 gamma=0 C_rel=1 rho=0 delta=0 enabled=timer facts=all
+task A prio=1 C=1 T=10 D=10 Jevent=0 Jrelease=9 CS=0 released=timer
+# admit: L=2, floor 2<=9. J_A=9. U=1/10<1 (pre-check first). w0=1+1=2; J+w0=11>T=10 -> stops at once.
+expect A not-established busy-period w=2
+end
+fixture past_deadline
+platform S=1 W_wake=1 gamma=0 C_rel=1 rho=0 delta=0 enabled=timer facts=all
+task H prio=1 C=2 T=10 D=10 Jevent=0 Jrelease=2 CS=0 released=timer
+task L prio=2 C=3 T=20 D=16 Jevent=0 Jrelease=2 CS=0 released=timer
+# identical arithmetic to basic (D_L=16<=T_L=20 admitted). H: R=2+5=7. L: w=4,10,15,15, R=2+15=17>D=16.
+expect H holds R=7 w=3,5,5
+expect L not-established past-deadline R=17 w=4,10,15,15
+end
+fixture third_review
+platform S=1 W_wake=1 gamma=0 C_rel=1 rho=1 delta=0 enabled=timer facts=all
+task H prio=1 C=5 T=20 D=20 Jevent=0 Jrelease=3 CS=0 released=timer
+task L prio=2 C=6 T=100 D=20 Jevent=0 Jrelease=3 CS=0 released=timer
+task K prio=3 C=1 T=100 D=100 Jevent=0 Jrelease=3 CS=0 released=timer
+# admit: L=max(1,2,1)=2, floor rho+delta+L=1+0+2=3<=3; no early release declared. J=3 all. hp cost H 5+2=7, L 6+2=8; timer 1 per task.
+# H: U=1/20+1/100+1/100=7/100<1. w0=6 (J+w0=9); w1=6+ceil(9/20)+ceil(9/100)+ceil(9/100)=9; w2=6+ceil(12/20)+2*ceil(12/100)=9. R=3+9=12<=20.
+# L: U=7/20+7/100=21/50<1. w0=7 (J+w0=10); w1=7+ceil(10/20)*7+ceil(10/20)+ceil(10/100)+ceil(10/100)=17; w2=7+ceil(20/20)*7+1+2*ceil(20/100)=17. R=3+17=20<=20 (the record's "R_L = 20").
+# K: U=7/20+8/100+7/100=1/2<1. w0=2 (J+w0=5); w1=2+ceil(5/20)*7+ceil(5/100)*8+ceil(5/20)+2*ceil(5/100)=20; w2=2+ceil(23/20)*7+ceil(23/100)*8+ceil(23/20)+2*ceil(23/100)=2+14+8+2+2=28; w3=2+ceil(31/20)*7+8+2+2=28. R=3+28=31<=100.
+expect H holds R=12 w=6,9,9
+expect L holds R=20 w=7,17,17
+expect K holds R=31 w=2,20,28,28
+end
+fixture mixed
+platform S=1 W_wake=1 gamma=1 C_rel=1 rho=0 delta=0 enabled=timer,uart facts=all
+source uart C=1 T=30 J=3 ack=exit priority=1 deferred=nothing
+task T1 prio=1 C=1 T=8 D=8 Jevent=0 Jrelease=3 CS=0 released=timer
+task T2 prio=2 C=2 T=16 D=16 Jevent=0 Jrelease=3 CS=0 released=timer
+task T3 prio=3 C=3 T=40 D=35 Jevent=0 Jrelease=3 CS=2 released=timer
+task T4 prio=4 C=4 T=30 D=30 Jevent=0 Jrelease=3 CS=0 released=uart:every
+# admit: enabled {timer,uart} = {uart}+timer; T4 every-arrival 30<=30; L=max(CS_T3+S=3, C_rel+S=2, C_s+S=2, W_wake=1)=3; timer floors 3<=3; J_s=3>=0+3; T4 Jrelease 3>=J_s; ack exit J_s+C_s+S=5<30.
+# J=3 all, J_s=3. hp cost C_j+3; timer C_rel+g=2 per task (4 tasks); uart C_s+g=2. timer+source rate 2/8+2/16+2/40+2/30+2/30=134/240.
+# T1: U=134/240<1. w0=2 (J+w0=5); w1=2+ceil(5/8)*2+ceil(5/16)*2+ceil(5/40)*2+ceil(5/30)*2+ceil(5/30)*2=12; J+w1=15>8 -> stop.
+# T2: U=4/8+134/240=254/240>=1.  T3: 254/240+5/16=329/240>=1.  T4: 329/240+6/40=365/240>=1.
+expect T1 not-established busy-period w=2,12
+expect T2 not-established utilisation
+expect T3 not-established utilisation
+expect T4 not-established utilisation
+end
+fixture refuse_unmodeled
+platform S=1 W_wake=1 gamma=0 C_rel=1 rho=0 delta=0 enabled=timer,uart facts=all
+task A prio=1 C=1 T=10 D=10 Jevent=0 Jrelease=2 CS=0 released=timer
+# condition 5: enabled {timer,uart} != declared {} + timer -> unmodeled-interrupt-load (s5 row). Missing uart inputs (cond 9, inconclusive) lose on precedence.
+expect refused unsupported-profile
+end
+fixture refuse_early_release
+platform S=1 W_wake=1 gamma=0 C_rel=1 rho=0 delta=0 enabled=timer facts=all no_early_release=false
+task A prio=1 C=1 T=10 D=10 Jevent=0 Jrelease=2 CS=0 released=timer
+# condition 6: early release declared -> value outside /1.
+expect refused unsupported-profile
+end
+fixture refuse_floor
+platform S=1 W_wake=1 gamma=0 C_rel=1 rho=0 delta=0 enabled=timer facts=all
+task A prio=1 C=1 T=10 D=10 Jevent=0 Jrelease=1 CS=0 released=timer
+# condition 7: L=max(CS+S=1, C_rel+S=2, W_wake=1)=2; floor rho+delta+L=2 > Jrelease=1 -> delay below its floor.
+expect refused analysis-inconclusive
+end
+fixture refuse_missing
+platform S=missing W_wake=1 gamma=0 C_rel=1 rho=0 delta=0 enabled=timer facts=all
+task A prio=1 C=1 T=10 D=10 Jevent=0 Jrelease=2 CS=0 released=timer
+# condition 9: S undeclared -> missing input. Nothing else fails.
+expect refused analysis-inconclusive
+end
+fixture refuse_loss
+platform S=1 W_wake=1 gamma=0 C_rel=1 rho=0 delta=0 enabled=timer,uart facts=all
+source uart C=2 T=25 J=25 ack=entry priority=1 deferred=nothing
+task A prio=1 C=1 T=10 D=10 Jevent=0 Jrelease=3 CS=0 released=timer
+# condition 7: L=max(1,2,C_s+S=3,1)=3; A floor 3<=3; J_s=25>=delta+L=3; but ack=entry needs J_s<T_s: 25<25 false -> no-loss inequality.
+expect refused unsupported-profile
+end
+fixture refuse_precedence
+platform S=missing W_wake=1 gamma=0 C_rel=1 rho=0 delta=0 enabled=timer facts=all one_processor=false
+task A prio=1 C=1 T=10 D=10 Jevent=0 Jrelease=2 CS=0 released=timer
+# condition 1 fails (unsupported-profile) and condition 9 fails (S missing, analysis-inconclusive); precedence -> unsupported-profile.
+expect refused unsupported-profile
+end

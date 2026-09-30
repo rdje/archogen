@@ -613,3 +613,14 @@ from
 to
             Some((num, den)) if false && num >= den => {
 end
+
+mutation runtime-analysed-job-without-its-transition
+file crates/rt-analysis/src/runtime.rs
+test -p rt-analysis --test runtime_expected
+expect killed
+why M2.6.3: the analysed job is charged S for its own transition in (record §3). Dropping it from w0 moves every iterate, and the independently derived fixtures must see it — the check that the comparison is not vacuous.
+from
+        let Some(mut w) = task.computation.checked_add(set.switch) else {
+to
+        let Some(mut w) = task.computation.checked_add(0) else {
+end

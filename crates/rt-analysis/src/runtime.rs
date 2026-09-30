@@ -794,7 +794,12 @@ pub enum Outcome {
 
 /// `⌈ numerator / denominator ⌉`, for a positive denominator.
 const fn ceil_div(numerator: u128, denominator: u128) -> u128 {
-    numerator / denominator + if numerator.is_multiple_of(denominator) { 0 } else { 1 }
+    numerator / denominator
+        + if numerator.is_multiple_of(denominator) {
+            0
+        } else {
+            1
+        }
 }
 
 const fn gcd(mut a: u128, mut b: u128) -> u128 {

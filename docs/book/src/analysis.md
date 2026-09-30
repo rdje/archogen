@@ -203,5 +203,11 @@ bound past a deadline is `not-established`, never a counterexample. Three indepe
 design before any code. Each one found something that could have under-estimated a response time: the first two
 in what the analysis is given, and the third in an admission rule that let a kernel release a task early. The
 implementation's tests check values derived by hand from the record, and six deliberate breakages are each caught.
-⚠️ It still may not be cited. §7.4 asks for expected results obtained independently, and that is leaf `M2.6.3`: a
-context that reads the record and never the code derives them.
+§7.4 also asks for expected results obtained independently (leaf `M2.6.3`). A context that read the record and
+never the code derived 18 fixtures by hand, and the code agrees with every verdict, bound and iterate. Under the
+variant, §13.4's repeated-preemption fixture gives a bound of 9 for H, which holds, and 49 for L, which is not
+established against either of the fixture's deadlines. The exact timeline gives 5 and 23. The variant is safe, and
+pessimistic by design.
+
+⚠️ It still cannot be cited for a real system. Its inputs, the costs and the platform facts, come from the catalog
+(leaf `M2.7`), which does not exist yet, and F17's refusal path is leaf `M2.6.4`.

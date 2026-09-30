@@ -4,6 +4,18 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the real-time analysis agrees with results worked out independently
+
+`ARCHOGEN-M2-0187` (leaf `M2.6.3`).
+
+- Someone who never saw the code worked out, from the design alone, what the analysis should answer for 18 test
+  cases. The code agrees with every one, down to each intermediate step of the calculation.
+- On the roadmap's repeated-preemption example, the analysis bounds the high-priority task at 9 (the real timeline
+  gives 5) and the low-priority task at 49 (really 23). It is safe and pessimistic, as intended, and it does not
+  claim the low-priority deadline is met.
+- The independent derivation also found four small gaps in the design text, now closed, and settled one of its
+  open questions.
+
 ## archogen — the real-time analysis for a running system is built
 
 `ARCHOGEN-M2-0186` (leaf `M2.6.2`).

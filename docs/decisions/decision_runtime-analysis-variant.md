@@ -3,6 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-09-30`
 - **Status:** `active`
+- **External sources:** [QEMU](../book/src/ledger.md#qemu) — version, scope and limits in the ledger
 - **Owner / source:** leaf `M2.6.1` (`docs/tasks/M2.md`), deciding what `ROADMAP.md` §7.4 requires before a
   `rt-static-up-v1` timing result may be accepted: "an analysis variant that accounts for its bounded critical
   sections, release jitter, timer/other interrupt interference, and context-switch costs". The review §7.4 asks
@@ -40,19 +41,19 @@ defaults.** A zero is declared, like any other value, with its evidence.
 | `C_i` | each task | everything the job executes from its transition in up to the decided switch that follows its completion, services excluded: the ledger's *task execution* for it, plus the *critical sections* (its completion path included), kernel services and *instrumentation* run on its behalf |
 | `T_i` | each task | minimum separation between nominal releases |
 | `D_i` | each task | relative deadline from the nominal release, `D_i ≤ T_i` |
-| `J_i^event` | each task | the release event's own jitter, from the description's `jitter` clause. The analysis always receives it: the language gives an absent clause the meaning `0`, which is the description's statement, not a default of the analysis |
+| `J_i^event` | each task | the release event's own jitter, from the description's `jitter` clause: how far the description lets a release vary from its nominal instant. The analysis always receives it: the language gives an absent clause the meaning `0`, which is the description's statement, not a default of the analysis. `J_k = J_k^event + J_k^release` in every ceiling, the timer term included |
 | `J_i^release` | each task | engine knowledge: the most by which the service that releases the task can start after its nominal release, everything included — timer resolution, reprogramming that lands after the due instant, hardware delivery, masked activity in progress, and services queued ahead |
 | `CS_i` | each task | the longest section the task executes with interrupts masked, the kernel's run on its behalf (its completion path included) and the application's alike |
 | priority, released by | each task | a distinct fixed rank, ascending highest-first (`decision_priority-comparison-direction.md`); the timer, or one named interrupt source, and for a source whether **every** arrival releases the task. A source-released task's nominal release is the arrival |
 | task facts | each task | whether it suspends itself; whether it locks the scheduler or defers preemption; whether it shares data outside its masked sections |
 | `C_rel` | the timer | one timer service: entry, releasing every due task, reprogramming, the scheduling decision up to the switch point whichever way it goes, exit |
 | `C_s`, `T_s`, `J_s` | each other interrupt source | one service, entry to exit, excluding work deferred to a task; minimum separation between arrivals; the most by which its service can start after an arrival, everything included as for `J^release` |
-| acknowledge point, interrupt priority, deferred work | each other interrupt source | at entry or at exit; its rank among interrupts; the declared task, if any, that runs its deferred work |
+| acknowledge point, interrupt priority, deferred work | each other interrupt source | at entry or at exit; its rank among interrupts; the declared task, if any, that runs work the service defers beyond releasing the tasks declared as `released by` it, whose work is analysed through them |
 | `S` | the platform | one context transition: from a decided switch, saving the outgoing context beyond what interrupt entry saved, to the incoming one running. It bounds the ledger's *task switch*, *initial dispatch* and *idle/wakeup* alike |
 | `W_wake` | the platform | from an interrupt becoming pending while the idle context waits, to interrupts being unmasked: the idle check plus the wake latency. The ledger's *idle/wakeup* is split here: the wake is `W_wake`, before the service; the switch out of idle is `S` |
 | `γ` | the platform | the preemption delay: the most one preemption or service adds to the preempted execution through lost cache, pipeline, predictor or TLB state. `0` only with evidence that the target keeps no such state |
 | `ρ`, `δ` | the platform | the largest delay the compare's rounding adds to a release (at most one resolution step less one unit; `0` when releases fall on ticks); the hardware's delivery latency from an interrupt becoming pending, unmasked, to its entry |
-| the platform facts | the platform | each a declared yes or no, with its evidence: <br>• the timer is event-driven, its compare has level semantics and rounds up, and the due-check uses the compare's counter and rounding; <br>• **a service releases a task only once its nominal release has passed** (no early release), releases every due one, and is raised only when one is due; <br>• only the timer service releases timer-released tasks; <br>• interrupts do not nest; every masked section masks every interrupt; every service preempts every task; <br>• preemption happens at every point outside a masked section, a service or a transition (no scheduler lock, no deferred preemption); <br>• a pending interrupt is taken before the resumed context executes an instruction, and every transition, into idle included, ends unmasked; <br>• context switching is eager, or `S` includes every deferred save and restore a transition causes (lazy floating-point state, for instance); <br>• each cost bound holds under any preemption pattern |
+| the platform facts | the platform | each a declared yes or no, with its evidence: <br>• there is one processor; <br>• the timer is event-driven, its compare has level semantics and rounds up, and the due-check uses the compare's counter and rounding; <br>• **a service releases a task only once its nominal release has passed** (no early release), releases every due one, and is raised only when one is due; <br>• only the timer service releases timer-released tasks; <br>• interrupts do not nest; every masked section masks every interrupt; every service preempts every task; <br>• preemption happens at every point outside a masked section, a service or a transition (no scheduler lock, no deferred preemption); <br>• a pending interrupt is taken before the resumed context executes an instruction, and every transition, into idle included, ends unmasked; <br>• context switching is eager, or `S` includes every deferred save and restore a transition causes (lazy floating-point state, for instance); <br>• each cost bound holds under any preemption pattern |
 | enabled sources | the build | the interrupts the build enables (§7.5's resolved plan), non-maskable interrupts and firmware traps included, which the declared sources plus the timer must equal |
 
 Every numerical input carries its §7.3 evidence category: assumed, observed maximum, externally supplied bound, or
@@ -86,7 +87,9 @@ R_i        = J_i + w_i          (w_i the fixed point)
 - **Before iterating**, if the interference utilisation reaches one, there is no fixed point and the result is
   `not-established` with no iteration. That is `Σ_{hp} (C_j + 2S + γ)/T_j + Σ_{tasks} (C_rel + γ)/T_k +
   Σ_{sources} (C_s + γ)/T_s ≥ 1`, compared exactly in reduced rationals. It is exact in both directions: at or
-  above one every iterate exceeds the last, because `C_i > 0`; below one the right-hand side is bounded. If an
+  above one every iterate exceeds the last, because `C_i > 0`; below one the right-hand side is at most
+  `c + U·w`, so a least fixed point exists. Whether it lies within the busy-period stop is decided only by
+  iterating. If an
   exact sum does not fit 128-bit numerator and denominator, the result is `analysis-inconclusive`, a named
   resource limit, and there is no iteration.
 - **Otherwise** the iteration runs to its fixed point. It stops, not converged, when `J_i + w_i > T_i` (strictly),
@@ -129,7 +132,8 @@ conservatism be recorded, not implied):
 ### 4. When it applies: the admission conditions
 
 A task set is admitted only if every condition holds, each checked against a §1 input. Otherwise it is refused
-before any arithmetic.
+before any arithmetic. **Every condition is checked**, and the refusal carries the verdict of highest precedence
+among all the failures (§5), with every reason of that verdict. It does not stop at the first failure.
 
 1. There is one processor.
 2. Priorities are distinct and fixed. Preemption happens at every point outside a masked section, a service, or a
@@ -176,7 +180,9 @@ before any arithmetic.
    late reprogramming and services queued ahead, and its evidence is the engine's. The conclusion names each
    `J^release` and `J_s` as an assumption with its evidence category. `L` counts on every transition ending
    unmasked (condition 5).
-8. The platform declares that `γ`, `C`, `C_s`, `C_rel` and `S` hold under any preemption pattern.
+8. The platform declares that `γ`, `C`, `C_s`, `C_rel` and `S` hold under any preemption pattern. `C`, `C_s`,
+   `C_rel` and `S` bound their own execution **excluding** the lost state `γ` charges, so that state is charged
+   once.
 9. Every input of §1 is present. `CS_i`, `J_s`, the acknowledge point, every task fact, every platform fact, and
    a zero anywhere are all declared, never defaulted.
 
@@ -217,13 +223,37 @@ Settled in advance: the fixture releases L with no service, and the variant char
 above the fixture's exact timeline is expected and is not a disagreement (§7.4.1: "must not demand an exact
 response-time answer").
 
-**Open questions for `M2.6.3`, not relied on by `/1`:**
+**`M2.6.3`'s result, `2026-09-30`.** The deriving context read this record, the roadmap and the profile, and
+never the implementation. It derived 18 fixtures by hand: 6 refusals, and 12 analysed sets covering every term,
+every stop and every verdict. Implementation and derivation agree on every verdict, every bound and every
+iterate (`crates/rt-analysis/tests/fixtures/runtime_expected.txt`, compared by
+`crates/rt-analysis/tests/runtime_expected.rs`). §13.4's fixture, with every input pinned (`S = 2`, `C_rel = 1`,
+`ρ = δ = W_wake = CS = γ = J^event = 0`, both tasks released by the timer at the floor `J^release = 3`), gives:
+- `R_H = 9`, which holds;
+- `R_L = 49`, `not-established` at deadlines 22 and 23.
+
+The second reviewer's `10` and `50` are these bounds at `J^release = 4`. Both variant bounds lie at or above the
+fixture's exact timeline, where H responds in 5 and L in 23.
+
+**The open questions, and what `M2.6.3` settled:**
 - whether a `J^release` that excludes services queued ahead suffices for the response bound, which would remove
-  the double charge declared in §3;
+  the double charge declared in §3. **Settled in the negative, with a residue.** Services queued ahead are counted
+  by the ceilings, because their arrivals lie within their jitter before the window. But while the analysed task
+  is not yet released, a queued service can decide a switch to lower-priority work, and that masked transition
+  runs before the pending timer interrupt is taken, where no term of `w` charges it. Dropping the queue from
+  `J^release` would therefore under-count by up to one `S` per queued service. That is sound only with those
+  transitions kept in `J^release`, or with a platform fact that no switch is decided while another interrupt is
+  pending. `/1` keeps the whole delay in `J^release`, and the double charge stays declared;
 - the exact non-preemptive fixed-priority queueing form that would let the analysis compute `J_s` and
-  `J^release` from interrupt priorities, instead of taking them as evidence;
-- whether RISC-V takes an interrupt pending at `mret` before any instruction of the resumed context. `/1` makes this
-  a declared platform fact (condition 5).
+  `J^release` from interrupt priorities, instead of taking them as evidence. **Not settled.** The candidate is
+  non-preemptive fixed-priority analysis in its corrected CAN form (Davis, Burns, Bril and Lukkien, 2007). It would
+  need the masked run as blocking, the timer as a queue member whose arrivals are every release, and the residue
+  above as extra items;
+- whether RISC-V takes an interrupt pending at `mret` before any instruction of the resumed context. **Not settled
+  from the sources read.** The deriving context recalls that the privileged specification evaluates
+  interrupt-trap conditions immediately after an `xRET`, which would settle it for a conforming hart, but it did
+  not check the text. Whether the target and QEMU conform is a separate fact. `/1` keeps it a declared platform fact
+  (condition 5).
 
 ## Why
 
@@ -353,3 +383,21 @@ admission condition. So the record is implemented as the contract, and its next 
 reads the record without the implementation, derives the fixtures' expected values, and reports anything it cannot
 derive from the record alone as a gap in the record. Three points of theory no reviewer settled are §6's open
 questions, and `/1` relies on none of them.
+
+**`M2.6.3`'s derivation, a fourth reader, same day.** Besides the results in §6, it reported what it could not
+derive from the record alone:
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 1 | gap | condition 1 had no §1 input, and a set with both a missing input and two processors turns on it | "there is one processor" is a platform fact (§1); the implementation already declared it |
+| 2 | gap | when several conditions fail at once, the verdict was not stated | every condition is checked, and the highest-precedence verdict wins (§4) |
+| 3 | gap | whether a task a source releases counts as its deferred work | no: released tasks are analysed through `released by`, and `deferred` names any other task that runs deferred work (§1) |
+| 4 | gap | what `J^event` means for a timer-released task, and which ceilings take it | how far the description lets a release vary; it enters every ceiling, the timer term included (§1) |
+| 5 | wording | "below one the right-hand side is bounded" | "at most `c + U·w`, so a least fixed point exists" (§2) |
+| 6 | gap | condition 8 could make `γ` charge lost state a second time | `C`, `C_s`, `C_rel` and `S` exclude what `γ` charges (condition 8) |
+| 7 | confirmation | the third review's `R_L = 20`, and the §13.4 bounds | reproduced (§6) |
+| 8 | open questions | Q1, Q2, Q3 | Q1 settled in the negative with its residue; Q2 and Q3 not settled (§6) |
+| 9 | not exercised | the iteration budget, 128-bit overflow, a missing task fact, a rate-limited release, the naming of assumptions | a missing task fact and a rate-limited release now have legs in `runtime_variant.rs`, and the naming of evidence and the catalog's enabled set already had one. The budget and the overflow need inputs past `u64` sums and a million iterations; they are stated as unexercised, not claimed |
+
+It also said it had derived "19 fixtures", where the file holds 18, a miscount in its summary. The fixture file
+is its Part 1, copied verbatim.

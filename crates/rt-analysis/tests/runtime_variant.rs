@@ -392,3 +392,37 @@ fn an_input_that_is_not_analytically_established_is_named_as_an_assumption() {
         "{assumptions:?}"
     );
 }
+
+#[test]
+fn an_undeclared_task_fact_is_an_unresolved_bound() {
+    // Named as unexercised by `M2.6.3`'s derivation: a task fact left undeclared, not declared false.
+    let mut undeclared = task("A", 1, 1, 10, 10, 2);
+    undeclared.facts.locks_scheduler = None;
+    let refusal = refused(admit(&[undeclared], &[], &platform()));
+    assert_eq!(refusal.verdict, RefusalVerdict::AnalysisInconclusive);
+    assert!(
+        refusal.reasons[0].contains("does not declare whether it locks the scheduler"),
+        "{refusal}"
+    );
+}
+
+#[test]
+fn a_task_released_on_some_arrivals_only_has_its_rate_limit_named() {
+    // Named as unexercised by `M2.6.3`'s derivation: a rate-limited source release is admitted with its separation
+    // as an assumption (record condition 5), not checked against the source's.
+    let (platform, uart) = with_uart(3, Acknowledge::AtEntry);
+    let mut e = task("E", 1, 1, 30, 30, 3);
+    e.released_by = ReleasedBy::Source {
+        source: "uart".into(),
+        every_arrival: false,
+    };
+    let set = admit(&[e], &[uart], &platform).expect("admitted");
+    assert!(
+        set.assumptions()
+            .iter()
+            .any(|a| a
+                == "task `E` is released on some arrivals of `uart` only, at most once per 30"),
+        "{:?}",
+        set.assumptions()
+    );
+}
