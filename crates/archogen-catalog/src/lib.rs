@@ -13,8 +13,11 @@
 //! that needs nothing but the file.
 
 pub mod grammar;
+pub mod hash;
+pub mod manifest;
 pub mod record;
 pub mod refusal;
+pub mod tree;
 
 pub use record::{classify, read_record, CatalogPath, Namespace, Record};
 pub use refusal::{At, Code, Refusal};

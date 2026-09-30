@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog computes its hashes, and the worked example agrees
+
+`ARCHOGEN-M2-0246` (leaf `M2.7.3.2`).
+
+- The catalog crate now computes every hash the design defines: each part of a record hashed over its own text
+  and files, and again over everything it rests on (the code under it, what that code's packages reach, its
+  targets' files, the ledger sections it cites, the records it depends on). The design's worked example states 23
+  of these values; all 23 come out right, and the test reads them from the example's own file, so the two cannot
+  drift apart.
+- The worked example has no packages and no ledger, so a second test workspace does: each input is changed in
+  turn, and exactly the right hashes must move. To prove the tests, each input was left out of the code in turn:
+  all 52 such changes made a test fail, after four gaps the first round of this found were closed.
+- The design's rules for packages that go beyond hashing, among them a scanner of Rust source for forbidden
+  words, are a leaf of their own, `M2.7.3.7`.
+
 ## archogen — the catalog's code begins: a record read and checked
 
 `ARCHOGEN-M2-0245` (leaf `M2.7.3.1`).

@@ -68,6 +68,17 @@ this page changing too.
 | Pinned by | its shape — every key path and the kind of value at it — frozen in `crates/archogen-cli/tests/goldens/archogen-provenance-1.golden` and compared by `crates/archogen-cli/tests/format_golden.rs`; a golden is never rewritten, so a shape change fails until the identifier moves |
 | Keeps | an artifact labelled `archogen-provenance/1` means the same to every reader of `/1` |
 
+## `catalog-rules`
+
+| Field | Value |
+| --- | --- |
+| Surface | the catalog's hash grammar and its ledger-time checks, which every catalog hash begins with and the lock's first line names (`docs/decisions/catalog/decision_catalog-records.md` §3 and §5) |
+| Version | `archogen-catalog/1` |
+| Declared at | `const:crates/archogen-catalog/src/hash.rs:IDENTIFIER` |
+| Changes when | any part of the hash grammar or of the ledger-time checks changes. Every hash moves with it, and the change's migration note says how the lock's earlier lines compare under it (`ROADMAP.md` §15) |
+| Pinned by | the worked example's 23 digests, read from `docs/decisions/catalog/decision_catalog-records-example.md` and reproduced by `crates/archogen-catalog/tests/hash.rs` |
+| Keeps | a hash labelled `/1` covers the same bytes for every reader, and a line ledgered under `/1` is verified under `/1` for good |
+
 ## `analysis-model`
 
 | Field | Value |

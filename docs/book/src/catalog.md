@@ -7,8 +7,9 @@ semantic version, content hash, source/license metadata, maintainer, dependencie
 preconditions, guarantees, implementation source, model source, cost evidence, and evidence status".
 
 This chapter explains the design that answers it. The design is decided, and it was reviewed independently sixteen
-times before it was accepted. Its code is being built in the `archogen-catalog` crate (`M2.7.3`), and so far that
-crate reads one record and refuses what breaks the design's rules for a single file. The rest of the crate, the
+times before it was accepted. Its code is being built in the `archogen-catalog` crate (`M2.7.3`). So far that crate
+reads a record and refuses what breaks the design's rules for a single file, and computes every hash the design
+defines, reproducing the worked example's 23 values. The rest of the crate, the
 gate, the check that protects it and the first records are the next leaves (`M2.7.3` to `M2.7.6`). Until they
 land, nothing loads a catalog, and `catalog/` is empty.
 
@@ -25,6 +26,8 @@ land, nothing loads a catalog, and `catalog/` is empty.
 | `docs/reviews/decision_catalog-records-reviews.md` | every review round, every finding, and the answer to each |
 | `crates/archogen-catalog/src/record.rs` | the code so far: one record read, and every rule of the design's §1 and §2 that needs only the file, each refusal with its one code |
 | `crates/archogen-catalog/tests/record.rs` | one valid record and one change of it per rule, each refused with that rule's code |
+| `crates/archogen-catalog/src/hash.rs` | every hash: each facet's own and bound hash, the record's, a review's, over the files, packages, targets and ledger sections they rest on |
+| `crates/archogen-catalog/tests/hash.rs` | the worked example, read from its own file, with all 23 of its values |
 
 ## A record, and its four parts
 
@@ -111,8 +114,8 @@ found them right.
 
 ## What it does not do yet
 
-- **Nothing loads a catalog.** `catalog/` is empty, and the crate reads one record so far; hashes, the lock,
-  status and claims are the rest of `M2.7.3`.
+- **Nothing loads a catalog.** `catalog/` is empty. The crate reads records and computes their hashes so far;
+  the lock, status and claims are the rest of `M2.7.3`.
 - **The port's facts are unknown.** The architecture port is assembly, which no record can hold yet, so every
   analysis of the runtime variant over the catalog is inconclusive until `M2.12` gives the port's code a record
   format.
