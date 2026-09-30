@@ -24,7 +24,7 @@
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M2.9` — §6 (a)
   and (b), two rulings on `ROADMAP` §3.1.1; `M5` — no board procured;
-  `API.5.5` — the page run in a browser (a session with browser tools, or the director); `TEMPLATE-REFS` —
+  `API.5.5` — the director saw the Check answer match; the answer on load and the browser's name and version remain; `TEMPLATE-REFS` —
   postponed, and nothing under `scripts/` is touched until the director says the template's reworked spine is ready.
 - **Derive, don't copy:** the test baseline is `cargo test --all -q` (must be 0 failed); the push distance
   and the ruled threshold are `bash scripts/push_cadence.sh`; the integration tier is

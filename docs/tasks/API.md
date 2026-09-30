@@ -682,15 +682,21 @@ agent can drive. The server is a capability of the built binary, spawned per ins
     frontier, both logs and `CHANGELOG.md`.
 
 - ID: `API.5.5`
-  Status: `blocked` — on a browser: this session had no browser tools, and the page has never run in one
+  Status: `blocked` — on the director's report of two remaining observations: the answer on load, and the browser
   Goal: the page run in a real browser, as `API.5`'s acceptance asks: "a worked example checks a real description in
   a browser and shows the verdict".
   Acceptance: the book's "Opening the page" followed in a browser; the answer on load is the default description's
   `invalid-description (exit 10)` with its `parsec` diagnostic; after Check with the book's description, the
   book's transcript; the browser's name and version recorded here.
   Unblocked by: a session with browser tools, or the director running those steps and reporting what the page shows.
-  Verification: `pending`
-  Commit: `pending`
+  Observed `2026-09-30`, **by the director**, in a browser: after Check with the book's description, the page showed
+  `ok (exit 0)` / `accepted against profile rt-static-up-v1 (eadl/1), 1 declaration(s)`. That is the book's
+  transcript line for line (`docs/book/src/engine-api.md`, the block marked `wasm-page-transcript`). So the page
+  loaded, fetched and instantiated the module, and answered in a real browser. **Not yet reported:** the answer
+  shown on load (`invalid-description (exit 10)` with the `parsec` diagnostic) and the browser's name and version.
+  The leaf stays open until both are reported, so it does not claim what was not seen.
+  Verification: partial — the Check leg observed by the director; the load leg and the browser's identity pending
+  Commit: `ARCHOGEN-API-0209` (the partial observation recorded)
 
 - ID: `API.6`
   Status: `pending`
@@ -723,7 +729,7 @@ agent can drive. The server is a capability of the built binary, spawned per ins
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `API.5` | `active` | the wasm binding, built, checked and documented with its page (`API.5.1`–`API.5.4`); only a run in a real browser remains (`API.5.5`, blocked on a browser) |
+| 1 | `API.5` | `active` | the wasm binding, built, checked and documented with its page (`API.5.1`–`API.5.4`); the director saw the Check answer match the book in a browser; the load answer and the browser's name and version remain (`API.5.5`) |
 | 2 | `API.6` | `pending` | the MCP server — the point of the tree, and last because everything above is what makes it safe to hand to an arbitrary agent |
 | 3 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6` |
 
@@ -794,6 +800,7 @@ this tree is taken when it does not delay that.
 | `2026-09-30` | `API.5.2` | the host tests; the same tests under Miri; two catalogued mutations; the shape golden blessed once; the focused tier, the wasm build and the gates | 8 of 8, and 8 of 8 under Miri; both mutations killed; the golden passes unblessed; all green |
 | `2026-09-30` | `API.5.3` | the artifact inspected by `WebAssembly.Module`; every tracked description through the loader, against the host build and `archogen check`; six RED arms; a broken loader on the real tree; the integration tier | no imports, the decided exports; 108 of 108 byte-identical, each exit equal; 6 of 6; refused, then green when restored; 11 of 11 |
 | `2026-09-30` | `API.5.4` | the book's page transcript through the page's own logic; five new RED arms and a real-tree RED; the page's wiring against a stand-in document; the book's serving command read with `curl`; the integration tier | reproduced; 11 of 11 arms, refused then green; both answers as expected; every file with its right content type; 11 of 11 — no browser run (`API.5.5`) |
+| `2026-09-30` | `API.5.5` | the director ran the book's "Opening the page" in a browser and reported the answer after Check | the book's transcript, line for line; the load answer and the browser's name and version not yet reported |
 
 ## Commit Log
 
@@ -812,6 +819,7 @@ this tree is taken when it does not delay that.
 | `API.5.2` | `ARCHOGEN-API-0202 (leaf API.5.2)` | **the wasm binding, built and tested on the host** — `crates/archogen-wasm`, its framing, its encoding and its three exports |
 | `API.5.3` | `ARCHOGEN-API-0203 (leaf API.5.3)` | **the browser module answers as the command line does** — the `wasm-binding` tier step, the loader and the harness |
 | `API.5.4` | `ARCHOGEN-API-0205 (leaf API.5.4)` | **the page** — `crates/archogen-wasm/page/`, documented with a transcript the tier reproduces; `API.5.5` filed for the browser run this session could not make |
+| `API.5.5` | `ARCHOGEN-API-0209 (leaf API.5.5)` | partial: the Check answer observed in a browser by the director; the leaf stays open for the load answer and the browser |
 
 ## Changelog
 

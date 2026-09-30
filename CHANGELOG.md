@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the web page answers in a real browser as the book says
+
+`ARCHOGEN-API-0209` (leaf `API.5.5`, partial).
+
+- The director followed the book's steps for opening the page in a browser. After Check with the book's
+  description, the page showed `ok (exit 0)` and `accepted against profile rt-static-up-v1 (eadl/1), 1
+  declaration(s)`: the book's transcript, line for line. So the module loaded and answered in a real browser, not
+  only in the stand-in the automated check uses.
+- Two observations the leaf asks for are not reported yet: the answer the page shows when it first loads, and the
+  browser's name and version. The leaf stays open for them rather than claiming them.
+
 ## archogen — removing the project template's references is filed, and postponed
 
 `ARCHOGEN-TEMPLATE-REFS-0208` (tree `TEMPLATE-REFS`).

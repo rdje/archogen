@@ -55,7 +55,7 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 | [`S0`](tasks/S0.md) | `done` | — every leaf closed; F28 green, and the chapter's counts are measured (`S0.8`) | repo-local |
 | [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.32` — closed leaves sealed out of the task trees, as ruled on §8; `.34` awaits the director's yes, `.10.5` the next push | repo-local |
 | [`M1`](tasks/M1.md) | `active` | `M1.29.4` — blocked: module parameters wait on the director's call (findings §7); every other leaf is closed | repo-local |
-| [`API`](tasks/API.md) | `active` | `API.5` — the wasm binding built, checked against the CLI and given its page; a browser run remains (`API.5.5`, blocked on a browser), then `API.6` | repo-local |
+| [`API`](tasks/API.md) | `active` | `API.5` — the wasm binding built, checked against the CLI and given its page; the director's browser run matched the book on Check; the load answer and the browser remain (`API.5.5`), then `API.6` | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |
 | [`M2`](tasks/M2.md) | `active` | `M2.7.1` — the catalog record, written and under independent review; then `M2.7.3`–`M2.7.5` and `M2.10`; `M2.9` waits on the director | repo-local |
 | [`M3`](tasks/M3.md) | `pending` | `M3.1` — candidate enumeration and substitutability | repo-local |
