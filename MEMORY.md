@@ -13,10 +13,10 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M1` → frontier `M1.30`; `PROGRAM`'s frontier is all blocked (on a push, and on the director). Every other tree's frontier head is in `docs/TASK_TREE.md`;
+- **Active tree:** `M1` → frontier `M1.10`; `PROGRAM`'s frontier is all blocked (on a push, and on the director). Every other tree's frontier head is in `docs/TASK_TREE.md`;
   it is not copied here.
-- **Next action:** **`M1.30`** — report §5.3's second half (what lies outside the closure); then `API.3`, `M2.6`, and
-  `M2.8.3` (the eADL side of the §3.2 agreement, a design act).
+- **Next action:** **`M1.10`** — the profile decisions still in prose; then `API.3`, `M2.6`, and `M2.8.3` (the eADL
+  side of the §3.2 agreement, a design act).
 - **In flight:** branch **`wip/m2.9`** (`758cbcd`) is a checkpoint, not a finished leaf — `M2.9` records it as
   not compiling (`crates/rt-core/tests/differential.rs` unadapted).
 - **⏳ Blockers (the director's):** `M1.29.4` — §7 of `decision_findings-for-director-review.md`; `M2.9` — §6 (a)

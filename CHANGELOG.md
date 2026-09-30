@@ -4,6 +4,17 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the author sees what their description depends on
+
+`ARCHOGEN-M1-0163` (leaf `M1.30`).
+
+- `archogen check` now lists, after "accepted", the facts the description depends on and what pulled each one
+  in, and then the facts it mentions that nothing it requests needs. The roadmap requires the second list to stay
+  visible, because a fact nobody needs should not fail the check. It is printed as information, not as a warning.
+- Until now this was computed and thrown away. The book's presence chapter nevertheless said it "appears in the
+  report's metadata", which was false. The chapter now shows a real run, and a test reads the report of every
+  accepted description in the repository, so dropping it again would fail the build.
+
 ## archogen — every diagnostic row names an input that fires it
 
 `ARCHOGEN-M1-0161` (leaf `M1.26.2.2`, with `ARCHOGEN-M1-0160`, `M1.26.2.1`).

@@ -37,6 +37,33 @@ const KIND_MODULES: &[(&str, &str)] = &[
     ),
 ];
 
+/// The closure boundary as report lines: what is inside and what pulled each fact in, then what is outside.
+pub fn closure_report(closure: &eadl_model::check::Closure) -> Vec<String> {
+    let inside: Vec<String> = closure
+        .inside
+        .iter()
+        .map(|(fact, by)| match by {
+            None => format!("{fact} (requested)"),
+            Some(owner) => format!("{fact} (needed by {owner})"),
+        })
+        .collect();
+    vec![
+        if inside.is_empty() {
+            "closure: nothing — this description requests nothing".to_string()
+        } else {
+            format!("closure: {}", inside.join(", "))
+        },
+        if closure.outside.is_empty() {
+            "outside the closure: nothing".to_string()
+        } else {
+            format!(
+                "outside the closure, needed by nothing requested: {}",
+                closure.outside.join(", ")
+            )
+        },
+    ]
+}
+
 /// Run `archogen check`.
 pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status {
     let path = parsed
@@ -120,6 +147,12 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
                 instances.len(),
                 instances.join(", ")
             );
+        }
+        // §5.3's second half (leaf `M1.30`): the closure the description was judged over, what pulled each
+        // fact in, and what lies outside it. Printed after the verdict and never as a diagnostic, so §4 rule 1
+        // — no warning, no note — still holds, and none of it can fail the check.
+        for line in closure_report(&outcome.closure) {
+            let _ = writeln!(out, "  {line}");
         }
         // ⚠️ Deliberately modest wording. Acceptance means the description is well-formed, in
         // profile, and internally consistent — it is not a statement that any system built from
@@ -238,6 +271,7 @@ pub fn frontend(
                 verdict,
                 diagnostics: diagnostics.items().to_vec(),
                 declarations: Vec::new(),
+                closure: eadl_model::check::Closure::default(),
             },
             instances: None,
         };

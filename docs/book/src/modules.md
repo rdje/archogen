@@ -30,6 +30,8 @@ namespaces, explicit exports, typed parameters and version constraints.
 $ archogen check docs/semantics/modules/app.system.eadl
 docs/semantics/modules/app.system.eadl: accepted against profile `rt-static-up-v1` (4 declaration(s))
   elaborated from 4 instance(s): platform.timer = hw.timer 1.0, platform = hw.soc 1.2, clock = os.time 2.0, (root) = app.system 1.0
+  closure: clock.time.monotonic (requested)
+  outside the closure, needed by nothing requested: app.rt, counter-width, platform.soc.bus, platform.timer.timer.counter, region
   this checks the description, not a system: no resolution, generation or analysis has run
 $ echo $?
 0
@@ -127,6 +129,8 @@ means `board.bus.clock` — without the rule both would be looked for at the roo
 $ archogen check docs/semantics/modules/app.sibling.eadl
 docs/semantics/modules/app.sibling.eadl: accepted against profile `rt-static-up-v1` (5 declaration(s))
   elaborated from 2 instance(s): board = hw.bus 1.0, (root) = app.sibling 1.0
+  closure: board.bus.clock (needed by board.bus.fast), board.bus.fast (requested), board.bus.main (requested), board.bus.timer (requested)
+  outside the closure, needed by nothing requested: app.rt, bus-width, clock-rate, counter-width
   this checks the description, not a system: no resolution, generation or analysis has run
 ```
 

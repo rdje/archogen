@@ -39,8 +39,24 @@ error[missing-fact]: `wrap-behavior` is required by this system and nothing desc
           can be made
 ```
 
-`dma-channels` is outside it, produces **no** diagnostic, and appears in the report's metadata
-because §5.3 requires it to stay visible.
+`dma-channels` is outside it, produces **no** diagnostic, and stays visible, because §5.3 requires
+it to: `archogen check` lists the closure after its verdict, with what pulled each fact in, and then
+everything outside it. On F05's own fixture, where `descriptor-format` is needed only by an engine
+nothing requests:
+
+```console
+$ archogen check docs/semantics/cases/positive-unrelated-unknown.eadl
+docs/semantics/cases/positive-unrelated-unknown.eadl: accepted against profile `rt-static-up-v1` (5 declaration(s))
+  closure: counter-width (needed by time.monotonic), soc.p (requested), time.monotonic (requested), timer.counter (requested)
+  outside the closure, needed by nothing requested: core-count, descriptor-format, other.engine, s, transfer-engine
+  this checks the description, not a system: no resolution, generation or analysis has run
+```
+
+The closure lines are metadata, not diagnostics: they fail nothing, and the reference's §4 rule 1 (no
+warning, no note) still holds (`docs/semantics/model.md` §2 rule 4). ⚠️ Until leaf `M1.30` this
+paragraph said the fact "appears in the report's metadata" and it did not: the presence pass computed
+the boundary and nothing showed it. A test now reads the report of every accepted description
+(`crates/archogen-cli/tests/closure_report.rs`), so the boundary cannot be dropped again unseen.
 
 The fixtures F04 and F05 are deliberately run against the *same* description. A checker that
 blocks on every unknown passes F04 and fails F05; one that blocks on nothing passes F05 and

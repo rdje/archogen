@@ -285,3 +285,14 @@ to
                                 let _dropped = (Diagnostic::error(
                                     "read-bad-escape",
 end
+
+mutation closure-computed-and-dropped
+file crates/archogen-cli/src/check_cmd.rs
+test -p archogen-cli --test closure_report every_accepted_description_reports_its_closure_boundary
+expect killed
+why M1.30: the shape the leaf found — the presence pass computes the closure boundary and nothing shows it. Dropping it from the report must fail the build, not pass silently.
+from
+        for line in closure_report(&outcome.closure) {
+to
+        for line in closure_report(&eadl_model::check::Closure::default()).into_iter().take(0) {
+end

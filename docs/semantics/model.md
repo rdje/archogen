@@ -82,6 +82,11 @@ A platform declares what it **offers** and what it declares **absent**; a system
    or the platform is wrong: `infeasible-configuration`.
 3. **A required fact that nothing describes is missing.** It lies inside the dependency closure of what
    the system requests, so no decision that depends on it can be made: `missing-fact`.
+4. **What lies outside the closure fails nothing, and stays visible** (§5.3). An undescribed fact that nothing
+   the description requests depends on is not an error. It is reported as metadata: `archogen check` prints,
+   after its verdict, the closure with what pulled each fact in and then every fact outside it
+   (`Closure` in `crates/eadl-model/src/check.rs`). Those lines are not diagnostics, so the reference's §4
+   rule 1 holds (leaf `M1.30`).
 
 ## 3. A refinement keeps every obligation of what it refines
 

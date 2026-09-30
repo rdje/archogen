@@ -13,7 +13,7 @@ one of those changes, and only then. What each closed leaf did lives in its tree
 | `PROGRAM` — workspace, tiers, book, ledger | In Progress | frontier `PROGRAM.10`, blocked: the `integration` job is in CI and awaits its first run (`.10.5`, at the next push); toolchain, actions and mdBook pinned; `.31`/`.32` wait on the director (findings §8) |
 | `M0` — charter, boundary, profile, target | Done | all seven leaves closed; F27 green. The board remains a recorded blocker, not a passed gate |
 | `S0` — early executable generation (F28) | Done | **F28 green**; every leaf closed — `S0.8` made the book chapter's counts and corpus table measured |
-| `M1` — eADL description foundation | Mostly Done | §12 M1's exit gate met; frontier `M1.30`: §5.3's report of what lies outside the closure; `M1.29.4` waits on the director (findings §7) |
+| `M1` — eADL description foundation | Mostly Done | §12 M1's exit gate met; frontier `M1.10`: the profile decisions still in prose; `M1.29.4` waits on the director (findings §7) |
 | `M2` — one engine realization + controls | In Progress | **F18 and F29 green**; frontier `M2.6`: the runtime-applicable analysis; the emulator's device tree is recorded and re-checked (`M2.8.2`), and `M2.8.3`, the eADL side, remains |
 | `M3` — joint resolver + checked plan | Not Started | frontier `M3.1` |
 | `M4` — generated system + simulator | Not Started | frontier `M4.1` |

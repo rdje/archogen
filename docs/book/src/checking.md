@@ -3,6 +3,8 @@
 ```console
 $ archogen check examples/periodic-three/system.eadl --profile rt-static-up-v1
 examples/periodic-three/system.eadl: accepted against profile `rt-static-up-v1` (8 declaration(s))
+  closure: console.uart (requested), console.write (requested), counter-width (needed by time.monotonic), observable-output (needed by console.write), observation-coherent (needed by time.monotonic), scheduling.fixed-priority (requested), soc.playground (requested), tick-rate (needed by time.monotonic), time.monotonic (requested), time.periodic-release (requested), timer.counter (requested)
+  outside the closure, needed by nothing requested: core-count, periodic-three, region
   this checks the description, not a system: no resolution, generation or analysis has run
 ```
 

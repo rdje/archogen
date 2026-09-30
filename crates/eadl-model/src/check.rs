@@ -45,6 +45,21 @@ use crate::profile::{self, Profile};
 use crate::refinement::{self, Facets};
 use crate::workload;
 
+/// The dependency closure a description was judged over (§5.3), for the report an author reads.
+///
+/// ⭐ **Metadata, not a diagnostic** (leaf `M1.30`). §5.3 requires that unknown facts outside the closure
+/// "remain visible in metadata and do not fail generation", while §4 rule 1 of
+/// `docs/semantics/reference.md` states there is no warning and no note anywhere in the toolchain. Both
+/// hold: this is what `archogen check` prints *after* its verdict, never a diagnostic, and it can fail
+/// nothing. `docs/semantics/model.md` §2 rule 4 states the channel.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Closure {
+    /// Each fact inside, with the fact that needs it — `None` for one the description requests itself.
+    pub inside: Vec<(String, Option<String>)>,
+    /// Each fact declared or needed that lies outside: nothing this description requests depends on it.
+    pub outside: Vec<String>,
+}
+
 /// What a check concluded.
 #[derive(Debug, Clone)]
 pub struct Outcome {
@@ -60,6 +75,9 @@ pub struct Outcome {
     /// it, and a field that counted forms would print one declaration too many for every description
     /// that states its version.
     pub declarations: Vec<Form>,
+    /// The closure boundary, filled once the presence pass has run; empty when a description never
+    /// reached it.
+    pub closure: Closure,
 }
 
 impl Outcome {
@@ -177,6 +195,7 @@ pub fn check(
             verdict: Verdict::InvalidDescription,
             diagnostics: read_diagnostics.items().to_vec(),
             declarations: forms,
+            closure: Closure::default(),
         };
     }
     passes(forms, registry, active_profile, Vec::new())
@@ -356,6 +375,10 @@ fn passes(
         facts.collect(form);
     }
     let presence = facts.check_excluding(&out_of_profile);
+    let closure = Closure {
+        inside: presence.pulled_in_by.clone(),
+        outside: presence.outside_closure.clone(),
+    };
     for diagnostic in presence.diagnostics {
         push(
             &mut findings,
@@ -393,6 +416,7 @@ fn passes(
         },
         diagnostics,
         declarations: forms,
+        closure,
     }
 }
 

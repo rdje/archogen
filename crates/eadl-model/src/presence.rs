@@ -106,6 +106,8 @@ pub struct PresenceReport {
     pub outside_closure: Vec<String>,
     /// Facts inside the closure that nothing describes.
     pub missing: Vec<String>,
+    /// Each fact of the closure and what pulled it in, from [`FactMap::closure_origins`].
+    pub pulled_in_by: Vec<(String, Option<String>)>,
     /// Everything wrong, in the order found.
     pub diagnostics: Vec<Diagnostic>,
 }
@@ -248,6 +250,36 @@ impl FactMap {
         seen
     }
 
+    /// Each fact of the closure, and what pulled it in: `None` for a fact the description requests itself,
+    /// `Some(owner)` for one a fact already inside needs (leaf `M1.30`).
+    ///
+    /// The same traversal as [`Self::closure`], breadth-first so the recorded owner is on a shortest path
+    /// from a request, and deterministic because `requested` and `needs` are ordered. Its facts are exactly
+    /// the closure's — a unit test holds the two together.
+    #[must_use]
+    pub fn closure_origins(&self) -> Vec<(String, Option<String>)> {
+        let mut origin: BTreeMap<String, Option<String>> = BTreeMap::new();
+        let mut queue: std::collections::VecDeque<(String, Option<String>)> = self
+            .requested
+            .iter()
+            .map(|(name, _)| (name.clone(), None))
+            .collect();
+        while let Some((name, by)) = queue.pop_front() {
+            if origin.contains_key(&name) {
+                continue;
+            }
+            if let Some(edges) = self.needs.get(&name) {
+                for (next, _) in edges {
+                    if !origin.contains_key(next) {
+                        queue.push_back((next.clone(), Some(name.clone())));
+                    }
+                }
+            }
+            origin.insert(name, by);
+        }
+        origin.into_iter().collect()
+    }
+
     /// Every name mentioned anywhere — declared, needed, or requested.
     fn universe(&self) -> BTreeSet<String> {
         let mut all: BTreeSet<String> = BTreeSet::new();
@@ -373,6 +405,7 @@ impl FactMap {
             closure: closure.into_iter().collect(),
             outside_closure,
             missing,
+            pulled_in_by: self.closure_origins(),
             diagnostics,
         }
     }
@@ -452,6 +485,7 @@ fn names_in(clause: &Form) -> Vec<(String, Span)> {
 mod tests {
     use super::{FactMap, Presence};
     use eadl_front::{read, SourceMap};
+    use std::collections::BTreeSet;
 
     fn map_of(text: &str) -> (FactMap, SourceMap) {
         let mut sources = SourceMap::new();
@@ -467,6 +501,30 @@ mod tests {
             map.collect(form);
         }
         (map, sources)
+    }
+
+    #[test]
+    fn closure_origins_hold_exactly_the_closure_and_say_what_pulled_each_fact_in() {
+        // `M1.30`'s report reads the origins, and the presence verdicts read the closure: two traversals of one
+        // graph, held together here so the report can never list a fact the verdicts did not judge.
+        let (map, _) = map_of(
+            "(defblock timer.counter (offers counter-width)) \
+             (defblock other.engine (offers transfer-engine) (needs descriptor-format)) \
+             (defservice time.monotonic (requires (needs counter-width))) \
+             (defsystem s (requires (uses time.monotonic)))",
+        );
+        let origins = map.closure_origins();
+        let keys: BTreeSet<String> = origins.iter().map(|(fact, _)| fact.clone()).collect();
+        assert_eq!(keys, map.closure());
+        assert!(origins.contains(&("time.monotonic".to_string(), None)));
+        assert!(origins.contains(&(
+            "counter-width".to_string(),
+            Some("time.monotonic".to_string())
+        )));
+        assert!(
+            !keys.contains("descriptor-format"),
+            "an unrequested engine's need is outside"
+        );
     }
 
     #[test]
