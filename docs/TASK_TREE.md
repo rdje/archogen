@@ -55,7 +55,7 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 | [`S0`](tasks/S0.md) | `done` | — every leaf closed; F28 green, and the chapter's counts are measured (`S0.8`) | repo-local |
 | [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.10` — **blocked**: `.10.5` waits on the next push for the `integration` job's first run; `.31`/`.32` wait on the director | repo-local |
 | [`M1`](tasks/M1.md) | `active` | `M1.29.4` — module parameters get a consumer; **waiting on the director** (`docs/decisions/decision_findings-for-director-review.md` §7) | repo-local |
-| [`API`](tasks/API.md) | `active` | `API.1` — **measure** whether the engine compiles for `wasm32-unknown-unknown` before anything is promised | repo-local |
+| [`API`](tasks/API.md) | `active` | `API.2` — state and gate the no-subprocess invariant; `API.1` measured that the I/O-free engine crates compile for wasm32 | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |
 | [`M2`](tasks/M2.md) | `active` | `M2.6` — the runtime-applicable analysis; `M2.8.3` (the eADL side of the §3.2 agreement) is a design act, `M2.9` waits on the director | repo-local |
 | [`M3`](tasks/M3.md) | `pending` | `M3.1` — candidate enumeration and substitutability | repo-local |

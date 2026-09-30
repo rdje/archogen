@@ -18,3 +18,4 @@ empty rather than with a false claim.
 | --- | --- | --- | --- |
 | `docs/book/src/s0.md` | four descriptions | gated | `crates/archogen-cli/tests/s0_chapter.rs` compares it, and the corpus table row by row, with the `.eadl` files in `examples/s0-heartbeat/` |
 | `docs/book/src/s0.md` | five files | gated | `crates/archogen-cli/tests/s0_chapter.rs` compares it, and the file table beneath it, with what `archogen build` writes |
+| `docs/book/src/verification.md` | four members | record | measured `2026-09-30` by `scripts/wasm_build.sh --list`; the sentence gives its date, and the step re-derives the set on every run |

@@ -4,6 +4,21 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the engine compiles for the browser
+
+`ARCHOGEN-API-0157` (leaf `API.1`).
+
+- A new step in the integration tier compiles the engine for WebAssembly (`wasm32-unknown-unknown`), the
+  browser target the planned wasm binding needs. The five crates with no file, process or environment access
+  compile.
+- The step works out which crates to include each time it runs, and names each one it leaves out with the line
+  that excluded it. Four are left out. One is the description reader, whose module loader now reads files; it
+  already does so through a replaceable interface, so the binding can supply its own. The API decision record
+  said six crates were free of I/O. That was true when written; the loader arrived the next day, and the
+  record now says so.
+- Its tests caught the first version of the step passing for the wrong reason: its pattern matched nothing
+  on this machine's `awk`, so it compiled everything.
+
 ## archogen — the emulator's platform is recorded and re-checked
 
 `ARCHOGEN-M2-0155` (leaf `M2.8.2`).

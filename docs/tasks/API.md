@@ -57,7 +57,7 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   Children: `API.1` … `API.7`
 
 - ID: `API.1`
-  Status: `pending`
+  Status: `done`
   Goal: **measure** whether the engine compiles for the browser, before anything is promised about it.
   Add a `wasm32-unknown-unknown` compile-target step to the §14.3 tier runner over the crates that are
   I/O-free in production, in the shape of the existing `no-std-build` step.
@@ -71,8 +71,52 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   measurement, not a contract: it converts "should be feasible" into "compiles, or here is exactly what
   breaks", and every later leaf is cheaper to scope once that is known. The director approved it landing
   before `M1.13` for that reason.
-  Verification: `pending`
-  Commit: `pending`
+  ⚠️ **One premise corrected by measurement:** "minus the two that touch the filesystem" — **four** do, in production
+  code: `archogen-cli`, `xtask`, `archogen-s0` (its emitter writes the generated crate) and `eadl-front` (its module
+  loader reads files). The last is the one a browser needs most, and its reads already sit behind a `ModuleSource`
+  implementation (`DirectoryModules`, `crates/eadl-front/src/module.rs`), so `API.5` can supply another; that is
+  recorded on `API.5`. The decision record's census ("six of the eight", `2026-09-28`) was true of its date:
+  `git log -S"read_to_string(&path)" -- crates/eadl-front/src/module.rs` → `0a19c36 2026-09-29`, the module loader,
+  a day later. The record is amended, not rewritten.
+  Verification: see the checklist — the five I/O-free crates compile for `wasm32-unknown-unknown`; the derivation's
+  five arms, which found the first cut of the detection matching nothing; the `integration` tier with the new step.
+  Commit: `ARCHOGEN-API-0157 (leaf API.1)`
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — nothing had measured it, and the pinned toolchain could not have:
+    ```text
+    $ git show HEAD:xtask/src/main.rs | grep -c "wasm"   → 0
+    $ rustup +1.95.0 target list --installed           → aarch64-apple-darwin, riscv64imac-unknown-none-elf (no wasm32)
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — the binding was promised by decision (`decision_programmatic-interface.md`)
+    and no tier step compiled anything for the browser target, so feasibility was an expectation. **WHERE:** the
+    `integration` tier's steps in `xtask/src/main.rs` — `git show HEAD:xtask/src/main.rs | grep -c 'name: "no-std-build"'`
+    → `1`, and no sibling for wasm32.
+  - [x] **FIX** — `scripts/wasm_build.sh`, the `wasm-build` step (requires `target:wasm32-unknown-unknown`, so an
+    absent target is *unavailable* locally and a failure under `--provisioned`); the crate set derived from
+    `cargo metadata`, excluding members whose production code names `std::fs`/`process`/`net`/`env`, each exclusion
+    named with its line; `rust-toolchain.toml` lists the target, so CI installs it.
+  - [x] **ADDRESSED (verified)** —
+    ```text
+    $ bash scripts/wasm_build.sh; echo "exit=$?"
+      wasm-build: excluded archogen-cli crates/archogen-cli/src/build_cmd.rs:82: … std::fs::read_to_string(path) …
+      wasm-build: excluded archogen-s0  crates/archogen-s0/src/emit.rs:69: std::fs::create_dir_all(&src)?;
+      wasm-build: excluded eadl-front   crates/eadl-front/src/module.rs:206: match std::fs::read_to_string(&path) {
+      wasm-build: excluded xtask        xtask/src/main.rs:47: use std::process::{Command, Stdio};
+      wasm-build: compiling for wasm32-unknown-unknown: eadl-model archogen-evidence rt-analysis rt-core rt-reference
+      exit=0
+    $ bash scripts/wasm_build.sh --self-test   → wasm-build self-test: 5 pass / 0 fail (5 arms)
+    ```
+    ⛔ The arms caught the first cut passing for the wrong reason — `wasm-build self-test: 1 pass / 4 fail (5 arms)`:
+    `\b` in its `awk` regex is not a word boundary under BSD `awk`, the detection matched nothing, and the real run
+    compiled all nine members and exited `0`. Then a grouped `use std::{fs, io};` was missed (`4 pass / 1 fail`).
+    Both fixed in the pattern, both pinned by an arm.
+  - [x] **NO REGRESSION** — `cargo xtask verify --tier integration` → `incomplete — 8 passed, 0 failed, 0 unavailable,
+    0 not built, 1 quarantined`: the new step ✅, every other step as before; `cargo test -q -p xtask` → `test result:
+    ok. 25 passed; 0 failed`.
+  - [x] **LOCKSTEP** — `verification.md` (a section, the tier table, the transcript re-rendered from the run above),
+    `COMMIT.md` step 2, `TOOLBOX.md`, the `rust-toolchain` ledger entry, `docs/figures.md`.
 
 - ID: `API.2`
   Status: `pending`
@@ -128,6 +172,9 @@ agent can drive. The server is a capability of the built binary, spawned per ins
 
 - ID: `API.5`
   Status: `pending`
+  ⚠️ From `API.1`'s measurement: the crates this binding needs most do I/O today — `eadl-front`'s module loader reads
+  files through `DirectoryModules` (the `ModuleSource` trait is the seam to supply another), and `archogen-s0`'s
+  emitter writes the generated crate to a directory. Both compile for wasm32; neither would work there as written.
   Goal: the **wasm binding** over the declared API, so the description-side toolchain runs in a browser
   or a worker.
   Acceptance: the API is reachable from `wasm32-unknown-unknown` as an artifact a page can load; a
@@ -170,12 +217,11 @@ agent can drive. The server is a capability of the built binary, spawned per ins
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `API.1` | `pending` | the wasm feasibility **measurement** — the one leaf the director ruled may land before the `M1.13` freeze, because it is a measurement and not a contract. It makes every later leaf cheaper to scope. The project's main line stays `M1.13`; this tree does not displace it |
-| 2 | `API.2` | `pending` | state and gate the no-subprocess invariant, also unblocked by the freeze and also cheap. §10.4's whole safety argument rests on a property that is currently written down nowhere |
-| 3 | `API.3` | `pending` | **the load-bearing leaf, and blocked on `M1.13`.** Declaring an API over an unfrozen language means declaring it twice: the freeze settles the integer domain and the escape set, which are the API's numeric types and its string encoding |
-| 4 | `API.4` | `pending` | the instance model and the resource limits an untrusted consumer makes necessary. New architecture, not a binding — archogen is stateless over files today |
-| 5 | `API.5` | `pending` | the wasm binding, behind `API.1` and `API.3` |
-| 6 | `API.6` | `pending` | the MCP server — the point of the tree, and last because everything above is what makes it safe to hand to an arbitrary agent |
+| 1 | `API.2` | `pending` | state and gate the no-subprocess invariant, also unblocked by the freeze and also cheap. §10.4's whole safety argument rests on a property that is currently written down nowhere |
+| 2 | `API.3` | `pending` | **the load-bearing leaf, and blocked on `M1.13`.** Declaring an API over an unfrozen language means declaring it twice: the freeze settles the integer domain and the escape set, which are the API's numeric types and its string encoding |
+| 3 | `API.4` | `pending` | the instance model and the resource limits an untrusted consumer makes necessary. New architecture, not a binding — archogen is stateless over files today |
+| 4 | `API.5` | `pending` | the wasm binding, behind `API.1` and `API.3` |
+| 5 | `API.6` | `pending` | the MCP server — the point of the tree, and last because everything above is what makes it safe to hand to an arbitrary agent |
 | 7 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6` |
 
 ⛔ **This tree does not displace the project's main line.** `M1.13` is the frontier in
@@ -232,12 +278,14 @@ them early is cheap and makes the rest estimable.
 | Date | Leaf | Checks | Result |
 | --- | --- | --- | --- |
 | `2026-09-28` | `API` | tree seeded from the director's ruling and a feasibility census; no code | the census is recorded in `docs/decisions/decision_programmatic-interface.md`: six of eight crates I/O-free in production, two already `no_std`, zero third-party dependencies, no `Command::new` in any production half |
+| `2026-09-30` | `API.1` | the five I/O-free crates built for wasm32; the derivation's arms; the integration tier | all compile; the first cut of the detection matched nothing and the arms caught it; tier `incomplete`, 8 passed, the emulator quarantined |
 
 ## Commit Log
 
 | Leaf | Commit subject or reference | Notes |
 | --- | --- | --- |
 | `API` | `ARCHOGEN-API-0078 (leaf API)` | tree seeded: `ROADMAP.md` §10.4, the decision record and its index row, seven leaves, three of the four open questions routed to a named owner |
+| `API.1` | `ARCHOGEN-API-0157 (leaf API.1)` | **the engine compiles for the browser** — measured by a derived `wasm-build` step; four members excluded by the I/O they do, each named |
 
 ## Changelog
 

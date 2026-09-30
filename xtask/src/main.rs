@@ -320,6 +320,19 @@ const TIERS: &[Tier] = &[
                 },
             },
             Step {
+                name: "wasm-build",
+                proves: "the engine's I/O-free crates, derived from the workspace, compile for the browser target",
+                action: Action::Run {
+                    program: "scripts/wasm_build.sh",
+                    args: &[],
+                    requires: Some("target:wasm32-unknown-unknown"),
+                    matters: "the programmatic-interface decision promises a wasm binding, and whether the \
+                              engine compiles for the browser is measured here rather than assumed \
+                              (leaf `API.1`). `rust-toolchain.toml` lists the target, so `rustup \
+                              toolchain install` adds it",
+                },
+            },
+            Step {
                 name: "emulator",
                 proves: "the pinned riscv-virt-up configuration renders and its toolchain is present (§3.2)",
                 action: Action::Run {

@@ -127,7 +127,7 @@ the day a chapter or a decision relies on it, as Miri did.
 | --- | --- |
 | Source | the Rust toolchain: `rustc`, Cargo, rustfmt and clippy |
 | Version | `1.95.0` — `rustc 1.95.0 (59807616e 2026-04-14)`, `cargo 1.95.0 (f2d3ce0bd 2026-03-21)` |
-| Pinned at | `toml:rust-toolchain.toml:channel` — with its components (`rustfmt`, `clippy`) and target (`riscv64imac-unknown-none-elf`); CI installs exactly that file (`rustup toolchain install`) |
+| Pinned at | `toml:rust-toolchain.toml:channel` — with its components (`rustfmt`, `clippy`) and targets (`riscv64imac-unknown-none-elf`, `wasm32-unknown-unknown`); CI installs exactly that file (`rustup toolchain install`) |
 | Retrieved | `2026-09-29`; pinned `2026-09-30` (`PROGRAM.30`) |
 | Hash | not captured |
 | Scope | every build and test. Also Cargo's workspace discovery, which the root `Cargo.toml`'s `exclude` relies on: Cargo keeps walking up past a workspace that excludes a package. That was measured on Cargo 1.95.0 by the arms of `LS-001`'s re-measurement |

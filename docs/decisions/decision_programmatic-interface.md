@@ -33,6 +33,12 @@ before its first `#[cfg(test)]`:
 | `archogen-cli` | 2 | 0 | 1 |
 | `archogen-s0` | 1 | 0 | 0 |
 
+*Amended `2026-09-30` (leaf `API.1`): the table is the census of `2026-09-28`. The next day `0a19c36` gave
+`eadl-front` a module loader that reads files, through its `DirectoryModules` implementation of
+`ModuleSource`. So five of the eight crates are now free of it, and `scripts/wasm_build.sh --list` derives the
+set on every run rather than restating it. The seam means the wasm binding (`API.5`) can supply its own
+source.*
+
 Six of the eight crates touch no filesystem, no subprocess and no environment. `rt-core` and
 `rt-reference` are already `#![cfg_attr(not(test), no_std)]`, and the integration tier already compiles
 for a bare-metal target — the same constraint wasm imposes, already paid for. The workspace has **zero**

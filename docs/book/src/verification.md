@@ -16,7 +16,7 @@ $ cargo xtask verify --list              # or: make tiers
 | Tier | When | What it covers |
 | --- | --- | --- |
 | `focused` | each edit loop, and every ordinary commit | format, lints, the whole contract suite |
-| `integration` | before a push, and before closing a milestone | the above, plus the doctrine enforcer, every doctrine gate's own RED arms, the book build, the `no_std` build and the pinned emulator |
+| `integration` | before a push, and before closing a milestone | the above, plus the doctrine enforcer, every doctrine gate's own RED arms, the book build, the `no_std` build, the browser (`wasm32`) build and the pinned emulator |
 | `extended` | scheduled, or when a change touches parsing, arithmetic or event ordering | fuzzing, mutation, Miri |
 | `hardware` | a change to target support, and every release gate | board regressions and timing observations |
 | `assurance` | every supported release | trust inventory, claim completeness, source and binary identity |
@@ -59,14 +59,15 @@ Rendered from a run, not retyped:
 ```console
 $ cargo xtask verify --tier integration
 tier: integration — before a push, and before closing a milestone
-  ✅ fmt                  0.25s  every Rust source is in canonical format
-  ✅ clippy               1.81s  no lint fires anywhere, including in tests and examples
-  ✅ tests                4.19s  every contract test passes, F28 and the semantic corpus included
-  ✅ doctrines            8.77s  every repository invariant holds on the working tree
-  ✅ self-tests          59.31s  every doctrine gate's RED arms still fire — a gate that stopped being able to fail is caught here
-  ✅ book                 0.12s  the mdBook builds, with its pinned release — it is the director's window, so a broken book is a broken deliverable
-  ✅ no-std-build         0.04s  the runtime core compiles for a bare-metal target (§14.3's "compile targets")
-  ⚠  emulator             0.13s  QUARANTINED — could not be run; leaf M2.8 owns the gap
+  ✅ fmt                  0.26s  every Rust source is in canonical format
+  ✅ clippy               0.13s  no lint fires anywhere, including in tests and examples
+  ✅ tests                5.57s  every contract test passes, F28 and the semantic corpus included
+  ✅ doctrines            8.92s  every repository invariant holds on the working tree
+  ✅ self-tests          83.88s  every doctrine gate's RED arms still fire — a gate that stopped being able to fail is caught here
+  ✅ book                 0.17s  the mdBook builds, with its pinned release — it is the director's window, so a broken book is a broken deliverable
+  ✅ no-std-build         0.21s  the runtime core compiles for a bare-metal target (§14.3's "compile targets")
+  ✅ wasm-build           0.41s  the engine's I/O-free crates, derived from the workspace, compile for the browser target
+  ⚠  emulator             0.23s  QUARANTINED — could not be run; leaf M2.8 owns the gap
      issue: QEMU is present, at the pinned release, offers the pinned machine, and presents exactly the device tree its fixture records (`M2.8.2`) — but the §3.2 agreement check has nothing to compare that platform with yet: the eADL platform description (`M2.8.3`) is not written
      unproven while it stands: that `riscv-virt-up` is the platform its eADL fixture describes (§3.2) — `TARGET_VERIFIED` in `targets/riscv-virt-up.env`
      target-emulator: found: QEMU emulator version 11.1.1
@@ -74,7 +75,7 @@ tier: integration — before a push, and before closing a milestone
      target-emulator: TARGET_VERIFIED=no — this configuration is still a PROPOSAL
      target-emulator:   the §3.2 agreement check could not be run: the eADL platform description it compares against is not written
      target-emulator:   leaf M2.8 owns flipping it, with the evidence that justifies it
-tier integration: incomplete — 7 passed, 0 failed, 0 unavailable, 0 not built, 1 quarantined
+tier integration: incomplete — 8 passed, 0 failed, 0 unavailable, 0 not built, 1 quarantined
   ⚠  incomplete is NOT a pass. §14.3: "a required tool skipped or unavailable is reported as such, not a passed check".
   ⚠  and a quarantine is an absence on terms. §14.3: "Quarantine requires a named issue, owner, affected claim, and bounded scope" — each is printed above.
 $ echo $?
@@ -229,6 +230,21 @@ untracked or built, no submodule, no global git configuration. Its first rehears
 every step green but the quarantined emulator, the gap annotated, the summary written. What it cannot
 reproduce is the runner's own userland, GNU `sed` and `awk` where this machine has BSD ones. Leaf
 `PROGRAM.10.5` reads the first real run for that, after the next push.
+
+## The engine compiles for the browser
+
+The programmatic-interface decision promises a wasm binding, so the `integration` tier measures whether
+the engine compiles for `wasm32-unknown-unknown` (leaf `API.1`). Its `wasm-build` step does not list the
+crates. It takes every workspace member whose production code, the source before its first
+`#[cfg(test)]`, names none of `std::fs`, `std::process`, `std::net` or `std::env`. It names each member
+it leaves out, with the line that excluded it. A crate that uses the filesystem compiles for wasm32 all
+the same, and fails when it runs. That is why such a crate is excluded rather than counted.
+
+On `2026-09-30` the measured answer was yes: `eadl-model`, `archogen-evidence`, `rt-analysis`, `rt-core`
+and `rt-reference` compile. Four members are excluded: the command-line tool, the runner, the S0 emitter,
+which writes the crate it generates, and `eadl-front`, whose module loader reads files. The last is the
+one a browser needs most, and its reads already go through one `ModuleSource` implementation, so the wasm
+binding (`API.5`) can supply its own.
 
 ## When a push is due
 
