@@ -6,7 +6,7 @@
 - **Owner / source:** raised during the M0 + M1 build; recorded here so they survive the session
 - **External sources:** [QEMU](../book/src/ledger.md#qemu) — version, scope and limits in the ledger
 
-Eight items are recorded here so they survive the session. Three are outside an implementer's
+Ten items are recorded here so they survive the session. Three are outside an implementer's
 authority to settle; the fourth (§4) is a measurement about the programme's own evidence that you
 should see even though it is already fixed; the sixth (§6) is a review of **your own amendment**
 by the model that has never read the implementation. Each is tracked as work, so nothing here
@@ -272,6 +272,29 @@ asks for something the profile refuses when it does not. **The decision needed:*
 rule that a response the API did not judge must still carry a §5.5 verdict, and which one. `API.3.2` builds
 on the reading. Changing it later is a change to one enum and its projection, before the version is
 fixed at `API.3`'s close.
+
+## 10. How far the hold on `scripts/` reaches (`2026-09-30`)
+
+On `2026-09-30` you asked for the files under `scripts/` to be left alone "just for now", while the template's
+spine is reworked, so that its files here can later be updated from it wherever they have not been amended
+locally. That is being followed literally: nothing under `scripts/` has changed since.
+
+**What it holds up:**
+- `PROGRAM.32`, sealing closed leaves out of the task trees (your §8 ruling). It needs a new check, and changes to
+  the checks that read leaves.
+- Any new gate, such as a check that a review history under `docs/reviews/` is only ever appended to. For now that
+  stays a convention.
+
+**Why it may be narrower than it reads.** `scripts/` holds two kinds of file:
+- the template's own, among them `bootstrap.sh`, `update_scaffold.sh` and the spine's checks, which the doctrine
+  run already reports as "scaffold-owned";
+- archogen's own, among them `check_doctrines.project.sh`, `check_readme_routes.sh`, `check_history_ledgers.sh`,
+  `wasm_binding.sh` and the other project checks. The template has no copy of these, so a template update would
+  not reach them.
+
+**The decision needed:** does the hold cover archogen's own files under `scripts/`, or only the template's?
+Recommended: the template's only. That protects the update you described, and lets `PROGRAM.32` and new project
+gates proceed.
 
 ## A note on what "done" means so far
 

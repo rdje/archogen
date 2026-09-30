@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the director is asked how far the hold on the scripts folder reaches
+
+`ARCHOGEN-PROGRAM-0214` (leaf `PROGRAM.32`, a question recorded).
+
+- The hold on `scripts/` is being followed to the letter, and it now stops two things: sealing closed task-tree
+  leaves, and any new check. The folder holds both the project template's files, which the hold protects for a
+  later update, and archogen's own checks, which the template has no copy of.
+- The findings register gains a tenth item asking whether the hold covers both. The recommendation is the template's
+  files only. The register's index line, which still said eight items, now says ten.
+
 ## archogen — how the runtime analysis's four shared inputs are built from their parts
 
 `ARCHOGEN-M2-0213` (leaf `M2.10.1`, a checkpoint: written, review pending).

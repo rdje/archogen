@@ -26,7 +26,7 @@
   and (b), two rulings on `ROADMAP` §3.1.1; `M5` — no board procured;
   `API.5.5` — the director saw the Check answer match; the answer on load and the browser's name and version remain;
   `TEMPLATE-REFS` — postponed; **nothing under `scripts/` is touched** until the director says so, which also holds
-  `PROGRAM.32`.
+  `PROGRAM.32` (its scope asked: findings §10).
 - **Derive, don't copy:** the test baseline is `cargo test --all -q` (must be 0 failed); the push distance
   and the ruled threshold are `bash scripts/push_cadence.sh`; the integration tier is
   `cargo xtask verify --tier integration`.

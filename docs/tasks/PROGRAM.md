@@ -3650,7 +3650,8 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM.32`
   Status: `blocked` — on the director's hold on `scripts/` (`2026-09-30`: "leave the files under scripts alone, just
   for now"). Its acceptance needs a new check proving sealed bodies unchanged, and gates that read leaves, the
-  template's `TASK-ACCEPTANCE` among them, finding sealed text; both are changes under `scripts/`.
+  template's `TASK-ACCEPTANCE` among them, finding sealed text; both are changes under `scripts/`. Whether the hold
+  covers archogen's own scripts is asked in §10 of `docs/decisions/decision_findings-for-director-review.md`.
   Goal: seal closed leaves out of the task trees — each `done` leaf's body moved byte for byte to a sealed per-subtree
   file with its digest, the tree keeping one line per closed leaf with its commit and a link; `M1` and `PROGRAM` first.
   Unblocked `2026-09-30` by the ruling on §8 of `docs/decisions/decision_findings-for-director-review.md` (option C),
