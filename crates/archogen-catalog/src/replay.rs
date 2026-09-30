@@ -11,8 +11,9 @@ use crate::hash::{review_ledger_hash, Catalog};
 use crate::history::History;
 use crate::ledger;
 use crate::lock::{self, blessed, Line, Lock, KNOWN_VERSIONS};
+use crate::production::check_production;
 use crate::refusal::{At, Code, Refusal};
-use crate::status::Reader;
+use crate::status::{statuses_under, Reader};
 
 /// A refusal about the lock at commit `name`, at line `line` of it when there is one.
 fn refuse(code: Code, name: &str, line: Option<usize>, message: impl Into<String>) -> Refusal {
@@ -369,6 +370,8 @@ pub fn replay_under(
             ledger::at_ledgering(&mut reader, &name, line, known)?;
         }
         ledger::retired(&mut reader, &name, known)?;
+        let statuses = statuses_under(history, &name, known)?;
+        check_production(&catalog, &statuses).map_err(|r| at_commit(&name, r))?;
     }
     Ok(())
 }
@@ -467,5 +470,7 @@ pub fn check_history_under(history: &History, head: &str, known: &[u64]) -> Resu
             ));
         }
     }
-    ledger::retired(&mut reader, head, known)
+    ledger::retired(&mut reader, head, known)?;
+    let catalog = Catalog::read(history.get(head)?.tree.clone())?;
+    check_production(&catalog, &statuses_under(history, head, known)?)
 }

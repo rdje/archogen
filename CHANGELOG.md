@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog holds its production namespace
+
+`ARCHOGEN-M2-0257` (leaf `M2.7.3.5.3`).
+
+- A component filed as production-ready must have every part reviewed as such, nothing left unknown, everything it
+  builds on production-ready too, and the parts its kind needs actually present. One that falls short stops the
+  catalog loading rather than being quietly demoted, so the next edit to a reviewed component cannot slip through.
+
 ## archogen — the catalog answers the analysis's lookups, one source per name
 
 `ARCHOGEN-M2-0256` (leaf `M2.7.3.5.2`).

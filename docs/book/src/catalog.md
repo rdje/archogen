@@ -20,9 +20,10 @@ recorded a review it checks the review's date against the commit's and that ever
 inherits, and it keeps a deleted record's rejection from being shed. Given what a claim recorded, it names every
 line and lookup that no longer holds, even when the catalog no longer loads. It answers the analysis's lookups by
 profile and target, refuses a name that more than one record supplies, and reads each fact grouped with a cost only
-from the record that supplies the cost. The rest of the crate, the gate, the check that protects it and the first
-records are the next leaves (`M2.7.3` to `M2.7.6`). Until they land, nothing loads a catalog, and `catalog/` is
-empty.
+from the record that supplies the cost. A record in the production namespace with any part not reviewed, anything
+unknown, or a dependency outside production stops the catalog loading; it is never quietly demoted. The rest of the
+crate, the gate, the check that protects it and the first records are the next leaves (`M2.7.3` to `M2.7.6`). Until
+they land, nothing loads a catalog, and `catalog/` is empty.
 
 ## The records that hold it
 
@@ -134,7 +135,8 @@ specification's. Round 11 found none live, and the record was accepted. Its hist
 
 - **Nothing loads a catalog.** `catalog/` is empty. The crate reads records, computes their hashes and checks the
   lock, over one tree and over a history, derives evidence status, checks each review where it was recorded and
-  traces invalidation, and answers lookups so far; the production namespace and claims are the rest of `M2.7.3`, and the gate that gives it the history is `M2.7.4`'s.
+  traces invalidation, answers lookups and holds the production namespace so far; claims are the rest of `M2.7.3`,
+  and the gate that gives it the history is `M2.7.4`'s.
 - **The port's facts are unknown.** The architecture port is assembly, which no record can hold yet, so every
   analysis of the runtime variant over the catalog is inconclusive until `M2.12` gives the port's code a record
   format.
