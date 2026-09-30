@@ -16,8 +16,8 @@
 `decision_runtime-analysis-variant.md` §1 lists every input, and each has one owner here:
 
 - **description:** the eADL description;
-- **application:** the separately supplied inputs of §10.3 ("separately supplied application inputs");
-- **the plan:** §7.5's resolved plan, which `M4` produces;
+- **application:** the separately supplied inputs of `ROADMAP.md` §10.3 ("separately supplied application inputs");
+- **the plan:** `ROADMAP.md` §7.5's resolved plan, which `M4` produces;
 - **the caller:** stands in for the application and the plan until they exist. Everything the caller supplies is
   named in the conclusion, and none of it can back a production claim (§7).
 
@@ -27,10 +27,10 @@
 | `T_s` | description | the minimum separation of a source's arrivals is a property of its environment |
 | `C_i`, `CS_i` | **composite**: the application's parts (the task's own code, its calls to each primitive, its masked runs and each way each can end) and the catalog's (the primitives' and the completion path's costs below) | composed from those parts as `decision_runtime-composite-inputs.md` §3 says; the caller supplies each whole until `M2.10.2` implements it |
 | `J_i^release`, `J_s` | **composite**: the description's periods, jitters and what releases each task; the catalog's costs and facts; the application's masked runs through `CS`; and the plan's order among sources | composed as a least fixed point, as `decision_runtime-composite-inputs.md` §3 says; the caller supplies each whole until `M2.10.2` |
-| task facts | application | whether a task suspends, locks the scheduler, shares data outside its sections, or masks other than through the runtime API, plus condition 8 for its own figures, which for the composition also says they hold from any entry state; each way each masked run can end, at an `unmask` or at the job's completion; and `leaves-interrupt-hardware-alone`, that no task writes the timer's counter or compare, the interrupt controller's configuration or claim and complete registers, or the hart's interrupt state other than through the runtime API's masking primitives, and that no application code releases a task or calls a runtime function, any function of a catalog record's implementation, other than the runtime API record's primitives. The caller declares the same of any application code in a service, and that no service calls a runtime primitive. The runtime API record's behavioral facts `no-suspension-primitive` and `no-scheduler-lock-primitive` support the first two for a task the application declares uses only that API |
+| task facts | application | whether a task suspends, locks the scheduler, shares data outside its sections, or masks other than through the runtime API, plus condition 8 for its own figures, which for the composition also says they hold from any entry state; each way each masked run can end, at an `unmask` or at the job's completion; and `leaves-interrupt-hardware-alone`, that no task writes the timer's counter or compare, the interrupt controller's configuration, or the hart's interrupt or trap state other than through the runtime API's masking primitives, or reads or writes the controller's claim and complete registers, a read of which claims, and that no application code releases a task or, after the first enabling of interrupts, calls a runtime function, any function of a catalog record's implementation, other than the runtime API record's primitives. The caller declares the same of any application code in a service, and that no service calls a runtime primitive. The runtime API record's behavioral facts `no-suspension-primitive` and `no-scheduler-lock-primitive` support the first two for a task the application declares uses only that API |
 | `C_rel` | catalog | `timer-service`, a timing cost |
 | `C_s` | catalog, only with the code fact `no-application-code.<source>` `yes` from the same record | `service.<source>`, a timing cost. The record that supplies it supplies the source's behavioral code facts too: `no-application-code`, `acknowledge-at-entry`, `defers-nothing` and `one-request-per-arrival`, each suffixed `.<source>`. So a change to that record's code, which is what could add application code to the service, makes the fact's review stale. Without the fact `yes`, the service runs application code, so `C_s` is composite, and the caller's. Every declared source needs a record that supplies `service.<source>`, with its cost `unknown` when it has none, and that states the source's facts and `external.<source>`; without one the source's facts cannot be read, and its inputs are undeclared |
-| acknowledge point, deferred work | catalog | behavioral code facts `acknowledge-at-entry.<source>` (`no` means at exit) and `defers-nothing.<source>`, from the record that supplies `service.<source>`. A task that runs deferred work is named by the description |
+| acknowledge point, deferred work | catalog | behavioral code facts `acknowledge-at-entry.<source>` (`no` means at exit; for a PLIC source, `yes` means that its service completes the claim at entry, and clears a level-triggered device's request there too, since the gateway holds a new arrival's request until the completion) and `defers-nothing.<source>`, from the record that supplies `service.<source>`. A task that runs deferred work is named by the description |
 | interrupt priority, the enabled set | the plan | — |
 | `S`, `W_wake`, `γ`, `ρ`, `δ` | catalog | timing costs `switch`, `wake`, `preemption-delay`, `compare-rounding` and `delivery` |
 | the composition's parts | catalog | timing costs `api.<p>` and `masked.<p>` for each primitive `p` a task can call, and `completion` and `masked.completion`, all from the runtime API record: the one record that supplies `completion` under the selection (the groups below; `decision_runtime-composite-inputs.md` §1) |
@@ -51,10 +51,11 @@ The behavioral code facts, one per condition of the variant's `PlatformFacts`:
 - `compare-rounds-up`
 - `due-check-matches-compare`
 - `no-early-release`
-- `raised-only-when-due`, which states both "raised only when a release is due" and "releases every due task",
-  as the variant's field does. "Raised" covers an interrupt still pending after a service has moved the compare on,
-  so its basis establishes that the timer service does not return while the interrupt still reflects a compare
-  value it has replaced (`decision_runtime-composite-inputs.md` §4, step 4)
+- `raised-only-when-due`, which states both "raised only when a release is due" and "releases every due task", as
+  the variant's field does. "Raised" covers an interrupt still pending after a service has moved the compare on, so
+  its basis establishes that neither the timer service's return nor initialisation's first enabling of interrupts
+  comes while the interrupt still reflects a compare value that was replaced (`decision_runtime-composite-inputs.md`
+  §4, step 4)
 - `only-timer-releases-timer-tasks`
 
 The variant's condition 8 for catalog costs is each cost's own `holds-under-preemption`.
@@ -69,10 +70,10 @@ supplies it:
 | `compare-rounding`, a timing cost, not a fact | timing-model | the rounding the timer-service record's code does whenever it turns a nominal instant into a compare value, on the target's counter, initialisation's first write included | `timer-service` |
 | `preemptive-everywhere`, `sections-mask-every-interrupt` | behavior-model | code: the runtime's scheduler and sections | `completion` |
 | `interrupts-do-not-nest`, `services-preempt-every-task`, `pending-taken-and-transitions-unmasked` | behavior-model | code: the port's trap entry and exit and its transitions | `switch` |
-| `pending-taken-after-unmask`, `no-empty-claim` | behavior-model | code, with the hardware's half established in its basis; `no-empty-claim` is `yes` on a target with no external interrupt | `switch` |
-| `one-processor`, `compare-level`, `external-before-timer`, `one-external-controller` | behavior-model | hardware, about the target; `one-external-controller` is `yes` on a target with no external interrupt | — |
+| `pending-taken-after-unmask`, `no-empty-claim` | behavior-model | code, with the hardware's half established in its basis; `no-empty-claim` is `yes` on a target with no external source once `M2.12` lets a port fact be stated, and `unknown` in `/1` like every `switch`-group fact (§13) | `switch` |
+| `one-processor`, `compare-level`, `external-before-timer`, `one-external-controller` | behavior-model | hardware, about the target; `one-external-controller` is `yes` on a target with no external source; `external-before-timer` `no` is outside `/1` (`decision_runtime-composite-inputs.md` §2) | — |
 | `runtime-discipline.<id>` | behavior-model | code: every package of the stating record's implementation's own and reached sets | the record `<id>` itself; a statement named with another record's id is refused |
-| `no-application-code.<source>`, `acknowledge-at-entry.<source>`, `defers-nothing.<source>`, `one-request-per-arrival.<source>` | behavior-model | code; for `one-request-per-arrival`, with the hardware's half, the source's trigger type, established in its basis | `service.<source>` |
+| `no-application-code.<source>`, `acknowledge-at-entry.<source>`, `defers-nothing.<source>`, `one-request-per-arrival.<source>` | behavior-model | code; for `one-request-per-arrival`, with the hardware's half, how the target's controller turns the source's line into requests, established in its basis | `service.<source>` |
 | `external.<source>` | behavior-model | hardware: the source reaches the hart as a machine external interrupt, through the controller's context for the hart's machine mode, whose priorities the plan sets | `service.<source>` |
 | `reprograms-only-in-service`, `releases-after-initialisation` | behavior-model | code | `timer-service` |
 | `no-suspension-primitive`, `no-scheduler-lock-primitive`, `releases-never-latched`, `primitives-out-of-line` | behavior-model | code | `completion` |
@@ -84,8 +85,8 @@ target's `.env` or `.eadl` makes its review stale.
 
 - **Image-specific names.** `switch`, `wake`, `preemption-delay`, `timer-service`, every `service.<source>`, and the
   composition's `api.<p>`, `masked.<p>`, `completion` and `masked.completion` include the image's code: generated
-  code (§8.2) and build-selected instrumentation. `independent` is admitted only for `compare-rounding` and
-  `delivery`, and only on a board (§2).
+  code (`ROADMAP.md` §8.2) and build-selected instrumentation. `independent` is admitted only for `compare-rounding`
+  and `delivery`, and only on a board (§2).
 - **What each catalog value must bound, independently of any application:**
   - `preemption-delay`: the most one preemption or service adds to **any** preempted execution, as the variant's
     §1 defines γ. A value measured on

@@ -160,6 +160,30 @@ and "runtime function" is defined.
 | O7 | nit | `no-empty-claim` stated a mechanism software cannot observe | the property stated, the mechanism the basis's, and `yes` with no external source (§2; the catalog's §12) |
 | O8 | nit | §5's "the packages it compiles" | §2's wording (§5) |
 
+**Round 6**, `2026-09-30`, the first judged under the closure rule: O2–O4 and O6–O8 were closed, and O1 and O5
+partial. The reviewer read the PLIC specification and QEMU 11.1.1's `sifive_plic.c` and `goldfish_rtc.c`, and
+simulated the model on 900 admitted sets per setting: no violation once the §2 facts hold. `C_i` and `CS_i` were
+sound, and `J^release` and `J_s` sound within the model. There were 10 findings, 6 live and 4 latent. Two defects
+were live on the emulator, both through facts: P1 and P2. The verdict was that the record "does not meet its closure
+rule". The answering context fetched `hw/intc/sifive_plic.c` at `v11.1.1` and confirmed both at their lines (a read
+of the claim register claims, at 163–174; any raise of a line pends, claimed or not, at 353–360), and the PLIC
+specification's claim sentences at their source, and put QEMU's behaviour in the ledger.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| O1 | partial | through P2 | as P2 |
+| O5 | partial | through P4 | as P4 |
+| P1 | defect, live | a claim is a register read, and both facts forbade only writes; a task that claims starves its source | reads and writes of the claim and complete registers governed, a read named as a claim, in both facts and §12; `no-empty-claim` and `one-request-per-arrival` listed among the image-wide facts that need the task fact (§2; the catalog's §12) |
+| P2 | defect, live | QEMU pends a request on any raise of a claimed source's line, so clearing before completing is not enough | the property stated alone, and the basis shows it for the target's controller, a PLIC gateway or QEMU's `sifive_plic`; QEMU's behaviour in the ledger; the variant's same omission, `M2.11`, now live too (§2; the catalog's §12) |
+| P3 | ambiguity, latent (board) | a PLIC gateway holds a new arrival until the completion, so "acknowledged at entry" is unclear | for a PLIC source, `yes` means the completion, and a level device's clear, happen at entry (the catalog's §12) |
+| P4 | ambiguity, latent (board) | the start-up assumption against a drained source forwarded again | stated about requests: after initialisation's last completion, none but an arrival's at or after the first enabling (§2) |
+| P5 | gap, latent | under `external-before-timer` `no`, a claim loop serves several sources ahead of the timer | `no` is `unsupported-profile` in `/1` (§1, §2) |
+| P6 | ambiguity, live, a false refusal | masking by the port's transitions, idle wake and fault path had no role | those roles added (§2) |
+| P7 | gap, live in principle | `mtvec` and `mscratch` were in no role | the hart's trap state, in the roles and both facts (§2) |
+| P8 | nit | step 1's cases rest on `timer-event-driven`, uncited, and omit the on-time service | cited, and named (§4) |
+| P9 | nit, latent | a stale MTIP at the first enabling | `raised-only-when-due`'s basis covers initialisation's first enabling too (the catalog's §12) |
+| P10 | nit | "no external source" against "no external interrupt"; `one-external-controller`'s vacuous case | aligned, and stated in the record (§2; the catalog's §12) |
+
 ## Why
 
 The record states the composition as it stands, and this file keeps how it got there, as for the catalog record.

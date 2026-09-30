@@ -110,9 +110,11 @@ target targets/example-target.env sha256:0061dd5cabefd87f90429ee144bc8b8d0824108
 timing-model example.base sha256:56d69b33f75c5d7e9373004a69a7a382d5033c73b181ef4d52ef30d4c2a1da50
 ```
 
-`example.base`'s lock lines, its review's included, are:
+A lock holding `example.base` alone reads, its first line naming the rules version and its review's line
+included:
 
 ```text
+# archogen-catalog/1
 example.base contract 0.1.0 sha256:7d0e0beeb4a60b63ec582923f85b705d783f6a23a9981e1376d31bbc7cdaafe0
 example.base implementation 0.1.0 sha256:8b294520470fcc0abd962849a5ece4b7ae461f499a96dc7e47c40cf5d57cc025
 example.base behavior-model 0.1.0 sha256:65dc42732194435388d0d7b717a23ad13dc4cc17dbdb77fca6ff117e5f394c29

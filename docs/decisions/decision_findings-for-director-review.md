@@ -221,6 +221,17 @@ fact, whose limit the design would then state. The catalog's eleventh review add
 
 The design now holds premise 3 from a named commit, the first after you confirm the settings, which is recorded then.
 
+Its twelfth and thirteenth reviews found that the check itself needs two settings more:
+- the check builds its checker from the commit the pull request merges into, in a required workflow or ruleset the
+  pull request cannot change, so no pull request's code runs in its own check;
+- code-owner review of the checker's closure: every package the check builds and what they depend on (today
+  `xtask`, `archogen-api`, `eadl-front` and `eadl-model`, with the catalog crate from `M2.7.3`), the root manifest,
+  `Cargo.lock`, `rust-toolchain.toml`, `.cargo/`, `.github/` and `scripts/`.
+
+Until the named commit exists, no production claim can be made. One new role is yours: a ledger line that fails its
+check, through a defect in the checker for instance, is repaired only by a waiver you rule on, and a waiver can
+only weaken what the catalog says.
+
 ## A note on what "done" means so far
 
 M0 and M1 are complete, and the shape of the claim matters. What exists is a **frontend**: a

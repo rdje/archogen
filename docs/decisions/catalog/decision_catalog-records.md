@@ -8,10 +8,10 @@
 - **Owner / source:** leaf `M2.7.1` (`docs/tasks/M2.md`), deciding what `ROADMAP.md` §9 requires of a catalog entry
   before any code for it is written: "an ID, semantic version, content hash, source/license metadata, maintainer,
   dependencies, supported profiles, preconditions, guarantees, implementation source, model source, cost evidence,
-  and evidence status". It also covers §9's two rules. "Unknown or unreviewed data may exist in an experimental
-  namespace but cannot silently satisfy a stronger production claim." And "Behavioral and timing models may have
-  separate versions because their changes invalidate different claims." The reviews, and the answer to each of
-  their findings, are the last section.
+  and evidence status". It also covers that section's two rules. "Unknown or unreviewed data may exist in an
+  experimental namespace but cannot silently satisfy a stronger production claim." And "Behavioral and timing models
+  may have separate versions because their changes invalidate different claims." The reviews, and the answer to each
+  of their findings, are the last section.
 
 ## The fact / decision
 
@@ -59,7 +59,8 @@ The behavioral and timing models are separate facets with separate versions, and
 other. So a change to one invalidates only the claims that read it. Both rest on their record's contract, so a
 change to the contract invalidates both.
 
-What this defends against, and what it assumes, is §0.
+What this defends against, and what it assumes, is §0. A bare section number is this record's own; one of
+`ROADMAP.md`'s is written with its name.
 
 ### 0. What it defends against
 
@@ -86,11 +87,19 @@ assumed control of the build machine or the hosting.
      - `main` is never force-pushed and never deleted;
      - the required checks are named in those settings, pinned to the CI provider's own app, so a status another
        source posts under the same name does not satisfy them;
-     - the checks' definitions, and everything they build or run, are protected from the pull request they judge:
-       `.github/`, `scripts/`, `xtask/`, the catalog crate and every package it depends on, the root manifest,
-       `Cargo.lock`, `rust-toolchain.toml` and `.cargo/`, by a required workflow or ruleset kept outside the pull
-       request, or by code-owner review of those paths. So a pull request can neither empty its own check nor
-       change the code that runs it.
+     - **the check runs a checker the pull request cannot change.** A required workflow or ruleset kept outside
+       the pull request builds the checker from the base commit, the one the pull request merges into, and runs it
+       on the merge result, whose catalog, history and files it reads as data. It builds the merge result's record
+       packages only under §3's rules, which refuse build scripts and procedural macros from what `cargo metadata`
+       resolves, before anything is built;
+     - **the checker's closure is reviewed by its code owners.** It is the normal and build dependency closure, as
+       `cargo metadata` resolves it at the base, of every package the check builds, with the root manifest,
+       `Cargo.lock`, `rust-toolchain.toml`, `.cargo/`, `.github/`, `scripts/` and whatever else the check runs.
+       Measured on `2026-09-30`, `xtask` reaches `archogen-api`, `eadl-front` and `eadl-model`, and the catalog
+       crate joins them with `M2.7.3`. The check builds and runs nothing outside it.
+
+     So no pull request's code runs in its own check, and a change to the checker judges only what merges after
+     it.
 
      The premise holds from a named commit of `main`, the first after those settings were confirmed. The director's
      confirmation names it (findings §11), and the claim tooling holds it as a constant beside the canonical URL
@@ -99,10 +108,11 @@ assumed control of the build machine or the hosting.
      Checked where it is cheap:
      - until that commit exists, a production claim is `not-established`, naming that premise 3 has no named
        commit (§7);
-     - CI refuses a change range that touches both the paths above and `catalog/`, so a change to the checker lands,
-       reviewed, before any catalog change it judges (§13);
      - a production claim is `not-established` when a first-parent commit of `origin/main` after that commit
-       changes `catalog/` and is not a merge commit (§7);
+       changes `catalog/` or the checker's closure and is not a merge commit (§7);
+     - a production claim records the commit its own tooling was built from, and is `not-established` unless that
+       commit's checker closure is, file for file, the one at a first-parent commit of `origin/main` at or after
+       the named commit (§7);
      - the loader re-applies §5's ledger-time checks at every ledgering commit, so a review that CI failed to check
        is still refused (§5).
 
@@ -147,11 +157,11 @@ assumed control of the build machine or the hosting.
 **The contract.** These fields are the record's contract facet, and its `version` is the record's semantic
 version.
 
-| §9 field | Form | Rule |
+| `ROADMAP.md` §9 field | Form | Rule |
 | --- | --- | --- |
 | ID | the symbol after `catalog-record` | §1's grammar, equal to the file stem |
 | semantic version | `(version "MAJOR.MINOR.PATCH")` | three decimal numbers, each `0` or without a leading zero, and no suffix. It is **the contract's version**. Each other facet has its own |
-| — (which of §9's four catalogs) | `(catalog algorithms)`, `machine`, `devices` or `interfaces` | §9's table. It decides what production requires (§6) |
+| — (which of `ROADMAP.md` §9's four catalogs) | `(catalog algorithms)`, `machine`, `devices` or `interfaces` | `ROADMAP.md` §9's table. It decides what production requires (§6) |
 | source/license metadata | `(source (origin "…") (license "…"))` | both non-empty. `origin` says where the content came from, exactly enough to find it again: this repository and the leaf that wrote it, or an outside source with a ledger section (`SOURCE-LEDGER`) |
 | maintainer | `(maintainer <tree-id>)` | the task tree that owns the record, such as `M2`: an uppercase letter, then uppercase letters and digits |
 | dependencies | `(depends (<id> "<MAJOR.MINOR>") …)`, or `(depends)` | a requirement on the dependency's **contract** version, with Cargo's caret meaning. `"1.2"` is at least `1.2.0` and below `2.0.0`. With major `0`, the minor is the boundary: `"0.3"` is at least `0.3.0` and below `0.4.0`. The catalog holds one record per id, so there is at most one candidate and nothing to choose. An id appears once, must resolve and must match, and the graph has no cycle |
@@ -164,7 +174,7 @@ version.
 **The other three facets.** Each is one form, always present, with its own version. `none` states that the facet
 does not exist, and why, and it is reviewed like any other statement (§5).
 
-| §9 field | Form |
+| `ROADMAP.md` §9 field | Form |
 | --- | --- |
 | implementation source | `(implementation (version "…") (sources "<package>" …))`, with at least one entry, each a package (§3); or `(implementation (version "…") (none "why"))` |
 | model source, behavioral | `(behavior-model (version "…") (sources "…" …) (describes <id> …) (facts <fact> …))`, or `(… (none "why"))` |
@@ -385,7 +395,7 @@ letters, digits, `-` and `_`; or `key = value`,
 where the key is a bare key or bare keys joined by `.`. A value is, on the same line, a basic string with no
 escape, an integer, `true` or `false`, an array of those, or an inline table `{ key = value, … }` of those. A
 quoted key, a literal or multi-line string, a value continued on the next line, a float or a date is outside it.
-Every manifest in the repository is inside it as of `2026-09-30`.
+Every tracked manifest is inside it as of `2026-09-30`.
 
 These rules are necessary, not sufficient: what the compiler reads is decided by `cfg_attr`, `env!` and the
 module rules, and no lexical rule sees all of it. So **the gate (`M2.7.4`) builds every package in every source
@@ -507,7 +517,7 @@ The **dependency closure** of a record is its dependencies, transitively.
 
 - **Independence.** No behavioral line names a timing model, and no timing line names a behavioral model. That is
   what keeps them independent (§8).
-- **The record's hash**, §9's "content hash", is over:
+- **The record's hash**, `ROADMAP.md` §9's "content hash", is over:
 
   ```text
   archogen-catalog/1
@@ -639,7 +649,9 @@ under `/1` is verified under `/1` for good, so a rule tightened later never refu
 was made. A corrected implementation of the same rule is not a tightening, and §9's waiver is its repair. **One
 identifier names the grammar and the checks**, and every hash begins with it. So any later version, of either,
 moves every hash and makes every review stale, and its migration note says how each earlier line is compared under
-it. A version that changes the checks alone may first split the identifier in two.
+it. A version that changes the checks alone may first split the identifier in two. The bump lands in the first
+catalog change after a checker that knows both versions has merged (premise 3), and that change reviews again
+or demotes every production record, since every hash moves.
 
 **The rejections a facet inherits** are read from the ledger and the commits that ledgered it:
 
@@ -751,7 +763,7 @@ facet instead.
   4. the facets its catalog requires are present and not empty: an implementation with a package, a behavioral
      model with at least one fact, a timing model with at least one cost:
 
-     | Catalog | Present and not empty in production | §9's admission evidence, which the production reviews' basis must address |
+     | Catalog | Present and not empty in production | `ROADMAP.md` §9's admission evidence, which the production reviews' basis must address |
      | --- | --- | --- |
      | `algorithms` | implementation, behavior-model, timing-model | contract, reviewed source basis, reference behavior, implementation tests, supported analysis model |
      | `machine` | behavior-model | primary specification references, exact revisions, reviewed extraction, executable checks where possible |
@@ -760,9 +772,9 @@ facet instead.
 
      The first column is checked mechanically. That the reviews addressed the second is not, and §13 says so.
 
-- **A record in `production` that fails any of these is refused at load**, and the catalog does not load. It is
-  not demoted. A production record that is not reviewed is a defect in the catalog. Demoting it quietly is the
-  silence §9 forbids, and it would let the next edit to a reviewed record pass unseen. The repair is visible
+- **A record in `production` that fails any of these is refused at load**, and the catalog does not load. It is not
+  demoted. A production record that is not reviewed is a defect in the catalog. Demoting it quietly is the silence
+  `ROADMAP.md` §9 forbids, and it would let the next edit to a reviewed record pass unseen. The repair is visible
   either way: review it again, or move the file to `experimental`.
 - **"In production"** everywhere in this record means the namespace. Status is always a facet's (§5).
 
@@ -784,7 +796,7 @@ facet instead.
   cannot supply the image.
 - **A claim result carries:**
   - its strength, profile, target and image, the commit it read, and the `origin/main` commit it was checked
-    against, with `origin`'s URL;
+    against, with `origin`'s URL, and the commit its own tooling was built from;
   - its closure, as `(id, facet, version, bound hash, status)` lines, and its image's closure as the same lines
     when it has an image;
   - its reads, as `(facet, name) → id`, and the lookups that found nothing, each with its selection;
@@ -834,8 +846,10 @@ facet instead.
        compile. A fact about code must be about the code the image holds, so the closure is a
        subset of what the image compiled, as well as the image's sources being a subset of the image's closure's
        sets;
-     - premise 3 has no named commit yet, or a first-parent commit of `origin/main` after it changes `catalog/` and
-       is not a merge commit (premise 3).
+     - premise 3 has no named commit yet; a first-parent commit of `origin/main` after it changes `catalog/` or the
+       checker's closure and is not a merge commit; or the claim's own tooling was built from a commit whose
+       checker closure is not, file for file, the one at a first-parent commit of `origin/main` at or after the
+       named commit (premise 3).
 
   As in the runtime variant's admission, the strongest verdict is reported with every reason that reaches it.
   What an analysis does with a value it could not read is the analysis's verdict, not admission's (§12).
@@ -866,7 +880,7 @@ facet instead.
 - **A change to the timing model** voids its production reviews and affects every claim that read it. It leaves
   the behavioral reviews, the contract review and every claim that did not read the timing model as they were,
   unless the change is to a file both models reach, which §13 lists as an over-approximation. The converse holds
-  too. This is §9's reason: "their changes invalidate different claims". `M2.7.3` tests both
+  too. This is `ROADMAP.md` §9's reason: "their changes invalidate different claims". `M2.7.3` tests both
   directions.
 - **For a production record, that holds when the change lands with its reviews.** A change moves the bound hash of
   every facet one of whose bound-hash inputs it changes, directly or through derived lines, transitively. For a
@@ -892,10 +906,10 @@ facet instead.
   fact affects it, as it should. Independence is between the models. It is not a promise that timing claims never
   depend on behavior.
 - **The code is shared.** A change to an implementation's sources voids its production reviews, and through §3's
-  derived lines those of both models of each record that describes or measures it. The code is what both models
-  are about. This is §9's "Any bound tied to a binary is invalidated by an applicable code, toolchain, linker,
-  feature, or target change". Code, toolchain files and targets are in the bound hashes. The claim's image covers
-  the rest (§7), and §13 names what that leaves.
+  derived lines those of both models of each record that describes or measures it. The code is what both models are
+  about. This is `ROADMAP.md` §9's "Any bound tied to a binary is invalidated by an applicable code, toolchain,
+  linker, feature, or target change". Code, toolchain files and targets are in the bound hashes. The claim's image
+  covers the rest (§7), and §13 names what that leaves.
 
 ### 9. Versions, the lock and the review ledger
 
@@ -904,12 +918,14 @@ facet instead.
     creates the lock, and it stands outside the sorted lines below. It changes only to a version the loader knows
     and that is later. A lock whose first line is missing, malformed, or names a version the loader does not know
     or one lower than a parent's lock names, is refused (`catalog-lock-review`): nothing is verified under no
-    version;
+    version. The append-only comparison of lines leaves the first line out, and holds it only to never decreasing.
+    A line new in a pushed range is refused when its commit's lock names a version lower than `origin/main`'s, so
+    a branch forked before a bump cannot go on ledgering under the older rules;
   - one line per facet version ever blessed, `<id> <facet> <version> sha256:<own hash>`;
   - one line per review ever blessed, `<id> review sha256:<ledger hash> <facet> <verdict> sha256:<the bound hash
     it names>` (§3);
   - one line per waiver, `<id> waiver sha256:<ledger hash> <commit>`, naming a review line and the commit that
-    ledgered it (below).
+    ledgered it by its full object name in lowercase hex (below).
 
   With the history of the commit being read, and of the published main line's for a production claim (§5), that is
   everything status needs, for a record that no longer exists too: each review's form, and the facet it saw, are in
@@ -940,17 +956,23 @@ facet instead.
   - A retired record's lines stay behind as history, so its versions cannot be reused and its reviews cannot be
     shed.
 - **A waiver repairs a review line that fails verification**, which would otherwise stop the catalog loading for
-  good (§13). Bless never writes one. It is added by hand, in a commit of its own, on the director's ruling
-  recorded in the findings record, and reaches `main` by a merge commit. The replay accepts it, as the one line
-  blessing would not write, only when the review line it names is in a parent's lock and fails §5's verification
-  at the commit it names, which ledgered that line. A waived line is not verified at load, and it can only lower a
-  status:
+  good (§13). Bless never writes one. It is added by hand on the director's ruling, recorded in the findings
+  record, and reaches `main` by a merge commit. Its commit holds the waiver lines and may do two things more, and
+  nothing else: move to `experimental` each record that a waived production review leaves short of §6, and remove
+  the waived reviews' forms from their records. The replay accepts a waiver, as the one line blessing would not
+  write, only when the review line it names is in a parent's lock and fails §5's verification at the commit it
+  names, which ledgered that line. At load, a waived line is exempt from every check that ties a line to its form:
+  it is not verified, its record need not hold its form, and a form it still holds is not compared with it. It
+  can only lower a status:
   - a production review it names establishes nothing;
-  - when its line or its form at that commit says `rejected`, it binds each facet either names, with the items of
-    that form when there is one, until a review answers it by its ledger hash.
+  - when its line or its form at that commit says `rejected`, it binds as an unwaived rejection does, each facet
+    either names: that facet, through lineage, and through the items the facet held at every commit that ledgered
+    the line, until a review answers it by its ledger hash.
 
   So a waiver never lifts a rejection or grants a verdict. A facet that loses a production review to one is
-  reviewed again. Like every line, a waiver is never removed.
+  reviewed again. Like every line, a waiver is never removed. **For a verifier defect the order is fixed:** the
+  fix merges first, judged by the checker it replaces (premise 3), and the waiver is the next catalog change,
+  judged by the fixed one.
 - **Checks at load:**
 
   | Code | When |
@@ -958,7 +980,7 @@ facet instead.
   | `catalog-lock-missing` | a facet's current version, or a review in a record, has no line. The repair is to bless |
   | `catalog-lock-unbumped` | a line has the same id, facet and version as a current facet, but a different own hash: changed without a version bump |
   | `catalog-lock-downgrade` | a facet's current version is below a version the lock holds for it |
-  | `catalog-lock-review` | the lock's first line missing, malformed, naming an unknown version or one lower than a parent's; a waiver naming a line that verifies, or a commit that did not ledger it; a present record lacks a review the ledger holds for its id; a review's form disagrees with its line's facet, verdict or hash, or with its form in the commit that ledgered it; at a ledgering commit, the review's form does not hash to the line's ledger hash, the line's facet or verdict is not the form's, or the facet's bound hash is not the one the line names (§5) |
+  | `catalog-lock-review` | the lock's first line missing, malformed, naming an unknown version or one lower than a parent's; a line that matches none of the lock's forms, or out of order; a waiver naming a line that verifies, or a commit that did not ledger it; a present record lacks a review the ledger holds for its id; a review's form disagrees with its line's facet, verdict or hash, or with its form in the commit that ledgered it; at a ledgering commit, the review's form does not hash to the line's ledger hash, the line's facet or verdict is not the form's, or the facet's bound hash is not the one the line names (§5) |
   | `catalog-lock-retired` | a retired id has a rejection that no production review of a record superseding it answers, and no present record supersedes it; a present record takes a superseded id; a present record lacks a `supersedes` the lineage holds for it |
   | `catalog-conflict` | for some profile and target the catalog names, or for a claim with no target, two records supply the same name under §12's selection |
 
@@ -981,7 +1003,7 @@ facet instead.
 
 ### 10. Invalidation
 
-§9: "Dependency-based invalidation must identify affected builds and analyses."
+`ROADMAP.md` §9: "Dependency-based invalidation must identify affected builds and analyses."
 
 - **Against what a claim recorded, not against the lock.** A claim result carries its closure, and its image's
   closure, with each line's bound hash and status, its reads, and its strength (§7). A recorded closure line is
@@ -1046,8 +1068,8 @@ covers, where a rejection binds, and the limits of `/1` that later leaves lift.
 
 ## Why
 
-- **§9 asks for a mechanism, not a label.** Every design that writes the evidence status into the record relies
-  on each editor remembering to lower it.
+- **`ROADMAP.md` §9 asks for a mechanism, not a label.** Every design that writes the evidence status into the
+  record relies on each editor remembering to lower it.
   - A production verdict bound to a hash is voided by the edit itself.
   - A rejection bound to the facet cannot be edited away, only answered.
   - A ledger that keeps every review means no verdict can be shed, reordered or renamed away.
@@ -1058,7 +1080,7 @@ covers, where a rejection binds, and the limits of `/1` that later leaves lift.
     code under a model, a workspace file, a target or a ledger section.
 
   With one hash per record, as the first draft had, a timing change forced a contract bump. That voided the
-  behavioral reviews and made §9's "their changes invalidate different claims" false.
+  behavioral reviews and made `ROADMAP.md` §9's "their changes invalidate different claims" false.
 - **Computed citations, and closures that follow the derived lines**, because a declared list, or a hand-written
   closure rule, is one someone can leave a facet out of.
 - **Invalidation against recorded closures, reads and statuses**, because a lock is rewritten by every bless, and
@@ -1073,7 +1095,8 @@ covers, where a rejection binds, and the limits of `/1` that later leaves lift.
   `targets/*.env` cannot nest a cost's fields. The reader already exists, is bounded and fuzzed, and gives every
   form a span. It reads only the datum layer, so a record is never mistaken for a description.
 - **§3's own encoding**, not `Form::to_canonical`, keeps hashes stable under any change to the language's printer.
-- **Refusing a stale production record at load, not demoting it.** A demotion would be the "silently" §9 forbids.
+- **Refusing a stale production record at load, not demoting it.** A demotion would be the "silently" `ROADMAP.md`
+  §9 forbids.
 - **A requirement per dependency, not an exact pin.** A compatible change to a dependency edits no dependent, and
   the dependency's bound contract hash still makes its dependents' contract reviews stale. There is one candidate
   per id, so no resolver chooses anything a locked build would have to repeat (§10.3).
@@ -1135,3 +1158,4 @@ the design as it stands, and that one keeps how it got here.
 | 10 | 18 | 1 (J1, code facts ungrouped from the costs whose code they state, and an image that need not compile the closure); J2–J4 near it | "cannot be accepted as it stands" |
 | 11 | 14 | 2 latent (Q1, `compare-rounding` not tied to the timer service's code; Q2, releases by code no statement covered), with Q3 near them; §3–§9 held | "cannot be accepted as it stands"; all three latent until a board or `M4` |
 | 12, the first under the closure rule | 12 | 1 live (R1, a pull request changing the checker that judges it), 1 latent (R3, forms items across rules versions); §3–§9 held | "does not yet meet the closure rule"; nothing else live at defect level once R1 is fixed and R2, R4 and R5 are answered |
+| 13 | 14 | 1 live (S1, the checker built through packages premise 3 did not list); S2 and S3, routes the answers left impossible, fail closed | "does not yet meet the closure rule"; nothing else live at defect level once S1 is fixed, S2 and S3 answered and S4's sentence added |

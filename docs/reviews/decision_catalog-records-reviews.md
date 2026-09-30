@@ -417,6 +417,35 @@ cited, at its source, for the ledger.
 | R11 | nits | 1 181 lines; `ROADMAP.md`'s §15 and §9 read as the record's; §12's table title | 1 182; those references say `ROADMAP.md`; the table retitled (§13, §12) |
 | R12 | nits | `M2.7.1`'s "To close" and this file's opening paragraph described early rounds | both brought to the current round |
 
+**Round 13**, `2026-09-30`: all 23 values matched by two routes, and every measured claim held, among them 620
+tracked paths, `cargo metadata`'s 11 packages with no build script, and `origin/main` still the initial commit. R2–R4,
+R6–R8, R10 and R12 were closed, R9 closed with a nit, and R1, R5 and R11 partial. There were 14 findings, 9 live and
+5 latent. One defect was live, S1, R1's class again: the checker is built through `xtask`, which also builds
+`archogen-api`, `eadl-front` and `eadl-model`, so a build script added there runs in the pull request's own check.
+The answering context measured that closure with `cargo metadata` and took the reviewer's single answer to S1 and S2:
+the check builds its checker from the base, so no pull request's code runs in its own check. It also filed the work
+the design now commits to (`M2.7.6`, `M4.10`, in `ARCHOGEN-M2-0235`).
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R1 | partial, defect | through S1 and S2 | as those rows |
+| R5 | partial, fails closed | through S3 and S4 | as those rows |
+| R11 | partial, nit | through S9 | as S9 |
+| S1 | defect, live | the protected list missed packages the checker is built through, so a build script there runs in CI and on every claimant's machine | the check builds the checker from the base commit, in a workflow the pull request cannot change; the checker's closure, computed by `cargo metadata` at the base and measured, is under code-owner review (§0, §13) |
+| S2 | gap, live, fails closed | the range rule refused §8's routes for the root build files, and every change that moves `Cargo.lock` | the range rule dropped; S1's answer protects the checker instead (§0) |
+| S3 | gap, live, fails closed | the waiver deadlocked with production records, did not exempt the checks a verifier defect trips, and had no order | its commit may also demote and remove the waived forms; a waived line is exempt from every check tying a line to its form; the fix merges first, then the waiver (§9) |
+| S4 | ambiguity, live | a waived rejection could read as not binding through lineage | it binds as an unwaived rejection does, through lineage and every ledgering commit's items (§9) |
+| S5 | gap, live | findings §11 listed the round-11 settings only | §11 lists the base-built checker, the closure's code owners, and the director's waiver role (findings §11) |
+| S6 | gap, premise 3 | a direct push that weakens the checker was not flagged | a non-merge first-parent commit touching the checker's closure is flagged too (§0, §7) |
+| S7 | nit | the waiver's commit had no form; a line of no known form had no code | the full object name in lowercase hex; `catalog-lock-review` (§9) |
+| S8 | nit | `no-empty-claim` `yes` with no external interrupt against §13's refusal in `/1` | `yes` there once `M2.12` lets a port fact be stated, `unknown` in `/1` (§12; the composition record's §2) |
+| S9 | nits | bare section numbers that are `ROADMAP.md`'s; "every manifest"; "this record's code"; the example's lock | a bare number is the record's own, and `ROADMAP.md`'s are named; "every tracked manifest"; "the timer-service record's code"; the example shows the first line (§0, §3, §12; the example) |
+| S10 | nit, latent (`M4`) | "runtime function" covered the scheduler's own construction | calls after the first enabling of interrupts (§12; the composition record's §2) |
+| S11 | gap, latent (a second rules version) | a bump against the range rule, and every production record failing §6 at it | the bump lands after a checker knowing both versions, re-reviewing or demoting every production record (§5) |
+| S12 | ambiguity, latent (a second rules version) | the first line under the append-only rule; a branch forked before a bump | the first line held only to never decreasing; a new line under a lower version than `origin/main`'s refused (§9) |
+| S13 | gap, latent (`M2.12`) | the port-facts refusal is a list of names | `M2.12` restates it by what a locator must reach (§13; `M2.12`) |
+| S14 | gap, latent (`M4`) | a production claim did not record what its tooling was built from | it records that commit, and needs its checker closure to match `origin/main`'s (§0, §7) |
+
 ## Why
 
 The decision record states the design as it stands. Its reviews are its history: every round appends a table,

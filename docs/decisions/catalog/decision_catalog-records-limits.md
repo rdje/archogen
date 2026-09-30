@@ -59,9 +59,11 @@
   `unknown` in `/1`: the `switch` group's, and the port's half of `preemptive-everywhere` (the trap exit that
   performs a decided switch), `sections-mask-every-interrupt`, `releases-never-latched` and
   `primitives-out-of-line`. The loader holds it: a known value of any of these facts is refused in `/1`
-  (`catalog-field`), since no hash covers the code it would be about. Every analysis of the runtime variant over the
-  catalog is then `analysis-inconclusive`, naming them. `M2.12` owns a record format that admits the port's
-  assembly, with `sym` operands only, and lifts it.
+  (`catalog-field`), since no hash covers the code it would be about. The list is by name. Whether a fact rests on
+  the port's code can depend on the port too, as `acknowledge-at-entry.<source>`, `one-request-per-arrival.<source>`
+  and `raised-only-when-due`'s basis may, so `M2.12` restates the rule by what a fact's locator must reach. Every
+  analysis of the runtime variant over the catalog is then `analysis-inconclusive`, naming them. `M2.12` owns a
+  record format that admits the port's assembly, with `sym` operands only, and lifts it.
 - **A bad line on `main` is repaired only by a waiver.** The lock is append-only and `main` is never rewritten, so a
   line that fails verification would stop the catalog loading for good in every clone that fetches it. It has two
   causes. One is a failure of premise 3. The other is a defect in the `/1` verifier: its fix refuses every line the
@@ -70,10 +72,9 @@
   can only lower a status. Premise 3 and its checks keep the first cause away, and the verifier's tests (`M2.7.3`,
   `M2.7.4`) the second.
 - **The checker is the repository's own code.** The loader, the gate, CI and what they are built with judge every
-  catalog change, and a pull request can change them. Premise 3 protects those paths by review, and CI refuses a
-  change range that touches both them and `catalog/`, so a checker change is reviewed and lands on its own before
-  any catalog change it judges. A checker change reviewed in error judges every catalog change after it: the
-  protection reaches as far as premise 3's review, and no further.
+  catalog change. A pull request cannot change the checker that judges it, since the check builds the checker from
+  the base (premise 3), and the checker's closure is under its code owners' review. A checker change reviewed in
+  error judges every catalog change after it: the protection reaches as far as that review, and no further.
 - **A rejection binds for good once it is in `main`'s history.** Until then it binds the branch it is on, and is
   lost with it: a reset of an unpushed branch, or a pushed branch deleted and pushed again as new. So a reviewer's
   rejection is merged to `main` in its own commit before the facet it names changes (How to apply). One that

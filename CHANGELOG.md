@@ -5,6 +5,24 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog's thirteenth review and the composition's sixth are answered
+
+`ARCHOGEN-M2-0237` (leaf `M2.7.1`, a twelfth checkpoint; with `M2.10.1`'s seventh). Before it, `ARCHOGEN-M2-0235`
+gave the work these reviews commit the project to its owners: `M2.7.6`, the catalog check's protection, and `M4.10`,
+everything the catalog design leaves to `M4`, which no `M4` leaf held.
+
+- **The catalog's thirteenth review** found the last round's fix one step short. The checking tool is built with
+  three packages the protected list did not name, so a change could still run its own code inside its own check.
+  Now the check builds its tool from the version being merged into, and code owners review everything that tool is
+  built from. So no change runs its own code when it is checked.
+  - The repair route for a bad ledger line now works in the cases it exists for, and never weakens a rejection.
+  - The director's findings list now names the two hosting settings this adds.
+- **The composition's sixth review** found the model sound in simulation, and two gaps in its facts, both real on
+  the emulator. Reading the interrupt controller's claim register is itself a claim, and nothing stopped a task
+  doing it. And QEMU's controller queues a new request whenever a device raises its line, even mid-service. Both
+  were confirmed in QEMU's source and are now covered, with the source recorded.
+- **Both reviews run again.**
+
 ## archogen — settled findings leave the decisions folder, their headings kept
 
 `ARCHOGEN-PROGRAM-0234` (leaf `PROGRAM.41`).
