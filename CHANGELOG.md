@@ -5,6 +5,23 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog's fourteenth review is answered
+
+`ARCHOGEN-M2-0240` (leaf `M2.7.1`, a thirteenth checkpoint).
+
+- **The fourteenth review** found the design one short revision from acceptable. The last round's protection had a
+  gap on cargo's side. Cargo reads build configuration before any of the design's refusals applied, and a
+  configuration can name a program for cargo to run. So a change could still run its own code in its own check.
+  - Now every cargo configuration is checked before cargo runs at all, and the checking tool is built where the
+    change's own files cannot reach it.
+  - The director's list for the hosting settings grew by three: a second person to approve changes to the checking
+    tool, since one person approving their own change protects nothing; fresh machines for the check; and a pinned
+    check if a merge queue is used.
+  - The work these answers commit the project to is named in the leaves that will build it.
+- **The record was split again** to stay under its size limit. Its hash grammar now sits in a file of its own, moved
+  unchanged and checked by comparison.
+- **The composition's seventh review is running.** The catalog's fifteenth follows.
+
 ## archogen — the two older sealing checks had the same blind spot, now closed
 
 `ARCHOGEN-PROGRAM-0239` (leaf `PROGRAM.42`).

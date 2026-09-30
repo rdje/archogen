@@ -224,9 +224,14 @@ The design now holds premise 3 from a named commit, the first after you confirm 
 Its twelfth and thirteenth reviews found that the check itself needs two settings more:
 - the check builds its checker from the commit the pull request merges into, in a required workflow or ruleset the
   pull request cannot change, so no pull request's code runs in its own check;
-- code-owner review of the checker's closure: every package the check builds and what they depend on (today
-  `xtask`, `archogen-api`, `eadl-front` and `eadl-model`, with the catalog crate from `M2.7.3`), the root manifest,
-  `Cargo.lock`, `rust-toolchain.toml`, `.cargo/`, `.github/` and `scripts/`.
+- code-owner review of the checker's closure: the packages the checker is built from and what they depend on
+  (today `xtask`, `archogen-api`, `eadl-front` and `eadl-model`, with the catalog crate and `archogen-evidence` from
+  `M2.7.3`), the root manifest, `Cargo.lock`, `rust-toolchain.toml`, `.cargo/`, `.github/` and `scripts/`.
+
+The fourteenth added three. Code-owner approval must come from an identity other than the author's, and one
+identity makes every commit here today, so it needs a second reviewer identity, which only you can provide. The
+check must run on the hosting's own ephemeral runners, restoring no cache a pull request's job can write. And with
+a merge queue, the check must be a ruleset-required workflow pinned outside the pull request's tree.
 
 Until the named commit exists, no production claim can be made. One new role is yours: a ledger line that fails its
 check, through a defect in the checker for instance, is repaired only by a waiver you rule on, and a waiver can

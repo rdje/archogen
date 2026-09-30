@@ -76,7 +76,8 @@
   the base (premise 3), and the checker's closure is under its code owners' review. A checker change reviewed in
   error judges every catalog change after it: the protection reaches as far as that review, and no further.
 - **A rejection binds for good once it is in `main`'s history.** Until then it binds the branch it is on, and is
-  lost with it: a reset of an unpushed branch, or a pushed branch deleted and pushed again as new. So a reviewer's
+  lost with it: a reset of an unpushed branch, a pushed branch deleted and pushed again as new, or one
+  force-pushed without it and pushed again. So a reviewer's
   rejection is merged to `main` in its own commit before the facet it names changes (How to apply). One that
   reached `origin/main` binds every production claim made from a clone that has fetched it, whatever branch the
   claim reads (§4), and while `main` is protected (premise 3).

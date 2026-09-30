@@ -88,15 +88,23 @@ assumed control of the build machine or the hosting.
      - the required checks are named in those settings, pinned to the CI provider's own app, so a status another
        source posts under the same name does not satisfy them;
      - **the check runs a checker the pull request cannot change.** A required workflow or ruleset kept outside
-       the pull request builds the checker from the base commit, the one the pull request merges into, and runs it
-       on the merge result, whose catalog, history and files it reads as data. It builds the merge result's record
-       packages only under §3's rules, which refuse build scripts and procedural macros from what `cargo metadata`
-       resolves, before anything is built;
-     - **the checker's closure is reviewed by its code owners.** It is the normal and build dependency closure, as
-       `cargo metadata` resolves it at the base, of every package the check builds, with the root manifest,
-       `Cargo.lock`, `rust-toolchain.toml`, `.cargo/`, `.github/`, `scripts/` and whatever else the check runs.
-       Measured on `2026-09-30`, `xtask` reaches `archogen-api`, `eadl-front` and `eadl-model`, and the catalog
-       crate joins them with `M2.7.3`. The check builds and runs nothing outside it.
+       the pull request builds the checker from the base commit, the one the pull request merges into, with §3's
+       allowlisted environment and an empty `CARGO_HOME`, in a checkout where no file of the merge result is on
+       cargo's directory path. It writes the merge result where only that tree's own tracked configuration is on
+       the path, and reads its catalog, history and files as data. It builds each replayed commit's record
+       packages only under §3's rules, which check every cargo configuration before any cargo command runs and
+       refuse build scripts and procedural macros before anything is built, and it runs none of them. With a merge
+       queue, the workflow is a ruleset-required one pinned outside the pull request's tree;
+     - **the check runs on the hosting's own ephemeral runners**, which no job running pull-request code has used,
+       and it restores no cache that such a job can write;
+     - **the checker's closure is reviewed by code owners other than its author.** The closure is what the check
+       builds from the base to make the checker: the normal and build dependency closure, as `cargo metadata`
+       resolves it there, of the checker's packages, with the root manifest, `Cargo.lock`, `rust-toolchain.toml`,
+       `.cargo/`, `.github/`, `scripts/` and whatever else the check runs. Measured on `2026-09-30`, `xtask`
+       reaches `archogen-api`, `eadl-front` and `eadl-model`, and the catalog crate and `archogen-evidence` join
+       them with `M2.7.3`. The check builds nothing else from the base. Approval comes from an identity other than
+       the author's, and one identity commits every commit here today (§13), so until the director names a second,
+       the premise is unmet (findings §11).
 
      So no pull request's code runs in its own check, and a change to the checker judges only what merges after
      it.
@@ -108,11 +116,13 @@ assumed control of the build machine or the hosting.
      Checked where it is cheap:
      - until that commit exists, a production claim is `not-established`, naming that premise 3 has no named
        commit (§7);
-     - a production claim is `not-established` when a first-parent commit of `origin/main` after that commit
-       changes `catalog/` or the checker's closure and is not a merge commit (§7);
-     - a production claim records the commit its own tooling was built from, and is `not-established` unless that
-       commit's checker closure is, file for file, the one at a first-parent commit of `origin/main` at or after
-       the named commit (§7);
+     - the check computes the checker's closure at the merge result too, after §3's configuration check, and
+       refuses one holding a path that the merge result's `CODEOWNERS` does not assign to its code owners;
+     - a production claim is `not-established` when a first-parent commit of `origin/main` after that commit is
+       not a merge commit (§7);
+     - a production claim's tooling is built from a written tree of a first-parent commit of `origin/main` at or
+       after the named commit, never from a working tree, and records that commit. The claim is `not-established`
+       when a first-parent commit after it, up to the commit the claim reads, changed the checker's closure (§7);
      - the loader re-applies §5's ledger-time checks at every ledgering commit, so a review that CI failed to check
        is still refused (§5).
 
@@ -135,8 +145,8 @@ assumed control of the build machine or the hosting.
 - **The syntax is the eADL reader's datum layer**: lists, symbols, integers, strings and `;` comments, read by
   `eadl_front::read` and nothing further. Decimals are refused in `/1`.
   - A record is **not** an eADL description: it is not type-checked, not a `.eadl` file, not in the conformance
-    suite's population and not in the language baseline. §5.6 puts engine knowledge in "versioned engine catalogs
-    or plugins … even when they are stored in a declarative engine-specific format".
+    suite's population and not in the language baseline. `ROADMAP.md` §5.6 puts engine knowledge in "versioned
+    engine catalogs or plugins … even when they are stored in a declarative engine-specific format".
   - Every reader diagnostic is a refusal.
 - **ASCII by construction.**
   - Every byte of the file, comments included, is printable ASCII (`0x20`–`0x7E`, the space included) or a line
@@ -215,7 +225,7 @@ does not exist, and why, and it is reviewed like any other statement (§5).
   - `(binary independent "why")`, when the value depends on no image. It is admitted for exactly two names,
     `compare-rounding` and `delivery` (§12), and only on a target whose `TARGET_KIND` is `board`. Every other
     name, and every emulator, refuses it.
-- **`evidence`** is one of §7.3's four categories:
+- **`evidence`** is one of `ROADMAP.md` §7.3's four categories:
   - `(evidence assumed)`;
   - `(evidence observed-maximum)`;
   - `(evidence observed-maximum (observed <n>) (safety-factor <numerator> <denominator>))`;
@@ -223,8 +233,8 @@ does not exist, and why, and it is reviewed like any other statement (§5).
   - `(evidence analytically-established)`.
 
   With a safety factor, `observed` is the raw observation, and `value` must equal ⌈`observed` × numerator /
-  denominator⌉, computed exactly in 128 bits. The factor's terms are `u32` and must pad: the denominator is
-  nonzero, the numerator is at least the denominator, and a term outside `u32` is refused the same way. As §7.3
+  denominator⌉, computed exactly in 128 bits. The factor's terms are `u32` and must pad: the denominator is nonzero,
+  the numerator is at least the denominator, and a term outside `u32` is refused the same way. As `ROADMAP.md` §7.3
   says, the factor changes nothing about the category.
 - **`locator`** is optional for `assumed` and required otherwise.
 - **A known cost becomes an `archogen_evidence::Bound`**, which must pass `Bound::validate`.
@@ -277,269 +287,10 @@ it refuses (§12).
 
 ### 3. Hashes: a normative byte grammar
 
-Every hash is SHA-256 (FIPS 180-4), written `sha256:` followed by 64 lowercase hexadecimal digits. Every hash
-input is ASCII text, one item per line. Every line ends in one line feed (`0x0A`), the last one included, and
-there is nothing else.
-
-**The encoding of a form, `E`**, is independent of any printer, so no change elsewhere moves a hash:
-
-- a symbol is its text;
-- an integer is its decimal value, with no leading zeros. A hexadecimal literal is encoded in decimal, so `0x28`
-  is `40`;
-- a string is `"`, then its decoded value with `\` written `\\` and `"` written `\"`, then `"`. §1 has made the
-  decoded value printable ASCII;
-- a list is `(`, then its items' encodings joined by one space, then `)`.
-
-**The forms of each facet:**
-
-- the contract's are the `version`, `catalog`, `source`, `maintainer`, `depends`, `supersedes`, `profiles`,
-  `targets`, `preconditions` and `guarantees` forms, each whole, in record order;
-- each other facet's is its one form, whole.
-
-**Source sets.** Each entry in `sources` is a tracked file, a directory, or a package: a directory whose
-`Cargo.toml` has a `[package]` table. A manifest with only a `[workspace]` table does not make a package.
-
-- **An entry inside a package stands for the whole package**, so a named file or subdirectory cannot narrow what
-  is covered.
-- **A directory entry with a package below it is refused.** Name the package instead.
-- **A package with another package below it is refused**, so an entry stands for exactly one package.
-- **The facet's own set:**
-  - a file entry is that file;
-  - a directory entry is every tracked file under it;
-  - a package entry is every tracked file under the package's directory.
-- **The facet's reached set** is what a package brings in beyond its directory, and it enters the bound hash
-  only, as `file` lines:
-  - the packages its manifest names as dependencies or build dependencies, transitively, each with every tracked
-    file under its directory. **A dependency table** is read by TOML's meaning, not its spelling: a table named
-    `dependencies`, `build-dependencies` or `dev-dependencies`, or by Cargo's aliases `build_dependencies` and
-    `dev_dependencies`, at the root or under `target.<triple>` whose triple is a bare key, however the dialect's
-    headers, dotted keys and inline tables write it. Each of its keys is a dependency. A quoted `cfg(…)` key is
-    outside the dialect below. Each reached package is held to every rule of this section, and its own workspace
-    manifest is in the reached set too. Dev dependencies are not followed, because they do not enter the built
-    code;
-  - its workspace's manifest: the nearest `Cargo.toml` with a `[workspace]` table, in the package's directory
-    or an ancestor. The package must be that manifest's own package, or match an entry of its `members` and no
-    entry of its `exclude`. An entry is a relative path whose segments are literal or exactly `*`, which matches
-    one segment. Anything else is refused. So is a package that workspace does not include, which Cargo would walk
-    past to an outer workspace (the ledger's `rust-toolchain` scope): `/1` does not follow it;
-  - from the package's directory and every ancestor up to the repository root, each of `.cargo/config.toml`,
-    `.cargo/config` and `rust-toolchain.toml` that exists. A `rust-toolchain` file without the extension there is
-    refused: the pin is one file, and rustup reads the legacy one too.
-
-  A change to the workspace manifest or the toolchain therefore makes reviews stale, but moves no version.
-
-Both sets are sorted bytewise by path, without duplicates, and a file in the own set is not repeated in the
-reached set. A path under `catalog/` is refused, in these sets and among a target's files alike, since a record
-could otherwise hash its own reviews, and a target file there would move with every bless.
-
-**A package is refused (`catalog-source`), fail-closed,** when:
-
-- a line of its manifest, or of its workspace manifest, is outside the dialect below;
-- it has a build script: a `build.rs` at its root, or a `build` key other than `false`;
-- any table of its manifest holds a `proc-macro`, `proc_macro`, `crate-type` or `crate_type` key, whatever its
-  value, since each can make it a procedural macro or another kind of crate; or it has a `package.workspace` key;
-- it declares a `[features]` table or an optional dependency. `/1` builds one configuration per profile and
-  target, so what a review saw is that configuration;
-- a dependency in any dependency table, `[dev-dependencies]` included, is not a path dependency, or is
-  `workspace = true`;
-- a `path` key of `[lib]`, `[[bin]]`, `[[test]]`, `[[example]]` or `[[bench]]` leaves its directory;
-- its workspace manifest has a `[patch]` or `[replace]` table;
-- a config or toolchain file on its ancestor path is present but untracked, or a config file there is outside the
-  manifest dialect below or holds a key whose path does not begin with `alias`, whether written under a header,
-  dotted or as an inline table. Build flags, linkers and linker scripts are the build's, and `/1` admits none;
-- its manifest or its workspace manifest has a `cargo-features` key, or a `rustflags` key in any table. Either
-  passes the compiler flags that `/1` admits none of;
-- a Rust source file of the package holds, **as tokens** (comments and the contents of literals are not tokens):
-  - anywhere: the identifier `asm`, `global_asm`, `naked_asm`, `include`, `include_str`, `include_bytes`,
-    `debugger_visualizer`, `no_mangle`, `export_name`, `link_section`, `panic_handler`, `global_allocator`,
-    `alloc_error_handler` or `macro_rules`, or the keyword `macro`. So a renamed import of an assembly or include
-    macro, or of an attribute macro such as `global_allocator`, is refused too, and the package defines no macro of
-    its own;
-  - inside an attribute, `#[…]` or `#![…]`, at any depth, so within `cfg_attr(…)` and `unsafe(…)` too, and inside
-    the arguments of any macro invocation: the identifier `path`, `link` or `used`. These three are common words,
-    refused only where they could become an attribute;
-  - the identifier `extern`, except in `extern crate`, and when followed by an optional string literal and `fn`
-    outside the arguments of a macro invocation. So a foreign block is refused, and so is one a macro could
-    assemble from its arguments, while an `extern "C" fn` definition and a function-pointer type are not;
-  - an identifier that is not ASCII.
-
-  An identifier is compared by its name, so `r#asm` is `asm`. Rust normalizes identifiers to NFC, and a non-ASCII
-  identifier could normalize to a refused name, so none is admitted.
-
-  **The Rust source files** of a package are every tracked `*.rs` file under its directory, and every source path
-  the compiler's dependency information lists for its builds (below). Each listed path must end in `.rs`. A listed
-  path that does not is a file an attribute or macro made the compiler read, and it is refused, whatever read it.
-  So the scan covers every file the compiler read, not the files a name suggests. No package in the build defines a
-  macro: `macro_rules` and `macro` are refused as words, and a procedural macro is refused by its manifest and by
-  what cargo resolves (below). A macro invocation's arguments hold none of the refused words. So nothing compiled
-  holds a refused form that its source does not show, beyond what the pinned toolchain's own macros expand to
-  (premise 1). What the refused forms
-  reach — code a symbol reaches only at link time, a native library, a file an assembler directive reads, and a
-  global hook or symbol another package could supply in its place — is in no source set and, for some, in no
-  dependency information, so `/1` admits none of them. `#![feature]` needs a nightly compiler, which the pin's
-  form and the environment below rule out. Architecture code that needs assembly waits for a record format that
-  admits it with `sym` operands only.
-
-  The rules bind the packages a record's sets reach, and no other. Measured on `2026-09-30`: `crates/rt-core`, the
-  package the slice `M2.7.4` records names, reaches no other package and passes them. Each refused word appears in
-  its tracked files only in comments, in literals or in its manifest; its attributes are `test`, `must_use`,
-  `derive` of standard traits, `cfg(test)` and `#![cfg_attr(not(test), no_std)]`; its only non-ASCII bytes are in
-  comments; and the dependency information a plain `cargo build -p rt-core` writes names only its three `.rs`
-  sources. A clippy run adds `Cargo.toml` to it, so the gate reads a plain build's. Packages no record reaches are
-  not held to these rules: `archogen-wasm`'s exports need `no_mangle`, and the spike under `targets/` declares
-  `[features]`.
-
-**The manifest dialect** is the part of TOML these manifests use. A line is blank; a comment; a table header,
-which is `[` or `[[`, then one or more bare keys joined by `.`, then `]` or `]]`, where a bare key is ASCII
-letters, digits, `-` and `_`; or `key = value`,
-where the key is a bare key or bare keys joined by `.`. A value is, on the same line, a basic string with no
-escape, an integer, `true` or `false`, an array of those, or an inline table `{ key = value, … }` of those. A
-quoted key, a literal or multi-line string, a value continued on the next line, a float or a date is outside it.
-Every tracked manifest is inside it as of `2026-09-30`.
-
-These rules are necessary, not sufficient: what the compiler reads is decided by `cfg_attr`, `env!` and the
-module rules, and no lexical rule sees all of it. So **the gate (`M2.7.4`) builds every package in every source
-set** and reads the compiler's dependency information:
-
-- **What it builds from.** The git index, written file by file from each blob's bytes into a directory of its own
-  under the repository's `target/`, with `GIT_NO_REPLACE_OBJECTS` set. It is not a checkout, so no filter,
-  attribute or line-ending setting of git's can change a byte. Two tracked paths that differ only in ASCII case
-  are refused, since a case-insensitive file system cannot hold both. Each build runs in its package's own
-  directory.
-- **What configuration it lets cargo read.** Cargo reads every `.cargo/config` and `.cargo/config.toml` from the
-  build's directory up to the file system's root, and those under `CARGO_HOME`. So before building, the gate
-  lists every such file on that path and refuses (`catalog-source`):
-  - one inside the written index that is not a tracked file this section hashes;
-  - one outside the written index, except the repository's own tracked copies, whose working-tree bytes must equal
-    the index's. `target/.cargo` is outside the written index and is refused, and so is anything above the
-    repository.
-- **Its environment is an allowlist:** `PATH`, `HOME`, `RUSTUP_HOME`, `RUSTUP_TOOLCHAIN` set to the pin,
-  `CARGO_HOME` set to an empty directory of the gate's own, since a workspace of path dependencies needs no
-  registry, and the gate's own `CARGO_TARGET_DIR`, and nothing else. A list of variables to clear would miss the
-  next one that changes a build. `RUSTUP_TOOLCHAIN` outranks every rustup override, and `rustc -vV` must then name
-  the pinned release, or the gate refuses (premise 1).
-- **The pin** is the `channel` of the `rust-toolchain.toml` at the written index's root, and it must be a release
-  number: three decimal numbers, `MAJOR.MINOR.PATCH`, each `0` or without a leading zero. A named channel such as
-  `stable`, `beta` or `nightly`, a dated or suffixed one, or an index with no `rust-toolchain.toml`, is refused.
-  A moving channel would change the compiler under an unchanged hash, and a nightly one admits `#![feature]`.
-- **What cargo resolves, before anything is built.** `cargo metadata --offline --locked --format-version 1`, in
-  the environment above, must report the root of the written index as its `workspace_root`. It resolves the whole
-  workspace, so every member's dependencies must be path ones, a package no record reaches included, dev
-  dependencies too. That tightens `decision_zero-dependency-engine-core.md`, which admits an external crate
-  through a reviewed decision; the tightening is recorded there. A member with any other dependency is refused on its
-  own (`catalog-source`), naming that member, rather than failing the offline resolution with a message about the
-  registry. In the graph of normal and build dependencies of every package in a source set, the gate also refuses:
-  - a package with a target of kind `proc-macro` or `custom-build`;
-  - a package whose `source` is not null, which is any dependency that is not a path one;
-  - a package the graph holds that §3's reading of the manifests did not reach, or one it reached that the graph
-    does not hold.
-
-  So cargo's own reading of the manifests checks the dialect's reading, both ways, and no manifest spelling adds a
-  package, a build script or a procedural macro unseen. `cargo metadata` runs no package's code. Every build runs
-  with `--offline --locked` as well, so nothing is fetched and `Cargo.lock` is not rewritten.
-- **Which workspace cargo sees.** The workspace root that `cargo metadata` reports is the root of the written
-  index. An `exclude` entry excludes every package whose directory is the entry or lies under
-  it, as cargo's does, and §3's membership rule reads it so.
-- **The build matrix.** The dev and release profiles. An implementation package is built for the host and for
-  each target's `RUST_TARGET`, for every target the record names in its contract or costs, where `any` means
-  every target under `targets/`. A package
-  that is only in a model's sets runs on the host, and is built for the host alone. There is no feature axis,
-  because `/1` refuses features.
-- **Who runs these checks.** The gate, on the commit being made. CI, on every commit it replays that changes
-  anything under `catalog/`, a tracked file under a package directory in any source set, a manifest,
-  `Cargo.lock`, a cargo configuration file, a toolchain file or a target file. Records under `catalog/` decide the
-  source sets, targets and costs, so this covers every change to what is built, and a commit made with the gate
-  bypassed is built too. A production claim runs them on the
-  commit it reads. Each reads the dependency information of every unit the build compiles, not only the packages a
-  record names.
-- **What it refuses:**
-  - a package that does not build under the matrix;
-  - every source path in the compiler's dependency information that is in neither set. A path is resolved
-    lexically against the written index's root, `.` and `..` included, and must then satisfy §4's grammar. One
-    outside the written index is refused, the toolchain's sysroot included: no package's own sources live there,
-    and measured on `2026-09-30` no workspace crate's dependency information names one. `M2.7.4` measures that
-    again before relying on it;
-  - a source path whose bytes after the build differ from its blob's;
-  - every environment dependency except `CARGO_PKG_*`, `CARGO_CRATE_NAME`, `CARGO_MANIFEST_DIR` and
-    `CARGO_MANIFEST_PATH`.
-
-The compiler, not a scan, decides completeness.
-
-**Own hash** of facet `F` of record `R`:
-
-```text
-archogen-catalog/1
-own F R
-E(form)                                          one line per form of the facet, in record order
-file <path> sha256:<hash of the file's bytes>    one line per file of the own set, in its order
-```
-
-**Bound hash** of `F`:
-
-```text
-archogen-catalog/1
-bound F R
-own sha256:<own hash of F>
-<derived lines: a set, without duplicates, sorted bytewise>
-```
-
-Each derived line takes one of four forms:
-
-- `<facet> <id> sha256:<that facet's bound hash>`;
-- `file <path> sha256:<file hash>`, for the reached set;
-- `target <path> sha256:<file hash>`;
-- `ledger <anchor> sha256:<hash of the section's bytes>`.
-
-The **target files** of a target `t` are `targets/<t>.env`, `targets/<t>.eadl`, and every path the `.env` gives
-as a value. A value that holds `/` is a path from the repository's root: it must be tracked and in §4's normal
-form, or the target is refused. A value without `/`, such as a program's name or a triple, is not a path.
-
-**A `.env` is lines** of three kinds: blank; a comment, whose first character is `#`; or `KEY=value`. A key is one
-of the prefixes `TARGET_`, `QEMU_`, `RUST_`, `REQUIRES_`, `DEVICE_` and `PLATFORM_`, then uppercase ASCII letters,
-digits and `_`. No variable that bash or a POSIX shell sets, reads or holds read-only begins with one of them, so no
-key is one the shell gives a meaning to. The value is the rest of the line: ASCII letters,
-digits, `.`, `_`, `-`, `/`, `+`, `:` and `,`, and nothing else, so it holds no character a shell treats specially.
-There is no `export`. Each key appears at most once. Any other line refuses the target (`catalog-field`), so no
-reader can take a different value from the one the shell that sources the file takes. A value without `/` that
-names a tracked file (a file, not a directory with tracked files under it), from the repository's root or from
-`targets/`, is refused: a file a target reads is named
-with its path, so a word such as `yes` never turns a file added later into a target file. A `.env` or `.eadl`
-directly under `targets/` without its pair is refused too, so every target under `targets/` is a named target (§2).
-
-The **dependency closure** of a record is its dependencies, transitively.
-
-| Facet | Derived lines |
-| --- | --- |
-| contract | `contract <D>` for each direct dependency `D`, so a dependency's changed guarantee makes its dependents' contract reviews stale, whatever its version says |
-| implementation | `file` lines of its reached set |
-| behavior-model | `contract <R>`, because the facts are stated under its profiles, targets, preconditions and dependencies; `implementation <R>` and `implementation <X>` for each `describes` record `X`, because a fact about code is voided when the code changes; `behavior-model <D>` for each direct dependency; `target` lines for the target files of each target the contract names, or of every target under `targets/` when it names `any`; `ledger` lines for its ledger locators; `file` lines of its reached set |
-| timing-model | `contract <R>`, for the same reason; `implementation <X>` for `R`, every record in `R`'s dependency closure, and every `measured-with` record with its own dependency closure; `timing-model <D>` for each direct dependency and each `measured-with` record; `target` lines for the target files of each target its costs name; `ledger` lines; `file` lines of its reached set |
-
-- **Independence.** No behavioral line names a timing model, and no timing line names a behavioral model. That is
-  what keeps them independent (§8).
-- **The record's hash**, `ROADMAP.md` §9's "content hash", is over:
-
-  ```text
-  archogen-catalog/1
-  record R
-  contract sha256:<bound>
-  implementation sha256:<bound>
-  behavior-model sha256:<bound>
-  timing-model sha256:<bound>
-  ```
-
-- **A review's ledger hash** is over its three lines, `archogen-catalog/1`, `review R` and `E(review form)`.
-- **Excluded from every facet hash** are the reviews, since a review cannot cover itself, and the namespace.
-  Promotion changes no hash, and it needs production verdicts (§6).
-- **A `none` facet is hashed like any other.** A `none` timing model still gets its `contract` and
-  `implementation` lines, so going from `none` to present, or back, is a change.
-- **Line 2 names the facet or review and the id**, so a review cannot be copied between records or facets whose
-  text is the same.
-- **`archogen-catalog/1` versions this grammar.** Changing any part of this section changes it.
-
-**Worked example.** [`decision_catalog-records-example.md`](decision_catalog-records-example.md) fixes two
-records and three files, byte for byte, and every hash this section gives them: each facet's own and bound hash,
-each record hash, a review's ledger hash and lock lines, and a forms digest. `M2.7.3` must reproduce every one.
+This section is kept in [`decision_catalog-records-hashes.md`](decision_catalog-records-hashes.md). It moved there
+verbatim when this record neared its size ceiling. It is part of this record, normative and reviewed with it: the
+byte grammar every hash is computed over, what each facet's own and bound hash covers, the package rules and the
+manifest dialect, what the gate builds and lets cargo read, and the worked example that pins them.
 
 ### 4. Paths, "tracked", and what reads the files
 
@@ -610,8 +361,8 @@ each record hash, a review's ledger hash and lock lines, and a forms digest. `M2
   - The gate also lists the untracked files under `catalog/`, ignored ones included (`git ls-files --others`
     without `--exclude-standard`), and refuses them (`catalog-layout`), since no reader of the index can see them
     and a `.gitignore` could otherwise hide a stray record.
-- **Without git.** A §10.3 package carries no index. Loading a catalog there needs the package's own manifest of
-  files, which is `M4`'s. Until then, the catalog loads only from a repository.
+- **Without git.** A `ROADMAP.md` §10.3 package carries no index. Loading a catalog there needs the package's own
+  manifest of files, which is `M4`'s. Until then, the catalog loads only from a repository.
 
 ### 5. Evidence status is derived, never written
 
@@ -644,14 +395,14 @@ names it.
 
 **Each ledgering commit is verified under the rules it was ledgered under**, those its lock's first line names
 (§9). `# archogen-catalog/1` names both §3's grammar and these ledger-time checks. A later version replaces that
-line, in the change that brings the new rules in, with a migration note as `ROADMAP.md` §15 asks. A line ledgered
+line, with a migration note as `ROADMAP.md` §15 asks, in the first catalog change after a checker that knows both
+versions has merged (premise 3). A line ledgered
 under `/1` is verified under `/1` for good, so a rule tightened later never refuses history that was honest when it
 was made. A corrected implementation of the same rule is not a tightening, and §9's waiver is its repair. **One
 identifier names the grammar and the checks**, and every hash begins with it. So any later version, of either,
 moves every hash and makes every review stale, and its migration note says how each earlier line is compared under
-it. A version that changes the checks alone may first split the identifier in two. The bump lands in the first
-catalog change after a checker that knows both versions has merged (premise 3), and that change reviews again
-or demotes every production record, since every hash moves.
+it. A version that changes the checks alone may first split the identifier in two. The change that bumps it
+reviews again or demotes every production record, since every hash moves.
 
 **The rejections a facet inherits** are read from the ledger and the commits that ledgered it:
 
@@ -802,8 +553,8 @@ facet instead.
   - its reads, as `(facet, name) → id`, and the lookups that found nothing, each with its selection;
   - every input it took from outside the catalog and the description, named, with the caller or application as
     its source;
-  - every precondition in the closure, as an assumption. §7.2 requires a claim to "list the unproved links", and
-    a precondition is one.
+  - every precondition in the closure, as an assumption. `ROADMAP.md` §7.2 requires a claim to "list the unproved
+    links", and a precondition is one.
 - **Admission, strongest verdict first:**
   1. `unsupported-profile`: the claim's target is not a named target (§2); or a record in the closure, or in the
      image's closure below, omits the claim's profile, or its `targets` does not admit the claim's target. A claim
@@ -832,8 +583,8 @@ facet instead.
        one of:
        - a file of the own or reached set of an implementation in the image's closure, at the bound hash the
          closure holds;
-       - generated code, named by the plan (§7.5) that generated it, with its hash;
-       - an application input of §10.3, named with its hash.
+       - generated code, named by the plan (`ROADMAP.md` §7.5) that generated it, with its hash;
+       - an application input of `ROADMAP.md` §10.3, named with its hash.
 
        Any other path refuses the claim. Generated code and application inputs are named in the claim, and until
        `M4` gives them their own evidence rules, either makes a production claim `not-established`, as a caller's
@@ -846,10 +597,10 @@ facet instead.
        compile. A fact about code must be about the code the image holds, so the closure is a
        subset of what the image compiled, as well as the image's sources being a subset of the image's closure's
        sets;
-     - premise 3 has no named commit yet; a first-parent commit of `origin/main` after it changes `catalog/` or the
-       checker's closure and is not a merge commit; or the claim's own tooling was built from a commit whose
-       checker closure is not, file for file, the one at a first-parent commit of `origin/main` at or after the
-       named commit (premise 3).
+     - premise 3 has no named commit yet; a first-parent commit of `origin/main` after it is not a merge commit;
+       or the claim's tooling was not built from a written tree of a first-parent commit of `origin/main` at or
+       after the named commit, or a first-parent commit after that one, up to the commit the claim reads, changed
+       the checker's closure (premise 3).
 
   As in the runtime variant's admission, the strongest verdict is reported with every reason that reaches it.
   What an analysis does with a value it could not read is the analysis's verdict, not admission's (§12).
@@ -857,8 +608,8 @@ facet instead.
   closure, with its status. That is how experimental data exists "but cannot **silently**" satisfy anything.
 - **A production claim is never quietly treated as exploratory**, and its shortfall is a verdict, not an error.
 - **Evidence strength is the analysis's to state.** An `assumed` or `observed-maximum` cost may back a production
-  claim, since §7.3 allows both, and it is named as an assumption with its category. The production rule is about
-  review, identity and provenance, not about evidence strength.
+  claim, since `ROADMAP.md` §7.3 allows both, and it is named as an assumption with its category. The production
+  rule is about review, identity and provenance, not about evidence strength.
 - **References outside claims.** An artifact that names a record without making a claim, such as S0's provenance
   file, names it by `(id, contract version, record hash)`. Whatever checks the artifact recomputes the record hash.
   For S0 that is `M2.7.4`'s gate. The record hash moves with any facet, which is what a reference to the whole
@@ -919,8 +670,8 @@ facet instead.
     and that is later. A lock whose first line is missing, malformed, or names a version the loader does not know
     or one lower than a parent's lock names, is refused (`catalog-lock-review`): nothing is verified under no
     version. The append-only comparison of lines leaves the first line out, and holds it only to never decreasing.
-    A line new in a pushed range is refused when its commit's lock names a version lower than `origin/main`'s, so
-    a branch forked before a bump cannot go on ledgering under the older rules;
+    Every replay, premise 3's check included, refuses a line new in a replayed commit whose lock names a version
+    lower than the base's, so a branch forked before a bump cannot go on ledgering under the older rules;
   - one line per facet version ever blessed, `<id> <facet> <version> sha256:<own hash>`;
   - one line per review ever blessed, `<id> review sha256:<ledger hash> <facet> <verdict> sha256:<the bound hash
     it names>` (§3);
@@ -936,13 +687,16 @@ facet instead.
   - A line, once committed, is never changed or removed.
   - The gate compares the lock with its version at every parent of the commit being made, both of a merge's. CI,
     for a push to any branch, compares it with the commit the push replaced on that branch, unless the branch is
-    new, with the merge base with `origin/main`, and with each parent of each merge it receives.
+    new, with the merge base with `origin/main`, and with each parent of each merge it receives. That push-time
+    comparison runs the pushed tree's own scripts, so it is advisory and binds nothing: premise 3's check is the
+    protected one.
   - **Catalog changes reach `main` by merge commits.** A squash or a rebase re-ledgers each review line in a new
     commit, where a rejection's hash is generally no longer the facet's current one, so the replay refuses it. The
     refusal is the rule's mechanism. The way through is a merge, which keeps the original ledgering commit in
-    `main`'s history. Deleting the rejection on the same branch is not a way through: the ledger is append-only
-    against every base the branch was pushed from. A new branch forked from `main`, or a hosting squash that drops
-    the line, is compared with bases that never held it, which is §13's limit on a rejection not yet in `main`.
+    `main`'s history. Deleting the rejection on the same branch is refused against the bases it replays, and the
+    push-time comparison warns of it; a branch force-pushed without it and pushed again loses it. A new branch
+    forked from `main`, or a hosting squash that drops the line, is compared with bases that never held it, which is
+    §13's limit on a rejection not yet in `main`.
   - A production claim compares the lock at the commit it reads with the lock at every ancestor and at
     `origin/main` and its ancestors (§4), so a line that history or the published main line holds, and the commit
     lacks, is seen even when the gate was bypassed.
@@ -958,13 +712,14 @@ facet instead.
 - **A waiver repairs a review line that fails verification**, which would otherwise stop the catalog loading for
   good (§13). Bless never writes one. It is added by hand on the director's ruling, recorded in the findings
   record, and reaches `main` by a merge commit. Its commit holds the waiver lines and may do two things more, and
-  nothing else: move to `experimental` each record that a waived production review leaves short of §6, and remove
-  the waived reviews' forms from their records. The replay accepts a waiver, as the one line blessing would not
+  nothing else under `catalog/`, which `M2.7.4`'s replay checks: move to `experimental` each record that a waived
+  production review leaves short of §6, directly or through §6's third item, and remove the waived reviews' forms
+  from their records. The replay accepts a waiver, as the one line blessing would not
   write, only when the review line it names is in a parent's lock and fails §5's verification at the commit it
   names, which ledgered that line. At load, a waived line is exempt from every check that ties a line to its form:
   it is not verified, its record need not hold its form, and a form it still holds is not compared with it. It
   can only lower a status:
-  - a production review it names establishes nothing;
+  - a production review it names establishes nothing, and its `answers` answer nothing;
   - when its line or its form at that commit says `rejected`, it binds as an unwaived rejection does, each facet
     either names: that facet, through lineage, and through the items the facet held at every commit that ledgered
     the line, until a review answers it by its ledger hash.
@@ -998,8 +753,8 @@ facet instead.
   - refuses `catalog-lock-unbumped`, `catalog-lock-downgrade`, `catalog-lock-review` and
     `catalog-lock-retired`.
 
-  So regenerating the lock cannot launder a change. §14.4 says the same of the trust baseline: "The author of the
-  implementation change cannot satisfy the gate solely by regenerating the expected baseline."
+  So regenerating the lock cannot launder a change. `ROADMAP.md` §14.4 says the same of the trust baseline: "The
+  author of the implementation change cannot satisfy the gate solely by regenerating the expected baseline."
 
 ### 10. Invalidation
 
@@ -1027,8 +782,8 @@ facet instead.
 - **Over the recorded closure, not today's graph.** A dependency that has since left the graph is still checked.
 - **It runs even when the catalog does not load.** Hashes are computed without the lock, and anything that cannot
   be read or computed counts as affected. The answer errs toward too many and never too few.
-- **Builds.** When `M4`'s lock data names the closure lines a build used (§10.3: "eADL/module/catalog versions,
-  source hashes"), the same function answers for the build.
+- **Builds.** When `M4`'s lock data names the closure lines a build used (`ROADMAP.md` §10.3: "eADL/module/catalog
+  versions, source hashes"), the same function answers for the build.
 
 ### 11. Refusals
 
@@ -1099,13 +854,13 @@ covers, where a rejection binds, and the limits of `/1` that later leaves lift.
   §9 forbids.
 - **A requirement per dependency, not an exact pin.** A compatible change to a dependency edits no dependent, and
   the dependency's bound contract hash still makes its dependents' contract reviews stale. There is one candidate
-  per id, so no resolver chooses anything a locked build would have to repeat (§10.3).
+  per id, so no resolver chooses anything a locked build would have to repeat (`ROADMAP.md` §10.3).
 - **Rejections bind items as well as ids**, because an id is a name its author can change, and the content a
   rejection was about is what must not return unexamined.
 - **A production claim reads a commit**, because the index is not history, and the ledger's permanence is a
   property of history.
-- **Composite inputs composed from owned parts, never taken whole from one owner.** A catalog figure that
-  silently omits the application's share is the under-charge §7.4 exists to prevent. So §12 names the catalog's
+- **Composite inputs composed from owned parts, never taken whole from one owner.** A catalog figure that silently
+  omits the application's share is the under-charge `ROADMAP.md` §7.4 exists to prevent. So §12 names the catalog's
   parts, and `decision_runtime-composite-inputs.md` adds them to the application's.
 - **Rejected: the hash written inside the record.** A record that contains its own hash needs a rule for the
   bytes it skips, and invites a hand-edited hash.
@@ -1159,3 +914,4 @@ the design as it stands, and that one keeps how it got here.
 | 11 | 14 | 2 latent (Q1, `compare-rounding` not tied to the timer service's code; Q2, releases by code no statement covered), with Q3 near them; §3–§9 held | "cannot be accepted as it stands"; all three latent until a board or `M4` |
 | 12, the first under the closure rule | 12 | 1 live (R1, a pull request changing the checker that judges it), 1 latent (R3, forms items across rules versions); §3–§9 held | "does not yet meet the closure rule"; nothing else live at defect level once R1 is fixed and R2, R4 and R5 are answered |
 | 13 | 14 | 1 live (S1, the checker built through packages premise 3 did not list); S2 and S3, routes the answers left impossible, fail closed | "does not yet meet the closure rule"; nothing else live at defect level once S1 is fixed, S2 and S3 answered and S4's sentence added |
+| 14 | 15 | none by construction; 2 ambiguities at defect level, live (T1, cargo configuration read before §3's refusals; T15, where the two trees sit) | "does not yet meet the closure rule"; "one short revision from acceptable" |

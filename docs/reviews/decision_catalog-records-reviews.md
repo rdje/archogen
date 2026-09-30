@@ -21,7 +21,8 @@ barred from any other implementation. Later rounds were given more as the record
 - from round 7, §0 to judge against, and `crates/rt-core`;
 - from round 8, the worked example in its own file, and the compiler's dependency files;
 - from round 9, §12 in its own file, and from round 10 the composition record, to check that the two agree;
-- from round 12, §13 in its own file, and the closure rule, with each finding marked live or latent.
+- from round 12, §13 in its own file, and the closure rule, with each finding marked live or latent;
+- from round 14, the leaves that own the implementation, and findings §11; from round 15, §3 in its own file.
 
 **Round 1**, `2026-09-30`: 22 findings, 6 of them defects, and the verdict that the record "should not be
 accepted as it stands". Acceptance sentence (2) failed by construction, and sentence (1) held only for what the
@@ -445,6 +446,36 @@ the design now commits to (`M2.7.6`, `M4.10`, in `ARCHOGEN-M2-0235`).
 | S12 | ambiguity, latent (a second rules version) | the first line under the append-only rule; a branch forked before a bump | the first line held only to never decreasing; a new line under a lower version than `origin/main`'s refused (§9) |
 | S13 | gap, latent (`M2.12`) | the port-facts refusal is a list of names | `M2.12` restates it by what a locator must reach (§13; `M2.12`) |
 | S14 | gap, latent (`M4`) | a production claim did not record what its tooling was built from | it records that commit, and needs its checker closure to match `origin/main`'s (§0, §7) |
+
+**Round 14**, `2026-09-30`: its first launch stopped at once on the account's weekly usage limit, and a relaunch
+ran. All 23 values matched by two routes, and every measured claim held, among them 628 tracked paths, `xtask`'s
+closure, and `origin/main` still the initial commit. S2–S8, S10 and S13 were closed, and S1, S9, S11, S12 and S14
+partial. There were 15 findings, none a defect by construction; 2 ambiguities at defect level were live, both in
+round 13's base-built check, and the verdict was that the record "does not yet meet the closure rule", "one short
+revision from acceptable". The answering context moved §3 verbatim to its own record first, since the answers
+would have taken this record past its ceiling, and checked the move by diff: only T1's edit differs.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| S1 | partial, defect-level | through T1, T15 and T8 | as those rows |
+| S9 | partial, nit | through T10 | as T10 |
+| S11, S12 | partial, latent | through T6 | as T6 |
+| S14 | partial, latent | through T8 | as T8 |
+| T1 | ambiguity, defect-level, live | `cargo metadata` runs `rustc` through any wrapper a configuration names, before §3's configuration rules applied | every configuration on a command's path is listed and held to the content rules before any cargo command runs, `cargo metadata` included (§3, §0) |
+| T15 | ambiguity, defect-level, live | where the base and the merge result sit was unstated, and one layout put the pull request's configuration on the checker's build | the checker built where no merge-result file is on cargo's path, the merge result written where only its own configuration is; the copies rule compares with the tree being judged (§0, §3) |
+| T2 | ambiguity, live | the closure was "every package the check builds", which holds the record packages it replays | the closure is what is built from the base to make the checker; record packages are built under §3 and never run (§0) |
+| T3 | gap, live, premise 3 | a dependency added to the checker without `CODEOWNERS` covering it | the check computes the closure at the merge result and refuses a path its `CODEOWNERS` does not assign (§0) |
+| T4 | gap, live, premise 3 | one identity cannot approve its own change | approval from an identity other than the author's; until the director names one, the premise is unmet (§0; findings §11) |
+| T5 | gap | push-time CI was said to bind, though it runs the pushed tree's scripts | it is advisory; a branch force-pushed without a rejection and pushed again loses it (§9, §13) |
+| T6 | ambiguity, latent (a second rules version) | two sequences for a bump; the lower-version refusal bound to no protected check | one sequence, after a checker knowing both versions; every replay refuses a line under a version lower than the base's (§5, §9) |
+| T7 | ambiguity, live, low | a waived review's `answers`; the demotion's reach; "nothing else" unscoped | its `answers` answer nothing; directly or through §6's third item; nothing else under `catalog/`, checked by `M2.7.4`'s replay (§9) |
+| T8 | gap, latent (`M4`) | "built from" undefined for a working tree; stale tooling; the check ran after the tooling | the tooling is built from a written tree of a first-parent commit of `origin/main`, recorded by construction; a closure change after it refuses the claim (§0, §7; `M4.10`) |
+| T9 | gap, live and latent | the owning leaves omitted mechanisms; the closure rule named `M2.7.3`–`M2.7.5` | each named in `M2.7.3`, `M2.7.4`, `M2.7.6` and `M4.10`; the slice is `M2.7.3`–`M2.7.6` |
+| T10 | nit | twelve bare references to `ROADMAP.md`'s subsections | each names `ROADMAP.md` |
+| T11 | nit | `archogen-evidence` unnamed in the closure | named in premise 3, findings §11 and `M2.7.6` |
+| T12 | nit | the non-merge check needed the closure at every past commit | every non-merge first-parent commit after the named commit is flagged (§0, §7) |
+| T13 | ambiguity, premise 3 | a merge queue runs the workflow at the group commit | with a queue, the check is a ruleset-required workflow pinned outside the pull request's tree (§0; findings §11) |
+| T14 | gap, premise 4 | a shared runner or cache lets a pull request's job plant state | the check runs on the hosting's ephemeral runners, restoring no cache such a job can write (§0; findings §11) |
 
 ## Why
 
