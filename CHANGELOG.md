@@ -4,6 +4,18 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — the engine API's design is decided
+
+`ARCHOGEN-API-0174` (leaf `API.3.1`).
+
+- archogen's programmatic interface gets one engine API, and its shape is now recorded. It will be a library,
+  `archogen-api`, with one operation: check a description given as text against a profile. The command line
+  becomes its first user, so the two cannot disagree.
+- Every answer carries one outcome from the same list the command line's exit codes use. When the description
+  was judged, the outcome is its verdict. When archogen could not judge it, the outcome says why, and it is
+  never missing and never "ok". That reading of the director's ruling is flagged for the director.
+- The work is split into the library, the command line's move onto it, and the book.
+
 ## archogen — a refinement to an undeclared platform is a missing fact
 
 `ARCHOGEN-M1-0172` (leaf `M1.26.3`).

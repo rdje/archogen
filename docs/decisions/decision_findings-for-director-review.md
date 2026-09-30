@@ -241,6 +241,26 @@ browse, which is why neither has been done. **The decision needed:** accept, ame
 period, or trees kept whole), or keep (A). The work is filed as `PROGRAM.31` (B) and `PROGRAM.32` (C), both
 `blocked` on this ruling.
 
+## 9. "Every programmatic response carries §5.5's verdict" — how the engine API reads it (`2026-09-30`)
+
+Your ruling of `2026-09-28` says every programmatic response carries §5.5's verdict. `ROADMAP.md` §10.4 says
+"for what it reports". The engine API (`decision_engine-api.md`, leaf `API.3.1`) has to decide what a response
+carries when archogen did not judge the description at all. There are two such cases today: a kind module,
+which no command loads yet (`M1.32`), and an import that exists but cannot be read.
+
+**What it does:** every response carries the exit contract's one outcome vocabulary, `Status`. When the
+description was judged, the status is its §5.5 verdict. When it was not, the status says `unimplemented` or
+`usage`. It is never absent and never `ok`. The failure your ruling guards against is a missing outcome read
+as success, and it needs a response with no status or a default one. This design has neither, and the CLI's
+exit code becomes a projection of the response rather than a second opinion.
+
+**The alternative:** force a §5.5 verdict onto both cases. The only candidate is `unsupported-profile`
+("requested behavior lies outside implemented semantics"), which would tell an author their description
+asks for something the profile refuses when it does not. **The decision needed:** accept the reading, or
+rule that a response the API did not judge must still carry a §5.5 verdict, and which one. `API.3.2` builds
+on the reading. Changing it later is a change to one enum and its projection, before the version is
+fixed at `API.3`'s close.
+
 ## A note on what "done" means so far
 
 M0 and M1 are complete, and the shape of the claim matters. What exists is a **frontend**: a

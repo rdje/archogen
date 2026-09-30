@@ -177,7 +177,8 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   - [x] **LOCKSTEP** — the decision record, `DOCTRINE_ENFORCEMENT.md`, `verification.md` "The product runs nothing".
 
 - ID: `API.3`
-  Status: `pending`
+  Status: `active`
+  Children: `API.3.1`, `API.3.2`, `API.3.3`, `API.3.4`
   Goal: declare the **engine API** — the transport-neutral contract every binding consumes, and the one
   the CLI becomes a consumer of.
   Acceptance: an in-memory entry point taking a description as text plus a profile and returning a
@@ -188,6 +189,60 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   Priority: **the load-bearing leaf** — everything after it is a binding. ⛔ **Sequenced behind `M1.13`.**
   The freeze settles the integer domain (F-F) and the escape set (F-G), which are exactly what the API's
   numeric types and its string encoding depend on. Declaring first means declaring twice.
+  **Decomposed `2026-09-30`, measured first.** `archogen check`'s judging path is spread over
+  `crates/archogen-cli/src/check_cmd.rs`: the profile lookup, the registry from the kind modules embedded
+  there, the module-file and kind-module routing in `frontend`, and the engine's `check`. `archogen build`
+  shares `frontend`. Declaring the API means moving all of that behind one entry point, moving the
+  outcome vocabulary with it, and gating parity. That is one design record and three slices, each
+  reviewable on its own.
+  Verification: closed by its children
+  Commit: `pending`
+
+- ID: `API.3.1`
+  Status: `done`
+  Goal: the design, decided and recorded before any code — where the API lives, what it takes and returns,
+  how it is versioned, and how parity with the CLI is gated.
+  Acceptance: a durable record under `docs/decisions/`; any reading of the director's ruling it depends on
+  flagged in the findings for the director; the children below filed from it.
+  **Decided:** [`decision_engine-api.md`](../decisions/decision_engine-api.md). A crate, `archogen-api`, with
+  one operation, `check`. Its `Response` carries the exit contract's `Status`, moved into the API, whose
+  verdict variants are §5.5's and whose `usage` and `unimplemented` cover a request it did not judge. Notes
+  carry what has no span, and diagnostics carry the rest. The version is apart from the language, `1.0`
+  fixed when `API.3` closes. Parity is gated three ways. The reading of "carries §5.5's verdict" is findings §9.
+  Verification: the record, the index row, findings §9; no code changed.
+  Commit: `ARCHOGEN-API-0174 (leaf API.3.1)`
+
+- ID: `API.3.2`
+  Status: `pending`
+  Goal: the crate — `crates/archogen-api` with `Request`, `Response`, `Status`, `VERSION` and `check`, the shipped
+  kind modules embedded in it, and `ModuleSource::unreadable`.
+  Acceptance: `check` answers every outcome the CLI's check path does today, each with its status: judged
+  (every §5.5 verdict the corpus reaches), an unsupported profile, a kind module, an unreadable import (through
+  a test `ModuleSource`), and a description too large to address; no response without a status, enforced by the
+  type; the crate in `scripts/wasm_build.sh`'s derived pure set and under `NO-SUBPROCESS`; unit tests for each
+  outcome; `make focused` exit `0`.
+  Priority: **high** — the load-bearing slice.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `API.3.3`
+  Status: `pending`
+  Goal: the CLI becomes the API's first consumer — `check` and `build` judge through `archogen_api::check`
+  and nothing else — and parity is gated.
+  Acceptance: `check_cmd.rs` and `build_cmd.rs` call the API, and the duplicated routing is gone; the three
+  parity legs of the decision (structural, by operation against `spec.rs`, by behaviour over every tracked
+  description), each with a RED arm; every CLI transcript the book shows unchanged; `make focused` exit `0`.
+  Priority: **high**.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `API.3.4`
+  Status: `pending`
+  Goal: the book documents the engine API — what it takes, what it returns, the outcome vocabulary, the version
+  and its promise, and what is outside it and why.
+  Acceptance: a chapter or section under `docs/book/src/` with an example that runs; `API.7` builds the full
+  programmatic-interface chapter on it and does not restate it; `API.3` closes with the version fixed at `1.0`.
+  Priority: **high** — the director reads the book.
   Verification: `pending`
   Commit: `pending`
 
@@ -253,10 +308,12 @@ agent can drive. The server is a capability of the built binary, spawned per ins
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `API.3` | `pending` | **the load-bearing leaf; its prerequisite, `M1.13`'s freeze, is `done`.** Declaring an API over an unfrozen language would have meant declaring it twice: the freeze settles the integer domain and the escape set, which are the API's numeric types and its string encoding |
-| 2 | `API.4` | `pending` | the instance model and the resource limits an untrusted consumer makes necessary. New architecture, not a binding — archogen is stateless over files today |
-| 3 | `API.5` | `pending` | the wasm binding, behind `API.1` and `API.3` |
-| 4 | `API.6` | `pending` | the MCP server — the point of the tree, and last because everything above is what makes it safe to hand to an arbitrary agent |
+| 1 | `API.3.2` | `pending` | **the load-bearing slice** — the crate the decision (`API.3.1`) fixed: `Request`, `Response`, the outcome vocabulary, `check` |
+| 2 | `API.3.3` | `pending` | the CLI as the API's first consumer, and parity gated three ways |
+| 3 | `API.3.4` | `pending` | the book documents the API; `API.3` closes and fixes the version at `1.0` |
+| 4 | `API.4` | `pending` | the instance model and the resource limits an untrusted consumer makes necessary. New architecture, not a binding — archogen is stateless over files today |
+| 5 | `API.5` | `pending` | the wasm binding, behind `API.1` and `API.3` |
+| 6 | `API.6` | `pending` | the MCP server — the point of the tree, and last because everything above is what makes it safe to hand to an arbitrary agent |
 | 7 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6` |
 
 ⛔ **This tree does not displace the project's main line.** `M1.13` is the frontier in
@@ -316,6 +373,7 @@ them early is cheap and makes the rest estimable.
 | `2026-09-28` | `API` | tree seeded from the director's ruling and a feasibility census; no code | the census is recorded in `docs/decisions/decision_programmatic-interface.md`: six of eight crates I/O-free in production, two already `no_std`, zero third-party dependencies, no `Command::new` in any production half |
 | `2026-09-30` | `API.1` | the five I/O-free crates built for wasm32; the derivation's arms; the integration tier | all compile; the first cut of the detection matched nothing and the arms caught it; tier `incomplete`, 8 passed, the emulator quarantined |
 | `2026-09-30` | `API.2` | the gate on the product; nine arms and two mutations; `wasm_build.sh` on the same rule | 44 production files, none spawns; the naive test-half rule shown leaking and replaced in both scripts |
+| `2026-09-30` | `API.3.1` | a read of `archogen check`'s judging path (`check_cmd.rs`, `build_cmd.rs`), `ModuleSource` and `ROADMAP.md` §10.4 and §15 | the path's parts and their one shared routing point, `frontend`; `MemoryModules` already exists; the ruling's wording and §10.4's differ, flagged as findings §9 |
 
 ## Commit Log
 
@@ -324,7 +382,9 @@ them early is cheap and makes the rest estimable.
 | `API` | `ARCHOGEN-API-0078 (leaf API)` | tree seeded: `ROADMAP.md` §10.4, the decision record and its index row, seven leaves, three of the four open questions routed to a named owner |
 | `API.1` | `ARCHOGEN-API-0157 (leaf API.1)` | **the engine compiles for the browser** — measured by a derived `wasm-build` step; four members excluded by the I/O they do, each named |
 | `API.2` | `ARCHOGEN-API-0158 (leaf API.2)` | **the product runs nothing, and a gate says so** — `NO-SUBPROCESS` |
+| `API.3.1` | `ARCHOGEN-API-0174 (leaf API.3.1)` | **the engine API's design, recorded** — a crate, one outcome vocabulary, a version promise, parity three ways; `API.3` decomposed |
 
 ## Changelog
 
 - `2026-09-28`: Created task tree from the director's ruling of the same date and `ROADMAP.md` §10.4.
+- `2026-09-30`: `API.3` decomposed into `API.3.1`–`API.3.4` after its design was recorded.

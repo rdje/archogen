@@ -9,7 +9,7 @@ one of those changes, and only then. What each closed leaf did lives in its tree
 | --- | --- | --- |
 | Discipline spine (`bedrock`) | Done | memory architecture · task-trees · commit workflow · doctrine enforcement · **claim verification** (adopted `2026-09-27`) · mdBook skeleton |
 | Roadmap seeded into task-trees | Done | eleven trees: `PROGRAM`, `API`, `M0`, `S0`, `M1`–`M7`; F01–F30 each owned |
-| `API` — programmatic interface (§10.4) | In Progress | frontier `API.3`: declare the engine API; the engine compiles for wasm32 (`API.1`) and the product runs nothing, gated (`API.2`) |
+| `API` — programmatic interface (§10.4) | In Progress | frontier `API.3.2`: the `archogen-api` crate; the API's design is recorded (`API.3.1`), the engine compiles for wasm32 (`API.1`), and the product runs nothing, gated (`API.2`) |
 | `PROGRAM` — workspace, tiers, book, ledger | In Progress | frontier `PROGRAM.34`: nested vendored checkouts off their pins, awaiting the director; the `integration` job awaits its first run (`.10.5`); `.31`/`.32` wait on the director (findings §8) |
 | `M0` — charter, boundary, profile, target | Done | all seven leaves closed; F27 green. The board remains a recorded blocker, not a passed gate |
 | `S0` — early executable generation (F28) | Done | **F28 green**; every leaf closed — `S0.8` made the book chapter's counts and corpus table measured |
