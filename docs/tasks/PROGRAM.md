@@ -3677,13 +3677,47 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0224 (leaf PROGRAM.32.1)`
 
 - ID: `PROGRAM.32.2`
-  Status: `pending`
+  Status: `done`
   Goal: `scripts/check_task_history.sh`: the gate, `--seal <TREE>` with its reconstruction proof, and `--self-test`
   with RED arms for each of the gate's four checks. It is registered as `TASK-HISTORY` in
   `scripts/check_doctrines.project.sh`. `TASK-ACCEPTANCE`'s refusal names a sealed owner as closed.
   Acceptance: every arm refused and then passed; the spine's own self-tests green; no held file changed.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the checklist — 14 arms, a dry run on real copies of `M1` and `PROGRAM`, and a mutation
+  that turns each new rule's arm red.
+  Commit: `ARCHOGEN-PROGRAM-0225 (leaf PROGRAM.32.2)`
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE** — the need, measured before the tool: 70 of `M1`'s 74 leaves and 54 of `PROGRAM`'s 63 were
+    `done`, 77% and 79% of the files (`PROGRAM.32.1`'s audit). No check held a sealed file to its digest, because
+    none existed.
+  - [x] **ROOT CAUSE** — nothing moved finished work out of a tree, and a hand move would lose a byte unseen. The
+    audit (`git grep -n "docs/tasks" scripts/`, each hit read) showed what a sealing tool must respect:
+    - `TASK-ACCEPTANCE` read a stub as a leaf lacking boxes;
+    - `LESSON-PROMOTION` and `WAIVER-ROUTING` judge anything under `docs/tasks/` as added;
+    - `docs/tasks/`' 20-file ceiling.
+  - [x] **FIX** — `scripts/check_task_history.sh`: the gate's four legs; `--seal <TREE>`, which proves the
+    reconstruction before it writes; and `--self-test`. It is registered as `TASK-HISTORY` in
+    `scripts/check_doctrines.project.sh`. `scripts/check_task_acceptance.sh` names a sealed owner as closed, with
+    arm 10. The rows are in `DOCTRINE_ENFORCEMENT.md` and `TOOLBOX.md`.
+  - [x] **ADDRESSED** — the self-test and the dry run:
+    - `bash scripts/check_task_history.sh --self-test` → rc=0, `task-history self-test: 14 pass / 0 fail (14 arms)`;
+    - `bash scripts/check_task_acceptance.sh --self-test` → `task-acceptance self-test: 10 pass / 0 fail`;
+    - a dry run on copies of the real trees in `target/doctrine_scratch/task_history/dryrun`:
+      - `--seal M1` → "sealed 37 subtree(s), 62 leaves … the reconstruction is byte for byte";
+      - `--seal PROGRAM` → "sealed 32 subtree(s), 50 leaves …";
+      - the gate → `task-history: OK (69 sealed file(s) … 112 stub(s) …)`, rc=0;
+      - `M1.md` went from 717 804 to 259 334 bytes, `PROGRAM.md` from 381 216 to 107 157;
+      - a real code change owned by a sealed leaf was refused there with "is closed and sealed".
+  - [x] **NO REGRESSION** — the self-tests, the enforcer and two mutations:
+    - `bash scripts/run_self_tests.sh` → rc=0, `self-tests: OK — 35 self-test(s) passed`;
+    - `bash scripts/check_doctrines.sh` → `=== all doctrines green ===` with this leaf staged;
+    - `bash -n` on both scripts → syntax OK;
+    - mutations: with the stub-to-file check disabled, the self-test goes to `13 pass / 1 fail`; with the sealed
+      branch removed from `TASK-ACCEPTANCE`, arm 10 goes red, `9 pass / 1 fail`.
+
+    No held file changed: `git diff --cached --name-only` names none of the 17 in findings §10.
+  - [x] **LOCKSTEP** — `DOCTRINE_ENFORCEMENT.md`, `TOOLBOX.md`, `scripts/check_doctrines.project.sh`; this leaf,
+    the frontier and both logs; `CHANGELOG.md`. The book's chapter follows with the real seal (`PROGRAM.32.3`).
 
 - ID: `PROGRAM.32.3`
   Status: `pending`
@@ -4028,7 +4062,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.32` | `active` | closed subtrees sealed out of the task trees (§8); the design decided (`.32.1`), the tool next (`.32.2`) |
+| 1 | `PROGRAM.32` | `active` | closed subtrees sealed out of the task trees (§8); the design and the tool done (`.32.1`, `.32.2`), the seal of `M1` and `PROGRAM` next (`.32.3`) |
 | 2 | `PROGRAM.39` | `pending` | the decisions folder partitioned by subject, adding no capacity; starts at 36 files or 360 000 bytes, or sooner |
 | 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 | 4 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
@@ -4172,6 +4206,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.37` | the move against `HEAD`'s tail; review sections measured by section; `README-ROUTES`; the doctrine enforcer | identical; 13 482 bytes moved, the rest summaries; rc=0, 318 625 bytes; all green |
 | `2026-09-30` | `PROGRAM.38` | the folder at `HEAD` and at `38d8634`; the independent review of the raise; what grew, by file; `README-ROUTES`; the doctrine enforcer | 324 165 over 28, against 250 243 over 23; 18 findings, 4 defects, all answered; the reviewed designs from 72 269 to 136 093 bytes; rc=0; all green |
 | `2026-09-30` | `PROGRAM.32.1` | a read-only audit of every script that reads `docs/tasks/`, each against a sealing commit; closed subtrees measured in `M1` and `PROGRAM` | the four held checks pass it; `TASK-ACCEPTANCE`, `README-ROUTES` and `LESSON-PROMOTION` shaped the design; 37 of 39 and 32 of 39 subtrees closed |
+| `2026-09-30` | `PROGRAM.32.2` | both self-tests; a dry run sealing copies of `M1` and `PROGRAM`, then the gate; a code change owned by a sealed leaf; two mutations; every self-test; the enforcer | 14 of 14 and 10 of 10; byte-for-byte reconstruction, 69 files and 112 stubs; refused as sealed; each mutation red; 35 of 35; all green |
 
 ## Commit Log
 
@@ -4237,6 +4272,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.37` | `ARCHOGEN-PROGRAM-0218 (leaf PROGRAM.37)` | **the runtime variant's review history joins the others** in `docs/reviews/`; the debt `ARCHOGEN-M2-0217` recorded is paid |
 | `PROGRAM.38` | `ARCHOGEN-PROGRAM-0222 (leaf PROGRAM.38)` | **the decisions folder's ceiling raised once**, to 40 files and 384 KiB, as the director's reviewed exception; `PROGRAM.39` owns the partition that replaces it |
 | `PROGRAM.32.1` | `ARCHOGEN-PROGRAM-0224 (leaf PROGRAM.32.1)` | **the sealing design** — `docs/decisions/decision_task-tree-sealing.md`; the tool next |
+| `PROGRAM.32.2` | `ARCHOGEN-PROGRAM-0225 (leaf PROGRAM.32.2)` | **the sealing tool and its gate** — `scripts/check_task_history.sh`, registered as `TASK-HISTORY`; `TASK-ACCEPTANCE` names a sealed owner as closed |
 
 ## Changelog
 

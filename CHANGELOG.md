@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the tool that moves finished work out of the task trees, and the check that keeps it there
+
+`ARCHOGEN-PROGRAM-0225` (leaf `PROGRAM.32.2`).
+
+- A new tool moves finished parts of a task tree into `docs/task-history/`, unchanged, and leaves a two-line
+  placeholder for each finished item. Before it writes anything, it proves that putting every item back would give
+  the original file byte for byte.
+- A new check runs on every commit. It refuses a moved file that changed, a file missing from its index, an index
+  line that changed, and a placeholder that is missing, altered, or points to the wrong file.
+- Tried on copies of the two largest trees, it moved 112 finished items and proved both files. `M1.md` would shrink
+  from 718 KB to 259 KB, and `PROGRAM.md` from 381 KB to 107 KB. The real move is the next step.
+- The check that every code change names its task now says plainly when the named task is already finished and
+  moved out, rather than reporting that it lacks a checklist.
+
 ## archogen — how finished work leaves the task trees is decided
 
 `ARCHOGEN-PROGRAM-0224` (leaf `PROGRAM.32.1`).

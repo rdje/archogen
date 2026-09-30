@@ -344,6 +344,22 @@ MD
       "$(printf '%s' "$out" | sed 's/^/    /')" >&2
   fi
 
+  # Arm 10 — a sealed leaf named as the owner (TASK-HISTORY, leaf `PROGRAM.32`). Its tree keeps only a two-line
+  # stub; the refusal must say the leaf is closed and sealed, not that it lacks a checklist.
+  new_repo a10
+  printf -- '\n- ID: `T.7`\n  Status: `done` — sealed in [`TREE/T.7.md`](../task-history/TREE/T.7.md); commit `WORK-0007`\n' \
+    >> "$repo/docs/tasks/TREE.md"
+  ( cd "$repo" && git add -A >/dev/null 2>&1 )
+  printf 'WORK-0001 (leaf T.7): a subject\n' > "$repo/git_message_brief.txt"
+  out="$( cd "$repo" && "$OLDSELF" 2>&1 )"; rc=$?
+  arms=$((arms + 1))
+  if [ "$rc" -eq 1 ] && printf '%s' "$out" | grep -q 'is closed and sealed'; then
+    ok=$((ok + 1)); printf 'SELF-TEST: ✅ arm %s\n' "10 (a sealed owner is named as closed)"
+  else
+    printf 'SELF-TEST: ❌ arm %s — wanted exit 1 and the sealed refusal, got exit %s\n%s\n' \
+      "10 (a sealed owner is named as closed)" "$rc" "$(printf '%s' "$out" | sed 's/^/    /')" >&2
+  fi
+
   echo "task-acceptance self-test: $ok pass / $((arms - ok)) fail"
   [ "$ok" -eq "$arms" ] || exit 1
   exit 0
@@ -420,6 +436,18 @@ if [ -z "$found" ]; then
     echo "  name is stale — a '$msgfile' left over from a previous commit names that commit's leaf,"
     echo "  which is why the workflow clears it after committing."
     echo "  staged task trees:"; sed 's/^/    /' "$tmp/leaves.txt"
+  } >&2
+  exit 1
+fi
+
+# ⛔ A sealed leaf is closed: its body lives in docs/task-history/, and the tree keeps only its two-line stub
+# (TASK-HISTORY, leaf `PROGRAM.32`, docs/decisions/decision_task-tree-sealing.md). Say so, rather than report a stub as
+# a leaf that lacks its checklist, which would send the author looking for boxes that were never meant to be there.
+if sed -n '2p' "$tmp/slice.md" | grep -q '^  Status: `done` — sealed in \['; then
+  {
+    echo "TASK-ACCEPTANCE: the owning leaf \`$owner\` (from $source_of_owner) is closed and sealed: its tree keeps"
+    echo "  only a stub, and its body is in $(sed -n '2p' "$tmp/slice.md" | sed 's/.*(\.\.\/\(task-history\/[^)]*\)).*/docs\/\1/')."
+    echo "  A change needs an open leaf. Name one, or open a new leaf for this change, in its tree first."
   } >&2
   exit 1
 fi
