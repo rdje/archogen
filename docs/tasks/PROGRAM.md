@@ -3610,7 +3610,7 @@ mdBook that is the director's window into the project.
   Commit: `pending`
 
 - ID: `PROGRAM.35`
-  Status: `active`
+  Status: `done`
   Children: `PROGRAM.35.1`, `PROGRAM.35.2`
   Goal: the README policy the director's standing instruction names — fsmgen's `README_POLICY.md` — adopted at its
   current revision, with caps derived from this repository's README and every route out of the README ending at a
@@ -3636,8 +3636,9 @@ mdBook that is the director's window into the project.
   guard's own overflow route, has no pressure control — the exact displacement fsmgen's policy measured.
   Acceptance: both children closed.
   Priority: **medium** — a standing instruction not met at the named revision; no present breach.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: closed `2026-09-30` by its two children — the text and the derived caps (`.35.1`), the routing
+  closure and its check (`.35.2`).
+  Commit: `ARCHOGEN-PROGRAM-0197` (`.35.1`), `ARCHOGEN-PROGRAM-0198` (`.35.2`)
 
 - ID: `PROGRAM.35.1`
   Status: `done`
@@ -3683,7 +3684,7 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0197 (leaf PROGRAM.35.1)`
 
 - ID: `PROGRAM.35.2`
-  Status: `pending`
+  Status: `done`
   Goal: the routing-pressure closure — a registry of every destination the README, the policy and the guard's emitted
   hint route to, each with its route class (`reader_navigation` or `author_overflow`), owner, lifecycle class and
   pressure control; and a check, run on every commit, that derives the destinations from the README's links and the
@@ -3692,8 +3693,53 @@ mdBook that is the director's window into the project.
   RED arms (an unregistered README link, an unregistered hint path, a row with no pressure control, an empty
   registry); `CHANGELOG.md` and `DEV_NOTES.md`, the uncontrolled terminals, recorded as measured debt routed to
   `PROGRAM.31` and the director's §8 ruling rather than silently counted as controlled.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: see the checklist — 18 destinations governed, 16 of 16 arms, six mutations of the real registry.
+  Commit: `ARCHOGEN-PROGRAM-0198 (leaf PROGRAM.35.2)`
+  promotion: declined (no `DEV_NOTES.md` lesson is added; the one transferable observation, that a heading matched as
+  a bare substring can land an edit inside a leaf body, is already recorded at `PROGRAM.20.1`'s placement repair)
+
+  ### Acceptance Checklist (enforced by `TASK-ACCEPTANCE`)
+
+  - [x] **REPRODUCE / ISSUE** — before this leaf nothing registered where the README routes, and the guards' shared
+    overflow terminal had no bound: `git show HEAD:README_POLICY.md | grep -c "### Routed destinations"` → `0`;
+    `README_LINE_CAP=0 bash scripts/check_readme_stability.sh` → rc=1, printing eight destinations, none of them
+    checked by anything; `git ls-files CHANGELOG.md DEV_NOTES.md | xargs wc -c` → 316 413 and 135 158 bytes.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: the policy the scaffold transferred has no routing-pressure section
+    (`git show 32e6b14:README_POLICY.md | grep -c "Routing pressure"` → `0`), so no route was ever registered.
+    `scripts/check_readme_stability.sh:55` (`routing_hint`) and `scripts/check_live_snapshots.sh:59` both send an
+    over-cap README's detail on, the second to "its tree's Commit Log and CHANGELOG.md". WHY: a cap on one file
+    was the only control, and fsmgen's revision is the one that follows the pressure the cap displaces; `.35.1`
+    adopted the text, and this leaf gives it a registry and a mechanism.
+  - [x] **FIX** — the table `### Routed destinations` in `README_POLICY.md`'s fenced note: 18 rows, each with a
+    route, an owner, a lifecycle, a control on every dimension and its onward routes. `scripts/check_readme_routes.sh`
+    derives the population, from `README.md`'s links, the paths `README-STABILITY` and `LIVE-SNAPSHOTS` actually
+    print for an over-cap README (the second on a scratch copy of its doctrine), the policy body's code spans, and
+    each reached row's onward routes. It then holds legs 1–5 of its header. It is registered as `README-ROUTES`, and
+    `DOCTRINE_ENFORCEMENT.md`, `TOOLBOX.md` and the book's verification chapter mirror it. Ceilings were set from a
+    measurement of each destination, with the snapshots' headroom practice. `CHANGELOG.md` and `DEV_NOTES.md`
+    (lines, bytes) and `docs/tasks/` (all but its file count) are `debt: PROGRAM.31` and `debt: PROGRAM.32`, both
+    open and both waiting on the director's §8 ruling.
+  - [x] **ADDRESSED (verified)** — `bash scripts/check_readme_routes.sh` → exit 0, `readme-routes: OK (18
+    destination(s) governed; recorded as debt, owned by: PROGRAM.31 PROGRAM.32)`. Six mutations of the real
+    registry, each restored with `cp` and re-run green:
+    ```text
+    AGENTS.md lines ceiling 13, one below 14   → rc=1  AGENTS.md: 14 lines, over its ceiling of 13 …
+    VISIBILITY.md row removed                  → rc=1  … routes readers to `VISIBILITY.md`, which no row … governs
+    CHANGELOG.md route written 'navigation'    → rc=1  … derives 'navigation + overflow'
+    docs/tasks/ debt on the closed PROGRAM.30  → rc=1  … `PROGRAM.30` is done — a closed leaf owns no debt
+    docs/book/ total 200000, below 221 710      → rc=1  docs/book/: 221710 bytes in total, over its ceiling of 200000
+    a LIVE_STATUS ⇄ TASK_TREE onward loop       → rc=1  onward routes form a cycle: docs/TASK_TREE.md → LIVE_STATUS.md → docs/TASK_TREE.md
+    ```
+    `--self-test` → `readme-routes self-test: 16 pass / 0 fail (16 arms)`, stub guards in scratch repositories.
+  - [x] **NO REGRESSION** — `bash scripts/run_self_tests.sh` → rc=0, `self-tests: OK — 32 self-test(s) passed`,
+    the new gate among them at 16 pass / 0 fail; `bash scripts/check_scratch_locality.sh` → exit 0 (170 files);
+    `bash scripts/check_doctrines.project.sh` → every project doctrine OK, `README-ROUTES` included;
+    `bash -n scripts/check_readme_routes.sh` → syntax OK. No Rust changed.
+    ⚠️ The awk runs as BWK `awk version 20200816` here, and the runner has `mawk`. Recursion and local arrays are
+    POSIX, and the first real run on the runner's userland (`PROGRAM.10.5`) is where that is observed.
+  - [x] **LOCKSTEP** — `README_POLICY.md`, `DOCTRINE_ENFORCEMENT.md`, `TOOLBOX.md`, `docs/book/src/verification.md`,
+    `scripts/check_doctrines.project.sh`; this leaf and `PROGRAM.35`, the frontier and both logs; `LIVE_STATUS.md`,
+    `docs/TASK_TREE.md`, `MEMORY.md`, `CHANGELOG.md`.
 
 
 ## Roadmap coverage map
@@ -3760,11 +3806,10 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.35` | `active` | the README policy the standing instruction names, at fsmgen's revision: `.35.1` adopted the text and derived the caps; `.35.2` is next — every route out of the README registered, and a check that derives them |
-| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
-| 3 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
-| 4 | `PROGRAM.31` | `blocked` | on the director's ruling on the findings record's §8 — the changelog and development notes as rolling ledgers |
-| 5 | `PROGRAM.32` | `blocked` | on the same ruling — closed leaves sealed out of the task trees |
+| 1 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 2 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
+| 3 | `PROGRAM.31` | `blocked` | on the director's ruling on the findings record's §8 — the changelog and development notes as rolling ledgers |
+| 4 | `PROGRAM.32` | `blocked` | on the same ruling — closed leaves sealed out of the task trees |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
@@ -3899,6 +3944,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.33` | the backlog re-keyed by content; five arms; two catalogued mutations | the edit that broke `S0.8`'s run now moves nothing; a changed, new, fixed or copied block each caught; both mutations killed |
 | `2026-09-30` | `PROGRAM.19` (fourth run) | the trigger off the record's commit timestamp; a full inventory; each scratch name censused against the tracked tree and its leaf's status read; a residue census; the provisioner, the focused tier, the whole suite and the gate, cold | 6.3 GB → 4.1 GB; ten of ten paths `gone`; both CI tools `already in place`; `passed — 3 passed`; 742 passed / 0 failed over 62 suites; all green — rows added by `ARCHOGEN-PROGRAM-0197`, since `0196` omitted them |
 | `2026-09-30` | `PROGRAM.35.1` | the body `cmp`'d and digested against fsmgen's; the page reviewed against the contract; 19 links resolved; `LIVE-SNAPSHOTS` one below the survivor on each axis, at equality and at the ceilings, on the real tree | body identical, `77a1e934…`; one duplication removed; 84 / 4 173 / 125 → ceilings 110 / 6 144 / 200; rc 1, 1, 0, 0 |
+| `2026-09-30` | `PROGRAM.35.2` | the derived population on the real tree; six mutations of the real registry; the gate's 16 arms; every self-test bare; scratch locality; the project doctrines | 18 destinations governed, two debt owners; each mutation refused with one named breach, and restored green; 16 of 16; 32 self-tests passed; OK; OK |
 
 ## Commit Log
 
@@ -3958,6 +4004,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.33` | `ARCHOGEN-PROGRAM-0153 (leaf PROGRAM.33)` | **the transcript backlog names what a block is** — not the line it sits on |
 | `PROGRAM.19` | `ARCHOGEN-PROGRAM-0196 (leaf PROGRAM.19, fourth run)` | **≈2.2 GB released** — the QEMU build tree the provisioner leaves after installing, the CI rehearsal's checkout, the doctrine scratch and closed leaves' probe files; every deletion looked up first, one active leaf's scratch kept |
 | `PROGRAM.35.1` | `ARCHOGEN-PROGRAM-0197 (leaf PROGRAM.35.1)` | **fsmgen's README policy adopted, and the caps derived from the page** — 110 lines and 6 144 bytes held by `LIVE-SNAPSHOTS`, where the template's 300 / 16 384 had never been fitted |
+| `PROGRAM.35.2` → `PROGRAM.35` | `ARCHOGEN-PROGRAM-0198 (leaf PROGRAM.35.2)` | **every route out of the README registered and bounded, or its debt owned** — `README-ROUTES` derives the routes from the page's links and its guards' actual hints; `PROGRAM.35` closed |
 
 ## Changelog
 

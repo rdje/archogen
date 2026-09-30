@@ -4,6 +4,24 @@ Changelog-style summary of completed work and its validation. Newest first. The
 `bedrock-scaffold` entries below the separator are the provenance of the discipline spine
 this repository was created from, not archogen's own history.
 
+## archogen — every place the README sends things is registered and bounded, or named as owned debt
+
+`ARCHOGEN-PROGRAM-0198` (leaf `PROGRAM.35.2`; `PROGRAM.35` closes).
+
+- A size limit on the landing page only moves the need to write things down somewhere else. The README policy
+  therefore asks that every place the README points to, and every place its checks tell an author to put what does
+  not fit, is itself kept in bounds.
+- A new check, `README-ROUTES`, works that list out on every commit instead of trusting a hand-kept one. It reads
+  the README's links, runs the README's two size checks on an oversized page, and reads the places they actually
+  name. It then follows each place on to wherever that place's own check sends overflow. There are 18 such places.
+  Each is registered in the policy with an owner, a lifecycle and a size limit measured from what it holds today.
+- The changelog, the development notes and the task trees have no limit yet. The check records them as debt owned
+  by open tasks, which wait on the director's decision about how these histories should be kept (the findings
+  record, §8). They are named, not counted as controlled.
+- The check refuses a link or a named place with no entry, a stale entry, a limit exceeded, debt pinned on a
+  finished task, and a chain of places that loops back on itself. Sixteen self-test cases and six deliberate breaks
+  of the real registry each produced the expected refusal.
+
 ## archogen — the README policy adopted at its source's revision, and the landing page's limits measured
 
 `ARCHOGEN-PROGRAM-0197` (leaf `PROGRAM.35.1`).

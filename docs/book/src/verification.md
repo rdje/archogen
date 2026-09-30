@@ -531,6 +531,21 @@ $ bash scripts/check_live_snapshots.sh              # the gate
 $ bash scripts/check_live_snapshots.sh --self-test  # its RED arms, on scratch repositories
 ```
 
+## Where the landing page sends things
+
+A size limit on `README.md` does not remove the need to write things down; it moves it somewhere else. So
+`README_POLICY.md` also asks that every place the README points a reader to, and every place its checks tell
+an author to move detail to, is itself kept in bounds. `README-ROUTES` works that list out from the README's
+links and from what its two checks actually print. It follows each place on to wherever that place's own check
+sends overflow, and holds each one to the ceiling registered for it in the policy. The changelog, the
+development notes and the task trees are not bounded yet. Each is recorded as debt owned by an open task, and
+those tasks wait on the director's decision about how these histories should be kept.
+
+```console
+$ bash scripts/check_readme_routes.sh              # the gate
+$ bash scripts/check_readme_routes.sh --self-test  # its RED arms, on scratch repositories
+```
+
 ## "Next" means what the task tree says
 
 A page that names the next task is repeating what that task's tree says, and a repeat goes stale the

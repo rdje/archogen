@@ -18,10 +18,40 @@
   staged. `README-STABILITY`'s 300 lines and 16 384 bytes are the scaffold's template defaults. They stay as an
   outer backstop, and as the gate that prints the routing hint, but they are not this project's caps. Raising a
   ceiling needs a decision record showing that the landing page's contract grew.
-- **Routed destinations:** every destination the README, this policy or the guard's hint routes to gets its owner,
-  lifecycle class and pressure control in `PROGRAM.35.2`, together with the check that derives them.
 - **Landing-page identity:** `README.md` is the repository's rendered landing page. Containment moves changing
   detail and chronology out of it; it does not move out the landing function.
+
+### Routed destinations
+
+The registry `README-ROUTES` (`scripts/check_readme_routes.sh`, leaf `PROGRAM.35.2`) holds on every commit. Its
+population is derived, not listed here: every link in `README.md` (`navigation`), every path the README's two guards
+print when the page is over its caps (`overflow`), every path this policy's body names in a code span, and every onward route below,
+followed until nothing new is reached. A path is governed by its own row, or by the row of the deepest registered
+directory above it. Ceilings are inclusive. For a file they bound its lines, bytes and longest line. For a directory
+they bound its tracked files, its largest file's lines and bytes, its longest line and its total bytes. A doctrine's
+name defers that dimension to that doctrine. `debt: <leaf>` records a terminal nothing bounds yet, owned by an open
+leaf. "Overflows to" is where that destination's own guard sends what does not fit.
+
+| Destination | Route | Owner | Lifecycle | Files | Lines | Bytes | Longest line | Total bytes | Overflows to |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `AGENTS.md` | navigation | `PROGRAM` | maintained_reference | — | 24 | 2048 | 200 | — | — |
+| `CHANGELOG.md` | navigation + overflow | `PROGRAM.31` | rolling_ledger, proposed | — | debt: `PROGRAM.31` | debt: `PROGRAM.31` | 256 | — | — |
+| `CLAUDE.md` | navigation | `PROGRAM` | maintained_reference | — | 90 | 6144 | 200 | — | — |
+| `COMMIT.md` | navigation | `PROGRAM` | maintained_reference | — | 160 | 9216 | 200 | — | — |
+| `DEV_NOTES.md` | navigation | `PROGRAM.31` | rolling_ledger, proposed | — | debt: `PROGRAM.31` | debt: `PROGRAM.31` | 200 | — | — |
+| `DOCTRINE_ENFORCEMENT.md` | navigation | `PROGRAM` | maintained_reference | — | 140 | 36864 | 3072 | — | — |
+| `LIVE_DOCUMENT_SIZE_CONTAINMENT.md` | navigation + overflow | `PROGRAM.17` | maintained_reference | — | 480 | 36864 | 512 | — | — |
+| `LIVE_STATUS.md` | navigation | `PROGRAM.17.2` | bounded_snapshot | — | LIVE-SNAPSHOTS | LIVE-SNAPSHOTS | LIVE-SNAPSHOTS | — | `CHANGELOG.md`, `docs/tasks/` |
+| `MEMORY.md` | navigation | `PROGRAM.17.2` | bounded_snapshot | — | MEMORY-ARCH | MEMORY-ARCH | LIVE-SNAPSHOTS | — | `docs/tasks/`, `docs/decisions/` |
+| `MEMORY_ARCHITECTURE.md` | navigation | `PROGRAM` | maintained_reference | — | 540 | 32768 | 512 | — | — |
+| `README_POLICY.md` | navigation + overflow | `PROGRAM.35` | maintained_reference | — | 260 | 20480 | 512 | — | — |
+| `ROADMAP.md` | navigation + overflow | the director | maintained_reference | — | 1100 | 131072 | 1024 | — | — |
+| `TOOLBOX.md` | navigation + overflow | `PROGRAM` | maintained_reference | — | 110 | 28672 | 2048 | — | — |
+| `VISIBILITY.md` | navigation | `PROGRAM` | maintained_reference | — | 90 | 5120 | 200 | — | — |
+| `docs/TASK_TREE.md` | navigation + overflow | `PROGRAM.17.2` | bounded_snapshot | — | LIVE-SNAPSHOTS | LIVE-SNAPSHOTS | LIVE-SNAPSHOTS | — | `CHANGELOG.md`, `docs/tasks/` |
+| `docs/book/` | navigation + overflow | `PROGRAM` | maintained_reference | 32 | 750 | 49152 | 1024 | 294912 | — |
+| `docs/decisions/` | navigation + overflow | `PROGRAM` | partitioned_canonical | 32 | 1200 | 98304 | 1536 | 327680 | — |
+| `docs/tasks/` | overflow | `PROGRAM.32` | partitioned_canonical | 20 | debt: `PROGRAM.32` | debt: `PROGRAM.32` | debt: `PROGRAM.32` | debt: `PROGRAM.32` | — |
 <!-- README-POLICY-LOCAL-ADOPTION:END -->
 
 ---
