@@ -21,7 +21,7 @@ follows is evidence rather than an author agreeing with himself.
 | --- | --- | --- | --- |
 | 1 | overrun attribution and escalation | detection applies the policy, to the **overrunning** task even when it is not running; the other three faults attribute to the running context | `ROADMAP.md` §3.1.1 (new) |
 | 2 | the empty task set | **refused** | `ROADMAP.md` §3.1.1; `rt-core` |
-| 3 | priority rank `0` | **refused**; rank is `N ≥ 1`, and `runtime index = rank − 1` is stated | `decision_priority-comparison-direction.md`; `rt-core` |
+| 3 | priority rank `0` | **refused**; rank is `N ≥ 1`, and the runtime index is stated — `rank − 1` then, `\|hp(i)\|` since `2026-10-01` (the priority record's item 3) | `decision_priority-comparison-direction.md`; `rt-core` |
 | 4 | containable fault inside a masked region | **escalates to fatal** | `ROADMAP.md` §3.1.1; `rt-core` |
 | 5 | the bound on mask nesting | **declared, and exceeding it is refused** — neither wrapping nor saturating | `ROADMAP.md` §3.1.1; `rt-core` |
 

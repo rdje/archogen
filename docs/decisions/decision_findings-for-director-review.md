@@ -69,7 +69,7 @@ They are set out with both readings and a recommendation in
 | --- | --- | --- |
 | 1 | does detecting an overrun apply its policy, and can a fault attach to a non-running task? | §3.1 states the mapping; an overrun applies on detection, to the overrunning task |
 | 2 | is an empty task set admissible? | refuse — a vacuous schedulability result is what §7.1 exists to prevent |
-| 3 | what does priority rank `0` mean? | refuse it in a description, **and write down the off-by-one** (the runtime's highest rank is `0`, the language's is `1`, and that is recorded nowhere) |
+| 3 | what does priority rank `0` mean? | refuse it in a description, **and write down the off-by-one** (the runtime's highest rank is `0`, the language's is `1`, and that is recorded nowhere) — written down `2026-09-13`, generalised to `runtime index = \|hp(i)\|` on `2026-10-01` (the priority record's item 3) |
 | 4 | a containable fault raised inside a masked region? | adopt the reference's reading — no contract change needed, it is an `rt-core` defect |
 | 5 | what bounds mask nesting? | refuse beyond the bound rather than saturating or wrapping |
 
@@ -177,7 +177,7 @@ review, and reversible:**
 
 - **Ranks need not be contiguous.** A description may give its tasks priorities `1, 5, 9`; nothing in the language
   forbids it, and fixed priority uses only the order. `rt-core` refused such a set, the reference accepted it. The
-  priority record now states `runtime index = |hp(i)|`, which is `rank − 1` when the ranks are contiguous, and
+  priority record now states `runtime index = |hp(i)|`, which is `rank − 1` when the ranks are exactly `1, 2, …, n`, and
   `rt-core` lowers by it. Refusing gaps instead would narrow the language by inference.
 - **What a halted runtime leaves in its task table is left to the implementation.** Both models halt on the same
   faults and attribute them alike; `rt-core` then marks the attributed task faulted, the reference freezes the table

@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the runtime contract says what the runtime does
+
+`ARCHOGEN-M2-0267` (leaf `M2.9`).
+
+- The fault-handling contract was rewritten so that a reader of the text alone gets the behaviour both
+  implementations share: what the two overrun policies do, how releases that arrive during a critical section are
+  judged, whom each fault is blamed on, and that a fatal fault halts everything and keeps the first cause.
+- Three of its rules are new to the runtime and are being carried into it next: nesting critical sections too deep,
+  or closing one that was never opened, now halts rather than being refused; a fault in an interrupt handler is
+  no task's; and a halted runtime changes nothing afterwards.
+- One is for the director's review: the runtime does not watch deadlines; a missed one shows as an overrun at the
+  task's next release.
+
 ## archogen — the runtime contract's second independent review, triaged
 
 `ARCHOGEN-M2-0266` (leaf `M2.9`).

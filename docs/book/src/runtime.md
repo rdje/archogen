@@ -54,9 +54,10 @@ scan for the first ready index.
 
 ⛔ The language counts from the other end of zero: eADL's highest rank is `(priority 1)`. So a
 description reaches the scheduler through `Scheduler::from_eadl_ranks`, the one place that
-performs `runtime index = eADL rank − 1`, and refuses at boot what §3.1.1 and
-`decision_priority-comparison-direction.md` rule out — an empty task set, a rank below `1`, two
-tasks sharing a rank, or ranks that do not run contiguously from `1`.
+performs `runtime index = |hp(i)|` — the number of tasks that outrank it, which is
+`eADL rank − 1` when the ranks are exactly `1, 2, …, n` — and refuses at boot what §3.1.1 and
+`decision_priority-comparison-direction.md` rule out: an empty task set, a rank below `1`, or two
+tasks sharing a rank. Ranks with gaps are admitted, because only their order matters.
 
 ## Masking is modelled, not assumed away
 
@@ -123,6 +124,16 @@ abandonment as its own transition, `JobSkipped` — never as an ordinary release
 job is a missed deadline by another name. The release that found the job late becomes the next
 job. An overrun found some other way, by an execution-budget monitor through `fault`, has no
 such release, so it starts nothing: the task waits for its next one.
+
+⏳ **What the contract states and the runtime does not carry yet.** The text's second review
+(`M2.9`, step 6) made them explicit, and step 6c carries them into both models:
+- a `mask` past the declared bound, and an `unmask` with nothing to close, are **assertion
+  failures**, which halt — the refusals described above leave the caller's matching `unmask` to
+  close a section early;
+- a trap or an assertion raised in a service, the trap path, a transition or idle is **no task's**,
+  and the interrupted task is recorded as interrupted, not as attributed;
+- a halted runtime **changes nothing afterwards** — no release processed or latched — and its kept
+  fault says whether rule 3 escalated it.
 
 ## It has been checked against a model that never saw it
 

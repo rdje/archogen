@@ -66,7 +66,7 @@ independently derived model of §8 disagreeing with the implementation
    mapping is therefore
 
    ```text
-   runtime index = eADL rank - 1
+   runtime index = |hp(i)|   (item 3), which is eADL rank - 1 when the ranks are exactly 1, 2, …, n
    ```
 
    and it is load-bearing for anything that lowers a description onto a runtime. It was written
@@ -83,10 +83,20 @@ independently derived model of §8 disagreeing with the implementation
    runtime index = |hp(i)|, the number of tasks whose rank is smaller
    ```
 
-   which is `rank - 1` exactly when the ranks are contiguous, as in every example so far. Refusing
-   a gap would have narrowed the language by inference, which item 1's argument rules out in the
-   other direction. Found when the differential comparison's rank ratchet was rewritten: the
-   implementation refused ranks with a gap, which the reference model accepts.
+   which is `rank - 1` exactly when the ranks are `1, 2, …, n`, as in every example so far — not
+   merely contiguous: for `2, 3, 4` the two differ. Refusing a gap would have narrowed the language
+   by inference, which item 1's argument rules out in the other direction. Found when the
+   differential comparison's rank ratchet was rewritten: the implementation refused ranks with a
+   gap, which the reference model accepts. ⏳ **Decided under the director's delegation, pending
+   the director's review** (findings §6); reversing it would refuse descriptions now valid, which
+   is the narrowing item 1 says §15 makes a versioned change.
+
+   Two consequences, stated so they are not rediscovered. **The runtime index is internal**: adding
+   or removing a task renumbers the others, so a trace, a plan or a fault record names a task by
+   its stable logical ID (`ROADMAP.md` §7.3), never by its index. And the order is a bijection only
+   because ranks are unique, which is enforced twice: `archogen check` refuses two tasks at one
+   priority (`unsupported-profile`, `crates/eadl-model/src/workload.rs`), and the lowering refuses
+   them at boot (`rt_core::BootError::DuplicateRank`).
 
 ## How to apply
 
