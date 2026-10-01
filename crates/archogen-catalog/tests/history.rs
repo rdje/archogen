@@ -143,6 +143,7 @@ fn add(
                 offset_minutes: 0,
             },
             tree,
+            hosting: false,
         },
     );
     text.unwrap_or_default()

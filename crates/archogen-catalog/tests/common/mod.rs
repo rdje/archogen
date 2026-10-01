@@ -167,6 +167,7 @@ pub fn add_on(
             parents: parents.iter().map(|p| (*p).to_owned()).collect(),
             date,
             tree,
+            hosting: false,
         },
     );
 }

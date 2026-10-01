@@ -500,3 +500,205 @@ fn a_load_refuses_a_lock_that_disagrees_with_its_tree_and_a_review_that_does_not
         archogen_catalog::Code::LockReview
     );
 }
+
+/// A main line: `1`, then merges `a` (of `1` and branch `b`) and `c` (of `a` and branch `d`), each made by the
+/// hosting, with a checker file and a file outside the checker in every tree. `changes` rewrites a file from a
+/// commit on.
+fn main_line(changes: &[(char, &str, &str)], direct: bool) -> History {
+    use archogen_catalog::history::Commit;
+    let mut h = History::default();
+    let files = |at: char| -> Vec<(String, String)> {
+        let mut out = vec![
+            ("scripts/check.sh".to_owned(), "check\n".to_owned()),
+            ("docs/notes.txt".to_owned(), "notes\n".to_owned()),
+        ];
+        // A change made at a commit stays in every commit made after it, in the order `1`, `b`, `a`, `d`, `c`.
+        let order = ['1', 'b', 'a', 'd', 'c'];
+        let index = |c: char| order.iter().position(|o| *o == c).unwrap();
+        for (c, path, text) in changes {
+            if index(*c) <= index(at) {
+                out.retain(|(p, _)| p != path);
+                out.push(((*path).to_owned(), (*text).to_owned()));
+            }
+        }
+        out
+    };
+    let mut put = |name: char, parents: &[String], hosting: bool| {
+        let extra: Vec<(String, String)> = files(name);
+        let extra: Vec<(&str, &str)> = extra
+            .iter()
+            .map(|(p, t)| (p.as_str(), t.as_str()))
+            .collect();
+        let parents: Vec<&str> = parents.iter().map(String::as_str).collect();
+        add(
+            &mut h,
+            &n(name),
+            &parents,
+            tree(&[&base(), &timed()], &extra),
+            None,
+        );
+        let mut commit: Commit = h.get(&n(name)).unwrap().clone();
+        commit.hosting = hosting;
+        h.insert(n(name), commit);
+    };
+    put('1', &[], false);
+    put('b', &[n('1')], false);
+    put('a', &[n('1'), n('b')], true);
+    put('d', &[n('a')], false);
+    if direct {
+        put('c', &[n('a')], false);
+    } else {
+        put('c', &[n('a'), n('d')], true);
+    }
+    h
+}
+
+/// The premise-3 reasons of a production claim at `c`, checked against `origin/main` at `c`.
+fn premise_reasons(h: &History, named: Option<char>, tooling: Option<char>) -> Vec<String> {
+    use archogen_catalog::claim::Premise3;
+    let l = load(h, &n('c')).unwrap_or_else(|e| panic!("{e}"));
+    let mut claim = Claim::new(
+        &l,
+        h,
+        Some(&n('c')),
+        P,
+        Some("example-target"),
+        Strength::Production,
+    );
+    claim.premise3(Premise3 {
+        named: named.map(n),
+        tooling: tooling.map(n),
+        checker: vec!["scripts/".to_owned(), "Cargo.toml".to_owned()],
+    });
+    claim.lookup(TIMING, "switch").unwrap();
+    claim
+        .admit()
+        .unwrap()
+        .reasons
+        .into_iter()
+        .filter(|r| {
+            r.contains("premise 3")
+                || r.contains("first-parent")
+                || r.contains("tooling")
+                || r.contains("checker")
+        })
+        .collect()
+}
+
+#[test]
+fn premise_3_holds_from_its_named_commit_along_the_hosting_merges() {
+    let h = main_line(&[], false);
+    assert_eq!(
+        premise_reasons(&h, Some('1'), Some('a')),
+        Vec::<String>::new()
+    );
+    assert_eq!(
+        premise_reasons(&h, Some('1'), Some('c')),
+        Vec::<String>::new(),
+        "tooling at origin/main itself"
+    );
+    assert_eq!(
+        premise_reasons(&h, Some('a'), Some('a')),
+        Vec::<String>::new(),
+        "tooling at the named commit"
+    );
+    let none = premise_reasons(&h, None, Some('a'));
+    assert_eq!(
+        none,
+        ["premise 3 has no named commit yet: the published main line's protection is not on"]
+    );
+    let off = premise_reasons(&h, Some('b'), Some('a'));
+    assert_eq!(off.len(), 1, "{off:?}");
+    assert!(
+        off[0].contains("not on `origin/main`'s first-parent chain"),
+        "{off:?}"
+    );
+}
+
+#[test]
+fn every_first_parent_commit_after_the_named_one_is_a_hosting_merge() {
+    let direct = main_line(&[], true);
+    let r = premise_reasons(&direct, Some('1'), Some('a'));
+    assert_eq!(r.len(), 1, "{r:?}");
+    assert!(
+        r[0].contains(&n('c')) && r[0].contains("not a merge the hosting made"),
+        "{r:?}"
+    );
+    // A merge, but not one the hosting signed.
+    let mut unsigned = main_line(&[], false);
+    let mut c = unsigned.get(&n('c')).unwrap().clone();
+    c.hosting = false;
+    unsigned.insert(n('c'), c);
+    let r = premise_reasons(&unsigned, Some('1'), Some('a'));
+    assert_eq!(r.len(), 1, "{r:?}");
+    assert!(r[0].contains(&n('c')), "{r:?}");
+    // Signed by the hosting, but not a merge.
+    let mut pushed = main_line(&[], true);
+    let mut c = pushed.get(&n('c')).unwrap().clone();
+    c.hosting = true;
+    pushed.insert(n('c'), c);
+    assert_eq!(
+        premise_reasons(&pushed, Some('1'), Some('a')).len(),
+        1,
+        "a single parent"
+    );
+    // The named commit itself, and what precedes it, are not judged.
+    assert_eq!(
+        premise_reasons(&direct, Some('c'), Some('c')),
+        Vec::<String>::new()
+    );
+}
+
+#[test]
+fn the_tooling_is_built_from_a_first_parent_commit_at_or_after_the_named_one() {
+    let h = main_line(&[], false);
+    let r = premise_reasons(&h, Some('1'), None);
+    assert!(r.iter().any(|x| x.contains("records no commit")), "{r:?}");
+    let r = premise_reasons(&h, Some('1'), Some('b'));
+    assert!(
+        r.iter().any(|x| x.contains("not a first-parent commit")),
+        "a branch commit: {r:?}"
+    );
+    let r = premise_reasons(&h, Some('a'), Some('1'));
+    assert!(
+        r.iter().any(|x| x.contains("not a first-parent commit")),
+        "before the named commit: {r:?}"
+    );
+}
+
+#[test]
+fn the_checkers_closure_may_not_change_after_the_tooling_was_built() {
+    let changed = main_line(&[('c', "scripts/check.sh", "a different check\n")], false);
+    let r = premise_reasons(&changed, Some('1'), Some('a'));
+    assert_eq!(r.len(), 1, "{r:?}");
+    assert!(
+        r[0].contains(&n('c')) && r[0].contains("`scripts/check.sh`"),
+        "{r:?}"
+    );
+    // Added, not only changed.
+    let added = main_line(&[('c', "scripts/new.sh", "new\n")], false);
+    assert_eq!(premise_reasons(&added, Some('1'), Some('a')).len(), 1);
+    // A path named exactly, not as a folder.
+    let manifest = main_line(&[('c', "Cargo.toml", "[workspace]\n")], false);
+    assert_eq!(
+        premise_reasons(&manifest, Some('1'), Some('a')).len(),
+        1,
+        "`Cargo.toml`"
+    );
+    // A file outside the closure may change; and a change before the tooling's commit is what it was built from.
+    let outside = main_line(&[('c', "docs/notes.txt", "other notes\n")], false);
+    assert_eq!(
+        premise_reasons(&outside, Some('1'), Some('a')),
+        Vec::<String>::new()
+    );
+    let before = main_line(&[('a', "scripts/check.sh", "a different check\n")], false);
+    assert_eq!(
+        premise_reasons(&before, Some('1'), Some('a')),
+        Vec::<String>::new()
+    );
+    assert_eq!(
+        premise_reasons(&before, Some('1'), Some('1')).len(),
+        1,
+        "after a tooling built at `1`"
+    );
+}

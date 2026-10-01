@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog crate is complete: premise 3 judged at claim time
+
+`ARCHOGEN-M2-0261` (leaf `M2.7.3.6.2`).
+
+- A production result now checks the protection of the main line it rests on: that it holds from the commit the
+  director names, that every change since arrived as a merge the hosting made and signed, that the tooling was built
+  from that protected line, and that the checker has not changed since. Until the director turns the protection on,
+  every production result says so.
+- With this, the catalog crate is complete: records, hashes, the lock, evidence status, invalidation, lookups, the
+  production namespace, claims and the package rules, every rule held by a test that fails without it.
+
 ## archogen — catalogued code is held to the package rules
 
 `ARCHOGEN-M2-0260` (leaf `M2.7.3.7`).

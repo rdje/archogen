@@ -30,6 +30,10 @@ pub struct Commit {
     pub date: CommitterDate,
     /// Its tracked set, with each file's bytes.
     pub tree: Tree,
+    /// The tooling's verdict that it is a merge commit the hosting made: committed as the hosting and signed with one
+    /// of the hosting's keys the tooling holds for this commit's first-parent range (premise 3). The tooling checks
+    /// the signature with a keyring it builds, never the user's own configuration.
+    pub hosting: bool,
 }
 
 /// Every commit the loader may ask about, by object name.

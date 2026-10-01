@@ -4,7 +4,8 @@
 //! claimant writes a citation list and none can leave out a facet it used. The closure of the citations holds every
 //! facet whose bound hash enters a cited one's, with each record's contract. Admission reports the strongest verdict
 //! with every reason that reaches it: `unsupported-profile` first, then, for a production claim only,
-//! `not-established`. Premise 3's causes are `M2.7.3.6.2`'s; what needs an image is held so until `M4` gives one.
+//! `not-established`, premise 3's causes among them (`M2.7.3.6.2`). What needs an image is held so until `M4` gives
+//! one.
 
 use std::collections::BTreeSet;
 
@@ -103,6 +104,21 @@ pub struct Claim<'c> {
     citations: BTreeSet<(String, FacetKind)>,
     costs: Vec<&'c crate::record::Cost>,
     inputs: Vec<Input>,
+    premise: Premise3,
+}
+
+/// What premise 3's claim-side checks read, which the claim tooling holds and records (§0, premise 3).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Premise3 {
+    /// The named commit of `main` the premise holds from, once the director has confirmed the hosting's settings;
+    /// `None` until then.
+    pub named: Option<String>,
+    /// The commit of `origin/main`'s first-parent chain the claim's tooling was built from.
+    pub tooling: Option<String>,
+    /// The checker's closure: the paths of the packages it is built from, with the root manifest, `Cargo.lock`,
+    /// `rust-toolchain.toml`, `.cargo/`, `.github/` and `scripts/`. A path ending in `/` stands for every file
+    /// under it.
+    pub checker: Vec<String>,
 }
 
 impl<'c> Claim<'c> {
@@ -128,6 +144,7 @@ impl<'c> Claim<'c> {
             citations: BTreeSet::new(),
             costs: Vec::new(),
             inputs: Vec::new(),
+            premise: Premise3::default(),
         }
     }
 
@@ -156,6 +173,11 @@ impl<'c> Claim<'c> {
             }
         }
         Ok(found)
+    }
+
+    /// What premise 3's checks read, which the claim tooling supplies.
+    pub fn premise3(&mut self, premise: Premise3) {
+        self.premise = premise;
     }
 
     /// An input taken from outside the catalog and the description.
@@ -367,13 +389,87 @@ impl<'c> Claim<'c> {
             }
         }
         out.extend(self.ledger_reasons()?);
-        // Premise 3's causes are `M2.7.3.6.2`'s. Its first holds of every claim until the director turns the main
-        // line's protection on and a commit is named (the findings record's §11), so it is stated here now.
-        out.push(
-            "premise 3 has no named commit yet: the published main line's protection is not on"
-                .to_owned(),
-        );
+        out.extend(self.premise3_reasons()?);
         Ok(out)
+    }
+
+    /// Premise 3's causes (§0): no named commit; the named commit off `origin/main`'s first-parent chain; a
+    /// first-parent commit after it that is not a merge the hosting made; tooling not built from a first-parent
+    /// commit at or after it; the checker's closure changed along the chain between the tooling's commit and the
+    /// `origin/main` commit the claim records.
+    fn premise3_reasons(&self) -> Result<Vec<String>, Refusal> {
+        let Some(named) = &self.premise.named else {
+            return Ok(vec![
+                "premise 3 has no named commit yet: the published main line's protection is not on"
+                    .to_owned(),
+            ]);
+        };
+        // Without `origin/main` there is no chain to judge, and the ledger's reasons already say so.
+        let Some(main) = &self.origin_main else {
+            return Ok(Vec::new());
+        };
+        // `origin/main`'s first-parent chain, newest first.
+        let mut chain: Vec<String> = Vec::new();
+        let mut current = Some(main.clone());
+        while let Some(name) = current {
+            current = self.history.get(&name)?.parents.first().cloned();
+            chain.push(name);
+        }
+        let Some(at_named) = chain.iter().position(|c| c == named) else {
+            return Ok(vec![format!(
+                "premise 3's named commit {named} is not on `origin/main`'s first-parent chain"
+            )]);
+        };
+        let mut out = Vec::new();
+        for name in &chain[..at_named] {
+            let commit = self.history.get(name)?;
+            if commit.parents.len() < 2 || !commit.hosting {
+                out.push(format!(
+                    "{name}, on `origin/main`'s first-parent chain after the named commit, is not a merge the hosting \
+                     made and signed"
+                ));
+            }
+        }
+        let Some(tooling) = &self.premise.tooling else {
+            out.push("the claim's tooling records no commit it was built from".to_owned());
+            return Ok(out);
+        };
+        let Some(at_tooling) = chain[..=at_named].iter().position(|c| c == tooling) else {
+            out.push(format!(
+                "the claim's tooling was built from {tooling}, not a first-parent commit of `origin/main` at or after \
+                 the named commit"
+            ));
+            return Ok(out);
+        };
+        // Each step from the tooling's commit up to `origin/main`, oldest first.
+        for step in chain[..=at_tooling].windows(2).rev() {
+            let (newer, older) = (&step[0], &step[1]);
+            let (a, b) = (
+                &self.history.get(older)?.tree,
+                &self.history.get(newer)?.tree,
+            );
+            let paths: std::collections::BTreeSet<&str> = a.paths().chain(b.paths()).collect();
+            if let Some(path) = paths
+                .into_iter()
+                .find(|p| self.in_checker(p) && a.get(p) != b.get(p))
+            {
+                out.push(format!(
+                    "the checker's closure changed at {newer}, in `{path}`, after the commit the tooling was built from"
+                ));
+            }
+        }
+        Ok(out)
+    }
+
+    /// Whether `path` is in the checker's closure.
+    fn in_checker(&self, path: &str) -> bool {
+        self.premise.checker.iter().any(|c| {
+            if c.ends_with('/') {
+                path.starts_with(c.as_str())
+            } else {
+                path == c
+            }
+        })
     }
 
     /// The commit's ledger must hold every line of every ancestor's and of `origin/main`'s and its ancestors'.

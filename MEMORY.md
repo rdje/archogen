@@ -13,12 +13,12 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M2` → frontier `M2.7.3`. `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API`'s is
+- **Active tree:** `M2` → frontier `M2.7.6`. `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API`'s is
   `API.6`; `M1`'s only open leaf, `M1.29.4`, is blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M2.7.3`, the catalog crate, is under way: `M2.7.3.6.2` (premise 3's causes, over a checker
-  closure `M2.7.6` will name) next, then `M2.7.6`, `M2.7.4`, `M2.7.5`, `M2.11`, then `API.6`. Accepted designs live
-  in `docs/specs/`, so `docs/decisions/` has room (`PROGRAM.43`).
+- **Next action:** `M2.7.3`, the catalog crate, is built. `M2.7.6` (the check's protection, its repository half; the
+  hosting half waits on findings §11) next, then `M2.7.4`, `M2.7.5`, `M2.11`, then `API.6`. Accepted designs live in
+  `docs/specs/`, so `docs/decisions/` has room (`PROGRAM.43`).
 - **In flight:** branch **`wip/m2.9`** (`758cbcd`) is a checkpoint, not a finished leaf — `M2.9` records it as
   not compiling (`crates/rt-core/tests/differential.rs` unadapted).
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of

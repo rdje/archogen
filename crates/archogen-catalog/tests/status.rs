@@ -137,6 +137,7 @@ fn add(history: &mut History, name: &str, parents: &[&str], mut tree: Tree, lock
                 offset_minutes: 0,
             },
             tree,
+            hosting: false,
         },
     );
 }
