@@ -1,5 +1,25 @@
 # What a report may claim
 
+## The idea, in plain words
+
+A medical check-up does not end with "you are healthy". It ends with separate results — blood pressure, this
+blood test, that scan — each saying what was measured, how, and what it can and cannot tell. archogen's reports work
+the same way. A system has several properties worth knowing: whether its configuration is valid, whether it behaves
+correctly, whether it meets its deadlines, whether it fits in memory, whether it starts up properly. The report
+gives each one its own answer, and each answer says what kind of evidence it rests on: a check of the description,
+an analysis under stated assumptions, tests run so far, a proof, a measurement on one particular board.
+
+So there is no single word such as "verified" that covers everything, and a property nobody has looked at is never
+silently counted as fine.
+
+> **In one minute, for engineers.** `ROADMAP.md` §7.1 prohibits a global "verified" flag, and
+> `crates/archogen-evidence/` encodes it three ways: no method aggregates a report's claims, a report with a property
+> left unclaimed refuses to render, and every positive conclusion is a typed claim that cannot be built without its
+> qualifier — the named constraints, the listed assumptions, the recorded coverage, the model, the refinement or the
+> target. Bounds carry their provenance, trust dependencies are declared, and artefacts are named by content hash.
+
+## How it works
+
 archogen reports do not say "verified". They cannot: there is no such word in the vocabulary,
 and the absence is enforced by the code that builds them.
 
@@ -12,12 +32,12 @@ and the absence is enforced by the code that builds them.
 A prohibition written in a document is one somebody violates under deadline. This one is
 encoded three ways (`crates/archogen-evidence/`).
 
-## 1. There is no aggregate verdict
+### 1. There is no aggregate verdict
 
 A report is a set of per-property claims. It offers no method that collapses them, so you
 cannot ask whether "it" passed — the question has no referent.
 
-## 2. Silence about a property is not a pass
+### 2. Silence about a property is not a pass
 
 A report refuses to render while any property lacks a claim:
 
@@ -28,7 +48,7 @@ memory-bounds, startup-behavior — a property with no claim is not a pass
 
 The only way to say nothing about a property is `not applicable`, which must still say *why*.
 
-## 3. Every positive conclusion carries its qualifier
+### 3. Every positive conclusion carries its qualifier
 
 There is no `Verified`, no `Passed`, no bare `Holds`. Each conclusion names what makes it
 true, and cannot be constructed without it:
@@ -58,7 +78,9 @@ Three sentences from §7.1 shape the whole table:
 
 So `tested conformance` has no route to a stronger conclusion, no matter how many runs.
 
-## Bounds remember where they came from
+## The precise rules
+
+### Bounds remember where they came from
 
 Every numerical bound records its units, scope, target, **binary identity**, and origin.
 
@@ -88,7 +110,7 @@ A bound with no binary identity is refused outright:
 That is §15's point — a compiler flag change can invalidate a timing bound while the eADL
 description is byte-identical.
 
-## Trust dependencies
+### Trust dependencies
 
 The generator and the independent checker are meant to reach their verdicts separately. §4.4's
 position is not that sharing is forbidden — it is that sharing must be **visible**.
@@ -112,7 +134,7 @@ wolf is a gate that gets disabled.
 does not prove semantic independence."* Two separately written implementations of the same
 misread specification share nothing any inventory can see.
 
-## Content hashes
+### Content hashes
 
 A binary identity and a trust item's content hash are both SHA-256 digests, written `sha256:` followed by the
 digest in lowercase hexadecimal. The catalog of engine knowledge will identify each record the same way, and a

@@ -714,7 +714,7 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0301 (leaf PROGRAM.47.4)`
 
 - ID: `PROGRAM.47.5`
-  Status: `active` — one chapter per child, each `done` when committed: `.1` the introduction, `.2` the tour, `.3` reading a description, `.4` describing a workload, `.5` checking a description
+  Status: `active` — one chapter per child, each `done` when committed: `.1` the introduction, `.2` the tour, `.3` reading a description, `.4` describing a workload, `.5` checking a description, `.6` what a report may claim
   Goal: every other chapter in layers, one leaf and commit each when started, the chapters a newcomer meets first
   leading — the introduction and the tour, reading and workload, checking, evidence and analysis, the catalog,
   targets, the command line, the engine API, verification — and the gory parts of each moved to annexes.
@@ -775,6 +775,15 @@ mdBook that is the director's window into the project.
   semantic_corpus` → `16 passed`; `--test kinds` → `37 passed`; `bash scripts/build_book.sh` → rc=0;
   `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`
   Commit: `ARCHOGEN-PROGRAM-0306 (leaf PROGRAM.47.5.5)`
+
+- ID: `PROGRAM.47.5.6`
+  Status: `done` — `2026-10-02`
+  Goal: *What a report may claim* in layers.
+  **Done.** It opens with a medical check-up's separate results, never "you are healthy", as the picture of a report
+  in which each property has its own answer and its own kind of evidence; then the one-minute summary, the three
+  encodings of the prohibition as how it works, and bounds, trust and hashes as the precise rules.
+  Verification: `bash scripts/build_book.sh` → rc=0; `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`
+  Commit: `ARCHOGEN-PROGRAM-0307 (leaf PROGRAM.47.5.6)`
 
 ## Roadmap coverage map
 
@@ -1079,6 +1088,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.47.5.3` | `ARCHOGEN-PROGRAM-0304 (leaf PROGRAM.47.5.3)` | ***Reading a description* in layers** |
 | `PROGRAM.47.5.4` | `ARCHOGEN-PROGRAM-0305 (leaf PROGRAM.47.5.4)` | ***Describing a workload* in layers** |
 | `PROGRAM.47.5.5` | `ARCHOGEN-PROGRAM-0306 (leaf PROGRAM.47.5.5)` | ***Checking a description* in layers** |
+| `PROGRAM.47.5.6` | `ARCHOGEN-PROGRAM-0307 (leaf PROGRAM.47.5.6)` | ***What a report may claim* in layers** |
 
 ## Changelog
 
