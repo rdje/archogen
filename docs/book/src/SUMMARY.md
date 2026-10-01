@@ -41,3 +41,4 @@
 - [What is versioned, and what changing it costs](versions.md)
 
 [Words this book uses](glossary.md)
+[Index](book-index.md)

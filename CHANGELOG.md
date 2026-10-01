@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the book has an index
+
+`ARCHOGEN-PROGRAM-0298` (leaf `PROGRAM.47.3`).
+
+- The book now ends with an index: every abbreviation and term with the chapters that use it, and every section of
+  every chapter, linked. It is written by a script from the chapters themselves and checked on every change, so it
+  is never out of date; each of its links was checked against the built book.
+
 ## archogen — the book has a glossary that cannot fall behind
 
 `ARCHOGEN-PROGRAM-0297` (leaf `PROGRAM.47.2`).

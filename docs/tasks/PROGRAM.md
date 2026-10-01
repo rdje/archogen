@@ -546,172 +546,19 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.31.md`](../task-history/PROGRAM/PROGRAM.31.md); commit `ARCHOGEN-PROGRAM-0207`
 
 - ID: `PROGRAM.32`
-  Status: `done` — unblocked `2026-09-30` by the director's ruling on §10 of
-  `docs/decisions/decision_findings-for-director-review.md`: the hold covers only the 17 template files archogen has
-  not changed. The new check, and the change to `TASK-ACCEPTANCE` (`check_task_acceptance.sh`, changed by
-  `PROGRAM.21`), are archogen's. The held checks that read leaves must keep working unchanged: `WAIVER-ROUTING`,
-  `GAP-CLAIM-CENSUS`, `TASK-TREE-OWNERSHIP` and `LIVE-DOC-CURRENCY`.
-  Goal: seal closed leaves out of the task trees — each `done` leaf's body moved byte for byte to a sealed per-subtree
-  file with its digest, the tree keeping one line per closed leaf with its commit and a link; `M1` and `PROGRAM` first.
-  Unblocked `2026-09-30` by the ruling on §8 of `docs/decisions/decision_findings-for-director-review.md` (option C),
-  which follows `PROGRAM.31`.
-  Acceptance (if accepted): `TASK-ACCEPTANCE` and every gate that reads a leaf still finds it (sealed text included);
-  a check proving sealed bodies unchanged; the tree's live graph complete; no line lost.
-  Children: `PROGRAM.32.1` … `PROGRAM.32.4` — decomposed `2026-09-30`, after a read-only audit of every check that
-  reads a leaf.
-  Verification: through its children — the design, the tool, the seal of `M1` and `PROGRAM`, and an independent
-  review whose findings hardened the tool.
-  Commit: `ARCHOGEN-PROGRAM-0228` closes it; its children's commits are in the log below.
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.32.md`](../task-history/PROGRAM/PROGRAM.32.md); commit `ARCHOGEN-PROGRAM-0228`
 
 - ID: `PROGRAM.32.1`
-  Status: `done`
-  Goal: the design, decided before any code: `docs/decisions/decision_task-tree-sealing.md`.
-  - The unit is a closed subtree.
-  - Its leaves move byte for byte to `docs/task-history/<TREE>/<SUBTREE>.md`, each leaving a two-line stub.
-  - An append-only index carries each file's digest.
-  - A reconstruction proof runs before anything is written, and the gate `TASK-HISTORY` runs after.
-  - The destination is outside `docs/tasks/` so that no held check mistakes moved text for new text.
-  Verification: the audit of `2026-09-30`, quoted in the record's "Why", measured each check against a sealing
-  commit, including `M1` and `PROGRAM`'s closed subtrees: 37 of 39 and 32 of 39.
-  Commit: `ARCHOGEN-PROGRAM-0224 (leaf PROGRAM.32.1)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.32.md`](../task-history/PROGRAM/PROGRAM.32.md); commit `ARCHOGEN-PROGRAM-0224`
 
 - ID: `PROGRAM.32.2`
-  Status: `done`
-  Goal: `scripts/check_task_history.sh`: the gate, `--seal <TREE>` with its reconstruction proof, and `--self-test`
-  with RED arms for each of the gate's four checks. It is registered as `TASK-HISTORY` in
-  `scripts/check_doctrines.project.sh`. `TASK-ACCEPTANCE`'s refusal names a sealed owner as closed.
-  Acceptance: every arm refused and then passed; the spine's own self-tests green; no held file changed.
-  Verification: see the checklist — 14 arms, a dry run on real copies of `M1` and `PROGRAM`, and a mutation
-  that turns each new rule's arm red.
-  Commit: `ARCHOGEN-PROGRAM-0225 (leaf PROGRAM.32.2)`
-
-  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
-  - [x] **REPRODUCE** — the need, measured before the tool: 70 of `M1`'s 74 leaves and 54 of `PROGRAM`'s 63 were
-    `done`, 77% and 79% of the files (`PROGRAM.32.1`'s audit). No check held a sealed file to its digest, because
-    none existed.
-  - [x] **ROOT CAUSE** — nothing moved finished work out of a tree, and a hand move would lose a byte unseen. The
-    audit (`git grep -n "docs/tasks" scripts/`, each hit read) showed what a sealing tool must respect:
-    - `TASK-ACCEPTANCE` read a stub as a leaf lacking boxes;
-    - `LESSON-PROMOTION` and `WAIVER-ROUTING` judge anything under `docs/tasks/` as added;
-    - `docs/tasks/`' 20-file ceiling.
-  - [x] **FIX** — `scripts/check_task_history.sh`: the gate's four legs; `--seal <TREE>`, which proves the
-    reconstruction before it writes; and `--self-test`. It is registered as `TASK-HISTORY` in
-    `scripts/check_doctrines.project.sh`. `scripts/check_task_acceptance.sh` names a sealed owner as closed, with
-    arm 10. The rows are in `DOCTRINE_ENFORCEMENT.md` and `TOOLBOX.md`.
-  - [x] **ADDRESSED** — the self-test and the dry run:
-    - `bash scripts/check_task_history.sh --self-test` → rc=0, `task-history self-test: 14 pass / 0 fail (14 arms)`;
-    - `bash scripts/check_task_acceptance.sh --self-test` → `task-acceptance self-test: 10 pass / 0 fail`;
-    - a dry run on copies of the real trees in `target/doctrine_scratch/task_history/dryrun`:
-      - `--seal M1` → "sealed 37 subtree(s), 62 leaves … the reconstruction is byte for byte";
-      - `--seal PROGRAM` → "sealed 32 subtree(s), 50 leaves …";
-      - the gate → `task-history: OK (69 sealed file(s) … 112 stub(s) …)`, rc=0;
-      - `M1.md` went from 717 804 to 259 334 bytes, `PROGRAM.md` from 381 216 to 107 157;
-      - a real code change owned by a sealed leaf was refused there with "is closed and sealed".
-  - [x] **NO REGRESSION** — the self-tests, the enforcer and two mutations:
-    - `bash scripts/run_self_tests.sh` → rc=0, `self-tests: OK — 35 self-test(s) passed`;
-    - `bash scripts/check_doctrines.sh` → `=== all doctrines green ===` with this leaf staged;
-    - `bash -n` on both scripts → syntax OK;
-    - mutations: with the stub-to-file check disabled, the self-test goes to `13 pass / 1 fail`; with the sealed
-      branch removed from `TASK-ACCEPTANCE`, arm 10 goes red, `9 pass / 1 fail`.
-
-    No held file changed: `git diff --cached --name-only` names none of the 17 in findings §10.
-  - [x] **LOCKSTEP** — `DOCTRINE_ENFORCEMENT.md`, `TOOLBOX.md`, `scripts/check_doctrines.project.sh`; this leaf,
-    the frontier and both logs; `CHANGELOG.md`. The book's chapter follows with the real seal (`PROGRAM.32.3`).
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.32.md`](../task-history/PROGRAM/PROGRAM.32.md); commit `ARCHOGEN-PROGRAM-0225`
 
 - ID: `PROGRAM.32.3`
-  Status: `done`
-  Goal: `M1` and `PROGRAM` sealed. `docs/task-history/` gets its row, and `docs/tasks/`' debt cells become measured
-  ceilings. The inventory, the book's verification chapter and `docs/TASK_TREE.md` are updated.
-  Acceptance: the reconstruction proven byte for byte for both trees; every check green in the sealing commit; the
-  trees' live leaves, frontier and logs unchanged.
-  Verification: see the checklist — the seal's own proof, then an independent re-derivation of both trees and of all
-  69 digests.
-  Commit: `ARCHOGEN-PROGRAM-0226 (leaf PROGRAM.32.3)`
-
-  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
-  - [x] **REPRODUCE** — at `HEAD` `15c61b4`, `wc -lc docs/tasks/M1.md docs/tasks/PROGRAM.md` → 7 633 lines and
-    717 804 bytes, and 381 216 bytes. `README-ROUTES` carried four `debt: PROGRAM.32` cells for `docs/tasks/`.
-  - [x] **ROOT CAUSE** — closed work was never moved out of a tree, the finding of §8 of the findings record.
-  - [x] **FIX** — the seal:
-    - `bash scripts/check_task_history.sh --seal M1` → "sealed 37 subtree(s), 62 leaves … the reconstruction is
-      byte for byte";
-    - `--seal PROGRAM` → "sealed 32 subtree(s), 50 leaves …";
-    - this leaf's own subtree, `PROGRAM.32`, stays live, since `.32.4` is open.
-
-    Registration:
-    - `README_POLICY.md`'s `docs/tasks/` row takes measured ceilings in place of its debt, and overflows to
-      `docs/task-history/`, which has its own `archive_terminal` row;
-    - the inventory rows, the book's new section, and `docs/TASK_TREE.md`'s header are updated.
-  - [x] **ADDRESSED** — the counts and an independent re-derivation:
-    - `wc -lc` → `M1.md` 2 278 lines and 259 334 bytes; `PROGRAM.md` 110 662 bytes;
-    - an independent re-derivation, separate code over `git show HEAD:docs/tasks/<TREE>.md`, expanded every stub
-      from its sealed file: "M1 independent reconstruction equals HEAD: True", and the same for `PROGRAM`;
-    - `shasum -a 256` over all 69 sealed files against their rows: "69 rows, 0 mismatched";
-    - `bash scripts/check_readme_routes.sh` → rc=0, `readme-routes: OK (21 destination(s) governed)`, with no debt
-      left.
-  - [x] **NO REGRESSION** — `bash scripts/check_doctrines.sh` → `=== all doctrines green ===` in the sealing commit,
-    the four held checks that read leaves among them. The frontier tables, the verification and commit logs and every
-    open leaf are untouched, since the reconstruction is byte for byte. `STATED-ORDER` reads the stubs' status lines.
-  - [x] **LOCKSTEP** — `README_POLICY.md`, `LIVE_DOCUMENT_SIZE_CONTAINMENT.md`, `docs/book/src/verification.md`,
-    `docs/TASK_TREE.md`; this leaf, the frontier and both logs; `LIVE_STATUS.md`, `MEMORY.md`, `CHANGELOG.md`.
-  ⚠️ *Corrected by `PROGRAM.32.4`.* Some figures above were not taken at the commits they name:
-  - `PROGRAM.md` was 384 721 bytes and 4 280 lines at `15c61b4`; 381 216 had been measured at `8b9a770`;
-  - at `940baf1` it was 978 lines and 113 467 bytes, since the 948 lines and 110 662 bytes were measured before
-    this leaf's own closure edits;
-  - the commit changed neither `KNOWLEDGE_MAP.md` nor `MEMORY.md`, which its message and the list above name.
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.32.md`](../task-history/PROGRAM/PROGRAM.32.md); commit `ARCHOGEN-PROGRAM-0226`
 
 - ID: `PROGRAM.32.4`
-  Status: `done`
-  Goal: an independent read-only review of the tool and the sealed result, every finding answered.
-  Verification: see the checklist. The review accepted the seal, "correct and lossless", and asked for the tool to
-  be hardened before another tree is sealed. That is done: 25 RED arms, and the real history passes every leg.
-  Commit: `ARCHOGEN-PROGRAM-0228 (leaf PROGRAM.32.4)`
-
-  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
-  - [x] **REPRODUCE** — the reviewer's constructions, each rebuilt as an arm in `scripts/check_task_history.sh`'s
-    self-test, refused none of them before this change:
-    - a seal made by hand of `T.2.1` from its open subtree;
-    - a body edited together with its row;
-    - a stub moved into another tree;
-    - a forged file and row, committed.
-
-    A leaf holding a column-0 fence was sealed torn.
-  - [x] **ROOT CAUSE** — three designs of the first tool:
-    - its gate compared with `HEAD` only, which is the commit itself in CI;
-    - it never re-derived a sealed leaf from the tree it came from;
-    - its seal sliced by lines without refusing what the slicing cannot hold.
-
-    The first, shown by `git show 940baf1:scripts/check_task_history.sh | grep -n head_index`:
-    ```text
-    296:  if git cat-file -e "HEAD:docs/task-history/INDEX.md" 2>/dev/null; then
-    297:    git show "HEAD:docs/task-history/INDEX.md" > "$SCRATCH/head-index.md" && printf '%s' "$SCRATCH/head-index.md"
-    ```
-    It read only `HEAD`'s index. The other two, by the review's 25-case mutation run, rebuilt here as arms.
-  - [x] **FIX** — the gate's legs:
-    - leg 3 is history-wide: every row any committed index held, and every sealed file against the commit that
-      added it;
-    - leg 4 ties each stub to its tree and each leaf to its subtree's file;
-    - leg 5 re-proves every sealed leaf against its tree just before its seal;
-    - leg 6 refuses a live leaf in a sealed subtree.
-
-    The seal refuses a leaf with a column-0 line after its `ID`, and rolls back if the gate refuses what it wrote.
-    Unreadable input is a named breach. The fallback commit text is checked against the Commit Log. The decision
-    record, the book and the inventory now match the build and the commits, and the review history is in
-    `docs/reviews/`.
-  - [x] **ADDRESSED** — `bash scripts/check_task_history.sh --self-test` → rc=0, `task-history self-test: 25 pass /
-    0 fail (25 arms)`. `bash scripts/check_task_history.sh` on the real repository → rc=0, "69 sealed file(s), each
-    against its row and its sealing commit … 112 stub(s) … every sealed leaf proven against its tree before its
-    seal".
-  - [x] **NO REGRESSION** — the mutations, the enforcer and the self-tests:
-    - with leg 5 disabled, the self-test goes to `23 pass / 2 fail`;
-    - with leg 3's file check disabled, it goes to `24 pass / 1 fail`;
-    - `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`;
-    - `bash scripts/run_self_tests.sh` → rc=0, `self-tests: OK — 35 self-test(s) passed`.
-
-    No held file changed. `HISTORY-LEDGERS` shares leg 3's old blind spot, and `PROGRAM.40` owns it.
-  - [x] **LOCKSTEP** — `docs/decisions/decision_task-tree-sealing.md`, `docs/reviews/`, `DOCTRINE_ENFORCEMENT.md`,
-    `docs/book/src/verification.md`, `LIVE_DOCUMENT_SIZE_CONTAINMENT.md`; `PROGRAM.32.3`'s corrected figures; the
-    frontier and both logs; `LIVE_STATUS.md`, `docs/TASK_TREE.md`, `MEMORY.md`, `CHANGELOG.md`.
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.32.md`](../task-history/PROGRAM/PROGRAM.32.md); commit `ARCHOGEN-PROGRAM-0228`
 
 - ID: `PROGRAM.35`
   Status: `done` — sealed in [`PROGRAM/PROGRAM.35.md`](../task-history/PROGRAM/PROGRAM.35.md); commit `ARCHOGEN-PROGRAM-0197`
@@ -733,331 +580,33 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.38.md`](../task-history/PROGRAM/PROGRAM.38.md); commit `ARCHOGEN-PROGRAM-0222`
 
 - ID: `PROGRAM.39`
-  Status: `done` — started at 358 185 bytes, before the warning was crossed, since the next review answers would
-  cross it
-  Goal: `docs/decisions/` partitioned into sub-folders by subject, with no capacity added, as
-  `decision_decisions-folder-ceiling.md` requires.
-  Acceptance:
-  - each sub-folder has a row, reachable through the parent's "Overflows to";
-  - `README-ROUTES` leaves out of a parent's figures what a deeper row governs. It refuses a set of rows whose totals
-    exceed 40 files or 393 216 bytes, and a ceiling above the one a decision names, with RED arms for each;
-  - a project gate extends index completeness to sub-folders, since the held template check reads the folder flat;
-  - `knowledge-map/subsystems.md` links each sub-folder's index;
-  - the findings register's settled items considered for sealing, with stubs kept for their section numbers;
-  - the first candidates are the catalog design's four records.
-  Verification: see the checklist.
-  Commit: `ARCHOGEN-PROGRAM-0230 (leaf PROGRAM.39)`
-
-  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
-  - [x] **REPRODUCE** — at `d64dc8d`, `git ls-files -z docs/decisions | xargs -0 cat | wc -c` → 358 185 over 30
-    files, 1 815 bytes under the 360 000 warning. Composition round 4 and catalog round 11 were back with answers
-    that would add more.
-  - [x] **ROOT CAUSE** — the folder holds four records of one design under open review, 151 370 bytes, which grow
-    a round at a time. Two held template checks read the folder flat, `git show HEAD:scripts/check_memory_architecture.sh`
-    at line 41 (`for f in docs/decisions/*.md`) and the map generator at line 42, and `README-ROUTES` counted a
-    sub-folder into its parent, so no partition had been possible without losing a check.
-  - [x] **FIX** — the partition, the checks that make it safe, and the records around it:
-    - the four records `git mv`d to `docs/decisions/catalog/`, with every path to them rewritten outside the sealed
-      histories, found by `git grep`;
-    - `scripts/check_decision_index.sh`, registered as `DECISION-INDEX`;
-    - `README-ROUTES`: a partition's files meet their own per-file ceilings, the parent's count and total still
-      count them, and a new table, `### Ceilings a decision fixes`, is enforced;
-    - the partition's row, and the cap table with the folder's 40 files and 393 216 bytes;
-    - `knowledge-map/subsystems.md` links the partition;
-    - the findings register's settled items considered and left, with the reason in the ceiling record.
-  - [x] **ADDRESSED** — the checks, the self-tests and the size:
-    - `bash scripts/check_decision_index.sh` → rc=0, "28 record(s)", four of them in the partition;
-    - `bash scripts/check_readme_routes.sh` → rc=0, `readme-routes: OK (22 destination(s) governed)`;
-    - `--self-test`: `decision-index self-test: 5 pass / 0 fail (5 arms)`, and
-      `readme-routes self-test: 20 pass / 0 fail (20 arms)` with its four new arms (a partition's per-file limits,
-      no capacity added, a cap above its decision, a cap's missing decision);
-    - the folder, the partition included, is 358 642 bytes over 30 files, within the cap.
-  - [x] **NO REGRESSION** — `cargo test -q -p archogen-evidence` → `test result: ok. 34 passed; 0 failed`, since a
-    comment in `sha256.rs` names the moved path. `bash scripts/run_self_tests.sh` → rc=0,
-    `self-tests: OK — 36 self-test(s) passed`. `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`,
-    `MEMORY-ARCH`, `KNOWLEDGE-MAP`, `SOURCE-LEDGER` and `BOOK-ANCHORS` among them. No held file changed.
-  - [x] **LOCKSTEP** — `README_POLICY.md`, `LIVE_DOCUMENT_SIZE_CONTAINMENT.md`, `DOCTRINE_ENFORCEMENT.md`, `TOOLBOX.md`,
-    `docs/book/src/verification.md`, `docs/book/src/versions.md`; `docs/decisions/decision_decisions-folder-ceiling.md`;
-    `docs/decisions/INDEX.md`, `docs/reviews/INDEX.md`; `docs/tasks/M2.md`; this leaf, the frontier and both logs;
-    `LIVE_STATUS.md`, `docs/TASK_TREE.md`, `MEMORY.md`, `KNOWLEDGE_MAP.md`, `CHANGELOG.md`.
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.39.md`](../task-history/PROGRAM/PROGRAM.39.md); commit `ARCHOGEN-PROGRAM-0230`
 
 - ID: `PROGRAM.40`
-  Status: `done`
-  Goal: `HISTORY-LEDGERS` catches in CI what it catches before a commit. Its leg 3 compares the index with `HEAD`,
-  which is the commit under test in CI, so a segment and its row forged together and committed pass there; the
-  review of `PROGRAM.32.4` found it (P4), and `TASK-HISTORY` now checks the same across history.
-  Acceptance: every row any committed index held still present, and every segment byte for byte what the commit that
-  added it wrote, with RED arms for a committed forgery; the book and `DOCTRINE_ENFORCEMENT.md` updated.
-  Verification: see the checklist.
-  Commit: `ARCHOGEN-PROGRAM-0229 (leaf PROGRAM.40)`
-
-  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
-  - [x] **REPRODUCE** — the new arm, "a segment and its row forged together and committed are refused", built a
-    forgery in a scratch repository and committed it. Against the old leg 3 it passes, since `HEAD` is the forgery
-    itself. With the new segment check mutated off, `bash scripts/check_history_ledgers.sh --self-test` →
-    `history-ledgers self-test: 14 pass / 1 fail (15 arms)`, that arm red.
-  - [x] **ROOT CAUSE** — leg 3 compared the index only with `HEAD`, as `git show faa9d2b^:scripts/check_history_ledgers.sh`
-    shows (`git cat-file -e "HEAD:$INDEX"`). In CI, `HEAD` is the commit under test, so a forged segment and row
-    matched themselves.
-  - [x] **FIX** — leg 3 reads every committed version of the index (`git log --format=%H -- docs/history/INDEX.md`)
-    and requires each of its rows still present and unchanged. Each segment must equal, byte for byte, what the
-    commit that added it wrote (`git log --diff-filter=A`). The honest limit is restated.
-  - [x] **ADDRESSED** — `bash scripts/check_history_ledgers.sh --self-test` → rc=0,
-    `history-ledgers self-test: 15 pass / 0 fail (15 arms)`; `bash scripts/check_history_ledgers.sh` on the real
-    ledgers → rc=0, `history-ledgers: OK (2 ledger(s) …)`.
-  - [x] **NO REGRESSION** — `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`;
-    `bash scripts/run_self_tests.sh` → rc=0, `self-tests: OK — 35 self-test(s) passed`. No held file changed.
-  - [x] **LOCKSTEP** — `docs/decisions/decision_history-ledgers.md`, `DOCTRINE_ENFORCEMENT.md`,
-    `docs/book/src/verification.md`; this leaf, the frontier and both logs; `LIVE_STATUS.md`, `docs/TASK_TREE.md`,
-    `MEMORY.md`, `CHANGELOG.md`.
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.40.md`](../task-history/PROGRAM/PROGRAM.40.md); commit `ARCHOGEN-PROGRAM-0229`
 
 - ID: `PROGRAM.41`
-  Status: `done`
-  Goal: the next compaction of `docs/decisions/`, named by `docs/decisions/decision_decisions-folder-ceiling.md`. The
-  findings register's settled items, §2, §4, §8 and §10, about 9.7 KB, are sealed out of it the way closed leaves
-  are: moved byte for byte, with a stub per item keeping its section number, since the numbers are cited across the
-  trees.
-  Why: after the partition (`PROGRAM.39`), the folder was 366 543 bytes on `2026-09-30` against a cap of 393 216.
-  Each review round of the catalog design adds several kilobytes, and only a new ruling can raise the cap.
-  Acceptance: the items moved and stubbed, every citation of their section numbers still resolving; a digest and
-  a check that the moved text never changes, reusing `TASK-HISTORY`'s pattern or a register of its own; the
-  folder's measurement in the inventory.
-  Verification: see the checklist.
-  Commit: `ARCHOGEN-PROGRAM-0234 (leaf PROGRAM.41)`
-
-  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
-  - [x] **REPRODUCE** — after `ARCHOGEN-M2-0233`, `git ls-tree -r --name-only b8448c6 docs/decisions | xargs -I{}
-    git show b8448c6:{} | wc -c` → 376904, short of the trigger by 3 096 bytes, with catalog round 13's and
-    composition round 6's answers still to come.
-  - [x] **ROOT CAUSE** — the folder grows by every review round's answers, and the ceiling cannot rise without a new
-    ruling. The compaction was named in advance: `git show b8448c6:docs/decisions/decision_decisions-folder-ceiling.md
-    | grep -n "next compaction"` → line 105, the findings register's settled items. They are cited by number across
-    the trees, so they could not move without a stub under each heading.
-  - [x] **FIX** — `scripts/check_decision_history.sh`, `DECISION-HISTORY`: `TASK-HISTORY`'s pattern for numbered
-    sections. `--seal` moved §2, §4, §8 and §10 into `docs/decision-history/decision_findings-for-director-review/`,
-    each heading kept above a one-line stub, with the reconstruction proven before writing. The gate's five legs:
-    rows, one to one, across history, stubs, provenance. `README_POLICY.md` routes the folder, `archive_terminal`.
-  - [x] **ADDRESSED** — the seal printed `sealed section(s) 02 04 08 10, 9745 bytes; the reconstruction is byte for
-    byte`; `bash scripts/check_decision_history.sh` → rc=0, `decision-history: OK (4 sealed section(s) …)`;
-    `bash scripts/check_decision_history.sh --self-test` → rc=0, `decision-history self-test: 20 pass / 0 fail (20
-    arms)`. The folder is 368 643 bytes, the register's intro and the ceiling record included. Mutations on a copy:
-    removing leg 3's file check, leg 5's comparison, the history rows or the live-again check each turns its own arm
-    red (`19 pass / 1 fail`). Removing the seal's reconstruction proof turns none red: no arm reaches it without a
-    fault in the seal's own code, as for `TASK-HISTORY`.
-  - [x] **NO REGRESSION** — `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`; `bash
-    scripts/run_self_tests.sh` → rc=0, `self-tests: OK — 37 self-test(s) passed`. No held file changed; every
-    citation of §2, §4, §8 and §10 still finds its heading.
-  - [x] **LOCKSTEP** — `docs/decisions/decision_decisions-folder-ceiling.md` and the register's intro,
-    `README_POLICY.md`, `LIVE_DOCUMENT_SIZE_CONTAINMENT.md`, `DOCTRINE_ENFORCEMENT.md`,
-    `docs/book/src/verification.md`; this leaf, the frontier and both logs; `LIVE_STATUS.md`, `docs/TASK_TREE.md`,
-    `MEMORY.md`, `CHANGELOG.md`.
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.41.md`](../task-history/PROGRAM/PROGRAM.41.md); commit `ARCHOGEN-PROGRAM-0234`
 
 
 - ID: `PROGRAM.41.1`
-  Status: `done`
-  Goal: `DECISION-HISTORY` hardened after its independent review (`2026-09-30`), which accepted the first seal as
-  correct and lossless and found the gate not yet sound enough to seal more. Its findings, D1–D18, and the answer to
-  each are in `docs/reviews/decision-history-reviews.md`. The two it names first:
-  - D1: history simplification hides a seal behind a merge (`git merge -s ours`), and the gate then passes an edit
-    to the settled text;
-  - D2: a fence model that toggles on backticks alone lets a seal swallow a live section or tear one.
-  Acceptance: each finding answered in the script, its header or the records; a RED arm for each construction the
-  review gave, each failing for its stated reason; every leg the review's mutation matrix found unarmed armed, or
-  said why it cannot be; the gate and every self-test green.
-  Verification: see the checklist.
-  Commit: `ARCHOGEN-PROGRAM-0238 (leaf PROGRAM.41.1)`
-
-  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
-  - [x] **REPRODUCE** — each defect the review built, rebuilt as an arm and run against the gate with the fix
-    mutated out on a copy (`target/tmp/p411/mutate.py`): without `--full-history` on the rows read, the `-s ours`
-    merge passes (`decision-history self-test: 53 pass / 1 fail (54 arms)`); with backtick-only fences, a tilde
-    fence's `## ` line is sealed (`53 pass / 1 fail`); with any closing run accepted, a fence holding a shorter one
-    tears the section (`52 pass / 2 fail`).
-  - [x] **ROOT CAUSE** — `git show 4973e33:scripts/check_decision_history.sh | grep -n 'git("log"'` shows both
-    history reads without `--full-history`, so git's default simplification follows one side of a merge that is
-    TREESAME to it and never visits the seal. The same file's `sections()` toggled a fence on any line starting
-    with three backticks, so a longer fence, or a tilde one, was misread. The rest were legs with no arm and limits
-    left unsaid.
-  - [x] **FIX** — the gate rewritten: `--full-history` on both reads; CommonMark fences; the seal refusing a section
-    with another `## ` line or ending inside a fence, a record with a carriage return or no final newline, a
-    malformed or repeated number; rollback on any refusal; a shallow repository and a failed history read refused;
-    the index's header, every stub line outside a fence, and the row's date checked; the folder listed by git; the
-    honest limits stated. `.gitattributes` keeps the folder from line-ending conversion.
-  - [x] **ADDRESSED** — `bash scripts/check_decision_history.sh --self-test` → rc=0, `decision-history self-test: 54
-    pass / 0 fail (54 arms)`; the mutation matrix → 41 of 42 mutations turn an arm red, the 42nd the added-files
-    read whose only construction the rows leg refuses first; `bash scripts/check_decision_history.sh` → rc=0,
-    `decision-history: OK (4 sealed section(s) …)`.
-  - [x] **NO REGRESSION** — `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`;
-    `bash scripts/run_self_tests.sh` → rc=0, `self-tests: OK — 37 self-test(s) passed`. The first seal is unchanged;
-    no held file changed.
-  - [x] **LOCKSTEP** — `docs/reviews/decision-history-reviews.md` and its index row, `DOCTRINE_ENFORCEMENT.md`,
-    `docs/decisions/decision_decisions-folder-ceiling.md`, `LIVE_DOCUMENT_SIZE_CONTAINMENT.md`, `.gitattributes`;
-    this leaf, the frontier and both logs; `LIVE_STATUS.md`, `docs/TASK_TREE.md`, `MEMORY.md`, `CHANGELOG.md`.
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.41.md`](../task-history/PROGRAM/PROGRAM.41.md); commit `ARCHOGEN-PROGRAM-0238`
 
 
 - ID: `PROGRAM.42`
-  Status: `done`
-  Goal: `TASK-HISTORY` and `HISTORY-LEDGERS` checked for `DECISION-HISTORY`'s D1. Both read history with `git log`
-  under its default simplification (`check_task_history.sh`, `check_history_ledgers.sh`), so a merge that drops a
-  seal's commit from the simplified history may hide it the same way. The review did not test them.
-  Acceptance: the construction reproduced on each gate or shown not to apply, by a scratch repository; where it
-  applies, `--full-history` and a RED arm; line endings of the sealed folders pinned in `.gitattributes`, as the
-  review's D14 asks of `docs/decision-history/`. Widened while reproducing: both gates also read a failed history
-  command as an empty history, D5's class, so a shallow repository and a failed read are refused too.
-  Verification: see the checklist.
-  Commit: `ARCHOGEN-PROGRAM-0239 (leaf PROGRAM.42)`
-
-  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
-  - [x] **REPRODUCE** — scratch repositories under `target/tmp/p42/`, the seal on one branch, then
-    `git merge -s ours` from a branch that never sealed. `TASK-HISTORY` at the merge → rc=0, `task-history: OK (0
-    sealed file(s) …)`, and again after the sealed leaf is edited live. `HISTORY-LEDGERS`, whose other side dropped
-    the oldest twenty entries itself so the window leg stays quiet → rc=0, `history-ledgers: OK (2 ledger(s) …)`:
-    twenty entries lost, every leg green. Both apply.
-  - [x] **ROOT CAUSE** — `git show 3526848:scripts/check_task_history.sh | grep -n 'git("log"'` → lines 232 and
-    241, and `git show 3526848:scripts/check_history_ledgers.sh | grep -n 'git log'` → lines 171 and 183: every
-    history read uses git's default simplification, which follows one side of a merge that is TREESAME to it and
-    never visits the seal. Each also read a failed command as no history (`or b""`, `2>/dev/null`).
-  - [x] **FIX** — `--full-history` on all four reads; a shallow repository refused; a failed read a breach. Each
-    self-test gains the merge and a shallow clone as RED arms. `.gitattributes` marks `docs/task-history/` and
-    `docs/history/` `-text`, all 83 of their files measured `i/lf` first.
-  - [x] **ADDRESSED** — the same constructions with the fix → rc=1, "`T.1`, committed in `415761b824ba`, is gone or
-    changed" and "row `0001`, committed in `fecbdf577beb`, is gone or changed"; `bash scripts/check_task_history.sh
-    --self-test` → `27 pass / 0 fail (27 arms)`; `bash scripts/check_history_ledgers.sh --self-test` → `17 pass / 0
-    fail (17 arms)`. Mutations on copies: without `--full-history` the merge arm turns red in each (`26 pass / 1
-    fail`, `16 pass / 1 fail`); without the shallow check its arm turns red in each.
-  - [x] **NO REGRESSION** — both gates on the real trees → rc=0, `task-history: OK (69 sealed file(s) …)` and
-    `history-ledgers: OK (2 ledger(s) …)`; `bash scripts/run_self_tests.sh` → rc=0, `self-tests: OK — 37 self-test(s)
-    passed`; `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`.
-  - [x] **LOCKSTEP** — `docs/decisions/decision_task-tree-sealing.md`, `docs/decisions/decision_history-ledgers.md`,
-    `DOCTRINE_ENFORCEMENT.md`, `.gitattributes`; this leaf, the frontier and both logs; `LIVE_STATUS.md`,
-    `docs/TASK_TREE.md`, `MEMORY.md`, `CHANGELOG.md`.
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.42.md`](../task-history/PROGRAM/PROGRAM.42.md); commit `ARCHOGEN-PROGRAM-0239`
 
 
 - ID: `PROGRAM.43`
-  Status: `done`
-  Goal: the accepted catalog design moved out of `docs/decisions/` to a specification home, on the director's ruling
-  of `2026-10-01`. The question put: "`docs/decisions/` is at 388 884 of its 393 216-byte ceiling (about 4 KB left),
-  and that ceiling was your one-time raise. The next decision record won't fit. How should the folder make room?"
-  The options: "Move accepted designs out", "Raise the cap again, reviewed", and "Hold the ceiling". The answer:
-  "Move accepted designs out". The six records of `docs/decisions/catalog/`, the catalog design and the composition
-  of the variant's inputs, both accepted (`M2.7.1`, `M2.10.1`), move to `docs/specs/catalog/`, which gets a routed
-  row of its own; every reference follows them; the ruling is recorded as a decision.
-  Acceptance: every gate green with the move; no reference left to the old folder outside sealed history; the
-  decisions folder's room measured before and after; the crate's tests, which read the worked example by its path,
-  still pass.
-  Verification: see the checklist — the folder from 388 884 to 205 397 bytes with the ruling's own record; every gate
-  green; the book built; 872 passed, 0 failed.
-  Commit: `ARCHOGEN-PROGRAM-0259 (leaf PROGRAM.43)`
-
-  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
-  - [x] **REPRODUCE / ISSUE** — `git ls-files docs/decisions | xargs cat | wc -c` → 388 884, against a ceiling of
-    393 216 that only a new ruling raises: the next decision record would not fit.
-  - [x] **ROOT CAUSE (WHY + WHERE)** — the folder held two accepted designs, 186 667 bytes of it, as decisions still
-    being made: `git show HEAD:README_POLICY.md | grep -c "docs/decisions/catalog/"` → 2, the partition's row and
-    its parent's onward cell. An accepted design is a specification its code is built against.
-  - [x] **FIX** — `git mv docs/decisions/catalog docs/specs/catalog`; every live reference rewritten, 50 in 22
-    files, the crate's `include_str!` paths among them, while closed narratives (`PROGRAM.39`'s move and its log
-    row), the changelog's past entry and a dated note keep the path they describe; `docs/specs/` routed in
-    `README_POLICY.md` and listed in `LIVE_DOCUMENT_SIZE_CONTAINMENT.md`; the index lists the moved records by
-    their new paths; the ruling recorded in `docs/decisions/decision_specifications-home.md`, and noted in the
-    ceiling's record; the knowledge map regenerated.
-  - [x] **ADDRESSED (verified)** — `git ls-files docs/decisions | xargs cat | wc -c` → 205 397, the ruling's record
-    included; `git grep -n "decisions/catalog"` → only accounts of the past: `CHANGELOG.md`'s entry,
-    `.doctrine/code_paths.txt`'s dated note, `PROGRAM.39`'s move and log row, the ceiling record's account of that
-    partition, the new record's account of this move, and this leaf's own text; `cargo test -p archogen-catalog` → every result ok;
-    `bash scripts/build_book.sh` → the book written.
-  - [x] **NO REGRESSION** — `cargo test --all -q` → 872 passed, 0 failed; `bash scripts/check_doctrines.sh` →
-    `=== all doctrines green ===`.
-  - [x] **LOCKSTEP** — `README_POLICY.md`, `LIVE_DOCUMENT_SIZE_CONTAINMENT.md`, `knowledge-map/subsystems.md` and
-    `KNOWLEDGE_MAP.md`, `docs/decisions/INDEX.md`, the book's catalog and versions chapters, `MEMORY.md`,
-    `CHANGELOG.md`.
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.43.md`](../task-history/PROGRAM/PROGRAM.43.md); commit `ARCHOGEN-PROGRAM-0259`
 - ID: `PROGRAM.44`
-  Status: `done`
-  Goal: the book opens with a tour of what archogen is for, at the director's request of `2026-10-01` ("it would
-  really help users, students, see the real potential of ARCHOGEN … seeing what they will be able to do with ARCHOGEN
-  will keep them engaged"), on the condition the director endorsed — "scrupulously honest about today versus
-  tomorrow".
-  Acceptance: a chapter after the introduction that follows one description to its running program and on to the
-  board, every claim about today checked against the repository, every copy of a file held to the file by a test.
-  Verification: see the checklist.
-  Commit: `ARCHOGEN-PROGRAM-0278 (leaf PROGRAM.44)`
-
-  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
-  - [x] **REPRODUCE / ISSUE** — `git show HEAD:docs/book/src/SUMMARY.md | grep -c "tour"` → 0: the book explained
-    each part and showed no newcomer what the whole is for.
-  - [x] **ROOT CAUSE (WHY + WHERE)** — the chapters were written as each part landed, so the book had no chapter
-    whose subject is the destination: `git show HEAD:docs/book/src/introduction.md | grep -c "archogen build"` → 0,
-    and the summary goes from the introduction straight to "What eADL describes"; WHERE:
-    `docs/book/src/SUMMARY.md`'s first section.
-  - [x] **FIX** — `docs/book/src/tour.md`, listed after the introduction: `examples/s0-heartbeat`'s description and
-    frozen output, verbatim; what is real today, each item checked — `rt-core`'s bare-metal build and agreement, the
-    fault contract still in review, the spike a hand-written measurement and nothing generated on the emulator yet;
-    what it becomes; what it is for and what it is not; the road to a board. `crates/archogen-cli/tests/book_tour.rs`
-    holds each marked copy to its file. The ledger's `<TaskID>`, which rendered as an unclosed HTML tag, put in code.
-  - [x] **ADDRESSED (verified)** — `cargo test -q -p archogen-cli --test book_tour` → `2 passed`, its arm reporting a
-    drifted copy and a missing file; `bash scripts/build_book.sh` → the book written, 0 warnings;
-    `book-anchors: OK (24 chapter(s), 4 normative document(s); every cited repository path resolves)`.
-  - [x] **NO REGRESSION** — `cargo test -q --workspace --exclude rt-core --exclude rt-reference` → 832 passed, 0
-    failed (the two crates were being edited by `M2.9`'s step 6i and are not touched here); `cargo clippy -q -p
-    archogen-cli --tests -- -D warnings` → rc=0; `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`.
-  - [x] **LOCKSTEP** — the book's summary and ledger; this leaf and its log; `CHANGELOG.md`.
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.44.md`](../task-history/PROGRAM/PROGRAM.44.md); commit `ARCHOGEN-PROGRAM-0278`
 
 - ID: `PROGRAM.45`
-  Status: `done`
-  Goal: the tour says how a reader interacts with a generated system, and answers the questions the director asked
-  on `2026-10-01` — "will it possible to interact with ARCHOGEN OSes? if so, how?", "logging into that OS and have a
-  minimal shell", "a kind of filesystem? what kind?" — in the same honest terms ("this sort of concrete, honest
-  information will help people understand what ARCHOGEN will produce").
-  Acceptance: inputs, outputs and inspection as the profile admits them, with an example the checker accepts; what
-  runs today kept apart from what is ahead; no login, shell or filesystem stated with the roadmap's reasons; every
-  shown file held to its file by a test.
-
-  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
-  - [x] **REPRODUCE / ISSUE** — `git show HEAD:docs/book/src/tour.md | grep -c "interact"` → 0.
-  - [x] **ROOT CAUSE (WHY + WHERE)** — `PROGRAM.44`'s tour said what a system is for, not how one uses it; WHERE:
-    `docs/book/src/tour.md`: `git show HEAD:docs/book/src/tour.md | grep -c "## 6. How you interact"` → 0. A claim made
-    in conversation was corrected on the way: a debugger is not yet attached to the emulator — `grep -c "gdb"
-    scripts/target_emulator.sh` → 0 — so the chapter says QEMU *can* host one.
-  - [x] **FIX** — the tour's section 6, *How you interact with it*, with `positive-sporadic-release.eadl` as an
-    `excerpt:`-marked block; `crates/archogen-cli/tests/book_tour.rs` learns excerpts (each shown line in its file, in
-    order, an elision starting `…`) and indented blocks, with an arm for a drifted excerpt.
-  - [x] **ADDRESSED (verified)** — `cargo test -q -p archogen-cli --test book_tour` → `2 passed`; the first run of the
-    excerpt check reported the chapter's copy as differing, an elision the check had not yet read, fixed in the check;
-    `bash scripts/build_book.sh` → 0 warnings.
-  - [x] **NO REGRESSION** — `cargo test --all -q` → 956 passed, 0 failed; `cargo clippy -q -p archogen-cli --tests --
-    -D warnings` → rc=0; `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`.
-  - [x] **LOCKSTEP** — the book; this leaf and its log; `CHANGELOG.md`.
-  Verification: see the checklist.
-  Commit: `ARCHOGEN-PROGRAM-0282 (leaf PROGRAM.45)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.45.md`](../task-history/PROGRAM/PROGRAM.45.md); commit `ARCHOGEN-PROGRAM-0282`
 
 - ID: `PROGRAM.46`
-  Status: `done` — `2026-10-01`, filed and closed the same day
-  Goal: a gate that every commit on `main` whose subject names a work unit (`ARCHOGEN-<TREE>-NNNN (leaf …)`) has a row
-  in its tree's Commit Log.
-  Why: `ARCHOGEN-M2-0263` and `ARCHOGEN-M2-0280` both landed without their rows, each found by hand a commit later; no
-  gate checks it, and `HISTORY-LEDGERS` checks only the changelog's order.
-  Acceptance: the check derives the rows from `git log` rather than a list, reports a missing row by commit, runs in
-  the enforcer, and has RED arms in scratch repositories like the other gates.
-
-  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
-  - [x] **REPRODUCE / ISSUE** — `git show HEAD:scripts/check_doctrines.project.sh | grep -c "COMMIT-LOG-ROWS"` → 0;
-    the census: 18 of the 260 commits whose subject has the `(leaf …)` form had no Commit Log row, `-0263` and
-    `-0280` among them.
-  - [x] **ROOT CAUSE (WHY + WHERE)** — `COMMIT.md` asks for the row, `git show HEAD:COMMIT.md | grep -c -i "commit log"`
-    → 2, and no gate reads it; `HISTORY-LEDGERS` checks the changelog's order only. WHERE: the enforcer's project slot, `scripts/check_doctrines.project.sh`.
-  - [x] **FIX** — `scripts/check_commit_log_rows.sh`: ids from `git log` and the pending message file, rows from the
-    table lines of `docs/tasks/` and `docs/task-history/`, the measured backlog of 18; registered in the project slot;
-    `DOCTRINE_ENFORCEMENT.md`'s row; the book's verification chapter.
-  - [x] **ADDRESSED (verified)** — `bash scripts/check_commit_log_rows.sh` → rc=0, `commit-log-rows: OK (242 work-unit
-    commit(s), each with a Commit Log row; 18 in the backlog, which may only shrink)`; `--self-test` → `9 pass / 0
-    fail (9 arms)`, among them a pending commit with no row refused and a prose mention not counted as a row. Twenty
-    older commits name a work unit without `(leaf …)` and are outside the rule; the first run, which counted them,
-    refused its own backlog, and the backlog was re-measured by the rule itself.
-  - [x] **NO REGRESSION** — scripts and docs only; `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`,
-    the new gate among them, this commit's own row checked as the pending one.
-  - [x] **LOCKSTEP** — `DOCTRINE_ENFORCEMENT.md`; the book's `verification.md`; this leaf and its log; `CHANGELOG.md`.
-  Verification: see the checklist.
-  Commit: `ARCHOGEN-PROGRAM-0283 (leaf PROGRAM.46)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.46.md`](../task-history/PROGRAM/PROGRAM.46.md); commit `ARCHOGEN-PROGRAM-0283`
 
 - ID: `PROGRAM.47`
   Status: `active` — filed `2026-10-02` on the director's ruling; `.1` done
@@ -1114,12 +663,35 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0297 (leaf PROGRAM.47.2)`
 
 - ID: `PROGRAM.47.3`
-  Status: `pending`
+  Status: `done` — `2026-10-02`
   Goal: the index at the end of the book, generated from the glossary's terms and every chapter's and annex's
-  headings by `scripts/book_index.sh`; `BOOK-INDEX`, refusing an index that differs from what the generator writes.
+  headings by `scripts/check_book_index.sh`; `BOOK-INDEX`, refusing an index that differs from what the generator writes.
   Acceptance: the generator's and the gate's RED arms; the index last in `SUMMARY.md`; the book builds.
-  Verification: `pending`
-  Commit: `pending`
+  **Measured before writing:** mdBook 0.5.2's anchors, on a probe book of awkward headings (code, emoji, a section
+  sign, an em dash, accents, a repeat): the heading's text lower-cased, letters, digits, `-` and `_` kept, a space a
+  `-`, the rest dropped, a repeat `-1`. The generator does exactly that, and its self-test pins the measured cases.
+  The gate is `scripts/check_book_index.sh`, not `book_index.sh` as first written: the spine's self-test stubs every
+  gate by the `check_` name, and the first name broke it (`spine self-test: 38 pass / 1 fail`).
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — no index: `git ls-tree HEAD docs/book/src/ | grep -c "book-index"` → 0.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — nothing produced one; an index kept by hand is wrong the day a heading
+    moves: `git show HEAD:scripts/check_doctrines.project.sh | grep -c "BOOK-INDEX"` → 0. WHERE: `docs/book/src/`,
+    `scripts/`.
+  - [x] **FIX** — `scripts/check_book_index.sh`: `--write` generates `docs/book/src/book-index.md` from `SUMMARY.md`,
+    the chapters' headings and the glossary; with no argument it is `BOOK-INDEX`, registered; the index last in
+    `SUMMARY.md`; `DOCTRINE_ENFORCEMENT.md`'s row.
+  - [x] **ADDRESSED (verified)** — `bash scripts/check_book_index.sh` → rc=0, `book-index: OK (269 entries, as the
+    chapters and the glossary give them)`; `--self-test` → `7 pass / 0 fail (7 arms)`; on the real build, 192 section
+    links checked against the HTML's ids, 0 missing; a mutant without the space rule and one passing a stale index,
+    each red.
+  - [x] **NO REGRESSION** — no Rust source changed; `bash scripts/build_book.sh` → rc=0;
+    `bash scripts/run_self_tests.sh` → rc=0, `self-tests: OK — 42 self-test(s) passed`;
+    `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`.
+  - [x] **LOCKSTEP** — the index and `SUMMARY.md`; `DOCTRINE_ENFORCEMENT.md`; the ruling's record names the script;
+    this leaf, the frontier and the log; `CHANGELOG.md`.
+  Verification: see the checklist.
+  Commit: `ARCHOGEN-PROGRAM-0298 (leaf PROGRAM.47.3)`
 
 - ID: `PROGRAM.47.4`
   Status: `pending`
@@ -1199,7 +771,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.47` | `active` | **the director's ruling of `2026-10-02`**: the book in layers, with a live glossary, annexes and an index; `.1` recorded, `.2` the glossary done, `.3` the index next |
+| 1 | `PROGRAM.47` | `active` | **the director's ruling of `2026-10-02`**: the book in layers, with a live glossary, annexes and an index; `.1` recorded, `.2` the glossary and `.3` the index done, `.4` the runtime chapter next |
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 | 3 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
 
@@ -1430,6 +1002,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.46` | `ARCHOGEN-PROGRAM-0283 (leaf PROGRAM.46)` | **`COMMIT-LOG-ROWS`**: every work-unit commit has its Commit Log row, the pending one included; a backlog of 18 that may only shrink |
 | `PROGRAM.47.1` | `ARCHOGEN-PROGRAM-0296 (leaf PROGRAM.47.1)` | **the book in layers, ruled and recorded** — plain words first, a one-minute summary, the precise rules; a live glossary, annexes, a generated index |
 | `PROGRAM.47.2` | `ARCHOGEN-PROGRAM-0297 (leaf PROGRAM.47.2)` | **the glossary, kept live** — every acronym the book uses, defined; `BOOK-GLOSSARY` |
+| `PROGRAM.47.3` | `ARCHOGEN-PROGRAM-0298 (leaf PROGRAM.47.3)` | **the index, generated** — every glossary word and every section, linked; `BOOK-INDEX` |
 
 ## Changelog
 

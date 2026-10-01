@@ -23,3 +23,5 @@ empty rather than with a false claim.
 | `docs/semantics/reference.md` | 100 bytes | record | measured `2026-09-30` by leaf `M1.39`'s fan-out probe; §6 rule 11 says it was taken before the rule existed |
 | `docs/book/src/verification.md` | 633 lines | record | `M1.md`'s 7 633 lines before its seal, measured `2026-09-30` at `940baf1`'s parent with `git show … \| wc -l`, leaf `PROGRAM.32.4`; the sentence names the sealing commit |
 | `docs/book/src/verification.md` | two lines | not-a-count | the stub's form, a definition `TASK-HISTORY` enforces, not a carried measurement |
+| `docs/book/src/book-index.md` | three kinds | gated | `scripts/check_book_index.sh` refuses an index that differs from the headings it copies — here *Three kinds of success* (the use cases) and *Three kinds of total…* (the scheduling checker) — so each is exactly the heading's figure, which its chapter keeps |
+| `docs/book/src/book-index.md` | three tests | gated | `scripts/check_book_index.sh` refuses an index that differs from the headings it copies — here *The three tests* (the boundary) |
