@@ -13,8 +13,8 @@ differently — recorded, with both readings, in
 to each implementer. This is an addition, not a correction: no earlier decision changes, and no
 existing description or result is invalidated.
 
-**Amendments, 2026-10-01 (leaves `M2.9`, `M2.17`, `M2.19`).** They answer the director's rulings (findings §6) and seven
-independent reviews of this text, *R1*–*R7*, whose findings and answers are tabled in
+**Amendments, 2026-10-01 (leaves `M2.9`, `M2.17`, `M2.19`).** They answer the director's rulings (findings §6) and eight
+independent reviews of this text, *R1*–*R8*, whose findings and answers are tabled in
 `docs/decisions/decision_runtime-contract-gaps.md`; the rule each answer touched is marked below.
 - **Corrections of the 2026-09-13 text** (§14.1): a second release latched in a masked region is contained, not
   fatal (rule 1); a completion closes its region (rule 4); a synchronous fault is the executing context's, and a
@@ -26,7 +26,11 @@ independent reviews of this text, *R1*–*R7*, whose findings and answers are ta
   or `unmask` outside a job is an assertion failure (Terms) — initialisation's included, which the composition's
   `leaves-interrupt-hardware-alone` had admitted; and a broken port obligation the trap path, a service or the runtime
   API's entry can see — an empty first claim, a timer trap with no release due, a claim returning an undeclared source,
-  an API entry naming no primitive — is an unexpected trap, and halts (Terms).
+  an API entry naming neither a primitive nor the completion path — is an unexpected trap, and halts (Terms); a port's
+  runtime-API trap, a primitive's or the completion path's, serves no interrupt (rule 2); and the image's panic handler
+  is the port's, an application's own refused at build, and a panic an assertion failure unless its check finds a guard
+  or an unexpected trap; what can happen between a failed check and the handler's first act is the port's to state,
+  whole, in its catalog record (Terms).
 - **What moved an implementation**, change by change: the record's *What changed an implementation*. `M2.17`
   located the empty set's refusal in `archogen build` and boot; `M2.19` moved this text out of `ROADMAP.md`.
 - **Evidence invalidated** (§15): none. No version of `rt-static-up-v1` is released or locked, no released result
@@ -72,35 +76,55 @@ independent reviews of this text, *R1*–*R7*, whose findings and answers are ta
   the instant before it — runs at its task's priority though the task owes no job. While such a context is preempted,
   every switch, whatever precedes it, resumes the highest-priority preempted context of this kind unless a task of
   higher priority than its task owes a job, and otherwise dispatches the highest-priority task owing a job, a job
-  observed meanwhile included; a job of a task whose context waits so starts at its entry only when that context's own
-  decided switch dispatches it. A decision a service preempted is made again, or the port lets no service preempt the
-  decision. A task faulted meanwhile (rule 5) keeps that context, which runs on at the task's priority to its decided
-  switch, and that switch dispatches no job of the faulted task; only then has the task left the schedule. A port may
-  instead let no service preempt that interval. Which it does, and how it guarantees either, it states in its catalog
-  record, reviewed there (`M2.12`).
+  observed meanwhile included; a job of a task whose completion-path context is waiting starts at its entry only when
+  that context's own decided switch dispatches it. A decision a service preempted is made again, or the port lets no
+  service preempt the decision. A task faulted meanwhile (rule 5) keeps that context, which runs on at the task's
+  priority to its decided switch, and that switch dispatches no job of the faulted task; only then has the task left the
+  schedule. A port may instead let no service preempt that interval. Which it does, and how it guarantees either, it
+  states in its catalog record, reviewed there (`M2.12`).
 - An **unexpected trap** is any trap other than the timer's interrupt, a declared source's interrupt whose claim finds a
-  request, the runtime API's own entry where the port uses one, and a trap that is another fault's mechanism — an access
-  fault on a stack's guard, or a check the runtime or the port makes that finds a guard reached, is a stack guard,
-  raised by the context that executed the access or the check — which context runs each such check, the port states in
-  its catalog record (`M2.12`); any other trap the runtime raises deliberately on a failed check is an assertion
-  failure. An external trap whose first claim finds no request is one, since the composition's `no-empty-claim` makes it
-  a port's broken obligation; a later claim in the same trap that finds none ends its service loop and is no fault,
-  while one that returns a source the plan does not declare is an unexpected trap at that claim, raised by the trap
-  path. A timer trap that finds no release due is one too, since `raised-only-when-due`, the variant's platform fact the
-  timer-service record supplies (`docs/specs/catalog/decision_catalog-records-variant-inputs.md`), makes it a port's
-  broken obligation; so is an entry of the runtime API that names no primitive, of the context that executed it. A
-  faulted task's later nominal releases are releases due for this test: the timer service performs each, and rule 5
-  discards it. An application's own failed check is classified by what it executes: a trap it executes, other than
-  another fault's mechanism, is an unexpected trap of the context that executed it, whatever path the port routes that
-  trap through. A trap is the runtime's deliberate one only when the runtime's own code executes it; how the port tells
-  them apart, it states in its catalog record (`M2.12`). Application code has no other entry to the fatal path (the
-  composition's `leaves-interrupt-hardware-alone`). A job that never completes is found only as rule 1 finds an overrun:
-  at its task's next observed release, never while it holds a masked region, and never for a task released no more. The
-  assertion failures this contract names are not all there are: any other check a runtime or a port makes of its own
-  invariants raises one.
+  request, the runtime API's own entry, naming a primitive or the completion path, where the port uses one, and a trap
+  that is another fault's mechanism — an access fault on a stack's guard, or a check the runtime or the port makes that
+  finds a guard reached, is a stack guard, raised by the context that executed the access or, for a check other than the
+  trap path's reading of an access fault, by the one that made the check — which context runs each such check, the port
+  states in its catalog record (`M2.12`); any other trap raised deliberately on a failed check of the runtime's or the
+  port's own invariants is an assertion failure. An external trap whose first claim finds no request is one, since the
+  composition's `no-empty-claim` makes it a port's broken obligation; a later claim in the same trap that finds none
+  ends its service loop and is no fault, while one that returns a source the plan does not declare is an unexpected trap
+  at that claim, raised by the trap path. A timer trap that finds no release due is one too, since
+  `raised-only-when-due`, the variant's platform fact the timer-service record supplies
+  (`docs/specs/catalog/decision_catalog-records-variant-inputs.md`), makes it a port's broken obligation; so is an entry
+  of the runtime API that names neither a primitive nor the completion path, of the context that executed it. A faulted
+  task's later nominal releases are releases due for this test: the timer service performs each, and rule 5 discards it.
+  A check that finds a guard reached, or one of the traps this paragraph names unexpected, is that stack guard or that
+  unexpected trap, whoever's code makes it and whether it then traps or panics; a later claim that finds none is no
+  fault. **Any other panic** — a Rust `panic!`, `assert!`, `unwrap`, `expect`, `todo!` or `unreachable!`, and a bounds
+  or overflow check, in any code of the image: the application's, `core`'s, any catalog record's, generated code — is an
+  assertion failure; so is the trap any other check executes under a panic strategy that aborts without calling the
+  handler. A stack guard or unexpected trap found by a check is raised by the context this paragraph and rule 2 name for
+  it, whichever context's code finds it and whether it traps or panics: a guard's access fault, and any other faulting
+  instruction — an exception the port does not serve among them — by the context that executed the instruction; an
+  interrupt the port does not serve, an empty first claim, a timer trap with no release due and an undeclared source by
+  the trap path; an API entry naming neither a primitive nor the completion path by the context that executed it; a
+  guard found by a check of a stack pointer by the context that made the check. Any other panic is raised by the context
+  that made the failed check or executed the panic, attributed as rule 2 says; a job that panics never completes. A
+  panic reaches the fatal path through the image's panic handler, the fault path's entry, which the port's catalog
+  record supplies (`M2.12`) — an image whose application supplies its own does not build — and whose first act masks
+  interrupts; under an aborting strategy, by the trap at the check. What can happen between a failed check and that act
+  or that trap — whether a trap can preempt the panicking context there, whether a release then observed can abandon its
+  job, and what runs before it reaches the handler — depends on how the port builds its panic path, and is the port's to
+  state, whole, in its catalog record, reviewed there with the port's design (`M2.12`); this contract fixes the panic's
+  kind, its raiser and its handler, not that window. A trap application code executes, other than the runtime API's own
+  entry or another fault's mechanism, is an unexpected trap of the context that executed it. Application code enters the
+  fatal path only by a panic or by such a trap (the composition's `leaves-interrupt-hardware-alone`). A boot is refused
+  without a panic, so the handler keeps nothing for it. A job that never completes is found only as rule 1 finds an
+  overrun: at its task's next observed release, never while it holds a masked region, and never for a task released no
+  more. The assertion failures this contract names are not all there are: any other check a runtime or a port makes of
+  its own invariants raises one.
 
 *(Terms: R2 33, 35, 37, 45, 47; R3 54–56, 58, 60–62, 64, 70; R4 82, 84–87, 89, 90, 95, 96, 100; R5 106, 110, 111,
-118–120; R6 124, 126, 127, 130, 131, 138, 139; R7 140, 142, 144, 147–149.)*
+118–120; R6 124, 126, 127, 130, 131, 138, 139; R7 140, 142, 144, 147–149; R8 152, 153, 156, 161, and its pre-landing
+checks.)*
 
 | §3.1 fault | §8.1 class | Attributed to | Containable |
 |---|---|---|---|
@@ -118,7 +142,7 @@ The rules below settle what the text left open; what is still open is listed at 
    task's latched arrivals are judged in arrival order against the task's state then: the first is fresh if the task
    owes no job (one that completed inside the region included) and an overrun if it does; each later one is judged
    against the state the earlier ones left, in which the task owes the job an earlier one released. Under `SkipLateJob`
-   each is an overrun in turn; under `Fault` the first overrun, whichever arrival it is, takes the task out, and every
+   each is an overrun in turn; under `Fault` the first overrun, whichever arrival it is, faults the task, and every
    arrival after it is discarded. Across tasks the order changes no task's state; across interrupts it is the hardware's
    and the plan's (the composition's `ahead`), among interrupts one trap serves the port's code's, stated with rule 2's
    choice, and within one service that service's code's, stated in its record (`M2.15` traces it). Where a fatal fault
@@ -132,7 +156,7 @@ The rules below settle what the text left open; what is still open is listed at 
    triggers an overrun is the policy's: under `SkipLateJob` it makes the task ready for its next job, with that
    release's nominal instant; under `Fault` it goes with the faulted task. A completion and a release at one instant:
    the completion first (§13.4). *(2026-10-01: §6 (b); R1 6, 14, 22; R2 31, 37, 42, 49; R3 64, 69, 76; R4 83, 97, 102;
-   R5 116; R6 129; R7 141, 143.)*
+   R5 116; R6 129; R7 141, 143; R8 160.)*
 
    1a. **An overrun raised without a release is outside this profile.** `rt-static-up-v1` has no execution-budget
    monitor: an overrun is detected by rule 1 alone, as rule 6 says of a deadline. A port that raises one another
@@ -143,36 +167,41 @@ The rules below settle what the text left open; what is still open is listed at 
    release, or a delivered latched release, belongs to — whichever context holds the processor: a task that is ready and
    not running, the task whose job the release service interrupted, or the task executing its own outermost `unmask` or
    completion. The single-core rule of §3.1 governs *execution*, not *attribution*. The other three faults are
-   attributed to the context that raises them. An exception — a guard's access fault, an assertion's trap, any other
-   faulting instruction — is raised by the context that executed the instruction; an unexpected trap that is an
-   interrupt — a cause the port does not serve, a timer trap with no release due, an undeclared source, an empty first
-   claim — is raised by the trap path. A task's job is that task, including a runtime primitive it called however the
-   port enters it — where the port enters the runtime API by a trap, the code from that trap's entry to its return is
-   the primitive, not the trap path — and the completion path it entered. A service, the trap path, a transition, idle,
-   initialisation or the fatal handler is no task: the evidence names that context, a service by its source, and records
-   the task it interrupted as interrupted, never as attributed. A service or the trap path interrupts the task whose job
-   its trap preempted, or whose job took that trap through the runtime API, while that job is still owed, and none if
-   the trap preempted idle or that job has completed or been abandoned since, even where its task owes a newer one. A
-   transition, from the decision's first instruction to the incoming context's first, interrupts the task whose job it
-   starts from — the job the preceding trap preempted or that took it through the runtime API, or the job whose
-   completion path decided it — while that job is still owed, whether it switches away from that job or returns to it,
-   and none if it starts from idle or that job has completed or been abandoned, even where its task owes a newer one. It
-   never interrupts a task it switches to and did not start from. For attribution the completion path ends where the
+   attributed to the context that raises them. An exception — a guard's access fault, any other faulting instruction —
+   is raised by the context that executed the instruction, and an assertion by the context that made the failed check
+   (Terms); an unexpected trap that is an interrupt — a cause the port does not serve, a timer trap with no release due,
+   an undeclared source, an empty first claim — is raised by the trap path. A task's job is that task, including a
+   runtime primitive it called however the port enters it — where the port enters the runtime API by a trap, a
+   primitive's or the completion path's, that trap serves no interrupt: a primitive's trap, from its entry to its
+   return, is the primitive, not the trap path, and an interrupt pending when it returns is taken as a trap of its own
+   when interrupts are next unmasked: at once if the call leaves the depth at zero, preempting the job; otherwise when
+   the region closes — at its outermost `unmask`, preempting the job, or at the job's completion, inside the transition
+   that follows (below; rule 4); the completion path's trap is the completion path up to the decision and the transition
+   after it, and an interrupt pending when that transition unmasks is taken as a trap inside the transition (below) —
+   and the completion path it entered. A service, the trap path, a transition, idle, initialisation or the fatal handler
+   is no task: the evidence names that context, a service by its source, and records the task it interrupted as
+   interrupted, never as attributed. A service or the trap path interrupts the task whose job its trap preempted while
+   that job is still owed, and none if the trap preempted idle or that job has completed or been abandoned since, even
+   where its task owes a newer one. A transition, from the decision's first instruction to the incoming context's first,
+   interrupts the task whose job it starts from — the job the preceding trap preempted, or the job whose completion path
+   decided it — while that job is still owed, whether it switches away from that job or returns to it, and none if it
+   starts from idle or that job has completed or been abandoned, even where its task owes a newer one. It never
+   interrupts a task it switches to and did not start from. For attribution the completion path ends where the
    scheduling decision begins: the decision, and everything after it up to the incoming context's first instruction, is
    the transition's wherever a port places it, whatever the composition's `completion` cost spans. A trap taken for an
    interrupt is the trap path from its entry until it has identified what it serves — the timer by the trap's cause, an
    external source by a claim that returns it — then that interrupt's service to the service's last instruction, and the
    trap path again between services and from the last to the trap's return or the following transition. A timer trap
    with no release due, an empty first claim and a claim returning an undeclared source are the trap path's wherever the
-   port's check runs. A service run inside an API trap is that service, not the primitive. Whether a port serves a
-   further pending interrupt in the same trap or returns and takes a new one, it states in its catalog record (`M2.12`);
-   the interrupted task follows from it. A trap taken inside a transition, after it unmasks and before the incoming
-   context's first instruction, preempted the incoming context: the trap path and its services interrupt the task whose
-   job that is, while owed, and none if it is idle or a completion path. The composition's timing boundaries are
-   unchanged. A stack guard is attributed the same way, and the evidence names whose guard was hit — a task's, the
-   interrupt stack's, or another stack the port guards, named; every stack whose bound is not established has a guard
-   (§7.6). *(2026-10-01: §6 (d); R1 4, 8; R2 34, 46; R3 57–59; R4 84, 87, 88, 104; R5 108–110, 118, 121; R6 124, 133;
-   R7 141, 146.)*
+   port's check runs. Whether a port serves a further pending interrupt in the same trap or returns and takes a new one,
+   it states in its catalog record (`M2.12`); the interrupted task follows from it. A trap taken inside a transition,
+   after it unmasks and before the incoming context's first instruction, preempted the incoming context: the trap path
+   and its services interrupt the task whose job that is, while owed, and none if it is idle or a completion path. A
+   trap taken during a decision that a service may preempt preempted that completion path's context, and interrupts no
+   task. The composition's timing boundaries are unchanged. A stack guard is attributed the same way, and the evidence
+   names whose guard was hit — a task's, the interrupt stack's, or another stack the port guards, named; every stack
+   whose bound is not established has a guard (§7.6). *(2026-10-01: §6 (d); R1 4, 8; R2 34, 46; R3 57–59; R4 84, 87, 88,
+   104; R5 108–110, 118, 121; R6 124, 133; R7 141, 146; R8 152, 155.)*
 3. **A containable fault raised inside a masked region is not containable.** Two grounds:
    - terminating a job that *holds* the region leaves the nesting depth above zero with no owner, so interrupts
      never return; forcing the depth to zero re-enables them inside a region whose invariants the faulting job was
@@ -199,16 +228,17 @@ The rules below settle what the text left open; what is still open is listed at 
    fault other than an overrun raised during a delivery is, on a port, the context's that raises it, as rule 2 says —
    the trap path's, a service's, or a transition's between or after its traps — and no task's. One raised by the trap
    path or a service interrupts the task whose job that fault's own trap preempted, while that job is still owed: for
-   the delivery's first trap, the task executing the outermost `unmask` (a service run inside that `unmask`'s API trap
-   included) or, after a completion, the task the completion's transition switched to; for a later trap, the task the
-   preceding trap's transition switched to; and none if that is idle or a completion path, or that job has completed or
+   the delivery's first trap, the task whose job executed the outermost `unmask` or, after a completion, the task of the
+   context the completion's transition resumed or dispatched; for a later trap, the task of the context the preceding
+   trap's transition resumed or dispatched; and none if that is idle or a completion path, or that job has completed or
    been abandoned since, even where its task owes a newer one. One raised by a transition interrupts the task whose job
    it starts from, while that job is owed (rule 2). In a hosted model that delivers inside `unmask` or the completion
-   path, such a fault is that task's. `M2.15` maps the two records as it maps their traces. A completion is not a fault:
-   the job's own code has finished, so neither ground of rule 3 reaches it, and it is the masked run that ends at
-   completion, which the timing analysis charges (`docs/specs/catalog/decision_runtime-composite-inputs.md`, `CS_i`). A
-   latched release is judged at that delivery (rule 1), so a task that completed inside the region is released afresh,
-   not overrun. *(2026-10-01: §6 (a); R1 16; R2 30; R3 73; R4 81; R5 107; R6 125; R7 141.)*
+   path, such a fault is that task's; one that delivers after its decision attributes it as a port does. `M2.15` maps
+   the two records as it maps their traces. A completion is not a fault: the job's own code has finished, so neither
+   ground of rule 3 reaches it, and it is the masked run that ends at completion, which the timing analysis charges
+   (`docs/specs/catalog/decision_runtime-composite-inputs.md`, `CS_i`). A latched release is judged at that delivery
+   (rule 1), so a task that completed inside the region is released afresh, not overrun. *(2026-10-01: §6 (a); R1 16;
+   R2 30; R3 73; R4 81; R5 107; R6 125; R7 141; R8 152, 159, 162.)*
 5. **The two overrun policies.** `SkipLateJob` (eADL `skip-late-job`): the task's owed job is abandoned — not started,
    preempted, or the job the release interrupted. Its remaining code never runs and no completion is recorded for it, no
    fault halts anything, and the triggering release makes the task ready for its next job (rule 1). `Fault` (eADL
@@ -217,17 +247,18 @@ The rules below settle what the text left open; what is still open is listed at 
    continues, and the runtime does not halt. A task without an `on-overrun` clause has `Fault`, and `archogen check`
    refuses a policy other than these two (`docs/semantics/model.md` §4 rule 6, leaf `M2.14`). A job is abandoned only
    where it holds no masked region: in its own code with the depth at zero, or at a primitive's entry or return where
-   the depth is zero. A policy applied while the job is inside a primitive takes effect at the primitive's entry if the
-   primitive has not yet changed the runtime's state — for `mask`, before the depth is raised — and otherwise at its
-   return, which a policy never reaches while the primitive holds the depth raised, since no release is observed inside
-   a region (rule 1). Where the policy takes effect at a primitive's return, the runtime completes the primitive on the
-   task's behalf — under `Fault`, which is not the task's own code, and under `SkipLateJob` before the next job starts;
-   where it takes effect at the entry, the primitive is not run. For attribution, a job whose policy takes effect at a
+   the depth is zero; for a panicking job, before its handler's first act, as the port's catalog record states (Terms).
+   A policy applied while the job is inside a primitive takes effect at the primitive's entry if the primitive has not
+   yet changed the runtime's state — for `mask`, before the depth is raised — and otherwise at its return, which a
+   policy never reaches while the primitive holds the depth raised, since no release is observed inside a region
+   (rule 1). Where the policy takes effect at a primitive's return, the runtime completes the primitive on the task's
+   behalf — under `Fault`, which is not the task's own code, and under `SkipLateJob` before the next job starts; where
+   it takes effect at the entry, the primitive is not run. For attribution, a job whose policy takes effect at a
    primitive's return is abandoned when the policy is applied. Containment keeps the runtime's state consistent and the
    schedule running, and claims nothing about the application state the abandoned job left (§3.1, Isolation). A run's
    timing claims end at its first contained overrun, which shows that an assumption of its analysis — an execution
    bound, an arrival bound or the interference it counted — did not hold, or that the claim was not established.
-   *(2026-10-01: R1 2, 11, 25; R2 28, 32, 41; R3 66, 72, 76; R4 93, 98; R5 112; R6 125.)*
+   *(2026-10-01: R1 2, 11, 25; R2 28, 32, 41; R3 66, 72, 76; R4 93, 98; R5 112; R6 125; R8 153.)*
 6. **The runtime detects no missed deadline.** Rule 1's overrun is its only timing fault. A miss shows only as that
    overrun, and only if the job is still owed when the task's next release is observed. That release is never observed
    before the deadline (§3.1's constrained deadlines). Only with `D = T`, strictly periodic releases and zero declared
@@ -240,22 +271,23 @@ The rules below settle what the text left open; what is still open is listed at 
    be a new source and a new fault. *(2026-10-01: R1 7, for the director's review; R2 39, 40; R3 63; R4 92, 99; R5 117;
    R6 128; R7 145.)*
 7. **Escalation halts, and keeps the first fault.** A fault that is not containable, or is made so by rule 3, enters the
-   fatal handler. From then no job runs, no release is processed, no pending interrupt is taken, and no transition
-   occurs; the handler ends, within a bound the port's catalog record declares, the fault path being the port's (the
+   fatal handler — a panic, from the panic handler's first act, which masks interrupts, or from the trap that aborts at
+   its check. From then no job runs, no release is processed, no pending interrupt is taken, and no transition occurs;
+   the handler ends, within a bound the port's catalog record declares, the fault path being the port's (the
    composition's role list), in a terminal state with interrupts masked. It preserves until reset the **first** such
-   fault only, written before anything else the handler does: its §3.1 kind; its §8.1 class; the attributed task's
-   stable logical ID — its elaborated eADL task name, the instance path of `docs/semantics/reference.md` §6 rule 9,
-   which `archogen check` requires unique (`schema-duplicate-name`) — or no task, with the raising context named, a
-   service by its source; the task it interrupted, if any; for a stack guard, whose guard was hit; and whether rule 3
-   escalated it, which in this profile it never does. The record carries a mark of three values: empty from boot, begun
-   by the record's first write, and complete by its last, which follows every field and precedes anything else the
-   handler does. A fault taken after the mark is begun and before it is complete ends the handler with the mark at begun
-   and the fields already written kept; one taken at or before that first write leaves it empty, so an empty mark on a
-   halted runtime records a fault taken before the record began. A runtime that holds tasks by an internal index has the
-   plan supply the ID when the record leaves it (§7.5): an index names no task in a record. A fault taken in the handler
-   ends it at once in its terminal state and never replaces the preserved one. What the task table shows afterwards is
-   the implementation's, and is not evidence of attribution. *(2026-10-01: R1 9; R2 34, 44, 48; R3 65, 68, 75, 80;
-   R4 80, 103; R5 113; R6 133, 135; R7 150.)*
+   fault only, written, once interrupts are masked, before anything else the handler does: its §3.1 kind; its §8.1
+   class; the attributed task's stable logical ID — its elaborated eADL task name, the instance path of
+   `docs/semantics/reference.md` §6 rule 9, which `archogen check` requires unique (`schema-duplicate-name`) — or no
+   task, with the raising context named, a service by its source; the task it interrupted, if any; for a stack guard,
+   whose guard was hit; and whether rule 3 escalated it, which in this profile it never does. The record carries a mark
+   of three values: empty from boot, begun by the record's first write, and complete by its last, which follows every
+   field and precedes anything else the handler does. A fault taken after the mark is begun and before it is complete
+   ends the handler with the mark at begun and the fields already written kept; one taken at or before that first write
+   leaves it empty, so an empty mark on a halted runtime records a fault taken before the record began. A runtime that
+   holds tasks by an internal index has the plan supply the ID when the record leaves it (§7.5): an index names no task
+   in a record. A fault taken in the handler ends it at once in its terminal state and never replaces the preserved one.
+   What the task table shows afterwards is the implementation's, and is not evidence of attribution. *(2026-10-01: R1 9;
+   R2 34, 44, 48; R3 65, 68, 75, 80; R4 80, 103; R5 113; R6 133, 135; R7 150; R8 153, 154.)*
 
 Two smaller decisions are fixed at the same time, for the same reason:
 
@@ -271,12 +303,56 @@ Two smaller decisions are fixed at the same time, for the same reason:
   the depth; the duration is bounded separately, by the `CS_i` the timing analysis charges. *(2026-10-01: R1 10; a
   refusal had been the answer.)*
 
+**What §13.1 F26 exercises.** The roadmap's F26 row points here, so the list is kept in one place: an answer that
+classifies a new case adds it here in the same change. Each is a fixture for `M4`/`M5`, its expected outcome — the
+schedule, and for a fatal fault the kept record — the rule's:
+- an overrun under both policies, at arrival and at delivery, several latched arrivals of one task judged in arrival
+  order among them, and a missed deadline where the job is still owed at its next observed release — `D = T`, strictly
+  periodic, zero declared jitter, the narrowing for the director's review (rules 1, 4, 5, 6);
+- a policy applied inside a primitive, at its entry and at its return (rule 5); a completion and a release at one
+  instant; a task that completed inside the region released afresh (rules 1, 4);
+- a stack guard, reached by an access and found by a check, trapping or panicking (Terms);
+- an unexpected trap: an interrupt the port does not serve, an empty first claim, a timer trap with no release due, a
+  claim returning an undeclared source, an API entry naming neither a primitive nor the completion path — each also
+  found by a check that panics — and a trap application code executes; and the cases that are no fault — a later claim
+  that finds none, a timer trap whose only due release is a faulted task's (Terms);
+- an assertion failure: the mask bound, an unbalanced `unmask`, a `mask` or `unmask` outside a job, the completion path
+  entered by a non-job, a job dispatched or resumed or idle entered inside a region, a failed check of the runtime's or
+  the port's invariants (Terms; the second smaller decision);
+- a release observed after a job's last instruction, and a service in that interval under the port's stated choice, a
+  waiting completion-path context resumed ahead of its own task's new job and a task faulted while its context waits
+  among them (Terms);
+- the interrupted task of a fault raised by a transition during a delivery, of one in a later trap of a delivery
+  spanning several traps, of one whose preempted job was abandoned since, of a trap taken inside a transition after it
+  unmasks, and of one taken during a decision a service may preempt (rules 2, 4);
+- an overrun attributed to a task that is ready and not running, and to one executing its own outermost `unmask` or
+  completion; a fault on the trap path between two services of one trap; a fault raised by a service or the trap path
+  whose trap preempted idle, which interrupts no task; an unexpected trap found by a service's check, the trap path's
+  (rule 2);
+- a panic: in application code, `core`, any catalog record's code and generated code, in a job and in a service, the
+  trap path, a transition, idle, initialisation and the completion path, each raised by its context; a guard or an
+  unexpected trap found by a check that panics, and under an aborting strategy; an application's own handler refused at
+  build; and, as the port's catalog record states it, a trap and a release observed between a failed check and the
+  handler's first act (Terms);
+- an interrupt pending when a runtime-API trap returns, taken at once, at the outermost `unmask`, and inside the
+  transition after a completion (rule 2); a transition that returns to the job it started from, and one that switches to
+  a job it did not start from (rule 2);
+- an external task's arrival lost during a pending request where its source does not count arrivals, and a task with no
+  `on-overrun` clause taking `Fault` (rules 1, 5); a job that never completes, unseen while it holds a region and for a
+  task released no more (Terms);
+- a fault in the fatal handler at or before the record's first write, before its mark is complete and after it, and the
+  kept record's fields (rule 7); a refused boot, which is no fault (the first smaller decision).
+*(2026-10-01: R8 157, and its pre-landing checks, the first of which found the list incomplete in the change that made
+it.)*
+
 **Still open:** each path's observation events and hosted/target trace compatibility, a discarded release's and a
 completion that closes a region included (`M2.15`); the catalog fact by which an external source's record says whether
 arrivals during a pending request are counted (rule 1; the source's catalog record, written under `M2.7.4`); how a port
 detects a non-job call, what it lets run in the interval after a job's last instruction and which context runs each
-guard check (Terms), whether it serves a further pending interrupt in the same trap (rule 2), and how the kept record is
-read out of a halted runtime (rule 7) — each the port's catalog record's (`M2.12`); each service's order of the releases
-it performs, its own record's (rule 1); and two that are not this contract's and that no fixture needs yet: a later
-idle-to-task dispatch's cost, the port's record's (`M2.12`), and a periodic task's first release instant, the
-timer-service record's (written under `M2.7.4`).
+guard check (Terms), whether it serves a further pending interrupt in the same trap (rule 2), what can happen between a
+failed check and the panic handler's first act, how a check passes the kind it names, and for a guard whose, to the
+handler — or, under an aborting strategy, to the trap path, and how that trap is told from any other trap (Terms), and
+how the kept record is read out of a halted runtime (rule 7) — each the port's catalog record's (`M2.12`); each
+service's order of the releases it performs, its own record's (rule 1); and two that are not this contract's and that no
+fixture needs yet: a later idle-to-task dispatch's cost, the port's record's (`M2.12`), and a periodic task's first
+release instant, the timer-service record's (written under `M2.7.4`).

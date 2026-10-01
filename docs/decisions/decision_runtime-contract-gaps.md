@@ -330,6 +330,34 @@ rule 1" reaches, the order within one trap, the open items, and the release late
 check stays a step of every answer round: what each round finds in the last round's sentences is what it catches
 early.
 
+## The fault contract reviewed an eighth time (`2026-10-01`, R8)
+
+An eighth new context read the contract beside the composition record, from the text alone. On R7's answers: 10
+answered, 2 partly (#146, #147), and the pre-landing check's N1–N4 present. **Verdict: 2 defects remain (#152,
+#153), both minor and both in text written for R7** — the fifth round in a row whose defects lie in the last
+answers. The rest held under its adversarial reading: the resume rule for waiting completion contexts, rule 4's
+per-trap delivery, the trap inside a transition, the guard check, the three-valued mark, rule 6.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 152 | defect (minor) | inside a runtime-API trap that serves an interrupt, the trap path's extent was undefined: one fault attributed to the task or to no task, one empty claim halting the runtime or not | answered by removing the case rather than defining it: a port's API trap, a primitive's or the completion path's, serves no interrupt; one pending is taken as a trap of its own when interrupts are next unmasked — at once, at the outermost `unmask`, or inside the transition after a completion. What an `mret` restoring the interrupt enable already does, and what the composition's `api.p` allows for; listed among the narrowings for the director's review |
+| 153 | defect (minor) | a panic's kind depended on who supplies the image's one panic handler | answered by fixing what does not depend on a port: a check that finds a guard or a named unexpected trap is that fault, raised by the context rule 2 names for it, trap or panic; any other panic is an assertion failure, raised by the context that made the check or executed the panic; the handler is the fault path's entry, the port's record supplying it and an application's own refused at build. What can happen between a failed check and the handler's first act depends on how a port builds its panic path, and is left, named and whole, to the port's catalog record (`M2.12`) — listed among the narrowings for the director's review |
+| 154–156 | drafting | the record written before the handler masks; a trap during a preempted decision; the port's own deliberate trap | accepted: written once interrupts are masked; such a trap interrupts no task; folded into #153's rule |
+| 157 | drafting | F26 lagged the contract a second time | the contract keeps F26's cases under *What §13.1 F26 exercises*, the roadmap's row pointing there, and an answer that classifies a new case adds it there in the same change |
+| 158–162 | nits | the open list; "switched to" for a resumed context; "takes the task out" against a waiting context; "whose context waits so"; a hosted model that delivers after deciding | accepted |
+
+**Answered `2026-10-02` (step 6o), after five passes and four pre-landing checks.** The checks found 5, 6, 3 and
+5 defects in the answers themselves, almost all in the text about panics. Each pass wrote rules for the instructions
+between a failed check and the panic handler: whose code made the check (P1–P4), a port's stated choice between two
+outcomes (Q, S), then the existing rules for abandonment applied to a panic in progress (T1–T5). Each time a
+reviewer could imagine a port, built some other way, for which the rule read two ways — because no port exists yet,
+and that window is nothing but how a port builds its panic path. The fifth pass fixes what holds for any port — a
+panic's kind, its raiser, its handler — and leaves the window to the port's catalog record, named and whole, to be
+reviewed with the port's design. None of it moves either model: `rt-core` already raises an assertion failure
+against the executing context, a job's or the kernel's. **The lesson recorded:** an answer that legislates a
+mechanism for a port not yet designed draws defects pass after pass; where an outcome is the mechanism, the contract
+fixes what it can and names the rest as the port's.
+
 ## Where the contract lives (`2026-10-01`)
 
 Answering R3 (`M2.9`) needed about 20 lines more than `ROADMAP.md`'s 1 100-line ceiling allowed, which only the

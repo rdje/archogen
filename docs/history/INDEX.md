@@ -23,6 +23,7 @@ its row.
 | `0008` | 20 | ARCHOGEN-PROGRAM-0207 | ARCHOGEN-M2-0187 | 304 | 20852 | `884604cbbbac3cbe6e92ad39b72ac5499352ab9f6ec4475b27c55532e9dadebe` | `2026-09-30` |
 | `0009` | 20 | ARCHOGEN-M2-0227 | archogen — removing the project template's references is f | 289 | 19565 | `ee49731606175949515ac26ddb69f66bc4620e1ae38b422180f99d95f9350773` | `2026-09-30` |
 | `0010` | 20 | ARCHOGEN-M2-0250 | ARCHOGEN-PROGRAM-0228 | 290 | 20386 | `aafcab4e456ff82f5ef573da698e4e2d95cc05ecb0323adc3db43083a77fd874` | `2026-10-01` |
+| `0011` | 20 | ARCHOGEN-M2-0271 | ARCHOGEN-M2-0251 | 212 | 13247 | `d3aea1265d74f9fbc827f244baca981f459d502ddbb95b7be4ae5d14fb25b516` | `2026-10-01` |
 
 ## `dev-notes`
 

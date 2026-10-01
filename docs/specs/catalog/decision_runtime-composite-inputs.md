@@ -102,6 +102,10 @@ dispatch, which claims before it knows the source, acts in the role of the servi
   hart's interrupt-enable state directly; only a job calls the runtime API's `mask` and `unmask` (the profile's fault
   contract, `docs/profiles/rt-static-up-v1-faults.md`, Terms, added `2026-10-01`); the port's trap path and its
   transitions use `mscratch` where it keeps a stack there;
+- the image's panic handler is the fault path's entry, supplied by the record that supplies `switch`, and acts in the
+  fault path's role, from its first act, which masks interrupts, whoever's panic calls it: a panic reaching it is no
+  breach of `leaves-interrupt-hardware-alone`, and what can happen before that act is that record's to state (added
+  `2026-10-01`, the fault contract's R8 153);
 - initialisation, before the first enabling of interrupts, writes the controller's configuration and the hart's
   interrupt state as the plan sets them. It may claim and complete requests left pending from before it, and it
   leaves none pending at the first enabling of interrupts that no arrival made. Two writes are one record's alone,
@@ -130,10 +134,14 @@ trap runs, and `mscratch` where the port keeps a stack pointer there.
 before the first enabling of interrupts, and firmware or a boot loader leaves no request pending that
 initialisation does not claim and complete. What code does after that is the facts' to state: requests a device
 raises without an arrival are `one-request-per-arrival.<source>`'s, and initialisation's leftovers its role's.
-**Assumed of the run:** no fault trap is taken. The fault path's role is there so its code is covered, and its
-masked run is in no term of `L`. An arrival
-during initialisation would wait out initialisation's masked run, which `L` does not hold, and no catalog fact can
-vouch for when the environment's arrivals come.
+**Assumed of the run:** no fatal fault is raised, by a trap or through the panic handler. The fault path's role is
+there so its code is covered, and its masked run is in no term of `L`. An arrival during initialisation would wait
+out initialisation's masked run, which `L` does not hold, and no catalog fact can vouch for when the environment's
+arrivals come.
+
+**A trap by which the port enters the runtime API**, a primitive's or the completion path's, serves no interrupt
+(added `2026-10-01`, the fault contract's R8 152, rule 2); the review of the record that supplies `switch` checks
+it.
 
 **Boundaries the catalog's costs keep:**
 
@@ -352,7 +360,7 @@ This record names what §12 gains; the catalog record's own review checks the wo
   - The description's periods, deadlines and release jitters, and the plan's order, are requirements and
     configuration, not evidence. They carry no category and lower none. A source's `T_s`, and the start-up
     assumption of §2, are different: they are arrival assumptions about the environment (§7.3), and the conclusion
-    names each as one. It names §2's assumption of the run, that no fault trap is taken, beside them.
+    names each as one. It names §2's assumption of the run, that no fatal fault is raised, beside them.
 - **A part or fact that cannot be read** makes the composites that need it undeclared. That covers a name no record
   supplies, an `unknown`, a cost outside its `holds-for`, a primitive the catalog does not cost, and a plan with no
   order among its sources. It is the variant's `analysis-inconclusive`, with the part named. §12's rule for a value

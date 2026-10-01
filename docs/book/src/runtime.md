@@ -66,11 +66,11 @@ tasks sharing a rank. Ranks with gaps are admitted, because only their order mat
 eliminate races or blocking."*
 
 A release arriving while interrupts are masked is **latched**, not lost, and delivered when the
-outermost critical section closes — highest priority first. Masking nests, so an inner section
+region closes, in an order that changes no task's state. Masking nests, so an inner section
 cannot unmask early, and the nesting is **bounded**. A `mask` beyond `Scheduler::MASK_DEPTH_LIMIT`,
-an `unmask` with nothing to close, a `mask` or `unmask` with no job running — only a job changes
-the depth — and a job dispatched while a region is open are each an **assertion failure**, which
-halts. A counter that wrapped would re-enable interrupts inside a
+an `unmask` with nothing to close, a `mask` or `unmask` with no job running — only a job, or its
+completion, changes the depth — and a job dispatched or resumed, or idle entered, while a region is
+open are each an **assertion failure**, which halts. A counter that wrapped would re-enable interrupts inside a
 critical section while reporting success; one that saturated would stop counting; one that
 refused — the answer until the contract's second review — would leave its caller's matching
 `unmask` to close the section early. Each fails silently, so none is allowed.
@@ -79,24 +79,31 @@ refused — the answer until the contract's second review — would leave its ca
 is nowhere to put it. Inventing somewhere would be a queue, in a profile that excludes queues,
 and the analysis would be describing a different system from the one running.
 
-When the second release arrives **while the first is still latched**, the latch keeps the overrun
-beside the release it holds, and both are judged at delivery — outside the masked region, under
-the task's own policy (the fault contract's rule 1). `SkipLateJob` makes the later release the task's next job;
-`Fault` takes the task out of the schedule. The alternative, judging it on arrival, would have
-made an ordinary contained overrun fatal for landing one instruction inside a critical section
-rather than one instruction after it.
+When a second release arrives **while the first is still latched**, both wait, and at delivery —
+outside the masked region — the task's latched arrivals are judged in the order they came, against
+the task's state then: the first is fresh if the task owes no job and an overrun if it does, and
+each later one meets the state the earlier ones left (the fault contract's rule 1). Under
+`SkipLateJob` each overrun renews the job in turn; under `Fault` the first overrun takes the task out
+of the schedule and later arrivals are discarded. `rt-core`, a hosted model, keeps the latest release
+and a mark that an earlier one came, so it can report fewer overruns than a board, which judges every
+due release; for a timer-released task the state after delivery is the same. The alternative,
+judging a release on arrival, would have made an ordinary contained overrun fatal for landing one
+instruction inside a critical section rather than one instruction after it.
 
 A job may **complete inside a masked region it opened** (the fault contract's rule 4). Its completion closes the
-region — the depth returns to zero with the job — delivers what was latched as the outermost
-`unmask` would, and the schedule is decided after. So a task that completes inside its own region
-and finds its own release latched is released afresh, not overrun. That is why `complete` returns
-the deliveries beside the completion.
+region — the depth returns to zero with the job — and what was latched is delivered before any task
+runs its own code again. On a board the next scheduling decision comes first, in the completion path,
+and the latched interrupts are taken when the transition that follows unmasks; `rt-core`, a hosted
+model, delivers inside `complete`. Both reach the same schedule. So a task that completes inside its
+own region and finds its own release latched is released afresh, not overrun. That is why `complete`
+returns the deliveries beside the completion.
 
 ## The fault path is a value
 
 A fault is returned, not panicked. That is what lets a hosted test observe the whole path without
-the process dying, and what lets the target port route it to a defined fatal handler instead of
-whatever `panic_handler` happens to be linked.
+the process dying, and what lets the target port route it to its one fatal handler — the same one a
+panic enters, which the port supplies, an application's own handler being refused at build (the
+fault contract's Terms).
 
 §8.1 asks for three things to be kept apart, and the distinction the runtime acts on is whether
 its **own state is still trustworthy**:
@@ -104,9 +111,9 @@ its **own state is still trustworthy**:
 | Fault | §8.1 class | Attributed to | Trustworthy after? | Because |
 | --- | --- | --- | --- | --- |
 | `Overrun` | expected error | the overrunning task, which need not be running | yes | a workload event the scheduler fully understands; a declared policy applies |
-| `StackGuard` | violated internal invariant | the executing context | no | memory the runtime relies on may already be wrong |
-| `UnexpectedTrap` | outside the model, taken by the deliberate fatal trap | the executing context | no | the cause is outside what was modelled |
-| `InvariantViolated` | violated internal invariant | the executing context | no | the runtime's own bookkeeping is inconsistent |
+| `StackGuard` | violated internal invariant | the context that raises it | no | memory the runtime relies on may already be wrong |
+| `UnexpectedTrap` | outside the model, taken by the deliberate fatal trap | the context that raises it | no | the cause is outside what was modelled |
+| `InvariantViolated`, §3.1's assertion failure | violated internal invariant | the context that raises it | no | the runtime's own bookkeeping, or a checked assumption, is wrong |
 
 The mapping is the fault contract's: `ROADMAP.md` §3.1 names the faults and §8.1 names the classes,
 and until the contract nothing connected them. Only an overrun leaves the system schedulable. Everything else
@@ -119,13 +126,26 @@ blames nobody and records the task it interrupted as interrupted. A stack guard 
 whose guard was hit — a task's, or the interrupt stack's — because the stack and the culprit can
 differ.
 
+A **panic** is an assertion failure, whoever's code panicked — unless the check that panicked found a
+stack's guard reached or one of the unexpected traps the contract names, which it then is. On a board a
+few instructions run between a failed check and the handler's first one, and an interrupt can land there.
+What may happen in that window depends on how a port builds its panic path, so the contract leaves it to
+the port to state, and to be reviewed with the port's design, rather than legislating for a port that
+does not exist yet. What the contract fixes is the panic's kind, who raised it, and that it ends in the
+port's handler.
+
 The halt keeps one record, `Fatal`: the **first** fault, the task it is attributed to or none,
-the task it interrupted, and whether rule 3 escalated it. One the fatal path raises afterwards is
+the task it interrupted, and whether rule 3 escalated it. On a board the record also carries a mark —
+empty from boot, begun by its first write, complete by its last — so a record cut short by a fault in
+the handler says so. One the fatal path raises afterwards is
 a consequence, not the cause, so it never replaces the record. And a halted runtime changes
 nothing: every event after the halt answers with the same record — no release processed or
 latched, no job completed, no section opened or closed.
 
-⛔ **And an overrun raised while interrupts are masked halts too** (the fault contract's rule 3). Terminating a
+⛔ **A containable fault raised while interrupts are masked would halt** (the fault contract's rule 3). In this
+profile the case never arises — no release is observed inside a masked region, so no overrun is raised there — and
+the rule stands for a later profile that could raise one; `rt-core` still escalates an overrun raised through
+`fault` while masked, the entry it keeps for such a profile. The grounds: terminating a
 job that holds the mask leaves the depth above zero with no owner, so interrupts never return;
 forcing it to zero re-enables them inside a region whose invariants were half-restored. And
 containment means resuming the schedule from a state the critical section had not finished
@@ -169,16 +189,18 @@ first comparison found **five**, and every one was a question the roadmap did no
 | 1 | does *detecting* an overrun apply its policy, and may a fault attach to a task that is not running? | yes, and yes: an overrun belongs to the task that overran |
 | 2 | is an empty task set admissible? | no |
 | 3 | what does priority rank `0` mean — and which end of the range is the runtime's index? | rank `0` is refused; a task's index is the number of tasks that outrank it |
-| 4 | what happens when a containable fault is raised inside a masked region? | it halts |
-| 5 | what bounds mask nesting, and what happens at the bound? | a declared bound, and `mask` beyond it is refused |
+| 4 | what happens when a containable fault is raised inside a masked region? | it halts — a rule that, since the contract's later rounds, this profile never reaches |
+| 5 | what bounds mask nesting, and what happens at the bound? | a declared bound, and `mask` beyond it is refused — since the contract's second review, an assertion failure |
 
 Deciding them changed the contract — what is now the profile's fault contract, written first as
 `ROADMAP.md` §3.1.1, and the priority decision record — which
 §14.1 makes a reviewed decision rather than an implementer's. The reference was then re-derived
 from the amended text by a context that still had not read `rt-core`. It reviewed the amendment as
 it went, and found more: its two behaviour questions were ruled on `2026-10-01`, and are the
-masking rules above — a second release latched beside the first, and a completion that closes its
-own critical section.
+masking rules above — a second release latched while the first waits, and a completion that closes
+its own critical section. The contract has since been reviewed independently round after round, each
+round's answers checked against both models and, from the seventh, read by a separate context before
+they land (`docs/decisions/decision_runtime-contract-gaps.md`).
 
 The tests that once asserted each disagreement now assert the agreement, on both sides. They were
 **rewritten, not deleted**: §14.1 forbids dropping the only evidence that a gap was ever closed.

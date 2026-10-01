@@ -183,6 +183,15 @@ accepted against profile rt-static-up-v1 (eadl/1), 1 declaration(s)
 - **The commands not built yet.** They are no operation. The command table
   (`crates/archogen-cli/src/spec.rs`) names the leaf that owns each one, and the MCP server (leaf
   `API.6`) will report that leaf rather than failing.
+
+The table also says, for each command, whether a programmatic consumer is offered it: `check`,
+`resolve`, `analyze`, `explain` and `replay` are; `build` and `verify` are excluded, each citing
+§10.4, and a test reads the exclusion from the table (leaf `API.6.2`). The server's design is
+recorded in `docs/decisions/decision_mcp-server.md`: it answers both eras of the protocol — the
+current revision, where every request carries its version and there is no handshake, and the one
+before it, which opens with a handshake — over its standard input and output; a tool takes the
+API's request, never a path; and a result reports an error whenever the description is not
+accepted, so a client that reads one flag never mistakes a refusal for a pass. It is not built yet.
 - **Wall-clock time.** The budget bounds the work, and the work is linear in it. A host that needs a
   deadline as well enforces it around the instance. The API reads no clock, and on `wasm32-unknown-unknown`
   the standard library has none to read.
