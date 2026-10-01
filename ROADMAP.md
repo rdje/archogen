@@ -262,9 +262,8 @@ Two smaller decisions are fixed at the same time, for the same reason:
   the depth; the duration is bounded separately, by the `CS_i` the timing analysis charges. *(2026-10-01: R1 10; a
   refusal had been the answer.)*
 
-**Still open:** each path's observation events and hosted/target trace compatibility (`M2.15`); a rank the lowering
-cannot take (`M2.18`); and, needed by no fixture yet, a later idle-to-task dispatch's cost and a periodic task's
-first release instant.
+**Still open:** each path's observation events and hosted/target trace compatibility (`M2.15`); and, needed by no
+fixture yet, a later idle-to-task dispatch's cost and a periodic task's first release instant.
 
 ### 3.2 Three target environments
 

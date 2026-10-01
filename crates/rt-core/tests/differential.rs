@@ -795,7 +795,9 @@ fn d3_both_refuse_rank_zero_and_order_tasks_by_rank() {
     // so `rt-core` holds them at indices 2, 0, 1. Both run the rank-5 task over the rank-9 one.
     let ranks = [9, 1, 5];
     let mut reference = Runtime::boot(spec(ranks)).expect("distinct ranks, none zero");
-    let mut core = Scheduler::from_eadl_ranks(ranks, [OverrunPolicy::Fault; N])
+    // The reference takes a 16-bit rank and `rt-core` the language's integer (leaf `M2.18`), so a rank
+    // beyond `u16::MAX` cannot be compared; here both take the same small ones.
+    let mut core = Scheduler::from_eadl_ranks(ranks.map(i64::from), [OverrunPolicy::Fault; N])
         .expect("distinct ranks, none below 1");
     reference
         .release(TaskId::from_index(0))

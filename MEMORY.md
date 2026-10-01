@@ -17,7 +17,7 @@
   `API.6`; `M1`'s only open leaf, `M1.29.4`, is blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
 - **Next action:** `M2.9` step 6g — a third independent review of §3.1.1, the text alone; its answers; the leaf
-  closed. Then `M2.18`. Then `M2.7.6` (its
+  closed. Then `M2.7.6` (its
   repository half; the hosting half waits on findings §11), `M2.7.4`, `M2.7.5`, `M2.11`, then `API.6`. This project
   uses no branches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of

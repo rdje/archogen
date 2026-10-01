@@ -145,7 +145,7 @@ pub enum BootError {
     /// §3.1: "static **unique** task priorities".
     DuplicateRank {
         /// The rank two tasks share.
-        rank: u16,
+        rank: i64,
     },
 }
 
@@ -204,13 +204,15 @@ impl<const N: usize> Scheduler<N> {
     ///
     /// Performing it in one named, tested place is the difference between a relation and an
     /// assumption. `ranks[i]` is the rank of the task described at position `i`; the returned
-    /// scheduler holds them in rank order.
+    /// scheduler holds them in rank order. A rank is the language's integer, so every rank
+    /// `archogen check` admits can be lowered — any `N ≥ 1` a 64-bit signed integer holds (leaf
+    /// `M2.18`; the priority record's item 1).
     ///
     /// # Errors
     ///
     /// [`BootError`] when the task set is empty, a rank is below 1, or two ranks collide.
     pub fn from_eadl_ranks(
-        ranks: [u16; N],
+        ranks: [i64; N],
         policies: [OverrunPolicy; N],
     ) -> Result<Self, BootError> {
         if N == 0 {

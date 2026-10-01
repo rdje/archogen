@@ -603,6 +603,38 @@ fn duplicate_ranks_are_refused() {
 }
 
 #[test]
+fn every_rank_the_language_admits_can_be_lowered() {
+    // A rank is the language's integer (leaf `M2.18`): `archogen check` admits `(priority 70000)`,
+    // and the lowering must take it — at the integer's extremes too, where only the order matters.
+    let mut s: Scheduler<3> = Scheduler::from_eadl_ranks(
+        [i64::MAX, 1, 70_000],
+        [
+            OverrunPolicy::SkipLateJob,
+            OverrunPolicy::Fault,
+            OverrunPolicy::Fault,
+        ],
+    )
+    .expect("distinct ranks, none below 1");
+    s.release(1);
+    s.release(2);
+    assert_eq!(
+        s.decide(),
+        Decision::Dispatch { to: 1 },
+        "rank 70000 outranks i64::MAX"
+    );
+    s.release(2);
+    assert_eq!(
+        s.state(2),
+        TaskState::Ready,
+        "i64::MAX is index 2, with its SkipLateJob"
+    );
+    assert_eq!(
+        Scheduler::<2>::from_eadl_ranks([i64::MIN, 1], [OverrunPolicy::Fault; 2]).unwrap_err(),
+        rt_core::BootError::RankBelowOne { position: 0 }
+    );
+}
+
+#[test]
 fn ranks_with_gaps_lower_by_their_order() {
     // The language admits any distinct ranks from 1, and fixed priority uses only their order
     // (`hp(i) = { j : N_j < N_i }`), so the index is the number of tasks that outrank it.

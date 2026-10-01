@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — any valid priority can reach the runtime
+
+`ARCHOGEN-M2-0275` (leaf `M2.18`).
+
+- The runtime's entry point for priorities took only numbers up to 65 535, while the language accepts any positive
+  64-bit integer. It now takes the language's own integer, so every priority that passes the check can be built.
+
 ## archogen — a system with no tasks: valid to describe, refused to build
 
 `ARCHOGEN-M2-0274` (leaf `M2.17`).

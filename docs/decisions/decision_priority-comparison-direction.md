@@ -55,8 +55,9 @@ meaning of "priority 1" in a queue.
 independently derived model of §8 disagreeing with the implementation
 (`decision_runtime-contract-gaps.md`, gap 3):
 
-1. **A rank is an integer `N ≥ 1`** — any such integer the language's integer type holds (*added `2026-10-01`*;
-   that the lowering takes every one of them is leaf `M2.18`'s). Rank `0` is **not** admissible in a description. The record
+1. **A rank is an integer `N ≥ 1`** — any such integer the language's integer type holds, a 64-bit signed one
+   (*added `2026-10-01`*); `rt_core::Scheduler::from_eadl_ranks` takes that integer, so every rank the checker
+   admits can be lowered (leaf `M2.18`). Rank `0` is **not** admissible in a description. The record
    said "`1` is the highest" and said nothing about `0`; admitting it would move the top of the
    range by inference, and §15 makes a change to a parameter's meaning a versioned language change
    rather than a tolerance. A description carrying `(priority 0)` is refused.
