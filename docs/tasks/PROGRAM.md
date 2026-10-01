@@ -1059,6 +1059,59 @@ mdBook that is the director's window into the project.
   Verification: see the checklist.
   Commit: `ARCHOGEN-PROGRAM-0283 (leaf PROGRAM.46)`
 
+- ID: `PROGRAM.47`
+  Status: `active` — filed `2026-10-02` on the director's ruling; `.1` done
+  Children: `PROGRAM.47.1` … `PROGRAM.47.5`
+  Goal: the book written in layers, as [`decision_book-in-layers.md`](../decisions/decision_book-in-layers.md)
+  rules: plain words first for a student, a one-minute summary and the precise rules for an expert, annexes for the
+  gory details, a live glossary and a generated index.
+  Why: the director, `2026-10-02`: "A student or newbie shall be able to read the book without being scared away. An
+  expert SW engineer or embedded SW engineer shall not be bored"; and "be sure to include and keep a live glossary for
+  acronyms … have annexes … keep in index at the end of the book".
+  Acceptance: every chapter in layers; the glossary and the index in the book, each held by its gate; the annexes
+  holding what the chapters point to; the book builds.
+  Verification: closed by its children
+  Commit: `pending`
+
+- ID: `PROGRAM.47.1`
+  Status: `done` — `2026-10-02`
+  Goal: the ruling recorded before any chapter changes.
+  **Done.** [`decision_book-in-layers.md`](../decisions/decision_book-in-layers.md) and its index row; the Knowledge
+  Map regenerated.
+  Verification: `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`
+  Commit: `ARCHOGEN-PROGRAM-0296 (leaf PROGRAM.47.1)`
+
+- ID: `PROGRAM.47.2`
+  Status: `pending`
+  Goal: the glossary, *Words this book uses*: every acronym the book uses, spelled out and explained, and the
+  recurring terms in plain words, each linked to where it is treated; `BOOK-GLOSSARY`, refusing an acronym in the
+  book that the glossary does not define, and an entry no chapter uses.
+  Acceptance: the gate's RED arms; the chapter in `SUMMARY.md`; the book builds.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `PROGRAM.47.3`
+  Status: `pending`
+  Goal: the index at the end of the book, generated from the glossary's terms and every chapter's and annex's
+  headings by `scripts/book_index.sh`; `BOOK-INDEX`, refusing an index that differs from what the generator writes.
+  Acceptance: the generator's and the gate's RED arms; the index last in `SUMMARY.md`; the book builds.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `PROGRAM.47.4`
+  Status: `pending`
+  Goal: the runtime chapter in layers, its full mechanics moved to an annex, *The fault contract, case by case*.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `PROGRAM.47.5`
+  Status: `pending`
+  Goal: every other chapter in layers, one leaf and commit each when started, the chapters a newcomer meets first
+  leading — the introduction and the tour, reading and workload, checking, evidence and analysis, the catalog,
+  targets, the command line, the engine API, verification — and the gory parts of each moved to annexes.
+  Verification: `pending`
+  Commit: `pending`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1123,8 +1176,9 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
-| 2 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
+| 1 | `PROGRAM.47` | `active` | **the director's ruling of `2026-10-02`**: the book in layers, with a live glossary, annexes and an index; `.1` recorded, `.2` the glossary next |
+| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 3 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
@@ -1351,6 +1405,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.44` | `ARCHOGEN-PROGRAM-0278 (leaf PROGRAM.44)` | **the book opens with a tour**: one description to its running program and on to a board, honest about today, its copies held to their files |
 | `PROGRAM.45` | `ARCHOGEN-PROGRAM-0282 (leaf PROGRAM.45)` | **the tour says how you interact with a system**: inputs, outputs, inspection; no login, shell or filesystem yet, with the roadmap's reasons; `PROGRAM.46` filed |
 | `PROGRAM.46` | `ARCHOGEN-PROGRAM-0283 (leaf PROGRAM.46)` | **`COMMIT-LOG-ROWS`**: every work-unit commit has its Commit Log row, the pending one included; a backlog of 18 that may only shrink |
+| `PROGRAM.47.1` | `ARCHOGEN-PROGRAM-0296 (leaf PROGRAM.47.1)` | **the book in layers, ruled and recorded** — plain words first, a one-minute summary, the precise rules; a live glossary, annexes, a generated index |
 
 ## Changelog
 

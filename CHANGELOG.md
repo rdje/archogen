@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the book will be written in layers
+
+`ARCHOGEN-PROGRAM-0296` (leaf `PROGRAM.47.1`).
+
+- On the director's ruling, every chapter of the book will open in plain words a student can follow, offer a
+  one-minute summary for engineers, then give the precise rules; the technical depths move to annexes, and a live
+  glossary of acronyms and terms and a generated index frame the chapters. The ruling is recorded; the chapters
+  follow one at a time.
+
 ## archogen — the fault contract answers its eighth reading, and the book catches up
 
 `ARCHOGEN-M2-0295` (leaf `M2.9`).

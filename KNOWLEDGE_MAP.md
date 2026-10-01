@@ -172,6 +172,7 @@ justifies the split — the rows below appear as that happens.
 ## Decision records
 
 - [`decision_api-instance.md`](docs/decisions/decision_api-instance.md)
+- [`decision_book-in-layers.md`](docs/decisions/decision_book-in-layers.md)
 - [`decision_decisions-folder-ceiling.md`](docs/decisions/decision_decisions-folder-ceiling.md)
 - [`decision_eadl-engine-boundary.md`](docs/decisions/decision_eadl-engine-boundary.md)
 - [`decision_eadl1-value-domain.md`](docs/decisions/decision_eadl1-value-domain.md)
