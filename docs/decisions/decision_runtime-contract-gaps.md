@@ -221,6 +221,32 @@ supplies the ID; an index names no task); 69 leaves the counting fact to the run
 were answered by `M2.19` and `M2.18`; 78 marks findings §6 (a) and (d) superseded in detail. The next round reads the
 composition record in full beside the contract, as R3 advised.
 
+## The fault contract reviewed a fourth time (`2026-10-01`, R4)
+
+A fourth new context read the contract beside the composition record in full, as R3 advised. On R3's answers: 20
+answered, 7 partly, none missed. **Verdict: 9 defects remain — and three of the four substantive ones are in text
+written to answer R3** (#81, #83, #84): each answer round has seeded defects of its own, mostly where the contract
+prescribed a port's *mechanism*. So the answers below change approach: **the contract states what a port must
+achieve, and leaves how to the port's catalog record (`M2.12`), reviewed there with the port's design**; and each
+answer text is to be checked against both models before it lands (step 6k). The reference model's own re-derivation
+(step 6i) reported #83 independently.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 81 | defect | rule 4 attributes a delivery fault backwards: on the target delivery is a trap and service after the transition unmasks | accepted: the trap path's or its service's on the target, the completion path's in a hosted model |
+| 82 | defect | the port's detection recipe halts every `mask` on a port that enters the API by a trap, and misses idle | the recipe removed: a port must detect a non-job call and raise it; how is its record's (`M2.12`) |
+| 83 | defect | rule 1's `Fault` wording discards the overrun that should take a task out after a fresh first arrival | accepted, the reviewer's text: each later arrival judged against the state the earlier ones left |
+| 84 | defect | the dispatch-in-region assertion's interrupted task reads incoming or outgoing; "decided" undefined | accepted: raised while the switch is being decided, interrupting the outgoing task if its job is owed; a switch is decided when the incoming context is recorded as current — what `rt-core` records |
+| 85 | defect (minor) | a one-instruction window between a job's last instruction and its completion path | a requirement: a release observed after the last instruction finds no job owed; how is the port's record's (`M2.12`) |
+| 86 | defect (minor) | a hosted latch judges the mark as one, the target each due release | accepted: stated, with the count's difference left to `M2.15`'s events; the states agree |
+| 87 | defect (minor) | the completion path against the transition when the decision sits inside it | accepted: for attribution the completion path ends where the decision begins |
+| 88 | defect (minor) | "its job is still owed" after a `SkipLateJob` renewal | accepted, the reviewer's text |
+| 89 | defect (minor) | a later claim returning an undeclared source; an API entry naming no primitive; the completion path entered by a non-job | accepted, the reviewer's text |
+| 80 | R3, partly | a fault while the first record is being written | accepted: a completeness mark written last |
+| 90, 91 | drafting | initialisation's rule credited to the composition; the composition's role list reads as letting kernel contexts call `mask` | accepted: it is this contract's narrowing, listed in the header; the composition record gains the matching sentence |
+| 92–97 | drafting | rule 6's "which needs `D = T`"; rule 5's "leaves the depth at zero"; the table's attribution column; §3.1's kernel critical sections; a timer trap with no release due; the counting fact's owner | accepted; a timer trap with no release due is an unexpected trap, like an empty claim, since the composition's `raised-only-when-due` makes it a port's broken obligation; the counting fact belongs to the source's catalog record, written under `M2.7.4` |
+| 98–105 | nits | vestigial "if there is one"; "running" for "owed"; `CS^app`; "no workload"; "not lost"; rule 7's "latched"; other guarded stacks; three stale lines in other records | accepted |
+
 ## Where the contract lives (`2026-10-01`)
 
 Answering R3 (`M2.9`) needed about 20 lines more than `ROADMAP.md`'s 1 100-line ceiling allowed, which only the
