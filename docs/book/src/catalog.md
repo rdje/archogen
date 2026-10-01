@@ -25,8 +25,8 @@ unknown, or a dependency outside production stops the catalog loading; it is nev
 reads the catalog only through lookups, so its citations are what it read and its closure is every facet those rest
 on; a production claim is refused with every reason that applies, among them that the main line is not yet
 protected. Code a record points at is held to §3's package rules: its manifests by their meaning, and its Rust
-source token by token. The rest of the crate, the gate, the check that protects it and the first records are the
-next leaves (`M2.7.3` to `M2.7.6`). Until they land, nothing loads a catalog, and `catalog/` is empty.
+source token by token. Premise 3 is judged at claim time too, so the crate is complete. The gate, the check that
+protects it and the first records are the next leaves (`M2.7.4` to `M2.7.6`). Until they land, nothing loads a catalog, and `catalog/` is empty.
 
 ## The records that hold it
 
@@ -138,8 +138,8 @@ specification's. Round 11 found none live, and the record was accepted. Its hist
 
 - **Nothing loads a catalog.** `catalog/` is empty. The crate reads records, computes their hashes and checks the
   lock, over one tree and over a history, derives evidence status, checks each review where it was recorded and
-  traces invalidation, answers lookups, holds the production namespace, admits claims and holds code to the package
-  rules so far; premise 3's checks are the rest of `M2.7.3`, and the gate that gives it the history is `M2.7.4`'s.
+  traces invalidation, answers lookups, holds the production namespace, admits claims, judging premise 3, and holds
+  code to the package rules: the crate is complete. The gate that gives it the history is `M2.7.4`'s.
 - **The port's facts are unknown.** The architecture port is assembly, which no record can hold yet, so every
   analysis of the runtime variant over the catalog is inconclusive until `M2.12` gives the port's code a record
   format.
