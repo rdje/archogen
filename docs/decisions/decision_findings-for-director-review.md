@@ -151,17 +151,26 @@ roadmap and task-trees, so please decide (sota, signoff)"). `M2.9` carries it ou
   latch keeps the overrun beside the release it holds; at delivery, outside every masked region, the task's
   declared overrun policy applies, as rule 1 asks, and rule 3 does not, as its own note says of delivery. The same
   doubling one instruction after the region was already contained by that policy; the outcome may not depend on
-  which side of an unmask an interrupt lands. This is how mature kernels treat it: FreeRTOS counts the ticks that
-  arrive while the scheduler is suspended and processes them on resume, and OSEK and AUTOSAR OS report an activation
-  beyond a task's limit to a configured hook rather than drop it or halt. The release that triggers an overrun is
-  the policy's: under `SkipLateJob` it becomes the task's next job, and under `Fault` it goes with the faulted task.
+  which side of an unmask an interrupt lands. Mature kernels defer rather than halt: FreeRTOS holds the ticks that
+  arrive while its scheduler is suspended and processes them on resume, "This ensures the tick count does not slip"
+  ([`tasks.c`](../book/src/ledger.md#freertos-kernel)), and OSEK reports an activation beyond a task's limit to its
+  `ErrorHook` rather than halt ([OS 2.2.3 §13.2.3.1](../book/src/ledger.md#osek-os)). ⛔ *Corrected `2026-10-01`
+  against the sources:* this sentence said OSEK and AUTOSAR "report an activation … rather than drop it". OSEK does
+  drop it — "If E_OS_LIMIT is returned the activation is ignored" — so the precedent supports reporting without
+  halting, not keeping; keeping the overrun is this profile's own choice, because a dropped release is a missed
+  deadline nobody would see. The release that triggers an overrun is the policy's: under `SkipLateJob` it becomes
+  the task's next job, and under `Fault` it goes with the faulted task.
 - **(a) A job may complete inside a masked region it opened, and its completion closes every section it opened.**
   The nesting depth returns to zero with the job, latched releases are delivered as at the outermost unmask, and the
   schedule is decided after. The accepted composition already charges this run (`docs/specs/catalog/
   decision_runtime-composite-inputs.md`, `CS_i`'s "run ending at completion"), and the variant's condition 5 says
   every transition ends unmasked. Rule 3's grounds do not reach it: the depth is the job's and ends with it, and the
   job's own code has finished, so no region is left half-made. AUTOSAR OS likewise enables interrupts again when a
-  task ends with them disabled.
+  task returns with them disabled ([SWS_Os_00239](../book/src/ledger.md#autosar-os)). ⛔ *Qualified `2026-10-01`
+  against the source:* AUTOSAR treats that return as an error it recovers from — it reports `E_OS_MISSINGEND`
+  (SWS_Os_00069) and ignores a `TerminateTask` called with interrupts disabled (SWS_Os_00093) — where rule 4 makes
+  the completion an ordinary one. The precedent supports the recovery, not the ordinariness; the ordinariness rests
+  on the composition's `CS_i` and condition 5 above, and whether such a completion is *reported* is `M2.15`'s.
 - **(c), (d) and (e) as drafted:** the trap row's class is the deliberate fatal trap; attribution is one rule, the
   executing context, which for a stack guard is the task whose guard was breached while every task has its own
   static stack; ground 2 speaks of resuming the schedule.

@@ -61,7 +61,9 @@ and the route is a row in `TOOLBOX.md`.
   - `REQ-007` — QEMU `virt` machine documentation and its device-tree bindings: **requested**. A
     dependency of `M2.8`'s §3.2 agreement check, which must compare QEMU's generated device tree
     against the eADL platform fixture. The device contracts it needs (PLIC 1.0.0, ACLINT 1.0-rc4,
-    TL16C550C, Devicetree v0.4) are held; the machine's own bindings are not.
+    TL16C550C, Devicetree v0.4) are held; the machine's own bindings are not. *(`2026-10-01`: the machine's
+    documentation is public, at `https://www.qemu.org/docs/master/system/riscv/virt.html`; a leaf that relies on it
+    reads it there and ledgers it, which no longer waits on this request.)*
 - ⛔ **Never a build dependency.** §12's exception for external references is explicit: read to
   adopt or check for updates, never write, and never make project code or builds depend on it.
   Anything adopted is **copied into this repository** under a repository-relative path, the way

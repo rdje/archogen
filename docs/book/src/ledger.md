@@ -232,3 +232,45 @@ the day a chapter or a decision relies on it, as Miri did.
 | Known limitations | a specification says what a conforming controller does, and says nothing of how long a notification takes. Whether a platform's port waits for the notification to reflect its last claim is the fact a catalog record states and a review checks |
 | Revalidation trigger | a newer ratified release of the PLIC, or a target with another external interrupt controller |
 | Named as | `PLIC specification` |
+
+## `freertos-kernel`
+
+| Field | Value |
+| --- | --- |
+| Source | FreeRTOS-Kernel, the kernel source of FreeRTOS: its `tasks.c` |
+| Version | `tasks.c` on `main` at commit `8be86d4a24fd4091f8f4192018423ab590f408db`, the branch head when read |
+| Pinned at | not pinned — read at `https://raw.githubusercontent.com/FreeRTOS/FreeRTOS-Kernel/main/tasks.c`; no build or check reads it |
+| Retrieved | `2026-10-01` |
+| Hash | sha256 `6de295f333f31818de546d6eb72b877c5a6964980f14f80bc1e17b19b7ff9fc4` of the file read |
+| Scope | one comment, quoted as a precedent for `ROADMAP.md` §3.1.1 rule 1 (findings §6 (b)): in `xTaskResumeAll`, "If any ticks occurred while the scheduler was suspended then they should be processed now. This ensures the tick count does not slip, and that any delayed tasks are resumed at the correct time." (lines 4141–4144) |
+| Known limitations | a precedent from another kernel, not a requirement on this one, and source code rather than a specification: the comment describes what that kernel does, not what a profile must |
+| Revalidation trigger | a decision resting on more of FreeRTOS's behaviour than this comment |
+| Named as | `FreeRTOS` |
+
+## `osek-os`
+
+| Field | Value |
+| --- | --- |
+| Source | OSEK/VDX Operating System Specification |
+| Version | 2.2.3, read from the copy at `https://www.irisa.fr/alf/downloads/puaut/TPNXT/images/os223.pdf` |
+| Pinned at | not pinned — read on `2026-10-01`; no build or check reads it |
+| Retrieved | `2026-10-01` |
+| Hash | sha256 `a0bb10b0b1413b3d95a40de117d3bedd3bbb74e2cae23c074c5532a95fa715cf` of the PDF read |
+| Scope | two sentences, quoted as a precedent and a correction for findings §6 (b): `ActivateTask` (§13.2.3.1), "If E_OS_LIMIT is returned the activation is ignored", with the status "Too many task activations of <TaskID>, E_OS_LIMIT"; and "The error hook routine (ErrorHook) is called if a system service returns a StatusType value not equal to E_OK" |
+| Known limitations | a precedent, not a requirement on this profile; the copy read is a mirror of the consortium's document, not the consortium's own site |
+| Revalidation trigger | a decision resting on more of OSEK's behaviour, or a copy from the standard's owner differing from the mirror |
+| Named as | `OSEK` |
+
+## `autosar-os`
+
+| Field | Value |
+| --- | --- |
+| Source | AUTOSAR Classic Platform, Specification of Operating System (`AUTOSAR_CP_SWS_OS`) |
+| Version | Release R24-11, read at `https://www.autosar.org/fileadmin/standards/R24-11/CP/AUTOSAR_CP_SWS_OS.pdf` |
+| Pinned at | not pinned — read on `2026-10-01`; no build or check reads it |
+| Retrieved | `2026-10-01` |
+| Hash | sha256 `6ec1915808e8819c6552bcc69fe935d8664f7bf0b8f9eb55810377e79ff8ae44` of the PDF read |
+| Scope | three requirements, quoted as a precedent and its qualification for findings §6 (a): [SWS_Os_00239] "If a Task returns from the entry function without making a TerminateTask or ChainTask call and interrupts are still disabled, the Operating System module shall enable them"; [SWS_Os_00069], which reports that return to the `ErrorHook` as `E_OS_MISSINGEND`; and [SWS_Os_00093], under which a service called with interrupts disabled is ignored with `E_OS_DISABLEDINT` |
+| Known limitations | a precedent, not a requirement on this profile: AUTOSAR treats the return as an error it recovers from, where `ROADMAP.md` §3.1.1 rule 4 makes the completion ordinary |
+| Revalidation trigger | a later AUTOSAR release renumbering or changing these requirements; a decision resting on more of AUTOSAR OS |
+| Named as | `AUTOSAR` |

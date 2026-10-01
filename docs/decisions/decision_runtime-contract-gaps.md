@@ -49,9 +49,12 @@ marked amendment in §3.1.1:
 overrun detected inside the masked region, so rule 3 made it fatal: a periodic task whose second release landed one
 instruction inside a critical section killed the system, where one instruction later it would have been contained.
 Before (a), `rt-core` let a job complete with the mask held and left the depth above zero with no owner — the
-condition ground 1 of rule 3 calls fatal, reached without a fault. The grounds are in the findings record: FreeRTOS's
-pended ticks, AUTOSAR OS re-enabling interrupts for a task that ends with them disabled, and the accepted
-composition's `CS_i`, the masked run that ends at completion.
+condition ground 1 of rule 3 calls fatal, reached without a fault. The grounds are in the findings record, checked
+against their sources on `2026-10-01`: FreeRTOS's pended ticks ([`tasks.c`](../book/src/ledger.md#freertos-kernel)),
+AUTOSAR OS re-enabling interrupts for a task that returns with them disabled, as an error it recovers from
+([SWS_Os_00239](../book/src/ledger.md#autosar-os)), and the accepted composition's `CS_i`, the masked run that ends
+at completion. OSEK, which the record also cited, drops an activation beyond a task's limit and reports it
+([OS 2.2.3](../book/src/ledger.md#osek-os)); the record is corrected.
 
 ## Carried into both models (`2026-10-01`)
 

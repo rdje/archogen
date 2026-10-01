@@ -17,7 +17,7 @@
   `API.6`; `M1`'s only open leaf, `M1.29.4`, is blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
 - **Next action:** `M2.9` step 6d — a second independent review of §3.1.1, the text alone; its answers; the leaf
-  closed. The external sources the rulings cite are being verified and ledgered (findings §6). Then `M2.14`
+  closed. The rulings' external precedents are read and ledgered (`M2.16`). Then `M2.14`
   (the overrun policy's domain), `M2.7.6` (its
   repository half; the hosting half waits on findings §11), `M2.7.4`, `M2.7.5`, `M2.11`, then `API.6`. This project
   uses no branches.

@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the rulings' outside precedents checked at their sources
+
+`ARCHOGEN-M2-0269` (leaf `M2.16`).
+
+- The runtime rulings cited how FreeRTOS, OSEK and AUTOSAR behave, from memory. Each was read in the published
+  source and recorded with its exact wording. FreeRTOS was right; OSEK was misstated — it discards an activation
+  beyond a task's limit and reports it — and AUTOSAR's behaviour is error recovery rather than a normal path. The
+  records are corrected; no ruling changes, because none depended on those precedents alone.
+- The two documents the target still lacks, the QEMU `virt` machine's and the RISC-V calling convention, are public,
+  and will be read and recorded by the work that first relies on them.
+
 ## archogen — the runtime keeps the first fatal fault and stops there
 
 `ARCHOGEN-M2-0268` (leaf `M2.9`).
