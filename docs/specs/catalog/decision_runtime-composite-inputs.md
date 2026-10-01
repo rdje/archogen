@@ -97,10 +97,11 @@ dispatch, which claims before it knows the source, acts in the role of the servi
 - the timer service writes the compare and releases its due timer tasks;
 - a source's service claims and completes its own source, accesses its own device's registers, and releases the
   tasks bound to it;
-- the runtime API's primitives, and the port's trap entry and exit, its transitions, its idle wake and its fault
-  path, mask and unmask the hardware — they write the hart's interrupt-enable state directly; only a job calls the
-  runtime API's `mask` and `unmask` (the profile's fault contract, `docs/profiles/rt-static-up-v1-faults.md`, Terms,
-  added `2026-10-01`); the port's trap path and its transitions use `mscratch` where it keeps a stack there;
+- the runtime API's primitives, the completion path (added `2026-10-01`, the fault contract's R6 136), and the port's
+  trap entry and exit, its transitions, its idle wake and its fault path, mask and unmask the hardware — they write the
+  hart's interrupt-enable state directly; only a job calls the runtime API's `mask` and `unmask` (the profile's fault
+  contract, `docs/profiles/rt-static-up-v1-faults.md`, Terms, added `2026-10-01`); the port's trap path and its
+  transitions use `mscratch` where it keeps a stack there;
 - initialisation, before the first enabling of interrupts, writes the controller's configuration and the hart's
   interrupt state as the plan sets them. It may claim and complete requests left pending from before it, and it
   leaves none pending at the first enabling of interrupts that no arrival made. Two writes are one record's alone,

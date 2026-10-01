@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the fault contract answers its sixth reading
+
+`ARCHOGEN-M2-0287` (leaf `M2.9`).
+
+- The sixth independent reading found three remaining ambiguities, all small and all in sentences written to
+  answer the fifth: which task a fatal fault's record names when the scheduler returns to the task it interrupted,
+  or a held-back release turns out late, and what happens to a finishing task that is taken out of the schedule
+  while it finishes. Each answer matches what the runtime's code already records; neither runtime model changed.
+
 ## archogen — no workflow can write to the repository
 
 `ARCHOGEN-M2-0285` (leaf `M2.7.6.1`).

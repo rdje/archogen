@@ -236,7 +236,7 @@ answer text is to be checked against both models before it lands (step 6k). The 
 | 81 | defect | rule 4 attributes a delivery fault backwards: on the target delivery is a trap and service after the transition unmasks | accepted: the trap path's or its service's on the target, the completion path's in a hosted model |
 | 82 | defect | the port's detection recipe halts every `mask` on a port that enters the API by a trap, and misses idle | the recipe removed: a port must detect a non-job call and raise it; how is its record's (`M2.12`) |
 | 83 | defect | rule 1's `Fault` wording discards the overrun that should take a task out after a fresh first arrival | accepted, the reviewer's text: each later arrival judged against the state the earlier ones left |
-| 84 | defect | the dispatch-in-region assertion's interrupted task reads incoming or outgoing; "decided" undefined | accepted: raised while the switch is being decided, interrupting the outgoing task if its job is owed; a switch is decided when the incoming context is recorded as current — what `rt-core` records |
+| 84 | defect | the dispatch-in-region assertion's interrupted task reads incoming or outgoing; "decided" undefined | accepted: raised while the switch is being decided, interrupting the outgoing task if its job is owed; a switch is decided when the incoming context is recorded as current — what `rt-core` records *(superseded: a transition interrupts the task whose job it starts from while that job is still owed, R5 110 and R6 124)* |
 | 85 | defect (minor) | a one-instruction window between a job's last instruction and its completion path | a requirement: a release observed after the last instruction finds no job owed; how is the port's record's (`M2.12`) |
 | 86 | defect (minor) | a hosted latch judges the mark as one, the target each due release | accepted: stated, with the count's difference left to `M2.15`'s events; the states agree |
 | 87 | defect (minor) | the completion path against the transition when the decision sits inside it | accepted: for attribution the completion path ends where the decision begins |
@@ -279,6 +279,27 @@ replacement text was checked against `rt-core` before it landed (#106's choice i
 #108's and #110's the running task each records), and the reference model's records agree with it over the
 comparison as before. **The loop's closure rule:** the leaf closes on the first independent round that finds no
 defect; a round that finds only drafting and nits is answered in its step and closes it.
+
+## The fault contract reviewed a sixth time (`2026-10-01`, R6)
+
+A sixth new context read the contract beside the composition record, from the text alone. On R5's answers: 13
+answered, 5 partly (#108, #110, #114, #117, #123), none missed. **Verdict: 3 defects remain (#124–#126), all minor,
+and all three in text written to answer R5** — as in R4 and R5, where every defect but one traced to the previous
+round's answers or to a case they opened. The text the earlier rounds settled holds; what each round finds is the
+last round's new sentences.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 124 | defect (minor) | "it never interrupts its incoming context" contradicted the outgoing clause and the Terms when a transition returns to the job its trap preempted | accepted, the reviewer's text: a transition interrupts the task whose job it starts from while that job is still owed, whether it switches away from it or returns to it — what `rt-core` records, a kernel fault's interrupted task being the running one, which a resume in place leaves unchanged |
+| 125 | defect (minor) | rule 4's delivery sentence named the interrupted task without #108's "still owed" | accepted, the reviewer's text; and a job whose policy takes effect at a primitive's return is abandoned, for attribution, when the policy is applied — `rt-core` clears the running task when it applies a policy |
+| 126 | defect (minor) | under the port's first choice, a task faulted while its completion-path context is preempted: whether that context runs on | accepted, the reviewer's text: it runs on to its decided switch, which dispatches no job of the faulted task; unreachable in both models, which complete atomically |
+| 127–131 | drafting | the decision after a service preempted it; rule 6's false "only"; the delivery order under a fatal fault; the completion path calling `mask`; a faulted task's later releases as releases due | accepted, the reviewer's texts |
+| 132–139 | nits | F26's three cases; "raising context" and "empty first claim"; the header's API entry; the handler bound's owner; the composition's role list; row 84's mark; `raised-only-when-due`'s owner; initialisation's bound | accepted; the handler bound is the port's record's, since the composition gives the fault path to the port |
+| 123 (R5) | residual | eleven lines measured at 121–124 columns | not a defect: in characters every prose line is within 120; the count was in bytes, an em dash being three |
+
+**Answered `2026-10-01` (step 6m).** Every finding is answered as triaged above, and none moves either model: #124's
+and #125's texts are what `rt-core`'s `raise` and `decide` record, and #126 is unreachable where completion is
+atomic. The comparison agrees as before.
 
 ## Where the contract lives (`2026-10-01`)
 
