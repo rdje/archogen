@@ -1031,15 +1031,33 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0282 (leaf PROGRAM.45)`
 
 - ID: `PROGRAM.46`
-  Status: `pending` — filed `2026-10-01`
+  Status: `done` — `2026-10-01`, filed and closed the same day
   Goal: a gate that every commit on `main` whose subject names a work unit (`ARCHOGEN-<TREE>-NNNN (leaf …)`) has a row
   in its tree's Commit Log.
   Why: `ARCHOGEN-M2-0263` and `ARCHOGEN-M2-0280` both landed without their rows, each found by hand a commit later; no
   gate checks it, and `HISTORY-LEDGERS` checks only the changelog's order.
   Acceptance: the check derives the rows from `git log` rather than a list, reports a missing row by commit, runs in
   the enforcer, and has RED arms in scratch repositories like the other gates.
-  Verification: `pending`
-  Commit: `pending`
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — `git show HEAD:scripts/check_doctrines.project.sh | grep -c "COMMIT-LOG-ROWS"` → 0;
+    the census: 18 of the 260 commits whose subject has the `(leaf …)` form had no Commit Log row, `-0263` and
+    `-0280` among them.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `COMMIT.md` asks for the row, `git show HEAD:COMMIT.md | grep -c -i "commit log"`
+    → 2, and no gate reads it; `HISTORY-LEDGERS` checks the changelog's order only. WHERE: the enforcer's project slot, `scripts/check_doctrines.project.sh`.
+  - [x] **FIX** — `scripts/check_commit_log_rows.sh`: ids from `git log` and the pending message file, rows from the
+    table lines of `docs/tasks/` and `docs/task-history/`, the measured backlog of 18; registered in the project slot;
+    `DOCTRINE_ENFORCEMENT.md`'s row; the book's verification chapter.
+  - [x] **ADDRESSED (verified)** — `bash scripts/check_commit_log_rows.sh` → rc=0, `commit-log-rows: OK (242 work-unit
+    commit(s), each with a Commit Log row; 18 in the backlog, which may only shrink)`; `--self-test` → `9 pass / 0
+    fail (9 arms)`, among them a pending commit with no row refused and a prose mention not counted as a row. Twenty
+    older commits name a work unit without `(leaf …)` and are outside the rule; the first run, which counted them,
+    refused its own backlog, and the backlog was re-measured by the rule itself.
+  - [x] **NO REGRESSION** — scripts and docs only; `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`,
+    the new gate among them, this commit's own row checked as the pending one.
+  - [x] **LOCKSTEP** — `DOCTRINE_ENFORCEMENT.md`; the book's `verification.md`; this leaf and its log; `CHANGELOG.md`.
+  Verification: see the checklist.
+  Commit: `ARCHOGEN-PROGRAM-0283 (leaf PROGRAM.46)`
 
 ## Roadmap coverage map
 
@@ -1332,6 +1350,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.43` | `ARCHOGEN-PROGRAM-0259 (leaf PROGRAM.43)` | **the accepted designs moved to `docs/specs/`**, on the director's ruling: the decisions folder from 388 884 to 205 397 bytes, no ceiling raised |
 | `PROGRAM.44` | `ARCHOGEN-PROGRAM-0278 (leaf PROGRAM.44)` | **the book opens with a tour**: one description to its running program and on to a board, honest about today, its copies held to their files |
 | `PROGRAM.45` | `ARCHOGEN-PROGRAM-0282 (leaf PROGRAM.45)` | **the tour says how you interact with a system**: inputs, outputs, inspection; no login, shell or filesystem yet, with the roadmap's reasons; `PROGRAM.46` filed |
+| `PROGRAM.46` | `ARCHOGEN-PROGRAM-0283 (leaf PROGRAM.46)` | **`COMMIT-LOG-ROWS`**: every work-unit commit has its Commit Log row, the pending one included; a backlog of 18 that may only shrink |
 
 ## Changelog
 

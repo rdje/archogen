@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a commit that forgets its task-log row is refused
+
+`ARCHOGEN-PROGRAM-0283` (leaf `PROGRAM.46`).
+
+- Every commit that names its unit of work must now have a row in that work's task log, and a commit that forgot
+  one is refused before it lands. Twice today a commit landed without its row and was caught only by hand; the
+  eighteen older commits without a row are listed and may only be worked off, never added to.
+
 ## archogen — the tour says how you interact with a generated system
 
 `ARCHOGEN-PROGRAM-0282` (leaf `PROGRAM.45`).

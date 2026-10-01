@@ -612,6 +612,12 @@ commit that sealed it, the index append-only, one placeholder per sealed section
 record held just before. The first seal, on `2026-09-30`, took four settled items of the director's findings
 register out of the decisions folder (`PROGRAM.41`).
 
+Each tree also keeps a Commit Log, one row per commit that worked on it, and `COMMIT-LOG-ROWS`
+(`scripts/check_commit_log_rows.sh`) holds every commit whose subject names a work unit to having its row —
+the pending commit included, so a commit that forgot its row is refused before it lands rather than found by
+hand a commit later, as two were on `2026-10-01` (`PROGRAM.46`). The rows missing when the gate landed are a
+backlog listed in the script, which may only shrink.
+
 ```console
 $ bash scripts/check_decision_history.sh                                   # the gate
 $ bash scripts/check_decision_history.sh --seal <RECORD> <N>...            # seal settled sections, with the proof
