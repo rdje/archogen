@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — only a running task opens a critical section
+
+`ARCHOGEN-M2-0273` (leaf `M2.9`).
+
+- The runtime now halts if a critical section is opened or closed while no task is running, and records that no
+  task is to blame. The independent model was re-derived to the same text, and the two now agree everywhere they
+  are compared, the one case where they used to differ included.
+
 ## archogen — the runtime contract answers its second review
 
 `ARCHOGEN-M2-0272` (leaf `M2.9`).

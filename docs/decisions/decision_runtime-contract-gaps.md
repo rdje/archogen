@@ -170,9 +170,9 @@ the one in *The rewritten §3.1.1 reviewed again*. Two amendments correct the 20
 | a fault in a service is no task's, and the task it interrupted is recorded as interrupted | 2 | `rt-core` |
 | a halted runtime changes nothing afterwards, and keeps the first fault's record | 7 | `rt-core` |
 | the mask bound and an unbalanced `unmask` are assertion failures, not refusals | the second decision | both |
-| a job started inside a region, and a `mask` or `unmask` with no job running, are assertion failures | Terms | both |
+| a job started inside a region, and a `mask` or `unmask` with no job running, are assertion failures | Terms | both (step 6f) |
 | exactly two overrun policies | 5 | the reference model, which had a third that halted |
-| an overrun raised without a release is outside the profile | 1a | neither's behaviour: both keep an entry for one, for a later profile, and disagree only there |
+| an overrun raised without a release is outside the profile | 1a | neither's behaviour inside the profile; both keep an entry for one, for a later profile. The reference first refused another task's inside a region, then — once rule 1a no longer said it "cannot be raised" — escalated it by rule 3's ground 2, as `rt-core` does (step 6f) |
 
 ⭐ **§5's lesson, a third time.** The reference model was derived from the text, and the two models agree, but six
 of the decisions they share were written only here and in findings §6. Agreement between models shows the text is

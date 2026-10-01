@@ -277,11 +277,17 @@ impl<const N: usize> Scheduler<N> {
     /// # Errors
     ///
     /// [`Refused::Halted`] once the runtime has halted — including by this call: a `mask` past
-    /// [`Scheduler::MASK_DEPTH_LIMIT`] is an assertion failure (§3.1.1). ⛔ It once saturated, and
+    /// [`Scheduler::MASK_DEPTH_LIMIT`], or with no job running, is an assertion failure (§3.1.1). ⛔ It once saturated, and
     /// then was refused; a saturated counter stops counting, and a refused one leaves the caller's
     /// matching `unmask` to close the section early. Both return interrupts one section early.
     pub fn mask(&mut self) -> Result<u8, Refused> {
         if self.halted.is_some() {
+            return Err(Refused::Halted);
+        }
+        if self.running.is_none() {
+            // §3.1.1, Terms: "Only a job changes the depth" — with none running, whatever executes
+            // this is no task's.
+            self.kernel_assertion("mask-with-no-job");
             return Err(Refused::Halted);
         }
         if self.mask_depth >= u32::from(Self::MASK_DEPTH_LIMIT) {
@@ -301,11 +307,15 @@ impl<const N: usize> Scheduler<N> {
     /// # Errors
     ///
     /// [`Refused::Halted`] once the runtime has halted — including by this call: an `unmask` with
-    /// no matching [`Scheduler::mask`] is an assertion failure (§3.1.1), taken through the fatal
+    /// no matching [`Scheduler::mask`], or with no job running, is an assertion failure (§3.1.1), taken through the fatal
     /// path rather than a panic, which reaches neither of §8.1's "defined fatal handler and
     /// diagnostic evidence".
     pub fn unmask(&mut self) -> Result<heapless::Transitions<N>, Refused> {
         if self.halted.is_some() {
+            return Err(Refused::Halted);
+        }
+        if self.running.is_none() {
+            self.kernel_assertion("unmask-with-no-job");
             return Err(Refused::Halted);
         }
         if self.mask_depth == 0 {
@@ -441,9 +451,15 @@ impl<const N: usize> Scheduler<N> {
         self.raise(fault, context)
     }
 
-    /// An assertion failure the scheduler itself detects, raised by whatever is executing.
+    /// An assertion failure the scheduler detects in a call the running job made.
     fn assertion(&mut self, invariant: &'static str) {
         self.raise(Fault::InvariantViolated { invariant }, Context::Job);
+    }
+
+    /// An assertion failure detected where no job is executing — a call with none running, or a
+    /// decision — which is no task's; the task the processor held, if any, is the interrupted one.
+    fn kernel_assertion(&mut self, invariant: &'static str) {
+        self.raise(Fault::InvariantViolated { invariant }, Context::Kernel);
     }
 
     /// Apply a fault's policy. An overrun contained under `SkipLateJob` leaves the task
@@ -521,8 +537,9 @@ impl<const N: usize> Scheduler<N> {
         };
         if starts_a_job && self.is_masked() {
             // §3.1.1, Terms: every job starts at depth zero, which is what makes every section
-            // open at a completion the completing job's (rule 4).
-            self.assertion("dispatch-while-masked");
+            // open at a completion the completing job's (rule 4). Raised by the decision, which is
+            // no task's.
+            self.kernel_assertion("dispatch-while-masked");
             return self.decide();
         }
         match (self.running, best) {

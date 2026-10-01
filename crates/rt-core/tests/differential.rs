@@ -59,8 +59,6 @@
 //! - a fault raised in a task's job while no task runs (`rt-core` attributes it to no task), or
 //!   in the idle context while one does;
 //! - an overrun raised for a task that owes no job;
-//! - an overrun of a task other than the region holder raised inside a masked region, which
-//!   §3.1.1 rule 1a says cannot happen: `rt-core` escalates it, the reference refuses it;
 //! - any event after a halt. Both answer it and change nothing: `rt-core` with the halt it keeps,
 //!   the reference with a refusal.
 //!
@@ -198,8 +196,13 @@ enum Event {
     Unmask,
     /// An `unmask` with nothing to close: an assertion failure in both (§3.1.1).
     UnbalancedUnmask,
-    /// An overrun found by something other than a release — an execution-budget monitor. Raised
-    /// only for a task that owes a job, and inside a masked region only for its holder.
+    /// A `mask` with no job running: an assertion failure in both (§3.1.1, Terms: "Only a job
+    /// changes the depth").
+    MaskWithNoJob,
+    /// An overrun found by something other than a release — an execution-budget monitor. Outside
+    /// `rt-static-up-v1` (§3.1.1 rule 1a), which detects overruns by releases alone; both models
+    /// keep an entry for one, for a later profile, so this compares them there too. Raised only for
+    /// a task that owes a job; inside a masked region both escalate it, whoever's it is.
     MonitorOverrun(usize),
     /// A trap, a stack guard or an assertion.
     Synchronous(Synchronous, Raised),
@@ -337,6 +340,15 @@ fn step(
                 other => return Err(format!("the reference answered {event:?} with {other:?}")),
             }
         }
+        Event::MaskWithNoJob => {
+            if core.mask().is_ok() {
+                return Err("rt-core accepted a mask with no job running".into());
+            }
+            match reference.mask() {
+                Ok(MaskEffect::Fatal) => {}
+                other => return Err(format!("the reference answered {event:?} with {other:?}")),
+            }
+        }
         Event::UnbalancedUnmask => {
             if core.unmask().is_ok() {
                 return Err("rt-core accepted an unmask with nothing to close".into());
@@ -400,14 +412,14 @@ struct Coverage {
     masked_completions: usize,
     /// Overruns raised by a monitor while unmasked, contained by the task's policy.
     contained_monitor_overruns: usize,
-    /// Overruns a monitor raised for the region holder inside its region, which halt
+    /// Overruns a monitor raised inside a masked region, which halt
     /// (§3.1.1 rules 1a and 3).
     masked_escalations: usize,
     /// Traps, stack guards and assertions raised in a task's job, which halt.
     synchronous_halts: usize,
     /// The same raised in kernel code — a service or the idle loop — which halt and blame no task.
     kernel_faults: usize,
-    /// `unmask` with nothing to close, an assertion failure.
+    /// `unmask` with nothing to close, or `mask` with no job running: assertion failures.
     unbalanced_unmasks: usize,
 }
 
@@ -425,8 +437,6 @@ fn run_sequence(
     let mut halted = false;
     let mut trace: Vec<Event> = Vec::new();
     let mut depth = 0_u32;
-    // The task whose job opened the masked region, if a job did (§3.1.1, Terms).
-    let mut holder: Option<usize> = None;
 
     for _ in 0..length {
         // ⭐ Since `M2.9` the generator goes where `M2.2`'s could not: a release to a task that
@@ -450,16 +460,9 @@ fn run_sequence(
                         .expect("task exists")
             })
             .collect();
-        // §3.1.1 rule 1a: a monitor is masked with the region, so inside one only the holder's
-        // own overrun can be raised.
-        let monitored: Vec<usize> = if depth == 0 {
-            owing.clone()
-        } else {
-            holder
-                .filter(|task| owing.contains(task))
-                .into_iter()
-                .collect()
-        };
+        // Outside the profile (§3.1.1 rule 1a); inside a region both models escalate it for any
+        // task (rule 3, ground 2), so every task owing a job is a target.
+        let monitored = owing.clone();
         let event = match rng.below(100) {
             0 => {
                 let kind = match rng.below(3) {
@@ -477,33 +480,22 @@ fn run_sequence(
             1..=3 if !monitored.is_empty() => {
                 Event::MonitorOverrun(monitored[rng.below(monitored.len())])
             }
-            // Rarer than the rest: it ends the sequence, and an early end costs coverage.
-            4 if depth == 0 && rng.below(4) == 0 => Event::UnbalancedUnmask,
+            // Rarer than the rest: each ends the sequence, and an early end costs coverage.
+            4 if depth == 0 && running.is_some() && rng.below(4) == 0 => Event::UnbalancedUnmask,
+            4 if running.is_none() && rng.below(4) == 0 => Event::MaskWithNoJob,
             5..=28 if running.is_some() => Event::Complete,
-            29..=40 if depth < 4 => Event::Mask,
+            // §3.1.1, Terms: only a job changes the depth, so a region is opened by a running job.
+            29..=40 if depth < 4 && running.is_some() => Event::Mask,
             41..=52 if depth > 0 => Event::Unmask,
             53..=65 => Event::Release(rng.below(N)),
             _ if !free.is_empty() => Event::Release(free[rng.below(free.len())]),
             _ => Event::Release(rng.below(N)),
         };
         match event {
-            Event::Mask => {
-                if depth == 0 {
-                    holder = running;
-                }
-                depth += 1;
-            }
-            Event::Unmask => {
-                depth -= 1;
-                if depth == 0 {
-                    holder = None;
-                }
-            }
+            Event::Mask => depth += 1,
+            Event::Unmask => depth -= 1,
             // §3.1.1 rule 4: a completion closes every section its job opened.
-            Event::Complete => {
-                depth = 0;
-                holder = None;
-            }
+            Event::Complete => depth = 0,
             _ => {}
         }
         trace.push(event);
@@ -547,7 +539,7 @@ fn run_sequence(
             Event::MonitorOverrun(_) => coverage.contained_monitor_overruns += 1,
             Event::Synchronous(_, Raised::InJob) => coverage.synchronous_halts += 1,
             Event::Synchronous(_, Raised::InKernel) => coverage.kernel_faults += 1,
-            Event::UnbalancedUnmask => coverage.unbalanced_unmasks += 1,
+            Event::UnbalancedUnmask | Event::MaskWithNoJob => coverage.unbalanced_unmasks += 1,
             _ => {}
         }
         match (event, before, running) {
@@ -648,14 +640,15 @@ fn differential_over_many_randomised_sequences() {
     // ⭐ The agreement above means nothing unless the sequences reached the states that matter.
     // These floors are well below what the generator currently produces; they exist to fail if a
     // future change to the event mix quietly stops exercising a behaviour. Measured 2026-10-01
-    // over these seeds, and again when `M2.9` step 6c added kernel faults and unbalanced unmasks,
-    // which end sequences early: each floor is at most about half of what the generator reached.
+    // over these seeds, again when `M2.9` step 6c added kernel faults and unbalanced unmasks, which
+    // end sequences early, and again when 6f let only a running job open a region, which makes
+    // regions rarer: each floor is at most about half of what the generator reached.
     assert!(coverage.preemptions >= 500, "{coverage:?}");
     assert!(coverage.latched_deliveries >= 200, "{coverage:?}");
     assert!(coverage.completions >= 1_000, "{coverage:?}");
-    assert!(coverage.idle_periods >= 3_000, "{coverage:?}");
+    assert!(coverage.idle_periods >= 1_400, "{coverage:?}");
     assert!(coverage.overruns_by_release >= 800, "{coverage:?}");
-    assert!(coverage.doubled_latches >= 1_500, "{coverage:?}");
+    assert!(coverage.doubled_latches >= 200, "{coverage:?}");
     assert!(coverage.skipped_jobs >= 700, "{coverage:?}");
     assert!(coverage.masked_completions >= 250, "{coverage:?}");
     assert!(coverage.contained_monitor_overruns >= 100, "{coverage:?}");
@@ -859,8 +852,14 @@ fn d5_both_bound_mask_nesting_at_the_same_depth_and_halt_beyond() {
         Scheduler::<N>::MASK_DEPTH_LIMIT,
         Runtime::<N>::MAX_MASK_DEPTH
     );
+    // Only a job changes the depth (§3.1.1, Terms), so a job holds the processor first.
     let mut reference = reference([OverrunPolicy::Fault; N]);
     let mut core = Scheduler::<N>::new([OverrunPolicy::Fault; N]);
+    reference
+        .release(TaskId::from_index(0))
+        .expect("dispatches");
+    core.release(0);
+    core.decide();
     for _ in 0..u8::MAX {
         reference.mask().expect("within the bound");
         core.mask().expect("within the bound");
@@ -877,6 +876,11 @@ fn d5_both_bound_mask_nesting_at_the_same_depth_and_halt_beyond() {
     // Neither lost count before it: as many unmasks as masks close the region, and one more halts.
     let mut reference = self::reference([OverrunPolicy::Fault; N]);
     let mut core = Scheduler::<N>::new([OverrunPolicy::Fault; N]);
+    reference
+        .release(TaskId::from_index(0))
+        .expect("dispatches");
+    core.release(0);
+    core.decide();
     for _ in 0..u8::MAX {
         reference.mask().expect("within the bound");
         core.mask().expect("within the bound");

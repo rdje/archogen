@@ -128,6 +128,8 @@ fn masking_nests_and_only_the_outermost_unmask_delivers() {
     // A critical section inside another must not unmask early — the classic way a "protected"
     // region stops being one.
     let mut s = scheduler();
+    s.release(2);
+    s.decide(); // only a job changes the depth (§3.1.1, Terms)
     s.mask().expect("within the declared bound");
     s.mask().expect("within the declared bound");
     s.release(0);
@@ -146,7 +148,9 @@ fn masking_nests_and_only_the_outermost_unmask_delivers() {
 
 #[test]
 fn latched_releases_are_delivered_highest_priority_first() {
-    let mut s = scheduler();
+    let mut s: Scheduler<4> = Scheduler::new([OverrunPolicy::Fault; 4]);
+    s.release(3);
+    s.decide(); // the lowest-ranked task holds the region
     s.mask().expect("within the declared bound");
     s.release(2);
     s.release(0);
@@ -185,6 +189,8 @@ fn a_second_latched_release_is_an_overrun_judged_at_delivery() {
     // and it is judged at delivery, outside the masked region, under the task's own policy. Not
     // lost, and not fatal for landing inside a critical section rather than one instruction after.
     let mut s = scheduler();
+    s.release(2);
+    s.decide();
     s.mask().expect("within the declared bound");
     assert_eq!(s.release(1), Transition::Latched { task: 1 });
     assert_eq!(s.release(1), Transition::OverrunLatched { task: 1 });
@@ -218,6 +224,8 @@ fn a_second_latched_release_is_an_overrun_judged_at_delivery() {
 #[test]
 fn a_latched_overrun_under_skip_late_job_becomes_the_next_job() {
     let mut s: Scheduler<2> = Scheduler::new([OverrunPolicy::SkipLateJob, OverrunPolicy::Fault]);
+    s.release(1);
+    s.decide(); // task 1's job holds the region
     s.mask().expect("maskable");
     s.release(0);
     assert_eq!(s.release(0), Transition::OverrunLatched { task: 0 });
@@ -236,7 +244,7 @@ fn a_latched_overrun_under_skip_late_job_becomes_the_next_job() {
         "the late job is skipped and the release that overran becomes the next job"
     );
     assert_eq!(s.state(0), TaskState::Ready);
-    assert_eq!(s.decide(), Decision::Dispatch { to: 0 });
+    assert_eq!(s.decide(), Decision::Switch { from: 1, to: 0 });
 }
 
 #[test]
@@ -630,6 +638,8 @@ fn exceeding_the_mask_bound_is_an_assertion_failure() {
     // matching `unmask` to close the section early. Each fails silently, so exceeding the bound
     // halts (the review's finding 10; until 2026-10-01 it refused).
     let mut s = scheduler();
+    s.release(0);
+    s.decide();
     for _ in 0..Scheduler::<3>::MASK_DEPTH_LIMIT {
         s.mask().expect("within the declared bound");
     }
@@ -641,9 +651,31 @@ fn exceeding_the_mask_bound_is_an_assertion_failure() {
     assert_eq!(
         s.decide(),
         Decision::Halt {
-            fatal: fatal(bound, None, None, false)
-        }
+            fatal: fatal(bound, Some(0), None, false)
+        },
+        "raised by the job that called `mask`"
     );
+}
+
+#[test]
+fn a_mask_or_unmask_with_no_job_running_is_an_assertion_failure() {
+    // §3.1.1, Terms: "Only a job changes the depth" (the second review's finding 35). With no job
+    // running, whatever executes the call is no task's.
+    for (invariant, call) in [("mask-with-no-job", true), ("unmask-with-no-job", false)] {
+        let mut s = scheduler();
+        let refused = if call {
+            s.mask().map(|_| ())
+        } else {
+            s.unmask().map(|_| ())
+        };
+        assert_eq!(refused, Err(Refused::Halted));
+        assert_eq!(
+            s.decide(),
+            Decision::Halt {
+                fatal: fatal(Fault::InvariantViolated { invariant }, None, None, false)
+            }
+        );
+    }
 }
 
 #[test]
@@ -670,7 +702,12 @@ fn an_unmask_with_nothing_to_close_is_an_assertion_failure() {
 fn a_job_starting_inside_a_masked_region_is_an_assertion_failure() {
     // §3.1.1, Terms: every job starts at depth zero, which is what makes every section open at a
     // completion the completing job's (rule 4, the review's finding 16).
+    // A job raising a region and a higher-ranked task released but not yet dispatched is the API's
+    // way to reach it; the decision raises it, which is no task's, and it interrupts the job that
+    // held the processor.
     let mut s = scheduler();
+    s.release(1);
+    s.decide();
     s.release(0);
     s.mask().expect("maskable");
     let masked = Fault::InvariantViolated {
@@ -679,7 +716,7 @@ fn a_job_starting_inside_a_masked_region_is_an_assertion_failure() {
     assert_eq!(
         s.decide(),
         Decision::Halt {
-            fatal: fatal(masked, None, None, false)
+            fatal: fatal(masked, None, Some(1), false)
         }
     );
 }

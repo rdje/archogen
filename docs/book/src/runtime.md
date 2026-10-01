@@ -67,8 +67,9 @@ eliminate races or blocking."*
 A release arriving while interrupts are masked is **latched**, not lost, and delivered when the
 outermost critical section closes — highest priority first. Masking nests, so an inner section
 cannot unmask early, and the nesting is **bounded**. A `mask` beyond `Scheduler::MASK_DEPTH_LIMIT`,
-an `unmask` with nothing to close, and a job dispatched while a region is open are each an
-**assertion failure**, which halts. A counter that wrapped would re-enable interrupts inside a
+an `unmask` with nothing to close, a `mask` or `unmask` with no job running — only a job changes
+the depth — and a job dispatched while a region is open are each an **assertion failure**, which
+halts. A counter that wrapped would re-enable interrupts inside a
 critical section while reporting success; one that saturated would stop counting; one that
 refused — the answer until the contract's second review — would leave its caller's matching
 `unmask` to close the section early. Each fails silently, so none is allowed.
