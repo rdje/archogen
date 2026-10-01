@@ -59,8 +59,8 @@ independently derived model of §8 disagreeing with the implementation
    said "`1` is the highest" and said nothing about `0`; admitting it would move the top of the
    range by inference, and §15 makes a change to a parameter's meaning a versioned language change
    rather than a tolerance. A description carrying `(priority 0)` is refused.
-   ⚠️ *Not yet by the checker* (measured `2026-10-01`): `archogen check` accepts `(priority 0)` and
-   `(priority -3)`, and only the runtime's lowering refuses them, at boot. Leaf `M2.13` owns the refusal.
+   `archogen check` refuses it, and any rank below 1, with `priority-below-one` (`docs/semantics/model.md`
+   §4 rule 5) since leaf `M2.13`, `2026-10-01`; until then only the runtime's lowering did, at boot.
 2. ⛔ **The runtime's task index is not the eADL rank.** `crates/rt-core` makes a task's array
    index its priority, and indices start at **0**, while the language's highest rank is **1**. The
    mapping is therefore

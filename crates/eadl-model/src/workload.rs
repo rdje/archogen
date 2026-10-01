@@ -18,12 +18,13 @@
 //! is a total order only because priorities are unique. A rule stated in the profile and
 //! enforced nowhere is a rule every consumer has to re-implement, and the copies drift.
 //!
-//! # The four rules
+//! # The rules
 //!
 //! | Rule | Verdict when broken | Why that verdict |
 //! |---|---|---|
 //! | a release model is declared | `missing-fact` | §5.3 — the arrival model is a relevant fact, and it is simply undescribed |
 //! | not both `period` and `min-separation` | `invalid-description` | §5.5 — two release models is contradictory, not merely unsupported |
+//! | a priority is a rank, 1 or more | `priority-below-one`, an `invalid-description` | the language's, not the profile's: a value below 1 names no rank (leaf `M2.13`) |
 //! | priorities are unique | `unsupported-profile` | the profile admits one task per priority; another profile could admit more |
 //! | deadlines are constrained (`D ≤ T`) | `unsupported-profile` | an arbitrary-deadline model needs a different analysis, not a wider version of this one |
 //!
@@ -72,6 +73,7 @@ pub fn check(forms: &[Form]) -> Vec<Diagnostic> {
         for task in &tasks {
             release_model(task, &mut diagnostics);
             constrained_deadline(task, &mut diagnostics);
+            rank(task, &mut diagnostics);
         }
         unique_priorities(&tasks, &mut diagnostics);
     }
@@ -183,6 +185,27 @@ fn quantity(clause: &Form) -> Result<Quantity, ()> {
     Quantity::read(clause.items().get(1), clause.items().get(2)).map_err(|_| ())
 }
 
+/// `docs/decisions/decision_priority-comparison-direction.md`: a priority is a rank, an integer from 1,
+/// and 1 is the highest. A value below 1 names no rank — admitting one would move the top of the range
+/// by inference, which `ROADMAP.md` §15 makes a versioned language change — and the runtime refuses to
+/// build it (`rt_core::Scheduler::from_eadl_ranks`). Ranks need not be contiguous; only their order
+/// is used.
+fn rank(task: &Task<'_>, out: &mut Vec<Diagnostic>) {
+    let Some((priority, span)) = task.priority else {
+        return;
+    };
+    if priority < 1 {
+        out.push(Diagnostic::error(
+            "priority-below-one",
+            format!("task `{}` has priority {priority}, below 1", task.name),
+            Label::new(span, "a priority is a rank from 1"),
+            "write a rank of 1 or more. 1 is the highest priority and a larger number is a lower \
+             one, so the task meant to run first is `(priority 1)`; a value below 1 names no \
+             priority, and the runtime refuses to build one",
+        ));
+    }
+}
+
 /// §3.1: "static **unique** task priorities".
 fn unique_priorities(tasks: &[Task<'_>], out: &mut Vec<Diagnostic>) {
     let mut seen: BTreeMap<i64, (&str, Span)> = BTreeMap::new();
@@ -240,6 +263,31 @@ mod tests {
     #[test]
     fn an_admitted_task_set_produces_nothing() {
         assert!(diagnose(&system(OK_A, OK_B)).is_empty());
+    }
+
+    #[test]
+    fn a_priority_below_one_names_no_rank() {
+        for below in ["0", "-3"] {
+            let found = diagnose(&system(
+                OK_A,
+                &format!("(period 30 ms) (deadline 30 ms) (priority {below})"),
+            ));
+            assert_eq!(found.len(), 1, "{found:?}");
+            assert!(found[0].starts_with("priority-below-one: "), "{found:?}");
+            assert!(
+                found[0].contains(&format!("priority {below}, below 1")),
+                "{found:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn ranks_need_not_be_contiguous() {
+        assert!(diagnose(&system(
+            OK_A,
+            "(period 30 ms) (deadline 30 ms) (priority 9)"
+        ))
+        .is_empty());
     }
 
     #[test]

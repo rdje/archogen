@@ -51,6 +51,7 @@ f1a98ae67be88ebdc2b58bfc47100213a6a8f54264cbd09392a0ce6a5c61db3a  suite/docs/sem
 f19cf9a62e4fa88b9a5eae2446da3f8656db6fb253ef364c0cb714b08564e3f1  suite/docs/semantics/cases/invalid-implementation-in-description.eadl
 c466466d0df1fec55dcedb7ab3f7d68939ac7dac406c21b957ce658af4cd62fc  suite/docs/semantics/cases/invalid-missing-name.eadl
 f2116bfb9e7bd81c7dfcda597b88cdbb5335cff2edb721acbc756cdf27dde9c4  suite/docs/semantics/cases/invalid-missing-required-clause.eadl
+40576172cc081457eed04d0c54c19209c47a51d5c26d02e71edc62eb0cd9d2ea  suite/docs/semantics/cases/invalid-priority-below-one.eadl
 fd88a95441b3c9f366dd403f7de417d4b9c021bf72ed7d9d3b2bc634c44d95c5  suite/docs/semantics/cases/invalid-quantity-without-unit.eadl
 1d10333cd177e56e1ea80bf966fa40e0ea63e99e5d7af2f222ee32d7c6a08ca3  suite/docs/semantics/cases/invalid-repeated-at-most-one.eadl
 6f3c2aeed2424b3ff8038a2b53731d4bf0863330addbe0304eaf25a9a95a81eb  suite/docs/semantics/cases/invalid-two-release-models.eadl

@@ -170,11 +170,14 @@ fn the_population_is_the_size_the_census_pins() {
     //
     // 105 → 107 at leaf `M1.33`: §7 rule 6, a name is declared once — one semantic case for a single file and
     // one module case for §6 rule 9's collision.
+    //
+    // 107 → 108 at leaf `M2.13`: `invalid-priority-below-one.eadl`, the worked case for the model's §4 rule
+    // 5 — a priority is a rank from 1 — which the checker did not enforce until then.
     let suite = suite();
     assert_eq!(
         suite.len(),
-        107,
-        "the conformance suite holds {} descriptions and this census pins 107 — if a case was added or \
+        108,
+        "the conformance suite holds {} descriptions and this census pins 108 — if a case was added or \
          removed deliberately, update the census in the same commit and say why in the leaf; if not, a \
          root stopped being walked",
         suite.len()

@@ -124,7 +124,12 @@ it (`crates/eadl-model/src/check.rs`, `crates/eadl-model/src/workload.rs`).
    `unsupported-profile`.
 4. **`rt-static-up-v1` admits static, unique priorities.** Equal priorities need a tie-break policy with
    its own analysis, which belongs to another profile: `unsupported-profile`.
-5. **A failure of the toolchain is never a verdict about the description** (§5.5): `tool-failure`.
+5. **A priority is a rank: an integer from 1, and 1 is the highest**
+   (`docs/decisions/decision_priority-comparison-direction.md`). A larger number is a lower priority, and
+   the ranks of a system need not be contiguous, because only their order is used. A value below 1 names no
+   rank: `priority-below-one`. That is the language's rule, not a profile's, so its verdict is
+   `invalid-description`.
+6. **A failure of the toolchain is never a verdict about the description** (§5.5): `tool-failure`.
 
 ## 5. A description contains no implementation
 
@@ -153,10 +158,11 @@ the one code that names more than one rule today says so.
 | `quantity-negative-duration` | a duration is negative (§1 rule 4) | write a non-negative duration; an interval's direction belongs in the clause that uses it | `check (defsystem s (task t (period -10 ms) (deadline 10 ms) (priority 1)))` |
 | `quantity-overflow` | a decimal is too precise to represent exactly (§1 rule 5) | reduce the precision, or change the unit so fewer digits are needed | `check (defblock timer.counter (offers (tick-rate 0.0000000000000000000000000000000000000001 MHz)))` |
 | `quantity-invalid` | no input today: the totality arm for a refusal `Quantity::new` may grow (§1 rule 6) | write a quantity as a number followed by a known unit | `none: the catch-all arm of Quantity::read, for a refusal Quantity::new may grow later; today it refuses only what the frequency and duration rows state, and each has its own code (section 1 rule 6)` |
+| `priority-below-one` | a task's priority is below 1 (§4 rule 5) | write a rank of 1 or more: 1 is the highest priority, and a larger number is a lower one | `check (defsystem s (task t (period 10 ms) (deadline 10 ms) (priority 0)))` |
 | `invalid-description` | a description contradicts itself: a fact both offered and absent (§2 rule 1), or a task with two release models (§4 rule 1) | remove one of the two declarations; only the author knows which was meant | `check (defblock b (offers counter-width) (absent counter-width))` |
 | `infeasible-configuration` | a required fact is declared absent (§2 rule 2) | correct the requirement or the platform | `check (defblock timer.counter (offers counter-width) (absent low-power-timer)) (defservice time.lowpower (requires (needs low-power-timer))) (defsystem s (requires (uses time.lowpower)))` |
 | `missing-fact` | something the system requires is described nowhere: a required fact (§2 rule 3), a task's release model (§4 rule 1), or the platform a refinement names (§3 rule 4) | declare the fact offered or absent on the platform; give a task a `period` or a `min-separation`; for a refinement, import the module that declares the target, or correct its name | `check (defservice time.monotonic (requires (needs wrap-behavior))) (defsystem s (requires (uses time.monotonic)))` |
 | `refinement-violated` | a concrete platform breaks an obligation of the abstract one it refines (§3 rules 1–3) | honour the obligation the diagnostic names: offer the guarantee, give the bounded value, or drop what the abstract declares absent | `check (defplatform soc.abstract (offers counter-width) (absent debug-port)) (defplatform soc.concrete (refines soc.abstract) (offers counter-width debug-port))` |
 | `unsupported-profile` | the description asks for something the active profile does not admit (§4 rules 2–4) | request a profile that supports it, or change the description to fit this one; nothing is silently weakened | `check (defsystem s (task a (period 10 ms) (deadline 10 ms) (priority 1)) (task b (period 10 ms) (deadline 10 ms) (priority 1)))` |
-| `tool-failure` | the toolchain could not proceed (§4 rule 5) | this is a failure of the toolchain, not a verdict about the description; report it | `none: only a shipped kind module over 4 GiB reaches it, and the kind modules are embedded in the toolchain (shipped_registry in crates/eadl-model/src/check.rs)` |
+| `tool-failure` | the toolchain could not proceed (§4 rule 6) | this is a failure of the toolchain, not a verdict about the description; report it | `none: only a shipped kind module over 4 GiB reaches it, and the kind modules are embedded in the toolchain (shipped_registry in crates/eadl-model/src/check.rs)` |
 | `boundary-implementation-in-description` | a construct is implementation, which eADL does not contain (§5) | move it to the layer the diagnostic names; the description states what, not how | `check (defsystem app.rt (task sensor (period 10 ms) (deadline 10 ms) (wcet 850 us)))` |

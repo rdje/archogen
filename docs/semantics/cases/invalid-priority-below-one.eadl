@@ -1,0 +1,7 @@
+; case: invalid-priority-below-one
+; expect: invalid-description
+; why: A task priority of 0. A priority is a rank from 1, the highest, and 0 names no rank.
+;
+(eadl-version eadl/1)
+
+(defsystem s (task t (period 10 ms) (deadline 10 ms) (priority 0)))

@@ -46,6 +46,7 @@
 10 boundary-implementation-in-description docs/semantics/cases/invalid-implementation-in-description.eadl
 10 schema-missing-name docs/semantics/cases/invalid-missing-name.eadl
 10 schema-cardinality docs/semantics/cases/invalid-missing-required-clause.eadl
+10 priority-below-one docs/semantics/cases/invalid-priority-below-one.eadl
 10 quantity-missing-unit docs/semantics/cases/invalid-quantity-without-unit.eadl
 10 missing-fact,schema-cardinality docs/semantics/cases/invalid-repeated-at-most-one.eadl
 10 invalid-description docs/semantics/cases/invalid-two-release-models.eadl

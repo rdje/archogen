@@ -186,13 +186,13 @@ shipped one is well-formed by itself, and the clash shows only when the two are 
 
 ## The semantic corpus
 
-`docs/semantics/cases/` holds 33 worked cases — §12 M1 asks for twenty — each declaring the
+`docs/semantics/cases/` holds 34 worked cases — §12 M1 asks for twenty — each declaring the
 verdict it expects in its own header, and each run through this pipeline:
 
 | Expected | Cases |
 | --- | --- |
 | `ok` | 6 |
-| `invalid-description` | 14 |
+| `invalid-description` | 15 |
 | `unsupported-profile` | 7 |
 | `infeasible-configuration` | 3 |
 | `missing-fact` | 3 |

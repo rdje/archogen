@@ -27,7 +27,7 @@ else — an extension, not a privileged addition.
 | `period` / `min-separation` | the release model. The profile admits periodic or sporadic with a declared minimum separation |
 | `deadline` + `deadline-from` | §7.3 requires "the relative deadline **and its reference event**" — a deadline measured from an unnamed instant is not checkable |
 | `jitter` | bounded release jitter. Absent means zero, which is a claim the analysis relies on |
-| `priority` | static and unique. The number is the policy; the ready-queue that realizes it is the engine's |
+| `priority` | static and unique; a rank from 1, the highest, so a larger number is a lower priority. Ranks need not be contiguous, and one below 1 is refused (`priority-below-one`). The number is the policy; the ready-queue that realizes it is the engine's |
 | `needs` / `uses` | what the task requires, functionally |
 | `on-overrun` | a named response, not a handler body |
 

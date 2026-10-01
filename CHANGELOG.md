@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a task priority below 1 is refused when the description is checked
+
+`ARCHOGEN-M2-0265` (leaf `M2.13`).
+
+- `archogen check` now refuses a task with `(priority 0)` or a negative priority, saying that a priority is a
+  rank from 1, the highest. Before, such a description was accepted and only failed later, when the runtime
+  refused to build it. Priorities with gaps, such as 1, 5 and 9, stay valid.
+- The language's meaning does not change: a rank below 1 never had one. The change is written down as a
+  correction to `eadl/1`, with a new worked case, and no existing description's verdict moved.
+
 ## archogen — the runtime and its independent model agree on the amended contract
 
 `ARCHOGEN-M2-0264` (leaf `M2.9`).
