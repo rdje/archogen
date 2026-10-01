@@ -698,10 +698,20 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0298 (leaf PROGRAM.47.3)`
 
 - ID: `PROGRAM.47.4`
-  Status: `pending`
-  Goal: the runtime chapter in layers, its full mechanics moved to an annex, *The fault contract, case by case*.
-  Verification: `pending`
-  Commit: `pending`
+  Status: `done` — `2026-10-02`
+  Goal: the runtime chapter in layers, its full mechanics moved to an annex.
+  **Done.** `docs/book/src/runtime.md` opens with the idea in plain words — one cook, a row of orders with deadlines,
+  a referee who decides beside a player who acts — then a one-minute summary for engineers, then how it works (a
+  task's life, who runs next, holding interrupts back, the four faults), then the precise rules, how we know they are
+  right, and today against ahead. *Annex A: The runtime's rules in detail* (`annex-runtime.md`), in a new *Annexes*
+  part, takes the case-by-case mechanics — latched arrivals and completions inside a region, panics, the record a
+  board keeps, the masked-overrun rule — and the history of how the two models were made to agree. The rewrite also
+  corrected a stale claim: the chapter said the bare-metal build was unavailable until the target was installed, and
+  `bash scripts/no_std_build.sh` builds `rt-core` for `riscv64imac-unknown-none-elf`, rc=0.
+  Verification: `bash scripts/build_book.sh` → rc=0; 231 anchored links across the book checked against the built
+  HTML, 0 missing; `book-glossary: OK`, `book-index: OK (280 entries …)`, `book-anchors: OK`, `book-coverage: OK`;
+  `cargo test --all -q` → 958 passed, 0 failed; `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`
+  Commit: `ARCHOGEN-PROGRAM-0301 (leaf PROGRAM.47.4)`
 
 - ID: `PROGRAM.47.5`
   Status: `pending`
@@ -775,7 +785,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.47` | `active` | **the director's ruling of `2026-10-02`**: the book in layers, with a live glossary, annexes and an index; `.1` recorded, `.2` the glossary and `.3` the index done, `.4` the runtime chapter next |
+| 1 | `PROGRAM.47` | `active` | **the director's ruling of `2026-10-02`**: the book in layers, with a live glossary, annexes and an index; `.1` recorded, `.2` the glossary, `.3` the index and `.4` the runtime chapter done, `.5` the other chapters next |
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 | 3 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
 
@@ -1008,6 +1018,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.47.2` | `ARCHOGEN-PROGRAM-0297 (leaf PROGRAM.47.2)` | **the glossary, kept live** — every acronym the book uses, defined; `BOOK-GLOSSARY` |
 | `PROGRAM.47.3` | `ARCHOGEN-PROGRAM-0298 (leaf PROGRAM.47.3)` | **the index, generated** — every glossary word and every section, linked; `BOOK-INDEX` |
 | `PROGRAM.47.2` | `ARCHOGEN-PROGRAM-0300 (leaf PROGRAM.47.2)` | **correction**: eADL spelled out, Extended Architecture Description Language, as `M1.13.3` recorded; the census that missed it was too narrow |
+| `PROGRAM.47.4` | `ARCHOGEN-PROGRAM-0301 (leaf PROGRAM.47.4)` | **the runtime chapter in layers**, its mechanics and history in Annex A |
 
 ## Changelog
 

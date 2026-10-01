@@ -19,6 +19,7 @@ a change that leaves it stale, so it is never edited by hand.
   catalog](catalog.md#a-record-and-its-four-parts)
 - A requirement is an obligation, not a claim to trust — [The boundary: functionality versus
   implementation](boundary.md#a-requirement-is-an-obligation-not-a-claim-to-trust)
+- A task's life — [The runtime: decisions, not actions](runtime.md#a-tasks-life)
 - A third reader — [Verifying the toolchain](verification.md#a-third-reader)
 - A tier has three outcomes, not two — [Verifying the toolchain](verification.md#a-tier-has-three-outcomes-not-two)
 - **ABI** — [definition](glossary.md), [The boundary: functionality versus implementation](boundary.md)
@@ -47,9 +48,9 @@ a change that leaves it stale, so it is never edited by hand.
 - Canonical form — [Reading a description](reading.md#canonical-form)
 - **catalog** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [What a report may
   claim](evidence.md), [What the scheduling checker establishes](analysis.md), [Where the engine's knowledge comes from:
-  the catalog](catalog.md), [The S0 early generation path](s0.md), [Where generated systems run](targets.md), [Verifying
-  the toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
-  changing it costs](versions.md)
+  the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [The S0 early generation path](s0.md),
+  [Where generated systems run](targets.md), [Verifying the toolchain](verification.md), [What this project relies on
+  from outside](ledger.md), [What is versioned, and what changing it costs](versions.md)
 - catalog-rules — [What is versioned, and what changing it costs](versions.md#catalog-rules)
 - catalog-s0 — [What is versioned, and what changing it costs](versions.md#catalog-s0)
 - chipdoc — [What this project relies on from outside](ledger.md#chipdoc)
@@ -120,9 +121,10 @@ a change that leaves it stale, so it is never edited by hand.
 - F29: the fixture built so an omission cannot hide — [What the scheduling checker
   establishes](analysis.md#f29-the-fixture-built-so-an-omission-cannot-hide)
 - **fault** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [The runtime: decisions, not
-  actions](runtime.md), [What this project relies on from outside](ledger.md)
+  actions](runtime.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
+  detail](annex-runtime.md)
+- Faults in detail — [Annex A: The runtime's rules in detail](annex-runtime.md#faults-in-detail)
 - Finished work leaves the task trees — [Verifying the toolchain](verification.md#finished-work-leaves-the-task-trees)
-- Four task states — [The runtime: decisions, not actions](runtime.md#four-task-states)
 - freertos-kernel — [What this project relies on from outside](ledger.md#freertos-kernel)
 - fsmgen — [What this project relies on from outside](ledger.md#fsmgen)
 
@@ -135,18 +137,24 @@ a change that leaves it stale, so it is never edited by hand.
 
 ## H
 
-- **halt** — [definition](glossary.md), [The runtime: decisions, not actions](runtime.md)
+- **halt** — [definition](glossary.md), [The runtime: decisions, not actions](runtime.md), [Annex A: The runtime's rules
+  in detail](annex-runtime.md)
 - Hashes: what a review is a review of — [Where the engine's knowledge comes from: the
   catalog](catalog.md#hashes-what-a-review-is-a-review-of)
+- Holding interrupts back — [The runtime: decisions, not actions](runtime.md#holding-interrupts-back)
 - How a format is held to its identifier — [What is versioned, and what changing it
   costs](versions.md#how-a-format-is-held-to-its-identifier)
 - How an engine change is held to what descriptions mean — [What is versioned, and what changing it
   costs](versions.md#how-an-engine-change-is-held-to-what-descriptions-mean)
 - How it was reviewed — [Where the engine's knowledge comes from: the catalog](catalog.md#how-it-was-reviewed)
+- How it works — [The runtime: decisions, not actions](runtime.md#how-it-works)
 - How much of this a machine can check — [The boundary: functionality versus
   implementation](boundary.md#how-much-of-this-a-machine-can-check)
 - How the command line is held to it — [The engine API](engine-api.md#how-the-command-line-is-held-to-it)
+- How the two models were made to agree — [Annex A: The runtime's rules in
+  detail](annex-runtime.md#how-the-two-models-were-made-to-agree)
 - How time is charged — [What the scheduling checker establishes](analysis.md#how-time-is-charged)
+- How we know it is right — [The runtime: decisions, not actions](runtime.md#how-we-know-it-is-right)
 - **HTTP** — [definition](glossary.md), [The engine API](engine-api.md)
 - **HTTPS** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 
@@ -157,13 +165,12 @@ a change that leaves it stale, so it is never edited by hand.
 - **interrupt** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The supported profile](profile.md), [What the scheduling checker establishes](analysis.md), [Where
   the engine's knowledge comes from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [Where
-  generated systems run](targets.md), [What this project relies on from outside](ledger.md)
+  generated systems run](targets.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's
+  rules in detail](annex-runtime.md)
 - **IPC** — [definition](glossary.md), [The supported profile](profile.md)
 - **ISA** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **ISR** — [definition](glossary.md), [The use cases](usecases.md), [What the scheduling checker
   establishes](analysis.md)
-- It has been checked against a model that never saw it — [The runtime: decisions, not
-  actions](runtime.md#it-has-been-checked-against-a-model-that-never-saw-it)
 - It is about meaning, not vocabulary — [The boundary: functionality versus
   implementation](boundary.md#it-is-about-meaning-not-vocabulary)
 
@@ -171,7 +178,8 @@ a change that leaves it stale, so it is never edited by hand.
 
 - **job** — [definition](glossary.md), [The supported profile](profile.md), [What the scheduling checker
   establishes](analysis.md), [The runtime: decisions, not actions](runtime.md), [Where generated systems
-  run](targets.md), [Verifying the toolchain](verification.md), [What this project relies on from outside](ledger.md)
+  run](targets.md), [Verifying the toolchain](verification.md), [What this project relies on from outside](ledger.md),
+  [Annex A: The runtime's rules in detail](annex-runtime.md)
 - **JSON** — [definition](glossary.md), [The engine API](engine-api.md), [What is versioned, and what changing it
   costs](versions.md)
 
@@ -182,6 +190,8 @@ a change that leaves it stale, so it is never edited by hand.
 ## L
 
 - language — [What is versioned, and what changing it costs](versions.md#language)
+- Latched releases and completions inside a region — [Annex A: The runtime's rules in
+  detail](annex-runtime.md#latched-releases-and-completions-inside-a-region)
 - Later profiles — [The supported profile](profile.md#later-profiles)
 - **LCOFI** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - linkedspec — [What this project relies on from outside](ledger.md#linkedspec)
@@ -189,8 +199,7 @@ a change that leaves it stale, so it is never edited by hand.
 
 ## M
 
-- Masking is modelled, not assumed away — [The runtime: decisions, not
-  actions](runtime.md#masking-is-modelled-not-assumed-away)
+- Masking — [The runtime: decisions, not actions](runtime.md#masking)
 - **MB** — [definition](glossary.md), [The engine API](engine-api.md)
 - **MCP** — [definition](glossary.md), [The engine API](engine-api.md), [What is versioned, and what changing it
   costs](versions.md)
@@ -227,7 +236,7 @@ a change that leaves it stale, so it is never edited by hand.
 - osek-os — [What this project relies on from outside](ledger.md#osek-os)
 - Other repositories are read-only — [Verifying the toolchain](verification.md#other-repositories-are-read-only)
 - **overrun** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [The runtime: decisions,
-  not actions](runtime.md)
+  not actions](runtime.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
 
 ## P
 
@@ -240,7 +249,7 @@ a change that leaves it stale, so it is never edited by hand.
 - **PLIC** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **port** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Where the engine's knowledge
   comes from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [What this project relies on
-  from outside](ledger.md)
+  from outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
 - **POSIX** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [The supported
   profile](profile.md)
 - Precise composition errors — [Modules and composition](modules.md#precise-composition-errors)
@@ -250,7 +259,7 @@ a change that leaves it stale, so it is never edited by hand.
 - **priority** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The use cases](usecases.md), [Describing a workload](workload.md), [Checking a
   description](checking.md), [The runtime: decisions, not actions](runtime.md), [The S0 early generation path](s0.md),
-  [What this project relies on from outside](ledger.md)
+  [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
 - profile — [What is versioned, and what changing it costs](versions.md#profile)
 - **profile** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The supported profile](profile.md), [The use cases](usecases.md), [Quantities and
@@ -258,7 +267,8 @@ a change that leaves it stale, so it is never edited by hand.
   description](checking.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [The runtime:
   decisions, not actions](runtime.md), [The S0 early generation path](s0.md), [Where generated systems run](targets.md),
   [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying the toolchain](verification.md),
-  [What this project relies on from outside](ledger.md), [What is versioned, and what changing it costs](versions.md)
+  [What this project relies on from outside](ledger.md), [What is versioned, and what changing it costs](versions.md),
+  [Annex A: The runtime's rules in detail](annex-runtime.md)
 - provenance-format — [What is versioned, and what changing it costs](versions.md#provenance-format)
 
 ## Q
@@ -283,7 +293,7 @@ a change that leaves it stale, so it is never edited by hand.
   [Where the engine's knowledge comes from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md),
   [The S0 early generation path](s0.md), [Where generated systems run](targets.md), [Verifying the
   toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
-  changing it costs](versions.md)
+  changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
 - Relevance decides whether an unknown matters — [Presence, absence, and
   relevance](presence.md#relevance-decides-whether-an-unknown-matters)
 - **RGX** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
@@ -297,7 +307,8 @@ a change that leaves it stale, so it is never edited by hand.
   board](tour.md), [The supported profile](profile.md), [What a report may claim](evidence.md), [What the scheduling
   checker establishes](analysis.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [The runtime:
   decisions, not actions](runtime.md), [Where generated systems run](targets.md), [Verifying the
-  toolchain](verification.md), [What this project relies on from outside](ledger.md)
+  toolchain](verification.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
+  detail](annex-runtime.md)
 - rust-toolchain — [What this project relies on from outside](ledger.md#rust-toolchain)
 - **RV64** — [definition](glossary.md), [Reading a description](reading.md)
 
@@ -310,6 +321,7 @@ a change that leaves it stale, so it is never edited by hand.
 - **SI** — [definition](glossary.md), [Quantities and units](quantities.md)
 - Silence is not admission — [The supported profile](profile.md#silence-is-not-admission)
 - **SSI** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
+- States and priorities — [The runtime: decisions, not actions](runtime.md#states-and-priorities)
 - Status is derived, never written — [Where the engine's knowledge comes from: the
   catalog](catalog.md#status-is-derived-never-written)
 - **STI** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
@@ -322,7 +334,7 @@ a change that leaves it stale, so it is never edited by hand.
   units](quantities.md), [Describing a workload](workload.md), [Checking a description](checking.md), [What the
   scheduling checker establishes](analysis.md), [The runtime: decisions, not actions](runtime.md), [The S0 early
   generation path](s0.md), [Verifying the toolchain](verification.md), [What this project relies on from
-  outside](ledger.md)
+  outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
 - The admitted task model, enforced — [Describing a workload](workload.md#the-admitted-task-model-enforced)
 - The binding a web page loads — [The engine API](engine-api.md#the-binding-a-web-page-loads)
 - The browser module answers as the command line does — [Verifying the
@@ -346,6 +358,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The gate: the oracle comes first — [The S0 early generation path](s0.md#the-gate-the-oracle-comes-first)
 - The histories are sealed as they grow — [Verifying the
   toolchain](verification.md#the-histories-are-sealed-as-they-grow)
+- The idea, in plain words — [The runtime: decisions, not actions](runtime.md#the-idea-in-plain-words)
 - The language definition travels with the binary — [Checking a
   description](checking.md#the-language-definition-travels-with-the-binary)
 - The list you read is the list the engine uses — [The supported
@@ -357,6 +370,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The observation contract — [The S0 early generation path](s0.md#the-observation-contract)
 - The passes, in the order a failure makes the next meaningless — [Checking a
   description](checking.md#the-passes-in-the-order-a-failure-makes-the-next-meaningless)
+- The precise rules — [The runtime: decisions, not actions](runtime.md#the-precise-rules)
 - The product runs nothing — [Verifying the toolchain](verification.md#the-product-runs-nothing)
 - The records that hold it — [Where the engine's knowledge comes from: the catalog](catalog.md#the-records-that-hold-it)
 - The sealed set — [The use cases](usecases.md#the-sealed-set)
@@ -379,10 +393,11 @@ a change that leaves it stale, so it is never edited by hand.
 - Three outcomes, and one that is easy to get wrong — [What the scheduling checker
   establishes](analysis.md#three-outcomes-and-one-that-is-easy-to-get-wrong)
 - **TL16C550C** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
+- Today and ahead — [The runtime: decisions, not actions](runtime.md#today-and-ahead)
 - **trap** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [The boundary: functionality
   versus implementation](boundary.md), [What the scheduling checker establishes](analysis.md), [The runtime: decisions,
   not actions](runtime.md), [Where generated systems run](targets.md), [What this project relies on from
-  outside](ledger.md)
+  outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
 - Trust dependencies — [What a report may claim](evidence.md#trust-dependencies)
 - Two mechanisms now catch all three — [Describing a workload](workload.md#two-mechanisms-now-catch-all-three)
 
@@ -436,6 +451,7 @@ a change that leaves it stale, so it is never edited by hand.
 - What this project does not claim — [Introduction](introduction.md#what-this-project-does-not-claim)
 - What you can run today — [Modules and composition](modules.md#what-you-can-run-today)
 - When a push is due — [Verifying the toolchain](verification.md#when-a-push-is-due)
+- When something goes wrong — [The runtime: decisions, not actions](runtime.md#when-something-goes-wrong)
 - When the description is broken — [The S0 early generation path](s0.md#when-the-description-is-broken)
 - Where each declaration came from — [The S0 early generation path](s0.md#where-each-declaration-came-from)
 - Where it lives — [Presence, absence, and relevance](presence.md#where-it-lives)
@@ -445,6 +461,7 @@ a change that leaves it stale, so it is never edited by hand.
 - Which language version a description is written in — [Reading a
   description](reading.md#which-language-version-a-description-is-written-in)
 - Which verdict one diagnostic carries — [Checking a description](checking.md#which-verdict-one-diagnostic-carries)
+- Who runs next — [The runtime: decisions, not actions](runtime.md#who-runs-next)
 - Why a bound carries a direction — [Refinement](refinement.md#why-a-bound-carries-a-direction)
 - Why a construct registry and not a keyword scan — [The boundary: functionality versus
   implementation](boundary.md#why-a-construct-registry-and-not-a-keyword-scan)

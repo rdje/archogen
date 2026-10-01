@@ -40,5 +40,9 @@
 - [What this project relies on from outside](ledger.md)
 - [What is versioned, and what changing it costs](versions.md)
 
+# Annexes
+
+- [Annex A: The runtime's rules in detail](annex-runtime.md)
+
 [Words this book uses](glossary.md)
 [Index](book-index.md)

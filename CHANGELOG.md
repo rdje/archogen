@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the runtime chapter, written for a newcomer and an expert
+
+`ARCHOGEN-PROGRAM-0301` (leaf `PROGRAM.47.4`).
+
+- The chapter on the runtime now starts in plain words — a cook with a row of orders, each due by a time — then
+  gives engineers a one-minute summary and the precise rules. The case-by-case details and their history moved
+  to the book's first annex, and a stale claim about the bare-metal build was corrected.
+
 ## archogen — the fault contract's ninth reading finds one defect
 
 `ARCHOGEN-M2-0299` (leaf `M2.9`).
