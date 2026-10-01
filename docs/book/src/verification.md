@@ -230,6 +230,15 @@ every step green but the quarantined emulator, the gap annotated, the summary wr
 reproduce is the runner's own userland, GNU `sed` and `awk` where this machine has BSD ones. Leaf
 `PROGRAM.10.5` reads the first real run for that, after the next push.
 
+Every workflow runs on `push`, and a pull request's branch in this repository is pushed, so every workflow runs
+code a pull request controls. `WORKFLOW-TOKENS` (`scripts/check_workflow_tokens.sh`, leaf `M2.7.6.1`) holds each
+to a read-only token. A workflow must have a top-level `permissions:` that grants no write scope, and no job may
+grant one. Every `actions/checkout` step must set `persist-credentials: false`, so the token does not stay in the
+clone. There must be no `pull_request_target` or `workflow_run` trigger, since both run with the base repository's
+token. The gate reads a plain subset of YAML and refuses the rest, so a file it cannot read is refused, never
+passed. This is the first piece of the catalog check's protection (`M2.7.6`). The repository's default token, and
+the other hosting settings, are the director's to set, and no commit can show them.
+
 ## The engine compiles for the browser
 
 The programmatic-interface decision promises a wasm binding, so the `integration` tier measures whether

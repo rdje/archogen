@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — no workflow can write to the repository
+
+`ARCHOGEN-M2-0285` (leaf `M2.7.6.1`).
+
+- Every CI workflow now runs with a read-only token and leaves no credentials in its checkout, and a new gate
+  refuses a workflow that grants a write permission, keeps the token, or uses a trigger that runs with the main
+  repository's token on code a pull request controls. It is the first piece of protecting the catalog's check,
+  whose verdict nothing a pull request controls may post; the hosting's own settings remain the director's.
+
 ## archogen — the fault contract answers its fifth reading
 
 `ARCHOGEN-M2-0284` (leaf `M2.9`).

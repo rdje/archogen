@@ -6,11 +6,17 @@ on:
   push:
   pull_request:
 
+# Read-only, and no checkout keeps the token (WORKFLOW-TOKENS, leaf M2.7.6.1): a pull request's branch runs here too.
+permissions:
+  contents: read
+
 jobs:
   focused:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0, what v4 resolved to on 2026-09-30
+        with:
+          persist-credentials: false
       # The toolchain rust-toolchain.toml pins, with its components and target: the one place the version is written.
       - name: The pinned Rust toolchain
         run: rustup toolchain install --no-self-update
@@ -30,6 +36,7 @@ jobs:
         with:
           # the doctrine step reads history, as the doctrines workflow does
           fetch-depth: 0
+          persist-credentials: false
       - name: The pinned Rust toolchain
         run: rustup toolchain install --no-self-update
       # What building the pinned QEMU needs from the image. QEMU itself is built at its pin, below: the image's

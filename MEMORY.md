@@ -18,7 +18,7 @@
   `docs/TASK_TREE.md`.
 - **Next action:** `M2.9` — a sixth independent review of `docs/profiles/rt-static-up-v1-faults.md`, read beside the
   composition record; the leaf closes on the first round that finds no defect. Then `M2.7.6` (its
-  repository half; the hosting half waits on findings §11), `M2.7.4`, `M2.7.5`, `M2.11`, then `API.6`. This project
+  repository half, `M2.7.6.1` done; the hosting half waits on findings §11), `M2.7.4`, `M2.7.5`, `M2.11`, then `API.6`. This project
   uses no branches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4` — findings §11, `main`'s protection;
