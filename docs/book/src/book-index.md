@@ -46,11 +46,12 @@ a change that leaves it stale, so it is never edited by hand.
 ## C
 
 - Canonical form — [Reading a description](reading.md#canonical-form)
-- **catalog** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [What a report may
-  claim](evidence.md), [What the scheduling checker establishes](analysis.md), [Where the engine's knowledge comes from:
-  the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [The S0 early generation path](s0.md),
-  [Where generated systems run](targets.md), [Verifying the toolchain](verification.md), [What this project relies on
-  from outside](ledger.md), [What is versioned, and what changing it costs](versions.md)
+- **catalog** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
+  board](tour.md), [What a report may claim](evidence.md), [What the scheduling checker establishes](analysis.md),
+  [Where the engine's knowledge comes from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md),
+  [The S0 early generation path](s0.md), [Where generated systems run](targets.md), [Verifying the
+  toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
+  changing it costs](versions.md)
 - catalog-rules — [What is versioned, and what changing it costs](versions.md#catalog-rules)
 - catalog-s0 — [What is versioned, and what changing it costs](versions.md#catalog-s0)
 - chipdoc — [What this project relies on from outside](ledger.md#chipdoc)
@@ -147,6 +148,7 @@ a change that leaves it stale, so it is never edited by hand.
 - How an engine change is held to what descriptions mean — [What is versioned, and what changing it
   costs](versions.md#how-an-engine-change-is-held-to-what-descriptions-mean)
 - How it was reviewed — [Where the engine's knowledge comes from: the catalog](catalog.md#how-it-was-reviewed)
+- How it works — [Introduction](introduction.md#how-it-works)
 - How it works — [The runtime: decisions, not actions](runtime.md#how-it-works)
 - How much of this a machine can check — [The boundary: functionality versus
   implementation](boundary.md#how-much-of-this-a-machine-can-check)
@@ -154,6 +156,7 @@ a change that leaves it stale, so it is never edited by hand.
 - How the two models were made to agree — [Annex A: The runtime's rules in
   detail](annex-runtime.md#how-the-two-models-were-made-to-agree)
 - How time is charged — [What the scheduling checker establishes](analysis.md#how-time-is-charged)
+- How to read this book — [Introduction](introduction.md#how-to-read-this-book)
 - How we know it is right — [The runtime: decisions, not actions](runtime.md#how-we-know-it-is-right)
 - **HTTP** — [definition](glossary.md), [The engine API](engine-api.md)
 - **HTTPS** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
@@ -176,10 +179,10 @@ a change that leaves it stale, so it is never edited by hand.
 
 ## J
 
-- **job** — [definition](glossary.md), [The supported profile](profile.md), [What the scheduling checker
-  establishes](analysis.md), [The runtime: decisions, not actions](runtime.md), [Where generated systems
-  run](targets.md), [Verifying the toolchain](verification.md), [What this project relies on from outside](ledger.md),
-  [Annex A: The runtime's rules in detail](annex-runtime.md)
+- **job** — [definition](glossary.md), [Introduction](introduction.md), [The supported profile](profile.md), [What the
+  scheduling checker establishes](analysis.md), [The runtime: decisions, not actions](runtime.md), [Where generated
+  systems run](targets.md), [Verifying the toolchain](verification.md), [What this project relies on from
+  outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
 - **JSON** — [definition](glossary.md), [The engine API](engine-api.md), [What is versioned, and what changing it
   costs](versions.md)
 
@@ -247,9 +250,10 @@ a change that leaves it stale, so it is never edited by hand.
 - **PGEN** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - pgen — [What this project relies on from outside](ledger.md#pgen)
 - **PLIC** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
-- **port** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Where the engine's knowledge
-  comes from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [What this project relies on
-  from outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
+- **port** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
+  board](tour.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [The runtime: decisions, not
+  actions](runtime.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
+  detail](annex-runtime.md)
 - **POSIX** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [The supported
   profile](profile.md)
 - Precise composition errors — [Modules and composition](modules.md#precise-composition-errors)
@@ -282,7 +286,6 @@ a change that leaves it stale, so it is never edited by hand.
 
 - **R24-11** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **RAM** — [definition](glossary.md), [Where generated systems run](targets.md)
-- Reading order — [Introduction](introduction.md#reading-order)
 - **README** — [definition](glossary.md), [Verifying the toolchain](verification.md)
 - **RED** — [definition](glossary.md), [Verifying the toolchain](verification.md)
 - Refusal is a feature — [The supported profile](profile.md#refusal-is-a-feature)
@@ -358,6 +361,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The gate: the oracle comes first — [The S0 early generation path](s0.md#the-gate-the-oracle-comes-first)
 - The histories are sealed as they grow — [Verifying the
   toolchain](verification.md#the-histories-are-sealed-as-they-grow)
+- The idea, in plain words — [Introduction](introduction.md#the-idea-in-plain-words)
 - The idea, in plain words — [The runtime: decisions, not actions](runtime.md#the-idea-in-plain-words)
 - The language definition travels with the binary — [Checking a
   description](checking.md#the-language-definition-travels-with-the-binary)
@@ -370,6 +374,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The observation contract — [The S0 early generation path](s0.md#the-observation-contract)
 - The passes, in the order a failure makes the next meaningless — [Checking a
   description](checking.md#the-passes-in-the-order-a-failure-makes-the-next-meaningless)
+- The precise rules — [Introduction](introduction.md#the-precise-rules)
 - The precise rules — [The runtime: decisions, not actions](runtime.md#the-precise-rules)
 - The product runs nothing — [Verifying the toolchain](verification.md#the-product-runs-nothing)
 - The records that hold it — [Where the engine's knowledge comes from: the catalog](catalog.md#the-records-that-hold-it)
@@ -393,6 +398,7 @@ a change that leaves it stale, so it is never edited by hand.
 - Three outcomes, and one that is easy to get wrong — [What the scheduling checker
   establishes](analysis.md#three-outcomes-and-one-that-is-easy-to-get-wrong)
 - **TL16C550C** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
+- Today and ahead — [Introduction](introduction.md#today-and-ahead)
 - Today and ahead — [The runtime: decisions, not actions](runtime.md#today-and-ahead)
 - **trap** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [The boundary: functionality
   versus implementation](boundary.md), [What the scheduling checker establishes](analysis.md), [The runtime: decisions,

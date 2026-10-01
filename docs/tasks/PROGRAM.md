@@ -714,12 +714,23 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0301 (leaf PROGRAM.47.4)`
 
 - ID: `PROGRAM.47.5`
-  Status: `pending`
+  Status: `active` — one chapter per child, each `done` when committed: `.1` the introduction
   Goal: every other chapter in layers, one leaf and commit each when started, the chapters a newcomer meets first
   leading — the introduction and the tour, reading and workload, checking, evidence and analysis, the catalog,
   targets, the command line, the engine API, verification — and the gory parts of each moved to annexes.
   Verification: `pending`
   Commit: `pending`
+
+- ID: `PROGRAM.47.5.1`
+  Status: `done` — `2026-10-02`
+  Goal: the introduction, the book's first page, in layers.
+  **Done.** It opens with the idea in plain words — the small devices such a system runs, describing what is needed
+  and letting archogen build it, the what-not-how rule — then a one-minute summary for engineers, the four steps,
+  the precise rules it held before (the boundary table, the first profile, what the project does not claim), today
+  against ahead, and how to read the book with its annexes, glossary and index.
+  Verification: `bash scripts/build_book.sh` → rc=0; the book gates and `bash scripts/check_doctrines.sh` → `=== all
+  doctrines green ===`
+  Commit: `ARCHOGEN-PROGRAM-0302 (leaf PROGRAM.47.5.1)`
 
 ## Roadmap coverage map
 
@@ -1019,6 +1030,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.47.3` | `ARCHOGEN-PROGRAM-0298 (leaf PROGRAM.47.3)` | **the index, generated** — every glossary word and every section, linked; `BOOK-INDEX` |
 | `PROGRAM.47.2` | `ARCHOGEN-PROGRAM-0300 (leaf PROGRAM.47.2)` | **correction**: eADL spelled out, Extended Architecture Description Language, as `M1.13.3` recorded; the census that missed it was too narrow |
 | `PROGRAM.47.4` | `ARCHOGEN-PROGRAM-0301 (leaf PROGRAM.47.4)` | **the runtime chapter in layers**, its mechanics and history in Annex A |
+| `PROGRAM.47.5.1` | `ARCHOGEN-PROGRAM-0302 (leaf PROGRAM.47.5.1)` | **the introduction in layers** |
 
 ## Changelog
 
