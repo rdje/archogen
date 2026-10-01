@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the fault contract answers its third reading
+
+`ARCHOGEN-M2-0277` (leaf `M2.9`).
+
+- The third independent reading of the runtime's fault contract found twelve places where two careful implementers
+  could still build different systems, most of them where the contract meets the board port: when a task's job
+  counts as finished, which traps are unexpected, how an interrupt controller's empty claim is treated, who may open
+  a critical section and how a port notices when the wrong code does. Each is now decided in the text; neither
+  runtime model needed to change.
+- What the contract narrowed, such as when a missed deadline is reported, is marked for the director's review.
+
 ## archogen — the runtime's fault contract leaves the roadmap
 
 `ARCHOGEN-M2-0276` (leaf `M2.19`).

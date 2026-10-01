@@ -16,9 +16,9 @@
 - **Active tree:** `M2` → frontier `M2.9`. `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API`'s is
   `API.6`; `M1`'s only open leaf, `M1.29.4`, is blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M2.9` step 6h — triage and answer the fault contract's third review (27 findings, 12 defects;
-  the report is summarised in the gaps record), now in `docs/profiles/rt-static-up-v1-faults.md`; then a fourth round
-  until no defect remains, and the leaf closed. Then `M2.7.6` (its
+- **Next action:** `M2.9` steps 6i — the reference model widens its rank to 64 bits (its own context) — and 6j, a
+  fourth independent review of `docs/profiles/rt-static-up-v1-faults.md` read beside the composition record; then
+  answers until no defect remains, and the leaf closed. Then `M2.7.6` (its
   repository half; the hosting half waits on findings §11), `M2.7.4`, `M2.7.5`, `M2.11`, then `API.6`. This project
   uses no branches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of

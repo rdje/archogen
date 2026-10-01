@@ -174,9 +174,13 @@ roadmap and task-trees, so please decide (sota, signoff)"). `M2.9` carries it ou
   (SWS_Os_00069) and ignores a `TerminateTask` called with interrupts disabled (SWS_Os_00093) — where rule 4 makes
   the completion an ordinary one. The precedent supports the recovery, not the ordinariness; the ordinariness rests
   on the composition's `CS_i` and condition 5 above, and whether such a completion is *reported* is `M2.15`'s.
+  *(Superseded in its detail by the fault contract's rule 4: the depth is the job's by its Terms, and whether the
+  decision precedes the delivery is the port's.)*
 - **(c), (d) and (e) as drafted:** the trap row's class is the deliberate fatal trap; attribution is one rule, the
   executing context, which for a stack guard is the task whose guard was breached while every task has its own
   static stack; ground 2 speaks of resuming the schedule.
+  *(Superseded in its detail by the fault contract's rule 2: attribution is the context that raises the fault, and a
+  stack guard names whose guard was hit apart from whom it is attributed to.)*
 
 **Carried out `2026-10-01`** (`ARCHOGEN-M2-0264`, leaf `M2.9`): both models carry (a)–(e), the reference re-derived
 by a context that never read `crates/rt-core`, and the two agree over a randomised comparison widened to everything

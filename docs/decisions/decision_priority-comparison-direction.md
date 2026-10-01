@@ -95,7 +95,8 @@ independently derived model of §8 disagreeing with the implementation
 
    Two consequences, stated so they are not rediscovered. **The runtime index is internal**: adding
    or removing a task renumbers the others, so a trace, a plan or a fault record names a task by
-   its stable logical ID (`ROADMAP.md` §7.3), never by its index. And the order is a bijection only
+   its stable logical ID (`ROADMAP.md` §7.3), never by its index; a runtime that holds only an index has the plan
+   supply the ID when a record leaves it (the profile's fault contract, rule 7; `ROADMAP.md` §7.5). And the order is a bijection only
    because ranks are unique, which is enforced twice: `archogen check` refuses two tasks at one
    priority (`unsupported-profile`, `crates/eadl-model/src/workload.rs`), and the lowering refuses
    them at boot (`rt_core::BootError::DuplicateRank`).

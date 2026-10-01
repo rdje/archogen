@@ -207,6 +207,20 @@ replacement text, several found by reading the contract against the composition 
 | 66–73 | drafting | rule 5's "otherwise at its return" and "rolls back"; the header against §14.1 and §15; rule 7's guard and context fields; rule 1's undefined "masked interval"; "masked run"; F26's row; "any other policy"; rule 4's "same state" |
 | 74–80 | nits | the profile page's pointer; the elaborated task name; "triggering release", "ready" not "dispatched"; `M2.18` going stale; findings §6 (a) and (d) not marked superseded; the empty set's boot refusal and check status; rule 7's escalated field and a fault before the record is complete |
 
+**Answered `2026-10-01` (step 6h), in the fault contract's new home.** Every finding is accepted, most in the
+reviewer's own replacement text, and none moves either model: they state what the port must do where the hosted
+models cannot see — 54's detection from the port's own state, 58's trap-entered primitive, 59–61's trap
+classification and claim loop, 62's completion instant — or settle what both models already did: 56 and 57's
+transition rule is what `rt-core` records, the decision's assertion naming the outgoing task while its job is owed,
+and 64's discard under `Fault` is what both models' states show. **55 is decided the other way from the reviewer's
+first option:** initialisation calls no masking primitive, since it runs with interrupts disabled and has nothing to
+mask, and the composition's `leaves-interrupt-hardware-alone` — writing the hart's interrupt state only through
+those primitives — then means not at all for it; neither record changes meaning. 63 rewrites rule 6 and §13.1 F26's
+row, whose narrowing is marked for the director's review; 65 aligns rule 7 with the priority record (a plan
+supplies the ID; an index names no task); 69 leaves the counting fact to the runtime records (`M2.7.4`); 74 and 77
+were answered by `M2.19` and `M2.18`; 78 marks findings §6 (a) and (d) superseded in detail. The next round reads the
+composition record in full beside the contract, as R3 advised.
+
 ## Where the contract lives (`2026-10-01`)
 
 Answering R3 (`M2.9`) needed about 20 lines more than `ROADMAP.md`'s 1 100-line ceiling allowed, which only the
