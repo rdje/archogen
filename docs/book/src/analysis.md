@@ -1,5 +1,33 @@
 # What the scheduling checker establishes
 
+## The idea, in plain words
+
+A task's **response time** is how long it can take, in the worst case, from the moment it is released to the moment
+it finishes. It is more than the time its own code needs, because a more urgent task can interrupt it, perhaps
+several times. The scheduling checker computes that worst case for every task and compares it with the task's
+deadline.
+
+Take two tasks. `beat` is the more urgent: it needs 2 ms of processor time every 10 ms. `chime` needs 3 ms every
+30 ms. On its own, `chime` would finish in 3 ms. But if both are released together, `beat` runs first, so `chime`
+finishes no earlier than 2 + 3 = 5 ms. Could `beat` interrupt it again within those 5 ms? Only if `beat` is
+released again within them, and it next is at 10 ms, so no: `chime`'s worst case is 5 ms, inside its 30 ms deadline.
+The checker does exactly this — add up the interruptions, check whether the larger total lets in more of them,
+repeat until the total stops growing — and keeps every step so anyone can check it by hand.
+
+The catch, and this chapter's main point, is how much that answer leaves out. It assumes switching between tasks
+costs nothing, that the execution times are right, that releases never arrive late. So its answer is never a bare
+"schedulable", always "schedulable in this model, under these assumptions".
+
+> **In one minute, for engineers.** `crates/rt-analysis` implements `ROADMAP.md` §7.4's idealized zero-overhead
+> response-time recurrence for fixed-priority preemptive tasks. A task set outside its conditions is refused at
+> construction; a positive result exists only as a conditional analysis naming its model and listing its assumptions;
+> non-convergence or overflow is `analysis-inconclusive`, never a miss; every result carries the recurrence as a
+> witness. Time is charged under the versioned `cost-accounting/1` contract, F18 checks the §13.2 baseline against
+> bounds parsed from the roadmap, and F29 is built so an omitted cost cannot hide.
+
+## How it works
+
+
 The first analysis in the toolchain is the **idealized zero-overhead response-time baseline** of
 `ROADMAP.md` §7.4. For a fixed-priority task set it computes, for each task, a bound on how long
 a job can take to finish:
@@ -12,7 +40,9 @@ R_i^(k+1) = C_i + Σ_{j ∈ hp(i)} ⌈ R_i^(k) / T_j ⌉ · C_j
 It is small, it is exact, and — this is the part that matters — it establishes much less than it
 looks like it does.
 
-## Where it lives
+## The precise rules
+
+### Where it lives
 
 The checker is the `rt-analysis` crate, and each claim this chapter makes has a file behind it:
 
@@ -25,7 +55,7 @@ The checker is the `rt-analysis` crate, and each claim this chapter makes has a 
 | `crates/rt-analysis/tests/f18_baseline.rs` | **F18** — the §13.2 baseline, with its expected bounds parsed out of `ROADMAP.md` |
 | `crates/rt-analysis/tests/f29_preemption.rs` | **F29** — the §13.4 repeated-preemption fixture |
 
-## What it may be used for, and what it may not
+### What it may be used for, and what it may not
 
 §7.4 is unusually direct about its own limits:
 
@@ -57,7 +87,7 @@ Duplicate priorities, a deadline longer than the separation, a zero computation 
 condition of §7.4, and each produces a refusal that says which one and why, rather than a number
 for a system the model does not describe.
 
-## Three outcomes, and one that is easy to get wrong
+### Three outcomes, and one that is easy to get wrong
 
 | Outcome | Means |
 | --- | --- |
@@ -74,7 +104,7 @@ An implementation that reported a resource limit as "unschedulable" would be inv
 counterexample nobody found. So non-convergence and overflow are `analysis-inconclusive`, they
 name which of the two explicit limits stopped them, and they never become a deadline miss.
 
-## The witness
+### The witness
 
 §7.4 asks for "the recurrence sequence recorded as a checkable witness", so every result carries
 the iterates that produced it. For the §13.2 baseline task `C`:
@@ -93,7 +123,7 @@ deadline of 3; recurrence C: 2 → 4 → 4
 
 A reader can re-derive that by hand in a minute, which is the point of recording it.
 
-## The expected answers live in the roadmap
+### The expected answers live in the roadmap
 
 §13.2 publishes the baseline and its expected bounds — A `1`, B `2`, C `4`. The F18 test does not
 copy those numbers; it **parses them out of `ROADMAP.md`**.
@@ -104,7 +134,7 @@ the oracle a one-line edit that looks like a fix. Reading the specification make
 and the requirement the same object, so changing the answer means changing a requirement — in a
 diff a reviewer recognises as one.
 
-## How time is charged
+### How time is charged
 
 The idealized baseline charges **nothing** for overhead, which is its declared assumption. Any
 analysis that does charge overhead has to say how, and §7.4.1 requires that to be a **versioned
@@ -128,7 +158,7 @@ and sealing one as an *exact trace* refuses two things:
 Both matter for the same reason: when they happen, **the total still looks plausible**. Nothing
 about the number invites suspicion, so a check that depends on suspicion never fires.
 
-### Three kinds of total, deliberately not interchangeable
+#### Three kinds of total, deliberately not interchangeable
 
 | Kind | May over-count | Supports |
 | --- | --- | --- |
@@ -140,7 +170,7 @@ about the number invites suspicion, so a check that depends on suspicion never f
 omission or duplicate charge, not a ban on sound pessimism" — so an envelope is allowed to charge
 the same interval twice, and has to say that is what it is.
 
-## F29: the fixture built so an omission cannot hide
+### F29: the fixture built so an omission cannot hide
 
 §13.4 specifies a repeated-preemption scenario completely — costs, transitions, preemptibility,
 and the instant-by-instant trace it must produce — and says why:
@@ -157,7 +187,7 @@ It is checked **two ways that are not derived from each other**: the roadmap's o
 table, parsed out of `ROADMAP.md`, and a simulator written from the operational rules in the prose
 above it. They agree interval for interval.
 
-### The controls, and why they re-simulate
+#### The controls, and why they re-simulate
 
 | Control | Correct answer | What it exposes |
 | --- | ---: | --- |
@@ -185,7 +215,7 @@ detection logic at all — the ledger simply will not seal.
 three known mistakes. It is not a benchmark, not a claim about any board, and not a substitute
 for reviewing the runtime accounting model and its theorem conditions.
 
-## What is still owed
+### What is still owed
 
 ⚠️ **Nothing here may be cited for a claim about a running system.** §7.4 requires a
 runtime-applicable variant accounting for bounded critical sections, release jitter, timer and

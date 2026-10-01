@@ -153,6 +153,7 @@ a change that leaves it stale, so it is never edited by hand.
 - How it works — [Describing a workload](workload.md#how-it-works)
 - How it works — [Checking a description](checking.md#how-it-works)
 - How it works — [What a report may claim](evidence.md#how-it-works)
+- How it works — [What the scheduling checker establishes](analysis.md#how-it-works)
 - How it works — [The runtime: decisions, not actions](runtime.md#how-it-works)
 - How much of this a machine can check — [The boundary: functionality versus
   implementation](boundary.md#how-much-of-this-a-machine-can-check)
@@ -352,8 +353,6 @@ a change that leaves it stale, so it is never edited by hand.
 - The case whose answer is allowed to change — [The use cases](usecases.md#the-case-whose-answer-is-allowed-to-change)
 - The commands — [The archogen command line](cli.md#the-commands)
 - The controlling boundary — [Introduction](introduction.md#the-controlling-boundary)
-- The controls, and why they re-simulate — [What the scheduling checker
-  establishes](analysis.md#the-controls-and-why-they-re-simulate)
 - The corpus — [The S0 early generation path](s0.md#the-corpus)
 - The emulator is pinned — [Where generated systems run](targets.md#the-emulator-is-pinned)
 - The engine compiles for the browser — [Verifying the toolchain](verification.md#the-engine-compiles-for-the-browser)
@@ -373,6 +372,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The idea, in plain words — [Describing a workload](workload.md#the-idea-in-plain-words)
 - The idea, in plain words — [Checking a description](checking.md#the-idea-in-plain-words)
 - The idea, in plain words — [What a report may claim](evidence.md#the-idea-in-plain-words)
+- The idea, in plain words — [What the scheduling checker establishes](analysis.md#the-idea-in-plain-words)
 - The idea, in plain words — [The runtime: decisions, not actions](runtime.md#the-idea-in-plain-words)
 - The language definition travels with the binary — [Checking a
   description](checking.md#the-language-definition-travels-with-the-binary)
@@ -390,6 +390,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The precise rules — [Describing a workload](workload.md#the-precise-rules)
 - The precise rules — [Checking a description](checking.md#the-precise-rules)
 - The precise rules — [What a report may claim](evidence.md#the-precise-rules)
+- The precise rules — [What the scheduling checker establishes](analysis.md#the-precise-rules)
 - The precise rules — [The runtime: decisions, not actions](runtime.md#the-precise-rules)
 - The product runs nothing — [Verifying the toolchain](verification.md#the-product-runs-nothing)
 - The records that hold it — [Where the engine's knowledge comes from: the catalog](catalog.md#the-records-that-hold-it)
@@ -406,8 +407,6 @@ a change that leaves it stale, so it is never edited by hand.
 - The witness — [What the scheduling checker establishes](analysis.md#the-witness)
 - There is no board — [Where generated systems run](targets.md#there-is-no-board)
 - Three kinds of success — [The use cases](usecases.md#three-kinds-of-success)
-- Three kinds of total, deliberately not interchangeable — [What the scheduling checker
-  establishes](analysis.md#three-kinds-of-total-deliberately-not-interchangeable)
 - Three obligations, and a violation names which —
   [Refinement](refinement.md#three-obligations-and-a-violation-names-which)
 - Three outcomes, and one that is easy to get wrong — [What the scheduling checker
