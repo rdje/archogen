@@ -26,10 +26,12 @@ jobs:
   catalog-check:
     runs-on: ubuntu-24.04
     steps:
-      # A commit the hosting made, named by the event: the expression is a SHA, never text a pull request wrote.
+      # The commit the hosting made for this run: github.sha is the merge branch's last merge commit for a
+      # pull_request event and the merge group's for merge_group — never the event payload's merge_commit_sha,
+      # which can be null or stale (review round 1, V4). A SHA, never text a pull request wrote.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0, what v4 resolved to on 2026-09-30
         with:
-          ref: ${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha }}
+          ref: ${{ github.sha }}
           path: judged
           fetch-depth: 2
           persist-credentials: false

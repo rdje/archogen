@@ -25,7 +25,9 @@
 #      the caller set reaches a build; `rustc -vV` must then name the pin;
 #   5. every cargo configuration on the checker build's path, from `checker/` up to `/`, is listed before cargo runs
 #      and must hold only `alias` keys, which cannot change a `cargo build` — cargo ignores an alias that shadows a
-#      built-in command, measured `2026-10-01` on the pin. The judged tree is never on that path;
+#      built-in command, measured `2026-10-01` on the pin. Only so: an alias's body can carry `--config`, and an
+#      alias named `b`, `clippy` or `fmt` does run, so this holds because cargo is invoked here by `build`, a
+#      built-in name, and nothing else (review round 1, V3). The judged tree is never on that path;
 #   6. the checker is built in `checker/`, `--offline --locked --release`, into `checker-target/`, and run from there,
 #      never copied, with `CARGO_TARGET_DIR` a fresh `records-target/`, so no build it makes can reach its binary.
 #      Each argument after `--` has `{judged}` replaced by the judged tree's directory and `{base}` by the base's.
@@ -35,7 +37,8 @@
 # checkout's `.cargo/config.toml` lies on the path of every build the checker makes in it. §3 admits outside the
 # written index only "the tracked copies of the tree being judged", so as written a checker applying §3 would refuse
 # every pull request that changes that file. The proposal is that §3 admit, as this script does, a configuration
-# outside the written index that holds only `alias` keys. Nothing depends on it until the checker exists.
+# outside the written index that holds only `alias` keys — and only with the constraint step 5 states: the checker
+# then invokes cargo by built-in subcommand names alone. Nothing depends on it until the checker exists.
 #
 # ⚠️ HONEST LIMIT: it cannot see the hosting — which commit is the base, whether the workflow running it is the
 # pinned one, the token's scope. Those are the workflow's (`M2.7.6.3`) and the director's settings (findings §11).
@@ -114,7 +117,7 @@ def write(rev, dest, label):
     r = subprocess.run(["git", "ls-tree", "-r", "-z", "--full-tree", rev], capture_output=True, env=GITENV)
     if r.returncode:
         refuse("%s: its tree could not be listed" % label)
-    files, folded = [], {}
+    files, folded, seen, dirs = [], {}, set(), set()
     for record in r.stdout.split(b"\0"):
         if not record:
             continue
@@ -142,6 +145,11 @@ def write(rev, dest, label):
             tail = "/".join(segments[-n:])
             if len(segments) >= n and tail.lower() == name.lower() and tail != name:
                 refuse("%s: `%s` spells `%s` otherwise" % (label, path, name))
+        # A tree git's own checks refuse, written by hand (review round 1, V5): refused, never half-written.
+        if path in seen or path in dirs or any("/".join(segments[:k]) in seen for k in range(1, len(segments))):
+            refuse("%s: `%s` is listed twice, or is both a file and a directory" % (label, path))
+        seen.add(path)
+        dirs.update("/".join(segments[:k]) for k in range(1, len(segments)))
         files.append((mode, sha, path))
     cat = subprocess.run(["git", "cat-file", "--batch"], input="".join(sha + "\n" for _, sha, _ in files).encode(),
                          capture_output=True, env=GITENV)
@@ -153,10 +161,13 @@ def write(rev, dest, label):
             refuse("%s: the blob of `%s` could not be read" % (label, path))
         size = int(header[2])
         target = os.path.join(dest, path)
-        os.makedirs(os.path.dirname(target), exist_ok=True)
-        with open(target, "wb") as fh:
-            fh.write(out[end + 1:end + 1 + size])
-        os.chmod(target, 0o755 if mode == "100755" else 0o644)
+        try:
+            os.makedirs(os.path.dirname(target), exist_ok=True)
+            with open(target, "wb") as fh:
+                fh.write(out[end + 1:end + 1 + size])
+            os.chmod(target, 0o755 if mode == "100755" else 0o644)
+        except OSError as e:
+            refuse("%s: `%s` could not be written: %s" % (label, path, e))
         pos = end + 1 + size + 1
     return {path for _, _, path in files}
 
@@ -333,6 +344,27 @@ touch \"$marker\"
   arm "a judged symbolic link is refused" 3 "is a symbolic link" "$(judged "escape@120000=/")"
   arm "judged paths equal but for ASCII case are refused" 3 "differ only in ASCII case" "$(judged "Docs/a=1" "docs/b=2")"
   arm "a cargo file name spelled otherwise is refused" 3 "spells \`build.rs\` otherwise" "$(judged "checker/Build.rs=fn main() {}")"
+  # Trees git's own checks refuse, written by hand: a path that is both a file and a directory, and a path twice.
+  literal() { # $1 = python expression building the tree's entries from `blob` and `sub`, the hashes as bytes
+    python3 - "$repo" "$1" <<'LIT'
+import subprocess, sys
+repo, expr = sys.argv[1], sys.argv[2]
+def obj(kind, data):
+    out = subprocess.run(["git", "-C", repo, "hash-object", "-t", kind, "-w", "--literally", "--stdin"],
+                         input=data, capture_output=True, check=True).stdout.strip()
+    return bytes.fromhex(out.decode())
+blob = obj("blob", b"x\n")
+sub = obj("tree", b"100644 x\0" + blob)
+base = subprocess.run(["git", "-C", repo, "cat-file", "tree", "HEAD"], capture_output=True, check=True).stdout
+tree = obj("tree", base + eval(expr)).hex()
+print(subprocess.run(["git", "-C", repo, "-c", "user.name=t", "-c", "user.email=t@t", "commit-tree", tree, "-m", "l"],
+                     capture_output=True, text=True, check=True).stdout.strip())
+LIT
+  }
+  arm "a hand-written tree with a path both a file and a directory is refused (round 1, V5)" 3 "both a file and a directory" \
+    "$(literal 'b"100644 zz\0" + blob + b"40000 zz\0" + sub')"
+  arm "a hand-written tree listing a path twice is refused (round 1, V5)" 3 "listed twice" \
+    "$(literal 'b"100644 zz\0" + blob + b"100644 zz\0" + blob')"
   sed -i.bak 's/^channel = .*/channel = "stable"/' "$repo/rust-toolchain.toml" && rm -f "$repo/rust-toolchain.toml.bak"
   g commit -q -am "a named channel"; base="$(g rev-parse HEAD)"
   arm "a base pinned to a named channel is refused" 3 "is not a release number" "$base"

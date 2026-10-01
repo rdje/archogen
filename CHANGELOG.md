@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — an attack review closes two ways past the workflow gate
+
+`ARCHOGEN-M2-0292` (leaf `M2.7.6.4`).
+
+- An independent reviewer attacked the catalog check's protection for real and found two ways a workflow could
+  hold a writable token unseen by the gate: a YAML key written with an escape code, and a setting placed on a
+  neighbouring step. Both are now refused, each with a test that fails if the protection is removed. The check's
+  harness and workflow held; they gained two smaller hardenings.
+
 ## archogen — the fault contract answers its seventh reading, checked before it lands
 
 `ARCHOGEN-M2-0290` (leaf `M2.9`).

@@ -41,10 +41,28 @@ FORBIDDEN_TRIGGERS = {"pull_request_target", "workflow_run"}
 KEY = re.compile(r"""^(?P<key>"[^"]*"|'[^']*'|[^\s"'#&*!|>{}\[\],][^:]*?)\s*:(?:\s+(?P<val>.*))?$""")
 
 def unquote(text):
+    """A scalar's value. A single-quoted one doubles its quote and has no other escape; a double-quoted one with an
+    escape never reaches here, since `read` refuses it."""
     text = text.strip()
-    if len(text) >= 2 and text[0] == text[-1] and text[0] in "\"'":
+    if len(text) >= 2 and text[0] == text[-1] == "'":
+        return text[1:-1].replace("''", "'")
+    if len(text) >= 2 and text[0] == text[-1] == '"':
         return text[1:-1]
     return text
+
+def has_escape(line):
+    """Whether a double-quoted scalar on the line holds a backslash: YAML resolves `\\x61` to `a` where this reader
+    would not, so a key or value written with one is refused rather than misread (review round 1, V1)."""
+    quote = None
+    for i, ch in enumerate(line):
+        if quote:
+            if ch == quote:
+                quote = None
+            elif quote == '"' and ch == "\\":
+                return True
+        elif ch in "\"'" and (i == 0 or line[i - 1] in " :[,-"):
+            quote = ch
+    return False
 
 def strip_comment(line):
     """The line without a trailing comment: a `#` at the start or after a space, outside quotes."""
@@ -68,7 +86,7 @@ def flow_items(val):
 
 def read(path, text):
     """The file as entries (line, path of ancestor keys, key, value), or a refusal."""
-    entries, stack, block = [], [], None
+    entries, stack, block, items = [], [], None, 0
     for n, raw in enumerate(text.split("\n"), 1):
         if "\t" in raw:
             return None, "%s:%d: a tab — write the file with spaces" % (path, n)
@@ -80,6 +98,8 @@ def read(path, text):
         line = strip_comment(raw)
         if not line.strip():
             continue
+        if has_escape(line):
+            return None, "%s:%d: an escape in a double-quoted scalar — write it plain or single-quoted" % (path, n)
         body = line.strip()
         if body in ("---", "...") or body.startswith("--- "):
             return None, "%s:%d: a document marker — one document per workflow" % (path, n)
@@ -87,7 +107,8 @@ def read(path, text):
         while body == "-" or body.startswith("- "):
             while stack and stack[-1][0] >= indent:
                 stack.pop()
-            stack.append((indent, "-"))
+            items += 1
+            stack.append((indent, "-%d" % items))
             rest = body[1:].lstrip(" ")
             indent += len(body) - len(rest)
             body = rest
@@ -161,7 +182,7 @@ def check(path, text):
             if parents[:1] == [key] and len(parents) >= 1:
                 if len(parents) == 1 and tkey is not None:
                     triggers.add(tkey)
-                elif len(parents) == 2 and parents[1] == "-" and tkey is None:
+                elif len(parents) == 2 and parents[1].startswith("-") and tkey is None:
                     triggers.add(tval)
         for t in sorted(triggers & FORBIDDEN_TRIGGERS):
             fails.append("%s:%d: the `%s` trigger runs with the base repository's token — not allowed" % (path, n, t))
@@ -174,7 +195,7 @@ def check(path, text):
             continue
         if not re.match(r"actions/checkout(@|$)", action):
             continue
-        if parents[-1:] != ["-"]:
+        if not parents or not parents[-1].startswith("-"):
             continue
         settings = {k: unquote(v) for _, _, k, v in children(entries, parents + ["with"])}
         if settings.get("persist-credentials") != "false":
@@ -270,6 +291,10 @@ jobs:
   arm "a local action is refused" 1 "a local action"
   fresh "$(variant $'  push:\n' $'\tpush:\n')"
   arm "a tab is refused" 1 "a tab"
+  fresh "$(variant $'  pull_request:\n' $'  "pull_request_t\\x61rget":\n')"
+  arm "an escaped key is refused, not misread (round 1, V1)" 1 "an escape in a double-quoted scalar"
+  fresh "$(variant $'          persist-credentials: false\n      - name: a script' $'      - uses: actions/setup-node@0123456789abcdef\n        with:\n          persist-credentials: false\n      - name: a script')"
+  arm "a sibling step's setting does not cover a checkout (round 1, V2)" 1 "without \`persist-credentials: false\`"
   rm -rf "$work"
   arms=$((arms + 1))
   if bash "$SELF" >/dev/null 2>&1; then ok=$((ok + 1)); echo "  ✅ the repository's workflows pass"
