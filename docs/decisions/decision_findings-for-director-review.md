@@ -207,9 +207,11 @@ masked region if it is masked with the region, that the two models then disagree
 declared source or composition covers one. An overrun is detected by a release alone, as rule 6 already says of a
 deadline, and a monitor is a later profile's.
 
-Of the reference's `CONTRACT SILENT` notes, four stay open, and none is a disagreement between the models: the
+Of the reference's `CONTRACT SILENT` notes, four stayed open, and none was a disagreement between the models: the
 domain of overrun policies, what a later idle-to-task dispatch costs, whether a runtime must raise a fault on an
-unbalanced unmask, and when a periodic task's first release falls.
+unbalanced unmask, and when a periodic task's first release falls. *(Superseded `2026-10-01`: the first is decided
+by §3.1.1 rule 5 and `M2.14`, the third by §3.1.1's second decision — an assertion failure; the other two are on
+§3.1.1's still-open list.)*
 
 ⭐ The generalisable part: **§5's lesson repeated one level up.** A second reader found gaps in
 the specification; the amendment that closed them was written by one author, and a second reader

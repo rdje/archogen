@@ -159,6 +159,21 @@ answered when it arrived. Triaged:
 | 46–50, 52 | nits | rule 2 and rule 1a; the start-in-region assertion's attribution; rule 7's bound and a fault in the handler; §13.4's general ordering; the trap row's token; two stale lines | accepted | 6e |
 | 51 | nit | who refuses an empty task set | accepted, and measured: `archogen check` accepts `(defsystem s)` with no task, rc=0; only the runtime's boot refuses it | `M2.17` |
 
+## What changed an implementation (`2026-10-01`)
+
+`ROADMAP.md` §3.1.1's 2026-10-01 amendments point here. *R1* is the review in *The amended §3.1.1 reviewed*, *R2*
+the one in *The rewritten §3.1.1 reviewed again*. Two amendments correct the 2026-09-13 text (findings §6 (a),
+(b)). Of the answers to R1 and R2, most state what both implementations already did; these changed one:
+
+| Change | Rule | Changed |
+| --- | --- | --- |
+| a fault in a service is no task's, and the task it interrupted is recorded as interrupted | 2 | `rt-core` |
+| a halted runtime changes nothing afterwards, and keeps the first fault's record | 7 | `rt-core` |
+| the mask bound and an unbalanced `unmask` are assertion failures, not refusals | the second decision | both |
+| a job started inside a region, and a `mask` or `unmask` with no job running, are assertion failures | Terms | both |
+| exactly two overrun policies | 5 | the reference model, which had a third that halted |
+| an overrun raised without a release is outside the profile | 1a | neither's behaviour: both keep an entry for one, for a later profile, and disagree only there |
+
 ⭐ **§5's lesson, a third time.** The reference model was derived from the text, and the two models agree, but six
 of the decisions they share were written only here and in findings §6. Agreement between models shows the text is
 implementable; only a reader of the text alone shows it is *sufficient*.
@@ -216,7 +231,8 @@ rank, and indices start at **0**.
 written down nowhere.** Anything mapping an eADL `(priority N)` clause onto a runtime task index
 must subtract one. **Recommend: state the mapping in the decision record, and say whether rank 0
 is admissible in a description** (recommend: no — admitting it moves the top of the range by
-inference, which §15 makes a versioned language change).
+inference, which §15 makes a versioned language change). *(Superseded `2026-10-01`: "subtract one" holds only for
+ranks exactly `1, 2, …, n`; the relation is `runtime index = |hp(i)|`, the priority record's item 3.)*
 
 ### 4. A containable fault raised inside a masked region
 

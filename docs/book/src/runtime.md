@@ -136,8 +136,10 @@ the late job would make the running task set differ from the analyzed task set w
 that it happened. `SkipLateJob` exists, is legal where the analysis was told, and reports the
 abandonment as its own transition, `JobSkipped` — never as an ordinary release, because a skipped
 job is a missed deadline by another name. The release that found the job late becomes the next
-job. An overrun found some other way, by an execution-budget monitor through `fault`, has no
-such release, so it starts nothing: the task waits for its next one.
+job. `rt-static-up-v1` has no other way to find an overrun — no execution-budget monitor, no
+deadline monitor (§3.1.1 rules 1a and 6) — so a release is the only detector. `rt-core` keeps an
+entry for an overrun raised some other way, through `fault`, for a later profile that has a
+monitor: with no triggering release, it starts nothing, and the task waits for its next one.
 
 ## It has been checked against a model that never saw it
 

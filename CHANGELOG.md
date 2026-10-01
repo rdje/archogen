@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the runtime contract answers its second review
+
+`ARCHOGEN-M2-0272` (leaf `M2.9`).
+
+- The contract now says exactly when a late task is stopped — never while it holds a critical section — that the
+  profile detects overruns by releases alone, with no budget or deadline monitor, which traps count as unexpected,
+  and what a fatal fault's record keeps. It also lists, in full, which of today's changes altered either model.
+- One rule follows in the runtime next: opening or closing a critical section when no task is running halts.
+
 ## archogen — the runtime contract's third reading, triaged
 
 `ARCHOGEN-M2-0271` (leaf `M2.9`).

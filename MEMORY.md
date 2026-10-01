@@ -16,8 +16,8 @@
 - **Active tree:** `M2` → frontier `M2.9`. `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API`'s is
   `API.6`; `M1`'s only open leaf, `M1.29.4`, is blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M2.9` step 6e — §3.1.1 answers its second review's findings 26–53 (triaged in
-  `decision_runtime-contract-gaps.md`), then 6f (both models), 6g (a third round), the leaf closed. Then `M2.17`,
+- **Next action:** `M2.9` step 6f — both models carry finding 35 (a `mask` or `unmask` with no job running is an
+  assertion failure) and the start-in-region assertion's attribution, then 6g (a third round), the leaf closed. Then `M2.17`,
   `M2.18`. Then `M2.7.6` (its
   repository half; the hosting half waits on findings §11), `M2.7.4`, `M2.7.5`, `M2.11`, then `API.6`. This project
   uses no branches.
