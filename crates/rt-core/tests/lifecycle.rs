@@ -14,7 +14,7 @@ use rt_core::{
     Context, Decision, Fatal, Fault, OverrunPolicy, Refused, Scheduler, TaskState, Transition,
 };
 
-/// The record a halt keeps (§3.1.1 rule 7).
+/// The record a halt keeps (the fault contract's rule 7).
 fn fatal(fault: Fault, task: Option<usize>, interrupted: Option<usize>, escalated: bool) -> Fatal {
     Fatal {
         fault,
@@ -129,7 +129,7 @@ fn masking_nests_and_only_the_outermost_unmask_delivers() {
     // region stops being one.
     let mut s = scheduler();
     s.release(2);
-    s.decide(); // only a job changes the depth (§3.1.1, Terms)
+    s.decide(); // only a job changes the depth (the fault contract's Terms)
     s.mask().expect("within the declared bound");
     s.mask().expect("within the declared bound");
     s.release(0);
@@ -185,7 +185,7 @@ fn releasing_a_task_whose_job_has_not_completed_is_an_overrun() {
 
 #[test]
 fn a_second_latched_release_is_an_overrun_judged_at_delivery() {
-    // §3.1.1 rule 1, amended by findings §6 (b): there is nowhere to put it, so it is an overrun,
+    // The fault contract's rule 1, amended by findings §6 (b): there is nowhere to put it, so it is an overrun,
     // and it is judged at delivery, outside the masked region, under the task's own policy. Not
     // lost, and not fatal for landing inside a critical section rather than one instruction after.
     let mut s = scheduler();
@@ -249,7 +249,7 @@ fn a_latched_overrun_under_skip_late_job_becomes_the_next_job() {
 
 #[test]
 fn a_completion_inside_a_masked_region_closes_it_and_delivers() {
-    // §3.1.1 rule 4, findings §6 (a): the depth is the job's and ends with it, and what was latched
+    // The fault contract's rule 4, findings §6 (a): the depth is the job's and ends with it, and what was latched
     // is delivered as at the outermost unmask, after the completion.
     let mut s = scheduler();
     s.release(2);
@@ -363,7 +363,7 @@ fn an_overrun_leaves_the_runtime_schedulable_and_a_trap_does_not() {
 
 #[test]
 fn a_trap_or_an_assertion_is_attributed_to_the_running_task() {
-    // §3.1.1's table and rule 2 (amended 2026-10-01, findings §6 (c), (d)): both are synchronous
+    // The fault contract's table and rule 2 (amended 2026-10-01, findings §6 (c), (d)): both are synchronous
     // to the executing context and attributed to it. Neither is containable.
     for fault in [
         Fault::UnexpectedTrap { cause: 7 },
@@ -386,7 +386,7 @@ fn a_trap_or_an_assertion_is_attributed_to_the_running_task() {
 
 #[test]
 fn a_trap_in_kernel_code_is_no_tasks_and_names_the_task_it_interrupted() {
-    // §3.1.1 rule 2 (the review's finding 8): a service, the trap path, a transition or idle is no
+    // The fault contract's rule 2 (the review's finding 8): a service, the trap path, a transition or idle is no
     // task, and a task whose job the fault interrupted is recorded as interrupted, never as
     // attributed.
     let mut s = scheduler();
@@ -440,7 +440,7 @@ fn the_first_fatal_fault_is_the_one_kept() {
 
 #[test]
 fn a_halted_runtime_changes_nothing_afterwards() {
-    // §3.1.1 rule 7 (the review's finding 9): "From then no job runs, no release is processed or
+    // The fault contract's rule 7 (the review's finding 9): "From then no job runs, no release is processed or
     // latched, and no transition occurs."
     let mut s = scheduler();
     s.release(1);
@@ -477,7 +477,7 @@ fn a_trap_while_no_task_runs_is_attributed_to_no_task() {
 
 #[test]
 fn an_overrun_raised_without_a_release_starts_no_job() {
-    // §3.1.1 rule 1 makes the triggering release the next job under `SkipLateJob`. An overrun an
+    // The fault contract's rule 1 makes the triggering release the next job under `SkipLateJob`. An overrun an
     // execution-budget monitor raises has none, so the late job is abandoned and the task waits.
     let mut s: Scheduler<3> = Scheduler::new([OverrunPolicy::SkipLateJob; 3]);
     s.release(0);
@@ -533,7 +533,7 @@ fn the_whole_state_machine_fits_in_a_fixed_size_with_no_allocation() {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════════════════════
-// The five questions `ROADMAP.md` §3.1.1 and the amended priority record now decide (leaf `M2.9`).
+// The five questions the fault contract and the amended priority record now decide (leaf `M2.9`).
 //
 // Each was found by an independently derived model reading the same contract and answering
 // differently. Four of the five went against this implementation.
@@ -541,7 +541,7 @@ fn the_whole_state_machine_fits_in_a_fixed_size_with_no_allocation() {
 
 #[test]
 fn an_empty_task_set_is_refused_at_boot() {
-    // §3.1.1: "A task set must be non-empty." "Finite static task set" admits the empty set, and a
+    // The fault contract: "A task set must be non-empty." "Finite static task set" admits the empty set, and a
     // system with no workload makes §7.2's second timing obligation vacuous — a vacuously passing
     // schedulability result is what §7.1 exists to prevent.
     let empty: Result<Scheduler<0>, _> = Scheduler::from_eadl_ranks([], []);
@@ -665,7 +665,7 @@ fn ranks_with_gaps_lower_by_their_order() {
 
 #[test]
 fn exceeding_the_mask_bound_is_an_assertion_failure() {
-    // §3.1.1: a counter that WRAPS re-enables interrupts inside a critical section while
+    // The fault contract: a counter that WRAPS re-enables interrupts inside a critical section while
     // reporting success; one that SATURATES stops counting; one that REFUSES leaves its caller's
     // matching `unmask` to close the section early. Each fails silently, so exceeding the bound
     // halts (the review's finding 10; until 2026-10-01 it refused).
@@ -691,7 +691,7 @@ fn exceeding_the_mask_bound_is_an_assertion_failure() {
 
 #[test]
 fn a_mask_or_unmask_with_no_job_running_is_an_assertion_failure() {
-    // §3.1.1, Terms: "Only a job changes the depth" (the second review's finding 35). With no job
+    // The fault contract's Terms: "Only a job changes the depth" (the second review's finding 35). With no job
     // running, whatever executes the call is no task's.
     for (invariant, call) in [("mask-with-no-job", true), ("unmask-with-no-job", false)] {
         let mut s = scheduler();
@@ -732,7 +732,7 @@ fn an_unmask_with_nothing_to_close_is_an_assertion_failure() {
 
 #[test]
 fn a_job_starting_inside_a_masked_region_is_an_assertion_failure() {
-    // §3.1.1, Terms: every job starts at depth zero, which is what makes every section open at a
+    // The fault contract's Terms: every job starts at depth zero, which is what makes every section open at a
     // completion the completing job's (rule 4, the review's finding 16).
     // A job raising a region and a higher-ranked task released but not yet dispatched is the API's
     // way to reach it; the decision raises it, which is no task's, and it interrupts the job that
@@ -755,7 +755,7 @@ fn a_job_starting_inside_a_masked_region_is_an_assertion_failure() {
 
 #[test]
 fn a_containable_fault_raised_while_masked_escalates() {
-    // §3.1.1 rule 3, on both its grounds: terminating a job that holds the mask orphans the
+    // The fault contract's rule 3, on both its grounds: terminating a job that holds the mask orphans the
     // nesting depth, and containment means resuming the schedule from a state the critical
     // section had not finished making consistent (amended 2026-10-01, findings §6 (e)).
     let mut s: Scheduler<3> = Scheduler::new([OverrunPolicy::SkipLateJob; 3]);
@@ -799,7 +799,7 @@ fn an_overrun_discovered_at_unmask_applies_its_ordinary_policy() {
 
 #[test]
 fn an_overrun_applies_its_policy_on_detection_without_a_second_call() {
-    // §3.1.1 rule 1: "Detection applies the policy." §3.1 requires the policy to be *defined* and
+    // The fault contract's rule 1: "Detection applies the policy." §3.1 requires the policy to be *defined* and
     // §7.3 makes it part of the task record, so it is the system's behaviour rather than a
     // caller's option — nothing else has to ask for it.
     let mut s: Scheduler<3> = Scheduler::new([OverrunPolicy::Fault; 3]);
@@ -817,7 +817,7 @@ fn an_overrun_applies_its_policy_on_detection_without_a_second_call() {
 
 #[test]
 fn an_overrun_is_attributed_to_the_overrunning_task_even_when_it_is_not_running() {
-    // §3.1.1 rule 2, and the one place the implementation's original reading survived review: a
+    // The fault contract's rule 2, and the one place the implementation's original reading survived review: a
     // release is signalled by an interrupt while some other context holds the processor, so the
     // overrunning task is by construction not the running one. The single-core rule governs
     // EXECUTION, not attribution.

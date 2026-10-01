@@ -1,6 +1,12 @@
 //! An **independent reference model** of the `rt-static-up-v1` task-lifecycle state machine
 //! (`ROADMAP.md` §8 "Runtime and architecture substrate", §3.1 the profile table, §8.1 the
-//! unsafe/synchronization boundaries).
+//! unsafe/synchronization boundaries), and the profile's **fault contract**,
+//! `docs/profiles/rt-static-up-v1-faults.md` (`ROADMAP.md` §3.1.1 until it moved there, verbatim,
+//! on 2026-10-01).
+//!
+//! "The fault contract" below always means that file: its *Terms*, its table, its numbered
+//! rules — whose numbers the move kept — its two smaller decisions and its *Still open* list. A
+//! bare section number (§3.1, §7.3, §8.1, …) is `ROADMAP.md`'s, in that file as in this crate.
 //!
 //! §12 M2's exit gate asks for "a separate simple reference model" alongside the engine
 //! realization, and states the condition that makes it worth having:
@@ -19,29 +25,31 @@
 //!
 //! ⭐ **And it was.** A differential comparison against an implementation of the same contract
 //! found five divergences, every one of them a place the contract genuinely did not decide.
-//! `ROADMAP.md` §3.1.1 ("Fault classification, attribution and containment", amendment of
-//! 2026-09-13) and the new "The admissible range, and the runtime's index" section of
-//! `docs/decisions/decision_priority-comparison-direction.md` now decide them. This model has
-//! been brought into line with **the amended text**, still without reading the implementation:
-//! every change is derived from §3.1.1's table and its rules, so where the two models now
-//! agree they agree because both satisfy one contract, not because one was adjusted to the other.
-//! Each note an amendment answers is **kept and rewritten** to cite it rather than deleted: that
-//! a question was once open is part of the record, and erasing it would erase the evidence that
-//! the agreement was earned.
+//! The fault contract — then `ROADMAP.md` §3.1.1, "Fault classification, attribution and
+//! containment", amendment of 2026-09-13 — and the new "The admissible range, and the runtime's
+//! index" section of `docs/decisions/decision_priority-comparison-direction.md` now decide them.
+//! This model has been brought into line with **the amended text**, still without reading the
+//! implementation: every change is derived from the fault contract's table and its rules, so where
+//! the two models now agree they agree because both satisfy one contract, not because one was
+//! adjusted to the other. Each note an amendment answers is **kept and rewritten** to cite it
+//! rather than deleted: that a question was once open is part of the record, and erasing it would
+//! erase the evidence that the agreement was earned.
 //!
-//! ⭐ **The amendment was then read the same way, and amended in its turn.** Three of this model's
-//! notes found gaps that §3.1.1 itself had opened, and the rulings of 2026-10-01
-//! (`docs/decisions/decision_findings-for-director-review.md` §6) closed them: rule 1 now observes
-//! a release that finds its task's latch already full **at delivery**, and a new rule 4 lets a job
-//! complete inside a masked region, closing it. Both are carried here from the amended text alone,
-//! and the three notes are rewritten below in the same `⭐ AMENDED` form as the first five.
+//! ⭐ **The fault contract was then read the same way, and amended in its turn.** Three of this
+//! model's notes found gaps that the fault contract itself had opened, and the rulings of
+//! 2026-10-01 (`docs/decisions/decision_findings-for-director-review.md` §6) closed them: rule 1
+//! now observes a release that finds its task's latch already full **at delivery**, and a new rule
+//! 4 lets a job complete inside a masked region, closing it. Both are carried here from the amended
+//! text alone, and the three notes are rewritten below in the same `⭐ AMENDED` form as the first
+//! five.
 //!
-//! ⭐ **Then the text itself was reviewed, and rewritten.** Also on 2026-10-01, a reader of §3.1.1
-//! alone returned twenty-five findings (`docs/decisions/decision_runtime-contract-gaps.md`, *The
-//! amended §3.1.1 reviewed*), and §3.1.1 was rewritten to answer them: a *Terms* paragraph, a rule
-//! 1a, rules 5 to 7, and a second smaller decision that changed its answer. Most of the answers
-//! state what this model already did. Four move it, each carried here from the rewritten text
-//! alone and marked `⭐ AMENDED` where it lands:
+//! ⭐ **Then the text itself was reviewed, and rewritten.** Also on 2026-10-01, a reader of the
+//! fault contract alone returned twenty-five findings
+//! (`docs/decisions/decision_runtime-contract-gaps.md`, *The amended §3.1.1 reviewed*), and the
+//! fault contract was rewritten to answer them: a *Terms* paragraph, a rule 1a, rules 5 to 7, and a
+//! second smaller decision that changed its answer. Most of the answers state what this model
+//! already did. Four move it, each carried here from the rewritten text alone and marked
+//! `⭐ AMENDED` where it lands:
 //!
 //! - a fault raised in a service, the trap path, a transition or idle is **no task's** (rule 2),
 //!   so a synchronous fault now names the executing [`Context`] rather than a task, and its
@@ -58,10 +66,10 @@
 //! holder's own overrun, which this model enforced with a refusal (`Refused::MonitorMasked`).
 //!
 //! ⭐ **And the rewritten text was reviewed again, and rewritten again.** A second reader of
-//! §3.1.1 alone returned twenty-eight findings more (`decision_runtime-contract-gaps.md`, *The
-//! rewritten §3.1.1 reviewed again*), and §3.1.1 as amended on 2026-10-01 now answers them. Four of
-//! the answers move this model, each carried from the text alone and marked `⭐ AMENDED` where it
-//! lands:
+//! the fault contract alone returned twenty-eight findings more
+//! (`decision_runtime-contract-gaps.md`, *The rewritten §3.1.1 reviewed again*), and the fault
+//! contract as amended on 2026-10-01 now answers them. Four of the answers move this model, each
+//! carried from the text alone and marked `⭐ AMENDED` where it lands:
 //!
 //! - **only a job changes the depth** (Terms): a `mask` or `unmask` executed with no job running
 //!   is an assertion failure of the executing context, so the `mask` with the processor idle that
@@ -103,7 +111,7 @@
 //!
 //! # The contract's terms in this model
 //!
-//! §3.1.1 opens with a *Terms* paragraph, and each term has one home here:
+//! The fault contract opens with a *Terms* paragraph, and each term has one home here:
 //!
 //! - **masked region** — "the interval in which the runtime's mask nesting depth is above zero":
 //!   [`Runtime::is_masked`]. It is "opened by a job's outermost `mask`, kernel or application, and
@@ -176,14 +184,14 @@ use core::fmt;
 /// declaration order has no scheduling meaning at all.
 ///
 /// The same record adds that "a trace, a plan or a fault record names a task by its stable
-/// logical ID (`ROADMAP.md` §7.3), never by its index", and §3.1.1 rule 7 asks the same of the
-/// fatal handler's evidence — "the attributed task's stable logical ID — its eADL task name, which
-/// `archogen check` requires unique (`schema-duplicate-name`)" — and says how an index may stand
-/// in for it: "A runtime that records a task by an internal index records it with the plan that
-/// maps the index to the name (§7.5)." A [`FaultRecord`] here carries a [`TaskId`] on that
-/// footing. It lives no longer than the [`Runtime`] that booted the set, and the booted set *is*
-/// the map: [`Runtime::spec`] resolves the id to [`TaskSpec::name`] without loss. The renumbering
-/// the record warns about happens between builds, which this model never spans.
+/// logical ID (`ROADMAP.md` §7.3), never by its index", and the fault contract's rule 7 asks the
+/// same of the fatal handler's evidence — "the attributed task's stable logical ID — its eADL task
+/// name, which `archogen check` requires unique (`schema-duplicate-name`)" — and says how an index
+/// may stand in for it: "A runtime that records a task by an internal index records it with the
+/// plan that maps the index to the name (§7.5)." A [`FaultRecord`] here carries a [`TaskId`] on
+/// that footing. It lives no longer than the [`Runtime`] that booted the set, and the booted set
+/// *is* the map: [`Runtime::spec`] resolves the id to [`TaskSpec::name`] without loss. The
+/// renumbering the record warns about happens between builds, which this model never spans.
 ///
 /// Boot does not check that names are unique. Rule 7 puts that check on `archogen check`, and a
 /// set that reaches the runtime has passed it; a duplicate here would make two records' names
@@ -221,10 +229,14 @@ impl TaskId {
 /// `(priority 9)` is a valid description — and fixed priority uses only their order". This model
 /// only ever compares two ranks, so a gap has no meaning here and is accepted.
 ///
-/// ⚠️ **CONTRACT SILENT — a rank's width.** §3.1.1's *Still open* list leaves "the checker's
-/// refusals of … a rank the lowering cannot take (`M2.18`)" to a leaf, so no upper end of the
-/// range is fixed. This model holds a rank in a `u16`: an adapter cannot present it a task whose
-/// rank does not fit, and must refuse such a description itself rather than truncate the rank.
+/// ⚠️ **CONTRACT SILENT — a rank's width, when this note was written.** The fault contract's
+/// *Still open* list then left "the checker's refusals of … a rank the lowering cannot take
+/// (`M2.18`)" to a leaf, so no upper end of the range was fixed. This model holds a rank in a
+/// `u16`: an adapter cannot present it a task whose rank does not fit, and must refuse such a
+/// description itself rather than truncate the rank. The list no longer names it: the
+/// priority-direction record's item 1 now admits "any such integer the language's integer type
+/// holds, a 64-bit signed one" (leaf `M2.18`), which a `u16` does not hold. This model has not
+/// been brought into line with that; until it is, the adapter's refusal above stands.
 ///
 /// ⭐ **`Ord` is deliberately not derived.** A derived `Ord` on a newtype over `u16` would make
 /// `a < b` mean "`a` is a *lower* priority", which is the opposite of what every reader of
@@ -279,8 +291,8 @@ impl Priority {
 /// state transition. Carrying them here would invite the model to look like it checked them.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TaskSpec {
-    /// The task's stable logical id (§7.3) — its eADL task name (§3.1.1 rule 7). It names the task
-    /// in diagnostics, and it is what a [`TaskId`] in a [`FaultRecord`] resolves to.
+    /// The task's stable logical id (§7.3) — its eADL task name (the fault contract's rule 7). It
+    /// names the task in diagnostics, and it is what a [`TaskId`] in a [`FaultRecord`] resolves to.
     pub name: &'static str,
     /// Its static priority. §3.1: "Static unique task priorities".
     pub priority: Priority,
@@ -297,9 +309,9 @@ pub struct TaskSpec {
 }
 
 /// What the runtime does to a task that overruns (§3.1 "Defined overrun … policy", §7.3
-/// "overrun behavior"): one of §3.1.1 rule 5's two policies.
+/// "overrun behavior"): one of the two policies of the fault contract's rule 5.
 ///
-/// ⭐ **AMENDED — §3.1.1 rule 5, "The two overrun policies".** This note used to read
+/// ⭐ **AMENDED — the fault contract's rule 5, "The two overrun policies".** This note used to read
 /// `⚠️ CONTRACT SILENT — still, after §3.1.1`: the table settled that an overrun is containable by
 /// "its declared per-task policy (§7.3)", and nothing stated the domain that policy ranges over.
 /// This model chose three — abandon this job, abandon this task, or stop — as the only responses a
@@ -313,16 +325,17 @@ pub struct TaskSpec {
 /// and only the entry a later profile would need ([`Runtime::raise_overrun`], outside the profile
 /// by rule 1a) reaches it there.
 ///
-/// (§3.1.1's first 2026-10-01 header said the review's answers "state what both implementations
-/// already did" apart from three named corrections, and rule 5 was not among the three. For this
-/// model that was not quite so: it carried the third, halting policy until this change. The header
-/// now defers to the gaps record's *What changed an implementation*, which lists it.)
+/// (The fault contract's first 2026-10-01 header said the review's answers "state what both
+/// implementations already did" apart from three named corrections, and rule 5 was not among the
+/// three. For this model that was not quite so: it carried the third, halting policy until this
+/// change. The header now defers to the gaps record's *What changed an implementation*, which lists
+/// it.)
 ///
 /// ⭐ **AMENDED — rule 5, the eADL clause.** This note used to read `⚠️ CONTRACT SILENT — on the
-/// eADL side only`: §3.1.1's *Still open* list left "the eADL clause's domain and its default
-/// (`M2.14`)" to a leaf, and this model gave [`TaskSpec::on_overrun`] no default. Rule 5 now
-/// decides both: "A task without an `on-overrun` clause has `Fault`, and `archogen check` refuses
-/// any other policy." The domain is the two variants below, and the default is
+/// eADL side only`: the fault contract's *Still open* list left "the eADL clause's domain and its
+/// default (`M2.14`)" to a leaf, and this model gave [`TaskSpec::on_overrun`] no default. Rule 5
+/// now decides both: "A task without an `on-overrun` clause has `Fault`, and `archogen check`
+/// refuses any other policy." The domain is the two variants below, and the default is
 /// [`OverrunAction::StopTask`], which `Default` now returns. A [`TaskSpec`] still states its policy
 /// — it is the record after that default has been applied — so the default is a name for the
 /// adapter building one, not something boot fills in. Anything richer (restart the task, degrade
@@ -330,8 +343,8 @@ pub struct TaskSpec {
 /// `dynamic-task-creation`, both of which the profile excludes by name.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum OverrunAction {
-    /// Abandon the owed job; the task stays in the schedule. §3.1.1 rule 5's `SkipLateJob` (eADL
-    /// `skip-late-job`):
+    /// Abandon the owed job; the task stays in the schedule. The `SkipLateJob` of the fault
+    /// contract's rule 5 (eADL `skip-late-job`):
     ///
     /// > the task's owed job is abandoned — not started, preempted, or the job the release
     /// > interrupted. Its remaining code never runs and no completion is recorded for it, no fault
@@ -362,8 +375,9 @@ pub enum OverrunAction {
     /// is at the return of its outermost `unmask` or of its completion. Where inside a primitive a
     /// port defers the policy is the port's obligation, not something this model can express.
     TerminateJob,
-    /// Remove the task from the schedule for good. §3.1.1 rule 5's `Fault` (eADL `fault`), and the
-    /// policy of a task whose description has no `on-overrun` clause (the `Default`):
+    /// Remove the task from the schedule for good. The `Fault` of the fault contract's rule 5 (eADL
+    /// `fault`), and the policy of a task whose description has no `on-overrun` clause (the
+    /// `Default`):
     ///
     /// > the task is faulted and leaves the schedule until reset. Its owed job is abandoned, the
     /// > triggering release and every later release of it are discarded, and no further
@@ -393,8 +407,9 @@ pub enum OverrunAction {
 /// self-suspension within a job, **there is no blocked state** — a task is never waiting for
 /// anything except its own next release.
 ///
-/// §3.1.1's Terms divide them in two: a task "owes a job from its release until that job
-/// completes or is abandoned", which is exactly [`TaskState::Ready`] and [`TaskState::Running`].
+/// The fault contract's Terms divide them in two: a task "owes a job from its release until that
+/// job completes or is abandoned", which is exactly [`TaskState::Ready`] and
+/// [`TaskState::Running`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TaskState {
     /// Created at boot (§8 "static task creation at boot") and never yet released. No job exists.
@@ -435,9 +450,9 @@ pub enum Processor {
     Idle,
     /// The named task holds the processor.
     Running(TaskId),
-    /// A fault entered the fatal handler and the runtime has stopped for good. §3.1.1 rule 7:
-    /// "From then no job runs, no release is processed or latched, and no transition occurs";
-    /// §8.1: "preserve a defined fatal handler and diagnostic evidence".
+    /// A fault entered the fatal handler and the runtime has stopped for good. The fault contract's
+    /// rule 7: "From then no job runs, no release is processed or latched, and no transition
+    /// occurs"; §8.1: "preserve a defined fatal handler and diagnostic evidence".
     Halted,
 }
 
@@ -457,8 +472,8 @@ pub enum Transition {
     ///
     /// ⚠️ **CONTRACT SILENT — and now listed as open.** F29 says "*Initial* dispatch", and its
     /// trace never returns to idle, so the contract never says what a *later* idle → task
-    /// dispatch is called or costs; §3.1.1's *Still open* list names it: "needed by no fixture
-    /// yet, a later idle-to-task dispatch's cost". This model reports every
+    /// dispatch is called or costs; the fault contract's *Still open* list names it: "needed by no
+    /// fixture yet, a later idle-to-task dispatch's cost". This model reports every
     /// idle → task transition as `Dispatch`, on the cost-accounting contract's structural reason —
     /// there is no outgoing context — rather than on the temporal one, since "first in the trace"
     /// is not a property of a transition.
@@ -473,12 +488,12 @@ pub enum Transition {
     /// therefore emits a `Switch`, never a `ToIdle` followed by a `Dispatch`, whenever a task
     /// hands the processor straight to another task.
     ///
-    /// `outgoing` and `incoming` may name **the same task**. Since §3.1.1's 2026-10-01 rulings a
-    /// job can end and be followed at once by the same task's next job — a late job skipped under
-    /// `SkipLateJob` while its replacement starts (rule 1), or a job completing inside a masked
-    /// region that latched its next release (rule 4). The finished job's context leaves and the
-    /// fresh job's arrives, so by the same F29 reasoning it is one switch, not nothing and not a
-    /// `ToIdle` plus a `Dispatch`.
+    /// `outgoing` and `incoming` may name **the same task**. Since the fault contract's 2026-10-01
+    /// rulings a job can end and be followed at once by the same task's next job — a late job
+    /// skipped under `SkipLateJob` while its replacement starts (rule 1), or a job completing
+    /// inside a masked region that latched its next release (rule 4). The finished job's context
+    /// leaves and the fresh job's arrives, so by the same F29 reasoning it is one switch, not
+    /// nothing and not a `ToIdle` plus a `Dispatch`.
     Switch {
         /// The task that lost the processor.
         outgoing: TaskId,
@@ -517,14 +532,14 @@ pub enum ReleaseEffect {
     /// region closes (§8.1 "Model synchronization and interrupt masking explicitly"; F15
     /// "Interrupt pending while masked → Correct delivery and acknowledgment behavior").
     ///
-    /// §3.1.1 rule 1: "Every release that arrives while a masked region is open is latched, and is
-    /// observed — for this rule and every other — only at its **delivery**, when the region
-    /// closes." So this is what *every* release inside a region reports, including one for a task
-    /// whose latch already holds one: the latch "holds the most recent release that arrived inside
-    /// a masked region, and a mark that an earlier one also did" (Terms), so a later arrival takes
-    /// the held place and the one it displaces is kept as the mark. Nothing is judged here, so
-    /// there is nothing else to report; [`Runtime::is_overrun_latched`] shows the mark, and the
-    /// policy's effect appears at delivery, in [`Unmasked::overruns`].
+    /// The fault contract's rule 1: "Every release that arrives while a masked region is open is
+    /// latched, and is observed — for this rule and every other — only at its **delivery**, when
+    /// the region closes." So this is what *every* release inside a region reports, including one
+    /// for a task whose latch already holds one: the latch "holds the most recent release that
+    /// arrived inside a masked region, and a mark that an earlier one also did" (Terms), so a later
+    /// arrival takes the held place and the one it displaces is kept as the mark. Nothing is judged
+    /// here, so there is nothing else to report; [`Runtime::is_overrun_latched`] shows the mark,
+    /// and the policy's effect appears at delivery, in [`Unmasked::overruns`].
     ///
     /// §13.4's "arrivals during them are latched" is not this. The Terms read it as "pending in
     /// hardware" during a service, a transition or the like — the processor's own interrupt
@@ -536,20 +551,20 @@ pub enum ReleaseEffect {
     /// policy has **already been applied**, with its effect carried here.
     ///
     /// Its current job had not finished. (A release arriving inside a masked region is never
-    /// reported here: §3.1.1 rule 1 observes it at delivery — see [`ReleaseEffect::Latched`].)
-    /// §3.1 excludes `general-ipc` — "including task-to-task queues" — and there is no per-task
-    /// job queue either, so the runtime has exactly one slot per task. The release is therefore
-    /// **neither stored nor silently dropped**: under a declared minimum separation `T` and a
-    /// constrained deadline `D ≤ T` (§3.1 Workload) this cannot happen in the analyzed workload,
-    /// so its occurrence means the separation was violated or the job overran, and either way
-    /// §13.1 F17 requires the runtime to refuse timing assurance rather than absorb it — which
-    /// §3.1.1 rule 5 now states for itself: "A run's timing claims end at its first contained
-    /// overrun" ([`Runtime::first_contained_overrun`]).
+    /// reported here: the fault contract's rule 1 observes it at delivery — see
+    /// [`ReleaseEffect::Latched`].) §3.1 excludes `general-ipc` — "including task-to-task queues" —
+    /// and there is no per-task job queue either, so the runtime has exactly one slot per task. The
+    /// release is therefore **neither stored nor silently dropped**: under a declared minimum
+    /// separation `T` and a constrained deadline `D ≤ T` (§3.1 Workload) this cannot happen in the
+    /// analyzed workload, so its occurrence means the separation was violated or the job overran,
+    /// and either way §13.1 F17 requires the runtime to refuse timing assurance rather than absorb
+    /// it — which the fault contract's rule 5 now states for itself: "A run's timing claims end at
+    /// its first contained overrun" ([`Runtime::first_contained_overrun`]).
     ///
-    /// ⭐ **AMENDED — §3.1.1 rule 1, "Detection applies the policy".** This note used to read
-    /// `⚠️ CONTRACT SILENT`, because nothing said whether detecting a second release must itself
-    /// trigger the §3.1 overrun policy; this model reported the overrun and left the escalation to
-    /// its caller. The amendment decides it the other way:
+    /// ⭐ **AMENDED — the fault contract's rule 1, "Detection applies the policy".** This note used
+    /// to read `⚠️ CONTRACT SILENT`, because nothing said whether detecting a second release must
+    /// itself trigger the §3.1 overrun policy; this model reported the overrun and left the
+    /// escalation to its caller. The fault contract decides it the other way:
     ///
     /// > An overrun is a fault the moment the runtime observes a release for a task that still
     /// > owes a job; it does not wait for a separate decision. … it is the system's behaviour
@@ -558,7 +573,7 @@ pub enum ReleaseEffect {
     /// So detection applies [`TaskSpec::on_overrun`] here, and the resulting [`FaultEffect`] is
     /// this variant's payload.
     ///
-    /// ⭐ **AMENDED — §3.1.1 rule 1, the triggering release.** This note used to read
+    /// ⭐ **AMENDED — the fault contract's rule 1, the triggering release.** This note used to read
     /// `⚠️ CONTRACT SILENT`: the rule settled that the policy applies, not what becomes of the
     /// release that triggered it. Under `TerminateJob` a runtime could abandon the late job and
     /// leave the task at rest, or abandon it and start a new one from this very release, and this
@@ -593,24 +608,24 @@ pub enum ReleaseEffect {
 
 /// What a fault did.
 ///
-/// ⭐ The context transition became an [`Option`] with §3.1.1 rule 2. An overrun is attributed to
-/// "the **overrunning** task, whichever context holds the processor", and containing a fault in a
-/// task that does not hold the processor moves no context at all. `None` is therefore not an
-/// absence of information: it is the positive statement that the schedule's occupant did not
+/// ⭐ The context transition became an [`Option`] with the fault contract's rule 2. An overrun is
+/// attributed to "the **overrunning** task, whichever context holds the processor", and containing
+/// a fault in a task that does not hold the processor moves no context at all. `None` is therefore
+/// not an absence of information: it is the positive statement that the schedule's occupant did not
 /// change.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FaultEffect {
     /// The job was abandoned ([`OverrunAction::TerminateJob`], the contract's `SkipLateJob`).
     /// The release that detected the overrun is the task's next job, so the task is ready again
-    /// (§3.1.1 rule 1). Outside the profile, an overrun raised without a release leaves the task
-    /// awaiting its next one ([`Runtime::raise_overrun`]). `Some` only if the faulting task held
-    /// the processor.
+    /// (the fault contract's rule 1). Outside the profile, an overrun raised without a release
+    /// leaves the task awaiting its next one ([`Runtime::raise_overrun`]). `Some` only if the
+    /// faulting task held the processor.
     JobTerminated(Option<Transition>),
     /// The task was removed from the schedule for good ([`OverrunAction::StopTask`], the
     /// contract's `Fault`). `Some` only if the faulting task held the processor.
     TaskStopped(Option<Transition>),
-    /// The runtime entered the fatal handler and halted (§3.1.1 rule 7). Nothing is scheduled
-    /// again, the state is frozen, and [`Runtime::fatal_record`] is the evidence (§8.1:
+    /// The runtime entered the fatal handler and halted (the fault contract's rule 7). Nothing is
+    /// scheduled again, the state is frozen, and [`Runtime::fatal_record`] is the evidence (§8.1:
     /// "preserve a defined fatal handler and diagnostic evidence").
     Fatal,
 }
@@ -622,9 +637,10 @@ pub enum FaultEffect {
 /// §8.1 asks for exactly this triage: "Distinguish expected errors, violated internal invariants,
 /// and deliberate fatal traps." [`Fault::class`] gives each fault its class.
 ///
-/// ⭐ **AMENDED — §3.1.1's table.** §3.1's four faults and §8.1's three classes were two lists with
-/// nothing joining them, and this model joined them by inference. The amendment states the join,
-/// and states attribution and containment with it; as last amended on 2026-10-01 it reads:
+/// ⭐ **AMENDED — the fault contract's table.** §3.1's four faults and §8.1's three classes were two
+/// lists with nothing joining them, and this model joined them by inference. The fault contract
+/// states the join, and states attribution and containment with it; as last amended on 2026-10-01
+/// it reads:
 ///
 /// | §3.1 fault | §8.1 class | Attributed to | Containable |
 /// |---|---|---|---|
@@ -650,11 +666,12 @@ pub enum Fault {
     /// corrupted, one number was wrong — so containment is possible, and §7.3 makes the response
     /// a per-task declaration ([`TaskSpec::on_overrun`]) rather than a runtime-wide rule.
     ///
-    /// It is the only one of the four whose §3.1.1 row says "Containable: Yes", and the only one
-    /// attributed to a task rather than to the executing context. It is also the only timing
-    /// fault: rule 6, "The runtime detects no missed deadline. Rule 1's overrun is its only timing
-    /// fault" — which this model, having no deadlines and no time, satisfies by construction. A
-    /// miss is observed only as rule 6 says, "if the next release finds the job still owed".
+    /// It is the only one of the four whose row in the fault contract's table says "Containable:
+    /// Yes", and the only one attributed to a task rather than to the executing context. It is also
+    /// the only timing fault: rule 6, "The runtime detects no missed deadline. Rule 1's overrun is
+    /// its only timing fault" — which this model, having no deadlines and no time, satisfies by
+    /// construction. A miss is observed only as rule 6 says, "if the next release finds the job
+    /// still owed".
     ///
     /// In this profile it has one source: "an overrun is detected by rule 1 alone" (rule 1a), at a
     /// release ([`ReleaseEffect::Overrun`]) or a delivery ([`Unmasked::overruns`]).
@@ -667,9 +684,10 @@ pub enum Fault {
     /// in one address space; no claim of isolation" — and the profile excludes `memory-isolation`
     /// by name. Continuing to schedule would be an unchecked path of exactly the kind §8.1 forbids.
     ///
-    /// §3.1.1's row confirms it and picks the class: "Deliberate fatal trap (its cause is outside
-    /// the model)", attributed to "the executing context (rule 2)", "Containable: No". The fatal
-    /// path is the deliberate response; what is unexpected is what the machine did to reach it.
+    /// The fault contract's row confirms it and picks the class: "Deliberate fatal trap (its cause
+    /// is outside the model)", attributed to "the executing context (rule 2)", "Containable: No".
+    /// The fatal path is the deliberate response; what is unexpected is what the machine did to
+    /// reach it.
     ///
     /// The Terms now say which traps are unexpected: "any trap other than the timer's interrupt, a
     /// declared source's interrupt whose claim finds a request, and the runtime API's own entry
@@ -686,17 +704,17 @@ pub enum Fault {
     /// allocated" (§3.1) in a single address space, so whatever lies beyond a guard belongs to
     /// something else with no protection boundary in between.
     ///
-    /// ⭐ **AMENDED — §3.1.1's table.** This note used to read `⚠️ CONTRACT SILENT`, because §3.1
-    /// and §7.6 say "stack guard" without saying whether it is a trapping guard region (which
-    /// prevents the overflowing write) or a checked canary (which discovers it afterwards), and
-    /// only the first reading could ever have permitted containment. The amendment decides the
-    /// *outcome* without pinning the mechanism — "Violated internal invariant … Containable: No" —
-    /// so the question no longer reaches this model: whichever mechanism a target implements, the
-    /// response is the same one.
+    /// ⭐ **AMENDED — the fault contract's table.** This note used to read `⚠️ CONTRACT SILENT`,
+    /// because §3.1 and §7.6 say "stack guard" without saying whether it is a trapping guard region
+    /// (which prevents the overflowing write) or a checked canary (which discovers it afterwards),
+    /// and only the first reading could ever have permitted containment. The fault contract decides
+    /// the *outcome* without pinning the mechanism — "Violated internal invariant … Containable:
+    /// No" — so the question no longer reaches this model: whichever mechanism a target implements,
+    /// the response is the same one.
     ///
-    /// ⭐ **AMENDED — §3.1.1 rule 2, whose guard.** This variant carried nothing, and the fault
-    /// was attributed to the task whose guard was breached. Rule 2 now separates the two: "A
-    /// stack guard is attributed the same way [to the executing context], and the evidence names
+    /// ⭐ **AMENDED — the fault contract's rule 2, whose guard.** This variant carried nothing, and
+    /// the fault was attributed to the task whose guard was breached. Rule 2 now separates the two:
+    /// "A stack guard is attributed the same way [to the executing context], and the evidence names
     /// whose guard was hit — a task's, or the interrupt stack's." So the guard travels with the
     /// fault into the [`FaultRecord`], and the attribution is the [`Context`]'s.
     StackGuard(Guard),
@@ -707,22 +725,24 @@ pub enum Fault {
     /// declared impossible is the "unchecked panic path in normal runtime operation" that §8.1
     /// tells the runtime to avoid.
     ///
-    /// ⭐ **AMENDED — §3.1.1's table.** This note used to read `⚠️ CONTRACT SILENT`, because §3.1
-    /// does not say whose assertion — the runtime's or the application's — and this model inferred
-    /// that both must be fatal from §3.1's Isolation row making application components *trusted*.
-    /// The amendment reaches the same place without the inference: "Violated internal invariant …
-    /// the executing context (rule 2) … No", with no distinction drawn by whose assertion it was.
+    /// ⭐ **AMENDED — the fault contract's table.** This note used to read `⚠️ CONTRACT SILENT`,
+    /// because §3.1 does not say whose assertion — the runtime's or the application's — and this
+    /// model inferred that both must be fatal from §3.1's Isolation row making application
+    /// components *trusted*. The fault contract reaches the same place without the inference:
+    /// "Violated internal invariant … the executing context (rule 2) … No", with no distinction
+    /// drawn by whose assertion it was.
     ///
-    /// The model raises this fault **itself**, too, wherever §3.1.1 names an assertion failure it
-    /// can detect: a `mask` past the declared depth ([`MaskEffect::Fatal`]), an `unmask` at depth
-    /// zero ([`UnmaskEffect::Fatal`]), and a `mask` or `unmask` executed with no job running
-    /// (both). The fourth the Terms name, "a depth above zero when a job would start", this model
-    /// cannot reach ([`Violation::JobStartedInsideMaskedRegion`]).
+    /// The model raises this fault **itself**, too, wherever the fault contract names an assertion
+    /// failure it can detect: a `mask` past the declared depth ([`MaskEffect::Fatal`]), an `unmask`
+    /// at depth zero ([`UnmaskEffect::Fatal`]), and a `mask` or `unmask` executed with no job
+    /// running (both). The fourth the Terms name, "a depth above zero when a job would start", this
+    /// model cannot reach ([`Violation::JobStartedInsideMaskedRegion`]).
     AssertionFailure,
 }
 
 impl Fault {
-    /// The §8.1 class §3.1.1's table gives this fault. Rule 7 preserves it with the fault.
+    /// The §8.1 class the fault contract's table gives this fault. Rule 7 preserves it with the
+    /// fault.
     #[must_use]
     pub const fn class(self) -> Class {
         match self {
@@ -734,8 +754,8 @@ impl Fault {
 }
 
 /// §8.1's three classes: "Distinguish expected errors, violated internal invariants, and
-/// deliberate fatal traps." §3.1.1's table gives one to each §3.1 fault ([`Fault::class`]), and
-/// rule 7 preserves it in the evidence ([`FaultRecord::class`]).
+/// deliberate fatal traps." The fault contract's table gives one to each §3.1 fault
+/// ([`Fault::class`]), and rule 7 preserves it in the evidence ([`FaultRecord::class`]).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Class {
     /// An expected error — the overrun's: a declared bound was wrong, and the runtime's own
@@ -748,8 +768,8 @@ pub enum Class {
     DeliberateFatalTrap,
 }
 
-/// Whose stack guard was hit. §3.1.1 rule 2: "the evidence names whose guard was hit — a task's,
-/// or the interrupt stack's."
+/// Whose stack guard was hit. The fault contract's rule 2: "the evidence names whose guard was hit
+/// — a task's, or the interrupt stack's."
 ///
 /// ⚠️ **CONTRACT SILENT — which guard a context can hit.** Rule 2 attributes a stack guard to the
 /// executing context and names the guard separately, and states no relation between the two. Which
@@ -766,7 +786,8 @@ pub enum Guard {
     InterruptStack,
 }
 
-/// The context executing the faulting instruction of a synchronous fault — §3.1.1 rule 2:
+/// The context executing the faulting instruction of a synchronous fault — the fault contract's
+/// rule 2:
 ///
 /// > The other three faults are synchronous to the context executing the faulting instruction and
 /// > are attributed to it. A task's job, including a runtime primitive or the completion path it
@@ -777,17 +798,17 @@ pub enum Guard {
 /// > when the fault is raised — the incoming one once the switch is decided, the outgoing one, or
 /// > none, while it is being decided.
 ///
-/// ⭐ **AMENDED — §3.1.1 rule 2 (findings §6 (d); the first review's findings 4 and 8).**
-/// Attribution has moved twice. Before 2026-09-13 a fault took no task at all, on the reasoning
-/// that "§3.1's single execution context is what makes the attribution unambiguous: one core, one
-/// running context, so a fault has exactly one task to belong to". The 2026-09-13 amendment
-/// separated attribution from execution — "The single-core rule of §3.1 governs *execution*, not
-/// *attribution*" — and the model's `raise` took a task, refusing any but the running one for the
-/// three synchronous faults, and refusing them outright with the processor idle, as having "no
-/// context to attribute it to". The rewrite gives such a fault a context that is no task, so this
-/// type replaced the task parameter: [`Context::Task`] for a job, the other variants for the
-/// contexts that are none, and the evidence ([`Attribution::NoTask`]) names that context and keeps
-/// the interrupted task apart from the attributed one.
+/// ⭐ **AMENDED — the fault contract's rule 2 (findings §6 (d); the first review's findings 4 and
+/// 8).** Attribution has moved twice. Before 2026-09-13 a fault took no task at all, on the
+/// reasoning that "§3.1's single execution context is what makes the attribution unambiguous: one
+/// core, one running context, so a fault has exactly one task to belong to". The 2026-09-13
+/// amendment separated attribution from execution — "The single-core rule of §3.1 governs
+/// *execution*, not *attribution*" — and the model's `raise` took a task, refusing any but the
+/// running one for the three synchronous faults, and refusing them outright with the processor
+/// idle, as having "no context to attribute it to". The rewrite gives such a fault a context that
+/// is no task, so this type replaced the task parameter: [`Context::Task`] for a job, the other
+/// variants for the contexts that are none, and the evidence ([`Attribution::NoTask`]) names that
+/// context and keeps the interrupted task apart from the attributed one.
 ///
 /// The fatal handler is deliberately **not** a variant. A fault in the handler can only be raised
 /// into a runtime that has already halted, where every operation is refused with
@@ -836,9 +857,9 @@ pub enum Context {
     Idle,
 }
 
-/// Whom a fault is attributed to: §3.1.1's "Attributed to" column, preserved by rule 7 as "the
-/// attributed task's stable logical ID — its eADL task name … — or no task with the executing
-/// context, the task it interrupted, if any".
+/// Whom a fault is attributed to: the fault contract's "Attributed to" column, preserved by rule 7
+/// as "the attributed task's stable logical ID — its eADL task name … — or no task with the
+/// executing context, the task it interrupted, if any".
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Attribution {
     /// A task: for an overrun, the overrunning task (rule 2: "the task a release, or a delivered
@@ -855,13 +876,13 @@ pub enum Attribution {
     NoTask {
         /// The executing context. Never [`Context::Task`].
         context: Context,
-        /// The task that context interrupted, if any — "recorded as interrupted, never as
+        /// The task that context interrupted, if any — recorded "as interrupted, never as
         /// attributed" (rule 2), and preserved as "the task it interrupted, if any" (rule 7).
         interrupted: Option<TaskId>,
     },
 }
 
-/// The fault the fatal handler preserves — §3.1.1 rule 7:
+/// The fault the fatal handler preserves — the fault contract's rule 7:
 ///
 /// > It preserves until reset the **first** such fault only: its §3.1 kind, its §8.1 class, the
 /// > attributed task's stable logical ID — its eADL task name, which `archogen check` requires
@@ -875,13 +896,13 @@ pub enum Attribution {
 /// bound the runtime's catalog record declares beside the nesting bound `M`", which this model,
 /// having no time, does not see.
 ///
-/// ⭐ **AMENDED — §3.1.1 rule 7 (the first review's finding 9).** This record used to be the first
-/// fault *of any kind*, contained or not, with fields `task`, `fault`, `fatal` and `masked`. Rule 7
-/// makes the preserved fault the first that **entered the fatal handler** — "the first such
-/// fault", such as "is not containable, or is made so by rule 3". A contained overrun before it is
-/// not such a fault, and a record showing one would describe an episode the runtime survived
-/// rather than the one that stopped it. So the record now exists only once the runtime has halted
-/// ([`Runtime::fatal_record`]); `fatal` went, since every such record is; `task` became
+/// ⭐ **AMENDED — the fault contract's rule 7 (the first review's finding 9).** This record used to
+/// be the first fault *of any kind*, contained or not, with fields `task`, `fault`, `fatal` and
+/// `masked`. Rule 7 makes the preserved fault the first that **entered the fatal handler** — "the
+/// first such fault", such as "is not containable, or is made so by rule 3". A contained overrun
+/// before it is not such a fault, and a record showing one would describe an episode the runtime
+/// survived rather than the one that stopped it. So the record now exists only once the runtime has
+/// halted ([`Runtime::fatal_record`]); `fatal` went, since every such record is; `task` became
 /// [`FaultRecord::attribution`], since rule 2 admits no task; and `masked` became
 /// [`FaultRecord::escalated`], since rule 7 asks whether rule 3 escalated the fault, not whether
 /// the depth was above zero — an assertion failure inside a region was masked and was not
@@ -896,7 +917,7 @@ pub enum Attribution {
 pub struct FaultRecord {
     /// Its §3.1 kind; for a stack guard, with whose guard was hit (rule 2).
     pub fault: Fault,
-    /// Its §8.1 class, per §3.1.1's table — always `fault.class()`.
+    /// Its §8.1 class, per the fault contract's table — always `fault.class()`.
     pub class: Class,
     /// The attributed task, or no task with the executing context and the task it interrupted
     /// (rules 2 and 7).
@@ -912,10 +933,10 @@ pub struct FaultRecord {
 /// closed the region ([`Runtime::complete`]). An inner `unmask` reports it too, with nothing
 /// delivered.
 ///
-/// The two share one record because §3.1.1 rule 4 makes a completion's closing a delivery too:
-/// "releases latched in the region are delivered after the completion is recorded and before any
-/// task executes an instruction of its own code". A completion outside any region reports the same
-/// record with nothing delivered and the completion's own transition.
+/// The two share one record because the fault contract's rule 4 makes a completion's closing a
+/// delivery too: "releases latched in the region are delivered after the completion is recorded and
+/// before any task executes an instruction of its own code". A completion outside any region
+/// reports the same record with nothing delivered and the completion's own transition.
 ///
 /// Every latched arrival processed lands in exactly one of `delivered`, `overruns` and `stopped`,
 /// and a delivery processes every one: it never halts. It is outside every masked region, so rule
@@ -930,12 +951,12 @@ pub struct Unmasked {
     /// How many latched arrivals found their task owing no job, and made it ready.
     pub delivered: usize,
     /// How many latched arrivals found the task already owing a job, **each of which had that
-    /// task's overrun policy applied** (§3.1.1 rule 1).
+    /// task's overrun policy applied** (the fault contract's rule 1).
     ///
-    /// The policy applied is the declared one, not an escalation. §3.1.1 rule 3 is explicit:
-    /// "Delivery is **not** inside a masked region, so an overrun found at delivery applies its
-    /// ordinary policy — the difference between a profile that can contain an overrun and one
-    /// that cannot."
+    /// The policy applied is the declared one, not an escalation. The fault contract's rule 3 is
+    /// explicit: "Delivery is **not** inside a masked region, so an overrun found at delivery
+    /// applies its ordinary policy — the difference between a profile that can contain an overrun
+    /// and one that cannot."
     ///
     /// ⭐ This includes an overrun a latch's **mark** stands for. Rule 1: "At delivery a task's
     /// latched arrivals are judged in arrival order against the task's state then: the first is
@@ -976,13 +997,13 @@ pub struct Unmasked {
 pub enum MaskEffect {
     /// The depth rose by one, to this value. At `0 → 1` a masked region opened.
     Masked(u8),
-    /// An **assertion failure**, so the runtime entered the fatal handler and halted (§3.1.1 rule
-    /// 7): the `mask` was executed with no job running, or would have raised the depth past
-    /// [`Runtime::MAX_MASK_DEPTH`]. The depth is left where it was, as evidence.
+    /// An **assertion failure**, so the runtime entered the fatal handler and halted (the fault
+    /// contract's rule 7): the `mask` was executed with no job running, or would have raised the
+    /// depth past [`Runtime::MAX_MASK_DEPTH`]. The depth is left where it was, as evidence.
     ///
-    /// ⭐ **AMENDED twice — §3.1.1's second smaller decision.** This model first refused a `mask`
-    /// past the bound under a `⚠️ CONTRACT SILENT` note, because §3.1 requires "bounded kernel
-    /// critical sections" and §7.3 requires every interrupt source to declare its "masking
+    /// ⭐ **AMENDED twice — the fault contract's second smaller decision.** This model first refused
+    /// a `mask` past the bound under a `⚠️ CONTRACT SILENT` note, because §3.1 requires "bounded
+    /// kernel critical sections" and §7.3 requires every interrupt source to declare its "masking
     /// constraints", while no maximum nesting depth was stated anywhere. The 2026-09-13 amendment
     /// stated one and agreed with the refusal — "Kernel critical sections are bounded by a
     /// declared nesting depth, and exceeding it is refused" — and the refusal was
@@ -1000,11 +1021,11 @@ pub enum MaskEffect {
     /// now requires. Past the bound, a job is running, so the assertion failure is attributed to
     /// it (rule 2): its job, whose primitive `mask` is.
     ///
-    /// ⭐ **AMENDED — §3.1.1's Terms, "Only a job changes the depth" (the second review's finding
-    /// 35).** "A `mask` or `unmask` executed with no job running is an assertion failure of the
-    /// executing context." See [`Runtime::mask`]: this model used to accept a `mask` with the
-    /// processor idle. It is now this variant, attributed to the executing context, which with no
-    /// job running is idle.
+    /// ⭐ **AMENDED — the fault contract's Terms, "Only a job changes the depth" (the second
+    /// review's finding 35).** "A `mask` or `unmask` executed with no job running is an assertion
+    /// failure of the executing context." See [`Runtime::mask`]: this model used to accept a `mask`
+    /// with the processor idle. It is now this variant, attributed to the executing context, which
+    /// with no job running is idle.
     Fatal,
 }
 
@@ -1014,35 +1035,36 @@ pub enum UnmaskEffect {
     /// The depth fell by one. At `1 → 0` the masked region closed and its latched releases were
     /// delivered; an inner `unmask` delivers nothing.
     Unmasked(Unmasked),
-    /// An **assertion failure**, so the runtime entered the fatal handler and halted (§3.1.1 rule
-    /// 7): the `unmask` was executed with no job running, or at depth zero.
+    /// An **assertion failure**, so the runtime entered the fatal handler and halted (the fault
+    /// contract's rule 7): the `unmask` was executed with no job running, or at depth zero.
     ///
-    /// ⭐ **AMENDED — §3.1.1's second smaller decision (the first review's finding 10).** This
-    /// model used to refuse an `unmask` at depth zero, with `Refused::NotMasked`, under a note that
-    /// read `⚠️ CONTRACT SILENT — narrowed by §3.1.1, not closed`: an unbalanced unmask was §8.1's
-    /// "violated internal invariant", and the table settled that such a fault, once raised, is not
-    /// containable, but the table classified only the four faults §3.1 names, and nothing said a
-    /// runtime detecting an unbalanced unmask must raise one. The model refused and did not halt
-    /// "because the *model* is a checker being driven by an adapter: halting here would destroy the
-    /// rest of a comparison run over a mistake in the harness", while conceding that "a real
-    /// runtime detecting the same thing in its own kernel would have the stronger case for
-    /// `Fault::AssertionFailure`, and §3.1.1 would then make it fatal".
+    /// ⭐ **AMENDED — the fault contract's second smaller decision (the first review's finding
+    /// 10).** This model used to refuse an `unmask` at depth zero, with `Refused::NotMasked`, under
+    /// a note that read `⚠️ CONTRACT SILENT — narrowed by §3.1.1, not closed`: an unbalanced unmask
+    /// was §8.1's "violated internal invariant", and the table settled that such a fault, once
+    /// raised, is not containable, but the table classified only the four faults §3.1 names, and
+    /// nothing said a runtime detecting an unbalanced unmask must raise one. The model refused and
+    /// did not halt "because the *model* is a checker being driven by an adapter: halting here
+    /// would destroy the rest of a comparison run over a mistake in the harness", while conceding
+    /// that "a real runtime detecting the same thing in its own kernel would have the stronger case
+    /// for `Fault::AssertionFailure`, and §3.1.1 would then make it fatal".
     ///
-    /// The contract has now decided it: "an `unmask` at depth zero [is an] **assertion
-    /// failure**". So the model halts too, and `Refused::NotMasked` is gone. What changed is not
-    /// the harness argument but its weight: an unbalanced `unmask` is now a contract-defined fatal
-    /// fault that the implementation must halt on as well, so a comparison run that continued
-    /// past it would be comparing two runtimes the contract says have stopped. Refusing would also
-    /// hide the imbalance from the caller, who would go on believing a section was open — rule 4
-    /// makes that easy to reach, since a job that completes inside a region has closed it, and an
-    /// `unmask` meant for that region then arrives at depth zero.
+    /// The contract has now decided it: "A `mask` that would raise the depth past `M`, and an
+    /// `unmask` at depth zero, are **assertion failures**". So the model halts too, and
+    /// `Refused::NotMasked` is gone. What changed is not the harness argument but its weight: an
+    /// unbalanced `unmask` is now a contract-defined fatal fault that the implementation must halt
+    /// on as well, so a comparison run that continued past it would be comparing two runtimes the
+    /// contract says have stopped. Refusing would also hide the imbalance from the caller, who
+    /// would go on believing a section was open — rule 4 makes that easy to reach, since a job that
+    /// completes inside a region has closed it, and an `unmask` meant for that region then arrives
+    /// at depth zero.
     ///
-    /// ⭐ **AMENDED — §3.1.1's Terms, "Only a job changes the depth".** An `unmask` "executed with
-    /// no job running" is an assertion failure too, whatever the depth. In this model the two
-    /// conditions coincide on every reachable state — only a job opens a region and its completion
-    /// closes it, so with no job running the depth is zero — but the model checks the Terms'
-    /// condition first, and attributes the failure to the executing context (rule 2): the running
-    /// task's job, or idle.
+    /// ⭐ **AMENDED — the fault contract's Terms, "Only a job changes the depth".** An `unmask`
+    /// "executed with no job running" is an assertion failure too, whatever the depth. In this
+    /// model the two conditions coincide on every reachable state — only a job opens a region and
+    /// its completion closes it, so with no job running the depth is zero — but the model checks
+    /// the Terms' condition first, and attributes the failure to the executing context (rule 2):
+    /// the running task's job, or idle.
     Fatal,
 }
 
@@ -1057,19 +1079,19 @@ pub enum UnmaskEffect {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Refused {
     /// The runtime is in its fatal handler. Every operation is refused from then on; the state is
-    /// evidence, not a schedule. §3.1.1 rule 7: "From then no job runs, no release is processed or
-    /// latched, and no transition occurs", and "A fault taken in the handler ends it at once in its
-    /// terminal state and never replaces the preserved one."
+    /// evidence, not a schedule. The fault contract's rule 7: "From then no job runs, no release is
+    /// processed or latched, and no transition occurs", and "A fault taken in the handler ends it
+    /// at once in its terminal state and never replaces the preserved one."
     Halted,
     /// The operation needs a running task and the processor is idle: [`Runtime::complete`], or a
     /// synchronous fault raised in a [`Context::Task`].
     NoTaskRunning,
     /// A synchronous fault named a [`Context::Task`] that is not the one holding the processor.
     ///
-    /// §3.1.1 rule 2: "The other three faults are synchronous to the context executing the
-    /// faulting instruction and are attributed to it." A task that does not hold the processor is
-    /// not executing anything, so attributing the fault to it is the concurrency claim the profile
-    /// does not admit, and it is refused rather than recorded.
+    /// The fault contract's rule 2: "The other three faults are synchronous to the context
+    /// executing the faulting instruction and are attributed to it." A task that does not hold the
+    /// processor is not executing anything, so attributing the fault to it is the concurrency claim
+    /// the profile does not admit, and it is refused rather than recorded.
     NotTheRunningTask,
     /// A synchronous fault named [`Context::Idle`] while a task holds the processor: idle is not
     /// executing (rule 2, as for [`Refused::NotTheRunningTask`]).
@@ -1077,8 +1099,8 @@ pub enum Refused {
     /// [`Runtime::raise_overrun`] — the entry outside the profile — named a task that owes no job,
     /// so there is nothing for it to have overrun.
     ///
-    /// §3.1.1's Terms: a task "owes a job from its release until that job completes or is
-    /// abandoned", which is exactly [`TaskState::Ready`] or [`TaskState::Running`]; and rule 1
+    /// The fault contract's Terms: a task "owes a job from its release until that job completes or
+    /// is abandoned", which is exactly [`TaskState::Ready`] or [`TaskState::Running`]; and rule 1
     /// makes an overrun a statement about "a task that still owes a job". A task that has never
     /// been released, has completed or abandoned its last job, or has been stopped is not making
     /// late progress on anything.
@@ -1120,14 +1142,14 @@ pub enum Violation {
     /// other than the job that opened it — so a job started, or resumed, at a depth above zero —
     /// or no job opened it, or no job holds the processor.
     ///
-    /// §3.1.1's Terms: "**Only a job changes the depth:** a `mask` or `unmask` executed with no job
-    /// running is an assertion failure of the executing context, and so is a depth above zero when
-    /// a job would start — raised by that decision, which is no task's. So every section open at a
-    /// completion is the completing job's." This model cannot reach either state: a `mask` with no
-    /// job running halts ([`MaskEffect::Fatal`]), inside a region arrivals latch, a completion
-    /// closes the region before any job starts, and every fault inside one halts. So finding one
-    /// means the model itself is broken, which is what a [`Violation`] reports, rather than the
-    /// assertion failure a runtime would raise.
+    /// The fault contract's Terms: "**Only a job changes the depth:** a `mask` or `unmask` executed
+    /// with no job running is an assertion failure of the executing context, and so is a depth
+    /// above zero when a job would start — raised by that decision, which is no task's. So every
+    /// section open at a completion is the completing job's." This model cannot reach either state:
+    /// a `mask` with no job running halts ([`MaskEffect::Fatal`]), inside a region arrivals latch,
+    /// a completion closes the region before any job starts, and every fault inside one halts. So
+    /// finding one means the model itself is broken, which is what a [`Violation`] reports, rather
+    /// than the assertion failure a runtime would raise.
     ///
     /// ⚠️ **CONTRACT SILENT — the context of "that decision".** Were the model to raise the
     /// job-start assertion, the Terms make it no task's, raised by the scheduling decision. Rule 2's
@@ -1149,17 +1171,17 @@ pub enum Violation {
 pub enum BootError {
     /// The task set is empty.
     ///
-    /// ⭐ **AMENDED — §3.1.1's first smaller decision.** This note used to read
+    /// ⭐ **AMENDED — the fault contract's first smaller decision.** This note used to read
     /// `⚠️ CONTRACT SILENT`: §3.1 says "finite static task set", and the empty set is finite. The
-    /// amendment refuses it, and refuses it for the reason this model had given —
+    /// fault contract refuses it, and refuses it for the reason this model had given —
     ///
-    /// > **A task set must be non-empty.** "Finite static task set" admits the empty set, and no
-    /// > workload makes §7.2's second timing obligation vacuous, which §7.1 exists to prevent.
-    /// > Boot refuses one; the checker not yet (`M2.17`).
+    /// > **A task set must be non-empty** — no workload makes §7.2's second timing obligation
+    /// > vacuous. `archogen build` and boot refuse one; `archogen check` admits it, a system
+    /// > describing composition alone (F01) being valid (`M2.17`).
     ///
     /// — so the behaviour is unchanged and only its authority has: it is now the contract's
     /// reasoning rather than this model's inference from it, and boot is where the contract puts
-    /// the refusal.
+    /// the refusal, beside `archogen build`.
     NoTasks,
     /// Two tasks share a priority. §3.1: "Static **unique** task priorities".
     DuplicatePriority {
@@ -1202,8 +1224,9 @@ pub struct Runtime<const N: usize> {
     state: [TaskState; N],
     /// One pending-release latch per task — §8's "simplest bounded structures adequate for the
     /// profile". Not a counter and not a queue: §3.1 excludes `general-ipc` "including
-    /// task-to-task queues". §3.1.1's Terms give it exactly its shape: it "holds the most recent
-    /// release that arrived inside a masked region, and a mark that an earlier one also did".
+    /// task-to-task queues". The fault contract's Terms give it exactly its shape: it "holds the
+    /// most recent release that arrived inside a masked region, and a mark that an earlier one also
+    /// did".
     latch: [Latch; N],
     running: Option<TaskId>,
     mask_depth: u8,
@@ -1218,14 +1241,14 @@ pub struct Runtime<const N: usize> {
 }
 
 impl<const N: usize> Runtime<N> {
-    /// The deepest mask nesting this model admits: §3.1.1's `M`.
+    /// The deepest mask nesting this model admits: the fault contract's `M`.
     ///
     /// The second smaller decision: "Each runtime's catalog record declares a maximum depth
-    /// `M ≥ 1`. A `mask` that would raise the depth past `M` … [is an] **assertion failure**."
-    /// The value is this model's declaration of it; its finiteness, its being declared, and the
-    /// assertion failure past it are the contract's — see [`MaskEffect::Fatal`]. "This bounds the
-    /// depth; the duration is bounded separately, by the `CS_i` the timing analysis charges",
-    /// which this model, having no time, does not see.
+    /// `M ≥ 1`. A `mask` that would raise the depth past `M`, and an `unmask` at depth zero, are
+    /// **assertion failures**." The value is this model's declaration of it; its finiteness, its
+    /// being declared, and the assertion failure past it are the contract's — see
+    /// [`MaskEffect::Fatal`]. "This bounds the depth; the duration is bounded separately, by the
+    /// `CS_i` the timing analysis charges", which this model, having no time, does not see.
     pub const MAX_MASK_DEPTH: u8 = u8::MAX;
 
     /// Create the static task set. This is §8's "static task creation at boot", and it is the
@@ -1238,10 +1261,10 @@ impl<const N: usize> Runtime<N> {
     /// released at boot or at its first timer tick is not stated anywhere. §3.1 describes
     /// "periodic or sporadic releases with declared minimum separation" without fixing the phase
     /// of the first one, while F29 simply asserts "The initial state already contains L's ready
-    /// job" for its own fixture; §3.1.1's *Still open* list now names it — "needed by no fixture
-    /// yet, … a periodic task's first release instant". This model takes no position: boot
-    /// releases nobody, and a caller that wants F29's initial state calls [`Runtime::release`] to
-    /// establish it. That keeps the choice visible in the trace instead of buried in the
+    /// job" for its own fixture; the fault contract's *Still open* list now names it — "needed by
+    /// no fixture yet, … a periodic task's first release instant". This model takes no position:
+    /// boot releases nobody, and a caller that wants F29's initial state calls [`Runtime::release`]
+    /// to establish it. That keeps the choice visible in the trace instead of buried in the
     /// constructor, where a disagreement about it would look like a disagreement about scheduling.
     ///
     /// # Errors
@@ -1326,9 +1349,9 @@ impl<const N: usize> Runtime<N> {
             .map(|&latch| latch != Latch::Empty)
     }
 
-    /// Whether this task's latch also holds **the mark that an earlier release came** — §3.1.1's
-    /// Terms: the latch "holds the most recent release that arrived inside a masked region, and a
-    /// mark that an earlier one also did".
+    /// Whether this task's latch also holds **the mark that an earlier release came** — the fault
+    /// contract's Terms: the latch "holds the most recent release that arrived inside a masked
+    /// region, and a mark that an earlier one also did".
     ///
     /// At delivery the mark is judged first, since its arrivals came first, and "the earlier
     /// arrivals the mark stands for are judged as one" (rule 1); the held release is judged after
@@ -1351,14 +1374,15 @@ impl<const N: usize> Runtime<N> {
         self.mask_depth
     }
 
-    /// Whether a masked region is open: §3.1.1's Terms, "the interval in which the runtime's mask
-    /// nesting depth is above zero". Releases arriving now are latched.
+    /// Whether a masked region is open: the fault contract's Terms, "the interval in which the
+    /// runtime's mask nesting depth is above zero". Releases arriving now are latched.
     #[must_use]
     pub const fn is_masked(&self) -> bool {
         self.mask_depth > 0
     }
 
-    /// The fault the fatal handler preserved (§3.1.1 rule 7), or `None` while the runtime runs.
+    /// The fault the fatal handler preserved (the fault contract's rule 7), or `None` while the
+    /// runtime runs.
     ///
     /// ⭐ **AMENDED — rule 7.** This replaces `fault_record`, which kept the first fault of any
     /// kind; see [`FaultRecord`] for why the halt's evidence is now the first fault that entered
@@ -1372,10 +1396,11 @@ impl<const N: usize> Runtime<N> {
     /// at a release or at a delivery (or, outside the profile, raised without a release) — or
     /// `None` if none has been.
     ///
-    /// §3.1.1 rule 5: "A run's timing claims end at its first contained overrun, which shows that
-    /// an assumption of its analysis — an execution bound, an arrival bound or the interference it
-    /// counted — did not hold, or that the claim was not established." This is where they ended.
-    /// An escalated overrun is not contained, and appears in [`Runtime::fatal_record`] instead.
+    /// The fault contract's rule 5: "A run's timing claims end at its first contained overrun,
+    /// which shows that an assumption of its analysis — an execution bound, an arrival bound or the
+    /// interference it counted — did not hold, or that the claim was not established." This is
+    /// where they ended. An escalated overrun is not contained, and appears in
+    /// [`Runtime::fatal_record`] instead.
     ///
     /// ⭐ **AMENDED — rule 1, the order across tasks (the second review's finding 42).** This note
     /// used to read `⚠️ CONTRACT SILENT — which overrun is first at one delivery`: rule 1 ordered a
@@ -1399,8 +1424,8 @@ impl<const N: usize> Runtime<N> {
     /// `docs/analysis/cost-accounting-v1.md`, is *ISR completion*, not interrupt arrival: "a
     /// release is signalled by an interrupt; the task becomes ready at ISR completion". The whole
     /// release service is this one atomic call. Its own interrupt disable is not a masked region
-    /// (§3.1.1 Terms), so it never changes the depth; it only reads it, and an arrival that lands
-    /// inside a masked region is latched instead.
+    /// (the fault contract's Terms), so it never changes the depth; it only reads it, and an
+    /// arrival that lands inside a masked region is latched instead.
     ///
     /// Each call is one arrival the platform delivered as a distinct request. Rule 1 says which
     /// arrivals those are — "a timer-released task's are computed at delivery and never coalesce;
@@ -1410,20 +1435,20 @@ impl<const N: usize> Runtime<N> {
     /// never reaches this model, and its loss is the port's to record, not the model's to detect.
     ///
     /// ⭐ **A release is also where an overrun is detected, and detection applies the policy**
-    /// (§3.1.1 rule 1) — see [`ReleaseEffect::Overrun`], which carries what the policy did. For a
-    /// release that arrives inside a masked region, "detection" happens at its delivery, by
-    /// [`Runtime::unmask`] or by a completion that closes the region ([`Runtime::complete`]). In
-    /// this profile there is no other detection: "an overrun is detected by rule 1 alone" (rule
-    /// 1a).
+    /// (the fault contract's rule 1) — see [`ReleaseEffect::Overrun`], which carries what the
+    /// policy did. For a release that arrives inside a masked region, "detection" happens at its
+    /// delivery, by [`Runtime::unmask`] or by a completion that closes the region
+    /// ([`Runtime::complete`]). In this profile there is no other detection: "an overrun is
+    /// detected by rule 1 alone" (rule 1a).
     ///
-    /// ⭐ **AMENDED — §3.1.1 rule 1, a release into a full latch.** This note used to read
-    /// `⚠️ CONTRACT SILENT`: rule 1 defined detection as "a release for a task that still owes a
-    /// **job**", and a task whose latch slot is already full may owe only an undelivered
+    /// ⭐ **AMENDED — the fault contract's rule 1, a release into a full latch.** This note used to
+    /// read `⚠️ CONTRACT SILENT`: rule 1 defined detection as "a release for a task that still owes
+    /// a **job**", and a task whose latch slot is already full may owe only an undelivered
     /// *release*. This model counted that as owing a job, so rule 3 then escalated it — a doubled
     /// arrival inside a critical section was fatal where the same doubling one instruction later
-    /// was contained — and nothing in §3.1.1 settled which side of the definition a full latch
-    /// fell on. The ruling of 2026-10-01 settled it on neither side, and rule 1 as now written
-    /// states it for every arrival inside a region, not only the second:
+    /// was contained — and nothing in the fault contract settled which side of the definition a
+    /// full latch fell on. The ruling of 2026-10-01 settled it on neither side, and rule 1 as now
+    /// written states it for every arrival inside a region, not only the second:
     ///
     /// > Every release that arrives while a masked region is open is latched, and is observed —
     /// > for this rule and every other — only at its **delivery**, when the region closes. At
@@ -1470,8 +1495,8 @@ impl<const N: usize> Runtime<N> {
         match self.state[index] {
             TaskState::Stopped => Ok(ReleaseEffect::Stopped),
             // The task already owes a job. One slot per task, so there is nowhere to put a
-            // second and nothing to silently drop it into — and §3.1.1 rule 1 makes this
-            // observation the fault itself, applied to this task whether or not it is running.
+            // second and nothing to silently drop it into — and the fault contract's rule 1 makes
+            // this observation the fault itself, applied to this task whether or not it is running.
             // The release is the policy's: under SkipLateJob it becomes the task's next job.
             TaskState::Ready | TaskState::Running => {
                 let was_running = self.running == Some(task);
@@ -1510,13 +1535,13 @@ impl<const N: usize> Runtime<N> {
     /// task reaching the end of its own computation, not an asynchronous event, and deferring it
     /// would leave a finished job holding the processor.
     ///
-    /// ⭐ **AMENDED — §3.1.1 rule 4.** This note used to read `⚠️ CONTRACT SILENT`: whether a job
-    /// may *complete* inside a masked region it opened was undecided, and rule 3 sharpened the
-    /// question without answering it. Its first ground — a job that holds the mask and ends
-    /// "leaves the nesting depth above zero with no owner" — applied word for word to a job that
-    /// merely *ends* there, but the rule scoped itself to "a containable **fault**", so this model
-    /// let the completion through and left the mask at its depth, with a finished task still
-    /// nominally its owner. The ruling of 2026-10-01 added a rule for it, which now reads:
+    /// ⭐ **AMENDED — the fault contract's rule 4.** This note used to read `⚠️ CONTRACT SILENT`:
+    /// whether a job may *complete* inside a masked region it opened was undecided, and rule 3
+    /// sharpened the question without answering it. Its first ground — a job that holds the mask
+    /// and ends "leaves the nesting depth above zero with no owner" — applied word for word to a
+    /// job that merely *ends* there, but the rule scoped itself to "a containable **fault**", so
+    /// this model let the completion through and left the mask at its depth, with a finished task
+    /// still nominally its owner. The ruling of 2026-10-01 added a rule for it, which now reads:
     ///
     /// > A job may complete inside a masked region, and its completion closes it. The region is
     /// > the job's (Terms), so the nesting depth returns to zero with the job, and releases latched
@@ -1567,9 +1592,9 @@ impl<const N: usize> Runtime<N> {
         let outgoing = self.running.ok_or(Refused::NoTaskRunning)?;
         self.state[outgoing.index()] = TaskState::Completed;
         self.running = None;
-        // §3.1.1 rule 4: "the nesting depth returns to zero with the job" — every section it
-        // opened, not one level — and only then are the latched releases delivered, so that
-        // delivery is outside every masked region exactly as rule 3's note requires.
+        // The fault contract's rule 4: "the nesting depth returns to zero with the job" — every
+        // section it opened, not one level — and only then are the latched releases delivered, so
+        // that delivery is outside every masked region exactly as rule 3's note requires.
         self.mask_depth = 0;
         self.holder = None;
         Ok(self.deliver_latched(Some(outgoing)))
@@ -1591,19 +1616,19 @@ impl<const N: usize> Runtime<N> {
     /// by [`Runtime::MAX_MASK_DEPTH`], and a `mask` past it is an assertion failure that halts —
     /// [`MaskEffect::Fatal`], where this model used to refuse.
     ///
-    /// §3.1.1's Terms make the region a job's: "opened by a job's outermost `mask`, kernel or
-    /// application". The caller is the running job, directly or through a primitive it called —
-    /// "A task's job, including a runtime primitive … it called, is that task" (rule 2) — and that
-    /// job is the region's holder.
+    /// The fault contract's Terms make the region a job's: "opened by a job's outermost `mask`,
+    /// kernel or application". The caller is the running job, directly or through a primitive it
+    /// called — "A task's job, including a runtime primitive … it called, is that task" (rule 2) —
+    /// and that job is the region's holder.
     ///
-    /// ⭐ **AMENDED — §3.1.1's Terms, "Only a job changes the depth" (the second review's finding
-    /// 35).** This note used to read `⚠️ CONTRACT SILENT — a mask with the processor idle`: the
-    /// Terms defined the region as opened by "a job's outermost `mask`" and listed the contexts
-    /// that never change the depth — "no service, trap path or transition" — and idle was in
-    /// neither list. This model accepted it: the depth rose, arrivals latched as in a job's region,
-    /// and the closing `unmask` delivered them, from a region with no holder. Refusing was the
-    /// alternative, and the second decision's own argument told against it. The Terms now decide
-    /// it the third way:
+    /// ⭐ **AMENDED — the fault contract's Terms, "Only a job changes the depth" (the second
+    /// review's finding 35).** This note used to read
+    /// `⚠️ CONTRACT SILENT — a mask with the processor idle`: the Terms defined the region as
+    /// opened by "a job's outermost `mask`" and listed the contexts that never change the depth —
+    /// "no service, trap path or transition" — and idle was in neither list. This model accepted
+    /// it: the depth rose, arrivals latched as in a job's region, and the closing `unmask`
+    /// delivered them, from a region with no holder. Refusing was the alternative, and the second
+    /// decision's own argument told against it. The Terms now decide it the third way:
     ///
     /// > **Only a job changes the depth:** a `mask` or `unmask` executed with no job running is an
     /// > assertion failure of the executing context …
@@ -1626,14 +1651,14 @@ impl<const N: usize> Runtime<N> {
             return Err(Refused::Halted);
         }
         if self.running.is_none() {
-            // §3.1.1's Terms: "a `mask` … executed with no job running is an assertion failure of
-            // the executing context" — idle, here. The depth is left at zero.
+            // The fault contract's Terms: "a `mask` … executed with no job running is an assertion
+            // failure of the executing context" — idle, here. The depth is left at zero.
             self.assertion_failure_in_a_primitive();
             return Ok(MaskEffect::Fatal);
         }
         if self.mask_depth == Self::MAX_MASK_DEPTH {
-            // §3.1.1's second smaller decision: an assertion failure, not a wrap, a saturation or
-            // a refusal. The depth stays at the bound as evidence.
+            // The fault contract's second smaller decision: an assertion failure, not a wrap, a
+            // saturation or a refusal. The depth stays at the bound as evidence.
             self.assertion_failure_in_a_primitive();
             return Ok(MaskEffect::Fatal);
         }
@@ -1652,17 +1677,18 @@ impl<const N: usize> Runtime<N> {
     /// `unmask` executed with no job running, or at depth zero, is an assertion failure that halts
     /// — [`UnmaskEffect::Fatal`], where this model used to refuse the second and had no first.
     ///
-    /// ⭐ **Delivery is outside the masked region, and §3.1.1 rule 3 says so.** The depth reaches
-    /// zero first and the latched releases are serviced after it: "Delivery is **not** inside a
-    /// masked region, so an overrun found at delivery applies its ordinary policy — the difference
-    /// between a profile that can contain an overrun and one that cannot." A runtime that
-    /// delivered *inside* the region would escalate every latched overrun to fatal by rule 3, and
-    /// containment would exist only on paper.
+    /// ⭐ **Delivery is outside the masked region, and the fault contract's rule 3 says so.** The
+    /// depth reaches zero first and the latched releases are serviced after it: "Delivery is
+    /// **not** inside a masked region, so an overrun found at delivery applies its ordinary policy
+    /// — the difference between a profile that can contain an overrun and one that cannot." A
+    /// runtime that delivered *inside* the region would escalate every latched overrun to fatal by
+    /// rule 3, and containment would exist only on paper.
     ///
     /// A delivered release that finds its task still owing a job is therefore an overrun whose
-    /// declared policy applies here (§3.1.1 rule 1). If that policy takes the processor away from
-    /// the faulting task, the scheduler still runs only once, at the end: the whole unmask reports
-    /// one [`Transition`]. No policy halts (rule 5), so the delivery always runs to the end.
+    /// declared policy applies here (the fault contract's rule 1). If that policy takes the
+    /// processor away from the faulting task, the scheduler still runs only once, at the end: the
+    /// whole unmask reports one [`Transition`]. No policy halts (rule 5), so the delivery always
+    /// runs to the end.
     ///
     /// A task whose latch also holds the mark ([`Runtime::is_overrun_latched`]) has two arrivals to
     /// judge, and rule 1 orders them: "At delivery a task's latched arrivals are judged in arrival
@@ -1690,16 +1716,16 @@ impl<const N: usize> Runtime<N> {
             return Err(Refused::Halted);
         }
         if self.running.is_none() {
-            // §3.1.1's Terms: "a `mask` or `unmask` executed with no job running is an assertion
-            // failure of the executing context", whatever the depth. On every state this model
-            // reaches, no job running means depth zero, so the check below would halt too; this is
-            // the Terms' own condition, checked first so that it does not depend on that.
+            // The fault contract's Terms: "a `mask` or `unmask` executed with no job running is an
+            // assertion failure of the executing context", whatever the depth. On every state this
+            // model reaches, no job running means depth zero, so the check below would halt too;
+            // this is the Terms' own condition, checked first so that it does not depend on that.
             self.assertion_failure_in_a_primitive();
             return Ok(UnmaskEffect::Fatal);
         }
         if self.mask_depth == 0 {
-            // §3.1.1's second smaller decision: "an `unmask` at depth zero [is an] assertion
-            // failure".
+            // The fault contract's second smaller decision: "A `mask` that would raise the depth
+            // past `M`, and an `unmask` at depth zero, are **assertion failures**".
             self.assertion_failure_in_a_primitive();
             return Ok(UnmaskEffect::Fatal);
         }
@@ -1719,7 +1745,7 @@ impl<const N: usize> Runtime<N> {
 
     /// Raise an overrun against `task` without a release.
     ///
-    /// ⛔ **Outside `rt-static-up-v1`.** §3.1.1 rule 1a:
+    /// ⛔ **Outside `rt-static-up-v1`.** The fault contract's rule 1a:
     ///
     /// > An overrun raised without a release is outside this profile. `rt-static-up-v1` has no
     /// > execution-budget monitor: an overrun is detected by rule 1 alone, as rule 6 says of a
@@ -1736,12 +1762,12 @@ impl<const N: usize> Runtime<N> {
     ///
     /// ⭐ **AMENDED — rule 1a, twice.** This entry was `raise(task, Fault::Overrun)`, kept "for an
     /// overrun detected some other way, an execution-budget monitor being the obvious one (§7.3's
-    /// 'execution bound')", and §3.1.1 said nothing of such an overrun. The first rewrite gave it a
-    /// rule 1a stating what this model did — "the task's policy applies with no triggering
-    /// release: under `SkipLateJob` the job is abandoned and the task's next job starts at its next
-    /// release, and under `Fault` the task is faulted". The second review found the monitor an
-    /// undeclared source, whose overruns inside a region two readers handled differently, and rule
-    /// 1a now takes the monitor out of the profile.
+    /// 'execution bound')", and the fault contract said nothing of such an overrun. The first
+    /// rewrite gave it a rule 1a stating what this model did — "the task's policy applies with no
+    /// triggering release: under `SkipLateJob` the job is abandoned and the task's next job starts
+    /// at its next release, and under `Fault` the task is faulted". The second review found the
+    /// monitor an undeclared source, whose overruns inside a region two readers handled
+    /// differently, and rule 1a now takes the monitor out of the profile.
     ///
     /// ⚠️ **CONTRACT SILENT — outside the profile, by the text's own design.** A later profile is
     /// to say "how its overrun is judged against the job it measured". This model judges it
@@ -1812,17 +1838,17 @@ impl<const N: usize> Runtime<N> {
         Ok(self.reschedule_after(task, was_running, contained))
     }
 
-    /// Raise an unexpected trap in `context`. It is not containable (§3.1.1's table), so the
-    /// runtime enters the fatal handler and halts (rule 7).
+    /// Raise an unexpected trap in `context`. It is not containable (the fault contract's table),
+    /// so the runtime enters the fatal handler and halts (rule 7).
     ///
-    /// The three synchronous faults are raised the same way, and this note is theirs. §3.1.1 rule
-    /// 2 attributes each to "the context executing the faulting instruction": a [`Context::Task`]
-    /// names the task whose job — or whose primitive or completion path — executed it, and must
-    /// be the running task; every other [`Context`] is no task, and the record names it and keeps
-    /// "the task it interrupted, if any" (rule 7) as interrupted, "never as attributed" — the task
-    /// holding the processor when the fault is raised, or none (see [`Context`] and
-    /// [`Attribution`]). The model refuses rather than re-attributes, because a misattribution is
-    /// the interesting thing to catch.
+    /// The three synchronous faults are raised the same way, and this note is theirs. The fault
+    /// contract's rule 2 attributes each to "the context executing the faulting instruction": a
+    /// [`Context::Task`] names the task whose job — or whose primitive or completion path —
+    /// executed it, and must be the running task; every other [`Context`] is no task, and the
+    /// record names it and keeps "the task it interrupted, if any" (rule 7) as interrupted, "never
+    /// as attributed" — the task holding the processor when the fault is raised, or none (see
+    /// [`Context`] and [`Attribution`]). The model refuses rather than re-attributes, because a
+    /// misattribution is the interesting thing to catch.
     ///
     /// None of the three is ever escalated: rule 3 escalates a *containable* fault, and these
     /// never were. Raised inside a masked region they halt all the same, with
@@ -1838,10 +1864,10 @@ impl<const N: usize> Runtime<N> {
         self.raise_synchronous(context, Fault::UnexpectedTrap)
     }
 
-    /// Raise a stack-guard fault in `context`; `guard` names whose guard was hit (§3.1.1 rule 2: "a
-    /// task's, or the interrupt stack's"). Not containable: the runtime halts (rule 7). See
-    /// [`Runtime::raise_unexpected_trap`] for attribution, and [`Guard`] for which pairings are
-    /// admitted.
+    /// Raise a stack-guard fault in `context`; `guard` names whose guard was hit (the fault
+    /// contract's rule 2: "a task's, or the interrupt stack's"). Not containable: the runtime halts
+    /// (rule 7). See [`Runtime::raise_unexpected_trap`] for attribution, and [`Guard`] for which
+    /// pairings are admitted.
     ///
     /// # Errors
     ///
@@ -1882,13 +1908,13 @@ impl<const N: usize> Runtime<N> {
     /// which task runs but silently loses the invariant in between is agreeing by luck.
     ///
     /// A halted runtime is exempt. Once the fatal handler has run this is no longer a schedule but
-    /// evidence, and §3.1.1 rule 7 disclaims the table as evidence of anything scheduling-shaped:
-    /// "What the task table shows afterwards is the implementation's, and is not evidence of
-    /// attribution." (The exemption used to have a second reason — a halt partway through a
-    /// delivery, under the halting policy rule 5 removed, could leave a ready task outranking the
-    /// one the processor stopped on. This model's halts now all fall between events, so its frozen
-    /// state happens to pass; the exemption stays because the contract says the table proves
-    /// nothing.)
+    /// evidence, and the fault contract's rule 7 disclaims the table as evidence of anything
+    /// scheduling-shaped: "What the task table shows afterwards is the implementation's, and is not
+    /// evidence of attribution." (The exemption used to have a second reason — a halt partway
+    /// through a delivery, under the halting policy rule 5 removed, could leave a ready task
+    /// outranking the one the processor stopped on. This model's halts now all fall between events,
+    /// so its frozen state happens to pass; the exemption stays because the contract says the table
+    /// proves nothing.)
     ///
     /// # Errors
     ///
@@ -1915,9 +1941,10 @@ impl<const N: usize> Runtime<N> {
                 states: running_by_state,
             });
         }
-        // §3.1.1's Terms: "Only a job changes the depth", so every section open is the job's that
-        // holds the processor — a region with no job holding it, or held by another task than the
-        // one running, is a job started inside it or a depth changed by something that is no job.
+        // The fault contract's Terms: "Only a job changes the depth", so every section open is the
+        // job's that holds the processor — a region with no job holding it, or held by another task
+        // than the one running, is a job started inside it or a depth changed by something that is
+        // no job.
         if self.is_masked() && (self.holder.is_none() || self.holder != self.running) {
             return Err(Violation::JobStartedInsideMaskedRegion {
                 holder: self.holder,
@@ -2049,10 +2076,10 @@ impl<const N: usize> Runtime<N> {
         }
     }
 
-    /// Enter the fatal handler (§3.1.1 rule 7): keep the first such fault and only the first, and
-    /// halt. Everything else is frozen where it stands — the task states, the latches, the depth
-    /// and the running task — because a fatal handler that tidied up would be destroying the
-    /// evidence §8.1 asks it to preserve.
+    /// Enter the fatal handler (the fault contract's rule 7): keep the first such fault and only
+    /// the first, and halt. Everything else is frozen where it stands — the task states, the
+    /// latches, the depth and the running task — because a fatal handler that tidied up would be
+    /// destroying the evidence §8.1 asks it to preserve.
     fn enter_fatal_handler(&mut self, record: FaultRecord) {
         if self.fatal.is_none() {
             self.fatal = Some(record);
@@ -2060,10 +2087,10 @@ impl<const N: usize> Runtime<N> {
     }
 
     /// An assertion failure raised by `mask` or `unmask` itself: past the declared depth or at
-    /// depth zero (§3.1.1's second smaller decision), or with no job running (the Terms). Rule 2
-    /// attributes it to the executing context, which for these two is the running job, whose
-    /// primitive they are, or — "a `mask` or `unmask` executed with no job running is an assertion
-    /// failure of the executing context" — idle.
+    /// depth zero (the fault contract's second smaller decision), or with no job running (the
+    /// Terms). Rule 2 attributes it to the executing context, which for these two is the running
+    /// job, whose primitive they are, or — "a `mask` or `unmask` executed with no job running is an
+    /// assertion failure of the executing context" — idle.
     fn assertion_failure_in_a_primitive(&mut self) {
         let attribution = match self.running {
             Some(task) => Attribution::Task(task),
@@ -2080,8 +2107,8 @@ impl<const N: usize> Runtime<N> {
         });
     }
 
-    /// Attribute a synchronous fault to `context` (§3.1.1 rule 2), or refuse a context the
-    /// processor contradicts.
+    /// Attribute a synchronous fault to `context` (the fault contract's rule 2), or refuse a
+    /// context the processor contradicts.
     fn attribute(&self, context: Context) -> Result<Attribution, Refused> {
         match context {
             Context::Task(task) => {
@@ -2127,8 +2154,8 @@ impl<const N: usize> Runtime<N> {
     }
 
     /// Apply `task`'s declared policy to an overrun outside every masked region, and move its
-    /// lifecycle state (§3.1.1 rules 1 and 5). `triggered` says whether a release detected it,
-    /// which in this profile it always did; `false` is the entry outside it
+    /// lifecycle state (the fault contract's rules 1 and 5). `triggered` says whether a release
+    /// detected it, which in this profile it always did; `false` is the entry outside it
     /// ([`Runtime::raise_overrun`]).
     ///
     /// It deliberately does **not** touch the processor. Who runs next is the scheduler's
@@ -2168,11 +2195,12 @@ impl<const N: usize> Runtime<N> {
     /// Turn a contained overrun into its [`FaultEffect`], running the scheduler only if `task`
     /// held the processor before the policy applied.
     ///
-    /// If it did not — §3.1.1 rule 2's case — nothing moves and the effect carries no transition.
-    /// A task skipped under `SkipLateJob` by a release is [`TaskState::Ready`] again by now, so
-    /// when it held the processor the scheduler hands the processor back to it: nothing ready can
-    /// outrank a task that was running with releases being delivered, and the handover from the
-    /// late job to the fresh one is a [`Transition::Switch`] from the task to itself.
+    /// If it did not — the case of the fault contract's rule 2 — nothing moves and the effect
+    /// carries no transition. A task skipped under `SkipLateJob` by a release is
+    /// [`TaskState::Ready`] again by now, so when it held the processor the scheduler hands the
+    /// processor back to it: nothing ready can outrank a task that was running with releases being
+    /// delivered, and the handover from the late job to the fresh one is a [`Transition::Switch`]
+    /// from the task to itself.
     fn reschedule_after(
         &mut self,
         task: TaskId,
@@ -2191,12 +2219,13 @@ impl<const N: usize> Runtime<N> {
     }
 
     /// Deliver every latched arrival, then run the scheduler once — the closing half of
-    /// [`Runtime::unmask`] at depth `1 → 0`, and of [`Runtime::complete`] by §3.1.1 rule 4.
+    /// [`Runtime::unmask`] at depth `1 → 0`, and of [`Runtime::complete`] by the fault contract's
+    /// rule 4.
     ///
     /// The caller has already brought the depth to zero, so everything here is outside every
-    /// masked region and no overrun found here escalates (§3.1.1 rule 3's note). `stood_down` is
-    /// a task that gave up the processor just before — the completing one — so the one transition
-    /// still names it as outgoing.
+    /// masked region and no overrun found here escalates (the note to the fault contract's rule 3).
+    /// `stood_down` is a task that gave up the processor just before — the completing one — so the
+    /// one transition still names it as outgoing.
     ///
     /// Tasks are taken in ascending rank — rule 1 makes the order across tasks "the port's" — and
     /// each task's arrivals in the order they arrived: the earlier arrivals the mark stands for,
@@ -2227,9 +2256,10 @@ impl<const N: usize> Runtime<N> {
                 TaskState::Ready | TaskState::Running => {
                     overruns += 1;
                     let was_running = self.running == Some(task);
-                    // §3.1.1 rule 1, with the release the policy's. The task stands down rather
-                    // than being rescheduled now, so that the scheduler runs once for the whole
-                    // delivery and its one transition still names the task that stood down.
+                    // The fault contract's rule 1, with the release the policy's. The task stands
+                    // down rather than being rescheduled now, so that the scheduler runs once for
+                    // the whole delivery and its one transition still names the task that stood
+                    // down.
                     self.contain_overrun(task, true);
                     if was_running {
                         self.running = None;
@@ -2270,15 +2300,15 @@ enum Contained {
 
 /// What one task's latch holds.
 ///
-/// Three states and no more, because §3.1.1's Terms give the latch exactly two things to keep: "A
-/// task's latch holds the most recent release that arrived inside a masked region, and a mark that
-/// an earlier one also did." A queue would be the `general-ipc` §3.1 excludes, and a counter of
-/// arrivals would keep what rule 1 says is not kept: "the earlier arrivals the mark stands for are
-/// judged as one". (This model had reached the same shape before the first rewrite, by arguing
-/// that under each policy the state after delivering two arrivals is the state after delivering
-/// more; the Terms now state it. The second rewrite moved which release the latch *holds* — the
-/// most recent rather than the first — which a model with no instants cannot tell apart; it
-/// shows only in whose nominal instant a skipped task's next job carries.)
+/// Three states and no more, because the fault contract's Terms give the latch exactly two things
+/// to keep: "A task's latch holds the most recent release that arrived inside a masked region, and
+/// a mark that an earlier one also did." A queue would be the `general-ipc` §3.1 excludes, and a
+/// counter of arrivals would keep what rule 1 says is not kept: "the earlier arrivals the mark
+/// stands for are judged as one". (This model had reached the same shape before the first rewrite,
+/// by arguing that under each policy the state after delivering two arrivals is the state after
+/// delivering more; the Terms now state it. The second rewrite moved which release the latch
+/// *holds* — the most recent rather than the first — which a model with no instants cannot tell
+/// apart; it shows only in whose nominal instant a skipped task's next job carries.)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Latch {
     /// Nothing pending.
@@ -2706,10 +2736,10 @@ mod tests {
     fn a_second_release_of_a_running_task_applies_its_overrun_policy_at_once() {
         let mut rt = two_tasks();
         rt.release(L).unwrap();
-        // §3.1.1 rule 1: the observation *is* the fault, and L's declared TerminateJob (the
-        // contract's SkipLateJob) applies here rather than waiting for a separate call. The late
-        // job is skipped and the triggering release "becomes the task's next job", so L hands the
-        // processor from its late job to its fresh one: one switch, from L to L.
+        // The fault contract's rule 1: the observation *is* the fault, and L's declared
+        // TerminateJob (the contract's SkipLateJob) applies here rather than waiting for a separate
+        // call. The late job is skipped and the triggering release "becomes the task's next job",
+        // so L hands the processor from its late job to its fresh one: one switch, from L to L.
         assert_eq!(
             rt.release(L).unwrap(),
             ReleaseEffect::Overrun(FaultEffect::JobTerminated(Some(Transition::Switch {
@@ -2736,9 +2766,9 @@ mod tests {
 
     #[test]
     fn under_fault_the_triggering_release_goes_with_the_faulted_task() {
-        // §3.1.1 rule 1: "under `Fault` it goes with the faulted task"; rule 5: "the triggering
-        // release and every later release of it are discarded". Nothing is left ready and
-        // nothing runs.
+        // The fault contract's rule 1: "under `Fault` it goes with the faulted task"; rule 5: "the
+        // triggering release and every later release of it are discarded". Nothing is left ready
+        // and nothing runs.
         let mut rt = boot2(OverrunAction::TerminateJob, OverrunAction::StopTask);
         rt.release(L).unwrap();
         assert_eq!(
@@ -2789,8 +2819,8 @@ mod tests {
         rt.release(H).unwrap();
         assert_eq!(rt.processor(), Processor::Running(H));
         assert_eq!(rt.state(L), Some(TaskState::Ready));
-        // §3.1.1 rule 2: the overrunning task is "the task a release … belongs to — whichever
-        // context holds the processor: a task that is ready and not running" among them.
+        // The fault contract's rule 2: the overrunning task is "the task a release … belongs to —
+        // whichever context holds the processor: a task that is ready and not running" among them.
         // Containing L's fault moves no context, because L was not holding any.
         assert_eq!(
             rt.release(L).unwrap(),
@@ -2929,10 +2959,10 @@ mod tests {
         let lifted = unmask_ok(&mut rt);
         assert_eq!(lifted.delivered, 0);
         assert_eq!(lifted.overruns, 1);
-        // §3.1.1 rule 3: "Delivery is not inside a masked region", so L's declared TerminateJob
-        // applies rather than escalating. L held the processor, its late job is skipped, and the
-        // delivered release is its next job (rule 1), so the one transition of this unmask hands
-        // the processor from L's late job to L's fresh one.
+        // The fault contract's rule 3: "Delivery is not inside a masked region", so L's declared
+        // TerminateJob applies rather than escalating. L held the processor, its late job is
+        // skipped, and the delivered release is its next job (rule 1), so the one transition of
+        // this unmask hands the processor from L's late job to L's fresh one.
         assert_eq!(
             lifted.transition,
             Some(Transition::Switch {
@@ -2947,7 +2977,7 @@ mod tests {
         assert_sound(&rt);
     }
 
-    // -- a doubled release inside one masked region (§3.1.1 rule 1) -----------------------------
+    // -- a doubled release inside one masked region (the fault contract's rule 1) ---------------
 
     /// `L` runs, and `H` — never released before — arrives twice inside one masked region that
     /// `L` holds. `H` declares `policy`.
@@ -3261,7 +3291,7 @@ mod tests {
         assert_sound(&rt);
     }
 
-    // -- a completion inside a masked region (§3.1.1 rule 4) ------------------------------------
+    // -- a completion inside a masked region (the fault contract's rule 4) ----------------------
 
     #[test]
     fn masking_does_not_defer_a_completion_and_the_completion_closes_the_region() {
@@ -3445,7 +3475,7 @@ mod tests {
         assert_sound(&rt);
     }
 
-    // -- the mask bound and an unbalanced unmask (§3.1.1's second smaller decision) -------------
+    // -- the mask bound and an unbalanced unmask (the fault contract's second smaller decision) ---
 
     #[test]
     fn an_unmask_at_depth_zero_is_an_assertion_failure_and_halts() {
@@ -3490,7 +3520,7 @@ mod tests {
         assert_eq!(rt.unmask().unwrap_err(), Refused::Halted);
     }
 
-    // -- only a job changes the depth (§3.1.1's Terms) ------------------------------------------
+    // -- only a job changes the depth (the fault contract's Terms) ------------------------------
 
     #[test]
     fn a_mask_with_no_job_running_is_an_assertion_failure_of_idle() {
@@ -3572,7 +3602,7 @@ mod tests {
 
     #[test]
     fn each_fault_carries_its_section_8_1_class() {
-        // §3.1.1's table, second column.
+        // The fault contract's table, second column.
         assert_eq!(Fault::Overrun.class(), Class::ExpectedError);
         assert_eq!(
             Fault::StackGuard(Guard::InterruptStack).class(),
@@ -3738,7 +3768,8 @@ mod tests {
         // Rule 2: "a transition interrupts the task the runtime holds as running when the fault is
         // raised — the incoming one once the switch is decided, the outgoing one, or none, while
         // it is being decided." Each event here completes its transition, so a fault "while it is
-        // being decided" is raised before the event that switches, and one "once decided" after.
+        // being decided" is raised before the event that switches, and one "once the switch is
+        // decided" after.
         fn interrupted_by_a_transition_fault(rt: &mut Runtime<2>) -> Option<TaskId> {
             assert_eq!(
                 rt.raise_unexpected_trap(Context::Transition).unwrap(),
@@ -3940,9 +3971,9 @@ mod tests {
     fn a_synchronous_fault_must_name_the_task_holding_the_processor() {
         let mut rt = two_tasks();
         rt.release(L).unwrap();
-        // §3.1.1 rule 2: the three synchronous faults are attributed to "the context executing
-        // the faulting instruction", so naming another task is the concurrency claim the profile
-        // does not admit.
+        // The fault contract's rule 2: the three synchronous faults are attributed to "the context
+        // executing the faulting instruction", so naming another task is the concurrency claim the
+        // profile does not admit.
         assert_eq!(
             rt.raise_unexpected_trap(Context::Task(H)).unwrap_err(),
             Refused::NotTheRunningTask
@@ -4044,7 +4075,8 @@ mod tests {
         let mut rt = two_tasks();
         rt.release(L).unwrap();
         rt.release(H).unwrap();
-        // §3.1.1 rule 2: the overrunning task, "whichever context holds the processor".
+        // The fault contract's rule 2: the overrunning task, "whichever context holds the
+        // processor".
         assert_eq!(
             rt.raise_overrun(L).unwrap(),
             FaultEffect::JobTerminated(None)
@@ -4127,11 +4159,11 @@ mod tests {
     /// ISR completion", and the switch to H is charged after the ISR interval. The ISR is
     /// nonpreemptible — "Switches and ISR handling are nonpreemptible; arrivals during them are
     /// latched" — but that is the processor's own interrupt disable during a service, which
-    /// §3.1.1's Terms say "is **not** a masked region, and §13.4's "latched" means pending in
-    /// hardware there, not held in a task's latch". This test used to replay each ISR as `mask` →
-    /// `release` → `unmask`; under the rewritten Terms that would be L's job opening a region it
-    /// never opened, so the ISR no longer touches the depth. The transitions are the same either
-    /// way.
+    /// the fault contract's Terms say "is **not** a masked region, and §13.4's "latched" means
+    /// pending in hardware there, not held in a task's latch". This test used to replay each ISR as
+    /// `mask` → `release` → `unmask`; under the rewritten Terms that would be L's job opening a
+    /// region it never opened, so the ISR no longer touches the depth. The transitions are the same
+    /// either way.
     #[test]
     fn f29_produces_one_initial_dispatch_and_four_switches() {
         let mut rt = two_tasks();
@@ -4230,9 +4262,9 @@ mod tests {
 
     #[test]
     fn a_job_never_starts_inside_a_masked_region() {
-        // §3.1.1's Terms: "a depth above zero when a job would start" is an assertion failure.
-        // No event reaches it, so the state is forced here, as a runtime that dispatched inside a
-        // region would leave it: L opened the region and H holds the processor.
+        // The fault contract's Terms: "a depth above zero when a job would start" is an assertion
+        // failure. No event reaches it, so the state is forced here, as a runtime that dispatched
+        // inside a region would leave it: L opened the region and H holds the processor.
         let mut rt = two_tasks();
         rt.release(L).unwrap();
         mask_ok(&mut rt);

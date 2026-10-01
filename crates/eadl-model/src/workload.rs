@@ -26,7 +26,7 @@
 //! | not both `period` and `min-separation` | `invalid-description` | §5.5 — two release models is contradictory, not merely unsupported |
 //! | a priority is a rank, 1 or more | `priority-below-one`, an `invalid-description` | the language's, not the profile's: a value below 1 names no rank (leaf `M2.13`) |
 //! | priorities are unique | `unsupported-profile` | the profile admits one task per priority; another profile could admit more |
-//! | the overrun policy is one the profile performs | `unsupported-profile` | `rt-static-up-v1` performs `fault`, its default, and `skip-late-job` (`ROADMAP.md` §3.1.1 rule 5); another profile could perform more (leaf `M2.14`) |
+//! | the overrun policy is one the profile performs | `unsupported-profile` | `rt-static-up-v1` performs `fault`, its default, and `skip-late-job` (the fault contract's rule 5); another profile could perform more (leaf `M2.14`) |
 //! | deadlines are constrained (`D ≤ T`) | `unsupported-profile` | an arbitrary-deadline model needs a different analysis, not a wider version of this one |
 //!
 //! The last two are `unsupported-profile` rather than `invalid-description` for the reason §3.1
@@ -63,7 +63,7 @@ struct Task<'a> {
     on_overrun: Option<(&'a str, Span)>,
 }
 
-/// The overrun policies `rt-static-up-v1`'s runtime performs (`ROADMAP.md` §3.1.1 rule 5), in eADL's
+/// The overrun policies `rt-static-up-v1`'s runtime performs (the fault contract's rule 5), in eADL's
 /// spelling. A task without the clause has the first, the profile's default.
 pub const OVERRUN_POLICIES: [&str; 2] = ["fault", "skip-late-job"];
 
@@ -217,8 +217,8 @@ fn rank(task: &Task<'_>, out: &mut Vec<Diagnostic>) {
     }
 }
 
-/// §3.1: a "defined overrun … policy". `rt-static-up-v1`'s runtime performs two (`ROADMAP.md` §3.1.1 rule
-/// 5), so a policy it cannot perform is refused rather than lowered onto something it is not. An absent clause
+/// §3.1: a "defined overrun … policy". `rt-static-up-v1`'s runtime performs two (rule 5 of the fault contract,
+/// `docs/profiles/rt-static-up-v1-faults.md`), so a policy it cannot perform is refused rather than lowered onto something it is not. An absent clause
 /// is `fault`, the profile's default, and needs no check.
 fn overrun_policy(task: &Task<'_>, out: &mut Vec<Diagnostic>) {
     let Some((policy, span)) = task.on_overrun else {

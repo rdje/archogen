@@ -55,7 +55,8 @@ scan for the first ready index.
 ⛔ The language counts from the other end of zero: eADL's highest rank is `(priority 1)`. So a
 description reaches the scheduler through `Scheduler::from_eadl_ranks`, the one place that
 performs `runtime index = |hp(i)|` — the number of tasks that outrank it, which is
-`eADL rank − 1` when the ranks are exactly `1, 2, …, n` — and refuses at boot what §3.1.1 and
+`eADL rank − 1` when the ranks are exactly `1, 2, …, n` — and refuses at boot what the profile's fault contract
+(`docs/profiles/rt-static-up-v1-faults.md`) and
 `decision_priority-comparison-direction.md` rule out: an empty task set, a rank below `1`, or two
 tasks sharing a rank. Ranks with gaps are admitted, because only their order matters.
 
@@ -80,12 +81,12 @@ and the analysis would be describing a different system from the one running.
 
 When the second release arrives **while the first is still latched**, the latch keeps the overrun
 beside the release it holds, and both are judged at delivery — outside the masked region, under
-the task's own policy (§3.1.1 rule 1). `SkipLateJob` makes the later release the task's next job;
+the task's own policy (the fault contract's rule 1). `SkipLateJob` makes the later release the task's next job;
 `Fault` takes the task out of the schedule. The alternative, judging it on arrival, would have
 made an ordinary contained overrun fatal for landing one instruction inside a critical section
 rather than one instruction after it.
 
-A job may **complete inside a masked region it opened** (§3.1.1 rule 4). Its completion closes the
+A job may **complete inside a masked region it opened** (the fault contract's rule 4). Its completion closes the
 region — the depth returns to zero with the job — delivers what was latched as the outermost
 `unmask` would, and the schedule is decided after. So a task that completes inside its own region
 and finds its own release latched is released afresh, not overrun. That is why `complete` returns
@@ -107,8 +108,8 @@ its **own state is still trustworthy**:
 | `UnexpectedTrap` | outside the model, taken by the deliberate fatal trap | the executing context | no | the cause is outside what was modelled |
 | `InvariantViolated` | violated internal invariant | the executing context | no | the runtime's own bookkeeping is inconsistent |
 
-The mapping is `ROADMAP.md` §3.1.1's: §3.1 names the faults and §8.1 names the classes, and until
-§3.1.1 nothing connected them. Only an overrun leaves the system schedulable. Everything else
+The mapping is the fault contract's: `ROADMAP.md` §3.1 names the faults and §8.1 names the classes,
+and until the contract nothing connected them. Only an overrun leaves the system schedulable. Everything else
 halts, because continuing means running a system nobody analyzed.
 
 The executing context is told, not guessed: a fault from outside arrives with a `Context` — the
@@ -124,7 +125,7 @@ a consequence, not the cause, so it never replaces the record. And a halted runt
 nothing: every event after the halt answers with the same record — no release processed or
 latched, no job completed, no section opened or closed.
 
-⛔ **And an overrun raised while interrupts are masked halts too** (§3.1.1 rule 3). Terminating a
+⛔ **And an overrun raised while interrupts are masked halts too** (the fault contract's rule 3). Terminating a
 job that holds the mask leaves the depth above zero with no owner, so interrupts never return;
 forcing it to zero re-enables them inside a region whose invariants were half-restored. And
 containment means resuming the schedule from a state the critical section had not finished
@@ -138,7 +139,7 @@ that it happened. `SkipLateJob` exists, is legal where the analysis was told, an
 abandonment as its own transition, `JobSkipped` — never as an ordinary release, because a skipped
 job is a missed deadline by another name. The release that found the job late becomes the next
 job. `rt-static-up-v1` has no other way to find an overrun — no execution-budget monitor, no
-deadline monitor (§3.1.1 rules 1a and 6) — so a release is the only detector. `rt-core` keeps an
+deadline monitor (the fault contract's rules 1a and 6) — so a release is the only detector. `rt-core` keeps an
 entry for an overrun raised some other way, through `fault`, for a later profile that has a
 monitor: with no triggering release, it starts nothing, and the task waits for its next one.
 
@@ -171,7 +172,8 @@ first comparison found **five**, and every one was a question the roadmap did no
 | 4 | what happens when a containable fault is raised inside a masked region? | it halts |
 | 5 | what bounds mask nesting, and what happens at the bound? | a declared bound, and `mask` beyond it is refused |
 
-Deciding them changed the roadmap — `ROADMAP.md` §3.1.1 and the priority decision record — which
+Deciding them changed the contract — what is now the profile's fault contract, written first as
+`ROADMAP.md` §3.1.1, and the priority decision record — which
 §14.1 makes a reviewed decision rather than an implementer's. The reference was then re-derived
 from the amended text by a context that still had not read `rt-core`. It reviewed the amendment as
 it went, and found more: its two behaviour questions were ruled on `2026-10-01`, and are the

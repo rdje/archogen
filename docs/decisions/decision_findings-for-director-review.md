@@ -83,6 +83,9 @@ invisible while one person implements it**, because they resolve it and the reso
 the specification. It only becomes visible when a second reader derives the same thing without
 seeing the first. That is what §12 M2 is asking for, and it worked.
 
+> *`2026-10-01`:* "§3.1.1" below means the profile's fault contract, `docs/profiles/rt-static-up-v1-faults.md`,
+> where the text moved on the director's ruling (leaf `M2.19`).
+
 ## 6. The §3.1.1 amendment was reviewed by the independent model — and it found five problems — **ruled `2026-10-01`**
 
 ⚠️ **This needs a decision, and two of the five change behaviour.**

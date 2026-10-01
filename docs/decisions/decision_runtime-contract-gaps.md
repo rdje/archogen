@@ -8,6 +8,11 @@
   reference model flagged them while being written, and a differential comparison hit the first
   of them on its opening sequence.
 
+> **Where the contract lives.** The resolution below was written into `ROADMAP.md` §3.1.1 on 2026-09-13. On
+> 2026-10-01 it moved, verbatim and with its rule numbers, to the profile's **fault contract**,
+> `docs/profiles/rt-static-up-v1-faults.md` (leaf `M2.19`; *Where the contract lives* below). "§3.1.1" in this
+> record means that text wherever it now is.
+
 ## Resolution
 
 All five are decided. The director delegated the decision on 2026-09-13 with the instruction that
@@ -177,6 +182,46 @@ the one in *The rewritten §3.1.1 reviewed again*. Two amendments correct the 20
 ⭐ **§5's lesson, a third time.** The reference model was derived from the text, and the two models agree, but six
 of the decisions they share were written only here and in findings §6. Agreement between models shows the text is
 implementable; only a reader of the text alone shows it is *sufficient*.
+
+## The fault contract reviewed a third time (`2026-10-01`, R3)
+
+A third new context, reading the text alone (it disclosed identifiers quoted inside the files it read, and that the
+section changed under it with `M2.17`). On R2's answers: 18 answered, 8 partly, 1 not — #39, rule 6's "always",
+which had grown worse. **Verdict: not yet fit to rely on from the text alone; 12 defects remain**, each with a
+replacement text, several found by reading the contract against the composition record. Their answers are step 6h's.
+
+| # | Kind | Finding |
+| --- | --- | --- |
+| 54 | defect | a `mask` or `unmask` by a service, the trap path or a transition while a job is preempted beneath it: forbidden in the headline, undetectable by "no job running" |
+| 55 | defect | the composition lets initialisation call the masking primitives; the contract halts any `mask` with no job running |
+| 56 | defect | the start-in-region assertion's context is "that decision", not one of rule 2's; on the target the decision is in the completion path, the task's |
+| 57 | defect (minor) | a fault in a transition "while it is being decided": the outgoing task or none, unchosen |
+| 58 | defect (minor) | a primitive entered by a trap: the task's, or the trap path's |
+| 59 | defect | an unexpected trap that is an interrupt has no faulting instruction, so "synchronous … attributed to it" splits readers |
+| 60 | defect | the unexpected-trap definition swallows a guard's access fault and a deliberate assertion trap |
+| 61 | defect | "a claim that finds no request" catches the empty claim that ends a PLIC claim loop |
+| 62 | defect | when a job completes is undefined; a release during the completion path is fresh or an overrun |
+| 63 | defect | rule 6's "always" contradicts rule 4 and a release's delivery latency (R2 #39, worse) |
+| 64 | defect (minor) | the latch coalesces while rule 1 says timer releases never do; "the next is an overrun" is false under `Fault` |
+| 65 | defect (minor) | rule 7 records a task by index with the plan; the priority record forbids the index |
+| 66–73 | drafting | rule 5's "otherwise at its return" and "rolls back"; the header against §14.1 and §15; rule 7's guard and context fields; rule 1's undefined "masked interval"; "masked run"; F26's row; "any other policy"; rule 4's "same state" |
+| 74–80 | nits | the profile page's pointer; the elaborated task name; "triggering release", "ready" not "dispatched"; `M2.18` going stale; findings §6 (a) and (d) not marked superseded; the empty set's boot refusal and check status; rule 7's escalated field and a fault before the record is complete |
+
+## Where the contract lives (`2026-10-01`)
+
+Answering R3 (`M2.9`) needed about 20 lines more than `ROADMAP.md`'s 1 100-line ceiling allowed, which only the
+director, the roadmap's owner, raises. The question put: "How should it grow?", with "Raise to 1200", "Move §3.1.1 to
+docs/specs/" and "Keep compacting". The first answer was "Raise to 1200". The director then asked why the roadmap
+had a ceiling at all, and why it needed modifying; the answer given was that it doubles as the normative contract,
+that §3.1.1 had become a 130-line specification under active review, and that such a contract belongs in the
+profile's specification. Asked again — "Move it out" or "Keep the 1200 raise" — **the director chose "Move it out"**.
+
+So the contract is `docs/profiles/rt-static-up-v1-faults.md`, normative as part of `rt-static-up-v1` and linked from
+its published form; `ROADMAP.md` §3.1.1 keeps the requirement, the four-row table and a pointer, and dropped from
+1 099 lines to 968. The text moved verbatim, its rule numbers unchanged. Every live citation follows it — `rt-core`,
+the comparison, the checker, the book, the semantics and the composition record name "the fault contract" — while
+records of what was done when it lived in the roadmap keep saying "§3.1.1". The independent model's citations were
+rewritten by its own context, without a change of behaviour.
 
 ## The fact / decision
 

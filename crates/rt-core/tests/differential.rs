@@ -7,12 +7,15 @@
 //! > where semantics agree. **A checker sharing the same erroneous recurrence with its reference
 //! > does not qualify as independent.**
 //!
+//! "The fault contract" below is `docs/profiles/rt-static-up-v1-faults.md`, which until 2026-10-01 was
+//! `ROADMAP.md` §3.1.1; its rule numbers did not change when it moved.
+//!
 //! # How independence was obtained, and what is still shared
 //!
 //! `crates/rt-reference` was written by an agent working in a separate context that was
 //! instructed not to read `crates/rt-core/**`, `docs/book/src/runtime.md` or `docs/tasks/M2.md`.
 //! It derived the model from `ROADMAP.md` §3.1/§8/§8.1 and the priority decision record. When
-//! `M2.9` resolved the gaps this harness found, writing `ROADMAP.md` §3.1.1 on 2026-09-13 and
+//! `M2.9` resolved the gaps this harness found, writing the fault contract on 2026-09-13 and
 //! amending it on 2026-10-01, the reference was re-derived from the amended text each time, by a
 //! context under the same instruction.
 //!
@@ -21,9 +24,9 @@
 //!
 //! | Shared input | Consequence |
 //! |---|---|
-//! | the contract text itself (`ROADMAP.md` §3.1, §3.1.1, §8, §8.1) | a misreading *the contract invites* would be made by both |
+//! | the contract text itself (`ROADMAP.md` §3.1, the fault contract, §8, §8.1) | a misreading *the contract invites* would be made by both |
 //! | `decision_priority-comparison-direction.md` | the priority direction is common to both |
-//! | §3.1.1 was written by the author of `rt-core` | the re-derivation shows the text says what was meant; it cannot show that what was meant is right |
+//! | the fault contract was written by the author of `rt-core` | the re-derivation shows the text says what was meant; it cannot show that what was meant is right |
 //! | the same model family produced both | §14: "a second model agreeing with the first is not ground truth" |
 //! | this adapter, written by the author of `rt-core` | a mapping error here can mask or manufacture a divergence |
 //! | near misses in the 2026-10-01 re-derivations | repository-wide searches showed the first author one line of `docs/book/src/runtime.md` and the three lines of `crates/rt-core/Cargo.toml` naming the reference; a `git status` showed the second the names, not the contents, of the `rt-core` files being changed beside it; no implementation or test text |
@@ -172,7 +175,7 @@ impl Rng {
     }
 }
 
-/// A fault synchronous to the executing context (§3.1.1 rule 2).
+/// A fault synchronous to the executing context (the fault contract's rule 2).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Synchronous {
     StackGuard,
@@ -194,13 +197,13 @@ enum Event {
     Complete,
     Mask,
     Unmask,
-    /// An `unmask` with nothing to close: an assertion failure in both (§3.1.1).
+    /// An `unmask` with nothing to close: an assertion failure in both (the fault contract).
     UnbalancedUnmask,
-    /// A `mask` with no job running: an assertion failure in both (§3.1.1, Terms: "Only a job
+    /// A `mask` with no job running: an assertion failure in both (the fault contract's Terms: "Only a job
     /// changes the depth").
     MaskWithNoJob,
     /// An overrun found by something other than a release — an execution-budget monitor. Outside
-    /// `rt-static-up-v1` (§3.1.1 rule 1a), which detects overruns by releases alone; both models
+    /// `rt-static-up-v1` (the fault contract's rule 1a), which detects overruns by releases alone; both models
     /// keep an entry for one, for a later profile, so this compares them there too. Raised only for
     /// a task that owes a job; inside a masked region both escalate it, whoever's it is.
     MonitorOverrun(usize),
@@ -255,7 +258,7 @@ fn synchronous(
     }
 }
 
-/// Whether two halts kept the same record (§3.1.1 rule 7): the same kind of fault, attributed to
+/// Whether two halts kept the same record (the fault contract's rule 7): the same kind of fault, attributed to
 /// the same task or to none, the same interrupted task, and the same answer to whether rule 3
 /// escalated it. The two models' records are shaped differently, so this is a mapping, and a
 /// claim that could be wrong.
@@ -408,12 +411,12 @@ struct Coverage {
     doubled_latches: usize,
     /// Late jobs abandoned under `SkipLateJob`, a release's or a monitor's.
     skipped_jobs: usize,
-    /// Completions inside a masked region (§3.1.1 rule 4).
+    /// Completions inside a masked region (the fault contract's rule 4).
     masked_completions: usize,
     /// Overruns raised by a monitor while unmasked, contained by the task's policy.
     contained_monitor_overruns: usize,
     /// Overruns a monitor raised inside a masked region, which halt
-    /// (§3.1.1 rules 1a and 3).
+    /// (the fault contract's rules 1a and 3).
     masked_escalations: usize,
     /// Traps, stack guards and assertions raised in a task's job, which halt.
     synchronous_halts: usize,
@@ -442,7 +445,7 @@ fn run_sequence(
         // ⭐ Since `M2.9` the generator goes where `M2.2`'s could not: a release to a task that
         // still owes a job — at once, or latched beside one already held — completions inside a
         // masked region, overruns a monitor raises, and the synchronous faults. Each was excluded
-        // while the contract did not decide it; §3.1.1 now does.
+        // while the contract did not decide it; the fault contract now does.
         let owes_a_job = |i: usize| {
             matches!(
                 reference.state(TaskId::from_index(i)).expect("task exists"),
@@ -460,7 +463,7 @@ fn run_sequence(
                         .expect("task exists")
             })
             .collect();
-        // Outside the profile (§3.1.1 rule 1a); inside a region both models escalate it for any
+        // Outside the profile (the fault contract's rule 1a); inside a region both models escalate it for any
         // task (rule 3, ground 2), so every task owing a job is a target.
         let monitored = owing.clone();
         let event = match rng.below(100) {
@@ -484,7 +487,7 @@ fn run_sequence(
             4 if depth == 0 && running.is_some() && rng.below(4) == 0 => Event::UnbalancedUnmask,
             4 if running.is_none() && rng.below(4) == 0 => Event::MaskWithNoJob,
             5..=28 if running.is_some() => Event::Complete,
-            // §3.1.1, Terms: only a job changes the depth, so a region is opened by a running job.
+            // The fault contract's Terms: only a job changes the depth, so a region is opened by a running job.
             29..=40 if depth < 4 && running.is_some() => Event::Mask,
             41..=52 if depth > 0 => Event::Unmask,
             53..=65 => Event::Release(rng.below(N)),
@@ -494,7 +497,7 @@ fn run_sequence(
         match event {
             Event::Mask => depth += 1,
             Event::Unmask => depth -= 1,
-            // §3.1.1 rule 4: a completion closes every section its job opened.
+            // The fault contract's rule 4: a completion closes every section its job opened.
             Event::Complete => depth = 0,
             _ => {}
         }
@@ -559,7 +562,7 @@ fn run_sequence(
                     if halted { "rt-core" } else { "the reference" }
                 ));
             }
-            // Both halted: compare what each kept (§3.1.1 rule 7). The task tables are left to
+            // Both halted: compare what each kept (the fault contract's rule 7). The task tables are left to
             // the implementation (`d9`), and neither answers a later event by changing anything.
             let Decision::Halt { fatal } = core.decide() else {
                 unreachable!("rt-core reported a halt");
@@ -703,12 +706,12 @@ fn the_two_models_are_not_the_same_model() {
 //
 // `d1`–`d5` once asserted the five places where `rt-core` and an independently derived model of
 // the same contract behaved differently, each on both sides, so neither could drift and the list
-// could not quietly shrink. `M2.9` resolved them in `ROADMAP.md` §3.1.1 and the priority record
+// could not quietly shrink. `M2.9` resolved them in the fault contract and the priority record
 // (`docs/decisions/decision_runtime-contract-gaps.md`), and each now asserts the agreement, on
 // both sides, for the same reason. ⛔ Rewritten, never deleted: §14.1 forbids dropping the only
 // evidence that a gap was closed.
 //
-// `d6` and `d7` are the two behaviours the independent review of §3.1.1 sent to the director,
+// `d6` and `d7` are the two behaviours the independent review of the fault contract sent to the director,
 // ruled 2026-10-01. `d8`, and the second half of `d3`, are what rewriting these tests found: two
 // places where `rt-core` departed from text the contract already had. `d9` is the one difference
 // the contract leaves to the implementation.
@@ -718,7 +721,7 @@ fn the_two_models_are_not_the_same_model() {
 fn d1_an_overrun_applies_its_policy_to_the_overrunning_task_in_both() {
     // Once undecided, and found twice: `rt-core` applied the policy at once, to the task that
     // overran, which need not be running; the reference reported the overrun, left escalation to
-    // its caller, and attributed faults only to the running task. §3.1.1 rule 1 — detection
+    // its caller, and attributed faults only to the running task. The fault contract's rule 1 — detection
     // applies the policy — and rule 2 — an overrun belongs to the overrunning task, because the
     // single-core rule governs execution, not attribution — decided it.
     let mut core = Scheduler::<N>::new([OverrunPolicy::Fault; N]);
@@ -756,7 +759,7 @@ fn d1_an_overrun_applies_its_policy_to_the_overrunning_task_in_both() {
 #[test]
 fn d2_both_refuse_an_empty_task_set() {
     // Once undecided: "finite static task set" admits the empty set, which the reference refused
-    // and `rt-core` accepted. §3.1.1 refuses it: a system with no workload makes §7.2's second
+    // and `rt-core` accepted. The fault contract refuses it: a system with no workload makes §7.2's second
     // timing obligation vacuous.
     assert_eq!(
         Runtime::<0>::boot([]).unwrap_err(),
@@ -816,7 +819,7 @@ fn d3_both_refuse_rank_zero_and_order_tasks_by_rank() {
 #[test]
 fn d4_a_containable_fault_inside_a_masked_region_escalates_in_both() {
     // Once undecided, and the one taken as an `rt-core` defect, its reasoning drawn entirely from
-    // existing text: §3.1.1 rule 3. Terminating a job that holds the mask orphans the depth, and
+    // existing text: the fault contract's rule 3. Terminating a job that holds the mask orphans the depth, and
     // containment means resuming the schedule from a state the section had not made consistent.
     let mut reference = reference([OverrunPolicy::SkipLateJob; N]);
     reference
@@ -846,7 +849,7 @@ fn d4_a_containable_fault_inside_a_masked_region_escalates_in_both() {
 #[test]
 fn d5_both_bound_mask_nesting_at_the_same_depth_and_halt_beyond() {
     // Once undecided: the reference refused beyond a bound; `rt-core` saturated a counter, which
-    // stops counting, so the matching unmasks no longer balance. §3.1.1 first declared the bound
+    // stops counting, so the matching unmasks no longer balance. The fault contract first declared the bound
     // and refused beyond it; its review found that a refusal leaves the caller's matching `unmask`
     // to close the section early (finding 10), so exceeding it, and an `unmask` with nothing to
     // close, are assertion failures, which halt.
@@ -854,7 +857,7 @@ fn d5_both_bound_mask_nesting_at_the_same_depth_and_halt_beyond() {
         Scheduler::<N>::MASK_DEPTH_LIMIT,
         Runtime::<N>::MAX_MASK_DEPTH
     );
-    // Only a job changes the depth (§3.1.1, Terms), so a job holds the processor first.
+    // Only a job changes the depth (the fault contract's Terms), so a job holds the processor first.
     let mut reference = reference([OverrunPolicy::Fault; N]);
     let mut core = Scheduler::<N>::new([OverrunPolicy::Fault; N]);
     reference
@@ -903,7 +906,7 @@ fn d5_both_bound_mask_nesting_at_the_same_depth_and_halt_beyond() {
 
 #[test]
 fn d6_a_doubled_latch_is_judged_at_delivery_in_both() {
-    // Findings §6 (b), ruled 2026-10-01 into §3.1.1 rule 1: a release into a full latch keeps the
+    // Findings §6 (b), ruled 2026-10-01 into the fault contract's rule 1: a release into a full latch keeps the
     // overrun beside the release it holds, judged at delivery under the task's own policy — so the
     // pair ends exactly as it would have landing one instruction after the region closed.
     for policy in [OverrunPolicy::Fault, OverrunPolicy::SkipLateJob] {
@@ -962,7 +965,7 @@ fn d6_a_doubled_latch_is_judged_at_delivery_in_both() {
 
 #[test]
 fn d7_a_completion_inside_a_masked_region_closes_it_in_both() {
-    // Findings §6 (a), ruled 2026-10-01 into §3.1.1 rule 4: the job's sections end with it, nested
+    // Findings §6 (a), ruled 2026-10-01 into the fault contract's rule 4: the job's sections end with it, nested
     // ones included, what was latched is delivered as at the outermost unmask, and the schedule is
     // decided after — so the completing task's own latched release starts it afresh.
     let policies = [OverrunPolicy::Fault; N];
@@ -1007,7 +1010,7 @@ fn d7_a_completion_inside_a_masked_region_closes_it_in_both() {
 
 #[test]
 fn d8_an_overrun_raised_without_a_release_starts_no_job_in_either() {
-    // Found while rewriting `d1`. §3.1.1 rule 1 makes the *triggering* release the task's next job
+    // Found while rewriting `d1`. The fault contract's rule 1 makes the *triggering* release the task's next job
     // under `SkipLateJob`; an overrun an execution-budget monitor raises has none. `rt-core` made
     // the task ready anyway, starting a job no release paid for, and reported it as an ordinary
     // release; the reference left it awaiting its next one. The rule decides it, so `rt-core` was
@@ -1037,7 +1040,7 @@ fn d8_an_overrun_raised_without_a_release_starts_no_job_in_either() {
 
 #[test]
 fn d9_what_a_halt_leaves_in_the_task_table_is_left_to_the_implementation() {
-    // Both halt on a stack guard and both attribute it to the running task, as §3.1.1's table
+    // Both halt on a stack guard and both attribute it to the running task, as the fault contract's table
     // has it. What each then shows in its task table differs, and the contract does not decide it:
     // §8.1 asks to "preserve a defined fatal handler and diagnostic evidence", not for a format.
     // Recorded as left to the implementation in `decision_runtime-contract-gaps.md`, and asserted

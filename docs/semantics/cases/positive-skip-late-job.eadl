@@ -1,7 +1,7 @@
 ; case: positive-skip-late-job
 ; expect: ok
 ; why: The smallest complete system, with the task's overrun policy declared as the profile's second:
-;   a late job is abandoned and the release that found it starts the next (ROADMAP.md §3.1.1 rule 5).
+;   a late job is abandoned and the release that found it starts the next (the profile's fault contract, rule 5).
 ;
 (eadl-version eadl/1)
 

@@ -59,6 +59,14 @@ not a wall.
 | `multicore` | more than one active core | requires an explicit memory model, inter-core interrupts, and shared-resource interference analysis |
 | `posix` | a POSIX personality | needs a named compliance subset, conformance tests, and specified divergences |
 
+## Faults
+
+The Fault response row's "defined overrun, unexpected-trap, stack-guard, and assertion failure policy" is spelled
+out in the profile's **fault contract**, [`rt-static-up-v1-faults.md`](rt-static-up-v1-faults.md): which §8.1 class
+each fault belongs to, whom it is attributed to, what contains an overrun — `fault`, the default, or
+`skip-late-job` — and what a fatal fault halts and keeps. This profile has no execution-budget or deadline monitor:
+an overrun is detected by a release finding its task's job still owed.
+
 ## Silence is not admission
 
 A capability this profile has **never heard of** is not admitted by default. An unknown name

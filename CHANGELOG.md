@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the runtime's fault contract leaves the roadmap
+
+`ARCHOGEN-M2-0276` (leaf `M2.19`).
+
+- On the director's ruling, the detailed rules for how the runtime classifies, blames, contains and escalates faults
+  moved out of the roadmap into the profile's own specification, unchanged. The roadmap keeps the requirement and a
+  one-table summary, and stops changing every time the contract's reviewers find something; it shrank by about 130
+  lines.
+
 ## archogen — any valid priority can reach the runtime
 
 `ARCHOGEN-M2-0275` (leaf `M2.18`).

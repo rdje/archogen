@@ -129,8 +129,8 @@ it (`crates/eadl-model/src/check.rs`, `crates/eadl-model/src/workload.rs`).
    the ranks of a system need not be contiguous, because only their order is used. A value below 1 names no
    rank: `priority-below-one`. That is the language's rule, not a profile's, so its verdict is
    `invalid-description`.
-6. **`rt-static-up-v1` performs two overrun policies**, `fault` and `skip-late-job` (`ROADMAP.md` §3.1.1
-   rule 5), and a task without an `on-overrun` clause has `fault`, the profile's default. Any other policy is
+6. **`rt-static-up-v1` performs two overrun policies**, `fault` and `skip-late-job` (rule 5 of the profile's fault
+   contract, `docs/profiles/rt-static-up-v1-faults.md`), and a task without an `on-overrun` clause has `fault`, the profile's default. Any other policy is
    one this runtime cannot perform, so it is refused rather than mapped onto one of the two:
    `unsupported-profile`. Another profile could perform more.
 7. **A failure of the toolchain is never a verdict about the description** (§5.5): `tool-failure`.

@@ -30,7 +30,7 @@ pub enum Fault {
     /// bound is an argument and a guard is a fact.
     StackGuard {
         /// Whose guard was hit: a task's, or `None` for the interrupt stack's. This is not the
-        /// attribution, which is the executing context's (§3.1.1 rule 2, and [`Context`]).
+        /// attribution, which is the executing context's (the fault contract's rule 2, and [`Context`]).
         task: Option<usize>,
     },
     /// A trap the runtime does not model. §8.1's "deliberate fatal trap" is *not* this — that is
@@ -73,7 +73,7 @@ impl Fault {
 }
 
 /// Where a synchronous fault was raised — a stack guard, a trap or an assertion — which is what it
-/// is attributed to: §3.1.1 rule 2, "synchronous to the context executing the faulting instruction".
+/// is attributed to: the fault contract's rule 2, "synchronous to the context executing the faulting instruction".
 /// An overrun is attributed to the overrunning task wherever it is raised, so this does not apply
 /// to it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

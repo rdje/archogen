@@ -1,5 +1,8 @@
 //! The shared runtime state machine (`ROADMAP.md` §4.2 `rt-core`, §8).
 //!
+//! Its fault path follows the profile's **fault contract**, `docs/profiles/rt-static-up-v1-faults.md` —
+//! until `2026-10-01` `ROADMAP.md` §3.1.1 — and the comments cite that contract's rules by number.
+//!
 //! ```text
 //! #![no_std] outside its own tests — §3.1 fixes the runtime as a "Rust no_std core".
 //! ```
