@@ -18,7 +18,8 @@
 //! at each ledgering commit and §9's retired ids, which the replay and the load run (`M2.7.3.4.2`); and
 //! [`invalidation`], which judges a claim's recorded closure and reads against the catalog now (`M2.7.3.4.3`); and
 //! [`selection`], §12's lookups, conflicts and groups (`M2.7.3.5.2`); [`production`], §6's namespace rules
-//! (`M2.7.3.5.3`); and [`load`] and [`claim`], every check composed, and §7's claims (`M2.7.3.6.1`).
+//! (`M2.7.3.5.3`); [`load`] and [`claim`], every check composed, and §7's claims (`M2.7.3.6.1`); and [`package`],
+//! §3's package rules and token scan (`M2.7.3.7`).
 
 pub mod claim;
 pub mod grammar;
@@ -29,6 +30,7 @@ pub mod ledger;
 pub mod load;
 pub mod lock;
 pub mod manifest;
+pub mod package;
 pub mod production;
 pub mod record;
 pub mod refusal;

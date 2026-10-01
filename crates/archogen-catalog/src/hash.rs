@@ -15,6 +15,7 @@ use eadl_front::Form;
 
 use crate::grammar;
 use crate::manifest::{self, Value};
+use crate::package;
 use crate::record::{
     classify, read_record, CatalogPath, Content, Cost, FacetKind, Fact, FactValue, Locator, Record,
     Review, Targets,
@@ -1004,6 +1005,15 @@ fn reach(
     let refuse = |message: String| Refusal::new(Code::Source, record, field, None, message);
     let manifest_path = tree::join(package, "Cargo.toml");
     let m = read_manifest(tree, &manifest_path, record, field)?;
+    package::check_manifest(tree, package, &manifest_path, &m).map_err(refuse)?;
+    for path in tree.under(package).filter(|p| p.ends_with(".rs")) {
+        package::scan(tree.get(path).unwrap_or_default()).map_err(|f| {
+            refuse(format!(
+                "`{path}` line {} column {}: {}",
+                f.line, f.column, f.why
+            ))
+        })?;
+    }
     for (name, dev) in dependencies(&m) {
         let path = dependency_path(&m, &name).ok_or_else(|| {
             refuse(format!(
@@ -1042,6 +1052,7 @@ fn reach(
     }) {
         let ws_path = tree::join(workspace_dir, "Cargo.toml");
         let ws = read_manifest(tree, &ws_path, record, field)?;
+        package::check_workspace(&ws_path, &ws).map_err(refuse)?;
         if workspace_dir != package {
             let relative = package
                 .strip_prefix(&format!("{workspace_dir}/"))
@@ -1089,6 +1100,8 @@ fn reach(
         for name in [".cargo/config.toml", ".cargo/config"] {
             let path = tree::join(dir, name);
             if tree.is_file(&path) {
+                let config = read_manifest(tree, &path, record, field)?;
+                package::check_config(&path, &config).map_err(refuse)?;
                 out.insert(path);
             }
         }

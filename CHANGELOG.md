@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — catalogued code is held to the package rules
+
+`ARCHOGEN-M2-0260` (leaf `M2.7.3.7`).
+
+- Code a catalog component points at can no longer carry assembly, file inclusion, linker controls, macros of its
+  own, extra build configurations or compiler flags: every package a component reaches is checked, its manifests
+  read by their meaning and its Rust source scanned token by token, so a word in a comment or a string is fine and
+  the same word as code is not.
+- The runtime core passes, as the design measured.
+
 ## archogen — accepted designs move to their own home
 
 `ARCHOGEN-PROGRAM-0259` (leaf `PROGRAM.43`).
