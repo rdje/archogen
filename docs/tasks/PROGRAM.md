@@ -714,7 +714,7 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0301 (leaf PROGRAM.47.4)`
 
 - ID: `PROGRAM.47.5`
-  Status: `active` — one chapter per child, each `done` when committed: `.1` the introduction, `.2` the tour, `.3` reading a description
+  Status: `active` — one chapter per child, each `done` when committed: `.1` the introduction, `.2` the tour, `.3` reading a description, `.4` describing a workload
   Goal: every other chapter in layers, one leaf and commit each when started, the chapters a newcomer meets first
   leading — the introduction and the tour, reading and workload, checking, evidence and analysis, the catalog,
   targets, the command line, the engine API, verification — and the gory parts of each moved to annexes.
@@ -752,6 +752,17 @@ mdBook that is the director's window into the project.
   --test corpus` → `14 passed`; `--test reference` → `55 passed`; `bash scripts/build_book.sh` → rc=0;
   `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`
   Commit: `ARCHOGEN-PROGRAM-0304 (leaf PROGRAM.47.5.3)`
+
+- ID: `PROGRAM.47.5.4`
+  Status: `done` — `2026-10-02`
+  Goal: *Describing a workload* in layers.
+  **Done.** It opens with what a workload and a task are and the four things a task says — how often, how quickly,
+  how urgent, what if late — and what it deliberately does not say; then the one-minute summary and the precise
+  rules, every section kept. The reach line `crates/eadl-model/tests/kinds.rs` quotes is unchanged.
+  Verification: `cargo test -q -p eadl-model --test kinds` → `37 passed`; `cargo test -q -p archogen-cli --test
+  book_transcripts` → `6 passed`; `bash scripts/build_book.sh` → rc=0; `bash scripts/check_doctrines.sh` → `===
+  all doctrines green ===`
+  Commit: `ARCHOGEN-PROGRAM-0305 (leaf PROGRAM.47.5.4)`
 
 ## Roadmap coverage map
 
@@ -1054,6 +1065,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.47.5.1` | `ARCHOGEN-PROGRAM-0302 (leaf PROGRAM.47.5.1)` | **the introduction in layers** |
 | `PROGRAM.47.5.2` | `ARCHOGEN-PROGRAM-0303 (leaf PROGRAM.47.5.2)` | **the tour**: the one-minute summary for engineers |
 | `PROGRAM.47.5.3` | `ARCHOGEN-PROGRAM-0304 (leaf PROGRAM.47.5.3)` | ***Reading a description* in layers** |
+| `PROGRAM.47.5.4` | `ARCHOGEN-PROGRAM-0305 (leaf PROGRAM.47.5.4)` | ***Describing a workload* in layers** |
 
 ## Changelog
 

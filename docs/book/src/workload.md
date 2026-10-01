@@ -1,5 +1,28 @@
 # Describing a workload
 
+## The idea, in plain words
+
+A device's **workload** is the work it must keep doing: read a sensor, run a control loop, refresh a display. In
+eADL each piece of that work is a **task**, and a task is described by its timing, never by its code:
+
+- **how often it runs** — every 10 ms (*periodic*), or whenever an event arrives, never closer together than some
+  minimum (*sporadic*);
+- **how quickly it must finish** — its **deadline**, measured from a moment the task declares, usually its release;
+- **how urgent it is** — its **priority**, `1` for the most urgent;
+- **what to do if it runs late** — its **overrun** policy: stop that task (`fault`), or drop the late round and
+  carry on (`skip-late-job`).
+
+What a task does not say is just as deliberate: not the code it runs, not how long that code takes, not where its
+stack lives. Those belong to the implementation, and archogen works them out or measures them.
+
+> **In one minute, for engineers.** A task is a `task` form in the `os/rt` feature module: a periodic or sporadic
+> release (`period` or `min-separation`), a relative `deadline` with its reference event (`deadline-from`), bounded
+> `jitter`, a static unique `priority` rank from `1`, `needs`/`uses` and an `on-overrun` policy (`fault` by default,
+> or `skip-late-job`). An execution bound, an entry point or a stack size is refused as implementation, by the kind's
+> schema and by the boundary classifier. The admitted task model is enforced, not assumed.
+
+## How it works
+
 A task says what it must do and when. It does not say how, what code does it, or where its
 stack goes.
 
@@ -20,7 +43,9 @@ The `task` kind lives in the **`os/rt` feature module**
 (`docs/semantics/kinds/os-rt.eadl`), declared with the same `defkind` primitive as everything
 else — an extension, not a privileged addition.
 
-## What a task carries
+## The precise rules
+
+### What a task carries
 
 | Clause | Why |
 | --- | --- |
@@ -31,7 +56,7 @@ else — an extension, not a privileged addition.
 | `needs` / `uses` | what the task requires, functionally |
 | `on-overrun` | a named response, not a handler body: `fault`, the default when the clause is absent, or `skip-late-job`; any other is refused (`unsupported-profile`) |
 
-## What a task does not carry
+### What a task does not carry
 
 §7.3 splits the task record three ways, and only one third is a description:
 
@@ -54,7 +79,7 @@ boundary corpus:
   *number* is an allocation the engine derives and §7.6 then checks against the actual linked
   image.
 
-## Two mechanisms now catch all three
+### Two mechanisms now catch all three
 
 Before the `os/rt` module, `task` was declared `(holds forms)` — opaque — so a `wcet` hidden
 inside one was caught only by the boundary classifier walking the whole tree. The measured reach
@@ -74,7 +99,7 @@ A registry that has not loaded `os-rt.eadl` **says so** rather than silently acc
 is inside a task. Silently accepting an unvalidatable clause is the failure mode that let the
 gap exist in the first place.
 
-## The admitted task model, enforced
+### The admitted task model, enforced
 
 The profile does not only *refuse* capabilities; it also *admits* a particular shape of task
 set, and that shape is checked:
@@ -119,7 +144,7 @@ description can break, and each says why. A test holds every exclusion and every
 classification names to something that exists, so a rule cannot be routed to a leaf that is not
 there.
 
-## The examples
+### The examples
 
 `examples/` holds the three use cases as real descriptions, and they are checked, not just
 stored:
