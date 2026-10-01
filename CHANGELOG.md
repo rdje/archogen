@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the tour says how you interact with a generated system
+
+`ARCHOGEN-PROGRAM-0282` (leaf `PROGRAM.45`).
+
+- The book's tour now answers the questions a newcomer asks next: you drive a generated system through declared
+  inputs — a button, a sensor line, a byte on the serial port, each waking a task that must respond in time — watch
+  its declared outputs, and look inside with a debugger. There is no login, shell or filesystem in this first
+  profile, and the chapter says why and where they sit on the roadmap.
+- What runs today is kept apart from what is ahead: event-driven input and a debugger on the emulator are still to
+  come.
+
 ## archogen — the fault contract answers its fourth reading
 
 `ARCHOGEN-M2-0281` (leaf `M2.9`).

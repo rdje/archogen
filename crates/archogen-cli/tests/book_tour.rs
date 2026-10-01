@@ -3,7 +3,8 @@
 //! `docs/book/src/tour.md` is the first chapter a newcomer reads, and it shows a description and the output its
 //! generated program prints. A copy in prose is a figure out of reach of what produced it — the defect class
 //! `crates/archogen-cli/tests/s0_chapter.rs` records four times — so each block the chapter marks with
-//! `<!-- verbatim: <path> -->` must equal that file with its comment lines (`;`) and blank lines removed. The output
+//! `<!-- verbatim: <path> -->` must equal that file with its comment lines (`;`) and blank lines removed, and each
+//! marked `<!-- excerpt: <path> -->` must show only that file's lines, in order, besides an elision, a line starting `…`. The output
 //! file is itself what F28 compares the running program with (`s0_oracle.rs`), so the chapter's output is the
 //! program's.
 
@@ -28,19 +29,37 @@ fn shown(text: &str) -> Vec<String> {
         .collect()
 }
 
+/// How a marked block must match its file.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Mark {
+    /// `<!-- verbatim: path -->`: the block is the file, without comment or blank lines.
+    Verbatim,
+    /// `<!-- excerpt: path -->`: every line of the block but an elision (one starting `…`) is a line of the file, in order.
+    Excerpt,
+}
+
 /// Every marked block in `chapter` that differs from its file, read through `read`; and every marker with no block.
+/// A block may be indented — inside a list item — and is compared with that indentation removed.
 fn violations(chapter: &str, read: &dyn Fn(&str) -> Option<String>) -> Vec<String> {
     let lines: Vec<&str> = chapter.lines().collect();
     let mut found = Vec::new();
     for (index, line) in lines.iter().enumerate() {
-        let Some(path) = line
-            .trim()
-            .strip_prefix("<!-- verbatim: ")
-            .and_then(|rest| rest.strip_suffix(" -->"))
-        else {
+        let marker = line.trim();
+        let (mark, rest) = if let Some(rest) = marker.strip_prefix("<!-- verbatim: ") {
+            (Mark::Verbatim, rest)
+        } else if let Some(rest) = marker.strip_prefix("<!-- excerpt: ") {
+            (Mark::Excerpt, rest)
+        } else {
             continue;
         };
-        if !lines.get(index + 1).is_some_and(|l| l.starts_with("```")) {
+        let Some(path) = rest.strip_suffix(" -->") else {
+            continue;
+        };
+        let indent = line.len() - line.trim_start().len();
+        if !lines
+            .get(index + 1)
+            .is_some_and(|l| l.trim_start().starts_with("```"))
+        {
             found.push(format!(
                 "`{path}`: the marker is not followed by a fenced block"
             ));
@@ -48,17 +67,28 @@ fn violations(chapter: &str, read: &dyn Fn(&str) -> Option<String>) -> Vec<Strin
         }
         let block: Vec<String> = lines[index + 2..]
             .iter()
-            .take_while(|l| !l.starts_with("```"))
-            .map(|l| (*l).to_string())
+            .take_while(|l| !l.trim_start().starts_with("```"))
+            .map(|l| l.get(indent..).unwrap_or("").to_string())
             .collect();
-        match read(path) {
-            None => found.push(format!("`{path}`: no such file")),
-            Some(text) if shown(&text) != block => {
-                found.push(format!(
-                    "`{path}`: the chapter's copy differs from the file"
-                ));
+        let Some(text) = read(path) else {
+            found.push(format!("`{path}`: no such file"));
+            continue;
+        };
+        let file = shown(&text);
+        let matches = match mark {
+            Mark::Verbatim => file == block,
+            Mark::Excerpt => {
+                let mut rest = file.iter();
+                block
+                    .iter()
+                    .filter(|l| !l.trim().starts_with('…'))
+                    .all(|l| rest.any(|f| f == l))
             }
-            Some(_) => {}
+        };
+        if !matches {
+            found.push(format!(
+                "`{path}`: the chapter's copy differs from the file"
+            ));
         }
     }
     found
@@ -74,6 +104,11 @@ fn the_tour_shows_each_file_as_it_is() {
         CHAPTER.matches("<!-- verbatim: ").count(),
         2,
         "the tour marks the description and its frozen output"
+    );
+    assert_eq!(
+        CHAPTER.matches("<!-- excerpt: ").count(),
+        1,
+        "and the event-driven example"
     );
 }
 
@@ -91,6 +126,14 @@ fn a_copy_that_drifted_is_reported() {
     let found = violations(&drifted, &read);
     assert_eq!(found.len(), 1, "{found:#?}");
     assert!(found[0].contains("expected/system.txt"), "{found:#?}");
+
+    let excerpt = CHAPTER.replacen("(jitter 1 ms)", "(jitter 2 ms)", 1);
+    let found = violations(&excerpt, &read);
+    assert_eq!(found.len(), 1, "{found:#?}");
+    assert!(
+        found[0].contains("positive-sporadic-release.eadl"),
+        "{found:#?}"
+    );
 
     let missing = CHAPTER.replacen(
         "examples/s0-heartbeat/system.eadl -->",

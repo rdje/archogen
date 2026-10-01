@@ -135,7 +135,47 @@ excluded by name with the guarantee it would break ([The supported profile](prof
 interface is on the roadmap — last, as a named subset layered on top, once the analysable
 foundation underneath it exists.
 
-## 6. The road to a board on your desk
+## 6. How you interact with it
+
+A generated system is used the way a device is used, not the way a computer is: you drive its declared
+inputs, watch its declared outputs, and look inside with a debugger.
+
+- **Inputs are events that wake a task.** A button, a sensor's "data ready" line or a byte arriving on the
+  serial port is an interrupt source the description declares, with the shortest time between two of its
+  events; the task it wakes has a deadline to respond within. This description from the language's test
+  corpus, `docs/semantics/cases/positive-sporadic-release.eadl`, is accepted by the checker today:
+
+  <!-- excerpt: docs/semantics/cases/positive-sporadic-release.eadl -->
+  ```text
+  (defblock event.line (offers interrupt-source min-arrival-separation))
+  (defsystem s
+    (task handler (min-separation 20 ms) (deadline 15 ms) (deadline-from release) (jitter 1 ms)
+                  (priority 1) (uses event.release))
+    …)
+  ```
+
+  It reads: events arrive at least 20 ms apart, and each one wakes `handler`, which must respond within
+  15 ms. The one rule is that every input says how often it can arrive — an undeclared input would break
+  every timing promise silently, so the profile refuses it by name (`unmodeled-interrupt-load`).
+- **Outputs are what the description declares** — the serial console first; lights, motors and displays as
+  further device services.
+- **Looking inside** is a developer's tool: a debugger, which QEMU can host and a physical board offers through
+  a debug probe — accessible debugging is one of the roadmap's criteria for choosing a board — and, after a fatal
+  fault, the record the runtime keeps of what happened and to which task.
+
+⚠️ Today the generator runs only periodic tasks, on your computer. Event-driven input on the emulator and on a
+board is part of the work ahead, and the repository does not yet attach a debugger to the emulator.
+
+**No login, no shell, no files — by design, for now.** A system in this profile has no users to log in and no
+shell: it boots straight into its tasks. The way to play with it is the description itself — change a period, add
+a task, give one an impossible deadline, make one overrun on purpose, then rebuild and read what changed in the
+output and in the report. A small command console, a task that reads the serial port and answers bounded commands,
+would fit the profile's rules, but nothing like it is planned yet. A filesystem is excluded from this profile by
+name: it brings power-loss recovery, persistence and memory use this profile does not analyse. The roadmap lists
+filesystems, with networking, among the later feature families; which kind is not decided, and the obligations it
+names point toward the small, power-loss-safe designs microcontrollers already use rather than a desktop's.
+
+## 7. The road to a board on your desk
 
 A generated system needs very little from a board: a processor core, memory, a timer, an interrupt
 controller and a serial port. That is **microcontroller** territory — development boards that

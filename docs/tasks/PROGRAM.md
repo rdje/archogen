@@ -1002,6 +1002,45 @@ mdBook that is the director's window into the project.
     archogen-cli --tests -- -D warnings` → rc=0; `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`.
   - [x] **LOCKSTEP** — the book's summary and ledger; this leaf and its log; `CHANGELOG.md`.
 
+- ID: `PROGRAM.45`
+  Status: `done`
+  Goal: the tour says how a reader interacts with a generated system, and answers the questions the director asked
+  on `2026-10-01` — "will it possible to interact with ARCHOGEN OSes? if so, how?", "logging into that OS and have a
+  minimal shell", "a kind of filesystem? what kind?" — in the same honest terms ("this sort of concrete, honest
+  information will help people understand what ARCHOGEN will produce").
+  Acceptance: inputs, outputs and inspection as the profile admits them, with an example the checker accepts; what
+  runs today kept apart from what is ahead; no login, shell or filesystem stated with the roadmap's reasons; every
+  shown file held to its file by a test.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — `git show HEAD:docs/book/src/tour.md | grep -c "interact"` → 0.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `PROGRAM.44`'s tour said what a system is for, not how one uses it; WHERE:
+    `docs/book/src/tour.md`: `git show HEAD:docs/book/src/tour.md | grep -c "## 6. How you interact"` → 0. A claim made
+    in conversation was corrected on the way: a debugger is not yet attached to the emulator — `grep -c "gdb"
+    scripts/target_emulator.sh` → 0 — so the chapter says QEMU *can* host one.
+  - [x] **FIX** — the tour's section 6, *How you interact with it*, with `positive-sporadic-release.eadl` as an
+    `excerpt:`-marked block; `crates/archogen-cli/tests/book_tour.rs` learns excerpts (each shown line in its file, in
+    order, an elision starting `…`) and indented blocks, with an arm for a drifted excerpt.
+  - [x] **ADDRESSED (verified)** — `cargo test -q -p archogen-cli --test book_tour` → `2 passed`; the first run of the
+    excerpt check reported the chapter's copy as differing, an elision the check had not yet read, fixed in the check;
+    `bash scripts/build_book.sh` → 0 warnings.
+  - [x] **NO REGRESSION** — `cargo test --all -q` → 956 passed, 0 failed; `cargo clippy -q -p archogen-cli --tests --
+    -D warnings` → rc=0; `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`.
+  - [x] **LOCKSTEP** — the book; this leaf and its log; `CHANGELOG.md`.
+  Verification: see the checklist.
+  Commit: `ARCHOGEN-PROGRAM-0282 (leaf PROGRAM.45)`
+
+- ID: `PROGRAM.46`
+  Status: `pending` — filed `2026-10-01`
+  Goal: a gate that every commit on `main` whose subject names a work unit (`ARCHOGEN-<TREE>-NNNN (leaf …)`) has a row
+  in its tree's Commit Log.
+  Why: `ARCHOGEN-M2-0263` and `ARCHOGEN-M2-0280` both landed without their rows, each found by hand a commit later; no
+  gate checks it, and `HISTORY-LEDGERS` checks only the changelog's order.
+  Acceptance: the check derives the rows from `git log` rather than a list, reports a missing row by commit, runs in
+  the enforcer, and has RED arms in scratch repositories like the other gates.
+  Verification: `pending`
+  Commit: `pending`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1292,6 +1331,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.42` | `ARCHOGEN-PROGRAM-0239 (leaf PROGRAM.42)` | **`TASK-HISTORY` and `HISTORY-LEDGERS` read history whole**: `--full-history`, shallow clones and failed reads refused, the merge and a shallow clone as RED arms; the sealed folders kept from line-ending conversion |
 | `PROGRAM.43` | `ARCHOGEN-PROGRAM-0259 (leaf PROGRAM.43)` | **the accepted designs moved to `docs/specs/`**, on the director's ruling: the decisions folder from 388 884 to 205 397 bytes, no ceiling raised |
 | `PROGRAM.44` | `ARCHOGEN-PROGRAM-0278 (leaf PROGRAM.44)` | **the book opens with a tour**: one description to its running program and on to a board, honest about today, its copies held to their files |
+| `PROGRAM.45` | `ARCHOGEN-PROGRAM-0282 (leaf PROGRAM.45)` | **the tour says how you interact with a system**: inputs, outputs, inspection; no login, shell or filesystem yet, with the roadmap's reasons; `PROGRAM.46` filed |
 
 ## Changelog
 
