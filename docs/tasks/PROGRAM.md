@@ -714,7 +714,7 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0301 (leaf PROGRAM.47.4)`
 
 - ID: `PROGRAM.47.5`
-  Status: `active` — one chapter per child, each `done` when committed: `.1` the introduction
+  Status: `active` — one chapter per child, each `done` when committed: `.1` the introduction, `.2` the tour
   Goal: every other chapter in layers, one leaf and commit each when started, the chapters a newcomer meets first
   leading — the introduction and the tour, reading and workload, checking, evidence and analysis, the catalog,
   targets, the command line, the engine API, verification — and the gory parts of each moved to annexes.
@@ -731,6 +731,15 @@ mdBook that is the director's window into the project.
   Verification: `bash scripts/build_book.sh` → rc=0; the book gates and `bash scripts/check_doctrines.sh` → `=== all
   doctrines green ===`
   Commit: `ARCHOGEN-PROGRAM-0302 (leaf PROGRAM.47.5.1)`
+
+- ID: `PROGRAM.47.5.2`
+  Status: `done` — `2026-10-02`
+  Goal: the tour in layers.
+  **Done.** The tour already opened in plain words and kept today apart from tomorrow; it gains the one-minute
+  summary for engineers, so an expert can see what is real in a paragraph.
+  Verification: `bash scripts/build_book.sh` → rc=0; `cargo test -q -p archogen-cli --test book_tour` → rc=0;
+  `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`
+  Commit: `ARCHOGEN-PROGRAM-0303 (leaf PROGRAM.47.5.2)`
 
 ## Roadmap coverage map
 
@@ -1031,6 +1040,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.47.2` | `ARCHOGEN-PROGRAM-0300 (leaf PROGRAM.47.2)` | **correction**: eADL spelled out, Extended Architecture Description Language, as `M1.13.3` recorded; the census that missed it was too narrow |
 | `PROGRAM.47.4` | `ARCHOGEN-PROGRAM-0301 (leaf PROGRAM.47.4)` | **the runtime chapter in layers**, its mechanics and history in Annex A |
 | `PROGRAM.47.5.1` | `ARCHOGEN-PROGRAM-0302 (leaf PROGRAM.47.5.1)` | **the introduction in layers** |
+| `PROGRAM.47.5.2` | `ARCHOGEN-PROGRAM-0303 (leaf PROGRAM.47.5.2)` | **the tour**: the one-minute summary for engineers |
 
 ## Changelog
 

@@ -10,6 +10,14 @@ microcontroller board on your desk.
 > hardware. Nothing in this book claims a verified operating system; every claim says what it
 > rests on.
 
+> **In one minute, for engineers.** Today: `archogen check` admits or refuses a description against
+> `rt-static-up-v1`; `archogen build` runs the experimental S0 path, generating a hosted Rust program whose
+> output a test compares byte for byte with an expectation frozen before the generator existed. Underneath:
+> `rt-core`, a `no_std` scheduler state machine agreeing with an independently derived model; the fault
+> contract under independent review; response-time analysis; a content-addressed catalog. On an emulated
+> RISC-V machine a hand-written program takes timer interrupts; nothing generated runs there yet. Ahead:
+> a bare-metal image for that machine, then for a physical board.
+
 ## 1. Describe what you want
 
 You do not write an operating system. You describe what you need: the platform's functionality,
