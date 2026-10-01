@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the runtime contract's two open questions are ruled
+
+`ARCHOGEN-M2-0263` (leaf `M2.9`).
+
+- With the director's delegation, the two behaviour questions the runtime contract's review left open are decided.
+  A task's release that arrives twice inside a critical section is no longer fatal for its timing alone: the
+  second is kept, and the task's own overrun policy applies when the section ends, as it would one instruction
+  later. A job may finish while holding the interrupt mask it took; finishing releases it.
+- The work that carries these into the runtime and its independent reference model resumes on the main line,
+  where it lands once reviewed; the side branch it was parked on goes.
+
 ## archogen — the catalog crate is complete: premise 3 judged at claim time
 
 `ARCHOGEN-M2-0261` (leaf `M2.7.3.6.2`).

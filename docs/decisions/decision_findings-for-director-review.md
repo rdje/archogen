@@ -83,7 +83,7 @@ invisible while one person implements it**, because they resolve it and the reso
 the specification. It only becomes visible when a second reader derives the same thing without
 seeing the first. That is what §12 M2 is asking for, and it worked.
 
-## 6. The §3.1.1 amendment was reviewed by the independent model — and it found five problems
+## 6. The §3.1.1 amendment was reviewed by the independent model — and it found five problems — **ruled `2026-10-01`**
 
 ⚠️ **This needs a decision, and two of the five change behaviour.**
 
@@ -143,6 +143,28 @@ is (a)). Fifteen `CONTRACT SILENT` notes remain in `rt-reference` in total.
 **The decision needed:** (a) and (b) change behaviour and belong to you; (c), (d) and (e) are
 drafting fixes I can apply under the same leaf once you rule on the first two. `M2.9` is open and
 is where this lands.
+
+**Ruled `2026-10-01`, by the director's delegation** ("What is your option on this. you know the codebase and the
+roadmap and task-trees, so please decide (sota, signoff)"). `M2.9` carries it out.
+
+- **(b) A second release while one is latched is recorded, never lost, and never fatal for its timing alone.** The
+  latch keeps the overrun beside the release it holds; at delivery, outside every masked region, the task's
+  declared overrun policy applies, as rule 1 asks, and rule 3 does not, as its own note says of delivery. The same
+  doubling one instruction after the region was already contained by that policy; the outcome may not depend on
+  which side of an unmask an interrupt lands. This is how mature kernels treat it: FreeRTOS counts the ticks that
+  arrive while the scheduler is suspended and processes them on resume, and OSEK and AUTOSAR OS report an activation
+  beyond a task's limit to a configured hook rather than drop it or halt. The release that triggers an overrun is
+  the policy's: under `SkipLateJob` it becomes the task's next job, and under `Fault` it goes with the faulted task.
+- **(a) A job may complete inside a masked region it opened, and its completion closes every section it opened.**
+  The nesting depth returns to zero with the job, latched releases are delivered as at the outermost unmask, and the
+  schedule is decided after. The accepted composition already charges this run (`docs/specs/catalog/
+  decision_runtime-composite-inputs.md`, `CS_i`'s "run ending at completion"), and the variant's condition 5 says
+  every transition ends unmasked. Rule 3's grounds do not reach it: the depth is the job's and ends with it, and the
+  job's own code has finished, so no region is left half-made. AUTOSAR OS likewise enables interrupts again when a
+  task ends with them disabled.
+- **(c), (d) and (e) as drafted:** the trap row's class is the deliberate fatal trap; attribution is one rule, the
+  executing context, which for a stack guard is the task whose guard was breached while every task has its own
+  static stack; ground 2 speaks of resuming the schedule.
 
 ⭐ The generalisable part: **§5's lesson repeated one level up.** A second reader found gaps in
 the specification; the amendment that closed them was written by one author, and a second reader
