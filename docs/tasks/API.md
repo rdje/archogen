@@ -742,14 +742,31 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   Commit: `ARCHOGEN-API-0293 (leaf API.6.1)`
 
 - ID: `API.6.2`
-  Status: `pending`
+  Status: `done` — `2026-10-01`
   Goal: each command in `crates/archogen-cli/src/spec.rs` declares whether it is offered programmatically, and the
   tool list derives from that: `check` a tool; `resolve`, `analyze`, `explain`, `replay` tools that name their
   owners; `build`, `verify` and the server's own command excluded, each with its reason.
   Acceptance: a test that the builds and `verify` are excluded, read from the table; the tool list, each tool's
   `_meta` and annotations derived, not written; `archogen --help` unchanged but for the new command.
-  Verification: `pending`
-  Commit: `pending`
+  **Done in part, by design:** the exposure and the list. The tool objects — `_meta`, annotations, input schemas —
+  are built where they are sent, in `API.6.4`, from this list; and the server's own command, which would change
+  §10.2's seven, lands with the server and its §10.4 sentence.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — no command said whether it is offered: `git show HEAD:crates/archogen-cli/src/spec.rs
+    | grep -c "exposure"` → 0; the builds' exclusion lived in prose (§10.4), where a tool list could miss it.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `CommandSpec` carried `Maturity` only: `git show HEAD:crates/archogen-cli/
+    src/spec.rs | grep -c "pub maturity: Maturity"` → 1 and no other per-command state, so the §10.4 rulings had no
+    place in the table §10.4 says the tool list derives from. WHERE: `crates/archogen-cli/src/spec.rs`.
+  - [x] **FIX** — `Exposure { Tool, Excluded { reason } }` on every command, `build` and `verify` excluded citing
+    §10.4; `tools()`, the offered commands in table order; two tests reading the exclusions from the table.
+  - [x] **ADDRESSED (verified)** — `cargo test -q -p archogen-cli --lib` → `30 passed`; with `build` flipped to
+    `Tool`, `neither_build_nor_verify_is_offered_programmatically` → `FAILED. 29 passed; 1 failed`.
+  - [x] **NO REGRESSION** — `cargo test --all -q` → 958 passed, 0 failed; `cargo clippy -q -p archogen-cli
+    --all-targets -- -D warnings` → rc=0; `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`.
+  - [x] **LOCKSTEP** — this leaf, the frontier and the log; the book's account is `API.6.5`'s, with the server.
+  Verification: see the checklist.
+  Commit: `ARCHOGEN-API-0294 (leaf API.6.2)`
 
 - ID: `API.6.3`
   Status: `pending`
@@ -793,7 +810,7 @@ agent can drive. The server is a capability of the built binary, spawned per ins
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `API.6` | `active` | the MCP server — designed (`API.6.1`); next `API.6.2`, the tools declared in the command table |
+| 1 | `API.6` | `active` | the MCP server — designed (`API.6.1`), its tools declared in the command table (`API.6.2`); next `API.6.3`, the bounded JSON reader |
 | 2 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6` |
 
 ⛔ **This tree does not displace the project's main line.** The director's ruling sequenced `API.3`–`API.7`
@@ -886,6 +903,7 @@ this tree is taken when it does not delay that.
 | `API.5.5` | `ARCHOGEN-API-0209 (leaf API.5.5)` | partial: the Check answer observed in a browser by the director; the leaf stays open for the load answer and the browser |
 | `API.5.5` | `ARCHOGEN-API-0220 (leaf API.5.5)` | **the page run in a real browser**, both legs observed by the director in Chrome 154; `API.5` closed |
 | `API.6.1` | `ARCHOGEN-API-0293 (leaf API.6.1)` | **the MCP server designed** — both protocol eras read at the source and answered; the specification ledgered by commit and hash |
+| `API.6.2` | `ARCHOGEN-API-0294 (leaf API.6.2)` | **each command declares whether it is offered** — `Exposure`, the builds and `verify` excluded citing §10.4, `tools()` |
 
 ## Changelog
 

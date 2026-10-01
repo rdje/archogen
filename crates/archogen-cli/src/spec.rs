@@ -85,6 +85,20 @@ impl Maturity {
     }
 }
 
+/// Whether a command is offered programmatically (`ROADMAP.md` §10.4): the tool list of the MCP server is derived
+/// from this, so a command added to the table is offered or excluded by a choice written beside it, never by a
+/// name list kept elsewhere (`docs/decisions/decision_mcp-server.md`, leaf `API.6.2`).
+pub enum Exposure {
+    /// Offered as a tool under the command's own name. A command that is not built is still offered, so a consumer
+    /// sees it at discovery, and calling it answers with the leaf that owns it.
+    Tool,
+    /// Not offered, for the reason given, which cites its ruling.
+    Excluded {
+        /// One line: why, and the ruling or leaf it rests on.
+        reason: &'static str,
+    },
+}
+
 /// One command of the §10.2 surface.
 pub struct CommandSpec {
     /// The subcommand word.
@@ -97,6 +111,8 @@ pub struct CommandSpec {
     pub options: &'static [OptionSpec],
     /// How much of the §10.2 contract this command delivers today.
     pub maturity: Maturity,
+    /// Whether a programmatic consumer is offered it (§10.4).
+    pub exposure: Exposure,
 }
 
 impl CommandSpec {
@@ -162,6 +178,7 @@ pub const COMMANDS: &[CommandSpec] = &[
         // `archogen --help`, in the same change that makes it real — the help text is rendered
         // from this table, so the two cannot disagree.
         maturity: Maturity::Built,
+        exposure: Exposure::Tool,
     },
     CommandSpec {
         name: "resolve",
@@ -181,6 +198,7 @@ pub const COMMANDS: &[CommandSpec] = &[
             },
         ],
         maturity: Maturity::Unimplemented { owner: "M3.4" },
+        exposure: Exposure::Tool,
     },
     CommandSpec {
         name: "build",
@@ -206,6 +224,9 @@ pub const COMMANDS: &[CommandSpec] = &[
             scope: "the S0 path: one fixed realization, periodic releases, hosted playground",
             completed_by: "M4.2",
         },
+        exposure: Exposure::Excluded {
+            reason: "ROADMAP.md §10.4: both builds are outside the programmatic interface",
+        },
     },
     CommandSpec {
         name: "analyze",
@@ -221,6 +242,7 @@ pub const COMMANDS: &[CommandSpec] = &[
             required: true,
         }],
         maturity: Maturity::Unimplemented { owner: "M2.6" },
+        exposure: Exposure::Tool,
     },
     CommandSpec {
         name: "verify",
@@ -236,6 +258,11 @@ pub const COMMANDS: &[CommandSpec] = &[
             required: true,
         }],
         maturity: Maturity::Unimplemented { owner: "PROGRAM.3" },
+        // It runs tiers, which drive a toolchain and an emulator: exposed only by its own ruling, never by
+        // analogy (the open question on the `API` tree).
+        exposure: Exposure::Excluded {
+            reason: "ROADMAP.md §10.4: verify needs its own ruling before it is exposed",
+        },
     },
     CommandSpec {
         name: "explain",
@@ -251,6 +278,7 @@ pub const COMMANDS: &[CommandSpec] = &[
             required: true,
         }],
         maturity: Maturity::Unimplemented { owner: "M3.4" },
+        exposure: Exposure::Tool,
     },
     CommandSpec {
         name: "replay",
@@ -261,8 +289,16 @@ pub const COMMANDS: &[CommandSpec] = &[
         }],
         options: &[],
         maturity: Maturity::Unimplemented { owner: "M4.7" },
+        exposure: Exposure::Tool,
     },
 ];
+
+/// The commands a programmatic consumer is offered, in the table's order: the MCP server's tool list.
+pub fn tools() -> impl Iterator<Item = &'static CommandSpec> {
+    COMMANDS
+        .iter()
+        .filter(|spec| matches!(spec.exposure, Exposure::Tool))
+}
 
 /// Look up a command by name.
 #[must_use]
@@ -272,7 +308,7 @@ pub fn command(name: &str) -> Option<&'static CommandSpec> {
 
 #[cfg(test)]
 mod tests {
-    use super::{command, COMMANDS};
+    use super::{command, tools, Exposure, COMMANDS};
 
     #[test]
     fn the_surface_is_exactly_the_roadmap_interface_target() {
@@ -283,6 +319,33 @@ mod tests {
             names,
             vec!["check", "resolve", "build", "analyze", "verify", "explain", "replay"]
         );
+    }
+
+    #[test]
+    fn neither_build_nor_verify_is_offered_programmatically() {
+        // ROADMAP.md §10.4: "Both builds are outside the programmatic interface", and `verify` waits for its own
+        // ruling. Read from the table, so moving either to `Tool` fails here, in the change that does it.
+        let offered: Vec<&str> = tools().map(|spec| spec.name).collect();
+        assert_eq!(offered, vec!["check", "resolve", "analyze", "explain", "replay"]);
+        for name in ["build", "verify"] {
+            let spec = command(name).expect("the command exists");
+            assert!(
+                matches!(spec.exposure, Exposure::Excluded { reason } if reason.contains("§10.4")),
+                "`{name}` must be excluded, citing §10.4"
+            );
+        }
+    }
+
+    #[test]
+    fn every_offered_command_is_built_or_names_its_owner() {
+        // An offered tool that is not built answers with its owning leaf, never a runtime failure (§10.4).
+        for spec in tools() {
+            assert!(
+                matches!(spec.maturity, super::Maturity::Built) || spec.maturity.owner().is_some(),
+                "`{}`",
+                spec.name
+            );
+        }
     }
 
     #[test]
