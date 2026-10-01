@@ -1,6 +1,6 @@
 //! Histories built in memory from the worked example, shared by the tests that need a ledger.
 //!
-//! The example is read from `docs/decisions/catalog/decision_catalog-records-example.md` itself. Blessing is the
+//! The example is read from `docs/specs/catalog/decision_catalog-records-example.md` itself. Blessing is the
 //! crate's own lines joined with the parents' locks, as §9 says bless writes them.
 
 #![allow(dead_code)]
@@ -15,7 +15,7 @@ use archogen_catalog::record::FacetKind;
 use archogen_catalog::tree::Tree;
 
 pub const EXAMPLE: &str =
-    include_str!("../../../../docs/decisions/catalog/decision_catalog-records-example.md");
+    include_str!("../../../../docs/specs/catalog/decision_catalog-records-example.md");
 
 pub const BEHAVIOR: FacetKind = FacetKind::BehaviorModel;
 pub const TIMING: FacetKind = FacetKind::TimingModel;

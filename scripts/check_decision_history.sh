@@ -45,7 +45,7 @@
 #
 # ⚠️ HONEST LIMITS:
 #   - history rewritten under the gate (a force-push, a replaced object) is premises 2 and 3's, as for the catalog
-#     (docs/decisions/catalog/decision_catalog-records.md §0). Within history, legs 3 and 5 hold whatever HEAD is;
+#     (docs/specs/catalog/decision_catalog-records.md §0). Within history, legs 3 and 5 hold whatever HEAD is;
 #   - a record is found by its file name. Moving it into another folder of docs/decisions/ is allowed, with every
 #     stub's link rewritten for its new folder; renaming it is refused for good, since its sealed files keep the old
 #     name. A stand-in record of the same name, moved in for one commit, could supply a section its real path never

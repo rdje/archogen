@@ -1,4 +1,4 @@
-//! The catalog of engine knowledge (`ROADMAP.md` §9), as `docs/decisions/catalog/decision_catalog-records.md`
+//! The catalog of engine knowledge (`ROADMAP.md` §9), as `docs/specs/catalog/decision_catalog-records.md`
 //! decides it.
 //!
 //! A catalog record is a tracked ASCII file under `catalog/`, read by the eADL reader's datum layer alone. It has

@@ -1,7 +1,7 @@
 //! §5's status (`M2.7.3.4.1`).
 //!
 //! Every history is built in memory from the worked example's records and files, read from
-//! `docs/decisions/catalog/decision_catalog-records-example.md` itself, and each passes the replay and the load
+//! `docs/specs/catalog/decision_catalog-records-example.md` itself, and each passes the replay and the load
 //! checks unless a case says otherwise, so every status is judged on a history a repository could hold.
 
 use std::collections::BTreeSet;
@@ -16,7 +16,7 @@ use archogen_catalog::status::{statuses, Status, Statuses};
 use archogen_catalog::tree::Tree;
 
 const EXAMPLE: &str =
-    include_str!("../../../docs/decisions/catalog/decision_catalog-records-example.md");
+    include_str!("../../../docs/specs/catalog/decision_catalog-records-example.md");
 
 const BEHAVIOR: FacetKind = FacetKind::BehaviorModel;
 const TIMING: FacetKind = FacetKind::TimingModel;

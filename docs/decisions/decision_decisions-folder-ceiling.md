@@ -96,6 +96,9 @@ days, not a lasting allowance. That is why the partition is opened now, with a w
     `MEMORY-ARCH` reads the folder flat;
   - `knowledge-map/subsystems.md` links the partition, which the generated map, reading the folder flat, does not
     reach.
+- **The accepted designs moved out, by `PROGRAM.43` on `2026-10-01`**, on the director's ruling
+  ([[decision_specifications-home]]): the partition's six records, both designs accepted, now live in
+  `docs/specs/catalog/`, and the folder went from 388 884 to 202 267 bytes. No ceiling was raised.
 - **A record** still goes in its canonical home, a sub-folder when its subject has one, and a review history still
   goes to `docs/reviews/`.
 - **"Only once" is enforced.** `README_POLICY.md`'s table `### Ceilings a decision fixes` holds this record's 40

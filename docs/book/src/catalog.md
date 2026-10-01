@@ -31,12 +31,12 @@ protected. The rest of the crate, the gate, the check that protects it and the f
 
 | File | What it holds |
 | --- | --- |
-| `docs/decisions/catalog/decision_catalog-records.md` | the design: what a record holds, how status and claims work, what it defends against |
-| `docs/decisions/catalog/decision_catalog-records-hashes.md` | its §3, the byte grammar every hash is computed over, and what the gate builds |
-| `docs/decisions/catalog/decision_catalog-records-example.md` | a worked example of records and the files they name, with every hash they have, which the catalog crate must reproduce |
-| `docs/decisions/catalog/decision_catalog-records-variant-inputs.md` | its §12, what the runtime analysis takes from the catalog, and from whom |
-| `docs/decisions/catalog/decision_catalog-records-limits.md` | its §13, what the design does not do |
-| `docs/decisions/catalog/decision_runtime-composite-inputs.md` | how four of the analysis's inputs are put together from catalog, application and plan parts |
+| `docs/specs/catalog/decision_catalog-records.md` | the design: what a record holds, how status and claims work, what it defends against |
+| `docs/specs/catalog/decision_catalog-records-hashes.md` | its §3, the byte grammar every hash is computed over, and what the gate builds |
+| `docs/specs/catalog/decision_catalog-records-example.md` | a worked example of records and the files they name, with every hash they have, which the catalog crate must reproduce |
+| `docs/specs/catalog/decision_catalog-records-variant-inputs.md` | its §12, what the runtime analysis takes from the catalog, and from whom |
+| `docs/specs/catalog/decision_catalog-records-limits.md` | its §13, what the design does not do |
+| `docs/specs/catalog/decision_runtime-composite-inputs.md` | how four of the analysis's inputs are put together from catalog, application and plan parts |
 | `docs/reviews/decision_catalog-records-reviews.md` | every review round, every finding, and the answer to each |
 | `crates/archogen-catalog/src/record.rs` | the code so far: one record read, and every rule of the design's §1 and §2 that needs only the file, each refusal with its one code |
 | `crates/archogen-catalog/tests/record.rs` | one valid record and one change of it per rule, each refused with that rule's code |
@@ -127,7 +127,7 @@ answered it. Every round recomputed the worked example's 23 hashes by two indepe
 found them right.
 
 The composition of four of the analysis's inputs from catalog, application and plan parts,
-`docs/decisions/catalog/decision_runtime-composite-inputs.md`, was reviewed the same way under the same closure
+`docs/specs/catalog/decision_runtime-composite-inputs.md`, was reviewed the same way under the same closure
 rule. Its rounds found defects in which platform facts the composition needs and how they are worded, several of
 them live on the emulator, whose interrupt order [QEMU](ledger.md#qemu)'s source showed differs from the
 specification's. Round 11 found none live, and the record was accepted. Its history is kept in

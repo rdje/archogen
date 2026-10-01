@@ -144,15 +144,14 @@ justifies the split — the rows below appear as that happens.
   `include_str!`s the reference. ⚠️ Both directions are not covered: this walks prose and asks about
   the code, and nothing walks the code and asks whether the book describes it — `PROGRAM.24`, filed on
   a measured instance. All four carry `--self-test` RED arms.
-- `docs/decisions/catalog/` — the catalog design, a partition of the decision records (`PROGRAM.39`), which the
-  generated list of decisions below does not reach, since it reads the folder flat:
-  [the catalog record](docs/decisions/catalog/decision_catalog-records.md), with its
-  [worked example](docs/decisions/catalog/decision_catalog-records-example.md), its §13,
-  [the limits](docs/decisions/catalog/decision_catalog-records-limits.md), and its §12,
-  [what the runtime variant takes](docs/decisions/catalog/decision_catalog-records-variant-inputs.md); and
-  [the composition of the variant's inputs](docs/decisions/catalog/decision_runtime-composite-inputs.md).
-  Their reviews are in `docs/reviews/`. `DECISION-INDEX` keeps every record in a partition linked from
-  `docs/decisions/INDEX.md`.
+- `docs/specs/catalog/` — the catalog design, accepted and moved out of the decision records (`PROGRAM.43`), which
+  the generated list of decisions below does not reach, since it reads that folder alone:
+  [the catalog record](docs/specs/catalog/decision_catalog-records.md), with its
+  [worked example](docs/specs/catalog/decision_catalog-records-example.md), its §13,
+  [the limits](docs/specs/catalog/decision_catalog-records-limits.md), and its §12,
+  [what the runtime variant takes](docs/specs/catalog/decision_catalog-records-variant-inputs.md); and
+  [the composition of the variant's inputs](docs/specs/catalog/decision_runtime-composite-inputs.md).
+  Their reviews are in `docs/reviews/`, and `docs/decisions/INDEX.md` still lists each by its new path.
 
 ## Active task-trees
 
@@ -190,6 +189,7 @@ justifies the split — the rows below appear as that happens.
 - [`decision_s0-retirement.md`](docs/decisions/decision_s0-retirement.md)
 - [`decision_scaffold-updater-adopted.md`](docs/decisions/decision_scaffold-updater-adopted.md)
 - [`decision_scratch-on-the-repository-volume.md`](docs/decisions/decision_scratch-on-the-repository-volume.md)
+- [`decision_specifications-home.md`](docs/decisions/decision_specifications-home.md)
 - [`decision_target-platform-description.md`](docs/decisions/decision_target-platform-description.md)
 - [`decision_task-tree-sealing.md`](docs/decisions/decision_task-tree-sealing.md)
 - [`decision_wasm-binding.md`](docs/decisions/decision_wasm-binding.md)

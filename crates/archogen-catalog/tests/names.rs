@@ -1,6 +1,6 @@
 //! The rules of §12 and §13 that one record's text shows (`M2.7.3.5.1`).
 //!
-//! The facts table is typed here from `docs/decisions/catalog/decision_catalog-records-variant-inputs.md` §12, not
+//! The facts table is typed here from `docs/specs/catalog/decision_catalog-records-variant-inputs.md` §12, not
 //! taken from the crate, so a name the crate drops is caught.
 
 mod common;

@@ -52,8 +52,8 @@ leaf. "Overflows to" is where that destination's own guard sends what does not f
 | `docs/book/` | navigation + overflow | `PROGRAM` | maintained_reference | 32 | 750 | 49152 | 1024 | 294912 | — |
 | `docs/history/` | overflow | `PROGRAM.31` | archive_terminal | HISTORY-LEDGERS | 1200 | 131072 | 256 | HISTORY-LEDGERS | — |
 | `docs/reviews/` | overflow | `PROGRAM.36` | partitioned_canonical | 16 | 1200 | 131072 | 1024 | 262144 | — |
-| `docs/decisions/` | navigation + overflow | `PROGRAM.39` | partitioned_canonical | 40 | 1200 | 98304 | 1536 | 393216 | `docs/reviews/`, `docs/decisions/catalog/`, `docs/decision-history/` |
-| `docs/decisions/catalog/` | overflow | `PROGRAM.39` | partitioned_canonical | 8 | 1200 | 98304 | 1536 | 196608 | — |
+| `docs/decisions/` | navigation + overflow | `PROGRAM.39` | partitioned_canonical | 40 | 1200 | 98304 | 1536 | 393216 | `docs/reviews/`, `docs/specs/`, `docs/decision-history/` |
+| `docs/specs/` | overflow | `PROGRAM.43` | partitioned_canonical | 16 | 1200 | 98304 | 1536 | 262144 | — |
 | `docs/decision-history/` | overflow | `PROGRAM.41` | archive_terminal | DECISION-HISTORY | 1200 | 98304 | 1536 | DECISION-HISTORY | — |
 | `docs/tasks/` | overflow | `PROGRAM.32` | partitioned_canonical | 20 | 3000 | 327680 | 3072 | 819200 | `docs/task-history/` |
 | `docs/task-history/` | overflow | `PROGRAM.32` | archive_terminal | TASK-HISTORY | 1800 | 163840 | 2048 | TASK-HISTORY | — |

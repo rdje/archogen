@@ -1,4 +1,4 @@
-# The catalog of engine knowledge (ROADMAP.md §9; docs/decisions/catalog/decision_catalog-records.md).
+# The catalog of engine knowledge (ROADMAP.md §9; docs/specs/catalog/decision_catalog-records.md).
 #
 # A separate crate because no ROADMAP.md §4.2 component owns the catalog: it is the engine's knowledge about
 # implementations, platforms and costs, read by the analyses and, later, by resolution and planning. It depends

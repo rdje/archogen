@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — accepted designs move to their own home
+
+`ARCHOGEN-PROGRAM-0259` (leaf `PROGRAM.43`).
+
+- The decisions folder had about 4 KB left under a ceiling only the director can raise. On the director's ruling,
+  the two accepted catalog designs moved to `docs/specs/catalog/`, a home for specifications that code is built
+  against, and the folder went from 388 884 to 205 397 bytes without raising anything.
+- Every link follows the records, the decisions index still lists them, and the ruling is recorded as a decision.
+
 ## archogen — claims cite what they read, and say why they fall short
 
 `ARCHOGEN-M2-0258` (leaf `M2.7.3.6.1`).

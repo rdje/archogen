@@ -1,7 +1,7 @@
 //! §9's lock over one tree (`M2.7.3.3.1`).
 //!
 //! Every case starts from the worked example's lock and its `example.base` record, read from
-//! `docs/decisions/catalog/decision_catalog-records-example.md` itself, and changes one thing.
+//! `docs/specs/catalog/decision_catalog-records-example.md` itself, and changes one thing.
 
 use archogen_catalog::hash::Catalog;
 use archogen_catalog::lock::{self, blessed, check_tree, Line, Lock};
@@ -9,7 +9,7 @@ use archogen_catalog::tree::Tree;
 use archogen_catalog::{Code, Refusal};
 
 const EXAMPLE: &str =
-    include_str!("../../../docs/decisions/catalog/decision_catalog-records-example.md");
+    include_str!("../../../docs/specs/catalog/decision_catalog-records-example.md");
 
 const RECORD: &str = "catalog/experimental/example.base.catalog";
 

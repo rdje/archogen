@@ -1,7 +1,7 @@
 //! The lock over history (§9 and §5, `M2.7.3.3.2`).
 //!
 //! Every history is built in memory from the worked example's records and files, read from
-//! `docs/decisions/catalog/decision_catalog-records-example.md` itself. Blessing is the crate's own
+//! `docs/specs/catalog/decision_catalog-records-example.md` itself. Blessing is the crate's own
 //! [`blessed`] lines joined with the parents' locks, as §9 says bless writes them; a hand-edited lock is written
 //! out as text.
 
@@ -15,7 +15,7 @@ use archogen_catalog::tree::Tree;
 use archogen_catalog::{Code, Refusal};
 
 const EXAMPLE: &str =
-    include_str!("../../../docs/decisions/catalog/decision_catalog-records-example.md");
+    include_str!("../../../docs/specs/catalog/decision_catalog-records-example.md");
 
 /// The first ```` ```text ```` block that starts with `starts`.
 fn block(starts: &str) -> &'static str {

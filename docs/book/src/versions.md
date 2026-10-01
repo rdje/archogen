@@ -72,11 +72,11 @@ this page changing too.
 
 | Field | Value |
 | --- | --- |
-| Surface | the catalog's hash grammar and its ledger-time checks, which every catalog hash begins with and the lock's first line names (`docs/decisions/catalog/decision_catalog-records.md` §3 and §5) |
+| Surface | the catalog's hash grammar and its ledger-time checks, which every catalog hash begins with and the lock's first line names (`docs/specs/catalog/decision_catalog-records.md` §3 and §5) |
 | Version | `archogen-catalog/1` |
 | Declared at | `const:crates/archogen-catalog/src/hash.rs:IDENTIFIER` |
 | Changes when | any part of the hash grammar or of the ledger-time checks changes. Every hash moves with it, and the change's migration note says how the lock's earlier lines compare under it (`ROADMAP.md` §15) |
-| Pinned by | the worked example's 23 digests, read from `docs/decisions/catalog/decision_catalog-records-example.md` and reproduced by `crates/archogen-catalog/tests/hash.rs` |
+| Pinned by | the worked example's 23 digests, read from `docs/specs/catalog/decision_catalog-records-example.md` and reproduced by `crates/archogen-catalog/tests/hash.rs` |
 | Keeps | a hash labelled `/1` covers the same bytes for every reader, and a line ledgered under `/1` is verified under `/1` for good |
 
 ## `analysis-model`
@@ -174,7 +174,7 @@ These surfaces have no version yet because they do not exist yet. Each is named 
 owns it, so the gap is visible rather than implied:
 
 - **Catalog records**, the engine knowledge that realizes descriptions, are designed in `M2.7`:
-  `docs/decisions/catalog/decision_catalog-records.md`, accepted after its independent review, versions each part of
+  `docs/specs/catalog/decision_catalog-records.md`, accepted after its independent review, versions each part of
   a record apart, and its lock names the version of its own rules (see [the catalog chapter](catalog.md)).
   Catalogs at scale belong to `M6`. F25, "a locked rebuild after a catalog update", lives at `M6.4`.
 - **Device and timing models** belong to `M2`.

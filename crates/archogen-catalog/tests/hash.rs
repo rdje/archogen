@@ -1,6 +1,6 @@
 //! §3's hashes against the worked example (`M2.7.3.2`).
 //!
-//! The example is read from `docs/decisions/catalog/decision_catalog-records-example.md` itself: its two records,
+//! The example is read from `docs/specs/catalog/decision_catalog-records-example.md` itself: its two records,
 //! its three files and every digest it states. So the test and the design cannot drift apart unseen.
 
 use archogen_catalog::hash::{encode, forms_hash, review_ledger_hash, Catalog, IDENTIFIER};
@@ -9,7 +9,7 @@ use archogen_catalog::tree::Tree;
 use archogen_evidence::sha256::Digest;
 
 const EXAMPLE: &str =
-    include_str!("../../../docs/decisions/catalog/decision_catalog-records-example.md");
+    include_str!("../../../docs/specs/catalog/decision_catalog-records-example.md");
 
 /// The first ```` ```text ```` block that starts with `starts`.
 fn block(starts: &str) -> &'static str {
