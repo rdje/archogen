@@ -151,6 +151,7 @@ a change that leaves it stale, so it is never edited by hand.
 - How it works — [Introduction](introduction.md#how-it-works)
 - How it works — [Reading a description](reading.md#how-it-works)
 - How it works — [Describing a workload](workload.md#how-it-works)
+- How it works — [Checking a description](checking.md#how-it-works)
 - How it works — [The runtime: decisions, not actions](runtime.md#how-it-works)
 - How much of this a machine can check — [The boundary: functionality versus
   implementation](boundary.md#how-much-of-this-a-machine-can-check)
@@ -369,6 +370,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The idea, in plain words — [Introduction](introduction.md#the-idea-in-plain-words)
 - The idea, in plain words — [Reading a description](reading.md#the-idea-in-plain-words)
 - The idea, in plain words — [Describing a workload](workload.md#the-idea-in-plain-words)
+- The idea, in plain words — [Checking a description](checking.md#the-idea-in-plain-words)
 - The idea, in plain words — [The runtime: decisions, not actions](runtime.md#the-idea-in-plain-words)
 - The language definition travels with the binary — [Checking a
   description](checking.md#the-language-definition-travels-with-the-binary)
@@ -384,6 +386,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The precise rules — [Introduction](introduction.md#the-precise-rules)
 - The precise rules — [Reading a description](reading.md#the-precise-rules)
 - The precise rules — [Describing a workload](workload.md#the-precise-rules)
+- The precise rules — [Checking a description](checking.md#the-precise-rules)
 - The precise rules — [The runtime: decisions, not actions](runtime.md#the-precise-rules)
 - The product runs nothing — [Verifying the toolchain](verification.md#the-product-runs-nothing)
 - The records that hold it — [Where the engine's knowledge comes from: the catalog](catalog.md#the-records-that-hold-it)
@@ -476,7 +479,6 @@ a change that leaves it stale, so it is never edited by hand.
 - Where to go next — [A tour: from a description to a board](tour.md#where-to-go-next)
 - Which language version a description is written in — [Reading a
   description](reading.md#which-language-version-a-description-is-written-in)
-- Which verdict one diagnostic carries — [Checking a description](checking.md#which-verdict-one-diagnostic-carries)
 - Who runs next — [The runtime: decisions, not actions](runtime.md#who-runs-next)
 - Why a bound carries a direction — [Refinement](refinement.md#why-a-bound-carries-a-direction)
 - Why a construct registry and not a keyword scan — [The boundary: functionality versus

@@ -714,7 +714,7 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0301 (leaf PROGRAM.47.4)`
 
 - ID: `PROGRAM.47.5`
-  Status: `active` — one chapter per child, each `done` when committed: `.1` the introduction, `.2` the tour, `.3` reading a description, `.4` describing a workload
+  Status: `active` — one chapter per child, each `done` when committed: `.1` the introduction, `.2` the tour, `.3` reading a description, `.4` describing a workload, `.5` checking a description
   Goal: every other chapter in layers, one leaf and commit each when started, the chapters a newcomer meets first
   leading — the introduction and the tour, reading and workload, checking, evidence and analysis, the catalog,
   targets, the command line, the engine API, verification — and the gory parts of each moved to annexes.
@@ -763,6 +763,18 @@ mdBook that is the director's window into the project.
   book_transcripts` → `6 passed`; `bash scripts/build_book.sh` → rc=0; `bash scripts/check_doctrines.sh` → `===
   all doctrines green ===`
   Commit: `ARCHOGEN-PROGRAM-0305 (leaf PROGRAM.47.5.4)`
+
+- ID: `PROGRAM.47.5.5`
+  Status: `done` — `2026-10-02`
+  Goal: *Checking a description* in layers.
+  **Done.** It opened with a console transcript; it now opens with the one question the check answers, its passes
+  as a proof-reader's, and the four verdicts a newcomer meets, each with what it means; then the one-minute summary,
+  the transcript as how it works, and the precise rules, every section kept. The command, the declaration count and
+  the corpus size three tests read are unchanged.
+  Verification: `cargo test -q -p archogen-cli --test kind_modules` → `7 passed`; `-p eadl-model --test
+  semantic_corpus` → `16 passed`; `--test kinds` → `37 passed`; `bash scripts/build_book.sh` → rc=0;
+  `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`
+  Commit: `ARCHOGEN-PROGRAM-0306 (leaf PROGRAM.47.5.5)`
 
 ## Roadmap coverage map
 
@@ -1066,6 +1078,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.47.5.2` | `ARCHOGEN-PROGRAM-0303 (leaf PROGRAM.47.5.2)` | **the tour**: the one-minute summary for engineers |
 | `PROGRAM.47.5.3` | `ARCHOGEN-PROGRAM-0304 (leaf PROGRAM.47.5.3)` | ***Reading a description* in layers** |
 | `PROGRAM.47.5.4` | `ARCHOGEN-PROGRAM-0305 (leaf PROGRAM.47.5.4)` | ***Describing a workload* in layers** |
+| `PROGRAM.47.5.5` | `ARCHOGEN-PROGRAM-0306 (leaf PROGRAM.47.5.5)` | ***Checking a description* in layers** |
 
 ## Changelog
 

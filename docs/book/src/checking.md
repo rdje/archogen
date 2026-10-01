@@ -1,5 +1,30 @@
 # Checking a description
 
+## The idea, in plain words
+
+Once a description has been read, `archogen check` asks one question about it: **does this description make sense,
+and is it something archogen can build?** It answers by running a series of passes, each looking at one kind of
+problem, much as a proof-reader checks spelling before grammar and grammar before meaning. A pass that finds a
+problem gives a **verdict** — a word that says what kind of problem it is, so you know what to fix first:
+
+- **invalid-description** — the text is wrong in itself: a typo, a missing part, implementation where only
+  requirements belong;
+- **unsupported-profile** — the text is fine, but it asks for something this version does not offer, such as
+  general communication between processes (`general-ipc`);
+- **missing-fact** — something the system needs is not described;
+- **infeasible-configuration** — what is described contradicts itself: a capability required and declared absent.
+
+An accepted description is well-formed and consistent. That is all it is: it is not yet a promise that a system
+built from it will meet its deadlines, which needs the steps that come after.
+
+> **In one minute, for engineers.** `archogen check` runs read, resolve, boundary, schema, profile, workload and
+> presence passes in an order where a failure makes the next meaningless. The headline verdict is chosen by a fixed
+> precedence meaning *what to fix first*, every diagnostic is still printed, and the verdict maps totally onto the
+> process exit code. Capabilities outside the profile are refused by name. The language definition is compiled into
+> the binary, and a semantic corpus pins the verdicts.
+
+## How it works
+
 ```console
 $ archogen check examples/periodic-three/system.eadl --profile rt-static-up-v1
 examples/periodic-three/system.eadl: accepted against profile `rt-static-up-v1` (8 declaration(s))
@@ -12,7 +37,9 @@ That second line is not modesty for its own sake. Acceptance means the descripti
 well-formed, in profile, and internally consistent. It is **not** a statement that any system
 built from it will behave — the evidence categories start after this point.
 
-## The passes, in the order a failure makes the next meaningless
+## The precise rules
+
+### The passes, in the order a failure makes the next meaningless
 
 | Pass | Owns | Verdict on failure |
 | --- | --- | --- |
@@ -77,7 +104,7 @@ constrained deadlines, a declared release model. The second half was prose in th
 and enforced nowhere until leaf `M1.9`, which is why a description with two tasks at priority 1
 used to be accepted. See [Describing a workload](workload.md).
 
-## The verdict is what to fix first
+### The verdict is what to fix first
 
 When several passes complain, the **verdict** is chosen by precedence — and precedence here
 means *what to fix first*, not severity of consequence:
@@ -98,7 +125,7 @@ And an out-of-profile capability is not *also* reported as a missing fact. Telli
 `general-ipc` "is required and nothing describes it" invites them to go and describe it, on a
 capability the profile refuses either way.
 
-### Which verdict one diagnostic carries
+#### Which verdict one diagnostic carries
 
 Some codes **are** §5.5 verdict names — `missing-fact`, `unsupported-profile`,
 `infeasible-configuration` — and a diagnostic carrying one decides the verdict itself. Most are not:
@@ -119,7 +146,7 @@ the refinement pass rather than silently skipped. Before that, the passes that r
 what they found, so `check` accepted a description `build` could not realize — and the two commands now
 agree because the one that was wrong was fixed, not because the disagreement was hidden.
 
-## Exit codes
+### Exit codes
 
 The verdict maps to the process exit code through one table, and a test asserts the mapping is
 total — so the number a script branches on and the word a human reads come from the same place:
@@ -144,7 +171,7 @@ That is `uc3`, behaving exactly as the use case says it should *today*: the plat
 a relative delay timer, the workload requires absolute deadlines, and no indirect realization
 exists yet. When `M3.2` lands, the same description must build — without changing.
 
-## Refused by name
+### Refused by name
 
 ```console
 $ archogen check examples/bounded-queue/system.eadl ; echo $?
@@ -161,7 +188,7 @@ archogen: unsupported-profile: 1 diagnostic(s) in examples/bounded-queue/system.
 The refusal names the capability, the profile, and the **obligation admitting it would add** —
 so it reads as a statement about work rather than a wall.
 
-## The language definition travels with the binary
+### The language definition travels with the binary
 
 The kind modules are embedded at compile time, not read from the working directory. `archogen` must
 behave identically wherever it is run from, and a language definition that could be shadowed by
@@ -184,7 +211,7 @@ The toolchain loads only the kind modules it ships. Loading one you write is lea
 extension experiment. Checking such a file on its own would not be enough: a kind that redefines a
 shipped one is well-formed by itself, and the clash shows only when the two are loaded together.
 
-## The semantic corpus
+### The semantic corpus
 
 `docs/semantics/cases/` holds 36 worked cases — §12 M1 asks for twenty — each declaring the
 verdict it expects in its own header, and each run through this pipeline:
