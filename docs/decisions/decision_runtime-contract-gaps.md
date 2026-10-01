@@ -358,6 +358,30 @@ against the executing context, a job's or the kernel's. **The lesson recorded:**
 mechanism for a port not yet designed draws defects pass after pass; where an outcome is the mechanism, the contract
 fixes what it can and names the rest as the port's.
 
+## The fault contract reviewed a ninth time (`2026-10-02`, R9)
+
+A ninth new context read the contract beside the composition record, from the text alone. On R8's answers: 9
+answered, 2 partly (#156, #157). **Verdict: 1 defect remains (#163), minor**, and it judged the delegations sound,
+the panic window's among them: no port can close that window by another means, letting a release abandon a
+panicking job costs no claim, and rule 7 keeps whichever fault reaches the handler first.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 163 | defect (minor) | two Terms sentences classified a deliberate trap after a check that finds an unexpected trap two ways, and rule 2's general clause gave it a second raiser | answered by restructuring rather than patching: the unexpected-trap bullet lists each case once with its raiser, and one paragraph classifies every check by what it finds, whoever's code makes it and whether it traps, panics or aborts; rule 2 excepts such a trap from "the context that executed the instruction" |
+| 164–168 | drafting | F26's executor cases and the aborting strategy; a panic no check precedes; the panic strategy's owner; rule 2's eight-line sentence; "only by a panic or such a trap" | accepted, the reviewer's texts, folded into the restructured bullet and rule 2 |
+| 169–171 | drafting | the header's "a synchronous fault"; R8's answers dated `2026-10-01`; an empty claim in a timer trap | accepted: the header names the raising context; R8's tags and the composition's two R8 sentences read `2026-10-02`; any claim but an external trap's first that finds none is no fault |
+| 172–175 | nits | the Terms said several things twice; the open list lacked the handler's bound; a policy inside a primitive on a port whose traps stay masked; rule 7's "anything else" against filling the fields | accepted: one statement of each |
+
+**Answered `2026-10-02` (step 6p), checked before landing.** The pre-landing check found 1 defect (V1), latent
+and inherited from R8's text, which the restructuring had made the single rule: a check was classified by what it
+finds "whoever's code makes it", so an application that compares its own stack pointer with a guard and panics
+would owe a stack-guard record no port could produce. Now a check of the runtime's, a port's, a catalog record's or
+generated code, which passes its kind as the port's record states, is classified by what it finds; one in
+application code by how it ends. Its 14 drafting points were taken: the access fault's raiser stated in the
+definition, an undeclared source only at a claim in a trap, initialisation's leftovers no fault, a timer service
+run in an external trap, the list's first case against the definition, the panic strategy refused at build when it
+is not the port's, and the tags. None of it moves either model. The book's runtime chapter moves with it.
+
 ## Where the contract lives (`2026-10-01`)
 
 Answering R3 (`M2.9`) needed about 20 lines more than `ROADMAP.md`'s 1 100-line ceiling allowed, which only the

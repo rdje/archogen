@@ -105,7 +105,7 @@ dispatch, which claims before it knows the source, acts in the role of the servi
 - the image's panic handler is the fault path's entry, supplied by the record that supplies `switch`, and acts in the
   fault path's role, from its first act, which masks interrupts, whoever's panic calls it: a panic reaching it is no
   breach of `leaves-interrupt-hardware-alone`, and what can happen before that act is that record's to state (added
-  `2026-10-01`, the fault contract's R8 153);
+  `2026-10-02`, the fault contract's R8 153);
 - initialisation, before the first enabling of interrupts, writes the controller's configuration and the hart's
   interrupt state as the plan sets them. It may claim and complete requests left pending from before it, and it
   leaves none pending at the first enabling of interrupts that no arrival made. Two writes are one record's alone,
@@ -140,7 +140,7 @@ out initialisation's masked run, which `L` does not hold, and no catalog fact ca
 arrivals come.
 
 **A trap by which the port enters the runtime API**, a primitive's or the completion path's, serves no interrupt
-(added `2026-10-01`, the fault contract's R8 152, rule 2); the review of the record that supplies `switch` checks
+(added `2026-10-02`, the fault contract's R8 152, rule 2); the review of the record that supplies `switch` checks
 it.
 
 **Boundaries the catalog's costs keep:**

@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the fault contract's ninth reading finds one defect
+
+`ARCHOGEN-M2-0299` (leaf `M2.9`).
+
+- The ninth independent reading found a single remaining ambiguity, down from a dozen in the first rounds, and
+  judged the contract's hand-offs to each board port sound. The answer simplified the most-patched passage into a
+  plain list, and the check before landing caught one more: an application's own checks are now judged by how
+  they end, since no port could tell what they meant.
+
 ## archogen — the book has an index
 
 `ARCHOGEN-PROGRAM-0298` (leaf `PROGRAM.47.3`).

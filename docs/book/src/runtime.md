@@ -126,13 +126,14 @@ blames nobody and records the task it interrupted as interrupted. A stack guard 
 whose guard was hit — a task's, or the interrupt stack's — because the stack and the culprit can
 differ.
 
-A **panic** is an assertion failure, whoever's code panicked — unless the check that panicked found a
-stack's guard reached or one of the unexpected traps the contract names, which it then is. On a board a
-few instructions run between a failed check and the handler's first one, and an interrupt can land there.
-What may happen in that window depends on how a port builds its panic path, so the contract leaves it to
-the port to state, and to be reviewed with the port's design, rather than legislating for a port that
-does not exist yet. What the contract fixes is the panic's kind, who raised it, and that it ends in the
-port's handler.
+A **panic** in the runtime's or the port's own code is an assertion failure — unless its check found a
+stack's guard reached or one of the unexpected traps the contract names, which it then is. A check in
+application code is classified by how it ends: a panic is an assertion failure, any other trap an
+unexpected trap; no port could tell what an application's own check meant. On a board a few instructions
+run between a failed check and the handler's first one, and an interrupt can land there. What may happen
+in that window depends on how a port builds its panic path, so the contract leaves it to the port to
+state, and to be reviewed with the port's design, rather than legislating for a port that does not exist
+yet. What the contract fixes is the panic's kind, who raised it, and that it ends in the port's handler.
 
 The halt keeps one record, `Fatal`: the **first** fault, the task it is attributed to or none,
 the task it interrupted, and whether rule 3 escalated it. On a board the record also carries a mark —
