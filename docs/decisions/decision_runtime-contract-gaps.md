@@ -132,6 +132,33 @@ the review's answers stated what both models already did, which was not true of 
 halting overrun policy, now removed, and escalated another task's masked overrun, which it now refuses as
 impossible while `rt-core` still escalates it.
 
+## The rewritten §3.1.1 reviewed again (`2026-10-01`, step 6d)
+
+A second new context, reading the text alone, judged the first round's 25 answers — 17 answered, 8 partly, none
+missed — and returned 28 findings more, numbered on from 26: 11 defects, 9 drafting, 8 nits. **Verdict: still not
+fit to rely on from the text alone, and not only for drafting.** It read the text before `M2.14` landed, so #32 was
+answered when it arrived. Triaged:
+
+| # | Kind | Finding | Answer | Step |
+| --- | --- | --- | --- | --- |
+| 26, 27, 29, 40 | defects, drafting | rule 1a's monitor: masked with the region, the holder's own overrun cannot be raised there; another task's is "cannot" against ground 2's "whichever task", and the models disagree; a stale monitor overrun; a monitor is an undeclared source | **decided, for the director's review: `rt-static-up-v1` has no execution-budget monitor.** An overrun is detected by rule 1 alone, as rule 6 already says of deadlines; a port that raises one another way is outside the profile, and the runtime's entry for one is a later profile's. So no containable fault is raised inside a masked region here, and rule 3 decides nothing observable in this profile — it is the answer a later profile starts from. The models' masked disagreement (#27) falls outside the profile | 6e |
+| 28 | defect | abandonment deferred to a primitive's return holds a region after `mask`, and contradicts `Fault`'s "never runs again" | accepted, the reviewer's text: abandoned only where no region is held, at a primitive's entry if it has not yet changed the runtime's state; under `Fault` no further instruction of the task's own code runs | 6e |
+| 30 | defect | rule 4's deliver-then-decide is the opposite of the target's decide-then-deliver | accepted: both orders reach the same state and are the port's; the trace is `M2.15`'s | 6e |
+| 31 | defect | "never lost" cannot hold for an external source whose gateway drops edges | accepted: it holds for arrivals the platform delivers as distinct requests; a source that cannot state it counts arrivals says a second one in a masked interval can be lost | 6e |
+| 32 | defect | the clause's domain and default undecided | answered by `M2.14` (`ARCHOGEN-M2-0270`) | done |
+| 33 | defect | "unexpected trap" undefined; an empty claim | accepted: any trap other than the timer, a declared source's interrupt whose claim finds a request, and the runtime API's entry; an empty claim is one — the composition's `no-empty-claim` makes it a violated port obligation | 6e |
+| 34 | defect (minor) | the interrupted task of a fault in a transition; rule 7 omits the interrupted task | accepted: a transition has already decided its incoming task, which is the one interrupted; rule 7 keeps it | 6e |
+| 35 | defect (minor) | `mask` or `unmask` with no job running | accepted: only a job changes the depth, so either with no job running is an assertion failure. Both models accept it today | 6e, 6f |
+| 36 | defect | the header's provenance claim is wrong on three counts | accepted: the header lists every change that moved an implementation | 6e |
+| 37 | drafting | which release the latch keeps; how many overruns a task still owing a job raises | accepted: the latch keeps the most recent release and a mark that an earlier one came; a task still owing a job at delivery overruns once for each latched arrival judged, as both models do | 6e |
+| 38 | drafting | the version sentence is not §15's criterion | accepted: no version of `rt-static-up-v1` is released or locked — the repository has no release tag | 6e |
+| 39 | drafting | rule 6 and F26 overclaim when a miss is observed | accepted | 6e |
+| 41, 42, 45 | drafting | the cause of an overrun; the order across tasks at one delivery; leftover terms | accepted | 6e |
+| 43 | drafting | the still-open list is incomplete | accepted: re-listed after these answers | 6e |
+| 44, 53 | drafting, nit | the stable logical ID's form and uniqueness; a rank's upper range | accepted: the ID is the eADL task name, unique by the checker (`schema-duplicate-name`); a rank is any `N ≥ 1` the language's integer holds — and measured: `archogen check` accepts `(priority 70000)`, which `rt-core`'s lowering, taking 16-bit ranks, cannot represent | 6e, `M2.18` |
+| 46–50, 52 | nits | rule 2 and rule 1a; the start-in-region assertion's attribution; rule 7's bound and a fault in the handler; §13.4's general ordering; the trap row's token; two stale lines | accepted | 6e |
+| 51 | nit | who refuses an empty task set | accepted, and measured: `archogen check` accepts `(defsystem s)` with no task, rc=0; only the runtime's boot refuses it | `M2.17` |
+
 ⭐ **§5's lesson, a third time.** The reference model was derived from the text, and the two models agree, but six
 of the decisions they share were written only here and in findings §6. Agreement between models shows the text is
 implementable; only a reader of the text alone shows it is *sufficient*.

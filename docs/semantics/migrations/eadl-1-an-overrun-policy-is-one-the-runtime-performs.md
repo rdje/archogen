@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-10-01
 - leaf: M2.14 (`docs/tasks/M2.md`)
-- status: pending
+- status: applied
 - constructs: suite/docs/semantics/cases/positive-skip-late-job.eadl, suite/docs/semantics/cases/unsupported-overrun-policy.eadl
 - invalidates: none in this repository, measured; outside it, a description whose task declares an `on-overrun` policy other than `fault` or `skip-late-job` against `rt-static-up-v1`
 

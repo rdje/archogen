@@ -200,6 +200,13 @@ miss** — rule 1's overrun is its only timing fault, §13.1 F26's "missed deadl
 `D = T`, and a miss with `D < T` is the timing analysis's to exclude and a trace's to observe. A deadline monitor
 would be a new interrupt source and a new fault, which the profile does not list.
 
+**Reviewed a third time `2026-10-01`, the text alone** (`M2.9` step 6d): 28 findings more, triaged in the gaps
+record. One more needs your review, decided meanwhile: **`rt-static-up-v1` has no execution-budget monitor.** Rule
+1a, added this morning, let one raise an overrun without a release; the review showed it cannot be raised inside a
+masked region if it is masked with the region, that the two models then disagree on another task's, and that no
+declared source or composition covers one. An overrun is detected by a release alone, as rule 6 already says of a
+deadline, and a monitor is a later profile's.
+
 Of the reference's `CONTRACT SILENT` notes, four stay open, and none is a disagreement between the models: the
 domain of overrun policies, what a later idle-to-task dispatch costs, whether a runtime must raise a fault on an
 unbalanced unmask, and when a periodic task's first release falls.
