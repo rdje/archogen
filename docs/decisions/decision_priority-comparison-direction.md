@@ -49,6 +49,45 @@ where `hp(i)` is exactly "the tasks whose `N` is smaller".
 The choice itself follows the examples rather than overruling them, and matches the ordinary
 meaning of "priority 1" in a queue.
 
+## The admissible range, and the runtime's index
+
+**Amendment, 2026-09-13 (leaf `M2.9`).** Two things this record left open were found by an
+independently derived model of §8 disagreeing with the implementation
+(`decision_runtime-contract-gaps.md`, gap 3):
+
+1. **A rank is an integer `N ≥ 1`.** Rank `0` is **not** admissible in a description. The record
+   said "`1` is the highest" and said nothing about `0`; admitting it would move the top of the
+   range by inference, and §15 makes a change to a parameter's meaning a versioned language change
+   rather than a tolerance. A description carrying `(priority 0)` is refused.
+   ⚠️ *Not yet by the checker* (measured `2026-10-01`): `archogen check` accepts `(priority 0)` and
+   `(priority -3)`, and only the runtime's lowering refuses them, at boot. Leaf `M2.13` owns the refusal.
+2. ⛔ **The runtime's task index is not the eADL rank.** `crates/rt-core` makes a task's array
+   index its priority, and indices start at **0**, while the language's highest rank is **1**. The
+   mapping is therefore
+
+   ```text
+   runtime index = eADL rank - 1
+   ```
+
+   and it is load-bearing for anything that lowers a description onto a runtime. It was written
+   down nowhere until this amendment, which is precisely how an off-by-one survives review: both
+   halves are individually correct and nothing states the relation. `rt_core::Scheduler::from_eadl_ranks`
+   now performs the conversion in one place, validates the ranks, and is the only supported way to
+   build a scheduler from a description.
+3. **Ranks need not be contiguous** *(added `2026-10-01`, leaf `M2.9`)*. Nothing in the language
+   requires the ranks of a system to run `1, 2, …, n` — `(priority 1)`, `(priority 5)` and
+   `(priority 9)` is a valid description — and fixed priority uses only their order,
+   `hp(i) = { j : N_j < N_i }` below. So the exact relation is
+
+   ```text
+   runtime index = |hp(i)|, the number of tasks whose rank is smaller
+   ```
+
+   which is `rank - 1` exactly when the ranks are contiguous, as in every example so far. Refusing
+   a gap would have narrowed the language by inference, which item 1's argument rules out in the
+   other direction. Found when the differential comparison's rank ratchet was rewritten: the
+   implementation refused ranks with a gap, which the reference model accepts.
+
 ## How to apply
 
 - **Sorting.** Ascending `N` is highest-first. A release trace emits coincident releases in

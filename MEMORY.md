@@ -16,11 +16,10 @@
 - **Active tree:** `M2` → frontier `M2.9`. `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API`'s is
   `API.6`; `M1`'s only open leaf, `M1.29.4`, is blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M2.9`, ruled by delegation `2026-10-01` (findings §6): bring branch `wip/m2.9`'s work onto
-  `main` and finish it by its plan, each commit green; then delete the branch. This project uses no branches. Then
-  `M2.7.6` (its repository half; the hosting half waits on findings §11), `M2.7.4`, `M2.7.5`, `M2.11`, then `API.6`.
-  Accepted designs live in `docs/specs/`, so `docs/decisions/` has room (`PROGRAM.43`).
-- **In flight:** branch **`wip/m2.9`** holds `M2.9`'s unfinished work, local only, until it lands on `main`.
+- **Next action:** `M2.9` step 6 — the amended §3.1.1 reviewed by a new independent context, its answers in green
+  commits, then the leaf closed (its plan in the leaf). Then `M2.13` (the checker refuses priority 0), `M2.7.6` (its
+  repository half; the hosting half waits on findings §11), `M2.7.4`, `M2.7.5`, `M2.11`, then `API.6`. This project
+  uses no branches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4` — findings §11, `main`'s protection;
   `TEMPLATE-REFS` — postponed. **The 17 template files archogen has not changed are never edited** (findings §10,

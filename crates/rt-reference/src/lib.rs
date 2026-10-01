@@ -17,6 +17,25 @@
 //! much as the model is: a silence found by two readers disagreeing is a silence the contract
 //! can be amended to close.
 //!
+//! ⭐ **And it was.** A differential comparison against an implementation of the same contract
+//! found five divergences, every one of them a place the contract genuinely did not decide.
+//! `ROADMAP.md` §3.1.1 ("Fault classification, attribution and containment", amendment of
+//! 2026-09-13) and the new "The admissible range, and the runtime's index" section of
+//! `docs/decisions/decision_priority-comparison-direction.md` now decide them. This model has
+//! been brought into line with **the amended text**, still without reading the implementation:
+//! every change is derived from §3.1.1's table and its rules, so where the two models now
+//! agree they agree because both satisfy one contract, not because one was adjusted to the other.
+//! Each note an amendment answers is **kept and rewritten** to cite it rather than deleted: that
+//! a question was once open is part of the record, and erasing it would erase the evidence that
+//! the agreement was earned.
+//!
+//! ⭐ **The amendment was then read the same way, and amended in its turn.** Three of this model's
+//! notes found gaps that §3.1.1 itself had opened, and the rulings of 2026-10-01
+//! (`docs/decisions/decision_findings-for-director-review.md` §6) closed them: rule 1 now observes
+//! a release that finds its task's latch already full **at delivery**, and a new rule 4 lets a job
+//! complete inside a masked region, closing it. Both are carried here from the amended text alone,
+//! and the three notes are rewritten below in the same `⭐ AMENDED` form as the first five.
+//!
 //! # What is modelled, and what is deliberately not
 //!
 //! §8 lists the initial mechanisms: "static task creation at boot, a fixed-priority ready
@@ -63,6 +82,14 @@ use core::fmt;
 /// "stable logical ID" in the description, and [`TaskSpec::name`] carries it for diagnostics. The
 /// index exists because the profile's task set is fixed at boot, so a position in it is a
 /// permanent identity — §3.1's exclusion of `dynamic-task-creation` is what makes that true.
+///
+/// ⛔ **It is not a priority either.** The priority-direction record's 2026-09-13 amendment warns
+/// that a runtime which makes a task's array index its rank ends up with a highest priority of `0`
+/// while the language's highest is `1`, so that `runtime index = eADL rank − 1` becomes
+/// load-bearing and unwritten — "which is precisely how an off-by-one survives review: both halves
+/// are individually correct and nothing states the relation". This model never makes that
+/// identification: [`TaskId`] and [`Priority`] are distinct types carrying unrelated numbers, and
+/// declaration order has no scheduling meaning at all.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct TaskId(usize);
 
@@ -101,6 +128,10 @@ pub struct Priority(u16);
 
 impl Priority {
     /// The highest rank the decision record admits.
+    ///
+    /// The range is now closed at this end explicitly: "a rank is an integer `N ≥ 1`. Rank `0` is
+    /// **not** admissible in a description" (`decision_priority-comparison-direction.md`,
+    /// amendment of 2026-09-13).
     pub const HIGHEST: Self = Self(1);
 
     /// A priority of the given rank.
@@ -157,8 +188,11 @@ pub struct TaskSpec {
 /// What the runtime does to a task that overruns (§3.1 "Defined overrun … policy", §7.3
 /// "overrun behavior").
 ///
-/// ⚠️ **CONTRACT SILENT:** §7.3 names the field and §3.1 requires the policy to be "defined", but
-/// neither states the domain of values. These three are chosen because they are the only
+/// ⚠️ **CONTRACT SILENT — still, after §3.1.1:** the amendment settles that an overrun *is*
+/// containable and that the containing response is "its declared per-task policy (§7.3)", which is
+/// the half this model needed; it still does not state the **domain** of values that policy ranges
+/// over. §7.3 names the field and §3.1 requires the policy to be "defined", and neither states
+/// what it may say. These three are chosen because they are the only
 /// responses a profile with no memory isolation, no restart service and no dynamic task creation
 /// can actually perform: abandon this job, abandon this task, or stop. Anything richer (restart
 /// the task, degrade to a backup job, raise criticality) is either `mixed-criticality-scheduling`
@@ -169,6 +203,12 @@ pub enum OverrunAction {
     /// fresh job. This is the only *containing* response, and it is sound only because §3.1
     /// admits "no self-suspension within a job" and no application mutexes: an abandoned job
     /// cannot be holding anything another task is waiting for.
+    ///
+    /// It is the policy §3.1.1 rule 1 calls `SkipLateJob`: the late job is skipped and the task
+    /// keeps its place in the schedule. When a **release** detected the overrun, that release is
+    /// the next one — "under `SkipLateJob` it becomes the task's next job" — so the task is ready
+    /// again at once (see [`ReleaseEffect::Overrun`]). An overrun raised through [`Runtime::raise`]
+    /// has no triggering release, so there the task waits for its next one.
     TerminateJob,
     /// Remove the task from the schedule permanently.
     ///
@@ -176,8 +216,15 @@ pub enum OverrunAction {
     /// ever put it back. The task set that remains is *not* the analyzed workload, which is why
     /// [`TaskState::Stopped`] is observable — a timing claim must not be quoted for a system
     /// running a strict subset of the tasks it was established for.
+    ///
+    /// This and [`OverrunAction::Fatal`] are the two responses that *fault* the task rather than
+    /// skip a job, and under both the release that detected the overrun goes with it — §3.1.1 rule
+    /// 1: "under `Fault` it goes with the faulted task". A stopped task is never released again.
     StopTask,
     /// Treat the overrun as fatal and enter the fatal handler.
+    ///
+    /// The release that detected the overrun goes with the faulted task (§3.1.1 rule 1), as under
+    /// [`OverrunAction::StopTask`]: a halted runtime schedules nothing.
     Fatal,
 }
 
@@ -258,6 +305,13 @@ pub enum Transition {
     /// bills "[9, 11) Switch H to L" a full 2 units after H's job completed at 9. This model
     /// therefore emits a `Switch`, never a `ToIdle` followed by a `Dispatch`, whenever a task
     /// hands the processor straight to another task.
+    ///
+    /// `outgoing` and `incoming` may name **the same task**. Since §3.1.1's 2026-10-01 rulings a
+    /// job can end and be followed at once by the same task's next job — a late job skipped under
+    /// `SkipLateJob` while its replacement starts (rule 1), or a job completing inside a masked
+    /// region that latched its next release (rule 4). The finished job's context leaves and the
+    /// fresh job's arrives, so by the same F29 reasoning it is one switch, not nothing and not a
+    /// `ToIdle` plus a `Dispatch`.
     Switch {
         /// The task that lost the processor.
         outgoing: TaskId,
@@ -295,36 +349,80 @@ pub enum ReleaseEffect {
     /// Interrupts were masked, so the release was **latched** and will take effect when masking
     /// is fully lifted (§8.1 "Model synchronization and interrupt masking explicitly"; F15
     /// "Interrupt pending while masked → Correct delivery and acknowledgment behavior").
+    ///
+    /// This is also what a release reports when the task's latch **already holds one**. §3.1.1
+    /// rule 1: such a release "is observed at **delivery**, not at arrival: the latch keeps the
+    /// overrun beside the release it holds". Nothing is decided here, so there is nothing else to
+    /// report; [`Runtime::is_overrun_latched`] shows what the latch now keeps, and the policy's
+    /// effect appears at delivery, in [`Unmasked::overruns`].
     Latched,
-    /// The task already owed a job, so this release had nowhere to go.
+    /// The task already owed a job, so this release had nowhere to go — and the task's overrun
+    /// policy has **already been applied**, with its effect carried here.
     ///
-    /// Either its current job had not finished, or an earlier release was still latched and
-    /// undelivered. §3.1 excludes `general-ipc` — "including task-to-task queues" — and there is
-    /// no per-task job queue either, so the runtime has exactly one slot per task. The release is
-    /// therefore **neither stored nor silently dropped**: it is reported, because under a
-    /// declared minimum separation `T` and a constrained deadline `D ≤ T` (§3.1 Workload) this
-    /// cannot happen in the analyzed workload. Its occurrence means the separation was violated
-    /// or the job overran, and either way §13.1 F17 requires the runtime to refuse timing
-    /// assurance rather than to absorb it.
+    /// Its current job had not finished. (A release whose task merely has an earlier release
+    /// still *latched* is no longer reported here: §3.1.1 rule 1 observes it at delivery — see
+    /// [`ReleaseEffect::Latched`].) §3.1 excludes `general-ipc` — "including task-to-task queues"
+    /// — and there is no per-task job queue either, so the runtime has exactly one slot per task.
+    /// The release is therefore **neither stored nor silently dropped**: under a declared minimum
+    /// separation `T` and a constrained deadline `D ≤ T` (§3.1 Workload) this cannot happen in the
+    /// analyzed workload, so its occurrence means the separation was violated or the job overran,
+    /// and either way §13.1 F17 requires the runtime to refuse timing assurance rather than absorb
+    /// it.
     ///
-    /// ⚠️ **CONTRACT SILENT:** nothing says whether detecting this must *itself* trigger the §3.1
-    /// overrun policy. This model reports and does not escalate, so that an adapter can drive an
-    /// implementation that does either; [`Runtime::raise`] with [`Fault::Overrun`] is the
-    /// escalation, and it is the caller's to make.
-    Overrun,
+    /// ⭐ **AMENDED — §3.1.1 rule 1, "Detection applies the policy".** This note used to read
+    /// `⚠️ CONTRACT SILENT`, because nothing said whether detecting a second release must itself
+    /// trigger the §3.1 overrun policy; this model reported the overrun and left the escalation to
+    /// its caller. The amendment decides it the other way:
+    ///
+    /// > An overrun is a fault the moment the runtime observes a release for a task that still
+    /// > owes a job; it does not wait for a separate decision. … it is the system's behaviour
+    /// > rather than a caller's option.
+    ///
+    /// So detection applies [`TaskSpec::on_overrun`] here, and the resulting [`FaultEffect`] is
+    /// this variant's payload.
+    ///
+    /// ⭐ **AMENDED — §3.1.1 rule 1, the triggering release.** This note used to read
+    /// `⚠️ CONTRACT SILENT`: the rule settled that the policy applies, not what becomes of the
+    /// release that triggered it. Under `TerminateJob` a runtime could abandon the late job and
+    /// leave the task at rest, or abandon it and start a new one from this very release, and this
+    /// model took the first reading — "the triggering release is consumed by the fault" — because
+    /// the second begins a response interval at an instant the analyzed workload never contains.
+    /// The ruling of 2026-10-01 takes the second:
+    ///
+    /// > The release that triggers an overrun is the policy's: under `SkipLateJob` it becomes the
+    /// > task's next job, and under `Fault` it goes with the faulted task.
+    ///
+    /// So under [`OverrunAction::TerminateJob`] — the contract's `SkipLateJob` — the late job is
+    /// abandoned and the task is [`TaskState::Ready`] again with this release as its job. If it
+    /// held the processor, the payload's transition is that handover, and since nothing can
+    /// outrank a task that was running unmasked it is a `Switch` from the task to itself (see
+    /// [`Transition::Switch`]); if it did not, nothing moves and the payload's transition is
+    /// `None`. Under [`OverrunAction::StopTask`] and [`OverrunAction::Fatal`] the release is
+    /// consumed with the task, as before. The objection this model had raised still stands as a
+    /// statement about timing, not as a reading of the contract: the job this release starts is
+    /// already outside the analyzed workload, which is why the fault is recorded for §13.1 F17.
+    Overrun(FaultEffect),
     /// The task was stopped by a fault policy and can never be released again
     /// ([`OverrunAction::StopTask`]).
     Stopped,
 }
 
 /// What a fault did.
+///
+/// ⭐ The context transition became an [`Option`] with §3.1.1 rule 2. An overrun is attributed to
+/// "the **overrunning** task, which need not be the running one", and containing a fault in a task
+/// that does not hold the processor moves no context at all. `None` is therefore not an absence of
+/// information: it is the positive statement that the schedule's occupant did not change.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FaultEffect {
-    /// The job was abandoned; the task awaits its next release
-    /// ([`OverrunAction::TerminateJob`]).
-    JobTerminated(Transition),
-    /// The task was removed from the schedule for good ([`OverrunAction::StopTask`]).
-    TaskStopped(Transition),
+    /// The job was abandoned ([`OverrunAction::TerminateJob`], the contract's `SkipLateJob`).
+    /// If a release detected the overrun, that release is the task's next job and the task is
+    /// ready again; if the overrun was raised, the task awaits its next release (§3.1.1 rule 1).
+    /// `Some` only if the faulting task held the processor.
+    JobTerminated(Option<Transition>),
+    /// The task was removed from the schedule for good ([`OverrunAction::StopTask`]). `Some` only
+    /// if the faulting task held the processor.
+    TaskStopped(Option<Transition>),
     /// The runtime entered the fatal handler. Nothing is scheduled again, and the state is frozen
     /// as evidence (§8.1: "preserve a defined fatal handler and diagnostic evidence").
     Fatal,
@@ -336,6 +434,26 @@ pub enum FaultEffect {
 /// ⭐ **Only the first is containable, and the contract is what decides that** — see each variant.
 /// §8.1 asks for exactly this triage: "Distinguish expected errors, violated internal invariants,
 /// and deliberate fatal traps."
+///
+/// ⭐ **AMENDED — §3.1.1's table.** §3.1's four faults and §8.1's three classes were two lists with
+/// nothing joining them, and this model joined them by inference. The amendment states the join,
+/// and states attribution and containment with it:
+///
+/// | §3.1 fault | §8.1 class | Attributed to | Containable |
+/// |---|---|---|---|
+/// | Overrun | Expected error | the **overrunning** task, which need not be the running one | Yes |
+/// | Stack guard | Violated internal invariant | the executing task, whose guard was breached | No |
+/// | Unexpected trap | Deliberate fatal trap | the running task | No |
+/// | Assertion failure | Violated internal invariant | the running task | No |
+///
+/// (The rows are quoted as amended on 2026-10-01, findings §6 (c) and (d): the trap row once read
+/// "Deliberate fatal trap, or a surprise outside the model", which left the four-to-three mapping
+/// partial, and the stack-guard row once named "the task whose guard was breached" in words other
+/// than rule 2's. Neither change moves an outcome here.)
+///
+/// Each variant below now cites the row instead of arguing for it. The rows agree with the
+/// readings this model had already taken, with one exception that was not a reading at all: the
+/// attribution column, which §3.1.1 rule 2 separates from execution — see [`Runtime::raise`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Fault {
     /// A job exceeded its declared execution bound.
@@ -344,15 +462,21 @@ pub enum Fault {
     /// bound") and reality exceeded it. The runtime's own invariants are untouched — nothing was
     /// corrupted, one number was wrong — so containment is possible, and §7.3 makes the response
     /// a per-task declaration ([`TaskSpec::on_overrun`]) rather than a runtime-wide rule.
+    ///
+    /// It is the only one of the four whose §3.1.1 row says "Containable: Yes", and the only one
+    /// attributed to a task other than the running one.
     Overrun,
     /// The architecture reported a trap the runtime did not plan for.
     ///
-    /// **Fatal.** §8.1 separates "deliberate fatal traps" from this; an *unexpected* trap means
-    /// the runtime's model of the machine is wrong, and a runtime that cannot say why the machine
-    /// trapped cannot argue that the damage stops at one task. §3.1 removes the one mechanism
-    /// that could bound it — "Trusted application components in one address space; no claim of
-    /// isolation" — and the profile excludes `memory-isolation` by name. Continuing to schedule
-    /// would be an unchecked path of exactly the kind §8.1 forbids.
+    /// **Fatal.** An *unexpected* trap means the runtime's model of the machine is wrong, and a
+    /// runtime that cannot say why the machine trapped cannot argue that the damage stops at one
+    /// task. §3.1 removes the one mechanism that could bound it — "Trusted application components
+    /// in one address space; no claim of isolation" — and the profile excludes `memory-isolation`
+    /// by name. Continuing to schedule would be an unchecked path of exactly the kind §8.1 forbids.
+    ///
+    /// §3.1.1's row confirms it and picks the class: "Deliberate fatal trap", attributed to the
+    /// running task, "Containable: No". The fatal path is the deliberate response; what is
+    /// unexpected is what the machine did to reach it.
     UnexpectedTrap,
     /// A task's stack guard was hit (§3.1 "stack-guard … policy", §7.6 "retain explicit
     /// guard/fault behavior").
@@ -361,11 +485,13 @@ pub enum Fault {
     /// allocated" (§3.1) in a single address space, so whatever lies beyond a guard belongs to
     /// something else with no protection boundary in between.
     ///
-    /// ⚠️ **CONTRACT SILENT:** §3.1 and §7.6 say "stack guard" without saying whether it is a
-    /// trapping guard region (which prevents the overflowing write) or a checked canary (which
-    /// discovers it afterwards). Only the first reading would permit containment, and the
-    /// contract does not promise it, so this model takes the fatal reading. A profile that
-    /// pinned the mechanism could justify the other.
+    /// ⭐ **AMENDED — §3.1.1's table.** This note used to read `⚠️ CONTRACT SILENT`, because §3.1
+    /// and §7.6 say "stack guard" without saying whether it is a trapping guard region (which
+    /// prevents the overflowing write) or a checked canary (which discovers it afterwards), and
+    /// only the first reading could ever have permitted containment. The amendment decides the
+    /// *outcome* without pinning the mechanism — "Violated internal invariant … Containable: No" —
+    /// so the question no longer reaches this model: whichever mechanism a target implements, the
+    /// response is the same one.
     StackGuard,
     /// An assertion failed (§3.1 "assertion failure policy").
     ///
@@ -374,10 +500,12 @@ pub enum Fault {
     /// declared impossible is the "unchecked panic path in normal runtime operation" that §8.1
     /// tells the runtime to avoid.
     ///
-    /// ⚠️ **CONTRACT SILENT:** §3.1 does not say whose assertion — the runtime's or the
-    /// application's. This model treats both as fatal, because §3.1's Isolation row makes
-    /// application components *trusted*: a trusted component's invariant being false is a
-    /// statement about the whole address space, not about one task.
+    /// ⭐ **AMENDED — §3.1.1's table.** This note used to read `⚠️ CONTRACT SILENT`, because §3.1
+    /// does not say whose assertion — the runtime's or the application's — and this model inferred
+    /// that both must be fatal from §3.1's Isolation row making application components *trusted*.
+    /// The amendment reaches the same place without the inference: "Violated internal invariant …
+    /// attributed to the running task … Containable: No", with no distinction drawn by whose
+    /// assertion it was.
     AssertionFailure,
 }
 
@@ -389,8 +517,14 @@ pub enum Fault {
 /// last consequence.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FaultRecord {
-    /// The task that was running when the fault was raised. §3.1's single execution context is
-    /// what makes this attribution unambiguous.
+    /// The task the fault is **attributed to**, per §3.1.1's table.
+    ///
+    /// ⭐ **AMENDED — §3.1.1 rule 2.** This field used to be documented as "the task that was
+    /// running when the fault was raised", on the reasoning that one core means one owner. The
+    /// amendment separates the two ideas: "The single-core rule of §3.1 governs *execution*, not
+    /// *attribution*." An overrun belongs to the overrunning task, which "is by construction not
+    /// the running one"; a trap, a stack-guard breach and an assertion failure are "synchronous to
+    /// the executing context and are attributed to it".
     pub task: TaskId,
     /// Which fault.
     pub fault: Fault,
@@ -398,20 +532,45 @@ pub struct FaultRecord {
     pub fatal: bool,
     /// Whether interrupts were masked when it was raised.
     ///
-    /// Recorded because it changes the outcome: see [`Runtime::raise`].
+    /// Recorded because it changes the outcome — §3.1.1 rule 3, see [`Runtime::raise`]. It is
+    /// false for an overrun discovered while *delivering* latched releases, because rule 3 puts
+    /// that moment outside the masked region — whether the region was closed by
+    /// [`Runtime::unmask`] or by a completion inside it ([`Runtime::complete`], rule 4).
     pub masked: bool,
 }
 
-/// What lifting a mask did.
+/// What closing the outermost masked region did: lifting a mask ([`Runtime::unmask`]), or a
+/// completion that closed one ([`Runtime::complete`]).
+///
+/// The two share one record because §3.1.1 rule 4 makes them one delivery: a completion inside a
+/// region delivers its latched releases "as at the outermost unmask". A completion outside any
+/// region reports the same record with nothing delivered and the completion's own transition.
+///
+/// Every latched arrival processed lands in exactly one of `delivered`, `overruns` and `stopped`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Unmasked {
     /// The mask depth that remains. Non-zero means this was an inner `unmask` of a nested pair
-    /// and nothing was delivered.
+    /// and nothing was delivered. Always `0` after a completion, which closes every section.
     pub depth: u8,
-    /// How many latched releases became ready.
+    /// How many latched releases found their task owing no job, and made it ready.
     pub delivered: usize,
-    /// How many latched releases found the task already owing a job
-    /// ([`ReleaseEffect::Overrun`]).
+    /// How many latched releases found the task already owing a job, **each of which had that
+    /// task's overrun policy applied** (§3.1.1 rule 1).
+    ///
+    /// The policy applied is the declared one, not an escalation. §3.1.1 rule 3 is explicit that
+    /// "Delivery at unmask is **not** inside a masked region. A release latched during a critical
+    /// section is delivered once the outermost section closes, so an overrun discovered at that
+    /// moment applies its ordinary per-task policy."
+    ///
+    /// ⭐ This includes the overrun a latch **kept beside the release it held** — a second arrival
+    /// for a task whose latch was already full (§3.1.1 rule 1, amended 2026-10-01). That overrun
+    /// is counted here, at delivery, and nowhere at arrival: the held release is delivered first
+    /// and the kept one is then judged against the job it has just started, exactly as the same
+    /// two arrivals would be judged one instruction after the region closed.
+    ///
+    /// If one of those policies is [`OverrunAction::Fatal`], delivery stops there: the counts
+    /// describe what was processed up to the fault, [`Unmasked::transition`] is `None`, and
+    /// [`Runtime::processor`] reports [`Processor::Halted`].
     pub overruns: usize,
     /// How many latched releases named a stopped task ([`ReleaseEffect::Stopped`]).
     pub stopped: usize,
@@ -425,6 +584,13 @@ pub struct Unmasked {
     /// examined in is not identifiable. F29 agrees at the trace level: latched arrivals are
     /// "serviced before the next task computation interval", one servicing point, not one per
     /// arrival.
+    ///
+    /// An overrun policy that vacates the processor during delivery is folded into the same single
+    /// transition rather than causing one of its own: the faulting task stands down, the scheduler
+    /// still runs exactly once at the end, and the result is one `Switch` (or one `ToIdle`) that
+    /// names it as the outgoing task. A completion is folded in the same way, as rule 4 orders it
+    /// — "the schedule is decided after" — so after [`Runtime::complete`] this is always `Some`
+    /// and names the completing task as outgoing, unless delivery reached a fatal policy.
     pub transition: Option<Transition>,
 }
 
@@ -442,22 +608,50 @@ pub enum Refused {
     Halted,
     /// The operation needs a running task and the processor is idle.
     NoTaskRunning,
+    /// A fault that is synchronous to the executing context named a task that is not the one
+    /// holding the processor.
+    ///
+    /// §3.1.1 rule 2: a trap, a stack-guard breach and an assertion failure "are synchronous to
+    /// the executing context and are attributed to it". Attributing one of them elsewhere is the
+    /// concurrency claim the profile does not admit, so it is refused rather than recorded.
+    NotTheRunningTask,
+    /// [`Fault::Overrun`] named a task that owes no job, so there is nothing for it to have
+    /// overrun.
+    ///
+    /// §3.1.1 rule 1 defines the fault in terms of "a task that still owes a job", which is
+    /// exactly [`TaskState::Ready`] or [`TaskState::Running`]. A task that has never been
+    /// released, has completed its last job, or has been stopped is not making late progress on
+    /// anything.
+    NoJobOwed,
     /// `unmask` was called with interrupts already enabled.
     ///
-    /// ⚠️ **CONTRACT SILENT:** an unbalanced unmask is §8.1's "violated internal invariant", and
-    /// §8.1 does not say whether a violated internal invariant must reach the fatal handler. This
-    /// model refuses and does not halt, because the *model* is a checker being driven by an
-    /// adapter: halting here would destroy the rest of a comparison run over a mistake in the
-    /// harness. A real runtime detecting the same thing in its own kernel would have the stronger
-    /// case for [`Fault::AssertionFailure`].
+    /// ⚠️ **CONTRACT SILENT — narrowed by §3.1.1, not closed.** An unbalanced unmask is §8.1's
+    /// "violated internal invariant", and the amendment's table now settles that such a fault,
+    /// *once raised*, is not containable. What it still does not settle is whether a runtime
+    /// detecting an unbalanced unmask must raise one: the table classifies the four faults §3.1
+    /// names, and an unbalanced unmask is not among them. This model refuses and does not halt,
+    /// because the *model* is a checker being driven by an adapter: halting here would destroy the
+    /// rest of a comparison run over a mistake in the harness. A real runtime detecting the same
+    /// thing in its own kernel would have the stronger case for [`Fault::AssertionFailure`], and
+    /// §3.1.1 would then make it fatal.
     NotMasked,
     /// The mask nesting depth is exhausted.
     ///
-    /// ⚠️ **CONTRACT SILENT:** §3.1 requires "bounded kernel critical sections" and §7.3 requires
-    /// every interrupt source to declare its "masking constraints", but no maximum nesting depth
-    /// is stated. This model uses [`Runtime::MAX_MASK_DEPTH`] and **refuses rather than wraps**,
-    /// which is the part that is not a free choice: a depth counter that wraps to zero re-enables
-    /// interrupts in the middle of a critical section and reports success while doing it.
+    /// ⭐ **AMENDED — §3.1.1's second smaller decision.** This note used to read
+    /// `⚠️ CONTRACT SILENT`, because §3.1 requires "bounded kernel critical sections" and §7.3
+    /// requires every interrupt source to declare its "masking constraints", while no maximum
+    /// nesting depth was stated anywhere. The amendment states it:
+    ///
+    /// > Kernel critical sections are bounded by a declared nesting depth, and exceeding it is
+    /// > refused. … A depth counter that *wraps* re-enables interrupts inside a critical section
+    /// > while reporting success; one that *saturates* stops counting, so the matching unmasks no
+    /// > longer balance. Both are silent failures, so the bound is explicit and exceeding it is an
+    /// > error.
+    ///
+    /// That is the reasoning this model had already given for refusing rather than wrapping, with
+    /// saturation ruled out as well. The **value** of the bound remains the model's own —
+    /// "declared" is where the amendment leaves it, and [`Runtime::MAX_MASK_DEPTH`] is this
+    /// model's declaration of it.
     MaskDepthExhausted,
     /// The id does not name a task in this static set.
     UnknownTask,
@@ -499,11 +693,16 @@ pub enum Violation {
 pub enum BootError {
     /// The task set is empty.
     ///
-    /// ⚠️ **CONTRACT SILENT:** §3.1 says "finite static task set", and the empty set is finite.
-    /// This model refuses it: a system with no task has no workload, so §7.2's second timing
-    /// obligation ("the runtime, selected services, and generated configuration conform to that
-    /// model") is vacuous, and a vacuously passing schedulability result is the kind of claim
-    /// §7.1 exists to prevent. A profile that wants a task-free image should say so explicitly.
+    /// ⭐ **AMENDED — §3.1.1's first smaller decision.** This note used to read
+    /// `⚠️ CONTRACT SILENT`: §3.1 says "finite static task set", and the empty set is finite. The
+    /// amendment refuses it, and refuses it for the reason this model had given —
+    ///
+    /// > "Finite static task set" admits the empty set, and a system with no workload makes §7.2's
+    /// > second timing obligation vacuous — a vacuously passing schedulability result is exactly
+    /// > what §7.1 exists to prevent.
+    ///
+    /// — so the behaviour is unchanged and only its authority has: it is now the contract's
+    /// reasoning rather than this model's inference from it.
     NoTasks,
     /// Two tasks share a priority. §3.1: "Static **unique** task priorities".
     DuplicatePriority {
@@ -516,11 +715,13 @@ pub enum BootError {
     },
     /// A task declares rank `0`.
     ///
-    /// ⚠️ **CONTRACT SILENT:** the decision record says "`1` is the highest" and says nothing
-    /// about `0`. This model refuses it rather than treating it as a still-higher priority,
-    /// because admitting it would silently move the top of the range and §15 forbids changing a
-    /// comparison direction or a parameter's meaning by inference. Admitting `0` is a language
-    /// change, so it needs the decision record amended, not a model that tolerates it.
+    /// ⭐ **AMENDED — `decision_priority-comparison-direction.md`, "The admissible range, and the
+    /// runtime's index".** This note used to read `⚠️ CONTRACT SILENT`: the record said "`1` is the
+    /// highest" and said nothing about `0`. The amendment closes the range — "a rank is an integer
+    /// `N ≥ 1`. Rank `0` is **not** admissible in a description … A description carrying
+    /// `(priority 0)` is refused" — on this model's own ground, that "admitting it would move the
+    /// top of the range by inference, and §15 makes a change to a parameter's meaning a versioned
+    /// language change rather than a tolerance".
     PriorityRankZero {
         /// The offending task.
         task: TaskId,
@@ -542,11 +743,11 @@ pub enum BootError {
 pub struct Runtime<const N: usize> {
     spec: [TaskSpec; N],
     state: [TaskState; N],
-    /// One pending-release flag per task — §8's "simplest bounded structures adequate for the
-    /// profile". A flag, not a counter and not a queue: §3.1 excludes `general-ipc` "including
-    /// task-to-task queues", so a second undelivered release has nowhere to be stored and must be
-    /// reported instead (see [`ReleaseEffect::Overrun`]).
-    latched: [bool; N],
+    /// One pending-release latch per task — §8's "simplest bounded structures adequate for the
+    /// profile". Not a counter and not a queue: §3.1 excludes `general-ipc` "including
+    /// task-to-task queues". It holds at most one release, and beside it at most one overrun —
+    /// §3.1.1 rule 1: "the latch keeps the overrun beside the release it holds" — see [`Latch`].
+    latch: [Latch; N],
     running: Option<TaskId>,
     mask_depth: u8,
     halted: bool,
@@ -556,8 +757,10 @@ pub struct Runtime<const N: usize> {
 impl<const N: usize> Runtime<N> {
     /// The deepest interrupt-mask nesting this model will accept.
     ///
-    /// See [`Refused::MaskDepthExhausted`] for why there is a limit and why exceeding it is a
-    /// refusal rather than a wrap. The value itself is arbitrary; its finiteness is not.
+    /// This is the "declared nesting depth" §3.1.1 requires a profile to bound its kernel
+    /// critical sections by. See [`Refused::MaskDepthExhausted`] for why exceeding it is a refusal
+    /// rather than a wrap or a saturation. The value itself is arbitrary; its finiteness, its
+    /// being declared, and the refusal at it are not.
     pub const MAX_MASK_DEPTH: u8 = u8::MAX;
 
     /// Create the static task set. This is §8's "static task creation at boot", and it is the
@@ -603,7 +806,7 @@ impl<const N: usize> Runtime<N> {
         Ok(Self {
             spec,
             state: [TaskState::Created; N],
-            latched: [false; N],
+            latch: [Latch::Empty; N],
             running: None,
             mask_depth: 0,
             halted: false,
@@ -651,7 +854,22 @@ impl<const N: usize> Runtime<N> {
     /// Whether a release for this task is latched and undelivered (F15's "pending while masked").
     #[must_use]
     pub fn is_latched(&self, task: TaskId) -> Option<bool> {
-        self.latched.get(task.index()).copied()
+        self.latch
+            .get(task.index())
+            .map(|&latch| latch != Latch::Empty)
+    }
+
+    /// Whether this task's latch also keeps an **overrun** beside the release it holds: a second
+    /// release arrived while the first was still latched (§3.1.1 rule 1, amended 2026-10-01).
+    ///
+    /// The overrun is recorded here and judged at delivery, where the task's declared policy
+    /// applies outside every masked region — see [`Unmasked::overruns`]. Until then nothing about
+    /// the task has changed and no fault is recorded.
+    #[must_use]
+    pub fn is_overrun_latched(&self, task: TaskId) -> Option<bool> {
+        self.latch
+            .get(task.index())
+            .map(|&latch| latch == Latch::ReleaseAndOverrun)
     }
 
     /// The current interrupt-mask nesting depth; `0` means interrupts are enabled.
@@ -681,6 +899,32 @@ impl<const N: usize> Runtime<N> {
     /// release is signalled by an interrupt; the task becomes ready at ISR completion". The
     /// arrival itself, if it lands inside a masked region, is what [`Runtime::mask`] latches.
     ///
+    /// ⭐ **A release is also where an overrun is detected, and detection now applies the policy**
+    /// (§3.1.1 rule 1) — see [`ReleaseEffect::Overrun`], which carries what the policy did. For a
+    /// release that arrives inside a masked region, "detection" happens at its delivery, by
+    /// [`Runtime::unmask`] or by a completion that closes the region ([`Runtime::complete`]).
+    ///
+    /// ⭐ **AMENDED — §3.1.1 rule 1, a release into a full latch.** This note used to read
+    /// `⚠️ CONTRACT SILENT`: rule 1 defined detection as "a release for a task that still owes a
+    /// **job**", and a task whose latch slot is already full may owe only an undelivered
+    /// *release*. This model counted that as owing a job, so rule 3 then escalated it — a doubled
+    /// arrival inside a critical section was fatal where the same doubling one instruction later
+    /// was contained — and nothing in §3.1.1 settled which side of the definition a full latch
+    /// fell on. The ruling of 2026-10-01 settles it, on neither of the two sides the note offered:
+    ///
+    /// > A release that arrives while the task's latch already holds one is observed at
+    /// > **delivery**, not at arrival: the latch keeps the overrun beside the release it holds, and
+    /// > when the outermost section closes the release is delivered and the overrun detected, so the
+    /// > task's policy applies outside every masked region. It is never lost, and never fatal for
+    /// > landing inside a critical section rather than one instruction after it.
+    ///
+    /// So such a release now reports [`ReleaseEffect::Latched`] and changes nothing but the latch
+    /// ([`Runtime::is_overrun_latched`]); no policy runs and no fault is recorded at arrival, and
+    /// rule 3 never reaches it. At delivery the held release is delivered first and the kept
+    /// overrun is then judged against the job that release started, so the task's declared policy
+    /// applies there — unescalated, [`FaultRecord::masked`] false — and is counted in
+    /// [`Unmasked::overruns`].
+    ///
     /// # Errors
     ///
     /// [`Refused::Halted`] if the runtime is in its fatal handler, or [`Refused::UnknownTask`].
@@ -692,22 +936,37 @@ impl<const N: usize> Runtime<N> {
 
         if self.is_masked() {
             // F29: "arrivals during them are latched and serviced before the next task
-            // computation interval". A latch records the arrival and inspects nothing: the ISR
-            // that would have examined the task's state has not run yet. Whether the task can
-            // actually accept the release is therefore decided at delivery, in `unmask`, which is
-            // where an overrun or a stopped task is reported.
-            if self.latched[index] {
-                return Ok(ReleaseEffect::Overrun);
-            }
-            self.latched[index] = true;
+            // computation interval". A latch records the arrival and inspects the task's
+            // lifecycle state not at all: the ISR that would have examined it has not run yet.
+            // Whether the task can actually accept the release is therefore decided at delivery.
+            // That now holds for a second arrival too (§3.1.1 rule 1, amended): the latch keeps
+            // the overrun beside the release it holds, and nothing is decided here.
+            self.latch[index] = match self.latch[index] {
+                Latch::Empty => Latch::Release,
+                // A third or later arrival is the same overrun the latch already keeps: the rule
+                // keeps "the overrun", and under every policy the state after delivering two
+                // arrivals is the state after delivering more, so a count would change a tally
+                // and nothing else — see `Latch`.
+                Latch::Release | Latch::ReleaseAndOverrun => Latch::ReleaseAndOverrun,
+            };
             return Ok(ReleaseEffect::Latched);
         }
 
         match self.state[index] {
             TaskState::Stopped => Ok(ReleaseEffect::Stopped),
             // The task already owes a job. One slot per task, so there is nowhere to put a
-            // second and nothing to silently drop it into.
-            TaskState::Ready | TaskState::Running => Ok(ReleaseEffect::Overrun),
+            // second and nothing to silently drop it into — and §3.1.1 rule 1 makes this
+            // observation the fault itself, applied to this task whether or not it is running.
+            // The release is the policy's: under SkipLateJob it becomes the task's next job.
+            TaskState::Ready | TaskState::Running => {
+                let was_running = self.running == Some(task);
+                let applied = self.overrun_detected_by_release(task);
+                Ok(ReleaseEffect::Overrun(self.reschedule_after(
+                    task,
+                    was_running,
+                    applied,
+                )))
+            }
             TaskState::Created | TaskState::Completed => {
                 self.state[index] = TaskState::Ready;
                 Ok(match self.take_processor() {
@@ -729,23 +988,63 @@ impl<const N: usize> Runtime<N> {
     /// task gives up the processor voluntarily — there is no yield, no block and no wait. The job
     /// boundary is also the timing observation boundary: "a job's response interval ends at the
     /// end of its useful computation; the switch away from it is outside that job's interval"
-    /// (`docs/analysis/cost-accounting-v1.md`), which is why the returned [`Transition`] is
-    /// reported separately rather than folded into the completion.
+    /// (`docs/analysis/cost-accounting-v1.md`), which is why the resulting [`Transition`] is
+    /// reported separately — [`Unmasked::transition`] — rather than folded into the completion.
     ///
     /// Masking does **not** defer this. F29 latches *arrivals*; a completion is the running task
     /// reaching the end of its own computation, not an asynchronous event, and deferring it would
     /// leave a finished job holding the processor.
     ///
+    /// ⭐ **AMENDED — §3.1.1 rule 4.** This note used to read `⚠️ CONTRACT SILENT`: whether a job
+    /// may *complete* inside a masked region it opened was undecided, and rule 3 sharpened the
+    /// question without answering it. Its first ground — a job that holds the mask and ends
+    /// "leaves the nesting depth above zero with no owner" — applied word for word to a job that
+    /// merely *ends* there, but the rule scoped itself to "a containable **fault**", so this model
+    /// let the completion through and left the mask at its depth, with a finished task still
+    /// nominally its owner. The ruling of 2026-10-01 adds a rule for it:
+    ///
+    /// > A job may complete inside a masked region it opened, and its completion closes it. The
+    /// > nesting depth returns to zero with the job, releases latched in the region are delivered
+    /// > as at the outermost unmask, and the schedule is decided after. … A latched release is
+    /// > judged at that delivery, so a task that completed inside the region is released afresh,
+    /// > not overrun.
+    ///
+    /// So a completion is now three steps in that order. The job ends and its task stands down;
+    /// the depth goes to `0` however deep the nesting was, closing every section; and the latched
+    /// releases are delivered exactly as [`Runtime::unmask`] delivers them — outside every masked
+    /// region, so an overrun found there applies its declared policy unescalated — before the
+    /// scheduler runs once. The completing task's own latched release therefore finds it
+    /// [`TaskState::Completed`] and starts a fresh job instead of overrunning the one that just
+    /// ended. Outside a masked region nothing is latched and this is the plain completion it
+    /// always was.
+    ///
+    /// ⭐ **This is why the method returns [`Unmasked`].** A completion inside a region can deliver
+    /// releases, find overruns, and — if one of those policies is [`OverrunAction::Fatal`] — halt
+    /// the runtime before any schedule is decided, which a bare [`Transition`] cannot express.
+    /// Rule 4 makes the delivery "as at the outermost unmask", so it is reported in the record the
+    /// outermost unmask already uses. Outside a region the record is `depth: 0`, nothing
+    /// delivered, and `transition: Some(..)` naming the completing task as outgoing.
+    ///
+    /// "A masked region it opened" needs no owner field here. Inside a masked region the
+    /// processor's occupant cannot change by any other route — arrivals latch, and rule 3 makes
+    /// every fault there fatal — so whoever completes inside one held the processor when its
+    /// outermost section opened.
+    ///
     /// # Errors
     ///
     /// [`Refused::Halted`], or [`Refused::NoTaskRunning`] if the processor is idle.
-    pub fn complete(&mut self) -> Result<Transition, Refused> {
+    pub fn complete(&mut self) -> Result<Unmasked, Refused> {
         if self.halted {
             return Err(Refused::Halted);
         }
         let outgoing = self.running.ok_or(Refused::NoTaskRunning)?;
         self.state[outgoing.index()] = TaskState::Completed;
-        Ok(self.vacate(outgoing))
+        self.running = None;
+        // §3.1.1 rule 4: "The nesting depth returns to zero with the job" — every section it
+        // opened, not one level — and only then are the latched releases delivered, so that
+        // delivery is outside every masked region exactly as rule 3's note requires of an unmask.
+        self.mask_depth = 0;
+        Ok(self.deliver_latched(Some(outgoing)))
     }
 
     /// Mask interrupts: releases arriving from now on are latched rather than delivered.
@@ -787,6 +1086,28 @@ impl<const N: usize> Runtime<N> {
     ///
     /// An inner unmask of a nested pair delivers nothing.
     ///
+    /// ⭐ **Delivery is outside the masked region, and §3.1.1 rule 3 says so.** The depth reaches
+    /// zero first and the latched releases are serviced after it: "A release latched during a
+    /// critical section is delivered once the outermost section closes, so an overrun discovered
+    /// at that moment applies its ordinary per-task policy." The rule adds that this is not an
+    /// implementer's subtlety but "the difference between a profile that can contain an overrun at
+    /// all and one that cannot" — a runtime that delivered *inside* the region would escalate
+    /// every latched overrun to fatal by rule 3, and containment would exist only on paper.
+    ///
+    /// A delivered release that finds its task still owing a job is therefore an overrun whose
+    /// declared policy applies here (§3.1.1 rule 1). If that policy takes the processor away from
+    /// the faulting task, the scheduler still runs only once, at the end: the whole unmask reports
+    /// one [`Transition`]. If that policy is [`OverrunAction::Fatal`], delivery stops at it and
+    /// the remaining latched releases stay undelivered — the state is evidence from then on.
+    ///
+    /// A task whose latch also keeps an overrun ([`Runtime::is_overrun_latched`]) has two arrivals
+    /// to deliver, and they are delivered in the order they arrived: "the release is delivered and
+    /// the overrun detected" (§3.1.1 rule 1). Both are delivered before the next task in rank, so
+    /// the pair is judged exactly as the same two arrivals would be one instruction after the
+    /// region closed — which is the ruling's own test: the outcome "may not depend on which side of
+    /// an unmask an interrupt lands". Only the transition count differs, by the single-transition
+    /// rule above.
+    ///
     /// # Errors
     ///
     /// [`Refused::Halted`], or [`Refused::NotMasked`] if interrupts are already enabled.
@@ -807,101 +1128,84 @@ impl<const N: usize> Runtime<N> {
                 transition: None,
             });
         }
-
-        let mut delivered = 0;
-        let mut overruns = 0;
-        let mut stopped = 0;
-        while let Some(task) = self.next_latched_by_rank() {
-            self.latched[task.index()] = false;
-            match self.state[task.index()] {
-                TaskState::Stopped => stopped += 1,
-                TaskState::Ready | TaskState::Running => overruns += 1,
-                TaskState::Created | TaskState::Completed => {
-                    self.state[task.index()] = TaskState::Ready;
-                    delivered += 1;
-                }
-            }
-        }
-        let transition = self
-            .take_processor()
-            .map(|(outgoing, incoming)| match outgoing {
-                None => Transition::Dispatch { incoming },
-                Some(outgoing) => Transition::Switch { outgoing, incoming },
-            });
-        Ok(Unmasked {
-            depth: 0,
-            delivered,
-            overruns,
-            stopped,
-            transition,
-        })
+        Ok(self.deliver_latched(None))
     }
 
-    /// Raise a fault against the running task.
+    /// Raise `fault` against `task`.
     ///
-    /// §3.1's single execution context is what makes the attribution unambiguous: one core, one
-    /// running context, so a fault has exactly one task to belong to. That is also why there is no
-    /// `task` parameter — a fault attributed to a task that was not running would be a claim about
-    /// concurrency the profile does not admit.
+    /// ⭐ **AMENDED — §3.1.1 rule 2.** This method used to take no `task` parameter, on the
+    /// reasoning that "§3.1's single execution context is what makes the attribution unambiguous:
+    /// one core, one running context, so a fault has exactly one task to belong to", and that "a
+    /// fault attributed to a task that was not running would be a claim about concurrency the
+    /// profile does not admit". The amendment addresses that reasoning directly:
     ///
-    /// ⚠️ **CONTRACT SILENT:** nothing says what happens when a *containable* fault is raised
-    /// inside a masked region. This model **escalates it to fatal**, and the reasoning is the
-    /// contract's own: terminating a job that holds the mask leaves the depth counter above zero
-    /// with no owner, so interrupts never come back and the runtime dies silently; forcing the
-    /// depth to zero instead re-enables interrupts in the middle of a region whose invariants the
-    /// faulting job was halfway through restoring. §8.1 offers no third option — "Avoid unchecked
-    /// panic paths in normal runtime operation; preserve a defined fatal handler and diagnostic
-    /// evidence" — so the defined fatal handler is where this goes.
+    /// > A release is signalled by an interrupt while some other context holds the processor, so
+    /// > the overrunning task is by construction not the running one. The single-core rule of §3.1
+    /// > governs *execution*, not *attribution*.
+    ///
+    /// So attribution is now a parameter, and §3.1.1's table decides what may be passed:
+    ///
+    /// - [`Fault::Overrun`] may name **any** task that still owes a job — [`TaskState::Ready`] or
+    ///   [`TaskState::Running`] — and is attributed to it. Naming a task that owes no job is
+    ///   [`Refused::NoJobOwed`], because rule 1 defines the fault in terms of a task that owes one.
+    /// - The other three are "synchronous to the executing context and are attributed to it", so
+    ///   they must name the running task: [`Refused::NoTaskRunning`] if the processor is idle and
+    ///   [`Refused::NotTheRunningTask`] if some other task holds it. The model refuses rather than
+    ///   silently re-attributing, because the misattribution is the interesting thing to catch.
+    ///
+    /// This is not the *only* way an overrun arises — §3.1.1 rule 1 makes a release that finds its
+    /// task still owing a job a fault by itself, applied by [`Runtime::release`], and at delivery
+    /// by [`Runtime::unmask`] and [`Runtime::complete`], without going through here. This entry
+    /// point remains for an overrun detected some other way, an execution-budget monitor being the
+    /// obvious one (§7.3's "execution bound"). Such an overrun has no triggering release, so under
+    /// [`OverrunAction::TerminateJob`] the task is left [`TaskState::Completed`] to await its next
+    /// one, where an overrun detected by a release starts that release as its next job.
+    ///
+    /// ⭐ **AMENDED — §3.1.1 rule 3.** A containable fault raised while interrupts are masked
+    /// escalates to fatal. This note used to read `⚠️ CONTRACT SILENT` and this model escalated
+    /// anyway, on the first of the two grounds the amendment now gives: terminating a job that
+    /// holds the mask "leaves the nesting depth above zero with no owner, so interrupts never
+    /// return", and forcing the depth to zero "re-enables them inside a region whose invariants the
+    /// faulting job was partway through restoring". That ground alone would only cover a fault
+    /// attributed to the mask holder, which rule 2 has just stopped being the only case; the rule
+    /// carries a second, wider ground for exactly that reason (worded as amended on 2026-10-01,
+    /// findings §6 (e), which moved the hazard from *changing* the schedule to *resuming* it):
+    ///
+    /// > containment means **resuming the schedule** from a state the critical section had not
+    /// > finished making consistent, which is what a kernel critical section exists to prevent.
+    /// > That holds whichever task the fault is attributed to, not only the one holding the mask.
+    ///
+    /// Delivery at unmask is explicitly *outside* the masked region and does not escalate; see
+    /// [`Runtime::unmask`]. Nor does delivery at a completion that closes the region, and the
+    /// completion itself is not a fault at all (rule 4); see [`Runtime::complete`].
     ///
     /// # Errors
     ///
-    /// [`Refused::Halted`], or [`Refused::NoTaskRunning`] if the processor is idle.
-    pub fn raise(&mut self, fault: Fault) -> Result<FaultEffect, Refused> {
+    /// [`Refused::Halted`], [`Refused::UnknownTask`], and the attribution refusals above.
+    pub fn raise(&mut self, task: TaskId, fault: Fault) -> Result<FaultEffect, Refused> {
         if self.halted {
             return Err(Refused::Halted);
         }
-        let task = self.running.ok_or(Refused::NoTaskRunning)?;
-        let masked = self.is_masked();
+        let index = self.index_of(task)?;
 
-        let action = match fault {
-            Fault::Overrun => self.spec[task.index()].on_overrun,
-            // The other three are fatal by the reasoning recorded on each `Fault` variant; the
-            // per-task declaration of §7.3 covers overrun behaviour and nothing else.
+        match fault {
+            Fault::Overrun => {
+                if !matches!(self.state[index], TaskState::Ready | TaskState::Running) {
+                    return Err(Refused::NoJobOwed);
+                }
+            }
             Fault::UnexpectedTrap | Fault::StackGuard | Fault::AssertionFailure => {
-                OverrunAction::Fatal
+                match self.running {
+                    None => return Err(Refused::NoTaskRunning),
+                    Some(running) if running != task => {
+                        return Err(Refused::NotTheRunningTask);
+                    }
+                    Some(_) => {}
+                }
             }
-        };
-        let action = if masked && !matches!(action, OverrunAction::Fatal) {
-            OverrunAction::Fatal
-        } else {
-            action
-        };
+        }
 
-        let fatal = matches!(action, OverrunAction::Fatal);
-        self.record_fault(FaultRecord {
-            task,
-            fault,
-            fatal,
-            masked,
-        });
-
-        Ok(match action {
-            OverrunAction::Fatal => {
-                // Freeze everything. The task states, the mask depth and the running task are
-                // diagnostic evidence now (§8.1), and a fatal handler that tidied up would be
-                // destroying the record it exists to preserve.
-                self.halted = true;
-                FaultEffect::Fatal
-            }
-            OverrunAction::TerminateJob => {
-                self.state[task.index()] = TaskState::Completed;
-                FaultEffect::JobTerminated(self.vacate(task))
-            }
-            OverrunAction::StopTask => {
-                self.state[task.index()] = TaskState::Stopped;
-                FaultEffect::TaskStopped(self.vacate(task))
-            }
-        })
+        Ok(self.apply_and_reschedule(task, fault))
     }
 
     // -- invariants ----------------------------------------------------------------------------
@@ -913,10 +1217,19 @@ impl<const N: usize> Runtime<N> {
     /// both this model and the implementation it drives. A model that agrees event-by-event on
     /// which task runs but silently loses the invariant in between is agreeing by luck.
     ///
+    /// A halted runtime is exempt, and deliberately so. Once the fatal handler has run this is no
+    /// longer a schedule but the frozen evidence §8.1 asks to be preserved, and evidence of a fault
+    /// caught partway through delivering latched releases can legitimately show a ready task
+    /// outranking the task the processor stopped on. Checking it would be asserting a scheduling
+    /// property of something that is no longer scheduling.
+    ///
     /// # Errors
     ///
     /// The first [`Violation`] found.
     pub fn check_invariants(&self) -> Result<(), Violation> {
+        if self.halted {
+            return Ok(());
+        }
         let mut running_by_state: Option<TaskId> = None;
         for (i, &state) in self.state.iter().enumerate() {
             if state == TaskState::Running {
@@ -991,8 +1304,8 @@ impl<const N: usize> Runtime<N> {
 
     fn next_latched_by_rank(&self) -> Option<TaskId> {
         let mut best: Option<TaskId> = None;
-        for (i, &latched) in self.latched.iter().enumerate() {
-            if !latched {
+        for (i, &latch) in self.latch.iter().enumerate() {
+            if latch == Latch::Empty {
                 continue;
             }
             let outranks_best = best.is_none_or(|b| {
@@ -1058,6 +1371,215 @@ impl<const N: usize> Runtime<N> {
             self.first_fault = Some(record);
         }
     }
+
+    /// Decide the policy §3.1.1 requires for `fault` on `task`, record the fault, and move the
+    /// task's lifecycle state.
+    ///
+    /// It deliberately does **not** touch the processor. Who runs next is the scheduler's
+    /// business, and separating the two is what lets [`Runtime::unmask`] apply a policy to the
+    /// running task partway through a delivery and still report one transition for the whole of
+    /// it.
+    fn apply_fault(&mut self, task: TaskId, fault: Fault) -> Applied {
+        let index = task.index();
+        let masked = self.is_masked();
+
+        let declared = match fault {
+            // §3.1.1: the overrun row is the only one whose "Containable" column says yes, and
+            // §7.3 is where the response is declared, per task.
+            Fault::Overrun => self.spec[index].on_overrun,
+            // The other three rows say "Containable: No".
+            Fault::UnexpectedTrap | Fault::StackGuard | Fault::AssertionFailure => {
+                OverrunAction::Fatal
+            }
+        };
+        // §3.1.1 rule 3: a containable fault raised while interrupts are masked is not containable.
+        let action = if masked && !matches!(declared, OverrunAction::Fatal) {
+            OverrunAction::Fatal
+        } else {
+            declared
+        };
+
+        let fatal = matches!(action, OverrunAction::Fatal);
+        self.record_fault(FaultRecord {
+            task,
+            fault,
+            fatal,
+            masked,
+        });
+
+        match action {
+            OverrunAction::Fatal => {
+                // Freeze everything. The task states, the mask depth and the running task are
+                // diagnostic evidence now (§8.1), and a fatal handler that tidied up would be
+                // destroying the record it exists to preserve.
+                self.halted = true;
+                Applied::Fatal
+            }
+            OverrunAction::TerminateJob => {
+                self.state[index] = TaskState::Completed;
+                Applied::JobTerminated
+            }
+            OverrunAction::StopTask => {
+                self.state[index] = TaskState::Stopped;
+                Applied::TaskStopped
+            }
+        }
+    }
+
+    /// An overrun detected by a **release** — at arrival in [`Runtime::release`], or at delivery.
+    ///
+    /// [`Runtime::apply_fault`], plus the one thing a release-triggered overrun adds: §3.1.1 rule
+    /// 1, "The release that triggers an overrun is the policy's: under `SkipLateJob` it becomes the
+    /// task's next job, and under `Fault` it goes with the faulted task." Under `TerminateJob`
+    /// (the contract's `SkipLateJob`) the task is therefore ready again with that release as its
+    /// job; under the other two the release is consumed with the task, which `apply_fault` has
+    /// already done.
+    fn overrun_detected_by_release(&mut self, task: TaskId) -> Applied {
+        let applied = self.apply_fault(task, Fault::Overrun);
+        if applied == Applied::JobTerminated {
+            self.state[task.index()] = TaskState::Ready;
+        }
+        applied
+    }
+
+    /// [`Runtime::apply_fault`], then run the scheduler if the faulting task was the one holding
+    /// the processor.
+    ///
+    /// If it was not — §3.1.1 rule 2's case — nothing moves and the effect carries no transition.
+    fn apply_and_reschedule(&mut self, task: TaskId, fault: Fault) -> FaultEffect {
+        let was_running = self.running == Some(task);
+        let applied = self.apply_fault(task, fault);
+        self.reschedule_after(task, was_running, applied)
+    }
+
+    /// Turn an applied policy into its [`FaultEffect`], running the scheduler only if `task` held
+    /// the processor before the policy applied.
+    ///
+    /// A task skipped under `SkipLateJob` by a release is [`TaskState::Ready`] again by now, so
+    /// when it held the processor the scheduler hands the processor back to it: nothing ready can
+    /// outrank a task that was running with releases being delivered, and the handover from the
+    /// late job to the fresh one is a [`Transition::Switch`] from the task to itself.
+    fn reschedule_after(
+        &mut self,
+        task: TaskId,
+        was_running: bool,
+        applied: Applied,
+    ) -> FaultEffect {
+        match applied {
+            Applied::Fatal => FaultEffect::Fatal,
+            Applied::JobTerminated => {
+                FaultEffect::JobTerminated(was_running.then(|| self.vacate(task)))
+            }
+            Applied::TaskStopped => {
+                FaultEffect::TaskStopped(was_running.then(|| self.vacate(task)))
+            }
+        }
+    }
+
+    /// Deliver every latched arrival, then run the scheduler once — the closing half of
+    /// [`Runtime::unmask`] at depth `1 → 0`, and of [`Runtime::complete`] by §3.1.1 rule 4.
+    ///
+    /// The caller has already brought the depth to zero, so everything here is outside every
+    /// masked region and [`Runtime::apply_fault`] does not escalate (§3.1.1 rule 3's note).
+    /// `stood_down` is a task that gave up the processor just before — the completing one — so
+    /// the one transition still names it as outgoing.
+    ///
+    /// Tasks are taken in ascending rank, and each task's arrivals in the order they arrived: the
+    /// release its latch holds, then the overrun it kept beside it. Each arrival is judged against
+    /// the task's state at that moment, exactly as [`Runtime::release`] would judge it unmasked —
+    /// the held release made the task owe a job, so the kept one is the overrun rule 1 says is
+    /// "detected" here.
+    fn deliver_latched(&mut self, mut stood_down: Option<TaskId>) -> Unmasked {
+        debug_assert!(
+            !self.is_masked(),
+            "delivery happens outside every masked region"
+        );
+        let mut delivered = 0;
+        let mut overruns = 0;
+        let mut stopped = 0;
+        while let Some(task) = self.next_latched_by_rank() {
+            let index = task.index();
+            // Take one arrival off the latch. A latch that kept an overrun still holds that
+            // arrival afterwards, so the same task comes round again before any lower rank, and a
+            // fatal policy below leaves exactly the undelivered arrivals visible as evidence.
+            self.latch[index] = match self.latch[index] {
+                Latch::ReleaseAndOverrun => Latch::Release,
+                Latch::Release | Latch::Empty => Latch::Empty,
+            };
+            match self.state[index] {
+                TaskState::Stopped => stopped += 1,
+                TaskState::Ready | TaskState::Running => {
+                    overruns += 1;
+                    let was_running = self.running == Some(task);
+                    // §3.1.1 rule 1, with the release the policy's. The task stands down rather
+                    // than being rescheduled now, so that the scheduler runs once for the whole
+                    // delivery and its one transition still names the task that stood down.
+                    match self.overrun_detected_by_release(task) {
+                        Applied::Fatal => {
+                            return Unmasked {
+                                depth: 0,
+                                delivered,
+                                overruns,
+                                stopped,
+                                transition: None,
+                            };
+                        }
+                        Applied::JobTerminated | Applied::TaskStopped => {
+                            if was_running {
+                                self.running = None;
+                                stood_down = Some(task);
+                            }
+                        }
+                    }
+                }
+                TaskState::Created | TaskState::Completed => {
+                    self.state[index] = TaskState::Ready;
+                    delivered += 1;
+                }
+            }
+        }
+        let transition = match self.take_processor() {
+            Some((preempted, incoming)) => Some(match preempted.or(stood_down) {
+                Some(outgoing) => Transition::Switch { outgoing, incoming },
+                None => Transition::Dispatch { incoming },
+            }),
+            None => stood_down.map(|outgoing| Transition::ToIdle { outgoing }),
+        };
+        Unmasked {
+            depth: 0,
+            delivered,
+            overruns,
+            stopped,
+            transition,
+        }
+    }
+}
+
+/// Which policy [`Runtime::apply_fault`] applied, before the scheduler has had its say.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Applied {
+    Fatal,
+    JobTerminated,
+    TaskStopped,
+}
+
+/// What one task's interrupt latch holds while interrupts are masked.
+///
+/// Three states and no more, because §3.1.1 rule 1 (amended 2026-10-01) gives the latch exactly
+/// two things to keep: "the latch keeps the overrun beside the release it holds". A queue would be
+/// the `general-ipc` §3.1 excludes; a counter of arrivals would keep nothing the policies can use,
+/// because under each of them the state after delivering two arrivals is the state after
+/// delivering more — `SkipLateJob` leaves the task ready with one fresh job however many it
+/// skipped, and a stopped task or a halted runtime takes no further release. So a third arrival is
+/// the overrun already kept, and changes nothing.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Latch {
+    /// Nothing pending.
+    Empty,
+    /// One release, judged at delivery against the task's state then.
+    Release,
+    /// One release, and the overrun of a later arrival kept beside it.
+    ReleaseAndOverrun,
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -1120,6 +1642,16 @@ impl fmt::Display for Refused {
                 "interrupt mask nesting depth exhausted; the depth is refused rather than wrapped, \
                  because a wrap re-enables interrupts inside a critical section and reports \
                  success (§3.1 bounded kernel critical sections)"
+            ),
+            Self::NotTheRunningTask => write!(
+                f,
+                "this fault is synchronous to the executing context, so §3.1.1 attributes it to \
+                 the task holding the processor; the named task is not that task"
+            ),
+            Self::NoJobOwed => write!(
+                f,
+                "the named task owes no job, so it cannot be overrunning one; §3.1.1 defines an \
+                 overrun as a fault of a task that still owes a job"
             ),
             Self::UnknownTask => write!(
                 f,
@@ -1315,11 +1847,11 @@ mod tests {
         rt.release(L).unwrap();
         rt.release(H).unwrap();
         assert_eq!(
-            rt.complete().unwrap(),
-            Transition::Switch {
+            rt.complete().unwrap().transition,
+            Some(Transition::Switch {
                 outgoing: H,
                 incoming: L,
-            }
+            })
         );
         assert_eq!(rt.state(H), Some(TaskState::Completed));
         assert_eq!(rt.processor(), Processor::Running(L));
@@ -1330,7 +1862,17 @@ mod tests {
     fn completion_with_nothing_ready_goes_idle() {
         let mut rt = two_tasks();
         rt.release(L).unwrap();
-        assert_eq!(rt.complete().unwrap(), Transition::ToIdle { outgoing: L });
+        assert_eq!(
+            rt.complete().unwrap(),
+            Unmasked {
+                depth: 0,
+                delivered: 0,
+                overruns: 0,
+                stopped: 0,
+                transition: Some(Transition::ToIdle { outgoing: L }),
+            },
+            "outside a masked region a completion delivers nothing and reports its own transition"
+        );
         assert_eq!(rt.processor(), Processor::Idle);
         assert_eq!(rt.state(L), Some(TaskState::Completed));
         assert_sound(&rt);
@@ -1357,26 +1899,135 @@ mod tests {
     // -- the second release ---------------------------------------------------------------------
 
     #[test]
-    fn releasing_a_running_task_again_is_an_overrun_and_is_not_queued() {
+    fn a_second_release_of_a_running_task_applies_its_overrun_policy_at_once() {
         let mut rt = two_tasks();
         rt.release(L).unwrap();
-        assert_eq!(rt.release(L).unwrap(), ReleaseEffect::Overrun);
-        // Nothing was stored: one completion returns the task to rest, it does not uncover a
-        // second job. §3.1 excludes queues, so there is no second job anywhere.
-        rt.complete().unwrap();
-        assert_eq!(rt.processor(), Processor::Idle);
-        assert_eq!(rt.state(L), Some(TaskState::Completed));
+        // §3.1.1 rule 1: the observation *is* the fault, and L's declared TerminateJob (the
+        // contract's SkipLateJob) applies here rather than waiting for a separate call. The late
+        // job is skipped and the triggering release "becomes the task's next job", so L hands the
+        // processor from its late job to its fresh one: one switch, from L to L.
+        assert_eq!(
+            rt.release(L).unwrap(),
+            ReleaseEffect::Overrun(FaultEffect::JobTerminated(Some(Transition::Switch {
+                outgoing: L,
+                incoming: L,
+            })))
+        );
+        assert_eq!(rt.state(L), Some(TaskState::Running));
+        assert_eq!(rt.processor(), Processor::Running(L));
+        let record = rt.fault_record().expect("the overrun was recorded");
+        assert_eq!(record.task, L);
+        assert_eq!(record.fault, Fault::Overrun);
+        assert!(!record.fatal);
+        assert!(!record.masked);
+        assert_sound(&rt);
+        // There is exactly one job — the fresh one — so one completion leaves L at rest.
+        assert_eq!(
+            rt.complete().unwrap().transition,
+            Some(Transition::ToIdle { outgoing: L })
+        );
+        assert_eq!(rt.complete().unwrap_err(), Refused::NoTaskRunning);
+    }
+
+    #[test]
+    fn under_stop_or_fatal_the_triggering_release_goes_with_the_faulted_task() {
+        // §3.1.1 rule 1: "under `Fault` it goes with the faulted task". Both of this model's
+        // faulting policies consume the release: nothing is left ready and nothing runs.
+        for (policy, expected) in [
+            (
+                OverrunAction::StopTask,
+                FaultEffect::TaskStopped(Some(Transition::ToIdle { outgoing: L })),
+            ),
+            (OverrunAction::Fatal, FaultEffect::Fatal),
+        ] {
+            let mut rt = Runtime::boot([
+                TaskSpec {
+                    name: "H",
+                    priority: Priority::HIGHEST,
+                    on_overrun: OverrunAction::TerminateJob,
+                },
+                TaskSpec {
+                    name: "L",
+                    priority: Priority::new(2),
+                    on_overrun: policy,
+                },
+            ])
+            .unwrap();
+            rt.release(L).unwrap();
+            assert_eq!(rt.release(L).unwrap(), ReleaseEffect::Overrun(expected));
+            assert_ne!(rt.state(L), Some(TaskState::Ready));
+            assert_ne!(rt.processor(), Processor::Running(L));
+        }
+    }
+
+    #[test]
+    fn an_overrun_is_attributed_to_the_overrunning_task_not_the_running_one() {
+        let mut rt = two_tasks();
+        rt.release(L).unwrap();
+        rt.release(H).unwrap();
+        assert_eq!(rt.processor(), Processor::Running(H));
+        assert_eq!(rt.state(L), Some(TaskState::Ready));
+        // §3.1.1 rule 2: "the overrunning task is by construction not the running one". Containing
+        // L's fault moves no context, because L was not holding any.
+        assert_eq!(
+            rt.release(L).unwrap(),
+            ReleaseEffect::Overrun(FaultEffect::JobTerminated(None))
+        );
+        // Rule 1: L's late job is skipped and this release is its next job, so L is still ready —
+        // with a fresh job now, still waiting behind H.
+        assert_eq!(rt.state(L), Some(TaskState::Ready));
+        assert_eq!(rt.processor(), Processor::Running(H));
+        assert_eq!(rt.fault_record().expect("recorded").task, L);
         assert_sound(&rt);
     }
 
     #[test]
-    fn releasing_a_ready_task_again_is_also_an_overrun() {
-        let mut rt = two_tasks();
-        rt.release(H).unwrap();
+    fn an_overrun_policy_of_stop_removes_a_ready_task_without_a_context_switch() {
+        let mut rt = Runtime::boot([
+            TaskSpec {
+                name: "H",
+                priority: Priority::HIGHEST,
+                on_overrun: OverrunAction::TerminateJob,
+            },
+            TaskSpec {
+                name: "L",
+                priority: Priority::new(2),
+                on_overrun: OverrunAction::StopTask,
+            },
+        ])
+        .unwrap();
         rt.release(L).unwrap();
-        assert_eq!(rt.state(L), Some(TaskState::Ready));
-        assert_eq!(rt.release(L).unwrap(), ReleaseEffect::Overrun);
+        rt.release(H).unwrap();
+        assert_eq!(
+            rt.release(L).unwrap(),
+            ReleaseEffect::Overrun(FaultEffect::TaskStopped(None))
+        );
+        assert_eq!(rt.state(L), Some(TaskState::Stopped));
+        assert_eq!(rt.processor(), Processor::Running(H));
         assert_sound(&rt);
+    }
+
+    #[test]
+    fn an_overrun_policy_of_fatal_halts_on_the_release_that_detected_it() {
+        let mut rt = Runtime::boot([
+            TaskSpec {
+                name: "H",
+                priority: Priority::HIGHEST,
+                on_overrun: OverrunAction::Fatal,
+            },
+            TaskSpec {
+                name: "L",
+                priority: Priority::new(2),
+                on_overrun: OverrunAction::TerminateJob,
+            },
+        ])
+        .unwrap();
+        rt.release(H).unwrap();
+        assert_eq!(
+            rt.release(H).unwrap(),
+            ReleaseEffect::Overrun(FaultEffect::Fatal)
+        );
+        assert_eq!(rt.processor(), Processor::Halted);
     }
 
     // -- masking -------------------------------------------------------------------------------
@@ -1449,40 +2100,603 @@ mod tests {
     }
 
     #[test]
-    fn a_second_release_of_one_task_inside_a_masked_region_is_an_overrun() {
-        let mut rt = two_tasks();
-        rt.mask().unwrap();
-        assert_eq!(rt.release(H).unwrap(), ReleaseEffect::Latched);
-        assert_eq!(rt.release(H).unwrap(), ReleaseEffect::Overrun);
-        let lifted = rt.unmask().unwrap();
-        assert_eq!(lifted.delivered, 1);
-        assert_sound(&rt);
-    }
-
-    #[test]
-    fn a_latched_release_for_a_task_that_still_owes_a_job_is_reported_at_delivery() {
+    fn a_latched_release_for_a_task_that_still_owes_a_job_applies_its_policy_at_delivery() {
         let mut rt = two_tasks();
         rt.release(L).unwrap();
         rt.mask().unwrap();
-        rt.release(L).unwrap();
+        // L's latch slot was empty, so this arrival is only inspected when it is delivered.
+        assert_eq!(rt.release(L).unwrap(), ReleaseEffect::Latched);
         let lifted = rt.unmask().unwrap();
         assert_eq!(lifted.delivered, 0);
         assert_eq!(lifted.overruns, 1);
-        assert_eq!(lifted.transition, None);
+        // §3.1.1 rule 3: "Delivery at unmask is not inside a masked region", so L's declared
+        // TerminateJob applies rather than escalating. L held the processor, its late job is
+        // skipped, and the delivered release is its next job (rule 1), so the one transition of
+        // this unmask hands the processor from L's late job to L's fresh one.
+        assert_eq!(
+            lifted.transition,
+            Some(Transition::Switch {
+                outgoing: L,
+                incoming: L,
+            })
+        );
+        assert_eq!(rt.state(L), Some(TaskState::Running));
+        assert_eq!(rt.processor(), Processor::Running(L));
+        let record = rt.fault_record().expect("recorded");
+        assert!(!record.masked, "delivery is outside the region");
+        assert!(!record.fatal, "so the containable policy stays containable");
+        assert_sound(&rt);
+    }
+
+    // -- a doubled release inside one masked region (§3.1.1 rule 1, amended 2026-10-01) --------
+
+    /// `L` runs, and `H` — never released before — arrives twice inside one masked region that
+    /// `L` holds. `H` declares `policy`.
+    fn h_doubled_inside_a_region_held_by_l(policy: OverrunAction) -> Runtime<2> {
+        let mut rt = Runtime::boot([
+            TaskSpec {
+                name: "H",
+                priority: Priority::HIGHEST,
+                on_overrun: policy,
+            },
+            TaskSpec {
+                name: "L",
+                priority: Priority::new(2),
+                on_overrun: OverrunAction::TerminateJob,
+            },
+        ])
+        .unwrap();
+        rt.release(L).unwrap();
+        rt.mask().unwrap();
+        assert_eq!(rt.release(H).unwrap(), ReleaseEffect::Latched);
+        assert_eq!(rt.is_overrun_latched(H), Some(false));
+        // The latch is already full. Rule 1: observed at delivery, not at arrival — so this
+        // arrival is latched like the first, and nothing else happens.
+        assert_eq!(rt.release(H).unwrap(), ReleaseEffect::Latched);
+        assert_eq!(rt.is_latched(H), Some(true));
+        assert_eq!(rt.is_overrun_latched(H), Some(true));
+        assert_eq!(rt.state(H), Some(TaskState::Created));
+        assert_eq!(rt.processor(), Processor::Running(L));
+        assert_eq!(
+            rt.fault_record(),
+            None,
+            "no policy has run yet, so no fault yet"
+        );
+        assert!(rt.is_masked());
+        assert_sound(&rt);
+        rt
+    }
+
+    #[test]
+    fn a_doubled_release_under_skip_late_job_is_contained_at_delivery() {
+        let mut rt = h_doubled_inside_a_region_held_by_l(OverrunAction::TerminateJob);
+        let lifted = rt.unmask().unwrap();
+        // The held release is delivered (H owed nothing, so it becomes ready), then the kept
+        // overrun is detected against the job that release started, and H's SkipLateJob skips it:
+        // the kept release becomes H's next job. One scheduler run, one transition.
+        assert_eq!(
+            lifted,
+            Unmasked {
+                depth: 0,
+                delivered: 1,
+                overruns: 1,
+                stopped: 0,
+                transition: Some(Transition::Switch {
+                    outgoing: L,
+                    incoming: H,
+                }),
+            }
+        );
+        assert_eq!(rt.state(H), Some(TaskState::Running));
+        assert_eq!(rt.state(L), Some(TaskState::Ready));
+        assert_eq!(rt.is_latched(H), Some(false));
+        assert_eq!(rt.is_overrun_latched(H), Some(false));
+        assert_eq!(
+            rt.fault_record(),
+            Some(FaultRecord {
+                task: H,
+                fault: Fault::Overrun,
+                fatal: false,
+                masked: false,
+            }),
+            "never fatal for landing inside a critical section"
+        );
         assert_sound(&rt);
     }
 
     #[test]
-    fn masking_does_not_defer_a_completion() {
+    fn a_doubled_release_under_stop_task_stops_the_task_at_delivery() {
+        let mut rt = h_doubled_inside_a_region_held_by_l(OverrunAction::StopTask);
+        let lifted = rt.unmask().unwrap();
+        // H is delivered, then faulted by its own policy; the kept release goes with it, so L
+        // never loses the processor and the unmask moves no context.
+        assert_eq!(
+            lifted,
+            Unmasked {
+                depth: 0,
+                delivered: 1,
+                overruns: 1,
+                stopped: 0,
+                transition: None,
+            }
+        );
+        assert_eq!(rt.state(H), Some(TaskState::Stopped));
+        assert_eq!(rt.processor(), Processor::Running(L));
+        let record = rt.fault_record().expect("recorded");
+        assert_eq!(
+            (record.task, record.fatal, record.masked),
+            (H, false, false)
+        );
+        assert_sound(&rt);
+    }
+
+    #[test]
+    fn a_doubled_release_under_fatal_halts_at_delivery_not_at_arrival() {
+        let mut rt = h_doubled_inside_a_region_held_by_l(OverrunAction::Fatal);
+        let lifted = rt.unmask().unwrap();
+        assert_eq!(
+            lifted,
+            Unmasked {
+                depth: 0,
+                delivered: 1,
+                overruns: 1,
+                stopped: 0,
+                transition: None,
+            }
+        );
+        assert_eq!(rt.processor(), Processor::Halted);
+        // Fatal because H declared Fatal, not because the arrival landed inside a region: the
+        // record says the fault was raised outside every masked region.
+        let record = rt.fault_record().expect("recorded");
+        assert_eq!((record.task, record.fatal, record.masked), (H, true, false));
+    }
+
+    /// The ruling's own test: "the outcome may not depend on which side of an unmask an
+    /// interrupt lands". The same two arrivals are replayed just inside the region and just after
+    /// it, for the running task and for a task that has not run, under every policy, and the
+    /// resulting task states, processor and fault record must agree. Only the number of context
+    /// transitions may differ — one per delivery, by [`Unmasked::transition`]'s rule.
+    ///
+    /// That one difference shows through in a single place: a halt partway through a delivery
+    /// freezes the state *before* the delivery's one scheduler run, so evidence that would show a
+    /// task dispatched after the region can show it merely ready inside it (see
+    /// [`Runtime::check_invariants`] on why halted evidence is exempt). For a halted runtime the
+    /// comparison therefore asks which tasks owe a job, not which one the frozen processor shows.
+    #[test]
+    fn a_doubled_release_ends_the_same_inside_a_region_as_one_instruction_after_it() {
+        fn boot(policy: OverrunAction) -> Runtime<2> {
+            Runtime::boot([
+                TaskSpec {
+                    name: "H",
+                    priority: Priority::HIGHEST,
+                    on_overrun: policy,
+                },
+                TaskSpec {
+                    name: "L",
+                    priority: Priority::new(2),
+                    on_overrun: policy,
+                },
+            ])
+            .unwrap()
+        }
+        fn observe(rt: &Runtime<2>) -> (Processor, [Option<TaskState>; 2], Option<FaultRecord>) {
+            let halted = rt.processor() == Processor::Halted;
+            let state = |task| match rt.state(task) {
+                Some(TaskState::Running) if halted => Some(TaskState::Ready),
+                other => other,
+            };
+            (rt.processor(), [state(H), state(L)], rt.fault_record())
+        }
+        for policy in [
+            OverrunAction::TerminateJob,
+            OverrunAction::StopTask,
+            OverrunAction::Fatal,
+        ] {
+            for doubled in [H, L] {
+                let mut inside = boot(policy);
+                inside.release(L).unwrap();
+                inside.mask().unwrap();
+                inside.release(doubled).unwrap();
+                inside.release(doubled).unwrap();
+                inside.unmask().unwrap();
+
+                let mut after = boot(policy);
+                after.release(L).unwrap();
+                after.mask().unwrap();
+                after.unmask().unwrap();
+                after.release(doubled).unwrap();
+                // A fatal first arrival leaves nothing to release into.
+                if after.processor() != Processor::Halted {
+                    after.release(doubled).unwrap();
+                }
+
+                assert_eq!(
+                    observe(&inside),
+                    observe(&after),
+                    "policy {policy:?}, doubled task {}",
+                    doubled.index()
+                );
+                inside.check_invariants().unwrap();
+            }
+        }
+    }
+
+    #[test]
+    fn a_third_release_into_a_full_latch_is_the_overrun_already_kept() {
+        let mut rt = two_tasks();
+        rt.mask().unwrap();
+        for _ in 0..3 {
+            assert_eq!(rt.release(H).unwrap(), ReleaseEffect::Latched);
+        }
+        assert_eq!(rt.is_overrun_latched(H), Some(true));
+        let lifted = rt.unmask().unwrap();
+        // One release delivered and one overrun detected: the latch keeps "the overrun", and a
+        // third arrival would have left H in this same state under every policy.
+        assert_eq!((lifted.delivered, lifted.overruns), (1, 1));
+        assert_eq!(rt.state(H), Some(TaskState::Running));
+        assert_sound(&rt);
+    }
+
+    #[test]
+    fn a_doubled_release_of_the_running_task_is_two_overruns_at_delivery() {
+        let mut rt = two_tasks();
+        rt.release(L).unwrap();
+        rt.mask().unwrap();
+        rt.release(L).unwrap();
+        rt.release(L).unwrap();
+        let lifted = rt.unmask().unwrap();
+        // L already owed its running job, so the held release is an overrun at delivery and the
+        // kept one is another — as the same two arrivals would be after the unmask. Each skips a
+        // job and becomes L's next, so L ends with one fresh job and the processor.
+        assert_eq!(
+            lifted,
+            Unmasked {
+                depth: 0,
+                delivered: 0,
+                overruns: 2,
+                stopped: 0,
+                transition: Some(Transition::Switch {
+                    outgoing: L,
+                    incoming: L,
+                }),
+            }
+        );
+        assert_eq!(rt.state(L), Some(TaskState::Running));
+        assert_sound(&rt);
+    }
+
+    #[test]
+    fn delivery_takes_tasks_in_rank_order_and_each_tasks_arrivals_in_arrival_order() {
+        // Three tasks so that a fatal policy in the middle rank shows exactly how far delivery
+        // got: everything ranked above it, nothing ranked below it.
+        const A: TaskId = TaskId::from_index(0);
+        const B: TaskId = TaskId::from_index(1);
+        const C: TaskId = TaskId::from_index(2);
+        let mut rt = Runtime::boot([
+            TaskSpec {
+                name: "A",
+                priority: Priority::new(1),
+                on_overrun: OverrunAction::TerminateJob,
+            },
+            TaskSpec {
+                name: "B",
+                priority: Priority::new(2),
+                on_overrun: OverrunAction::Fatal,
+            },
+            TaskSpec {
+                name: "C",
+                priority: Priority::new(3),
+                on_overrun: OverrunAction::TerminateJob,
+            },
+        ])
+        .unwrap();
+        rt.mask().unwrap();
+        // Arrival order deliberately the reverse of rank.
+        rt.release(C).unwrap();
+        rt.release(B).unwrap();
+        rt.release(B).unwrap();
+        rt.release(A).unwrap();
+        let lifted = rt.unmask().unwrap();
+        // A first; then B's held release (B owed nothing, so it is delivered), then B's kept
+        // overrun, which B's Fatal policy turns into a halt. C is never reached.
+        assert_eq!(
+            lifted,
+            Unmasked {
+                depth: 0,
+                delivered: 2,
+                overruns: 1,
+                stopped: 0,
+                transition: None,
+            }
+        );
+        assert_eq!(rt.processor(), Processor::Halted);
+        assert_eq!(rt.state(A), Some(TaskState::Ready));
+        assert_eq!(rt.state(B), Some(TaskState::Ready));
+        assert_eq!(rt.state(C), Some(TaskState::Created));
+        assert_eq!(
+            rt.is_latched(C),
+            Some(true),
+            "the undelivered release is evidence"
+        );
+        assert_eq!(rt.is_latched(B), Some(false));
+        let record = rt.fault_record().expect("recorded");
+        assert_eq!((record.task, record.fatal, record.masked), (B, true, false));
+    }
+
+    #[test]
+    fn an_overrun_found_at_delivery_still_costs_one_transition_for_the_whole_unmask() {
+        let mut rt = two_tasks();
+        rt.release(L).unwrap();
+        rt.mask().unwrap();
+        rt.release(L).unwrap(); // latched, and L still owes its job
+        rt.release(H).unwrap(); // latched, and a genuine new release
+        let lifted = rt.unmask().unwrap();
+        assert_eq!(lifted.delivered, 1);
+        assert_eq!(lifted.overruns, 1);
+        // L's late job is skipped and H takes the processor, but the scheduler still runs exactly
+        // once: one Switch naming L as outgoing, not a ToIdle followed by a Dispatch.
+        assert_eq!(
+            lifted.transition,
+            Some(Transition::Switch {
+                outgoing: L,
+                incoming: H,
+            })
+        );
+        // Rule 1: the release that found L late is L's next job, now waiting behind H.
+        assert_eq!(rt.state(L), Some(TaskState::Ready));
+        assert_eq!(rt.processor(), Processor::Running(H));
+        assert_sound(&rt);
+    }
+
+    #[test]
+    fn a_fatal_overrun_policy_found_at_delivery_stops_the_delivery() {
+        let mut rt = Runtime::boot([
+            TaskSpec {
+                name: "H",
+                priority: Priority::HIGHEST,
+                on_overrun: OverrunAction::TerminateJob,
+            },
+            TaskSpec {
+                name: "L",
+                priority: Priority::new(2),
+                on_overrun: OverrunAction::Fatal,
+            },
+        ])
+        .unwrap();
+        rt.release(L).unwrap();
+        rt.mask().unwrap();
+        rt.release(H).unwrap();
+        rt.release(L).unwrap();
+        let lifted = rt.unmask().unwrap();
+        // Deliveries run in ascending rank, so H lands before L's overrun is reached.
+        assert_eq!(lifted.delivered, 1);
+        assert_eq!(lifted.overruns, 1);
+        assert_eq!(lifted.transition, None);
+        assert_eq!(rt.processor(), Processor::Halted);
+        assert_eq!(rt.fault_record().expect("recorded").task, L);
+    }
+
+    // -- a completion inside a masked region (§3.1.1 rule 4, added 2026-10-01) ------------------
+
+    #[test]
+    fn masking_does_not_defer_a_completion_and_the_completion_closes_the_region() {
         let mut rt = two_tasks();
         rt.release(L).unwrap();
         rt.mask().unwrap();
         // A completion is the running task reaching the end of its own computation, not an
-        // arrival, so F29's latching rule does not apply to it.
-        assert_eq!(rt.complete().unwrap(), Transition::ToIdle { outgoing: L });
+        // arrival, so F29's latching rule does not apply to it. Rule 4: "its completion closes
+        // it" — the depth returns to zero with the job.
+        assert_eq!(
+            rt.complete().unwrap(),
+            Unmasked {
+                depth: 0,
+                delivered: 0,
+                overruns: 0,
+                stopped: 0,
+                transition: Some(Transition::ToIdle { outgoing: L }),
+            }
+        );
         assert_eq!(rt.processor(), Processor::Idle);
-        assert!(rt.is_masked());
+        assert!(!rt.is_masked());
+        // The region is closed, so the unmask that would have closed it is now unbalanced.
+        assert_eq!(rt.unmask().unwrap_err(), Refused::NotMasked);
+        assert_eq!(rt.fault_record(), None, "a completion is not a fault");
         assert_sound(&rt);
+    }
+
+    #[test]
+    fn a_completion_closes_every_nested_section_not_one_level() {
+        let mut rt = two_tasks();
+        rt.release(L).unwrap();
+        rt.mask().unwrap();
+        rt.mask().unwrap();
+        rt.mask().unwrap();
+        rt.release(H).unwrap();
+        let done = rt.complete().unwrap();
+        assert_eq!(done.depth, 0);
+        assert_eq!(rt.mask_depth(), 0);
+        // Delivery happened at once, as at the outermost unmask, not at some later inner one.
+        assert_eq!(done.delivered, 1);
+        assert_eq!(
+            done.transition,
+            Some(Transition::Switch {
+                outgoing: L,
+                incoming: H,
+            })
+        );
+        assert_sound(&rt);
+    }
+
+    #[test]
+    fn a_completion_inside_a_region_delivers_another_tasks_latched_release_then_schedules() {
+        let mut rt = two_tasks();
+        rt.release(L).unwrap();
+        rt.mask().unwrap();
+        assert_eq!(rt.release(H).unwrap(), ReleaseEffect::Latched);
+        let done = rt.complete().unwrap();
+        // L's job ends, the region closes, H is delivered, and the schedule is decided after:
+        // one transition, from the completing task to the delivered one.
+        assert_eq!(
+            done,
+            Unmasked {
+                depth: 0,
+                delivered: 1,
+                overruns: 0,
+                stopped: 0,
+                transition: Some(Transition::Switch {
+                    outgoing: L,
+                    incoming: H,
+                }),
+            }
+        );
+        assert_eq!(rt.state(L), Some(TaskState::Completed));
+        assert_eq!(rt.state(H), Some(TaskState::Running));
+        assert_eq!(rt.is_latched(H), Some(false));
+        assert_sound(&rt);
+    }
+
+    #[test]
+    fn a_completion_inside_a_region_releases_its_own_latched_release_afresh() {
+        let mut rt = two_tasks();
+        rt.release(L).unwrap();
+        rt.mask().unwrap();
+        // At arrival L still owes the job it is running; that is not judged now.
+        assert_eq!(rt.release(L).unwrap(), ReleaseEffect::Latched);
+        let done = rt.complete().unwrap();
+        // Rule 4: "A latched release is judged at that delivery, so a task that completed inside
+        // the region is released afresh, not overrun." L's next job takes the processor from its
+        // finished one.
+        assert_eq!(
+            done,
+            Unmasked {
+                depth: 0,
+                delivered: 1,
+                overruns: 0,
+                stopped: 0,
+                transition: Some(Transition::Switch {
+                    outgoing: L,
+                    incoming: L,
+                }),
+            }
+        );
+        assert_eq!(rt.state(L), Some(TaskState::Running));
+        assert_eq!(rt.fault_record(), None, "released afresh, not overrun");
+        assert_sound(&rt);
+    }
+
+    #[test]
+    fn a_completion_inside_a_region_with_its_own_release_doubled_overruns_once() {
+        let mut rt = two_tasks();
+        rt.release(L).unwrap();
+        rt.mask().unwrap();
+        rt.release(L).unwrap();
+        rt.release(L).unwrap();
+        assert_eq!(rt.is_overrun_latched(L), Some(true));
+        let done = rt.complete().unwrap();
+        // The held release finds L completed and starts its next job; the kept overrun is then
+        // detected against that job, and L's SkipLateJob makes the kept release the job after.
+        assert_eq!(
+            done,
+            Unmasked {
+                depth: 0,
+                delivered: 1,
+                overruns: 1,
+                stopped: 0,
+                transition: Some(Transition::Switch {
+                    outgoing: L,
+                    incoming: L,
+                }),
+            }
+        );
+        assert_eq!(rt.state(L), Some(TaskState::Running));
+        let record = rt.fault_record().expect("recorded");
+        assert_eq!(
+            (record.task, record.fatal, record.masked),
+            (L, false, false)
+        );
+        assert_sound(&rt);
+    }
+
+    #[test]
+    fn an_overrun_found_by_a_completions_delivery_applies_its_policy_unescalated() {
+        let mut rt = Runtime::boot([
+            TaskSpec {
+                name: "H",
+                priority: Priority::HIGHEST,
+                on_overrun: OverrunAction::TerminateJob,
+            },
+            TaskSpec {
+                name: "L",
+                priority: Priority::new(2),
+                on_overrun: OverrunAction::StopTask,
+            },
+        ])
+        .unwrap();
+        rt.release(L).unwrap();
+        rt.release(H).unwrap();
+        rt.mask().unwrap();
+        // L is preempted and still owes its job; this arrival is judged only at delivery.
+        assert_eq!(rt.release(L).unwrap(), ReleaseEffect::Latched);
+        let done = rt.complete().unwrap();
+        // H completes, the region closes, L's latched release finds L owing a job: an overrun,
+        // outside every masked region, so L's own StopTask applies rather than rule 3's fatal.
+        assert_eq!(
+            done,
+            Unmasked {
+                depth: 0,
+                delivered: 0,
+                overruns: 1,
+                stopped: 0,
+                transition: Some(Transition::ToIdle { outgoing: H }),
+            }
+        );
+        assert_eq!(rt.state(L), Some(TaskState::Stopped));
+        assert_eq!(rt.processor(), Processor::Idle);
+        let record = rt.fault_record().expect("recorded");
+        assert_eq!(
+            (record.task, record.fatal, record.masked),
+            (L, false, false)
+        );
+        assert_sound(&rt);
+    }
+
+    #[test]
+    fn a_fatal_policy_reached_by_a_completions_delivery_halts_before_any_schedule() {
+        let mut rt = Runtime::boot([
+            TaskSpec {
+                name: "H",
+                priority: Priority::HIGHEST,
+                on_overrun: OverrunAction::Fatal,
+            },
+            TaskSpec {
+                name: "L",
+                priority: Priority::new(2),
+                on_overrun: OverrunAction::TerminateJob,
+            },
+        ])
+        .unwrap();
+        rt.release(L).unwrap();
+        rt.mask().unwrap();
+        rt.release(H).unwrap();
+        rt.release(H).unwrap();
+        let done = rt.complete().unwrap();
+        // The completion happened — L's job is over — but the delivery reached H's Fatal policy,
+        // so no schedule was decided and there is no transition to report.
+        assert_eq!(
+            done,
+            Unmasked {
+                depth: 0,
+                delivered: 1,
+                overruns: 1,
+                stopped: 0,
+                transition: None,
+            }
+        );
+        assert_eq!(rt.state(L), Some(TaskState::Completed));
+        assert_eq!(rt.processor(), Processor::Halted);
+        let record = rt.fault_record().expect("recorded");
+        assert_eq!((record.task, record.fatal, record.masked), (H, true, false));
+        assert_eq!(rt.complete().unwrap_err(), Refused::Halted);
     }
 
     #[test]
@@ -1509,7 +2723,10 @@ mod tests {
     fn an_unexpected_trap_is_fatal_for_the_whole_runtime() {
         let mut rt = two_tasks();
         rt.release(L).unwrap();
-        assert_eq!(rt.raise(Fault::UnexpectedTrap).unwrap(), FaultEffect::Fatal);
+        assert_eq!(
+            rt.raise(L, Fault::UnexpectedTrap).unwrap(),
+            FaultEffect::Fatal
+        );
         assert_eq!(rt.processor(), Processor::Halted);
         assert_eq!(
             rt.fault_record(),
@@ -1525,7 +2742,7 @@ mod tests {
         assert_eq!(rt.complete().unwrap_err(), Refused::Halted);
         assert_eq!(rt.mask().unwrap_err(), Refused::Halted);
         assert_eq!(
-            rt.raise(Fault::AssertionFailure).unwrap_err(),
+            rt.raise(L, Fault::AssertionFailure).unwrap_err(),
             Refused::Halted
         );
     }
@@ -1535,7 +2752,7 @@ mod tests {
         for fault in [Fault::StackGuard, Fault::AssertionFailure] {
             let mut rt = two_tasks();
             rt.release(L).unwrap();
-            assert_eq!(rt.raise(fault).unwrap(), FaultEffect::Fatal);
+            assert_eq!(rt.raise(L, fault).unwrap(), FaultEffect::Fatal);
             assert_eq!(rt.processor(), Processor::Halted);
         }
     }
@@ -1545,7 +2762,7 @@ mod tests {
         let mut rt = two_tasks();
         rt.release(L).unwrap();
         rt.release(H).unwrap();
-        rt.raise(Fault::UnexpectedTrap).unwrap();
+        rt.raise(H, Fault::UnexpectedTrap).unwrap();
         // H was running and L was preempted; both readings survive the halt, because a fatal
         // handler that tidied up would be destroying its own evidence.
         assert_eq!(rt.state(H), Some(TaskState::Running));
@@ -1556,9 +2773,9 @@ mod tests {
     fn the_first_fault_is_the_one_kept() {
         let mut rt = two_tasks();
         rt.release(L).unwrap();
-        rt.raise(Fault::Overrun).unwrap();
+        rt.raise(L, Fault::Overrun).unwrap();
         rt.release(H).unwrap();
-        rt.raise(Fault::UnexpectedTrap).unwrap();
+        rt.raise(H, Fault::UnexpectedTrap).unwrap();
         let record = rt.fault_record().expect("a fault was recorded");
         assert_eq!(record.fault, Fault::Overrun);
         assert_eq!(record.task, L);
@@ -1571,11 +2788,11 @@ mod tests {
         rt.release(L).unwrap();
         rt.release(H).unwrap();
         assert_eq!(
-            rt.raise(Fault::Overrun).unwrap(),
-            FaultEffect::JobTerminated(Transition::Switch {
+            rt.raise(H, Fault::Overrun).unwrap(),
+            FaultEffect::JobTerminated(Some(Transition::Switch {
                 outgoing: H,
                 incoming: L,
-            })
+            }))
         );
         assert_eq!(rt.state(H), Some(TaskState::Completed));
         assert_eq!(rt.processor(), Processor::Running(L));
@@ -1605,8 +2822,8 @@ mod tests {
         .unwrap();
         rt.release(H).unwrap();
         assert_eq!(
-            rt.raise(Fault::Overrun).unwrap(),
-            FaultEffect::TaskStopped(Transition::ToIdle { outgoing: H })
+            rt.raise(H, Fault::Overrun).unwrap(),
+            FaultEffect::TaskStopped(Some(Transition::ToIdle { outgoing: H }))
         );
         assert_eq!(rt.state(H), Some(TaskState::Stopped));
         // §3.1 excludes dynamic task creation, so there is no way back.
@@ -1631,7 +2848,7 @@ mod tests {
         ])
         .unwrap();
         rt.release(H).unwrap();
-        rt.raise(Fault::Overrun).unwrap();
+        rt.raise(H, Fault::Overrun).unwrap();
         rt.mask().unwrap();
         rt.release(H).unwrap();
         rt.release(L).unwrap();
@@ -1650,9 +2867,9 @@ mod tests {
         let mut rt = two_tasks();
         rt.release(L).unwrap();
         rt.mask().unwrap();
-        // TerminateJob would leave the mask depth above zero with no owner; there is no safe
-        // continuation, so §8.1's defined fatal handler is where this goes.
-        assert_eq!(rt.raise(Fault::Overrun).unwrap(), FaultEffect::Fatal);
+        // §3.1.1 rule 3, first ground: TerminateJob would leave the mask depth above zero with no
+        // owner, and forcing it to zero would re-enable interrupts mid-region.
+        assert_eq!(rt.raise(L, Fault::Overrun).unwrap(), FaultEffect::Fatal);
         assert_eq!(rt.processor(), Processor::Halted);
         let record = rt.fault_record().expect("a fault was recorded");
         assert!(record.masked);
@@ -1660,12 +2877,74 @@ mod tests {
     }
 
     #[test]
-    fn a_fault_with_an_idle_processor_has_no_task_to_attribute_it_to() {
+    fn a_containable_fault_of_a_task_that_holds_no_mask_escalates_too() {
         let mut rt = two_tasks();
+        rt.release(L).unwrap();
+        rt.release(H).unwrap();
+        rt.mask().unwrap();
+        // L holds no mask, so rule 3's first ground does not reach it. Its second does:
+        // containment "means changing the schedule, which is the structure a kernel critical
+        // section exists to protect … whichever task the fault is attributed to".
+        assert_eq!(rt.raise(L, Fault::Overrun).unwrap(), FaultEffect::Fatal);
+        assert_eq!(rt.processor(), Processor::Halted);
+        let record = rt.fault_record().expect("a fault was recorded");
+        assert_eq!(record.task, L);
+        assert!(record.masked);
+        assert!(record.fatal);
+    }
+
+    #[test]
+    fn a_synchronous_fault_must_name_the_task_holding_the_processor() {
+        let mut rt = two_tasks();
+        rt.release(L).unwrap();
+        // §3.1.1 rule 2: a trap, a stack-guard breach and an assertion failure are "synchronous to
+        // the executing context and are attributed to it", so naming another task is the
+        // concurrency claim the profile does not admit.
         assert_eq!(
-            rt.raise(Fault::Overrun).unwrap_err(),
-            Refused::NoTaskRunning
+            rt.raise(H, Fault::UnexpectedTrap).unwrap_err(),
+            Refused::NotTheRunningTask
         );
+        assert_eq!(rt.processor(), Processor::Running(L));
+        assert_eq!(rt.fault_record(), None, "a refusal is not a fault");
+    }
+
+    #[test]
+    fn a_synchronous_fault_with_an_idle_processor_has_no_context_to_attribute_it_to() {
+        let mut rt = two_tasks();
+        for fault in [
+            Fault::UnexpectedTrap,
+            Fault::StackGuard,
+            Fault::AssertionFailure,
+        ] {
+            assert_eq!(rt.raise(L, fault).unwrap_err(), Refused::NoTaskRunning);
+        }
+    }
+
+    #[test]
+    fn an_overrun_needs_a_task_that_still_owes_a_job() {
+        let mut rt = two_tasks();
+        // Created: never released, so there is no job for it to be late with.
+        assert_eq!(rt.raise(L, Fault::Overrun).unwrap_err(), Refused::NoJobOwed);
+        rt.release(L).unwrap();
+        rt.complete().unwrap();
+        // Completed: its job is over, so it is not overrunning anything either.
+        assert_eq!(rt.raise(L, Fault::Overrun).unwrap_err(), Refused::NoJobOwed);
+    }
+
+    #[test]
+    fn an_overrun_can_be_raised_against_a_ready_task_and_moves_no_context() {
+        let mut rt = two_tasks();
+        rt.release(L).unwrap();
+        rt.release(H).unwrap();
+        // §3.1.1 rule 2 again, by the explicit entry point this time rather than by detection.
+        assert_eq!(
+            rt.raise(L, Fault::Overrun).unwrap(),
+            FaultEffect::JobTerminated(None)
+        );
+        assert_eq!(rt.state(L), Some(TaskState::Completed));
+        assert_eq!(rt.processor(), Processor::Running(H));
+        assert_eq!(rt.fault_record().expect("recorded").task, L);
+        assert_sound(&rt);
     }
 
     // -- the contract's own fixture --------------------------------------------------------------
@@ -1715,14 +2994,25 @@ mod tests {
             assert_sound(&rt);
 
             // "[7, 9) First H job" then "[9, 11) Switch H to L".
-            record(rt.complete().unwrap(), &mut transitions, &mut n);
+            record(
+                rt.complete()
+                    .unwrap()
+                    .transition
+                    .expect("H hands back to L"),
+                &mut transitions,
+                &mut n,
+            );
             assert_eq!(rt.processor(), Processor::Running(L));
             assert_sound(&rt);
         }
 
         // "[21, 23) Remaining L computation" and L's first job ends. The fixture stops here; the
         // transition away from L is outside it, and outside L's response interval too.
-        record(rt.complete().unwrap(), &mut transitions, &mut n);
+        record(
+            rt.complete().unwrap().transition.expect("L goes idle"),
+            &mut transitions,
+            &mut n,
+        );
 
         assert_eq!(n, 6);
         assert_eq!(

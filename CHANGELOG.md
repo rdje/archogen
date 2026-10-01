@@ -5,6 +5,22 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the runtime and its independent model agree on the amended contract
+
+`ARCHOGEN-M2-0264` (leaf `M2.9`).
+
+- The runtime now follows the rulings: a task released twice inside a critical section has its overrun policy
+  applied when the section ends, and a job that finishes while holding the interrupt mask releases it. The
+  independent model was re-derived from the written contract alone, and the two agree on every randomised event
+  sequence, which now also covers overruns, critical sections ended by a completion, and fatal faults. Reverting
+  any ruling in either one makes the comparison fail.
+- Rewriting the comparison caught three runtime defects, now fixed: a trap was blamed on no task instead of the
+  running one; an overrun reported by a budget monitor started a job nobody released, and a skipped job looked like
+  an ordinary release; and a second fault could overwrite the first one's evidence.
+- Task priorities may now have gaps, such as 1, 5 and 9, since only their order matters. The language check still
+  accepts priority 0, which the runtime refuses; that is filed to be fixed next.
+- The work landed on the main line; the side branch it had been parked on is removed.
+
 ## archogen — the runtime contract's two open questions are ruled
 
 `ARCHOGEN-M2-0263` (leaf `M2.9`).

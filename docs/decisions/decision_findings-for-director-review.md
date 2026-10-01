@@ -166,6 +166,28 @@ roadmap and task-trees, so please decide (sota, signoff)"). `M2.9` carries it ou
   executing context, which for a stack guard is the task whose guard was breached while every task has its own
   static stack; ground 2 speaks of resuming the schedule.
 
+**Carried out `2026-10-01`** (`ARCHOGEN-M2-0264`, leaf `M2.9`): both models carry (a)–(e), the reference re-derived
+by a context that never read `crates/rt-core`, and the two agree over a randomised comparison widened to everything
+§3.1.1 now decides. Rewriting the comparison's tests found five more things. Three were `rt-core` departing from
+text the contract already had, and were fixed with the text cited: a trap or an assertion reported against no task
+where the table says "the running task"; an overrun raised without a release (an execution-budget monitor's) that
+started a job no release paid for, and a skipped job reported as an ordinary release; and a later fault overwriting
+the one that halted the runtime. Two needed a decision, and I took them under the same delegation — **for your
+review, and reversible:**
+
+- **Ranks need not be contiguous.** A description may give its tasks priorities `1, 5, 9`; nothing in the language
+  forbids it, and fixed priority uses only the order. `rt-core` refused such a set, the reference accepted it. The
+  priority record now states `runtime index = |hp(i)|`, which is `rank − 1` when the ranks are contiguous, and
+  `rt-core` lowers by it. Refusing gaps instead would narrow the language by inference.
+- **What a halted runtime leaves in its task table is left to the implementation.** Both models halt on the same
+  faults and attribute them alike; `rt-core` then marks the attributed task faulted, the reference freezes the table
+  as it stood. §8.1 asks for evidence, not a format. Recorded in `decision_runtime-contract-gaps.md` and asserted on
+  both sides.
+
+Of the reference's `CONTRACT SILENT` notes, four stay open, and none is a disagreement between the models: the
+domain of overrun policies, what a later idle-to-task dispatch costs, whether a runtime must raise a fault on an
+unbalanced unmask, and when a periodic task's first release falls.
+
 ⭐ The generalisable part: **§5's lesson repeated one level up.** A second reader found gaps in
 the specification; the amendment that closed them was written by one author, and a second reader
 found gaps in *that*. The mechanism is not a one-off audit — it is worth running at every point

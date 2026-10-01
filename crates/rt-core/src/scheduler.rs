@@ -58,9 +58,22 @@ pub enum Transition {
     Released { task: usize },
     /// A release arrived while interrupts were masked and was latched for delivery on unmask.
     Latched { task: usize },
+    /// A release arrived while the task's latch already held one. §3.1.1 rule 1: the overrun is
+    /// kept beside the held release and judged at delivery, outside every masked region, where the
+    /// task's policy applies. Never lost, and never fatal for landing inside a critical section.
+    OverrunLatched { task: usize },
     /// A task finished its job and is waiting for the next release.
     Completed { task: usize },
-    /// A task entered the fault path.
+    /// A task overran and its `SkipLateJob` policy abandoned the late job. When a release detected
+    /// the overrun, that release is the task's next job and the task is ready (§3.1.1 rule 1);
+    /// when the overrun was raised through [`Scheduler::fault`], the task waits for its next
+    /// release. Its own variant, because a skipped job is a missed deadline by another name and
+    /// must be told apart from an ordinary release in any trace.
+    JobSkipped { task: usize },
+    /// A task entered the fault path. `task` is the one the fault is attributed to by §3.1.1's
+    /// table: the overrunning task for an overrun, the executing one for the other three. It is
+    /// `usize::MAX` only for a trap or an assertion raised while no task holds the processor — in
+    /// the idle loop or a handler — where the executing context is the kernel's and no task's.
     Faulted { task: usize, fault: Fault },
 }
 
@@ -85,6 +98,54 @@ pub enum Decision {
     Halt { fault: Fault },
 }
 
+/// Why an operation was refused.
+///
+/// §3.1.1 fixes two bounds that were previously silent, and both are reported rather than
+/// absorbed: a saturating counter and a wrapping one both fail silently, and "silently" is the
+/// part that matters — a critical section that quietly stopped nesting still *looks* entered.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Refused {
+    /// The nesting depth of §3.1's "bounded kernel critical sections" is exhausted.
+    MaskDepthExhausted {
+        /// The declared bound.
+        limit: u8,
+    },
+    /// `unmask` without a matching `mask`.
+    NotMasked,
+    /// The runtime has entered its fatal path; §8.1 offers no way back.
+    Halted,
+}
+
+/// Why a task set was not admissible at boot.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BootError {
+    /// §3.1.1: "A task set must be non-empty." A system with no workload makes §7.2's second
+    /// timing obligation vacuous, and a vacuously passing schedulability result is what §7.1
+    /// exists to prevent.
+    NoTasks,
+    /// An eADL priority rank below 1. `decision_priority-comparison-direction.md`: a rank is an
+    /// integer `N >= 1`, and admitting 0 would move the top of the range by inference.
+    RankBelowOne {
+        /// Its position in the supplied list.
+        position: usize,
+    },
+    /// §3.1: "static **unique** task priorities".
+    DuplicateRank {
+        /// The rank two tasks share.
+        rank: u16,
+    },
+}
+
+/// What a task's latch holds while interrupts are masked: one slot per task, since the profile
+/// excludes queues, and a mark for the overrun a second arrival makes (§3.1.1 rule 1).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Latch {
+    Empty,
+    Held,
+    /// A release is held, and at least one more arrived: the overrun is judged at delivery.
+    Overrun,
+}
+
 /// The fixed-priority scheduler over a static set of `N` tasks.
 ///
 /// `N` is a const parameter because the profile admits a "finite static task set" created at boot
@@ -95,7 +156,7 @@ pub struct Scheduler<const N: usize> {
     states: [TaskState; N],
     policies: [OverrunPolicy; N],
     /// Releases that arrived while masked, delivered on unmask.
-    latched: [bool; N],
+    latched: [Latch; N],
     running: Option<usize>,
     /// Interrupt masking depth. §8.1 asks for masking to be modelled explicitly; nesting is
     /// counted so a critical section inside another does not unmask early.
@@ -105,13 +166,75 @@ pub struct Scheduler<const N: usize> {
 }
 
 impl<const N: usize> Scheduler<N> {
-    /// Create the task set at boot. Every task starts [`TaskState::Suspended`].
+    /// The declared bound on critical-section nesting (§3.1 "bounded kernel critical sections",
+    /// fixed by §3.1.1).
+    ///
+    /// The *value* is a judgement — 255 is far beyond any real kernel's nesting — but the
+    /// *refusal* at the bound is not: §3.1.1 rules out both wrapping and saturating, because each
+    /// fails silently.
+    pub const MASK_DEPTH_LIMIT: u8 = u8::MAX;
+
+    /// Build a scheduler from eADL priority ranks, in description order.
+    ///
+    /// ⛔ **This is the only supported way to lower a description onto a scheduler**, because the
+    /// mapping it performs is a load-bearing off-by-one that was written down nowhere until
+    /// `decision_priority-comparison-direction.md` was amended: a task's array index here *is* its
+    /// priority and indices start at **0**, while the language's highest rank is **1**. So
+    ///
+    /// ```text
+    /// runtime index = |hp(i)| = the number of tasks whose rank is smaller
+    /// ```
+    ///
+    /// which is `eADL rank - 1` exactly when the ranks run contiguously from 1, as every example
+    /// does. The language does not require that, and fixed priority uses only the order — the
+    /// record's `hp(i) = { j : N_j < N_i }` — so ranks `1, 5, 9` lower to indices `0, 1, 2`.
+    ///
+    /// Performing it in one named, tested place is the difference between a relation and an
+    /// assumption. `ranks[i]` is the rank of the task described at position `i`; the returned
+    /// scheduler holds them in rank order.
+    ///
+    /// # Errors
+    ///
+    /// [`BootError`] when the task set is empty, a rank is below 1, or two ranks collide.
+    pub fn from_eadl_ranks(
+        ranks: [u16; N],
+        policies: [OverrunPolicy; N],
+    ) -> Result<Self, BootError> {
+        if N == 0 {
+            return Err(BootError::NoTasks);
+        }
+        for (position, rank) in ranks.iter().enumerate() {
+            if *rank < 1 {
+                return Err(BootError::RankBelowOne { position });
+            }
+        }
+        // §3.1: "static **unique** task priorities". Distinct ranks also make every index below
+        // distinct, so each task lands on its own slot. Quadratic in N, once, at boot.
+        for (position, rank) in ranks.iter().enumerate() {
+            if ranks[..position].contains(rank) {
+                return Err(BootError::DuplicateRank { rank: *rank });
+            }
+        }
+
+        let mut by_rank = [OverrunPolicy::Fault; N];
+        for (position, rank) in ranks.iter().enumerate() {
+            let index = ranks.iter().filter(|other| *other < rank).count();
+            by_rank[index] = policies[position];
+        }
+        Ok(Self::new(by_rank))
+    }
+
+    /// Create the task set at boot, indexed by priority rank. Every task starts
+    /// [`TaskState::Suspended`].
+    ///
+    /// Prefer [`Scheduler::from_eadl_ranks`] when the task set comes from a description: this
+    /// constructor takes the runtime's 0-based indexing and cannot check a rank it never sees.
     #[must_use]
     pub const fn new(policies: [OverrunPolicy; N]) -> Self {
         Self {
             states: [TaskState::Suspended; N],
             policies,
-            latched: [false; N],
+            latched: [Latch::Empty; N],
             running: None,
             mask_depth: 0,
             halted: None,
@@ -137,8 +260,21 @@ impl<const N: usize> Scheduler<N> {
     }
 
     /// Enter a critical section. Nests.
-    pub fn mask(&mut self) {
-        self.mask_depth = self.mask_depth.saturating_add(1);
+    ///
+    /// # Errors
+    ///
+    /// [`Refused::MaskDepthExhausted`] at [`Scheduler::MASK_DEPTH_LIMIT`]. ⛔ This previously
+    /// saturated, which cannot wrap but is not therefore safe: a saturated counter stops
+    /// counting, so the matching unmasks no longer balance and interrupts return one section
+    /// early. §3.1.1 rules out both wrapping and saturating, because both fail silently.
+    pub fn mask(&mut self) -> Result<u8, Refused> {
+        if self.mask_depth >= u32::from(Self::MASK_DEPTH_LIMIT) {
+            return Err(Refused::MaskDepthExhausted {
+                limit: Self::MASK_DEPTH_LIMIT,
+            });
+        }
+        self.mask_depth += 1;
+        Ok(u8::try_from(self.mask_depth).unwrap_or(u8::MAX))
     }
 
     /// Leave a critical section, delivering any latched releases when the outermost one closes.
@@ -147,25 +283,41 @@ impl<const N: usize> Scheduler<N> {
     /// because that is the order a re-enabled interrupt controller would present them and the
     /// order the ready structure will read them back in.
     ///
-    /// # Panics
+    /// # Errors
     ///
-    /// If unmasking without a matching [`Scheduler::mask`]. An unbalanced critical section is a
-    /// violated invariant, and §8.1 keeps that distinct from an expected error — but this one is
-    /// a programming error in the substrate, caught at the point it happens rather than turned
-    /// into a runtime fault that hides it.
-    pub fn unmask(&mut self) -> heapless::Transitions<N> {
-        assert!(self.mask_depth > 0, "unmask without a matching mask");
-        self.mask_depth -= 1;
-        let mut delivered = heapless::Transitions::new();
-        if self.mask_depth > 0 {
-            return delivered;
+    /// [`Refused::NotMasked`] when there is no matching [`Scheduler::mask`]. Reported rather than
+    /// panicked: §8.1 asks for "a defined fatal handler and diagnostic evidence", and a panic in
+    /// the scheduler reaches neither.
+    pub fn unmask(&mut self) -> Result<heapless::Transitions<N>, Refused> {
+        if self.mask_depth == 0 {
+            return Err(Refused::NotMasked);
         }
+        self.mask_depth -= 1;
+        if self.mask_depth > 0 {
+            return Ok(heapless::Transitions::new());
+        }
+        Ok(self.deliver_latched())
+    }
+
+    /// Deliver every latched release, in task order, now that no section is open. A latched
+    /// release for a task that still owes a job is an overrun the moment it is delivered, and an
+    /// overrun latched beside a release is judged right after it: §3.1.1 rule 1, detection applies
+    /// the policy, here outside every masked region, so rule 3 does not escalate it.
+    fn deliver_latched(&mut self) -> heapless::Transitions<N> {
+        let mut delivered = heapless::Transitions::new();
         for task in 0..N {
-            if self.latched[task] {
-                self.latched[task] = false;
-                if let Some(transition) = self.deliver(task) {
-                    delivered.push(transition);
-                }
+            let latch = core::mem::replace(&mut self.latched[task], Latch::Empty);
+            if latch == Latch::Empty {
+                continue;
+            }
+            let first = match self.deliver(task) {
+                Some(transition) => transition,
+                None => self.overrun_by_release(task),
+            };
+            delivered.push(first);
+            if latch == Latch::Overrun {
+                let second = self.overrun_by_release(task);
+                delivered.push(second);
             }
         }
         delivered
@@ -173,20 +325,38 @@ impl<const N: usize> Scheduler<N> {
 
     /// A release arrived for `task`.
     ///
-    /// While masked it is **latched** rather than lost. A release arriving while an earlier one
-    /// is still latched, or while the task has not completed, is an **overrun**: there is nowhere
-    /// to put a second pending job, and inventing somewhere would be a queue in a profile that
-    /// excludes queues.
+    /// While masked it is **latched** rather than lost. A release arriving while one is already
+    /// latched is kept as an overrun beside it, judged at delivery (§3.1.1 rule 1): there is no
+    /// queue to hold a second job, and the outcome must not depend on which side of an unmask the
+    /// interrupt landed. Unmasked, a release while the task has not completed is an **overrun**
+    /// at once.
     pub fn release(&mut self, task: usize) -> Transition {
         if self.is_masked() {
-            if self.latched[task] {
-                return self.raise(Fault::Overrun { task });
-            }
-            self.latched[task] = true;
-            return Transition::Latched { task };
+            return match self.latched[task] {
+                Latch::Empty => {
+                    self.latched[task] = Latch::Held;
+                    Transition::Latched { task }
+                }
+                Latch::Held | Latch::Overrun => {
+                    self.latched[task] = Latch::Overrun;
+                    Transition::OverrunLatched { task }
+                }
+            };
         }
         self.deliver(task)
-            .unwrap_or_else(|| self.raise(Fault::Overrun { task }))
+            .unwrap_or_else(|| self.overrun_by_release(task))
+    }
+
+    /// An overrun a release detected: §3.1.1 rule 1, with the release the policy's. Under
+    /// `SkipLateJob` that release becomes the task's next job, so the task is ready again; under
+    /// `Fault` it goes with the faulted task. An overrun raised through [`Scheduler::fault`] has no
+    /// triggering release, which is the whole difference.
+    fn overrun_by_release(&mut self, task: usize) -> Transition {
+        let transition = self.raise(Fault::Overrun { task });
+        if transition == (Transition::JobSkipped { task }) {
+            self.states[task] = TaskState::Ready;
+        }
+        transition
     }
 
     /// Deliver a release now. `None` means it was an overrun.
@@ -202,14 +372,15 @@ impl<const N: usize> Scheduler<N> {
         }
     }
 
-    /// The running task finished its job.
+    /// The running task finished its job. Returns the completion, and what it delivered when the
+    /// job completed inside a masked region it opened (§3.1.1 rule 4), in task order.
     ///
     /// # Panics
     ///
     /// If `task` is not the running one. The substrate reports completion of what it dispatched;
     /// anything else means the two disagree about what is on the processor, which is an invariant
     /// violation worth catching where it happens.
-    pub fn complete(&mut self, task: usize) -> Transition {
+    pub fn complete(&mut self, task: usize) -> (Transition, heapless::Transitions<N>) {
         assert_eq!(
             self.running,
             Some(task),
@@ -217,43 +388,74 @@ impl<const N: usize> Scheduler<N> {
         );
         self.states[task] = TaskState::Suspended;
         self.running = None;
-        Transition::Completed { task }
+        // §3.1.1 rule 4: a job may complete inside a masked region it opened, and its completion
+        // closes it. The depth is the job's and ends with it; what was latched is delivered as at
+        // the outermost unmask, after the completion, so the completing task is released afresh.
+        let delivered = if self.mask_depth > 0 {
+            self.mask_depth = 0;
+            self.deliver_latched()
+        } else {
+            heapless::Transitions::new()
+        };
+        (Transition::Completed { task }, delivered)
     }
 
-    /// Raise a fault from outside — a stack guard, an unexpected trap, an assertion.
+    /// Raise a fault from outside — a stack guard, an unexpected trap, an assertion, or an overrun
+    /// some other mechanism detected, an execution-budget monitor being the obvious one.
+    ///
+    /// ⚠️ Such an overrun has no triggering release, so under `SkipLateJob` the late job is
+    /// abandoned and the task waits for its next release: §3.1.1 rule 1 makes the *triggering*
+    /// release the next job, and there is none here. Making the task ready would start a job no
+    /// release paid for.
     pub fn fault(&mut self, fault: Fault) -> Transition {
         self.raise(fault)
     }
 
+    /// Apply a fault's policy. An overrun contained under `SkipLateJob` leaves the task
+    /// [`TaskState::Suspended`] and reports [`Transition::JobSkipped`], which
+    /// [`Scheduler::overrun_by_release`] completes into a new job.
     fn raise(&mut self, fault: Fault) -> Transition {
         let task = match fault {
             Fault::Overrun { task } | Fault::StackGuard { task } => task,
-            // A trap or an invariant violation is not attributable to one task's state; it stops
-            // the runtime, and `decide` reports `Halt`.
-            _ => {
-                self.halted = Some(fault);
-                return Transition::Faulted {
-                    task: usize::MAX,
-                    fault,
+            // §3.1.1's table: a trap and an assertion are "synchronous to the executing context
+            // and are attributed to it" (rule 2) — the running task, when there is one. Neither
+            // is containable, so the runtime halts either way.
+            Fault::UnexpectedTrap { .. } | Fault::InvariantViolated { .. } => {
+                let Some(task) = self.running else {
+                    self.halted.get_or_insert(fault);
+                    return Transition::Faulted {
+                        task: usize::MAX,
+                        fault,
+                    };
                 };
+                task
             }
         };
-        if matches!(fault, Fault::Overrun { .. })
+        // §3.1.1 rule 3: a containable fault raised inside a masked region is not containable.
+        // Terminating a job that holds the mask leaves the nesting depth above zero with no
+        // owner, so interrupts never return; forcing it to zero re-enables them with the
+        // region's invariants half-restored. §8.1 offers no third option.
+        let containable = !self.is_masked();
+        if containable
+            && matches!(fault, Fault::Overrun { .. })
             && self.policies[task] == OverrunPolicy::SkipLateJob
         {
-            // The late job is abandoned and the new release accepted — recorded, never silent.
-            self.states[task] = TaskState::Ready;
+            // The late job is abandoned — recorded, never silent. Whether a new job follows is the
+            // triggering release's to say (`overrun_by_release`).
+            self.states[task] = TaskState::Suspended;
             if self.running == Some(task) {
                 self.running = None;
             }
-            return Transition::Released { task };
+            return Transition::JobSkipped { task };
         }
         self.states[task] = TaskState::Faulted;
         if self.running == Some(task) {
             self.running = None;
         }
-        if !fault.runtime_state_is_trustworthy() {
-            self.halted = Some(fault);
+        if !fault.runtime_state_is_trustworthy() || !containable {
+            // The first fault is the evidence (§8.1, "preserve … diagnostic evidence"): one the
+            // fatal path raises afterwards is a consequence, and must not overwrite the cause.
+            self.halted.get_or_insert(fault);
         }
         Transition::Faulted { task, fault }
     }
@@ -306,10 +508,11 @@ impl<const N: usize> Scheduler<N> {
 pub mod heapless {
     use super::Transition;
 
-    /// At most one delivered transition per task, which is the capacity a latch set can hold.
+    /// At most two delivered transitions per task: a latched release, and the overrun latched
+    /// beside it (§3.1.1 rule 1).
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub struct Transitions<const N: usize> {
-        items: [Option<Transition>; N],
+        items: [[Option<Transition>; 2]; N],
         len: usize,
     }
 
@@ -318,14 +521,14 @@ pub mod heapless {
         #[must_use]
         pub const fn new() -> Self {
             Self {
-                items: [None; N],
+                items: [[None; 2]; N],
                 len: 0,
             }
         }
 
-        /// Append. Cannot overflow: at most one latched release exists per task.
+        /// Append. Cannot overflow: at most two transitions are delivered per task.
         pub fn push(&mut self, transition: Transition) {
-            self.items[self.len] = Some(transition);
+            self.items[self.len / 2][self.len % 2] = Some(transition);
             self.len += 1;
         }
 
@@ -343,7 +546,11 @@ pub mod heapless {
 
         /// The delivered transitions, in order.
         pub fn as_slice(&self) -> impl Iterator<Item = Transition> + '_ {
-            self.items[..self.len].iter().filter_map(|item| *item)
+            self.items
+                .iter()
+                .flatten()
+                .take(self.len)
+                .filter_map(|item| *item)
         }
     }
 

@@ -1,4 +1,5 @@
-//! `M2.2` — differential testing of `rt-core` against an independently derived reference.
+//! `M2.2` — differential testing of `rt-core` against an independently derived reference; and
+//! `M2.9` — the same comparison once the contract decided what the first one found it did not.
 //!
 //! `ROADMAP.md` §12 M2 states the requirement and the trap in one sentence:
 //!
@@ -10,22 +11,28 @@
 //!
 //! `crates/rt-reference` was written by an agent working in a separate context that was
 //! instructed not to read `crates/rt-core/**`, `docs/book/src/runtime.md` or `docs/tasks/M2.md`.
-//! It derived the model from `ROADMAP.md` §3.1/§8/§8.1 and the priority decision record.
+//! It derived the model from `ROADMAP.md` §3.1/§8/§8.1 and the priority decision record. When
+//! `M2.9` resolved the gaps this harness found, writing `ROADMAP.md` §3.1.1 on 2026-09-13 and
+//! amending it on 2026-10-01, the reference was re-derived from the amended text each time, by a
+//! context under the same instruction.
 //!
 //! ⚠️ **What remains shared, disclosed because §4.4 requires it and the `M2.2` acceptance demands
 //! it explicitly:**
 //!
 //! | Shared input | Consequence |
 //! |---|---|
-//! | the contract text itself (`ROADMAP.md` §3.1, §8, §8.1) | a misreading *the contract invites* would be made by both |
+//! | the contract text itself (`ROADMAP.md` §3.1, §3.1.1, §8, §8.1) | a misreading *the contract invites* would be made by both |
 //! | `decision_priority-comparison-direction.md` | the priority direction is common to both |
+//! | §3.1.1 was written by the author of `rt-core` | the re-derivation shows the text says what was meant; it cannot show that what was meant is right |
 //! | the same model family produced both | §14: "a second model agreeing with the first is not ground truth" |
 //! | this adapter, written by the author of `rt-core` | a mapping error here can mask or manufacture a divergence |
+//! | near misses in the 2026-10-01 re-derivation | repository-wide searches showed its author one line of `docs/book/src/runtime.md` and the three lines of `crates/rt-core/Cargo.toml` naming the reference; no implementation or test text |
 //!
 //! ⭐ **So agreement is the weak result here, and disagreement is the strong one.** Two models
 //! that disagree cannot have been copied from each other, and every divergence is either a defect
-//! in one of them or a place the contract does not actually decide. The divergences this harness
-//! found are recorded in the `M2.2` leaf, each adjudicated against the roadmap.
+//! in one of them or a place the contract does not actually decide. The `M2.2` divergences were
+//! all of the second kind; `M2.9` decided them, and the tests that recorded each disagreement now
+//! record the agreement — rewritten, not deleted, because §14.1 forbids dropping the evidence.
 //!
 //! # The adapter's three deliberate alignments
 //!
@@ -34,19 +41,36 @@
 //!
 //! 1. **Priority.** `rt-core` makes a task's *index* its rank, highest first. `rt-reference`
 //!    carries an explicit `Priority` where `1` is highest and `0` is refused. So index `i` maps to
-//!    rank `i + 1`. ⛔ That off-by-one is real and is stated nowhere in the repository — see the
-//!    leaf.
+//!    rank `i + 1`, the relation `decision_priority-comparison-direction.md` now states.
 //! 2. **Dispatch timing.** `rt-reference` dispatches *eagerly*, inside `release`. `rt-core`
 //!    separates the event from the decision, so this harness calls `decide()` after every event
 //!    to bring it to the same point. Without that the two are trivially "different" for a reason
 //!    that is not a defect.
 //! 3. **Overrun policy.** `rt-core::OverrunPolicy::Fault` leaves the task unschedulable and the
-//!    runtime running, which is `rt-reference::OverrunAction::StopTask`, **not** its `Fatal`.
-//!    The mapping follows observed behaviour rather than the name.
+//!    runtime running, which is `rt-reference::OverrunAction::StopTask`, **not** its `Fatal`;
+//!    `SkipLateJob` is its `TerminateJob`. The mapping follows observed behaviour, not the name.
+//!
+//! # What the comparison leaves out, and why
+//!
+//! Only events legal in both models' preconditions are generated, so a divergence is about
+//! semantics rather than about one model refusing what the other accepts. The reference refuses,
+//! and `rt-core` accepts:
+//!
+//! - a trap, a stack guard or an assertion naming a task other than the running one, or raised
+//!   while no task runs — `rt-core` attributes that one to no task;
+//! - an overrun raised for a task that owes no job;
+//! - any event after a halt. `rt-core`'s decision stays `Halt`; the reference refuses everything.
+//!
+//! And once both have halted, what each leaves in its task table is left to the implementation:
+//! the comparison checks that both halted and to whom the fault was attributed, and `d9` asserts
+//! the tables on both sides.
 
-use rt_core::{Decision, OverrunPolicy, Scheduler, TaskState as CoreState};
+use rt_core::{
+    Decision, OverrunPolicy, Scheduler, TaskState as CoreState, Transition as CoreTransition,
+};
 use rt_reference::{
-    OverrunAction, Priority, Processor, Refused, Runtime, TaskId, TaskSpec, TaskState as RefState,
+    FaultEffect, OverrunAction, Priority, Processor, Refused, ReleaseEffect, Runtime, TaskId,
+    TaskSpec, TaskState as RefState,
 };
 
 const N: usize = 3;
@@ -144,47 +168,135 @@ impl Rng {
     }
 }
 
+/// A fault synchronous to the executing context (§3.1.1 rule 2).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Synchronous {
+    StackGuard,
+    Trap,
+    Assertion,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Event {
     Release(usize),
     Complete,
     Mask,
     Unmask,
+    /// An overrun found by something other than a release — an execution-budget monitor. Raised
+    /// only for a task that owes a job.
+    MonitorOverrun(usize),
+    /// A trap, a stack guard or an assertion, raised by the running task.
+    Synchronous(Synchronous),
+}
+
+/// The same synchronous fault, in each model's terms, attributed to `task`.
+fn synchronous(kind: Synchronous, task: usize) -> (rt_core::Fault, rt_reference::Fault) {
+    match kind {
+        Synchronous::StackGuard => (
+            rt_core::Fault::StackGuard { task },
+            rt_reference::Fault::StackGuard,
+        ),
+        Synchronous::Trap => (
+            rt_core::Fault::UnexpectedTrap { cause: 0 },
+            rt_reference::Fault::UnexpectedTrap,
+        ),
+        Synchronous::Assertion => (
+            rt_core::Fault::InvariantViolated {
+                invariant: "differential",
+            },
+            rt_reference::Fault::AssertionFailure,
+        ),
+    }
+}
+
+/// What one event did, as far as the coverage count needs to know.
+#[derive(Debug, Default)]
+struct Stepped {
+    /// `rt-core`'s transitions.
+    core: Vec<CoreTransition>,
+    /// Overruns the reference found by a release, at arrival or at delivery.
+    reference_overruns: usize,
 }
 
 /// Drive both models through one event, keeping `rt-core` at the same decision point.
 ///
-/// Returns the running task `rt-core` believes in, and whether it has halted, because neither is
-/// exposed on its public surface — `decide()` reports them.
+/// `running` and `halted` are what `rt-core`'s `decide()` reported, because neither is on its
+/// public surface otherwise. An `Err` is a divergence no snapshot shows: either model refusing an
+/// event both should accept, or a fault attributed differently.
 fn step(
     core: &mut Scheduler<N>,
     reference: &mut Runtime<N>,
     event: Event,
     running: &mut Option<usize>,
     halted: &mut bool,
-) {
+) -> Result<Stepped, String> {
+    let refused =
+        |who: &str, why: &dyn core::fmt::Debug| format!("{who} refused {event:?}: {why:?}");
+    let mut stepped = Stepped::default();
     match event {
         Event::Release(i) => {
-            core.release(i);
-            let _ = reference.release(TaskId::from_index(i));
+            stepped.core.push(core.release(i));
+            let effect = reference
+                .release(TaskId::from_index(i))
+                .map_err(|why| refused("the reference", &why))?;
+            if matches!(effect, ReleaseEffect::Overrun(_)) {
+                stepped.reference_overruns += 1;
+            }
         }
         Event::Complete => {
-            if let Some(task) = *running {
-                core.complete(task);
-                *running = None;
-                let _ = reference.complete();
-            }
+            let task = running.expect("generated only while a task runs");
+            let (completed, delivered) = core.complete(task);
+            stepped.core.push(completed);
+            stepped.core.extend(delivered.as_slice());
+            let closed = reference
+                .complete()
+                .map_err(|why| refused("the reference", &why))?;
+            stepped.reference_overruns += closed.overruns;
         }
         Event::Mask => {
-            core.mask();
-            let _ = reference.mask();
+            core.mask().map_err(|why| refused("rt-core", &why))?;
+            reference
+                .mask()
+                .map_err(|why| refused("the reference", &why))?;
         }
         Event::Unmask => {
-            if core.is_masked() {
-                core.unmask();
+            let delivered = core.unmask().map_err(|why| refused("rt-core", &why))?;
+            stepped.core.extend(delivered.as_slice());
+            let closed = reference
+                .unmask()
+                .map_err(|why| refused("the reference", &why))?;
+            stepped.reference_overruns += closed.overruns;
+        }
+        Event::MonitorOverrun(i) => {
+            stepped
+                .core
+                .push(core.fault(rt_core::Fault::Overrun { task: i }));
+            reference
+                .raise(TaskId::from_index(i), rt_reference::Fault::Overrun)
+                .map_err(|why| refused("the reference", &why))?;
+        }
+        Event::Synchronous(kind) => {
+            let task = running.expect("generated only while a task runs");
+            let (core_fault, reference_fault) = synchronous(kind, task);
+            // §3.1.1's table and rule 2: attributed to the executing context, the running task —
+            // by `rt-core`'s report, and by the reference's acceptance of that attribution.
+            let transition = core.fault(core_fault);
+            if transition
+                != (CoreTransition::Faulted {
+                    task,
+                    fault: core_fault,
+                })
+            {
+                return Err(format!(
+                    "rt-core reported {transition:?} for {kind:?} raised by running task {task}"
+                ));
             }
-            if reference.is_masked() {
-                let _ = reference.unmask();
+            stepped.core.push(transition);
+            let effect = reference
+                .raise(TaskId::from_index(task), reference_fault)
+                .map_err(|why| refused("the reference", &why))?;
+            if effect != FaultEffect::Fatal {
+                return Err(format!("the reference contained {kind:?}: {effect:?}"));
             }
         }
     }
@@ -198,6 +310,7 @@ fn step(
             *running = None;
         }
     }
+    Ok(stepped)
 }
 
 /// What the generator actually exercised. ⭐ Without this, "400 sequences agreed" could be true
@@ -210,6 +323,20 @@ struct Coverage {
     latched_deliveries: usize,
     completions: usize,
     idle_periods: usize,
+    /// Overruns a release found, at arrival or at delivery, counted by both models.
+    overruns_by_release: usize,
+    /// Releases into a full latch (findings §6 (b)).
+    doubled_latches: usize,
+    /// Late jobs abandoned under `SkipLateJob`, a release's or a monitor's.
+    skipped_jobs: usize,
+    /// Completions inside a masked region (§3.1.1 rule 4).
+    masked_completions: usize,
+    /// Overruns raised by a monitor while unmasked, contained by the task's policy.
+    contained_monitor_overruns: usize,
+    /// Overruns raised by a monitor while masked, which halt (§3.1.1 rule 3).
+    masked_escalations: usize,
+    /// Traps, stack guards and assertions, which halt.
+    synchronous_halts: usize,
 }
 
 /// Run one randomised sequence, returning the first divergence with the trace that produced it.
@@ -228,49 +355,90 @@ fn run_sequence(
     let mut depth = 0_u32;
 
     for _ in 0..length {
-        // Only events legal in BOTH models' preconditions, so a divergence is about semantics
-        // rather than about one model refusing what the other accepts — and only inside the
-        // region the contract actually decides. A release to a task that already owes a job is
-        // an OVERRUN, and where its fault is attributed is a question §3.1 does not settle; it
-        // is excluded here and asserted explicitly as `d1_overrun_attribution_is_undecided`.
-        //
-        // ⛔ A LATCHED release counts as owing a job even though the task's *state* has not moved
-        // yet — masking defers delivery, it does not create a second slot. Missing this on the
-        // first attempt left 373 of 400 sequences "diverging" for the one reason already known,
-        // reached through the masked path instead of the direct one.
+        // ⭐ Since `M2.9` the generator goes where `M2.2`'s could not: a release to a task that
+        // still owes a job — at once, or latched beside one already held — completions inside a
+        // masked region, overruns a monitor raises, and the synchronous faults. Each was excluded
+        // while the contract did not decide it; §3.1.1 now does.
         let owes_a_job = |i: usize| {
-            let id = TaskId::from_index(i);
             matches!(
-                reference.state(id).expect("task exists"),
+                reference.state(TaskId::from_index(i)).expect("task exists"),
                 RefState::Ready | RefState::Running
-            ) || reference.is_latched(id).expect("task exists")
+            )
         };
-        let free: Vec<usize> = (0..N).filter(|i| !owes_a_job(*i)).collect();
-        let event = match rng.below(10) {
-            5..=6 if running.is_some() => Event::Complete,
-            7 if depth < 4 => Event::Mask,
-            8 if depth > 0 => Event::Unmask,
-            _ if free.is_empty() => {
-                if running.is_some() {
-                    Event::Complete
-                } else if depth > 0 {
-                    Event::Unmask
-                } else {
-                    Event::Mask
-                }
-            }
-            _ => Event::Release(free[rng.below(free.len())]),
+        let owing: Vec<usize> = (0..N).filter(|i| owes_a_job(*i)).collect();
+        // Most releases go to a task with no job owed or latched, so the schedule stays busy
+        // rather than draining into stopped tasks; the rest go to any task and may overrun.
+        let free: Vec<usize> = (0..N)
+            .filter(|i| {
+                !owes_a_job(*i)
+                    && !reference
+                        .is_latched(TaskId::from_index(*i))
+                        .expect("task exists")
+            })
+            .collect();
+        let event = match rng.below(100) {
+            0 if running.is_some() => Event::Synchronous(match rng.below(3) {
+                0 => Synchronous::StackGuard,
+                1 => Synchronous::Trap,
+                _ => Synchronous::Assertion,
+            }),
+            1..=3 if !owing.is_empty() => Event::MonitorOverrun(owing[rng.below(owing.len())]),
+            4..=28 if running.is_some() => Event::Complete,
+            29..=40 if depth < 4 => Event::Mask,
+            41..=52 if depth > 0 => Event::Unmask,
+            53..=65 => Event::Release(rng.below(N)),
+            _ if !free.is_empty() => Event::Release(free[rng.below(free.len())]),
+            _ => Event::Release(rng.below(N)),
         };
         match event {
             Event::Mask => depth += 1,
             Event::Unmask => depth -= 1,
+            // §3.1.1 rule 4: a completion closes every section its job opened.
+            Event::Complete => depth = 0,
             _ => {}
         }
         trace.push(event);
         let before = running;
         let was_masked = core.is_masked();
-        step(&mut core, &mut reference, event, &mut running, &mut halted);
+        let stepped =
+            step(&mut core, &mut reference, event, &mut running, &mut halted).map_err(|why| {
+                format!(
+                    "seed {seed}, step {}: {why}\n  trace     {trace:?}",
+                    trace.len()
+                )
+            })?;
 
+        let core_overruns = stepped
+            .core
+            .iter()
+            .filter(|t| {
+                matches!(
+                    t,
+                    CoreTransition::JobSkipped { .. }
+                        | CoreTransition::Faulted {
+                            fault: rt_core::Fault::Overrun { .. },
+                            ..
+                        }
+                )
+            })
+            .count();
+        if !matches!(event, Event::MonitorOverrun(_)) {
+            coverage.overruns_by_release += stepped.reference_overruns.min(core_overruns);
+        }
+        for transition in &stepped.core {
+            match transition {
+                CoreTransition::OverrunLatched { .. } => coverage.doubled_latches += 1,
+                CoreTransition::JobSkipped { .. } => coverage.skipped_jobs += 1,
+                _ => {}
+            }
+        }
+        match event {
+            Event::Complete if was_masked => coverage.masked_completions += 1,
+            Event::MonitorOverrun(_) if was_masked => coverage.masked_escalations += 1,
+            Event::MonitorOverrun(_) => coverage.contained_monitor_overruns += 1,
+            Event::Synchronous(_) => coverage.synchronous_halts += 1,
+            _ => {}
+        }
         match (event, before, running) {
             (Event::Release(_), Some(from), Some(to)) if from != to => coverage.preemptions += 1,
             (Event::Unmask, _, Some(_)) if was_masked => coverage.latched_deliveries += 1,
@@ -279,6 +447,19 @@ fn run_sequence(
             _ => {}
         }
 
+        let reference_halted = matches!(reference.processor(), Processor::Halted);
+        if halted || reference_halted {
+            if halted != reference_halted {
+                return Err(format!(
+                    "seed {seed}, step {}: only {} halted\n  trace     {trace:?}",
+                    trace.len(),
+                    if halted { "rt-core" } else { "the reference" }
+                ));
+            }
+            // Both halted, and the attribution was compared in `step`. The task tables are left
+            // to the implementation (`d9`), and the reference refuses every later event.
+            return Ok(());
+        }
         let got = core_snapshot(&core, halted, running);
         let want = ref_snapshot(&reference);
         if got != want {
@@ -300,25 +481,34 @@ fn run_sequence(
 
 #[test]
 fn differential_over_many_randomised_sequences() {
+    const SEQUENCES: u64 = 400;
+    // Every pattern of the two policies over the three ranks that matters: all of one, all of the
+    // other, and each kind above the other.
+    let patterns = [
+        [OverrunPolicy::Fault; N],
+        [
+            OverrunPolicy::SkipLateJob,
+            OverrunPolicy::Fault,
+            OverrunPolicy::Fault,
+        ],
+        [OverrunPolicy::SkipLateJob; N],
+        [
+            OverrunPolicy::Fault,
+            OverrunPolicy::SkipLateJob,
+            OverrunPolicy::SkipLateJob,
+        ],
+    ];
     let mut failures: Vec<String> = Vec::new();
     let mut coverage = Coverage::default();
-    for seed in 1..=400_u64 {
-        let policies = if seed % 2 == 0 {
-            [OverrunPolicy::Fault; N]
-        } else {
-            [
-                OverrunPolicy::SkipLateJob,
-                OverrunPolicy::Fault,
-                OverrunPolicy::Fault,
-            ]
-        };
-        if let Err(why) = run_sequence(seed, 40, policies, &mut coverage) {
+    for seed in 1..=SEQUENCES {
+        let policies = patterns[usize::try_from(seed).expect("small") % patterns.len()];
+        if let Err(why) = run_sequence(seed, 60, policies, &mut coverage) {
             failures.push(why);
         }
     }
     assert!(
         failures.is_empty(),
-        "{} of 400 sequences diverged. First three:\n\n{}",
+        "{} of {SEQUENCES} sequences diverged. First three:\n\n{}",
         failures.len(),
         failures
             .iter()
@@ -327,14 +517,23 @@ fn differential_over_many_randomised_sequences() {
             .collect::<Vec<_>>()
             .join("\n\n")
     );
+    eprintln!("{coverage:?}");
 
     // ⭐ The agreement above means nothing unless the sequences reached the states that matter.
     // These floors are well below what the generator currently produces; they exist to fail if a
-    // future change to the event mix quietly stops exercising a behaviour.
-    assert!(coverage.preemptions >= 200, "{coverage:?}");
-    assert!(coverage.latched_deliveries >= 100, "{coverage:?}");
+    // future change to the event mix quietly stops exercising a behaviour. Measured 2026-10-01
+    // over these seeds: each floor is about half of what the generator then reached.
+    assert!(coverage.preemptions >= 500, "{coverage:?}");
+    assert!(coverage.latched_deliveries >= 200, "{coverage:?}");
     assert!(coverage.completions >= 1_000, "{coverage:?}");
-    assert!(coverage.idle_periods >= 500, "{coverage:?}");
+    assert!(coverage.idle_periods >= 3_000, "{coverage:?}");
+    assert!(coverage.overruns_by_release >= 800, "{coverage:?}");
+    assert!(coverage.doubled_latches >= 1_500, "{coverage:?}");
+    assert!(coverage.skipped_jobs >= 700, "{coverage:?}");
+    assert!(coverage.masked_completions >= 250, "{coverage:?}");
+    assert!(coverage.contained_monitor_overruns >= 100, "{coverage:?}");
+    assert!(coverage.masked_escalations >= 25, "{coverage:?}");
+    assert!(coverage.synchronous_halts >= 50, "{coverage:?}");
 }
 
 #[test]
@@ -344,82 +543,57 @@ fn the_two_models_are_not_the_same_model() {
     // `rt-core` has no name for. This asserts the *structural* difference, so that a future
     // "simplification" that made the reference mirror the implementation would fail here rather
     // than quietly turn the differential test into a tautology.
-    // Rank 0 is constructible but refused at boot — the reference keeps every admissibility
-    // rule in one place. `rt-core` has no explicit rank at all, so it cannot express the
-    // question, which is itself the divergence.
-    let zero = core::array::from_fn::<_, N, _>(|i| TaskSpec {
-        name: "z",
-        priority: Priority::new(u16::try_from(i).expect("small")),
-        on_overrun: OverrunAction::StopTask,
-    });
-    assert!(
-        Runtime::boot(zero).is_err(),
-        "the reference refuses rank 0 at boot"
-    );
+    // The reference keeps every admissibility rule in its boot; `rt-core`'s plain constructor
+    // takes indices and checks nothing, and only its description route, `from_eadl_ranks`, does.
     let empty: Result<Runtime<0>, _> = Runtime::boot([]);
     assert!(empty.is_err(), "the reference refuses an empty task set");
-    // `rt-core` accepts one, and idles forever — recorded as a divergence in the M2.2 leaf.
     let mut none = Scheduler::<0>::new([]);
     assert_eq!(none.decide(), Decision::Idle);
 
-    // The reference attributes a fault to the RUNNING task and refuses when the processor is
-    // idle — `rt-core` takes a task id instead, which is the same divergence `d1` is about.
+    // The reference takes a synchronous fault's attribution as a parameter and refuses a wrong
+    // one; `rt-core` reads it from its own running task, and accepts a trap while idle.
     let mut r = reference([OverrunPolicy::Fault; N]);
-    assert!(matches!(
-        r.raise(rt_reference::Fault::UnexpectedTrap),
+    assert_eq!(
+        r.raise(TaskId::from_index(0), rt_reference::Fault::UnexpectedTrap),
         Err(Refused::NoTaskRunning)
-    ));
+    );
     r.release(TaskId::from_index(0))
         .expect("boots idle, so this dispatches");
-    let _ = r.raise(rt_reference::Fault::UnexpectedTrap);
+    assert_eq!(
+        r.raise(TaskId::from_index(1), rt_reference::Fault::UnexpectedTrap),
+        Err(Refused::NotTheRunningTask)
+    );
+    assert_eq!(
+        r.raise(TaskId::from_index(0), rt_reference::Fault::UnexpectedTrap),
+        Ok(FaultEffect::Fatal)
+    );
     assert_eq!(r.processor(), Processor::Halted);
-    assert!(matches!(
-        r.release(TaskId::from_index(0)),
-        Err(Refused::Halted)
-    ));
+    assert_eq!(r.release(TaskId::from_index(0)), Err(Refused::Halted));
 }
 
 // ═════════════════════════════════════════════════════════════════════════════════════════════
-// KNOWN DIVERGENCES
+// THE GAPS, RESOLVED — AND WHAT THE RESOLUTION FOUND
 //
-// ⭐ These are the point of the exercise. Each one is a place where `rt-core` and an
-// independently derived model of the same contract behave differently — which means the contract
-// does not decide it, because two readers reading only the contract arrived at different answers.
+// `d1`–`d5` once asserted the five places where `rt-core` and an independently derived model of
+// the same contract behaved differently, each on both sides, so neither could drift and the list
+// could not quietly shrink. `M2.9` resolved them in `ROADMAP.md` §3.1.1 and the priority record
+// (`docs/decisions/decision_runtime-contract-gaps.md`), and each now asserts the agreement, on
+// both sides, for the same reason. ⛔ Rewritten, never deleted: §14.1 forbids dropping the only
+// evidence that a gap was closed.
 //
-// They are asserted rather than fixed, and asserted on BOTH sides, so that:
-//   * a change to either model that alters the disagreement fails here and forces a re-reading;
-//   * a NEW divergence shows up in the randomised test above rather than hiding among these;
-//   * and the list cannot quietly shrink by someone "fixing" one side without amending the
-//     contract, which §14.1 forbids ("implementation changes cannot silently weaken requirements").
-//
-// Resolving them is a change to `ROADMAP.md`, not to a crate — it is a reviewed contract
-// decision. They are routed in the `M2.2` leaf.
+// `d6` and `d7` are the two behaviours the independent review of §3.1.1 sent to the director,
+// ruled 2026-10-01. `d8`, and the second half of `d3`, are what rewriting these tests found: two
+// places where `rt-core` departed from text the contract already had. `d9` is the one difference
+// the contract leaves to the implementation.
 // ═════════════════════════════════════════════════════════════════════════════════════════════
 
 #[test]
-fn d1_overrun_attribution_and_escalation_are_undecided() {
-    // ⛔ THE DEEPEST ONE, and it was found twice independently: the reference author flagged it as
-    // a CONTRACT SILENT point while writing the model, and the randomised comparison hit it on its
-    // very first sequence.
-    //
-    // §3.1 requires a "defined overrun … policy" and §7.3 puts "overrun behavior" in the per-task
-    // record. Neither says (a) whether *detecting* an overrun applies that policy by itself, nor
-    // (b) whether a fault can be attributed to a task that is not the running one.
-    //
-    // The two models answer differently, and each has a real argument:
-    //
-    //   `rt-core`      a second release IS the overrun, so the policy applies at once, to the
-    //                  task that overran — which need not be running, because the overrun is
-    //                  detected by a release interrupt while somebody else holds the processor.
-    //
-    //   `rt-reference` reports the overrun and leaves escalation to the caller, and attributes
-    //                  faults only to the running task: "a fault attributed to a task that was
-    //                  not running would be a claim about concurrency the profile does not admit."
-    //
-    // ⚠️ The reference's argument is right for a *trap* — which belongs to whoever executed the
-    // instruction — and the implementation's is right for an *overrun*, which is precisely a
-    // statement about a task that is NOT making progress. §3.1 lists both in one sentence and
-    // §8.1's three-way triage does not map onto that list, which is the actual gap.
+fn d1_an_overrun_applies_its_policy_to_the_overrunning_task_in_both() {
+    // Once undecided, and found twice: `rt-core` applied the policy at once, to the task that
+    // overran, which need not be running; the reference reported the overrun, left escalation to
+    // its caller, and attributed faults only to the running task. §3.1.1 rule 1 — detection
+    // applies the policy — and rule 2 — an overrun belongs to the overrunning task, because the
+    // single-core rule governs execution, not attribution — decided it.
     let mut core = Scheduler::<N>::new([OverrunPolicy::Fault; N]);
     let mut reference = reference([OverrunPolicy::Fault; N]);
 
@@ -430,135 +604,317 @@ fn d1_overrun_attribution_and_escalation_are_undecided() {
             .release(TaskId::from_index(task))
             .expect("accepted");
     }
-    core.decide();
+    assert_eq!(core.decide(), Decision::Dispatch { to: 0 });
     assert_eq!(core.state(1), CoreState::Ready);
-    assert_eq!(
-        reference.state(TaskId::from_index(1)),
-        Some(RefState::Ready)
-    );
 
     // Now task 1 overruns while task 0 holds the processor.
+    assert_eq!(
+        core.release(1),
+        CoreTransition::Faulted {
+            task: 1,
+            fault: rt_core::Fault::Overrun { task: 1 }
+        }
+    );
+    assert_eq!(
+        reference.release(TaskId::from_index(1)),
+        Ok(ReleaseEffect::Overrun(FaultEffect::TaskStopped(None))),
+        "applied on detection, to the task that is not running, moving no context"
+    );
+    assert_eq!(core.decide(), Decision::Continue { task: 0 });
+    let both = ref_snapshot(&reference);
+    assert_eq!(core_snapshot(&core, false, Some(0)), both);
+    assert_eq!(both.tasks[1], Seen::Gone);
+}
+
+#[test]
+fn d2_both_refuse_an_empty_task_set() {
+    // Once undecided: "finite static task set" admits the empty set, which the reference refused
+    // and `rt-core` accepted. §3.1.1 refuses it: a system with no workload makes §7.2's second
+    // timing obligation vacuous.
+    assert_eq!(
+        Runtime::<0>::boot([]).unwrap_err(),
+        rt_reference::BootError::NoTasks
+    );
+    assert_eq!(
+        Scheduler::<0>::from_eadl_ranks([], []).unwrap_err(),
+        rt_core::BootError::NoTasks
+    );
+}
+
+#[test]
+fn d3_both_refuse_rank_zero_and_order_tasks_by_rank() {
+    // Once undecided: the priority record said "`1` is the highest" and nothing about `0`, while
+    // `rt-core`'s index started at 0. The amended record refuses rank 0 and states the relation.
+    // ⛔ Rewriting this test found that `rt-core` also refused ranks with a gap — `1, 5, 9` —
+    // which the language admits and the reference accepts. Fixed priority uses only the order, so
+    // the record now states `runtime index = |hp(i)|`, and `rt-core` lowers by it.
+    let spec = |ranks: [u16; N]| {
+        core::array::from_fn::<_, N, _>(|i| TaskSpec {
+            name: ["a", "b", "c"][i],
+            priority: Priority::new(ranks[i]),
+            on_overrun: OverrunAction::StopTask,
+        })
+    };
+    assert!(matches!(
+        Runtime::boot(spec([0, 1, 2])),
+        Err(rt_reference::BootError::PriorityRankZero { .. })
+    ));
+    assert_eq!(
+        Scheduler::from_eadl_ranks([0, 1, 2], [OverrunPolicy::Fault; N]).unwrap_err(),
+        rt_core::BootError::RankBelowOne { position: 0 }
+    );
+
+    // Ranks with gaps, described out of order: description positions 0, 1, 2 carry ranks 9, 1, 5,
+    // so `rt-core` holds them at indices 2, 0, 1. Both run the rank-5 task over the rank-9 one.
+    let ranks = [9, 1, 5];
+    let mut reference = Runtime::boot(spec(ranks)).expect("distinct ranks, none zero");
+    let mut core = Scheduler::from_eadl_ranks(ranks, [OverrunPolicy::Fault; N])
+        .expect("distinct ranks, none below 1");
+    reference
+        .release(TaskId::from_index(0))
+        .expect("dispatches");
+    reference.release(TaskId::from_index(2)).expect("preempts");
+    core.release(2);
+    assert_eq!(core.decide(), Decision::Dispatch { to: 2 });
     core.release(1);
-    let effect = reference.release(TaskId::from_index(1)).expect("accepted");
-
+    assert_eq!(core.decide(), Decision::Switch { from: 2, to: 1 });
     assert_eq!(
-        core.state(1),
-        CoreState::Faulted,
-        "rt-core applies the policy immediately, to the non-running task"
-    );
-    assert!(
-        matches!(effect, rt_reference::ReleaseEffect::Overrun),
-        "the reference reports the overrun and leaves escalation to the caller"
-    );
-    assert_eq!(
-        reference.state(TaskId::from_index(1)),
-        Some(RefState::Ready),
-        "and the reference's task is untouched, because `raise` would attribute to task 0"
+        reference.processor(),
+        Processor::Running(TaskId::from_index(2))
     );
 }
 
 #[test]
-fn d2_the_empty_task_set_is_undecided() {
-    // §3.1 says "finite static task set". The empty set is finite.
-    //
-    //   `rt-reference` refuses it at boot: no workload makes §7.2's second timing obligation
-    //                  vacuous, and a vacuously passing schedulability result is what §7.1 exists
-    //                  to prevent.
-    //   `rt-core`      accepts it and idles forever.
-    //
-    // A profile that wants a task-free image should say so; one that does not should exclude it.
-    assert!(Runtime::<0>::boot([]).is_err());
-    let mut none = Scheduler::<0>::new([]);
-    assert_eq!(none.decide(), Decision::Idle);
-}
-
-#[test]
-fn d3_the_meaning_of_priority_rank_zero_is_undecided() {
-    // `docs/decisions/decision_priority-comparison-direction.md` says "`1` is the highest" and
-    // says nothing about `0`.
-    //
-    //   `rt-reference` refuses rank 0 at boot — admitting it would move the top of the range by
-    //                  inference, and §15 makes that a language change needing the record amended.
-    //   `rt-core`      has no explicit rank at all: a task's *index* is its rank and indices start
-    //                  at 0, so its highest priority is 0 while eADL's is 1.
-    //
-    // ⛔ That off-by-one is real, it is load-bearing for anything mapping a description onto the
-    // runtime, and it is written down nowhere in the repository.
-    let zero = core::array::from_fn::<_, N, _>(|i| TaskSpec {
-        name: "z",
-        priority: Priority::new(u16::try_from(i).expect("small")),
-        on_overrun: OverrunAction::StopTask,
-    });
-    assert!(Runtime::boot(zero).is_err(), "the reference refuses rank 0");
-
-    // `rt-core`'s highest-priority task is index 0, which the language calls priority 1.
-    let mut core = Scheduler::<N>::new([OverrunPolicy::Fault; N]);
-    core.release(0);
-    core.release(1);
-    assert_eq!(
-        core.decide(),
-        Decision::Dispatch { to: 0 },
-        "index 0 is the highest rank here; the eADL description would call it `(priority 1)`"
-    );
-}
-
-#[test]
-fn d4_a_containable_fault_inside_a_masked_region_is_undecided() {
-    // §8.1 requires masking to be modelled and requires a defined fatal handler; nothing covers a
-    // *containable* fault raised while masked.
-    //
-    //   `rt-reference` escalates it to fatal: terminating a job that holds the mask leaves the
-    //                  depth above zero with no owner, so interrupts never return; forcing the
-    //                  depth to zero re-enables them mid-region with invariants half-restored.
-    //   `rt-core`      has no notion of it — masking and faults do not interact.
-    //
-    // The reference's reasoning is the stronger of the two and is drawn entirely from the
-    // contract, which is why this is routed as a probable `rt-core` defect rather than a wash.
+fn d4_a_containable_fault_inside_a_masked_region_escalates_in_both() {
+    // Once undecided, and the one taken as an `rt-core` defect, its reasoning drawn entirely from
+    // existing text: §3.1.1 rule 3. Terminating a job that holds the mask orphans the depth, and
+    // containment means resuming the schedule from a state the section had not made consistent.
     let mut reference = reference([OverrunPolicy::SkipLateJob; N]);
     reference
         .release(TaskId::from_index(0))
         .expect("dispatches");
     reference.mask().expect("maskable");
-    let effect = reference
-        .raise(rt_reference::Fault::Overrun)
-        .expect("running");
-    assert!(
-        matches!(effect, rt_reference::FaultEffect::Fatal),
-        "a containable fault inside a masked region escalates in the reference"
+    assert_eq!(
+        reference.raise(TaskId::from_index(0), rt_reference::Fault::Overrun),
+        Ok(FaultEffect::Fatal),
+        "SkipLateJob would have contained it outside the region"
     );
+    assert_eq!(reference.processor(), Processor::Halted);
 
     let mut core = Scheduler::<N>::new([OverrunPolicy::SkipLateJob; N]);
     core.release(0);
     core.decide();
-    core.mask();
+    core.mask().expect("maskable");
     core.fault(rt_core::Fault::Overrun { task: 0 });
-    assert_ne!(
+    assert_eq!(
         core.decide(),
         Decision::Halt {
             fault: rt_core::Fault::Overrun { task: 0 }
-        },
-        "rt-core does not escalate, because it does not model the interaction at all"
+        }
     );
 }
 
 #[test]
-fn d5_the_bound_on_mask_nesting_is_undecided() {
-    // §3.1 requires "bounded kernel critical sections" and §7.3 requires every interrupt source to
-    // declare its "masking constraints"; no maximum nesting depth is stated anywhere.
-    //
-    //   `rt-reference` bounds it at 255 and REFUSES beyond — the value is arbitrary, the refusal
-    //                  is not: a depth counter that wraps re-enables interrupts inside a critical
-    //                  section and reports success while doing it.
-    //   `rt-core`      saturates a `u32`. It cannot wrap, but a saturated counter stops counting,
-    //                  so the matching unmasks no longer balance — the same failure by a slower
-    //                  route.
+fn d5_both_bound_mask_nesting_at_the_same_depth_and_refuse_beyond() {
+    // Once undecided: the reference refused beyond a bound; `rt-core` saturated a counter, which
+    // stops counting, so the matching unmasks no longer balance. §3.1.1 declares the bound and
+    // refuses beyond it.
+    assert_eq!(
+        Scheduler::<N>::MASK_DEPTH_LIMIT,
+        Runtime::<N>::MAX_MASK_DEPTH
+    );
     let mut reference = reference([OverrunPolicy::Fault; N]);
+    let mut core = Scheduler::<N>::new([OverrunPolicy::Fault; N]);
     for _ in 0..u8::MAX {
         reference.mask().expect("within the bound");
+        core.mask().expect("within the bound");
     }
-    assert!(
-        reference.mask().is_err(),
-        "the reference refuses beyond its bound"
+    assert_eq!(reference.mask(), Err(Refused::MaskDepthExhausted));
+    assert_eq!(
+        core.mask(),
+        Err(rt_core::Refused::MaskDepthExhausted { limit: u8::MAX })
     );
-    assert_eq!(reference.mask_depth(), u8::MAX, "and does not wrap");
+    // And neither lost count: as many unmasks as masks close the region, and one more is refused.
+    for _ in 0..u8::MAX {
+        reference.unmask().expect("balanced");
+        core.unmask().expect("balanced");
+    }
+    assert!(!reference.is_masked() && !core.is_masked());
+    assert_eq!(reference.unmask().unwrap_err(), Refused::NotMasked);
+    assert_eq!(core.unmask().unwrap_err(), rt_core::Refused::NotMasked);
+}
+
+#[test]
+fn d6_a_doubled_latch_is_judged_at_delivery_in_both() {
+    // Findings §6 (b), ruled 2026-10-01 into §3.1.1 rule 1: a release into a full latch keeps the
+    // overrun beside the release it holds, judged at delivery under the task's own policy — so the
+    // pair ends exactly as it would have landing one instruction after the region closed.
+    for policy in [OverrunPolicy::Fault, OverrunPolicy::SkipLateJob] {
+        let policies = [OverrunPolicy::Fault, policy, OverrunPolicy::Fault];
+
+        let mut core = Scheduler::<N>::new(policies);
+        let mut reference = reference(policies);
+        core.release(0);
+        core.decide();
+        reference
+            .release(TaskId::from_index(0))
+            .expect("dispatches");
+        core.mask().expect("maskable");
+        reference.mask().expect("maskable");
+        assert_eq!(core.release(1), CoreTransition::Latched { task: 1 });
+        assert_eq!(core.release(1), CoreTransition::OverrunLatched { task: 1 });
+        for _ in 0..2 {
+            assert_eq!(
+                reference.release(TaskId::from_index(1)),
+                Ok(ReleaseEffect::Latched)
+            );
+        }
+        assert_eq!(
+            reference.is_overrun_latched(TaskId::from_index(1)),
+            Some(true)
+        );
+        assert_eq!(
+            core.decide(),
+            Decision::Continue { task: 0 },
+            "nothing is judged inside the region"
+        );
+        core.unmask().expect("masked");
+        reference.unmask().expect("masked");
+        assert_eq!(core.decide(), Decision::Continue { task: 0 });
+        let inside = core_snapshot(&core, false, Some(0));
+        assert_eq!(inside, ref_snapshot(&reference), "{policy:?}");
+
+        let mut after = Scheduler::<N>::new(policies);
+        after.release(0);
+        after.decide();
+        after.release(1);
+        after.release(1);
+        assert_eq!(after.decide(), Decision::Continue { task: 0 });
+        assert_eq!(
+            inside,
+            core_snapshot(&after, false, Some(0)),
+            "{policy:?}: the region changes when the overrun is judged, not how"
+        );
+        let expected = match policy {
+            OverrunPolicy::Fault => Seen::Gone,
+            OverrunPolicy::SkipLateJob => Seen::Ready,
+        };
+        assert_eq!(inside.tasks[1], expected, "{policy:?}");
+    }
+}
+
+#[test]
+fn d7_a_completion_inside_a_masked_region_closes_it_in_both() {
+    // Findings §6 (a), ruled 2026-10-01 into §3.1.1 rule 4: the job's sections end with it, nested
+    // ones included, what was latched is delivered as at the outermost unmask, and the schedule is
+    // decided after — so the completing task's own latched release starts it afresh.
+    let policies = [OverrunPolicy::Fault; N];
+    let mut core = Scheduler::<N>::new(policies);
+    let mut reference = reference(policies);
+    core.release(2);
+    core.decide();
+    reference
+        .release(TaskId::from_index(2))
+        .expect("dispatches");
+    for _ in 0..2 {
+        core.mask().expect("maskable");
+        reference.mask().expect("maskable");
+    }
+    for task in [0, 2] {
+        core.release(task);
+        assert_eq!(
+            reference.release(TaskId::from_index(task)),
+            Ok(ReleaseEffect::Latched)
+        );
+    }
+
+    let (completed, delivered) = core.complete(2);
+    assert_eq!(completed, CoreTransition::Completed { task: 2 });
+    assert_eq!(
+        delivered.as_slice().collect::<Vec<_>>(),
+        vec![
+            CoreTransition::Released { task: 0 },
+            CoreTransition::Released { task: 2 }
+        ],
+        "task 2's own latched release is a new job, not an overrun"
+    );
+    let closed = reference.complete().expect("task 2 runs");
+    assert_eq!((closed.depth, closed.delivered, closed.overruns), (0, 2, 0));
+    assert!(!core.is_masked() && !reference.is_masked());
+    assert_eq!(core.decide(), Decision::Dispatch { to: 0 });
+    assert_eq!(
+        core_snapshot(&core, false, Some(0)),
+        ref_snapshot(&reference)
+    );
+}
+
+#[test]
+fn d8_an_overrun_raised_without_a_release_starts_no_job_in_either() {
+    // Found while rewriting `d1`. §3.1.1 rule 1 makes the *triggering* release the task's next job
+    // under `SkipLateJob`; an overrun an execution-budget monitor raises has none. `rt-core` made
+    // the task ready anyway, starting a job no release paid for, and reported it as an ordinary
+    // release; the reference left it awaiting its next one. The rule decides it, so `rt-core` was
+    // corrected, and reports the skip as itself.
+    let policies = [OverrunPolicy::SkipLateJob; N];
+    let mut core = Scheduler::<N>::new(policies);
+    let mut reference = reference(policies);
+    core.release(0);
+    core.decide();
+    reference
+        .release(TaskId::from_index(0))
+        .expect("dispatches");
+
+    assert_eq!(
+        core.fault(rt_core::Fault::Overrun { task: 0 }),
+        CoreTransition::JobSkipped { task: 0 }
+    );
+    assert!(matches!(
+        reference.raise(TaskId::from_index(0), rt_reference::Fault::Overrun),
+        Ok(FaultEffect::JobTerminated(Some(_)))
+    ));
+    assert_eq!(core.decide(), Decision::Idle);
+    let both = ref_snapshot(&reference);
+    assert_eq!(core_snapshot(&core, false, None), both);
+    assert_eq!(both.tasks[0], Seen::Waiting);
+}
+
+#[test]
+fn d9_what_a_halt_leaves_in_the_task_table_is_left_to_the_implementation() {
+    // Both halt on a stack guard and both attribute it to the running task, as §3.1.1's table
+    // has it. What each then shows in its task table differs, and the contract does not decide it:
+    // §8.1 asks to "preserve a defined fatal handler and diagnostic evidence", not for a format.
+    // Recorded as left to the implementation in `decision_runtime-contract-gaps.md`, and asserted
+    // on both sides so a change to either is seen.
+    let policies = [OverrunPolicy::Fault; N];
+    let mut core = Scheduler::<N>::new(policies);
+    let mut reference = reference(policies);
+    core.release(1);
+    core.decide();
+    reference
+        .release(TaskId::from_index(1))
+        .expect("dispatches");
+
+    let fault = rt_core::Fault::StackGuard { task: 1 };
+    assert_eq!(
+        core.fault(fault),
+        CoreTransition::Faulted { task: 1, fault }
+    );
+    assert_eq!(
+        reference.raise(TaskId::from_index(1), rt_reference::Fault::StackGuard),
+        Ok(FaultEffect::Fatal)
+    );
+    assert_eq!(core.decide(), Decision::Halt { fault });
+    assert_eq!(reference.processor(), Processor::Halted);
+    assert_eq!(
+        reference.fault_record().map(|record| record.task),
+        Some(TaskId::from_index(1))
+    );
+
+    // `rt-core` marks the attributed task and takes it off the processor; the reference freezes
+    // the table as it stood when the fault was raised.
+    assert_eq!(core.state(1), CoreState::Faulted);
+    assert_eq!(
+        reference.state(TaskId::from_index(1)),
+        Some(RefState::Running)
+    );
 }

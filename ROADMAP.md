@@ -119,6 +119,80 @@ The scheduling model is fixed-priority even if the test harness randomizes event
 
 The first profile excludes task migration, mixed-criticality scheduling, dynamic clock scaling, unbounded blocking, arbitrary asynchronous executors, dynamic task creation, and runtime-loaded drivers. A request for these features returns an unsupported-profile diagnostic rather than silently reducing the requested guarantee.
 
+### 3.1.1 Fault classification, attribution and containment
+
+**Amendment, 2026-09-13 (leaf `M2.9`).** §3.1's Fault response row names four faults and §8.1 names
+three classes, and nothing connected them. Two independent implementations of §8 read the gap
+differently — recorded, with both readings, in
+`docs/decisions/decision_runtime-contract-gaps.md` — so the mapping is fixed here rather than left
+to each implementer. This is an addition, not a correction: no earlier decision changes, and no
+existing description or result is invalidated.
+
+| §3.1 fault | §8.1 class | Attributed to | Containable |
+|---|---|---|---|
+| Overrun | Expected error | the **overrunning** task, which need not be the running one | Yes — by its declared per-task policy (§7.3) |
+| Stack guard | Violated internal invariant | the executing task, whose guard was breached | No |
+| Unexpected trap | Deliberate fatal trap | the running task | No |
+| Assertion failure | Violated internal invariant | the running task | No |
+
+Four rules follow, and each settles a question the text previously left open:
+
+1. **Detection applies the policy.** An overrun is a fault the moment the runtime observes a
+   release for a task that still owes a job; it does not wait for a separate decision. §3.1
+   requires the policy to be *defined* and §7.3 makes it part of the task record, so it is the
+   system's behaviour rather than a caller's option. A release that arrives while the task's latch
+   already holds one is observed at **delivery**, not at arrival: the latch keeps the overrun beside
+   the release it holds, and when the outermost section closes the release is delivered and the
+   overrun detected, so the task's policy applies outside every masked region. It is never lost, and
+   never fatal for landing inside a critical section rather than one instruction after it. The
+   release that triggers an overrun is the policy's: under `SkipLateJob` it becomes the task's next
+   job, and under `Fault` it goes with the faulted task. *(Amended 2026-10-01, findings §6 (b).)*
+2. **Overrun is attributed to a task that is not running, and this is not a concurrency claim.**
+   A release is signalled by an interrupt while some other context holds the processor, so the
+   overrunning task is by construction not the running one. The single-core rule of §3.1 governs
+   *execution*, not *attribution*. The other three faults are synchronous to the executing
+   context and are attributed to it: for a stack guard that is the task whose guard was breached,
+   since every task runs on its own static stack. *(Amended 2026-10-01, findings §6 (d).)*
+3. **A containable fault raised while interrupts are masked is not containable.** Two independent
+   grounds, and the rule needs both — the first alone justifies a narrower rule than is wanted:
+   - terminating a job that *holds* the mask leaves the nesting depth above zero with no owner, so
+     interrupts never return; forcing the depth to zero re-enables them inside a region whose
+     invariants the faulting job was partway through restoring;
+   - and containment means **resuming the schedule** from a state the critical section had not
+     finished making consistent, which is what a kernel critical section exists to prevent. That
+     holds whichever task the fault is attributed to, not only the one holding the mask.
+     *(Amended 2026-10-01, findings §6 (e).)*
+
+   §8.1 offers no third option — "preserve a defined fatal handler" — so it escalates. Escalation
+   is the conservative direction: a fatal path that was not strictly required costs availability,
+   while a containment that was not safe costs correctness silently.
+
+   ⚠️ Delivery at unmask is **not** inside a masked region. A release latched during a critical
+   section is delivered once the outermost section closes, so an overrun discovered at that moment
+   applies its ordinary per-task policy. The distinction is not a subtlety to be resolved by an
+   implementer: it is the difference between a profile that can contain an overrun at all and one
+   that cannot.
+
+4. **A job may complete inside a masked region it opened, and its completion closes it.** The
+   nesting depth returns to zero with the job, releases latched in the region are delivered as at
+   the outermost unmask, and the schedule is decided after. A completion is not a fault: the job's
+   own code has finished, so neither ground of rule 3 reaches it, and it is the masked run that
+   ends at completion, which the timing analysis charges
+   (`docs/specs/catalog/decision_runtime-composite-inputs.md`, `CS_i`). A latched release is judged
+   at that delivery, so a task that completed inside the region is released afresh, not overrun.
+   *(Added 2026-10-01, findings §6 (a).)*
+
+Two smaller decisions are fixed at the same time, for the same reason:
+
+- **A task set must be non-empty.** "Finite static task set" admits the empty set, and a system
+  with no workload makes §7.2's second timing obligation vacuous — a vacuously passing
+  schedulability result is exactly what §7.1 exists to prevent.
+- **Kernel critical sections are bounded by a declared nesting depth, and exceeding it is
+  refused.** "Bounded kernel critical sections" did not say what the bound is or what happens at
+  it. A depth counter that *wraps* re-enables interrupts inside a critical section while reporting
+  success; one that *saturates* stops counting, so the matching unmasks no longer balance. Both
+  are silent failures, so the bound is explicit and exceeding it is an error.
+
 ### 3.2 Three target environments
 
 | Environment | Purpose | Limitation |

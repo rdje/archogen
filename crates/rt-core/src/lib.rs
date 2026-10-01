@@ -45,4 +45,4 @@ pub mod fault;
 pub mod scheduler;
 
 pub use fault::{Fault, OverrunPolicy};
-pub use scheduler::{Decision, Scheduler, TaskState, Transition};
+pub use scheduler::{BootError, Decision, Refused, Scheduler, TaskState, Transition};
