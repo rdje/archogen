@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the runtime contract's second independent review, triaged
+
+`ARCHOGEN-M2-0266` (leaf `M2.9`).
+
+- A reviewer who read only the written contract, and neither implementation, found it not yet sufficient on its
+  own: several rules both implementations follow were written in the decision records rather than in the
+  contract, and a few were written nowhere. Each of its findings now has an answer and a step that carries it out.
+- Two came out as work of their own: the language accepts any overrun policy, even a made-up name, and the
+  events the runtime's fault paths produce in a trace are still to be defined.
+
 ## archogen — a task priority below 1 is refused when the description is checked
 
 `ARCHOGEN-M2-0265` (leaf `M2.13`).

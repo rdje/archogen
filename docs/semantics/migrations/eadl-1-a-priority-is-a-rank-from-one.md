@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-10-01
 - leaf: M2.13 (`docs/tasks/M2.md`)
-- status: pending
+- status: applied
 - constructs: suite/docs/semantics/cases/invalid-priority-below-one.eadl
 - invalidates: none in this repository, measured; outside it, a description giving a task `(priority 0)` or a negative priority
 

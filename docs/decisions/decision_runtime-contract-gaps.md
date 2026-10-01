@@ -73,6 +73,47 @@ Rewriting the tests found five things more:
 | ranks with a gap refused | **a new question** — the language admits them | decided `2026-10-01`, for the director's review: ranks lower by their order, `runtime index = \|hp(i)\|` ([[decision_priority-comparison-direction]], item 3) |
 | what a halted runtime leaves in its task table | **a new question** — `rt-core` marks the attributed task, the reference freezes the table | **left to the implementation**: §8.1 asks for evidence, not a format; asserted on both sides (`d9`) |
 
+## The amended §3.1.1 reviewed (`2026-10-01`)
+
+`M2.9`'s plan step 6: a new context, instructed not to read `crates/`, the book or the task trees, reviewed
+`ROADMAP.md` §3.1.1 as amended and item 3 of [[decision_priority-comparison-direction]]. It disclosed what it saw
+outside its brief — some lines of `docs/tasks/` through a grep whose filter missed, and the Knowledge Map's summary
+of `fault.rs` — and none of its findings rests on them. **Its verdict: not yet fit to be relied on from the text
+alone**, because several decisions both models share live in this record and findings §6 rather than in §3.1.1, and
+some are in neither. Twenty-five findings: thirteen defects, eight drafting, four nits.
+
+| # | Kind | Finding | Answer | Step |
+| --- | --- | --- | --- | --- |
+| 1 | defect | rule 3's "while interrupts are masked", read literally, makes every overrun found at arrival fatal, since a release service runs with the hardware masked | accepted: rule 3 concerns the runtime's masked region, the mask depth above zero, defined; a service's own interrupt disable is not one — as both models implement | 6b |
+| 2 | defect | neither policy is defined | accepted: stated as both models implement — `SkipLateJob` abandons the owed job at once, wherever it stands; `Fault` takes the task out of the schedule for good, its later releases discarded, every other task continuing | 6b |
+| 3 | defect | the policies' domain, their eADL spelling and an absent clause are undecided | accepted, and measured: `archogen check` accepts `(on-overrun banana)` and a task with no clause. The domain is `fault` and `skip-late-job`; an absent clause means `fault`, the profile's default; any other symbol is refused | `M2.14` |
+| 4 | defect | rule 2 says the overrunning task is never the running one; the table, that it need not be | accepted: the overrunning task, whichever context holds the processor | 6b |
+| 5 | defect | an overrun raised without a release is not in the text | accepted: a rule 1a, as both models implement it. Raised inside a masked region it escalates: a monitor is an interrupt the port masks with the region, so only the mask holder's own check can raise one there, and ground 1 holds | 6b |
+| 6 | defect | a doubled latch at a completion, three arrivals, and the surviving job's instant | accepted: a task's latched arrivals are judged one at a time in arrival order against its state then, so a completing task's own pair is a fresh job and an overrun (both models); later arrivals are the same overrun; under `SkipLateJob` the surviving job is the last arrival's | 6b |
+| 7 | defect | §13.1 F26's "missed deadline" has no defined behaviour | decided, **for the director's review**: `rt-static-up-v1`'s runtime detects no deadline miss. Rule 1's overrun is its only timing fault, F26's miss is exercised as one with `D = T`, and a miss with `D < T` is the timing analysis's to exclude and a trace's to observe | 6b, F26's row |
+| 8 | defect | attribution outside task context | accepted: the executing context; a service, the trap path, a transition or idle is no task, and the evidence names the interrupted task as interrupted. `rt-core` attributes a fault in a service to the interrupted task today | 6b, 6c |
+| 9 | defect | escalation's terminal state and its evidence are unspecified | accepted: halt; nothing runs, is delivered or is latched afterwards; the first fault is kept, with its kind, class, attribution and whether rule 3 escalated it; the task table afterwards is not evidence. `rt-core` still edits its table on a release after a halt | 6b, 6c |
+| 10 | defect | refusing a `mask` past the bound leaves the matching `unmask` to close the section early; an unbalanced `unmask` is open | accepted: both are assertion failures, which halt; the bound is the runtime record's to declare | 6b, 6c |
+| 11 | defect | containment can abandon a job inside a primitive's unmasked part | accepted: a job is abandoned only in its own code or at a primitive's entry or return, so a policy applied inside a primitive takes effect at its return — a port obligation the runtime records state | 6b, `M2.7.4` |
+| 12 | defect | the section's header says nothing changed, and the 2026-10-01 amendment changed behaviour | accepted: marked as a correction | 6b |
+| 13 | defect (minor) | the observation events an overrun, a skip, a delivery or an escalation produce are undefined | accepted: a leaf of its own, beside §6.3's | `M2.15` |
+| 14 | drafting | rule 1 says only a *second* in-region release is observed at delivery | accepted: every in-region release | 6b |
+| 15 | drafting | six names for two concepts; "latch" undefined | accepted: one definitions paragraph | 6b |
+| 16 | drafting | "a masked region it opened" | accepted: every job starts at depth zero and nothing else changes it, so every open section at a completion is the job's | 6b |
+| 17 | drafting | "Unexpected trap → Deliberate fatal trap" mixes cause and response | accepted | 6b |
+| 18 | drafting | the composition record's `releases-never-latched` row says `complete` leaves the depth | accepted: one sentence corrected | 6b |
+| 19 | drafting | the priority record's item 2 still gives `rank − 1`; so do gap 3's row here and findings §5 | accepted | 6b |
+| 20 | drafting | (a) the index is unstable across builds; (b) duplicate ranks refused nowhere; (c) item 3's review status unmarked | (a) and (c) accepted. (b) **rejected**: duplicates are refused twice, by the checker (`unsupported-profile`) and by the lowering (`BootError::DuplicateRank`), which the reviewer was told not to read; the record will say so | 6b |
+| 21 | drafting | §14.1: the rulings were in force before an independent review of the text | agreed: this is that review, and a second round follows the answers | 6d |
+| 22 | nit | a coincident completion and release | accepted: §13.4's order lifted into rule 1 | 6b |
+| 23 | nit | "each settles a question" overclaims | accepted | 6b |
+| 24 | nit | rule 3's grounds read as both needed in every case | accepted | 6b |
+| 25 | nit | timing claims after a contained overrun | accepted: a run's claims end at its first contained overrun | 6b |
+
+⭐ **§5's lesson, a third time.** The reference model was derived from the text, and the two models agree, but six
+of the decisions they share were written only here and in findings §6. Agreement between models shows the text is
+implementable; only a reader of the text alone shows it is *sufficient*.
+
 ## The fact / decision
 
 `crates/rt-core` and `crates/rt-reference` implement the same runtime semantics from the same

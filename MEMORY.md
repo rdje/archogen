@@ -16,8 +16,9 @@
 - **Active tree:** `M2` → frontier `M2.9`. `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API`'s is
   `API.6`; `M1`'s only open leaf, `M1.29.4`, is blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M2.9` step 6 — the amended §3.1.1 reviewed by a new independent context, its answers in green
-  commits, then the leaf closed (its plan in the leaf). Then `M2.7.6` (its
+- **Next action:** `M2.9` step 6b — §3.1.1 rewritten to answer the review's findings (triaged in
+  `decision_runtime-contract-gaps.md`), then 6c (both models), 6d (a second review), the leaf closed. Then `M2.14`
+  (the overrun policy's domain), `M2.7.6` (its
   repository half; the hosting half waits on findings §11), `M2.7.4`, `M2.7.5`, `M2.11`, then `API.6`. This project
   uses no branches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of

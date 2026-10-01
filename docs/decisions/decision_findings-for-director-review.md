@@ -184,6 +184,13 @@ review, and reversible:**
   as it stood. §8.1 asks for evidence, not a format. Recorded in `decision_runtime-contract-gaps.md` and asserted on
   both sides.
 
+**Reviewed again `2026-10-01`, the text alone.** A new context read §3.1.1 as amended, and neither model: 25
+findings, 13 defects, triaged in `decision_runtime-contract-gaps.md`. Most ask the text to say what both models
+already do. One more needs your review, decided meanwhile so `M2.9` can proceed: **the runtime detects no deadline
+miss** — rule 1's overrun is its only timing fault, §13.1 F26's "missed deadline" is exercised as an overrun with
+`D = T`, and a miss with `D < T` is the timing analysis's to exclude and a trace's to observe. A deadline monitor
+would be a new interrupt source and a new fault, which the profile does not list.
+
 Of the reference's `CONTRACT SILENT` notes, four stay open, and none is a disagreement between the models: the
 domain of overrun policies, what a later idle-to-task dispatch costs, whether a runtime must raise a fault on an
 unbalanced unmask, and when a periodic task's first release falls.
