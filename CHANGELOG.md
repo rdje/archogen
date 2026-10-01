@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog check builds its checker where a pull request cannot reach
+
+`ARCHOGEN-M2-0288` (leaf `M2.7.6.2`).
+
+- The script that will run the catalog's check builds the checker from the main line's own files, never from the
+  pull request being judged, in a clean environment with the pinned compiler, and runs it from a place no other
+  build can write. Its tests plant hostile build scripts, compiler wrappers, toolchain files and environment
+  variables and show that none of them ever runs; the checker itself is still to be written.
+
 ## archogen — the fault contract answers its sixth reading
 
 `ARCHOGEN-M2-0287` (leaf `M2.9`).

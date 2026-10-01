@@ -146,4 +146,6 @@ specification's. Round 11 found none live, and the record was accepted. Its hist
 - **No surface makes a production claim.** That needs images, which are `M4`'s, and `M4.10` holds everything the
   design leaves to it.
 - **Premise 3 is unmet** until the director turns on the hosting settings and names a second reviewer. Its
-  repository half has begun: every workflow holds a read-only token and keeps no credentials (`M2.7.6.1`).
+  repository half has begun: every workflow holds a read-only token and keeps no credentials (`M2.7.6.1`), and
+  the harness that builds the checker from the base and runs it on the judged tree is written and tested against
+  the constructions the reviews found (`M2.7.6.2`).

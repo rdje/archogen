@@ -239,6 +239,16 @@ token. The gate reads a plain subset of YAML and refuses the rest, so a file it 
 passed. This is the first piece of the catalog check's protection (`M2.7.6`). The repository's default token, and
 the other hosting settings, are the director's to set, and no commit can show them.
 
+The second piece is the check's harness, `scripts/catalog_check.sh` (leaf `M2.7.6.2`). It runs from a clean
+checkout of the commit a pull request merges into, and writes the base, which the checker is built from, and the
+judged tree from git's stored blobs, never checking either out. The checker is built under an
+allowlisted environment, with the toolchain pinned by the base's own file, and runs from a target directory of its
+own. Before cargo runs, every cargo configuration on the build's path must hold only aliases, which cannot change a
+build. Its self-test plants a build script, a cargo wrapper, a toolchain file, a copy of the harness and hostile
+environment variables in a judged tree or around the run, and checks that none of them ever runs. Each
+protection, removed in turn, turns one of those arms red. The checker it runs is `M2.7.4`'s and does not exist
+yet, so the tests use a stub.
+
 ## The engine compiles for the browser
 
 The programmatic-interface decision promises a wasm binding, so the `integration` tier measures whether
