@@ -256,7 +256,11 @@ pub const RT_STATIC_UP_V1: Profile = Profile {
             decision: "defined overrun, unexpected-trap, stack-guard, and assertion failure policy; bounded diagnostic handling",
             parts: &[
                 Part {
-                    rule: "defined overrun, unexpected-trap, stack-guard, and assertion failure policy",
+                    rule: "defined overrun",
+                    stage: Stage::Check("`crate::workload`: an overrun policy the runtime does not perform is refused, and an absent one is the default"),
+                },
+                Part {
+                    rule: "unexpected-trap, stack-guard, and assertion failure policy",
                     stage: Stage::Later { stage: "build", owner: "M4.6" },
                 },
                 Part {

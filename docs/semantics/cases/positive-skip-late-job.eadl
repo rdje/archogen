@@ -1,0 +1,17 @@
+; case: positive-skip-late-job
+; expect: ok
+; why: The smallest complete system, with the task's overrun policy declared as the profile's second:
+;   a late job is abandoned and the release that found it starts the next (ROADMAP.md §3.1.1 rule 5).
+;
+(eadl-version eadl/1)
+
+(defblock timer.counter (offers counter-width tick-rate observation-coherent))
+(defplatform soc.p (offers (core-count 1 tick)) (requires (uses timer.counter)))
+(defservice time.monotonic
+  (requires (unambiguous-horizon (at-least 60 s))
+            (needs counter-width tick-rate observation-coherent)))
+(defsystem s
+  (task only (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1)
+             (on-overrun skip-late-job) (uses time.monotonic))
+  (requires (uses time.monotonic))
+  (platform (uses soc.p)))

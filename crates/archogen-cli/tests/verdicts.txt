@@ -61,6 +61,7 @@
 0 - docs/semantics/cases/positive-decimal-quantity.eadl
 0 - docs/semantics/cases/positive-explicit-absence-unused.eadl
 0 - docs/semantics/cases/positive-minimal-system.eadl
+0 - docs/semantics/cases/positive-skip-late-job.eadl
 0 - docs/semantics/cases/positive-sporadic-release.eadl
 0 - docs/semantics/cases/positive-unrelated-unknown.eadl
 0 - docs/semantics/cases/positive-valid-refinement.eadl
@@ -70,6 +71,7 @@
 12 unsupported-profile docs/semantics/cases/unsupported-dynamic-task-creation.eadl
 12 unsupported-profile docs/semantics/cases/unsupported-general-ipc.eadl
 12 unsupported-profile docs/semantics/cases/unsupported-multicore.eadl
+12 unsupported-profile docs/semantics/cases/unsupported-overrun-policy.eadl
 12 missing-fact,unsupported-profile docs/semantics/cases/unsupported-precedence-over-missing-fact.eadl
 20 - docs/semantics/kinds/core.eadl
 20 - docs/semantics/kinds/os-rt.eadl

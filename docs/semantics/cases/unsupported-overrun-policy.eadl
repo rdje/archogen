@@ -1,0 +1,9 @@
+; case: unsupported-overrun-policy
+; expect: unsupported-profile
+; why: A task declares an overrun policy rt-static-up-v1's runtime does not perform. It performs
+;   `fault`, the default, and `skip-late-job` (ROADMAP.md §3.1.1 rule 5); a response it cannot
+;   perform would be a policy nobody analyzed, so it is refused rather than mapped onto one of them.
+;
+(eadl-version eadl/1)
+
+(defsystem s (task t (period 10 ms) (deadline 10 ms) (priority 1) (on-overrun restart-task)))

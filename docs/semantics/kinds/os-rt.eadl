@@ -57,5 +57,7 @@
   ; What the task requires of the system, functionally.
   (clause needs (cardinality any) (holds forms))
   (clause uses (cardinality any) (holds forms))
-  ; §3.1: "defined overrun … policy". A named response, not a handler body.
+  ; §3.1: "defined overrun … policy". A named response, not a handler body. rt-static-up-v1
+  ; performs `fault`, the default when the clause is absent, and `skip-late-job` (ROADMAP.md
+  ; §3.1.1 rule 5; docs/semantics/model.md §4 rule 6); the checker refuses any other.
   (clause on-overrun (cardinality at-most-one) (holds values symbol)))

@@ -29,7 +29,7 @@ else — an extension, not a privileged addition.
 | `jitter` | bounded release jitter. Absent means zero, which is a claim the analysis relies on |
 | `priority` | static and unique; a rank from 1, the highest, so a larger number is a lower priority. Ranks need not be contiguous, and one below 1 is refused (`priority-below-one`). The number is the policy; the ready-queue that realizes it is the engine's |
 | `needs` / `uses` | what the task requires, functionally |
-| `on-overrun` | a named response, not a handler body |
+| `on-overrun` | a named response, not a handler body: `fault`, the default when the clause is absent, or `skip-late-job`; any other is refused (`unsupported-profile`) |
 
 ## What a task does not carry
 

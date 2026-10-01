@@ -26,6 +26,7 @@
 //! | not both `period` and `min-separation` | `invalid-description` | §5.5 — two release models is contradictory, not merely unsupported |
 //! | a priority is a rank, 1 or more | `priority-below-one`, an `invalid-description` | the language's, not the profile's: a value below 1 names no rank (leaf `M2.13`) |
 //! | priorities are unique | `unsupported-profile` | the profile admits one task per priority; another profile could admit more |
+//! | the overrun policy is one the profile performs | `unsupported-profile` | `rt-static-up-v1` performs `fault`, its default, and `skip-late-job` (`ROADMAP.md` §3.1.1 rule 5); another profile could perform more (leaf `M2.14`) |
 //! | deadlines are constrained (`D ≤ T`) | `unsupported-profile` | an arbitrary-deadline model needs a different analysis, not a wider version of this one |
 //!
 //! The last two are `unsupported-profile` rather than `invalid-description` for the reason §3.1
@@ -58,7 +59,13 @@ struct Task<'a> {
     min_separation: Option<&'a Form>,
     deadline: Option<&'a Form>,
     priority: Option<(i64, Span)>,
+    /// `(on-overrun <symbol>)`, when declared and a symbol; the schema refuses any other value.
+    on_overrun: Option<(&'a str, Span)>,
 }
+
+/// The overrun policies `rt-static-up-v1`'s runtime performs (`ROADMAP.md` §3.1.1 rule 5), in eADL's
+/// spelling. A task without the clause has the first, the profile's default.
+pub const OVERRUN_POLICIES: [&str; 2] = ["fault", "skip-late-job"];
 
 /// Check every system's task set against the admitted workload model.
 ///
@@ -74,6 +81,7 @@ pub fn check(forms: &[Form]) -> Vec<Diagnostic> {
             release_model(task, &mut diagnostics);
             constrained_deadline(task, &mut diagnostics);
             rank(task, &mut diagnostics);
+            overrun_policy(task, &mut diagnostics);
         }
         unique_priorities(&tasks, &mut diagnostics);
     }
@@ -95,6 +103,9 @@ fn collect(system: &Form) -> Vec<Task<'_>> {
                 Some(Form::Integer { value, span }) => Some((*value, *span)),
                 _ => None,
             },
+            on_overrun: clause(task, "on-overrun")
+                .and_then(|c| c.items().get(1))
+                .and_then(|value| value.as_symbol().map(|name| (name, value.span()))),
         })
         .collect()
 }
@@ -206,6 +217,29 @@ fn rank(task: &Task<'_>, out: &mut Vec<Diagnostic>) {
     }
 }
 
+/// §3.1: a "defined overrun … policy". `rt-static-up-v1`'s runtime performs two (`ROADMAP.md` §3.1.1 rule
+/// 5), so a policy it cannot perform is refused rather than lowered onto something it is not. An absent clause
+/// is `fault`, the profile's default, and needs no check.
+fn overrun_policy(task: &Task<'_>, out: &mut Vec<Diagnostic>) {
+    let Some((policy, span)) = task.on_overrun else {
+        return;
+    };
+    if !OVERRUN_POLICIES.contains(&policy) {
+        out.push(Diagnostic::error(
+            "unsupported-profile",
+            format!(
+                "task `{}` declares the overrun policy `{policy}`, which `rt-static-up-v1` does not perform",
+                task.name
+            ),
+            Label::new(span, "not an overrun policy of this profile"),
+            "write `(on-overrun fault)`, the default — the task leaves the schedule and every other task \
+             continues — or `(on-overrun skip-late-job)`, which abandons the late job and lets the release \
+             that found it start the next. A response this runtime cannot perform would be a policy nobody \
+             analyzed, so it is refused rather than mapped onto one of these",
+        ));
+    }
+}
+
 /// §3.1: "static **unique** task priorities".
 fn unique_priorities(tasks: &[Task<'_>], out: &mut Vec<Diagnostic>) {
     let mut seen: BTreeMap<i64, (&str, Span)> = BTreeMap::new();
@@ -278,6 +312,25 @@ mod tests {
                 found[0].contains(&format!("priority {below}, below 1")),
                 "{found:?}"
             );
+        }
+    }
+
+    #[test]
+    fn an_overrun_policy_the_profile_does_not_perform_is_refused() {
+        let found = diagnose(&system(
+            OK_A,
+            "(period 30 ms) (deadline 30 ms) (priority 2) (on-overrun banana)",
+        ));
+        assert_eq!(found.len(), 1, "{found:?}");
+        assert!(found[0].starts_with("unsupported-profile: "), "{found:?}");
+        assert!(found[0].contains("`banana`"), "{found:?}");
+    }
+
+    #[test]
+    fn both_overrun_policies_and_an_absent_clause_are_admitted() {
+        for policy in ["(on-overrun fault)", "(on-overrun skip-late-job)", ""] {
+            let task = format!("(period 30 ms) (deadline 30 ms) (priority 2) {policy}");
+            assert!(diagnose(&system(OK_A, &task)).is_empty(), "{policy}");
         }
     }
 

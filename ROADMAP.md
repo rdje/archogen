@@ -223,7 +223,7 @@ The rules below settle what the text left open; what is still open is listed at 
    effect when the primitive returns: containment keeps the runtime's state consistent and the schedule running,
    and claims nothing about the application state the abandoned job left (§3.1, Isolation). A run's timing claims
    end at its first contained overrun, which broke the execution bound its analysis assumed. *(Added 2026-10-01,
-   the review's findings 2, 11 and 25; the eADL spellings and the clause's domain are leaf `M2.14`'s.)*
+   the review's findings 2, 11 and 25. A task without an `on-overrun` clause has `fault`, and `archogen check` refuses any other policy, `docs/semantics/model.md` §4 rule 6, leaf `M2.14`.)*
 6. **The runtime detects no missed deadline.** Rule 1's overrun is the only timing fault `rt-static-up-v1`'s
    runtime raises. A job that misses its deadline is observed as an overrun when `D = T` and its next release
    finds it owed, which is how §13.1 F26 exercises a missed deadline; a miss with `D < T`, or one inside a run that
@@ -251,7 +251,7 @@ Two smaller decisions are fixed at the same time, for the same reason:
   the depth; the duration is bounded separately, by the `CS_i` the timing analysis charges. *(Amended 2026-10-01,
   the review's finding 10: a refusal had been the answer.)*
 
-**Still open**, each a leaf's: the eADL clause's domain and its default (`M2.14`); the observation events of each
+**Still open**, each a leaf's: the observation events of each
 path above, and the rule that makes a hosted trace compatible with a target's (`M2.15`); what a later idle-to-task
 dispatch costs, and when a periodic task's first release falls, which no fixture has needed yet.
 

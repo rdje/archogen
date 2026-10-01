@@ -173,11 +173,14 @@ fn the_population_is_the_size_the_census_pins() {
     //
     // 107 → 108 at leaf `M2.13`: `invalid-priority-below-one.eadl`, the worked case for the model's §4 rule
     // 5 — a priority is a rank from 1 — which the checker did not enforce until then.
+    //
+    // 108 → 110 at leaf `M2.14`: `positive-skip-late-job.eadl` and `unsupported-overrun-policy.eadl`, the
+    // worked cases for §4 rule 6 — the two overrun policies `rt-static-up-v1` performs, one admitted, one not.
     let suite = suite();
     assert_eq!(
         suite.len(),
-        108,
-        "the conformance suite holds {} descriptions and this census pins 108 — if a case was added or \
+        110,
+        "the conformance suite holds {} descriptions and this census pins 110 — if a case was added or \
          removed deliberately, update the census in the same commit and say why in the leaf; if not, a \
          root stopped being walked",
         suite.len()

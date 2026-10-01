@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a task's overrun policy must be one the runtime performs
+
+`ARCHOGEN-M2-0270` (leaf `M2.14`).
+
+- `archogen check` now refuses an `on-overrun` policy the runtime cannot perform. Two are admitted: `fault`, which
+  is also what a task gets when it declares none, and `skip-late-job`. Before, any word was accepted and only the
+  runtime would have had no idea what to do with it.
+- Written down as a correction to `eadl/1`, with two new worked cases; no existing description's verdict moved.
+
 ## archogen — the rulings' outside precedents checked at their sources
 
 `ARCHOGEN-M2-0269` (leaf `M2.16`).

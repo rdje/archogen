@@ -129,7 +129,11 @@ it (`crates/eadl-model/src/check.rs`, `crates/eadl-model/src/workload.rs`).
    the ranks of a system need not be contiguous, because only their order is used. A value below 1 names no
    rank: `priority-below-one`. That is the language's rule, not a profile's, so its verdict is
    `invalid-description`.
-6. **A failure of the toolchain is never a verdict about the description** (§5.5): `tool-failure`.
+6. **`rt-static-up-v1` performs two overrun policies**, `fault` and `skip-late-job` (`ROADMAP.md` §3.1.1
+   rule 5), and a task without an `on-overrun` clause has `fault`, the profile's default. Any other policy is
+   one this runtime cannot perform, so it is refused rather than mapped onto one of the two:
+   `unsupported-profile`. Another profile could perform more.
+7. **A failure of the toolchain is never a verdict about the description** (§5.5): `tool-failure`.
 
 ## 5. A description contains no implementation
 
@@ -163,6 +167,6 @@ the one code that names more than one rule today says so.
 | `infeasible-configuration` | a required fact is declared absent (§2 rule 2) | correct the requirement or the platform | `check (defblock timer.counter (offers counter-width) (absent low-power-timer)) (defservice time.lowpower (requires (needs low-power-timer))) (defsystem s (requires (uses time.lowpower)))` |
 | `missing-fact` | something the system requires is described nowhere: a required fact (§2 rule 3), a task's release model (§4 rule 1), or the platform a refinement names (§3 rule 4) | declare the fact offered or absent on the platform; give a task a `period` or a `min-separation`; for a refinement, import the module that declares the target, or correct its name | `check (defservice time.monotonic (requires (needs wrap-behavior))) (defsystem s (requires (uses time.monotonic)))` |
 | `refinement-violated` | a concrete platform breaks an obligation of the abstract one it refines (§3 rules 1–3) | honour the obligation the diagnostic names: offer the guarantee, give the bounded value, or drop what the abstract declares absent | `check (defplatform soc.abstract (offers counter-width) (absent debug-port)) (defplatform soc.concrete (refines soc.abstract) (offers counter-width debug-port))` |
-| `unsupported-profile` | the description asks for something the active profile does not admit (§4 rules 2–4) | request a profile that supports it, or change the description to fit this one; nothing is silently weakened | `check (defsystem s (task a (period 10 ms) (deadline 10 ms) (priority 1)) (task b (period 10 ms) (deadline 10 ms) (priority 1)))` |
-| `tool-failure` | the toolchain could not proceed (§4 rule 6) | this is a failure of the toolchain, not a verdict about the description; report it | `none: only a shipped kind module over 4 GiB reaches it, and the kind modules are embedded in the toolchain (shipped_registry in crates/eadl-model/src/check.rs)` |
+| `unsupported-profile` | the description asks for something the active profile does not admit (§4 rules 2–4 and 6) | request a profile that supports it, or change the description to fit this one; nothing is silently weakened | `check (defsystem s (task a (period 10 ms) (deadline 10 ms) (priority 1)) (task b (period 10 ms) (deadline 10 ms) (priority 1)))` |
+| `tool-failure` | the toolchain could not proceed (§4 rule 7) | this is a failure of the toolchain, not a verdict about the description; report it | `none: only a shipped kind module over 4 GiB reaches it, and the kind modules are embedded in the toolchain (shipped_registry in crates/eadl-model/src/check.rs)` |
 | `boundary-implementation-in-description` | a construct is implementation, which eADL does not contain (§5) | move it to the layer the diagnostic names; the description states what, not how | `check (defsystem app.rt (task sensor (period 10 ms) (deadline 10 ms) (wcet 850 us)))` |
