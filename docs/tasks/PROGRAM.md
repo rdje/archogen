@@ -714,7 +714,7 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0301 (leaf PROGRAM.47.4)`
 
 - ID: `PROGRAM.47.5`
-  Status: `active` — one chapter per child, each `done` when committed: `.1` the introduction, `.2` the tour
+  Status: `active` — one chapter per child, each `done` when committed: `.1` the introduction, `.2` the tour, `.3` reading a description
   Goal: every other chapter in layers, one leaf and commit each when started, the chapters a newcomer meets first
   leading — the introduction and the tour, reading and workload, checking, evidence and analysis, the catalog,
   targets, the command line, the engine API, verification — and the gory parts of each moved to annexes.
@@ -740,6 +740,18 @@ mdBook that is the director's window into the project.
   Verification: `bash scripts/build_book.sh` → rc=0; `cargo test -q -p archogen-cli --test book_tour` → rc=0;
   `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`
   Commit: `ARCHOGEN-PROGRAM-0303 (leaf PROGRAM.47.5.2)`
+
+- ID: `PROGRAM.47.5.3`
+  Status: `done` — `2026-10-02`
+  Goal: *Reading a description* in layers.
+  **Done.** It opened with a block on the language's two normative halves, a reviewer's preface in front of a
+  newcomer; it now opens with what reading is and what an S-expression looks like, a one-minute summary for
+  engineers, and three steps, and the preface became the first of the precise rules. The console transcripts and
+  the corpus counts two tests read are unchanged.
+  Verification: `cargo test -q -p archogen-cli --test book_transcripts` → `6 passed`; `cargo test -q -p eadl-front
+  --test corpus` → `14 passed`; `--test reference` → `55 passed`; `bash scripts/build_book.sh` → rc=0;
+  `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`
+  Commit: `ARCHOGEN-PROGRAM-0304 (leaf PROGRAM.47.5.3)`
 
 ## Roadmap coverage map
 
@@ -1041,6 +1053,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.47.4` | `ARCHOGEN-PROGRAM-0301 (leaf PROGRAM.47.4)` | **the runtime chapter in layers**, its mechanics and history in Annex A |
 | `PROGRAM.47.5.1` | `ARCHOGEN-PROGRAM-0302 (leaf PROGRAM.47.5.1)` | **the introduction in layers** |
 | `PROGRAM.47.5.2` | `ARCHOGEN-PROGRAM-0303 (leaf PROGRAM.47.5.2)` | **the tour**: the one-minute summary for engineers |
+| `PROGRAM.47.5.3` | `ARCHOGEN-PROGRAM-0304 (leaf PROGRAM.47.5.3)` | ***Reading a description* in layers** |
 
 ## Changelog
 

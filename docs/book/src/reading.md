@@ -1,5 +1,46 @@
 # Reading a description
 
+## The idea, in plain words
+
+A description is text, and before archogen can do anything with it, it has to **read** it: turn the characters
+into a structure it can work with. When the text has a mistake — a missing parenthesis, `3ms` where `3 ms` was
+meant — reading is also where the first help comes from, and the message has to say exactly where the problem is
+and how to fix it.
+
+eADL is written as nested lists in parentheses, a form called *S-expressions* that comes from the Lisp family of
+languages. Each list starts with a word that says what it is, followed by its parts:
+
+```text
+(task beat (period 10 ms) (deadline 10 ms) (priority 1))
+```
+
+reads as "a task called `beat`, with a period of 10 ms, a deadline of 10 ms and priority 1". The same shape carries
+every part of a description, so one small reader handles them all, and it remembers where every piece came from,
+which is what lets a message point at the exact characters.
+
+> **In one minute, for engineers.** The reader turns eADL text into S-expressions with a source span on every
+> node, numbers kept exact (a decimal is an integer with a scale, never a float, within the 64-bit signed range),
+> comments kept and some promoted to headers, and a canonical form. Every diagnostic carries a span and a repair. Its normative definition has two halves —
+> `docs/semantics/grammar.md` for what is well-formed, `docs/semantics/reference.md` for what it means — and both are
+> executed against the reader over the whole corpus, as the next section explains.
+
+## How it works
+
+1. **The text becomes lists.** Each parenthesis opens a list, each word or number becomes an atom, and every one of
+   them records where it came from: the file, the line and the column.
+2. **A mistake becomes a message.** Text that cannot be read — `3ms` with no space, a list never closed — stops the
+   reader with a diagnostic that names the spot and says how to repair it, as the examples below show.
+3. **What was read moves on.** The lists go to the checker ([Checking a description](checking.md)), which decides
+   whether they describe a system the profile admits.
+
+Before anything can be checked, resolved or generated, it has to be read — and when it cannot be read, the message
+has to say where and what to do. `ROADMAP.md` §5.5 makes that part of the user contract: every diagnostic carries
+source spans and a concrete repair direction.
+
+## The precise rules
+
+### Where the rules live
+
 > **The surface has two normative halves, and this chapter is neither of them.**
 > `docs/semantics/grammar.md` says what a well-formed description *is*;
 > `docs/semantics/reference.md` says what a well-formed description *is worth* — the exact value
@@ -17,12 +58,7 @@
 > recognizer reports the productions of each derivation it accepts, and a production no probe reaches
 > fails the build.
 
-
-Before anything can be checked, resolved or generated, it has to be read — and when it cannot
-be read, the message has to say where and what to do. `ROADMAP.md` §5.5 makes that part of the
-user contract: every diagnostic carries source spans and a concrete repair direction.
-
-## What the reader produces
+### What the reader produces
 
 S-expressions, with spans on everything:
 
@@ -54,7 +90,7 @@ that `MHz` is a unit is the model layer's business. That separation is what lets
 serve the boundary corpus, the S0 fixture and the M1 semantic corpus without any of them
 leaking assumptions into the others.
 
-## Numbers are exact — there is no float anywhere
+### Numbers are exact — there is no float anywhere
 
 §7.4 requires exact integer or checked rational arithmetic. A reader that produced `f64` would
 lose that before any analysis ran: a `0.1 ms` in a description would silently become a value
@@ -86,7 +122,7 @@ It prints every distinct integer value the population writes, the largest of the
 domain's magnitude bits it needs, and — the number a decision about the domain rests on — how many
 literals the domain **refused**.
 
-## Diagnostics point at the problem
+### Diagnostics point at the problem
 
 ```text
 error[read-malformed-number]: `3ms` is not a number
@@ -149,13 +185,13 @@ no verdict at all. Now the first list past the limit is `read-nesting-too-deep`,
 without descending, and nothing after the reader meets the depth. The limit belongs to `eadl/1`, like the
 64-bit value domain, so every reader refuses the same descriptions.
 
-## Comments survive
+### Comments survive
 
 They are semantically inert to the language and are kept anyway, with their spans, because the
 boundary corpus carries its case metadata in them. Discarding them would force a second,
 divergent parser to exist just to read those headers.
 
-## Canonical form
+### Canonical form
 
 Two descriptions differing only in whitespace print identically. That is the first link in the
 chain §12 M4 needs — "repeated generation produces identical canonical plans and generated
@@ -181,7 +217,7 @@ cascade into more errors. ⛔ Until leaf `M1.35`, a backslash before a character
 one byte (`"a\éb"`) crashed the reader, and `archogen check` exited 101 where the contract is a
 diagnostic and exit 10 (`crates/eadl-front/src/reader.rs`).
 
-## Which language version a description is written in
+### Which language version a description is written in
 
 A description can say so:
 
@@ -232,7 +268,7 @@ otherwise would be the more dangerous kind of green. What makes it more than a p
 corpora are about to be digested into `eadl/1`'s frozen baseline, which is what turns "a later version
 differs" from a promise into something a gate can check.
 
-## A lesson from the corpus
+### A lesson from the corpus
 
 The header format needs **two** independent discriminators — indentation *and* key shape — and
 each was added only after the other alone failed on a real file in the corpus. The second

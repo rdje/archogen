@@ -73,11 +73,11 @@ a change that leaves it stale, so it is never edited by hand.
 ## D
 
 - **deadline** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
-  board](tour.md), [The boundary: functionality versus implementation](boundary.md), [Quantities and
-  units](quantities.md), [Describing a workload](workload.md), [What a report may claim](evidence.md), [What the
-  scheduling checker establishes](analysis.md), [The runtime: decisions, not actions](runtime.md), [The engine
-  API](engine-api.md), [Verifying the toolchain](verification.md), [What is versioned, and what changing it
-  costs](versions.md)
+  board](tour.md), [The boundary: functionality versus implementation](boundary.md), [Reading a
+  description](reading.md), [Quantities and units](quantities.md), [Describing a workload](workload.md), [What a report
+  may claim](evidence.md), [What the scheduling checker establishes](analysis.md), [The runtime: decisions, not
+  actions](runtime.md), [The engine API](engine-api.md), [Verifying the toolchain](verification.md), [What is versioned,
+  and what changing it costs](versions.md)
 - **description** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The boundary: functionality versus implementation](boundary.md), [The use cases](usecases.md),
   [Reading a description](reading.md), [Kinds and schemas](kinds.md), [Quantities and units](quantities.md), [Modules
@@ -149,6 +149,7 @@ a change that leaves it stale, so it is never edited by hand.
   costs](versions.md#how-an-engine-change-is-held-to-what-descriptions-mean)
 - How it was reviewed — [Where the engine's knowledge comes from: the catalog](catalog.md#how-it-was-reviewed)
 - How it works — [Introduction](introduction.md#how-it-works)
+- How it works — [Reading a description](reading.md#how-it-works)
 - How it works — [The runtime: decisions, not actions](runtime.md#how-it-works)
 - How much of this a machine can check — [The boundary: functionality versus
   implementation](boundary.md#how-much-of-this-a-machine-can-check)
@@ -244,9 +245,10 @@ a change that leaves it stale, so it is never edited by hand.
 ## P
 
 - **PDF** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
-- **period** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Kinds and
-  schemas](kinds.md), [Quantities and units](quantities.md), [The S0 early generation path](s0.md), [Verifying the
-  toolchain](verification.md), [What is versioned, and what changing it costs](versions.md)
+- **period** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Reading a
+  description](reading.md), [Kinds and schemas](kinds.md), [Quantities and units](quantities.md), [The S0 early
+  generation path](s0.md), [Verifying the toolchain](verification.md), [What is versioned, and what changing it
+  costs](versions.md)
 - **PGEN** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - pgen — [What this project relies on from outside](ledger.md#pgen)
 - **PLIC** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
@@ -261,18 +263,19 @@ a change that leaves it stale, so it is never edited by hand.
   establishes](analysis.md), [The runtime: decisions, not actions](runtime.md), [Where generated systems
   run](targets.md)
 - **priority** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
-  board](tour.md), [The use cases](usecases.md), [Describing a workload](workload.md), [Checking a
-  description](checking.md), [The runtime: decisions, not actions](runtime.md), [The S0 early generation path](s0.md),
-  [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
+  board](tour.md), [The use cases](usecases.md), [Reading a description](reading.md), [Describing a
+  workload](workload.md), [Checking a description](checking.md), [The runtime: decisions, not actions](runtime.md), [The
+  S0 early generation path](s0.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules
+  in detail](annex-runtime.md)
 - profile — [What is versioned, and what changing it costs](versions.md#profile)
 - **profile** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
-  board](tour.md), [The supported profile](profile.md), [The use cases](usecases.md), [Quantities and
-  units](quantities.md), [Refinement](refinement.md), [Describing a workload](workload.md), [Checking a
-  description](checking.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [The runtime:
-  decisions, not actions](runtime.md), [The S0 early generation path](s0.md), [Where generated systems run](targets.md),
-  [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying the toolchain](verification.md),
-  [What this project relies on from outside](ledger.md), [What is versioned, and what changing it costs](versions.md),
-  [Annex A: The runtime's rules in detail](annex-runtime.md)
+  board](tour.md), [The supported profile](profile.md), [The use cases](usecases.md), [Reading a
+  description](reading.md), [Quantities and units](quantities.md), [Refinement](refinement.md), [Describing a
+  workload](workload.md), [Checking a description](checking.md), [Where the engine's knowledge comes from: the
+  catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [The S0 early generation path](s0.md), [Where
+  generated systems run](targets.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying
+  the toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
+  changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
 - provenance-format — [What is versioned, and what changing it costs](versions.md#provenance-format)
 
 ## Q
@@ -333,11 +336,11 @@ a change that leaves it stale, so it is never edited by hand.
 
 - **task** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The boundary: functionality versus implementation](boundary.md), [The supported
-  profile](profile.md), [The use cases](usecases.md), [Kinds and schemas](kinds.md), [Quantities and
-  units](quantities.md), [Describing a workload](workload.md), [Checking a description](checking.md), [What the
-  scheduling checker establishes](analysis.md), [The runtime: decisions, not actions](runtime.md), [The S0 early
-  generation path](s0.md), [Verifying the toolchain](verification.md), [What this project relies on from
-  outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
+  profile](profile.md), [The use cases](usecases.md), [Reading a description](reading.md), [Kinds and
+  schemas](kinds.md), [Quantities and units](quantities.md), [Describing a workload](workload.md), [Checking a
+  description](checking.md), [What the scheduling checker establishes](analysis.md), [The runtime: decisions, not
+  actions](runtime.md), [The S0 early generation path](s0.md), [Verifying the toolchain](verification.md), [What this
+  project relies on from outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
 - The admitted task model, enforced — [Describing a workload](workload.md#the-admitted-task-model-enforced)
 - The binding a web page loads — [The engine API](engine-api.md#the-binding-a-web-page-loads)
 - The browser module answers as the command line does — [Verifying the
@@ -362,6 +365,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The histories are sealed as they grow — [Verifying the
   toolchain](verification.md#the-histories-are-sealed-as-they-grow)
 - The idea, in plain words — [Introduction](introduction.md#the-idea-in-plain-words)
+- The idea, in plain words — [Reading a description](reading.md#the-idea-in-plain-words)
 - The idea, in plain words — [The runtime: decisions, not actions](runtime.md#the-idea-in-plain-words)
 - The language definition travels with the binary — [Checking a
   description](checking.md#the-language-definition-travels-with-the-binary)
@@ -375,6 +379,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The passes, in the order a failure makes the next meaningless — [Checking a
   description](checking.md#the-passes-in-the-order-a-failure-makes-the-next-meaningless)
 - The precise rules — [Introduction](introduction.md#the-precise-rules)
+- The precise rules — [Reading a description](reading.md#the-precise-rules)
 - The precise rules — [The runtime: decisions, not actions](runtime.md#the-precise-rules)
 - The product runs nothing — [Verifying the toolchain](verification.md#the-product-runs-nothing)
 - The records that hold it — [Where the engine's knowledge comes from: the catalog](catalog.md#the-records-that-hold-it)
@@ -463,6 +468,7 @@ a change that leaves it stale, so it is never edited by hand.
 - Where it lives — [Presence, absence, and relevance](presence.md#where-it-lives)
 - Where it lives — [What the scheduling checker establishes](analysis.md#where-it-lives)
 - Where the landing page sends things — [Verifying the toolchain](verification.md#where-the-landing-page-sends-things)
+- Where the rules live — [Reading a description](reading.md#where-the-rules-live)
 - Where to go next — [A tour: from a description to a board](tour.md#where-to-go-next)
 - Which language version a description is written in — [Reading a
   description](reading.md#which-language-version-a-description-is-written-in)
