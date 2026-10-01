@@ -150,7 +150,9 @@ is where this lands.
 **Ruled `2026-10-01`, by the director's delegation** ("What is your option on this. you know the codebase and the
 roadmap and task-trees, so please decide (sota, signoff)"). `M2.9` carries it out.
 
-- **(b) A second release while one is latched is recorded, never lost, and never fatal for its timing alone.** The
+- **(b) A second release while one is latched is recorded, never lost, and never fatal for its timing alone.**
+  *(Narrowed `2026-10-01` by the fault contract's rule 1: "never lost" holds for arrivals the platform delivers as
+  distinct requests; an external source that does not count arrivals during a pending request can lose one.)* The
   latch keeps the overrun beside the release it holds; at delivery, outside every masked region, the task's
   declared overrun policy applies, as rule 1 asks, and rule 3 does not, as its own note says of delivery. The same
   doubling one instruction after the region was already contained by that policy; the outcome may not depend on

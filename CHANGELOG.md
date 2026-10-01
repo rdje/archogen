@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the fault contract answers its fourth reading
+
+`ARCHOGEN-M2-0281` (leaf `M2.9`).
+
+- The fourth independent reading found nine remaining ambiguities, three of them in text written to answer the
+  third. The answers now state what a board port must achieve and leave how to the port's own reviewed record, which
+  is where the new ambiguities kept appearing; the three mistakes are corrected, each checked against the runtime's
+  code before landing. Neither runtime model needed to change.
+
 ## archogen — the independent model accepts every priority the language does
 
 `ARCHOGEN-M2-0279` (leaf `M2.9`).

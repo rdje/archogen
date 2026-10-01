@@ -130,9 +130,9 @@ belongs in the profile's specification rather than in the roadmap; its rule numb
 | §3.1 fault | §8.1 class | Attributed to | Containable |
 |---|---|---|---|
 | Overrun | Expected error | the **overrunning** task, whichever context holds the processor (rule 2) | Yes — by its declared per-task policy (§7.3, rule 5) |
-| Stack guard | Violated internal invariant | the executing context (rule 2) | No |
-| Unexpected trap | Deliberate fatal trap (its cause is outside the model) | the executing context (rule 2) | No |
-| Assertion failure | Violated internal invariant | the executing context (rule 2) | No |
+| Stack guard | Violated internal invariant | the context that raises it (rule 2) | No |
+| Unexpected trap | Deliberate fatal trap (its cause is outside the model) | the context that raises it (rule 2) | No |
+| Assertion failure | Violated internal invariant | the context that raises it (rule 2) | No |
 
 ### 3.2 Three target environments
 

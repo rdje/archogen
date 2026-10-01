@@ -27,8 +27,8 @@ follows is evidence rather than an author agreeing with himself.
 | 1 | overrun attribution and escalation | detection applies the policy, to the **overrunning** task even when it is not running; the other three faults attribute to the running context | `ROADMAP.md` §3.1.1 (new) |
 | 2 | the empty task set | **refused** | `ROADMAP.md` §3.1.1; `rt-core` |
 | 3 | priority rank `0` | **refused**; rank is `N ≥ 1`, and the runtime index is stated — `rank − 1` then, `\|hp(i)\|` since `2026-10-01` (the priority record's item 3) | `decision_priority-comparison-direction.md`; `rt-core` |
-| 4 | containable fault inside a masked region | **escalates to fatal** | `ROADMAP.md` §3.1.1; `rt-core` |
-| 5 | the bound on mask nesting | **declared, and exceeding it is refused** — neither wrapping nor saturating | `ROADMAP.md` §3.1.1; `rt-core` |
+| 4 | containable fault inside a masked region | **escalates to fatal** — still the rule, which since `2026-10-01` decides nothing observable in this profile (the fault contract's rule 3) | `ROADMAP.md` §3.1.1; `rt-core` |
+| 5 | the bound on mask nesting | **declared, and exceeding it is refused** — neither wrapping nor saturating; since `2026-10-01` an assertion failure, not a refusal (the fault contract's second smaller decision) | `ROADMAP.md` §3.1.1; `rt-core` |
 
 ⭐ **Four of the five went against the implementation**, which is the outcome that makes the
 exercise worth its cost: an author's reading lost to a contract reading four times out of five,
@@ -246,6 +246,13 @@ answer text is to be checked against both models before it lands (step 6k). The 
 | 90, 91 | drafting | initialisation's rule credited to the composition; the composition's role list reads as letting kernel contexts call `mask` | accepted: it is this contract's narrowing, listed in the header; the composition record gains the matching sentence |
 | 92–97 | drafting | rule 6's "which needs `D = T`"; rule 5's "leaves the depth at zero"; the table's attribution column; §3.1's kernel critical sections; a timer trap with no release due; the counting fact's owner | accepted; a timer trap with no release due is an unexpected trap, like an empty claim, since the composition's `raised-only-when-due` makes it a port's broken obligation; the counting fact belongs to the source's catalog record, written under `M2.7.4` |
 | 98–105 | nits | vestigial "if there is one"; "running" for "owed"; `CS^app`; "no workload"; "not lost"; rule 7's "latched"; other guarded stacks; three stale lines in other records | accepted |
+
+**Answered `2026-10-01` (step 6k).** Every finding is answered as triaged above, and none moves either model: #83's
+reading (a fresh first arrival, then the overrun that takes a `Fault` task out) is what both models do; #84 and #88's
+transition rule is what `rt-core` records — the current task at a decision, and none after a `SkipLateJob` renewal
+vacated it; #81's hosted order delivers inside the completion path, as `rt-core`'s `complete` does. The port's
+mechanisms (#82, #85) are requirements now, their how in the port's catalog record (`M2.12`). The composition record
+gains the two sentences #90 and #91 ask for, and findings §6 (b) and gap rows 4 and 5 their marks (#105).
 
 ## Where the contract lives (`2026-10-01`)
 
