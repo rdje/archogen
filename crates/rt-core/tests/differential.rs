@@ -145,7 +145,7 @@ fn ref_snapshot(r: &Runtime<N>) -> Snapshot {
 fn reference(policies: [OverrunPolicy; N]) -> Runtime<N> {
     let spec = core::array::from_fn(|i| TaskSpec {
         name: ["a", "b", "c"][i],
-        priority: Priority::new(u16::try_from(i).expect("small") + 1),
+        priority: Priority::new(i64::try_from(i).expect("small") + 1),
         on_overrun: match policies[i] {
             // Observed behaviour, not the name: `Fault` stops the task and keeps scheduling.
             OverrunPolicy::Fault => OverrunAction::StopTask,
@@ -778,7 +778,7 @@ fn d3_both_refuse_rank_zero_and_order_tasks_by_rank() {
     // ⛔ Rewriting this test found that `rt-core` also refused ranks with a gap — `1, 5, 9` —
     // which the language admits and the reference accepts. Fixed priority uses only the order, so
     // the record now states `runtime index = |hp(i)|`, and `rt-core` lowers by it.
-    let spec = |ranks: [u16; N]| {
+    let spec = |ranks: [i64; N]| {
         core::array::from_fn::<_, N, _>(|i| TaskSpec {
             name: ["a", "b", "c"][i],
             priority: Priority::new(ranks[i]),
@@ -787,20 +787,19 @@ fn d3_both_refuse_rank_zero_and_order_tasks_by_rank() {
     };
     assert!(matches!(
         Runtime::boot(spec([0, 1, 2])),
-        Err(rt_reference::BootError::PriorityRankZero { .. })
+        Err(rt_reference::BootError::PriorityBelowOne { .. })
     ));
     assert_eq!(
         Scheduler::from_eadl_ranks([0, 1, 2], [OverrunPolicy::Fault; N]).unwrap_err(),
         rt_core::BootError::RankBelowOne { position: 0 }
     );
 
-    // Ranks with gaps, described out of order: description positions 0, 1, 2 carry ranks 9, 1, 5,
-    // so `rt-core` holds them at indices 2, 0, 1. Both run the rank-5 task over the rank-9 one.
-    let ranks = [9, 1, 5];
-    let mut reference = Runtime::boot(spec(ranks)).expect("distinct ranks, none zero");
-    // The reference takes a 16-bit rank and `rt-core` the language's integer (leaf `M2.18`), so a rank
-    // beyond `u16::MAX` cannot be compared; here both take the same small ones.
-    let mut core = Scheduler::from_eadl_ranks(ranks.map(i64::from), [OverrunPolicy::Fault; N])
+    // Ranks with gaps, described out of order, up to the language's largest integer (leaf `M2.18`):
+    // description positions 0, 1, 2 carry ranks `i64::MAX`, 1, 70 000, so `rt-core` holds them at
+    // indices 2, 0, 1. Both run the rank-70 000 task over the `i64::MAX` one.
+    let ranks = [i64::MAX, 1, 70_000];
+    let mut reference = Runtime::boot(spec(ranks)).expect("distinct ranks, none below 1");
+    let mut core = Scheduler::from_eadl_ranks(ranks, [OverrunPolicy::Fault; N])
         .expect("distinct ranks, none below 1");
     reference
         .release(TaskId::from_index(0))

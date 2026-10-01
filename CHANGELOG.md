@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the independent model accepts every priority the language does
+
+`ARCHOGEN-M2-0279` (leaf `M2.9`).
+
+- The independent runtime model now takes any positive 64-bit priority, as the language and the runtime already
+  do, and the two are compared at the largest one. Rewriting it to the latest contract changed none of its
+  behaviour, and it independently spotted one ambiguity the fourth review also reported.
+
 ## archogen — the book opens with a tour of what archogen is for
 
 `ARCHOGEN-PROGRAM-0278` (leaf `PROGRAM.44`).

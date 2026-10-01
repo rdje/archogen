@@ -5,8 +5,9 @@
 # recurrence with its reference does not qualify as independent." The same argument applies
 # to a shared type: a reference model that imports the implementation's vocabulary inherits
 # the implementation's misreadings of the contract along with it. This crate is derived from
-# ROADMAP.md §3.1/§8/§8.1, docs/profiles/rt-static-up-v1.md and the priority-direction
-# decision record, and from nothing else.
+# ROADMAP.md §3.1/§8/§8.1, docs/profiles/rt-static-up-v1.md, the profile's fault contract
+# docs/profiles/rt-static-up-v1-faults.md, docs/analysis/cost-accounting-v1.md and the
+# priority-direction decision record, and from nothing else.
 [package]
 name = "rt-reference"
 version = "0.1.0"
