@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the MCP server's design, read at the source
+
+`ARCHOGEN-API-0293` (leaf `API.6.1`).
+
+- Before building the server that lets AI agents drive archogen, the protocol was read at its source: its current
+  revision, from July 2026, changed how a client and server meet, and older clients cannot talk to a server that
+  only speaks the new one. The design answers both, offers exactly the operations the command table declares, and
+  never lets a refused description read as a success.
+
 ## archogen — an attack review closes two ways past the workflow gate
 
 `ARCHOGEN-M2-0292` (leaf `M2.7.6.4`).

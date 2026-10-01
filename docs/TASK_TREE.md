@@ -56,7 +56,7 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 | [`S0`](tasks/S0.md) | `done` | — every leaf closed; F28 green, and the chapter's counts are measured (`S0.8`) | repo-local |
 | [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.34` — awaits the director's yes; `.41.1` and `.42` done, every sealing gate reads history whole; `.10.5` the next push | repo-local |
 | [`M1`](tasks/M1.md) | `active` | `M1.29.4` — blocked: module parameters wait on the director's call (findings §7); every other leaf is closed | repo-local |
-| [`API`](tasks/API.md) | `active` | `API.6` — the MCP server, behind the main line; `API.5`, the wasm binding and its page, done and run in a browser | repo-local |
+| [`API`](tasks/API.md) | `active` | `API.6` — the MCP server, designed for both protocol eras (`API.6.1`); `API.5`, the wasm binding and its page, done and run in a browser | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |
 | [`M2`](tasks/M2.md) | `active` | `M2.9` — both runtime models agree; the fault contract answers its seventh review; an eighth round next; then `M2.7.6`, `M2.7.4`, `M2.7.5` and `M2.10.2` | repo-local |
 | [`M3`](tasks/M3.md) | `pending` | `M3.1` — candidate enumeration and substitutability | repo-local |

@@ -180,6 +180,7 @@ justifies the split — the rows below appear as that happens.
 - [`decision_findings-for-director-review.md`](docs/decisions/decision_findings-for-director-review.md)
 - [`decision_history-ledgers.md`](docs/decisions/decision_history-ledgers.md)
 - [`decision_incomplete-blocking-policy.md`](docs/decisions/decision_incomplete-blocking-policy.md)
+- [`decision_mcp-server.md`](docs/decisions/decision_mcp-server.md)
 - [`decision_priority-comparison-direction.md`](docs/decisions/decision_priority-comparison-direction.md)
 - [`decision_programmatic-interface.md`](docs/decisions/decision_programmatic-interface.md)
 - [`decision_push-cadence.md`](docs/decisions/decision_push-cadence.md)

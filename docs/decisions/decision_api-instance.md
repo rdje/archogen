@@ -4,7 +4,7 @@
 - **Date:** `2026-09-30`
 - **Status:** `active`
 - **Owner / source:** leaf `API.4.1`. [[programmatic-interface]] requires that "instance" be defined before it
-  is implemented, and the director's ruling made the MCP server "spawned per instance". [[engine-api]] is the
+  is implemented, and the director's ruling made the [MCP](../book/src/ledger.md#mcp-specification) server "spawned per instance". [[engine-api]] is the
   contract an instance serves.
 
 ## The fact / decision

@@ -9,7 +9,7 @@
 ## The fact / decision
 
 archogen gains a **programmatic interface**: one declared, versioned, transport-neutral engine API, of
-which a `wasm32-unknown-unknown` build and an **MCP server** are two bindings. Any agent — an LLM, a
+which a `wasm32-unknown-unknown` build and an **[MCP](../book/src/ledger.md#mcp-specification) server** are two bindings. Any agent — an LLM, a
 swarm, an orchestrator — may drive a running archogen instance through that server.
 
 Three rulings came with it, and each is a constraint rather than a preference:

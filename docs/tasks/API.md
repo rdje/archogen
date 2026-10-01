@@ -710,7 +710,8 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   Commit: `ARCHOGEN-API-0209` (the Check leg), `ARCHOGEN-API-0220` (the load leg and the browser; the leaf closed)
 
 - ID: `API.6`
-  Status: `pending`
+  Status: `active` — decomposed `2026-10-01`; `API.6.1` done
+  Children: `API.6.1` … `API.6.5`
   Goal: the **MCP server** — any agent drives a running archogen instance through it.
   Acceptance: the tool list is derived from `crates/archogen-cli/src/spec.rs`, so a documented operation
   is always an offered one and an unimplemented one names its owning leaf instead of failing at runtime;
@@ -721,6 +722,58 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   would invalidate, and is reachable from the transport and **not** from the generator or the checker;
   the book documents it; `make integration` exit `0` or naming what is incomplete.
   Priority: **the point of the tree**, and last because everything above is what makes it safe.
+  ⚠️ Read at the primary source before designing, `2026-10-01`: MCP's current revision, `2026-07-28`, has no
+  `initialize` handshake — every request carries its version and capabilities in `_meta`, and `server/discover` is
+  mandatory — and a legacy client cannot reach a server that speaks only it. The design answers both eras
+  ([`decision_mcp-server.md`](../decisions/decision_mcp-server.md)).
+  Verification: `pending` — closed by its children
+  Commit: `pending`
+
+- ID: `API.6.1`
+  Status: `done` — `2026-10-01`
+  Goal: the server's design recorded and the protocol it implements ledgered, before any code.
+  Acceptance: a decision record answering the protocol revision, the eras, the transport, how the tool list derives
+  from `spec.rs` with the builds excluded, what a tool takes and returns, `isError` against the verdict, the input
+  bounds and the dependency rule; the specification's ledger entry with what was read, its commit and its hashes.
+  **Done.** [`decision_mcp-server.md`](../decisions/decision_mcp-server.md) and its index row; the ledger's
+  `mcp-specification` entry, both schemas pinned by commit `3098fe9` and sha256; the four documents that named MCP
+  now cite it (`source-ledger: OK (19 entries …)`).
+  Verification: `bash scripts/check_source_ledger.sh` → rc=0; `bash scripts/check_doctrines.sh` → all green
+  Commit: `ARCHOGEN-API-0293 (leaf API.6.1)`
+
+- ID: `API.6.2`
+  Status: `pending`
+  Goal: each command in `crates/archogen-cli/src/spec.rs` declares whether it is offered programmatically, and the
+  tool list derives from that: `check` a tool; `resolve`, `analyze`, `explain`, `replay` tools that name their
+  owners; `build`, `verify` and the server's own command excluded, each with its reason.
+  Acceptance: a test that the builds and `verify` are excluded, read from the table; the tool list, each tool's
+  `_meta` and annotations derived, not written; `archogen --help` unchanged but for the new command.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `API.6.3`
+  Status: `pending`
+  Goal: the server's own JSON reader: bounded nesting and size, refusing every malformed text, and a writer with one
+  way to write each value.
+  Acceptance: RED arms for each refusal and both edges of each bound; a round trip of every message the server
+  sends; no dependency.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `API.6.4`
+  Status: `pending`
+  Goal: the server, `archogen mcp`: `server/discover`, `tools/list`, `tools/call` under `2026-07-28`'s per-request
+  `_meta`; `initialize`, `ping`, `tools/list`, `tools/call` under `2025-11-25`; the errors the record names; exit at
+  the end of stdin.
+  Acceptance: an integration test that spawns the built binary and speaks both eras over its stdio, a refusal and
+  an unimplemented tool among them; every result's verdict checked against the CLI's for the same description;
+  `NO-SUBPROCESS` green.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `API.6.5`
+  Status: `pending`
+  Goal: the book documents the server, and a context that did not write it reviews it against the specification.
   Verification: `pending`
   Commit: `pending`
 
@@ -740,7 +793,7 @@ agent can drive. The server is a capability of the built binary, spawned per ins
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `API.6` | `pending` | the MCP server — the point of the tree, and last because everything above is what makes it safe to hand to an arbitrary agent |
+| 1 | `API.6` | `active` | the MCP server — designed (`API.6.1`); next `API.6.2`, the tools declared in the command table |
 | 2 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6` |
 
 ⛔ **This tree does not displace the project's main line.** The director's ruling sequenced `API.3`–`API.7`
@@ -832,6 +885,7 @@ this tree is taken when it does not delay that.
 | `API.5.4` | `ARCHOGEN-API-0205 (leaf API.5.4)` | **the page** — `crates/archogen-wasm/page/`, documented with a transcript the tier reproduces; `API.5.5` filed for the browser run this session could not make |
 | `API.5.5` | `ARCHOGEN-API-0209 (leaf API.5.5)` | partial: the Check answer observed in a browser by the director; the leaf stays open for the load answer and the browser |
 | `API.5.5` | `ARCHOGEN-API-0220 (leaf API.5.5)` | **the page run in a real browser**, both legs observed by the director in Chrome 154; `API.5` closed |
+| `API.6.1` | `ARCHOGEN-API-0293 (leaf API.6.1)` | **the MCP server designed** — both protocol eras read at the source and answered; the specification ledgered by commit and hash |
 
 ## Changelog
 

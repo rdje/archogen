@@ -105,7 +105,7 @@ this page changing too.
 
 | Field | Value |
 | --- | --- |
-| Surface | the engine API: the one contract every consumer judges a description through, the CLI today and the wasm and MCP bindings to come ([The engine API](engine-api.md)) |
+| Surface | the engine API: the one contract every consumer judges a description through, the CLI today and the wasm and [MCP](ledger.md#mcp-specification) bindings to come ([The engine API](engine-api.md)) |
 | Version | `1.2` — `1.0` fixed `2026-09-30` when leaf `API.3` closed; `1.1` added the response's engine version (`API.4.1`); `1.2` added `check_with` and its `Limits` (`API.4.2`) |
 | Declared at | `const:crates/archogen-api/src/lib.rs:VERSION` |
 | Changes when | an operation or a response field is added, which is a minor; an operation or a field removed, or a field given a new meaning, which is a new major |

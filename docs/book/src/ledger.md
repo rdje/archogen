@@ -177,6 +177,20 @@ the day a chapter or a decision relies on it, as Miri did.
 | Revalidation trigger | any workflow edit; a security advisory for either action |
 | Named as | `actions/checkout`, `actions/cache` |
 
+## `mcp-specification`
+
+| Field | Value |
+| --- | --- |
+| Source | the Model Context Protocol specification: its schemas and its published pages |
+| Version | revision `2026-07-28` (the current one) and `2025-11-25` (the last initialization-based one); schemas read at commit `3098fe94caa1b9e0afaaa6d30e040b61d5802471` of `github.com/modelcontextprotocol/specification`, the head of `main` when read |
+| Pinned at | not pinned — read on `2026-10-01`; no build or check reads it |
+| Retrieved | `2026-10-01`: `schema/2026-07-28/schema.ts` and `schema/2025-11-25/schema.ts` at that commit, and the pages on versioning, the base protocol, `server/discover`, the stdio transport, tools and the `2025-11-25` lifecycle at `modelcontextprotocol.io/specification/` |
+| Hash | sha256 `742750af0bb8c716e7030c4977c992b55d1adc4407e9e66997db5846baedc2cd` of `2026-07-28/schema.ts`, `e74b56e73b2e37bdb595f74ba22e428ad7f07aa3519355ba661d681298ed38ac` of `2025-11-25/schema.ts` |
+| Scope | the protocol `docs/decisions/decision_mcp-server.md` implements: per-request `_meta` and its required fields, `-32602` and `-32022`, `server/discover`, `resultType`, the stdio framing and shutdown, `tools/list` and `tools/call` with `isError` and `structuredContent`, and the `2025-11-25` `initialize` handshake a dual-era server answers |
+| Known limitations | the pages are read as published, and the schema, which the specification calls "the source of truth", is pinned by commit; a revision after `2026-07-28` may change what a server must do |
+| Revalidation trigger | a new protocol revision; any change to the server's protocol handling |
+| Named as | `MCP` |
+
 ## `node`
 
 | Field | Value |

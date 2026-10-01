@@ -85,7 +85,7 @@ API change: it is a language change, and it goes through the migration notes
 
 ## What an instance is
 
-A consumer does not talk to a library. It talks to an **instance**: an MCP server it spawned, a wasm module
+A consumer does not talk to a library. It talks to an **instance**: an [MCP](ledger.md#mcp-specification) server it spawned, a wasm module
 a page loaded, or, for the shortest life, one run of the command line
 (`docs/decisions/decision_api-instance.md`). An instance is bound to the build it came from: the engine
 version, the API version, the language it reads, the profiles it supports, and the kind modules built
