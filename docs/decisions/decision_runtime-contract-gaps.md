@@ -301,6 +301,35 @@ last round's new sentences.
 and #125's texts are what `rt-core`'s `raise` and `decide` record, and #126 is unreachable where completion is
 atomic. The comparison agrees as before.
 
+## The fault contract reviewed a seventh time (`2026-10-01`, R7)
+
+A seventh new context read the contract beside the composition record, from the text alone. On R6's answers: 14
+answered, 2 partly (#128, #129), none missed, and R5's residual line widths confirmed within 120 characters.
+**Verdict: 3 defects remain (#140–#142)** — two in text written for R5 and R6 (#140 from #106, #126 and #127;
+#141 from #125 and #129), one older (#142, R3 #60's text).
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 140 | defect | a preempted completion-path context was resumed by no rule, and the dispatch sentence contradicted "runs at its task's priority" | accepted, the reviewer's rule with one change: every switch resumes the highest-priority preempted context of that kind unless a task of higher priority than its task owes a job — the reviewer's "above every task owing a job" would have dispatched the task's own new job ahead of its waiting context; unreachable in both models, which complete atomically |
+| 141 | defect | a delivery spanning several traps: rule 4 named the first trap's task, rule 2 the task each trap preempted | accepted, the reviewer's texts: each trap's interrupted task is the one that trap preempted; whether a port serves a further pending interrupt in the same trap or returns is its record's stated choice (`M2.12`) |
+| 142 | defect (minor) | a guard found by a port's check could be recorded as a stack guard or an assertion failure | accepted, the reviewer's text: a stack guard, raised by the context that made the check |
+| 143–147 | drafting | the interrupt order is the hardware's and the plan's, not the port's; a faulted task's releases against the composition's timer facts; rule 6's "only … does"; a job's own API trap in rule 2; an application's own failed check | accepted; for #144 the option to stop programming the compare is withdrawn instead of amending the composition's facts: the timer service performs each such release and rule 5 discards it |
+| 148–151 | nits | "only a job changes the depth" against the completion; "released" for "observed"; a mark that cannot tell no fault from a fault before its first write; two open items not this contract's | accepted: the mark takes three values; the open items are named to the port's record and the timer-service record |
+
+**Answered `2026-10-01` (step 6n).** Every finding is answered as triaged above, and none moves either model.
+**Process change, after six rounds whose defects came mostly from the previous round's answers:** before the answers
+landed, a separate context read the changed sentences alone against R7's report and the composition record, and
+its findings are answered in the same step. It found **4 defects in the answers themselves** (N1–N4) and 8
+drafting points, all fixed before landing: a fault in a delivery is the context's that raises it, a transition's
+included (N1); a trap taken inside a transition after it unmasks preempted the incoming context (N2); an
+application's own trap is an unexpected trap whatever path the port routes it through, the runtime's deliberate trap
+being only one its own code executes (N3); the record's mark is begun by the record's first write and complete by its
+last, before anything else the handler does (N4). The rest: no exhaustive list after "every switch", rule 4's
+completed-job exclusion, guard checks by the runtime too with where each runs the port's to state, what "found by
+rule 1" reaches, the order within one trap, the open items, and the release latency named `J_i^release`. The
+check stays a step of every answer round: what each round finds in the last round's sentences is what it catches
+early.
+
 ## Where the contract lives (`2026-10-01`)
 
 Answering R3 (`M2.9`) needed about 20 lines more than `ROADMAP.md`'s 1 100-line ceiling allowed, which only the

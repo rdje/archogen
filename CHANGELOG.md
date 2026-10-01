@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the fault contract answers its seventh reading, checked before it lands
+
+`ARCHOGEN-M2-0290` (leaf `M2.9`).
+
+- The seventh reading found three remaining ambiguities, among them what resumes a task's half-finished completion
+  after an interrupt, and which task a fatal fault's record names when a burst of held-back interrupts arrives
+  as several traps. Because six readings in a row found most of their problems in the previous answers, the
+  answers were checked by a separate reader before landing; it found four more, fixed in the same change.
+
 ## archogen — the catalog check has its workflow
 
 `ARCHOGEN-M2-0289` (leaf `M2.7.6.3`).
