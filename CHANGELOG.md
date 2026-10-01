@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog check has its workflow
+
+`ARCHOGEN-M2-0289` (leaf `M2.7.6.3`).
+
+- A pull request now has a CI job that will run the catalog's check: it takes the main line's side of the merge
+  to build and run the checker, and only reads the pull request's side. Until the checker is written the job
+  fails, never passes; making the hosting require it is the director's setting.
+
 ## archogen — the catalog check builds its checker where a pull request cannot reach
 
 `ARCHOGEN-M2-0288` (leaf `M2.7.6.2`).

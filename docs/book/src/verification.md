@@ -230,24 +230,23 @@ every step green but the quarantined emulator, the gap annotated, the summary wr
 reproduce is the runner's own userland, GNU `sed` and `awk` where this machine has BSD ones. Leaf
 `PROGRAM.10.5` reads the first real run for that, after the next push.
 
-Every workflow runs on `push`, and a pull request's branch in this repository is pushed, so every workflow runs
-code a pull request controls. `WORKFLOW-TOKENS` (`scripts/check_workflow_tokens.sh`, leaf `M2.7.6.1`) holds each
-to a read-only token. A workflow must have a top-level `permissions:` that grants no write scope, and no job may
-grant one. Every `actions/checkout` step must set `persist-credentials: false`, so the token does not stay in the
-clone. There must be no `pull_request_target` or `workflow_run` trigger, since both run with the base repository's
-token. The gate reads a plain subset of YAML and refuses the rest, so a file it cannot read is refused, never
-passed. This is the first piece of the catalog check's protection (`M2.7.6`). The repository's default token, and
-the other hosting settings, are the director's to set, and no commit can show them.
+Every workflow runs on `push`, which a pull request's branch here triggers, so every workflow runs code a pull
+request controls. `WORKFLOW-TOKENS` (`scripts/check_workflow_tokens.sh`, leaf `M2.7.6.1`) holds each to a read-only
+token: a top-level `permissions:` granting no write scope and no job granting one, `persist-credentials: false` on
+every `actions/checkout`, and no `pull_request_target` or `workflow_run` trigger, both of which run with the base
+repository's token. It reads a plain subset of YAML and refuses the rest, so a file it cannot read is never passed.
 
-The second piece is the check's harness, `scripts/catalog_check.sh` (leaf `M2.7.6.2`). It runs from a clean
-checkout of the commit a pull request merges into, and writes the base, which the checker is built from, and the
-judged tree from git's stored blobs, never checking either out. The checker is built under an
-allowlisted environment, with the toolchain pinned by the base's own file, and runs from a target directory of its
-own. Before cargo runs, every cargo configuration on the build's path must hold only aliases, which cannot change a
-build. Its self-test plants a build script, a cargo wrapper, a toolchain file, a copy of the harness and hostile
-environment variables in a judged tree or around the run, and checks that none of them ever runs. Each
-protection, removed in turn, turns one of those arms red. The checker it runs is `M2.7.4`'s and does not exist
-yet, so the tests use a stub.
+The catalog check's harness, `scripts/catalog_check.sh` (`M2.7.6.2`), runs from a clean checkout of the commit a
+pull request merges into. It writes the base and the judged tree from git's stored blobs, builds the checker from
+the base under an allowlisted environment and the base's toolchain pin, and runs it from a target directory of its
+own; every cargo configuration on the build's path must hold aliases only. Its self-test plants a build script, a
+cargo wrapper, a toolchain file, a copy of the harness and hostile environment variables, and checks that none ever
+runs; removing each protection turns an arm red. The checker is `M2.7.4`'s, not yet written, so the tests use a stub.
+
+`.github/workflows/catalog-check.yml` (`M2.7.6.3`) runs it on a pull request: the hosting's merge is checked out
+where nothing runs from it, and the base is cloned beside it. Until the checker exists the job fails, the safe
+direction. Whether a pull request's own copy of the file can satisfy the required check is for the hosting's rules,
+which only the director can set, as is the repository's default token.
 
 ## The engine compiles for the browser
 
