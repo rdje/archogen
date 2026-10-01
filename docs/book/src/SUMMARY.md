@@ -1,6 +1,7 @@
 # Summary
 
 [Introduction](introduction.md)
+[A tour: from a description to a board](tour.md)
 
 # What eADL describes
 

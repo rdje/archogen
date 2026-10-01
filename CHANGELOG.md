@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the book opens with a tour of what archogen is for
+
+`ARCHOGEN-PROGRAM-0278` (leaf `PROGRAM.44`).
+
+- A new chapter after the introduction follows one small description — two periodic tasks and a serial console —
+  to the program generated from it and the schedule it prints, then says plainly what is real today, what the
+  generated system becomes, what it can be used for, and the road to running on a microcontroller board.
+- Today and tomorrow are kept apart: the running example is the experimental path, and the board-level program on
+  the emulator is a hand-written measurement, not yet a generated system. The chapter's copies of the description
+  and of its output are checked against the files on every test run.
+
 ## archogen — the fault contract answers its third reading
 
 `ARCHOGEN-M2-0277` (leaf `M2.9`).

@@ -256,7 +256,7 @@ the day a chapter or a decision relies on it, as Miri did.
 | Pinned at | not pinned — read on `2026-10-01`; no build or check reads it |
 | Retrieved | `2026-10-01` |
 | Hash | sha256 `a0bb10b0b1413b3d95a40de117d3bedd3bbb74e2cae23c074c5532a95fa715cf` of the PDF read |
-| Scope | two sentences, quoted as a precedent and a correction for findings §6 (b): `ActivateTask` (§13.2.3.1), "If E_OS_LIMIT is returned the activation is ignored", with the status "Too many task activations of <TaskID>, E_OS_LIMIT"; and "The error hook routine (ErrorHook) is called if a system service returns a StatusType value not equal to E_OK" |
+| Scope | two sentences, quoted as a precedent and a correction for findings §6 (b): `ActivateTask` (§13.2.3.1), "If E_OS_LIMIT is returned the activation is ignored", with the status "Too many task activations of `<TaskID>`, E_OS_LIMIT"; and "The error hook routine (ErrorHook) is called if a system service returns a StatusType value not equal to E_OK" |
 | Known limitations | a precedent, not a requirement on this profile; the copy read is a mirror of the consortium's document, not the consortium's own site |
 | Revalidation trigger | a decision resting on more of OSEK's behaviour, or a copy from the standard's owner differing from the mirror |
 | Named as | `OSEK` |
