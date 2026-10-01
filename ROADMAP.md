@@ -252,8 +252,8 @@ The rules below settle what the text left open; what is still open is listed at 
 
 Two smaller decisions are fixed at the same time, for the same reason:
 
-- **A task set must be non-empty.** "Finite static task set" admits the empty set, and no workload makes §7.2's
-  second timing obligation vacuous, which §7.1 exists to prevent. Boot refuses one; the checker not yet (`M2.17`).
+- **A task set must be non-empty** — no workload makes §7.2's second timing obligation vacuous. `archogen build` and
+  boot refuse one; `archogen check` admits it, a system describing composition alone (F01) being valid (`M2.17`).
 - **Kernel critical sections are bounded by a declared nesting depth.** "Bounded kernel critical sections" did not
   say what the bound is or what happens at it. Each runtime's catalog record declares a maximum depth `M ≥ 1`. A
   `mask` that would raise the depth past `M`, and an `unmask` at depth zero, are **assertion failures**: a counter
@@ -262,9 +262,9 @@ Two smaller decisions are fixed at the same time, for the same reason:
   the depth; the duration is bounded separately, by the `CS_i` the timing analysis charges. *(2026-10-01: R1 10; a
   refusal had been the answer.)*
 
-**Still open:** each path's observation events and hosted/target trace compatibility (`M2.15`); the checker's
-refusals of an empty task set (`M2.17`) and of a rank the lowering cannot take (`M2.18`); and, needed by no fixture
-yet, a later idle-to-task dispatch's cost and a periodic task's first release instant.
+**Still open:** each path's observation events and hosted/target trace compatibility (`M2.15`); a rank the lowering
+cannot take (`M2.18`); and, needed by no fixture yet, a later idle-to-task dispatch's cost and a periodic task's
+first release instant.
 
 ### 3.2 Three target environments
 

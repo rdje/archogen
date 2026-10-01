@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a system with no tasks: valid to describe, refused to build
+
+`ARCHOGEN-M2-0274` (leaf `M2.17`).
+
+- A description whose system declares no task stays valid to check — the book's opening example composes a platform
+  and services that way — and building one is refused, as it already was. The contract now says which step refuses
+  it, instead of implying the check should.
+
 ## archogen — only a running task opens a critical section
 
 `ARCHOGEN-M2-0273` (leaf `M2.9`).
