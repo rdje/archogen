@@ -24,7 +24,7 @@ follows is evidence rather than an author agreeing with himself.
 
 | # | Question | Decision | Changed |
 | --- | --- | --- | --- |
-| 1 | overrun attribution and escalation | detection applies the policy, to the **overrunning** task even when it is not running; the other three faults attribute to the running context | `ROADMAP.md` §3.1.1 (new) |
+| 1 | overrun attribution and escalation | detection applies the policy, to the **overrunning** task even when it is not running; the other three faults attribute to the running context *(superseded: to the context that raises it, the fault contract's rule 2)* | `ROADMAP.md` §3.1.1 (new) |
 | 2 | the empty task set | **refused** | `ROADMAP.md` §3.1.1; `rt-core` |
 | 3 | priority rank `0` | **refused**; rank is `N ≥ 1`, and the runtime index is stated — `rank − 1` then, `\|hp(i)\|` since `2026-10-01` (the priority record's item 3) | `decision_priority-comparison-direction.md`; `rt-core` |
 | 4 | containable fault inside a masked region | **escalates to fatal** — still the rule, which since `2026-10-01` decides nothing observable in this profile (the fault contract's rule 3) | `ROADMAP.md` §3.1.1; `rt-core` |
@@ -44,10 +44,10 @@ marked amendment in §3.1.1:
 
 | Item | The question | Ruling | Where |
 | --- | --- | --- | --- |
-| (b) | a second release while the task's latch already holds one | an overrun, kept **beside** the latched release and judged at **delivery**, outside the masked region, by the task's policy; the triggering release is the policy's (`SkipLateJob`: the next job; `Fault`: goes with the task) | rule 1 |
-| (a) | a job completing inside a masked region it opened | allowed; the completion closes the job's sections (depth to zero), delivers what was latched as at the outermost unmask, then the schedule is decided | rule 4 (new) |
+| (b) | a second release while the task's latch already holds one | an overrun, kept **beside** the latched release and judged at **delivery**, outside the masked region, by the task's policy; the triggering release is the policy's (`SkipLateJob`: the next job; `Fault`: goes with the task) *(superseded in its detail: the latched arrivals are judged in arrival order at delivery, rule 1)* | rule 1 |
+| (a) | a job completing inside a masked region it opened | allowed; the completion closes the job's sections (depth to zero), delivers what was latched as at the outermost unmask, then the schedule is decided *(superseded in its detail: on a port the decision precedes the delivery, rule 4)* | rule 4 (new) |
 | (c) | the unexpected trap's class | the deliberate fatal trap | the table |
-| (d) | attribution of the synchronous faults | one rule: the executing context, which for a stack guard is the task whose guard was breached | rule 2 |
+| (d) | attribution of the synchronous faults | one rule: the executing context, which for a stack guard is the task whose guard was breached *(superseded in its detail: the context that raises it, the guard named apart, rule 2)* | rule 2 |
 | (e) | ground 2 of rule 3 | containment means *resuming the schedule* from an inconsistent state, whichever task the fault is attributed to | rule 3 |
 
 ⚠️ **(b) changed gap 1's answer at one edge, and (a) changed `rt-core`.** Before (b), a doubled latch was an
@@ -244,7 +244,7 @@ answer text is to be checked against both models before it lands (step 6k). The 
 | 89 | defect (minor) | a later claim returning an undeclared source; an API entry naming no primitive; the completion path entered by a non-job | accepted, the reviewer's text |
 | 80 | R3, partly | a fault while the first record is being written | accepted: a completeness mark written last |
 | 90, 91 | drafting | initialisation's rule credited to the composition; the composition's role list reads as letting kernel contexts call `mask` | accepted: it is this contract's narrowing, listed in the header; the composition record gains the matching sentence |
-| 92–97 | drafting | rule 6's "which needs `D = T`"; rule 5's "leaves the depth at zero"; the table's attribution column; §3.1's kernel critical sections; a timer trap with no release due; the counting fact's owner | accepted; a timer trap with no release due is an unexpected trap, like an empty claim, since the composition's `raised-only-when-due` makes it a port's broken obligation; the counting fact belongs to the source's catalog record, written under `M2.7.4` |
+| 92–97 | drafting | rule 6's "which needs `D = T`"; rule 5's "leaves the depth at zero"; the table's attribution column; §3.1's kernel critical sections; a timer trap with no release due; the counting fact's owner | accepted; a timer trap with no release due is an unexpected trap, like an empty claim, since the composition's `raised-only-when-due` makes it a port's broken obligation *(the fact is the timer-service records', which the composition reads: R5 118)*; the counting fact belongs to the source's catalog record, written under `M2.7.4` |
 | 98–105 | nits | vestigial "if there is one"; "running" for "owed"; `CS^app`; "no workload"; "not lost"; rule 7's "latched"; other guarded stacks; three stale lines in other records | accepted |
 
 **Answered `2026-10-01` (step 6k).** Every finding is answered as triaged above, and none moves either model: #83's
@@ -253,6 +253,32 @@ transition rule is what `rt-core` records — the current task at a decision, an
 vacated it; #81's hosted order delivers inside the completion path, as `rt-core`'s `complete` does. The port's
 mechanisms (#82, #85) are requirements now, their how in the port's catalog record (`M2.12`). The composition record
 gains the two sentences #90 and #91 ask for, and findings §6 (b) and gap rows 4 and 5 their marks (#105).
+
+## The fault contract reviewed a fifth time (`2026-10-01`, R5)
+
+A fifth new context read the contract beside the composition record, from the text alone. On R4's answers: 25
+answered, 1 partly (#81), none missed. **Verdict: 5 defects remain (#106–#110), one substantive (#106)** — and, as
+in R4, most come from the answer round: #107, #110 and part of #108 from text written for #81, #84 and #88, and #106
+opened by #85's answer. None is a mechanism the contract delegates; each is an outcome that varied with a port's
+mechanism, and four of the five are confined to the kept record's attribution fields.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 106 | defect | nothing said what runs after a service preempts a job past its last instruction, which the task no longer owes | accepted, the reviewer's text: that context runs at its task's priority until its decided switch, or the port lets no service preempt it, stated in its record (`M2.12`); both models complete atomically, the second |
+| 107 | defect (minor) | rule 4 left the delivery order to every port, against the composition's `releases-never-latched`, and the two orders keep different records | accepted, the reviewer's text: on a port the decision precedes delivery; a hosted model may deliver first, its fault then the task's, and `M2.15` maps the two records |
+| 108 | defect (minor) | a service's interrupted task had no "still owed" qualifier, unlike a transition's | accepted, the reviewer's text: the job its trap preempted while still owed, else none — what `rt-core` records, whose abandonment and completion both clear the running task |
+| 109 | defect (minor) | nothing said where the trap path ends and a service begins | accepted, the reviewer's text: the trap path until it has identified what it serves, then the service; a service inside an API trap is that service; the composition's timing boundaries unchanged |
+| 110 | defect (minor) | "decided" was tied to when a port records its incoming context, which is port bookkeeping | accepted, the reviewer's text: a transition interrupts the outgoing task if its job is still owed and never its incoming context — what `rt-core` records, whose decision raises before it records the incoming task |
+| 111, 112 | drafting | the latch's "same state" fails for a source that does not count arrivals; rule 5's "completes the primitive" read as unconditional | accepted, the reviewer's text |
+| 113 | drafting | rule 7 said when the completeness mark is set, not what it reads before | accepted: it reads incomplete from boot; how the kept record leaves a halted runtime joins *Still open* |
+| 114, 115 | drafting | F26 lags the contract; the header counted three reviews and listed no narrowing for a broken port obligation | accepted: F26 names the cases in the contract's words; the header counts five and lists the narrowing |
+| 116–123 | nits | rule 1's delivery instant; rule 6's sentence; `raised-only-when-due`'s owner; the Terms' bounds and contexts; idle entered with a raised depth; which stacks have a guard; stale lines in this record and findings §6 (b); overlong lines | accepted |
+
+**Answered `2026-10-01` (step 6l).** Every finding is answered as triaged above, and none moves either model: each
+replacement text was checked against `rt-core` before it landed (#106's choice is the models' atomic completion,
+#108's and #110's the running task each records), and the reference model's records agree with it over the
+comparison as before. **The loop's closure rule:** the leaf closes on the first independent round that finds no
+defect; a round that finds only drafting and nits is answered in its step and closes it.
 
 ## Where the contract lives (`2026-10-01`)
 

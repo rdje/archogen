@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the fault contract answers its fifth reading
+
+`ARCHOGEN-M2-0284` (leaf `M2.9`).
+
+- The fifth independent reading found five remaining ambiguities, four of them only in which task a fatal fault's
+  record names. The answers say what runs in the instant after a task's last instruction, when a board delivers a
+  release held back by a critical section, and where interrupt entry ends and an interrupt's own handler begins;
+  each was checked against the runtime's code first, and neither runtime model needed to change. The review loop
+  now has its stopping rule: the first reading that finds no defect closes it.
+
 ## archogen — a commit that forgets its task-log row is refused
 
 `ARCHOGEN-PROGRAM-0283` (leaf `PROGRAM.46`).

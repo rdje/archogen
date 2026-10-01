@@ -165,6 +165,8 @@ roadmap and task-trees, so please decide (sota, signoff)"). `M2.9` carries it ou
   halting, not keeping; keeping the overrun is this profile's own choice, because a dropped release is a missed
   deadline nobody would see. The release that triggers an overrun is the policy's: under `SkipLateJob` it becomes
   the task's next job, and under `Fault` it goes with the faulted task.
+  *(Superseded in its detail by the fault contract's rule 1: the latch holds releases, not overruns, and its arrivals
+  are judged in arrival order at delivery.)*
 - **(a) A job may complete inside a masked region it opened, and its completion closes every section it opened.**
   The nesting depth returns to zero with the job, latched releases are delivered as at the outermost unmask, and the
   schedule is decided after. The accepted composition already charges this run (`docs/specs/catalog/
