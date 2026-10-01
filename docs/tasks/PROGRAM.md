@@ -1082,13 +1082,36 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0296 (leaf PROGRAM.47.1)`
 
 - ID: `PROGRAM.47.2`
-  Status: `pending`
+  Status: `done` — `2026-10-02`
   Goal: the glossary, *Words this book uses*: every acronym the book uses, spelled out and explained, and the
   recurring terms in plain words, each linked to where it is treated; `BOOK-GLOSSARY`, refusing an acronym in the
   book that the glossary does not define, and an entry no chapter uses.
   Acceptance: the gate's RED arms; the chapter in `SUMMARY.md`; the book builds.
-  Verification: `pending`
-  Commit: `pending`
+  **Measured before writing:** the chapters used 61 words of two or more capitals outside code, links and comments,
+  among them the RISC-V interrupt names the ledger quotes, units, project names (`RGX`, `PGEN`), a chip's part
+  number and a Roman numeral. Every one but the numeral is defined — a reader meeting `TL16C550C` needs it as much
+  as `UART` — so the gate needs no exception list beyond the project's identifiers and Roman numerals.
+  ⚠️ eADL is never spelled out in this repository; the entry says so rather than guess (findings for the director).
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — no glossary: `git ls-tree HEAD docs/book/src/ | grep -c "glossary"` → 0, and the
+    measure above found 61 undefined acronyms across the chapters.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — the book defined terms where it used them, or not at all, and nothing held
+    a list to the chapters: `git show HEAD:scripts/check_doctrines.project.sh | grep -c "BOOK-GLOSSARY"` → 0.
+    WHERE: `docs/book/src/`, the enforcer's project slot.
+  - [x] **FIX** — `docs/book/src/glossary.md` (acronyms, then the project's own words, each linked), last in
+    `SUMMARY.md`; `scripts/check_book_glossary.sh`, registered; `DOCTRINE_ENFORCEMENT.md`'s row; each entry naming a
+    ledgered source linked to its entry; `docs/book/`'s ceilings raised to 48 files and 384 KiB by the ruling's record,
+    since the glossary took the book to 295 147 bytes, past its 288 KiB, and `README_POLICY.md` changed with it.
+  - [x] **ADDRESSED (verified)** — `bash scripts/check_book_glossary.sh` → rc=0, `book-glossary: OK (60 acronym(s)
+    used and defined; 17 term(s), each in a chapter)`; `--self-test` → `9 pass / 0 fail (9 arms)`; with the
+    undefined-acronym rule removed, and with the stale-entry rule removed, an arm each → `expected exit 1, got 0`.
+  - [x] **NO REGRESSION** — no Rust source changed; `bash scripts/build_book.sh` → rc=0;
+    `bash scripts/run_self_tests.sh` → rc=0; `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`.
+  - [x] **LOCKSTEP** — the book's glossary and `SUMMARY.md`; `DOCTRINE_ENFORCEMENT.md`; this leaf, the frontier and
+    the log; `CHANGELOG.md`.
+  Verification: see the checklist.
+  Commit: `ARCHOGEN-PROGRAM-0297 (leaf PROGRAM.47.2)`
 
 - ID: `PROGRAM.47.3`
   Status: `pending`
@@ -1176,7 +1199,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.47` | `active` | **the director's ruling of `2026-10-02`**: the book in layers, with a live glossary, annexes and an index; `.1` recorded, `.2` the glossary next |
+| 1 | `PROGRAM.47` | `active` | **the director's ruling of `2026-10-02`**: the book in layers, with a live glossary, annexes and an index; `.1` recorded, `.2` the glossary done, `.3` the index next |
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 | 3 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
 
@@ -1406,6 +1429,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.45` | `ARCHOGEN-PROGRAM-0282 (leaf PROGRAM.45)` | **the tour says how you interact with a system**: inputs, outputs, inspection; no login, shell or filesystem yet, with the roadmap's reasons; `PROGRAM.46` filed |
 | `PROGRAM.46` | `ARCHOGEN-PROGRAM-0283 (leaf PROGRAM.46)` | **`COMMIT-LOG-ROWS`**: every work-unit commit has its Commit Log row, the pending one included; a backlog of 18 that may only shrink |
 | `PROGRAM.47.1` | `ARCHOGEN-PROGRAM-0296 (leaf PROGRAM.47.1)` | **the book in layers, ruled and recorded** — plain words first, a one-minute summary, the precise rules; a live glossary, annexes, a generated index |
+| `PROGRAM.47.2` | `ARCHOGEN-PROGRAM-0297 (leaf PROGRAM.47.2)` | **the glossary, kept live** — every acronym the book uses, defined; `BOOK-GLOSSARY` |
 
 ## Changelog
 

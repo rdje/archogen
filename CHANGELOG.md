@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the book has a glossary that cannot fall behind
+
+`ARCHOGEN-PROGRAM-0297` (leaf `PROGRAM.47.2`).
+
+- The book now ends with *Words this book uses*: every abbreviation it uses, from API to xRET, spelled out and
+  explained, and the project's everyday-looking words that mean something precise. A check refuses any change that
+  uses an abbreviation the glossary does not explain, or leaves an entry nothing uses.
+
 ## archogen — the book will be written in layers
 
 `ARCHOGEN-PROGRAM-0296` (leaf `PROGRAM.47.1`).

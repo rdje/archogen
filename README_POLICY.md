@@ -49,7 +49,7 @@ leaf. "Overflows to" is where that destination's own guard sends what does not f
 | `TOOLBOX.md` | navigation + overflow | `PROGRAM` | maintained_reference | — | 110 | 28672 | 2048 | — | — |
 | `VISIBILITY.md` | navigation | `PROGRAM` | maintained_reference | — | 90 | 5120 | 200 | — | — |
 | `docs/TASK_TREE.md` | navigation + overflow | `PROGRAM.17.2` | bounded_snapshot | — | LIVE-SNAPSHOTS | LIVE-SNAPSHOTS | LIVE-SNAPSHOTS | — | `CHANGELOG.md`, `docs/tasks/` |
-| `docs/book/` | navigation + overflow | `PROGRAM` | maintained_reference | 32 | 750 | 49152 | 1024 | 294912 | — |
+| `docs/book/` | navigation + overflow | `PROGRAM` | maintained_reference | 48 | 750 | 49152 | 1024 | 393216 | — |
 | `docs/history/` | overflow | `PROGRAM.31` | archive_terminal | HISTORY-LEDGERS | 1200 | 131072 | 256 | HISTORY-LEDGERS | — |
 | `docs/reviews/` | overflow | `PROGRAM.36` | partitioned_canonical | 16 | 1200 | 131072 | 1024 | 262144 | — |
 | `docs/decisions/` | navigation + overflow | `PROGRAM.39` | partitioned_canonical | 40 | 1200 | 98304 | 1536 | 393216 | `docs/reviews/`, `docs/specs/`, `docs/decision-history/` |
@@ -67,6 +67,8 @@ needs a new ruling, recorded as a new decision, and this table changed with it.
 | --- | --- | --- | --- |
 | `docs/decisions/` | Files | 40 | `docs/decisions/decision_decisions-folder-ceiling.md` |
 | `docs/decisions/` | Total bytes | 393216 | `docs/decisions/decision_decisions-folder-ceiling.md` |
+| `docs/book/` | Files | 48 | `docs/decisions/decision_book-in-layers.md` |
+| `docs/book/` | Total bytes | 393216 | `docs/decisions/decision_book-in-layers.md` |
 <!-- README-POLICY-LOCAL-ADOPTION:END -->
 
 ---

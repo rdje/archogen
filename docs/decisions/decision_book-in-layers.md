@@ -38,6 +38,16 @@ Three parts frame the chapters:
   where it is treated. It is generated, never hand-kept, by `scripts/book_index.sh`, and a gate, `BOOK-INDEX`,
   refuses a commit whose index differs from what the generator writes — the Knowledge Map's pattern.
 
+## The book's ceilings
+
+The ruling grows the book on purpose: a glossary, an index, annexes and a plain opening in every chapter. So, with
+this record, `docs/book/`'s ceilings in `README_POLICY.md` rise: its files from 32 to **48**, for the glossary, the
+index and the annexes; its total bytes from 294 912 (288 KiB) to **393 216 (384 KiB)**. Measured when raised,
+`2026-10-02`: the glossary took the book to 295 147 bytes, past the old total; an index of a few tens of kilobytes
+and an opening of one or two kilobytes in each of the chapters account for most of the rest, and annexes mostly
+move text rather than add it. The per-file ceilings stay — 750 lines, 48 KiB, 1 024 bytes a line — so a chapter
+that outgrows them sheds its details into an annex rather than raising them.
+
 ## Why
 
 A book read only by experts can open with the rule; this one is the director's only view of the project and the
