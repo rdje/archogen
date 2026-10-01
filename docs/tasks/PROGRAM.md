@@ -640,7 +640,11 @@ mdBook that is the director's window into the project.
   among them the RISC-V interrupt names the ledger quotes, units, project names (`RGX`, `PGEN`), a chip's part
   number and a Roman numeral. Every one but the numeral is defined — a reader meeting `TL16C550C` needs it as much
   as `UART` — so the gate needs no exception list beyond the project's identifiers and Roman numerals.
-  ⚠️ eADL is never spelled out in this repository; the entry says so rather than guess (findings for the director).
+  ⛔ *Corrected `2026-10-02`:* this leaf said eADL is "never spelled out in this repository", from a census of the README,
+  the roadmap, the book and the semantics only. The director answered "eADL = Extended ADL", pointing to the task trees:
+  leaf `M1.13.3` had recorded "Extended Architecture Description Language", read as extensible, since `2026-09-29`. The
+  entry now says so (`ARCHOGEN-PROGRAM-0300`), and a search now starts with the task trees, the Knowledge Map cards and
+  the decision records, then the book, as the director directed.
 
   **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
   - [x] **REPRODUCE / ISSUE** — no glossary: `git ls-tree HEAD docs/book/src/ | grep -c "glossary"` → 0, and the
@@ -1003,6 +1007,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.47.1` | `ARCHOGEN-PROGRAM-0296 (leaf PROGRAM.47.1)` | **the book in layers, ruled and recorded** — plain words first, a one-minute summary, the precise rules; a live glossary, annexes, a generated index |
 | `PROGRAM.47.2` | `ARCHOGEN-PROGRAM-0297 (leaf PROGRAM.47.2)` | **the glossary, kept live** — every acronym the book uses, defined; `BOOK-GLOSSARY` |
 | `PROGRAM.47.3` | `ARCHOGEN-PROGRAM-0298 (leaf PROGRAM.47.3)` | **the index, generated** — every glossary word and every section, linked; `BOOK-INDEX` |
+| `PROGRAM.47.2` | `ARCHOGEN-PROGRAM-0300 (leaf PROGRAM.47.2)` | **correction**: eADL spelled out, Extended Architecture Description Language, as `M1.13.3` recorded; the census that missed it was too narrow |
 
 ## Changelog
 

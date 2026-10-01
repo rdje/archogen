@@ -34,8 +34,10 @@ as `F26`, task-tree leaves — are names, not words, and are not listed.
   first profile. See [The supported profile](profile.md).
 - **DSP** — Digital Signal Processor: a processor specialised for signal arithmetic. See [What this project relies
   on from outside](ledger.md).
-- **eADL** — the description language archogen reads. The name comes from the project's charter, and this
-  repository never spells it out. See [The boundary](boundary.md) and [Reading a description](reading.md).
+- **eADL** — Extended Architecture Description Language: the description language archogen reads. *Extended* in
+  the sense of *extensible*: code and data wear the same cloth, one syntax for both, and the language grows through
+  its own declaration construct, `defkind`. The director's reading, recorded on leaf `M1.13.3`. See [The
+  boundary](boundary.md) and [Reading a description](reading.md).
 - **EBNF** — Extended Backus–Naur Form: a notation for writing down a language's grammar. See [Verifying the
   toolchain](verification.md).
 - **EIP** — External Interrupt Pending: the [PLIC specification](ledger.md#riscv-plic)'s name for the pending bit it
