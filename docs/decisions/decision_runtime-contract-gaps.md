@@ -110,6 +110,25 @@ some are in neither. Twenty-five findings: thirteen defects, eight drafting, fou
 | 24 | nit | rule 3's grounds read as both needed in every case | accepted | 6b |
 | 25 | nit | timing claims after a contained overrun | accepted: a run's claims end at its first contained overrun | 6b |
 
+**Carried into both models (`2026-10-01`, step 6c).** `rt-core` and the reference, re-derived again by a context
+that read neither `rt-core` nor the book nor the trees, carry findings 8, 9, 10 and 16: a fault raised in kernel
+code is no task's and names the task it interrupted; a halt keeps one record — the first fatal fault, its
+attribution, whom it interrupted, whether rule 3 escalated it — and every event after it changes nothing; the mask
+bound, an `unmask` with nothing to close and a job started inside a region are assertion failures. The comparison
+now generates kernel-context faults, unbalanced unmasks and the region holder's escalated overrun, and compares
+the two halts' records: 400 sequences, 0 diverged. A mutation run of each rule on `rt-core`: 16 of 17 red; the
+seventeenth, a later fault overwriting the kept one inside `raise`, is unreachable, because every entry point
+answers a halted runtime before reaching it.
+
+The reference's author recorded what the text still leaves to a reader, for step 6d's round: rule 3's ground 2 has
+no case left that ground 1 does not cover, since rule 1a says another task's overrun cannot be raised inside a
+region; rule 1a does not say how the holder's own overrun is raised there; a `mask` while idle; the order across
+tasks at one delivery; which task a fault in a transition interrupts; that records name a stable logical ID while
+boot does not check names are unique (the checker does: `schema-duplicate-name`); and that §3.1.1's header claims
+the review's answers stated what both models already did, which was not true of the reference — it had a third,
+halting overrun policy, now removed, and escalated another task's masked overrun, which it now refuses as
+impossible while `rt-core` still escalates it.
+
 ⭐ **§5's lesson, a third time.** The reference model was derived from the text, and the two models agree, but six
 of the decisions they share were written only here and in findings §6. Agreement between models shows the text is
 implementable; only a reader of the text alone shows it is *sufficient*.

@@ -26,11 +26,12 @@ pub enum Fault {
         /// The task that overran.
         task: usize,
     },
-    /// A task's stack guard was touched. §7.6: guards stay even when a static bound exists,
-    /// because a bound is an argument and a guard is a fact.
+    /// A stack guard was touched. §7.6: guards stay even when a static bound exists, because a
+    /// bound is an argument and a guard is a fact.
     StackGuard {
-        /// The task whose guard was hit.
-        task: usize,
+        /// Whose guard was hit: a task's, or `None` for the interrupt stack's. This is not the
+        /// attribution, which is the executing context's (§3.1.1 rule 2, and [`Context`]).
+        task: Option<usize>,
     },
     /// A trap the runtime does not model. §8.1's "deliberate fatal trap" is *not* this — that is
     /// a decision; this is a surprise.
@@ -71,6 +72,19 @@ impl Fault {
     }
 }
 
+/// Where a synchronous fault was raised — a stack guard, a trap or an assertion — which is what it
+/// is attributed to: §3.1.1 rule 2, "synchronous to the context executing the faulting instruction".
+/// An overrun is attributed to the overrunning task wherever it is raised, so this does not apply
+/// to it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Context {
+    /// The running task's job, a runtime primitive it called, or its completion path: that task.
+    Job,
+    /// A service, the trap path, a transition, idle or the fatal handler: no task. A task whose
+    /// job the fault interrupted is recorded as interrupted, never as attributed.
+    Kernel,
+}
+
 /// What to do when a task overruns — the policy eADL's `(on-overrun …)` clause declares.
 ///
 /// ⛔ There is no `Ignore`. §3.1 requires a *defined* overrun policy, and silently dropping the
@@ -95,7 +109,7 @@ mod tests {
     fn only_an_overrun_leaves_the_runtime_trustworthy() {
         assert!(Fault::Overrun { task: 0 }.runtime_state_is_trustworthy());
         for fault in [
-            Fault::StackGuard { task: 0 },
+            Fault::StackGuard { task: Some(0) },
             Fault::UnexpectedTrap { cause: 2 },
             Fault::InvariantViolated { invariant: "x" },
         ] {
@@ -111,7 +125,7 @@ mod tests {
     fn every_fault_has_a_distinct_allocation_free_name() {
         let slugs = [
             Fault::Overrun { task: 0 }.slug(),
-            Fault::StackGuard { task: 0 }.slug(),
+            Fault::StackGuard { task: Some(0) }.slug(),
             Fault::UnexpectedTrap { cause: 0 }.slug(),
             Fault::InvariantViolated { invariant: "x" }.slug(),
         ];

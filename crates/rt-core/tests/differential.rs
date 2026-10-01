@@ -26,7 +26,7 @@
 //! | §3.1.1 was written by the author of `rt-core` | the re-derivation shows the text says what was meant; it cannot show that what was meant is right |
 //! | the same model family produced both | §14: "a second model agreeing with the first is not ground truth" |
 //! | this adapter, written by the author of `rt-core` | a mapping error here can mask or manufacture a divergence |
-//! | near misses in the 2026-10-01 re-derivation | repository-wide searches showed its author one line of `docs/book/src/runtime.md` and the three lines of `crates/rt-core/Cargo.toml` naming the reference; no implementation or test text |
+//! | near misses in the 2026-10-01 re-derivations | repository-wide searches showed the first author one line of `docs/book/src/runtime.md` and the three lines of `crates/rt-core/Cargo.toml` naming the reference; a `git status` showed the second the names, not the contents, of the `rt-core` files being changed beside it; no implementation or test text |
 //!
 //! ⭐ **So agreement is the weak result here, and disagreement is the strong one.** Two models
 //! that disagree cannot have been copied from each other, and every divergence is either a defect
@@ -56,21 +56,27 @@
 //! semantics rather than about one model refusing what the other accepts. The reference refuses,
 //! and `rt-core` accepts:
 //!
-//! - a trap, a stack guard or an assertion naming a task other than the running one, or raised
-//!   while no task runs — `rt-core` attributes that one to no task;
+//! - a fault raised in a task's job while no task runs (`rt-core` attributes it to no task), or
+//!   in the idle context while one does;
 //! - an overrun raised for a task that owes no job;
-//! - any event after a halt. `rt-core`'s decision stays `Halt`; the reference refuses everything.
+//! - an overrun of a task other than the region holder raised inside a masked region, which
+//!   §3.1.1 rule 1a says cannot happen: `rt-core` escalates it, the reference refuses it;
+//! - any event after a halt. Both answer it and change nothing: `rt-core` with the halt it keeps,
+//!   the reference with a refusal.
 //!
 //! And once both have halted, what each leaves in its task table is left to the implementation:
-//! the comparison checks that both halted and to whom the fault was attributed, and `d9` asserts
-//! the tables on both sides.
+//! the comparison checks that both halted and what each kept — the fault, whom it is attributed
+//! to, whom it interrupted, whether rule 3 escalated it — and `d9` asserts the tables on both
+//! sides.
 
 use rt_core::{
-    Decision, OverrunPolicy, Scheduler, TaskState as CoreState, Transition as CoreTransition,
+    Context as CoreContext, Decision, Fatal, OverrunPolicy, Scheduler, TaskState as CoreState,
+    Transition as CoreTransition,
 };
 use rt_reference::{
-    FaultEffect, OverrunAction, Priority, Processor, Refused, ReleaseEffect, Runtime, TaskId,
-    TaskSpec, TaskState as RefState,
+    Attribution, Context as RefContext, FaultEffect, FaultRecord, Guard, MaskEffect, OverrunAction,
+    Priority, Processor, Refused, ReleaseEffect, Runtime, TaskId, TaskSpec, TaskState as RefState,
+    UnmaskEffect,
 };
 
 const N: usize = 3;
@@ -176,37 +182,100 @@ enum Synchronous {
     Assertion,
 }
 
+/// Where a synchronous fault is raised: in the running task's job, or in kernel code — a service
+/// while a task runs, the idle loop while none does.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Raised {
+    InJob,
+    InKernel,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Event {
     Release(usize),
     Complete,
     Mask,
     Unmask,
+    /// An `unmask` with nothing to close: an assertion failure in both (§3.1.1).
+    UnbalancedUnmask,
     /// An overrun found by something other than a release — an execution-budget monitor. Raised
-    /// only for a task that owes a job.
+    /// only for a task that owes a job, and inside a masked region only for its holder.
     MonitorOverrun(usize),
-    /// A trap, a stack guard or an assertion, raised by the running task.
-    Synchronous(Synchronous),
+    /// A trap, a stack guard or an assertion.
+    Synchronous(Synchronous, Raised),
 }
 
-/// The same synchronous fault, in each model's terms, attributed to `task`.
-fn synchronous(kind: Synchronous, task: usize) -> (rt_core::Fault, rt_reference::Fault) {
+/// The same synchronous fault in each model's terms, raised with the processor as `running`
+/// shows it. A stack guard hit in a job is that task's; one hit in kernel code is the interrupt
+/// stack's.
+fn synchronous(
+    kind: Synchronous,
+    raised: Raised,
+    running: Option<usize>,
+    reference: &mut Runtime<N>,
+) -> (rt_core::Fault, CoreContext, Result<FaultEffect, Refused>) {
+    let (core_context, context) = match (raised, running) {
+        (Raised::InJob, Some(task)) => {
+            (CoreContext::Job, RefContext::Task(TaskId::from_index(task)))
+        }
+        (Raised::InJob, None) => unreachable!("a job's fault is generated only while a task runs"),
+        (Raised::InKernel, Some(_)) => (CoreContext::Kernel, RefContext::Service),
+        (Raised::InKernel, None) => (CoreContext::Kernel, RefContext::Idle),
+    };
+    let guarded = match raised {
+        Raised::InJob => running,
+        Raised::InKernel => None,
+    };
     match kind {
         Synchronous::StackGuard => (
-            rt_core::Fault::StackGuard { task },
-            rt_reference::Fault::StackGuard,
+            rt_core::Fault::StackGuard { task: guarded },
+            core_context,
+            reference.raise_stack_guard(
+                context,
+                guarded.map_or(Guard::InterruptStack, |task| {
+                    Guard::Task(TaskId::from_index(task))
+                }),
+            ),
         ),
         Synchronous::Trap => (
             rt_core::Fault::UnexpectedTrap { cause: 0 },
-            rt_reference::Fault::UnexpectedTrap,
+            core_context,
+            reference.raise_unexpected_trap(context),
         ),
         Synchronous::Assertion => (
             rt_core::Fault::InvariantViolated {
                 invariant: "differential",
             },
-            rt_reference::Fault::AssertionFailure,
+            core_context,
+            reference.raise_assertion_failure(context),
         ),
     }
+}
+
+/// Whether two halts kept the same record (§3.1.1 rule 7): the same kind of fault, attributed to
+/// the same task or to none, the same interrupted task, and the same answer to whether rule 3
+/// escalated it. The two models' records are shaped differently, so this is a mapping, and a
+/// claim that could be wrong.
+fn same_record(core: Fatal, reference: FaultRecord) -> bool {
+    let kind = match (core.fault, reference.fault) {
+        (rt_core::Fault::Overrun { .. }, rt_reference::Fault::Overrun)
+        | (rt_core::Fault::UnexpectedTrap { .. }, rt_reference::Fault::UnexpectedTrap)
+        | (rt_core::Fault::InvariantViolated { .. }, rt_reference::Fault::AssertionFailure) => true,
+        (rt_core::Fault::StackGuard { task }, rt_reference::Fault::StackGuard(guard)) => {
+            guard
+                == task.map_or(Guard::InterruptStack, |task| {
+                    Guard::Task(TaskId::from_index(task))
+                })
+        }
+        _ => false,
+    };
+    let attribution = match reference.attribution {
+        Attribution::Task(task) => core.task == Some(task.index()) && core.interrupted.is_none(),
+        Attribution::NoTask { interrupted, .. } => {
+            core.task.is_none() && core.interrupted == interrupted.map(TaskId::index)
+        }
+    };
+    kind && attribution && core.escalated == reference.escalated
 }
 
 /// What one event did, as far as the coverage count needs to know.
@@ -222,7 +291,7 @@ struct Stepped {
 ///
 /// `running` and `halted` are what `rt-core`'s `decide()` reported, because neither is on its
 /// public surface otherwise. An `Err` is a divergence no snapshot shows: either model refusing an
-/// event both should accept, or a fault attributed differently.
+/// event both should accept, or the two answering it differently.
 fn step(
     core: &mut Scheduler<N>,
     reference: &mut Runtime<N>,
@@ -255,49 +324,47 @@ fn step(
         }
         Event::Mask => {
             core.mask().map_err(|why| refused("rt-core", &why))?;
-            reference
-                .mask()
-                .map_err(|why| refused("the reference", &why))?;
+            match reference.mask() {
+                Ok(MaskEffect::Masked(_)) => {}
+                other => return Err(format!("the reference answered {event:?} with {other:?}")),
+            }
         }
         Event::Unmask => {
             let delivered = core.unmask().map_err(|why| refused("rt-core", &why))?;
             stepped.core.extend(delivered.as_slice());
-            let closed = reference
-                .unmask()
-                .map_err(|why| refused("the reference", &why))?;
-            stepped.reference_overruns += closed.overruns;
+            match reference.unmask() {
+                Ok(UnmaskEffect::Unmasked(closed)) => stepped.reference_overruns += closed.overruns,
+                other => return Err(format!("the reference answered {event:?} with {other:?}")),
+            }
+        }
+        Event::UnbalancedUnmask => {
+            if core.unmask().is_ok() {
+                return Err("rt-core accepted an unmask with nothing to close".into());
+            }
+            match reference.unmask() {
+                Ok(UnmaskEffect::Fatal) => {}
+                other => return Err(format!("the reference answered {event:?} with {other:?}")),
+            }
         }
         Event::MonitorOverrun(i) => {
             stepped
                 .core
-                .push(core.fault(rt_core::Fault::Overrun { task: i }));
+                .push(core.fault(rt_core::Fault::Overrun { task: i }, CoreContext::Kernel));
             reference
-                .raise(TaskId::from_index(i), rt_reference::Fault::Overrun)
+                .raise_overrun(TaskId::from_index(i))
                 .map_err(|why| refused("the reference", &why))?;
         }
-        Event::Synchronous(kind) => {
-            let task = running.expect("generated only while a task runs");
-            let (core_fault, reference_fault) = synchronous(kind, task);
-            // §3.1.1's table and rule 2: attributed to the executing context, the running task —
-            // by `rt-core`'s report, and by the reference's acceptance of that attribution.
-            let transition = core.fault(core_fault);
-            if transition
-                != (CoreTransition::Faulted {
-                    task,
-                    fault: core_fault,
-                })
-            {
-                return Err(format!(
-                    "rt-core reported {transition:?} for {kind:?} raised by running task {task}"
-                ));
-            }
-            stepped.core.push(transition);
-            let effect = reference
-                .raise(TaskId::from_index(task), reference_fault)
-                .map_err(|why| refused("the reference", &why))?;
+        Event::Synchronous(kind, raised) => {
+            let (core_fault, context, effect) = synchronous(kind, raised, *running, reference);
+            let effect = effect.map_err(|why| refused("the reference", &why))?;
             if effect != FaultEffect::Fatal {
                 return Err(format!("the reference contained {kind:?}: {effect:?}"));
             }
+            let transition = core.fault(core_fault, context);
+            if !matches!(transition, CoreTransition::Halted { .. }) {
+                return Err(format!("rt-core contained {kind:?}: {transition:?}"));
+            }
+            stepped.core.push(transition);
         }
     }
     // Alignment 2: bring `rt-core` to the decision point the reference is already at.
@@ -333,10 +400,15 @@ struct Coverage {
     masked_completions: usize,
     /// Overruns raised by a monitor while unmasked, contained by the task's policy.
     contained_monitor_overruns: usize,
-    /// Overruns raised by a monitor while masked, which halt (§3.1.1 rule 3).
+    /// Overruns a monitor raised for the region holder inside its region, which halt
+    /// (§3.1.1 rules 1a and 3).
     masked_escalations: usize,
-    /// Traps, stack guards and assertions, which halt.
+    /// Traps, stack guards and assertions raised in a task's job, which halt.
     synchronous_halts: usize,
+    /// The same raised in kernel code — a service or the idle loop — which halt and blame no task.
+    kernel_faults: usize,
+    /// `unmask` with nothing to close, an assertion failure.
+    unbalanced_unmasks: usize,
 }
 
 /// Run one randomised sequence, returning the first divergence with the trace that produced it.
@@ -353,6 +425,8 @@ fn run_sequence(
     let mut halted = false;
     let mut trace: Vec<Event> = Vec::new();
     let mut depth = 0_u32;
+    // The task whose job opened the masked region, if a job did (§3.1.1, Terms).
+    let mut holder: Option<usize> = None;
 
     for _ in 0..length {
         // ⭐ Since `M2.9` the generator goes where `M2.2`'s could not: a release to a task that
@@ -376,14 +450,36 @@ fn run_sequence(
                         .expect("task exists")
             })
             .collect();
+        // §3.1.1 rule 1a: a monitor is masked with the region, so inside one only the holder's
+        // own overrun can be raised.
+        let monitored: Vec<usize> = if depth == 0 {
+            owing.clone()
+        } else {
+            holder
+                .filter(|task| owing.contains(task))
+                .into_iter()
+                .collect()
+        };
         let event = match rng.below(100) {
-            0 if running.is_some() => Event::Synchronous(match rng.below(3) {
-                0 => Synchronous::StackGuard,
-                1 => Synchronous::Trap,
-                _ => Synchronous::Assertion,
-            }),
-            1..=3 if !owing.is_empty() => Event::MonitorOverrun(owing[rng.below(owing.len())]),
-            4..=28 if running.is_some() => Event::Complete,
+            0 => {
+                let kind = match rng.below(3) {
+                    0 => Synchronous::StackGuard,
+                    1 => Synchronous::Trap,
+                    _ => Synchronous::Assertion,
+                };
+                let raised = if running.is_some() && rng.below(2) == 0 {
+                    Raised::InJob
+                } else {
+                    Raised::InKernel
+                };
+                Event::Synchronous(kind, raised)
+            }
+            1..=3 if !monitored.is_empty() => {
+                Event::MonitorOverrun(monitored[rng.below(monitored.len())])
+            }
+            // Rarer than the rest: it ends the sequence, and an early end costs coverage.
+            4 if depth == 0 && rng.below(4) == 0 => Event::UnbalancedUnmask,
+            5..=28 if running.is_some() => Event::Complete,
             29..=40 if depth < 4 => Event::Mask,
             41..=52 if depth > 0 => Event::Unmask,
             53..=65 => Event::Release(rng.below(N)),
@@ -391,10 +487,23 @@ fn run_sequence(
             _ => Event::Release(rng.below(N)),
         };
         match event {
-            Event::Mask => depth += 1,
-            Event::Unmask => depth -= 1,
+            Event::Mask => {
+                if depth == 0 {
+                    holder = running;
+                }
+                depth += 1;
+            }
+            Event::Unmask => {
+                depth -= 1;
+                if depth == 0 {
+                    holder = None;
+                }
+            }
             // §3.1.1 rule 4: a completion closes every section its job opened.
-            Event::Complete => depth = 0,
+            Event::Complete => {
+                depth = 0;
+                holder = None;
+            }
             _ => {}
         }
         trace.push(event);
@@ -436,7 +545,9 @@ fn run_sequence(
             Event::Complete if was_masked => coverage.masked_completions += 1,
             Event::MonitorOverrun(_) if was_masked => coverage.masked_escalations += 1,
             Event::MonitorOverrun(_) => coverage.contained_monitor_overruns += 1,
-            Event::Synchronous(_) => coverage.synchronous_halts += 1,
+            Event::Synchronous(_, Raised::InJob) => coverage.synchronous_halts += 1,
+            Event::Synchronous(_, Raised::InKernel) => coverage.kernel_faults += 1,
+            Event::UnbalancedUnmask => coverage.unbalanced_unmasks += 1,
             _ => {}
         }
         match (event, before, running) {
@@ -456,8 +567,23 @@ fn run_sequence(
                     if halted { "rt-core" } else { "the reference" }
                 ));
             }
-            // Both halted, and the attribution was compared in `step`. The task tables are left
-            // to the implementation (`d9`), and the reference refuses every later event.
+            // Both halted: compare what each kept (§3.1.1 rule 7). The task tables are left to
+            // the implementation (`d9`), and neither answers a later event by changing anything.
+            let Decision::Halt { fatal } = core.decide() else {
+                unreachable!("rt-core reported a halt");
+            };
+            let Some(record) = reference.fatal_record() else {
+                return Err(format!(
+                    "seed {seed}, step {}: the reference halted and kept no record",
+                    trace.len()
+                ));
+            };
+            if !same_record(fatal, record) {
+                return Err(format!(
+                    "seed {seed}, step {}: the halts kept different records\n  trace     {trace:?}\n  rt-core   {fatal:?}\n  reference {record:?}",
+                    trace.len()
+                ));
+            }
             return Ok(());
         }
         let got = core_snapshot(&core, halted, running);
@@ -522,7 +648,8 @@ fn differential_over_many_randomised_sequences() {
     // ⭐ The agreement above means nothing unless the sequences reached the states that matter.
     // These floors are well below what the generator currently produces; they exist to fail if a
     // future change to the event mix quietly stops exercising a behaviour. Measured 2026-10-01
-    // over these seeds: each floor is about half of what the generator then reached.
+    // over these seeds, and again when `M2.9` step 6c added kernel faults and unbalanced unmasks,
+    // which end sequences early: each floor is at most about half of what the generator reached.
     assert!(coverage.preemptions >= 500, "{coverage:?}");
     assert!(coverage.latched_deliveries >= 200, "{coverage:?}");
     assert!(coverage.completions >= 1_000, "{coverage:?}");
@@ -533,7 +660,9 @@ fn differential_over_many_randomised_sequences() {
     assert!(coverage.masked_completions >= 250, "{coverage:?}");
     assert!(coverage.contained_monitor_overruns >= 100, "{coverage:?}");
     assert!(coverage.masked_escalations >= 25, "{coverage:?}");
-    assert!(coverage.synchronous_halts >= 50, "{coverage:?}");
+    assert!(coverage.synchronous_halts >= 20, "{coverage:?}");
+    assert!(coverage.kernel_faults >= 50, "{coverage:?}");
+    assert!(coverage.unbalanced_unmasks >= 15, "{coverage:?}");
 }
 
 #[test]
@@ -550,21 +679,26 @@ fn the_two_models_are_not_the_same_model() {
     let mut none = Scheduler::<0>::new([]);
     assert_eq!(none.decide(), Decision::Idle);
 
-    // The reference takes a synchronous fault's attribution as a parameter and refuses a wrong
-    // one; `rt-core` reads it from its own running task, and accepts a trap while idle.
+    // The reference takes a synchronous fault's context as a parameter, naming the task or one of
+    // four kernel contexts, and refuses one the processor contradicts; `rt-core` is told only job
+    // or kernel and reads the task from its own running one.
     let mut r = reference([OverrunPolicy::Fault; N]);
     assert_eq!(
-        r.raise(TaskId::from_index(0), rt_reference::Fault::UnexpectedTrap),
+        r.raise_unexpected_trap(RefContext::Task(TaskId::from_index(0))),
         Err(Refused::NoTaskRunning)
     );
     r.release(TaskId::from_index(0))
         .expect("boots idle, so this dispatches");
     assert_eq!(
-        r.raise(TaskId::from_index(1), rt_reference::Fault::UnexpectedTrap),
+        r.raise_unexpected_trap(RefContext::Task(TaskId::from_index(1))),
         Err(Refused::NotTheRunningTask)
     );
     assert_eq!(
-        r.raise(TaskId::from_index(0), rt_reference::Fault::UnexpectedTrap),
+        r.raise_unexpected_trap(RefContext::Idle),
+        Err(Refused::NotIdle)
+    );
+    assert_eq!(
+        r.raise_unexpected_trap(RefContext::Task(TaskId::from_index(0))),
         Ok(FaultEffect::Fatal)
     );
     assert_eq!(r.processor(), Processor::Halted);
@@ -695,30 +829,32 @@ fn d4_a_containable_fault_inside_a_masked_region_escalates_in_both() {
         .expect("dispatches");
     reference.mask().expect("maskable");
     assert_eq!(
-        reference.raise(TaskId::from_index(0), rt_reference::Fault::Overrun),
+        reference.raise_overrun(TaskId::from_index(0)),
         Ok(FaultEffect::Fatal),
         "SkipLateJob would have contained it outside the region"
     );
     assert_eq!(reference.processor(), Processor::Halted);
+    let record = reference.fatal_record().expect("halted");
+    assert!(record.escalated, "and the record says rule 3 escalated it");
 
     let mut core = Scheduler::<N>::new([OverrunPolicy::SkipLateJob; N]);
     core.release(0);
     core.decide();
     core.mask().expect("maskable");
-    core.fault(rt_core::Fault::Overrun { task: 0 });
-    assert_eq!(
-        core.decide(),
-        Decision::Halt {
-            fault: rt_core::Fault::Overrun { task: 0 }
-        }
-    );
+    core.fault(rt_core::Fault::Overrun { task: 0 }, CoreContext::Kernel);
+    let Decision::Halt { fatal } = core.decide() else {
+        panic!("rt-core escalates it too");
+    };
+    assert!(same_record(fatal, record), "{fatal:?} against {record:?}");
 }
 
 #[test]
-fn d5_both_bound_mask_nesting_at_the_same_depth_and_refuse_beyond() {
+fn d5_both_bound_mask_nesting_at_the_same_depth_and_halt_beyond() {
     // Once undecided: the reference refused beyond a bound; `rt-core` saturated a counter, which
-    // stops counting, so the matching unmasks no longer balance. §3.1.1 declares the bound and
-    // refuses beyond it.
+    // stops counting, so the matching unmasks no longer balance. §3.1.1 first declared the bound
+    // and refused beyond it; its review found that a refusal leaves the caller's matching `unmask`
+    // to close the section early (finding 10), so exceeding it, and an `unmask` with nothing to
+    // close, are assertion failures, which halt.
     assert_eq!(
         Scheduler::<N>::MASK_DEPTH_LIMIT,
         Runtime::<N>::MAX_MASK_DEPTH
@@ -729,19 +865,34 @@ fn d5_both_bound_mask_nesting_at_the_same_depth_and_refuse_beyond() {
         reference.mask().expect("within the bound");
         core.mask().expect("within the bound");
     }
-    assert_eq!(reference.mask(), Err(Refused::MaskDepthExhausted));
-    assert_eq!(
-        core.mask(),
-        Err(rt_core::Refused::MaskDepthExhausted { limit: u8::MAX })
-    );
-    // And neither lost count: as many unmasks as masks close the region, and one more is refused.
+    assert_eq!(reference.mask(), Ok(MaskEffect::Fatal));
+    assert_eq!(core.mask(), Err(rt_core::Refused::Halted));
+    let Decision::Halt { fatal } = core.decide() else {
+        panic!("rt-core halts too");
+    };
+    let record = reference.fatal_record().expect("halted");
+    assert!(same_record(fatal, record), "{fatal:?} against {record:?}");
+    assert!(reference.is_masked() && core.is_masked(), "neither wrapped");
+
+    // Neither lost count before it: as many unmasks as masks close the region, and one more halts.
+    let mut reference = self::reference([OverrunPolicy::Fault; N]);
+    let mut core = Scheduler::<N>::new([OverrunPolicy::Fault; N]);
     for _ in 0..u8::MAX {
-        reference.unmask().expect("balanced");
+        reference.mask().expect("within the bound");
+        core.mask().expect("within the bound");
+    }
+    for _ in 0..u8::MAX {
+        assert!(matches!(reference.unmask(), Ok(UnmaskEffect::Unmasked(_))));
         core.unmask().expect("balanced");
     }
     assert!(!reference.is_masked() && !core.is_masked());
-    assert_eq!(reference.unmask().unwrap_err(), Refused::NotMasked);
-    assert_eq!(core.unmask().unwrap_err(), rt_core::Refused::NotMasked);
+    assert_eq!(reference.unmask(), Ok(UnmaskEffect::Fatal));
+    assert_eq!(core.unmask().unwrap_err(), rt_core::Refused::Halted);
+    let Decision::Halt { fatal } = core.decide() else {
+        panic!("rt-core halts too");
+    };
+    let record = reference.fatal_record().expect("halted");
+    assert!(same_record(fatal, record), "{fatal:?} against {record:?}");
 }
 
 #[test]
@@ -865,11 +1016,11 @@ fn d8_an_overrun_raised_without_a_release_starts_no_job_in_either() {
         .expect("dispatches");
 
     assert_eq!(
-        core.fault(rt_core::Fault::Overrun { task: 0 }),
+        core.fault(rt_core::Fault::Overrun { task: 0 }, CoreContext::Kernel),
         CoreTransition::JobSkipped { task: 0 }
     );
     assert!(matches!(
-        reference.raise(TaskId::from_index(0), rt_reference::Fault::Overrun),
+        reference.raise_overrun(TaskId::from_index(0)),
         Ok(FaultEffect::JobTerminated(Some(_)))
     ));
     assert_eq!(core.decide(), Decision::Idle);
@@ -894,21 +1045,23 @@ fn d9_what_a_halt_leaves_in_the_task_table_is_left_to_the_implementation() {
         .release(TaskId::from_index(1))
         .expect("dispatches");
 
-    let fault = rt_core::Fault::StackGuard { task: 1 };
+    let fault = rt_core::Fault::StackGuard { task: Some(1) };
+    assert!(matches!(
+        core.fault(fault, CoreContext::Job),
+        CoreTransition::Halted { .. }
+    ));
+    let one = TaskId::from_index(1);
     assert_eq!(
-        core.fault(fault),
-        CoreTransition::Faulted { task: 1, fault }
-    );
-    assert_eq!(
-        reference.raise(TaskId::from_index(1), rt_reference::Fault::StackGuard),
+        reference.raise_stack_guard(RefContext::Task(one), Guard::Task(one)),
         Ok(FaultEffect::Fatal)
     );
-    assert_eq!(core.decide(), Decision::Halt { fault });
+    let Decision::Halt { fatal } = core.decide() else {
+        panic!("a stack guard halts");
+    };
     assert_eq!(reference.processor(), Processor::Halted);
-    assert_eq!(
-        reference.fault_record().map(|record| record.task),
-        Some(TaskId::from_index(1))
-    );
+    let record = reference.fatal_record().expect("halted");
+    assert_eq!(record.attribution, Attribution::Task(one));
+    assert!(same_record(fatal, record), "{fatal:?} against {record:?}");
 
     // `rt-core` marks the attributed task and takes it off the processor; the reference freezes
     // the table as it stood when the fault was raised.

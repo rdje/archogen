@@ -6,7 +6,7 @@
 //! the **boundary** of the fourth — it reports that a switch is due; the architecture port
 //! performs it.
 //!
-//! # The five states, and why there are five
+//! # The four states, and why there are four
 //!
 //! ```text
 //!            release                 dispatch
@@ -33,7 +33,7 @@
 //! (`docs/decisions/decision_priority-comparison-direction.md`), so "the highest-priority ready
 //! task" is the first set bit, and the ready structure is a bitmask over a fixed capacity.
 
-use crate::fault::{Fault, OverrunPolicy};
+use crate::fault::{Context, Fault, OverrunPolicy};
 
 /// Where a task is in its lifecycle.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -70,11 +70,28 @@ pub enum Transition {
     /// release. Its own variant, because a skipped job is a missed deadline by another name and
     /// must be told apart from an ordinary release in any trace.
     JobSkipped { task: usize },
-    /// A task entered the fault path. `task` is the one the fault is attributed to by §3.1.1's
-    /// table: the overrunning task for an overrun, the executing one for the other three. It is
-    /// `usize::MAX` only for a trap or an assertion raised while no task holds the processor — in
-    /// the idle loop or a handler — where the executing context is the kernel's and no task's.
+    /// A task overran under its `Fault` policy and left the schedule for good; every other task
+    /// continues (§3.1.1 rule 5). A fault that halts the runtime is [`Transition::Halted`].
     Faulted { task: usize, fault: Fault },
+    /// The runtime entered its fatal handler (§3.1.1 rule 7). Every event after the halt answers
+    /// with this same record and changes nothing: no job runs, no release is processed or latched.
+    Halted { fatal: Fatal },
+}
+
+/// What the fatal handler keeps (§3.1.1 rule 7): the **first** fault that was not containable,
+/// or was made so by rule 3. A later fault, one in the handler included, never replaces it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Fatal {
+    /// The fault, which carries its §3.1 kind; [`Fault::runtime_state_is_trustworthy`] separates
+    /// §8.1's expected error from the rest.
+    pub fault: Fault,
+    /// The task it is attributed to (§3.1.1 rule 2), or `None` when no task's code raised it.
+    pub task: Option<usize>,
+    /// The task whose job a fault raised in kernel context interrupted — recorded as interrupted,
+    /// never as attributed.
+    pub interrupted: Option<usize>,
+    /// Whether rule 3 escalated a containable fault because a masked region was open.
+    pub escalated: bool,
 }
 
 /// What the substrate should do next.
@@ -94,25 +111,21 @@ pub enum Decision {
     Dispatch { to: usize },
     /// Switch from `from` to `to`. The only decision that costs a save **and** a restore.
     Switch { from: usize, to: usize },
-    /// The runtime's own state is no longer trustworthy; run the fatal path.
-    Halt { fault: Fault },
+    /// The runtime's own state is no longer trustworthy; run the fatal path. Stays the decision.
+    Halt { fatal: Fatal },
 }
 
 /// Why an operation was refused.
 ///
-/// §3.1.1 fixes two bounds that were previously silent, and both are reported rather than
-/// absorbed: a saturating counter and a wrapping one both fail silently, and "silently" is the
-/// part that matters — a critical section that quietly stopped nesting still *looks* entered.
+/// ⛔ One reason only. A `mask` past the bound and an `unmask` with nothing to close were refusals
+/// until `2026-10-01`, and §3.1.1 now makes both assertion failures: a refused `mask` leaves its
+/// caller's matching `unmask` to close the section early, which is the failure the bound exists
+/// to prevent. So both halt, and the refusal a caller sees is the one every operation after a
+/// halt sees.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Refused {
-    /// The nesting depth of §3.1's "bounded kernel critical sections" is exhausted.
-    MaskDepthExhausted {
-        /// The declared bound.
-        limit: u8,
-    },
-    /// `unmask` without a matching `mask`.
-    NotMasked,
-    /// The runtime has entered its fatal path; §8.1 offers no way back.
+    /// The runtime has entered its fatal path; §8.1 offers no way back. [`Decision::Halt`] says
+    /// why.
     Halted,
 }
 
@@ -161,17 +174,17 @@ pub struct Scheduler<const N: usize> {
     /// Interrupt masking depth. §8.1 asks for masking to be modelled explicitly; nesting is
     /// counted so a critical section inside another does not unmask early.
     mask_depth: u32,
-    /// Set once the runtime's own state is no longer trustworthy.
-    halted: Option<Fault>,
+    /// Set once, by the first fault that is not containable (§3.1.1 rule 7).
+    halted: Option<Fatal>,
 }
 
 impl<const N: usize> Scheduler<N> {
     /// The declared bound on critical-section nesting (§3.1 "bounded kernel critical sections",
     /// fixed by §3.1.1).
     ///
-    /// The *value* is a judgement — 255 is far beyond any real kernel's nesting — but the
-    /// *refusal* at the bound is not: §3.1.1 rules out both wrapping and saturating, because each
-    /// fails silently.
+    /// The *value* is a judgement — 255 is far beyond any real kernel's nesting, and the runtime's
+    /// catalog record declares it — but what happens at the bound is not: §3.1.1 makes exceeding it
+    /// an assertion failure, because wrapping, saturating and refusing each fail silently.
     pub const MASK_DEPTH_LIMIT: u8 = u8::MAX;
 
     /// Build a scheduler from eADL priority ranks, in description order.
@@ -263,15 +276,17 @@ impl<const N: usize> Scheduler<N> {
     ///
     /// # Errors
     ///
-    /// [`Refused::MaskDepthExhausted`] at [`Scheduler::MASK_DEPTH_LIMIT`]. ⛔ This previously
-    /// saturated, which cannot wrap but is not therefore safe: a saturated counter stops
-    /// counting, so the matching unmasks no longer balance and interrupts return one section
-    /// early. §3.1.1 rules out both wrapping and saturating, because both fail silently.
+    /// [`Refused::Halted`] once the runtime has halted — including by this call: a `mask` past
+    /// [`Scheduler::MASK_DEPTH_LIMIT`] is an assertion failure (§3.1.1). ⛔ It once saturated, and
+    /// then was refused; a saturated counter stops counting, and a refused one leaves the caller's
+    /// matching `unmask` to close the section early. Both return interrupts one section early.
     pub fn mask(&mut self) -> Result<u8, Refused> {
+        if self.halted.is_some() {
+            return Err(Refused::Halted);
+        }
         if self.mask_depth >= u32::from(Self::MASK_DEPTH_LIMIT) {
-            return Err(Refused::MaskDepthExhausted {
-                limit: Self::MASK_DEPTH_LIMIT,
-            });
+            self.assertion("mask-depth-bound");
+            return Err(Refused::Halted);
         }
         self.mask_depth += 1;
         Ok(u8::try_from(self.mask_depth).unwrap_or(u8::MAX))
@@ -285,12 +300,17 @@ impl<const N: usize> Scheduler<N> {
     ///
     /// # Errors
     ///
-    /// [`Refused::NotMasked`] when there is no matching [`Scheduler::mask`]. Reported rather than
-    /// panicked: §8.1 asks for "a defined fatal handler and diagnostic evidence", and a panic in
-    /// the scheduler reaches neither.
+    /// [`Refused::Halted`] once the runtime has halted — including by this call: an `unmask` with
+    /// no matching [`Scheduler::mask`] is an assertion failure (§3.1.1), taken through the fatal
+    /// path rather than a panic, which reaches neither of §8.1's "defined fatal handler and
+    /// diagnostic evidence".
     pub fn unmask(&mut self) -> Result<heapless::Transitions<N>, Refused> {
+        if self.halted.is_some() {
+            return Err(Refused::Halted);
+        }
         if self.mask_depth == 0 {
-            return Err(Refused::NotMasked);
+            self.assertion("unmask-at-depth-zero");
+            return Err(Refused::Halted);
         }
         self.mask_depth -= 1;
         if self.mask_depth > 0 {
@@ -331,6 +351,9 @@ impl<const N: usize> Scheduler<N> {
     /// interrupt landed. Unmasked, a release while the task has not completed is an **overrun**
     /// at once.
     pub fn release(&mut self, task: usize) -> Transition {
+        if let Some(fatal) = self.halted {
+            return Transition::Halted { fatal };
+        }
         if self.is_masked() {
             return match self.latched[task] {
                 Latch::Empty => {
@@ -352,7 +375,7 @@ impl<const N: usize> Scheduler<N> {
     /// `Fault` it goes with the faulted task. An overrun raised through [`Scheduler::fault`] has no
     /// triggering release, which is the whole difference.
     fn overrun_by_release(&mut self, task: usize) -> Transition {
-        let transition = self.raise(Fault::Overrun { task });
+        let transition = self.raise(Fault::Overrun { task }, Context::Kernel);
         if transition == (Transition::JobSkipped { task }) {
             self.states[task] = TaskState::Ready;
         }
@@ -381,6 +404,9 @@ impl<const N: usize> Scheduler<N> {
     /// anything else means the two disagree about what is on the processor, which is an invariant
     /// violation worth catching where it happens.
     pub fn complete(&mut self, task: usize) -> (Transition, heapless::Transitions<N>) {
+        if let Some(fatal) = self.halted {
+            return (Transition::Halted { fatal }, heapless::Transitions::new());
+        }
         assert_eq!(
             self.running,
             Some(task),
@@ -400,64 +426,72 @@ impl<const N: usize> Scheduler<N> {
         (Transition::Completed { task }, delivered)
     }
 
-    /// Raise a fault from outside — a stack guard, an unexpected trap, an assertion, or an overrun
-    /// some other mechanism detected, an execution-budget monitor being the obvious one.
+    /// Raise a fault from outside: a stack guard, an unexpected trap or an assertion, raised in
+    /// `context`; or an overrun some mechanism other than a release detected, an execution-budget
+    /// monitor being the obvious one (§3.1.1 rule 1a), for which `context` does not matter.
     ///
     /// ⚠️ Such an overrun has no triggering release, so under `SkipLateJob` the late job is
     /// abandoned and the task waits for its next release: §3.1.1 rule 1 makes the *triggering*
     /// release the next job, and there is none here. Making the task ready would start a job no
     /// release paid for.
-    pub fn fault(&mut self, fault: Fault) -> Transition {
-        self.raise(fault)
+    pub fn fault(&mut self, fault: Fault, context: Context) -> Transition {
+        if let Some(fatal) = self.halted {
+            return Transition::Halted { fatal };
+        }
+        self.raise(fault, context)
+    }
+
+    /// An assertion failure the scheduler itself detects, raised by whatever is executing.
+    fn assertion(&mut self, invariant: &'static str) {
+        self.raise(Fault::InvariantViolated { invariant }, Context::Job);
     }
 
     /// Apply a fault's policy. An overrun contained under `SkipLateJob` leaves the task
     /// [`TaskState::Suspended`] and reports [`Transition::JobSkipped`], which
     /// [`Scheduler::overrun_by_release`] completes into a new job.
-    fn raise(&mut self, fault: Fault) -> Transition {
-        let task = match fault {
-            Fault::Overrun { task } | Fault::StackGuard { task } => task,
-            // §3.1.1's table: a trap and an assertion are "synchronous to the executing context
-            // and are attributed to it" (rule 2) — the running task, when there is one. Neither
-            // is containable, so the runtime halts either way.
-            Fault::UnexpectedTrap { .. } | Fault::InvariantViolated { .. } => {
-                let Some(task) = self.running else {
-                    self.halted.get_or_insert(fault);
-                    return Transition::Faulted {
-                        task: usize::MAX,
-                        fault,
-                    };
-                };
-                task
-            }
+    fn raise(&mut self, fault: Fault, context: Context) -> Transition {
+        // §3.1.1 rule 2: an overrun is the overrunning task's, whichever context holds the
+        // processor; the other three are the executing context's, and kernel code is no task.
+        let (task, interrupted) = match (fault, context) {
+            (Fault::Overrun { task }, _) => (Some(task), None),
+            (_, Context::Job) => (self.running, None),
+            (_, Context::Kernel) => (None, self.running),
         };
         // §3.1.1 rule 3: a containable fault raised inside a masked region is not containable.
-        // Terminating a job that holds the mask leaves the nesting depth above zero with no
+        // Terminating a job that holds the region leaves the nesting depth above zero with no
         // owner, so interrupts never return; forcing it to zero re-enables them with the
         // region's invariants half-restored. §8.1 offers no third option.
-        let containable = !self.is_masked();
-        if containable
-            && matches!(fault, Fault::Overrun { .. })
-            && self.policies[task] == OverrunPolicy::SkipLateJob
-        {
-            // The late job is abandoned — recorded, never silent. Whether a new job follows is the
-            // triggering release's to say (`overrun_by_release`).
-            self.states[task] = TaskState::Suspended;
+        let containable = fault.runtime_state_is_trustworthy();
+        let escalated = containable && self.is_masked();
+        if let (true, false, Some(task)) = (containable, escalated, task) {
+            // §3.1.1 rule 5. The late job is abandoned — recorded, never silent.
             if self.running == Some(task) {
                 self.running = None;
             }
-            return Transition::JobSkipped { task };
+            if self.policies[task] == OverrunPolicy::SkipLateJob {
+                // Whether a new job follows is the triggering release's to say
+                // (`overrun_by_release`).
+                self.states[task] = TaskState::Suspended;
+                return Transition::JobSkipped { task };
+            }
+            self.states[task] = TaskState::Faulted;
+            return Transition::Faulted { task, fault };
         }
-        self.states[task] = TaskState::Faulted;
-        if self.running == Some(task) {
-            self.running = None;
+        // Rule 7: the fatal handler. The attributed task is marked in the table, which after a
+        // halt is this implementation's and not evidence; the record below is.
+        if let Some(task) = task {
+            self.states[task] = TaskState::Faulted;
+            if self.running == Some(task) {
+                self.running = None;
+            }
         }
-        if !fault.runtime_state_is_trustworthy() || !containable {
-            // The first fault is the evidence (§8.1, "preserve … diagnostic evidence"): one the
-            // fatal path raises afterwards is a consequence, and must not overwrite the cause.
-            self.halted.get_or_insert(fault);
-        }
-        Transition::Faulted { task, fault }
+        let fatal = *self.halted.get_or_insert(Fatal {
+            fault,
+            task,
+            interrupted,
+            escalated,
+        });
+        Transition::Halted { fatal }
     }
 
     /// What the substrate should do next.
@@ -469,8 +503,8 @@ impl<const N: usize> Scheduler<N> {
     /// Idempotent: calling it twice without an intervening event returns the same decision, so a
     /// substrate may consult it at any modelled boundary.
     pub fn decide(&mut self) -> Decision {
-        if let Some(fault) = self.halted {
-            return Decision::Halt { fault };
+        if let Some(fatal) = self.halted {
+            return Decision::Halt { fatal };
         }
         // The highest-priority ready task is the lowest index, because the index IS the rank.
         let mut best: Option<usize> = None;
@@ -479,6 +513,17 @@ impl<const N: usize> Scheduler<N> {
                 best = Some(task);
                 break;
             }
+        }
+        let starts_a_job = match (self.running, best) {
+            (Some(current), Some(candidate)) => candidate < current,
+            (None, Some(_)) => true,
+            _ => false,
+        };
+        if starts_a_job && self.is_masked() {
+            // §3.1.1, Terms: every job starts at depth zero, which is what makes every section
+            // open at a completion the completing job's (rule 4).
+            self.assertion("dispatch-while-masked");
+            return self.decide();
         }
         match (self.running, best) {
             (Some(current), None) => Decision::Continue { task: current },

@@ -66,10 +66,12 @@ eliminate races or blocking."*
 
 A release arriving while interrupts are masked is **latched**, not lost, and delivered when the
 outermost critical section closes — highest priority first. Masking nests, so an inner section
-cannot unmask early, and the nesting is **bounded**: `mask` beyond `Scheduler::MASK_DEPTH_LIMIT`
-is refused, and so is an `unmask` with nothing to close. A counter that wrapped would re-enable
-interrupts inside a critical section while reporting success; one that saturated would stop
-counting, so the unmasks would no longer balance. Both fail silently, so neither is allowed.
+cannot unmask early, and the nesting is **bounded**. A `mask` beyond `Scheduler::MASK_DEPTH_LIMIT`,
+an `unmask` with nothing to close, and a job dispatched while a region is open are each an
+**assertion failure**, which halts. A counter that wrapped would re-enable interrupts inside a
+critical section while reporting success; one that saturated would stop counting; one that
+refused — the answer until the contract's second review — would leave its caller's matching
+`unmask` to close the section early. Each fails silently, so none is allowed.
 
 ⛔ **A second release while one is still pending is an overrun, not a second pending job.** There
 is nowhere to put it. Inventing somewhere would be a queue, in a profile that excludes queues,
@@ -100,14 +102,26 @@ its **own state is still trustworthy**:
 | Fault | §8.1 class | Attributed to | Trustworthy after? | Because |
 | --- | --- | --- | --- | --- |
 | `Overrun` | expected error | the overrunning task, which need not be running | yes | a workload event the scheduler fully understands; a declared policy applies |
-| `StackGuard` | violated internal invariant | the task whose guard was breached | no | memory the runtime relies on may already be wrong |
-| `UnexpectedTrap` | deliberate fatal trap | the running task, or none while none runs | no | the cause is outside what was modelled |
-| `InvariantViolated` | violated internal invariant | the running task, or none while none runs | no | the runtime's own bookkeeping is inconsistent |
+| `StackGuard` | violated internal invariant | the executing context | no | memory the runtime relies on may already be wrong |
+| `UnexpectedTrap` | outside the model, taken by the deliberate fatal trap | the executing context | no | the cause is outside what was modelled |
+| `InvariantViolated` | violated internal invariant | the executing context | no | the runtime's own bookkeeping is inconsistent |
 
 The mapping is `ROADMAP.md` §3.1.1's: §3.1 names the faults and §8.1 names the classes, and until
 §3.1.1 nothing connected them. Only an overrun leaves the system schedulable. Everything else
-halts, because continuing means running a system nobody analyzed — and the halt keeps the
-**first** fault, because one the fatal path raises afterwards is a consequence, not the cause.
+halts, because continuing means running a system nobody analyzed.
+
+The executing context is told, not guessed: a fault from outside arrives with a `Context` — the
+running task's `Job`, which includes a primitive it called and its completion path, or `Kernel`
+code: a service, the trap path, a transition, idle. Kernel code is no task's, so a trap there
+blames nobody and records the task it interrupted as interrupted. A stack guard says separately
+whose guard was hit — a task's, or the interrupt stack's — because the stack and the culprit can
+differ.
+
+The halt keeps one record, `Fatal`: the **first** fault, the task it is attributed to or none,
+the task it interrupted, and whether rule 3 escalated it. One the fatal path raises afterwards is
+a consequence, not the cause, so it never replaces the record. And a halted runtime changes
+nothing: every event after the halt answers with the same record — no release processed or
+latched, no job completed, no section opened or closed.
 
 ⛔ **And an overrun raised while interrupts are masked halts too** (§3.1.1 rule 3). Terminating a
 job that holds the mask leaves the depth above zero with no owner, so interrupts never return;
@@ -124,16 +138,6 @@ abandonment as its own transition, `JobSkipped` — never as an ordinary release
 job is a missed deadline by another name. The release that found the job late becomes the next
 job. An overrun found some other way, by an execution-budget monitor through `fault`, has no
 such release, so it starts nothing: the task waits for its next one.
-
-⏳ **What the contract states and the runtime does not carry yet.** The text's second review
-(`M2.9`, step 6) made them explicit, and step 6c carries them into both models:
-- a `mask` past the declared bound, and an `unmask` with nothing to close, are **assertion
-  failures**, which halt — the refusals described above leave the caller's matching `unmask` to
-  close a section early;
-- a trap or an assertion raised in a service, the trap path, a transition or idle is **no task's**,
-  and the interrupted task is recorded as interrupted, not as attributed;
-- a halted runtime **changes nothing afterwards** — no release processed or latched — and its kept
-  fault says whether rule 3 escalated it.
 
 ## It has been checked against a model that never saw it
 

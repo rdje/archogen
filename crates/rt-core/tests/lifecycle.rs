@@ -10,7 +10,19 @@
 //! reference does not qualify as independent" — so what these assert is the **contract**, which
 //! both implementations must satisfy.
 
-use rt_core::{Decision, Fault, OverrunPolicy, Scheduler, TaskState, Transition};
+use rt_core::{
+    Context, Decision, Fatal, Fault, OverrunPolicy, Refused, Scheduler, TaskState, Transition,
+};
+
+/// The record a halt keeps (§3.1.1 rule 7).
+fn fatal(fault: Fault, task: Option<usize>, interrupted: Option<usize>, escalated: bool) -> Fatal {
+    Fatal {
+        fault,
+        task,
+        interrupted,
+        escalated,
+    }
+}
 
 /// Three tasks, index 0 the highest priority, all faulting on overrun — the examples' shape.
 fn scheduler() -> Scheduler<3> {
@@ -247,7 +259,6 @@ fn a_completion_inside_a_masked_region_closes_it_and_delivers() {
         !s.is_masked(),
         "the job's sections end with it, nested ones included"
     );
-    assert_eq!(s.unmask().unwrap_err(), rt_core::Refused::NotMasked);
     assert_eq!(s.decide(), Decision::Dispatch { to: 0 });
 }
 
@@ -331,11 +342,12 @@ fn an_overrun_leaves_the_runtime_schedulable_and_a_trap_does_not() {
     );
 
     let mut s = scheduler();
-    s.fault(Fault::UnexpectedTrap { cause: 7 });
+    let trap = Fault::UnexpectedTrap { cause: 7 };
+    s.fault(trap, Context::Kernel);
     assert_eq!(
         s.decide(),
         Decision::Halt {
-            fault: Fault::UnexpectedTrap { cause: 7 }
+            fatal: fatal(trap, None, None, false)
         },
         "after an unmodelled trap the runtime's own state is not trustworthy"
     );
@@ -354,10 +366,53 @@ fn a_trap_or_an_assertion_is_attributed_to_the_running_task() {
         let mut s = scheduler();
         s.release(1);
         s.decide();
-        assert_eq!(s.fault(fault), Transition::Faulted { task: 1, fault });
+        let kept = fatal(fault, Some(1), None, false);
+        assert_eq!(
+            s.fault(fault, Context::Job),
+            Transition::Halted { fatal: kept }
+        );
         assert_eq!(s.state(1), TaskState::Faulted);
-        assert_eq!(s.decide(), Decision::Halt { fault });
+        assert_eq!(s.decide(), Decision::Halt { fatal: kept });
     }
+}
+
+#[test]
+fn a_trap_in_kernel_code_is_no_tasks_and_names_the_task_it_interrupted() {
+    // §3.1.1 rule 2 (the review's finding 8): a service, the trap path, a transition or idle is no
+    // task, and a task whose job the fault interrupted is recorded as interrupted, never as
+    // attributed.
+    let mut s = scheduler();
+    s.release(1);
+    s.decide();
+    let trap = Fault::UnexpectedTrap { cause: 7 };
+    let kept = fatal(trap, None, Some(1), false);
+    assert_eq!(
+        s.fault(trap, Context::Kernel),
+        Transition::Halted { fatal: kept }
+    );
+    assert_eq!(
+        s.state(1),
+        TaskState::Running,
+        "the interrupted task is not marked"
+    );
+    assert_eq!(s.decide(), Decision::Halt { fatal: kept });
+}
+
+#[test]
+fn a_stack_guard_names_whose_guard_apart_from_who_is_blamed() {
+    // The interrupt stack's guard, hit by a service: no task is attributed, and the fault says
+    // whose guard it was.
+    let mut s = scheduler();
+    s.release(2);
+    s.decide();
+    let guard = Fault::StackGuard { task: None };
+    s.fault(guard, Context::Kernel);
+    assert_eq!(
+        s.decide(),
+        Decision::Halt {
+            fatal: fatal(guard, None, Some(2), false)
+        }
+    );
 }
 
 #[test]
@@ -366,32 +421,50 @@ fn the_first_fatal_fault_is_the_one_kept() {
     let mut s = scheduler();
     s.release(1);
     s.decide();
-    s.fault(Fault::StackGuard { task: 1 });
+    let guard = Fault::StackGuard { task: Some(1) };
+    s.fault(guard, Context::Job);
+    let kept = fatal(guard, Some(1), None, false);
     // One raised with no task to attribute it to, and one attributed to a task.
-    s.fault(Fault::UnexpectedTrap { cause: 7 });
-    s.fault(Fault::StackGuard { task: 2 });
-    assert_eq!(
-        s.decide(),
-        Decision::Halt {
-            fault: Fault::StackGuard { task: 1 }
-        }
-    );
+    s.fault(Fault::UnexpectedTrap { cause: 7 }, Context::Kernel);
+    s.fault(Fault::StackGuard { task: Some(2) }, Context::Job);
+    assert_eq!(s.decide(), Decision::Halt { fatal: kept });
+}
+
+#[test]
+fn a_halted_runtime_changes_nothing_afterwards() {
+    // §3.1.1 rule 7 (the review's finding 9): "From then no job runs, no release is processed or
+    // latched, and no transition occurs."
+    let mut s = scheduler();
+    s.release(1);
+    s.decide();
+    s.release(2);
+    let guard = Fault::StackGuard { task: Some(1) };
+    let Transition::Halted { fatal: kept } = s.fault(guard, Context::Job) else {
+        panic!("a stack guard halts");
+    };
+    let halted = Transition::Halted { fatal: kept };
+    assert_eq!(s.release(0), halted, "not processed");
+    assert_eq!(s.state(0), TaskState::Suspended);
+    assert_eq!(s.fault(Fault::Overrun { task: 2 }, Context::Kernel), halted);
+    assert_eq!(s.state(2), TaskState::Ready, "not contained, not faulted");
+    assert_eq!(s.mask(), Err(Refused::Halted));
+    assert_eq!(s.unmask().unwrap_err(), Refused::Halted);
+    assert!(!s.is_masked(), "and not latched either");
+    assert_eq!(s.complete(2).0, halted);
+    assert_eq!(s.decide(), Decision::Halt { fatal: kept });
 }
 
 #[test]
 fn a_trap_while_no_task_runs_is_attributed_to_no_task() {
     // The executing context is the kernel's — the idle loop or a handler — so no task carries it.
-    let mut s = scheduler();
-    let fault = Fault::UnexpectedTrap { cause: 7 };
-    assert_eq!(
-        s.fault(fault),
-        Transition::Faulted {
-            task: usize::MAX,
-            fault
-        }
-    );
-    assert_eq!(s.state(0), TaskState::Suspended);
-    assert_eq!(s.decide(), Decision::Halt { fault });
+    for context in [Context::Job, Context::Kernel] {
+        let mut s = scheduler();
+        let fault = Fault::UnexpectedTrap { cause: 7 };
+        let kept = fatal(fault, None, None, false);
+        assert_eq!(s.fault(fault, context), Transition::Halted { fatal: kept });
+        assert_eq!(s.state(0), TaskState::Suspended);
+        assert_eq!(s.decide(), Decision::Halt { fatal: kept });
+    }
 }
 
 #[test]
@@ -402,7 +475,7 @@ fn an_overrun_raised_without_a_release_starts_no_job() {
     s.release(0);
     assert_eq!(s.decide(), Decision::Dispatch { to: 0 });
     assert_eq!(
-        s.fault(Fault::Overrun { task: 0 }),
+        s.fault(Fault::Overrun { task: 0 }, Context::Kernel),
         Transition::JobSkipped { task: 0 }
     );
     assert_eq!(s.state(0), TaskState::Suspended);
@@ -423,13 +496,14 @@ fn a_stack_guard_halts_and_takes_the_task_off_the_processor() {
     let mut s = scheduler();
     s.release(1);
     assert_eq!(s.decide(), Decision::Dispatch { to: 1 });
-    s.fault(Fault::StackGuard { task: 1 });
+    let guard = Fault::StackGuard { task: Some(1) };
+    s.fault(guard, Context::Job);
     assert_eq!(s.state(1), TaskState::Faulted);
     assert_ne!(s.state(1), TaskState::Running);
     assert_eq!(
         s.decide(),
         Decision::Halt {
-            fault: Fault::StackGuard { task: 1 }
+            fatal: fatal(guard, Some(1), None, false)
         }
     );
 }
@@ -550,29 +624,64 @@ fn ranks_with_gaps_lower_by_their_order() {
 }
 
 #[test]
-fn mask_nesting_is_bounded_and_the_bound_refuses_rather_than_saturating() {
+fn exceeding_the_mask_bound_is_an_assertion_failure() {
     // §3.1.1: a counter that WRAPS re-enables interrupts inside a critical section while
-    // reporting success; one that SATURATES stops counting, so the matching unmasks no longer
-    // balance and interrupts return one section early. Both fail silently, so the bound refuses.
+    // reporting success; one that SATURATES stops counting; one that REFUSES leaves its caller's
+    // matching `unmask` to close the section early. Each fails silently, so exceeding the bound
+    // halts (the review's finding 10; until 2026-10-01 it refused).
     let mut s = scheduler();
     for _ in 0..Scheduler::<3>::MASK_DEPTH_LIMIT {
         s.mask().expect("within the declared bound");
     }
+    assert_eq!(s.mask(), Err(Refused::Halted));
+    assert!(s.is_masked(), "and the depth did not wrap to zero");
+    let bound = Fault::InvariantViolated {
+        invariant: "mask-depth-bound",
+    };
     assert_eq!(
-        s.mask().unwrap_err(),
-        rt_core::Refused::MaskDepthExhausted {
-            limit: Scheduler::<3>::MASK_DEPTH_LIMIT
+        s.decide(),
+        Decision::Halt {
+            fatal: fatal(bound, None, None, false)
         }
     );
-    assert!(s.is_masked(), "and the depth did not wrap to zero");
 }
 
 #[test]
-fn unmasking_without_a_matching_mask_is_reported_not_panicked() {
-    // §8.1 asks for "a defined fatal handler and diagnostic evidence"; a panic in the scheduler
-    // reaches neither, and a hosted test cannot observe it.
+fn an_unmask_with_nothing_to_close_is_an_assertion_failure() {
+    // Taken through the fatal path rather than a panic: §8.1 asks for "a defined fatal handler and
+    // diagnostic evidence", and a panic in the scheduler reaches neither.
     let mut s = scheduler();
-    assert_eq!(s.unmask().unwrap_err(), rt_core::Refused::NotMasked);
+    s.release(0);
+    s.decide();
+    assert_eq!(s.unmask().unwrap_err(), Refused::Halted);
+    let unbalanced = Fault::InvariantViolated {
+        invariant: "unmask-at-depth-zero",
+    };
+    assert_eq!(
+        s.decide(),
+        Decision::Halt {
+            fatal: fatal(unbalanced, Some(0), None, false)
+        },
+        "raised by the running job, so attributed to it"
+    );
+}
+
+#[test]
+fn a_job_starting_inside_a_masked_region_is_an_assertion_failure() {
+    // §3.1.1, Terms: every job starts at depth zero, which is what makes every section open at a
+    // completion the completing job's (rule 4, the review's finding 16).
+    let mut s = scheduler();
+    s.release(0);
+    s.mask().expect("maskable");
+    let masked = Fault::InvariantViolated {
+        invariant: "dispatch-while-masked",
+    };
+    assert_eq!(
+        s.decide(),
+        Decision::Halt {
+            fatal: fatal(masked, None, None, false)
+        }
+    );
 }
 
 #[test]
@@ -584,13 +693,13 @@ fn a_containable_fault_raised_while_masked_escalates() {
     s.release(0);
     s.decide();
     s.mask().expect("maskable");
-    s.fault(Fault::Overrun { task: 0 });
+    s.fault(Fault::Overrun { task: 0 }, Context::Kernel);
     assert_eq!(
         s.decide(),
         Decision::Halt {
-            fault: Fault::Overrun { task: 0 }
+            fatal: fatal(Fault::Overrun { task: 0 }, Some(0), None, true)
         },
-        "SkipLateJob would have contained this outside a critical section"
+        "SkipLateJob would have contained this outside a critical section, and the record says rule 3 escalated it"
     );
 }
 
@@ -613,11 +722,8 @@ fn an_overrun_discovered_at_unmask_applies_its_ordinary_policy() {
         vec![Transition::JobSkipped { task: 0 }],
         "SkipLateJob abandons the late job and accepts the new release"
     );
-    assert_ne!(
-        s.decide(),
-        Decision::Halt {
-            fault: Fault::Overrun { task: 0 }
-        },
+    assert!(
+        !matches!(s.decide(), Decision::Halt { .. }),
         "delivery at unmask is outside the critical section, so containment applies"
     );
 }

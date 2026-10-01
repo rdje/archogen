@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the runtime keeps the first fatal fault and stops there
+
+`ARCHOGEN-M2-0268` (leaf `M2.9`).
+
+- When the runtime hits a fatal fault it now keeps one record of it: what happened, which task it is blamed on,
+  which task it interrupted, and whether a critical section is what made it fatal. After that, nothing changes:
+  later events are answered with the same record.
+- A fault in an interrupt handler or the idle loop is no task's, and the task it interrupted is named as such.
+- Nesting critical sections past the limit, closing one that was never opened, or starting a task inside one now
+  halts, instead of being refused and leaving the system one section out of balance.
+- The independent model was re-derived again from the contract, and the two still agree on every randomised
+  sequence, now including these faults.
+
 ## archogen — the runtime contract says what the runtime does
 
 `ARCHOGEN-M2-0267` (leaf `M2.9`).
