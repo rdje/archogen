@@ -20,7 +20,11 @@
 # The gate reads a subset of YAML: block mappings and sequences, plain or quoted scalars, block scalars (whose text
 # it skips), and flow sequences of scalars. It refuses what it cannot read with certainty — an anchor, an alias, a
 # merge key, a flow mapping other than `permissions: {}`, a document marker, a tab, a line of no form it knows — so
-# it fails closed rather than passing a file it misread.
+# it fails closed rather than passing a file it misread. Since review round 2 was not completed (leaf `M2.7.6.4`), it
+# also refuses a quoted key, a key written twice in one mapping, and two keys of one mapping that differ only in case:
+# which of two values a parser keeps is the parser's, and GitHub turns an action's input names into environment
+# variables by "convert[ing] input names to uppercase letters" (its metadata-syntax reference, the ledger's
+# `github-actions-syntax`), so `PERSIST-CREDENTIALS` and `persist-credentials` would meet in one variable.
 #
 # ⚠️ HONEST LIMIT: the repository's default token, and every other setting findings §11 lists, is the hosting's; a
 # commit cannot show it. This gate holds the half a commit can.
@@ -127,6 +131,8 @@ def read(path, text):
         m = KEY.match(body)
         if not m:
             return None, "%s:%d: a line the gate cannot read — `%s`" % (path, n, body[:60])
+        if m.group("key")[:1] in ("\"", "'"):
+            return None, "%s:%d: a quoted key — write it plain" % (path, n)
         key, val = unquote(m.group("key")), (m.group("val") or "").strip()
         if key == "<<":
             return None, "%s:%d: a merge key — write the mapping out" % (path, n)
@@ -142,6 +148,17 @@ def read(path, text):
         stack.append((indent, key))
         if re.fullmatch(r"[|>][-+0-9]*", val):
             block = indent
+    seen = {}
+    for n, parents, key, _ in entries:
+        if key is None:
+            continue
+        first = seen.setdefault((tuple(parents), key.casefold()), (n, key))
+        if first[0] != n:
+            if first[1] == key:
+                return None, ("%s:%d: `%s` written twice in one mapping (first on line %d) — which counts is the "
+                              "parser's" % (path, n, key, first[0]))
+            return None, ("%s:%d: `%s` and `%s` (line %d) differ only in case in one mapping — write one"
+                          % (path, n, key, first[1], first[0]))
     return entries, None
 
 def children(entries, parent):
@@ -295,6 +312,12 @@ jobs:
   arm "an escaped key is refused, not misread (round 1, V1)" 1 "an escape in a double-quoted scalar"
   fresh "$(variant $'          persist-credentials: false\n      - name: a script' $'      - uses: actions/setup-node@0123456789abcdef\n        with:\n          persist-credentials: false\n      - name: a script')"
   arm "a sibling step's setting does not cover a checkout (round 1, V2)" 1 "without \`persist-credentials: false\`"
+  fresh "$(variant $'          persist-credentials: false\n' $'          persist-credentials: false\n          persist-credentials: true\n')"
+  arm "a key written twice in one mapping is refused" 1 "written twice in one mapping"
+  fresh "$(variant $'          persist-credentials: false\n' $'          persist-credentials: false\n          PERSIST-CREDENTIALS: true\n')"
+  arm "keys that differ only in case are refused" 1 "differ only in case"
+  fresh "$(variant $'permissions:\n  contents: read\n' $'permissions:\n  contents: read\n\'permissions\': write-all\n')"
+  arm "a quoted key is refused" 1 "a quoted key"
   rm -rf "$work"
   arms=$((arms + 1))
   if bash "$SELF" >/dev/null 2>&1; then ok=$((ok + 1)); echo "  ✅ the repository's workflows pass"

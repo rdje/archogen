@@ -139,6 +139,7 @@ a change that leaves it stale, so it is never edited by hand.
 
 - **GB** — [definition](glossary.md), [Modules and composition](modules.md)
 - github-actions — [What this project relies on from outside](ledger.md#github-actions)
+- github-actions-syntax — [What this project relies on from outside](ledger.md#github-actions-syntax)
 - **GNU** — [definition](glossary.md), [Verifying the toolchain](verification.md)
 - **GPG** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 
@@ -482,7 +483,8 @@ a change that leaves it stale, so it is never edited by hand.
 
 ## Y
 
-- **YAML** — [definition](glossary.md), [Verifying the toolchain](verification.md)
+- **YAML** — [definition](glossary.md), [Verifying the toolchain](verification.md), [What this project relies on from
+  outside](ledger.md)
 
 ## Numbers and symbols
 

@@ -197,6 +197,20 @@ the day a chapter or a decision relies on it, as Miri did.
 | Revalidation trigger | any workflow edit; a security advisory for either action |
 | Named as | `actions/checkout`, `actions/cache` |
 
+## `github-actions-syntax`
+
+| Field | Value |
+| --- | --- |
+| Source | GitHub's documentation, the metadata syntax reference for actions (`docs.github.com/en/actions/reference/workflows-and-actions/metadata-syntax`) |
+| Version | the page as published on `2026-10-02`; the documentation carries no version |
+| Pinned at | not pinned — read on `2026-10-02`; no build or check reads it |
+| Retrieved | `2026-10-02`, by `curl` of the page |
+| Hash | sha256 `94bf89e3feacc7cf4e9ebc24d6f0790784d055f3e5c7acf9e9311f19fff9cfe5` of the page as fetched |
+| Scope | how an action's inputs reach it: "The environment variable created converts input names to uppercase letters and replaces spaces with `_` characters", and "We recommend using lowercase input ids" — so two input names of one `with:` that differ only in case meet in one variable, which `WORKFLOW-TOKENS` refuses (`M2.7.6.4`) |
+| Known limitations | the page does not say which of two such inputs wins, nor whether the workflow reader accepts a key twice; the gate refuses both rather than rely on either |
+| Revalidation trigger | a change to the gate's YAML reader; a change to how GitHub passes inputs |
+| Named as | `metadata syntax reference` |
+
 ## `mcp-specification`
 
 | Field | Value |

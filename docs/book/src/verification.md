@@ -271,7 +271,8 @@ runs; removing each protection turns an arm red. The checker is `M2.7.4`'s, not 
 where nothing runs from it, and the base is cloned beside it. Until the checker exists the job fails, the safe
 direction. Whether a pull request's own copy of the file can satisfy the required check is for the hosting's rules,
 which only the director can set, as is the repository's default token. The design's first independent review found
-two ways past `WORKFLOW-TOKENS`, an escaped YAML key and a setting on a neighbouring step; both are now refused
+two ways past `WORKFLOW-TOKENS`, an escaped YAML key and a setting on a neighbouring step; both are now refused,
+and so are a quoted key and a key written twice, or twice but for case, in one mapping
 (`docs/reviews/catalog-check-protection-reviews.md`).
 
 ### The engine compiles for the browser

@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the workflow gate refuses three more ways to be misread
+
+`ARCHOGEN-M2-0329` (leaf `M2.7.6.4`).
+
+- The gate that keeps every CI workflow on a read-only token now refuses a key written twice in one place, two
+  keys that differ only in case — GitHub upper-cases an action's input names, so both would land in one setting —
+  and a quoted key. The second outside review of the check's protection could not be completed by an agent, and
+  is recorded as such.
+
 ## archogen — the book's index lists topics, not layers
 
 `ARCHOGEN-PROGRAM-0326` (leaf `PROGRAM.47.6`).
