@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the fault contract's fourteenth reading
+
+`ARCHOGEN-M2-0336` (leaf `M2.9`).
+
+- The fourteenth reading found two gaps: when exactly a job finishes if its last step is a call into the runtime, and
+  when a runtime call first counts as having changed anything. Both are settled. Five checks before landing kept
+  finding the same kind of slip in the list of test cases the contract asks for; the open question of which boards
+  can run which test is now left to the test suite that will know the boards.
+
 ## archogen — the fault contract's thirteenth reading
 
 `ARCHOGEN-M2-0334` (leaf `M2.9`).

@@ -14,7 +14,7 @@ one of those changes, and only then. What each closed leaf did lives in its tree
 | `M0` — charter, boundary, profile, target | Done | all seven leaves closed; F27 green. The board remains a recorded blocker, not a passed gate |
 | `S0` — early executable generation (F28) | Done | **F28 green**; every leaf closed — `S0.8` made the book chapter's counts and corpus table measured |
 | `M1` — eADL description foundation | Mostly Done | §12 M1's exit gate met; every leaf closed but `M1.29.4`, which waits on the director (findings §7) |
-| `M2` — one engine realization + controls | In Progress | **F17 (analysis half), F18 and F29 green**; `riscv-virt-up` verified (`M2.8`); frontier `M2.9`: both runtime models agree on the amended contract, review 13 answered, 14 reading; the catalog crate built; catalog and composition records accepted |
+| `M2` — one engine realization + controls | In Progress | **F17 (analysis half), F18 and F29 green**; `riscv-virt-up` verified (`M2.8`); frontier `M2.9`: both runtime models agree on the amended contract, review 14 answered, 15 reading; the catalog crate built; catalog and composition records accepted |
 | `M3` — joint resolver + checked plan | Not Started | frontier `M3.1` |
 | `M4` — generated system + simulator | Not Started | frontier `M4.1` |
 | `M5` — physical execution evidence | Not Started | **blocked: no board procured** (2026-09-13) — director decision |

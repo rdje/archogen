@@ -16,9 +16,9 @@
 - **Active tree:** `M2` → frontier `M2.9`. `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API`'s is
   `API.6`; `M1`'s only open leaf, `M1.29.4`, is blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M2.9` — triage the fourteenth independent review (R14) of `docs/profiles/rt-static-up-v1-faults.md`,
-  with the R13 check's carried points D1–D5 and N1–N4 (step 6u); the leaf closes on the first round that finds no
-  defect. Then `API.6.5`, the MCP server's chapter and its independent review. Then `M2.7.6` (its
+- **Next action:** `API.6.5` — answer the MCP server's review (7 defects: quadratic duplicate check, line bound,
+  response amplification, `id: null`, non-integer ids, argument errors, a cited test), and a leaf for bounded
+  diagnostic excerpts; then `M2.9` — triage R15 (step 6v), F26's scoping class carried to it and `M4`. Then `M2.7.6` (its
   repository half: `.1`–`.3` done, `.4` its review next; the hosting half waits on findings §11), `M2.7.4`, `M2.7.5`, `M2.11`, then `API.6`. This project
   uses no branches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of

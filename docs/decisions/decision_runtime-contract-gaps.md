@@ -488,6 +488,32 @@ D2: rule 1's exception wider than the owed job; D3: nothing enforcing the new na
 D5: what a port's trap writes before it tells any entry apart; N1–N4) are carried into step 6u, read with R14's
 answers. None of it moves either model; the composition record's role list moved with it.
 
+## The fault contract reviewed a fourteenth time (`2026-10-02`, R14)
+
+A fourteenth new context read the contract beside the composition record, from the text alone. On R13's answers: 11
+answered, 1 partly (#217). **Verdict: 2 defects remain (#227, #228)**: #227 in R13's own answer, where the moment a
+job completes had two descriptions that differ when its code ends in a tail call to a primitive; #228 the carried
+point D5, whether a valid primitive's trap prefix changes the runtime's state, reachable by an unbalanced `unmask`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 227 | defect | a job's completion named both its own code's last instruction and the one its completion path follows | the reviewer's text: the last instruction it executes before its completion path, a tail-called primitive's included; the composition's `completion` span notes the over-count |
+| 228 | defect (minor) | where a valid primitive first changes the runtime's state, against a port's trap prefix | the reviewer's text: `unmask` before it is lowered, any other primitive where the runtime API record states, and a trap's prefix no change |
+| 229–232 | drafting | the window's scope wider than the job a release finds owed; the run-on only inside a primitive; the narrowing not in the composition; F26's scope | accepted, the composition carrying the narrowing |
+| 233–235 | nits | F26's two prologue lines; idle preempted in such a trap; the header's list | accepted |
+
+**Answered `2026-10-02` (step 6u), with R13's check's carried D1–D5 and N1–N4, checked before landing five times.**
+The first check found 1 defect, in F26: "each such port" had two antecedents, so a fixture could be owed on a port
+where its case cannot arise. Three further checks each found the same class in the text written for the one before
+— a scoped clause, a pointer to the window bullet, a rule for all of F26 — and the last also found that such a rule
+would drop the fixtures that inject a broken obligation. What landed is the last text read clean: the two fixtures
+with their own exact port conditions, the after-check clause removed, F26's opening unchanged. **Carried, open:** the
+first check's 5 drafting points and 4 nits; the second's 1 and 4; and F26's scoping class, of which the window
+bullet's "outside a primitive and inside one" is the older instance, for R15 to read and for `M4`'s fixture design,
+where which port can build which case is settled. **Recorded for the process:** a fixture list scoped line by line
+reopens with each line; its scope belongs with the fixture suite that knows the ports. None of it moves either
+model.
+
 ## Where the contract lives (`2026-10-01`)
 
 Answering R3 (`M2.9`) needed about 20 lines more than `ROADMAP.md`'s 1 100-line ceiling allowed, which only the
