@@ -231,7 +231,12 @@ and a charge for state a preemption destroys, `fixed-priority-with-overheads/1`.
 engine knowledge, and none of them defaults. A task set outside its model is refused before any arithmetic, and a
 bound past a deadline is `not-established`, never a counterexample. Three independent reviews went through the
 design before any code. Each one found something that could have under-estimated a response time: the first two
-in what the analysis is given, and the third in an admission rule that let a kernel release a task early. The
+in what the analysis is given, and the third in an admission rule that let a kernel release a task early. A later
+review, of how the inputs are composed, found one more gap of the same kind: an interrupt that no arrival pays for. A
+trap can find nothing to claim when the controller's notice lags its last claim, and a level-triggered source completed
+before its device is cleared is served twice for one arrival. The analysis charges a source once per arrival, so
+neither is charged, and the variant now refuses a platform that does not declare that every interrupt taken is paid
+for (leaf `M2.11`). The
 implementation's tests check values derived by hand from the record, and six deliberate breakages are each caught.
 §7.4 also asks for expected results obtained independently (leaf `M2.6.3`). A context that read the record and
 never the code derived 18 fixtures by hand, and the code agrees with every verdict, bound and iterate. Under the
@@ -241,7 +246,7 @@ pessimistic by design.
 
 **F17 holds on the analysis side** (leaf `M2.6.4`, `crates/rt-analysis/tests/f17_refusal.rs`). Take a complete set the
 variant admits and give it one defect at a time. An interrupt the build enables and nobody declared, a source or
-timer cost nobody knows, nesting, a task that suspends itself or locks the scheduler: each is refused, as
+timer cost nobody knows, an interrupt no arrival pays for, nesting, a task that suspends itself or locks the scheduler: each is refused, as
 `unsupported-profile` or `analysis-inconclusive`, and never answered. The idealized baseline cannot stand in for the
 refused answer, because its conclusion names another model and always carries "no overhead".
 

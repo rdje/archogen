@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the timing analysis refuses interrupts nobody pays for
+
+`ARCHOGEN-M2-0342` (leaf `M2.11`, step 1).
+
+- The timing analysis charges each interrupt source once per event it receives. A review had found two ways real
+  hardware can serve one event twice, or take an interrupt with no event at all; neither was charged. The analysis
+  now refuses a platform that does not declare this never happens, and says so by name. Nothing it already
+  concluded changes. An independent review of the change is next.
+
 ## archogen — the MCP server is done
 
 `ARCHOGEN-API-0341` (leaf `API.6`).

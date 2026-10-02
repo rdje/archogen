@@ -122,6 +122,7 @@ fn platform(map: &BTreeMap<String, String>) -> Platform {
             services_preempt_every_task: fact("services_preempt_every_task"),
             pending_taken_and_transitions_unmasked: fact("pending_taken_and_transitions_unmasked"),
             eager_switching: fact("eager_switching"),
+            services_paid_by_arrivals: fact("services_paid_by_arrivals"),
             timer_event_driven: fact("timer_event_driven"),
             compare_level: fact("compare_level"),
             compare_rounds_up: fact("compare_rounds_up"),

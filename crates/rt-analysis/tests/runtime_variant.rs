@@ -28,6 +28,7 @@ fn all_facts() -> PlatformFacts {
         services_preempt_every_task: Some(true),
         pending_taken_and_transitions_unmasked: Some(true),
         eager_switching: Some(true),
+        services_paid_by_arrivals: Some(true),
         timer_event_driven: Some(true),
         compare_level: Some(true),
         compare_rounds_up: Some(true),
@@ -326,6 +327,35 @@ fn a_source_that_can_lose_an_arrival_is_refused() {
     let (platform, uart) = with_uart(22, Acknowledge::AtExit);
     let refusal = refused(admit(&[task("A", 1, 1, 10, 10, 3)], &[uart], &platform));
     assert!(refusal.reasons[0].contains("lose an arrival"), "{refusal}");
+}
+
+#[test]
+fn an_interrupt_no_arrival_pays_for_is_outside_the_model() {
+    // Condition 5, added by leaf `M2.11`. The source term charges `C_s` once per arrival: for A, `w = 2 + 1 + 2 = 5`
+    // and `R = 3 + 5 = 8`, within a deadline of 9. A level-triggered uart completed before its device is cleared is
+    // served twice for one arrival, so the term would have to charge 4: `w = 2 + 1 + 4 = 7` and `R = 10`, past it.
+    // A trap that claims nothing is charged nowhere at all. The variant refuses such a platform rather than answer.
+    let (mut platform, uart) = with_uart(3, Acknowledge::AtEntry);
+    let tasks = [task("A", 1, 1, 10, 9, 3)];
+    let set = admit(&tasks, std::slice::from_ref(&uart), &platform)
+        .expect("admitted, every interrupt paid for");
+    assert_eq!(holds(&analyze(&set)[0]), (8, vec![2, 5, 5]));
+
+    platform.facts.services_paid_by_arrivals = Some(false);
+    let refusal = refused(admit(&tasks, std::slice::from_ref(&uart), &platform));
+    assert_eq!(refusal.verdict, RefusalVerdict::UnsupportedProfile);
+    assert!(
+        refusal.reasons[0].contains("no arrival is served twice"),
+        "{refusal}"
+    );
+
+    platform.facts.services_paid_by_arrivals = None;
+    let refusal = refused(admit(&tasks, &[uart], &platform));
+    assert_eq!(refusal.verdict, RefusalVerdict::AnalysisInconclusive);
+    assert!(
+        refusal.reasons[0].contains("does not declare whether every interrupt taken"),
+        "{refusal}"
+    );
 }
 
 #[test]

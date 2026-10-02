@@ -84,6 +84,7 @@ fn complete() -> (Vec<RuntimeTask>, Vec<Source>, Platform) {
             services_preempt_every_task: Some(true),
             pending_taken_and_transitions_unmasked: Some(true),
             eager_switching: Some(true),
+            services_paid_by_arrivals: Some(true),
             timer_event_driven: Some(true),
             compare_level: Some(true),
             compare_rounds_up: Some(true),
@@ -139,6 +140,12 @@ const DEFECTS: &[(&str, Defect, RefusalVerdict, &str)] = &[
         |_, _, p| p.enabled = None,
         RefusalVerdict::AnalysisInconclusive,
         "enabled interrupts are not declared",
+    ),
+    (
+        "an interrupt taken that no arrival pays for",
+        |_, _, p| p.facts.services_paid_by_arrivals = Some(false),
+        RefusalVerdict::UnsupportedProfile,
+        "no arrival is served twice does not hold",
     ),
     (
         "interrupts nest",

@@ -178,6 +178,9 @@ pub struct PlatformFacts {
     pub pending_taken_and_transitions_unmasked: Option<bool>,
     /// Switching is eager, or `S` includes every deferred save and restore (condition 5).
     pub eager_switching: Option<bool>,
+    /// Every interrupt taken is the timer's, or a service of a declared source for one of its arrivals, and no
+    /// arrival is served twice (condition 5, added by leaf `M2.11`): the source term counts services by arrivals.
+    pub services_paid_by_arrivals: Option<bool>,
     /// The timer is event-driven (condition 6).
     pub timer_event_driven: Option<bool>,
     /// The compare has level semantics (condition 6).
@@ -405,6 +408,11 @@ pub fn admit(
     found.fact(
         facts.eager_switching,
         "switching is eager, or S includes every deferred save and restore",
+        5,
+    );
+    found.fact(
+        facts.services_paid_by_arrivals,
+        "every interrupt taken is the timer's or a declared source's service for one of its arrivals, and no arrival is served twice",
         5,
     );
     found.fact(facts.timer_event_driven, "the timer is event-driven", 6);
