@@ -44,10 +44,10 @@
    envelope is refused with `-32700` without being parsed — six, because a JSON writer may spell any byte as six; the
    JSON reader is the server's own, refuses nesting deeper than a fixed bound, a name given twice and every malformed
    text, and reads each object in time linear in its size. Work per request is linear in its size (`API.4.2`), and
-   requests are served one at a time; ⚠️ the answer's size is not yet bounded with it: a description of a million
-   unclosed forms is answered with diagnostics that each quote its one long line, which `API.6.6` bounds (`API.6.5`'s
-   review, D3); that, for a stdio server with one client, is how the specification's "Rate limit tool invocations" is
-   met, and the record says so rather than claiming more.
+   requests are served one at a time; the answer is bounded with it, since a diagnostic quotes at most a 160-character
+   window of a long line (`API.6.6`; `API.6.5`'s review, D3, where one line of a million unclosed forms had been
+   answered in 1.5 GB); that, for a stdio server with one client, is how the specification's "Rate limit tool
+   invocations" is met, and the record says so rather than claiming more.
 6. **No dependency, no process.** The server, its reader and its writer are code in `crates/archogen-cli`, which
    depends on the engine API and not the reverse, so the checker and the generator share nothing new (§10.4,
    F30). It spawns nothing (`NO-SUBPROCESS`).

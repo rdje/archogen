@@ -133,6 +133,12 @@ and through the modules.
 The command line asks with no budget. It is its own consumer and trusts the files it was given. The
 language's limits still apply to it, because they belong to the language.
 
+The answer is bounded with the request. A diagnostic quotes the line it points into, and a line longer than 160
+characters is quoted as a window of that many around the span, cut with `…` (`crates/eadl-front/src/diagnostic.rs`,
+leaf `API.6.6`). Before that window, one line of a million unclosed forms drew 257 diagnostics that each quoted it
+whole: an answer of 1.5 GB for a request of 1 MB. `crates/archogen-api/tests/check.rs` holds the rendered answer
+to a small multiple of its request.
+
 ### How the command line is held to it
 
 `crates/archogen-cli/tests/api_parity.rs` checks three things:

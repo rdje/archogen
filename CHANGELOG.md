@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — an answer is never much larger than its question
+
+`ARCHOGEN-API-0338` (leaf `API.6.6`).
+
+- An error message quotes the line it points to; on a line a megabyte long, quoted once per error, a small request
+  produced a gigabyte-and-a-half answer. Now a long line is quoted as a short window around the problem, so the
+  command line and the server stay small and fast whatever they are sent.
+
 ## archogen — the MCP server holds up against a hostile client
 
 `ARCHOGEN-API-0337` (leaf `API.6.5`).

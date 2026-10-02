@@ -904,14 +904,36 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   Commit: `ARCHOGEN-API-0335 (leaf API.6.5)` for the book; `ARCHOGEN-API-0337 (leaf API.6.5)` for the review
 
 - ID: `API.6.6`
-  Status: `pending`
+  Status: `done` — `2026-10-02`
   Goal: an answer as bounded as its request. A description of a million unclosed forms is answered — by
   `archogen check`, the engine API and `archogen mcp` alike — with diagnostics that each quote its one long line:
   1.5 GB and 4.8 GB of memory for a 1 MB request (`API.6.5`'s review, D3). The renderer quotes a window of a long
   line around its span, so an answer's size is linear in its request's.
   Acceptance: a RED arm with the reviewer's input; the window's edges; every transcript the book shows unchanged.
-  Verification: `pending`
-  Commit: `pending`
+  **Done.** `crates/eadl-front/src/diagnostic.rs`: a line longer than `EXCERPT` (160) characters is quoted as a
+  window of that many around the span, 40 before it, cut with `…`, the caret moved with it and never past the
+  window; a shorter line is quoted as before, so no transcript moved. The reviewer's 1 MB line, measured on a release
+  build: `archogen check` from 770 MB of output and 1.5 GB of memory to 0.25 MB and 7 MB; `archogen mcp` from a
+  1.5 GB answer and 4.8 GB of memory to 0.57 MB and 10 MB.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — with the window disabled, `cargo test -q -p archogen-api --test check an_answer` →
+    `FAILED. 0 passed; 1 failed`, a 100 000-character line of `(` rendered far past four times its size.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `render_label` printed `source.line_text(position.line)` whole, and an
+    indent to the column, for every diagnostic: `git show HEAD:crates/eadl-front/src/diagnostic.rs | grep -c "let
+    line_text = source.line_text(position.line);"` → 1. WHERE: `crates/eadl-front/src/diagnostic.rs`.
+  - [x] **FIX** — `excerpt`, `EXCERPT`; the caret bounded by the window; the book's *What one request may cost* and
+    the record's §5.
+  - [x] **ADDRESSED (verified)** — `cargo test -q -p eadl-front --lib` → `77 passed`, the window's edges and the
+    caret at a long line's start, middle and end; `-p archogen-api --test check` → `11 passed`; the window disabled
+    → `FAILED. 75 passed; 2 failed` and the API test red.
+  - [x] **NO REGRESSION** — every transcript test green, the book's unchanged; `cargo xtask verify --tier focused`
+    → `tier focused: passed — 3 passed, 0 failed`; `cargo test -q --workspace` → 999 passed, 0 failed; `bash
+    scripts/check_doctrines.sh` → `=== all doctrines green ===`.
+  - [x] **LOCKSTEP** — the book, the record, the figure register; this leaf, the frontier and the log;
+    `CHANGELOG.md`.
+  Verification: see the checklist.
+  Commit: `ARCHOGEN-API-0338 (leaf API.6.6)`
 
 - ID: `API.7`
   Status: `pending`
@@ -929,7 +951,7 @@ agent can drive. The server is a capability of the built binary, spawned per ins
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `API.6` | `active` | the MCP server — designed (`API.6.1`), its tools declared in the command table (`API.6.2`); its JSON reader (`API.6.3`), and the server, `archogen mcp` (`API.6.4`); the book and its review (`API.6.5`); next `API.6.6`, an answer as bounded as its request |
+| 1 | `API.6` | `active` | the MCP server — designed (`API.6.1`), its tools declared in the command table (`API.6.2`); its JSON reader (`API.6.3`), and the server, `archogen mcp` (`API.6.4`); the book and its review (`API.6.5`); an answer as bounded as its request (`API.6.6`); `API.6` closes with them |
 | 2 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6` |
 
 ⛔ **This tree does not displace the project's main line.** The director's ruling sequenced `API.3`–`API.7`
@@ -1027,6 +1049,7 @@ this tree is taken when it does not delay that.
 | `API.6.4` | `ARCHOGEN-API-0333 (leaf API.6.4)` | **the MCP server, `archogen mcp`**: both eras over stdio, the command table's tools, `check` answering the wasm binding's bytes, its verdicts the command line's on the conformance cases |
 | `API.6.5` | `ARCHOGEN-API-0335 (leaf API.6.5)` | **the book documents the MCP server**: *The server an agent spawns*, its transcript a real run the stdio test replays |
 | `API.6.5` | `ARCHOGEN-API-0337 (leaf API.6.5)` | **the MCP server's review answered**: the duplicate check linear, the line bound six times the budget, no `null` ids, integral ids, argument errors as tool errors; D3 filed as `API.6.6` |
+| `API.6.6` | `ARCHOGEN-API-0338 (leaf API.6.6)` | **an answer as bounded as its request**: a diagnostic quotes a 160-character window of a long line; 1.5 GB to 0.57 MB for the reviewer's 1 MB line |
 
 ## Changelog
 

@@ -137,7 +137,7 @@ a change that leaves it stale, so it is never edited by hand.
 
 ## G
 
-- **GB** — [definition](glossary.md), [Modules and composition](modules.md)
+- **GB** — [definition](glossary.md), [Modules and composition](modules.md), [The engine API](engine-api.md)
 - github-actions — [What this project relies on from outside](ledger.md#github-actions)
 - github-actions-syntax — [What this project relies on from outside](ledger.md#github-actions-syntax)
 - **GNU** — [definition](glossary.md), [Verifying the toolchain](verification.md)

@@ -298,3 +298,28 @@ fn the_same_request_answers_the_same_twice_and_names_the_build() {
         assert_eq!(first.engine, env!("CARGO_PKG_VERSION"));
     }
 }
+
+/// Leaf `API.6.6` (`API.6.5`'s review, D3): an answer is as bounded as its request. A description of unclosed forms
+/// on one long line drew diagnostics that each quoted the whole line: 1.5 GB rendered for a 1 MB request. Now each
+/// quotes a window of it, so the rendered answer is linear in the request.
+#[test]
+fn an_answer_is_as_bounded_as_its_request() {
+    let text = "(".repeat(100_000);
+    let response = archogen_api::check(&Request {
+        name: "deep.eadl",
+        text: &text,
+        profile: None,
+        modules: &archogen_api::NoModules,
+    });
+    let rendered = response.render_diagnostics();
+    assert!(
+        !response.diagnostics.is_empty(),
+        "the description is refused"
+    );
+    assert!(
+        rendered.len() < 4 * text.len() + 64 * 1024,
+        "{} bytes rendered for a {}-byte request",
+        rendered.len(),
+        text.len()
+    );
+}

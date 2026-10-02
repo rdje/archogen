@@ -256,7 +256,7 @@ impl Diagnostic {
             return format!("  --> <unknown source>: {}\n", label.message);
         };
         let position = source.position(label.span.start);
-        let line_text = source.line_text(position.line);
+        let whole_line = source.line_text(position.line);
         let gutter_width = position.line.to_string().len();
         let pad = " ".repeat(gutter_width);
 
@@ -274,8 +274,13 @@ impl Diagnostic {
             .next()
             .unwrap_or_default()
             .trim_end_matches('\r');
-        let caret_width = on_this_line.chars().count().max(1);
-        let indent = " ".repeat((position.column as usize).saturating_sub(1));
+        let column = (position.column as usize).saturating_sub(1);
+        // ⛔ A line longer than `EXCERPT` characters is quoted as a window around the span (leaf `API.6.6`). Quoted
+        // whole, a 1 MB line of unclosed forms was printed once per diagnostic, 257 times: an answer of 1.5 GB for a
+        // request of 1 MB, from `archogen check`, the engine API and the MCP server alike (`API.6.5`'s review, D3).
+        let (line_text, column, room) = excerpt(whole_line, column);
+        let caret_width = on_this_line.chars().count().min(room).max(1);
+        let indent = " ".repeat(column);
 
         // Counted over the covered text rather than found by offset arithmetic: `end - 1` can land inside
         // a multi-byte character, and `position` slices at the offset it is given — measured, twelve
@@ -312,6 +317,43 @@ impl Diagnostic {
             continuation
         )
     }
+}
+
+/// The longest line a diagnostic quotes whole, in characters. A longer line is quoted as a window of this many
+/// characters around the span, with `…` where it was cut, so a diagnostic's size does not grow with its line's.
+pub const EXCERPT: usize = 160;
+
+/// How many characters of context an excerpt keeps before its span.
+const BEFORE: usize = 40;
+
+/// The text to quote for a line, the span's column in that text (0-based), and how many characters the caret may
+/// cover from there before the quoted text ends: the line itself when it is at most [`EXCERPT`] characters, and
+/// otherwise a window of that many around `column`, marked `…` at each cut end.
+fn excerpt(line: &str, column: usize) -> (String, usize, usize) {
+    let length = line.chars().count();
+    if length <= EXCERPT {
+        return (
+            line.to_owned(),
+            column,
+            length.saturating_sub(column).max(1),
+        );
+    }
+    let mut start = column.saturating_sub(BEFORE);
+    let end = (start + EXCERPT).min(length);
+    if end - start < EXCERPT {
+        start = end.saturating_sub(EXCERPT);
+    }
+    let mut text = String::new();
+    let mut shifted = column - start;
+    if start > 0 {
+        text.push('…');
+        shifted += 1;
+    }
+    text.extend(line.chars().skip(start).take(end - start));
+    if end < length {
+        text.push('…');
+    }
+    (text, shifted, end.saturating_sub(column).max(1))
 }
 
 /// A set of diagnostics collected during one pass.
@@ -371,7 +413,7 @@ impl Diagnostics {
 
 #[cfg(test)]
 mod tests {
-    use super::{Diagnostic, Diagnostics, Label, Severity, Verdict};
+    use super::{Diagnostic, Diagnostics, Label, Severity, Verdict, EXCERPT};
     use crate::source::{SourceMap, Span};
 
     // ── `Verdict::of_code`: one rule, one default, every consumer ────────────────────────────
@@ -659,5 +701,64 @@ mod tests {
             "r",
         ));
         assert!(set.has_errors());
+    }
+
+    /// The quoted source line of a rendered single-label diagnostic: the line after the gutter's ` |`.
+    fn quoted_line(rendered: &str) -> &str {
+        rendered
+            .lines()
+            .find(|line| line.contains(" | ") && !line.trim_start().starts_with('|'))
+            .and_then(|line| line.split_once(" | "))
+            .map(|(_, text)| text)
+            .expect("a quoted line")
+    }
+
+    fn render_at(text: &str, start: u32, end: u32) -> String {
+        let mut sources = SourceMap::new();
+        let id = sources.add("t.eadl", text).unwrap();
+        Diagnostic::error(
+            "read-example",
+            "m",
+            Label::new(Span::new(id, start, end), ""),
+            "r",
+        )
+        .render(&sources)
+    }
+
+    #[test]
+    fn a_line_at_the_excerpt_bound_is_quoted_whole_and_one_longer_is_cut() {
+        let at = "a".repeat(EXCERPT);
+        assert_eq!(quoted_line(&render_at(&at, 0, 1)), at);
+        let longer = "a".repeat(EXCERPT + 1);
+        let quoted = quoted_line(&render_at(&longer, 0, 1)).to_owned();
+        assert!(
+            quoted.ends_with('…') && !quoted.starts_with('…'),
+            "{quoted}"
+        );
+        assert_eq!(quoted.chars().count(), EXCERPT + 1);
+    }
+
+    /// Leaf `API.6.6`: on a long line, the caret still lands under the span's first character — at the line's
+    /// start, its middle and its end — and the quoted text is a bounded window, cut with `…`.
+    #[test]
+    fn a_long_lines_excerpt_puts_the_caret_under_its_span() {
+        for at in [0_usize, 5_000, 9_999] {
+            let mut text: Vec<char> = "é".repeat(10_000).chars().collect();
+            text[at] = 'X';
+            let text: String = text.into_iter().collect();
+            let start = u32::try_from(text.char_indices().nth(at).unwrap().0).unwrap();
+            let rendered = render_at(&text, start, start + 1);
+            let quoted = quoted_line(&rendered);
+            let marker = marker_line(&rendered);
+            assert!(quoted.chars().count() <= EXCERPT + 2, "{quoted}");
+            let caret = marker.trim_start_matches(['|', ' ']).len();
+            let caret_at = marker.chars().count() - caret - "  | ".chars().count();
+            assert_eq!(
+                quoted.chars().nth(caret_at),
+                Some('X'),
+                "at {at}: {quoted}\n{marker}"
+            );
+            assert!(rendered.len() < 2_000, "at {at}: {} bytes", rendered.len());
+        }
     }
 }
