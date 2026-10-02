@@ -6,7 +6,7 @@
 - **Owner / source:** raised during the M0 + M1 build; recorded here so they survive the session
 - **External sources:** [QEMU](../book/src/ledger.md#qemu) — version, scope and limits in the ledger
 
-Eleven items are recorded here so they survive the session. Three are outside an implementer's
+Twelve items are recorded here so they survive the session. Three are outside an implementer's
 authority to settle; the fourth (§4) is a measurement about the programme's own evidence that you
 should see even though it is already fixed; the sixth (§6) is a review of **your own amendment**
 by the model that has never read the implementation. Each is tracked as work, so nothing here
@@ -322,6 +322,37 @@ every construction the reviews found.
 Until the named commit exists, no production claim can be made. One new role is yours: a ledger line that fails its
 check, through a defect in the checker for instance, is repaired only by a waiver you rule on, and a waiver can
 only weaken what the catalog says.
+
+## 12. The fault contract's narrowings — **approved `2026-10-02`**
+
+The fault contract (`docs/profiles/rt-static-up-v1-faults.md`) lists in its header, under *Narrowings*, each claim its
+amendments made that the earlier text did not limit, "for the director's review" (§14.1). Asked on `2026-10-02`, after
+its fifteenth independent review found no defect — "The narrowings listed in the contract's header await your
+approval." — **the director answered: "APPROVED"**.
+
+What was approved is that list as it stood when asked, R15's answers included:
+- no overrun is raised without a release (rule 1a);
+- a missed deadline is reported only as rule 6 says, and §13.1 F26 with it;
+- an externally released task's second arrival during a pending request can be lost where its source does not count
+  arrivals (rule 1);
+- a `mask` or `unmask` outside a job is an assertion failure, initialisation's included (Terms);
+- the cases the Terms list that the trap path, a service or the runtime API's entry can see — an external trap's empty
+  first claim, a timer trap or further timer service that finds no release due, a claim returning an undeclared
+  source, an API entry naming neither a primitive nor the completion path — are unexpected traps, halting when raised;
+- a port's runtime-API trap serves no interrupt, whatever its entry names (rule 2);
+- the image's panic handler and its panic strategy are the port's, another refused at build, and a panic is an
+  assertion failure unless a check of the runtime's, a port's, a catalog record's or generated code finds a guard or an
+  unexpected trap, an application's check being classified by how it ends;
+- what can happen before a fault a check finds, or a panic, is raised is the port's to state, whole, in its catalog
+  record — a primitive left consistent or its job not abandoned, and a job not abandoned run on at its task's priority,
+  before any later job of its task starts, to the raising (Terms, rule 5);
+- application initialisation, like application code after it, never calls the fault path (Terms);
+- a policy applied before its check in the trap of an API entry naming neither a primitive nor the completion path, or
+  in an `unmask` at depth zero, abandons the job and raises nothing (rule 5).
+
+**How it is applied.** The contract's header records the approval when `M2.9`'s step 6v lands, and the rules that said
+"for the director's review" say approved. A later amendment that narrows a claim again is a new item for review; this
+approval covers the list above and nothing added after it.
 
 ## A note on what "done" means so far
 
