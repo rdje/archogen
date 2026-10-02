@@ -440,6 +440,32 @@ before they land. None of it moves either model; the composition record's role l
 book's Annex A, moved with it. **Recorded for the process:** answering a drafting point by adding a rule cost five
 checks; a delegation the reviewed text already made, read as written, closed it.
 
+## The fault contract reviewed a twelfth time (`2026-10-02`, R12)
+
+A twelfth new context read the contract beside the composition record, from the text alone. On R11's answers: 10
+answered, 1 partly (#199, F26 behind rule 2), and 2 it could not see beyond the gaps record's summary. **Verdict: 1
+defect remains (#204), minor, in text older than R11**: on a port that enters the runtime API by a trap, nothing said
+whose context an entry naming neither a primitive nor the completion path is before its check finds it, so a guard
+reached there had two kept records. It judged everything written for R11 sound under an adversarial reading, the
+delegations included, and the carried C1 and C2 drafting.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 204 | defect (minor) | the trap of an API entry naming neither a primitive nor the completion path belonged to no context before its check | it serves no interrupt and is, until the first fault raised in it, the context's that executed the entry; for rule 5 it is a primitive that never returns |
+| 205 | drafting | a compiled panic handler's prologue runs before its first act | not the reviewer's text, which no compiled handler could meet: the prologue belongs to the window before the raising, or, reached by the trap path, to the trap path |
+| 206–208 | drafting | F26 behind rule 2's initialisation; C2 outside a primitive; C1, how the port's statement binds another record | F26 follows; C2 recorded as *Still open* for `M4`, whose generated code alone can reach it; a record states its own passing and a selection disagreeing with the port is refused |
+| 209–214 | nits | "a job that panics"; the aborting trap with no check; "the port's check"; *Still open*'s owners; a service that runs application code; the bound's end | accepted |
+
+**Answered `2026-10-02` (step 6s), with R11's carried C1, C2 and N1–N4, checked before landing three times.** The
+checks found 1, 1 and 0 defects, both in text written for the check before: #204's answer made the trap the job's
+but rule 5 had no place for a policy in it (D1); a requirement that it take no interrupt before its check collided
+with the window the Terms leave to the port (ND1). What landed adds no requirement: for rule 5 the trap is a primitive
+that never returns, so the primitive clause applies as written, and a policy that would take effect at its return
+takes none, its fault being raised. The third check's 4 drafting points and 1 nit (DR-A: what counts as changing
+the runtime's state before an entry is told apart; DR-B, DR-C: F26's scope and the trap serving no interrupt; DR-D:
+"takes none" under `Fault`; a tag's plural) are carried into step 6t, read with R13's answers. None of it moves either
+model; the composition record's API-trap sentence moved with it.
+
 ## Where the contract lives (`2026-10-01`)
 
 Answering R3 (`M2.9`) needed about 20 lines more than `ROADMAP.md`'s 1 100-line ceiling allowed, which only the

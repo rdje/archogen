@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the fault contract's twelfth reading
+
+`ARCHOGEN-M2-0330` (leaf `M2.9`).
+
+- The twelfth reading found one gap, older than the last round: a call into the runtime that names no real
+  operation had no owner for the moment before it is recognised. It is now the caller's, and treated like any other
+  runtime call that never returns. Two of the three checks before landing each caught the previous fix adding a rule
+  that clashed with another; what landed adds none.
+
 ## archogen — the workflow gate refuses three more ways to be misread
 
 `ARCHOGEN-M2-0329` (leaf `M2.7.6.4`).

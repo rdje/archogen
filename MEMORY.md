@@ -16,8 +16,8 @@
 - **Active tree:** `M2` → frontier `M2.9`. `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API`'s is
   `API.6`; `M1`'s only open leaf, `M1.29.4`, is blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M2.9` — triage the twelfth independent review (R12) of `docs/profiles/rt-static-up-v1-faults.md`,
-  with the sixth pre-landing check's carried points C1, C2, N1–N4 (step 6s); the leaf closes on the first round that
+- **Next action:** `M2.9` — triage the thirteenth independent review (R13) of `docs/profiles/rt-static-up-v1-faults.md`,
+  with the third R12 check's carried points DR-A–DR-D and its nit (step 6t); the leaf closes on the first round that
   finds no defect. Then `M2.7.6` (its
   repository half: `.1`–`.3` done, `.4` its review next; the hosting half waits on findings §11), `M2.7.4`, `M2.7.5`, `M2.11`, then `API.6`. This project
   uses no branches.
