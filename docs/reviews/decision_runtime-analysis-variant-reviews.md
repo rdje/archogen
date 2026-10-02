@@ -2,7 +2,7 @@
 
 - **Type:** `decision`
 - **Date:** `2026-09-30`
-- **Status:** `active`
+- **Status:** `active` — `M2.11`'s round closed `2026-10-02` on its fifth review, which found no defect
 - **External sources:** [QEMU](../book/src/ledger.md#qemu) — version, scope and limits in the ledger
 - **Owner / source:** leaf `M2.6.1` (`docs/tasks/M2.md`). This is the review history of
   [[decision_runtime-analysis-variant]], moved out of it verbatim on `2026-09-30` by leaf `PROGRAM.37`, as
@@ -229,6 +229,24 @@ under-charge in the recurrence there since `/1`, and two defects in how conditio
 | 12 | nit | the `riscv-privileged` Hash field said "not captured" while Known limitations hashes the third sentence's file | said so |
 | 13 | nit | `runtime.rs`'s module comment counted three reviews | "independent reviews have each found …" |
 | 14 | nit | the `one-claim-per-trap` row's "read only when" | "read by the composition only when …; the catalog's §12 reads it whatever that fact states" |
+
+**`M2.11`'s fifth review, `2026-10-02`,** of commit `b8e0870`, by a new read-only context. **No defect.** It
+re-derived both witnesses' bounds, 27 and 278, found every listed case excluded or charged, the `C + δ + γ` charge
+sound, nothing else in the window uncharged — after transitions, around the idle wake, between timer and source
+services, at the job's own release — and no qualifier, clause or case lost across the leaf's five commits. By the
+leaf's closure rule, the first round to find no defect, `M2.11` closes on it. Defects per round: 5, 1, 3, 3, 0. Its
+drafting points and nits were answered before the leaf closed:
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 1 | drafting | §2's `δ` bullet named only the gap after a service's return, not a transition's end, nor which service pays, nor the gap the window's end cuts | both gaps named; each service pays the gap before its own entry; a cut gap charged to a request or due release pending when it began, its service after the window; added to "each arrival is charged once"; §3 and the field's comment aligned |
+| 2 | drafting | "such a request" could carry the trap's instant, refusing every two-source controller; "a claim" named no context | "that the trap's own claim, read at that instant, would take; and that claim, whenever it reads, takes a request a declared source's arrival made", in condition 5, §1, the doc comment, `no-empty-claim` and the catalog |
+| 3 | drafting | round 4's tie of a trap's service to the claimed request's source not carried to §1 or the doc comment | carried to the doc comment; §1 now names the fact and defers to condition 5's clauses, so no second copy can drift, which also kept that line under its ceiling |
+| 4 | drafting | step 4's bound on `s_0` did not give the next inequality, and the window holds only a prefix of the part before the claim | `s_0 − t` less than the length of that part lying after the window; "a prefix of that trap's part before the claim" |
+| 5 | nit | §3's `δ` deviation understated, and omitted the `δ` before the job's own releasing service, charged in `J^release` and by `k = i` | both stated |
+| 6 | nit | §6's expected results all have `δ = 0`, so the `δ` charge has no independently derived result | said so in §6: its test is the author's, from the fourth review's witness, re-derived by the fifth |
+| 7 | nit | `CONDITIONS` and the book lacked §4's every-run statement | both carry it |
+| 8 | nit | the composition record's Review counted two amendments of four, and its delivery paragraph justified the larger `δ` for the floors only | four named; "and its recurrence, which since `M2.11` charges `δ` with every service" |
 
 ## Why
 

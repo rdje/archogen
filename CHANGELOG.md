@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the timing analysis's interrupt rule is settled
+
+`ARCHOGEN-M2-0350` (leaf `M2.11`).
+
+- The fifth independent review of the new interrupt rule found nothing wrong, so the work closes. Over five reviews
+  the problems found went 5, 1, 3, 3 and then 0. The analysis now refuses a platform unless every interrupt it takes
+  runs exactly one handler, paid for by a timer release or by an event, and it charges the pause before each handler.
+  Its model is `fixed-priority-with-overheads/2`. Next is the format that lets the processor-specific assembly code be
+  catalogued and reviewed.
+
 ## archogen — the timing analysis charges the pause between interrupts
 
 `ARCHOGEN-M2-0349` (leaf `M2.11`, step 5).

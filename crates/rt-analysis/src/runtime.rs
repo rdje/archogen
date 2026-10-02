@@ -23,9 +23,10 @@ pub const MODEL: &str =
 /// named resource limit, `analysis-inconclusive`.
 pub const ITERATION_BUDGET: usize = 1_000_000;
 
-/// The conditions every conclusion of this variant carries (record §4, in the order given there).
+/// The conditions every conclusion of this variant carries (record §4, in the order given there), each of every run
+/// the declared inputs allow.
 pub const CONDITIONS: &[&str] = &[
-    "one processor",
+    "one processor, and every condition below of every run the declared inputs allow",
     "distinct fixed priorities; preemption at every point outside a masked section, a service or a transition",
     "constrained deadlines (D ≤ T)",
     "no self-suspension, no scheduler lock or deferred preemption, and data shared only inside declared masked sections",
@@ -182,8 +183,9 @@ pub struct PlatformFacts {
     pub eager_switching: Option<bool>,
     /// Every interrupt taken runs one service, paid for by a due release or an arrival (condition 5, added by leaf
     /// `M2.11`): a timer trap runs the timer's service and claims nothing; any other trap is taken only while a
-    /// request a declared source's arrival made is pending at the controller that a claim read then would take, and
-    /// its one claim takes such a request; no service runs otherwise; an arrival makes at most one request.
+    /// request a declared source's arrival made is pending at the controller that the trap's own claim, read at that
+    /// instant, would take, and that claim, whenever it reads, takes a request a declared source's arrival made, the
+    /// trap running that request's source's service; no service runs otherwise; an arrival makes at most one request.
     pub services_paid_by_arrivals: Option<bool>,
     /// The timer is event-driven (condition 6).
     pub timer_event_driven: Option<bool>,
@@ -299,7 +301,7 @@ pub struct RuntimeSet {
     switch: u128,
     preemption_delay: u128,
     timer_service: u128,
-    /// `δ`, charged with every service: the gap before a trap taken as the one before it returns (record §2).
+    /// `δ`, charged with every service: the gap before each trap's entry (record §2).
     delivery: u128,
     assumptions: Vec<String>,
 }

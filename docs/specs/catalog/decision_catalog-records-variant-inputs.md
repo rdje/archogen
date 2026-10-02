@@ -62,8 +62,9 @@ The behavioral code facts, one per condition of the variant's `PlatformFacts`:
 The variant's `PlatformFacts::services_paid_by_arrivals`, its condition 5 that every interrupt taken runs one
 service, paid for by a due release or an arrival (added by leaf `M2.11`), has no fact of its own. It is `yes` when
 each of these is `yes`:
-- `no-empty-claim`: every external trap is taken while a request an arrival made is pending at the controller that a
-  claim read then would take, and its claim takes such a request;
+- `no-empty-claim`: every external trap is taken while a request an arrival made is pending at the controller that the
+  trap's own claim, read at that instant, would take, and that claim, whenever it reads, takes a request an arrival
+  made;
 - `one-claim-per-trap`, read for this whatever `external-before-timer` states: each trap taken for an interrupt runs
   one service, a timer trap claiming nothing;
 - for each declared source, `one-request-per-arrival.<source>` and `external.<source>`, so its interrupts reach the
