@@ -714,7 +714,7 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0301 (leaf PROGRAM.47.4)`
 
 - ID: `PROGRAM.47.5`
-  Status: `active` — one chapter per child, each `done` when committed: `.1` the introduction, `.2` the tour, `.3` reading a description, `.4` describing a workload, `.5` checking a description, `.6` what a report may claim, `.7` the scheduling checker, `.8` the catalog, `.9` where systems run, `.10` the command line, `.11` the engine API, `.12` verifying the toolchain, with Annex B, `.13` the boundary, `.14` the supported profile, `.15` the use cases, `.16` kinds and schemas, `.17` quantities and units, `.18` modules and composition
+  Status: `active` — one chapter per child, each `done` when committed: `.1` the introduction, `.2` the tour, `.3` reading a description, `.4` describing a workload, `.5` checking a description, `.6` what a report may claim, `.7` the scheduling checker, `.8` the catalog, `.9` where systems run, `.10` the command line, `.11` the engine API, `.12` verifying the toolchain, with Annex B, `.13` the boundary, `.14` the supported profile, `.15` the use cases, `.16` kinds and schemas, `.17` quantities and units, `.18` modules and composition, `.19` presence, absence and relevance
   Goal: every other chapter in layers, one leaf and commit each when started, the chapters a newcomer meets first
   leading — the introduction and the tour, reading and workload, checking, evidence and analysis, the catalog,
   targets, the command line, the engine API, verification — and the gory parts of each moved to annexes.
@@ -929,6 +929,18 @@ mdBook that is the director's window into the project.
   `6`, `8`, `9 passed`; `figure-register: OK`; `bash scripts/build_book.sh` → rc=0; `bash scripts/check_doctrines.sh`
   → `=== all doctrines green ===`
   Commit: `ARCHOGEN-PROGRAM-0321 (leaf PROGRAM.47.5.18)`
+
+- ID: `PROGRAM.47.5.19`
+  Status: `done` — `2026-10-02`
+  Goal: *Presence, absence, and relevance* in layers.
+  **Done.** It opens with asking whether a car has air conditioning — yes, no, or "I don't know", which is not a no —
+  as the picture of offered, absent and undescribed; a gap mattering only inside what the system depends on; and a
+  yes-and-no refused rather than guessed. Then the one-minute summary, the three-state table as how it works, and the
+  precise rules, every section and transcript kept.
+  Verification: `cargo test -q -p eadl-model --test f04_f06_presence` → `10 passed`; `-p archogen-cli --test
+  closure_report --test book_transcripts` → `6`, `4 passed`; `figure-register: OK`; `bash scripts/build_book.sh` →
+  rc=0; `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`
+  Commit: `ARCHOGEN-PROGRAM-0322 (leaf PROGRAM.47.5.19)`
 
 ## Roadmap coverage map
 
@@ -1246,6 +1258,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.47.5.16` | `ARCHOGEN-PROGRAM-0318 (leaf PROGRAM.47.5.16)` | ***Kinds and schemas* in layers** |
 | `PROGRAM.47.5.17` | `ARCHOGEN-PROGRAM-0320 (leaf PROGRAM.47.5.17)` | ***Quantities and units* in layers** |
 | `PROGRAM.47.5.18` | `ARCHOGEN-PROGRAM-0321 (leaf PROGRAM.47.5.18)` | ***Modules and composition* in layers** |
+| `PROGRAM.47.5.19` | `ARCHOGEN-PROGRAM-0322 (leaf PROGRAM.47.5.19)` | ***Presence, absence, and relevance* in layers** |
 
 ## Changelog
 

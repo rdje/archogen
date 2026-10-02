@@ -1,5 +1,26 @@
 # Presence, absence, and relevance
 
+## The idea, in plain words
+
+Ask whether a car has air conditioning and you can get a yes, a no, or "I don't know" — and "I don't know" is not
+a no. A description says the same kinds of thing about every fact: it is **offered**, it is **absent**, or nothing
+says. archogen keeps them apart because each sends the author off to do something different: a no is a definite
+answer, an "I don't know" is a gap to fill.
+
+A gap matters only where something depends on it. A board's description mentions hardware the system never uses,
+so archogen works out what the system actually depends on — the **closure** of what it requests — blocks only on
+gaps inside it, and lists the rest for the author to see. A description that says both yes and no about the same
+fact is refused: archogen will not guess which half was meant.
+
+> **In one minute, for engineers.** Offered is a claim, not evidence; absent is a definite negative; undescribed is
+> neither. By `ROADMAP.md` §5.3, an unknown inside the transitive closure of the requested services is
+> `missing-fact`, and one outside it is metadata that `archogen check` lists and nothing fails. A required fact
+> declared absent is `infeasible-configuration`; offered and absent together is `invalid-description`, reachable
+> or not. F04, F05 and F06 run against one description, so neither blocking on every unknown nor on none passes.
+> The pass is `crates/eadl-model/src/presence.rs`, and it is not provider resolution.
+
+## How it works
+
 A description says one of three things about any fact:
 
 | State | Meaning |
@@ -11,7 +32,9 @@ A description says one of three things about any fact:
 The third is not the second. That difference decides which diagnostic an author gets, and
 therefore what they go and do.
 
-## Relevance decides whether an unknown matters
+## The precise rules
+
+### Relevance decides whether an unknown matters
 
 The original plan said an unknown capability anywhere blocks generation. That was revised, and
 the roadmap records why: a platform description carries facts about hardware the system never
@@ -63,7 +86,7 @@ blocks on every unknown passes F04 and fails F05; one that blocks on nothing pas
 fails F04. Only relevance passes both — and using two different descriptions would have let two
 different bugs pass.
 
-## Absent is a definite answer
+### Absent is a definite answer
 
 ```text
 error[infeasible-configuration]: `low-power-timer` is required by this system but declared absent
@@ -74,7 +97,7 @@ error[infeasible-configuration]: `low-power-timer` is required by this system bu
 Reporting this as `missing-fact` would send the author off to describe something the platform
 has already said it does not have.
 
-## Contradictions are rejected, never resolved
+### Contradictions are rejected, never resolved
 
 ```text
 error[invalid-description]: `low-power-timer` is declared both offered and absent
@@ -96,7 +119,7 @@ Unlike an unknown fact, a contradiction is invalid whether or not it is reachabl
 the relevance rule for unknowns specifically, and states the rejection rule for contradictions
 without a qualifier.
 
-## Offered is a claim, not evidence
+### Offered is a claim, not evidence
 
 > "Offered" records a claim whose evidential status is separate; declaring it does not make it
 > proven.
@@ -105,14 +128,14 @@ Nothing in this analysis says a platform *really* has a capability. Presence is 
 description asserts; whether that assertion is backed lives in the evidence vocabulary, with its
 own category and its own scope.
 
-## What this is not
+### What this is not
 
 This is presence and relevance analysis, not provider resolution. It answers "is every fact this
 system depends on actually known?" It does not choose implementations, allocate resources, or
 check capacity — that is the joint resolver, and conflating the two here would produce a
 resolver nobody reviewed.
 
-## Where it lives
+### Where it lives
 
 `crates/eadl-model/src/presence.rs`, run as the fifth pass of `archogen check`. Fixtures **F04**
 (a relevant capability undescribed → `missing-fact`), **F05** (an irrelevant one → the system
