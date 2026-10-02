@@ -206,8 +206,9 @@ It offers the command table's tools, so an agent learns at once that `resolve` e
 takes the API's request — the description's text, its profile and its modules' texts, never a path — and answers the
 API's response in the wasm binding's encoding above, the same bytes, both as structured content and as text. Its
 result is an error whenever the description is not accepted, so a client that reads one flag never mistakes a
-refusal for a pass. A tool that is not built answers with its leaf, and a version the server does not speak is
-refused with the versions it does:
+refusal for a pass. An argument `check` cannot use is answered the same way, saying what to change, so a model can
+correct its call. A tool that is not built answers with its leaf, and a version the server does not speak is refused
+with the versions it does:
 
 <!-- mcp-transcript: crates/archogen-cli/tests/mcp_stdio.rs sends each `→` line to `archogen mcp` and compares its
      answers with the `←` lines -->
@@ -236,7 +237,8 @@ single-file case of the conformance suite both ways.
 
 The table also says, for each command, whether a programmatic consumer is offered it: `check`,
 `resolve`, `analyze`, `explain` and `replay` are; `build` and `verify` are excluded, each citing
-§10.4, and a test reads the exclusion from the table (leaf `API.6.2`). So is `mcp`, the server itself.
+§10.4, and a test reads the exclusion from the table (leaf `API.6.2`). The table excludes `mcp`, the server itself,
+as well.
 - **Wall-clock time.** The budget bounds the work, and the work is linear in it. A host that needs a
   deadline as well enforces it around the instance. The API reads no clock, and on `wasm32-unknown-unknown`
   the standard library has none to read.

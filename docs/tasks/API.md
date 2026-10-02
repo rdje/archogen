@@ -711,7 +711,7 @@ agent can drive. The server is a capability of the built binary, spawned per ins
 
 - ID: `API.6`
   Status: `active` — decomposed `2026-10-01`; `API.6.1` done
-  Children: `API.6.1` … `API.6.5`
+  Children: `API.6.1` … `API.6.6`
   Goal: the **MCP server** — any agent drives a running archogen instance through it.
   Acceptance: the tool list is derived from `crates/archogen-cli/src/spec.rs`, so a documented operation
   is always an offered one and an unimplemented one names its owning leaf instead of failing at runtime;
@@ -844,7 +844,7 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   Commit: `ARCHOGEN-API-0333 (leaf API.6.4)`
 
 - ID: `API.6.5`
-  Status: `active` — `2026-10-02`; the book written (`-0335`), the review next
+  Status: `done` — `2026-10-02`; the book written (`-0335`), the review answered (`-0337`), its D3 filed as `API.6.6`
   Goal: the book documents the server, and a context that did not write it reviews it against the specification.
   **The book (`-0335`).** *The engine API* gains *The server an agent spawns*: how an agent starts and speaks to
   `archogen mcp`, both eras, what `check` takes and answers, an unbuilt tool and a refused version; its transcript is
@@ -865,8 +865,53 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   - [x] **NO REGRESSION** — `cargo clippy -q -p archogen-cli --all-targets -- -D warnings` → rc=0; `bash
     scripts/build_book.sh` → rc=0; `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`.
   - [x] **LOCKSTEP** — the chapter, the index; this leaf and the log.
-  Verification: the book `cargo test -q -p archogen-cli --test mcp_stdio` → `3 passed`; the review `pending`
-  Commit: `ARCHOGEN-API-0335 (leaf API.6.5)` for the book; the review `pending`
+
+  **The review (`-0337`).** A context that had not written the server read it against the pinned specification and
+  attacked it — a 30 000-line fuzz, RFC 8259 vectors, hostile sizes — and found 7 defects, 10 drafting points and 8
+  nits (the protocol's shapes conformant, the input bounds not). Answered: **D1** the duplicate check a set lookup,
+  linear (an object of 238 000 members had taken 81 s); **D2** the line bound six times the budget, since a JSON
+  writer may spell any byte as six (Python's `json.dumps` wrote a 0.8 MB description as 2.4 MB, refused); **D4** an
+  unreadable request answered with no id, never `null`, which neither schema allows; **D5** a request's id a string
+  or an integral number; **D6** an argument `check` cannot use a tool error with what to change, as both revisions'
+  tools pages ask of "Input validation errors", read at the commit (`-32602` kept for no tool, an unknown tool or
+  arguments that are no object); **D7** the test the code cited, written over the whole suite and hostile texts.
+  **D3**, a 1 MB description of unclosed forms answered in 1.5 GB because each diagnostic quotes its one long line —
+  the command line too — is the engine's renderer's, filed as `API.6.6`. The drafting points and nits: the record's
+  §4, §5 and *As built* corrected (the line bound, the ping before `initialize` a leniency, `resultType` only under
+  `2026-07-28`); the pages read at the commit ledgered with their hashes; a version that is no string named so; a
+  `2026-07-28` method in a `2025-11-25` session not found; an unbuilt tool's description saying so; the suite run in
+  both revisions; a built tool without a handler `-32603`; client responses ignored, blank lines skipped; the stdio
+  test's input on its own thread; `json.rs`'s departure from RFC 8259 §9 stated. Chosen and kept: U+2028 unescaped,
+  and a per-request `2025-11-25` refused with `-32022` (the record says why).
+
+  **Acceptance checklist, the review (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — the reviewer's runs, each reproduced as a test against a mutant restoring the flaw:
+    the quadratic check → `a_wide_object_is_read_in_time_linear_in_its_size` `FAILED` after 30.09 s; the 2× bound
+    → `FAILED. 64 passed; 1 failed`; `id: null` restored → `FAILED. 64 passed; 1 failed`; `1.5` accepted → `FAILED.
+    64 passed; 1 failed`.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `members.iter().any(…)` per name in `json.rs`; a line bound reasoned from
+    `\n` alone; `error` writing `id.clone()` of a `Value::Null`: `git show HEAD:crates/archogen-cli/src/mcp.rs | grep
+    -c "2 \* archogen_api::DEFAULT_BYTES"` → 1. WHERE: `crates/archogen-cli/src/json.rs`, `mcp.rs`.
+  - [x] **FIX** — as above; `Failure` separating `-32602` from `-32603`; `integral`; the record, the ledger, the book.
+  - [x] **ADDRESSED (verified)** — `cargo test -q -p archogen-cli --lib` → `65 passed`; `--test mcp_stdio` → `3
+    passed`, the suite now in both revisions; the four mutants above red, the restored code green.
+  - [x] **NO REGRESSION** — `cargo xtask verify --tier focused` → `tier focused: passed — 3 passed, 0 failed`;
+    `cargo test -q --workspace` → 996 passed, 0 failed; `bash scripts/check_doctrines.sh` → `=== all doctrines green
+    ===`.
+  - [x] **LOCKSTEP** — the record, the ledger's `mcp-specification`, the book's section; `API.6.6` filed; this leaf,
+    the frontier and the log; `CHANGELOG.md`.
+  Verification: see the checklists.
+  Commit: `ARCHOGEN-API-0335 (leaf API.6.5)` for the book; `ARCHOGEN-API-0337 (leaf API.6.5)` for the review
+
+- ID: `API.6.6`
+  Status: `pending`
+  Goal: an answer as bounded as its request. A description of a million unclosed forms is answered — by
+  `archogen check`, the engine API and `archogen mcp` alike — with diagnostics that each quote its one long line:
+  1.5 GB and 4.8 GB of memory for a 1 MB request (`API.6.5`'s review, D3). The renderer quotes a window of a long
+  line around its span, so an answer's size is linear in its request's.
+  Acceptance: a RED arm with the reviewer's input; the window's edges; every transcript the book shows unchanged.
+  Verification: `pending`
+  Commit: `pending`
 
 - ID: `API.7`
   Status: `pending`
@@ -884,7 +929,7 @@ agent can drive. The server is a capability of the built binary, spawned per ins
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `API.6` | `active` | the MCP server — designed (`API.6.1`), its tools declared in the command table (`API.6.2`); its JSON reader (`API.6.3`), and the server, `archogen mcp` (`API.6.4`); next `API.6.5`, the book and a review |
+| 1 | `API.6` | `active` | the MCP server — designed (`API.6.1`), its tools declared in the command table (`API.6.2`); its JSON reader (`API.6.3`), and the server, `archogen mcp` (`API.6.4`); the book and its review (`API.6.5`); next `API.6.6`, an answer as bounded as its request |
 | 2 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6` |
 
 ⛔ **This tree does not displace the project's main line.** The director's ruling sequenced `API.3`–`API.7`
@@ -981,6 +1026,7 @@ this tree is taken when it does not delay that.
 | `API.6.3` | `ARCHOGEN-API-0332 (leaf API.6.3)` | **the server's JSON reader and writer**: RFC 8259 and nothing else, a size and a nesting bound, a name twice refused, a number kept as its text; `spec.rs` formatted, which `focused` had failed on since `-0294` |
 | `API.6.4` | `ARCHOGEN-API-0333 (leaf API.6.4)` | **the MCP server, `archogen mcp`**: both eras over stdio, the command table's tools, `check` answering the wasm binding's bytes, its verdicts the command line's on the conformance cases |
 | `API.6.5` | `ARCHOGEN-API-0335 (leaf API.6.5)` | **the book documents the MCP server**: *The server an agent spawns*, its transcript a real run the stdio test replays |
+| `API.6.5` | `ARCHOGEN-API-0337 (leaf API.6.5)` | **the MCP server's review answered**: the duplicate check linear, the line bound six times the budget, no `null` ids, integral ids, argument errors as tool errors; D3 filed as `API.6.6` |
 
 ## Changelog
 

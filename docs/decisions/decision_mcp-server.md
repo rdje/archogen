@@ -32,36 +32,52 @@
 3. **A tool takes the engine API's request, not the command line's.** The command line names a file; the server
    has no filesystem authority (§10.4), so `check` takes the description's text, its profile and the texts of its
    modules — `archogen_api::Request` — under the API's byte budget, and answers `archogen_api::Response`.
-4. **Every result carries §5.5's verdict, and `isError` cannot overstate it.** A tool result's `structuredContent`
-   is the response in the wasm binding's encoding (`docs/decisions/decision_wasm-binding.md` §6), the same bytes
-   for the same answer, and its one text block carries that JSON, as the specification asks of structured content.
-   `isError` is `false` only when the response accepts the description; a refusal, an inconclusive answer or a
-   tool failure is `true`, so a client that reads nothing but `isError` never takes a refusal for a pass. A call
-   naming no tool, or with arguments that are not the tool's, is a protocol error, `-32602`.
-5. **Bounded on untrusted input.** A line longer than the API's byte budget plus a fixed allowance for the
-   envelope is refused with `-32700` without being parsed; the JSON reader is the server's own, refuses nesting
-   deeper than a fixed bound and every malformed text, and reads nothing it does not need. Work per request is linear
-   in its size (`API.4.2`), and requests are served one at a time; that, for a stdio server with one client, is how
-   the specification's "Rate limit tool invocations" is met, and the record says so rather than claiming more.
+4. **Every result carries §5.5's verdict, and `isError` cannot overstate it.** A tool result's `structuredContent` is
+   the response in the wasm binding's encoding (`docs/decisions/decision_wasm-binding.md` §6), the same bytes for the
+   same answer, and its one text block carries that JSON, as the specification asks of structured content. `isError` is
+   `false` only when the response accepts the description; a refusal, an inconclusive answer or a tool failure is
+   `true`, so a client that reads nothing but `isError` never takes a refusal for a pass. A call naming no tool, an
+   unknown tool, or arguments that are no object is a protocol error, `-32602`; an argument the tool cannot use is a
+   tool error, `isError: true` with what to change, as both revisions' tools pages ask of "Input validation errors" (the
+   `2025-11-25` changelog's SEP-1303), so a model can correct itself (`2026-10-02`, `API.6.5`'s review, D6).
+5. **Bounded on untrusted input.** A line longer than six times the API's byte budget plus a fixed allowance for the
+   envelope is refused with `-32700` without being parsed — six, because a JSON writer may spell any byte as six; the
+   JSON reader is the server's own, refuses nesting deeper than a fixed bound, a name given twice and every malformed
+   text, and reads each object in time linear in its size. Work per request is linear in its size (`API.4.2`), and
+   requests are served one at a time; ⚠️ the answer's size is not yet bounded with it: a description of a million
+   unclosed forms is answered with diagnostics that each quote its one long line, which `API.6.6` bounds (`API.6.5`'s
+   review, D3); that, for a stdio server with one client, is how the specification's "Rate limit tool invocations" is
+   met, and the record says so rather than claiming more.
 6. **No dependency, no process.** The server, its reader and its writer are code in `crates/archogen-cli`, which
    depends on the engine API and not the reverse, so the checker and the generator share nothing new (§10.4,
    F30). It spawns nothing (`NO-SUBPROCESS`).
 
 ## As built (`2026-10-02`, leaf `API.6.4`)
 
-What the server settles that the record left open, each read at the ledger's pinned schemas:
-- A `ping` before `initialize` is answered, empty: `2025-11-25`'s lifecycle lets a client send "requests other than
-  pings" only after `initialize` is answered, so pings may come first. `2026-07-28` has no `ping`; under it the
-  method is not found.
+What the server settles that the record left open, each read at the ledger's pinned commit; corrected `2026-10-02`
+by `API.6.5`'s review:
+- A `ping` before `initialize` is answered, empty, a leniency: `2025-11-25`'s lifecycle makes "The initialization phase
+  … the first interaction" and lets a client send "requests other than pings" only after `initialize` is answered, so
+  a ping may arrive while it waits; answering one earlier costs nothing. `2026-07-28` has no `ping`; under it the
+  method is not found, as is any `2026-07-28` method in a `2025-11-25` session.
 - `initialize` is answered with `2025-11-25` whatever version it names, the lifecycle's rule ("the same version" if
   supported, "otherwise … another protocol version it supports").
 - `2026-07-28`'s cacheable results, `server/discover`'s and `tools/list`'s, carry `ttlMs: 0` and `cacheScope:
-  "public"`: the schema requires both, and nothing here promises a list stays fresh. Every result carries
-  `resultType: "complete"` and the server's `serverInfo` in its `_meta`.
+  "public"`: the schema requires both, and nothing here promises a list stays fresh. Every `2026-07-28` result
+  carries `resultType: "complete"` and the server's `serverInfo` in its `_meta`; a `2025-11-25` result carries
+  neither, its revision having no `resultType`.
 - `check` takes `description`, and optionally `name`, `profile` and `modules`, an object from each module's name to
-  its text; any other argument is `-32602`.
-- The line bound is twice the API's byte budget and 64 KiB: JSON's escapes can double a description's length, and a
-  bound that refused a description the API accepts would be a transport overruling the engine.
+  its text; any other argument, or one of the wrong type, is a tool error (§4). An unbuilt tool's description says it
+  is not built and names its leaf, since a model reads a description and few clients show it `_meta`.
+- The line bound is six times the API's byte budget and 64 KiB (§5): a bound that refused a description the API
+  accepts, for how its client escaped it, would be a transport overruling the engine.
+- An answer to a request whose id could not be read carries no `id`: both revisions' schemas make the error
+  response's `id` optional and type it a string or an integer, so `null`, which JSON-RPC 2.0 would write, is not
+  theirs. A request's id is a string or an integral number, as JSON Schema's `integer` reads one; `1.5` is refused.
+- A response the client sends is ignored, since this server sends no request; a blank line is skipped.
+- Chosen and not changed: the line separators U+2028 and U+0085 reach stdout unescaped, as the wasm binding writes
+  them, since the stdio transport frames messages by `\n` alone; and a per-request `_meta` naming `2025-11-25` is
+  refused with `-32022`, whose message says that revision opens with `initialize`.
 
 ## Why
 

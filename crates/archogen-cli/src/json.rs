@@ -13,7 +13,11 @@
 //!   leading zero or no digits, a string with a raw control character or an escape the grammar does not list,
 //!   text after the value;
 //! - an escaped lone surrogate, which names no character (RFC 8259 §8.2 leaves its behaviour "unpredictable");
-//! - an object that names a member twice, whose meaning RFC 8259 §4 calls "unpredictable";
+//! - an object that names a member twice, whose meaning RFC 8259 §4 calls "unpredictable". This one departs from
+//!   RFC 8259 §9, which says a parser "MUST accept all texts that conform to the JSON grammar" and lets it limit only
+//!   size, depth, numbers and strings: a message that names `id` or `name` twice would let two readers disagree on
+//!   which it meant, so the server refuses it rather than choose. The check is a set lookup per member, so a wide
+//!   object costs time linear in its size;
 //! - arrays and objects nested deeper than [`MAX_DEPTH`].
 //!
 //! **What the writer writes**: no whitespace between tokens; an object's members in the order they were made;
@@ -24,6 +28,7 @@
 //! **A number keeps its text.** It is checked against the grammar and never converted, so a request's `id` is
 //! answered with exactly the text it came with, as JSON-RPC 2.0 asks, and no precision is lost to a float.
 
+use std::collections::HashSet;
 use std::fmt;
 
 /// The deepest nesting of arrays and objects the reader accepts. A message the server reads or writes nests
@@ -278,6 +283,7 @@ impl Reader<'_> {
         }
         self.expect(b'{')?;
         let mut members: Vec<(String, Value)> = Vec::new();
+        let mut names: HashSet<String> = HashSet::new();
         self.whitespace();
         if self.peek() == Some(b'}') {
             self.at += 1;
@@ -294,7 +300,7 @@ impl Reader<'_> {
                 });
             }
             let name = self.string()?;
-            if members.iter().any(|(key, _)| *key == name) {
+            if !names.insert(name.clone()) {
                 return Err(Refusal {
                     kind: RefusalKind::DuplicateName,
                     at: start,
@@ -741,6 +747,25 @@ mod tests {
         );
     }
 
+    /// Review of `API.6.5`, D1: a duplicate check that compared each name with every earlier one took 81 s on an
+    /// object of 238 000 members. A set lookup reads 100 000 members in well under the bound below; the quadratic
+    /// check needs about 5 · 10⁹ comparisons for them.
+    #[test]
+    fn a_wide_object_is_read_in_time_linear_in_its_size() {
+        let members: Vec<String> = (0..100_000)
+            .map(|index| format!("\"k{index}\":0"))
+            .collect();
+        let text = format!("{{{}}}", members.join(","));
+        let started = std::time::Instant::now();
+        let value = read(text.as_bytes(), usize::MAX).expect("a wide object is read");
+        let took = started.elapsed();
+        assert!(matches!(value, Value::Object(ref members) if members.len() == 100_000));
+        assert!(
+            took < std::time::Duration::from_secs(10),
+            "read in {took:?}"
+        );
+    }
+
     #[test]
     fn a_number_keeps_its_text() {
         for text in [
@@ -785,8 +810,9 @@ mod tests {
         assert_eq!(write(&value), r#"{"z":[1,null],"a":{}}"#);
     }
 
-    /// Message shapes like the server's, both eras, written before the server: each reads back to the value, and is
-    /// its own canonical text. The server's own answers are round-tripped in `mcp.rs`'s tests and `tests/mcp_stdio.rs`.
+    /// Synthetic JSON-RPC texts, written before the server and not its messages (their fields are illustrative):
+    /// each reads back to the value and is its own canonical text. The server's own answers are round-tripped in
+    /// `mcp.rs`'s tests and `tests/mcp_stdio.rs`.
     #[test]
     fn the_messages_the_server_sends_round_trip() {
         for text in [

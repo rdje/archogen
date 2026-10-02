@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the MCP server holds up against a hostile client
+
+`ARCHOGEN-API-0337` (leaf `API.6.5`).
+
+- An outside review attacked the new server and found it could be stalled for minutes by one large request, refused
+  some valid descriptions because of how a client escaped them, and answered some errors in a form the protocol
+  forbids. All fixed and tested. One finding — a pathological description producing an enormous answer, in the
+  command line too — is the engine's, and is next.
+
 ## archogen — the fault contract's fourteenth reading
 
 `ARCHOGEN-M2-0336` (leaf `M2.9`).
