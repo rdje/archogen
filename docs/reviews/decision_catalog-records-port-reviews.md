@@ -2,7 +2,7 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-02`
-- **Status:** `active` — rounds 1 to 4 answered; round 5 next; the review closes on the first round that finds no
+- **Status:** `active` — rounds 1 to 5 answered; round 6 next; the review closes on the first round that finds no
   defect
 - **External sources:** [the Rust Reference](../book/src/ledger.md#rust-reference) shipped with the pinned toolchain
   — version, hashes and limits in the ledger
@@ -133,6 +133,33 @@ answering.
 **Superseded, found by this round:** round 1's answer 4 ("and no label line follows it", deleted by round 3's 14, the
 property kept); round 2's 3 (§4's per-fact locator list, removed by round 3's 7), 7 (restated by this round's 5) and 12
 (`0x`, removed by round 3's 15); round 3's 1 (its inline directions, narrowed by this round's 1).
+
+**Round 5**, `2026-10-02`, of commit `9c79034`, by a new context with the same probing licence. No admitted line
+produced an undefined symbol, a relocation the gate would not predict, a directive's effect or a fall-through out of
+a naked body; outputs never shared an input's register. 3 defects, all low in severity and all in wording: a sentence
+saying each inline operand has a register of its own, while two inputs of one value may share one; round 4's answer
+narrowing the naked body's review duty from "each return" to `ret` and `mret`, dropping `jr` and `tail`; and the
+ledger claiming a `noreturn` quote that no longer exists. 13 findings: 3 defects, 3 gaps, 5 drafting points, 2 nits.
+Defects per round: 8, 2, 2, 1, 3.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 1 | defect | "each in a register of its own" false: two inputs of one value shared a register in release builds, which no admitted line observes | "no output shares a register"; the input sharing measured and stated; the book's line moved |
+| 2 | defect | round 4's answer dropped "each return": `jr` and `tail` exits were no longer the review's | "on each exit, `sp`, `gp`, `tp` and the callee-saved registers; on an exit by `mret` or into another context, every register" |
+| 3 | defect | the `rust-reference` scope claimed a verbatim `noreturn` quote that no longer exists | the item dropped, the naked-function rule quoted in its place ("Behavior is undefined if execution falls through past the end of the assembly code"), in §14.2 and the scope; "quoted, the alignment one stated as an absence" |
+| 4 | gap | a `sym` through a generic parameter names code the instantiating crate chooses, outside the port's sets | refused: a `sym`'s function has no type or const parameters and is in no `trait` and no generic `impl`; its path has no `Self` and no generic arguments |
+| 5 | gap | a naked body's system-register writes, and how the hart derives a trap's address (the mode bits, vectored offsets) | "what either form writes"; the `BASE` and vectored arithmetic quoted from the privileged specification, verified here; the alignment paragraph covers wherever a trap lands |
+| 6 | gap | an output, too, receives undefined upper bits from a narrow input | "what a system register or an output receives" |
+| 7 | drafting | §11 indexed only part of §14.2's `catalog-field` cases, and its locator row missed a `file` locator beside a `code` one | "a case §14.2 files under `catalog-field`"; the locator row names a code fact's non-`code` locator |
+| 8 | drafting | "structure first" and "whose locators are all admitted" dropped at `1d35a45`, so a port fact with no locator had two codes | the order restored — structure, locators, fields — and the qualifier |
+| 9 | drafting | the refusal's naming said nothing of `any` or of a stating record | "for `any` or a target off the triples, the reaching or stating record" |
+| 10 | drafting | which `sym` path forms are admitted | identifiers joined by `::`, optionally from `crate::`, `self::` or `super::`; no `Self`, no generic arguments |
+| 11 | drafting | the `mhartid` sentence's provenance in the `riscv-privileged` entry | its Source and Retrieved name the CSR listing chapter and its date; the scope's long quotes replaced by what the record quotes |
+| 12 | nit | §13's `describes` sentence read as a loader rule | "should …; the loader checks nothing more there" |
+| 13 | nit | round 1's 8 and 14 use the wording round 3's 8 found ambiguous | named below |
+
+**Superseded, found by this round:** round 1's answers 8 and 14 (their "its own record" read as round 3's 8 restates
+it) and round 3's 19 (its `noreturn` quote, replaced by the naked-function rule).
 
 ## Why
 

@@ -181,9 +181,15 @@ its host among them whatever the host's architecture, assembles a template the g
 - one or more template strings, each a string literal that is not raw and holds no `\` and no line feed. The compiler
   joins them with line feeds, so each is exactly one line of the template;
 - operands, each named `<identifier> =`, the identifier neither a keyword nor raw and compared as §3 compares
-  identifiers: `sym <path>`; `const <expression>`; and in `asm!` only, `in`, `out` or `inout`, each with `(reg)`,
+  identifiers: `sym <path>`, the path identifiers joined by `::`, optionally beginning `crate::`, `self::` or
+  `super::`, with no `Self` segment and no generic arguments; `const <expression>`; and in `asm!` only, `in`, `out` or `inout`, each with `(reg)`,
   then its expression, `_` admitted for an output, `inout` optionally followed by `=> <expression>`;
 - in `asm!` only, at most one `options(nostack)`.
+
+An invocation holding a `sym` operand lies in a function that has no type or const parameters and is neither inside
+a `trait` nor inside an `impl` that has type or const parameters: a `sym` through a generic parameter names code the crate that instantiates the function chooses,
+outside every set of the port's record (the fifth review's probe p2). A plain generic call in Rust reaches the same
+way, and is the review's, as Rust is.
 
 A comma after the last argument, or inside `options(…)`, is admitted, as the compiler admits it.
 
@@ -216,7 +222,7 @@ The kinds, every mnemonic and register name lowercase:
 
 A placeholder is `{<identifier>}`, with no modifier and no space, naming a named operand; its kind is that operand's.
 
-**An `asm!` declares every register it touches, each in a register of its own.** Every line of an `asm!` is an
+**An `asm!` declares every register it touches, and no output shares a register.** Every line of an `asm!` is an
 instruction whose mnemonic §14.3 marks inline, and each register operand is `zero` or a placeholder: where the
 signature writes the register, one for an `out` or `inout` operand; where it reads it, one for an `in` or `inout`
 operand.
@@ -228,11 +234,12 @@ reset code).
 `lateout` and `inlateout` are refused because the compiler may give such an output an input's register — the
 Reference: "Note that a lateout may be allocated to the same register as an in" — so a line writing it would change
 what a later line reads (the fourth review's probe l3: `li {o}, 2147483648` then `csrw mtvec, {h}` installed the
-integer, not the handler). `out` and `inout` never share one with an `in`. With every register declared, each in its
-own, the gate's binding of every placeholder is the compiler's. The values are Rust's, and one detail of them is the
+integer, not the handler). `out` and `inout` never share one with an `in`. Two inputs of one value may share one
+(measured on the pin, in release builds), which no admitted line observes, since none writes an input. With every
+register declared and no output sharing one, the gate's binding of every placeholder is the compiler's. The values are Rust's, and one detail of them is the
 review's: an input narrower than 64 bits leaves the register's upper bits undefined — the Reference: "If a value is
 of a smaller size than the register it is allocated in then the upper bits of that register will have an undefined
-value for inputs" — so what a system register receives from one is checked by the review.
+value for inputs" — so what a system register or an output receives from one is checked by the review.
 `{}` and `{<digits>}` are refused: how the compiler binds them is not what a reading of "the next" or "the n-th"
 gives (`M2.12.2`'s second review, its probe p2, where `call {}` became `call a0`).
 
@@ -245,32 +252,35 @@ outside its invocation.
 
 **A naked body ends.** In `naked_asm!`, the last line is an instruction that never falls through — `mret`, `ret`,
 `jr`, `tail`, or `j` to a label. Otherwise a naked body runs on into whatever the linker places next, which no `sym`
-names (the first review's probe p5). An `asm!` admits no such instruction and no `noreturn`, so it falls through into
-the compiled Rust code around it, wherever the compiler places that, inlined or not, or traps. What an `asm!` writes
+names (the first review's probe p5), and the Reference says of a naked function "Behavior is undefined if execution
+falls through past the end of the assembly code". An `asm!` admits no such instruction and no `noreturn`, so it falls through into
+the compiled Rust code around it, wherever the compiler places that, inlined or not, or traps. What either form writes
 to a system register, and how that changes the code after it — the interrupts taken, the trap vector, the privilege
 and byte order of later loads and stores, a trap — is the review's.
 
 **What a naked body leaves is the review's.** The Reference requires of a naked function that "All callee-saved
 registers must have the same value upon return as they had on entry". A transition restores another context's by
-design, so the gate cannot hold a naked body to it. What a body leaves on a return by `ret` in `sp`, `gp`, `tp` and
-the callee-saved registers, on a return by `mret` in every register — which holds the interrupted context's value, or
-the incoming one's for a transition, since compiled Rust was interrupted anywhere — and what it stores, is the
-review's, with the code in view.
+design, so the gate cannot hold a naked body to it. What a body leaves on each exit in `sp`, `gp`, `tp` and the
+callee-saved registers, and on an exit by `mret` or into another context in every register — which holds the
+interrupted context's value, or the incoming one's for a transition, since compiled Rust was interrupted anywhere —
+and what it stores, is the review's, with the code in view.
 
 **What the refused forms would reach, and what remains the review's.** A directive can read a file, place code where
 the image's layout does not expect it, or define a symbol another package could supply in place of a Rust one; a name
 in a code position, a body that falls off its end and a label resolved elsewhere each reach what the linker places.
 Those are what §3 refused assembly for (the catalog's review findings C9 and E7), and they stay refused. What the
 admitted forms reach is a Rust item by `sym`, in the dependency information §3 scans or the pinned toolchain's own
-library (premise 1), or an address the code computes, reached through `jr`, a return, or a trap to a vector the code
-wrote. A jump through a computed address, code written to memory and executed, and a `sym` naming a `static` in a code
+library (premise 1), or an address the code computes, reached through `jr`, a return, or a trap. A trap goes where the
+vector the code wrote sends it: to its `BASE` field, the low two bits being the mode, and in vectored mode an
+interrupt to `BASE` "plus four times the interrupt cause number", as the [privileged
+specification](../../book/src/ledger.md#riscv-privileged) puts it. A jump through a computed address, code written to memory and executed, and a `sym` naming a `static` in a code
 position, which executes its bytes, and a fixed address reached through `zero` — `jr zero`, or `zero` written to `mtvec`
 or to `mepc` before `mret` — reach what Rust's own casts can reach, and the review checks them as for Rust
 (§13: the token rules are necessary, not sufficient).
 
 **Alignment.** `mtvec` needs a 4-byte-aligned base (§14.1). The pinned compiler gives a naked function that
-alignment, and no attribute asks for it. How the port knows its trap entry is aligned is therefore a fact its record
-states (`M2.12.3`). The pin's measured behaviour can be its basis only because the toolchain file is in the record's
+alignment, and no attribute asks for it. How the port knows the address it installs as the vector is aligned, and
+where each trap then lands, is therefore a fact its record states (`M2.12.3`). The pin's measured behaviour can be its basis only because the toolchain file is in the record's
 bound hash (§3), so a moved pin makes the review stale.
 
 **The port's facts, by what a locator reaches.** §13 refused, by name, a known value of every fact about the port's
@@ -292,7 +302,7 @@ code. That is restated:
   and carry a locator into it. The loader checks nothing more here; the review checks that the locators reach the
   code the basis rests on (§13: a code locator is necessary, not sufficient).
 
-**Refusals** (§11), one code per case:
+**Refusals** (§11), one code per case, taken in this order — structure, then locators, then fields:
 - `catalog-shape`: a second `assembly` subform, or one naming no package; two identical locators of one fact; several
   locators on a fact that is not a code fact;
 - `catalog-locator`: a locator §2's rule does not admit, a `file` or `ledger` locator on a code fact among them;
@@ -300,10 +310,10 @@ code. That is restated:
   §11 files them); a package outside §14.2 and §14.3;
 - `catalog-field`: an unknown architecture; a record reaching a declared package, or stating a known port fact, with
   `any` or a target off the dialect's triples; two declarations of one package naming different architectures; a known
-  port fact with no locator the port-fact rule admits.
+  port fact whose locators are all admitted, none of them one the port-fact rule requires.
 
-A refusal names the record whose field breaks the rule: for a target off the triples, the reaching record at its
-contract's targets; for two declarations that disagree, the later record in id order at its `assembly` subform.
+A refusal names the record whose field breaks the rule: for `any` or a target off the triples, the reaching or
+stating record at its contract's targets; for two declarations that disagree, the later record in id order at its `assembly` subform.
 
 #### 14.3 The `riscv64` dialect
 
@@ -361,6 +371,7 @@ to each are in [`decision_catalog-records-port-reviews.md`](../../reviews/decisi
 | 2, same day | 14 | `call {}` bound by the compiler to a `reg` operand; a leading-zero label read as octal | 2 defects, 3 gaps; named placeholders only, labels by value without a leading zero, `noreturn` ending, the triple; all answered |
 | 3, same day | 20 | an `asm!` writing an undeclared register made compiled Rust jump to an integer; labels aliasing modulo `2^32` | 2 defects, 4 gaps; inline `asm!` narrowed to declared registers and CSR work, labels of four digits, a hosted build's `cfg` excluded; all answered |
 | 4, same day | 13 | `lateout` sharing an input's register installed an integer as the trap vector | 1 defect, 3 gaps; `lateout` and `inlateout` refused, `mret` returns and system-register effects the review's, `mhartid` read only; all answered |
+| 5, same day | 13 | three wording defects — inputs sharing a register, a naked exit's duty narrowed, a lost quote — and a generic `sym` | 3 defects, 3 gaps; words restored, a generic `sym` refused, the trap's address arithmetic stated; all answered |
 
 ## Why
 

@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the assembly design's fifth review: words that had drifted
+
+`ARCHOGEN-M2-0358` (leaf `M2.12.2`, step 6).
+
+- The fifth review found nothing the compiler does wrong with admitted code, but three places where the design's own
+  words had drifted out of true in earlier answers, and one way a generic function could reach code the port does not
+  hold. The words are restored and generic functions are refused that reach. A sixth review is next.
+
 ## archogen — the assembly design's fourth review: two names, one register
 
 `ARCHOGEN-M2-0357` (leaf `M2.12.2`, step 5).
