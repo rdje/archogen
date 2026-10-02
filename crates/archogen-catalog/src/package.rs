@@ -39,7 +39,7 @@ const CRATE_KIND_KEYS: [&str; 4] = ["proc-macro", "proc_macro", "crate-type", "c
 const TARGET_TABLES: [&str; 5] = ["lib", "bin", "test", "example", "bench"];
 
 /// Rust's keywords, which a `!` after does not make a macro invocation (`if !(…)`).
-const KEYWORDS: [&str; 39] = [
+pub(crate) const KEYWORDS: [&str; 39] = [
     "as", "async", "await", "break", "const", "continue", "crate", "dyn", "else", "enum", "extern",
     "false", "fn", "for", "if", "impl", "in", "let", "loop", "match", "mod", "move", "mut", "pub",
     "ref", "return", "self", "Self", "static", "struct", "super", "trait", "true", "type",
@@ -219,7 +219,7 @@ pub struct Found {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-enum Kind {
+pub(crate) enum Kind {
     /// An identifier, by its name, `r#asm`'s among them; `true` when it holds a byte outside ASCII.
     Ident(String, bool),
     /// A string literal of any kind.
@@ -235,13 +235,16 @@ enum Kind {
 }
 
 #[derive(Debug, Clone)]
-struct Token {
-    kind: Kind,
-    at: usize,
+pub(crate) struct Token {
+    pub(crate) kind: Kind,
+    /// Its first byte's offset.
+    pub(crate) at: usize,
+    /// The offset just past it.
+    pub(crate) end: usize,
 }
 
 /// Rust's tokens in `source`, comments dropped and literals kept whole.
-fn tokens(source: &[u8]) -> Result<Vec<Token>, (usize, String)> {
+pub(crate) fn tokens(source: &[u8]) -> Result<Vec<Token>, (usize, String)> {
     let mut out = Vec::new();
     let mut i = 0;
     let n = source.len();
@@ -279,6 +282,7 @@ fn tokens(source: &[u8]) -> Result<Vec<Token>, (usize, String)> {
             out.push(Token {
                 kind: Kind::Str,
                 at: i,
+                end,
             });
             i = end;
         } else if b == b'\'' {
@@ -309,6 +313,7 @@ fn tokens(source: &[u8]) -> Result<Vec<Token>, (usize, String)> {
             out.push(Token {
                 kind: Kind::Other,
                 at: start,
+                end: i,
             });
         } else if b.is_ascii_digit() {
             let start = i;
@@ -324,6 +329,7 @@ fn tokens(source: &[u8]) -> Result<Vec<Token>, (usize, String)> {
             out.push(Token {
                 kind: Kind::Other,
                 at: start,
+                end: i,
             });
         } else if ident_byte(b) {
             let start = i;
@@ -339,17 +345,20 @@ fn tokens(source: &[u8]) -> Result<Vec<Token>, (usize, String)> {
             out.push(Token {
                 kind: Kind::Ident(name, non_ascii),
                 at: start,
+                end: i,
             });
         } else if matches!(b, b'(' | b'[' | b'{') {
             out.push(Token {
                 kind: Kind::Open(char::from(b)),
                 at: i,
+                end: i + 1,
             });
             i += 1;
         } else if matches!(b, b')' | b']' | b'}') {
             out.push(Token {
                 kind: Kind::Close(char::from(b)),
                 at: i,
+                end: i + 1,
             });
             i += 1;
         } else {
@@ -357,6 +366,7 @@ fn tokens(source: &[u8]) -> Result<Vec<Token>, (usize, String)> {
             out.push(Token {
                 kind: Kind::Punct(char::from(b)),
                 at: i,
+                end: i + 1,
             });
             i += 1;
         }
@@ -433,12 +443,27 @@ enum Frame {
     Plain,
 }
 
-/// §3's token rules over one Rust source file.
+/// §3's token rules over one Rust source file of a package no `assembly` declaration names.
 ///
 /// # Errors
 ///
 /// The first token the rules refuse, with its line and column, or a source that does not tokenize.
 pub fn scan(source: &[u8]) -> Result<(), Found> {
+    scan_with(source, None)
+}
+
+/// §3's token rules over one Rust source file of a package an `assembly` declaration names for `architecture`:
+/// `asm` and `naked_asm` admitted only as §14.2 admits them, each invocation held to its rules
+/// ([`crate::assembly`]).
+///
+/// # Errors
+///
+/// The first token the rules refuse, with its line and column, or a source that does not tokenize.
+pub fn scan_assembly(source: &[u8], architecture: &str) -> Result<(), Found> {
+    scan_with(source, Some(architecture))
+}
+
+fn scan_with(source: &[u8], architecture: Option<&str>) -> Result<(), Found> {
     let at = |offset: usize, why: String| {
         let line = source[..offset].iter().filter(|&&b| b == b'\n').count() + 1;
         let column = offset
@@ -450,6 +475,7 @@ pub fn scan(source: &[u8]) -> Result<(), Found> {
         Found { line, column, why }
     };
     let tokens = tokens(source).map_err(|(offset, why)| at(offset, why))?;
+    let structure = architecture.map(|_| crate::assembly::Structure::of(source, &tokens));
     let mut stack: Vec<Frame> = Vec::new();
     for (k, token) in tokens.iter().enumerate() {
         let prev = k.checked_sub(1).map(|p| &tokens[p].kind);
@@ -479,7 +505,12 @@ pub fn scan(source: &[u8]) -> Result<(), Found> {
                 if *non_ascii {
                     return Err(at(token.at, "an identifier that is not ASCII".to_owned()));
                 }
-                if REFUSED.contains(&name.as_str()) {
+                if let (Some(architecture), Some(structure), "asm" | "naked_asm") =
+                    (architecture, &structure, name.as_str())
+                {
+                    crate::assembly::check(source, &tokens, structure, k, architecture)
+                        .map_err(|(offset, why)| at(offset, why))?;
+                } else if REFUSED.contains(&name.as_str()) {
                     return Err(at(token.at, format!("the identifier `{name}`")));
                 }
                 let enclosed = stack.iter().any(|f| *f != Frame::Plain);

@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog reads the port's assembly
+
+`ARCHOGEN-M2-0374` (leaf `M2.12.4.2`).
+
+- In a package declared as assembly, the catalog's scanner now admits the port's assembly, and only in the narrow
+  form the design allows: written out in full, inside a function built only for the bare-metal target, each line one
+  instruction from a short list with each operand of the right kind, every register an inline block touches
+  declared, and every jump to code going through a name the compiler resolves.
+
 ## archogen — the catalog reads the port's record form
 
 `ARCHOGEN-M2-0373` (leaf `M2.12.4.1`).

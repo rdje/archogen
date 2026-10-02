@@ -56,8 +56,11 @@ protected. Code a record points at is held to §3's package rules: its manifests
 source token by token. Premise 3 is judged at claim time too, so the crate is complete. It has begun reading the
 port's records as §14 amends them (`M2.12.4.1`): a fact about code may point at several places in it, an
 implementation may declare which of its packages hold assembly, and a known fact about the port's code is admitted
-only when it points into declared assembly and its record runs on the dialect's targets. The assembly itself is still
-refused until the token scan reads it (`M2.12.4.2`). The gate, the check that
+only when it points into declared assembly and its record runs on the dialect's targets. The token scan reads the
+assembly itself (`M2.12.4.2`): in a declared package, `asm!` and `naked_asm!` written out in full, inside a function
+built only for the bare-metal target, every line one instruction from the dialect's short list with each operand of
+the kind its position takes, and every register an inline block touches declared to the compiler. What the port's
+record must state of the fault contract is checked next (`M2.12.4.3`). The gate, the check that
 protects it and the first records are the next leaves (`M2.7.4` to `M2.7.6`). Until they land, nothing loads a catalog, and `catalog/` is empty.
 
 ### The records that hold it

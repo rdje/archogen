@@ -263,6 +263,7 @@ impl Catalog {
         let mut computer = Computer {
             catalog: self,
             targets: self.named_targets()?,
+            declared: self.declared_architectures(),
             hashes: Hashes::default(),
             stack: Vec::new(),
         };
@@ -297,6 +298,7 @@ impl Catalog {
         let mut computer = Computer {
             catalog: self,
             targets,
+            declared: self.declared_architectures(),
             hashes: Hashes::default(),
             stack: Vec::new(),
         };
@@ -329,6 +331,16 @@ impl Catalog {
         }
         self.assembly_rules(&computer.hashes)?;
         Ok(computer.hashes)
+    }
+
+    /// Each declared package's directory, with the architecture its declaration names: what the token scan reads
+    /// it by (§14.2). Two declarations of one package cannot disagree while §14.3 has one dialect
+    /// ([`crate::dialect`]).
+    fn declared_architectures(&self) -> BTreeMap<String, String> {
+        self.declared()
+            .into_iter()
+            .map(|(package, architecture, _)| (package, architecture))
+            .collect()
     }
 
     /// The packages every `assembly` declaration names (§14.2), each as its package's directory, with its
@@ -462,6 +474,8 @@ fn port_facts(record: &Record) -> Vec<(FacetKind, &Fact)> {
 struct Computer<'a> {
     catalog: &'a Catalog,
     targets: Vec<String>,
+    /// Each declared package's directory, with its architecture (§14.2).
+    declared: BTreeMap<String, String>,
     hashes: Hashes,
     stack: Vec<(String, FacetKind)>,
 }
@@ -643,7 +657,13 @@ impl<'a> Computer<'a> {
     fn compute(&mut self, record: &Record, facet: FacetKind) -> Result<FacetHash, Refusal> {
         let id = record.id.as_str();
         let (sources, facts, costs) = parts(record, facet);
-        let sets = Sets::of(&self.catalog.tree, &record.path, facet, &sources)?;
+        let sets = Sets::of(
+            &self.catalog.tree,
+            &self.declared,
+            &record.path,
+            facet,
+            &sources,
+        )?;
         let mut own_lines = vec![
             IDENTIFIER.to_owned(),
             format!("own {} {id}", facet.as_str()),
@@ -939,6 +959,7 @@ struct Sets {
 impl Sets {
     fn of(
         tree: &Tree,
+        declared: &BTreeMap<String, String>,
         record: &str,
         facet: FacetKind,
         entries: &[String],
@@ -984,6 +1005,7 @@ impl Sets {
                     own.extend(tree.under(&package).map(str::to_owned));
                     reach(
                         tree,
+                        declared,
                         &package,
                         &mut reached,
                         &mut BTreeSet::new(),
@@ -1126,6 +1148,7 @@ fn dependencies(m: &manifest::Manifest) -> Vec<(String, bool)> {
 /// and the cargo configuration and toolchain files on its ancestor path.
 fn reach(
     tree: &Tree,
+    declared: &BTreeMap<String, String>,
     package: &str,
     out: &mut BTreeSet<String>,
     seen: &mut BTreeSet<String>,
@@ -1140,7 +1163,12 @@ fn reach(
     let m = read_manifest(tree, &manifest_path, record, field)?;
     package::check_manifest(tree, package, &manifest_path, &m).map_err(refuse)?;
     for path in tree.under(package).filter(|p| p.ends_with(".rs")) {
-        package::scan(tree.get(path).unwrap_or_default()).map_err(|f| {
+        let source = tree.get(path).unwrap_or_default();
+        match declared.get(package) {
+            Some(architecture) => package::scan_assembly(source, architecture),
+            None => package::scan(source),
+        }
+        .map_err(|f| {
             refuse(format!(
                 "`{path}` line {} column {}: {}",
                 f.line, f.column, f.why
@@ -1175,7 +1203,7 @@ fn reach(
         }
         packages_below(tree, &dir, field, record)?;
         out.extend(tree.under(&dir).map(str::to_owned));
-        reach(tree, &dir, out, seen, record, field)?;
+        reach(tree, declared, &dir, out, seen, record, field)?;
     }
     // The workspace manifest.
     if let Some(workspace_dir) = tree::ancestors(package).into_iter().find(|dir| {
