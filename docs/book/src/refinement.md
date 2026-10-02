@@ -1,5 +1,23 @@
 # Refinement
 
+## The idea, in plain words
+
+A family of chips often starts as one general description — a counter at least 32 bits wide, no DMA — and then
+concrete chips that claim to fit it. In eADL a concrete description can say it **refines** an abstract one, and
+archogen does not take the claim on trust: it checks it. The concrete description must keep every guarantee the
+abstract one makes, stay inside every bound it sets, and offer nothing it rules out. It may say more — an extra
+serial port is fine — and what it adds is shown, not hidden.
+
+> **In one minute, for engineers.** `(refines …)` is an obligation to check, not permission to trust
+> (`ROADMAP.md` §5.1.1). Its obligations are guarantee, constraint and exclusion; a violation is
+> `refinement-violated` naming the obligation, and every violation is reported. Additions are allowed and reported
+> (§5.3: an unused device is not an invalid refinement), while offering what the abstract declares absent violates
+> the exclusion. Bounds carry a direction — `at-least`, `at-most`, `exactly` — compared on the amount, not the
+> spelling, and a bound of the wrong dimension is a type error. The check is `crates/eadl-model/src/refinement.rs`,
+> fixture F07.
+
+## How it works
+
 A concrete description can claim to satisfy an abstract one:
 
 ```text
@@ -17,7 +35,9 @@ A concrete description can claim to satisfy an abstract one:
 > A refinement declaration is an **obligation to check**, not permission to trust a claim
 > blindly.
 
-## Three obligations, and a violation names which
+## The precise rules
+
+### Three obligations, and a violation names which
 
 | Obligation | Violated when |
 | --- | --- |
@@ -40,7 +60,7 @@ error[refinement-violated]: `soc.concrete` does not offer `wrap-behavior`, which
 
 Every violation is reported, not just the first.
 
-## The unused device
+### The unused device
 
 §5.3 adds the rule that keeps the check from being useless:
 
@@ -54,7 +74,7 @@ equality would reject every real refinement — saying more is the entire point 
 Allowed is not the same as invisible. Additions appear in the report, because the author should
 be able to see what grew.
 
-## Why an exclusion is not an omission
+### Why an exclusion is not an omission
 
 The two rules above pull against each other, and the exclusion obligation is where they meet. A
 checker that only compared what both descriptions mention would miss the case that matters most:
@@ -70,7 +90,7 @@ An abstract description declares a fact absent *because something depends on its
 refinement that quietly adds it has changed what the abstract description meant, while still
 looking like it says strictly more.
 
-## Why a bound carries a direction
+### Why a bound carries a direction
 
 An abstract description writes `(counter-width (at-least 32 bit))`, not `(counter-width 32
 bit)`. §5.2: *"More bits or a faster clock is not universally better."*

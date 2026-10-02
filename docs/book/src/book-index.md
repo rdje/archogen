@@ -92,7 +92,7 @@ a change that leaves it stale, so it is never edited by hand.
   that keep the repository honest](annex-repository.md)
 - Diagnostics — [The archogen command line](cli.md#diagnostics)
 - Diagnostics point at the problem — [Reading a description](reading.md#diagnostics-point-at-the-problem)
-- **DMA** — [definition](glossary.md), [The supported profile](profile.md)
+- **DMA** — [definition](glossary.md), [The supported profile](profile.md), [Refinement](refinement.md)
 - **DSP** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 
 ## E
@@ -100,10 +100,11 @@ a change that leaves it stale, so it is never edited by hand.
 - **eADL** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The boundary: functionality versus implementation](boundary.md), [The use cases](usecases.md),
   [Reading a description](reading.md), [Kinds and schemas](kinds.md), [Quantities and units](quantities.md), [Modules
-  and composition](modules.md), [Describing a workload](workload.md), [What a report may claim](evidence.md), [Where the
-  engine's knowledge comes from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [The S0
-  early generation path](s0.md), [Where generated systems run](targets.md), [Verifying the toolchain](verification.md),
-  [What this project relies on from outside](ledger.md), [What is versioned, and what changing it costs](versions.md)
+  and composition](modules.md), [Refinement](refinement.md), [Describing a workload](workload.md), [What a report may
+  claim](evidence.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [The runtime: decisions, not
+  actions](runtime.md), [The S0 early generation path](s0.md), [Where generated systems run](targets.md), [Verifying the
+  toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
+  changing it costs](versions.md)
 - **EBNF** — [definition](glossary.md), [Verifying the toolchain](verification.md)
 - **EIP** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - Elaboration produces instances, not modules — [Modules and
@@ -162,6 +163,7 @@ a change that leaves it stale, so it is never edited by hand.
 - How it works — [Quantities and units](quantities.md#how-it-works)
 - How it works — [Modules and composition](modules.md#how-it-works)
 - How it works — [Presence, absence, and relevance](presence.md#how-it-works)
+- How it works — [Refinement](refinement.md#how-it-works)
 - How it works — [Describing a workload](workload.md#how-it-works)
 - How it works — [Checking a description](checking.md#how-it-works)
 - How it works — [What a report may claim](evidence.md#how-it-works)
@@ -275,9 +277,9 @@ a change that leaves it stale, so it is never edited by hand.
 - pgen — [What this project relies on from outside](ledger.md#pgen)
 - **PLIC** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **port** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
-  board](tour.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [The runtime: decisions, not
-  actions](runtime.md), [Where generated systems run](targets.md), [What this project relies on from
-  outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
+  board](tour.md), [Refinement](refinement.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [The
+  runtime: decisions, not actions](runtime.md), [Where generated systems run](targets.md), [What this project relies on
+  from outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
 - **POSIX** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [The supported
   profile](profile.md)
 - Precise composition errors — [Modules and composition](modules.md#precise-composition-errors)
@@ -400,6 +402,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The idea, in plain words — [Quantities and units](quantities.md#the-idea-in-plain-words)
 - The idea, in plain words — [Modules and composition](modules.md#the-idea-in-plain-words)
 - The idea, in plain words — [Presence, absence, and relevance](presence.md#the-idea-in-plain-words)
+- The idea, in plain words — [Refinement](refinement.md#the-idea-in-plain-words)
 - The idea, in plain words — [Describing a workload](workload.md#the-idea-in-plain-words)
 - The idea, in plain words — [Checking a description](checking.md#the-idea-in-plain-words)
 - The idea, in plain words — [What a report may claim](evidence.md#the-idea-in-plain-words)
@@ -426,6 +429,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The precise rules — [Quantities and units](quantities.md#the-precise-rules)
 - The precise rules — [Modules and composition](modules.md#the-precise-rules)
 - The precise rules — [Presence, absence, and relevance](presence.md#the-precise-rules)
+- The precise rules — [Refinement](refinement.md#the-precise-rules)
 - The precise rules — [Describing a workload](workload.md#the-precise-rules)
 - The precise rules — [Checking a description](checking.md#the-precise-rules)
 - The precise rules — [What a report may claim](evidence.md#the-precise-rules)
