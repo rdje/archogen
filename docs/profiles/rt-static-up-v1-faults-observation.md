@@ -35,7 +35,7 @@ record is `M4.9`'s, and the replay manifest's ordering rules (`M4.7`) name it.
 | --- | --- | --- |
 | `release` | the release's observation (rule 1): where its service judges it — at once where no masked region is open, at its delivery otherwise — which can follow its arrival by its latency (rule 6) | the task, by its stable logical ID; for a timer-released task, the release's nominal instant |
 | `complete` | the job's completion — its last instruction before its completion path's first (Terms) — recorded before a release at the same instant (§13.4) | the task |
-| `start`, `resume` | the incoming context's first instruction: `start` a job's first, `resume` a preempted job's later one. A transition preempted before it — by a trap taken inside the transition after it unmasks (rule 2) — stamps neither, and nor does a completion path's context, whose task owes no job (Terms) | the task |
+| `start`, `resume` | the incoming context's first instruction: `start` a job's first, `resume` a preempted job's later one. A transition preempted before it — by a trap taken inside the transition after it unmasks (rule 2) — stamps neither, and nor does a completion path's context, whose task owes no job (Terms), nor the context in which the runtime completes a primitive on an abandoned job's behalf (rule 5) | the task |
 | `preempt` | the outgoing job's last instruction before another context's first; an abandoned job, a context never entered, a completion path's context and a job whose trap ends in a halt stamp none | the task |
 | idle entry | idle's first instruction after a transition into it; a trap that returns to idle stamps none | — |
 | `fault` | for an overrun, the release that observes it (rule 1); for a fatal fault, its raising (rule 7) | its §3.1 kind; for an overrun, the task, the policy's outcome, `skip-late-job` or `fault` (rule 5), and under `skip-late-job` for a timer-released task the triggering release's nominal instant; for a fatal fault, the fields fixed at its raising — the kept record's (rule 7) where its mark is complete |
@@ -62,11 +62,12 @@ stamps, not by when a model reports them.
 
 A **hosted** trace is a hosted model's, `rt-core`'s among them; a **target** trace is the port's image's, on the
 emulator or a board. A comparison gives the hosted run the target's release observations — each release where the
-target judged it, a delivery's together after its region closes and before the hosted model decides — and the fatal
-faults raised from outside the runtime's logic, a stack guard or an unexpected trap among them, where the target raised
-them; how it drives the hosted run, and where the hosted model decides, are `M4.9`'s, taking the port's catalog facts
-(`decision-placement`, `one-claim-per-trap`, `services-preempt-completion-interval`, §14.4 of the catalog record) as
-its parameters. For that, the target's trace shows where each masked region opens and closes and where each trap
+target judged it, a delivery's together after its region closes and before the hosted model decides — each job's
+completion where its `complete` is stamped, before a release at the same instant (§2), and every fatal fault the
+target raised, the runtime's own assertion failures among them, where the target raised it; how it drives the hosted
+run, and where the hosted model decides, are `M4.9`'s, taking the port's catalog facts — among them
+`decision-placement` and `services-preempt-completion-interval` (the catalog record's §14.4) and `one-claim-per-trap`
+(its §12) — as its parameters. For that, the target's trace shows where each masked region opens and closes and where each trap
 begins and ends, which `M4.3`'s event set holds. The two traces then agree on the fault paths when each of these
 holds:
 
@@ -80,19 +81,19 @@ holds:
    `start`, never a `resume` of the abandoned job; after one with outcome `fault`, the task is never entered again —
    save in the Terms' window.
 4. **The target's releases against the plan,** not against the hosted trace, which the target drove: until the task is
-   faulted or the runtime halts, and save in the Terms' window, a timer-released task observes one release per
-   nominal release due, each a `release` or an overrun `fault`, in nominal order; a task of an external source whose
-   catalog record states that it counts arrivals, one per recorded arrival, in arrival order; one of a source that
-   does not, at most one per recorded arrival — whether one was lost only where rule 1 lets it be is the port's
-   fixtures' (`M4.6`). None is observed while a masked region is open, or before its nominal instant or recorded
-   arrival; and, where the task's release latency (the composition's `J_i^release`) is declared and the run's timing
-   claims hold (rule 5), none later than that latency after it, or, where it arrived inside a masked region, than
-   that region's delivery — within `M4.9`'s tolerances.
-5. **A fatal fault** is compared by its kind, its §8.1 class, whose guard was hit and its escalation mark. Its
-   attributed task, raising context and interrupted task are not compared: they follow from how the port takes its
-   traps (rule 2), and during a delivery from where a model delivers (rule 4), so the two records differ by
-   construction where both are right. The port's fixtures judge the target's against the contract (`M4.6`), and
-   `rt-core`'s tests the hosted model's.
+   faulted or the runtime halts, and save in the Terms' window, a timer-released task observes its nominal releases
+   in nominal order, none twice and none skipped, each a `release` or an overrun `fault` — under `Fault` up to the one
+   that faults it, the later ones discarded; a task of an external source whose catalog record states that it counts
+   arrivals, its recorded arrivals likewise, in arrival order; one of a source that does not, at most one per recorded
+   arrival — whether one was lost only where rule 1 lets it be is the port's fixtures' (`M4.6`). None is observed
+   while a masked region is open, or before its nominal instant or recorded arrival. How late one may be observed is
+   the timing analysis's to bound and `M4.9`'s to check: the composition's `J_i^release` bounds when the service that
+   releases the task starts, not when it judges the release.
+5. **A fatal fault** is given to the hosted run where the target raised it, so the comparison does not judge it: its
+   kind, class, guard and attribution — which follows from how the port takes its traps, and during a delivery from
+   where a model delivers, so differs by construction between a hosted model and a port (rules 2, 4) — are the port's
+   fixtures' to judge against the contract (`M4.6`), and `rt-core`'s tests the hosted model's own. After it, neither
+   trace shows a `release`, `start`, `resume` or `complete` (rule 7).
 6. **A task's fatal fault.** Where either trace's fatal fault is attributed to a task, every event from that task's
    job's `start` to the fault, save item 4's checks, is not compared: a check's or a panic's window (Terms) may have
    opened anywhere in that stretch, a release observed in it can leave the job running on where the hosted model
@@ -101,7 +102,7 @@ holds:
    the hosted run, are not compared with it: the hosted model takes no trap. Tasks are compared by stable logical ID,
    a hosted model that holds indices having the plan supply them (§7.5); instants are not compared between the two
    traces, since the hosted run takes the target's, and item 4 checks the target's against the plan. Which context
-   runs next outside items 2 and 3 is `M4.9`'s comparison, not a fault path's.
+   runs next outside items 2, 3 and 5 is `M4.9`'s comparison, not a fault path's.
 
 ## 5. `rt-core`'s transitions, mapped
 
@@ -109,28 +110,28 @@ holds:
 | --- | --- |
 | `Transition::Released { task }` | `release` |
 | `Transition::Latched`, `Transition::OverrunLatched` | none: an arrival inside a region is observed at its delivery |
-| `Transition::Completed { task }` | `complete`; the delivered list `complete` returns with it is the delivery of §3 |
+| `Transition::Completed { task }` | `complete`; the delivered list `complete` returns with it is the delivery of §3, empty where a delivery's releases are given after its region closes (§4) |
 | `Transition::JobSkipped { task }` | `fault`: overrun, the task, `skip-late-job` |
 | `Transition::Faulted { task, fault }`, the task's first | `fault`: overrun, the task, `fault` |
 | `Transition::Faulted { .. }` of a task already faulted | none: a discarded release |
-| the halt's first report — `Err(Refused::Halted)` from a `mask` or `unmask` of a runtime not yet halted, `Decision::Halt` from the `decide` that raised it, or `Transition::Halted { fatal }` | `fault`, with the fields `rt-core` holds: the kind (`InvariantViolated` is the contract's assertion failure), whose guard — a task's or the interrupt stack's, another guarded stack's (`guarded-stacks`) taken from the target's record — the escalation mark, and the attribution, which §4 does not compare; the §8.1 class follows from the kind, the plan supplies the tasks' IDs, and `rt-core` keeps no raising context |
+| the halt's first report — `Err(Refused::Halted)` from a `mask` or `unmask` of a runtime not yet halted, `Decision::Halt` from the `decide` that raised it, or `Transition::Halted { fatal }` | `fault`, with the fields `rt-core` holds: the kind (`InvariantViolated` is the contract's assertion failure), whose guard — a task's or the interrupt stack's, another guarded stack's (`guarded-stacks`) taken from the target's record — the escalation mark, and the attribution — §4 gives the fault rather than comparing it; the §8.1 class follows from the kind, the plan supplies the tasks' IDs, and `rt-core` keeps no raising context |
 | any report of the halt after the first | none |
-| a `mask` or `unmask` that returns `Ok` | none on the fault paths; an outermost `unmask`'s delivered list is a delivery of §3 |
+| a `mask` or `unmask` that returns `Ok` | none on the fault paths; an outermost `unmask`'s delivered list is a delivery of §3, empty where a delivery's releases are given after its region closes (§4) |
 | `Decision::{Dispatch, Switch, Continue, Idle}` | `start`, `resume`, `preempt` and idle entry, as `M4.3` stamps them for a hosted model; they name the incoming task, not whether it starts or resumes, which the harness knows from the task's `Released` and `JobSkipped` and the contexts its trace has shown entered |
 
 Given a delivery's releases after its region closes (§4), the hosted model judges each against the task's state then,
 so its latch holds none and its mark stands for no arrival. Given them inside the region, its latch keeps the most
 recent release and a mark that an earlier one came, and judges the held release before the arrivals its mark stands
 for, as one (rule 1, Terms): §4's first item assumes the former. A `complete` called with no job, or another task's,
-running panics; driven as `M4.9` drives it, that is a disagreement on what runs, `M4.9`'s to report.
+running, before a halt, panics; driven as `M4.9` drives it, that is a disagreement on what runs, `M4.9`'s to report.
 
 ## 6. What stays open
 
 - The event set outside the fault paths, its fields there, and the orderings it allows: `M4.3`.
 - The trace's format, the comparator, how it drives the hosted run and where the hosted model decides, and its
   instants' tolerances: `M4.9`; the events the trace holds besides these, regions and traps among them, and their
-  order: `M4.3`; the replay manifest's ordering rules and recorded external events: `M4.7`; the fixtures §4 and §5
-  leave to them: `M4.6`.
+  order: `M4.3`; the replay manifest's ordering rules and recorded external events: `M4.7`; the fixtures §4 leaves to
+  them: `M4.6`.
 - The catalog fact by which an external source's record states it counts arrivals (rule 1): the source's record,
   under `M2.7.4`; and a periodic task's first release instant, which §4's plan check needs: the timer-service record,
   under `M2.7.4`.
@@ -146,4 +147,4 @@ traces against a stated rule rather than one invented when the first mismatch ap
 
 - A change to a fault path's rule in the contract revisits this record's §3 and §4 in the same change.
 - `M4.3` takes §2's stamping rules and fields, and records regions and traps; `M4.9` applies §4; `M4.6`'s fixtures
-  judge what §4 and §5 leave to them.
+  judge what §4 leaves to them.

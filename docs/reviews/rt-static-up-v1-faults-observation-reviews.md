@@ -2,7 +2,7 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-02`
-- **Status:** `active` — rounds 1 to 3 answered; round 4 next; the review closes on the first round that finds no defect
+- **Status:** `active` — rounds 1 to 4 answered; round 5 next; the review closes on the first round that finds no defect
 - **Owner / source:** leaf `M2.15` (`docs/tasks/M2.md`). The design under review is
   [`rt-static-up-v1-faults-observation.md`](../profiles/rt-static-up-v1-faults-observation.md), part of the profile's
   fault contract, with the routing it makes in the contract's *Still open* and the pointers in `M4.3`, `M4.6`, `M4.7`
@@ -116,6 +116,28 @@ own and delegates the rest, naming what `M4.3` must record and what `M4.9` takes
 | 17 | drafting | "a fatal fault stamped at a driven call" | withdrawn: faults raised from outside the runtime's logic are given; the rest are the hosted model's |
 | 18 | drafting | "each trap's exit" for a runtime-API trap or several interrupts in one trap | withdrawn with the decision points |
 | 19 | nit | "§4" where §5 too leaves to the fixtures | "§4 and §5" |
+
+## Round 4
+
+`2026-10-03`, of commit `a594223`, by a new context asked to judge round 3's scope decision as well as its text, with
+probes P1–P9. It found the decision mostly sound — the driving and the decision points depend on the port's catalog
+facts, and a missed preemption after an ordinary delivery is no fault path — but cut too deep in three places that
+depend on no port fact: completions, the hosted model's own assertion failures, and what follows a fatal fault. 11
+findings: 1 defect, 4 gaps, 3 drafting points, 3 nits. Defects per round: 9, 6, 8, 1.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 1 | defect | item 4's upper bound used `J_i^release`, which bounds when the releasing service starts, against a stamp where it judges | the upper bound withdrawn: how late a release may be observed is the timing analysis's to bound and `M4.9`'s to check |
+| 2 | gap, round 2's answer 1 partly dropped | nothing said where the hosted run gets each completion, which item 1's judgments depend on | each job's completion given where its `complete` is stamped, before a release at the same instant |
+| 3 | gap | the runtime's own assertion failures at calls that open or close no region were neither given nor recorded | every fatal fault the target raised is given to the hosted run; the comparison does not judge fatal faults, the fixtures do (item 5) |
+| 4 | gap | nothing checked that nothing runs after a fatal fault | item 5: after it, neither trace shows a `release`, `start`, `resume` or `complete` |
+| 5 | gap | the context that completes a primitive for an abandoned job could stamp `resume` | §2: it stamps neither |
+| 6 | drafting | "one release per nominal release due" against `Fault`'s discards and a halt | "in nominal order, none twice and none skipped … under `Fault` up to the one that faults it" |
+| 7 | drafting | "the run's timing claims hold" undecidable from the trace | withdrawn with the upper bound |
+| 8 | drafting, round 2's answer 12 dropped | the delivered lists are empty where the delivery is given after the region closes | restored in both §5 rows |
+| 9 | nit | after a halt `complete` returns `Halted` | "before a halt" |
+| 10 | nit | `M4.6`'s pointer still named the non-job completion, now `M4.9`'s | dropped; the pointer names every fatal fault |
+| 11 | nit | the facts' parenthesis read as exhaustive, and `one-claim-per-trap` is §12's | "among them … (§14.4) and `one-claim-per-trap` (its §12)" |
 
 ## Why
 
