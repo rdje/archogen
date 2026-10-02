@@ -3,7 +3,7 @@
 ## Metadata
 
 - Tree ID: `API`
-- Status: `active`
+- Status: `done` — `2026-10-02`, with `API.7`
 - Roadmap lane: `ROADMAP.md` §10.4 (added by director ruling `2026-09-28`); §4.4 trust; §5.5 verdicts;
   §7.1 report completeness; §14.3 compile targets; §15 versioning
 - Created: `2026-09-28`
@@ -52,7 +52,8 @@ agent can drive. The server is a capability of the built binary, spawned per ins
 ## Task Tree
 
 - ID: `API`
-  Status: `active`
+  Status: `done` — `2026-10-02`; every child done. Findings §9, how "every programmatic response carries §5.5's
+  verdict" is read, stays with the director: a stricter ruling would open a leaf
   Goal: the programmatic interface — one engine API, two bindings
   Children: `API.1` … `API.7`
 
@@ -946,7 +947,7 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   Commit: `ARCHOGEN-API-0338 (leaf API.6.6)`
 
 - ID: `API.7`
-  Status: `pending`
+  Status: `done` — `2026-10-02`
   Goal: the book chapter for the programmatic interface.
   Acceptance: a chapter states what an agent and a browser can do, what they cannot, and which verdicts
   they receive; it cites the API, the bindings and the decision record; `BOOK-ANCHORS` and
@@ -954,14 +955,25 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   crate this tree adds, so the tree does not create the drift it was filed to end.
   Priority: **medium, and not optional** — the director reads the book and not the code. Filed as its own
   leaf rather than folded into `API.6` so it cannot be quietly skipped when the server lands.
-  Verification: `pending`
-  Commit: `pending`
+  **Done.** `docs/book/src/engine-api.md` gains *What each consumer can do, and what it receives*: the director's
+  ruling cited (`decision_programmatic-interface.md`), and a table of the four doors — the command line, the library,
+  the wasm binding and the MCP server — with what each can do and what it receives, each citing its crate and
+  record; every one receives §5.5's verdict when judged, none can generate or verify, and only the person's tool
+  reads files. And *Today and ahead*: `check` today through all four, held by the parity legs, the `wasm-binding`
+  step and the stdio test; the offered commands joining with their leaves (`M3.4`, `M2.6`, `M4.7`); `verify` awaiting
+  `PROGRAM.3`'s ruling, `build` outside by §10.4; findings §9 open. A paragraph that sat inside a list moved after it.
+  `PROGRAM.24`'s question for this tree's crates: `archogen-api` and `archogen-wasm` are each named in the chapter
+  beside a path into them, which `book-coverage` checks for every workspace member.
+  Verification: `cargo test -q -p eadl-front --test reference` → `55 passed` (legs 8 and 9 over every chapter);
+  `cargo test -q -p archogen-cli --test mcp_stdio` → `3 passed`, the chapter's transcript replayed; `bash
+  scripts/check_doctrines.sh` → `=== all doctrines green ===`, `book-anchors` and `book-coverage` among them
+  Commit: `ARCHOGEN-API-0353 (leaf API.7)`
 
 ## Current Frontier
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6`, which closed `2026-10-02` with the MCP server, `archogen mcp`, built, reviewed and documented |
+| — | none | `done` | the tree is closed: `API.1`–`API.7` done `2026-10-02`; findings §9 stays with the director |
 
 ⛔ **This tree does not displace the project's main line.** The director's ruling sequenced `API.3`–`API.7`
 behind `M1.13`, the language freeze, which closed on `2026-09-29`; `API.3` and `API.4` followed it. The main
@@ -1033,6 +1045,7 @@ this tree is taken when it does not delay that.
 | `2026-09-30` | `API.5.5` | the director ran the book's "Opening the page" in a browser and reported the answer after Check | the book's transcript, line for line; the load answer and the browser's name and version not yet reported |
 | `2026-09-30` | `API.5.5` | the director's second report: the page's answer on load, and the browser | `invalid-description (exit 10)` as the book says; Chrome `154.0.8037.58` (arm64); the leaf and `API.5` closed |
 | `2026-10-02` | `API.6` | each acceptance clause against its test or record; `make integration` | every clause evidenced; 11 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined; `API.6` closed |
+| `2026-10-02` | `API.7` | the reference legs 8 and 9; the transcript replay; the doctrines | 55 passed; 3 passed; all green; `API.7` and the tree closed |
 
 ## Commit Log
 
@@ -1060,6 +1073,7 @@ this tree is taken when it does not delay that.
 | `API.6.5` | `ARCHOGEN-API-0335 (leaf API.6.5)` | **the book documents the MCP server**: *The server an agent spawns*, its transcript a real run the stdio test replays |
 | `API.6.5` | `ARCHOGEN-API-0337 (leaf API.6.5)` | **the MCP server's review answered**: the duplicate check linear, the line bound six times the budget, no `null` ids, integral ids, argument errors as tool errors; D3 filed as `API.6.6` |
 | `API.6.6` | `ARCHOGEN-API-0338 (leaf API.6.6)` | **an answer as bounded as its request**: a diagnostic quotes a 160-character window of a long line; 1.5 GB to 0.57 MB for the reviewer's 1 MB line |
+| `API.7` | `ARCHOGEN-API-0353 (leaf API.7)` | **the programmatic interface's chapter**: what each consumer can do and receives, today and ahead; the tree closed |
 | `API.6` | `ARCHOGEN-API-0341 (leaf API.6)` | **the MCP server closed**: every acceptance clause evidenced, the integration tier 11 of 11; `API.7` next |
 
 ## Changelog

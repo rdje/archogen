@@ -230,6 +230,24 @@ nested too deep, or naming one field twice, is refused before anything is judged
 file. Its verdicts are the command line's: a test speaks to the built binary in both eras and checks every
 single-file case of the conformance suite both ways.
 
+### What each consumer can do, and what it receives
+
+The interface exists by the director's ruling of `2026-09-28` (`docs/decisions/decision_programmatic-interface.md`):
+one declared API, of which a browser build and an MCP server are two bindings, and both builds outside it. Four
+consumers reach the engine today, and all four reach the same operation:
+
+| Consumer | Its door | What it can do | What it receives |
+| --- | --- | --- | --- |
+| a person | `archogen check` (`crates/archogen-cli`) | check a description, its imports read from a directory | the status as the exit code, and the diagnostics rendered as text |
+| a Rust program | `archogen_api::check` (`crates/archogen-api`) | check text it holds, its imports from memory or none | a `Response`: the status, the diagnostics and their sources, and, when judged, the verdict and what was read |
+| a web page | the wasm binding (`crates/archogen-wasm`, `docs/decisions/decision_wasm-binding.md`) | check text, its imports framed into the request | the same response, encoded as JSON |
+| an agent | `archogen mcp` (`crates/archogen-cli/src/mcp.rs`, `docs/decisions/decision_mcp-server.md`) | call the `check` tool, and discover the others with their maturity and the leaf that owns each | the binding's JSON as the tool's structured result, marked an error unless the description was accepted |
+
+Every one of them receives §5.5's verdict whenever the description was judged, and a status that says why when it
+was not; none receives `ok` for a description nobody judged. None of them can generate a system or run the
+verification tiers, and only the person's own tool reads files: a program, a page and an agent hand over every
+module themselves.
+
 ### What is outside it
 
 - **`archogen build`.** Generation writes a crate tree. §10.4 keeps it a human or CI action, since a
@@ -240,11 +258,22 @@ single-file case of the conformance suite both ways.
 - **The commands not built yet.** They are no operation. The command table
   (`crates/archogen-cli/src/spec.rs`) names the leaf that owns each one, and the MCP server reports that
   leaf rather than failing.
+- **Wall-clock time.** The budget bounds the work, and the work is linear in it. A host that needs a
+  deadline as well enforces it around the instance. The API reads no clock, and on `wasm32-unknown-unknown`
+  the standard library has none to read.
 
 The table also says, for each command, whether a programmatic consumer is offered it: `check`,
 `resolve`, `analyze`, `explain` and `replay` are; `build` and `verify` are excluded, each citing
 §10.4, and a test reads the exclusion from the table (leaf `API.6.2`). The table excludes `mcp`, the server itself,
 as well.
-- **Wall-clock time.** The budget bounds the work, and the work is linear in it. A host that needs a
-  deadline as well enforces it around the instance. The API reads no clock, and on `wasm32-unknown-unknown`
-  the standard library has none to read.
+
+## Today and ahead
+
+- **Today:** one operation, `check`, through four doors — the command line, the library, the page and the MCP
+  server — each held to the same answers by tests: the command line's parity legs, the integration tier's
+  `wasm-binding` step, and the MCP server's stdio test over the conformance cases in both protocol eras.
+- **Ahead:** each command the table lists as offered joins the API when its own leaf builds it: `resolve` and
+  `explain` (`M3.4`), `analyze` (`M2.6`), `replay` (`M4.7`). The MCP server lists them already, each naming that
+  leaf. `verify` waits for a ruling of its own (`PROGRAM.3`), and `build` stays outside, by §10.4.
+- ⚠️ **Open for the director:** whether every response carries a §5.5 verdict, as the ruling says, or only a
+  response that reports one, as §10.4 says. This chapter follows §10.4 (One outcome vocabulary).

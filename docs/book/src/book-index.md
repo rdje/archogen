@@ -432,6 +432,8 @@ a change that leaves it stale, so it is never edited by hand.
 - What CI does with an incomplete tier — [Verifying the toolchain](verification.md#what-ci-does-with-an-incomplete-tier)
 - What comes from outside is written down — [Annex B: The checks that keep the repository
   honest](annex-repository.md#what-comes-from-outside-is-written-down)
+- What each consumer can do, and what it receives — [The engine
+  API](engine-api.md#what-each-consumer-can-do-and-what-it-receives)
 - What is being built first — [Introduction](introduction.md#what-is-being-built-first)
 - What is deliberately absent — [The runtime: decisions, not actions](runtime.md#what-is-deliberately-absent)
 - What is frozen, and what a digest can prove — [Verifying the

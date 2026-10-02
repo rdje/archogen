@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the programmatic interface is complete
+
+`ARCHOGEN-API-0353` (leaf `API.7`).
+
+- The book's chapter on the programmatic interface now says, in one table, what each way in can do and what it gets
+  back: the command line, the Rust library, the web page and the AI-agent server. All four check descriptions and
+  always return the verdict a person would see; none can generate a system. With it, the programmatic-interface
+  work is closed. One question remains with the director: whether a request archogen did not judge must still carry
+  a formal verdict.
+
 ## archogen — a design for holding processor-specific code in the catalog
 
 `ARCHOGEN-M2-0352` (leaf `M2.12.2`, step 1).
