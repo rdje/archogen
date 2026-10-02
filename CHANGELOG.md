@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the assembly design's first review: names that become links
+
+`ARCHOGEN-M2-0354` (leaf `M2.12.2`, step 2).
+
+- An independent reviewer compiled small experiments and showed that the draft let some instructions name things,
+  such as a processor register, that the toolchain quietly turns into links to whatever code carries that name — the
+  very kind of hidden link the design exists to rule out. The design now checks every operand by its position in its
+  instruction, keeps a short list of instructions the port actually needs, and requires hand-written functions to
+  end cleanly. A second review is next.
+
 ## archogen — the programmatic interface is complete
 
 `ARCHOGEN-API-0353` (leaf `API.7`).
