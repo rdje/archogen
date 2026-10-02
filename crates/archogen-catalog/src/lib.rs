@@ -19,9 +19,12 @@
 //! [`invalidation`], which judges a claim's recorded closure and reads against the catalog now (`M2.7.3.4.3`); and
 //! [`selection`], §12's lookups, conflicts and groups (`M2.7.3.5.2`); [`production`], §6's namespace rules
 //! (`M2.7.3.5.3`); [`load`] and [`claim`], every check composed, and §7's claims, premise 3 among them (`M2.7.3.6`); and [`package`],
-//! §3's package rules and token scan (`M2.7.3.7`).
+//! §3's package rules and token scan (`M2.7.3.7`). §14.2 amends the record's form (`M2.12.4.1`): a code fact's
+//! several `code` locators, the [`record::Assembly`] declaration and its [`dialect`], and the rules over declared
+//! assembly that [`hash::Catalog::hashes`] checks once every set is known.
 
 pub mod claim;
+pub mod dialect;
 pub mod grammar;
 pub mod hash;
 pub mod history;

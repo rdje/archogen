@@ -13,14 +13,16 @@ use std::collections::{BTreeMap, BTreeSet};
 use archogen_evidence::sha256::Digest;
 use eadl_front::Form;
 
+use crate::dialect;
 use crate::grammar;
 use crate::manifest::{self, Value};
 use crate::package;
 use crate::record::{
     classify, read_record, CatalogPath, Content, Cost, FacetKind, Fact, FactValue, Locator, Record,
-    Review, Targets,
+    Review, Targets, PORT_FACTS,
 };
 use crate::refusal::{Code, Refusal};
+use crate::status::env_value;
 use crate::tree::{self, Tree};
 
 /// The identifier of this grammar and of the rules (§3, §5). Every hash begins with it.
@@ -288,7 +290,8 @@ impl Catalog {
     /// # Errors
     ///
     /// The first refusal met: an unresolved or unmatched reference or a cycle (`catalog-dependency`), a source set
-    /// or package rule (`catalog-source`), a target or locator outside §2 (`catalog-field`, `catalog-locator`).
+    /// or package rule (`catalog-source`), a target or locator outside §2 (`catalog-field`, `catalog-locator`), and
+    /// then §14.2's rules over declared assembly (`catalog-field`).
     pub fn hashes(&self) -> Result<Hashes, Refusal> {
         let targets = self.named_targets()?;
         let mut computer = Computer {
@@ -324,8 +327,136 @@ impl Catalog {
                 .records
                 .insert(record.id.clone(), hash_lines(&lines));
         }
+        self.assembly_rules(&computer.hashes)?;
         Ok(computer.hashes)
     }
+
+    /// The packages every `assembly` declaration names (§14.2), each as its package's directory, with its
+    /// architecture and the declaring record, in id order.
+    fn declared(&self) -> Vec<(String, String, String)> {
+        let mut out = Vec::new();
+        for (id, record) in &self.records {
+            if let Content::Present(p) = &record.implementation.content {
+                if let Some(assembly) = &p.assembly {
+                    for entry in &assembly.packages {
+                        if let Some(package) = package_of(&self.tree, entry) {
+                            out.push((package, assembly.architecture.clone(), id.clone()));
+                        }
+                    }
+                }
+            }
+        }
+        out
+    }
+
+    /// §14.2's rules over the whole catalog, once every set is known: every record whose own or reached set, in
+    /// any facet, holds a declared package names its targets, each with its `RUST_TARGET` among the dialect's
+    /// triples; and a known value of one of the twelve port facts has a locator `(code <id> "<path>")` into a
+    /// package record `<id>` declares, its record naming its targets on that declaration's triples. Each refusal is
+    /// `catalog-field`: the locators are well formed either way.
+    fn assembly_rules(&self, hashes: &Hashes) -> Result<(), Refusal> {
+        let declared = self.declared();
+        for (id, record) in &self.records {
+            for facet in FacetKind::ALL {
+                let Some(h) = hashes.facet(id, facet) else {
+                    continue;
+                };
+                for (package, architecture, _) in &declared {
+                    let manifest = tree::join(package, "Cargo.toml");
+                    if h.own_set.contains(&manifest) || h.reached.contains(&manifest) {
+                        self.on_triples(
+                            record,
+                            architecture,
+                            &format!(
+                                "its {} reaches `{package}`, which holds assembly",
+                                facet.as_str()
+                            ),
+                        )?;
+                    }
+                }
+            }
+            for (facet, fact) in port_facts(record) {
+                let FactValue::Known { locators, .. } = &fact.value else {
+                    continue;
+                };
+                let architecture = locators.iter().find_map(|locator| match locator {
+                    Locator::Code { id: at, path } => declared
+                        .iter()
+                        .find(|(package, _, by)| {
+                            by == at && path.starts_with(&format!("{package}/"))
+                        })
+                        .map(|(_, architecture, _)| architecture),
+                    _ => None,
+                });
+                let Some(architecture) = architecture else {
+                    return Err(Refusal::new(
+                        Code::Field,
+                        &record.path,
+                        &format!("{} fact[{}]", facet.as_str(), fact.name),
+                        None,
+                        format!(
+                            "a known value of `{}`, a fact about the port's code, needs a locator into a package its record declares as assembly (§14.2)",
+                            fact.name
+                        ),
+                    ));
+                };
+                self.on_triples(
+                    record,
+                    architecture,
+                    &format!("it states a known value of `{}`", fact.name),
+                )?;
+            }
+        }
+        Ok(())
+    }
+
+    /// `record` names its targets, `any` refused, and each has its `RUST_TARGET` among `architecture`'s triples
+    /// (§14.2); `why` says what binds it.
+    fn on_triples(&self, record: &Record, architecture: &str, why: &str) -> Result<(), Refusal> {
+        let refuse =
+            |message: String| Refusal::new(Code::Field, &record.path, "targets", None, message);
+        let Targets::Named(named) = &record.contract.targets else {
+            return Err(refuse(format!(
+                "{why}, so it names its targets, and `any` is refused (§14.2)"
+            )));
+        };
+        let triples = dialect::triples(architecture).unwrap_or_default();
+        for target in named {
+            let rust = env_value(&self.tree, target, "RUST_TARGET");
+            if !rust.is_some_and(|r| triples.contains(&r.as_str())) {
+                return Err(refuse(format!(
+                    "{why}, so each target's `RUST_TARGET` is among `{architecture}`'s triples, and `{target}`'s is not (§14.3)"
+                )));
+            }
+        }
+        Ok(())
+    }
+}
+
+/// The package an implementation's entry names: its directory's, or the nearest enclosing package's (§3).
+fn package_of(tree: &Tree, entry: &str) -> Option<String> {
+    let start = if tree.is_file(entry) {
+        tree::parent(entry)
+    } else {
+        entry
+    };
+    tree::ancestors(start)
+        .into_iter()
+        .find(|dir| is_package(tree, dir).unwrap_or(false))
+        .map(str::to_owned)
+}
+
+/// The facts of the twelve about the port's code a record states, each with its facet.
+fn port_facts(record: &Record) -> Vec<(FacetKind, &Fact)> {
+    let mut out = Vec::new();
+    if let Content::Present(m) = &record.behavior_model.content {
+        out.extend(m.facts.iter().map(|f| (FacetKind::BehaviorModel, f)));
+    }
+    if let Content::Present(m) = &record.timing_model.content {
+        out.extend(m.facts.iter().map(|f| (FacetKind::TimingModel, f)));
+    }
+    out.retain(|(_, f)| PORT_FACTS.contains(&f.name.as_str()));
+    out
 }
 
 struct Computer<'a> {
@@ -340,7 +471,7 @@ fn parts(record: &Record, facet: FacetKind) -> (Vec<String>, Vec<&Fact>, Vec<&Co
     match facet {
         FacetKind::Contract => (Vec::new(), Vec::new(), Vec::new()),
         FacetKind::Implementation => match &record.implementation.content {
-            Content::Present(p) => (p.0.clone(), Vec::new(), Vec::new()),
+            Content::Present(p) => (p.sources.clone(), Vec::new(), Vec::new()),
             Content::None(_) => (Vec::new(), Vec::new(), Vec::new()),
         },
         FacetKind::BehaviorModel => match &record.behavior_model.content {
@@ -361,8 +492,10 @@ fn parts(record: &Record, facet: FacetKind) -> (Vec<String>, Vec<&Fact>, Vec<&Co
 fn locators<'r>(facts: &[&'r Fact], costs: &[&'r Cost]) -> Vec<(&'r Locator, String)> {
     let mut out = Vec::new();
     for fact in facts {
-        if let FactValue::Known { locator, .. } = &fact.value {
-            out.push((locator, format!("fact[{}]", fact.name)));
+        if let FactValue::Known { locators, .. } = &fact.value {
+            for locator in locators {
+                out.push((locator, format!("fact[{}]", fact.name)));
+            }
         }
     }
     for cost in costs {

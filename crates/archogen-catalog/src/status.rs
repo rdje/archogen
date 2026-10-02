@@ -91,7 +91,7 @@ pub(crate) struct Production {
 }
 
 /// A value of `targets/<target>.env`, read leniently: §3's grammar is the hashes' to enforce.
-fn env_value(tree: &Tree, target: &str, key: &str) -> Option<String> {
+pub(crate) fn env_value(tree: &Tree, target: &str, key: &str) -> Option<String> {
     let text = core::str::from_utf8(tree.get(&format!("targets/{target}.env"))?).ok()?;
     text.split('\n')
         .find_map(|l| l.strip_prefix(key)?.strip_prefix('='))
@@ -140,7 +140,10 @@ pub(crate) fn items(
             );
         }
         FacetKind::Implementation => {
-            if let Content::Present(Packages(entries)) = &record.implementation.content {
+            if let Content::Present(Packages {
+                sources: entries, ..
+            }) = &record.implementation.content
+            {
                 sources(&mut out, entries);
             }
         }

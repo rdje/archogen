@@ -1,4 +1,5 @@
-//! The rules of §12 and §13 that one record's text shows (`M2.7.3.5.1`).
+//! The rules of §12 that one record's text shows (`M2.7.3.5.1`); §14.2's port-fact rule, which needs the catalog
+//! whole, is `tests/assembly.rs`'s.
 //!
 //! The facts table is typed here from `docs/specs/catalog/decision_catalog-records-variant-inputs.md` §12, not
 //! taken from the crate, so a name the crate drops is caught.
@@ -43,7 +44,7 @@ const TABLE: [(&str, bool, bool); 31] = [
     ("eager-switching", false, true),
 ];
 
-/// §13's facts about the port's code.
+/// §14.2's twelve facts about the port's code.
 const PORT: [&str; 12] = [
     "eager-switching",
     "interrupts-do-not-nest",
@@ -113,9 +114,6 @@ fn every_tabled_fact_is_read_in_its_own_facet_and_refused_in_the_other() {
 #[test]
 fn a_known_code_fact_takes_a_code_locator() {
     for (name, behavior, code) in TABLE {
-        if PORT.contains(&name) {
-            continue;
-        }
         let place = |fact: String| {
             if behavior {
                 in_behavior(&fact)
@@ -136,7 +134,9 @@ fn a_known_code_fact_takes_a_code_locator() {
 }
 
 #[test]
-fn a_fact_about_the_ports_code_is_unknown_in_slash_1() {
+fn a_fact_about_the_ports_code_reads_known_or_unknown() {
+    // §13 refused a known value by name; §14.2 restates the rule by what a locator reaches, which the catalog
+    // judges whole, so the record alone reads either way.
     for name in PORT {
         let behavior = name != "eager-switching";
         let place = |fact: String| {
@@ -149,15 +149,9 @@ fn a_fact_about_the_ports_code_is_unknown_in_slash_1() {
         read(&place(unknown(name))).unwrap_or_else(|e| panic!("`{name}` unknown: {e}"));
         for value in ["yes", "no"] {
             let fact = format!("(fact {name} {value} (locator {CODE}) (basis \"see it\"))");
-            let r = read(&place(fact)).unwrap_err();
-            assert_eq!(r.code, Code::Field, "`{name}` {value}: {r}");
-            assert!(r.message.contains("port's code"), "`{name}`: {r}");
+            read(&place(fact)).unwrap_or_else(|e| panic!("`{name}` {value}: {e}"));
         }
     }
-    // It points at the fact.
-    let r = read(&in_behavior(&known("interrupts-do-not-nest", CODE))).unwrap_err();
-    assert_eq!(r.field, "behavior-model fact[interrupts-do-not-nest]");
-    assert_eq!(r.at.map(|a| a.line), Some(14), "{r}");
 }
 
 #[test]

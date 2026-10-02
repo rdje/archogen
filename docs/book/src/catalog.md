@@ -53,7 +53,11 @@ unknown, or a dependency outside production stops the catalog loading; it is nev
 reads the catalog only through lookups, so its citations are what it read and its closure is every facet those rest
 on; a production claim is refused with every reason that applies, among them that the main line is not yet
 protected. Code a record points at is held to §3's package rules: its manifests by their meaning, and its Rust
-source token by token. Premise 3 is judged at claim time too, so the crate is complete. The gate, the check that
+source token by token. Premise 3 is judged at claim time too, so the crate is complete. It has begun reading the
+port's records as §14 amends them (`M2.12.4.1`): a fact about code may point at several places in it, an
+implementation may declare which of its packages hold assembly, and a known fact about the port's code is admitted
+only when it points into declared assembly and its record runs on the dialect's targets. The assembly itself is still
+refused until the token scan reads it (`M2.12.4.2`). The gate, the check that
 protects it and the first records are the next leaves (`M2.7.4` to `M2.7.6`). Until they land, nothing loads a catalog, and `catalog/` is empty.
 
 ### The records that hold it

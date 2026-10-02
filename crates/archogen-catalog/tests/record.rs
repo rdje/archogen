@@ -106,9 +106,9 @@ fn the_valid_record_reads_with_every_field() {
         &model.facts[0].value,
         FactValue::Known {
             holds: true,
-            locator: Locator::Code { .. },
+            locators,
             ..
-        }
+        } if matches!(locators.as_slice(), [Locator::Code { .. }])
     ));
     assert!(matches!(&model.facts[1].value, FactValue::Unknown(_)));
     let Content::Present(timing) = &r.timing_model.content else {

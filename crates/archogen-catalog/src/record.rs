@@ -9,7 +9,9 @@
 use archogen_evidence::bound::{Bound, BoundOrigin, SafetyFactor};
 use eadl_front::{Form, SourceId, SourceMap, Span};
 
+use crate::dialect;
 use crate::grammar::{self, Requirement, Version};
+use crate::hash::encode;
 use crate::refusal::{At, Code, Refusal};
 
 /// Which namespace a record lives in (§6).
@@ -174,8 +176,8 @@ pub enum FactValue {
     Known {
         /// `yes`.
         holds: bool,
-        /// Where it comes from.
-        locator: Locator,
+        /// Where it comes from: one locator, or for a code fact one or more `code` locators (§2, §14.2).
+        locators: Vec<Locator>,
         /// Why.
         basis: String,
     },
@@ -275,9 +277,24 @@ pub enum Content<T> {
     None(String),
 }
 
-/// An implementation's content: its packages.
+/// An implementation's content: its packages, and those of them that hold assembly.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Packages(pub Vec<String>);
+pub struct Packages {
+    /// Its `sources`, each a package (§3).
+    pub sources: Vec<String>,
+    /// Its `assembly` declaration, when it ends with one (§14.2).
+    pub assembly: Option<Assembly>,
+}
+
+/// An `(assembly <architecture> "<package>" …)` declaration (§14.2): which of the facet's packages hold assembly,
+/// and in which dialect.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Assembly {
+    /// The dialect's architecture, one §14.3 lists.
+    pub architecture: String,
+    /// The packages, each byte for byte an entry of the facet's `sources`.
+    pub packages: Vec<String>,
+}
 
 /// A behavioral model's content.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -690,8 +707,9 @@ const TABLED: [(&str, FacetKind, bool); 25] = [
     ("eager-switching", FacetKind::TimingModel, true),
 ];
 
-/// The facts about the port's code, `unknown` in `/1` since no record can hold that code (§13).
-const PORT_FACTS: [&str; 12] = [
+/// The twelve facts about the port's code (§14.2): a known value of one needs a locator into assembly a record
+/// declares, which the catalog checks whole ([`crate::hash::Catalog::hashes`]).
+pub const PORT_FACTS: [&str; 12] = [
     "eager-switching",
     "interrupts-do-not-nest",
     "services-preempt-every-task",
@@ -705,6 +723,12 @@ const PORT_FACTS: [&str; 12] = [
     "releases-never-latched",
     "primitives-out-of-line",
 ];
+
+/// Whether `name` is a code fact (§2): one §12 lists as about code.
+#[must_use]
+pub fn is_code_fact(name: &str) -> bool {
+    tabled(name).is_some_and(|(_, code)| code)
+}
 
 /// The facet §12's facts table gives fact `name`, and whether it is about code; `None` for a fact it does not name.
 #[must_use]
@@ -1170,22 +1194,86 @@ impl Ctx<'_> {
         let spec = [
             ("version", Occurs::One),
             ("sources", Occurs::Optional),
+            ("assembly", Occurs::Optional),
             ("none", Occurs::Optional),
         ];
         let slots = self.slots("implementation", &form.items()[1..], &spec)?;
         let version = self.version("implementation version", slots[0][0])?;
-        let content = match self.none_of("implementation", &slots, 2)? {
+        let content = match self.none_of("implementation", &slots, 3)? {
             Some(why) => Content::None(why),
             None => {
                 self.present("implementation", &slots, &["sources"])?;
-                Content::Present(Packages(self.paths(
-                    "implementation sources",
-                    slots[1][0],
-                    true,
-                )?))
+                let sources = self.paths("implementation sources", slots[1][0], true)?;
+                let assembly = match slots[2].first() {
+                    Some(declaration) => Some(self.assembly(declaration, &sources)?),
+                    None => None,
+                };
+                Content::Present(Packages { sources, assembly })
             }
         };
         Ok(Facet { version, content })
+    }
+
+    /// `(assembly <architecture> "<package>" …)` (§14.2), its refusals in §14.2's order: its shape, then its
+    /// packages against the facet's `sources` (`catalog-source`), then its architecture (`catalog-field`).
+    fn assembly(&self, form: &Form, sources: &[String]) -> Result<Assembly, Refusal> {
+        let field = "implementation assembly";
+        let items = form.items();
+        let architecture = match items.get(1) {
+            Some(Form::Symbol { name, .. }) => name.clone(),
+            _ => {
+                return Err(self.refuse(
+                    Code::Shape,
+                    field,
+                    Some(form),
+                    "an `assembly` declaration is `(assembly <architecture> \"<package>\" …)`",
+                ))
+            }
+        };
+        if items.len() < 3 {
+            return Err(self.refuse(
+                Code::Shape,
+                field,
+                Some(form),
+                "an `assembly` declaration names at least one package",
+            ));
+        }
+        for item in &items[2..] {
+            self.string(field, item)?;
+        }
+        let mut packages: Vec<String> = Vec::new();
+        for item in &items[2..] {
+            let package = self.string(field, item)?;
+            if packages.iter().any(|p| p == package) {
+                return Err(self.refuse(
+                    Code::Source,
+                    field,
+                    Some(item),
+                    format!("`{package}` appears twice in the declaration"),
+                ));
+            }
+            if !sources.iter().any(|s| s == package) {
+                return Err(self.refuse(
+                    Code::Source,
+                    field,
+                    Some(item),
+                    format!("`{package}` is not an entry of the facet's `sources`"),
+                ));
+            }
+            packages.push(package.to_owned());
+        }
+        if dialect::triples(&architecture).is_none() {
+            return Err(self.refuse(
+                Code::Field,
+                field,
+                items.get(1),
+                format!("`{architecture}` is not an architecture §14.3 lists"),
+            ));
+        }
+        Ok(Assembly {
+            architecture,
+            packages,
+        })
     }
 
     fn behavior_model(&self, form: &Form) -> Result<Facet<BehaviorModel>, Refusal> {
@@ -1294,16 +1382,20 @@ impl Ctx<'_> {
                 let slots = self.slots(
                     &field,
                     &items[3..],
-                    &[("locator", Occurs::One), ("basis", Occurs::One)],
+                    &[("locator", Occurs::Many), ("basis", Occurs::One)],
                 )?;
-                let locator = self.locator(&field, slots[0][0])?;
+                self.several(&field, &name, form, &slots[0])?;
+                let locators = slots[0]
+                    .iter()
+                    .map(|l| self.locator(&field, l))
+                    .collect::<Result<_, _>>()?;
                 let basis =
                     self.text(&format!("{field} basis"), self.only("basis", slots[1][0])?)?;
                 Ok(Fact {
                     name,
                     value: FactValue::Known {
                         holds: word == "yes",
-                        locator,
+                        locators,
                         basis,
                     },
                 })
@@ -1317,6 +1409,42 @@ impl Ctx<'_> {
             }
             _ => Err(malformed("it is `yes`, `no`, or `(unknown \"why\")`")),
         }
+    }
+
+    /// A known fact's locators, as structure (§1, §14.2): at least one; several only on a code fact; no two the
+    /// same. Their order among the fact's subforms is [`Ctx::slots`]'s.
+    fn several(
+        &self,
+        field: &str,
+        name: &str,
+        form: &Form,
+        locators: &[&Form],
+    ) -> Result<(), Refusal> {
+        let Some(first) = locators.first() else {
+            return Err(self.refuse(Code::Shape, field, Some(form), "`locator` is missing"));
+        };
+        if locators.len() > 1 && !is_code_fact(name) {
+            return Err(self.refuse(
+                Code::Shape,
+                field,
+                Some(locators[1]),
+                format!("several locators on `{name}`, which is not a code fact"),
+            ));
+        }
+        let mut seen = vec![encode(first)];
+        for locator in &locators[1..] {
+            let this = encode(locator);
+            if seen.contains(&this) {
+                return Err(self.refuse(
+                    Code::Shape,
+                    field,
+                    Some(locator),
+                    "two identical locators of one fact",
+                ));
+            }
+            seen.push(this);
+        }
+        Ok(())
     }
 
     /// `(locator (file "…"))`, `(locator (code <id> "…"))` or `(locator (ledger <anchor> "…"))` (§2).
@@ -1615,9 +1743,8 @@ impl Ctx<'_> {
         }
     }
 
-    /// The rules of §12 and §13 a record's own text shows (`M2.7.3.5.1`): a fact the facts table names, in a facet
-    /// the table does not give it; a code fact whose locator is not `code`; in `/1`, a known value of a fact about
-    /// the port's code; a `runtime-discipline.<id>` statement named with another record's id; a cost named
+    /// The rules of §12 a record's own text shows (`M2.7.3.5.1`): a fact the facts table names, in a facet the
+    /// table does not give it; a code fact with a locator that is not `code`; a `runtime-discipline.<id>` statement named with another record's id; a cost named
     /// `api.completion`, which would make `masked.completion` ambiguous.
     fn section_12(
         &self,
@@ -1658,28 +1785,17 @@ impl Ctx<'_> {
                             ),
                         ));
                     }
-                    if let FactValue::Known { locator, .. } = &fact.value {
-                        if code && !matches!(locator, Locator::Code { .. }) {
+                    if let FactValue::Known { locators, .. } = &fact.value {
+                        if code && locators.iter().any(|l| !matches!(l, Locator::Code { .. })) {
                             return Err(refuse(
                                 Code::Locator,
                                 format!(
-                                    "`{}` is a fact about code, which takes a `code` locator",
+                                    "`{}` is a fact about code, which takes `code` locators and no other",
                                     fact.name
                                 ),
                             ));
                         }
                     }
-                }
-                if PORT_FACTS.contains(&fact.name.as_str())
-                    && matches!(fact.value, FactValue::Known { .. })
-                {
-                    return Err(refuse(
-                        Code::Field,
-                        format!(
-                            "in `/1`, `{}` is about the port's code, which no record can hold, so it is `unknown` (§13)",
-                            fact.name
-                        ),
-                    ));
                 }
                 if let Some(named) = fact.name.strip_prefix("runtime-discipline.") {
                     if named != id {
