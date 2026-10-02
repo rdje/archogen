@@ -2,7 +2,7 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-02`
-- **Status:** `active` — round 1 answered; round 2 next; the review closes on the first round that finds no defect
+- **Status:** `active` — rounds 1 and 2 answered; round 3 next; the review closes on the first round that finds no defect
 - **External sources:** [the Rust Reference](../book/src/ledger.md#rust-reference) shipped with the pinned toolchain,
   and [the RISC-V privileged specification](../book/src/ledger.md#riscv-privileged) — versions, hashes and limits in
   the ledger
@@ -70,6 +70,55 @@ inverted. 30 findings: 9 defects, 13 gaps, 6 drafting points, 2 nits.
 | 28 | drafting | "or after it in the window" ambiguous | "or after its check, in the window before its failure is raised" |
 | 29 | nit | a tautology; "the handler's symbol" LTO-dependent | reworded; "ends in the handler" |
 | 30 | nit | absent and `unknown`; no `ecall`, `ebreak` or `unimp` in the dialect | both undeclared, said; no record's code can trap deliberately or enter the API by a trap on `riscv64` today, said |
+
+**Round 2**, `2026-10-02`, of commits `d13c870` and `b551072`, by a new context that went through the contract
+itself, with compile-only probes on the pin. It found the convention record through `depends` mechanical and sound
+in its core, and the contract's amendments sound in substance, but 6 defects: §14.4's facts placed in the `switch`
+group made §13's port-fact rule read two ways; §14.4 stated falsely that no `riscv64` code can trap deliberately (a
+load from an address nothing answers is one, in the dialect and in Rust); a read condition let F26 owe a fixture that
+cannot arise; a basis clause the contract requires had been dropped; a fact the contract requires was not obligatory;
+and the inventory above claimed 15 ambiguities while listing 13. 30 findings: 6 defects, 11 gaps, 10 drafting points,
+3 nits. Defects per round: 9, 6.
+
+The inventory's two missing ambiguities, recovered from its report: whether "each such check" and "each guard check"
+agree — they do, the contexts stated being guard checks', since a check finding an unexpected trap has its raiser
+fixed by the Terms; and the port-dependent points the contract relies on but *Still open* omits — another stack the
+port guards, where the port places the decision, and a further timer interrupt found by its pending bit — answered by
+`guarded-stacks`, `decision-placement` and `one-claim-per-trap`'s basis. The inventory's quotations were not kept in
+the repository: its entries are recorded above by name, the contract they quote is the source.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 1 | defect | §14.4's facts in the `switch` group made §13's and §12's "every `switch`-group fact … known only as §14.2 states" bind them, against §14.2's twelve | §13 and §12 narrowed to "each of the twelve facts §14.2 names"; §14.4 says its facts need no locator into declared assembly |
+| 2 | defect | "no record's code can … make a deliberate trap" false: `ld t0, 8(zero)`, `jr zero`, `read_volatile(0x8)` | the conclusion deleted; `checks-trap` added, scoping the trapping cases |
+| 3 | defect | `window-primitive-consistent` readable where no release can be observed inside a primitive, owing an impossible fixture | read only when `window-release-abandons` and `window-trap-preempts-inside` are both `yes` |
+| 4 | defect | the basis clause "a call through its own runtime-API trap included" dropped from `detects-non-job-calls` | restored |
+| 5 | defect | `generated-guard-check-contexts` not obligatory, though the contract requires it | obligatory, `unknown` admitted until `M4` |
+| 6 | defect | the inventory claimed 15 ambiguities, listing 13; "each quoted" untrue of the record | the two recovered and answered above; the quotations' loss said |
+| 7 | gap | obligatory facts and the costs could be absent, and absence is not refused | the port record supplies each obligatory fact and both costs, or the catalog is refused at load |
+| 8 | gap | the convention record's form unstated against §6, §7 and §12 | catalog `interfaces`, implementation `none` enforced, profiles and targets admitting its dependers', a self-named `convention-stated.<id>` fact |
+| 9 | gap | which review judges conformance; "stale" cited to §10 | the behavioral model's review; §3 and §5 cited, the contract, behavioral and timing reviews named |
+| 10 | gap | §14.4's names' kind and facet fixed nowhere the loader checks | rows in §12's table: behavior-model code facts, `panic-strategy-abort` with a `file` locator, `fatal-path.*` timing costs |
+| 11 | gap | nothing obligatory carried the window whole | `fault-window`, obligatory, its basis the whole window |
+| 12 | gap | other records had no form for their guard-check contexts | `guard-check-contexts.<id>`, self-named, outside every group |
+| 13 | gap | the compiler-prologue case, the window's contexts and the trapping cases unscoped | each scoped: entries named as compiled functions, the window facts' contexts, `checks-trap` |
+| 14 | gap | one undeclared fact disqualified every fixture, and one stays `unknown` until `M4` | each case read by its own fact; production waits for `M4`'s generated checks, said |
+| 15 | gap | §14.4's measured premises neither reproducible nor carried forward | each probe re-run here, its source hashed and recorded; How to apply and `M2.12.4`'s acceptance carry them |
+| 16 | gap | an image under a selection with no `switch` escaped the check; the entry's name only in prose | `M4.10`: images only where a record supplies `switch`; the entry's path exposed by a field of `M4`'s design |
+| 17 | gap | combinations that cannot be stated or are not tied together | the bases state them and the review judges them, said |
+| 18 | drafting | what the check refuses and what it names | the catalog refused at load, naming the port's `depends` or the depending record's |
+| 19 | drafting | "that record's §3", "that record's §14.4" in the contract | "the catalog record's" |
+| 20 | drafting | three `M2.12.3` edits unmarked | marked |
+| 21 | drafting | the director note's "narrows no claim further" | the two small consequences stated: the raising later by the handler's call, the window holding generated code |
+| 22 | drafting | the depth rule's exception for `mask` can never apply: a `mask` past `M` holds a region, and rule 5 abandons no job holding one | reverted to `unmask` alone, with the window's case |
+| 23 | drafting | F26's polarity and keying ambiguous | each F26 phrase mapped to its fact; "not where it states the opposite" |
+| 24 | drafting | "the contract requires each" wrong for `vector-direct` and `panic-strategy-abort`; the strategy's locator | both said to be §14.4's narrowings; `abort` the target's default; a `file` locator |
+| 25 | drafting | "a trap may preempt" read as including exceptions | "an interrupt may preempt" |
+| 26 | drafting | "necessary, not sufficient" named one case | both named: no convention, or the right one with nonconforming code |
+| 27 | drafting | the versioning claim unmatched in §3 or §5 | narrowed to the names, which §3's bullet now carries |
+| 28 | nit | positional references | named |
+| 29 | nit | "in the primitive or in its trap" dropped | restored |
+| 30 | nit | `one-claim-per-trap`'s basis duty recorded once | in the composition record's row and §12's table too |
 
 ## Why
 

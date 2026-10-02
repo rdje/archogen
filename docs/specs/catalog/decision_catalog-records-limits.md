@@ -56,10 +56,11 @@
   ledger is where a reviewer of related content looks, and nothing forces the look.
 - **The port's facts are known only with a locator into declared assembly.** Until `M2.12` they were `unknown`
   by name, since §3 refused assembly. §14.2 admits the port's assembly in a package an `assembly` declaration names,
-  and restates the rule by what a locator reaches: a fact about the port's code — the `switch` group's, and the
-  port's half of `preemptive-everywhere` (the trap exit that performs a decided switch),
+  and restates the rule by what a locator reaches: each of the twelve facts §14.2 names — the `switch` group's eight
+  of §12, and the port's half of `preemptive-everywhere` (the trap exit that performs a decided switch),
   `sections-mask-every-interrupt`, `releases-never-latched` and `primitives-out-of-line` — is known only as §14.2
-  states, and refused known otherwise (`catalog-field`). A fact whose basis rests on the port's code too, as
+  states, and refused known otherwise (`catalog-field`); §14.4's port statement, also in the `switch` group, is not
+  held to it. A fact whose basis rests on the port's code too, as
   `acknowledge-at-entry.<source>`, `one-request-per-arrival.<source>` and `raised-only-when-due`'s may, should name
   the port's record in `describes` and carry a locator into it; the loader checks nothing more there, and that its
   locators reach all the code its basis rests on is the review's. Until a record with such a declaration exists, every analysis of the runtime variant over the

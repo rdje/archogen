@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — what the port must declare: the second review
+
+`ARCHOGEN-M2-0366` (leaf `M2.12.3`, step 3).
+
+- The second review found the cross-record check sound, and six defects in the surrounding text, the sharpest a claim
+  that processor code here cannot trap on purpose, which a single load from an empty address disproves. The claim is
+  gone, a statement for such traps is added, and the rules on what the port must state are tightened. Every compiler
+  fact the design relies on is now re-measured from recorded sources. A third review is next.
+
 ## archogen — what the port must declare: the first review
 
 `ARCHOGEN-M2-0364` (leaf `M2.12.3`, step 2).

@@ -367,8 +367,11 @@ pinned compiler `abort`, the only one that builds a `no_std` binary. What change
 catalog's own rules (§3) refuse `#[panic_handler]` in any record's code, since it is a global hook another package
 could supply in its place. So the image generates the handler, holding nothing but a call of the entry the port's
 record names, and the fault contract's Terms and rule 7 now raise a panic at that entry's first act rather than the
-handler's. This narrows no claim further, so it is not a new narrowing under the rule above; it is shown to you
-because it rewords an approved item. **If you want it treated as one**, say so and it waits for your approval.
+handler's. Two small consequences: the raising comes later by the handler's own call, so rule 7's "from the raising,
+no pending interrupt is taken" starts that much later; and the window before the raising now holds that generated
+code, which the port states whole without holding it. It narrows no approved claim, so it is not a new narrowing under
+the rule above; it is shown to you because it rewords an approved item. **If you want it treated as one**, say so and
+it waits for your approval.
 
 ## A note on what "done" means so far
 
