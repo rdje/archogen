@@ -16,7 +16,8 @@
 - **Active tree:** `M2` → frontier `M2.7.4`. `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API` is
   closed; `M1`'s only open leaf, `M1.29.4`, is blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M2.7.4`, the slice's first catalog records and the lock, both its waits met; then `M2.20`.
+- **Next action:** `M2.7.4.1`, the three toolchain claims measured and held, then `.2`–`.4`, the checker and the
+  gate; `M2.7.4.5`, the records and the lock, is blocked on the director (findings §11); then `M2.20`.
   `M2.15` closed `2026-10-03` (the fault paths' observation events, seven reviews); `M2.12` closed `2026-10-02`. This project uses no branches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4` and `M2.7.6.4` — findings §11, `main`'s protection and a reviewer;
