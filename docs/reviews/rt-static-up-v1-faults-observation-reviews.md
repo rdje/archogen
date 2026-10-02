@@ -2,7 +2,7 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-02`
-- **Status:** `active` — rounds 1 to 5 answered; round 6 next; the review closes on the first round that finds no defect
+- **Status:** `active` — rounds 1 to 6 answered; round 7 next; the review closes on the first round that finds no defect
 - **Owner / source:** leaf `M2.15` (`docs/tasks/M2.md`). The design under review is
   [`rt-static-up-v1-faults-observation.md`](../profiles/rt-static-up-v1-faults-observation.md), part of the profile's
   fault contract, with the routing it makes in the contract's *Still open* and the pointers in `M4.3`, `M4.6`, `M4.7`
@@ -154,6 +154,25 @@ Defects per round: 9, 6, 8, 1, 2.
 | 3 | gap | with the upper bound withdrawn, a lost timer release is undecidable where an outcome-`fault` overrun names no instant, and the lateness check was routed nowhere | every timer overrun `fault` carries its triggering release's nominal instant; §6 and `M4.9`'s pointer route the lateness check to `M4.9`, against a bound the timing analysis states |
 | 4 | drafting | item 5's field list read as exhaustive, leaving the interrupted task and the escalation mark unjudged | every field named, each compared or not, and why |
 | 5 | nit | `M4.9`'s pointer named only the releases given | releases, completions and the fatal faults it cannot raise |
+
+## Round 6
+
+`2026-10-03`, of commit `3d3eea5`, by a new context asked first for regressions, with probes P1–P8 — 20 000 random
+driven runs among them. Item 5's list matches exactly what `rt-core` raises. 10 findings: 1 defect, 3 gaps, 2 drafting
+points, 4 nits. Defects per round: 9, 6, 8, 1, 2, 1. The defect is round 3's finding 2's family again: driving the hosted
+model through a call whose job rule 5 abandons before it runs.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 1 | defect, from round 5's answer 1 | a `mask` or `unmask` whose job rule 5 abandons at its entry, or in the window, raises nothing on the target but halts or latches the driven hosted model | only a call that runs — changes the depth or raises — is recorded and driven; an abandoned one is given as the release that abandoned it, the fixtures judging where the port let it be abandoned |
+| 2 | gap | the kept record cannot tell the runtime's own assertion from a port's check, so a target-only runtime assertion was undecidable | the fatal `fault` event names, for an assertion failure, which of item 5's cases it is, or none; `rt-core`'s `invariant` names the hosted one's |
+| 3 | gap, latent | the depth bound compared assumes one `M` | "the hosted model's `M` being the target runtime's declared one" |
+| 4 | drafting | the list of faults given read as exhaustive | "among them", with a panic, a catalog record's check and a runtime check beyond item 5's |
+| 5 | drafting | "with no job running" read on the processor | "in the runtime's record (the Terms' case)", a call over a preempted job the port's check, given |
+| 6 | nit | "a refused one" is `rt-core`'s word | "that runs — changes the depth or raises an assertion failure" |
+| 7 | nit | `rt-core` also holds `invariant` and `cause` | named |
+| 8 | nit | `Continue` and `Idle` name no incoming task | "`Dispatch` and `Switch` name the incoming task" |
+| 9 | nit | the hosted model computes the escalation mark, not copies it | "the escalation mark is `no` in every trace (§3)" |
 
 ## Why
 

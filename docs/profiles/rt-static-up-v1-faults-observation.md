@@ -38,7 +38,7 @@ record is `M4.9`'s, and the replay manifest's ordering rules (`M4.7`) name it.
 | `start`, `resume` | the incoming context's first instruction: `start` a job's first, `resume` a preempted job's later one. A transition preempted before it — by a trap taken inside the transition after it unmasks (rule 2) — stamps neither, and nor does a completion path's context, whose task owes no job (Terms), nor the context in which the runtime completes a primitive on an abandoned job's behalf (rule 5) | the task |
 | `preempt` | the outgoing job's last instruction before another context's first; an abandoned job, a context never entered, a completion path's context and a job whose trap ends in a halt stamp none | the task |
 | idle entry | idle's first instruction after a transition into it; a trap that returns to idle stamps none | — |
-| `fault` | for an overrun, the release that observes it (rule 1); for a fatal fault, its raising (rule 7) | its §3.1 kind; for an overrun, the task, the policy's outcome, `skip-late-job` or `fault` (rule 5), and for a timer-released task the triggering release's nominal instant; for a fatal fault, the fields fixed at its raising — the kept record's (rule 7) where its mark is complete |
+| `fault` | for an overrun, the release that observes it (rule 1); for a fatal fault, its raising (rule 7) | its §3.1 kind; for an overrun, the task, the policy's outcome, `skip-late-job` or `fault` (rule 5), and for a timer-released task the triggering release's nominal instant; for a fatal fault, the fields fixed at its raising — the kept record's (rule 7) where its mark is complete — and, for an assertion failure, which of §4 item 5's cases it is, or none |
 
 Save in the Terms' window, where the port's catalog record states what a release observed there does, a release
 that finds its task owing a job produces one `fault` event, kind `overrun`, and no `release` event. Under
@@ -64,11 +64,15 @@ A **hosted** trace is a hosted model's, `rt-core`'s among them; a **target** tra
 emulator or a board. A comparison gives the hosted run the target's release observations — each release where the
 target judged it, a delivery's together after its region closes and before the hosted model decides — each job's
 completion where its `complete` is stamped, before a release at the same instant (§2), and each fatal fault the
-target raised that the hosted model cannot raise itself — a stack guard, an unexpected trap, a failed check of the
-port's or of generated code — where the target raised it; how it drives the hosted run, and where the hosted model decides, are `M4.9`'s, taking the port's catalog facts — among them
+target raised that the hosted model cannot raise itself — among them a stack guard, an unexpected trap, a panic, a
+failed check of the port's, of a catalog record's or of generated code, and a runtime check beyond item 5's — where
+the target raised it; how it drives the hosted run, and where the hosted model decides, are `M4.9`'s, taking the port's catalog facts — among them
 `decision-placement` and `services-preempt-completion-interval` (the catalog record's §14.4) and `one-claim-per-trap`
-(its §12) — as its parameters. For that, the target's trace shows each `mask` and `unmask` call, a refused one included — so where
-each masked region opens and closes — and where each trap begins and ends, which `M4.3`'s event set holds. The two traces then agree on the fault paths when each of these
+(its §12) — as its parameters. For that, the target's trace shows each `mask` and `unmask` that runs — that changes the depth or
+raises an assertion failure — and where each trap begins and ends, which `M4.3`'s event set holds. A call whose job
+rule 5 abandons first, at its entry or in the Terms' window, raises nothing (the contract's second smaller decision):
+it is not recorded and not driven, the release that abandoned the job being given instead, and whether the port let
+it be abandoned there is the fixtures' (`M4.6`). The two traces then agree on the fault paths when each of these
 holds:
 
 1. **Each judgment.** Every release the target observed is judged the same in both: a `release`, an overrun `fault`
@@ -89,14 +93,17 @@ holds:
    while a masked region is open, or before its nominal instant or recorded arrival. How late one may be observed is
    the timing analysis's to bound and `M4.9`'s to check: the composition's `J_i^release` bounds when the service that
    releases the task starts, not when it judges the release.
-5. **A fatal fault.** The runtime's own assertion failures — the depth bound, an `unmask` at depth zero, a `mask` or
-   `unmask` with no job running, a dispatch or resume with a region open — are the hosted model's to raise at the
-   calls and decisions `M4.9` drives it through, and one in one trace only is a disagreement; for one in both, its
+5. **A fatal fault.** The runtime's own assertion failures — the depth bound, the hosted model's `M` being the target
+   runtime's declared one; an `unmask` at depth zero; a `mask` or `unmask` with no job running in the runtime's record
+   (the Terms' case, a call from another context over a preempted job being the port's check, given); a dispatch or
+   resume with a region open — are the hosted model's to raise at the calls and decisions `M4.9` drives it through,
+   and one in one trace only is a disagreement, the target's naming its case (§2); for one in both, its
    kind and §8.1 class are compared. Every other fatal fault is given (above), and whether it was due in that run is
    not compared: a known limit, the fixtures judging each kind in its own scenarios (`M4.6`). A fatal fault's
    attributed task and interrupted task are not compared, since they follow from how the port takes its traps, and
    during a delivery from where a model delivers, so differ by construction between a hosted model and a port (rules
-   2, 4); nor are whose guard and the escalation mark of a given fault, which the hosted model copies. The fixtures
+   2, 4); nor whose guard of a given fault, which the hosted model copies; the escalation mark is `no` in every trace
+   (§3). The fixtures
    judge the target's record against the contract (`M4.6`), and `rt-core`'s tests the hosted model's. After a fatal
    fault, neither trace shows a `release`, `start`, `resume`, idle entry or `complete` (rule 7).
 6. **A task's fatal fault.** Where either trace's fatal fault is attributed to a task, every event from that task's
@@ -119,10 +126,10 @@ holds:
 | `Transition::JobSkipped { task }` | `fault`: overrun, the task, `skip-late-job` |
 | `Transition::Faulted { task, fault }`, the task's first | `fault`: overrun, the task, `fault` |
 | `Transition::Faulted { .. }` of a task already faulted | none: a discarded release |
-| the halt's first report — `Err(Refused::Halted)` from a `mask` or `unmask` of a runtime not yet halted, `Decision::Halt` from the `decide` that raised it, or `Transition::Halted { fatal }` | `fault`, with the fields `rt-core` holds: the kind (`InvariantViolated` is the contract's assertion failure), whose guard — a task's or the interrupt stack's, another guarded stack's (`guarded-stacks`) taken from the target's record — the escalation mark, and the attribution — §4 gives the fault rather than comparing it; the §8.1 class follows from the kind, the plan supplies the tasks' IDs, and `rt-core` keeps no raising context |
+| the halt's first report — `Err(Refused::Halted)` from a `mask` or `unmask` of a runtime not yet halted, `Decision::Halt` from the `decide` that raised it, or `Transition::Halted { fatal }` | `fault`, with the fields `rt-core` holds: the kind, with its `invariant` or `cause` (`InvariantViolated` is the contract's assertion failure, its `invariant` naming §4 item 5's case), whose guard — a task's or the interrupt stack's, another guarded stack's (`guarded-stacks`) taken from the target's record — the escalation mark, and the attribution — §4 gives the fault rather than comparing it; the §8.1 class follows from the kind, the plan supplies the tasks' IDs, and `rt-core` keeps no raising context |
 | any report of the halt after the first | none |
 | a `mask` or `unmask` that returns `Ok` | none on the fault paths; an outermost `unmask`'s delivered list is a delivery of §3, empty where a delivery's releases are given after its region closes (§4) |
-| `Decision::{Dispatch, Switch, Continue, Idle}` | `start`, `resume`, `preempt` and idle entry, as `M4.3` stamps them for a hosted model; they name the incoming task, not whether it starts or resumes, which the harness knows from the task's `Released` and `JobSkipped` and the contexts its trace has shown entered |
+| `Decision::{Dispatch, Switch, Continue, Idle}` | `start`, `resume`, `preempt` and idle entry, as `M4.3` stamps them for a hosted model; `Dispatch` and `Switch` name the incoming task, not whether it starts or resumes, which the harness knows from the task's `Released` and `JobSkipped` and the contexts its trace has shown entered |
 
 Given a delivery's releases after its region closes (§4), the hosted model judges each against the task's state then,
 so its latch holds none and its mark stands for no arrival. Given them inside the region, its latch keeps the most
@@ -135,7 +142,7 @@ running, before a halt, panics; driven as `M4.9` drives it, that is a disagreeme
 - The event set outside the fault paths, its fields there, and the orderings it allows: `M4.3`.
 - The trace's format, the comparator, how it drives the hosted run and where the hosted model decides, its instants'
   tolerances, and how late a release may be observed — observations matched to releases in order, against a bound
-  the timing analysis states: `M4.9`; the events the trace holds besides these, each `mask` and `unmask` call and each trap among them, and their
+  the timing analysis states: `M4.9`; the events the trace holds besides these, each `mask` and `unmask` that runs and each trap among them, and their
   order: `M4.3`; the replay manifest's ordering rules and recorded external events: `M4.7`; the fixtures §4 leaves to
   them: `M4.6`.
 - The catalog fact by which an external source's record states it counts arrivals (rule 1): the source's record,
@@ -152,5 +159,5 @@ traces against a stated rule rather than one invented when the first mismatch ap
 ## How to apply
 
 - A change to a fault path's rule in the contract revisits this record's §3 and §4 in the same change.
-- `M4.3` takes §2's stamping rules and fields, and records each `mask` and `unmask` call and each trap; `M4.9` applies §4; `M4.6`'s fixtures
+- `M4.3` takes §2's stamping rules and fields, and records each `mask` and `unmask` that runs and each trap; `M4.9` applies §4; `M4.6`'s fixtures
   judge what §4 leaves to them.
