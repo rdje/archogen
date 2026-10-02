@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the MCP server is done
+
+`ARCHOGEN-API-0341` (leaf `API.6`).
+
+- Any agent that speaks the Model Context Protocol can now start `archogen mcp` and ask it to check a description.
+  Every promise made for the server was checked against a test or a record, and the full pre-push test run passed
+  all eleven of its stages. What remains of the programmatic interface is its own book chapter (`API.7`).
+
 ## archogen — the fault contract is settled
 
 `ARCHOGEN-M2-0340` (leaf `M2.9`).

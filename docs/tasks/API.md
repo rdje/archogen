@@ -710,7 +710,7 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   Commit: `ARCHOGEN-API-0209` (the Check leg), `ARCHOGEN-API-0220` (the load leg and the browser; the leaf closed)
 
 - ID: `API.6`
-  Status: `active` — decomposed `2026-10-01`; `API.6.1` done
+  Status: `done` — `2026-10-02`; its six children done, and the integration tier passed
   Children: `API.6.1` … `API.6.6`
   Goal: the **MCP server** — any agent drives a running archogen instance through it.
   Acceptance: the tool list is derived from `crates/archogen-cli/src/spec.rs`, so a documented operation
@@ -726,8 +726,18 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   `initialize` handshake — every request carries its version and capabilities in `_meta`, and `server/discover` is
   mandatory — and a legacy client cannot reach a server that speaks only it. The design answers both eras
   ([`decision_mcp-server.md`](../decisions/decision_mcp-server.md)).
-  Verification: `pending` — closed by its children
-  Commit: `pending`
+  Verification: each clause of the acceptance, `2026-10-02`. **The tool list** is `spec::tools()`, the command table
+  less its exclusions (`the_tool_list_is_the_command_tables_less_its_exclusions`), and a tool not built answers with
+  the leaf that owns it (`a_tool_that_is_not_built_answers_with_the_leaf_that_owns_it`). **Maturity at discovery**:
+  each tool carries its maturity and owner in its `_meta`, which the same test reads. **The verdict**: `check` answers the wasm
+  binding's bytes, `status` and `exit` included, and the command line's verdict on every single-file conformance
+  case in both revisions (`every_verdict_is_the_command_lines_for_the_same_description`). **Neither build exposed**:
+  `neither_build_nor_verify_is_offered_programmatically` reads the table, and `a_call_that_is_no_call_is_a_protocol_error`
+  calls `build`, `verify` and `mcp` and is refused each time. **No external dependency**: the server is built from
+  this workspace's crates alone, its JSON reader its own (`API.6.3`), so no §4.4 trust category arises. **The book**:
+  *The server an agent spawns* in `engine-api.md`, its transcript a real run (`API.6.5`). **`make integration`**:
+  exit `0`, 11 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined.
+  Commit: `ARCHOGEN-API-0341 (leaf API.6)`
 
 - ID: `API.6.1`
   Status: `done` — `2026-10-01`
@@ -951,8 +961,7 @@ agent can drive. The server is a capability of the built binary, spawned per ins
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `API.6` | `active` | the MCP server — designed (`API.6.1`), its tools declared in the command table (`API.6.2`); its JSON reader (`API.6.3`), and the server, `archogen mcp` (`API.6.4`); the book and its review (`API.6.5`); an answer as bounded as its request (`API.6.6`); `API.6` closes with them |
-| 2 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6` |
+| 1 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6`, which closed `2026-10-02` with the MCP server, `archogen mcp`, built, reviewed and documented |
 
 ⛔ **This tree does not displace the project's main line.** The director's ruling sequenced `API.3`–`API.7`
 behind `M1.13`, the language freeze, which closed on `2026-09-29`; `API.3` and `API.4` followed it. The main
@@ -1023,6 +1032,7 @@ this tree is taken when it does not delay that.
 | `2026-09-30` | `API.5.4` | the book's page transcript through the page's own logic; five new RED arms and a real-tree RED; the page's wiring against a stand-in document; the book's serving command read with `curl`; the integration tier | reproduced; 11 of 11 arms, refused then green; both answers as expected; every file with its right content type; 11 of 11 — no browser run (`API.5.5`) |
 | `2026-09-30` | `API.5.5` | the director ran the book's "Opening the page" in a browser and reported the answer after Check | the book's transcript, line for line; the load answer and the browser's name and version not yet reported |
 | `2026-09-30` | `API.5.5` | the director's second report: the page's answer on load, and the browser | `invalid-description (exit 10)` as the book says; Chrome `154.0.8037.58` (arm64); the leaf and `API.5` closed |
+| `2026-10-02` | `API.6` | each acceptance clause against its test or record; `make integration` | every clause evidenced; 11 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined; `API.6` closed |
 
 ## Commit Log
 
@@ -1050,6 +1060,7 @@ this tree is taken when it does not delay that.
 | `API.6.5` | `ARCHOGEN-API-0335 (leaf API.6.5)` | **the book documents the MCP server**: *The server an agent spawns*, its transcript a real run the stdio test replays |
 | `API.6.5` | `ARCHOGEN-API-0337 (leaf API.6.5)` | **the MCP server's review answered**: the duplicate check linear, the line bound six times the budget, no `null` ids, integral ids, argument errors as tool errors; D3 filed as `API.6.6` |
 | `API.6.6` | `ARCHOGEN-API-0338 (leaf API.6.6)` | **an answer as bounded as its request**: a diagnostic quotes a 160-character window of a long line; 1.5 GB to 0.57 MB for the reviewer's 1 MB line |
+| `API.6` | `ARCHOGEN-API-0341 (leaf API.6)` | **the MCP server closed**: every acceptance clause evidenced, the integration tier 11 of 11; `API.7` next |
 
 ## Changelog
 
