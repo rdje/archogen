@@ -1,5 +1,22 @@
 # The `archogen` command line
 
+## The idea, in plain words
+
+`archogen` is a program you run from a terminal, and everything the toolchain does starts there: `archogen check`
+reads a description and says whether it is acceptable, `archogen build` generates a system from it. Each command
+says honestly how finished it is — the help text marks a command that works only in an early, narrow form as
+*experimental*, and one that does not exist yet as *unimplemented*, with the piece of work that will build it — so
+you never mistake a placeholder for a feature. And when something goes wrong, the program's exit code tells a
+script what kind of problem it was, using the same verdicts a person reads.
+
+> **In one minute, for engineers.** The command surface is `ROADMAP.md` §10.2's interface target, declared once in
+> `crates/archogen-cli/src/spec.rs`, from which the help text and the parser are derived, with a three-state
+> maturity per command (built, experimental, unimplemented with its owning leaf) and, for the programmatic surface,
+> whether it is offered as a tool. `check` is built; `build` is experimental over the S0 path; the rest name their
+> owners. Exit codes map totally from the verdicts; diagnostics carry spans and repairs.
+
+## How it works
+
 `archogen` is the single entry point to the toolchain. Its command surface is fixed by the
 interface target in `ROADMAP.md` §10.2 and is declared in one table
 (`crates/archogen-cli/src/spec.rs`), from which both the help text and the parser are derived —
@@ -23,7 +40,9 @@ COMMANDS:
     replay   replay a recorded failure manifest and check its identity   [unimplemented — tracked by leaf M4.7]
 ```
 
-## The commands
+## The precise rules
+
+### The commands
 
 | Command | Does | Built by |
 | --- | --- | --- |
@@ -77,7 +96,7 @@ The `[unimplemented]` marker comes from the same table the parser validates agai
 command becomes real and stops advertising itself as unbuilt in **one** change — a test asserts
 that `check` no longer carries the marker and `resolve` still does.
 
-## Exit codes
+### Exit codes
 
 Exit codes are a stable part of the contract — CI tiers and scripts branch on them. Two
 families share the space and are deliberately kept apart.
@@ -110,7 +129,7 @@ its code with nothing: a toolchain that failed has not produced a valid system, 
 never be readable as one. `unimplemented` is temporary — it disappears command by command as
 the owning leaves land.
 
-## Diagnostics
+### Diagnostics
 
 Every refusal states what happened and what to do about it, because §5.5 requires a concrete
 repair direction on every diagnostic:
@@ -128,7 +147,7 @@ archogen: usage: unknown option `--strict` for `archogen check`
 Asking a command what it needs never requires satisfying it first — `archogen resolve --help`
 and `archogen help resolve` both work with no other arguments.
 
-## What it is built from
+### What it is built from
 
 The CLI depends on the Rust standard library and nothing else. That is a deliberate,
 recorded decision (`docs/decisions/decision_zero-dependency-engine-core.md`): §4.4 makes
