@@ -32,8 +32,9 @@ the section early.
 ## Faults in detail
 
 **Whose guard.** A stack guard says separately whose guard was hit — a task's, or the interrupt stack's — because
-the stack and the culprit can differ. A guard is hit by reading or writing it; a jump into one is an unexpected trap
-instead, since a stack is never executed.
+the stack and the culprit can differ. A guard is hit by reading or writing it, found either because the access faults
+or by a check — the port's catalog record says which, for each stack; a jump into one whose access faults is an
+unexpected trap instead, since a stack is never executed.
 
 **Panics.** A panic in the runtime's, a port's, a catalog record's or generated code is an assertion failure —
 unless its check found a stack's guard reached or one of the unexpected traps the contract names, which it then is,

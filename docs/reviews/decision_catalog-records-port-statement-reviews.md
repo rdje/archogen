@@ -2,7 +2,7 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-02`
-- **Status:** `active` — rounds 1 to 5 answered; round 6 next; the review closes on the first round that finds no defect
+- **Status:** `active` — rounds 1 to 6 answered; round 7 next; the review closes on the first round that finds no defect
 - **External sources:** [the Rust Reference](../book/src/ledger.md#rust-reference) shipped with the pinned toolchain,
   and [the RISC-V privileged specification](../book/src/ledger.md#riscv-privileged) — versions, hashes and limits in
   the ledger
@@ -201,6 +201,25 @@ here: `RUSTC_BOOTSTRAP=1 cargo +1.95.0 build -Zbuild-std=core` over `bin_main.rs
 | 10 | nit | How to apply omitted round 4's `RUSTC_BOOTSTRAP` premise | added, with `-Zbuild-std`'s |
 | 11 | nit | "built `abort` or not at all" rests on the pin holding no `rust-src` | measured and stated |
 | 12 | nit | §2's "marks file-located", a term neither §12 nor §14.4 uses | "says has a `file` locator" |
+
+**Round 6**, `2026-10-02`, of commit `11be781`, by a new context asked first for regressions. It re-derived all five
+probe hashes, reproduced every toolchain answer, the new `-Zbuild-std` refusal included, and found every answer of
+rounds 1 to 5 in the text; but 1 defect, again of the previous round's answer: round 5 narrowed the undecidable case in
+the fixtures paragraph and `M4.6`, but not where the port's record paragraph states it a second time, so one input,
+a fact absent because its condition failed on a `no`, had two answers. 8 findings: 1 defect, 1 gap, 3 drafting
+points, 3 nits. Defects per round: 9, 6, 4, 3, 2, 1. Its rustup premise was not written: the answer scopes the claim
+to a toolchain installed from the file alone instead.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 1 | defect | the port's record paragraph kept "absent or `unknown` … leaves that case undecidable" | the same rule as the fixtures paragraph: `unknown`, or absent while its read condition is open, "can leave" it |
+| 2 | gap | §14.4's refusals tighten `/1`, yet no leaf names them and nothing orders them before the first lock | `M2.12.4`'s goal names them; the versioning paragraph says no lock is written before them; `M2.7.4` waits for it |
+| 3 | drafting | an `unknown` fact under a failed condition, and a case keyed on two facts one of which settles it, read as undecidable | a fact under a failed condition is refused whatever its value; a case is undecidable when its facts, combined as it says, do not settle it |
+| 4 | drafting | §3's scope named §14.4's names while its history named its refusals | §3 and the versioning paragraph both put §14.4's refusals in `/1`: a change after the first lock is a new rules version, as §5's "a rule tightened later" needs |
+| 5 | drafting | no presence rule for another record's `guard-check-contexts.<id>` | the loader passes a record stating none, and its behavioral review refuses it |
+| 6 | nit | the catch-all called a fetch from a guard a stack-guard case, inside nested dashes | "a case reached by an access (…, or a fetch, the last an unexpected trap)" |
+| 7 | nit | the `rust-src` premise holds of what is installed, not of the file | scoped to a toolchain installed from the file alone, as CI installs it |
+| 8 | nit | the book's guard sentence unconditional, though check-only guards are admitted | `annex-runtime.md`: found because the access faults or by a check, the record saying which |
 
 ## Why
 

@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — what the port must declare: the sixth review
+
+`ARCHOGEN-M2-0370` (leaf `M2.12.3`, step 7).
+
+- The sixth review found one defect: a rule the previous round corrected in one place was still stated the old way
+  in another. Both now say the same thing. The new checks the port's record must pass are now scheduled to be built
+  before the catalog's first lock is written, so no record admitted early is refused later. The runtime annex now
+  says a stack's guard may be noticed by a fault or by a check. A seventh review is next.
+
 ## archogen — what the port must declare: the fifth review
 
 `ARCHOGEN-M2-0369` (leaf `M2.12.3`, step 6).
