@@ -2,10 +2,11 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-02`
-- **Status:** `active` — round 1 answered; round 2 next; the review closes on the first round that finds no defect
+- **Status:** `active` — rounds 1 and 2 answered; round 3 next; the review closes on the first round that finds no defect
 - **Owner / source:** leaf `M2.15` (`docs/tasks/M2.md`). The design under review is
   [`rt-static-up-v1-faults-observation.md`](../profiles/rt-static-up-v1-faults-observation.md), part of the profile's
-  fault contract, with the routing it makes in the contract's *Still open* and the pointers in `M4.3` and `M4.9`.
+  fault contract, with the routing it makes in the contract's *Still open* and the pointers in `M4.3`, `M4.6`, `M4.7`
+  and `M4.9`.
 
 ## The draft
 
@@ -52,6 +53,35 @@ run fed by its own clock; the answer drives the hosted run by the target's obser
 | 21 | nit | §3.1 used bare | added to the header's list |
 | 22 | nit | the plan supplies other IDs too; `InvariantViolated` | "the tasks' IDs"; `InvariantViolated` is the assertion failure |
 | 23 | nit | the acceptance named a home the record does not use; the annex said "board" | the acceptance notes the record; the annex says "a target's" |
+
+## Round 2
+
+`2026-10-02`, of commit `5d3f45b`, by a new context asked first for regressions, with probes P1–P8. Round 1's driving
+held in principle, and most of its answers held; one regressed (20). 18 findings: 6 defects, 3 gaps, 5 drafting points,
+4 nits. The driving was incomplete: it named no source for the hosted model's `mask`, `unmask` and `complete`, so the
+hosted model could neither raise its own assertions nor see a release judged inside a region; and it decided only where
+the target transitioned, so a missed preemption was accepted. Defects per round: 9, 6.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 1 | defect | the driving named no source for `mask`, `unmask` and `complete`, and no event marked a region | `mask` and `unmask` are events (§2), each driven with `complete`; a fatal fault stamped at a driven call is the hosted model's to raise; a release given above depth zero is latched, so one judged inside a region disagrees |
+| 2 | defect, regression of answer 20 | "else `fault`" gave a faulted task's latched arrival a `fault` event | "`release` if it owes no job, `fault` if it owes one, and nothing if it is faulted" |
+| 3 | defect | deciding only where the target transitioned accepted a missed preemption | the hosted model decides at each trap's exit and after each `complete`; item 2 compares each decision with the next event naming the context the target ran, an interrupt entry naming the one it preempted |
+| 4 | defect | the plan check counted only, missing a late or out-of-order observation; instants equal by construction | in nominal or arrival order, observed within `J_i^release` or at its region's delivery; instants not compared between the traces |
+| 5 | defect | the plan check ignored a halt and a faulted external task | "until the task is faulted or the runtime halts, and save in the Terms' window" over every clause |
+| 6 | defect | item 6's stretch too short, and blind to other tasks' diverging decisions | every event from that task's job's `start` to the fault, item 4's checks kept |
+| 7 | gap | idle had no stamp | an idle-entry row; a trap returning to idle stamps none |
+| 8 | gap | a check-found guard cannot be told from a data-access guard | "where either trace's fatal fault is attributed to a task" |
+| 9 | gap | the plan check needs a periodic task's first release instant | routed to the timer-service record, `M2.7.4` (§6) |
+| 10 | drafting | neither `Dispatch` nor `Switch` tells start from resume; `Continue` unmapped | the harness says which from each task's history; `Continue` no event |
+| 11 | drafting | `rt-reference` decides inside its own calls | the sentence names `rt-core`'s |
+| 12 | drafting | driven, `complete`'s delivered list is empty | said |
+| 13 | drafting | the driving is for any comparison, not only the fault paths | §1 and `M4.9`'s pointer say so |
+| 14 | drafting | item 1's "the same fields" against item 5 | "save as item 5 says" |
+| 15 | nit | `Fatal` holds the attribution too | named, not compared |
+| 16 | nit | `complete` panics for another task's too | "with no job, or another task's, running" |
+| 17 | nit | the non-job completion is §5's | `M4.6`'s pointer says §4 and §5 |
+| 18 | nit | bare self-references; the review file's owner line | "§1 to §6 are this record's"; `M4.6` and `M4.7` named |
 
 ## Why
 
