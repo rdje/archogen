@@ -2,7 +2,7 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-02`
-- **Status:** `active` — rounds 1 to 3 answered; round 4 next; the review closes on the first round that finds no
+- **Status:** `active` — rounds 1 to 4 answered; round 5 next; the review closes on the first round that finds no
   defect
 - **External sources:** [the Rust Reference](../book/src/ledger.md#rust-reference) shipped with the pinned toolchain
   — version, hashes and limits in the ledger
@@ -105,6 +105,34 @@ Defects per round: 8, 2, 2.
 10 (integers decimal only; lowercase covers mnemonics and register names), 11 (`clobber_abi` and all options but
 `nostack` refused) and 16 (its reasoning restated by round 2's 9); round 2's 2 (labels bounded to four digits), 4
 (`noreturn` refused in `asm!`), 8 (the `cfg` condition) and 10 (the codes listed per case).
+
+**Round 4**, `2026-10-02`, of commit `1d35a45`, by a new context with the same probing licence. It confirmed every
+inline mnemonic with every operand kind free of undefined symbols and stray relocations, the integer edges, the label
+rule, the `cfg` rule over associated, default, nested and closure functions, and the version reasoning, and found 1
+defect: `lateout` and `inlateout` let the compiler give an output an input's register, so a block passing every rule
+installed an integer as the trap vector. 13 findings: 1 defect, 3 gaps, 4 drafting points, 5 nits. Defects per round:
+8, 2, 2, 1. Its `mhartid` finding was verified here against the privileged specification's CSR listing before
+answering.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 1 | defect | "a lateout may be allocated to the same register as an in": `li {o}, 2147483648` then `csrw mtvec, {h}` installed the integer | `lateout` and `inlateout` refused in `asm!`; `out` and `inout` never share an input's register; the Reference quoted and ledgered; the book's line moved |
+| 2 | gap | an input narrower than 64 bits leaves the register's upper bits undefined, which the gate cannot see | the gate's claim is about bindings, not values; the narrow input the review's, the Reference quoted |
+| 3 | gap | on a return by `mret` every register is live in the interrupted Rust, not only the callee-saved ones | on `mret`, every register is the review's, holding the interrupted context's value or the incoming one's |
+| 4 | gap | what a system-register write does to the code after it, and `mhartid` writes, which always trap | the effects the review's, and an `asm!` "falls through, or traps"; `mhartid` admitted only in `csrr`, read-only in the CSR listing, now ledgered |
+| 5 | drafting | §12's note and §13 still stated round 2's wording, missing round 3's 5 and 8 | both reduced to "known only as §14.2 states" |
+| 6 | drafting | the superseded list missed round 2's 3, 7 and 12 and round 1's 4 | named below |
+| 7 | drafting | §11 gave some cases two codes | §11's `catalog-field` bullet defers to §14.2's list; its shape row exempts a code fact's locators, which §14.2 files |
+| 8 | drafting | "it takes no label" read two ways | "every line of an `asm!` is an instruction whose mnemonic §14.3 marks inline" |
+| 9 | nit | the memory example's placeholder base occurs nowhere | memory occurs only in naked bodies, `8(sp)` its example |
+| 10 | nit | "that declaration's triples"; `any` on a record stating a port fact | "the triples §14.3 lists for that declaration's architecture"; `any` refused for such a record too |
+| 11 | nit | `const` values wrap as literals do | said so: wider than 64 bits fails to assemble, the rest modulo `2^64` |
+| 12 | nit | trailing commas unsaid | admitted, as the compiler admits them |
+| 13 | nit | `jr zero` and `zero` written to `mtvec` or `mepc` reach address 0 | named among the computed addresses the review checks |
+
+**Superseded, found by this round:** round 1's answer 4 ("and no label line follows it", deleted by round 3's 14, the
+property kept); round 2's 3 (§4's per-fact locator list, removed by round 3's 7), 7 (restated by this round's 5) and 12
+(`0x`, removed by round 3's 15); round 3's 1 (its inline directions, narrowed by this round's 1).
 
 ## Why
 

@@ -58,8 +58,8 @@
   by name, since §3 refused assembly. §14.2 admits the port's assembly in a package an `assembly` declaration names,
   and restates the rule by what a locator reaches: a fact about the port's code — the `switch` group's, and the
   port's half of `preemptive-everywhere` (the trap exit that performs a decided switch),
-  `sections-mask-every-interrupt`, `releases-never-latched` and `primitives-out-of-line` — is refused known
-  (`catalog-field`) without a locator whose own record declares assembly for the package it locates (§14.2). A fact whose basis rests on the port's code too, as
+  `sections-mask-every-interrupt`, `releases-never-latched` and `primitives-out-of-line` — is known only as §14.2
+  states, and refused known otherwise (`catalog-field`). A fact whose basis rests on the port's code too, as
   `acknowledge-at-entry.<source>`, `one-request-per-arrival.<source>` and `raised-only-when-due`'s may, names the
   port's record in `describes` and carries a locator into it; that its locators reach all the code its basis rests
   on is the review's. Until a record with such a declaration exists, every analysis of the runtime variant over the

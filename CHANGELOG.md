@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the assembly design's fourth review: two names, one register
+
+`ARCHOGEN-M2-0357` (leaf `M2.12.2`, step 5).
+
+- The fourth review found one more way the compiler and the design could disagree: two inline-assembly values the
+  design treats as separate can be given the same register by the compiler, so a value written early is what a later
+  line reads. That form of output is now refused. Defects found per review: 8, 2, 2, 1. A fifth review is next.
+
 ## archogen — the assembly design's third review: what the compiler assumes
 
 `ARCHOGEN-M2-0356` (leaf `M2.12.2`, step 4).
