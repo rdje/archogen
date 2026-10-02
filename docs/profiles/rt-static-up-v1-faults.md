@@ -14,29 +14,31 @@ to each implementer. This is an addition, not a correction: no earlier decision 
 existing description or result is invalidated.
 
 **Amendments, 2026-10-01 and 2026-10-02 (leaves `M2.9`, `M2.17`, `M2.19`).** They answer the director's rulings
-(findings §6) and fourteen independent reviews of this text, *R1*–*R14*, whose findings and answers are tabled in
+(findings §6) and fifteen independent reviews of this text, *R1*–*R15*, whose findings and answers are tabled in
 `docs/decisions/decision_runtime-contract-gaps.md`; the rule each answer touched is marked below.
 - **Corrections of the 2026-09-13 text** (§14.1): a second release latched in a masked region is contained, not fatal
   (rule 1); a completion closes its region (rule 4); a fault other than an overrun is the context's that raises it, and
   a service's is no task's, where the table said "the running task" (rule 2); the mask bound and an unbalanced `unmask`
   are assertion failures, where they were refusals (the second smaller decision).
-- **Narrowings**, each a claim the earlier text did not limit, for the director's review: no overrun is raised without a
-  release (rule 1a); a missed deadline is reported only as rule 6 says, and §13.1 F26 with it; an externally released
-  task's second arrival during a pending request can be lost where its source does not count arrivals (rule 1); a `mask`
-  or `unmask` outside a job is an assertion failure (Terms) — initialisation's included, which the composition's
-  `leaves-interrupt-hardware-alone` had admitted; and these cases the Terms list, which the trap path, a service or the
-  runtime API's entry can see — an external trap's empty first claim, a timer trap with no release due or a timer
-  service run for a further pending timer interrupt that finds none, a claim returning an undeclared source, an API
-  entry naming neither a primitive nor the completion path — are unexpected traps, which halt when raised (Terms); a
-  port's runtime-API trap serves no interrupt, whatever its entry names (rule 2, `2026-10-02`); and the image's panic
-  handler is the port's, an application's own refused at build, and the panic strategy the port's, another refused at
-  build, and a panic an assertion failure unless a check of the runtime's, a port's, a catalog record's or generated
-  code finds a guard or an unexpected trap, an application's check being classified by how it ends; what can happen
-  before a fault a check finds, or a panic, is raised, inside a primitive or outside one, is the port's to state, whole,
-  in its catalog record, a primitive left with the runtime's state consistent or its job not abandoned but run on to the
-  raising (Terms, rule 5, `2026-10-02`); application initialisation, like application code after it, never calls the
-  fault path (Terms, `2026-10-02`); and a policy applied in the trap of an API entry naming neither a primitive nor the
-  completion path, before its check, abandons the job and raises nothing (rule 5, `2026-10-02`).
+- **Narrowings**, each a claim the earlier text did not limit, **approved by the director `2026-10-02`** (findings §12):
+  no overrun is raised without a release (rule 1a); a missed deadline is reported only as rule 6 says, and §13.1 F26
+  with it; an externally released task's second arrival during a pending request can be lost where its source does not
+  count arrivals (rule 1); a `mask` or `unmask` outside a job is an assertion failure (Terms) — initialisation's
+  included, which the composition's `leaves-interrupt-hardware-alone` had admitted; and these cases the Terms list,
+  which the trap path, a service or the runtime API's entry can see — an external trap's empty first claim, a timer trap
+  with no release due or a timer service run for a further pending timer interrupt that finds none, a claim returning an
+  undeclared source, an API entry naming neither a primitive nor the completion path — are unexpected traps, which halt
+  when raised (Terms); a port's runtime-API trap serves no interrupt, whatever its entry names (rule 2, `2026-10-02`);
+  and the image's panic handler is the port's, an application's own refused at build, and the panic strategy the port's,
+  another refused at build, and a panic an assertion failure unless a check of the runtime's, a port's, a catalog
+  record's or generated code finds a guard or an unexpected trap, an application's check being classified by how it
+  ends; what can happen before a fault a check finds, or a panic, is raised, inside a primitive or outside one, is the
+  port's to state, whole, in its catalog record, a primitive left with the runtime's state consistent or its job not
+  abandoned, and a job not abandoned, inside a primitive or outside one, run on at its task's priority, before any later
+  job of its task starts, to the raising (Terms, rule 5, `2026-10-02`); application initialisation, like application
+  code after it, never calls the fault path (Terms, `2026-10-02`); and a policy applied before its check in the trap of
+  an API entry naming neither a primitive nor the completion path, or in an `unmask` at depth zero, abandons the job and
+  raises nothing (rule 5, `2026-10-02`).
 - **What moved an implementation**, change by change: the record's *What changed an implementation*. `M2.17`
   located the empty set's refusal in `archogen build` and boot; `M2.19` moved this text out of `ROADMAP.md`.
 - **Evidence invalidated** (§15): none. No version of `rt-static-up-v1` is released or locked, no released result
@@ -63,9 +65,9 @@ existing description or result is invalidated.
   context but a job, is an assertion failure of that context, as a `mask` is. **Initialisation** is no job, so it calls
   no masking primitive — running before the first enabling of interrupts with interrupts already disabled, it has
   nothing to mask. This narrows what the composition's `leaves-interrupt-hardware-alone` admits: its masking primitives
-  are a job's only. A depth above zero when a job is dispatched or resumed, or idle is entered, is likewise an assertion
-  failure, raised by the transition — no task's, even where a port decides inside the completion path — so it
-  interrupts, as rule 2 says, the task whose job the transition starts from while that job is still owed, and none
+  are a job's only. A depth above zero when a job is dispatched or resumed, or idle is entered or resumed, is likewise
+  an assertion failure, raised by the transition — no task's, even where a port decides inside the completion path — so
+  it interrupts, as rule 2 says, the task whose job the transition starts from while that job is still owed, and none
   otherwise. So every section open at a completion is the completing job's.
 - A task's **latch** is what holds its releases that arrive while a masked region is open. On the target that is
   the interrupt pending in hardware, or the timer's releases due, which the timer service computes at delivery (the
@@ -178,7 +180,7 @@ existing description or result is invalidated.
 111, 118–120; R6 124, 126, 127, 130, 131, 138, 139; R7 140, 142, 144, 147–149; 2026-10-02: R8 152, 153, 156, 161, and
 its pre-landing checks; R9 163, 165, 166, 168, 171, 172, and its pre-landing check; R10 176–180, 183, 184, 188, 191, and
 its pre-landing check; R11 193, 196, 200, 201, and its pre-landing checks; R12 205, 208–211, 214, and its pre-landing
-checks; R13 216, 217, 220, 221, 224, and its pre-landing check; R14 227, 229–231.)*
+checks; R13 216, 217, 220, 221, 224, and its pre-landing check; R14 227, 229–231; R15 237.)*
 
 | §3.1 fault | §8.1 class | Attributed to | Containable |
 |---|---|---|---|
@@ -214,10 +216,10 @@ The rules below settle what the text left open; what is still open is listed at 
    76; R4 83, 97, 102; R5 116; R6 129; R7 141, 143; 2026-10-02: R8 160; R11 197; R13 219; R14 229.)*
 
    1a. **An overrun raised without a release is outside this profile.** `rt-static-up-v1` has no execution-budget
-   monitor: an overrun is detected by rule 1 alone, as rule 6 says of a deadline. A port that raises one another
-   way — a monitor's interrupt, or a bound checked synchronously — is outside the profile. A later profile that
-   admits one must say how its source is declared (§3.1, §7.3) and charged, and how its overrun is judged against
-   the job it measured. *(2026-10-01: R1 5; narrowed by R2 26, 27, 29, 40, for the director's review.)*
+   monitor: an overrun is detected by rule 1 alone, as rule 6 says of a deadline. A port that raises one another way — a
+   monitor's interrupt, or a bound checked synchronously — is outside the profile. A later profile that admits one must
+   say how its source is declared (§3.1, §7.3) and charged, and how its overrun is judged against the job it measured.
+   *(2026-10-01: R1 5; narrowed by R2 26, 27, 29, 40; approved by the director `2026-10-02`.)*
 2. **Attribution follows the fault, not the processor.** An overrun is attributed to the overrunning task — the task a
    release, or a delivered latched release, belongs to — whichever context holds the processor: a task that is ready and
    not running, the task whose job the release service interrupted, or the task executing its own outermost `unmask` or
@@ -340,8 +342,8 @@ The rules below settle what the text left open; what is still open is listed at 
    misses its deadline and completes before its next release is observed is never reported. §13.1 F26 exercises a miss
    with `D = T`, strictly periodic releases and zero declared jitter, in which the job is still owed when the next
    release is observed; any other miss is the analysis's to exclude and a trace's to observe. A deadline monitor would
-   be a new source and a new fault. *(2026-10-01: R1 7, for the director's review; R2 39, 40; R3 63; R4 92, 99; R5 117;
-   R6 128; R7 145; R10 189.)*
+   be a new source and a new fault. *(2026-10-01: R1 7, approved by the director `2026-10-02`; R2 39, 40; R3 63; R4 92,
+   99; R5 117; R6 128; R7 145; R10 189.)*
 7. **Escalation halts, and keeps the first fault.** A fault that is not containable, or is made so by rule 3, enters the
    fatal path where it is raised: a guard's data access fault, and a trap of the Terms' third case, at that trap's
    entry; any other fault — a case of the Terms' first included, however early its check finds it — where it is passed
@@ -376,20 +378,20 @@ Two smaller decisions are fixed at the same time, for the same reason:
   `archogen build` and boot refuse one; a refused boot is no fault: the runtime never starts, and nothing is kept but
   the refusal. `archogen check` admits one, a system describing composition alone (F01) being valid, and makes no timing
   claim for it (`M2.17`; R3 79).
-- **Kernel critical sections are bounded by a declared nesting depth.** "Bounded kernel critical sections" did not
-  say what the bound is or what happens at it. Each runtime's catalog record declares a maximum depth `M ≥ 1`. A
-  `mask` that would raise the depth past `M`, and an `unmask` at depth zero, are **assertion failures**: a counter
-  that *wraps* re-enables interrupts inside a critical section while reporting success, one that *saturates* stops
-  counting, and one that *refuses* leaves its caller's matching `unmask` to close the section early. This bounds
-  the depth; the duration is bounded separately, by the `CS_i` the timing analysis charges. *(2026-10-01: R1 10; a
-  refusal had been the answer.)*
+- **Kernel critical sections are bounded by a declared nesting depth.** "Bounded kernel critical sections" did not say
+  what the bound is or what happens at it. Each runtime's catalog record declares a maximum depth `M ≥ 1`. A `mask` that
+  would raise the depth past `M`, and an `unmask` at depth zero — save one whose job rule 5 abandons at its entry,
+  before its check, which raises nothing — are **assertion failures**: a counter that *wraps* re-enables interrupts
+  inside a critical section while reporting success, one that *saturates* stops counting, and one that *refuses* leaves
+  its caller's matching `unmask` to close the section early. This bounds the depth; the duration is bounded separately,
+  by the `CS_i` the timing analysis charges. *(2026-10-01: R1 10; a refusal had been the answer; 2026-10-02: R15 243.)*
 
 **What §13.1 F26 exercises.** The roadmap's F26 row points here, so the list is kept in one place: an answer that
 classifies a new case adds it here in the same change. Each is a fixture for `M4`/`M5`, its expected outcome — the
 schedule, and for a fatal fault the kept record — the rule's:
 - an overrun under both policies, at arrival and at delivery, several latched arrivals of one task judged in arrival
   order among them, and a missed deadline where the job is still owed at its next observed release — `D = T`, strictly
-  periodic, zero declared jitter, the narrowing for the director's review (rules 1, 4, 5, 6);
+  periodic, zero declared jitter, the narrowing the director approved (rules 1, 4, 5, 6);
 - a policy applied inside a primitive, at its entry and at its return, in a hosted model and on each port whose
   primitives can be preempted, and, on each such port, a fault met while the runtime completes a primitive on an
   abandoned job's behalf, raised in the context the port's catalog record states; and, on each port that enters the
@@ -415,9 +417,9 @@ schedule, and for a fatal fault the kept record — the rule's:
   timer interrupt whose only due release is a faulted task's, none of them a fault; and a fault on the trap path between
   two services of one trap (Terms, rule 2);
 - an assertion failure: the mask bound, an unbalanced `unmask`, a `mask` or `unmask` outside a job, the completion path
-  entered by a non-job, a job dispatched or resumed or idle entered inside a region, a failed check of the runtime's, a
-  port's, a catalog record's or generated code's own invariants, ending in a panic, in a deliberate trap and in a call
-  of the fault path (Terms; the second smaller decision);
+  entered by a non-job, a job dispatched or resumed or idle entered or resumed inside a region, a failed check of the
+  runtime's, a port's, a catalog record's or generated code's own invariants, ending in a panic, in a deliberate trap
+  and in a call of the fault path (Terms; the second smaller decision);
 - a release observed after the instruction at which a job completes, a job whose own code ends in a tail call to
   `unmask` among them, a release taken inside it an overrun, and a service in that interval under the port's stated
   choice, a waiting completion-path context resumed ahead of its own task's new job and a task faulted while its context
@@ -458,7 +460,7 @@ schedule, and for a fatal fault the kept record — the rule's:
 *(2026-10-02: R8 157, and its pre-landing checks, the first of which found the list incomplete in the change that made
 it; R9 164, 171, 174; R10 185, 186, 190, and its pre-landing check; R11 192, 194–196, and its pre-landing checks;
 R12 204, 206, 213, and its pre-landing checks; R11's sixth pre-landing check's N3; R13 215, 218, 222, and R12's third
-check's DR-C; R13's check's D4, N2; R14 227, 228, 232, 233.)*
+check's DR-C; R13's check's D4, N2; R14 227, 228, 232, 233, and its pre-landing checks; R15 237.)*
 
 **Still open:** each path's observation events and hosted/target trace compatibility, a discarded release's and a
 completion that closes a region included (`M2.15`); the catalog fact by which an external source's record says whether
@@ -477,7 +479,7 @@ record's (`M2.12`); `M2.12`'s own check per selection of another record's passin
 whether this contract will limit what a port's record may state of a release that abandons a job outside a primitive
 while a check of the runtime's state that generated code makes has yet to raise what it found — today the port's to
 state (Terms, rule 5) — generated code's checks being `M4`'s to define; each service's order of the releases it
-performs, its own record's (rule 1); which context runs each guard check another record's code makes, that record's
-(Terms); and two that are not this contract's and that no fixture needs yet: a later idle-to-task dispatch's cost, the
-port's record's (`M2.12`), and a periodic task's first release instant, the timer-service record's (written under
-`M2.7.4`).
+performs, its own record's (rule 1); where any primitive but `mask` and `unmask` first changes the runtime's state, the
+runtime API record's (rule 5); which context runs each guard check another record's code makes, that record's (Terms);
+and two that are not this contract's and that no fixture needs yet: a later idle-to-task dispatch's cost, the port's
+record's (`M2.12`), and a periodic task's first release instant, the timer-service record's (written under `M2.7.4`).

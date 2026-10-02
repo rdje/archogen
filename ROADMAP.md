@@ -754,7 +754,7 @@ These fixtures test correctness boundaries, not just the implementation's curren
 | F23 | Intentional model/HAL shared misconception | Independent source or target check exposes it | M5 |
 | F24 | New composite functional kind | Works without implementation content in eADL | M6 |
 | F25 | Locked rebuild after unrelated catalog update | Semantic meaning and selected inputs remain stable | M6 |
-| F26 | Every case the fault contract lists under *What §13.1 F26 exercises* (`docs/profiles/rt-static-up-v1-faults.md`), among them: overrun under both policies and a missed deadline; stack guard; unexpected trap; assertion failure; the interval after a job's last instruction; a delivery spanning several traps; the kept record's fields (rule 7) | Defined fault behavior and bounded diagnostic path | M4/M5 |
+| F26 | Every case the fault contract lists under *What §13.1 F26 exercises* (`docs/profiles/rt-static-up-v1-faults.md`), among them: overrun under both policies and a missed deadline; stack guard; unexpected trap; assertion failure; the interval after the instruction at which a job completes; a delivery spanning several traps; the kept record's fields (rule 7) | Defined fault behavior and bounded diagnostic path | M4/M5 |
 | F27 | Worked functionality/implementation boundary cases | Accepted functional guarantees and rejected implementation fields, with reasons; ambiguous cases reviewed | M0/M1 |
 | F28 | Small description to executable before full foundations | Base and modified inputs affect observed behavior; unsupported input fails; no output edits | S0 |
 | F29 | Repeated preemption with explicit interrupt and switch costs | Exact fixed-trace ledger totals 23; known omission/duplicate-charge controls detected; claims respect analysis scope | M2 |

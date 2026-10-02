@@ -58,7 +58,7 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 | [`M1`](tasks/M1.md) | `active` | `M1.29.4` — blocked: module parameters wait on the director's call (findings §7); every other leaf is closed | repo-local |
 | [`API`](tasks/API.md) | `active` | `API.6` — the MCP server built, `archogen mcp`, both protocol eras (`API.6.4`); `API.6.5`, its chapter and review, next; `API.5`, the wasm binding and its page, done and run in a browser | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |
-| [`M2`](tasks/M2.md) | `active` | `M2.9` — both runtime models agree; the fault contract answers its fourteenth review (two defects); the fifteenth round is reading it; then `M2.7.6`, `M2.7.4`, `M2.7.5` and `M2.10.2` | repo-local |
+| [`M2`](tasks/M2.md) | `active` | `M2.7.6` — `M2.9` closed: the fault contract's fifteenth review found no defect, its narrowings approved; then `M2.7.6`, `M2.7.4`, `M2.7.5` and `M2.10.2` | repo-local |
 | [`M3`](tasks/M3.md) | `pending` | `M3.1` — candidate enumeration and substitutability | repo-local |
 | [`M4`](tasks/M4.md) | `pending` | `M4.1` — the typed runtime/build plan | repo-local |
 | [`M5`](tasks/M5.md) | `blocked` | — **no board procured** (`M0.5`, 2026-09-13) | repo-local |

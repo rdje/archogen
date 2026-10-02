@@ -514,6 +514,39 @@ where which port can build which case is settled. **Recorded for the process:** 
 reopens with each line; its scope belongs with the fixture suite that knows the ports. None of it moves either
 model.
 
+## The fault contract reviewed a fifteenth time (`2026-10-02`, R15) — no defect; the leaf closes
+
+A fifteenth new context read the contract beside the composition record, from the text alone. On R14's answers: 8
+answered, 1 partly (#230, the header and the composition behind the run-on). **Verdict: no defect remains.** It found
+no reachable case where two careful conforming readings differ observably outside a named port statement, no
+requirement a port cannot meet, and no contradiction with the composition record, the profile page, the priority
+record or the roadmap; the text written for R14 held — when a job completes, rule 5's first-change clause, the
+window's scope and run-on, rule 1's exception, the initialisation sentence.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 236 | drafting | the header and the composition's role list behind the run-on | the reviewer's text in both |
+| 237 | drafting | "idle is entered" against "resumed, not entered afresh" | "entered or resumed", in the Terms and F26 |
+| 238 | drafting | no F26 fixture for idle's entry resumed | **carried, not answered:** the fixture's port condition was itself found to owe it where it cannot arise, the class below |
+| 239–242 | nits | the composition's initialisation sentence; ROADMAP's F26 row; the composition's §4 double charge; *Still open*'s owner for other primitives | the reviewer's texts |
+| 243 | drafting | an `unmask` at depth zero that raises nothing, absent from the second smaller decision and the header | the reviewer's text |
+
+**Answered `2026-10-02` (step 6v), checked before landing once.** The check found 1 defect, in #238's new fixture:
+"on each port that also lets an interrupt preempt that trap" owed idle's case on a port that lets only a job's call be
+preempted. #238's fixture was withdrawn rather than scoped again, since every F26 fixture written with a port
+condition in the last three rounds drew the same finding. **Carried, open, to `M4`'s fixture design and `M2.12`:**
+F26's scoping class — which fixture is owed on which port, the window bullet's "outside a primitive and inside one"
+its oldest instance, #238 and the check's DR2 its newest; the check's DR1 (the second smaller decision's exception
+names only the entry case, the window's abandonment raising nothing too) and its nits 2 and 4; and, carried from
+R14's checks, their drafting points on the window's other contexts and the kept job's place in the schedule.
+
+**The narrowings approved.** Asked after this round, the director approved the header's list of narrowings,
+`2026-10-02` ("APPROVED"; findings §12); the header and the rules that said "for the director's review" now say so.
+
+**`M2.9` closes**, by the rule step 6 set: the first independent round that finds no defect. Fifteen rounds found
+13, 11, 12, 9, 5, 3, 3, 2, 1, 2, 1, 1, 1, 2 and 0 defects. Neither model moved in the last nine; the comparison
+passes 11.
+
 ## Where the contract lives (`2026-10-01`)
 
 Answering R3 (`M2.9`) needed about 20 lines more than `ROADMAP.md`'s 1 100-line ceiling allowed, which only the

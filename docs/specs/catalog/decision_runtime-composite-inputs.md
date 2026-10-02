@@ -91,9 +91,10 @@ A fact that cannot be read leaves undeclared the composites it gates, `analysis-
 | `leaves-interrupt-hardware-alone` | application fact, covering its tasks and its initialisation, and the caller's declaration for a service's application code | after the first enabling of interrupts, application code runs only as a declared task's job or as a service's application code; and no application code, a task's, a service's or application initialisation's, writes the timer's counter or compare, the interrupt controller's configuration, or the hart's interrupt or trap state other than through the runtime API's masking primitives (a job's only: the fault contract, Terms) or reads or writes the controller's claim and complete registers, a read of which claims, or a declared source's device registers; no service calls a runtime primitive; and no application code releases a task or calls a runtime function other than the runtime API record's primitives and its completion path. A runtime function is any function of a catalog record's implementation, a driver's included, called after the first enabling of interrupts; before it, application initialisation reaches that hardware only through catalog functions, which `runtime-discipline.<id>` covers | `reprograms-only-in-service`, the plan's order, `releases-never-latched`, `no-empty-claim` and each `one-request-per-arrival.<source>` are statements about the whole image, and a code fact's locator reaches only catalog code. Each holds for the image only with this one, as `sections-mask-every-interrupt` holds only with the fourth task fact |
 | `runtime-discipline.<id>` | code, one per record, stated by each record about every package its implementation's own and reached sets hold | that code writes the timer's counter or compare, the controller's configuration, or the hart's interrupt or trap state, reads or writes the controller's claim and complete registers or those of any device wired to the external controller, and releases a task, only in a role listed below this table, a device's registers in the roles of the record that supplies its source's service, whether or not the application declares it a source. No service in it calls a runtime primitive | the image-wide facts above rest on locators into their owners' code. Every other record compiled into the image, a driver or a service among them, states the same about itself, so no compiled code is covered by nothing. It is required `yes` from every record whose implementation facet, not `none`, is in the claim's closure, and from `M4` in the image's. Reading one adds its record's behavioral model to the closure, so the set is computed to a fixed point. Generated code is in no record: from `M4` the plan's generator states the same of it, and until then the conclusion names generated code, and any record compiled but outside the closure, as assumptions |
 
-**Application initialisation calls no entry of the fault path**, before the first enabling of interrupts as after it:
-`leaves-interrupt-hardware-alone` holds this too, the fault contract's narrowing of the catalog functions it lets
-initialisation call (its Terms; added `2026-10-02`, its R14 231).
+**Application code calls no entry of the fault path** — in initialisation, before the first enabling of interrupts, as
+in a job or a service's application code after it; a panic reaching the image's handler is no such call (the role
+list below): `leaves-interrupt-hardware-alone` holds this too, the fault contract's narrowing of the catalog functions
+it lets initialisation call (its Terms; added `2026-10-02`, its R14 231, R15 239).
 
 **The roles `runtime-discipline.<id>` allows.** A function's writes, claims and releases take the role of the
 context that calls it, so a runtime function called from a service acts in that service's role, and the port's
@@ -111,9 +112,10 @@ dispatch, which claims before it knows the source, acts in the role of the servi
   path's role from its first act, which masks interrupts, whoever's panic or check, or whichever trap's path, reaches
   it: a panic reaching the handler is no breach of `leaves-interrupt-hardware-alone`, and what can happen before a
   fault a check finds, or a panic, is raised, inside a primitive or outside one, is that record's to state, a
-  primitive left with the runtime's state consistent or its job not abandoned but run on to the raising (the fault
-  contract's rule 5; added `2026-10-02`, its R8 153; the second entry, and the window's scope, `2026-10-02`, its R11
-  pre-landing checks; the run-on `2026-10-02`, its R13 216);
+  primitive left with the runtime's state consistent or its job not abandoned, and a job not abandoned, inside a
+  primitive or outside one, run on at its task's priority, before any later job of its task starts, to the raising
+  (the fault contract's rule 5; added `2026-10-02`, its R8 153; the second entry, and the window's scope,
+  `2026-10-02`, its R11 pre-landing checks; the run-on `2026-10-02`, its R13 216, R14 230 and R15 236);
 - initialisation, before the first enabling of interrupts, writes the controller's configuration and the hart's
   interrupt state as the plan sets them. It may claim and complete requests left pending from before it, and it
   leaves none pending at the first enabling of interrupts that no arrival made. Two writes are one record's alone,
@@ -236,10 +238,11 @@ holding.
 **`C_i`.** The variant's `C_i` is everything the job executes from its transition in up to the decided switch that
 follows its completion, services excluded.
 
-- **The parts partition it.** Every instruction in that span is the task's own code, is inside a primitive call
-  (at most `n_{i,p}` calls to each `p`), or is on the completion path. The parts meet at instructions with
-  nothing between them: each primitive's first and last instruction (`primitives-out-of-line`), the job's last
-  instruction of its own code, and the end of the transition in (§2).
+- **The parts cover it**, overlapping only where the job's code ends in a tail call (the `completion` row). Every
+  instruction in that span is the task's own code, is inside a primitive call (at most `n_{i,p}` calls to each `p`),
+  or is on the completion path. The parts meet at instructions with nothing between them: each primitive's first and
+  last instruction (`primitives-out-of-line`), the job's last instruction of its own code, and the end of the
+  transition in (§2).
 - **Instrumentation** lands in whichever part runs it.
 - **So the sum bounds it:** a sum of each part's maximum is at least the maximum of the sum.
 - **The sum is only a bound if each part's figure holds from whatever state the code before it left.** `γ` charges
@@ -331,7 +334,9 @@ The least fixed point is therefore an upper bound on how late the service can st
 - `δ` includes the latency before an interrupt is pending, which the variant's own `δ` does not;
 - `δ` is charged twice in `B_x`, although a stretch that begins after the interrupt is pending can only overlap the
   first `δ`'s later part;
-- `B_timer` charges `ρ` and a whole service with its transition, although only a late write needs the second.
+- `B_timer` charges `ρ` and a whole service with its transition, although only a late write needs the second;
+- a primitive a job's own code ends by tail-calling is inside `completion`'s span and charged again as `api.p` (the
+  parts table; the fault contract's R15 241).
 
 ### 5. What the catalog's §12 gains
 

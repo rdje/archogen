@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the fault contract is settled
+
+`ARCHOGEN-M2-0340` (leaf `M2.9`).
+
+- The fifteenth independent reading of the runtime's fault contract found nothing that two careful implementers could
+  read differently, and the director approved the claims it narrows. Over fifteen rounds the readings found 13, 11, 12,
+  9, 5, 3, 3, 2, 1, 2, 1, 1, 1, 2 and then 0 problems. Which of its test cases each future board must run is left to
+  the test suite that will know the boards.
+
 ## archogen — an answer is never much larger than its question
 
 `ARCHOGEN-API-0338` (leaf `API.6.6`).
