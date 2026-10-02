@@ -1,5 +1,27 @@
 # Quantities and units
 
+## The idea, in plain words
+
+"Wait 10" means nothing until you say 10 what: seconds, milliseconds, ticks of a clock. In eADL a number that
+measures something carries its unit — `10 ms`, `10 MHz`, `64 KiB` — and the unit is part of what it means. archogen
+checks units before it does any arithmetic, so a period measured in parsecs, a clock running at zero hertz, or a
+comparison of a time with an amount of memory is refused with a message saying what is wrong, instead of producing
+a number that looks right.
+
+It never rounds quietly either. Every amount is held as an exact fraction, because a timing analysis adds its own
+results up again and again, and small rounding errors grow into a wrong answer that still looks like a number. And
+every comparison says which way is better: a longer time horizon is better, a longer delay is worse, and some
+values must simply match.
+
+> **In one minute, for engineers.** A quantity is the shape `<number> <symbol>`, its unit from a closed table; a
+> lone number is a count. Magnitudes are exact rationals, `i128` over `i128`, normalized, with checked operations —
+> overflow yields no result, never a wrapped one — exact comparison (`crates/eadl-model/src/rational.rs`) and upward
+> rounding where the analysis needs it; there is no floating point anywhere. F03 refuses a non-positive frequency
+> and incompatible units as type errors before arithmetic, the dimension checked before either magnitude is read.
+> Every comparison declares `at-least`, `at-most` or `exact`, with no default.
+
+## How it works
+
 A number in an eADL description carries a unit whenever it *measures* something, and the unit is part of
 its meaning.
 
@@ -19,7 +41,9 @@ halves of that.
 (size 64 KiB)
 ```
 
-## Exact, always
+## The precise rules
+
+### Exact, always
 
 `ROADMAP.md` §7.4 requires "exact integer time units or checked rational arithmetic, upward
 rounding where needed, overflow detection". So every magnitude is an exact rational — `i128`
@@ -58,7 +82,7 @@ profile that requires deadline ≤ period. The products are now computed exactly
 Rounding, where it is needed, goes **up**: analysis needs `⌈R/T⌉`, and rounding the other way
 understates interference, which turns a missed deadline into a reported pass.
 
-## The unit table is small on purpose
+### The unit table is small on purpose
 
 | Dimension | Units |
 | --- | --- |
@@ -71,7 +95,7 @@ A table that accepts arbitrary SI prefixes accepts `Ps` and `mHz` too, and a typ
 is worse than one that does not. Binary prefixes only for storage: a `KiB` is 1024 bytes, and a
 "KB" is an argument nobody needs to have again.
 
-## F03: refusal before arithmetic
+### F03: refusal before arithmetic
 
 `ROADMAP.md` §13.1 requires two things to fail as a **type or constraint error before arithmetic**:
 
@@ -143,7 +167,7 @@ violated `constraint` obligation ([Refinement](refinement.md) shows the whole re
 `ms` measures time and `bit` measures information — they cannot be compared
 ```
 
-## More is not better
+### More is not better
 
 §5.2 warns that "more bits or a faster clock is not universally better", so every comparison
 carries a **declared direction**, and there is no default:
