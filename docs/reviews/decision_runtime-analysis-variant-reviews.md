@@ -159,6 +159,30 @@ M2.11"; each fix local.
 | 13 | nit | the book omitted QEMU's mechanism, and the changelog said "real hardware" | both corrected |
 | 14 | nit | a hyphenated name for a fact that does not exist, and "one composed from others" ambiguous | the field's name; "one with no fact of its own" |
 
+**`M2.11`'s second review, `2026-10-02`,** of commit `08a707b`, the first review's answers, by a new read-only
+context given the first witness. Its verdict: the answers close the five defects; the witness breaks condition 5's
+trap-time clause, and with that trap removed `i` responds in 23 against the bound of 27; no schedule meeting §4
+under the intended readings exceeds the bound. One defect, a false justification with no under-charge, and drafting
+points mostly about traps that run several services.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 1 | defect | the composition record's new step-4 sentence appealed to the request pending at the trap, which can be `x`'s own, counted by no ceiling of `Δ_x`; the bound survives by the reviewer's own derivation | that derivation adopted in step 4: the cut entry is shorter than `C_w`, and a charge of `w` goes unused that exceeds it, whatever was pending |
+| 2 | drafting | "request", "pending" and "claim" undefined, and "pending" read at the hart readmits the witness; a request pending but not claimable | defined in condition 5, with `no-empty-claim`'s stale-notification sentence; a source trap's one claim takes a request |
+| 3 | drafting | a claim loop's final empty claim ran "for" no request | moot: each trap now runs one service |
+| 4 | drafting | a timer service inside a trap that runs several services had no cost, start or case in §2 | moot: a timer trap runs the timer's service alone, claiming nothing; §2's timer case stated |
+| 5 | drafting | the releasing service of a source-released job, and which traps the window holds | a sentence for the releasing service; "every other interrupt trap that runs in the window starts in it" |
+| 6 | drafting | the acknowledgement point, `exit` and the floors under the new start and claim loops | the start is the trap's entry again, one service per trap, so `exit` is the trap's and the floors stand as necessary; acknowledgement at entry unchanged, no under-charge, as the reviewer found |
+| 7 | drafting | the cost clause for several services per trap stated in condition 5 alone, and owned by no record | removed with claim loops: condition 5 requires one service per trap, and the catalog reads `one-claim-per-trap` for it |
+| 8 | drafting | "raised" in the catalog against "taken" in the variant; "due" undefined | the catalog says its "raised" means the variant's *taken*; *due* defined in condition 6 |
+| 9 | drafting | the catalog paragraph's "all already preconditions", and a conjunct `no` read as the fact `no` | "each a fact the variant or its composition already reads"; anything but every conjunct `yes` reaches the variant undeclared, naming the conjunct |
+| 10 | drafting | `/1` naming two texts, the changed definitions unlisted, and the rule credited to §15 | `/1` is the text before `1c61e70`; the definitions listed; the rule is the record's, §15 asking only that changes be explicit |
+| 11 | nit | stale `/1` references, and the composition record's Review silent on its amendments | each fixed where it meant the model; the composition record's Review names this history |
+| 12 | nit | "would be served", the refusal's "and releases", and "a service … is taken" | "could be"; "and its service releases"; the interrupt is taken |
+| 13 | nit | the book's F17 paragraph and its "serves an event that came after the trap"; the `riscv-privileged` scope's "two sentences" | corrected |
+| 14 | nit | no test pinned condition 6's refusal text; the field names no longer say what they hold | a test asserts the text; the fields keep their names, which the catalog's fact names match, and their doc comments carry the meaning |
+| 15 | nit | "a conforming platform allows" while P2 is the emulator's | "a conforming controller, or the emulator's" |
+
 ## Why
 
 The record states the variant as it stands, and this file keeps how it got there, as for the catalog record.

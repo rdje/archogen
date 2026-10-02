@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the timing analysis's rule, settled by a second review
+
+`ARCHOGEN-M2-0347` (leaf `M2.11`, step 3).
+
+- A second independent review found the corrected rule sound and no task set that breaks the bound, but one wrong
+  argument and several unclear words. The rule is now simpler: every interrupt the system takes runs exactly one
+  handler, paid for by a timer release or by an event. The words it relies on are defined. A third review is next.
+
 ## archogen — the timing analysis's new rule, corrected by its review
 
 `ARCHOGEN-M2-0344` (leaf `M2.11`, step 2).

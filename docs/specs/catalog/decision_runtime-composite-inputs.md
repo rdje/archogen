@@ -83,7 +83,7 @@ A fact that cannot be read leaves undeclared the composites it gates, `analysis-
 | `releases-never-latched` | code | no service runs while the runtime's mask depth is raised: the port masks the hardware before raising it, and lowers it before unmasking the hardware. A completion entered with the depth raised lowers it before the transition that follows unmasks, and that work is inside `completion`. `rt-core`'s `complete` returns the depth to zero (rule 4 of `docs/profiles/rt-static-up-v1-faults.md`, then `ROADMAP.md` §3.1.1; corrected here `2026-10-01`); the port still unmasks the hardware only in the transition that follows, and the runtime record's review checks it | `rt-core` latches a release that arrives while the depth is raised and delivers it on `unmask`. On the target that path is then never taken, so no `unmask` makes a task ready and no part has to charge the decision and switch that would follow |
 | `primitives-out-of-line` | code | each primitive is compiled out of line, and its masking and unmasking instructions are compiler barriers | a call's boundaries, and a run's, are then instructions. The compiler cannot move the task's own code into a primitive or across a masking instruction |
 | `external-before-timer` | hardware | whether the hardware takes a pending machine external interrupt before a pending machine timer interrupt, however the controller is configured | the timer's place in the order is the hardware's, not the plan's. The privileged specification takes machine external interrupts before machine timer interrupts; QEMU 11.1.1, without the Advanced Interrupt Architecture, takes the lowest pending cause first, the timer before external interrupts (the ledger's `qemu`), so the emulator target states `no`. With `no` the timer is ahead of every source (§1), and §3's queue for a source counts it. That holds only if each external trap serves one request and returns, since a port that claims again before returning, as the PLIC specification lets a handler do, would run several services while the timer waits: so `no` needs `one-claim-per-trap` `yes`: it is `unsupported-profile` when that fact is read and declared `no`, and leaves every `J` undeclared when it cannot be read |
-| `one-claim-per-trap` | code, in the `switch` group | every trap taken for an interrupt serves exactly that interrupt: a timer trap claims nothing, and an external trap claims one request, runs its service and returns; an exception trap serves no interrupt. So an interrupt taken before external ones is taken between two source services, and nothing else is served between a service and its trap's return | read only when `external-before-timer` is `no`, where a claim loop would put several services ahead of the timer that §3's queue counts behind it |
+| `one-claim-per-trap` | code, in the `switch` group | every trap taken for an interrupt serves exactly that interrupt: a timer trap claims nothing, and an external trap claims one request, runs its service and returns; an exception trap serves no interrupt. So an interrupt taken before external ones is taken between two source services, and nothing else is served between a service and its trap's return | read only when `external-before-timer` is `no`, and for the variant's condition 5 always (`M2.11`), where a claim loop would put several services ahead of the timer that §3's queue counts behind it |
 | `external.<source>` | hardware, one per source, from the record that supplies `service.<source>` | the source reaches the hart as a machine external interrupt, through the controller's context for the hart's machine mode, whose priorities the plan sets. A source routed through a supervisor context is taken below the machine timer, and states `no` | the plan's order holds only for such sources. A source with `no`, such as a platform-defined local interrupt, a software interrupt, or one a priority scheme places among the timer, is outside the composition. A catalog reviewer sees the source's own wiring, never a description's list of sources |
 | `no-empty-claim` | code, with the hardware's half established in its basis, in the `switch` group | every external trap is taken while a request is pending, so its claim finds one: a trap taken on a notification the last claim has made stale is taken while nothing is pending, even when a request arrives before its claim reads (*stated at the trap, `2026-10-02`, leaf `M2.11`*). How is the basis's to show: for example, the port's service exit waits until the controller's notification to the hart reflects the last claim, so a notification sent before that claim cannot trap the hart again. It is `yes` on a target with no external source, once `M2.12` lets a port fact be stated | the PLIC specification lets a notification "take some time to be received", holding a value "valid at some point in the past", and a claim then returns zero. Such a trap is a service that no request pays for, and repeated it can keep the timer from ever being taken |
 | `one-request-per-arrival.<source>` | code, one per source, with the hardware's half established in its basis, from the record that supplies `service.<source>` | every request a service of the source claims was made by an arrival, and each arrival makes at most one. The basis shows it for the target's controller: for a PLIC gateway, that the source is edge-triggered with one edge per arrival, or that its level is deasserted at the gateway before the completion arrives there; for QEMU's `sifive_plic`, which pends a request on every raise of a source's line, even while the source is claimed, that from the first enabling of interrupts, and from each claim, until the source's next arrival, the line is raised only by that arrival, or while the request it raised is still pending and unclaimed | the PLIC specification forwards a new request on a completion "if the interrupt is level-triggered and the interrupt is still asserted", and QEMU pends one on any raise of the line. Either way a source can be served twice for one arrival, and step 4 counts services by arrivals. How the controller turns the line into requests is the source's wiring, and when its service lowers or raises the line is that service's code, so both are in that record's review |
@@ -311,9 +311,16 @@ everything that runs inside it:
      takes the highest request pending when it is read, so a service can serve a request that arrived after its
      trap. Such a service either started before the window, and is the stretch step 2 counts, since `C_q + S ≤ L`
      by `L`'s definition, or started inside it, and then that arrival is inside the window and the ceiling counts
-     it, or came after the window. Then the window holds only the trap's entry, which the request pending when the
-     trap was taken pays for (`no-empty-claim`): it arrived before the trap, its service starts no earlier than the
-     trap, so the ceiling counts its arrival, and its `C` covers an entry (*added `2026-10-02`, leaf `M2.11`*). A
+     it, or came after the window, its claim then after the window too. The window then holds only that trap's
+     entry, shorter than `C_w`, `w` the interrupt it claimed, and a charge of `w` goes unused that exceeds it. Either
+     fewer than `n_w = ⌈(Δ + J_w)/T_w⌉` arrivals of `w` lie in the ceiling's reach, so one charge is unused; or `n_w`
+     do, and with the late one `n_w + 1`, so the earliest is at least `Δ + J_w` before it, and its service starts at
+     some `s_0` less than that trap's entry span after the window's opening `t`. If `s_0 < t`, its charge pays for
+     nothing the window holds beyond the stretch step 2 counts, which `B_x` pays. If `s_0 ≥ t`, the stretch ended by
+     `s_0`, so at least `L − (s_0 − t)` of `B_x` is unused, while the entry's part in the window is shorter than
+     `C_w − (s_0 − t)`, and `L ≥ C_w + S`. The argument needs nothing of what
+     was pending when the trap was taken, so it holds whether `x`'s own request, a request behind it or the timer's
+     interrupt was (*added `2026-10-02`, leaf `M2.11`, from the derivation of the variant's review round 2*). A
      displaced request is served after every interrupt ahead of it, and is counted by its own arrival.
    - For the timer ahead of a source, each timer service maps to a release that was due when its
      interrupt was raised (raised only when due) and that the service performs. "Raised" covers an interrupt still
@@ -384,7 +391,7 @@ This record names what §12 gains; the catalog record's own review checks the wo
   order among its sources. It is the variant's `analysis-inconclusive`, with the part named. §12's rule for a value
   it could not read applies unchanged.
 - **A declared value outside what the composition covers** is `unsupported-profile`, as the variant's §5 treats one
-  outside `/1`. That covers a §2 fact that is read and declared `no`, `external-before-timer` apart unless
+  outside its model. That covers a §2 fact that is read and declared `no`, `external-before-timer` apart unless
   `one-claim-per-trap` is read and declared `no`, and a plan whose order among sources is not strict.
 - **The stops of §3:**
   - **For a source:** no fixed point, an overflow, or passing its no-loss limit. Each means `J_s` cannot be bounded
@@ -451,7 +458,7 @@ This record names what §12 gains; the catalog record's own review checks the wo
     primitive call inside it: B3's under-charge.
   - **An extra `γ` at every primitive boundary instead of the entry-state obligation.** `γ` is defined per
     preemption, and its evidence would not cover a boundary.
-  - **A joint fixed point over interrupts with no order.** A strict order exists on the platforms `/1` covers:
+  - **A joint fixed point over interrupts with no order.** A strict order exists on the platforms this composition covers:
     - the hart orders the timer against external interrupts, the specification's way or, as QEMU 11.1.1 does,
       lowest cause first, and `external-before-timer` states which;
     - the external controller orders its sources by the priorities the plan sets.
@@ -483,6 +490,9 @@ This record names what §12 gains; the catalog record's own review checks the wo
 `M2.10.1`'s acceptance is a review by a context that did not write this record, finding no composite that
 under-charges against the variant's §1 definitions. The findings, and the answer to each, are in
 [`decision_runtime-composite-inputs-reviews.md`](../../reviews/decision_runtime-composite-inputs-reviews.md).
+Two amendments by `M2.11` on `2026-10-02` — `no-empty-claim` stated at the trap, and step 4's case of a claim after
+the window — were reviewed with the variant's change, in
+[`decision_runtime-analysis-variant-reviews.md`](../../reviews/decision_runtime-analysis-variant-reviews.md).
 
 | Round | Findings | Defects | Verdict |
 | --- | --- | --- | --- |

@@ -30,9 +30,9 @@ pub const CONDITIONS: &[&str] = &[
     "constrained deadlines (D ≤ T)",
     "no self-suspension, no scheduler lock or deferred preemption, and data shared only inside declared masked sections",
     "every enabled interrupt declared; no nesting; every masked section masks every interrupt; every service \
-     preempts every task; every interrupt taken is paid for by a due release or an arrival; a pending interrupt is \
-     taken before a resumed instruction; transitions end unmasked; eager switching or deferred saves inside S; \
-     deferred work runs as a declared task; a task released on every arrival of a source has T ≤ T_s",
+     preempts every task; every interrupt taken runs one service, paid for by a due release or an arrival; a pending \
+     interrupt is taken before a resumed instruction; transitions end unmasked; eager switching or deferred saves \
+     inside S; deferred work runs as a declared task; a task released on every arrival of a source has T ≤ T_s",
     "an event-driven timer with level compare that rounds up, its due-check on the compare's counter and rounding, \
      taken only when a release is due, whose service releases no task before its nominal release and every due one, \
      and which alone releases timer-released tasks",
@@ -180,9 +180,9 @@ pub struct PlatformFacts {
     pub pending_taken_and_transitions_unmasked: Option<bool>,
     /// Switching is eager, or `S` includes every deferred save and restore (condition 5).
     pub eager_switching: Option<bool>,
-    /// Every interrupt taken is paid for by a due release or an arrival (condition 5, added by leaf `M2.11`): none
-    /// but the timer's is taken unless a request an arrival made is pending; every service serves one request of
-    /// its source, claimed after it was made; an arrival makes at most one request, and none is served twice.
+    /// Every interrupt taken runs one service, paid for by a due release or an arrival (condition 5, added by leaf
+    /// `M2.11`): a timer trap runs the timer's service and claims nothing; any other trap is taken only while a
+    /// request an arrival made is pending, and its one claim takes a request; an arrival makes at most one request.
     pub services_paid_by_arrivals: Option<bool>,
     /// The timer is event-driven (condition 6).
     pub timer_event_driven: Option<bool>,
@@ -415,7 +415,7 @@ pub fn admit(
     );
     found.fact(
         facts.services_paid_by_arrivals,
-        "every interrupt taken is paid for by a due release or an arrival",
+        "every interrupt taken runs one service, paid for by a due release or an arrival",
         5,
     );
     found.fact(facts.timer_event_driven, "the timer is event-driven", 6);
@@ -441,7 +441,7 @@ pub fn admit(
     );
     found.fact(
         facts.raised_only_when_due,
-        "a timer interrupt is taken only when a release is due, and releases every due task",
+        "a timer interrupt is taken only when a release is due, and its service releases every due task",
         6,
     );
     found.fact(

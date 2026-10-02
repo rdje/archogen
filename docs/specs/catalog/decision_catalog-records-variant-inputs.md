@@ -51,29 +51,30 @@ The behavioral code facts, one per condition of the variant's `PlatformFacts`:
 - `compare-rounds-up`
 - `due-check-matches-compare`
 - `no-early-release`
-- `raised-only-when-due`, which states both "raised only when a release is due" and "releases every due task", as
-  the variant's field does. "Raised" covers an interrupt still pending after a service has moved the compare on, so
+- `raised-only-when-due`, which states both "raised only when a release is due" and "releases every due task", the
+  variant's condition 6, which since `M2.11` says *taken*. "Raised" here covers an interrupt still pending after a
+  service has moved the compare on, so it means what *taken* means there, and
   its basis establishes that neither the timer service's return nor initialisation's first enabling of interrupts
   comes while the interrupt still reflects a compare value that was replaced (`decision_runtime-composite-inputs.md`
   §4, step 4)
 - `only-timer-releases-timer-tasks`
 
-The variant's `PlatformFacts::services_paid_by_arrivals`, its condition 5 that every interrupt taken is paid for by
-a due release or an arrival (added by leaf `M2.11`), has no fact of its own. It is `yes` when each of these is
-`yes`, all already the composition's preconditions:
+The variant's `PlatformFacts::services_paid_by_arrivals`, its condition 5 that every interrupt taken runs one
+service, paid for by a due release or an arrival (added by leaf `M2.11`), has no fact of its own. It is `yes` when
+each of these is `yes`, each a fact the variant or its composition already reads:
 - `no-empty-claim`: every external trap is taken while a request is pending;
+- `one-claim-per-trap`, read for this whatever `external-before-timer` states: every trap runs one service;
 - for each declared source, `one-request-per-arrival.<source>` and `external.<source>`, so its interrupts reach the
   hart only through the controller those facts are about;
 - `one-external-controller`;
 - `raised-only-when-due`, for the timer's half;
-- `leaves-interrupt-hardware-alone` and each `runtime-discipline.<id>`, without which no fact about the whole image
-  holds (`decision_runtime-composite-inputs.md` §2): a task that reads the claim register empties a request a trap
-  was taken for.
+- the application's `leaves-interrupt-hardware-alone` and each `runtime-discipline.<id>`, without which no fact about
+  the whole image holds (`decision_runtime-composite-inputs.md` §2): a task that reads the claim register empties a
+  request a trap was taken for.
 
-It is `no` when any of them is `no`, and otherwise undeclared when any is `unknown`. `M2.7.5` composes it so, and the
-conclusion names each. The cost decomposition the condition states for a trap that runs several services is the
-`service.<source>` costs' to hold: such traps exist only when `external-before-timer` is `yes`, and a basis that
-admits a claim loop states that each service's part is within its cost.
+Otherwise the fact reaches the variant undeclared, as a value this section could not read does (below), naming each
+conjunct that is not `yes`: a conjunct `no` shows that the composition cannot vouch for the condition, not that an
+interrupt goes unpaid. A caller may still declare the variant's fact itself. `M2.7.5` composes it so, and the conclusion names each conjunct.
 
 The variant's condition 8 for catalog costs is each cost's own `holds-under-preemption`.
 
@@ -108,7 +109,7 @@ target's `.env` or `.eadl` makes its review stale.
   - `preemption-delay`: the most one preemption or service adds to **any** preempted execution, as the variant's
     §1 defines γ. A value measured on
     particular code is that code's, and its `scope` says so;
-  - `compare-rounding`: the worst case over all release instants. The variant's `/1` takes ρ as given and derives
+  - `compare-rounding`: the worst case over all release instants. The variant takes ρ as given and derives
     nothing, so the worst case is what it uses, which is conservative. A smaller value because the description's
     releases fall on ticks is not composed in `/1`: it needs the timer's resolution as a number, which no
     yes-or-no fact states (`decision_runtime-composite-inputs.md` §7);

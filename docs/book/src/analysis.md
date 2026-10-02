@@ -233,12 +233,12 @@ bound past a deadline is `not-established`, never a counterexample. Three indepe
 design before any code. Each one found something that could have under-estimated a response time: the first two
 in what the analysis is given, and the third in an admission rule that let a kernel release a task early. A later
 review, of how the inputs are composed, found one more gap of the same kind: an interrupt that nothing pays for. The
-interrupt controller's notice can reach the processor after the claim that emptied it, so a trap is taken with
-nothing to serve, or serves an event that came after the trap. A level-triggered source completed before its device
+interrupt controller's notice can reach the processor after the claim that emptied it, so a trap can be taken while
+nothing is pending. A level-triggered source completed before its device
 is cleared is served twice for one event, and the emulator's controller requests again on any raise of a line. A
 timer interrupt can stay pending after its service has moved the alarm on. The analysis charges a source once per
 event and the timer once per release, so none of these is charged. The variant now refuses a platform that does not
-declare every interrupt it takes paid for, by a due release or by an event, and its model became
+declare that every interrupt it takes runs one service, paid for by a due release or by an event, and its model became
 `fixed-priority-with-overheads/2` (leaf `M2.11`). The
 implementation's tests check values derived by hand from the record, and six deliberate breakages are each caught.
 §7.4 also asks for expected results obtained independently (leaf `M2.6.3`). A context that read the record and
@@ -249,7 +249,7 @@ pessimistic by design.
 
 **F17 holds on the analysis side** (leaf `M2.6.4`, `crates/rt-analysis/tests/f17_refusal.rs`). Take a complete set the
 variant admits and give it one defect at a time. An interrupt the build enables and nobody declared, a source or
-timer cost nobody knows, an interrupt no arrival pays for, nesting, a task that suspends itself or locks the scheduler: each is refused, as
+timer cost nobody knows, an interrupt nothing pays for, nesting, a task that suspends itself or locks the scheduler: each is refused, as
 `unsupported-profile` or `analysis-inconclusive`, and never answered. The idealized baseline cannot stand in for the
 refused answer, because its conclusion names another model and always carries "no overhead".
 

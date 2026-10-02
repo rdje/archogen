@@ -345,7 +345,8 @@ fn an_interrupt_no_arrival_pays_for_is_outside_the_model() {
     let refusal = refused(admit(&tasks, std::slice::from_ref(&uart), &platform));
     assert_eq!(refusal.verdict, RefusalVerdict::UnsupportedProfile);
     assert!(
-        refusal.reasons[0].contains("paid for by a due release or an arrival does not hold"),
+        refusal.reasons[0]
+            .contains("runs one service, paid for by a due release or an arrival does not hold"),
         "{refusal}"
     );
 
@@ -353,7 +354,19 @@ fn an_interrupt_no_arrival_pays_for_is_outside_the_model() {
     let refusal = refused(admit(&tasks, &[uart], &platform));
     assert_eq!(refusal.verdict, RefusalVerdict::AnalysisInconclusive);
     assert!(
-        refusal.reasons[0].contains("does not declare whether every interrupt taken is paid for"),
+        refusal.reasons[0]
+            .contains("does not declare whether every interrupt taken runs one service"),
+        "{refusal}"
+    );
+
+    // Condition 6 says *taken* (`M2.11`): a timer interrupt still pending after its service moved the compare on is
+    // served with no release due, and the timer term, which counts releases, charges it nowhere.
+    let mut platform = self::platform();
+    platform.facts.raised_only_when_due = Some(false);
+    let refusal = refused(admit(&tasks, &[], &platform));
+    assert_eq!(refusal.verdict, RefusalVerdict::UnsupportedProfile);
+    assert!(
+        refusal.reasons[0].contains("a timer interrupt is taken only when a release is due"),
         "{refusal}"
     );
 }

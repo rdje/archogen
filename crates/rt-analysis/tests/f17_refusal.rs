@@ -145,7 +145,7 @@ const DEFECTS: &[(&str, Defect, RefusalVerdict, &str)] = &[
         "an interrupt taken that neither a due release nor an arrival pays for",
         |_, _, p| p.facts.services_paid_by_arrivals = Some(false),
         RefusalVerdict::UnsupportedProfile,
-        "paid for by a due release or an arrival does not hold",
+        "runs one service, paid for by a due release or an arrival does not hold",
     ),
     (
         "interrupts nest",
