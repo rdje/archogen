@@ -102,10 +102,13 @@ dispatch, which claims before it knows the source, acts in the role of the servi
   hart's interrupt-enable state directly; only a job calls the runtime API's `mask` and `unmask` (the profile's fault
   contract, `docs/profiles/rt-static-up-v1-faults.md`, Terms, added `2026-10-01`); the port's trap path and its
   transitions use `mscratch` where it keeps a stack there;
-- the image's panic handler is the fault path's entry, supplied by the record that supplies `switch`, and acts in the
-  fault path's role, from its first act, which masks interrupts, whoever's panic calls it: a panic reaching it is no
-  breach of `leaves-interrupt-hardware-alone`, and what can happen before that act is that record's to state (added
-  `2026-10-02`, the fault contract's R8 153);
+- the record that supplies `switch` supplies the fault path's entries — the image's panic handler, and an entry that a
+  check's call, and the trap path with a fault raised at a trap, reach, which it names — and each acts in the fault
+  path's role from its first act, which masks interrupts, whoever's panic or check, or whichever trap's path, reaches
+  it: a panic reaching the handler is no breach of `leaves-interrupt-hardware-alone`, and what can happen before a
+  fault a check finds, or a panic, is raised, inside a primitive or outside one, is that record's to state, a
+  primitive left with the runtime's state consistent or its job not abandoned (the fault contract's rule 5) (added
+  `2026-10-02`, the fault contract's R8 153; the second entry `2026-10-02`, its R11 pre-landing checks);
 - initialisation, before the first enabling of interrupts, writes the controller's configuration and the hart's
   interrupt state as the plan sets them. It may claim and complete requests left pending from before it, and it
   leaves none pending at the first enabling of interrupts that no arrival made. Two writes are one record's alone,
@@ -134,10 +137,10 @@ trap runs, and `mscratch` where the port keeps a stack pointer there.
 before the first enabling of interrupts, and firmware or a boot loader leaves no request pending that
 initialisation does not claim and complete. What code does after that is the facts' to state: requests a device
 raises without an arrival are `one-request-per-arrival.<source>`'s, and initialisation's leftovers its role's.
-**Assumed of the run:** no fatal fault is raised, by a trap or through the panic handler. The fault path's role is
-there so its code is covered, and its masked run is in no term of `L`. An arrival during initialisation would wait
-out initialisation's masked run, which `L` does not hold, and no catalog fact can vouch for when the environment's
-arrivals come.
+**Assumed of the run:** no fatal fault is raised, by a trap or through either of the fault path's entries. The fault
+path's role is there so its code is covered, and its masked run is in no term of `L`. An arrival during initialisation
+would wait out initialisation's masked run, which `L` does not hold, and no catalog fact can vouch for when the
+environment's arrivals come.
 
 **A trap by which the port enters the runtime API**, a primitive's or the completion path's, serves no interrupt
 (added `2026-10-02`, the fault contract's R8 152, rule 2); the review of the record that supplies `switch` checks

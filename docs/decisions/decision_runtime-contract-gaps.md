@@ -407,6 +407,39 @@ landed with the answers; the rest is carried into step 6r, to be read with R11's
 **Recorded for the process:** a fix made for a pre-landing check's finding is new text too, and is read again before
 it lands — #176 is what an unread fix costs.
 
+## The fault contract reviewed an eleventh time (`2026-10-02`, R11)
+
+An eleventh new context read the contract beside the composition record, from the text alone. On R10's answers: 13
+answered, 3 partly (#177, #183, #188), each because F26 had not followed the Terms. **Verdict: 1 defect remains
+(#192), minor**, older than R10's text and exposed by the panic answers: rule 7 said when a panic enters the fatal
+handler but not when a fault a trap raises does, so a second fault on a port's trap path before the handler starts —
+a guard reached, then the trap path saving context on the same stack — had three readings of the kept record. It
+judged the delegations sound again, the panic window's included, and none of W1–W11 a defect.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 192 | defect (minor) | rule 7 fixed a panic's entry to the handler, not a trap-raised fault's, so a fault on the trap path before the handler had three readings | rule 7 names each fault's raise point — a guard's data access fault and a third-case trap at its trap's entry, any other where it reaches the fault path — and a fault taken on the trap path between a fatal fault's raising and the handler's first act ends the runtime in the terminal state, before the record's first write; the trap path is not made part of the handler, which writes the record before anything else it does; F26 gains the case |
+| 193 | drafting | the pass-the-kind obligation left out the raiser, a deliberate trap on a failed own-invariant check, and generated code's reviewer | taken with W5: what is passed is the kind, the raiser and a guard's owner, so does such a deliberate trap, and generated code's review is the plan's generator's |
+| 194, 195 | drafting | F26 lagged three answers; six lines assumed an optional port design | accepted, and "a later claim" conditioned with them |
+| 196 | drafting | whether a fetch's access fault on a guard is a stack guard | decided: a load's, store's or atomic's is; a fetch's is an unexpected trap, a stack being never fetched |
+| 197–203 | nits | the tags' findings §6; a refused boot's empty mark; a transition from initialisation; "the one"; "dispatches or resumes"; rule 2's raisers; the header's list | accepted |
+
+**Answered `2026-10-02` (step 6r), with W1–W7 and W9–W11, checked before landing — six times.** Each check read
+the text written for the one before, and found 2, 2, 1, 3, 1 and 0 defects. The first two were the answers' own:
+rule 7 said a trap-raised fault entered "the fatal handler" at its trap, against the choice that the trap path is not
+the handler (D1), and the Terms' "at that claim" competed with rule 7's raise point (D2). The rest came from what was
+added to answer drafting points: a window between a failed check and its raising widened to every check, then
+narrowed to panics, a rule for a primitive's unraised fault, and an obligation to pass a fault with interrupts
+disabled, which a check in a job's own code cannot meet. What landed reads the committed text's delegation as written
+— what can happen before a fault a check finds, or a panic, is raised is the port's to state, inside a primitive or
+outside one, leaving the runtime's state consistent or the job not abandoned — and gives the fault path a second
+entry, named by the port's record, which a check's call and the trap path reach. The sixth check found no defect; its
+2 drafting points and 4 nits (C1: how the port's statement binds another record's checking code; C2: a pending check
+that reports the runtime's state broken, outside a primitive; N1–N4) are carried into step 6s, read with R12's answers
+before they land. None of it moves either model; the composition record's role list and run assumption, and the
+book's Annex A, moved with it. **Recorded for the process:** answering a drafting point by adding a rule cost five
+checks; a delegation the reviewed text already made, read as written, closed it.
+
 ## Where the contract lives (`2026-10-01`)
 
 Answering R3 (`M2.9`) needed about 20 lines more than `ROADMAP.md`'s 1 100-line ceiling allowed, which only the

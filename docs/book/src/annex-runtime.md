@@ -31,22 +31,28 @@ the section early.
 
 ## Faults in detail
 
-**Whose guard.** A stack guard says separately whose guard was hit — a task's, or the interrupt stack's —
-because the stack and the culprit can differ.
+**Whose guard.** A stack guard says separately whose guard was hit — a task's, or the interrupt stack's — because
+the stack and the culprit can differ. A guard is hit by reading or writing it; a jump into one is an unexpected trap
+instead, since a stack is never executed.
 
 **Panics.** A panic in the runtime's, a port's, a catalog record's or generated code is an assertion failure —
 unless its check found a stack's guard reached or one of the unexpected traps the contract names, which it then is,
-and such a check must pass that kind on to the fault path. A check in application code is classified by how it
-ends: a panic is an assertion failure, a trap is what that trap is — touching a guard a stack guard, any other an
-unexpected trap — since no port could tell what an application's own check meant. It reaches the port's one fatal
-handler, which the port supplies; an application's own handler is refused at build. On a board a few instructions
-run between a failed check and the handler's first one, and an interrupt can land there. What may happen in that
-window depends on how a port builds its panic path, so the contract leaves it to the port to state, and to be
-reviewed with the port's design, rather than legislating for a port that does not exist yet.
+and such a check must pass on what it found: the kind, the context that raised it and, for a guard, whose. A check
+in application code is classified by how it ends: a panic is an assertion failure, a trap is what that trap is —
+reading or writing a guard a stack guard, any other an unexpected trap — since no port could tell what an
+application's own check meant. It reaches the port's one fatal handler, which the port supplies; an application's
+own handler is refused at build. On a board a few instructions run between a failed check and the moment its fault
+is raised, and an interrupt can land there. What may happen in that window depends on how a port builds its panic
+path, so the contract leaves it to the port to state, and to be reviewed with the port's design, rather than
+legislating for a port that does not exist yet — inside a runtime primitive too, where the port also says what
+becomes of the primitive, and must leave the runtime consistent or else not abandon the job. A check that passes
+what it found by a trap or a direct call has the same window, stated the same way.
 
 **The record a board keeps.** Beside the fault, its task and the task it interrupted, a board's record carries a
 mark — empty from boot, begun by its first write, complete by its last — so a record cut short by a fault in the
-handler says so, and an empty mark on a halted system says the fault came before the record began.
+handler says so, and an empty mark on a halted system says the fault came before the record began. A fault taken on
+the few instructions of the trap path between a fatal fault and the handler's first counts as one in the handler,
+taken before the first write: it leaves the mark empty too.
 
 ⛔ **A containable fault raised while interrupts are masked would halt** (rule 3). In this profile the case never
 arises — no release is observed inside a masked region, so no overrun is raised there — and the rule stands for a
