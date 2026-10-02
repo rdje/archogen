@@ -714,7 +714,7 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0301 (leaf PROGRAM.47.4)`
 
 - ID: `PROGRAM.47.5`
-  Status: `active` — one chapter per child, each `done` when committed: `.1` the introduction, `.2` the tour, `.3` reading a description, `.4` describing a workload, `.5` checking a description, `.6` what a report may claim, `.7` the scheduling checker, `.8` the catalog, `.9` where systems run, `.10` the command line, `.11` the engine API, `.12` verifying the toolchain, with Annex B, `.13` the boundary, `.14` the supported profile
+  Status: `active` — one chapter per child, each `done` when committed: `.1` the introduction, `.2` the tour, `.3` reading a description, `.4` describing a workload, `.5` checking a description, `.6` what a report may claim, `.7` the scheduling checker, `.8` the catalog, `.9` where systems run, `.10` the command line, `.11` the engine API, `.12` verifying the toolchain, with Annex B, `.13` the boundary, `.14` the supported profile, `.15` the use cases
   Goal: every other chapter in layers, one leaf and commit each when started, the chapters a newcomer meets first
   leading — the introduction and the tour, reading and workload, checking, evidence and analysis, the catalog,
   targets, the command line, the engine API, verification — and the gory parts of each moved to annexes.
@@ -880,6 +880,18 @@ mdBook that is the director's window into the project.
   Verification: `cargo test -q -p eadl-model profile` → 0 failed; `figure-register: OK`; `book-glossary: OK`;
   `bash scripts/build_book.sh` → rc=0; `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`
   Commit: `ARCHOGEN-PROGRAM-0316 (leaf PROGRAM.47.5.14)`
+
+- ID: `PROGRAM.47.5.15`
+  Status: `done` — `2026-10-02`
+  Goal: *The use cases* in layers.
+  **Done.** It opens with an exam written before the course is taught, as the picture of example systems fixed before
+  the engine existed; each case's required answer in one plain line — build, "cannot be sure", bridge the gap or say
+  what is missing, stay refused — and the sealed set as the end-of-course measure. Then the one-minute summary, the
+  table as how it works, and the precise rules, every section kept; the plain layer names the cases rather than
+  counting them.
+  Verification: `figure-register: OK`; `book-glossary: OK`; `bash scripts/build_book.sh` → rc=0; `bash scripts/
+  check_doctrines.sh` → `=== all doctrines green ===`
+  Commit: `ARCHOGEN-PROGRAM-0317 (leaf PROGRAM.47.5.15)`
 
 ## Roadmap coverage map
 
@@ -1193,6 +1205,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.47.5.12` | `ARCHOGEN-PROGRAM-0314 (leaf PROGRAM.47.5.12)` | ***Verifying the toolchain* in layers**, its repository checks moved to Annex B |
 | `PROGRAM.47.5.13` | `ARCHOGEN-PROGRAM-0315 (leaf PROGRAM.47.5.13)` | ***The boundary* in layers** |
 | `PROGRAM.47.5.14` | `ARCHOGEN-PROGRAM-0316 (leaf PROGRAM.47.5.14)` | ***The supported profile* in layers** |
+| `PROGRAM.47.5.15` | `ARCHOGEN-PROGRAM-0317 (leaf PROGRAM.47.5.15)` | ***The use cases* in layers** |
 
 ## Changelog
 
