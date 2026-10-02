@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — what the port must declare: decided
+
+`ARCHOGEN-M2-0371` (leaf `M2.12.3`, step 8, closed).
+
+- The seventh independent review found no defect, so what the architecture port's catalog record must declare about
+  faults is decided: the facts it states, the costs of its fatal path, and the convention by which a failed check
+  reports what it found, matched across records. Its remaining wording points are answered in the same change.
+  Building it into the catalog crate comes next, before the catalog's first lock.
+
 ## archogen — what the port must declare: the sixth review
 
 `ARCHOGEN-M2-0370` (leaf `M2.12.3`, step 7).

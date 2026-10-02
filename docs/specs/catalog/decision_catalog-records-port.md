@@ -3,8 +3,8 @@
 - **Type:** `decision`
 - **Date:** `2026-10-02`
 - **Status:** `active` — §14.1, the measurements, done (`M2.12.1`); the format, §14.2 and §14.3, decided by `M2.12.2`
-  on `2026-10-02`, its seventh review finding no defect; the port's statement, §14.4, drafted by `M2.12.3` and under
-  review
+  on `2026-10-02`, its seventh review finding no defect; the port's statement, §14.4, decided by `M2.12.3`
+  on `2026-10-02`, its seventh review finding no defect
 - **External sources:** [the Rust Reference](../../book/src/ledger.md#rust-reference) shipped with the pinned
   toolchain, [the Rust toolchain](../../book/src/ledger.md#rust-toolchain) itself, and [the RISC-V privileged
   specification](../../book/src/ledger.md#riscv-privileged) — versions, hashes and limits in the ledger
@@ -95,7 +95,8 @@ pub fn install() {
 }
 ```
 
-What it emitted for the two naked functions, verbatim apart from blank and `.cfi` lines:
+What it emitted for the two naked functions, verbatim apart from blank and `.cfi` lines and, after each body, its end
+label, a `.Ltmp` label, `.size` and `.text` (`M2.12.3`'s seventh review):
 
 ```text
 	.section	.text._ZN10nakedprobe10trap_entry17h9bf1aa9842e58abcE,"ax",@progbits
@@ -152,7 +153,7 @@ name, no `global_asm!`.
 nothing has been ledgered under `/1`, and no history needs its rules kept (§5). Every amendment here relaxes a rule
 — the assembly tokens, the `assembly` subform, several locators, a known value of one of the twelve port facts below, and §4's path rule read per list,
 which the loader already applies — and none refuses what `/1` admitted. Until `M2.12.4` the loader refuses the rest, so no lock line written before then can hold a record that
-only the rest admits; when `M2.12.4` lands, after the first lock or before it, no earlier line's verdict
+only the rest admits; when `M2.12.4` lands — before the first lock, which §14.4's refusals need (§14.4, *Versioning*) — no earlier line's verdict
 changes. §14.2 and §14.3 are part of what `archogen-catalog/1` names: from the first lock on, changing them, like
 changing §3, is a new rules version (§9). `ROADMAP.md` §15's ask that a change be explicit is met here.
 
@@ -381,7 +382,7 @@ matched across records mechanically, through a record of its own: the convention
 it found.
 
 **The port's record** is the record that supplies `switch` under the selection
-(`decision_runtime-composite-inputs.md` §1). Its behavioral model states the facts of the table below and its timing
+(`decision_runtime-composite-inputs.md` §2). Its behavioral model states the facts of the table below and its timing
 model the costs below, all in the `switch` group (§12), each fact but `panic-strategy-abort` and
 `generated-guard-check-contexts` a code fact whose locators reach its own implementation or a `describes` record's,
 as §2 admits — the runtime API record's for what rests on `rt-core`'s primitives, scheduler or detection; those two
@@ -560,7 +561,7 @@ and not where it states the opposite:
   subcases — a later claim in an external trap, a claim made in a timer trap for a further external interrupt, a timer
   service run for a further timer interrupt found by its pending bit — only where `one-claim-per-trap`'s basis says
   the port does that; and the case "of one in a later trap of a delivery spanning several traps" only where a delivery
-  can span several, which `one-claim-per-trap` `yes`, or its basis, says;
+  can span several, which `one-claim-per-trap` `yes`, on a target with an external source, or its basis, says;
 - "under the port's stated choice" for the completion interval: a service in that interval, a waiting completion-path
   context resumed ahead of its own task's new job, and a task faulted while its context waits, where
   `services-preempt-completion-interval` is `yes`; and "on each port that lets a service preempt the decision":
@@ -569,13 +570,13 @@ and not where it states the opposite:
   checks its basis names;
 - the window: a trap taken before a raising, outside a primitive where `window-trap-preempts-outside` is `yes`, inside
   one where `window-trap-preempts-inside` is, each in the contexts its basis names; a release observed then abandoning
-  the job, where `window-release-abandons` is `yes`, outside a primitive as its basis says, and inside one only where
+  the job, where `window-release-abandons` is `yes`, outside a primitive as its basis says, and inside one, as its basis says, only where
   `window-primitive-consistent` is also `yes`; what becomes of the primitive, as `window-primitive-consistent` states,
   where it is read; the kept context run on to the raising under both policies, outside a primitive where
   `window-trap-preempts-outside` is `yes` and `window-release-abandons` is `no`, or `yes` with its basis naming only
   inside a primitive, inside one where
-  `window-trap-preempts-inside` is `yes` and either `window-primitive-consistent` or `window-release-abandons` is `no`
-  there; and a fatal fault
+  `window-trap-preempts-inside` is `yes` and either `window-primitive-consistent` is `no`, or `window-release-abandons`
+  is `no`, or `yes` with its basis naming only outside a primitive; and a fatal fault
   raised before the raising, kept if it is the first, on every port;
 - "a fault in a fault-path entry's compiler prologue": for each entry `fault-path-entries`' basis names compiled, not
   naked — a naked one has no compiler prologue — the part of the case that reaches that entry: by a panic for the one
@@ -583,8 +584,10 @@ and not where it states the opposite:
 - a case a fact's basis, or the port's convention, scopes — to contexts, points, entries, routes or stacks: those named
   above, `primitives-preemptible`'s points, the routes by which the convention's checks pass what they find (a trap, a
   panic, a call of the fault path), and the stacks `guarded-stacks` names, a stack-guard case owed only on a guarded
-  stack, and a case reached by an access (a load, a store, an atomic, or a fetch, the last an unexpected trap) only
-  where that basis says the access faults — is owed there, matched by `M4.6`'s review against the basis or the convention;
+  stack, one found by a check only where `guard-check-contexts`, `generated-guard-check-contexts` or a record's
+  `guard-check-contexts.<id>` names a check of that stack, and a case reached by an access (a load, a store, an
+  atomic, or a fetch, the last an unexpected trap) only where `guarded-stacks`' basis says the access faults — is
+  owed there, matched by `M4.6`'s review against the basis or the convention;
 - the cases "on each port whose stated strategy aborts, under it" are owed on no port while the pin offers none:
   `panic-strategy-abort` `yes` names the strategy under which every panic calls the handler, not one that aborts
   without calling it.
@@ -630,6 +633,7 @@ to each are in [`decision_catalog-records-port-reviews.md`](../../reviews/decisi
 | 4, same day | 17 | two regressions from round 3's answers — an "or" read as "and", `checks-trap` narrowed — and two refusals unfiled in §11 | 3 defects, 2 gaps; the condition rule exact, `checks-trap`'s scopes restored, §11 and §2 aligned; all answered |
 | 5, same day | 12 | a convention locator refused under two codes, a regression of round 4's; `/1`'s amendment history; how a stack's guard is found | 2 defects, 1 gap; one code per refusal, §3 and the versioning paragraph exact, `guarded-stacks`' basis says how; all answered |
 | 6, same day | 8 | the undecidable case narrowed in one of its two statements only; §14.4's refusals unordered before the first lock | 1 defect, 1 gap; both statements one rule, a case's facts settling it; `M2.12.4` and `M2.7.4` ordered; all answered |
+| 7, same day | 12 | no defect: a check-found guard case unscoped, wording, and §14.1's assembly listing | 0 defects, 1 gap; all answered; **§14.4 decided** |
 
 ## Why
 

@@ -187,4 +187,4 @@ with the first is not ground truth", so this is evidence with a stated scope, no
   narrows (`M2.9`).
 - **Ahead:** no port exists yet, so `rt-core` has decided for no real interrupt. The port's catalog record comes
   next (`M2.12`): its assembly format is decided, and what the port must state of the fault contract's open points is
-  under review — on the road to [the emulated machine and a board](targets.md).
+  decided — on the road to [the emulated machine and a board](targets.md).

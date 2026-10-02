@@ -2,14 +2,15 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-02`
-- **Status:** `active` — rounds 1 to 6 answered; round 7 next; the review closes on the first round that finds no defect
+- **Status:** `closed` — `2026-10-02`: round 7 found no defect, and §14.4 was decided in the change that answered it
 - **External sources:** [the Rust Reference](../book/src/ledger.md#rust-reference) shipped with the pinned toolchain,
   and [the RISC-V privileged specification](../book/src/ledger.md#riscv-privileged) — versions, hashes and limits in
   the ledger
 - **Owner / source:** leaf `M2.12.3` (`docs/tasks/M2.md`). The design under review is §14.4 of the catalog record, kept
   in [`decision_catalog-records-port.md`](../specs/catalog/decision_catalog-records-port.md), with the amendments it
   makes to the fault contract (`docs/profiles/rt-static-up-v1-faults.md`), the composition record, §2, §3, §9, §11,
-  §12, §13 and §14's summary of the catalog record, findings §12, `M4.6` and `M4.10`. Section numbers are the catalog record's.
+  §12, §13 and §14's summary of the catalog record, its §5 and §14.1, findings §12, `M4.6`, `M4.10`, `M2.12.4`, `M2.7.4`, and
+  the book's `annex-runtime.md`, `catalog.md` and `runtime.md`. Section numbers are the catalog record's.
 
 ## The fact / decision
 
@@ -220,6 +221,28 @@ to a toolchain installed from the file alone instead.
 | 6 | nit | the catch-all called a fetch from a guard a stack-guard case, inside nested dashes | "a case reached by an access (…, or a fetch, the last an unexpected trap)" |
 | 7 | nit | the `rust-src` premise holds of what is installed, not of the file | scoped to a toolchain installed from the file alone, as CI installs it |
 | 8 | nit | the book's guard sentence unconditional, though check-only guards are admitted | `annex-runtime.md`: found because the access faults or by a check, the record saying which |
+
+**Round 7**, `2026-10-02`, of commit `40cc989`, by a new context asked first for regressions. It read every sentence
+round 6 changed against the text before it, grepped every other statement of the same rules, re-derived all five probe
+hashes and reproduced every toolchain answer, adding side doors of its own — a `staticlib`, and an `immediate-abort`
+library linked into an `abort` binary, each refused the same way. It found every answer of rounds 1 to 6 in place and
+**no defect**, so the review closes on it. 12 findings: 1 gap, 4 drafting points, 7 nits, one of them in §14.1,
+`M2.12.1`'s, reproduced here before it was answered. Defects per round: 9, 6, 4, 3, 2, 1, 0.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 1 | gap | a stack-guard case found by a check owed on a stack no guard check covers | owed only where `guard-check-contexts`, `generated-guard-check-contexts` or a record's `guard-check-contexts.<id>` names a check of that stack |
+| 2 | drafting | §14.2 still let `M2.12.4` land after the first lock | "before the first lock, which §14.4's refusals need" |
+| 3 | drafting | §5 named only §3's grammar and the ledger-time checks as `/1`'s | "§3's grammar, with what §3 says it versions (§14.2 to §14.4)" |
+| 4 | drafting | the inside run-on and abandonment missed a release abandoning only outside | the inside run-on also where its basis names only outside; the inside abandonment "as its basis says" |
+| 5 | drafting | `one-claim-per-trap` `yes` alone does not let a delivery span several traps | "on a target with an external source" |
+| 6 | nit | the `switch` supplier cited to the composition's §1 | §2 |
+| 7 | nit | "that basis" could read as any fact's | "`guarded-stacks`' basis" |
+| 8 | nit | `M2.7.4`'s "`M2.12.3` with it" | both closed, and the wait for `M2.12.4` kept |
+| 9 | nit | the book's guard owners omitted a stack the port guards | added |
+| 10 | nit | rustup's profile decides whether `rust-src` is installed from the file | left as scoped, "as CI installs it": `M2.12.4`'s compile-only test of the premise runs in CI, so a runner that held `rust-src` would fail it first |
+| 11 | nit | the header's amended-file list incomplete | completed |
+| 12 | nit | §14.1's assembly "verbatim apart from blank and `.cfi` lines" omitted each body's end label, `.Ltmp`, `.size` and `.text` | reproduced on the pin and said |
 
 ## Why
 

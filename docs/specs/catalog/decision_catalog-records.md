@@ -398,7 +398,8 @@ and a neutered CI let through is refused at load (`catalog-review`), not only wh
 names it.
 
 **Each ledgering commit is verified under the rules it was ledgered under**, those its lock's first line names
-(§9). `# archogen-catalog/1` names both §3's grammar and these ledger-time checks. A later version replaces that
+(§9). `# archogen-catalog/1` names §3's grammar, with what §3 says it versions (§14.2 to §14.4), and these ledger-time
+checks. A later version replaces that
 line, with a migration note as `ROADMAP.md` §15 asks, in the first catalog change after a checker that knows both
 versions has merged (premise 3). A line ledgered
 under `/1` is verified under `/1` for good, so a rule tightened later never refuses history that was honest when it

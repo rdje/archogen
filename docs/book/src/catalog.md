@@ -173,7 +173,8 @@ specification's. Round 11 found none live, and the record was accepted. Its hist
   hold assembly, each instruction from a short list with every operand checked by its position, other code reached
   only by `sym` or an address the code computes, every register an inline block touches declared, no output sharing a register, and
   no directive. What the port's record must state of the fault contract's open points, as facts reviewed beside its
-  code, one of them matched across records, is under review (`M2.12.3`). Until the loader admits it (`M2.12.4`) and a
+  code, one of them matched across records, is decided too, after seven independent reviews (`M2.12.3`): among
+  them how each guarded stack's overflow is found, and the convention by which a failed check passes what it found. Until the loader admits it (`M2.12.4`) and a
   port's record exists, every analysis of the runtime variant over the catalog is inconclusive.
 - **No surface makes a production claim.** That needs images, which are `M4`'s, and `M4.10` holds everything the
   design leaves to it.

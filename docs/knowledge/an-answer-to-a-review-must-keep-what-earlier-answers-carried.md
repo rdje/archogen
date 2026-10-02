@@ -5,6 +5,7 @@ answers:
   - "I rewrote a reviewed passage to fix a finding — what could the rewrite have lost?"
   - "My argument says a cost is paid by some charge — how do I know that charge is free?"
   - "A review finds a class of cases my rule does not charge — do I charge them or refuse them?"
+  - "I corrected a rule a review found wrong — where else is the same rule stated?"
 type: knowledge
 date: 2026-10-02
 ---
@@ -18,7 +19,7 @@ draw new defects in the next, and the loop does not converge. What makes an answ
 
 ## The answer
 
-Three habits, each learned from a defect an answer introduced (leaf `M2.11`, its review rounds 2 and 3,
+Four habits, each learned from a defect an answer introduced (leaf `M2.11`, its review rounds 2 and 3,
 in `docs/reviews/decision_runtime-analysis-variant-reviews.md`; and leaf `M2.9`'s fifteen rounds):
 
 1. **Edit the words a finding names; do not rewrite the passage whole.** `M2.11`'s third step rewrote
@@ -36,6 +37,13 @@ in `docs/reviews/decision_runtime-analysis-variant-reviews.md`; and leaf `M2.9`'
    finding. Refusing them, one service per trap, deleted that text and the findings with it. The same
    held in `M2.9`: deleting text was the safest answer, and an answer by delegation to the record that
    owns a fact beat new mechanics.
+4. **A rule changed in one statement is changed in every other.** `M2.12.3`'s answers drew a regression
+   or a partial carry in three rounds running: a definition that turned an "or" into an "and", a quotation
+   that narrowed a fact's scope, and a rule corrected where the fixtures state it but not where the
+   record's earlier paragraph states it again (`docs/reviews/decision_catalog-records-port-statement-reviews.md`,
+   rounds 4 to 6). Before landing, grep the rule's key words across the record, its sibling records, the
+   task leaves and the book, and give every statement the same words; and ask each review to read the
+   previous round's answers first.
 
 ## Why
 

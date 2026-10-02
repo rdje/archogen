@@ -31,7 +31,7 @@ the section early.
 
 ## Faults in detail
 
-**Whose guard.** A stack guard says separately whose guard was hit — a task's, or the interrupt stack's — because
+**Whose guard.** A stack guard says separately whose guard was hit — a task's, the interrupt stack's, or another stack the port guards — because
 the stack and the culprit can differ. A guard is hit by reading or writing it, found either because the access faults
 or by a check — the port's catalog record says which, for each stack; a jump into one whose access faults is an
 unexpected trap instead, since a stack is never executed.
