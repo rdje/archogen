@@ -2,7 +2,7 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-02`
-- **Status:** `active` — rounds 1 to 4 answered; round 5 next; the review closes on the first round that finds no defect
+- **Status:** `active` — rounds 1 to 5 answered; round 6 next; the review closes on the first round that finds no defect
 - **External sources:** [the Rust Reference](../book/src/ledger.md#rust-reference) shipped with the pinned toolchain,
   and [the RISC-V privileged specification](../book/src/ledger.md#riscv-privileged) — versions, hashes and limits in
   the ledger
@@ -177,6 +177,30 @@ Defects per round: 9, 6, 4, 3. Its stronger panic-strategy premise was reproduce
 | 15 | nit | rule 2's "for rule 5" dropped | restored |
 | 16 | nit | which records the obligatory and within-record rules bind | every record stating these names; only the `switch` supplier read |
 | 17 | nit | a non-convention record's `convention-stated.<id>`, and the port's own `guard-check-contexts.<id>` | both refused |
+
+**Round 5**, `2026-10-02`, of commit `a9be943`, by a new context asked first for regressions. It re-derived all five
+probe hashes, reproduced every panic-strategy answer, measured E0152 across two crates as well as in one, and found
+every answer of rounds 1 to 4 still in the text; but 2 defects. One is a regression of round 4's answers 3 and 7: "other
+than a single `file` locator" filed a convention fact with several locators under `catalog-locator` while §14.2 files
+it under `catalog-shape`, two codes for one refusal. The other: §3 still said `/1` was amended once, by §14.2, whose
+reason, a relaxing, does not cover §14.4's refusals. 12 findings: 2 defects, 1 gap, 6 drafting points, 3 nits.
+Defects per round: 9, 6, 4, 3, 2. Its unmeasured premise, that `core` cannot be rebuilt on the pin, was measured
+here: `RUSTC_BOOTSTRAP=1 cargo +1.95.0 build -Zbuild-std=core` over `bin_main.rs` is refused for want of `rust-src`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 1 | defect | a convention fact's several `file` locators refused under two codes | §14.4 refuses a single locator that is not `file` (`catalog-locator`), several being §14.2's `catalog-shape` |
+| 2 | defect | §3: `/1` "amended once, by §14.2"; §14.4 tightens it with no reason given | §3: amended twice, by §14.2, which relaxes, and §14.4, which adds names and refusals; §14.4's versioning says why it may: no record or lock exists |
+| 3 | gap | a stack-guard case reached by an access owed on a guard only a check finds | `guarded-stacks`' basis says how each guard's reach is found; the access cases owed only where it says the access faults |
+| 4 | drafting | "absent or `unknown` cannot be decided" made a case whose condition fails on a `no` undecidable | undecidable where the fact is `unknown`, or absent while its read condition is open |
+| 5 | drafting | the outside run-on's "`no` there" missed a release abandoning only inside | "`no`, or `yes` with its basis naming only inside a primitive" |
+| 6 | drafting | `M4.6` kept round 3's "contexts or points" | `M4.6` names contexts, points, entries, routes or stacks, and the convention, and the open-condition rule |
+| 7 | drafting | `checks-trap`'s basis cannot name another record's checks | the port's own and its `describes` records'; another record's take the convention's routes |
+| 8 | drafting | "one for `or`" read as exactly one | "at least one" |
+| 9 | drafting | the trap list omitted a store | "such as a load from, a store to, or a jump to" |
+| 10 | nit | How to apply omitted round 4's `RUSTC_BOOTSTRAP` premise | added, with `-Zbuild-std`'s |
+| 11 | nit | "built `abort` or not at all" rests on the pin holding no `rust-src` | measured and stated |
+| 12 | nit | §2's "marks file-located", a term neither §12 nor §14.4 uses | "says has a `file` locator" |
 
 ## Why
 

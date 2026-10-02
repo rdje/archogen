@@ -258,7 +258,7 @@ carry several `(locator (code …))` subforms, one after another, no two the sam
 - `(locator (code <id> "<path>"))` names a file in record `<id>`'s implementation own set, so the facet's bound
   hash covers it through `implementation <id>` (§3). In a behavioral model, `<id>` is the record itself or a
   `describes` record. In a timing model, it is the record, a record in its dependency closure, or a
-  `measured-with` record. A code fact takes this form and no other, and a fact §12 or §14.4 marks file-located takes a `file` locator and no other;
+  `measured-with` record. A code fact takes this form and no other, and a fact §12 or §14.4 says has a `file` locator takes that locator and no other;
 - `(locator (ledger <anchor> "<revision>, <section>"))` names a section of `docs/book/src/ledger.md`. The section
   is the part from the heading `` ## `<anchor>` `` up to the next line beginning `## `, or the end of the file.
   It must exist and be the only heading with that anchor, and its bytes are in the facet's bound hash (§3).

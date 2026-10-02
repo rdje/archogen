@@ -399,7 +399,7 @@ load (`catalog-field`, naming the record); each may be `unknown`, which §6 keep
 | `completion-decision-remade` | a decision a service preempted is made again; `no`, no service preempts the decision. Read only when `services-preempt-completion-interval` is `yes` | — | |
 | `guard-check-contexts` | for each guard check the port's own code makes, the context that runs it is stated | the table of checks and contexts, from the contract's rule 2's set | yes |
 | `generated-guard-check-contexts` | the same for each guard check generated code makes; `unknown` until `M4` defines generated code's checks | the table; a `file` locator, generated code being in no record | yes |
-| `guarded-stacks` | every stack the port guards is named | each stack, by name | yes |
+| `guarded-stacks` | every stack the port guards is named | each stack, by name, and how a reach of its guard is found: by the access faulting, and what makes it fault, or by a check only | yes |
 | `decision-placement` | where the port makes a scheduling decision is stated | the place, the completion path's included | yes |
 | `api-entry-by-trap` | the port enters the runtime API by a trap | the trap, which entries — primitives, the completion path — it serves, and how it tells its entry apart | |
 | `api-trap-preemptible-before-decode` | an interrupt may preempt that trap before it tells its entry apart. Read only when `api-entry-by-trap` is `yes` | in which contexts it can | |
@@ -412,7 +412,7 @@ load (`catalog-field`, naming the record); each may be `unknown`, which §6 keep
 | `window-primitive-consistent` | inside a primitive, an abandonment in the window leaves the runtime's state consistent; `no`, the job is not abandoned there. Read only when `window-release-abandons` and `window-trap-preempts-inside` are both `yes` | — | |
 | `abandoned-primitive-completion` | how and in which context the runtime completes a primitive on an abandoned job's behalf is stated | the context, one in whose role the composition lets that code act, and how a fault met there is raised | yes |
 | `fault-path-entries` | the fault path's two entries are named | each entry's function and signature, and whether it is naked or compiled: the one the image's panic handler calls, and the one a check's call and the trap path reach; what the handler passes it | yes |
-| `checks-trap` | a check that finds a fault, or a failed check of a record's own invariants, in the port's code or a record's using its convention, may end in a deliberate trap — a load from, or a jump to, an address nothing answers, which the dialect and Rust both admit; generated code's checks are `M4`'s | which checks, and the trap each takes | |
+| `checks-trap` | a check that finds a fault, or a failed check of a record's own invariants, in the port's code or a record's using its convention, may end in a deliberate trap — such as a load from, a store to, or a jump to, an address nothing answers, which the dialect and Rust both admit; generated code's checks are `M4`'s | which checks — the port's own and those of the records it `describes` — and the trap each takes; another record's take the convention's routes (below) | |
 | `traps-discriminated` | the trap path tells a check's deliberate trap from any other trap | how | yes |
 | `kept-record-readout` | the kept record can be read out of a halted runtime | where it lives and how it is read | yes |
 | `panic-strategy-abort` | the image is built with the `abort` strategy, the target's default on the pin, under which every panic calls the handler | the pin's measurement (below); its locator a `file` locator to the record's own statement of it, since no port code sets the image's strategy | yes |
@@ -430,8 +430,8 @@ several is `one-claim-per-trap`'s (§12), whose basis states, when it is `no`, h
 interrupt — a timer interrupt by its pending bit — and the order among the interrupts one trap serves.
 
 **Within the record**, the loader refuses (`catalog-field`): a fact stated `yes` or `no` where it is read only under a
-condition that does not hold — a condition holds when its facts, combined as it says, each for `and` and one for
-`or`, are stated `yes`, a fact absent or `unknown` counting as not `yes`; and `api-trap-preemptible-before-decode` `yes` with `primitives-preemptible` `no`, since
+condition that does not hold — a condition holds when its facts, combined as it says, each for `and` and at least one
+for `or`, are stated `yes`, a fact absent or `unknown` counting as not `yes`; and `api-trap-preemptible-before-decode` `yes` with `primitives-preemptible` `no`, since
 the contract's rule 2 makes a primitive's trap, from its entry to its return, the primitive, and the trap of an entry
 naming neither a primitive nor the completion path one too. Other combinations — a
 release abandoning only inside a primitive, or `api-trap-preemptible-before-decode` `yes` for a job's call beside
@@ -475,7 +475,10 @@ without the list's two-space indentation, each ending in a line feed, its sha256
   calling the handler, "`-Cpanic=immediate-abort` requires `-Zunstable-options` and a nightly compiler"; and even
   with `RUSTC_BOOTSTRAP=1` and `-Zunstable-options` the binary is refused, "the crate `core` was compiled with a
   panic strategy which is incompatible with `immediate-abort`", while a library builds; an image's build runs in
-  the gate's allowlisted environment besides, where such a `RUSTC_BOOTSTRAP` is seen (§7):
+  the gate's allowlisted environment besides, where such a `RUSTC_BOOTSTRAP` is seen (§7). Nor is `core` rebuilt:
+  as a package's `src/main.rs` (edition 2021), `RUSTC_BOOTSTRAP=1 cargo +1.95.0 build -Zbuild-std=core --target
+  riscv64imac-unknown-none-elf` is refused, "unable to build with the standard library, try:" `rustup component add
+  rust-src`, the pin's components (`rust-toolchain.toml`) holding no `rust-src` (`M2.12.3`'s fifth review):
 
   ```rust
   #![no_std]
@@ -510,7 +513,7 @@ without the list's two-space indentation, each ending in a line feed, its sha256
   pub extern "C" fn jumps() { ::core::arch::naked_asm!("j 1f", "1:", "mret") }
   ```
 
-So on the pin a binary is built `abort` or not at all, every panic calls the handler, and the contract's cases under a
+So on the pin, whose components hold no `rust-src`, a binary is built `abort` or not at all, every panic calls the handler, and the contract's cases under a
 strategy that aborts without calling it cannot arise. These are premises §14.4 rests on: re-run with §14.1's when the
 pin moves (How to apply), and held as `M2.12.4`'s compile-only tests.
 
@@ -521,8 +524,9 @@ failed check of a record's own invariants, and the trap path pass the kind, the 
 to the fault path — registers or memory, encodings, which entry, and the route
 of a check that panics through the image's handler. The loader refuses (`catalog-field`) a record with that prefix
 whose catalog is not `interfaces`, whose implementation is not `none`, or whose behavioral model does not state exactly
-one fact, `convention-stated.<id>`, `<id>` its own, `yes`; and (`catalog-locator`) one whose fact carries other than a
-single `file` locator, to a copy of the convention its contract states — the contract governing. That fact is
+one fact, `convention-stated.<id>`, `<id>` its own, `yes`; and (`catalog-locator`) one whose fact's single locator is not a
+`file` locator, to a copy of the convention its contract states — the contract governing; several locators on that fact
+are refused as §14.2 files them (`catalog-shape`). That fact is
 self-named, outside every group, and refused when named with another record's id, so no two conventions supply one
 name. A record that depends on a convention whose
 profiles and targets do not admit its own is refused (`catalog-dependency`). The port's record lists exactly one such record in `depends`, and so does every record
@@ -565,7 +569,8 @@ and not where it states the opposite:
   the job, where `window-release-abandons` is `yes`, outside a primitive as its basis says, and inside one only where
   `window-primitive-consistent` is also `yes`; what becomes of the primitive, as `window-primitive-consistent` states,
   where it is read; the kept context run on to the raising under both policies, outside a primitive where
-  `window-trap-preempts-outside` is `yes` and `window-release-abandons` is `no` there, inside one where
+  `window-trap-preempts-outside` is `yes` and `window-release-abandons` is `no`, or `yes` with its basis naming only
+  inside a primitive, inside one where
   `window-trap-preempts-inside` is `yes` and either `window-primitive-consistent` or `window-release-abandons` is `no`
   there; and a fatal fault
   raised before the raising, kept if it is the first, on every port;
@@ -575,12 +580,14 @@ and not where it states the opposite:
 - a case a fact's basis, or the port's convention, scopes — to contexts, points, entries, routes or stacks: those named
   above, `primitives-preemptible`'s points, the routes by which the convention's checks pass what they find (a trap, a
   panic, a call of the fault path), and the stacks `guarded-stacks` names, a stack-guard case owed only on a guarded
-  stack — is owed there, matched by `M4.6`'s review against the basis or the convention;
+  stack, and one reached by an access — a load, a store, an atomic, a fetch — only where its basis says the access
+  faults — is owed there, matched by `M4.6`'s review against the basis or the convention;
 - the cases "on each port whose stated strategy aborts, under it" are owed on no port while the pin offers none:
   `panic-strategy-abort` `yes` names the strategy under which every panic calls the handler, not one that aborts
   without calling it.
 
-A case whose fact is absent or `unknown` cannot be decided on that port, and the others can: `M4.6` reads each case by
+A case whose fact is `unknown`, or absent while its read condition is open — a fact it names `unknown`, or itself absent
+so, and the rest not settling it — cannot be decided on that port, and the others can: `M4.6` reads each case by
 its own fact. `generated-guard-check-contexts` stays `unknown` until `M4` defines generated code's checks, so a
 production claim on any port waits for that (§6).
 
@@ -589,7 +596,9 @@ outside a primitive while a check of the runtime's state that generated code mak
 stays the contract's open question for `M4`, whose generated code alone can reach it.
 
 **Versioning.** §14.4's fact and cost names, and the id prefix `convention.check-passing.`, are part of the grammar
-`archogen-catalog/1` names, like §14.2's and §14.3's (§3).
+`archogen-catalog/1` names, like §14.2's and §14.3's (§3). Unlike §14.2's amendments, which only relax, its refusals
+tighten `/1` in place: no record and no lock exist yet (`catalog/` is absent, `2026-10-02`), so none refuses what was
+ledgered.
 
 ## Review
 
@@ -615,6 +624,7 @@ to each are in [`decision_catalog-records-port-reviews.md`](../../reviews/decisi
 | 2, same day | 30 | the port-fact rule read two ways; a false claim that `riscv64` code cannot trap deliberately; an impossible fixture | 6 defects, 11 gaps; the rule narrowed to §14.2's twelve, `checks-trap` and `fault-window` added, presence and the convention record's form required; all answered |
 | 3, same day | 19 | an impossible inside run-on fixture; §12 sweeping in the convention's own fact; `M4.6` stale; probe sources not recorded | 4 defects, 3 gaps; the run-on keyed on its fact, §12's rows exact, `M4.6` aligned, sources printed verbatim and re-derived; all answered |
 | 4, same day | 17 | two regressions from round 3's answers — an "or" read as "and", `checks-trap` narrowed — and two refusals unfiled in §11 | 3 defects, 2 gaps; the condition rule exact, `checks-trap`'s scopes restored, §11 and §2 aligned; all answered |
+| 5, same day | 12 | a convention locator refused under two codes, a regression of round 4's; `/1`'s amendment history; how a stack's guard is found | 2 defects, 1 gap; one code per refusal, §3 and the versioning paragraph exact, `guarded-stacks`' basis says how; all answered |
 
 ## Why
 
@@ -631,5 +641,6 @@ measurements say what the port needs and what the toolchain does with it, so the
   changed result is a change to §14.2 or §14.3, so a new rules version from the first lock on. `M2.12.4` holds these
   premises as compile-only tests built with the pinned toolchain, so the bump's own run fails first. The same holds of
   §14.4's premises — the target's default strategy, `unwind` refused for a binary, `immediate-abort` refused off a
-  nightly compiler, two handlers refused, every panic reaching the handler, `j` assembling to `c.j` — each probe's
+  nightly compiler and, under `RUSTC_BOOTSTRAP`, for a binary against the precompiled `core`, which `-Zbuild-std`
+  cannot rebuild without `rust-src`, two handlers refused, every panic reaching the handler, `j` assembling to `c.j` — each probe's
   source recorded there with its hash.

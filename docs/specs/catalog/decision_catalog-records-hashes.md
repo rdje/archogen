@@ -289,8 +289,8 @@ The **dependency closure** of a record is its dependencies, transitively.
 - **Line 2 names the facet or review and the id**, so a review cannot be copied between records or facets whose
   text is the same.
 - **`archogen-catalog/1` versions this grammar.** From the first lock on, changing any part of this section, or
-  §14.2 and §14.3, which hold the assembly its token rules admit, or §14.4's fact and cost names and its id prefix `convention.check-passing.`, changes it. Before it, `/1` was amended once, by
-  §14.2, for the reason given there.
+  §14.2 and §14.3, which hold the assembly its token rules admit, or §14.4's fact and cost names and its id prefix `convention.check-passing.`, changes it. Before it, `/1` was amended twice: by
+  §14.2, which relaxes it, and by §14.4, which adds names and refusals, each for the reason given there.
 
 **Worked example.** [`decision_catalog-records-example.md`](decision_catalog-records-example.md) fixes two
 records and three files, byte for byte, and every hash this section gives them: each facet's own and bound hash,
