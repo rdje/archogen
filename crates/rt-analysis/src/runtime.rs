@@ -182,7 +182,8 @@ pub struct PlatformFacts {
     pub eager_switching: Option<bool>,
     /// Every interrupt taken runs one service, paid for by a due release or an arrival (condition 5, added by leaf
     /// `M2.11`): a timer trap runs the timer's service and claims nothing; any other trap is taken only while a
-    /// request an arrival made is pending, and its one claim takes a request; an arrival makes at most one request.
+    /// request a declared source's arrival made is pending at the controller, and its one claim takes such a
+    /// request; an arrival makes at most one request.
     pub services_paid_by_arrivals: Option<bool>,
     /// The timer is event-driven (condition 6).
     pub timer_event_driven: Option<bool>,
@@ -194,8 +195,8 @@ pub struct PlatformFacts {
     pub due_check_matches_compare: Option<bool>,
     /// A service releases a task only once its nominal release has passed (condition 6, the third review).
     pub no_early_release: Option<bool>,
-    /// A timer interrupt is taken only when a release is due, not while it reflects a compare a service replaced,
-    /// and its service releases every due task (condition 6; *taken* since leaf `M2.11`).
+    /// A timer interrupt is taken only when a release is due, and its service releases every due task (condition 6;
+    /// *taken* since leaf `M2.11`).
     pub raised_only_when_due: Option<bool>,
     /// Only the timer service releases timer-released tasks (condition 6).
     pub only_timer_releases_timer_tasks: Option<bool>,

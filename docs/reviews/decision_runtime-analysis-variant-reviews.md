@@ -183,6 +183,30 @@ points mostly about traps that run several services.
 | 14 | nit | no test pinned condition 6's refusal text; the field names no longer say what they hold | a test asserts the text; the fields keep their names, which the catalog's fact names match, and their doc comments carry the meaning |
 | 15 | nit | "a conforming platform allows" while P2 is the emulator's | "a conforming controller, or the emulator's" |
 
+**`M2.11`'s third review, `2026-10-02`,** of commit `cc2c141`, by a new read-only context. It confirmed the first
+witness excluded by the trap-time clause and the step-4 inequalities, and found no schedule past the bound under the
+intended readings; but step 3 had dropped "of a declared source", which let a never-enabled source's request, stuck
+pending at the controller, satisfy the clause: the first witness with such a source gives 33 against 27. Its
+verdict: "not fit to close M2.11 yet". Defects per round: 5, 1, 3.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 1 | defect | the trap-time clause lost "of a declared source", and a request stuck pending at the controller satisfied it; the stale-notification sentence contradicted the definition | "a request a declared source's arrival made is pending at the controller", in condition 5, §1, §2, the doc comment, `no-empty-claim` and the catalog; the stale-notification sentence now a consequence |
+| 2 | defect | §2 charged a cut trap's entry to an arbitrary pending request, whose `C_s` need not cover code that reads the pending bits; no under-charge | the request a claim at the window's end would take: up to that instant the run is the one in which nothing arrives after it, where the trap is that request's service, so the cut part is a prefix within its `C_s` |
+| 3 | defect | step 4's `s_0 ≥ t` case: the stretch step 2 counts need not have ended by `s_0`, which can precede `x`'s pending; no under-charge | split at `p_x`, the instant `x`'s interrupt is pending at the hart: before it, `s_0`'s service is paid by elapsed time or is the stretch; after it, it is the stretch or the stretch ended by `s_0` |
+| 4 | drafting | "every later change is `/2`'s" against the rule, `/2` conclusions having been stated | `/2` open while `M2.11` is, its conclusions the tests' and §6's re-run with every change; a change after that is `/3` |
+| 5 | drafting | three verdicts readable for `one-claim-per-trap` `no` with `external-before-timer` `yes` | the composition record's row restored; the catalog reads the fact for condition 5 and maps its `no` to the fact's `no`; the preconditions row says so |
+| 6 | drafting | "a caller may still declare the variant's fact", and a conjunct `no` never mapping to `no` | the sentence deleted; `no` from the three conjuncts that contradict a clause, undeclared otherwise |
+| 7 | drafting | *due* not limited to timer-released tasks, and "a service … releases every due one" | "a release of a timer-released task is due …"; "the timer service releases every due one" |
+| 8 | drafting | a source with no claim could never meet condition 5, and a claim's request not said to be an arrival's | such a source refused, said so; "such a request", one a declared source's arrival made |
+| 9 | drafting | two senses of pending, and of claim | "pending at the controller" in condition 5, the hart's elsewhere, said so; a read that finds none takes nothing |
+| 10 | drafting | step 4's loose terms and `w`'s place ahead of `x` | `[t − J_w, t + Δ)` and "that trap's part before the claim"; `w` ahead of `x`, its claim read while `x` waited; the timer case deleted |
+| 11 | nit | "each trap runs one service", exception traps running none | "each trap taken for an interrupt" in §1's row and the catalog |
+| 12 | nit | the catalog's conjunct dropped the caller's declaration for a service's application code | added |
+| 13 | nit | the timer fact's doc comment stricter than condition 6; the test comment's "is served"; §5 and F17 omitting a trap that runs several services | the clause removed; "could be"; both name it |
+| 14 | nit | round 2's row 14 said the catalog's fact names match both fields; round 2's row 2 did not reach "pending but not claimable" | corrected here, the earlier rows left as they stand: `services_paid_by_arrivals` has no catalog fact; finding 1 above answers the second |
+| 15 | nit | the ledger's `riscv-privileged` Hash field said two sentences | three |
+
 ## Why
 
 The record states the variant as it stands, and this file keeps how it got there, as for the catalog record.

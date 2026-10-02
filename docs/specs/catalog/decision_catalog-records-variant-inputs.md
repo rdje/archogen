@@ -34,7 +34,7 @@
 | interrupt priority, the enabled set | the plan | — |
 | `S`, `W_wake`, `γ`, `ρ`, `δ` | catalog | timing costs `switch`, `wake`, `preemption-delay`, `compare-rounding` and `delivery` |
 | the composition's parts | catalog | timing costs `api.<p>` and `masked.<p>` for each primitive `p` a task can call, and `completion` and `masked.completion`, all from the runtime API record: the one record that supplies `completion` under the selection (the groups below; `decision_runtime-composite-inputs.md` §1) |
-| the composition's preconditions | catalog | behavioral facts, each with its group in the facts table below: the code facts `reprograms-only-in-service`, `releases-never-latched`, `primitives-out-of-line` and `pending-taken-after-unmask`; the hardware facts `external-before-timer` and `one-external-controller`; for each source, the hardware fact `external.<source>` and the code fact `one-request-per-arrival.<source>`; `no-empty-claim`; `one-claim-per-trap`, read when `external-before-timer` is `no`; `starts-by-transition`; and `runtime-discipline.<id>`, from every record whose implementation facet, not `none`, is in the claim's closure, and from `M4` in the image's, about every package its implementation's own and reached sets hold. That set is computed to a fixed point, since reading a statement adds its record's behavioral model to the closure (`decision_runtime-composite-inputs.md` §2) |
+| the composition's preconditions | catalog | behavioral facts, each with its group in the facts table below: the code facts `reprograms-only-in-service`, `releases-never-latched`, `primitives-out-of-line` and `pending-taken-after-unmask`; the hardware facts `external-before-timer` and `one-external-controller`; for each source, the hardware fact `external.<source>` and the code fact `one-request-per-arrival.<source>`; `no-empty-claim`; `one-claim-per-trap`, read when `external-before-timer` is `no`, and for the variant's condition 5 by the paragraph after the behavioral code facts below; `starts-by-transition`; and `runtime-discipline.<id>`, from every record whose implementation facet, not `none`, is in the claim's closure, and from `M4` in the image's, about every package its implementation's own and reached sets hold. That set is computed to a fixed point, since reading a statement adds its record's behavioral model to the closure (`decision_runtime-composite-inputs.md` §2) |
 | the order among sources | the plan | the controller's priorities, a strict order over the sources whose `external.<source>` is `yes`, each deliverable to the hart's machine-mode context, its priority above that context's threshold; the timer's place is `external-before-timer`'s. A plan that omits either statement leaves every `J` undeclared |
 | the platform facts | catalog | behavioral facts, one per condition of the variant's `PlatformFacts`, but for one with no fact of its own (listed below). **Code facts** carry a `code` locator into the code they are about (§2). **Hardware facts** are `one-processor` and `compare-level`. The timing fact `eager-switching` must come from the record that supplies `switch`: `yes` means the variant's condition holds for that `switch`, that switching is eager or that `S` includes every deferred save and restore, and its basis says which |
 
@@ -61,20 +61,23 @@ The behavioral code facts, one per condition of the variant's `PlatformFacts`:
 
 The variant's `PlatformFacts::services_paid_by_arrivals`, its condition 5 that every interrupt taken runs one
 service, paid for by a due release or an arrival (added by leaf `M2.11`), has no fact of its own. It is `yes` when
-each of these is `yes`, each a fact the variant or its composition already reads:
-- `no-empty-claim`: every external trap is taken while a request is pending;
-- `one-claim-per-trap`, read for this whatever `external-before-timer` states: every trap runs one service;
+each of these is `yes`:
+- `no-empty-claim`: every external trap is taken while a request a declared source's arrival made is pending at the
+  controller, and its claim takes one;
+- `one-claim-per-trap`, read for this whatever `external-before-timer` states: each trap taken for an interrupt runs
+  one service, a timer trap claiming nothing;
 - for each declared source, `one-request-per-arrival.<source>` and `external.<source>`, so its interrupts reach the
   hart only through the controller those facts are about;
 - `one-external-controller`;
-- `raised-only-when-due`, for the timer's half;
-- the application's `leaves-interrupt-hardware-alone` and each `runtime-discipline.<id>`, without which no fact about
-  the whole image holds (`decision_runtime-composite-inputs.md` §2): a task that reads the claim register empties a
-  request a trap was taken for.
+- the application's `leaves-interrupt-hardware-alone`, with the caller's declaration of it for a service's
+  application code, and each `runtime-discipline.<id>`, without which no fact about the whole image holds
+  (`decision_runtime-composite-inputs.md` §2): code that reads the claim register empties a request a trap was
+  taken for.
 
-Otherwise the fact reaches the variant undeclared, as a value this section could not read does (below), naming each
-conjunct that is not `yes`: a conjunct `no` shows that the composition cannot vouch for the condition, not that an
-interrupt goes unpaid. A caller may still declare the variant's fact itself. `M2.7.5` composes it so, and the conclusion names each conjunct.
+It is `no` when `no-empty-claim`, `one-claim-per-trap` or any `one-request-per-arrival.<source>` is `no`, each of
+which contradicts a clause of the condition. Otherwise, when any conjunct is not `yes`, the fact reaches the variant
+undeclared, as a value this section could not read does (below), naming each such conjunct. The condition's timer
+half is condition 6's own fact, `raised-only-when-due`. `M2.7.5` composes it so, and the conclusion names each conjunct.
 
 The variant's condition 8 for catalog costs is each cost's own `holds-under-preemption`.
 

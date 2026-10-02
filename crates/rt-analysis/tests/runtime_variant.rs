@@ -359,8 +359,8 @@ fn an_interrupt_no_arrival_pays_for_is_outside_the_model() {
         "{refusal}"
     );
 
-    // Condition 6 says *taken* (`M2.11`): a timer interrupt still pending after its service moved the compare on is
-    // served with no release due, and the timer term, which counts releases, charges it nowhere.
+    // Condition 6 says *taken* (`M2.11`): a timer interrupt still pending after its service moved the compare on could
+    // be served with no release due, and the timer term, which counts releases, would charge it nowhere.
     let mut platform = self::platform();
     platform.facts.raised_only_when_due = Some(false);
     let refusal = refused(admit(&tasks, &[], &platform));

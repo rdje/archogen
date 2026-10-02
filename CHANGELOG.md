@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the timing analysis's rule: a third review catches a lost word
+
+`ARCHOGEN-M2-0348` (leaf `M2.11`, step 4).
+
+- The third review found that the last rewrite had dropped "of a declared source", which let a forgotten interrupt
+  source reopen the missed deadline the first review found. It is restored, and two arguments that reached the right
+  total by charging the wrong thing are corrected. A fourth review is next; the rule closes when one finds nothing.
+
 ## archogen — the timing analysis's rule, settled by a second review
 
 `ARCHOGEN-M2-0347` (leaf `M2.11`, step 3).
