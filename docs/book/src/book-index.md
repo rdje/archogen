@@ -260,8 +260,9 @@ a change that leaves it stale, so it is never edited by hand.
 - **PLIC** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **port** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [Refinement](refinement.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [The
-  runtime: decisions, not actions](runtime.md), [Where generated systems run](targets.md), [What this project relies on
-  from outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
+  runtime: decisions, not actions](runtime.md), [Where generated systems run](targets.md), [Verifying the
+  toolchain](verification.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
+  detail](annex-runtime.md)
 - **POSIX** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [The supported
   profile](profile.md)
 - Precise composition errors — [Modules and composition](modules.md#precise-composition-errors)

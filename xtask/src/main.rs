@@ -41,7 +41,9 @@
 //! can make a step's exit count as an absence (leaf `PROGRAM.10.1`).
 
 mod dtb;
+mod elf;
 mod mutation;
+mod premises;
 mod target;
 
 use std::path::{Path, PathBuf};
@@ -324,6 +326,19 @@ const TIERS: &[Tier] = &[
                               being active in a host build is evidence that it *can* be, not that \
                               it *does* build for a target. `rustup target add` the `RUST_TARGET` of \
                               `targets/riscv-virt-up.env`",
+                },
+            },
+            Step {
+                name: "pin-premises",
+                proves: "every premise the port's record states as measured on the pinned toolchain still holds, each \
+                         probe the record prints read at its hash (§14.1–§14.4)",
+                action: Action::Run {
+                    program: "cargo",
+                    args: &["xtask", "pin-premises"],
+                    requires: Some(RUST_TARGET_REQUIREMENT),
+                    matters: "the port's assembly format rests on what the pinned compiler, assembler and linker do; \
+                              a pin bump that changes one must fail here before any record rests on it (leaf \
+                              `M2.12.4.4`). `rustup target add` the `RUST_TARGET` of `targets/riscv-virt-up.env`",
                 },
             },
             Step {
@@ -868,6 +883,7 @@ fn help() {
     println!("    cargo xtask verify --list");
     println!("    cargo xtask dtb-summary <file.dtb>");
     println!("    cargo xtask dtb-check <file.dtb> <fixture.md>");
+    println!("    cargo xtask pin-premises");
     println!();
     println!("TIERS:");
     for tier in TIERS {
@@ -905,6 +921,7 @@ fn main() {
         ["dtb-check", file, fixture] => dtb_check(file, fixture),
         ["target-agreement", env, dtb] => target_agreement(env, dtb),
         ["mutate"] => mutation::run(&repo_root(), &[]),
+        ["pin-premises"] => premises::run(&repo_root()),
         ["mutate", "--only", ids @ ..] if !ids.is_empty() => mutation::run(
             &repo_root(),
             &ids.iter().map(|s| (*s).to_string()).collect::<Vec<_>>(),

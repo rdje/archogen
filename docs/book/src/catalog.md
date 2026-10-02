@@ -53,16 +53,12 @@ unknown, or a dependency outside production stops the catalog loading; it is nev
 reads the catalog only through lookups, so its citations are what it read and its closure is every facet those rest
 on; a production claim is refused with every reason that applies, among them that the main line is not yet
 protected. Code a record points at is held to §3's package rules: its manifests by their meaning, and its Rust
-source token by token. Premise 3 is judged at claim time too, so the crate is complete. It has begun reading the
-port's records as §14 amends them (`M2.12.4.1`): a fact about code may point at several places in it, an
-implementation may declare which of its packages hold assembly, and a known fact about the port's code is admitted
-only when it points into declared assembly and its record runs on the dialect's targets. The token scan reads the
-assembly itself (`M2.12.4.2`): in a declared package, `asm!` and `naked_asm!` written out in full, inside a function
-built only for the bare-metal target, every line one instruction from the dialect's short list with each operand of
-the kind its position takes, and every register an inline block touches declared to the compiler. And what the port's
-record must state of the fault contract is checked (`M2.12.4.3`): the record that supplies the switch states every
-fact the statement owes, the obligatory ones never `no`; it depends on exactly one convention for how a failed check
-reports what it found, and every record selected with it on that same one. The gate, the check that
+source token by token. Premise 3 is judged at claim time too, so the crate is complete. It also reads the port's
+records as §14 amends them (`M2.12.4`): a fact about code may point at several places in it, an implementation may
+declare which of its packages hold assembly, the token scan holds that assembly to the dialect's short list, and the
+port's statement is checked — every fact it owes, and one convention for reporting a failed check, shared by every
+record selected with it. What the format rests on in the pinned toolchain is re-checked in every integration run, so
+a toolchain bump that changes it fails first. The gate, the check that
 protects it and the first records are the next leaves (`M2.7.4` to `M2.7.6`). Until they land, nothing loads a catalog, and `catalog/` is empty.
 
 ### The records that hold it

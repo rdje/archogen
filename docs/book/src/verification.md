@@ -38,7 +38,7 @@ $ cargo xtask verify --list              # or: make tiers
 | Tier | When | What it covers |
 | --- | --- | --- |
 | `focused` | each edit loop, and every ordinary commit | format, lints, the whole contract suite |
-| `integration` | before a push, and before closing a milestone | the above, plus the doctrine enforcer, every doctrine gate's own RED arms, the book build, the `no_std` build, the browser (`wasm32`) build, the pinned emulator, and the architecture spike run on it |
+| `integration` | before a push, and before closing a milestone | the above, plus the doctrine enforcer, every doctrine gate's own RED arms, the book build, the `no_std` build, the pinned toolchain's premises the port's catalog record rests on, the browser (`wasm32`) build, the pinned emulator, and the architecture spike run on it |
 | `extended` | scheduled, or when a change touches parsing, arithmetic or event ordering | fuzzing, mutation, Miri |
 | `hardware` | a change to target support, and every release gate | board regressions and timing observations |
 | `assurance` | every supported release | trust inventory, claim completeness, source and binary identity |
@@ -83,18 +83,19 @@ Rendered from a run, not retyped:
 ```console
 $ cargo xtask verify --tier integration
 tier: integration — before a push, and before closing a milestone
-  ✅ fmt                  0.37s  every Rust source is in canonical format
-  ✅ clippy               1.37s  no lint fires anywhere, including in tests and examples
-  ✅ tests                9.60s  every contract test passes, F28 and the semantic corpus included
-  ✅ doctrines           20.13s  every repository invariant holds on the working tree
-  ✅ self-tests          72.95s  every doctrine gate's RED arms still fire — a gate that stopped being able to fail is caught here
-  ✅ book                 0.13s  the mdBook builds, with its pinned release — it is the director's window, so a broken book is a broken deliverable
-  ✅ no-std-build         0.08s  the runtime core compiles for a bare-metal target (§14.3's "compile targets")
-  ✅ wasm-build           0.62s  the engine's I/O-free crates, derived from the workspace, compile for the browser target
-  ✅ wasm-binding         0.79s  the browser artifact imports nothing, exports what its record lists, and answers every tracked description byte for byte as the host build does, with archogen check's exit code
-  ✅ emulator             0.20s  the pinned riscv-virt-up configuration renders and its toolchain is present (§3.2)
-  ✅ spike                0.14s  code runs on the verified target: boot, a timer interrupt taken and returned from, the context preserved, output on the UART — and a clobbered context is caught (M2.8.4)
-tier integration: passed — 11 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined
+  ✅ fmt                  0.53s  every Rust source is in canonical format
+  ✅ clippy             249.68s  no lint fires anywhere, including in tests and examples
+  ✅ tests              103.46s  every contract test passes, F28 and the semantic corpus included
+  ✅ doctrines           21.30s  every repository invariant holds on the working tree
+  ✅ self-tests         104.20s  every doctrine gate's RED arms still fire — a gate that stopped being able to fail is caught here
+  ✅ book                 0.14s  the mdBook builds, with its pinned release — it is the director's window, so a broken book is a broken deliverable
+  ✅ no-std-build         0.05s  the runtime core compiles for a bare-metal target (§14.3's "compile targets")
+  ✅ pin-premises         1.16s  every premise the port's record states as measured on the pinned toolchain still holds, each probe the record prints read at its hash (§14.1–§14.4)
+  ✅ wasm-build          13.61s  the engine's I/O-free crates, derived from the workspace, compile for the browser target
+  ✅ wasm-binding         0.76s  the browser artifact imports nothing, exports what its record lists, and answers every tracked description byte for byte as the host build does, with archogen check's exit code
+  ✅ emulator             0.21s  the pinned riscv-virt-up configuration renders and its toolchain is present (§3.2)
+  ✅ spike                0.13s  code runs on the verified target: boot, a timer interrupt taken and returned from, the context preserved, output on the UART — and a clobbered context is caught (M2.8.4)
+tier integration: passed — 12 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined
 $ echo $?
 0
 ```

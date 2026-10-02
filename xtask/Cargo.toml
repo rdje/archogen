@@ -15,4 +15,5 @@ workspace = true
 
 [dependencies]
 archogen-api = { path = "../crates/archogen-api" }
+archogen-evidence = { path = "../crates/archogen-evidence" }
 eadl-front = { path = "../crates/eadl-front" }

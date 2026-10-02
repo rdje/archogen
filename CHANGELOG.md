@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the toolchain's premises, checked on every integration run
+
+`ARCHOGEN-M2-0376` (leaf `M2.12.4.4`, closing `M2.12.4`).
+
+- What the port's record format rests on in the pinned toolchain is now checked on every integration run, not only
+  measured once: how the compiler aligns and names the port's functions, how the assembler reads labels and
+  integers and expands its instructions, and what a panic does. Each experiment the record prints is read from it at
+  its hash. A toolchain bump that changes any of these fails before a record can rest on it. With this, the
+  catalog's support for the port's record is complete.
+
 ## archogen — the catalog checks what the port declares about faults
 
 `ARCHOGEN-M2-0375` (leaf `M2.12.4.3`).

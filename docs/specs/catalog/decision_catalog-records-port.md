@@ -648,7 +648,8 @@ measurements say what the port needs and what the toolchain does with it, so the
   and §14.3 state as measured on the pin — the labels' and integers' wrapping, a `const` wider than 64 bits, two `in`
   operands sharing a register, the registers `call`, `tail`, `la` and `li` write — before any record rests on it. A
   changed result is a change to §14.2 or §14.3, so a new rules version from the first lock on. `M2.12.4` holds these
-  premises as compile-only tests built with the pinned toolchain, so the bump's own run fails first. The same holds of
+  premises as compile-only tests built with the pinned toolchain, so the bump's own run fails first: `cargo xtask
+  pin-premises`, the integration tier's `pin-premises` step (`M2.12.4.4`). The same holds of
   §14.4's premises — the target's default strategy, `unwind` refused for a binary, `immediate-abort` refused off a
   nightly compiler and, under `RUSTC_BOOTSTRAP`, for a binary against the precompiled `core`, which `-Zbuild-std`
   cannot rebuild without `rust-src` on a toolchain installed from the file alone, two handlers refused, every panic reaching the handler, `j` assembling to `c.j` — each probe's
