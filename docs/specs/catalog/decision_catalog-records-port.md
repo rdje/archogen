@@ -2,8 +2,8 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-02`
-- **Status:** `active` — §14.1, the measurements, done (`M2.12.1`); the format, §14.2 and §14.3, drafted by
-  `M2.12.2` and under review
+- **Status:** `active` — §14.1, the measurements, done (`M2.12.1`); the format, §14.2 and §14.3, decided by `M2.12.2`
+  on `2026-10-02`, its seventh review finding no defect; the port's statement is `M2.12.3`'s
 - **External sources:** [the Rust Reference](../../book/src/ledger.md#rust-reference) shipped with the pinned
   toolchain, [the Rust toolchain](../../book/src/ledger.md#rust-toolchain) itself, and [the RISC-V privileged
   specification](../../book/src/ledger.md#riscv-privileged) — versions, hashes and limits in the ledger
@@ -212,7 +212,8 @@ A label number is `0`, or a decimal number of one to four digits not beginning w
 The kinds, every mnemonic and register name lowercase:
 - **register:** a name §14.3 lists, or a placeholder for a `reg` operand;
 - **system register:** a name §14.3 lists, and nothing else;
-- **integer:** `0`, or a decimal number not beginning with `0`, optionally preceded, with no space, by `-`, its value
+- **integer:** `0`, or a decimal number not beginning with `0`, that number optionally preceded, with no space, by `-`
+  (`-0` refused), its value
   within the signed 64-bit range, since the assembler reads a larger one modulo `2^64` (the third review's probe pi;
   `addi a0, a0, 18446744073709549568` assembled as `-2048`); or a placeholder for a `const` operand, with no `-`
   before it, whose value is the compiler's: one wider than 64 bits fails to assemble, and the rest is read modulo
@@ -250,7 +251,7 @@ gives (`M2.12.2`'s second review, its probe p2, where `call {}` became `call a0`
 So each of these is refused, naming the line: a directive or any token beginning with `.`; a name in a position
 whose kind it is not — `call mepc`, `la t0, t1` or `j mstatus` would each assemble to a reference to a symbol of that
 name, which the linker binds (`M2.12.2`'s first review, its probe p1); a placeholder in a position its operand's kind
-does not take, as `call {r}` for a `reg` operand; an integer where a system register or code goes, as `csrw 0x105,
+does not take, as `call {r}` for a `reg` operand; an integer where a system register or code goes, as `csrw 261,
 zero`; a relocation operator (`%`); a comment; a `;`; `{{` or `}}`; a tab; and a label reference that resolves
 outside its invocation.
 
@@ -267,8 +268,12 @@ registers must have the same value upon return as they had on entry". A transiti
 design, so the gate cannot hold a naked body to it. What a body leaves on each exit and at each `call` in `sp`, `gp`,
 `tp` and the callee-saved registers, and on an exit by `mret` or into another context in every register — which holds
 the interrupted context's value, or the incoming one's for a transition, since compiled Rust was interrupted anywhere
-— what it passes to the function a `call` or `tail` enters, in the argument registers that function's signature
-reads, and what it stores, is the review's, with the code in view.
+— what it passes to the function a `call` or `tail` enters, or a trap enters through a vector it installs, in every
+argument the compiled function reads — its signature's, in registers or on the stack, and those the compiler adds:
+the address a result returned in memory is written to, and a `#[track_caller]` function's location, which a `sym`
+names without the shim a function pointer gets, since "rustc implements track_caller in a codegen context by
+appending an implicit parameter to the function ABI" (the Reference's code-generation chapter) — and what it stores,
+is the review's, with the code in view.
 
 **What the refused forms would reach, and what remains the review's.** A directive can read a file, place code where
 the image's layout does not expect it, or define a symbol another package could supply in place of a Rust one; a name
@@ -334,7 +339,7 @@ to this record; from the first lock on, that is a new rules version, which moves
 
 Each mnemonic, with the kind of each operand in order (R register, C system register, I integer, M memory, S code,
 L label). An R that leads a signature is written, every other R and a memory operand's register are read, and `sd`,
-`sw`, the branches and `jr` write none. The rows marked *inline* are the only ones an `asm!` admits:
+`sw`, the branches and `jr` write none; their leading R is read. The rows marked *inline* are the only ones an `asm!` admits:
 
 | Signature | Mnemonics | Inline |
 | --- | --- | --- |
@@ -378,6 +383,7 @@ to each are in [`decision_catalog-records-port-reviews.md`](../../reviews/decisi
 | 4, same day | 13 | `lateout` sharing an input's register installed an integer as the trap vector | 1 defect, 3 gaps; `lateout` and `inlateout` refused, `mret` returns and system-register effects the review's, `mhartid` read only; all answered |
 | 5, same day | 13 | three wording defects — inputs sharing a register, a naked exit's duty narrowed, a lost quote — and a generic `sym` | 3 defects, 3 gaps; words restored, a generic `sym` refused, the trap's address arithmetic stated; all answered |
 | 6, same day | 12 | a quotation lost in round 5's compaction; what a naked body hands a function at a `call` | 1 defect, 1 gap; the `mhartid` sentence quoted, the `call` hand-off the review's; all answered |
+| 7, same day | 9 | **no defect**: every quotation verbatim, nothing lost across seven states, no admitted construction past the claim | the review closed; its two gaps and points answered |
 
 ## Why
 
@@ -388,5 +394,8 @@ measurements say what the port needs and what the toolchain does with it, so the
 ## How to apply
 
 - A bare section number here is the catalog record's.
-- The measurements are the pin's. When the toolchain pin moves, `M2.12.1`'s probe is re-run and §14.1 re-read before
-  any record rests on it.
+- The measurements are the pin's. When the toolchain pin moves, `M2.12.1`'s probe is re-run, with every premise §14.2
+  and §14.3 state as measured on the pin — the labels' and integers' wrapping, a `const` wider than 64 bits, two `in`
+  operands sharing a register, the registers `call`, `tail`, `la` and `li` write — before any record rests on it. A
+  changed result is a change to §14.2 or §14.3, so a new rules version from the first lock on. `M2.12.4` holds these
+  premises as compile-only tests built with the pinned toolchain, so the bump's own run fails first.

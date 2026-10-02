@@ -119,8 +119,8 @@ could otherwise hash its own reviews, and a target file there would move with ev
   global hook or symbol another package could supply in its place — is in no source set and, for some, in no
   dependency information, so `/1` admits none of them. `#![feature]` needs a nightly compiler, which the pin's
   form and the environment below rule out. Architecture code that needs assembly is admitted only as §14.2 states
-  ([`decision_catalog-records-port.md`](decision_catalog-records-port.md)): `sym` operands, a closed dialect, no
-  directive.
+  ([`decision_catalog-records-port.md`](decision_catalog-records-port.md)): code reached only by `sym` operands or
+  addresses the code computes, a closed dialect, no directive.
 
   The rules bind the packages a record's sets reach, and no other. Measured on `2026-09-30`: `crates/rt-core`, the
   package the slice `M2.7.4` records names, reaches no other package and passes them. Each refused word appears in

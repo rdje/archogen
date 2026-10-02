@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the design for holding processor assembly is settled
+
+`ARCHOGEN-M2-0360` (leaf `M2.12.2`).
+
+- The seventh independent review of how the catalog may hold a processor port's assembly found nothing wrong, so the
+  design is settled. Over seven reviews, each compiling small experiments with the project's own compiler, the
+  problems found went 8, 2, 2, 1, 3, 1 and then 0, every answer narrowing what is admitted. The checker keeps refusing
+  all assembly until the design is built and tested; next is how the port states the facts the fault contract leaves
+  to it.
+
 ## archogen — the assembly design's sixth review: a quotation restored
 
 `ARCHOGEN-M2-0359` (leaf `M2.12.2`, step 7).

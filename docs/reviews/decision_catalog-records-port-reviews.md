@@ -2,8 +2,7 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-02`
-- **Status:** `active` — rounds 1 to 6 answered; round 7 next; the review closes on the first round that finds no
-  defect
+- **Status:** `closed` — round 7, `2026-10-02`, found no defect; its points answered before closing
 - **External sources:** [the Rust Reference](../book/src/ledger.md#rust-reference) shipped with the pinned toolchain,
   and [the RISC-V privileged specification](../book/src/ledger.md#riscv-privileged) — versions, hashes and limits in
   the ledger
@@ -186,6 +185,29 @@ drafting points, 6 nits. Defects per round: 8, 2, 2, 1, 3, 1.
 
 **Superseded, found by this round:** round 5's answer 11 in part (its "the scope's long quotes replaced by what the
 record quotes" true only once this round's 1 quoted the `mhartid` sentence in the record).
+
+**Round 7**, `2026-10-02`, of commit `20f3dfd`, by a new context asked first for regressions. **No defect.** Every
+quotation verbatim at its hashed or fetched source, every "quoted in" claim true, §14.1's probe source hashing as
+stated, no rule, qualifier, case or quotation dropped across the seven states, and no admitted construction reaching
+what no hash covers or binding otherwise than the compiler under its probes — the generic rule at any depth and the
+`call` hand-off included. By the closure rule the review closes on it. Defects per round: 8, 2, 2, 1, 3, 1, 0. Its
+points were answered by word edits before the leaf closed:
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 1 | gap | the `call` hand-off narrower than what compiled Rust reads: arguments on the stack, the address a result returned in memory is written to, a `#[track_caller]` location a `sym` names without the function pointer's shim | "every argument the compiled function reads", each named, the code-generation chapter quoted and ledgered; the same said of a function a trap enters through an installed vector |
+| 2 | gap | when the pin moves, only §14.1 was re-measured, while §14.2 and §14.3 rest on measurements of the pin too | every "measured on the pin" premise re-run with the probe on a pin change; a changed result a new rules version from the first lock; `M2.12.4` holds them as compile-only tests |
+| 3 | drafting | round 6's Superseded list missed four answers | named below |
+| 4 | drafting | §11's shape row's "apart" read two ways, and did not index a declaration naming no package | "a code fact's locators excepted; a case §14.2 files under `catalog-shape`" |
+| 5 | nit | `csrw 0x105, zero` used hex, which round 3 removed | `csrw 261, zero` |
+| 6 | nit | whether `-0` is admitted | refused |
+| 7 | nit | the leading R of `sd`, `sw`, the branches and `jr` | read |
+| 8 | nit | §3's summary lagged the computed addresses | "code reached only by `sym` operands or addresses the code computes" |
+| 9 | nit | the review open when the first lock lands would make every later answer a new rules version | `M2.7.4`'s first record waits for §14 to settle, `M2.12.2` closed and `M2.12.3` with it |
+
+**Superseded, found by this round:** round 2's answer 9 (by round 6's 9, "only the rest admits"), and round 5's
+answers 8 (by round 6's 5, the four-stage order), 4 (by round 6's 3, "at any depth") and 10 (by round 6's 10, repeated
+`super::`).
 
 ## Why
 

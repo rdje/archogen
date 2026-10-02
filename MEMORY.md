@@ -16,9 +16,9 @@
 - **Active tree:** `M2` → frontier `M2.12`. `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API` is
   closed; `M1`'s only open leaf, `M1.29.4`, is blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M2.12.2` — the format admitting the port's assembly, against §14.1's measurements
-  (`docs/specs/catalog/decision_catalog-records-port.md`); then `.3`–`.5`, then `M2.15`. `M2.11` closed
-  `2026-10-02`; `M2.7.6` waits on the director's reviewer. This project uses no branches.
+- **Next action:** `M2.12.3` — the port's statement: the facts by which the port's record states what the fault
+  contract's *Still open* leaves it, and the check per selection, reviewed; then `M2.12.4` (the code), `M2.12.5`, then
+  `M2.15`. `M2.12.2`'s format closed `2026-10-02`. This project uses no branches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4` and `M2.7.6.4` — findings §11, `main`'s protection and a reviewer;
   `TEMPLATE-REFS` — postponed. **The 17 template files archogen has not changed are never edited** (findings §10,

@@ -22,7 +22,8 @@ a change that leaves it stale, so it is never edited by hand.
 - A task's life — [The runtime: decisions, not actions](runtime.md#a-tasks-life)
 - A third reader — [Verifying the toolchain](verification.md#a-third-reader)
 - A tier has three outcomes, not two — [Verifying the toolchain](verification.md#a-tier-has-three-outcomes-not-two)
-- **ABI** — [definition](glossary.md), [The boundary: functionality versus implementation](boundary.md)
+- **ABI** — [definition](glossary.md), [The boundary: functionality versus implementation](boundary.md), [What this
+  project relies on from outside](ledger.md)
 - Absence is reported, never skipped — [Where generated systems run](targets.md#absence-is-reported-never-skipped)
 - Absent is a definite answer — [Presence, absence, and relevance](presence.md#absent-is-a-definite-answer)
 - **ACLINT** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
