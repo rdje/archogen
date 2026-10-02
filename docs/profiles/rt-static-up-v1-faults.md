@@ -485,8 +485,7 @@ kind, its raiser and, for a guard, whose — to the fault path or the trap path,
 trap path tells a check's deliberate trap, and the trap at a check, or at a panic no check precedes, under an aborting
 strategy, from any other trap (Terms), the fatal path's bound from the fault's raising, how the kept record is read out
 of a halted runtime (rule 7), and the order among the interrupts one trap serves (rule 1) — each the port's catalog
-record's (`M2.12`), stated as the facts and costs §14.4 of the catalog record names, which also holds the check per
-selection of another record's passing against the port's statement (Terms; *so routed `2026-10-02`, `M2.12.3`*);
+record's (`M2.12`), stated as the facts, costs and check-passing convention record §14.4 of the catalog record names, which also holds the check per selection of another record's passing against the port's statement (Terms; *so routed `2026-10-02`, `M2.12.3`*);
 whether this contract will limit what a port's record may state of a release that abandons a job outside a primitive
 while a check of the runtime's state that generated code makes has yet to raise what it found — today the port's to
 state (Terms, rule 5) — generated code's checks being `M4`'s to define; each service's order of the releases it

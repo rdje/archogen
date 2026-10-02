@@ -2,7 +2,7 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-02`
-- **Status:** `active` — rounds 1 to 3 answered; round 4 next; the review closes on the first round that finds no defect
+- **Status:** `active` — rounds 1 to 4 answered; round 5 next; the review closes on the first round that finds no defect
 - **External sources:** [the Rust Reference](../book/src/ledger.md#rust-reference) shipped with the pinned toolchain,
   and [the RISC-V privileged specification](../book/src/ledger.md#riscv-privileged) — versions, hashes and limits in
   the ledger
@@ -149,6 +149,34 @@ gaps, 6 drafting points, 6 nits. Defects per round: 9, 6, 4.
 | 17 | nit | the history's header list; the id prefix unversioned | §3 and §13 added; the prefix part of the grammar |
 | 18 | nit | Cargo syntax for a `rustc` probe; the `c.j` bytes; "locators into the code that does it" | each probe's command given; "a two-byte compressed `c.j`"; "where code does it" |
 | 19 | nit | the obligatory-`no` rule's reach; `panic-strategy-abort`'s other locators | the port's record only, the sole supplier of the group; `code` and `ledger` locators refused |
+
+**Round 4**, `2026-10-02`, of commit `7d2dd36`, by a new context asked first for regressions. It re-derived all four
+probe hashes from the printed sources and ran every command, each answering as stated, and found the core sound; but 3
+defects, two of them regressions from round 3's answers: defining when a read condition holds turned
+`window-release-abandons`'s "or" into "and", refusing valid records; quoting "a check that finds a fault" into
+`checks-trap` dropped the invariant checks F26's trap case keys on; and §11 and §2 did not carry round 3's new
+`catalog-locator` and `catalog-dependency` refusals. 17 findings: 3 defects, 2 gaps, 7 drafting points, 5 nits.
+Defects per round: 9, 6, 4, 3. Its stronger panic-strategy premise was reproduced here before it was written.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 1 | defect | "every fact it names is stated `yes`" made an "or" condition an "and" | a condition's facts combined as it says, each for `and`, one for `or`; absent or `unknown` not `yes` |
+| 2 | defect | `checks-trap` narrowed to checks that find a fault, leaving F26's invariant-check trap case unkeyed | both scopes restored: a check that finds a fault, or a failed check of a record's own invariants |
+| 3 | defect | §11 and §2 lacked round 3's `catalog-locator` and `catalog-dependency` refusals; the convention fact's locator filed unevenly | §11's locator and dependency rows name §14.4's cases; §2 says a file-located fact takes a `file` locator and no other; the convention fact's locator case `catalog-locator` too |
+| 4 | gap | further-pending subcases partly scoped: a later claim, a timer-trap claim for an external interrupt, the several-trap delivery | each subcase scoped by `one-claim-per-trap`'s basis; the several-trap case where a delivery can span several |
+| 5 | gap | the catch-all reached only contexts or points; API-trap, check-route and stack-guard cases unscoped | `api-entry-by-trap`'s basis names its entries; the catch-all takes contexts, points, entries, routes and stacks, the convention's routes and `guarded-stacks` among them |
+| 6 | drafting | the presence rule's facts with no read condition | "every fact of the table that has no read condition, or whose read condition holds" |
+| 7 | drafting | the convention record's one fact possibly no longer required | "exactly one fact, `convention-stated.<id>`, `yes`", a single `file` locator |
+| 8 | drafting | the inside run-on clause's grouping; inside abandonment not keyed on consistency | "and either …"; inside abandonment owed only where `window-primitive-consistent` is `yes` |
+| 9 | drafting | `panic-strategy-abort` against F26's "whose stated strategy aborts" | F26's phrase quoted; the fact's `yes` said not to be such a strategy |
+| 10 | drafting | §14.2's `catalog-field` bullet still said "a known port fact" (wrapped, so missed) | "a known value of one of the twelve" |
+| 11 | drafting | §3's bullet lacked the id prefix | added |
+| 12 | drafting | the contract's routing line omitted the convention record | "the facts, costs and check-passing convention record §14.4 … names" |
+| 13 | nit | the hashes match only without the list's indentation | said |
+| 14 | nit | the `RUSTC_BOOTSTRAP` premise understated | reproduced and stated: the binary is still refused against the precompiled `core` |
+| 15 | nit | rule 2's "for rule 5" dropped | restored |
+| 16 | nit | which records the obligatory and within-record rules bind | every record stating these names; only the `switch` supplier read |
+| 17 | nit | a non-convention record's `convention-stated.<id>`, and the port's own `guard-check-contexts.<id>` | both refused |
 
 ## Why
 
