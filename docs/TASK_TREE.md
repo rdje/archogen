@@ -58,7 +58,7 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 | [`M1`](tasks/M1.md) | `active` | `M1.29.4` — blocked: module parameters wait on the director's call (findings §7); every other leaf is closed | repo-local |
 | [`API`](tasks/API.md) | `active` | `API.7` — the programmatic interface's chapter; `API.6`, the MCP server `archogen mcp`, done `2026-10-02`; `API.5`, the wasm binding and its page, done and run in a browser | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |
-| [`M2`](tasks/M2.md) | `active` | `M2.11` — the variant refuses an interrupt nothing pays for, the model `/2`; three review rounds answered, a fourth next; then `M2.12`, `M2.15`, and `M2.7.6`, whose review and hosting half wait on the director | repo-local |
+| [`M2`](tasks/M2.md) | `active` | `M2.11` — the variant refuses an interrupt nothing pays for, the model `/2`; four review rounds answered, a fifth next; then `M2.12`, `M2.15`, and `M2.7.6`, whose review and hosting half wait on the director | repo-local |
 | [`M3`](tasks/M3.md) | `pending` | `M3.1` — candidate enumeration and substitutability | repo-local |
 | [`M4`](tasks/M4.md) | `pending` | `M4.1` — the typed runtime/build plan | repo-local |
 | [`M5`](tasks/M5.md) | `blocked` | — **no board procured** (`M0.5`, 2026-09-13) | repo-local |

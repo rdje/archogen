@@ -239,7 +239,9 @@ is cleared is served twice for one event, and the emulator's controller requests
 timer interrupt can stay pending after its service has moved the alarm on. The analysis charges a source once per
 event and the timer once per release, so none of these is charged. The variant now refuses a platform that does not
 declare that every interrupt it takes runs one service, paid for by a due release or by an event, and its model became
-`fixed-priority-with-overheads/2` (leaf `M2.11`). The
+`fixed-priority-with-overheads/2` (leaf `M2.11`). The same leaf's reviews found one more gap, there since the first
+version: when a service returns with another interrupt waiting, the processor runs nothing for up to the delivery
+latency `δ` before the next one. Every service now carries that gap. The
 implementation's tests check values derived by hand from the record, and six deliberate breakages are each caught.
 §7.4 also asks for expected results obtained independently (leaf `M2.6.3`). A context that read the record and
 never the code derived 18 fixtures by hand, and the code agrees with every verdict, bound and iterate. Under the

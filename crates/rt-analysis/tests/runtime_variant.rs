@@ -372,6 +372,36 @@ fn an_interrupt_no_arrival_pays_for_is_outside_the_model() {
 }
 
 #[test]
+fn every_service_carries_the_delivery_gap_before_it() {
+    // `M2.11`'s fourth review: a service that returns with another interrupt pending leaves up to `δ` in which nothing
+    // runs before the next trap, since a pending interrupt is taken before the resumed context executes an
+    // instruction. With `δ = 4`, two sources arriving together every 50 cost 1, a gap of 4 and 1 on the timeline, and
+    // `i` completes at 237. Charging `C + γ` per service gave `w = 201 + 1 + 5 + 5 = 212` and `R = 224`, admitted at a
+    // deadline of 224. Each service now charges `C + δ + γ = 5`:
+    //   w = 201 → 201 + ⌈213/1000⌉·5 + ⌈217/50⌉·5 + ⌈223/50⌉·5 = 201 + 5 + 25 + 25 = 256
+    //   w = 256 → 201 + 5 + ⌈272/50⌉·5 + ⌈278/50⌉·5 = 201 + 5 + 30 + 30 = 266, a fixed point; R = 12 + 266 = 278.
+    let mut platform = platform();
+    platform.delivery = v(4);
+    platform.enabled = Some(EnabledSet {
+        interrupts: vec!["timer".into(), "a".into(), "b".into()],
+        from_resolved_plan: true,
+    });
+    let source = |id: &str, priority: i64, jitter: u64| Source {
+        id: id.into(),
+        service: v(1),
+        separation: v(50),
+        jitter: v(jitter),
+        acknowledge: Some(Acknowledge::AtExit),
+        priority: Some(priority),
+        deferred: Some(Deferred::Nothing),
+    };
+    let sources = [source("a", 1, 16), source("b", 2, 22)];
+    let set = admit(&[task("i", 1, 200, 1000, 278, 12)], &sources, &platform)
+        .expect("admitted: every floor and no-loss limit holds");
+    assert_eq!(holds(&analyze(&set)[0]), (278, vec![201, 256, 266, 266]));
+}
+
+#[test]
 fn a_task_released_on_every_arrival_cannot_claim_a_longer_separation() {
     let (platform, uart) = with_uart(3, Acknowledge::AtEntry);
     let mut e = task("E", 1, 1, 30, 30, 3);

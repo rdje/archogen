@@ -56,7 +56,7 @@ defaults.** A zero is declared, like any other value, with its evidence.
 | `W_wake` | the platform | from an interrupt becoming pending while the idle context waits, to interrupts being unmasked: the idle check plus the wake latency. The ledger's *idle/wakeup* is split here: the wake is `W_wake`, before the service; the switch out of idle is `S` |
 | `γ` | the platform | the preemption delay: the most one preemption or service adds to the preempted execution through lost cache, pipeline, predictor or TLB state. `0` only with evidence that the target keeps no such state |
 | `ρ`, `δ` | the platform | the largest delay the compare's rounding adds to a release (at most one resolution step less one unit; `0` when releases fall on ticks); the hardware's delivery latency from an interrupt becoming pending, unmasked, to its entry |
-| the platform facts | the platform | each a declared yes or no, with its evidence: <br>• there is one processor; <br>• the timer is event-driven, its compare has level semantics and rounds up, and the due-check uses the compare's counter and rounding; <br>• **a service releases a task only once its nominal release has passed** (no early release), the timer service releases every due one; the timer's interrupt is taken only when a release is due; <br>• only the timer service releases timer-released tasks; <br>• interrupts do not nest; every masked section masks every interrupt; every service preempts every task; <br>• **every interrupt taken runs one service, paid for by a due release or by an arrival**: an interrupt other than the timer's is taken only while a request a declared source's arrival made is pending at the controller, and its trap's one claim takes such a request; an arrival makes at most one request (condition 5); <br>• preemption happens at every point outside a masked section, a service or a transition (no scheduler lock, no deferred preemption); <br>• a pending interrupt is taken before the resumed context executes an instruction, and every transition, into idle included, ends unmasked; <br>• context switching is eager, or `S` includes every deferred save and restore a transition causes (lazy floating-point state, for instance); <br>• each cost bound holds under any preemption pattern |
+| the platform facts | the platform | each a declared yes or no, with its evidence: <br>• there is one processor; <br>• the timer is event-driven, its compare has level semantics and rounds up, and the due-check uses the compare's counter and rounding; <br>• **a service releases a task only once its nominal release has passed** (no early release), the timer service releases every due one; the timer's interrupt is taken only when a release is due; <br>• only the timer service releases timer-released tasks; <br>• interrupts do not nest; every masked section masks every interrupt; every service preempts every task; <br>• **every interrupt taken runs one service, paid for by a due release or by an arrival**: an interrupt other than the timer's is taken only while a request a declared source's arrival made is pending at the controller that a claim read then would take, and its trap's one claim takes such a request; no service runs otherwise; an arrival makes at most one request (condition 5); <br>• preemption happens at every point outside a masked section, a service or a transition (no scheduler lock, no deferred preemption); <br>• a pending interrupt is taken before the resumed context executes an instruction, and every transition, into idle included, ends unmasked; <br>• context switching is eager, or `S` includes every deferred save and restore a transition causes (lazy floating-point state, for instance); <br>• each cost bound holds under any preemption pattern |
 | enabled sources | the build | the interrupts the build enables (§7.5's resolved plan), non-maskable interrupts and firmware traps included, which the declared sources plus the timer must equal |
 
 Every numerical input carries its §7.3 evidence category: assumed, observed maximum, externally supplied bound, or
@@ -87,8 +87,8 @@ J_i        = J_i^event + J_i^release
 w_i^(0)    = C_i + S
 w_i^(n+1)  = C_i + S
              + Σ_{j ∈ hp(i)}   ⌈ (w_i^(n) + J_j) / T_j ⌉ · (C_j + 2S + γ)
-             + Σ_{k ∈ tasks}   ⌈ (w_i^(n) + J_k) / T_k ⌉ · (C_rel + γ)
-             + Σ_{s ∈ sources} ⌈ (w_i^(n) + J_s) / T_s ⌉ · (C_s + γ)
+             + Σ_{k ∈ tasks}   ⌈ (w_i^(n) + J_k) / T_k ⌉ · (C_rel + δ + γ)
+             + Σ_{s ∈ sources} ⌈ (w_i^(n) + J_s) / T_s ⌉ · (C_s + δ + γ)
 R_i        = J_i + w_i          (w_i the fixed point)
 ```
 
@@ -97,6 +97,10 @@ R_i        = J_i + w_i          (w_i the fixed point)
   code, idle window or lower-priority transition runs. Blocking by such activity happens before readiness, and
   `J_i^release` carries it, bounded below by §4 condition 7. The published forms charge it as `B_i` after
   readiness instead. That is a deviation, stated in §3 and checked by `M2.6.3`.
+- **Every service carries `δ`.** A service that returns while another interrupt is pending leaves up to `δ` before
+  the next trap's entry, in which nothing runs, since a pending interrupt is taken before the resumed context
+  executes an instruction (condition 5). Each service is charged that gap. *Added `2026-10-02` by leaf `M2.11`*, after
+  its fourth review found the gap charged nowhere since `/1`: with `δ = 4`, a set admitted at 224 completed at 237.
 - The timer term runs over **every** task, lower-priority ones included, because each release is served by the
   timer and every service preempts whatever runs. For `k = i` it counts the task's own release.
 - **The source term charges everything a source's services run in the window** that starts at the analysed job's
@@ -107,16 +111,16 @@ R_i        = J_i + w_i          (w_i the fixed point)
   releases a source-released job: its arrival is that job's release, at or before readiness and at most `J_s`
   before the service started. A source's trap whose claim falls after the window leaves only its part before the
   claim in it. The trap was taken while a request a declared source's arrival made was pending at the controller,
-  and no claim came between, so at the window's end such a request is still pending. Take the one a claim then
-  would take. Up to the window's end the run is the one in which nothing arrives after it, where this trap is that
-  request's service, so the part in the window is a prefix of a service within its `C_s`. Its arrival came before
+  and no claim came between, so at the window's end such a request is still pending. Take the request this trap's
+  claim takes in the run that matches this one up to the window's end and has no arrival after it: it was pending
+  then, and this trap is its service there, so the part in the window is a prefix of a service within its `C_s`. Its arrival came before
   the window's end, and its own service, this trap or a later one, starts no earlier than the trap and at most `J_s`
   after that arrival, so the ceiling counts it. Each arrival is charged once: for its own service, or for the part of the
   one trap the window's end cuts, its own service then that trap or one after it. A timer trap runs the
   timer's service alone, paid for by the release due when it was taken (condition 6), which the timer term counts.
 - **Before iterating**, if the interference utilisation reaches one, there is no fixed point and the result is
-  `not-established` with no iteration. That is `Σ_{hp} (C_j + 2S + γ)/T_j + Σ_{tasks} (C_rel + γ)/T_k +
-  Σ_{sources} (C_s + γ)/T_s ≥ 1`, compared exactly in reduced rationals. It is exact in both directions: at or
+  `not-established` with no iteration. That is `Σ_{hp} (C_j + 2S + γ)/T_j + Σ_{tasks} (C_rel + δ + γ)/T_k +
+  Σ_{sources} (C_s + δ + γ)/T_s ≥ 1`, compared exactly in reduced rationals. It is exact in both directions: at or
   above one every iterate exceeds the last, because `C_i > 0`; below one the right-hand side is at most
   `c + U·w`, so a least fixed point exists. Whether it lies within the busy-period stop is decided only by
   iterating. If an
@@ -139,7 +143,7 @@ R_i        = J_i + w_i          (w_i the fixed point)
 | task execution, and the critical sections, kernel services and instrumentation run for a job | inside `C` of that job |
 | instrumentation inside a service or a transition | inside `C_rel`, `C_s` or `S` respectively, never a fourth place |
 | task switch, initial dispatch, idle/wakeup | `S` for the analysed job's transition in; `2S` per interfering job (its transition in, and the return to what it preempted) |
-| interrupt service | `C_rel` per release of any task, `C_s` per arrival of source `s`, never inside `S` or `C`. The boundary is the decision to switch: a scheduling decision that switches nothing is the service's, and everything from a decided switch on is `S` |
+| interrupt service | `C_rel` per release of any task, `C_s` per arrival of source `s`, each with the delivery gap `δ` before it, never inside `S` or `C`. The boundary is the decision to switch: a scheduling decision that switches nothing is the service's, and everything from a decided switch on is `S` |
 | critical sections, transitions and the idle wake of lower-priority work | before readiness, inside `J_i^release`. After readiness none runs: no scheduler lock or deferred preemption exists (a platform fact), so the proof in the third review below holds |
 | lost preemption-dependent state | `γ` per interfering job and per service |
 
@@ -155,6 +159,8 @@ conservatism be recorded, not implied):
   another task. Releases served by one timer interrupt are each charged.
 - `γ` is charged per interfering job and per service, so one preemption episode, a service followed by the job it
   releases, is charged `2γ`.
+- `δ` is charged per service, although the preempted code can run during a delivery that does not follow a return
+  with an interrupt pending.
 - The interference terms count `⌈ ⌉` arrivals, which may include one whose service fell before the window.
 - When the engine's `J^release` also counts services queued ahead, which `w` counts again, those are charged
   twice.
@@ -164,6 +170,9 @@ conservatism be recorded, not implied):
 A task set is admitted only if every condition holds, each checked against a §1 input. Otherwise it is refused
 before any arithmetic. **Every condition is checked**, and the refusal carries the verdict of highest precedence
 among all the failures (§5), with every reason of that verdict. It does not stop at the first failure.
+
+Each condition is a statement about **every run** the declared inputs allow, not about one: §2's argument reasons
+about a run that differs from another only in arrivals after an instant, and a condition must hold there too.
 
 1. There is one processor.
 2. Priorities are distinct and fixed. Preemption happens at every point outside a masked section, a service, or a
@@ -178,7 +187,7 @@ among all the failures (§5), with every reason of that verdict. It does not sto
    - Every interrupt the build enables other than the timer is declared, with `C_s`, `T_s`, `J_s`, its
      acknowledge point and its priority, and the declared sources plus the timer equal the build's enabled set.
      Counter-wrap, timekeeping, overrun and watchdog interrupts, non-maskable interrupts and firmware traps are
-     sources like any other.
+     sources like any other, and one whose service claims nothing is refused by the paid-for condition below.
    - Interrupts do not nest.
    - Every masked section masks every interrupt.
    - Every service preempts every task.
@@ -186,10 +195,12 @@ among all the failures (§5), with every reason of that verdict. It does not sto
      makes a **request** at the interrupt controller, **pending at the controller** from then until a **claim**, a
      read of the controller that takes it; a read that finds none takes nothing. Each trap taken for an interrupt
      runs exactly one service: a timer trap the timer's, claiming nothing, taken only when a release is due
-     (condition 6); any other trap a declared source's, taken only while a request a declared source's arrival made
-     is pending at the controller, whose one claim takes such a request. So a trap taken on a notification that a
-     claim has made stale meets this only if such a request arrived before the trap; one arriving before its claim
-     reads does not count. An arrival makes at most one request. A source whose service claims nothing, such as a
+     (condition 6); any other trap the service of the source whose request its one claim takes, taken only while a
+     request a declared source's arrival made is pending at the controller that a claim read then would take, and
+     its claim takes such a request. No service runs except as such a trap's one service. So a trap taken on a
+     notification that a claim has made stale meets this only if such a request, still unclaimed, arrived before the
+     trap; one arriving after the trap, even before its claim reads, does not count. An arrival makes at most one
+     request. A source whose service claims nothing, such as a
      non-maskable interrupt, a software interrupt or a firmware trap, cannot meet this condition and is refused.
      Elsewhere in this record an interrupt *pending* is pending at the hart. §2 shows why the source term then
      charges every service. *Added `2026-10-02` by leaf `M2.11`*, after the composition's review found services that a conforming
@@ -345,10 +356,10 @@ fixture's exact timeline, where H responds in 5 and L in 23.
   due release or by an arrival", with the terms it defines, and condition 6 reads *taken* where it read *raised*
   and defines *due*. `/1` is the text before commit `1c61e70`, which first added to condition 5 in place; that
   addition and every later change of `M2.11`'s are `/2`'s. `/2` is open while `M2.11` is: its text changes with each
-  answer to the leaf's reviews, and its only conclusions until the leaf closes are the tests' and §6's, re-run with
+  answer to the leaf's reviews, and its only conclusions until the leaf closes are the tests', §6's and the book's account of §6, re-run with
   every change. A change after that is `/3`. `/1` had stated conclusions: §6's expected results, the book's account
-  of them, and the variant's tests. So every conclusion stated in `/1` is void. The recurrence's formulas are
-  unchanged, and the platforms of those sets are stipulated to meet every condition: the expected
+  of them, and the variant's tests. So every conclusion stated in `/1` is void. The recurrence charges `δ` with every
+  service since the fourth review, which moves no bound of a set with `δ = 0`, as every expected result's is; and the platforms of those sets are stipulated to meet every condition: the expected
   results' `facts=all` is read as every fact `yes`, the new one included, and the tests declare each `yes`. Re-run
   under `/2` they give the same verdicts, bounds and iterates (`crates/rt-analysis/tests/runtime_expected.rs`). No
   command reached the variant under `/1`: `archogen analyze` is `Unimplemented` in
@@ -356,7 +367,7 @@ fixture's exact timeline, where H responds in 5 and L in 23.
 
 ## Review (`ROADMAP.md` §7.4: "reviewed applicability conditions")
 
-Four readers checked this record on `2026-09-30`, and three more `M2.11`'s change on `2026-10-02`. Each was a new
+Four readers checked this record on `2026-09-30`, and four more `M2.11`'s change on `2026-10-02`. Each was a new
 read-only context that had not written it. Their
 findings, and the answer to each, are kept in
 [`decision_runtime-analysis-variant-reviews.md`](../reviews/decision_runtime-analysis-variant-reviews.md).
@@ -370,3 +381,4 @@ findings, and the answer to each, are kept in
 | `M2.11`'s first review, `2026-10-02` | 14 | a trap taken before the arrival it serves escaped the source term: 33 against an admitted 27 | 5 defects; condition 5 stated at the trap, condition 6 *taken*, the model `/2`; all answered |
 | `M2.11`'s second review, same day | 15 | the first's defects closed and no schedule found past the bound; a false justification in the composition record's step 4 | 1 defect; one service per trap, the terms defined; all answered |
 | `M2.11`'s third review, same day | 15 | step 3 had dropped "of a declared source": a stuck request satisfied the clause, 33 against 27 again | 3 defects; the declared source restored, §2's cut trap charged to the request a claim would take, step 4 split at `p_x`; all answered |
+| `M2.11`'s fourth review, same day | 14 | the delivery gap after a service, charged nowhere since `/1`: 224 admitted, 237 on the timeline | 3 defects; every service charges `δ`, every condition holds of every run, the claimable request; all answered |

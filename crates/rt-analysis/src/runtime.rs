@@ -2,9 +2,9 @@
 //!
 //! ⛔ **This module implements `docs/decisions/decision_runtime-analysis-variant.md` and nothing else.** Every
 //! input, condition, term and verdict below is a section of that record, cited where it is used. Anything the
-//! implementation needs that the record does not say goes back to the record first. Three independent reviews
-//! each found a way an earlier draft could under-estimate a response time, so a local "improvement" here is
-//! how a fourth gets in.
+//! implementation needs that the record does not say goes back to the record first. Independent reviews have
+//! each found a way an earlier draft could under-estimate a response time (the record's Review), so a local
+//! "improvement" here is how the next gets in.
 //!
 //! The shape follows the baseline (`crate::response`): admission is a constructor precondition ([`admit`]), the
 //! recurrence records its witness, and the three outcomes that are easy to collapse stay apart. The variant
@@ -182,8 +182,8 @@ pub struct PlatformFacts {
     pub eager_switching: Option<bool>,
     /// Every interrupt taken runs one service, paid for by a due release or an arrival (condition 5, added by leaf
     /// `M2.11`): a timer trap runs the timer's service and claims nothing; any other trap is taken only while a
-    /// request a declared source's arrival made is pending at the controller, and its one claim takes such a
-    /// request; an arrival makes at most one request.
+    /// request a declared source's arrival made is pending at the controller that a claim read then would take, and
+    /// its one claim takes such a request; no service runs otherwise; an arrival makes at most one request.
     pub services_paid_by_arrivals: Option<bool>,
     /// The timer is event-driven (condition 6).
     pub timer_event_driven: Option<bool>,
@@ -299,6 +299,8 @@ pub struct RuntimeSet {
     switch: u128,
     preemption_delay: u128,
     timer_service: u128,
+    /// `δ`, charged with every service: the gap before a trap taken as the one before it returns (record §2).
+    delivery: u128,
     assumptions: Vec<String>,
 }
 
@@ -753,6 +755,7 @@ pub fn admit(
         switch: resolve(switch),
         preemption_delay: resolve(gamma),
         timer_service: resolve(timer_service),
+        delivery: resolve(delivery),
         assumptions,
     })
 }
@@ -823,6 +826,12 @@ const fn gcd(mut a: u128, mut b: u128) -> u128 {
     a
 }
 
+/// What one service of cost `c` charges: itself, the delivery gap before it, and the state it destroys (record §2).
+fn per_service(set: &RuntimeSet, c: u128) -> Option<u128> {
+    c.checked_add(set.delivery)?
+        .checked_add(set.preemption_delay)
+}
+
 /// The interference utilisation of task `index`, exactly, as a reduced fraction; `None` when it does not fit
 /// 128-bit numerator and denominator (record §2's pre-check).
 fn utilisation(set: &RuntimeSet, index: usize) -> Option<(u128, u128)> {
@@ -833,16 +842,10 @@ fn utilisation(set: &RuntimeSet, index: usize) -> Option<(u128, u128)> {
         terms.push((job(task.computation)?, task.separation));
     }
     for task in &set.tasks {
-        terms.push((
-            set.timer_service.checked_add(set.preemption_delay)?,
-            task.separation,
-        ));
+        terms.push((per_service(set, set.timer_service)?, task.separation));
     }
     for source in &set.sources {
-        terms.push((
-            source.service.checked_add(set.preemption_delay)?,
-            source.separation,
-        ));
+        terms.push((per_service(set, source.service)?, source.separation));
     }
     let (mut num, mut den) = (0u128, 1u128);
     for (n, d) in terms {
@@ -873,14 +876,14 @@ fn next(set: &RuntimeSet, index: usize, w: u128) -> Option<u128> {
             .checked_add(set.preemption_delay)?;
         total = total.checked_add(arrivals.checked_mul(cost)?)?;
     }
-    let release = set.timer_service.checked_add(set.preemption_delay)?;
+    let release = per_service(set, set.timer_service)?;
     for k in &set.tasks {
         let arrivals = ceil_div(w.checked_add(k.jitter)?, k.separation);
         total = total.checked_add(arrivals.checked_mul(release)?)?;
     }
     for s in &set.sources {
         let arrivals = ceil_div(w.checked_add(s.jitter)?, s.separation);
-        let cost = s.service.checked_add(set.preemption_delay)?;
+        let cost = per_service(set, s.service)?;
         total = total.checked_add(arrivals.checked_mul(cost)?)?;
     }
     Some(total)

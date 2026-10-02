@@ -207,6 +207,29 @@ verdict: "not fit to close M2.11 yet". Defects per round: 5, 1, 3.
 | 14 | nit | round 2's row 14 said the catalog's fact names match both fields; round 2's row 2 did not reach "pending but not claimable" | corrected here, the earlier rows left as they stand: `services_paid_by_arrivals` has no catalog fact; finding 1 above answers the second |
 | 15 | nit | the ledger's `riscv-privileged` Hash field said two sentences | three |
 
+**`M2.11`'s fourth review, `2026-10-02`,** of commit `d2e8c54`, by a new read-only context asked also to diff every
+answer of the leaf for anything lost. Every listed case stays excluded — the first witness, the stuck source, a
+second service per arrival, a stale timer interrupt, claim loops — and step 4's charges are free. But it found an
+under-charge in the recurrence there since `/1`, and two defects in how condition 5 and §2 read. Defects per round:
+5, 1, 3, 3.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 1 | defect | a service returning with another interrupt pending leaves up to `δ` in which nothing runs, charged in no term; with `δ = 4`, two sources arriving together, a set admitted at 224 completes at 237 | every service charges `C + δ + γ`, in the recurrence, the utilisation sum, §3 and the code; the witness a test, `R = 278`; no expected result moves, every one having `δ = 0` |
+| 2 | defect | under a per-run reading, a declared request pending at the controller but not claimable there (a source routed to the supervisor context) met the trap-time clause: 28 admitted, 33 on the timeline; §2 needs an all-runs reading the record never stated | §4 states every condition of every run the declared inputs allow; the clause reads "that a claim read then would take", in condition 5, §1, the doc comment, `no-empty-claim` and the catalog; round 3's row 14 corrected here |
+| 3 | defect | §2's cut-trap sentence named the request a claim at the window's end would take, which the trap's own code can change before its claim; no under-charge | the reviewer's wording: the request this trap's claim takes in the run that matches this one up to the window's end and has no arrival after it |
+| 4 | drafting | the trap's service no longer tied to the claimed request's source | "the service of the source whose request its one claim takes" |
+| 5 | drafting | a service run outside an interrupt trap, on an exception's return, in no clause | "No service runs except as such a trap's one service", which `one-claim-per-trap`'s "an exception trap serves no interrupt" now matches |
+| 6 | drafting | "one arriving before its claim reads does not count" also read as excluding a request that arrived before the trap | "such a request, still unclaimed, arrived before the trap; one arriving after the trap, even before its claim reads, does not count" |
+| 7 | drafting | step 4: "before the window" for `t ≤ s_0 < p_x`, the cut trap's own delivery, and `w` ahead of `x` for the timer | "before the window, or inside it before `p_x`"; the delivery paid by `x`'s second `δ`; the timer's case stated |
+| 8 | drafting | `no-empty-claim`, a `switch`-group fact, named "a declared source's", a list its reviewer cannot see | "a request an arrival made … that a claim read then would take"; the plan's enabled set and deliverability make it a declared source's |
+| 9 | drafting | round 3's answers dropped `raised-only-when-due` from the catalog's conjuncts, reversing round 1's row 4 unrecorded | recorded here: the timer half is condition 6's own fact, which the variant checks apart |
+| 10 | nit | condition 5's first bullet called non-maskable interrupts and firmware traps sources like any other | "and one whose service claims nothing is refused by the paid-for condition below" |
+| 11 | nit | the `/2` bullet's conclusions omitted the book's account of §6 | added |
+| 12 | nit | the `riscv-privileged` Hash field said "not captured" while Known limitations hashes the third sentence's file | said so |
+| 13 | nit | `runtime.rs`'s module comment counted three reviews | "independent reviews have each found …" |
+| 14 | nit | the `one-claim-per-trap` row's "read only when" | "read by the composition only when …; the catalog's §12 reads it whatever that fact states" |
+
 ## Why
 
 The record states the variant as it stands, and this file keeps how it got there, as for the catalog record.

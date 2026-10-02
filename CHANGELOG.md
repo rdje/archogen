@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the timing analysis charges the pause between interrupts
+
+`ARCHOGEN-M2-0349` (leaf `M2.11`, step 5).
+
+- The fourth review found a cost the analysis had never charged: when one interrupt handler finishes with another
+  interrupt waiting, the processor pauses for its delivery delay before the next, and a task set could miss a
+  deadline the analysis said it met (237 against 224). Every handler is now charged that pause. No earlier result
+  moves, since every checked example had a delay of zero. A fifth review is next.
+
 ## archogen — the timing analysis's rule: a third review catches a lost word
 
 `ARCHOGEN-M2-0348` (leaf `M2.11`, step 4).
