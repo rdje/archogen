@@ -34,32 +34,35 @@ record it relied on, and whether that record was reviewed.
 
 ### What the crate does today
 
-This chapter explains the design that answers it. The design is decided, and it was reviewed independently sixteen
-times before it was accepted. Its code is being built in the `archogen-catalog` crate (`M2.7.3`). So far that crate
-reads a record and refuses what breaks the design's rules for a single file, and computes every hash the design
-defines, reproducing the worked example's 23 values. It also reads the catalog's lock and checks it against the
-records of one tree: a changed facet without a version bump, a version going backwards, a missing line, and a review
-line that disagrees with its review or was taken out of its record. Over a history given in memory, it holds the
-lock append-only, recomputes every commit's new lines as blessing would write them, verifies each review at the
-commit that ledgered it, and accepts a waiver only where §9 allows one. From that history it derives each facet's
-evidence status: rejected while a rejection reaches it unanswered, by its own record, its lineage or content it
-shares, production only where a review names its current hash, stale or unreviewed otherwise. At each commit that
-recorded a review it checks the review's date against the commit's and that every answer names a rejection the facet
-inherits, and it keeps a deleted record's rejection from being shed. Given what a claim recorded, it names every
-line and lookup that no longer holds, even when the catalog no longer loads. It answers the analysis's lookups by
-profile and target, refuses a name that more than one record supplies, and reads each fact grouped with a cost only
-from the record that supplies the cost. A record in the production namespace with any part not reviewed, anything
-unknown, or a dependency outside production stops the catalog loading; it is never quietly demoted. A claim now
-reads the catalog only through lookups, so its citations are what it read and its closure is every facet those rest
-on; a production claim is refused with every reason that applies, among them that the main line is not yet
-protected. Code a record points at is held to §3's package rules: its manifests by their meaning, and its Rust
-source token by token. Premise 3 is judged at claim time too, so the crate is complete. It also reads the port's
-records as §14 amends them (`M2.12.4`): a fact about code may point at several places in it, an implementation may
-declare which of its packages hold assembly, the token scan holds that assembly to the dialect's short list, and the
-port's statement is checked — every fact it owes, and one convention for reporting a failed check, shared by every
-record selected with it. What the format rests on in the pinned toolchain is re-checked in every integration run, so
-a toolchain bump that changes it fails first. The gate, the check that
-protects it and the first records are the next leaves (`M2.7.4` to `M2.7.6`). Until they land, nothing loads a catalog, and `catalog/` is empty.
+This chapter explains the design. It was reviewed independently sixteen times before it was accepted, and the
+`archogen-catalog` crate implements all of it (`M2.7.3`, `M2.12.4`). It reads records and refuses what breaks the
+rules, each refusal with its one code; computes every hash, reproducing the worked example's 23 values; checks the
+lock over one tree and over the history; derives each facet's evidence status; names what a later change
+invalidates; answers the analysis's lookups; holds the production namespace; admits claims, judging premise 3; and
+holds the code a record points at to the package rules, the port's assembly to its dialect. The gate, the check that
+protects it and the first records are the next leaves (`M2.7.4` to `M2.7.6`). Until they land, nothing loads a
+catalog, and `catalog/` is empty.
+
+### The port's record
+
+The port is the small part of the runtime written in the processor's own language: the code that runs when an
+interrupt arrives, that switches from one task to another, and that turns interrupts off and on. Rust cannot say
+those things, so they are assembly, and the catalog at first refused assembly outright, since assembly can reach code
+no review sees. The port's record admits it narrowly (the design's §14,
+`docs/specs/catalog/decision_catalog-records-port.md`):
+
+- **Where it may be.** A record declares which of its packages hold assembly, and for which processor family. Only
+  there, and only inside a function built for the bare-metal target, may assembly appear.
+- **What it may say.** Each line is one instruction from a short list, each operand checked by its position. Other
+  code is reached only through a Rust name the compiler resolves; there is no assembler directive; and an inline
+  block declares to the compiler every register it touches.
+- **What the port must state.** The fault contract leaves the port choices: how it catches a primitive called from
+  outside a job, whether a trap serves one interrupt or several, how a failed check reports what it found, how a
+  stack's guard is noticed. Its record states each as a fact beside the code, `unknown` where nobody knows yet, and
+  the ones the contract requires are never `no`. One choice is shared: every record whose code makes a check depends
+  on the same *check-passing convention* record as the port, which the catalog matches mechanically.
+- **What it rests on.** The format leans on what the pinned compiler and assembler do — how they align the trap
+  entry, how they read labels and numbers — and each such premise is re-checked on every integration run.
 
 ### The records that hold it
 
@@ -72,7 +75,8 @@ protects it and the first records are the next leaves (`M2.7.4` to `M2.7.6`). Un
 | `docs/specs/catalog/decision_catalog-records-limits.md` | its §13, what the design does not do |
 | `docs/specs/catalog/decision_runtime-composite-inputs.md` | how four of the analysis's inputs are put together from catalog, application and plan parts |
 | `docs/reviews/decision_catalog-records-reviews.md` | every review round, every finding, and the answer to each |
-| `crates/archogen-catalog/src/record.rs` | the code so far: one record read, and every rule of the design's §1 and §2 that needs only the file, each refusal with its one code |
+| `docs/specs/catalog/decision_catalog-records-port.md` | its §14, the port's assembly and what the port's record must state |
+| `crates/archogen-catalog/src/record.rs` | one record read, and every rule of the design that needs only the file, each refusal with its one code |
 | `crates/archogen-catalog/tests/record.rs` | one valid record and one change of it per rule, each refused with that rule's code |
 | `crates/archogen-catalog/src/hash.rs` | every hash: each facet's own and bound hash, the record's, a review's, over the files, packages, targets and ledger sections they rest on |
 | `crates/archogen-catalog/tests/hash.rs` | the worked example, read from its own file, with all 23 of its values |
@@ -173,14 +177,8 @@ specification's. Round 11 found none live, and the record was accepted. Its hist
   lock, over one tree and over a history, derives evidence status, checks each review where it was recorded and
   traces invalidation, answers lookups, holds the production namespace, admits claims, judging premise 3, and holds
   code to the package rules: the crate is complete. The gate that gives it the history is `M2.7.4`'s.
-- **The port's facts are unknown, for now.** The architecture port is assembly. Its record format is decided, after
-  seven independent reviews (`M2.12.2`, `docs/specs/catalog/decision_catalog-records-port.md`): a record names the packages that
-  hold assembly, each instruction from a short list with every operand checked by its position, other code reached
-  only by `sym` or an address the code computes, every register an inline block touches declared, no output sharing a register, and
-  no directive. What the port's record must state of the fault contract's open points, as facts reviewed beside its
-  code, one of them matched across records, is decided too, after seven independent reviews (`M2.12.3`): among
-  them how each guarded stack's overflow is found, and the convention by which a failed check passes what it found. Until the loader admits it (`M2.12.4`) and a
-  port's record exists, every analysis of the runtime variant over the catalog is inconclusive.
+- **No port's record exists yet.** Its format, its statement and the loader's checks are done (`M2.12`). Until a
+  port's record is written, every analysis of the runtime variant over the catalog is inconclusive.
 - **No surface makes a production claim.** That needs images, which are `M4`'s, and `M4.10` holds everything the
   design leaves to it.
 - **Premise 3 is unmet** until the director turns on the hosting settings and names a second reviewer. Its

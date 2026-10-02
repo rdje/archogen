@@ -13,12 +13,11 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M2` → frontier `M2.12`. `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API` is
+- **Active tree:** `M2` → frontier `M2.15`. `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API` is
   closed; `M1`'s only open leaf, `M1.29.4`, is blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M2.12.5`, the book, then `M2.15`. `M2.12.2`'s format, `M2.12.3`'s port statement and
-  `M2.12.4`'s code closed `2026-10-02`: `archogen-catalog` admits §14.2's format and makes §14.4's refusals, the
-  pin's premises held by `cargo xtask pin-premises`. This project uses no branches.
+- **Next action:** `M2.15`, the fault paths' observation events. `M2.12` closed `2026-10-02`: the port's record
+  format, statement, loader and book; the pin's premises held by `cargo xtask pin-premises`. This project uses no branches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4` and `M2.7.6.4` — findings §11, `main`'s protection and a reviewer;
   `TEMPLATE-REFS` — postponed. **The 17 template files archogen has not changed are never edited** (findings §10,

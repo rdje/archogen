@@ -120,8 +120,12 @@ as `F26`, task-tree leaves — are names, not words, and are not listed.
 
 ## Words with a meaning of their own here
 
+- **assembly** — code written in the processor's own language, one instruction a line; the port needs a little, and
+  the catalog admits it narrowly. See [Where the engine's knowledge comes from: the catalog](catalog.md).
 - **catalog** — the reviewed building blocks a generated system is assembled from, each pinned by a hash of its
   content. See [Where the engine's knowledge comes from: the catalog](catalog.md).
+- **check-passing convention** — the one rule, shared by the port and every record whose code makes a check, by
+  which a failed check reports what it found. See [Where the engine's knowledge comes from: the catalog](catalog.md).
 - **deadline** — how long after its release a task's work must be finished. See [Describing a workload](workload.md).
 - **description** — a text in eADL saying what a system must do, never how. See [Reading a description](reading.md).
 - **fault** — something gone wrong that the runtime must answer: an overrun, a stack overflow, an unexpected trap or

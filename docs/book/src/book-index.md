@@ -34,6 +34,9 @@ a change that leaves it stale, so it is never edited by hand.
 - **API** — [definition](glossary.md), [The runtime: decisions, not actions](runtime.md), [The archogen command
   line](cli.md), [The engine API](engine-api.md), [Verifying the toolchain](verification.md), [What is versioned, and
   what changing it costs](versions.md)
+- **assembly** — [definition](glossary.md), [Modules and composition](modules.md), [Where the engine's knowledge comes
+  from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [What this project relies on from
+  outside](ledger.md)
 - **AUTOSAR** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [What this project relies
   on from outside](ledger.md)
 - autosar-os — [What this project relies on from outside](ledger.md#autosar-os)
@@ -56,6 +59,8 @@ a change that leaves it stale, so it is never edited by hand.
   changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
 - catalog-rules — [What is versioned, and what changing it costs](versions.md#catalog-rules)
 - catalog-s0 — [What is versioned, and what changing it costs](versions.md#catalog-s0)
+- **check-passing convention** — [definition](glossary.md), [Where the engine's knowledge comes from: the
+  catalog](catalog.md)
 - chipdoc — [What this project relies on from outside](ledger.md#chipdoc)
 - **CI** — [definition](glossary.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying
   the toolchain](verification.md), [What this project relies on from outside](ledger.md), [Annex B: The checks that keep
@@ -185,9 +190,10 @@ a change that leaves it stale, so it is never edited by hand.
 ## J
 
 - **job** — [definition](glossary.md), [Introduction](introduction.md), [The supported profile](profile.md), [What the
-  scheduling checker establishes](analysis.md), [The runtime: decisions, not actions](runtime.md), [Where generated
-  systems run](targets.md), [Verifying the toolchain](verification.md), [What this project relies on from
-  outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
+  scheduling checker establishes](analysis.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [The
+  runtime: decisions, not actions](runtime.md), [Where generated systems run](targets.md), [Verifying the
+  toolchain](verification.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
+  detail](annex-runtime.md)
 - **JSON** — [definition](glossary.md), [The engine API](engine-api.md), [What is versioned, and what changing it
   costs](versions.md)
 
@@ -278,12 +284,11 @@ a change that leaves it stale, so it is never edited by hand.
 - **profile** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The supported profile](profile.md), [The use cases](usecases.md), [Reading a
   description](reading.md), [Quantities and units](quantities.md), [Refinement](refinement.md), [Describing a
-  workload](workload.md), [Checking a description](checking.md), [Where the engine's knowledge comes from: the
-  catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [The S0 early generation path](s0.md), [Where
-  generated systems run](targets.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [What this
-  project relies on from outside](ledger.md), [What is versioned, and what changing it costs](versions.md), [Annex A:
-  The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that keep the repository
-  honest](annex-repository.md)
+  workload](workload.md), [Checking a description](checking.md), [The runtime: decisions, not actions](runtime.md), [The
+  S0 early generation path](s0.md), [Where generated systems run](targets.md), [The archogen command line](cli.md), [The
+  engine API](engine-api.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
+  changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that
+  keep the repository honest](annex-repository.md)
 - provenance-format — [What is versioned, and what changing it costs](versions.md#provenance-format)
 
 ## Q
@@ -354,10 +359,11 @@ a change that leaves it stale, so it is never edited by hand.
   board](tour.md), [The boundary: functionality versus implementation](boundary.md), [The supported
   profile](profile.md), [The use cases](usecases.md), [Reading a description](reading.md), [Kinds and
   schemas](kinds.md), [Quantities and units](quantities.md), [Describing a workload](workload.md), [Checking a
-  description](checking.md), [What the scheduling checker establishes](analysis.md), [The runtime: decisions, not
-  actions](runtime.md), [The S0 early generation path](s0.md), [Verifying the toolchain](verification.md), [What this
-  project relies on from outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The
-  checks that keep the repository honest](annex-repository.md)
+  description](checking.md), [What the scheduling checker establishes](analysis.md), [Where the engine's knowledge comes
+  from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [The S0 early generation
+  path](s0.md), [Verifying the toolchain](verification.md), [What this project relies on from outside](ledger.md),
+  [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that keep the repository
+  honest](annex-repository.md)
 - The admitted task model, enforced — [Describing a workload](workload.md#the-admitted-task-model-enforced)
 - The binding a web page loads — [The engine API](engine-api.md#the-binding-a-web-page-loads)
 - The browser module answers as the command line does — [Verifying the
@@ -384,6 +390,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The observation contract — [The S0 early generation path](s0.md#the-observation-contract)
 - The passes, in the order a failure makes the next meaningless — [Checking a
   description](checking.md#the-passes-in-the-order-a-failure-makes-the-next-meaningless)
+- The port's record — [Where the engine's knowledge comes from: the catalog](catalog.md#the-ports-record)
 - The product runs nothing — [Verifying the toolchain](verification.md#the-product-runs-nothing)
 - The records that hold it — [Where the engine's knowledge comes from: the catalog](catalog.md#the-records-that-hold-it)
 - The sealed set — [The use cases](usecases.md#the-sealed-set)
@@ -407,9 +414,10 @@ a change that leaves it stale, so it is never edited by hand.
 - **TL16C550C** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - Today and ahead: there is no board — [Where generated systems run](targets.md#today-and-ahead-there-is-no-board)
 - **trap** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [The boundary: functionality
-  versus implementation](boundary.md), [What the scheduling checker establishes](analysis.md), [The runtime: decisions,
-  not actions](runtime.md), [Where generated systems run](targets.md), [What this project relies on from
-  outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
+  versus implementation](boundary.md), [What the scheduling checker establishes](analysis.md), [Where the engine's
+  knowledge comes from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [Where generated
+  systems run](targets.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
+  detail](annex-runtime.md)
 - Trust dependencies — [What a report may claim](evidence.md#trust-dependencies)
 - Two mechanisms now catch all three — [Describing a workload](workload.md#two-mechanisms-now-catch-all-three)
 
