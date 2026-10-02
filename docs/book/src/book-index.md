@@ -174,6 +174,7 @@ a change that leaves it stale, so it is never edited by hand.
 - How it works — [The archogen command line](cli.md#how-it-works)
 - How it works — [The engine API](engine-api.md#how-it-works)
 - How it works — [Verifying the toolchain](verification.md#how-it-works)
+- How it works — [What is versioned, and what changing it costs](versions.md#how-it-works)
 - How much of this a machine can check — [The boundary: functionality versus
   implementation](boundary.md#how-much-of-this-a-machine-can-check)
 - How the command line is held to it — [The engine API](engine-api.md#how-the-command-line-is-held-to-it)
@@ -413,6 +414,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The idea, in plain words — [The archogen command line](cli.md#the-idea-in-plain-words)
 - The idea, in plain words — [The engine API](engine-api.md#the-idea-in-plain-words)
 - The idea, in plain words — [Verifying the toolchain](verification.md#the-idea-in-plain-words)
+- The idea, in plain words — [What is versioned, and what changing it costs](versions.md#the-idea-in-plain-words)
 - The language definition travels with the binary — [Checking a
   description](checking.md#the-language-definition-travels-with-the-binary)
 - The list you read is the list the engine uses — [The supported

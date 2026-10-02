@@ -1,5 +1,23 @@
 # What is versioned, and what changing it costs
 
+## The idea, in plain words
+
+A description written today must still mean the same thing years from now, though archogen will have changed many
+times by then. So everything whose meaning someone relies on carries a **version**: the language itself, the
+supported profile, the engine, and the formats of the files archogen writes. A version is a promise that, while it
+stays the same, whatever was built on it stays valid. Changing what something means without changing its version
+would break that promise without anyone noticing, so archogen does not let it happen: each version is declared once
+in the code, listed on this page, and held there by a check that fails when the two disagree.
+
+> **In one minute, for engineers.** `ROADMAP.md` §15 versions the language apart from the engine, catalog entries,
+> device and timing models and evidence formats, and requires a description to keep its meaning under its locked
+> semantic version. Each surface below gives its version, where it is declared, what forces a new one, what refuses
+> an unannounced change, and what it keeps. `VERSION-REGISTER` (`scripts/check_version_register.sh`) requires every
+> version the code declares to be registered here with the same value; frozen verdicts hold the engine to what
+> descriptions mean, and golden files that are never rewritten hold each format to its identifier.
+
+## How it works
+
 `ROADMAP.md` §15 separates the version of the language from the versions of the engine, catalog
 entries, device and timing models, and evidence formats. It also requires that "a source description
 retains its meaning under its locked semantic version". This page lists every versioned surface this

@@ -714,7 +714,7 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0301 (leaf PROGRAM.47.4)`
 
 - ID: `PROGRAM.47.5`
-  Status: `active` — one chapter per child, each `done` when committed: `.1` the introduction, `.2` the tour, `.3` reading a description, `.4` describing a workload, `.5` checking a description, `.6` what a report may claim, `.7` the scheduling checker, `.8` the catalog, `.9` where systems run, `.10` the command line, `.11` the engine API, `.12` verifying the toolchain, with Annex B, `.13` the boundary, `.14` the supported profile, `.15` the use cases, `.16` kinds and schemas, `.17` quantities and units, `.18` modules and composition, `.19` presence, absence and relevance, `.20` refinement
+  Status: `active` — one chapter per child, each `done` when committed: `.1` the introduction, `.2` the tour, `.3` reading a description, `.4` describing a workload, `.5` checking a description, `.6` what a report may claim, `.7` the scheduling checker, `.8` the catalog, `.9` where systems run, `.10` the command line, `.11` the engine API, `.12` verifying the toolchain, with Annex B, `.13` the boundary, `.14` the supported profile, `.15` the use cases, `.16` kinds and schemas, `.17` quantities and units, `.18` modules and composition, `.19` presence, absence and relevance, `.20` refinement, `.21` what is versioned
   Goal: every other chapter in layers, one leaf and commit each when started, the chapters a newcomer meets first
   leading — the introduction and the tour, reading and workload, checking, evidence and analysis, the catalog,
   targets, the command line, the engine API, verification — and the gory parts of each moved to annexes.
@@ -952,6 +952,17 @@ mdBook that is the director's window into the project.
   Verification: `cargo test -q -p eadl-model --test f07_refinement` → `13 passed`; `figure-register: OK`; `bash
   scripts/build_book.sh` → rc=0; `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`
   Commit: `ARCHOGEN-PROGRAM-0323 (leaf PROGRAM.47.5.20)`
+
+- ID: `PROGRAM.47.5.21`
+  Status: `done` — `2026-10-02`
+  Goal: *What is versioned, and what changing it costs* in layers.
+  **Done.** It opens with a description that must mean the same years from now, a version as a promise, and the check
+  that holds each version the code declares to this page. Then the one-minute summary and the chapter's opening as how
+  it works. The entries stay `##` headings, since `VERSION-REGISTER` reads a section as `## \`<id>\``; so the
+  precise rules follow as they stand rather than under a heading of their own.
+  Verification: `version-register: OK (11 entries …)`; `figure-register: OK`; `bash scripts/build_book.sh` → rc=0;
+  `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`
+  Commit: `ARCHOGEN-PROGRAM-0324 (leaf PROGRAM.47.5.21)`
 
 ## Roadmap coverage map
 
@@ -1271,6 +1282,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.47.5.18` | `ARCHOGEN-PROGRAM-0321 (leaf PROGRAM.47.5.18)` | ***Modules and composition* in layers** |
 | `PROGRAM.47.5.19` | `ARCHOGEN-PROGRAM-0322 (leaf PROGRAM.47.5.19)` | ***Presence, absence, and relevance* in layers** |
 | `PROGRAM.47.5.20` | `ARCHOGEN-PROGRAM-0323 (leaf PROGRAM.47.5.20)` | ***Refinement* in layers** |
+| `PROGRAM.47.5.21` | `ARCHOGEN-PROGRAM-0324 (leaf PROGRAM.47.5.21)` | ***What is versioned* in layers**, its entries kept where the register gate reads them |
 
 ## Changelog
 
