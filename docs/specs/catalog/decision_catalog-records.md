@@ -185,7 +185,7 @@ does not exist, and why, and it is reviewed like any other statement (§5).
 
 | `ROADMAP.md` §9 field | Form |
 | --- | --- |
-| implementation source | `(implementation (version "…") (sources "<package>" …))`, with at least one entry, each a package (§3); or `(implementation (version "…") (none "why"))` |
+| implementation source | `(implementation (version "…") (sources "<package>" …))`, with at least one entry, each a package (§3), optionally followed by `(assembly <architecture> "<package>" …)` naming those of them that hold assembly (§14.2); or `(implementation (version "…") (none "why"))` |
 | model source, behavioral | `(behavior-model (version "…") (sources "…" …) (describes <id> …) (facts <fact> …))`, or `(… (none "why"))` |
 | model source, timing, and cost evidence | `(timing-model (version "…") (sources "…" …) (measured-with <id> …) (facts <fact> …) (costs <cost> …))`, or `(… (none "why"))` |
 
@@ -200,7 +200,8 @@ does not exist, and why, and it is reviewed like any other statement (§5).
   implementation or a `describes` record's; in a timing model, `eager-switching` included, also a record in its
   dependency closure or a `measured-with` record.
 
-**A fact** is `(fact <name> yes|no (locator …) (basis "…"))`, or `(fact <name> (unknown "why"))`.
+**A fact** is `(fact <name> yes|no (locator …) (basis "…"))`, or `(fact <name> (unknown "why"))`. A code fact may
+carry several `code` locators, one after another, each admitted by the rule below (§14.2).
 
 **A cost** is `(cost <name> (target <t>) (unknown "why"))`, or a known value:
 
@@ -820,6 +821,13 @@ lookup selects them.
 This section is kept in [`decision_catalog-records-limits.md`](decision_catalog-records-limits.md). It is part of this
 record, normative and reviewed with it: what the structure guarantees and what it leaves to review, what no hash
 covers, where a rejection binds, and the limits of `/1` that later leaves lift.
+
+### 14. The port's assembly
+
+This section is kept in [`decision_catalog-records-port.md`](decision_catalog-records-port.md). It is part of this
+record, normative and reviewed with it: what the port's assembly needs and what the pinned toolchain does with it,
+measured; the declaration, invocations and templates that admit it in a record's package; the dialect per
+architecture; and the port's facts restated by what a locator reaches (`M2.12`).
 
 ## Why
 

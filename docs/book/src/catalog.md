@@ -168,9 +168,11 @@ specification's. Round 11 found none live, and the record was accepted. Its hist
   lock, over one tree and over a history, derives evidence status, checks each review where it was recorded and
   traces invalidation, answers lookups, holds the production namespace, admits claims, judging premise 3, and holds
   code to the package rules: the crate is complete. The gate that gives it the history is `M2.7.4`'s.
-- **The port's facts are unknown.** The architecture port is assembly, which no record can hold yet, so every
-  analysis of the runtime variant over the catalog is inconclusive until `M2.12` gives the port's code a record
-  format.
+- **The port's facts are unknown, for now.** The architecture port is assembly. Its record format is designed and
+  under review (`M2.12.2`, `docs/specs/catalog/decision_catalog-records-port.md`): a record names the packages that
+  hold assembly, written with `sym` references only and a closed list of instructions, and no directive. Until the
+  loader admits it (`M2.12.4`) and a port's record exists, every analysis of the runtime variant over the catalog is
+  inconclusive.
 - **No surface makes a production claim.** That needs images, which are `M4`'s, and `M4.10` holds everything the
   design leaves to it.
 - **Premise 3 is unmet** until the director turns on the hosting settings and names a second reviewer. Its

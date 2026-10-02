@@ -90,9 +90,10 @@ could otherwise hash its own reviews, and a target file there would move with ev
 - its manifest or its workspace manifest has a `cargo-features` key, or a `rustflags` key in any table. Either
   passes the compiler flags that `/1` admits none of;
 - a Rust source file of the package holds, **as tokens** (comments and the contents of literals are not tokens):
-  - anywhere: the identifier `asm`, `global_asm`, `naked_asm`, `include`, `include_str`, `include_bytes`,
+  - anywhere: the identifier `global_asm`, `include`, `include_str`, `include_bytes`,
     `debugger_visualizer`, `no_mangle`, `export_name`, `link_section`, `panic_handler`, `global_allocator`,
-    `alloc_error_handler` or `macro_rules`, or the keyword `macro`. So a renamed import of an assembly or include
+    `alloc_error_handler` or `macro_rules`, or the keyword `macro`; and `asm` and `naked_asm` anywhere but as §14.2
+    admits them, in a package an `assembly` declaration names (`M2.12`). So a renamed import of an assembly or include
     macro, or of an attribute macro such as `global_allocator`, is refused too, and the package defines no macro of
     its own;
   - inside an attribute, `#[…]` or `#![…]`, at any depth, so within `cfg_attr(…)` and `unsafe(…)` too, and inside
@@ -117,8 +118,9 @@ could otherwise hash its own reviews, and a target file there would move with ev
   reach — code a symbol reaches only at link time, a native library, a file an assembler directive reads, and a
   global hook or symbol another package could supply in its place — is in no source set and, for some, in no
   dependency information, so `/1` admits none of them. `#![feature]` needs a nightly compiler, which the pin's
-  form and the environment below rule out. Architecture code that needs assembly waits for a record format that
-  admits it with `sym` operands only.
+  form and the environment below rule out. Architecture code that needs assembly is admitted only as §14.2 states
+  ([`decision_catalog-records-port.md`](decision_catalog-records-port.md)): `sym` operands, a closed dialect, no
+  directive.
 
   The rules bind the packages a record's sets reach, and no other. Measured on `2026-09-30`: `crates/rt-core`, the
   package the slice `M2.7.4` records names, reaches no other package and passes them. Each refused word appears in

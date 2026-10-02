@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a design for holding processor-specific code in the catalog
+
+`ARCHOGEN-M2-0352` (leaf `M2.12.2`, step 1).
+
+- The catalog's design now says how a record may hold the small amount of assembly a processor port needs: only in
+  packages the record names, written so that every link to other code is visible to the checks, with a closed list
+  of instructions and no assembler directives. It is a draft; independent reviews come next, and the checker keeps
+  refusing all assembly until the design is settled and built.
+
 ## archogen — what the processor-specific code needs, measured
 
 `ARCHOGEN-M2-0351` (leaf `M2.12.1`).

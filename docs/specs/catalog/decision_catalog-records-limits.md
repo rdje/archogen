@@ -54,16 +54,16 @@
 - **A rejection binds items, not meaning.** Content moved into another record without lineage, and changed so
   that no item of §5 matches, whether a name, an entry, a file's bytes or the forms, is new content for review. The
   ledger is where a reviewer of related content looks, and nothing forces the look.
-- **The port's facts are `unknown` in `/1`.** §3 refuses assembly, so the port's trap entry and exit, its
-  transitions and its masking instructions cannot be in any record. Every fact about that code is therefore
-  `unknown` in `/1`: the `switch` group's, and the port's half of `preemptive-everywhere` (the trap exit that
-  performs a decided switch), `sections-mask-every-interrupt`, `releases-never-latched` and
-  `primitives-out-of-line`. The loader holds it: a known value of any of these facts is refused in `/1`
-  (`catalog-field`), since no hash covers the code it would be about. The list is by name. Whether a fact rests on
-  the port's code can depend on the port too, as `acknowledge-at-entry.<source>`, `one-request-per-arrival.<source>`
-  and `raised-only-when-due`'s basis may, so `M2.12` restates the rule by what a fact's locator must reach. Every
-  analysis of the runtime variant over the catalog is then `analysis-inconclusive`, naming them. `M2.12` owns a
-  record format that admits the port's assembly, with `sym` operands only, and lifts it.
+- **The port's facts are known only with a locator into declared assembly.** Until `M2.12` they were `unknown`
+  by name, since §3 refused assembly. §14.2 admits the port's assembly in a package an `assembly` declaration names,
+  and restates the rule by what a locator reaches: a fact about the port's code — the `switch` group's, and the
+  port's half of `preemptive-everywhere` (the trap exit that performs a decided switch),
+  `sections-mask-every-interrupt`, `releases-never-latched` and `primitives-out-of-line` — is refused known
+  (`catalog-field`) without a locator into such a package. A fact whose basis rests on the port's code too, as
+  `acknowledge-at-entry.<source>`, `one-request-per-arrival.<source>` and `raised-only-when-due`'s may, names the
+  port's record in `describes` and carries a locator into it; that its locators reach all the code its basis rests
+  on is the review's. Until a record with such a declaration exists, every analysis of the runtime variant over the
+  catalog is still `analysis-inconclusive`, naming these facts.
 - **A bad line on `main` is repaired only by a waiver.** The lock is append-only and `main` is never rewritten, so a
   line that fails verification would stop the catalog loading for good in every clone that fetches it. It has two
   causes. One is a failure of premise 3. The other is a defect in the `/1` verifier: its fix refuses every line the
