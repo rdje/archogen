@@ -609,7 +609,7 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.46.md`](../task-history/PROGRAM/PROGRAM.46.md); commit `ARCHOGEN-PROGRAM-0283`
 
 - ID: `PROGRAM.47`
-  Status: `active` — filed `2026-10-02` on the director's ruling; `.1` done
+  Status: `done` — `2026-10-02`, filed that day on the director's ruling
   Children: `PROGRAM.47.1` … `PROGRAM.47.6`
   Goal: the book written in layers, as [`decision_book-in-layers.md`](../decisions/decision_book-in-layers.md)
   rules: plain words first for a student, a one-minute summary and the precise rules for an expert, annexes for the
@@ -619,8 +619,9 @@ mdBook that is the director's window into the project.
   acronyms … have annexes … keep in index at the end of the book".
   Acceptance: every chapter in layers; the glossary and the index in the book, each held by its gate; the annexes
   holding what the chapters point to; the book builds.
-  Verification: closed by its children
-  Commit: `pending`
+  Verification: closed by its children, `.1` to `.5`; the glossary and the index held by `BOOK-GLOSSARY` and
+  `BOOK-INDEX` on every commit from here on
+  Commit: the children's, `ARCHOGEN-PROGRAM-0296` to `-0327`
 
 - ID: `PROGRAM.47.1`
   Status: `done` — `2026-10-02`
@@ -714,12 +715,14 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0301 (leaf PROGRAM.47.4)`
 
 - ID: `PROGRAM.47.5`
-  Status: `active` — one chapter per child, each `done` when committed: `.1` the introduction, `.2` the tour, `.3` reading a description, `.4` describing a workload, `.5` checking a description, `.6` what a report may claim, `.7` the scheduling checker, `.8` the catalog, `.9` where systems run, `.10` the command line, `.11` the engine API, `.12` verifying the toolchain, with Annex B, `.13` the boundary, `.14` the supported profile, `.15` the use cases, `.16` kinds and schemas, `.17` quantities and units, `.18` modules and composition, `.19` presence, absence and relevance, `.20` refinement, `.21` what is versioned, `.22` the S0 path
+  Status: `done` — `2026-10-02`; one chapter per child: `.1` the introduction, `.2` the tour, `.3` reading a description, `.4` describing a workload, `.5` checking a description, `.6` what a report may claim, `.7` the scheduling checker, `.8` the catalog, `.9` where systems run, `.10` the command line, `.11` the engine API, `.12` verifying the toolchain, with Annex B, `.13` the boundary, `.14` the supported profile, `.15` the use cases, `.16` kinds and schemas, `.17` quantities and units, `.18` modules and composition, `.19` presence, absence and relevance, `.20` refinement, `.21` what is versioned, `.22` the S0 path, `.23` what the project relies on from outside
   Goal: every other chapter in layers, one leaf and commit each when started, the chapters a newcomer meets first
   leading — the introduction and the tour, reading and workload, checking, evidence and analysis, the catalog,
   targets, the command line, the engine API, verification — and the gory parts of each moved to annexes.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: every chapter `SUMMARY.md` lists opens in plain words — the tour by its own opening, with the
+  summary `.2` added — the two annexes, the glossary and the index apart by design; Annex A holds the runtime's
+  mechanics and Annex B the repository's checks; the book gates and `bash scripts/check_doctrines.sh` green
+  Commit: the children's, `ARCHOGEN-PROGRAM-0302` to `-0327`
 
 - ID: `PROGRAM.47.5.1`
   Status: `done` — `2026-10-02`
@@ -978,6 +981,17 @@ mdBook that is the director's window into the project.
   green ===`
   Commit: `ARCHOGEN-PROGRAM-0325 (leaf PROGRAM.47.5.22)`
 
+- ID: `PROGRAM.47.5.23`
+  Status: `done` — `2026-10-02`
+  Goal: *What this project relies on from outside* in layers, the last chapter.
+  **Done.** It opens with no project being built from nothing — an emulator, a compiler, a book generator, other
+  people's specifications — and the page as the list of what is relied on, what for, what it cannot tell, and when to
+  look again, so a claim about an outside tool is dated here rather than timeless elsewhere. Then the one-minute
+  summary and the chapter's opening as how it works. The entries stay `##` headings, which `SOURCE-LEDGER` reads.
+  Verification: `source-ledger: OK (20 entries …)`; `figure-register: OK`; `readme-routes: OK`; `bash scripts/
+  build_book.sh` → rc=0; `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`
+  Commit: `ARCHOGEN-PROGRAM-0327 (leaf PROGRAM.47.5.23)`
+
 - ID: `PROGRAM.47.6`
   Status: `done` — `2026-10-02`
   Goal: the index without the layer headings, which name a chapter's part and no topic.
@@ -990,8 +1004,8 @@ mdBook that is the director's window into the project.
 
   **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
   - [x] **REPRODUCE / ISSUE** — `git show 8e64d68:docs/book/src/book-index.md | grep -c "^- How it works —"` → 22,
-    and 23 with the ledger chapter layered, when `SOURCE-LEDGER: docs/book/src/book-index.md cites ledger.md#how-it-works, which is no
-    entry`.
+    and 23 with the ledger chapter layered, when `SOURCE-LEDGER` refused it: `docs/book/src/book-index.md cites
+    ledger.md#how-it-works, which is no entry`.
   - [x] **ROOT CAUSE (WHY + WHERE)** — the generator indexed every `##` and `###` heading, and the book's layering
     (`docs/decisions/decision_book-in-layers.md`) gives every chapter the same four:
     `git show 8e64d68:scripts/check_book_index.sh | grep -c "if len(m.group(1)) in (2, 3):$"` → 1, the one
@@ -1072,9 +1086,8 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.47` | `active` | **the director's ruling of `2026-10-02`**: the book in layers, with a live glossary, annexes and an index; `.1` recorded, `.2` the glossary, `.3` the index and `.4` the runtime chapter done, `.5` the other chapters next |
-| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
-| 3 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
+| 1 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 2 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
 
 **`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
 cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
@@ -1329,6 +1342,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.47.5.21` | `ARCHOGEN-PROGRAM-0324 (leaf PROGRAM.47.5.21)` | ***What is versioned* in layers**, its entries kept where the register gate reads them |
 | `PROGRAM.47.5.22` | `ARCHOGEN-PROGRAM-0325 (leaf PROGRAM.47.5.22)` | ***The S0 early generation path* in layers** |
 | `PROGRAM.47.6` | `ARCHOGEN-PROGRAM-0326 (leaf PROGRAM.47.6)` | **the index without the layer headings**: 342 entries to 270, four words that named no topic gone |
+| `PROGRAM.47.5.23` | `ARCHOGEN-PROGRAM-0327 (leaf PROGRAM.47.5.23)` | ***What this project relies on from outside* in layers**; `PROGRAM.47.5` and `PROGRAM.47` closed, every chapter in layers |
 
 ## Changelog
 

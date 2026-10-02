@@ -1,5 +1,25 @@
 # What this project relies on from outside
 
+## The idea, in plain words
+
+No project is built from nothing. archogen runs its systems on an emulator, builds them with a compiler, makes this
+book with a book generator, and reads other people's specifications: of processors, of interrupt controllers, of
+other real-time operating systems. Each of these was written by someone else, changes on its own schedule, and has
+limits its authors know better than anyone here. This page is the list. For each outside source it says which
+version is relied on, what it is relied on for, what it cannot tell you, and what should make someone check it
+again — so that a claim about an outside tool lives here, dated, rather than as a timeless sentence somewhere else
+that quietly goes stale.
+
+> **In one minute, for engineers.** `ROADMAP.md` §15's dependency ledger: one entry per external source — a tool, a
+> vendored checkout, a corpus, a template or a specification — giving its version, where that version is pinned,
+> when it was retrieved, its hash where captured, its scope, its known limitations, what triggers revalidation, and
+> the names it is cited by. `SOURCE-LEDGER` (`scripts/check_source_ledger.sh`) requires every pin the repository
+> holds to belong to an entry with the same version, every chapter or decision that names a source to link its
+> entry, and every field filled with absolute dates. It finds a claim by the source's name, so a source never listed
+> is invisible to it.
+
+## How it works
+
 Everything below comes from outside this repository: a tool, a checkout, a corpus or a
 template. Each entry says which version is relied on and where that version is pinned, when it was
 last read, what it is relied on *for*, what it cannot tell you, and what should make someone look
