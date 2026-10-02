@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the fault contract's thirteenth reading
+
+`ARCHOGEN-M2-0334` (leaf `M2.9`).
+
+- The thirteenth reading found one gap, in last round's answer about calls into the runtime that name no real
+  operation: whether an interruption before the call is recognised may simply drop it. It may, and nothing is
+  reported. The check before landing found nothing to fix for the first time this round.
+
 ## archogen — an AI agent can now drive archogen
 
 `ARCHOGEN-API-0333` (leaf `API.6.4`).

@@ -107,8 +107,9 @@ dispatch, which claims before it knows the source, acts in the role of the servi
   path's role from its first act, which masks interrupts, whoever's panic or check, or whichever trap's path, reaches
   it: a panic reaching the handler is no breach of `leaves-interrupt-hardware-alone`, and what can happen before a
   fault a check finds, or a panic, is raised, inside a primitive or outside one, is that record's to state, a
-  primitive left with the runtime's state consistent or its job not abandoned (the fault contract's rule 5; added
-  `2026-10-02`, its R8 153; the second entry, and the window's scope, `2026-10-02`, its R11 pre-landing checks);
+  primitive left with the runtime's state consistent or its job not abandoned but run on to the raising (the fault
+  contract's rule 5; added `2026-10-02`, its R8 153; the second entry, and the window's scope, `2026-10-02`, its R11
+  pre-landing checks);
 - initialisation, before the first enabling of interrupts, writes the controller's configuration and the hart's
   interrupt state as the plan sets them. It may claim and complete requests left pending from before it, and it
   leaves none pending at the first enabling of interrupts that no arrival made. Two writes are one record's alone,

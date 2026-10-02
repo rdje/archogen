@@ -466,6 +466,28 @@ the runtime's state before an entry is told apart; DR-B, DR-C: F26's scope and t
 "takes none" under `Fault`; a tag's plural) are carried into step 6t, read with R13's answers. None of it moves either
 model; the composition record's API-trap sentence moved with it.
 
+## The fault contract reviewed a thirteenth time (`2026-10-02`, R13)
+
+A thirteenth new context read the contract beside the composition record, from the text alone. On R12's answers: all
+11 answered. **Verdict: 1 defect remains (#215), minor**: the carried point DR-A, which it read as a defect rather
+than drafting. On a port that lets an interrupt preempt its runtime-API trap before it tells its entry apart, nothing
+said whether what the trap writes first counts as changing the runtime's state, so an overrun applied in the trap of
+an entry naming neither a primitive nor the completion path could halt the runtime or abandon the job. It judged the
+delegations sound and found no contradiction with the composition record, the profile page or the roadmap.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 215 | defect (minor) | what a bogus API entry's trap writes before its check did not say whether a policy took effect at its entry | the reviewer's text, its precondition kept: for rule 5 that trap is a primitive that changes no runtime state, so a policy applied before its check, no other check or panic pending, abandons the job and raises nothing; after it, the window, the port's to state |
+| 216–220 | drafting | the guard on the window lets a job be kept and never resumed; when a job completes; F26's scope; rule 1's summary overclaiming; an application's call of the fault path before interrupts are enabled | the guard runs the kept context on to the raising; a job completes at the instruction its completion path follows, not the reviewer's text, which would undo #209; F26 scoped; rule 1 states the exception; the call forbidden before as after, a narrowing |
+| 221–226 | nits | the prologue's two routes; F26 and the prologue; "and halt"; whose record states a check's context; *Still open*'s port properties; a tag | accepted |
+
+**Answered `2026-10-02` (step 6t), with the R12 check's carried DR-B–DR-D and its nit, checked before landing once.**
+The check found no defect, its first reading of a round's answers to do so, and judged the kept precondition and the
+completion deviation sound. Its 5 drafting points and 4 nits (D1: where the kept context stands in the schedule;
+D2: rule 1's exception wider than the owed job; D3: nothing enforcing the new narrowing; D4: F26's prologue overlap;
+D5: what a port's trap writes before it tells any entry apart; N1–N4) are carried into step 6u, read with R14's
+answers. None of it moves either model; the composition record's role list moved with it.
+
 ## Where the contract lives (`2026-10-01`)
 
 Answering R3 (`M2.9`) needed about 20 lines more than `ROADMAP.md`'s 1 100-line ceiling allowed, which only the
