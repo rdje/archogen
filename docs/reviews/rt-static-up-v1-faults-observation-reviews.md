@@ -2,7 +2,7 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-02`
-- **Status:** `active` — rounds 1 and 2 answered; round 3 next; the review closes on the first round that finds no defect
+- **Status:** `active` — rounds 1 to 3 answered; round 4 next; the review closes on the first round that finds no defect
 - **Owner / source:** leaf `M2.15` (`docs/tasks/M2.md`). The design under review is
   [`rt-static-up-v1-faults-observation.md`](../profiles/rt-static-up-v1-faults-observation.md), part of the profile's
   fault contract, with the routing it makes in the contract's *Still open* and the pointers in `M4.3`, `M4.6`, `M4.7`
@@ -82,6 +82,40 @@ the target transitioned, so a missed preemption was accepted. Defects per round:
 | 16 | nit | `complete` panics for another task's too | "with no job, or another task's, running" |
 | 17 | nit | the non-job completion is §5's | `M4.6`'s pointer says §4 and §5 |
 | 18 | nit | bare self-references; the review file's owner line | "§1 to §6 are this record's"; `M4.6` and `M4.7` named |
+
+## Round 3
+
+`2026-10-03`, of commit `ea2ce10`, by a new context asked first for regressions, with a probe crate driving `rt-core`
+exactly as round 2's §4 said, its decisions stamped three ways (P1–P13). 19 findings: 8 defects, 4 gaps, 6 drafting
+points, 1 nit. Defects per round: 9, 6, 8 — not converging. Every new defect sat in the comparator's mechanics round 2
+had written: how `mask` and `unmask` are replayed, where the hosted model decides, how its decisions are stamped, and
+how each is compared with what the target ran next. Those depend on the port's catalog facts (`decision-placement`,
+`one-claim-per-trap`, a primitive preempted at its entry) and on scheduling outside the fault paths — a missed
+preemption is no fault path — so they are `M4.9`'s and `M4.3`'s. The answer shrinks §4 to what is the fault paths'
+own and delegates the rest, naming what `M4.3` must record and what `M4.9` takes as parameters
+(`docs/knowledge/an-answer-to-a-review-must-keep-what-earlier-answers-carried.md`, habit 3).
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 1 | defect | deciding after `complete` and at each trap's exit put the hosted decision before the delivery, and §5's stamping rejected rule 4's own case either way | where the hosted model decides is `M4.9`'s; §4 item 2 compares only the next task after a completion's delivery, rule 4's "same schedule" |
+| 2 | defect | `mask` and `unmask` stamped at the call, before the depth changes, made correct pairs at a primitive's entry disagree | the `mask` and `unmask` events and their replay withdrawn: `M4.3` records regions and traps, `M4.9` drives with the port's facts |
+| 3 | defect | nothing compared start against resume, so a resumed abandoned job was accepted | item 3: after `skip-late-job` the task's next entry is a `start`; after `fault`, none |
+| 4 | defect | the latency bound applied after the run's timing claims had ended, and where `J` is undeclared | "where `J_i^release` is declared and the run's timing claims hold (rule 5)" |
+| 5 | defect | no lower bound: an early observation passed | "none … before its nominal instant or recorded arrival" |
+| 6 | defect, regression of answer 16 | the exclusion of interrupt and timer-programming events was deleted silently | restored, item 7 |
+| 7 | defect | `unmask` returns a delivered list, not a depth | the row withdrawn with the events |
+| 8 | defect | another task's release judged inside a region was accepted | item 4: "none is observed while a masked region is open" |
+| 9 | gap | a decision at each trap's exit is not the contract's | withdrawn with the decision points, `M4.9`'s |
+| 10 | gap | a driven panic, or another task's `mask`, had no verdict | §5: a disagreement on what runs, `M4.9`'s to report |
+| 11 | gap | `rt-core`'s guard is a task's or the interrupt stack's | another guarded stack's taken from the target's record |
+| 12 | gap | the first release instant and the counting fact routed to `M2.7.4`, which named neither; the contract said no fixture needs the first | `M2.7.4` names both; the contract says §4's plan check needs it |
+| 13 | drafting | `mask`, `unmask` and idle entry beside §6.3's events | the first two withdrawn; idle entry kept, a stamp |
+| 14 | drafting | `Switch` names both tasks | "name the incoming task, not whether it starts or resumes" |
+| 15 | drafting | the latch holds none save a release judged inside a region | §5 says which delivery item 1 assumes |
+| 16 | drafting | `rt-core`'s primitives take no task | withdrawn with the events |
+| 17 | drafting | "a fatal fault stamped at a driven call" | withdrawn: faults raised from outside the runtime's logic are given; the rest are the hosted model's |
+| 18 | drafting | "each trap's exit" for a runtime-API trap or several interrupts in one trap | withdrawn with the decision points |
+| 19 | nit | "§4" where §5 too leaves to the fixtures | "§4 and §5" |
 
 ## Why
 

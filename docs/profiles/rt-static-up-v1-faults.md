@@ -493,6 +493,6 @@ while a check of the runtime's state that generated code makes has yet to raise 
 state (Terms, rule 5) — generated code's checks being `M4`'s to define; each service's order of the releases it
 performs, its own record's (rule 1); where any primitive but `mask` and `unmask` first changes the runtime's state, the
 runtime API record's (rule 5); which context runs each guard check another record's code makes, that record's (Terms);
-and one that is not this contract's and that no fixture needs yet: a periodic task's first release instant, the
-timer-service record's (written under `M2.7.4`). A later idle-to-task dispatch needs no cost of its own (*`M2.12.3`*): the switch out
+and one that is not this contract's: a periodic task's first release instant, the timer-service record's (written
+under `M2.7.4`), which the plan check of the observation record's §4 needs (*`M2.15`*). A later idle-to-task dispatch needs no cost of its own (*`M2.12.3`*): the switch out
 of idle is `switch`'s `S`, and the wake before it `W_wake` (the catalog record's §14.4).
