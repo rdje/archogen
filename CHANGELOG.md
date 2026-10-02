@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — what the port must declare: the third review
+
+`ARCHOGEN-M2-0367` (leaf `M2.12.3`, step 4).
+
+- The third review confirmed the design's core and found four defects, among them experiment sources the design said
+  were recorded when only their fingerprints were. The sources are now printed in full, and each fingerprint was
+  re-derived from the printed text. A fourth review is next.
+
 ## archogen — what the port must declare: the second review
 
 `ARCHOGEN-M2-0366` (leaf `M2.12.3`, step 3).

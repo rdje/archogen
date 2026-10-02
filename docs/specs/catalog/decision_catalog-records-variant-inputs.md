@@ -93,7 +93,9 @@ supplies it:
 | `preemptive-everywhere`, `sections-mask-every-interrupt` | behavior-model | code: the runtime's scheduler and sections | `completion` |
 | `interrupts-do-not-nest`, `services-preempt-every-task`, `pending-taken-and-transitions-unmasked`, `one-claim-per-trap`, `starts-by-transition` | behavior-model | code: the port's trap entry and exit and its transitions, each fact as `decision_runtime-composite-inputs.md` §2 words it; `one-claim-per-trap`'s basis states, when it is `no`, how a trap finds a further pending interrupt and the order among those it serves (§14.4) | `switch` |
 | `pending-taken-after-unmask`, `no-empty-claim` | behavior-model | code, with the hardware's half established in its basis; `no-empty-claim` is `yes` on a target with no external source, and like each of the twelve facts §14.2 names it is known only as §14.2 states | `switch` |
-| the port's statement's facts (§14.4) | behavior-model | code: the port's, or a `describes` record's, as §14.4 says; `panic-strategy-abort` about the image's build, with a `file` locator | `switch` |
+| the facts of §14.4's table | behavior-model | code: the port's, or a `describes` record's, as §14.4 says; `panic-strategy-abort` and `generated-guard-check-contexts` not code facts, each with a `file` locator | `switch` |
+| `convention-stated.<id>` | behavior-model | not a code fact; a `file` locator to the convention record's copy of its convention (§14.4) | the record `<id>` itself; a statement named with another record's id is refused |
+| `guard-check-contexts.<id>` | behavior-model | code: the contexts that run the guard checks the record `<id>`'s code makes (§14.4) | the record `<id>` itself; a statement named with another record's id is refused |
 | `fatal-path.entry`, `fatal-path.trap`, timing costs, not facts | timing-model | the port's fault path, as §14.4 says | `switch` |
 | `one-processor`, `compare-level`, `external-before-timer`, `one-external-controller` | behavior-model | hardware, about the target; `one-external-controller` is `yes` on a target with no external source; `external-before-timer` `no` needs `one-claim-per-trap` `yes` (`decision_runtime-composite-inputs.md` §2) | — |
 | `runtime-discipline.<id>` | behavior-model | code: every package of the stating record's implementation's own and reached sets | the record `<id>` itself; a statement named with another record's id is refused |
@@ -160,8 +162,8 @@ target's `.env` or `.eadl` makes its review stale.
   The groups are:
   - `switch`: `eager-switching`, `interrupts-do-not-nest`, `services-preempt-every-task`,
     `pending-taken-and-transitions-unmasked`, `pending-taken-after-unmask`, `no-empty-claim`, `one-claim-per-trap`
-    and `starts-by-transition`, the port's; and §14.4's facts and the costs `fatal-path.entry` and `fatal-path.trap`,
-    the port's statement (`M2.12.3`);
+    and `starts-by-transition`, the port's; and the facts of §14.4's table and the costs `fatal-path.entry` and
+    `fatal-path.trap`, the port's statement (`M2.12.3`);
   - `service.<source>`: its four `.<source>` code facts and `external.<source>`;
   - `timer-service`: the six timer facts, `reprograms-only-in-service`, and the cost `compare-rounding`, since the
     rounding is the timer service's code. `independent` stays open to it on a board, and its review cites that code.

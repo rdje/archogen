@@ -15,7 +15,9 @@ existing description or result is invalidated.
 
 **Amendments, 2026-10-01 and 2026-10-02 (leaves `M2.9`, `M2.17`, `M2.19`, and `M2.12.3` where marked).** They answer the director's rulings
 (findings §6) and fifteen independent reviews of this text, *R1*–*R15*, whose findings and answers are tabled in
-`docs/decisions/decision_runtime-contract-gaps.md`; the rule each answer touched is marked below.
+`docs/decisions/decision_runtime-contract-gaps.md`; the rule each answer touched is marked below. `M2.12.3`'s edits,
+marked where they stand, answer the reviews of the catalog record's §14.4, in
+`docs/reviews/decision_catalog-records-port-statement-reviews.md`.
 - **Corrections of the 2026-09-13 text** (§14.1): a second release latched in a masked region is contained, not fatal
   (rule 1); a completion closes its region (rule 4); a fault other than an overrun is the context's that raises it, and
   a service's is no task's, where the table said "the running task" (rule 2); the mask bound and an unbalanced `unmask`
@@ -151,8 +153,8 @@ existing description or result is invalidated.
   call belonging, like a prologue, to the window before the raising (below), and an image whose application supplies
   its own handler not building — and a
   check's call, and the
-  trap path with a fault raised at a trap, through the fault path's other entry, which that record names; the first act
-  of each entry — the first its own code does; a prologue the compiler emits before it belongs, where a panic or a check's
+  trap path with a fault raised at a trap, through the fault path's other entry, which the port's catalog record names;
+  the first act of each entry (*`M2.12.3`*) — the first its own code does; a prologue the compiler emits before it belongs, where a panic or a check's
   call reaches the entry, to the window before the raising (below), and where the trap path reaches it with a fault
   raised at a trap, to the trap path (rule 7) — masks interrupts. Under a panic strategy that aborts without calling the
   handler, a panic reaches the fatal path by the trap at the check, or at the panic where no check precedes it. The
@@ -491,5 +493,5 @@ state (Terms, rule 5) — generated code's checks being `M4`'s to define; each s
 performs, its own record's (rule 1); where any primitive but `mask` and `unmask` first changes the runtime's state, the
 runtime API record's (rule 5); which context runs each guard check another record's code makes, that record's (Terms);
 and one that is not this contract's and that no fixture needs yet: a periodic task's first release instant, the
-timer-service record's (written under `M2.7.4`). A later idle-to-task dispatch needs no cost of its own: the switch out
+timer-service record's (written under `M2.7.4`). A later idle-to-task dispatch needs no cost of its own (*`M2.12.3`*): the switch out
 of idle is `switch`'s `S`, and the wake before it `W_wake` (the catalog record's §14.4).

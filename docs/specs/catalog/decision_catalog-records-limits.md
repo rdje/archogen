@@ -54,7 +54,7 @@
 - **A rejection binds items, not meaning.** Content moved into another record without lineage, and changed so
   that no item of §5 matches, whether a name, an entry, a file's bytes or the forms, is new content for review. The
   ledger is where a reviewer of related content looks, and nothing forces the look.
-- **The port's facts are known only with a locator into declared assembly.** Until `M2.12` they were `unknown`
+- **The twelve port facts §14.2 names are known only with a locator into declared assembly.** Until `M2.12` they were `unknown`
   by name, since §3 refused assembly. §14.2 admits the port's assembly in a package an `assembly` declaration names,
   and restates the rule by what a locator reaches: each of the twelve facts §14.2 names — the `switch` group's eight
   of §12, and the port's half of `preemptive-everywhere` (the trap exit that performs a decided switch),

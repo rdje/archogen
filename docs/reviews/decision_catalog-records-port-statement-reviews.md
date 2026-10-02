@@ -2,14 +2,14 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-02`
-- **Status:** `active` — rounds 1 and 2 answered; round 3 next; the review closes on the first round that finds no defect
+- **Status:** `active` — rounds 1 to 3 answered; round 4 next; the review closes on the first round that finds no defect
 - **External sources:** [the Rust Reference](../book/src/ledger.md#rust-reference) shipped with the pinned toolchain,
   and [the RISC-V privileged specification](../book/src/ledger.md#riscv-privileged) — versions, hashes and limits in
   the ledger
 - **Owner / source:** leaf `M2.12.3` (`docs/tasks/M2.md`). The design under review is §14.4 of the catalog record, kept
   in [`decision_catalog-records-port.md`](../specs/catalog/decision_catalog-records-port.md), with the amendments it
-  makes to the fault contract (`docs/profiles/rt-static-up-v1-faults.md`), the composition record, §2, §9, §11, §12
-  and §14's summary of the catalog record, `M4.6` and `M4.10`. Section numbers are the catalog record's.
+  makes to the fault contract (`docs/profiles/rt-static-up-v1-faults.md`), the composition record, §2, §3, §9, §11,
+  §12, §13 and §14's summary of the catalog record, findings §12, `M4.6` and `M4.10`. Section numbers are the catalog record's.
 
 ## The fact / decision
 
@@ -119,6 +119,36 @@ the repository: its entries are recorded above by name, the contract they quote 
 | 28 | nit | positional references | named |
 | 29 | nit | "in the primitive or in its trap" dropped | restored |
 | 30 | nit | `one-claim-per-trap`'s basis duty recorded once | in the composition record's row and §12's table too |
+
+**Round 3**, `2026-10-02`, of commit `66cf1f9`, by a new context asked first for regressions. It found the
+convention record through `depends` mechanical and sound, every port obligation covered with the right shape, and the
+contract's amendments keeping every settled rule, the depth rule's exception now right; and 4 defects, three of the
+regression or false-statement kind: the inside run-on fixture still owed where no interrupt reaches a primitive; §12's
+"§14.4's facts" sweeping in the convention record's own fact and refusing every catalog with a port; `M4.6` still
+carrying the rule round 2's 14 replaced; and probe sources said to be recorded that were not. 19 findings: 4 defects, 3
+gaps, 6 drafting points, 6 nits. Defects per round: 9, 6, 4.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 1 | defect | the inside run-on case owed with `primitives-preemptible` `no`, where no release can be observed in a primitive | owed inside only where `window-trap-preempts-inside` is `yes`; outside likewise keyed on its own fact |
+| 2 | defect | §12's "§14.4's facts" took in `convention-stated.<id>`, making it a `switch`-group code fact and refusing every valid convention record | "the facts of §14.4's table"; §12 rows for `convention-stated.<id>` (not a code fact, a `file` locator) and `guard-check-contexts.<id>` (code), each self-named, outside every group |
+| 3 | defect | `M4.6` still said one undeclared fact disqualifies every fixture | `M4.6` now reads each case by its own fact |
+| 4 | defect | the probe sources "recorded" were not: four hashes with prose only, not re-derivable | each source printed verbatim with its command, and its hash re-derived from the printed text before landing |
+| 5 | gap | facts the contract says the port states could be absent | the port record supplies every fact whose read condition holds, and `one-claim-per-trap`, as well as the obligatory ones |
+| 6 | gap | the further timer-interrupt subcases keyed only on `one-claim-per-trap` `no` | scoped by its basis: a timer service run for one, or a claim in a timer trap, only where the basis says so |
+| 7 | gap | `generated-guard-check-contexts` a code fact about code in no record; generated code's checks outside `checks-trap` | a `file` locator, like `panic-strategy-abort`, a `code` or `ledger` one refused; generated code's checks said to be `M4`'s |
+| 8 | drafting | the read-condition refusal on an absent or `unknown` conditioning fact | a condition holds only when every fact it names is stated `yes` |
+| 9 | drafting | the convention record's form mixed refusals with descriptions; contract or file authoritative | each refusal named with its code; the contract governs, the file a copy |
+| 10 | drafting | the refusal's reason missed rule 2's other clause | the trap of an entry naming neither counts as a primitive, said in the fact and the reason |
+| 11 | drafting | "such a check" lost the contract's "that finds a fault" | quoted |
+| 12 | drafting | the prologue case depended on what `fault-path-entries` did not state | its basis states, per entry, naked or compiled; the case mapped per entry and route |
+| 13 | drafting | no polarity for the completion-interval cases | the waiting-context cases owed where `services-preempt-completion-interval` is `yes` |
+| 14 | nit | positional references remained | named |
+| 15 | nit | three contract edits unmarked; the header's R1–R15 sentence; "which that record names" | marked; the header names `M2.12.3`'s reviews; "the port's catalog record" |
+| 16 | nit | §13's heading overstated; "a known port fact" undefined | "the twelve port facts §14.2 names" in both |
+| 17 | nit | the history's header list; the id prefix unversioned | §3 and §13 added; the prefix part of the grammar |
+| 18 | nit | Cargo syntax for a `rustc` probe; the `c.j` bytes; "locators into the code that does it" | each probe's command given; "a two-byte compressed `c.j`"; "where code does it" |
+| 19 | nit | the obligatory-`no` rule's reach; `panic-strategy-abort`'s other locators | the port's record only, the sole supplier of the group; `code` and `ledger` locators refused |
 
 ## Why
 
