@@ -13,14 +13,13 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M2` → frontier `M2.7.6`. `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API`'s is
+- **Active tree:** `M2` → frontier `M2.11`. `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API`'s is
   `API.7`; `M1`'s only open leaf, `M1.29.4`, is blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M2.7.6` — the catalog check's protection: round 3 of its review (a read-only review of the narrowed
-  `WORKFLOW-TOKENS` reader, or the director's reviewer); then `M2.11`, `M2.12`, `M2.15`. `M2.9` and `API.6` closed `2026-10-02`. This project
-  uses no branches.
+- **Next action:** `M2.11` — answer its independent review (step 2), then close it; then `M2.12`, `M2.15`. `M2.7.6`
+  waits on the director's reviewer (rounds 2 and 3 stopped by the harness's screening). This project uses no branches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
-  `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4` — findings §11, `main`'s protection;
+  `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4` and `M2.7.6.4` — findings §11, `main`'s protection and a reviewer;
   `TEMPLATE-REFS` — postponed. **The 17 template files archogen has not changed are never edited** (findings §10,
   ruled `2026-09-30`); every other script is archogen's.
 - **Derive, don't copy:** the test baseline is `cargo test --all -q` (must be 0 failed); the push distance

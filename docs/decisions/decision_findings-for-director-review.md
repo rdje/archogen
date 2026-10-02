@@ -319,6 +319,12 @@ from someone other than its pusher; the workflow token is read-only by default; 
 commits on `main`, signed with its key. How the check itself is protected is now `M2.7.6`'s design, with a test for
 every construction the reviews found.
 
+**Since `2026-10-02` the review of that design waits on your reviewer too** (`M2.7.6.4`). Its first round, by an
+agent, found two defects, both answered. Its second and third, each a new agent context, the third asked only to
+read the gate beside the YAML and GitHub references, were stopped by the agent harness's own safety screening before
+they reported. No agent launches a fourth: the next round is the reviewer you name, with the review history
+(`docs/reviews/catalog-check-protection-reviews.md`) as its brief.
+
 Until the named commit exists, no production claim can be made. One new role is yours: a ledger line that fails its
 check, through a defect in the checker for instance, is repaired only by a waiver you rule on, and a waiver can
 only weaken what the catalog says.

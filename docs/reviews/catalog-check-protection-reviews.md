@@ -2,8 +2,9 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-01`
-- **Status:** `active` — round 2 not completed; round 3 next; the review closes on the first round that finds no
-  construction running pull-request code in the check, or making it pass without the base's checker
+- **Status:** `active` — rounds 2 and 3 not completed; the next round is a reviewer the director names (findings
+  §11); the review closes on the first round that finds no construction running pull-request code in the check, or
+  making it pass without the base's checker
 - **Owner / source:** leaf `M2.7.6.4` (`docs/tasks/M2.md`). The design under review is the repository half of
   `M2.7.6`, stated in the headers of `scripts/check_workflow_tokens.sh` (`M2.7.6.1`), `scripts/catalog_check.sh`
   (`M2.7.6.2`) and `.github/workflows/catalog-check.yml` (`M2.7.6.3`), against premise 3 of
@@ -41,3 +42,16 @@ spirit but did not refuse:
 Round 3 is the next: a review of the narrowed reader by a reader rather than an attacker — the gate's subset, set
 beside GitHub's workflow schema and the YAML specification, asking what it accepts that GitHub reads otherwise — or
 by a reviewer the director names (findings §11 already asks for a second reviewer identity).
+
+**Round 3**, `2026-10-02`, was that reading: a new read-only context, asked to compare the gate's accepted subset with
+the YAML 1.2.2 specification and GitHub's workflow and metadata syntax references, quoting them, with no
+proof-of-concept file written. It read those, and GitHub's published workflow reader code, and was stopped by the
+agent harness's safety screening before its findings were delivered; no findings, count or verdict exist. It is
+recorded as not completed, as round 2 is, and its absence of findings is not a verdict. It handed back one remark
+without findings: that the syntax pages as published had changed since the gate's header was written. Checked the
+same day for the page the gate cites: the metadata syntax reference fetched again is byte-identical to the ledger's
+`github-actions-syntax` (sha256 `94bf89e3…`), and both of its quoted sentences stand, so nothing in the header
+moves. The workflow syntax reference is cited by no gate and no ledger entry.
+
+Two agent rounds having ended this way, an agent does not launch a fourth. The next round is a reviewer the director
+names (findings §11).

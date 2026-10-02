@@ -273,7 +273,9 @@ direction. Whether a pull request's own copy of the file can satisfy the require
 which only the director can set, as is the repository's default token. The design's first independent review found
 two ways past `WORKFLOW-TOKENS`, an escaped YAML key and a setting on a neighbouring step; both are now refused,
 and so are a quoted key and a key written twice, or twice but for case, in one mapping
-(`docs/reviews/catalog-check-protection-reviews.md`).
+(`docs/reviews/catalog-check-protection-reviews.md`). Its next two rounds, each by a new agent context, were stopped
+by the agent harness's own safety screening before they reported, so the next round is a reviewer the director
+names.
 
 ### The engine compiles for the browser
 
