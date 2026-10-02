@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — what a trace shows on each fault path: decided
+
+`ARCHOGEN-M2-0385` (leaf `M2.15`, closed).
+
+- The record of which events each fault path produces, and when a trace from the host and one from the target agree
+  on them, is decided after seven independent reviews. The host run is fed what the target observed, and the
+  comparison keeps to what is the fault paths' own; how the comparator replays and decides is left to the leaves
+  that build it. One follow-up is filed: the runtime crates' documentation still quotes superseded contract text.
+
 ## archogen — the book explains the port's record
 
 `ARCHOGEN-M2-0377` (leaf `M2.12.5`, closing `M2.12`).

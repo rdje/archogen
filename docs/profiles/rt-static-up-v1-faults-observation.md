@@ -6,7 +6,8 @@
 > (`docs/tasks/M2.md`), filed by `M2.9`'s review, finding 13. A bare rule number is the contract's; §1 to §6 are this
 > record's; any other bare section number — §3.1, §6.3, §7.5, §8.1, §13.4 — is `ROADMAP.md`'s.
 
-- **Status:** `active` — drafted `2026-10-02` by `M2.15`, under review; its rounds are in
+- **Status:** `active` — drafted `2026-10-02` by `M2.15` and decided `2026-10-03`, its seventh review finding no
+  defect; its rounds are in
   [`docs/reviews/rt-static-up-v1-faults-observation-reviews.md`](../reviews/rt-static-up-v1-faults-observation-reviews.md)
 
 ## In plain words
@@ -36,7 +37,7 @@ record is `M4.9`'s, and the replay manifest's ordering rules (`M4.7`) name it.
 | `release` | the release's observation (rule 1): where its service judges it — at once where no masked region is open, at its delivery otherwise — which can follow its arrival by its latency (rule 6) | the task, by its stable logical ID; for a timer-released task, the release's nominal instant |
 | `complete` | the job's completion — its last instruction before its completion path's first (Terms) — recorded before a release at the same instant (§13.4) | the task |
 | `start`, `resume` | the incoming context's first instruction: `start` a job's first, `resume` a preempted job's later one. A transition preempted before it — by a trap taken inside the transition after it unmasks (rule 2) — stamps neither, and nor does a completion path's context, whose task owes no job (Terms), nor the context in which the runtime completes a primitive on an abandoned job's behalf (rule 5) | the task |
-| `preempt` | the outgoing job's last instruction before another context's first; an abandoned job, a context never entered, a completion path's context and a job whose trap ends in a halt stamp none | the task |
+| `preempt` | the outgoing job's last instruction before another context's first; an abandoned job, a context never entered, a completion path's context and a job whose trap, panic or check's call ends in a halt stamp none | the task |
 | idle entry | idle's first instruction after a transition into it; a trap that returns to idle stamps none | — |
 | `fault` | for an overrun, the release that observes it (rule 1); for a fatal fault, its raising (rule 7) | its §3.1 kind; for an overrun, the task, the policy's outcome, `skip-late-job` or `fault` (rule 5), and for a timer-released task the triggering release's nominal instant; for a fatal fault, the fields fixed at its raising — the kept record's (rule 7) where its mark is complete — and, for an assertion failure, which of §4 item 5's cases it is, or none |
 
@@ -95,10 +96,10 @@ holds:
    releases the task starts, not when it judges the release.
 5. **A fatal fault.** The runtime's own assertion failures — the depth bound, the hosted model's `M` being the target
    runtime's declared one; an `unmask` at depth zero; a `mask` or `unmask` with no job running in the runtime's record
-   (the Terms' case, a call from another context over a preempted job being the port's check, given); a dispatch or
+   (the Terms' case, a call from another context with a job in the record being the port's check, given); a dispatch or
    resume with a region open — are the hosted model's to raise at the calls and decisions `M4.9` drives it through,
    and one in one trace only is a disagreement, the target's naming its case (§2); for one in both, its
-   kind and §8.1 class are compared. Every other fatal fault is given (above), and whether it was due in that run is
+   kind and §8.1 class are compared, not its case, which the Terms' window can change (item 6). Every other fatal fault is given (above), and whether it was due in that run is
    not compared: a known limit, the fixtures judging each kind in its own scenarios (`M4.6`). A fatal fault's
    attributed task and interrupted task are not compared, since they follow from how the port takes its traps, and
    during a delivery from where a model delivers, so differ by construction between a hosted model and a port (rules
@@ -129,7 +130,7 @@ holds:
 | the halt's first report — `Err(Refused::Halted)` from a `mask` or `unmask` of a runtime not yet halted, `Decision::Halt` from the `decide` that raised it, or `Transition::Halted { fatal }` | `fault`, with the fields `rt-core` holds: the kind, with its `invariant` or `cause` (`InvariantViolated` is the contract's assertion failure, its `invariant` naming §4 item 5's case), whose guard — a task's or the interrupt stack's, another guarded stack's (`guarded-stacks`) taken from the target's record — the escalation mark, and the attribution — §4 gives the fault rather than comparing it; the §8.1 class follows from the kind, the plan supplies the tasks' IDs, and `rt-core` keeps no raising context |
 | any report of the halt after the first | none |
 | a `mask` or `unmask` that returns `Ok` | none on the fault paths; an outermost `unmask`'s delivered list is a delivery of §3, empty where a delivery's releases are given after its region closes (§4) |
-| `Decision::{Dispatch, Switch, Continue, Idle}` | `start`, `resume`, `preempt` and idle entry, as `M4.3` stamps them for a hosted model; `Dispatch` and `Switch` name the incoming task, not whether it starts or resumes, which the harness knows from the task's `Released` and `JobSkipped` and the contexts its trace has shown entered |
+| `Decision::{Dispatch, Switch, Continue, Idle}` | `start`, `resume`, `preempt` and idle entry, as `M4.3` stamps them for a hosted model; `Dispatch` and `Switch` name the incoming task, not whether it starts or resumes, and `Continue` stamps none; which the harness knows from the task's `Released` and `JobSkipped` and the contexts its trace has shown entered |
 
 Given a delivery's releases after its region closes (§4), the hosted model judges each against the task's state then,
 so its latch holds none and its mark stands for no arrival. Given them inside the region, its latch keeps the most

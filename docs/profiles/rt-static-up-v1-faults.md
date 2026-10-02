@@ -473,9 +473,9 @@ R12 204, 206, 213, and its pre-landing checks; R11's sixth pre-landing check's N
 check's DR-C; R13's check's D4, N2; R14 227, 228, 232, 233, and its pre-landing checks; R15 237.)*
 
 **Still open:** each path's observation events and hosted/target trace compatibility, a discarded release's and a
-completion that closes a region included — drafted in
-[`rt-static-up-v1-faults-observation.md`](rt-static-up-v1-faults-observation.md), part of this contract, under review
-(*`M2.15`, `2026-10-02`*); the catalog fact by which an external source's record says whether
+completion that closes a region included — decided in
+[`rt-static-up-v1-faults-observation.md`](rt-static-up-v1-faults-observation.md), part of this contract, its seventh
+review finding no defect (*`M2.15`, `2026-10-03`*); the catalog fact by which an external source's record says whether
 arrivals during a pending request are counted (rule 1; the source's catalog record, written under `M2.7.4`); how a port
 detects a non-job call, what it lets run in the interval after the instruction at which a job completes and which
 context runs each guard check its own code or generated code makes (Terms), whether it serves a further pending

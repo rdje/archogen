@@ -19,7 +19,7 @@ draw new defects in the next, and the loop does not converge. What makes an answ
 
 ## The answer
 
-Four habits, each learned from a defect an answer introduced (leaf `M2.11`, its review rounds 2 and 3,
+Five habits, each learned from a defect an answer introduced (leaf `M2.11`, its review rounds 2 and 3,
 in `docs/reviews/decision_runtime-analysis-variant-reviews.md`; and leaf `M2.9`'s fifteen rounds):
 
 1. **Edit the words a finding names; do not rewrite the passage whole.** `M2.11`'s third step rewrote
@@ -44,6 +44,12 @@ in `docs/reviews/decision_runtime-analysis-variant-reviews.md`; and leaf `M2.9`'
    rounds 4 to 6). Before landing, grep the rule's key words across the record, its sibling records, the
    task leaves and the book, and give every statement the same words; and ask each review to read the
    previous round's answers first.
+5. **Defects that stop falling mean the text has grown into another leaf's domain.** `M2.15`'s rounds ran
+   9, 6, 8: each answer specified more of how a trace comparator replays and decides, which depends on
+   facts the port's record owns and on scheduling outside the leaf's fault paths. Round 3's answer kept
+   only what the leaf owns and delegated the rest with explicit requirements on the delegates; the rounds
+   then ran 1, 2, 1, 0. When a round's defects do not fall, ask what the new text decides that another leaf
+   should, and hand it over rather than refine it (`docs/reviews/rt-static-up-v1-faults-observation-reviews.md`).
 
 ## Why
 

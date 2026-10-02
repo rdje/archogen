@@ -2,7 +2,7 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-02`
-- **Status:** `active` — rounds 1 to 6 answered; round 7 next; the review closes on the first round that finds no defect
+- **Status:** `closed` — `2026-10-03`: round 7 found no defect, and the record was decided in the change that answered it
 - **Owner / source:** leaf `M2.15` (`docs/tasks/M2.md`). The design under review is
   [`rt-static-up-v1-faults-observation.md`](../profiles/rt-static-up-v1-faults-observation.md), part of the profile's
   fault contract, with the routing it makes in the contract's *Still open* and the pointers in `M4.3`, `M4.6`, `M4.7`
@@ -173,6 +173,21 @@ model through a call whose job rule 5 abandons before it runs.
 | 7 | nit | `rt-core` also holds `invariant` and `cause` | named |
 | 8 | nit | `Continue` and `Idle` name no incoming task | "`Dispatch` and `Switch` name the incoming task" |
 | 9 | nit | the hosted model computes the escalation mark, not copies it | "the escalation mark is `no` in every trace (§3)" |
+
+## Round 7
+
+`2026-10-03`, of commit `fc53007`, by a new context asked first for regressions, with probes P1–P8. Round 6's answer
+held and regressed nothing: a call that runs is well defined on the target, so the comparator never has to tell an
+abandoned call apart, and the partition is complete. Item 5's cases still match `rt-core`'s `invariant` strings
+exactly; both runtimes declare `M = 255`. **No defect**, so the review closes. 4 findings: 3 drafting points, 1 nit.
+Defects per round: 9, 6, 8, 1, 2, 1, 0.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 1 | drafting | the new case field neither compared nor excluded; in the window the two runtimes raise different cases | "not its case, which the Terms' window can change (item 6)" |
+| 2 | drafting | round 2's "`Continue` no event" dropped in step 4's rewrite | "`Continue` stamps none" |
+| 3 | drafting | only a trap's halt exempted a job from `preempt`; a panic's or a check's call ends in a halt too | "whose trap, panic or check's call ends in a halt" |
+| 4 | nit | the port's check covers a non-job call with a job in the record, preempted or not | "with a job in the record" |
 
 ## Why
 
