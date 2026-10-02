@@ -1,5 +1,27 @@
 # Verifying the toolchain
 
+## The idea, in plain words
+
+A tool that makes promises about other people's systems has to be checked itself, and more strictly than they are.
+archogen's own checks come in **tiers**, from quick to thorough. The quickest runs on every change, in seconds: is
+the code formatted, does it pass its tests. The next runs before work is shared: does the book still build, does the
+code still compile for the emulated machine and for a web browser. Slower ones search for inputs that break the
+code (*fuzzing*), plant bugs on purpose to see whether the tests notice (*mutation*), and run the code under a tool
+that catches undefined behaviour (*Miri*). Each tier reports one of three outcomes — passed, failed, or *incomplete*
+when something could not be run — because "nothing failed" is not the same as "everything passed".
+
+Besides the code, the repository checks itself: its book, its records and its task trees are held to the code and
+to each other by checks of their own, which [Annex B](annex-repository.md) describes.
+
+> **In one minute, for engineers.** `ROADMAP.md` §14.3's five tiers — `focused`, `integration`, `extended`,
+> `hardware`, `assurance` — are declared once in `xtask/src/main.rs` and run as `cargo xtask verify --tier …`. A tier
+> exits passed, failed or incomplete (exit 20, never a pass), and CI passes an incomplete tier only with each owned
+> gap annotated. `extended` runs fuzzing, mutation against catalogued defects and Miri, each shown able to fail. The
+> engine compiles for `wasm32-unknown-unknown` and its browser module answers as the CLI does; the product spawns no
+> process; the language is frozen at `eadl/1` with migration notes. The repository-integrity gates are in Annex B.
+
+## How it works
+
 The project's own checks are organised into the five tiers of `ROADMAP.md` §14.3, and each one
 is a named command. The runner is the workspace's `xtask` member — `xtask/src/main.rs` declares every
 tier and every step in it, and `make tiers` prints them from there. The outside tools the tiers run, and
@@ -21,7 +43,9 @@ $ cargo xtask verify --list              # or: make tiers
 | `hardware` | a change to target support, and every release gate | board regressions and timing observations |
 | `assurance` | every supported release | trust inventory, claim completeness, source and binary identity |
 
-## A tier has three outcomes, not two
+## The precise rules
+
+### A tier has three outcomes, not two
 
 §14.3 ends with a sentence that is easy to agree with and hard to implement:
 
@@ -52,7 +76,7 @@ there. And the two reasons a step cannot run are kept apart, because the respons
   names exiting `20` still fails, and a quarantined step that *passes* is refused as a stale
   quarantine, so the leaf that closes the gap deletes the row in the same commit (leaf `PROGRAM.10.1`).
 
-## What that looks like today
+### What that looks like today
 
 Rendered from a run, not retyped:
 
@@ -109,7 +133,7 @@ like being covered. Each gap was given an owner. The `extended` tier's three ste
 `mutation` in 8.00 s, `miri` in 996.69 s. The remaining gaps are named: `M5.1` for the board, and
 `M3.6` / `M4.8` / `M4.7` for the assurance tier.
 
-### The `miri` step proves it can fail before it passes
+#### The `miri` step proves it can fail before it passes
 
 The workspace contains no `unsafe` code, so a Miri run over it that passes looks exactly like a run
 in which Miri saw nothing at all. `scripts/extended_miri.sh` therefore starts by building a
@@ -131,7 +155,7 @@ $ bash scripts/extended_miri.sh --arm-only  # only the seeded dangling-pointer r
 $ bash scripts/extended_miri.sh --all       # every test target, the corpus walks included
 ```
 
-### The `fuzz` step, and what it found on its first run
+#### The `fuzz` step, and what it found on its first run
 
 `scripts/extended_fuzz.sh` runs a seeded fuzz harness over the reader and the exact arithmetic
 (`crates/eadl-model/tests/fuzz.rs`). It has no dependency and does not use `cargo-fuzz`. Every run
@@ -168,7 +192,7 @@ $ bash scripts/extended_fuzz.sh                 # the fixed seed and a fresh one
 $ FUZZ_SEED=42 bash scripts/extended_fuzz.sh    # a chosen seed; a failure prints its replay command
 ```
 
-### The `mutation` step: each defect, put back, must still be caught
+#### The `mutation` step: each defect, put back, must still be caught
 
 Every leaf that fixed a defect proved its test by breaking the code on purpose and watching the test
 fail. That was done by hand, once. `cargo xtask mutate` does it again on every run, from a catalog
@@ -193,7 +217,7 @@ $ cargo xtask mutate                        # the whole catalog
 $ cargo xtask mutate --only lcm-to-max      # one entry
 ```
 
-## What CI does with an `incomplete` tier
+### What CI does with an `incomplete` tier
 
 It passes the job, and says so on every run. The policy is recorded in
 `docs/decisions/decision_incomplete-blocking-policy.md` and carried out by `scripts/ci_integration.sh`:
@@ -250,7 +274,7 @@ which only the director can set, as is the repository's default token. The desig
 two ways past `WORKFLOW-TOKENS`, an escaped YAML key and a setting on a neighbouring step; both are now refused
 (`docs/reviews/catalog-check-protection-reviews.md`).
 
-## The engine compiles for the browser
+### The engine compiles for the browser
 
 The programmatic-interface decision promises a wasm binding, so the `integration` tier measures whether
 the engine compiles for `wasm32-unknown-unknown` (leaf `API.1`). Its `wasm-build` step does not list the
@@ -266,7 +290,7 @@ one a browser needs most, and its reads already go through one `ModuleSource` im
 binding (`API.5`) can supply its own. It does: the engine API, `archogen-api`, and the binding, `archogen-wasm`, have since joined the set, and
 the binding hands `eadl-front` its modules from memory.
 
-## The browser module answers as the command line does
+### The browser module answers as the command line does
 
 Compiling is not running. The `wasm-binding` step builds the module a web page loads
 (`docs/decisions/decision_wasm-binding.md`) and runs it in [Node](ledger.md#node), through the same loader a
@@ -300,11 +324,11 @@ day it was written, derived like the rest. It depends on `eadl-front`, which sti
 calls the directory loader: a caller hands it a `ModuleSource`, and an in-memory one is what a browser
 would pass.
 
-## A third reader
+### A third reader
 
 `docs/semantics/grammar.md` defines what a well-formed description is, and until `2026-09-30` it had two
 opinions about that: archogen's reader, and a recognizer the conformance suite derives from the grammar. Both
-are this project's code. `scripts/third_opinion.sh` adds a third that nobody here wrote: LinkedSpec's
+are this project's code. `scripts/third_opinion.sh` adds a third that nobody here wrote: [LinkedSpec](ledger.md#linkedspec)'s
 `SExprDocumentV1` recognizer, run as an outside program (leaf `M1.22`). Each side is reduced to the same
 shape, the forms of a document as raw source text and nesting. The script records, for every tracked
 description, whether they agree. It compares token boundaries and whether the document is complete. It
@@ -319,7 +343,7 @@ neither of the two existing opinions could see it. Since leaf `M1.37` the reader
 every tracked description. The record
 (`docs/semantics/third-opinion.txt`) fails the script the moment any document's agreement changes.
 
-## The product runs nothing
+### The product runs nothing
 
 archogen describes, checks and generates, and it executes nothing. `archogen build` writes a crate and stops.
 Nothing in the product compiles, links or runs what it wrote, and nothing it does starts another process. That
@@ -329,7 +353,7 @@ production code under `crates/*/src` may name `Command`, `spawn`, `exec` or `for
 `xtask/` and `scripts/` compile and run things on purpose, and they are outside what it reads. A
 `#[cfg(test)]` on a lone helper does not hide the lines below it. Only one that opens a test module does.
 
-## When a push is due
+### When a push is due
 
 The director ruled a push cadence on `2026-09-28`: push once the branch is a set number of commits ahead of
 `origin/main`. The number has one copy, the **Threshold** field of `docs/decisions/decision_push-cadence.md`,
@@ -338,7 +362,7 @@ when a push is due and `2` when it cannot tell, for example with no `origin/main
 two answers. It is a report and never a gate. A push needs the director's authorization, so a check that
 refused commits at the threshold would strand the work it is meant to protect.
 
-## What the `tests` step is a suite *of*
+### What the `tests` step is a suite *of*
 
 The row above says "every contract test passes", and for the language that means a declared population.
 `docs/semantics/conformance.md` is the manifest: which descriptions
@@ -378,7 +402,7 @@ conformance cases of a language version.
 standard — a checker "sharing the same erroneous recurrence with its reference does not qualify as
 independent" — is not met by it, and leaf `M1.22` owns the question of a third recognizer.
 
-## What is frozen, and what a digest can prove
+### What is frozen, and what a digest can prove
 
 The constructs of `eadl/1` are digested into `docs/semantics/BASELINE.txt`, one line per construct, in
 the form `<sha256 of the construct's text>  <construct id>`. Three commands, and no output is quoted
@@ -416,7 +440,7 @@ beside the baseline it enforces has no prior state to differ from, so no RED arm
 tree. `M1.13.4.5` wrote the file and the comparator that classifies a difference as *moved*, *added* or
 *removed*; `scripts/check_language_freeze.sh` is the gate.
 
-## The freeze, and the note it demands
+### The freeze, and the note it demands
 
 `LANGUAGE-FREEZE` runs with the other doctrines — on every commit, and in the `integration` tier — and has
 **three legs**:
@@ -464,250 +488,7 @@ movement is correct, or complete, or that every description the change invalidat
 residue is review, exactly as `BOOK-ANCHORS` states its own. The gate removes the cheapest failure, a
 frozen construct edited silently, and leaves the expensive one to the reader.
 
-## Every crate is in this book
-
-`BOOK-ANCHORS` checks that what a chapter cites exists; `BOOK-COVERAGE` checks the other direction — that every
-crate of the workspace appears in some chapter **beside a path into it**, so no capability exists that this
-book never shows you. The crates are read from `Cargo.toml` rather than listed, so a new one is covered the day
-it is added. A name alone does not count: a list of crate names would pass a name-only rule and tell you
-nothing about where anything lives. When it was written, the scheduling checker — the `rt-analysis` crate —
-was in no chapter at all; [What the scheduling checker establishes](analysis.md) now says which file holds what.
-
-```console
-$ bash scripts/check_book_coverage.sh
-```
-
-## Other repositories are read-only
-
-`REPOSITORY-BOUNDARY` runs with the other doctrines on every commit. It checks the one place this
-repository can see another: each vendored checkout it pins — today `vendor/linkedspec` — must be **at
-its pin**, with **no commit made there**, **no file changed** and **no file created**. Reading a vendor,
-building it by its documented route and moving our own pin to a commit it has published are all fine;
-writing into it is not, and neither is accepting a change another project's agent wrote into this one
-without a task-tree leaf that records who authorized it (`CLAUDE.md`, and
-`docs/decisions/decision_repository-boundary-read-only.md` for the one time it happened).
-
-```console
-$ bash scripts/check_repository_boundary.sh              # the gate
-$ bash scripts/check_repository_boundary.sh --self-test  # its RED arms, on scratch repositories
-```
-
-⚠️ It does not look inside the checkouts *nested* in a vendor. The vendor's own published bootstrap
-moves and dirties those — thousands of entries, measured — and running a documented build is
-consumption, so a gate that counted them would refuse every commit for doing what the rules allow.
-
-## Scratch stays on this volume
-
-Every temporary file this repository's scripts create lives under its own `target/`, never in the
-system's temporary directory. `SCRATCH-LOCALITY` reads every tracked shell script and Rust source and
-refuses a `mktemp` with no template under `target/`, a line naming the system temporary directory, and a
-Rust `temp_dir()` call. When it was written, one ordinary run of the doctrines and their self-tests made
-**26** temporary directories and files, **every one** of them off this volume, from 18 places in 15
-files. Four of those places are in files this project takes from its scaffold. A local edit there would
-be erased by the next sync, so the check lists them without refusing them, and the change they need is
-written down for the scaffold's owner in `docs/decisions/decision_scratch-on-the-repository-volume.md`.
-
-Moving a fixture changes what surrounds it. Two self-tests broke when their scratch moved under
-`target/`: one because git ignores that whole directory, and one because Cargo, walking up from the
-fixture, now found this workspace. The second is why the root `Cargo.toml` excludes `target`.
-
-```console
-$ bash scripts/check_scratch_locality.sh              # the gate
-$ bash scripts/check_scratch_locality.sh --self-test  # its RED arms, on scratch repositories
-```
-
-## What comes from outside is written down
-
-`SOURCE-LEDGER` keeps [What this project relies on from outside](ledger.md) true to the repository.
-Every version this repository pins must appear in that chapter at the same version, and a chapter or
-decision that names an outside source must link to its entry. When the check was written, no chapter
-and no decision linked to anything outside, and the pins it found showed that the Rust compiler,
-mdBook and the CI's actions are not pinned to exact versions at all (`PROGRAM.30`).
-
-```console
-$ bash scripts/check_source_ledger.sh              # the gate
-$ bash scripts/check_source_ledger.sh --self-test  # its RED arms, on scratch repositories
-```
-
-
-Three of those pins were once moving targets: the Rust channel `stable`, the CI actions' `v4` tags and whatever
-mdBook was installed. Each now names one release (leaf `PROGRAM.30`). `rust-toolchain.toml` says `1.95.0`, with
-the components and the bare-metal target the tiers use, and CI installs exactly that file with
-`rustup toolchain install`, so the version is written once. The actions are referenced by commit. The `book` step
-builds only with the pinned mdBook, because every `ledger.md#…` link depends on how mdBook derives a heading's
-anchor. The day the Rust pin was set, `1.98.0` passed the same format check, lints and test suite, so a bump
-starts from evidence rather than from hope.
-
-## What is versioned is written down
-
-`VERSION-REGISTER` keeps [What is versioned, and what changing it costs](versions.md) true to the code.
-Every version the code declares must be on that page at the same value: each format identifier, each
-version constant, each profile id, and the engine version, which every crate must agree on. When the
-check was written, it found one version that the census planning it had missed, the model the
-scheduling analysis reasons in, because the census looked for version constants by name and the gate
-looks at what the value is.
-
-```console
-$ bash scripts/check_version_register.sh              # the gate
-$ bash scripts/check_version_register.sh --self-test  # its RED arms, on scratch repositories
-```
-
-## A bug report says what its issue says
-
-The bugs this project reports to the tools it uses live in `docs/feedback/`, one register per vendor
-and one directory per bug. `FEEDBACK-REGISTER` checks that each register row states what its bug's
-own page states, that a `verified` bug was re-measured on the date the register gives, and that every
-total is a recount. When it was written, the index above the registers still said [LinkedSpec](ledger.md#linkedspec) had five
-open bugs and two blockers, three days after all five had been verified.
-
-```console
-$ bash scripts/check_feedback_register.sh              # the gate
-$ bash scripts/check_feedback_register.sh --self-test  # its RED arms, on scratch repositories
-```
-
-## The status pages stay short
-
-`LIVE_STATUS.md` and `docs/TASK_TREE.md` show where each part of the work stands now. They grew into
-something else. Each finished task appended a note to its area's row, until `LIVE_STATUS.md` held
-42,110 bytes in 21 lines, one row alone being 30,256 bytes long. What each task did already lives in
-its tree's Commit Log and in `CHANGELOG.md`, so the rows were cut back to status, next task and any
-blocker, after checking that every task they mentioned had its own record. `LIVE-SNAPSHOTS` now
-bounds these pages, `MEMORY.md` and `README.md` on lines, bytes and longest line. The longest line is
-counted separately because a page can keep a short line count while one row grows without limit. The
-landing page's limits were measured from the page itself, after a review against `README_POLICY.md`,
-rather than taken from the generous defaults the project's template started with.
-
-```console
-$ bash scripts/check_live_snapshots.sh              # the gate
-$ bash scripts/check_live_snapshots.sh --self-test  # its RED arms, on scratch repositories
-```
-
-## The histories are sealed as they grow
-
-`CHANGELOG.md` and `DEV_NOTES.md` gain an entry with nearly every commit. They are rolling ledgers: once one holds
-twice its window of entries, its oldest window is moved, byte for byte, into the next numbered file under
-`docs/history/`, and `docs/history/INDEX.md` lists each such file with its range, its size and a fingerprint.
-Nothing is rewritten. Reading the live file and then the sealed files, newest first, gives the whole history
-exactly as it was written (`docs/decisions/decision_history-ledgers.md`). `HISTORY-LEDGERS` checks on every commit
-that no sealed file has changed since it was sealed, that the index lists every one and has lost or changed no row it ever held, that the order runs on
-unbroken, and that neither live file has outgrown its window.
-
-```console
-$ bash scripts/check_history_ledgers.sh              # the gate
-$ bash scripts/check_history_ledgers.sh --seal       # a rollover the gate asks for, with its proof
-$ bash scripts/check_history_ledgers.sh --self-test  # its RED arms, on scratch repositories
-```
-
-## Finished work leaves the task trees
-
-A task tree records every leaf of its work, with its checklist and evidence. Most of it is finished work: on
-`2026-09-30`, 77% of `docs/tasks/M1.md` and 79% of `docs/tasks/PROGRAM.md`.
-- **What moves.** Once every leaf of one of a tree's top-level parts is done, those leaves move, byte for byte, into
-  one file under `docs/task-history/`.
-- **What stays.** Each leaf leaves two lines in the tree, its name and a link to where its text now is. The live
-  work, the list of what is next and the logs stay where they were.
-- **The proof.** Before anything is written, the tool checks that putting every leaf back would give the tree as it
-  was, byte for byte (`docs/decisions/decision_task-tree-sealing.md`).
-- **The first seal**, on `2026-09-30`: 112 leaves left `M1` and `PROGRAM`. At the sealing commit, `M1.md` went
-  from 7 633 lines to 2 278, and `PROGRAM.md` from 4 280 to 978.
-
-`TASK-HISTORY` checks on every commit, in CI as well as before a commit:
-- that no sealed file has changed since the commit that sealed it;
-- that `docs/task-history/INDEX.md` lists every sealed file and has lost or changed no row it ever held;
-- that every sealed leaf has exactly one two-line placeholder in its tree, linking the file that holds it;
-- that every sealed leaf is, byte for byte, what its tree held just before it was sealed, so a hand-made or edited
-  seal is refused.
-
-```console
-$ bash scripts/check_task_history.sh                  # the gate
-$ bash scripts/check_task_history.sh --seal M1        # seal what has closed in a tree, with its proof
-$ bash scripts/check_task_history.sh --self-test      # its RED arms, on scratch repositories
-```
-
-The decisions folder is kept the same way. A numbered section of a decision record that is settled, such as a
-finding the director has ruled on, moves byte for byte into `docs/decision-history/`. Its heading stays in the
-record, above one line linking the sealed file, so a citation of the section by its number still finds it.
-`DECISION-HISTORY` checks what `TASK-HISTORY` checks, for sections: every sealed file against its row and the
-commit that sealed it, the index append-only, one placeholder per sealed section, and every sealed section what its
-record held just before. The first seal, on `2026-09-30`, took four settled items of the director's findings
-register out of the decisions folder (`PROGRAM.41`).
-
-Each tree also keeps a Commit Log, one row per commit that worked on it, and `COMMIT-LOG-ROWS`
-(`scripts/check_commit_log_rows.sh`) holds every commit whose subject names a work unit to having its row —
-the pending commit included, so a commit that forgot its row is refused before it lands rather than found by
-hand a commit later, as two were on `2026-10-01` (`PROGRAM.46`). The rows missing when the gate landed are a
-backlog listed in the script, which may only shrink.
-
-```console
-$ bash scripts/check_decision_history.sh                                   # the gate
-$ bash scripts/check_decision_history.sh --seal <RECORD> <N>...            # seal settled sections, with the proof
-$ bash scripts/check_decision_history.sh --self-test                       # its RED arms, on scratch repositories
-```
-
-## Where the landing page sends things
-
-A size limit on `README.md` does not remove the need to write things down; it moves it somewhere else. So
-`README_POLICY.md` also asks that every place the README points a reader to, and every place its checks tell an
-author to move detail to, is itself kept in bounds. `README-ROUTES` works that list out from the README's links and
-from what its two checks actually print. It follows each place on to wherever that place's own check sends overflow,
-and holds each one to the ceiling registered for it in the policy. The changelog and the development notes are
-bounded as rolling ledgers (above). A design's review history, which grows by a round at a time, overflows from the
-decisions folder to `docs/reviews/`, which has ceilings of its own. The task trees are bounded too, and their
-finished parts overflow to `docs/task-history/`, as settled sections of a decision record do to
-`docs/decision-history/` (above). A folder grown too large is split by subject into sub-folders, each with ceilings
-of its own, while the folder's own limits still count everything in them, so a split adds no room; and no ceiling
-may rise above what a decision fixes, which the policy lists and the check enforces. The decisions folder was split
-this way on `2026-09-30`, and `DECISION-INDEX` keeps every record in a sub-folder listed in its index.
-
-```console
-$ bash scripts/check_readme_routes.sh              # the gate
-$ bash scripts/check_readme_routes.sh --self-test  # its RED arms, on scratch repositories
-```
-
-## "Next" means what the task tree says
-
-A page that names the next task is repeating what that task's tree says, and a repeat goes stale the
-moment the tree moves without it. It has happened here several times: a page naming a task already
-finished, a list of what comes next naming the current task as its own successor, and a changelog whose
-header says "newest first" opening with an entry seven commits old. `STATED-ORDER` compares every such
-repeat with its source on every commit. On its first run it found one more: a task whose own status said
-it was in progress while its tree's list said it was blocked.
-
-```console
-$ bash scripts/check_stated_order.sh              # the gate
-$ bash scripts/check_stated_order.sh --self-test  # its RED arms, on scratch repositories
-```
-
-## A number added to this book says what keeps it true
-
-The error this project has made most often is a number written into a page that later stopped being
-true: a count of descriptions over a directory that had grown, a list introduced as `Three rules` above
-four. `FIGURE-REGISTER` stops a commit from adding such a number to a live page without saying what keeps
-it true. The number must either be compared with a measurement by a named test that reads the page, carry
-the date it was measured on the same line, or be marked as not a count (`docs/figures.md`). Numbers
-already on these pages are counted and reported, and a commit may only lower their count in a page it
-touches. Its first run refused a claim written while the check was being built, which named a test that
-never reads the page.
-
-```console
-$ bash scripts/check_figure_register.sh              # the gate
-$ bash scripts/check_figure_register.sh --self-test  # its RED arms, on scratch repositories
-```
-
-## Every diagnostic shown in this book is a real run
-
-When this book shows `archogen check` refusing a description, a test re-runs that command and requires
-the book to show exactly what it prints: every label, the final summary line and the exit code, with
-nothing shortened or re-wrapped (`crates/archogen-cli/tests/book_transcripts.rs`). Before that test,
-five of the twelve checkable examples differed from a real run. Two had silently dropped the "first
-declared here" label that the text around them said was there. All five are re-rendered from runs.
-Eleven older examples use a file that is not in the repository, so no one can re-run them. They are
-listed in the test, and the list may shrink but never grow. Each is listed by what it shows, its first
-error and its first location, and not by the line it sits on. The first version used line numbers, and a
-paragraph added above one of them made the test fail for an example that had not changed (leaf
-`PROGRAM.33`).
-
-## Why `focused` runs the whole suite
+### Why `focused` runs the whole suite
 
 §14.3 defines the focused tier as "format/type checks and **affected** contract tests", and
 selecting affected tests needs change-impact machinery. Measured warm on this tree, the three

@@ -43,6 +43,7 @@
 # Annexes
 
 - [Annex A: The runtime's rules in detail](annex-runtime.md)
+- [Annex B: The checks that keep the repository honest](annex-repository.md)
 
 [Words this book uses](glossary.md)
 [Index](book-index.md)

@@ -8,13 +8,13 @@ a change that leaves it stale, so it is never edited by hand.
 
 ## A
 
-- A bug report says what its issue says — [Verifying the
-  toolchain](verification.md#a-bug-report-says-what-its-issue-says)
+- A bug report says what its issue says — [Annex B: The checks that keep the repository
+  honest](annex-repository.md#a-bug-report-says-what-its-issue-says)
 - A kind defines well-formedness, never behavior — [Kinds and
   schemas](kinds.md#a-kind-defines-well-formedness-never-behavior)
 - A lesson from the corpus — [Reading a description](reading.md#a-lesson-from-the-corpus)
-- A number added to this book says what keeps it true — [Verifying the
-  toolchain](verification.md#a-number-added-to-this-book-says-what-keeps-it-true)
+- A number added to this book says what keeps it true — [Annex B: The checks that keep the repository
+  honest](annex-repository.md#a-number-added-to-this-book-says-what-keeps-it-true)
 - A record, and its four parts — [Where the engine's knowledge comes from: the
   catalog](catalog.md#a-record-and-its-four-parts)
 - A requirement is an obligation, not a claim to trust — [The boundary: functionality versus
@@ -57,11 +57,12 @@ a change that leaves it stale, so it is never edited by hand.
 - catalog-s0 — [What is versioned, and what changing it costs](versions.md#catalog-s0)
 - chipdoc — [What this project relies on from outside](ledger.md#chipdoc)
 - **CI** — [definition](glossary.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying
-  the toolchain](verification.md), [What this project relies on from outside](ledger.md)
+  the toolchain](verification.md), [What this project relies on from outside](ledger.md), [Annex B: The checks that keep
+  the repository honest](annex-repository.md)
 - Claims cite what they read — [Where the engine's knowledge comes from: the
   catalog](catalog.md#claims-cite-what-they-read)
-- **CLI** — [definition](glossary.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [What is
-  versioned, and what changing it costs](versions.md)
+- **CLI** — [definition](glossary.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying
+  the toolchain](verification.md), [What is versioned, and what changing it costs](versions.md)
 - **CLINT** — [definition](glossary.md), [Where generated systems run](targets.md)
 - Comments survive — [Reading a description](reading.md#comments-survive)
 - Content hashes — [What a report may claim](evidence.md#content-hashes)
@@ -87,7 +88,7 @@ a change that leaves it stale, so it is never edited by hand.
   [Where the engine's knowledge comes from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md),
   [The S0 early generation path](s0.md), [Where generated systems run](targets.md), [The archogen command line](cli.md),
   [The engine API](engine-api.md), [Verifying the toolchain](verification.md), [What is versioned, and what changing it
-  costs](versions.md)
+  costs](versions.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
 - Diagnostics — [The archogen command line](cli.md#diagnostics)
 - Diagnostics point at the problem — [Reading a description](reading.md#diagnostics-point-at-the-problem)
 - **DMA** — [definition](glossary.md), [The supported profile](profile.md)
@@ -108,9 +109,10 @@ a change that leaves it stale, so it is never edited by hand.
   composition](modules.md#elaboration-produces-instances-not-modules)
 - engine — [What is versioned, and what changing it costs](versions.md#engine)
 - engine-api — [What is versioned, and what changing it costs](versions.md#engine-api)
-- Every crate is in this book — [Verifying the toolchain](verification.md#every-crate-is-in-this-book)
-- Every diagnostic shown in this book is a real run — [Verifying the
-  toolchain](verification.md#every-diagnostic-shown-in-this-book-is-a-real-run)
+- Every crate is in this book — [Annex B: The checks that keep the repository
+  honest](annex-repository.md#every-crate-is-in-this-book)
+- Every diagnostic shown in this book is a real run — [Annex B: The checks that keep the repository
+  honest](annex-repository.md#every-diagnostic-shown-in-this-book-is-a-real-run)
 - Exact, always — [Quantities and units](quantities.md#exact-always)
 - Exactly one primitive is trusted — [Kinds and schemas](kinds.md#exactly-one-primitive-is-trusted)
 - Exit codes — [Checking a description](checking.md#exit-codes)
@@ -126,7 +128,8 @@ a change that leaves it stale, so it is never edited by hand.
   actions](runtime.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
   detail](annex-runtime.md)
 - Faults in detail — [Annex A: The runtime's rules in detail](annex-runtime.md#faults-in-detail)
-- Finished work leaves the task trees — [Verifying the toolchain](verification.md#finished-work-leaves-the-task-trees)
+- Finished work leaves the task trees — [Annex B: The checks that keep the repository
+  honest](annex-repository.md#finished-work-leaves-the-task-trees)
 - freertos-kernel — [What this project relies on from outside](ledger.md#freertos-kernel)
 - fsmgen — [What this project relies on from outside](ledger.md#fsmgen)
 
@@ -160,6 +163,7 @@ a change that leaves it stale, so it is never edited by hand.
 - How it works — [Where generated systems run](targets.md#how-it-works)
 - How it works — [The archogen command line](cli.md#how-it-works)
 - How it works — [The engine API](engine-api.md#how-it-works)
+- How it works — [Verifying the toolchain](verification.md#how-it-works)
 - How much of this a machine can check — [The boundary: functionality versus
   implementation](boundary.md#how-much-of-this-a-machine-can-check)
 - How the command line is held to it — [The engine API](engine-api.md#how-the-command-line-is-held-to-it)
@@ -228,7 +232,8 @@ a change that leaves it stale, so it is never edited by hand.
 ## N
 
 - Names carry their whole path — [Modules and composition](modules.md#names-carry-their-whole-path)
-- "Next" means what the task tree says — [Verifying the toolchain](verification.md#next-means-what-the-task-tree-says)
+- "Next" means what the task tree says — [Annex B: The checks that keep the repository
+  honest](annex-repository.md#next-means-what-the-task-tree-says)
 - node — [What this project relies on from outside](ledger.md#node)
 - Not versioned yet — [What is versioned, and what changing it costs](versions.md#not-versioned-yet)
 - **NUL** — [definition](glossary.md), [Reading a description](reading.md)
@@ -245,7 +250,8 @@ a change that leaves it stale, so it is never edited by hand.
 - **OSEK** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [What this project relies on
   from outside](ledger.md)
 - osek-os — [What this project relies on from outside](ledger.md#osek-os)
-- Other repositories are read-only — [Verifying the toolchain](verification.md#other-repositories-are-read-only)
+- Other repositories are read-only — [Annex B: The checks that keep the repository
+  honest](annex-repository.md#other-repositories-are-read-only)
 - **overrun** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Describing a
   workload](workload.md), [The runtime: decisions, not actions](runtime.md), [Annex A: The runtime's rules in
   detail](annex-runtime.md)
@@ -281,9 +287,10 @@ a change that leaves it stale, so it is never edited by hand.
   description](reading.md), [Quantities and units](quantities.md), [Refinement](refinement.md), [Describing a
   workload](workload.md), [Checking a description](checking.md), [Where the engine's knowledge comes from: the
   catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [The S0 early generation path](s0.md), [Where
-  generated systems run](targets.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying
-  the toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
-  changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
+  generated systems run](targets.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [What this
+  project relies on from outside](ledger.md), [What is versioned, and what changing it costs](versions.md), [Annex A:
+  The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that keep the repository
+  honest](annex-repository.md)
 - provenance-format — [What is versioned, and what changing it costs](versions.md#provenance-format)
 
 ## Q
@@ -297,8 +304,10 @@ a change that leaves it stale, so it is never edited by hand.
 
 - **R24-11** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **RAM** — [definition](glossary.md), [Where generated systems run](targets.md)
-- **README** — [definition](glossary.md), [Verifying the toolchain](verification.md)
-- **RED** — [definition](glossary.md), [Verifying the toolchain](verification.md)
+- **README** — [definition](glossary.md), [Verifying the toolchain](verification.md), [Annex B: The checks that keep the
+  repository honest](annex-repository.md)
+- **RED** — [definition](glossary.md), [Verifying the toolchain](verification.md), [Annex B: The checks that keep the
+  repository honest](annex-repository.md)
 - Refusal is a feature — [The supported profile](profile.md#refusal-is-a-feature)
 - Refused by name — [Checking a description](checking.md#refused-by-name)
 - **release** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
@@ -307,7 +316,8 @@ a change that leaves it stale, so it is never edited by hand.
   [Where the engine's knowledge comes from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md),
   [The S0 early generation path](s0.md), [Where generated systems run](targets.md), [Verifying the
   toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
-  changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
+  changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that
+  keep the repository honest](annex-repository.md)
 - Relevance decides whether an unknown matters — [Presence, absence, and
   relevance](presence.md#relevance-decides-whether-an-unknown-matters)
 - **RGX** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
@@ -332,7 +342,8 @@ a change that leaves it stale, so it is never edited by hand.
 
 ## S
 
-- Scratch stays on this volume — [Verifying the toolchain](verification.md#scratch-stays-on-this-volume)
+- Scratch stays on this volume — [Annex B: The checks that keep the repository
+  honest](annex-repository.md#scratch-stays-on-this-volume)
 - **SEI** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - semulith — [What this project relies on from outside](ledger.md#semulith)
 - **SHA-256** — [definition](glossary.md), [What a report may claim](evidence.md)
@@ -352,7 +363,8 @@ a change that leaves it stale, so it is never edited by hand.
   schemas](kinds.md), [Quantities and units](quantities.md), [Describing a workload](workload.md), [Checking a
   description](checking.md), [What the scheduling checker establishes](analysis.md), [The runtime: decisions, not
   actions](runtime.md), [The S0 early generation path](s0.md), [Verifying the toolchain](verification.md), [What this
-  project relies on from outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
+  project relies on from outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The
+  checks that keep the repository honest](annex-repository.md)
 - The admitted task model, enforced — [Describing a workload](workload.md#the-admitted-task-model-enforced)
 - The binding a web page loads — [The engine API](engine-api.md#the-binding-a-web-page-loads)
 - The browser module answers as the command line does — [Verifying the
@@ -369,11 +381,9 @@ a change that leaves it stale, so it is never edited by hand.
 - The fault path is a value — [The runtime: decisions, not actions](runtime.md#the-fault-path-is-a-value)
 - The first code on the target — [Where generated systems run](targets.md#the-first-code-on-the-target)
 - The freeze, and the note it demands — [Verifying the toolchain](verification.md#the-freeze-and-the-note-it-demands)
-- The fuzz step, and what it found on its first run — [Verifying the
-  toolchain](verification.md#the-fuzz-step-and-what-it-found-on-its-first-run)
 - The gate: the oracle comes first — [The S0 early generation path](s0.md#the-gate-the-oracle-comes-first)
-- The histories are sealed as they grow — [Verifying the
-  toolchain](verification.md#the-histories-are-sealed-as-they-grow)
+- The histories are sealed as they grow — [Annex B: The checks that keep the repository
+  honest](annex-repository.md#the-histories-are-sealed-as-they-grow)
 - The idea, in plain words — [Introduction](introduction.md#the-idea-in-plain-words)
 - The idea, in plain words — [Reading a description](reading.md#the-idea-in-plain-words)
 - The idea, in plain words — [Describing a workload](workload.md#the-idea-in-plain-words)
@@ -385,14 +395,11 @@ a change that leaves it stale, so it is never edited by hand.
 - The idea, in plain words — [Where generated systems run](targets.md#the-idea-in-plain-words)
 - The idea, in plain words — [The archogen command line](cli.md#the-idea-in-plain-words)
 - The idea, in plain words — [The engine API](engine-api.md#the-idea-in-plain-words)
+- The idea, in plain words — [Verifying the toolchain](verification.md#the-idea-in-plain-words)
 - The language definition travels with the binary — [Checking a
   description](checking.md#the-language-definition-travels-with-the-binary)
 - The list you read is the list the engine uses — [The supported
   profile](profile.md#the-list-you-read-is-the-list-the-engine-uses)
-- The miri step proves it can fail before it passes — [Verifying the
-  toolchain](verification.md#the-miri-step-proves-it-can-fail-before-it-passes)
-- The mutation step: each defect, put back, must still be caught — [Verifying the
-  toolchain](verification.md#the-mutation-step-each-defect-put-back-must-still-be-caught)
 - The observation contract — [The S0 early generation path](s0.md#the-observation-contract)
 - The passes, in the order a failure makes the next meaningless — [Checking a
   description](checking.md#the-passes-in-the-order-a-failure-makes-the-next-meaningless)
@@ -407,11 +414,13 @@ a change that leaves it stale, so it is never edited by hand.
 - The precise rules — [Where generated systems run](targets.md#the-precise-rules)
 - The precise rules — [The archogen command line](cli.md#the-precise-rules)
 - The precise rules — [The engine API](engine-api.md#the-precise-rules)
+- The precise rules — [Verifying the toolchain](verification.md#the-precise-rules)
 - The product runs nothing — [Verifying the toolchain](verification.md#the-product-runs-nothing)
 - The records that hold it — [Where the engine's knowledge comes from: the catalog](catalog.md#the-records-that-hold-it)
 - The sealed set — [The use cases](usecases.md#the-sealed-set)
 - The semantic corpus — [Checking a description](checking.md#the-semantic-corpus)
-- The status pages stay short — [Verifying the toolchain](verification.md#the-status-pages-stay-short)
+- The status pages stay short — [Annex B: The checks that keep the repository
+  honest](annex-repository.md#the-status-pages-stay-short)
 - The target, described in eADL, and checked against the device tree — [Where generated systems
   run](targets.md#the-target-described-in-eadl-and-checked-against-the-device-tree)
 - The three tests — [The boundary: functionality versus implementation](boundary.md#the-three-tests)
@@ -456,8 +465,8 @@ a change that leaves it stale, so it is never edited by hand.
 - What a task does not carry — [Describing a workload](workload.md#what-a-task-does-not-carry)
 - What an instance is — [The engine API](engine-api.md#what-an-instance-is)
 - What CI does with an incomplete tier — [Verifying the toolchain](verification.md#what-ci-does-with-an-incomplete-tier)
-- What comes from outside is written down — [Verifying the
-  toolchain](verification.md#what-comes-from-outside-is-written-down)
+- What comes from outside is written down — [Annex B: The checks that keep the repository
+  honest](annex-repository.md#what-comes-from-outside-is-written-down)
 - What F27 proves, and what it does not — [The boundary: functionality versus
   implementation](boundary.md#what-f27-proves-and-what-it-does-not)
 - What is being built first — [Introduction](introduction.md#what-is-being-built-first)
@@ -466,7 +475,8 @@ a change that leaves it stale, so it is never edited by hand.
   toolchain](verification.md#what-is-frozen-and-what-a-digest-can-prove)
 - What is outside it — [The engine API](engine-api.md#what-is-outside-it)
 - What is still owed — [What the scheduling checker establishes](analysis.md#what-is-still-owed)
-- What is versioned is written down — [Verifying the toolchain](verification.md#what-is-versioned-is-written-down)
+- What is versioned is written down — [Annex B: The checks that keep the repository
+  honest](annex-repository.md#what-is-versioned-is-written-down)
 - What it defends against — [Where the engine's knowledge comes from: the catalog](catalog.md#what-it-defends-against)
 - What it does not check, and the gap that closed — [Kinds and
   schemas](kinds.md#what-it-does-not-check-and-the-gap-that-closed)
@@ -493,7 +503,8 @@ a change that leaves it stale, so it is never edited by hand.
 - Where each declaration came from — [The S0 early generation path](s0.md#where-each-declaration-came-from)
 - Where it lives — [Presence, absence, and relevance](presence.md#where-it-lives)
 - Where it lives — [What the scheduling checker establishes](analysis.md#where-it-lives)
-- Where the landing page sends things — [Verifying the toolchain](verification.md#where-the-landing-page-sends-things)
+- Where the landing page sends things — [Annex B: The checks that keep the repository
+  honest](annex-repository.md#where-the-landing-page-sends-things)
 - Where the rules live — [Reading a description](reading.md#where-the-rules-live)
 - Where to go next — [A tour: from a description to a board](tour.md#where-to-go-next)
 - Which language version a description is written in — [Reading a
