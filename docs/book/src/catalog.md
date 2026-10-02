@@ -1,10 +1,38 @@
 # Where the engine's knowledge comes from: the catalog
 
-A description says what a system must do. To say anything about how a real system does it, the engine needs
-knowledge that no description holds: what a scheduler guarantees, what a timer on a given platform does, how long a
-kernel path takes. `ROADMAP.md` §9 puts that knowledge in a **catalog**, and asks for every entry to carry "an ID,
-semantic version, content hash, source/license metadata, maintainer, dependencies, supported profiles,
-preconditions, guarantees, implementation source, model source, cost evidence, and evidence status".
+## The idea, in plain words
+
+A description says *what* a system must do. To build it, archogen needs to know *how* — how a scheduler behaves,
+what a timer on a particular chip does, how long switching between tasks takes. That knowledge lives in the
+**catalog**: a collection of reviewed parts archogen assembles systems from.
+
+Think of a cookbook in which every recipe has been tested by someone, signed and dated, and sealed so that you would
+notice if one word had changed since. Each part in the catalog is a **record**: what it is, what it promises, what it
+needs, the code that does it, and the facts and timings it states. Each record is sealed by a **hash**, a fingerprint
+of its exact content, so a review is a review of exactly those bytes; change one character and the review no longer
+counts, without anyone having to remember to say so. When a report relies on a part, it says which version of which
+record it relied on, and whether that record was reviewed.
+
+> **In one minute, for engineers.** `ROADMAP.md` §9's catalog, designed in `docs/specs/catalog/decision_catalog-records.md`
+> and accepted after its independent review rounds. A record under `catalog/` has four facets — contract,
+> implementation, behavioral model, timing model — each with an own and a bound hash over a normative byte grammar.
+> Evidence status (`production`, `rejected`, `stale`, `unreviewed`) is derived from an append-only review ledger,
+> never written; claims cite exactly what their lookups read; a production claim needs production inputs, a board's
+> timings and a protected main line. The `archogen-catalog` crate implements it; the gate, the check's protection and
+> the first records come next, so `catalog/` is empty today.
+
+## How it works
+
+1. **A part is written as a record**, with its four facets, in the same syntax eADL is read with.
+2. **Its hashes are computed**, never written, so the record cannot claim a version its content does not have.
+3. **A reviewer reviews it** by naming a hash; the review is ledgered, and holds only for that content.
+4. **Its status is derived** from the reviews: `production` only where a review names its current hash.
+5. **A claim reads it** through a lookup that returns what it found and where from, so the claim's citations are
+   exactly what it used, and a later change to any of it flags the claim.
+
+## The precise rules
+
+### What the crate does today
 
 This chapter explains the design that answers it. The design is decided, and it was reviewed independently sixteen
 times before it was accepted. Its code is being built in the `archogen-catalog` crate (`M2.7.3`). So far that crate
@@ -28,7 +56,7 @@ protected. Code a record points at is held to §3's package rules: its manifests
 source token by token. Premise 3 is judged at claim time too, so the crate is complete. The gate, the check that
 protects it and the first records are the next leaves (`M2.7.4` to `M2.7.6`). Until they land, nothing loads a catalog, and `catalog/` is empty.
 
-## The records that hold it
+### The records that hold it
 
 | File | What it holds |
 | --- | --- |
@@ -44,7 +72,7 @@ protects it and the first records are the next leaves (`M2.7.4` to `M2.7.6`). Un
 | `crates/archogen-catalog/src/hash.rs` | every hash: each facet's own and bound hash, the record's, a review's, over the files, packages, targets and ledger sections they rest on |
 | `crates/archogen-catalog/tests/hash.rs` | the worked example, read from its own file, with all 23 of its values |
 
-## A record, and its four parts
+### A record, and its four parts
 
 A record is one small text file under `catalog/`, written in the same datum syntax eADL is read with, and read by
 that reader alone. It has four parts, called facets:
@@ -59,7 +87,7 @@ that reader alone. It has four parts, called facets:
 The two models are versioned apart, because a change to one invalidates different claims than a change to the
 other, which `ROADMAP.md` §9 asks for in so many words.
 
-## Hashes: what a review is a review of
+### Hashes: what a review is a review of
 
 Every facet has two hashes, and neither is written in the record; both are computed.
 
@@ -71,7 +99,7 @@ Every facet has two hashes, and neither is written in the record; both are compu
 A review names a bound hash. So a review is of exactly the content that hash covers, and any change to any of it,
 a comment in the code under a model included, leaves the review stale. Nobody has to remember to lower a status.
 
-## Status is derived, never written
+### Status is derived, never written
 
 A facet's evidence status is `production`, `rejected`, `stale` or `unreviewed`, and it is computed from reviews,
 never written by hand:
@@ -86,7 +114,7 @@ A record may sit in the **production** namespace only while all four of its face
 sit in the **experimental** one, which is how unreviewed knowledge "may exist ... but cannot silently satisfy a
 stronger production claim" (`ROADMAP.md` §9).
 
-## Claims cite what they read
+### Claims cite what they read
 
 The analysis consults the catalog by name. Every lookup returns what it found and the record it came from, so a
 claim's citations are exactly what it read, never a list someone wrote. Its closure follows the hashes: every facet
@@ -98,7 +126,7 @@ the caller, the timings it read are a board's, measured on the very image the cl
 built only from reviewed code. Before `M4` builds images, no production claim can be made at all, and the design
 says so rather than pretending otherwise.
 
-## What it defends against
+### What it defends against
 
 The design's threat model, which the director ruled, takes in every change that reaches the catalog through the
 repository: a hand-edited lock, a bypassed local check, a forged review. Each is refused, or makes the affected
@@ -114,7 +142,7 @@ include a second person to approve changes to the checking tool, since a sole au
 protects nothing. How the check itself is protected from what it judges is the leaf `M2.7.6`, with a test for
 every attack the reviews found.
 
-## How it was reviewed
+### How it was reviewed
 
 Each round was a new context that had not written the design, reading it with the repository's code and history
 to hand, and trying to break it. Rounds 1 to 11 found defects in the catalog's own mechanics, fewer each time. The
@@ -134,7 +162,7 @@ them live on the emulator, whose interrupt order [QEMU](ledger.md#qemu)'s source
 specification's. Round 11 found none live, and the record was accepted. Its history is kept in
 `docs/reviews/decision_runtime-composite-inputs-reviews.md`.
 
-## What it does not do yet
+## Today and ahead
 
 - **Nothing loads a catalog.** `catalog/` is empty. The crate reads records, computes their hashes and checks the
   lock, over one tree and over a history, derives evidence status, checks each review where it was recorded and

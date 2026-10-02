@@ -154,6 +154,7 @@ a change that leaves it stale, so it is never edited by hand.
 - How it works — [Checking a description](checking.md#how-it-works)
 - How it works — [What a report may claim](evidence.md#how-it-works)
 - How it works — [What the scheduling checker establishes](analysis.md#how-it-works)
+- How it works — [Where the engine's knowledge comes from: the catalog](catalog.md#how-it-works)
 - How it works — [The runtime: decisions, not actions](runtime.md#how-it-works)
 - How much of this a machine can check — [The boundary: functionality versus
   implementation](boundary.md#how-much-of-this-a-machine-can-check)
@@ -168,8 +169,7 @@ a change that leaves it stale, so it is never edited by hand.
 
 ## I
 
-- **ID** — [definition](glossary.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [The S0 early
-  generation path](s0.md)
+- **ID** — [definition](glossary.md), [The S0 early generation path](s0.md)
 - **interrupt** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The supported profile](profile.md), [What the scheduling checker establishes](analysis.md), [Where
   the engine's knowledge comes from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [Where
@@ -373,6 +373,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The idea, in plain words — [Checking a description](checking.md#the-idea-in-plain-words)
 - The idea, in plain words — [What a report may claim](evidence.md#the-idea-in-plain-words)
 - The idea, in plain words — [What the scheduling checker establishes](analysis.md#the-idea-in-plain-words)
+- The idea, in plain words — [Where the engine's knowledge comes from: the catalog](catalog.md#the-idea-in-plain-words)
 - The idea, in plain words — [The runtime: decisions, not actions](runtime.md#the-idea-in-plain-words)
 - The language definition travels with the binary — [Checking a
   description](checking.md#the-language-definition-travels-with-the-binary)
@@ -391,6 +392,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The precise rules — [Checking a description](checking.md#the-precise-rules)
 - The precise rules — [What a report may claim](evidence.md#the-precise-rules)
 - The precise rules — [What the scheduling checker establishes](analysis.md#the-precise-rules)
+- The precise rules — [Where the engine's knowledge comes from: the catalog](catalog.md#the-precise-rules)
 - The precise rules — [The runtime: decisions, not actions](runtime.md#the-precise-rules)
 - The product runs nothing — [Verifying the toolchain](verification.md#the-product-runs-nothing)
 - The records that hold it — [Where the engine's knowledge comes from: the catalog](catalog.md#the-records-that-hold-it)
@@ -413,6 +415,7 @@ a change that leaves it stale, so it is never edited by hand.
   establishes](analysis.md#three-outcomes-and-one-that-is-easy-to-get-wrong)
 - **TL16C550C** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - Today and ahead — [Introduction](introduction.md#today-and-ahead)
+- Today and ahead — [Where the engine's knowledge comes from: the catalog](catalog.md#today-and-ahead)
 - Today and ahead — [The runtime: decisions, not actions](runtime.md#today-and-ahead)
 - **trap** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [The boundary: functionality
   versus implementation](boundary.md), [What the scheduling checker establishes](analysis.md), [The runtime: decisions,
@@ -454,7 +457,6 @@ a change that leaves it stale, so it is never edited by hand.
 - What it defends against — [Where the engine's knowledge comes from: the catalog](catalog.md#what-it-defends-against)
 - What it does not check, and the gap that closed — [Kinds and
   schemas](kinds.md#what-it-does-not-check-and-the-gap-that-closed)
-- What it does not do yet — [Where the engine's knowledge comes from: the catalog](catalog.md#what-it-does-not-do-yet)
 - What it is built from — [The archogen command line](cli.md#what-it-is-built-from)
 - What it may be used for, and what it may not — [What the scheduling checker
   establishes](analysis.md#what-it-may-be-used-for-and-what-it-may-not)
@@ -464,6 +466,8 @@ a change that leaves it stale, so it is never edited by hand.
 - What that looks like today — [Verifying the toolchain](verification.md#what-that-looks-like-today)
 - What the boundary rules out — [The boundary: functionality versus
   implementation](boundary.md#what-the-boundary-rules-out)
+- What the crate does today — [Where the engine's knowledge comes from: the
+  catalog](catalog.md#what-the-crate-does-today)
 - What the reader produces — [Reading a description](reading.md#what-the-reader-produces)
 - What the schema checks — [Kinds and schemas](kinds.md#what-the-schema-checks)
 - What the tests step is a suite *of* — [Verifying the toolchain](verification.md#what-the-tests-step-is-a-suite-of)
