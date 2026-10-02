@@ -22,7 +22,9 @@ returns to zero with the job — and what was latched is delivered before any ta
 board the next scheduling decision comes first, in the completion path, and the latched interrupts are taken
 when the transition that follows unmasks; `rt-core`, a hosted model, delivers inside `complete`. Both reach the
 same schedule. So a task that completes inside its own region and finds its own release latched is released
-afresh, not overrun, which is why `complete` returns the deliveries beside the completion.
+afresh, not overrun, which is why `complete` returns the deliveries beside the completion. What a trace shows on
+each fault path, and what a host trace and a board trace may differ in, is drafted in
+`docs/profiles/rt-static-up-v1-faults-observation.md`, under review (`M2.15`).
 
 The nesting bound exists because each alternative fails silently: a counter that wrapped would re-enable
 interrupts inside a critical section while reporting success; one that saturated would stop counting; one that
