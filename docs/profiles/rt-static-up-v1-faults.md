@@ -143,8 +143,12 @@ existing description or result is invalidated.
   code — is an assertion failure, raised by the context that made the failed check — the check whose failure it reports
   — or, for a panic no check precedes (`todo!`, `unimplemented!`, an unconditional `panic!`), the context that executed
   it, attributed as rule 2 says; a job that panics before the instruction at which it would complete never completes. A
-  panic reaches the fatal path through the image's panic handler, an entry of the fault path, which the port's catalog
-  record supplies (`M2.12`) — an image whose application supplies its own does not build — and a check's call, and the
+  panic reaches the fatal path through the image's panic handler, which the image generates (`M4`), since §3 of the
+  catalog record refuses a record's `panic_handler`, to call at once the entry of the fault path the port's catalog
+  record names (`M2.12`; that record's §14.4; *so stated `2026-10-02`, `M2.12.3`*) — what the handler runs before that
+  call belonging, like a prologue, to the window before the raising (below), and an image whose application supplies
+  its own handler not building — and a
+  check's call, and the
   trap path with a fault raised at a trap, through the fault path's other entry, which that record names; the first act
   of each — the first its own code does; a prologue the compiler emits before it belongs, where a panic or a check's
   call reaches the entry, to the window before the raising (below), and where the trap path reaches it with a fault
@@ -381,7 +385,8 @@ Two smaller decisions are fixed at the same time, for the same reason:
 - **Kernel critical sections are bounded by a declared nesting depth.** "Bounded kernel critical sections" did not say
   what the bound is or what happens at it. Each runtime's catalog record declares a maximum depth `M ≥ 1`. A `mask` that
   would raise the depth past `M`, and an `unmask` at depth zero — save one whose job rule 5 abandons at its entry,
-  before its check, which raises nothing — are **assertion failures**: a counter that *wraps* re-enables interrupts
+  before its check, or after it in the window before that check's failure is raised (Terms), each raising nothing
+  (*the window's case added `2026-10-02`, `M2.12.3`*) — are **assertion failures**: a counter that *wraps* re-enables interrupts
   inside a critical section while reporting success, one that *saturates* stops counting, and one that *refuses* leaves
   its caller's matching `unmask` to close the section early. This bounds the depth; the duration is bounded separately,
   by the `CS_i` the timing analysis charges. *(2026-10-01: R1 10; a refusal had been the answer; 2026-10-02: R15 243.)*
@@ -475,11 +480,12 @@ kind, its raiser and, for a guard, whose — to the fault path or the trap path,
 trap path tells a check's deliberate trap, and the trap at a check, or at a panic no check precedes, under an aborting
 strategy, from any other trap (Terms), the fatal path's bound from the fault's raising, how the kept record is read out
 of a halted runtime (rule 7), and the order among the interrupts one trap serves (rule 1) — each the port's catalog
-record's (`M2.12`); `M2.12`'s own check per selection of another record's passing against the port's statement (Terms);
+record's (`M2.12`), stated as the facts §14.4 of the catalog record names; `M2.12`'s own check per selection of another record's passing against the port's statement (Terms);
 whether this contract will limit what a port's record may state of a release that abandons a job outside a primitive
 while a check of the runtime's state that generated code makes has yet to raise what it found — today the port's to
 state (Terms, rule 5) — generated code's checks being `M4`'s to define; each service's order of the releases it
 performs, its own record's (rule 1); where any primitive but `mask` and `unmask` first changes the runtime's state, the
 runtime API record's (rule 5); which context runs each guard check another record's code makes, that record's (Terms);
-and two that are not this contract's and that no fixture needs yet: a later idle-to-task dispatch's cost, the port's
-record's (`M2.12`), and a periodic task's first release instant, the timer-service record's (written under `M2.7.4`).
+and one that is not this contract's and that no fixture needs yet: a periodic task's first release instant, the
+timer-service record's (written under `M2.7.4`). A later idle-to-task dispatch's cost is `switch`'s `S`, which bounds
+initial dispatch and idle wake alike (the catalog record's §14.4).

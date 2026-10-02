@@ -183,6 +183,8 @@ with the first is not ground truth", so this is evidence with a stated scope, no
 
 - **Today:** `rt-core` is built and tested on a host, and compiles for the pinned bare-metal target,
   `riscv64imac-unknown-none-elf`, in the integration tier's `no-std-build` step (`scripts/no_std_build.sh`). The
-  fault contract is under its independent review.
-- **Ahead:** no port exists yet, so `rt-core` has decided for no real interrupt. The port's design and its
-  catalog record (`M2.12`) come next on the road to [the emulated machine and a board](targets.md).
+  fault contract is settled: its fifteenth independent review found no defect, and the director approved the claims it
+  narrows (`M2.9`).
+- **Ahead:** no port exists yet, so `rt-core` has decided for no real interrupt. The port's catalog record comes
+  next (`M2.12`): its assembly format is decided, and what the port must state of the fault contract's open points is
+  under review — on the road to [the emulated machine and a board](targets.md).

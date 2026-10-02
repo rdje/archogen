@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — what the processor port must declare
+
+`ARCHOGEN-M2-0363` (leaf `M2.12.3`, step 1).
+
+- The fault-handling contract leaves about twenty questions to the processor port: how it catches misuse, what its
+  traps do, how a failed check reaches the fatal path, how long that path takes. The catalog design now says how the
+  port's record answers each, as a yes-or-no statement explained and pointed at the code, with one of them checked
+  automatically across records. Two facts about the compiler were measured first. A first independent review is
+  next.
+
 ## archogen — the design for holding processor assembly is settled
 
 `ARCHOGEN-M2-0360` (leaf `M2.12.2`).

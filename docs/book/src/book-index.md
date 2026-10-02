@@ -127,9 +127,9 @@ a change that leaves it stale, so it is never edited by hand.
 - F28, and what it could not see — [The S0 early generation path](s0.md#f28-and-what-it-could-not-see)
 - F29: the fixture built so an omission cannot hide — [What the scheduling checker
   establishes](analysis.md#f29-the-fixture-built-so-an-omission-cannot-hide)
-- **fault** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [The runtime: decisions, not
-  actions](runtime.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
-  detail](annex-runtime.md)
+- **fault** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Where the engine's knowledge
+  comes from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [What this project relies on
+  from outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
 - Faults in detail — [Annex A: The runtime's rules in detail](annex-runtime.md#faults-in-detail)
 - Finished work leaves the task trees — [Annex B: The checks that keep the repository
   honest](annex-repository.md#finished-work-leaves-the-task-trees)
