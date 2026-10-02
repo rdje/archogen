@@ -769,13 +769,41 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   Commit: `ARCHOGEN-API-0294 (leaf API.6.2)`
 
 - ID: `API.6.3`
-  Status: `pending`
+  Status: `done` — `2026-10-02`
   Goal: the server's own JSON reader: bounded nesting and size, refusing every malformed text, and a writer with one
   way to write each value.
   Acceptance: RED arms for each refusal and both edges of each bound; a round trip of every message the server
   sends; no dependency.
-  Verification: `pending`
-  Commit: `pending`
+  **Done.** `crates/archogen-cli/src/json.rs`: `read(bytes, limit)` refuses, each with the byte where it stopped, a
+  text over its bound before reading it, bytes that are not UTF-8, a byte order mark, everything outside RFC 8259's
+  grammar, an escaped lone surrogate, a name given twice in one object, and nesting deeper than `MAX_DEPTH` (64),
+  recursing no deeper than that; a number keeps its text, so a request's `id` is answered as it came. `write` has
+  one way to write each value, a string as the wasm binding writes one. The messages the server will send are
+  `API.6.4`'s, so the round trip here is of their shapes, as `docs/decisions/decision_mcp-server.md` gives them, and
+  of 2 000 generated values; `API.6.4`'s acceptance takes the round trip of the messages it actually sends.
+  **Found on the way:** `crates/archogen-cli/src/spec.rs` had been committed unformatted by `ARCHOGEN-API-0294`, so
+  the `focused` tier's `fmt` step failed from that commit; no pre-commit check runs `cargo fmt`. Formatted here.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — the server had no reader: `git ls-files crates/archogen-cli/src | grep -c json` → 0;
+    and `git show HEAD:crates/archogen-cli/src/spec.rs > spec_head.rs; rustfmt --check --edition 2021 spec_head.rs`
+    → rc=1.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — the record's §5 and §6 ask for the server's own bounded reader, with no
+    dependency, and nothing in the workspace reads JSON: the wasm binding's requests are length-framed
+    (`git show HEAD:docs/decisions/decision_wasm-binding.md | grep -c "is length-framed, not JSON"` → 1). WHERE:
+    `crates/archogen-cli/src/`.
+  - [x] **FIX** — `json.rs`: `Value`, `Number`, `read`, `write`, `Refusal`; `pub mod json` in `lib.rs`; `spec.rs`
+    formatted.
+  - [x] **ADDRESSED (verified)** — `cargo test -q -p archogen-cli --lib json` → `14 passed; 0 failed`; three mutants
+    each red: the duplicate check removed → `FAILED. 12 passed; 2 failed`, the depth bound one higher → `FAILED. 13
+    passed; 1 failed`, the leading-zero rule removed → `FAILED. 13 passed; 1 failed`.
+  - [x] **NO REGRESSION** — `cargo xtask verify --tier focused` → `tier focused: passed — 3 passed, 0 failed`;
+    `cargo clippy -q -p archogen-cli --all-targets -- -D warnings` → rc=0; `bash scripts/check_doctrines.sh` →
+    `=== all doctrines green ===`.
+  - [x] **LOCKSTEP** — this leaf, `API.6.4`'s acceptance, the frontier and the log; `CHANGELOG.md`. The book's
+    account of the server is `API.6.5`'s.
+  Verification: see the checklist.
+  Commit: `ARCHOGEN-API-0332 (leaf API.6.3)`
 
 - ID: `API.6.4`
   Status: `pending`
@@ -784,7 +812,7 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   the end of stdin.
   Acceptance: an integration test that spawns the built binary and speaks both eras over its stdio, a refusal and
   an unimplemented tool among them; every result's verdict checked against the CLI's for the same description;
-  `NO-SUBPROCESS` green.
+  `NO-SUBPROCESS` green; every message it sends read back by `API.6.3`'s reader and written to the same bytes.
   Verification: `pending`
   Commit: `pending`
 
@@ -810,7 +838,7 @@ agent can drive. The server is a capability of the built binary, spawned per ins
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `API.6` | `active` | the MCP server — designed (`API.6.1`), its tools declared in the command table (`API.6.2`); next `API.6.3`, the bounded JSON reader |
+| 1 | `API.6` | `active` | the MCP server — designed (`API.6.1`), its tools declared in the command table (`API.6.2`); its JSON reader and writer (`API.6.3`); next `API.6.4`, the server |
 | 2 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6` |
 
 ⛔ **This tree does not displace the project's main line.** The director's ruling sequenced `API.3`–`API.7`
@@ -904,6 +932,7 @@ this tree is taken when it does not delay that.
 | `API.5.5` | `ARCHOGEN-API-0220 (leaf API.5.5)` | **the page run in a real browser**, both legs observed by the director in Chrome 154; `API.5` closed |
 | `API.6.1` | `ARCHOGEN-API-0293 (leaf API.6.1)` | **the MCP server designed** — both protocol eras read at the source and answered; the specification ledgered by commit and hash |
 | `API.6.2` | `ARCHOGEN-API-0294 (leaf API.6.2)` | **each command declares whether it is offered** — `Exposure`, the builds and `verify` excluded citing §10.4, `tools()` |
+| `API.6.3` | `ARCHOGEN-API-0332 (leaf API.6.3)` | **the server's JSON reader and writer**: RFC 8259 and nothing else, a size and a nesting bound, a name twice refused, a number kept as its text; `spec.rs` formatted, which `focused` had failed on since `-0294` |
 
 ## Changelog
 

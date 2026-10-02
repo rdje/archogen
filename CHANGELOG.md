@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the MCP server can read and write JSON
+
+`ARCHOGEN-API-0332` (leaf `API.6.3`).
+
+- The coming MCP server will read requests from whatever program drives it, so it gets its own small JSON reader
+  rather than a borrowed one: it accepts exactly the JSON standard, refuses anything oversized, nested too deep,
+  malformed, or naming the same field twice, and says where it stopped. Its writer has one way to write each value.
+- A formatting slip in an earlier commit had made the quick verification tier fail; it is fixed.
+
 ## archogen — the fault contract's twelfth reading
 
 `ARCHOGEN-M2-0330` (leaf `M2.9`).

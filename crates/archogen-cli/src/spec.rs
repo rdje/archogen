@@ -326,7 +326,10 @@ mod tests {
         // ROADMAP.md §10.4: "Both builds are outside the programmatic interface", and `verify` waits for its own
         // ruling. Read from the table, so moving either to `Tool` fails here, in the change that does it.
         let offered: Vec<&str> = tools().map(|spec| spec.name).collect();
-        assert_eq!(offered, vec!["check", "resolve", "analyze", "explain", "replay"]);
+        assert_eq!(
+            offered,
+            vec!["check", "resolve", "analyze", "explain", "replay"]
+        );
         for name in ["build", "verify"] {
             let spec = command(name).expect("the command exists");
             assert!(

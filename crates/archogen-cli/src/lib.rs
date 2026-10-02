@@ -14,6 +14,7 @@
 pub mod build_cmd;
 pub mod check_cmd;
 pub mod cli;
+pub mod json;
 pub mod spec;
 pub mod status;
 
