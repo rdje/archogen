@@ -1,5 +1,32 @@
 # The boundary: functionality versus implementation
 
+## The idea, in plain words
+
+When you order a meal, you say what you want — vegetarian, no nuts, ready by eight — and leave the cooking to the
+kitchen. You do not tell the chef in which order to chop. A description and archogen split the work the same way:
+the description says what the device offers and what the system must guarantee; how to achieve it is archogen's
+business.
+
+The split matters because only a description of *what* can be reused. "Time readings must never be ambiguous within
+a minute" can be met by another timer, on another board, and archogen has to show that it was. "Read the high half,
+then the low half, then the high half again" is a procedure for one chip: it can be checked against nothing but
+itself.
+
+The line is drawn by meaning, not by vocabulary. A requirement may sound technical and still be a requirement; a
+procedure may be phrased politely and still be a procedure. This chapter gives the tests that tell them apart, and
+shows how much of the telling a machine can do.
+
+> **In one minute, for engineers.** eADL states offered features, required functionality, architectural
+> connections, operating conditions and externally testable guarantees — never an algorithm, a register sequence, a
+> provider choice, a model body or generated code. Every proposed field must pass the externality,
+> implementation-independence and non-prescription tests. The classifier in `crates/eadl-model/src/boundary.rs`
+> refuses the constructs that are implementation by definition, from a construct registry rather than a keyword
+> scan; fixture F27 (`crates/eadl-model/tests/f27_boundary.rs`) proves it with agreement, coverage and mutation arms.
+> Acceptance is not soundness, which `ROADMAP.md` §4.3 leaves to human review. Missing support is reported as a
+> missing engine capability, never patched with implementation syntax.
+
+## How it works
+
 Everything in archogen rests on one rule:
 
 > **eADL describes hardware and OS features, functionalities, their externally required
@@ -7,14 +34,28 @@ Everything in archogen rests on one rule:
 
 Algorithms, device implementations, register-programming sequences, simulator models,
 provider selection, lowering rules, code layouts, and code generation belong to the engine
-and its versioned knowledge bases.
+and its versioned knowledge bases. A description that encodes how one timer is programmed is a
+driver with extra steps; one that states what the time service must guarantee can be met through a different
+adapter, and the engine has to prove it was.
 
-This is what makes a description *reusable*. A description that encodes how one timer is
-programmed is a driver with extra steps; a description that states what the time service must
-guarantee can be satisfied by a different timer, on a different board, through a different
-adapter — and the engine has to prove it did.
+### The three tests
 
-## It is about meaning, not vocabulary
+Every proposed field faces all three:
+
+1. **Externality** — does it state an offered feature, a required functionality, an
+   architectural connection, an operating condition, or an externally testable guarantee?
+2. **Implementation-independence** — would it remain valid for a different implementation
+   with the same relevant functionality and guarantees?
+3. **Non-prescription** — can its interpretation be stated without prescribing an algorithm,
+   an instruction sequence, a code provider, a data structure, or an executable model body?
+
+Fail test 1 or test 3 and the field belongs in engine knowledge. Test 2 catches the subtle
+case: a field that survives substituting the implementation is a contract; one that does not
+is a description of *this* implementation wearing a contract's clothes.
+
+## The precise rules
+
+### It is about meaning, not vocabulary
 
 The boundary is **not** "technical words go in the engine". A constraint on observable
 functionality belongs in eADL even when it says *counter*, *modulus*, or *privilege*. A
@@ -31,22 +72,7 @@ Two consequences people reliably get backwards:
 Both can be live at once. Native access atomicity may be a fact in *engine platform
 knowledge*, while the required coherence of the exposed observation is an *eADL contract*.
 
-## The three tests
-
-Every proposed field faces all three:
-
-1. **Externality** — does it state an offered feature, a required functionality, an
-   architectural connection, an operating condition, or an externally testable guarantee?
-2. **Implementation-independence** — would it remain valid for a different implementation
-   with the same relevant functionality and guarantees?
-3. **Non-prescription** — can its interpretation be stated without prescribing an algorithm,
-   an instruction sequence, a code provider, a data structure, or an executable model body?
-
-Fail test 1 or test 3 and the field belongs in engine knowledge. Test 2 catches the subtle
-case: a field that survives substituting the implementation is a contract; one that does not
-is a description of *this* implementation wearing a contract's clothes.
-
-## Worked cases
+### Worked cases
 
 | Case | eADL may state | The engine owns |
 | --- | --- | --- |
@@ -59,7 +85,7 @@ is a description of *this* implementation wearing a contract's clothes.
 | Ordering and coherence | an offered coherence property, or a required ordering guarantee | barriers, cache maintenance, executable memory and device models |
 | Representation units | declared units and acceptable ranges at the architectural interface | scaling, rounding, conversion helpers, overflow checks |
 
-## A requirement is an obligation, not a claim to trust
+### A requirement is an obligation, not a claim to trust
 
 - A **declared capability is not evidence**. "Offered" records a claim; its evidential status
   is tracked separately.
@@ -67,13 +93,13 @@ is a description of *this* implementation wearing a contract's clothes.
 - When nothing can realize a requirement, the engine reports **missing engine capability** —
   never "impossible", unless that has actually been established.
 
-## What the boundary rules out
+### What the boundary rules out
 
 Adding implementation syntax as an escape hatch for missing engine support. If a functional
 description cannot be realized, the defect is in engine knowledge, and the fix is tracked
 engine work — not a new eADL field that smuggles the procedure in.
 
-## How much of this a machine can check
+### How much of this a machine can check
 
 Fixture **F27** enforces the part a machine can. It refuses the constructs that are
 implementation *by definition* — an `implementation` or `model` body, a `provider` selection, an
@@ -93,7 +119,7 @@ error[boundary-implementation-in-description]: `wcet` is implementation, and eAD
           and binary identity outside eADL.
 ```
 
-### Why a construct registry and not a keyword scan
+#### Why a construct registry and not a keyword scan
 
 The tempting implementation looks for imperative-sounding words. The corpus disproves it in one
 case. This declaration is **accepted** and contains `write` twice:
@@ -109,7 +135,7 @@ step to perform. What separates the two is the **construct** the content sits in
 under an `implementation`, `model`, `provider` or `emit` block is a procedure; the same word
 elsewhere is a reference.
 
-### What F27 proves, and what it does not
+#### What F27 proves, and what it does not
 
 It runs three arms, and the third is what makes the first two mean anything:
 

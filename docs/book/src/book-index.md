@@ -153,6 +153,7 @@ a change that leaves it stale, so it is never edited by hand.
   costs](versions.md#how-an-engine-change-is-held-to-what-descriptions-mean)
 - How it was reviewed — [Where the engine's knowledge comes from: the catalog](catalog.md#how-it-was-reviewed)
 - How it works — [Introduction](introduction.md#how-it-works)
+- How it works — [The boundary: functionality versus implementation](boundary.md#how-it-works)
 - How it works — [Reading a description](reading.md#how-it-works)
 - How it works — [Describing a workload](workload.md#how-it-works)
 - How it works — [Checking a description](checking.md#how-it-works)
@@ -385,6 +386,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The histories are sealed as they grow — [Annex B: The checks that keep the repository
   honest](annex-repository.md#the-histories-are-sealed-as-they-grow)
 - The idea, in plain words — [Introduction](introduction.md#the-idea-in-plain-words)
+- The idea, in plain words — [The boundary: functionality versus implementation](boundary.md#the-idea-in-plain-words)
 - The idea, in plain words — [Reading a description](reading.md#the-idea-in-plain-words)
 - The idea, in plain words — [Describing a workload](workload.md#the-idea-in-plain-words)
 - The idea, in plain words — [Checking a description](checking.md#the-idea-in-plain-words)
@@ -404,6 +406,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The passes, in the order a failure makes the next meaningless — [Checking a
   description](checking.md#the-passes-in-the-order-a-failure-makes-the-next-meaningless)
 - The precise rules — [Introduction](introduction.md#the-precise-rules)
+- The precise rules — [The boundary: functionality versus implementation](boundary.md#the-precise-rules)
 - The precise rules — [Reading a description](reading.md#the-precise-rules)
 - The precise rules — [Describing a workload](workload.md#the-precise-rules)
 - The precise rules — [Checking a description](checking.md#the-precise-rules)
@@ -467,8 +470,6 @@ a change that leaves it stale, so it is never edited by hand.
 - What CI does with an incomplete tier — [Verifying the toolchain](verification.md#what-ci-does-with-an-incomplete-tier)
 - What comes from outside is written down — [Annex B: The checks that keep the repository
   honest](annex-repository.md#what-comes-from-outside-is-written-down)
-- What F27 proves, and what it does not — [The boundary: functionality versus
-  implementation](boundary.md#what-f27-proves-and-what-it-does-not)
 - What is being built first — [Introduction](introduction.md#what-is-being-built-first)
 - What is deliberately absent — [The runtime: decisions, not actions](runtime.md#what-is-deliberately-absent)
 - What is frozen, and what a digest can prove — [Verifying the
@@ -511,8 +512,6 @@ a change that leaves it stale, so it is never edited by hand.
   description](reading.md#which-language-version-a-description-is-written-in)
 - Who runs next — [The runtime: decisions, not actions](runtime.md#who-runs-next)
 - Why a bound carries a direction — [Refinement](refinement.md#why-a-bound-carries-a-direction)
-- Why a construct registry and not a keyword scan — [The boundary: functionality versus
-  implementation](boundary.md#why-a-construct-registry-and-not-a-keyword-scan)
 - Why an exclusion is not an omission — [Refinement](refinement.md#why-an-exclusion-is-not-an-omission)
 - Why focused runs the whole suite — [Verifying the toolchain](verification.md#why-focused-runs-the-whole-suite)
 - Why the split — [The runtime: decisions, not actions](runtime.md#why-the-split)

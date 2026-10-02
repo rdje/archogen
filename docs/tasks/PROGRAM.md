@@ -714,7 +714,7 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0301 (leaf PROGRAM.47.4)`
 
 - ID: `PROGRAM.47.5`
-  Status: `active` — one chapter per child, each `done` when committed: `.1` the introduction, `.2` the tour, `.3` reading a description, `.4` describing a workload, `.5` checking a description, `.6` what a report may claim, `.7` the scheduling checker, `.8` the catalog, `.9` where systems run, `.10` the command line, `.11` the engine API, `.12` verifying the toolchain, with Annex B
+  Status: `active` — one chapter per child, each `done` when committed: `.1` the introduction, `.2` the tour, `.3` reading a description, `.4` describing a workload, `.5` checking a description, `.6` what a report may claim, `.7` the scheduling checker, `.8` the catalog, `.9` where systems run, `.10` the command line, `.11` the engine API, `.12` verifying the toolchain, with Annex B, `.13` the boundary
   Goal: every other chapter in layers, one leaf and commit each when started, the chapters a newcomer meets first
   leading — the introduction and the tour, reading and workload, checking, evidence and analysis, the catalog,
   targets, the command line, the engine API, verification — and the gory parts of each moved to annexes.
@@ -854,6 +854,19 @@ mdBook that is the director's window into the project.
   `readme-routes: OK`; `bash scripts/build_book.sh` → rc=0; `bash scripts/check_doctrines.sh` → `=== all doctrines
   green ===`
   Commit: `ARCHOGEN-PROGRAM-0314 (leaf PROGRAM.47.5.12)`
+
+- ID: `PROGRAM.47.5.13`
+  Status: `done` — `2026-10-02`
+  Goal: *The boundary* in layers.
+  **Done.** It opens with ordering a meal — say what you want, leave the cooking to the kitchen — as the picture of
+  what against how; why only a description of *what* can be reused; and that the line is drawn by meaning, not
+  vocabulary. Then the one-minute summary, the rule and its three tests as how it works, and the precise rules, every
+  section kept; the summary names the tests rather than counting them, and separates the classifier
+  (`crates/eadl-model/src/boundary.rs`) from its fixture F27 (`tests/f27_boundary.rs`).
+  Verification: `cargo test -q -p eadl-model --test f27_boundary` → `7 passed`; `-p archogen-cli --test
+  book_transcripts` → `6 passed`; `figure-register: OK`; `bash scripts/build_book.sh` → rc=0; `bash scripts/
+  check_doctrines.sh` → `=== all doctrines green ===`
+  Commit: `ARCHOGEN-PROGRAM-0315 (leaf PROGRAM.47.5.13)`
 
 ## Roadmap coverage map
 
@@ -1165,6 +1178,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.47.5.10` | `ARCHOGEN-PROGRAM-0312 (leaf PROGRAM.47.5.10)` | ***The `archogen` command line* in layers** |
 | `PROGRAM.47.5.11` | `ARCHOGEN-PROGRAM-0313 (leaf PROGRAM.47.5.11)` | ***The engine API* in layers** |
 | `PROGRAM.47.5.12` | `ARCHOGEN-PROGRAM-0314 (leaf PROGRAM.47.5.12)` | ***Verifying the toolchain* in layers**, its repository checks moved to Annex B |
+| `PROGRAM.47.5.13` | `ARCHOGEN-PROGRAM-0315 (leaf PROGRAM.47.5.13)` | ***The boundary* in layers** |
 
 ## Changelog
 
