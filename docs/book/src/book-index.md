@@ -385,6 +385,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The records that hold it — [Where the engine's knowledge comes from: the catalog](catalog.md#the-records-that-hold-it)
 - The sealed set — [The use cases](usecases.md#the-sealed-set)
 - The semantic corpus — [Checking a description](checking.md#the-semantic-corpus)
+- The server an agent spawns — [The engine API](engine-api.md#the-server-an-agent-spawns)
 - The status pages stay short — [Annex B: The checks that keep the repository
   honest](annex-repository.md#the-status-pages-stay-short)
 - The target, described in eADL, and checked against the device tree — [Where generated systems

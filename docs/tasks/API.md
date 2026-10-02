@@ -844,10 +844,29 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   Commit: `ARCHOGEN-API-0333 (leaf API.6.4)`
 
 - ID: `API.6.5`
-  Status: `pending`
+  Status: `active` — `2026-10-02`; the book written (`-0335`), the review next
   Goal: the book documents the server, and a context that did not write it reviews it against the specification.
-  Verification: `pending`
-  Commit: `pending`
+  **The book (`-0335`).** *The engine API* gains *The server an agent spawns*: how an agent starts and speaks to
+  `archogen mcp`, both eras, what `check` takes and answers, an unbuilt tool and a refused version; its transcript is
+  a real run, which `crates/archogen-cli/tests/mcp_stdio.rs` replays against the built binary and compares byte for
+  byte, red with one character of an answer changed. Its three sentences that said the server was not built are
+  corrected.
+
+  **Acceptance checklist, the book (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — the chapter said the server was not built after it was:
+    `git show HEAD:docs/book/src/engine-api.md | grep -c "It is not built yet"` → 1.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `API.6.4` changed the code and the command-line chapter but left the engine
+    API's chapter, where the server is described, to this leaf: `git show HEAD:docs/book/src/engine-api.md | grep -c
+    "mcp-transcript"` → 0. WHERE: `docs/book/src/engine-api.md`.
+  - [x] **FIX** — the section and its transcript; the three sentences corrected; the replay test in
+    `crates/archogen-cli/tests/mcp_stdio.rs`.
+  - [x] **ADDRESSED (verified)** — `cargo test -q -p archogen-cli --test mcp_stdio` → `3 passed`; with `M3.4` changed
+    to `M3.5` in the book's answer line, the replay → `FAILED. 0 passed; 1 failed`.
+  - [x] **NO REGRESSION** — `cargo clippy -q -p archogen-cli --all-targets -- -D warnings` → rc=0; `bash
+    scripts/build_book.sh` → rc=0; `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`.
+  - [x] **LOCKSTEP** — the chapter, the index; this leaf and the log.
+  Verification: the book `cargo test -q -p archogen-cli --test mcp_stdio` → `3 passed`; the review `pending`
+  Commit: `ARCHOGEN-API-0335 (leaf API.6.5)` for the book; the review `pending`
 
 - ID: `API.7`
   Status: `pending`
@@ -961,6 +980,7 @@ this tree is taken when it does not delay that.
 | `API.6.2` | `ARCHOGEN-API-0294 (leaf API.6.2)` | **each command declares whether it is offered** — `Exposure`, the builds and `verify` excluded citing §10.4, `tools()` |
 | `API.6.3` | `ARCHOGEN-API-0332 (leaf API.6.3)` | **the server's JSON reader and writer**: RFC 8259 and nothing else, a size and a nesting bound, a name twice refused, a number kept as its text; `spec.rs` formatted, which `focused` had failed on since `-0294` |
 | `API.6.4` | `ARCHOGEN-API-0333 (leaf API.6.4)` | **the MCP server, `archogen mcp`**: both eras over stdio, the command table's tools, `check` answering the wasm binding's bytes, its verdicts the command line's on the conformance cases |
+| `API.6.5` | `ARCHOGEN-API-0335 (leaf API.6.5)` | **the book documents the MCP server**: *The server an agent spawns*, its transcript a real run the stdio test replays |
 
 ## Changelog
 

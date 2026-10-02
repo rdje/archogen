@@ -214,3 +214,36 @@ fn every_verdict_is_the_command_lines_for_the_same_description() {
     }
     assert!(disagreements.is_empty(), "{}", disagreements.join("\n"));
 }
+
+/// The transcript the book shows (`docs/book/src/engine-api.md`, under its `mcp-transcript` marker) is a real run:
+/// each `→` line is sent to the built server, and its answers are the `←` lines, byte for byte.
+#[test]
+fn the_books_transcript_is_what_the_server_answers() {
+    let chapter =
+        fs::read_to_string(repo_root().join("docs/book/src/engine-api.md")).expect("the chapter");
+    let after = chapter
+        .split("<!-- mcp-transcript")
+        .nth(1)
+        .expect("the chapter marks its transcript");
+    let block = after
+        .split("```text\n")
+        .nth(1)
+        .and_then(|rest| rest.split("```").next())
+        .expect("a text block follows the marker");
+    let mut sent = Vec::new();
+    let mut expected = Vec::new();
+    for line in block.lines() {
+        if let Some(request) = line.strip_prefix("→ ") {
+            sent.push(request.to_owned());
+        } else if let Some(answer) = line.strip_prefix("← ") {
+            expected.push(answer.to_owned());
+        } else {
+            panic!("a transcript line is a `→` request or a `←` answer: {line}");
+        }
+    }
+    assert!(!sent.is_empty(), "the transcript sends something");
+    let (answers, code, stderr) = session(&sent);
+    assert_eq!(code, 0, "{stderr}");
+    let answered: Vec<String> = answers.iter().map(json::write).collect();
+    assert_eq!(answered, expected);
+}

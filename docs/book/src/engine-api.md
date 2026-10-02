@@ -13,7 +13,7 @@ be possible for a person and impossible for a program, or the other way round.
 > text plus a profile in, a `Response` carrying §5.5's verdict, diagnostics and the engine's version out. It reads no
 > file, writes none, spawns nothing, and compiles for `wasm32-unknown-unknown`. An instance is one running copy of one
 > build, stateless between requests; a byte budget bounds each request. The CLI is held to it by parity tests; a wasm
-> binding serves a web page; an MCP server for agents is designed and not built.
+> binding serves a web page; `archogen mcp` serves agents over MCP, both of its protocol eras.
 
 ## How it works
 
@@ -192,6 +192,37 @@ ok (exit 0)
 accepted against profile rt-static-up-v1 (eadl/1), 1 declaration(s)
 ```
 
+### The server an agent spawns
+
+An agent — an AI assistant, an orchestrator, a script — starts `archogen mcp` and talks to it over the
+[Model Context Protocol](ledger.md#mcp-specification): one JSON message per line on its standard input, one answer
+per line on its standard output, and nothing else written there (`crates/archogen-cli/src/mcp.rs`, leaf `API.6.4`,
+designed in `docs/decisions/decision_mcp-server.md`). It speaks both eras of the protocol. Under the current
+revision, `2026-07-28`, there is no handshake: every request names its version and the client's capabilities in its
+`_meta`, and is answered on its own. Under the one before, `2025-11-25`, the client opens with `initialize`, and the
+server keeps that choice until its input ends.
+
+It offers the command table's tools, so an agent learns at once that `resolve` exists and is not built. `check`
+takes the API's request — the description's text, its profile and its modules' texts, never a path — and answers the
+API's response in the wasm binding's encoding above, the same bytes, both as structured content and as text. Its
+result is an error whenever the description is not accepted, so a client that reads one flag never mistakes a
+refusal for a pass. A tool that is not built answers with its leaf, and a version the server does not speak is
+refused with the versions it does:
+
+<!-- mcp-transcript: crates/archogen-cli/tests/mcp_stdio.rs sends each `→` line to `archogen mcp` and compares its
+     answers with the `←` lines -->
+```text
+→ {"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{}},"name":"resolve","arguments":{}}}
+← {"jsonrpc":"2.0","id":1,"result":{"content":[{"type":"text","text":"`resolve` is not built yet: task-tree leaf M3.4 owns it (docs/TASK_TREE.md)"}],"isError":true,"resultType":"complete","_meta":{"io.modelcontextprotocol/serverInfo":{"name":"archogen","version":"0.1.0"}}}}
+→ {"jsonrpc":"2.0","id":2,"method":"tools/list","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2024-11-05","io.modelcontextprotocol/clientCapabilities":{}}}}
+← {"jsonrpc":"2.0","id":2,"error":{"code":-32022,"message":"protocol version `2024-11-05` is not served per request: `2026-07-28` is, and `2025-11-25` after `initialize`","data":{"supported":["2026-07-28","2025-11-25"],"requested":"2024-11-05"}}}
+```
+
+The server reads with its own JSON reader (`crates/archogen-cli/src/json.rs`, leaf `API.6.3`): text over a bound, or
+nested too deep, or naming one field twice, is refused before anything is judged. It spawns nothing and opens no
+file. Its verdicts are the command line's: a test speaks to the built binary in both eras and checks every
+single-file case of the conformance suite both ways.
+
 ### What is outside it
 
 - **`archogen build`.** Generation writes a crate tree. §10.4 keeps it a human or CI action, since a
@@ -200,17 +231,12 @@ accepted against profile rt-static-up-v1 (eadl/1), 1 declaration(s)
 - **`archogen verify`.** It runs verification tiers, which drive a toolchain and an emulator. It
   needs its own ruling before it is exposed, and is not exposed by analogy.
 - **The commands not built yet.** They are no operation. The command table
-  (`crates/archogen-cli/src/spec.rs`) names the leaf that owns each one, and the MCP server (leaf
-  `API.6`) will report that leaf rather than failing.
+  (`crates/archogen-cli/src/spec.rs`) names the leaf that owns each one, and the MCP server reports that
+  leaf rather than failing.
 
 The table also says, for each command, whether a programmatic consumer is offered it: `check`,
 `resolve`, `analyze`, `explain` and `replay` are; `build` and `verify` are excluded, each citing
-§10.4, and a test reads the exclusion from the table (leaf `API.6.2`). The server's design is
-recorded in `docs/decisions/decision_mcp-server.md`: it answers both eras of the protocol — the
-current revision, where every request carries its version and there is no handshake, and the one
-before it, which opens with a handshake — over its standard input and output; a tool takes the
-API's request, never a path; and a result reports an error whenever the description is not
-accepted, so a client that reads one flag never mistakes a refusal for a pass. It is not built yet.
+§10.4, and a test reads the exclusion from the table (leaf `API.6.2`). So is `mcp`, the server itself.
 - **Wall-clock time.** The budget bounds the work, and the work is linear in it. A host that needs a
   deadline as well enforces it around the instance. The API reads no clock, and on `wasm32-unknown-unknown`
   the standard library has none to read.
