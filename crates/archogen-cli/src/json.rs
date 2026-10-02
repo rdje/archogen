@@ -785,8 +785,8 @@ mod tests {
         assert_eq!(write(&value), r#"{"z":[1,null],"a":{}}"#);
     }
 
-    /// The shapes `docs/decisions/decision_mcp-server.md` gives the server's messages, both eras: each written text
-    /// reads back to the value, and each is its own canonical text. `API.6.4` adds the messages it sends.
+    /// Message shapes like the server's, both eras, written before the server: each reads back to the value, and is
+    /// its own canonical text. The server's own answers are round-tripped in `mcp.rs`'s tests and `tests/mcp_stdio.rs`.
     #[test]
     fn the_messages_the_server_sends_round_trip() {
         for text in [

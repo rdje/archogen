@@ -1,7 +1,7 @@
-//! The `archogen` binary: a thin shell around [`archogen_cli::run`].
+//! The `archogen` binary: a thin shell around [`archogen_cli::run_with_input`].
 //!
 //! Everything testable lives in the library. This file owns only the two things a library
-//! cannot: reading the real argument vector and terminating the process with the status code.
+//! cannot: reading the real argument vector and standard input, and terminating the process with the status code.
 
 use std::io::Write;
 use std::process::ExitCode;
@@ -10,7 +10,13 @@ fn main() -> ExitCode {
     let mut stdout = std::io::stdout().lock();
     let mut stderr = std::io::stderr().lock();
 
-    let status = archogen_cli::run(std::env::args().skip(1), &mut stdout, &mut stderr);
+    let mut stdin = std::io::stdin().lock();
+    let status = archogen_cli::run_with_input(
+        std::env::args().skip(1),
+        &mut stdin,
+        &mut stdout,
+        &mut stderr,
+    );
 
     // Flush explicitly: a locked stdout is flushed on drop, and a drop-time failure would be
     // discarded, turning a truncated report into a silent success.

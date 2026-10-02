@@ -548,7 +548,9 @@ worker; and an MCP server, so any agent — an LLM, a swarm, an orchestrator —
 instance. The server is a capability of the built binary: it is spawned per instance and listened to, and
 its tool list is derived from the same command table the CLI help is derived from, so a documented
 operation is always an offered one, and an unimplemented one names the leaf that owns it rather than
-failing at runtime.
+failing at runtime. It is started as `archogen mcp`, which serves one message per line on standard input
+and output (`docs/decisions/decision_mcp-server.md`); the command is no tool, and §10.2's seven stay the
+human interface.
 
 **Both builds are outside the programmatic interface.** Neither the compilation of archogen itself nor
 `archogen build` (system generation, §10.3) is controllable through it. Generation writes a crate tree

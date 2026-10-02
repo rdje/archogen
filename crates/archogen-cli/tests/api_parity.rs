@@ -113,10 +113,16 @@ fn arm_1_a_cli_source_that_builds_its_own_registry_is_reported() {
 // ── 2. by operation ──────────────────────────────────────────────────────────────────────────────
 
 /// The commands `ROADMAP.md` §10.4 keeps out of the programmatic interface, each with its reason.
-const EXCLUDED: &[(&str, &str)] = &[(
-    "build",
-    "§10.4: generation writes a crate tree and stays a human or CI action",
-)];
+const EXCLUDED: &[(&str, &str)] = &[
+    (
+        "build",
+        "§10.4: generation writes a crate tree and stays a human or CI action",
+    ),
+    (
+        "mcp",
+        "§10.4: the server is a transport for the operations, not one of them",
+    ),
+];
 
 /// Every way the API's operations and the commands that run disagree.
 fn operation_mismatches(

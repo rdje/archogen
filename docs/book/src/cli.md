@@ -13,7 +13,8 @@ script what kind of problem it was, using the same verdicts a person reads.
 > `crates/archogen-cli/src/spec.rs`, from which the help text and the parser are derived, with a three-state
 > maturity per command (built, experimental, unimplemented with its owning leaf) and, for the programmatic surface,
 > whether it is offered as a tool. `check` is built; `build` is experimental over the S0 path; the rest name their
-> owners. Exit codes map totally from the verdicts; diagnostics carry spans and repairs.
+> owners. `archogen mcp`, §10.4's server, offers the tools to an agent over [MCP](ledger.md#mcp-specification). Exit codes map totally from the verdicts;
+> diagnostics carry spans and repairs.
 
 ## How it works
 
@@ -38,6 +39,7 @@ COMMANDS:
     verify   run a verification tier over a build   [unimplemented — tracked by leaf PROGRAM.3]
     explain  explain how one requirement was realized, or why it could not be   [unimplemented — tracked by leaf M3.4]
     replay   replay a recorded failure manifest and check its identity   [unimplemented — tracked by leaf M4.7]
+    mcp      serve the engine API to an agent over MCP, on standard input and output
 ```
 
 ## The precise rules
@@ -53,6 +55,7 @@ COMMANDS:
 | `archogen verify <BUILD> --tier <TIER>` | run a verification tier | leaf `PROGRAM.3` |
 | `archogen explain <BUILD> --requirement <REQUIREMENT>` | explain how one requirement was realized, or why it could not be | leaf `M3.4` |
 | `archogen replay <MANIFEST>` | replay a recorded failure manifest and check its identity | leaf `M4.7` |
+| `archogen mcp` | serve the engine API to an agent over [MCP](ledger.md#mcp-specification), on standard input and output — §10.4's server, not one of §10.2's seven | **built** — leaf `API.6.4`; the tools it offers are this table's, `build` and `verify` excluded |
 
 `check` is built, over one file or a module tree. A module file is **elaborated** from its module path
 (`docs/semantics/reference.md` §6 rule 7), its names are resolved (§6 rules 9 and 10), and its

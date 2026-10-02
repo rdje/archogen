@@ -15,6 +15,7 @@ pub mod build_cmd;
 pub mod check_cmd;
 pub mod cli;
 pub mod json;
+pub mod mcp;
 pub mod spec;
 pub mod status;
 
@@ -36,11 +37,25 @@ where
     A: IntoIterator<Item = S>,
     S: Into<String>,
 {
+    run_with_input(args, &mut std::io::empty(), out, err)
+}
+
+/// [`run`], with the input a command that reads one takes: `archogen mcp` serves its messages from it.
+pub fn run_with_input<A, S>(
+    args: A,
+    input: &mut dyn std::io::BufRead,
+    out: &mut dyn Write,
+    err: &mut dyn Write,
+) -> Status
+where
+    A: IntoIterator<Item = S>,
+    S: Into<String>,
+{
     match cli::parse(args) {
         Ok(Invocation::Help(None)) => emit(out, &cli::help_overview()),
         Ok(Invocation::Help(Some(name))) => emit(out, &cli::help_command(name)),
         Ok(Invocation::Version) => emit(out, &format!("archogen {VERSION}\n")),
-        Ok(Invocation::Run(parsed)) => dispatch(&parsed, out, err),
+        Ok(Invocation::Run(parsed)) => dispatch(&parsed, input, out, err),
         Err(refusal) => report(err, &refusal),
     }
 }
@@ -73,11 +88,29 @@ fn report(err: &mut dyn Write, refusal: &Refusal) -> Status {
 /// As each command lands, it gains an arm here and its [`spec::Maturity`] changes in the same
 /// edit — which is what keeps `archogen --help` from advertising a gap that is closed, or a
 /// completeness that is not there.
-fn dispatch(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status {
+fn dispatch(
+    parsed: &Parsed,
+    input: &mut dyn std::io::BufRead,
+    out: &mut dyn Write,
+    err: &mut dyn Write,
+) -> Status {
     let spec = parsed.spec();
     match spec.name {
         "check" => return check_cmd::run(parsed, out, err),
         "build" => return build_cmd::run(parsed, out, err),
+        "mcp" => {
+            return match mcp::serve(input, out) {
+                Ok(()) => Status::Ok,
+                Err(error) => {
+                    let _ = writeln!(
+                        err,
+                        "archogen: {}: the server's streams failed: {error}",
+                        Status::ToolFailure.slug()
+                    );
+                    Status::ToolFailure
+                }
+            }
+        }
         _ => {}
     }
     let Some(owner) = spec.maturity.owner() else {

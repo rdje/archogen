@@ -30,9 +30,9 @@ a change that leaves it stale, so it is never edited by hand.
 - **AI** — [definition](glossary.md), [The engine API](engine-api.md)
 - An example that runs — [The engine API](engine-api.md#an-example-that-runs)
 - analysis-model — [What is versioned, and what changing it costs](versions.md#analysis-model)
-- **API** — [definition](glossary.md), [The runtime: decisions, not actions](runtime.md), [The engine
-  API](engine-api.md), [Verifying the toolchain](verification.md), [What is versioned, and what changing it
-  costs](versions.md)
+- **API** — [definition](glossary.md), [The runtime: decisions, not actions](runtime.md), [The archogen command
+  line](cli.md), [The engine API](engine-api.md), [Verifying the toolchain](verification.md), [What is versioned, and
+  what changing it costs](versions.md)
 - **AUTOSAR** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [What this project relies
   on from outside](ledger.md)
 - autosar-os — [What this project relies on from outside](ledger.md#autosar-os)
@@ -208,8 +208,8 @@ a change that leaves it stale, so it is never edited by hand.
 
 - Masking — [The runtime: decisions, not actions](runtime.md#masking)
 - **MB** — [definition](glossary.md), [The engine API](engine-api.md)
-- **MCP** — [definition](glossary.md), [The engine API](engine-api.md), [What is versioned, and what changing it
-  costs](versions.md)
+- **MCP** — [definition](glossary.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [What is
+  versioned, and what changing it costs](versions.md)
 - mcp-specification — [What this project relies on from outside](ledger.md#mcp-specification)
 - mdbook — [What this project relies on from outside](ledger.md#mdbook)
 - **MEI** — [definition](glossary.md), [What this project relies on from outside](ledger.md)

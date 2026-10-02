@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — an AI agent can now drive archogen
+
+`ARCHOGEN-API-0333` (leaf `API.6.4`).
+
+- `archogen mcp` starts a server that speaks the Model Context Protocol, the standard way AI assistants call tools.
+  An agent can list what archogen offers and ask it to check a description, and gets the same verdict, byte for
+  byte, as the web build and the same pass or refusal as the command line. Tools not built yet say which piece of
+  work will build them. Both the current protocol and the one before it are spoken.
+
 ## archogen — the MCP server can read and write JSON
 
 `ARCHOGEN-API-0332` (leaf `API.6.3`).

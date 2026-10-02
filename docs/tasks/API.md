@@ -806,15 +806,42 @@ agent can drive. The server is a capability of the built binary, spawned per ins
   Commit: `ARCHOGEN-API-0332 (leaf API.6.3)`
 
 - ID: `API.6.4`
-  Status: `pending`
+  Status: `done` — `2026-10-02`
   Goal: the server, `archogen mcp`: `server/discover`, `tools/list`, `tools/call` under `2026-07-28`'s per-request
   `_meta`; `initialize`, `ping`, `tools/list`, `tools/call` under `2025-11-25`; the errors the record names; exit at
   the end of stdin.
   Acceptance: an integration test that spawns the built binary and speaks both eras over its stdio, a refusal and
   an unimplemented tool among them; every result's verdict checked against the CLI's for the same description;
   `NO-SUBPROCESS` green; every message it sends read back by `API.6.3`'s reader and written to the same bytes.
-  Verification: `pending`
-  Commit: `pending`
+  **Done.** `crates/archogen-cli/src/mcp.rs` and `archogen mcp`: one message per line, both eras as the record
+  decides — `server/discover`, `tools/list` and `tools/call` per request under `2026-07-28` (`-32602` for a missing
+  `_meta` key, `-32022` with `supported` and `requested` for another version), and `initialize`, `ping`,
+  `tools/list` and `tools/call` under `2025-11-25`. The tools are `spec::tools()`; `check` answers the wasm
+  binding's bytes as `structuredContent` and its text block, `isError` false only on acceptance; an unbuilt tool
+  names its leaf. Read at the pinned schemas (sha256 `742750af…`, `e74b56e7…`, both matching the ledger) and the
+  `2025-11-25` lifecycle: the namespaced `_meta` keys, `resultType`, `ttlMs` and `cacheScope`, a `ping` allowed
+  before `initialize`, `2026-07-28` having no `ping`; the record's *As built* states each choice. `ROADMAP.md` §10.4
+  names the command, `spec.rs` lists it as no tool, and the surface test reads §10.4 for it.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — no server: `git show HEAD:crates/archogen-cli/src/lib.rs | grep -c "pub mod mcp"` →
+    0, and `archogen mcp` was `usage: unknown command`.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `API.6.1`–`.3` gave the design, the tool list and the reader; nothing served
+    them: `git show HEAD:crates/archogen-cli/src/spec.rs | grep -c '"mcp"'` → 0. WHERE: `crates/archogen-cli/src/`.
+  - [x] **FIX** — `mcp.rs`; `run_with_input` and the `mcp` arm; `main.rs` passing stdin; `mcp` in `spec.rs`,
+    excluded with its reason; `archogen-wasm` a dependency, for the response's encoding; `api_parity.rs`'s
+    exclusions; §10.4's sentence; the record's *As built*; the book's command table and help transcript.
+  - [x] **ADDRESSED (verified)** — `cargo test -q -p archogen-cli --lib mcp` → `12 passed`; `--test mcp_stdio` → `2
+    passed`, the built binary spoken to in both eras and its verdict the command line's on all 36 single-file cases;
+    three mutants red — `isError` inverted → `11 passed; 1 failed` and the stdio suite `0 passed; 2 failed`, the
+    version check removed → `11 passed; 1 failed`, `resultType` dropped → `11 passed; 1 failed`.
+  - [x] **NO REGRESSION** — `cargo xtask verify --tier focused` → `tier focused: passed — 3 passed, 0 failed`;
+    `cargo test -q --workspace` → 986 passed, 0 failed; `bash scripts/check_doctrines.sh` → `=== all doctrines green
+    ===`, `NO-SUBPROCESS` among them.
+  - [x] **LOCKSTEP** — `ROADMAP.md` §10.4; the record; `docs/book/src/cli.md`; this leaf, the frontier and the log;
+    `CHANGELOG.md`. The server's own chapter and its review are `API.6.5`'s.
+  Verification: see the checklist.
+  Commit: `ARCHOGEN-API-0333 (leaf API.6.4)`
 
 - ID: `API.6.5`
   Status: `pending`
@@ -838,7 +865,7 @@ agent can drive. The server is a capability of the built binary, spawned per ins
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `API.6` | `active` | the MCP server — designed (`API.6.1`), its tools declared in the command table (`API.6.2`); its JSON reader and writer (`API.6.3`); next `API.6.4`, the server |
+| 1 | `API.6` | `active` | the MCP server — designed (`API.6.1`), its tools declared in the command table (`API.6.2`); its JSON reader (`API.6.3`), and the server, `archogen mcp` (`API.6.4`); next `API.6.5`, the book and a review |
 | 2 | `API.7` | `pending` | the book chapter. Not optional, and not foldable into `API.6` |
 
 ⛔ **This tree does not displace the project's main line.** The director's ruling sequenced `API.3`–`API.7`
@@ -933,6 +960,7 @@ this tree is taken when it does not delay that.
 | `API.6.1` | `ARCHOGEN-API-0293 (leaf API.6.1)` | **the MCP server designed** — both protocol eras read at the source and answered; the specification ledgered by commit and hash |
 | `API.6.2` | `ARCHOGEN-API-0294 (leaf API.6.2)` | **each command declares whether it is offered** — `Exposure`, the builds and `verify` excluded citing §10.4, `tools()` |
 | `API.6.3` | `ARCHOGEN-API-0332 (leaf API.6.3)` | **the server's JSON reader and writer**: RFC 8259 and nothing else, a size and a nesting bound, a name twice refused, a number kept as its text; `spec.rs` formatted, which `focused` had failed on since `-0294` |
+| `API.6.4` | `ARCHOGEN-API-0333 (leaf API.6.4)` | **the MCP server, `archogen mcp`**: both eras over stdio, the command table's tools, `check` answering the wasm binding's bytes, its verdicts the command line's on the conformance cases |
 
 ## Changelog
 

@@ -160,7 +160,8 @@ const LOCKED: OptionSpec = OptionSpec {
     required: false,
 };
 
-/// The seven commands of the §10.2 interface target, in the order the roadmap lists them.
+/// The seven commands of the §10.2 interface target, in the order the roadmap lists them, and `mcp`, the server
+/// §10.4 names (leaf `API.6.4`).
 pub const COMMANDS: &[CommandSpec] = &[
     CommandSpec {
         name: "check",
@@ -291,6 +292,17 @@ pub const COMMANDS: &[CommandSpec] = &[
         maturity: Maturity::Unimplemented { owner: "M4.7" },
         exposure: Exposure::Tool,
     },
+    CommandSpec {
+        name: "mcp",
+        summary: "serve the engine API to an agent over MCP, on standard input and output",
+        positionals: &[],
+        options: &[],
+        // Built by leaf API.6.4 (docs/decisions/decision_mcp-server.md).
+        maturity: Maturity::Built,
+        exposure: Exposure::Excluded {
+            reason: "ROADMAP.md §10.4: the server itself, through which the tools are offered",
+        },
+    },
 ];
 
 /// The commands a programmatic consumer is offered, in the table's order: the MCP server's tool list.
@@ -312,12 +324,22 @@ mod tests {
 
     #[test]
     fn the_surface_is_exactly_the_roadmap_interface_target() {
-        // ROADMAP.md §10.2 lists these seven and no others. A command added here without a
-        // roadmap change is scope drift; one removed is a broken user contract.
+        // ROADMAP.md §10.2 lists the first seven and no others, and §10.4 names the server's command. A command
+        // added here without a roadmap change is scope drift; one removed is a broken user contract.
         let names: Vec<&str> = COMMANDS.iter().map(|spec| spec.name).collect();
         assert_eq!(
             names,
-            vec!["check", "resolve", "build", "analyze", "verify", "explain", "replay"]
+            vec!["check", "resolve", "build", "analyze", "verify", "explain", "replay", "mcp"]
+        );
+        let roadmap = include_str!("../../../ROADMAP.md");
+        let section = roadmap
+            .split("### 10.4 ")
+            .nth(1)
+            .and_then(|rest| rest.split("\n### ").next())
+            .expect("ROADMAP.md has a §10.4");
+        assert!(
+            section.contains("`archogen mcp`"),
+            "§10.4 names the server's command"
         );
     }
 

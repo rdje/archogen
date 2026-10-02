@@ -47,6 +47,22 @@
    depends on the engine API and not the reverse, so the checker and the generator share nothing new (§10.4,
    F30). It spawns nothing (`NO-SUBPROCESS`).
 
+## As built (`2026-10-02`, leaf `API.6.4`)
+
+What the server settles that the record left open, each read at the ledger's pinned schemas:
+- A `ping` before `initialize` is answered, empty: `2025-11-25`'s lifecycle lets a client send "requests other than
+  pings" only after `initialize` is answered, so pings may come first. `2026-07-28` has no `ping`; under it the
+  method is not found.
+- `initialize` is answered with `2025-11-25` whatever version it names, the lifecycle's rule ("the same version" if
+  supported, "otherwise … another protocol version it supports").
+- `2026-07-28`'s cacheable results, `server/discover`'s and `tools/list`'s, carry `ttlMs: 0` and `cacheScope:
+  "public"`: the schema requires both, and nothing here promises a list stays fresh. Every result carries
+  `resultType: "complete"` and the server's `serverInfo` in its `_meta`.
+- `check` takes `description`, and optionally `name`, `profile` and `modules`, an object from each module's name to
+  its text; any other argument is `-32602`.
+- The line bound is twice the API's byte budget and 64 KiB: JSON's escapes can double a description's length, and a
+  bound that refused a description the API accepts would be a transport overruling the engine.
+
 ## Why
 
 - **Dual-era, not modern-only.** The specification changed its model on `2026-07-28`, and a client built for the
