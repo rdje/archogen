@@ -16,7 +16,7 @@
 - **Active tree:** `M2` → frontier `M2.12`. `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API` is
   closed; `M1`'s only open leaf, `M1.29.4`, is blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M2.12.4` — the code: `archogen-catalog` admits §14.2's format and makes §14.4's refusals and
+- **Next action:** `M2.12.4.1`, the first of `M2.12.4`'s four — the code: `archogen-catalog` admits §14.2's format and makes §14.4's refusals and
   check per selection, with the pin's premises as compile-only tests, before any lock; then `M2.12.5`, then `M2.15`.
   `M2.12.2`'s format and `M2.12.3`'s port statement closed `2026-10-02`. This project uses no branches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
