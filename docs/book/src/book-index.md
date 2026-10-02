@@ -51,7 +51,7 @@ a change that leaves it stale, so it is never edited by hand.
   [Where the engine's knowledge comes from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md),
   [The S0 early generation path](s0.md), [Where generated systems run](targets.md), [Verifying the
   toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
-  changing it costs](versions.md)
+  changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
 - catalog-rules — [What is versioned, and what changing it costs](versions.md#catalog-rules)
 - catalog-s0 — [What is versioned, and what changing it costs](versions.md#catalog-s0)
 - chipdoc — [What this project relies on from outside](ledger.md#chipdoc)

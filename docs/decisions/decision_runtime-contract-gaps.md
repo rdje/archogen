@@ -382,6 +382,31 @@ definition, an undeclared source only at a claim in a trap, initialisation's lef
 run in an external trap, the list's first case against the definition, the panic strategy refused at build when it
 is not the port's, and the tags. None of it moves either model. The book's runtime chapter moves with it.
 
+## The fault contract reviewed a tenth time (`2026-10-02`, R10)
+
+A tenth new context read the contract beside the composition record, from the text alone. On R9's answers: 11
+answered, 2 partly (#163, #167). **Verdict: 2 defects remain (#176, #177)**, both in the paragraph that classifies a
+check that finds a fault, and both from the last round's answers — #176 in the pre-landing check's V1 answer, which
+was applied without being checked again; #177 in a clause the restructuring kept. It judged the delegations sound
+again, the panic window's included.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 176 | defect | a non-application check that does not pass the kind it finds was classified as an assertion failure by the Terms and as the unexpected trap it found by the case list and rule 2 | accepted, the reviewer's text: such a check is classified by what it finds, and passing the kind is an obligation — code whose check finds a fault and does not pass it does not conform, and its record's review refuses it; rule 2 reads "the fault the check finds and passes" |
+| 177 | defect (minor) | a deliberate trap on a failed check of a catalog record's or generated code's own invariants had no classification | accepted: such a trap, and any other check that code makes of its own invariants, is an assertion failure |
+| 178–184 | drafting | an application check ending in a guard access; the definition per trap against cases per claim; a timer service run in a timer trap; rule 2's two incomplete restatements; the timer identified by its pending bit; a served exception; when a panic is raised | accepted, the reviewer's texts |
+| 185, 186 | drafting | F26 lagged three cases step 6p added, and two of its lines demanded ports no one may build | accepted |
+| 187–191 | nits | the header's panic summary; "a job that never completes"; "its release's latency"; the panic cross product in F26; "a port's broken obligation" for a catalog's | accepted |
+
+**Answered `2026-10-02` (step 6q), checked before landing.** None of it moves either model. The pre-landing check
+found no defect, and 8 drafting points and 3 nits (W1–W11): the per-claim sentence against "a later claim", a faulted
+task's releases for a timer service, an application's trap under an aborting strategy, "that code" without an
+antecedent, the pass-the-kind obligation's referents, the header's broken-obligation wording, two F26 lines, the
+header's count, two names for one list, rule 5 against the raise point, and two placements. The header's count (W8)
+landed with the answers; the rest is carried into step 6r, to be read with R11's answers before it lands.
+**Recorded for the process:** a fix made for a pre-landing check's finding is new text too, and is read again before
+it lands — #176 is what an unread fix costs.
+
 ## Where the contract lives (`2026-10-01`)
 
 Answering R3 (`M2.9`) needed about 20 lines more than `ROADMAP.md`'s 1 100-line ceiling allowed, which only the

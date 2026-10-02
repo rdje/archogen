@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the fault contract's tenth reading
+
+`ARCHOGEN-M2-0309` (leaf `M2.9`).
+
+- The tenth reading found two small gaps in how a failed check is classified, one of them in a fix applied without
+  being read again; both are closed in a sentence each, and every new sentence is now read before it lands.
+
 ## archogen — the runtime chapter, written for a newcomer and an expert
 
 `ARCHOGEN-PROGRAM-0301` (leaf `PROGRAM.47.4`).
