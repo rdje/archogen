@@ -1,5 +1,30 @@
 # Where generated systems run
 
+## The idea, in plain words
+
+A generated system has to run somewhere, and archogen uses three places, one after another. First your own
+computer, where the system's decisions are tested quickly, with no real hardware involved. Then an **emulator**:
+QEMU pretends to be a RISC-V computer, so the real target code runs — starting up, taking interrupts — on hardware
+that is only simulated. Last, a **board**: a real microcontroller on your desk. Each place can tell you some things
+and not others. The emulator runs the real code, but its timing is not a real chip's, so only a board's own
+measurements can back a timing claim about that board.
+
+**Which board?** The first will be a RISC-V microcontroller board, the kind archogen's runtime is built for, and none
+has been chosen yet: that is milestone `M5`, the director's decision. To give an idea of the kind, the
+[RP2350](ledger.md#rp2350) chip of the Raspberry Pi Pico 2 carries RISC-V cores beside its Arm ones — "Hazard3
+(`RV32IMAC+`) processors" in its datasheet. Such cores are 32-bit, where archogen's emulated target is 64-bit today,
+so a first board brings a port of its own. Boards built on another processor family, such as Arm Cortex-M
+microcontrollers, would each need another port, which nothing plans yet; and a full computer built to run a
+general-purpose operating system is a different class of machine from the devices this profile describes.
+
+> **In one minute, for engineers.** `hosted-playground` tests the shared runtime logic deterministically;
+> `riscv-virt-up` runs real target binaries on QEMU's `virt` machine at a pinned release and command line, its device
+> tree checked against the platform's eADL description, a missing emulator reported rather than skipped; `board-first`
+> is the same profile on a named board with its own measurements. The first code on the emulated target is a
+> hand-written timer-interrupt measurement, not a generated system. No board exists yet.
+
+## How it works
+
 Three environments, with different jobs and different limits. Confusing them is how a project
 comes to believe it has hardware evidence.
 
@@ -9,7 +34,9 @@ comes to believe it has hardware evidence.
 | `riscv-virt-up` | independent execution of real target binaries — startup, interrupt paths, MMIO contracts | it is a virtual platform, not a board and not a cycle-accurate timing reference |
 | `board-first` | the same profile on a named physical processor and device revision | only what its documented configuration and measurement procedure support |
 
-## The emulator is pinned
+## The precise rules
+
+### The emulator is pinned
 
 [QEMU](ledger.md#qemu)'s `virt` machine is a *configurable* virtual platform: its device set and the device tree
 it generates depend on the release and the options. An unpinned invocation silently changes the
@@ -31,7 +58,7 @@ And the platform the emulator *actually* offers is checked, not assumed —
 against the eADL platform fixture. That is the difference between "we described a platform" and
 "we described *this* platform".
 
-## Absence is reported, never skipped
+### Absence is reported, never skipped
 
 QEMU is installed here. This is the same `--check` run with it left off `PATH`, which is how a machine without it
 sees the step:
@@ -68,7 +95,7 @@ measured against it. One property is left out of the comparison, by name: a rand
 at every boot. The file also records a deliberate gap. The hart offers floating point, and archogen
 builds for `riscv64imac`, without it.
 
-## The target, described in eADL, and checked against the device tree
+### The target, described in eADL, and checked against the device tree
 
 §3.2 asks for agreement between the target and its "eADL platform fixture". That fixture is
 `targets/riscv-virt-up.eadl` (leaf `M2.8.3.2`, `docs/decisions/decision_target-platform-description.md`). It uses
@@ -104,7 +131,7 @@ target-emulator: the §3.2 agreement holds: targets/riscv-virt-up.eadl agrees wi
 The description claims no instruction set, no interrupt route and no other device. Those would be facts
 nothing checks, and the interrupt timings the runtime analysis needs are the catalog's, with their evidence.
 
-## The first code on the target
+### The first code on the target
 
 `M2.8` asks for an architecture spike: startup, a timer interrupt, the return from it, observable output, and
 context preservation, run in the emulator. `targets/riscv-virt-up/spike/` is that image (leaf `M2.8.4`). It is a
@@ -133,7 +160,7 @@ target-spike: spike: ok
 target-spike: the negative control was caught: a clobbered register reports `context CLOBBERED`, status 2
 ```
 
-## There is no board
+## Today and ahead: there is no board
 
 **No physical board has been selected or procured.** Physical-target evidence is blocked, and
 that is recorded as a programme risk rather than left to surface at the release.

@@ -156,6 +156,7 @@ a change that leaves it stale, so it is never edited by hand.
 - How it works — [What the scheduling checker establishes](analysis.md#how-it-works)
 - How it works — [Where the engine's knowledge comes from: the catalog](catalog.md#how-it-works)
 - How it works — [The runtime: decisions, not actions](runtime.md#how-it-works)
+- How it works — [Where generated systems run](targets.md#how-it-works)
 - How much of this a machine can check — [The boundary: functionality versus
   implementation](boundary.md#how-much-of-this-a-machine-can-check)
 - How the command line is held to it — [The engine API](engine-api.md#how-the-command-line-is-held-to-it)
@@ -259,8 +260,8 @@ a change that leaves it stale, so it is never edited by hand.
 - **PLIC** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **port** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [The runtime: decisions, not
-  actions](runtime.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
-  detail](annex-runtime.md)
+  actions](runtime.md), [Where generated systems run](targets.md), [What this project relies on from
+  outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
 - **POSIX** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [The supported
   profile](profile.md)
 - Precise composition errors — [Modules and composition](modules.md#precise-composition-errors)
@@ -309,10 +310,13 @@ a change that leaves it stale, so it is never edited by hand.
   relevance](presence.md#relevance-decides-whether-an-unknown-matters)
 - **RGX** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - rgx — [What this project relies on from outside](ledger.md#rgx)
-- **RISC-V** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [What this project relies on
-  from outside](ledger.md)
+- **RISC-V** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Where generated systems
+  run](targets.md), [What this project relies on from outside](ledger.md)
 - riscv-plic — [What this project relies on from outside](ledger.md#riscv-plic)
 - riscv-privileged — [What this project relies on from outside](ledger.md#riscv-privileged)
+- **RP2350** — [definition](glossary.md), [Where generated systems run](targets.md), [What this project relies on from
+  outside](ledger.md)
+- rp2350 — [What this project relies on from outside](ledger.md#rp2350)
 - rt-static-up-v1 — [The supported profile](profile.md#rt-static-up-v1)
 - **runtime** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The supported profile](profile.md), [What a report may claim](evidence.md), [What the scheduling
@@ -321,6 +325,7 @@ a change that leaves it stale, so it is never edited by hand.
   toolchain](verification.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
   detail](annex-runtime.md)
 - rust-toolchain — [What this project relies on from outside](ledger.md#rust-toolchain)
+- **RV32IMAC** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **RV64** — [definition](glossary.md), [Reading a description](reading.md)
 
 ## S
@@ -375,6 +380,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The idea, in plain words — [What the scheduling checker establishes](analysis.md#the-idea-in-plain-words)
 - The idea, in plain words — [Where the engine's knowledge comes from: the catalog](catalog.md#the-idea-in-plain-words)
 - The idea, in plain words — [The runtime: decisions, not actions](runtime.md#the-idea-in-plain-words)
+- The idea, in plain words — [Where generated systems run](targets.md#the-idea-in-plain-words)
 - The language definition travels with the binary — [Checking a
   description](checking.md#the-language-definition-travels-with-the-binary)
 - The list you read is the list the engine uses — [The supported
@@ -394,6 +400,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The precise rules — [What the scheduling checker establishes](analysis.md#the-precise-rules)
 - The precise rules — [Where the engine's knowledge comes from: the catalog](catalog.md#the-precise-rules)
 - The precise rules — [The runtime: decisions, not actions](runtime.md#the-precise-rules)
+- The precise rules — [Where generated systems run](targets.md#the-precise-rules)
 - The product runs nothing — [Verifying the toolchain](verification.md#the-product-runs-nothing)
 - The records that hold it — [Where the engine's knowledge comes from: the catalog](catalog.md#the-records-that-hold-it)
 - The sealed set — [The use cases](usecases.md#the-sealed-set)
@@ -407,7 +414,6 @@ a change that leaves it stale, so it is never edited by hand.
 - The verdict is what to fix first — [Checking a description](checking.md#the-verdict-is-what-to-fix-first)
 - The version and what it promises — [The engine API](engine-api.md#the-version-and-what-it-promises)
 - The witness — [What the scheduling checker establishes](analysis.md#the-witness)
-- There is no board — [Where generated systems run](targets.md#there-is-no-board)
 - Three kinds of success — [The use cases](usecases.md#three-kinds-of-success)
 - Three obligations, and a violation names which —
   [Refinement](refinement.md#three-obligations-and-a-violation-names-which)
@@ -417,6 +423,7 @@ a change that leaves it stale, so it is never edited by hand.
 - Today and ahead — [Introduction](introduction.md#today-and-ahead)
 - Today and ahead — [Where the engine's knowledge comes from: the catalog](catalog.md#today-and-ahead)
 - Today and ahead — [The runtime: decisions, not actions](runtime.md#today-and-ahead)
+- Today and ahead: there is no board — [Where generated systems run](targets.md#today-and-ahead-there-is-no-board)
 - **trap** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [The boundary: functionality
   versus implementation](boundary.md), [What the scheduling checker establishes](analysis.md), [The runtime: decisions,
   not actions](runtime.md), [Where generated systems run](targets.md), [What this project relies on from

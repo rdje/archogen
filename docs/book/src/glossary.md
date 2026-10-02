@@ -93,6 +93,11 @@ as `F26`, task-tree leaves — are names, not words, and are not listed.
   entry](ledger.md#rgx).
 - **RISC-V** — an open instruction set architecture, the fifth Reduced Instruction Set Computer design from
   Berkeley; archogen's first target. See [Where generated systems run](targets.md).
+- **RP2350** — the microcontroller on the Raspberry Pi Pico 2, with RISC-V cores beside its Arm ones: a part number,
+  not an acronym. See [Where generated systems run](targets.md) and [its datasheet's ledger entry](ledger.md#rp2350).
+- **RV32IMAC** — 32-bit RISC-V with the integer base (`I`), multiply and divide (`M`), atomic instructions (`A`) and
+  compressed instructions (`C`): the letters name the instruction-set extensions a core implements. See [Where
+  generated systems run](targets.md).
 - **RV64** — 64-bit RISC-V. See [Reading a description](reading.md).
 - **SEI**, **SSI**, **STI** — Supervisor External, Software and Timer Interrupt: RISC-V's interrupts for its
   supervisor mode, which archogen's first systems do not use. See [What this project relies on from

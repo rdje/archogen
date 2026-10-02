@@ -714,7 +714,7 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0301 (leaf PROGRAM.47.4)`
 
 - ID: `PROGRAM.47.5`
-  Status: `active` — one chapter per child, each `done` when committed: `.1` the introduction, `.2` the tour, `.3` reading a description, `.4` describing a workload, `.5` checking a description, `.6` what a report may claim, `.7` the scheduling checker, `.8` the catalog
+  Status: `active` — one chapter per child, each `done` when committed: `.1` the introduction, `.2` the tour, `.3` reading a description, `.4` describing a workload, `.5` checking a description, `.6` what a report may claim, `.7` the scheduling checker, `.8` the catalog, `.9` where systems run
   Goal: every other chapter in layers, one leaf and commit each when started, the chapters a newcomer meets first
   leading — the introduction and the tour, reading and workload, checking, evidence and analysis, the catalog,
   targets, the command line, the engine API, verification — and the gory parts of each moved to annexes.
@@ -805,6 +805,19 @@ mdBook that is the director's window into the project.
   Verification: `bash scripts/build_book.sh` → rc=0; `book-glossary: OK`, `book-anchors: OK`; `bash scripts/
   check_doctrines.sh` → `=== all doctrines green ===`
   Commit: `ARCHOGEN-PROGRAM-0310 (leaf PROGRAM.47.5.8)`
+
+- ID: `PROGRAM.47.5.9`
+  Status: `done` — `2026-10-02`
+  Goal: *Where generated systems run* in layers, with the director's question of which boards.
+  **Done.** It opens with the three places a system runs, in order, and what each can and cannot tell; then *Which
+  board?*, answering the director's question of `2026-10-02` with only what is verified: the first board a RISC-V
+  microcontroller, none chosen (`M5`); the Pico 2's RP2350 as an example of the kind, quoted from its datasheet, read
+  and ledgered (`rp2350`, sha256 `2877d0f2…`, build-date `2025-07-29`) since the product page refuses a scripted read;
+  its cores 32-bit against the 64-bit emulated target; other processor families a port each, none planned. Then the
+  one-minute summary and the precise rules. Two names the live glossary refused, `RP2350` and `RV32IMAC`, are defined.
+  Verification: `source-ledger: OK (20 entries …)`; `book-glossary: OK (62 acronym(s) …)`; `bash scripts/
+  build_book.sh` → rc=0; `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`
+  Commit: `ARCHOGEN-PROGRAM-0311 (leaf PROGRAM.47.5.9)`
 
 ## Roadmap coverage map
 
@@ -1112,6 +1125,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.47.5.6` | `ARCHOGEN-PROGRAM-0307 (leaf PROGRAM.47.5.6)` | ***What a report may claim* in layers** |
 | `PROGRAM.47.5.7` | `ARCHOGEN-PROGRAM-0308 (leaf PROGRAM.47.5.7)` | ***What the scheduling checker establishes* in layers**, a two-task example worked in words |
 | `PROGRAM.47.5.8` | `ARCHOGEN-PROGRAM-0310 (leaf PROGRAM.47.5.8)` | ***The catalog* in layers** |
+| `PROGRAM.47.5.9` | `ARCHOGEN-PROGRAM-0311 (leaf PROGRAM.47.5.9)` | ***Where generated systems run* in layers**, and which boards, from a ledgered datasheet |
 
 ## Changelog
 

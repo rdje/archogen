@@ -191,6 +191,20 @@ the day a chapter or a decision relies on it, as Miri did.
 | Revalidation trigger | a new protocol revision; any change to the server's protocol handling |
 | Named as | `MCP` |
 
+## `rp2350`
+
+| Field | Value |
+| --- | --- |
+| Source | Raspberry Pi's RP2350 datasheet, the microcontroller on the Raspberry Pi Pico 2 |
+| Version | the datasheet's own colophon: build-date `2025-07-29`, build-version `d126e9e-clean` |
+| Pinned at | not pinned — read on `2026-10-02` at `https://datasheets.raspberrypi.com/rp2350/rp2350-datasheet.pdf`; no build or check reads it |
+| Retrieved | `2026-10-02` |
+| Hash | sha256 `2877d0f270fb6d6a57943bee58aaad536aa027bea1e5b1c4ce2541a3230d4be8` of the PDF read |
+| Scope | two statements, quoted in *Where generated systems run* as an example of the kind of board the first one will be: "Dual Cortex-M33 or Hazard3 processors at 150 MHz", and "RISC-V architecture support is implemented by dynamically swapping the Cortex-M33 (Armv8-M) processors with Hazard3 (RV32IMAC+) processors" |
+| Known limitations | an example, not a selection: no board is chosen (`M5`), and nothing here says this one meets the roadmap's criteria for a first board |
+| Revalidation trigger | a board being selected; a decision resting on more of the chip |
+| Named as | `RP2350` |
+
 ## `node`
 
 | Field | Value |
