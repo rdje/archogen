@@ -158,7 +158,8 @@ target's `.env` or `.eadl` makes its review stale.
   The groups are:
   - `switch`: `eager-switching`, `interrupts-do-not-nest`, `services-preempt-every-task`,
     `pending-taken-and-transitions-unmasked`, `pending-taken-after-unmask`, `no-empty-claim`, `one-claim-per-trap`
-    and `starts-by-transition`, the port's;
+    and `starts-by-transition`, the port's; and §14.4's facts and the costs `fatal-path.entry` and `fatal-path.trap`,
+    the port's statement (`M2.12.3`);
   - `service.<source>`: its four `.<source>` code facts and `external.<source>`;
   - `timer-service`: the six timer facts, `reprograms-only-in-service`, and the cost `compare-rounding`, since the
     rounding is the timer service's code. `independent` stays open to it on a board, and its review cites that code.

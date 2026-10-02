@@ -360,6 +360,16 @@ What was approved is that list as it stood when asked, R15's answers included:
 "for the director's review" say approved. A later amendment that narrows a claim again is a new item for review; this
 approval covers the list above and nothing added after it.
 
+**A mechanism stated after the approval, `2026-10-02` (`M2.12.3`) — for your review.** The item "the image's panic
+handler and its panic strategy are the port's, another refused at build" stands in effect: the handler still does
+nothing but the port's work, an application's own still does not build, and the strategy is still the port's — on the
+pinned compiler `abort`, the only one that builds a `no_std` binary. What changed is how the handler is supplied. The
+catalog's own rules (§3) refuse `#[panic_handler]` in any record's code, since it is a global hook another package
+could supply in its place. So the image generates the handler, holding nothing but a call of the entry the port's
+record names, and the fault contract's Terms and rule 7 now raise a panic at that entry's first act rather than the
+handler's. This narrows no claim further, so it is not a new narrowing under the rule above; it is shown to you
+because it rewords an approved item. **If you want it treated as one**, say so and it waits for your approval.
+
 ## A note on what "done" means so far
 
 M0 and M1 are complete, and the shape of the claim matters. What exists is a **frontend**: a

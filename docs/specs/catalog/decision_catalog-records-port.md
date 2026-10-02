@@ -373,78 +373,119 @@ needs no atomics, and the build target has no floating-point extension, though t
 
 #### 14.4 The port's statement (`M2.12.3`)
 
-**In plain words.** The fault contract (`docs/profiles/rt-static-up-v1-faults.md`, its *Still open*) leaves a list of
-things to the port: how it catches a primitive called from outside a job, what may run after a job's last
-instruction, whether its traps serve one interrupt or several, how a failed check reaches the fatal path, how long
-that path takes, and more. The port's record states each as a fact, yes or no, whose basis says how, with locators
-into the code that does it, so a review judges it beside the code. One of them is matched mechanically across
-records: the convention by which a failed check passes what it found.
+**In plain words.** The fault contract (`docs/profiles/rt-static-up-v1-faults.md`, its Terms, its rules 1, 2, 5
+and 7, and its *Still open*) leaves a list of things to the port: how it catches a primitive called from outside a
+job, what may run after a job's last instruction, whether its traps serve one interrupt or several, how a failed check
+reaches the fatal path, how long that path takes, and more. The port's record states each as a fact, yes or no, whose
+basis says how, with locators into the code that does it, so a review judges it beside the code. One of them is
+matched across records mechanically, through a record of its own: the convention by which a failed check passes what
+it found.
 
 **The port's record** is the record that supplies `switch` under the selection
-(`decision_runtime-composite-inputs.md` §1). Its behavioral model states the facts below, in the `switch` group,
-each a code fact under §2's locator rule; a known value of one rests on code the record's implementation holds, its
-declared assembly or its Rust. Until a fact is stated it is `unknown`, and a selection whose port leaves one
-`unknown` cannot be read for what that fact decides.
+(`decision_runtime-composite-inputs.md` §1). Its behavioral model states the facts below and its timing model the
+costs below, all in the `switch` group (§12), each fact a code fact whose locators reach its own implementation or a
+`describes` record's, as §2 admits — the runtime API record's for what rests on `rt-core`'s primitives, scheduler or
+detection. A fact absent and a fact `unknown` are both undeclared (§12), and a port record leaving one of them so
+cannot back `M4`'s fixtures (below).
 
-| Fact | `yes` states | The basis says |
-| --- | --- | --- |
-| `detects-non-job-calls` | the port raises every call of a primitive or the completion path from a context that is not a job, as the contract's Terms require | how it tells a job's call apart, a call through its own runtime-API trap included |
-| `services-preempt-completion-interval` | a service may preempt the interval after the instruction at which a job completes | how it guarantees the choice and the next fact's |
-| `completion-decision-remade` | a decision a service preempted is made again; read only when the fact above is `yes`, `no` stating that no service preempts the decision | — |
-| `guard-check-contexts` | for each guard check the port's code makes, the context that runs it is stated | the table of checks and contexts, from the contract's rule 2's set |
-| `guarded-stacks` | every stack the port guards is named | each stack, by name |
-| `decision-placement` | where the port makes a scheduling decision is stated | the place, the completion path's included |
-| `serves-further-pending-in-trap` | a trap may serve a further pending interrupt before it returns; `no`, it returns and takes a new trap | how it finds the further one, a timer interrupt's pending bit included, and the order among the interrupts one trap serves |
-| `api-entry-by-trap` | the port enters the runtime API by a trap | the trap and how it tells its entry apart |
-| `api-trap-preemptible-before-decode` | an interrupt may preempt that trap before it tells its entry apart; read only when the fact above is `yes` | in which contexts it can |
-| `primitives-preemptible` | an interrupt may preempt a primitive | which primitives, and at which points |
-| `unmask-preemptible-before-check` | an interrupt may preempt an `unmask` at depth zero before its check, in the primitive or in its trap | — |
-| `window-trap-preempts` | a trap may preempt the context between a failed check, or a panic's start, and the raising, inside a primitive or outside one | the window whole: what runs before the raising, in which contexts, and where the kept job stands in the schedule |
-| `window-release-abandons` | a release observed in that window may abandon the job | — |
-| `window-primitive-consistent` | inside a primitive, the window leaves the runtime's state consistent; `no`, the job is not abandoned there | — |
-| `abandoned-primitive-completion` | how and in which context the runtime completes a primitive on an abandoned job's behalf is stated | the context, one in whose role the composition lets that code act, and how a fault met there is raised |
-| `fault-path-entries` | the fault path's two entries are named | the function the image's panic handler calls, and the entry a check's call and the trap path reach |
-| `check-passing.<convention>` | the port's checks, and the trap path, pass a check's kind, raiser and guard owner by the convention named `<convention>`; the port states exactly one | the convention: registers or memory, encodings, which entry |
-| `traps-discriminated` | the trap path tells a check's deliberate trap from any other trap | how |
-| `kept-record-readout` | the kept record can be read out of a halted runtime | where it lives and how it is read |
-| `vector-aligned` | the address the port installs as the trap vector is aligned as `mtvec` needs | whether by the pin's measured alignment (§14.1) or by a check in its code |
-| `vector-vectored` | the vector is installed in vectored mode; `no`, direct | where each trap then lands |
+| Fact | `yes` states | The basis says | Obligatory |
+| --- | --- | --- | --- |
+| `detects-non-job-calls` | the port raises every call of a primitive or the completion path from a context that is not a job, as the contract's Terms require | how it tells a job's call apart | yes |
+| `services-preempt-completion-interval` | a service may preempt the interval after the instruction at which a job completes | how it guarantees the choice and the next fact's | |
+| `completion-decision-remade` | a decision a service preempted is made again; `no`, no service preempts the decision. Read only when the fact above is `yes` | — | |
+| `guard-check-contexts` | for each guard check the port's own code makes, the context that runs it is stated | the table of checks and contexts, from the contract's rule 2's set | yes |
+| `generated-guard-check-contexts` | the same for each guard check generated code makes; `unknown` until `M4` defines generated code's checks | the table | |
+| `guarded-stacks` | every stack the port guards is named | each stack, by name | yes |
+| `decision-placement` | where the port makes a scheduling decision is stated | the place, the completion path's included | yes |
+| `api-entry-by-trap` | the port enters the runtime API by a trap | the trap and how it tells its entry apart | |
+| `api-trap-preemptible-before-decode` | an interrupt may preempt that trap before it tells its entry apart. Read only when `api-entry-by-trap` is `yes` | in which contexts it can | |
+| `primitives-preemptible` | an interrupt may preempt a primitive | which primitives, and at which points: at the entry, at the return, between | |
+| `unmask-preemptible-before-check` | an interrupt may preempt an `unmask` at depth zero before its check. Read only when `primitives-preemptible` is `yes` | — | |
+| `window-trap-preempts-outside` | a trap may preempt the context between a failed check, or a panic's start, and the raising, outside a primitive | the window whole: what runs before the raising, in which contexts, and where the kept job stands in the schedule | |
+| `window-trap-preempts-inside` | the same inside a primitive. Read only when `primitives-preemptible` is `yes` | as above | |
+| `window-release-abandons` | a release observed in that window may abandon the job. Read only when one of the two facts above is `yes` | — | |
+| `window-primitive-consistent` | inside a primitive, an abandonment in the window leaves the runtime's state consistent; `no`, the job is not abandoned there. Read only when `window-release-abandons` is `yes` | — | |
+| `abandoned-primitive-completion` | how and in which context the runtime completes a primitive on an abandoned job's behalf is stated | the context, one in whose role the composition lets that code act, and how a fault met there is raised | yes |
+| `fault-path-entries` | the fault path's two entries are named | each entry's function and signature: the one the image's panic handler calls, and the one a check's call and the trap path reach; what the handler passes it | yes |
+| `traps-discriminated` | the trap path tells a check's deliberate trap from any other trap | how | yes |
+| `kept-record-readout` | the kept record can be read out of a halted runtime | where it lives and how it is read | yes |
+| `panic-strategy-abort` | the image is built with `panic = "abort"`, under which every panic calls the handler | the pin's measurement (below) | yes |
+| `vector-direct` | the port installs the trap vector in direct mode, every trap landing at its base | how it knows that base is aligned as `mtvec` needs: by the pin's measured alignment (§14.1), or by a check in its code | yes |
+
+A known `no` of a fact marked obligatory is refused (`catalog-field`): the contract requires each. Vectored mode is
+not admitted: its four-byte slots would rest on the assembler choosing four-byte encodings, which the dialect cannot
+force, since `j` assembles to the two-byte `c.j` (`M2.12.3`'s first review). Whether a trap serves one interrupt or
+several is `one-claim-per-trap`'s (§12), whose basis states, when it is `no`, how a trap finds a further pending
+interrupt — a timer interrupt by its pending bit — and the order among the interrupts one trap serves.
+
+**Within the record**, the loader refuses (`catalog-field`): a fact stated `yes` or `no` where it is read only when
+another is `yes` and that one is not; and `api-trap-preemptible-before-decode` `yes` with `primitives-preemptible`
+`no`, since the contract's rule 2 makes a primitive's trap, from its entry to its return, the primitive.
 
 **The fatal path's bound** is two timing costs of the same record, per target: `fatal-path.entry`, from a fault's
 raising through an entry of the fault path to the terminal state, and `fatal-path.trap`, from a fault raised at a
-trap, along the trap path and its other entry, to the terminal state (the contract's rule 7). A later idle-to-task
-dispatch needs no cost of its own: `switch`'s `S` bounds initial dispatch and idle wake alike
+trap, along the trap path and its other entry, to the terminal state (the contract's rule 7). Each covers a fault
+taken in the handler or on the trap path on the way, which ends the runtime at once. A later idle-to-task dispatch
+needs no cost of its own: the switch out of idle is `S`'s, and the wake before it `W_wake`'s
 (`decision_runtime-analysis-variant.md` §1).
 
 **The panic handler.** §3 refuses `panic_handler` in every package a record reaches, since a global hook another
-package could supply in place is code no record would hold. So the image's `#[panic_handler]` is the image's (`M4`),
-generated to call the entry `fault-path-entries` names, and the port's record supplies that entry, not the attribute.
-On the pin every panic reaches the handler: under `panic = "abort"` a bounds check and a `panic!` both call into
-`core::panicking`, which ends in the handler's symbol, and the strategy that aborts without calling it is refused —
-the pinned compiler answers `-C panic=immediate-abort` with "requires `-Zunstable-options` and a nightly compiler"
-(measured `2026-10-02`). So the contract's cases under an aborting strategy cannot arise on the pin.
+package could supply in its place is code no record would hold. So the image's `#[panic_handler]` is generated by
+`M4`, and holds nothing but a call of the entry `fault-path-entries` names, with what the compiler emits around it;
+the port's record supplies that entry. An application's own handler beside it does not build: two are a duplicate lang
+item (E0152, measured on the pin).
 
-**The check per selection.** A record other than the port's whose code makes a check, or a deliberate trap or call on
-a failed check of its own invariants, states `check-passing.<convention> yes` for the convention its code uses. A
-selection is refused (`catalog-conflict`) when any record in it states a `check-passing` convention other than the
-port's, or when the port states none or two. A record whose code makes no such check states none. Generated code,
-in no record, is held to the port's convention by the review of the plan's generator (`M4`), as the contract says.
+**The panic strategy, measured on the pin** (`rustc 1.95.0 (59807616e 2026-04-14)`, `riscv64imac-unknown-none-elf`,
+`2026-10-02`). A `no_std` crate built `panic = "abort"`, holding `fn checked(v: &[u8], i: usize) -> u8 { v[i] }`
+and `fn explicit(x: u32) -> u32 { if x == 7 { panic!("seven") } x + 1 }`, calls
+`core::panicking::panic_bounds_check` and `core::panicking::panic_fmt`, which end in the handler. `-C panic=unwind`
+builds a library but not a binary ("unwinding panics are not supported without std", the first review's probe), and
+`-C panic=immediate-abort`, the strategy that aborts without calling the handler, is answered "`-Cpanic=immediate-abort`
+requires `-Zunstable-options` and a nightly compiler"; and an image's build runs in the gate's allowlisted environment,
+where a `RUSTC_BOOTSTRAP` that would unlock it is seen (§7).
+So on the pin a binary is built `abort` or not at all, every panic calls the handler, and the contract's cases under a
+strategy that aborts without calling it cannot arise. These are premises §14.4 rests on, re-run with §14.1's when the
+pin moves.
 
-**Consistency within the record**, checked by the loader (`catalog-field`): `serves-further-pending-in-trap` `yes`
-with `one-claim-per-trap` `yes` is refused, since one claim per trap is one interrupt per trap; and a fact read only
-when another is `yes` is `unknown` or absent when that one is `no`.
+**The check per selection.** A check-passing convention is a record of its own, whose id begins
+`convention.check-passing.`, whose implementation is `none`, and whose contract states the convention: how a failed
+check, a deliberate trap or call on a failed check of a record's own invariants, and the trap path pass the kind, the
+raiser and, for a guard, whose guard, to the fault path — registers or memory, encodings, which entry, and the route
+of a check that panics through the image's handler. The port's record lists exactly one such record in `depends`,
+and so does every record whose code makes such a check or deliberate trap or call. The convention's meaning is then
+in each of their bound hashes, and a change to it makes their reviews stale (§10). Under a selection where a record
+supplies `switch`, the selection is refused (`catalog-conflict`) when the port depends on no convention record, or
+on more than one, or when any record in the selection depends on one the port does not. Under a selection with no
+`switch`, the check is not made. The check is necessary, not sufficient: a record whose code makes a check but
+depends on no convention passes it, and its review refuses it, as the contract says. Generated code, in no record, is
+held to the port's convention by the review of the plan's generator (`M4`).
 
-**For `M4`'s fixtures** (`M4.6`, the contract's F26 list): a case the contract owes "on each port that" does
-something is owed on a port whose record states the fact for it `yes` — `primitives-preemptible`,
-`api-entry-by-trap`, `api-trap-preemptible-before-decode`, `unmask-preemptible-before-check`,
-`serves-further-pending-in-trap`, `services-preempt-completion-interval`, `completion-decision-remade`,
-`window-trap-preempts`, `window-release-abandons` and `window-primitive-consistent` — and not owed where it is `no`.
-A fact stated per context in its basis, as `api-trap-preemptible-before-decode`'s is, scopes its case to those
-contexts. The cases under an aborting strategy are owed on no port while the pin offers none.
+**For `M4`'s fixtures** (`M4.6`, the contract's F26 list), each case is owed where the port's record makes it arise:
+- a case the contract owes "on each port that" does something, on a port whose record states the fact for it `yes` —
+  `primitives-preemptible`, `api-entry-by-trap`, `api-trap-preemptible-before-decode`,
+  `unmask-preemptible-before-check`, `services-preempt-completion-interval`, `completion-decision-remade`, and
+  `one-claim-per-trap` `no` for a further pending interrupt served in the same trap — and not where it is `no`;
+- the window's cases one by one: a trap taken before a raising, outside a primitive where
+  `window-trap-preempts-outside` is `yes`, inside one where `window-trap-preempts-inside` is; a release observed then
+  abandoning the job, where `window-release-abandons` is `yes`; what becomes of the primitive, as
+  `window-primitive-consistent` states; the kept context run on to the raising under both policies, where
+  `window-release-abandons` is `no`, or `window-primitive-consistent` is `no`; and a fatal fault raised before the
+  raising, kept if it is the first, on every port;
+- a case a fact's basis scopes to some contexts or points — `api-trap-preemptible-before-decode`'s contexts,
+  `primitives-preemptible`'s points — is owed there, matched by `M4.6`'s review against the basis;
+- the cases under a strategy that aborts without calling the handler are owed on no port while the pin offers none.
+
+The `riscv64` dialect (§14.3) has no `ecall`, `ebreak` or `unimp`, and `core::arch::breakpoint` and
+`core::intrinsics::abort` are unstable on the pin (the first review's probe): so today no record's code can enter the
+runtime API by a trap or make a deliberate trap, and the cases owed on a port that enters the runtime API by a trap
+are owed on no `riscv64` port.
 
 **Still the contract's.** Whether the contract will limit what a port may state of a release that abandons a job
-outside a primitive while a check generated code makes has yet to raise what it found stays the contract's open
-question for `M4`, whose generated code alone can reach it.
+outside a primitive while a check of the runtime's state that generated code makes has yet to raise what it found
+stays the contract's open question for `M4`, whose generated code alone can reach it.
+
+**Versioning.** §14.4's facts, costs and loader rules are part of what `archogen-catalog/1` names, like §14.2's and
+§14.3's.
 
 ## Review
 
@@ -460,6 +501,13 @@ to each are in [`decision_catalog-records-port-reviews.md`](../../reviews/decisi
 | 5, same day | 13 | three wording defects — inputs sharing a register, a naked exit's duty narrowed, a lost quote — and a generic `sym` | 3 defects, 3 gaps; words restored, a generic `sym` refused, the trap's address arithmetic stated; all answered |
 | 6, same day | 12 | a quotation lost in round 5's compaction; what a naked body hands a function at a `call` | 1 defect, 1 gap; the `mhartid` sentence quoted, the `call` hand-off the review's; all answered |
 | 7, same day | 9 | **no defect**: every quotation verbatim, nothing lost across seven states, no admitted construction past the claim | the review closed; its two gaps and points answered |
+
+§14.4, the port's statement, is reviewed apart, until a round finds no defect; its findings and answers are in
+[`decision_catalog-records-port-statement-reviews.md`](../../reviews/decision_catalog-records-port-statement-reviews.md).
+
+| Round | Findings | What it turned on | Outcome |
+| --- | --- | --- | --- |
+| 1, `2026-10-02` | 30 | the check per selection colliding with §12's one-supplier rule and binding no meaning; the contract's amendments incomplete; F26's run-on scoping inverted | 9 defects, 13 gaps; a convention record through `depends`, the contract's Terms and rule 7 amended, the window's facts split; all answered |
 
 ## Why
 

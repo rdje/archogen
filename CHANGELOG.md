@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — what the port must declare: the first review
+
+`ARCHOGEN-M2-0364` (leaf `M2.12.3`, step 2).
+
+- The first review found the cross-record check broken in its own mechanism: two records naming the same convention
+  collided with the catalog's one-supplier rule, and a name alone bound no meaning. A convention is now a catalog
+  record of its own, which the port and every record that reports faults must depend on, so its meaning is hashed and
+  a change to it is noticed. Several gaps in coverage are closed, and the fault contract's wording on the panic handler
+  is made consistent throughout. A second review is next.
+
 ## archogen — what the processor port must declare
 
 `ARCHOGEN-M2-0363` (leaf `M2.12.3`, step 1).

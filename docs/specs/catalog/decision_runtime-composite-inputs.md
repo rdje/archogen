@@ -109,7 +109,8 @@ dispatch, which claims before it knows the source, acts in the role of the servi
   contract, `docs/profiles/rt-static-up-v1-faults.md`, Terms, added `2026-10-01`); the port's trap path and its
   transitions use `mscratch` where it keeps a stack there;
 - the record that supplies `switch` supplies the fault path's entries — the one the image's generated panic handler
-  calls (the catalog record's §14.4, which leaves the `#[panic_handler]` attribute to the image), and an entry that a
+  calls (the catalog record's §14.4, which leaves the `#[panic_handler]` attribute to the image; *`M2.12.3`,
+  `2026-10-02`*), and an entry that a
   check's call, and the trap path with a fault raised at a trap, reach, which it names — and each acts in the fault
   path's role from its first act, which masks interrupts, whoever's panic or check, or whichever trap's path, reaches
   it: a panic reaching the handler is no breach of `leaves-interrupt-hardware-alone`, and what can happen before a

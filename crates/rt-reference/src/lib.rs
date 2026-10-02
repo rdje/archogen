@@ -528,10 +528,10 @@ pub enum Transition {
     /// its own name and its own (smaller) cost rather than folding it into a switch: F29 charges
     /// "Initial dispatch from idle to L" 1 unit against 2 for every task-to-task switch.
     ///
-    /// ⚠️ **CONTRACT SILENT — and now listed as open.** F29 says "*Initial* dispatch", and its
-    /// trace never returns to idle, so the contract never says what a *later* idle → task
-    /// dispatch is called or costs; the fault contract's *Still open* list names it: "needed by no
-    /// fixture yet, a later idle-to-task dispatch's cost". This model reports every
+    /// ⚠️ **CONTRACT SILENT on the name, settled on the cost.** F29 says "*Initial* dispatch", and
+    /// its trace never returns to idle, so the contract never names a *later* idle → task dispatch.
+    /// Its cost the catalog record settles (§14.4, `M2.12.3`): "the switch out of idle is `S`'s,
+    /// and the wake before it `W_wake`'s". This model reports every
     /// idle → task transition as `Dispatch`, on the cost-accounting contract's structural reason —
     /// there is no outgoing context — rather than on the temporal one, since "first in the trace"
     /// is not a property of a transition.
