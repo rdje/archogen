@@ -1,5 +1,29 @@
 # Kinds and schemas
 
+## The idea, in plain words
+
+Every declaration in a description has a **kind** — a service, a block of hardware, a platform, a system — and a
+kind works like a printed form. It says which boxes there are, which must be filled and how often, and what goes
+in each: a name, a number with its unit, a nested list. archogen checks every declaration against its kind's form
+before it reads anything else, so a misspelt box, or a period measured in parsecs, is caught at once, with a
+"did you mean" where one helps.
+
+Two things make kinds unusual. The forms are themselves written in eADL, all but one: `defkind`, the form for
+making forms, is the only one built into archogen's code, so adding a kind never adds a hidden rule. And a form
+checks shape, not truth: a well-filled form can still describe something that cannot be built, and later checks
+are there for that.
+
+> **In one minute, for engineers.** A kind is a schema over a declaration's frame: known kind, name, each name
+> declared once, known clauses, cardinalities, value types, among them `quantity`, which the quantity module
+> checks. `defkind` is the only trusted primitive, in Rust; every surface kind is declared in eADL in
+> `docs/semantics/kinds/core.eadl`, and a test asserts both. A kind holds only `doc`, `name` and `clause`, and the
+> boundary classifier runs over kind definitions too. A `(holds forms)` clause is opaque to the schema; the
+> refinement pass reads the quantities inside it, and the classifier, which walks the whole tree, still sees a
+> forbidden construct there. The normative text is `docs/semantics/reference.md` §7 and §4; the reach this
+> chapter publishes is gated by `crates/eadl-model/tests/kinds.rs`.
+
+## How it works
+
 A **kind** says what a declaration may contain. `defservice`, `defblock`, `defplatform`,
 `defpolicy` and `defsystem` are kinds, and so is anything a user adds tomorrow.
 
@@ -10,7 +34,9 @@ A **kind** says what a declaration may contain. `defservice`, `defblock`, `defpl
 > a host-code evaluator is stated there and cited to the classifier that enforces it against the
 > facility that declares the language.
 
-## Exactly one primitive is trusted
+## The precise rules
+
+### Exactly one primitive is trusted
 
 `ROADMAP.md` §2 settles where the trust sits:
 
@@ -43,7 +69,7 @@ reached the loader, a kind module stating its version was refused as `schema-not
 whole registry with it, so `archogen` answered `tool-failure` for every description it was asked about,
 and no test that checked a *description* could see it happen.
 
-## A kind defines well-formedness, never behavior
+### A kind defines well-formedness, never behavior
 
 §5.6 is explicit that `defkind` "must not become a host-code evaluator or an implementation
 template language". A kind definition holds `doc`, `name` and `clause` — and nothing else.
@@ -59,7 +85,7 @@ facility that declares the language:
 
 A kind must also carry a `doc`. A kind nobody can explain is a kind nobody should be adding.
 
-## What the schema checks
+### What the schema checks
 
 The **declaration frame**: known kind, name present when required, **each name declared once**, known
 clauses, right number of them, right value shapes. A clause declares those shapes with `(holds values …)`, and one of
@@ -90,7 +116,7 @@ The "did you mean" is edit-distance bounded on purpose. Suggesting `defsystem` f
 Every problem in a kind definition is reported, not just the first — a malformed definition
 usually has several things wrong with it.
 
-## What it does not check, and the gap that closed
+### What it does not check, and the gap that closed
 
 A clause declared `(holds forms)` is **opaque**. `(at-least 60 s)` is nested forms at this
 layer and becomes a checked quantity later — in the refinement pass, which reduces every
