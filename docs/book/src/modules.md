@@ -1,5 +1,26 @@
 # Modules and composition
 
+## The idea, in plain words
+
+Nobody describes a whole device in one file. A board, its timer and the operating-system services it needs are
+described separately, often by different people, and reused across many systems. So an eADL description can
+**import** another, the way a program imports a library: under a short local name, taking only what that module
+chooses to **export**, at a stated **version** or later.
+
+archogen then puts the pieces together — this is **elaboration** — and checks the assembled whole exactly as if it
+had been written in one file. On the way it refuses the usual troubles of assembly: a module that is missing, a
+version that is too old, a file whose content claims a different name than the one it was found by, two names
+that would mean the same thing.
+
+> **In one minute, for engineers.** `defmodule` with `import … (as …) (version (at-least …))`, `export` and typed
+> parameters; the rules are `docs/semantics/reference.md` §6 and the diagnostics its §4. An import is found by its
+> dotted lowercase name on the module path, beside the description, and verified against the name its `defmodule`
+> declares. Elaboration produces instances, children before parents; every name carries its whole instance path;
+> the elaborated tree goes through every pass a single description gets. `archogen check` runs it today; module
+> parameters reach no declaration yet (`M1.29.4`).
+
+## How it works
+
 A description is not one file. Reusable sub-hardware and sub-OS descriptions are imported with
 namespaces, explicit exports, typed parameters and version constraints.
 
@@ -20,7 +41,7 @@ namespaces, explicit exports, typed parameters and version constraints.
     (requires (uses clock.time.monotonic))))
 ```
 
-## What you can run today
+### What you can run today
 
 `archogen check` **elaborates and type-checks** a module file. The example above is
 `docs/semantics/modules/app.system.eadl`, and the modules it imports sit beside it — that directory is its
@@ -62,7 +83,9 @@ Every refusal this chapter shows is rendered by the command from a file in `docs
 which holds one case for every `module-` code a command can reach; the one code without a case,
 `module-too-large`, fires only on a four-gigabyte source.
 
-## Elaboration produces instances, not modules
+## The precise rules
+
+### Elaboration produces instances, not modules
 
 This is the design decision the whole module system turns on. `ROADMAP.md` §5.1.1:
 
@@ -90,7 +113,7 @@ million instances and held 1.8 GB, and a chain of 3 000 modules crashed the elab
 16 modules, the root included. Elaboration stops at the first import past either limit, with one error,
 `module-too-many-instances` or `module-import-too-deep`. The largest tree in the repository has 4 instances.
 
-## Names carry their whole path
+### Names carry their whole path
 
 **Rule 9.** A declaration in an imported instance is named by the path of aliases that reached it, and the
 root's declarations keep their own names:
@@ -175,7 +198,7 @@ error[schema-duplicate-name]: `parts.public.part` is declared twice
 archogen: invalid-description: 1 diagnostic(s) in docs/semantics/modules/bad.name-collision.eadl
 ```
 
-## Precise composition errors
+### Precise composition errors
 
 "There is a cycle" is a puzzle. The whole chain is a diagnostic — and it is reported at the import
 that closes it, in the file where that import is written:
@@ -217,7 +240,7 @@ listing the real ones.
 Only a **cycle** stops elaboration, because continuing into one does not terminate. Everything
 else is collected, so a description with three composition problems costs one edit cycle.
 
-## Versions
+### Versions
 
 `(version (at-least 1 0))` means the same major version and at least that minor. A **major**
 difference is never satisfied, however much newer the module is — and the refusal points at both the
