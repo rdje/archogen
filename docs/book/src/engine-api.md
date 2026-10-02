@@ -1,5 +1,22 @@
 # The engine API
 
+## The idea, in plain words
+
+People use archogen by typing commands. Programs need a way in too: a web page that checks a description as you
+type, an editor that underlines a mistake, a build server, or an AI assistant asked to help write a description.
+The **engine API** is that way in. A program hands archogen a description as text and gets back a structured answer
+it can read without parsing sentences — and the answer always carries the same verdict a person would see, so a
+program can never mistake a refusal for a pass. The command line itself goes through the same door, so nothing can
+be possible for a person and impossible for a program, or the other way round.
+
+> **In one minute, for engineers.** `crates/archogen-api` declares one versioned operation, `check`: description
+> text plus a profile in, a `Response` carrying §5.5's verdict, diagnostics and the engine's version out. It reads no
+> file, writes none, spawns nothing, and compiles for `wasm32-unknown-unknown`. An instance is one running copy of one
+> build, stateless between requests; a byte budget bounds each request. The CLI is held to it by parity tests; a wasm
+> binding serves a web page; an MCP server for agents is designed and not built.
+
+## How it works
+
 The command line is how a person uses archogen. A browser, an editor, a build farm or an agent needs
 to use it without a shell and without parsing prose, and `ROADMAP.md` §10.4 gives them the same
 operations through one declared **engine API**. The CLI is its first consumer rather than a second
@@ -10,7 +27,9 @@ recorded in `docs/decisions/decision_engine-api.md`. It reads no file, writes no
 and it compiles for `wasm32-unknown-unknown` with the rest of the engine
 ([Verifying the toolchain](verification.md)).
 
-## One operation: check
+## The precise rules
+
+### One operation: check
 
 The API offers the operations the command line has built, which today is one: `check`, a
 description as text plus a profile in, a structured response out. A `Request` holds:
@@ -34,7 +53,7 @@ A `Response` holds:
 | `notes`, `hint` | what the API says about a request it did not judge, and the repair |
 | `judged` | present exactly when the description was judged: the verdict, the language version and profile it was judged under, the declarations it read, a module tree's instances, and the closure |
 
-## One outcome vocabulary
+### One outcome vocabulary
 
 The status is the exit contract the command line already has ([The `archogen` command
 line](cli.md)). The CLI's exit code is that status's number, so the two cannot drift apart. When the
@@ -53,7 +72,7 @@ with no outcome, or with a default one. This one has neither. ⚠️ The directo
 response carries a §5.5 verdict. §10.4 says "for what it reports". This chapter follows the second
 reading, which is flagged for the director's call.
 
-## An example that runs
+### An example that runs
 
 `crates/archogen-api/examples/in_memory.rs` sends three requests, all held in memory: one accepted,
 one judged and refused, and one the API does not judge.
@@ -72,7 +91,7 @@ api 1.2 · engine 0.1.0 · status unsupported-profile
 `crates/archogen-api/tests/book_example.rs` runs the example and compares its output with the block
 above, so this page cannot go on showing output the API no longer gives.
 
-## The version and what it promises
+### The version and what it promises
 
 The API's version is `1.2`, apart from the language's (`eadl/1`) and the profile's, as §15 requires.
 Every response names the API version and the engine version, and a judged one also names the language
@@ -83,7 +102,7 @@ or a field is a minor. A description whose verdict changes under the same langua
 API change: it is a language change, and it goes through the migration notes
 ([What is versioned](versions.md)).
 
-## What an instance is
+### What an instance is
 
 A consumer does not talk to a library. It talks to an **instance**: an [MCP](ledger.md#mcp-specification) server it spawned, a wasm module
 a page loaded, or, for the shortest life, one run of the command line
@@ -94,7 +113,7 @@ description, the profile, and the module texts it loaded) and the build, which t
 Asking the same instance the same question twice gives the same answer, and
 `crates/archogen-api/tests/check.rs` asks twice and compares the whole response.
 
-## What one request may cost
+### What one request may cost
 
 The language already bounds the shapes that multiply work. A list nests at most 256 deep, and a module tree
 has at most 1 024 instances and 16-module import chains ([Reading a description](reading.md),
@@ -114,7 +133,7 @@ and through the modules.
 The command line asks with no budget. It is its own consumer and trusts the files it was given. The
 language's limits still apply to it, because they belong to the language.
 
-## How the command line is held to it
+### How the command line is held to it
 
 `crates/archogen-cli/tests/api_parity.rs` checks three things:
 
@@ -126,7 +145,7 @@ language's limits still apply to it, because they belong to the language.
 - **They say the same thing.** Over every description in the repository, the command line's exit
   code, diagnostic codes and notes equal the API's status, diagnostic codes and notes.
 
-## The binding a web page loads
+### The binding a web page loads
 
 A page reaches the API through `archogen-wasm` (`crates/archogen-wasm/src/lib.rs`), a module built for
 `wasm32-unknown-unknown` (`docs/decisions/decision_wasm-binding.md`). A page asks it three things: a buffer for
@@ -144,7 +163,7 @@ the module cannot read is answered `usage`, with a note naming the field and the
 nothing is judged. The module imports nothing, so whatever page loads it, it cannot read a file or send anything
 anywhere. [Verifying the toolchain](verification.md) shows how that, and its answers, are checked.
 
-### Opening the page
+#### Opening the page
 
 `crates/archogen-wasm/page/index.html` is a page that checks a description typed into it. A browser loads
 modules only over HTTP, so build the module and serve the repository's root:
@@ -173,7 +192,7 @@ ok (exit 0)
 accepted against profile rt-static-up-v1 (eadl/1), 1 declaration(s)
 ```
 
-## What is outside it
+### What is outside it
 
 - **`archogen build`.** Generation writes a crate tree. §10.4 keeps it a human or CI action, since a
   remote consumer does not need that authority. `build` asks the API whether a description checks,

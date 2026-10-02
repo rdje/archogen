@@ -714,7 +714,7 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0301 (leaf PROGRAM.47.4)`
 
 - ID: `PROGRAM.47.5`
-  Status: `active` — one chapter per child, each `done` when committed: `.1` the introduction, `.2` the tour, `.3` reading a description, `.4` describing a workload, `.5` checking a description, `.6` what a report may claim, `.7` the scheduling checker, `.8` the catalog, `.9` where systems run, `.10` the command line
+  Status: `active` — one chapter per child, each `done` when committed: `.1` the introduction, `.2` the tour, `.3` reading a description, `.4` describing a workload, `.5` checking a description, `.6` what a report may claim, `.7` the scheduling checker, `.8` the catalog, `.9` where systems run, `.10` the command line, `.11` the engine API
   Goal: every other chapter in layers, one leaf and commit each when started, the chapters a newcomer meets first
   leading — the introduction and the tour, reading and workload, checking, evidence and analysis, the catalog,
   targets, the command line, the engine API, verification — and the gory parts of each moved to annexes.
@@ -828,6 +828,16 @@ mdBook that is the director's window into the project.
   Verification: `cargo test -q -p archogen-cli` → 0 failed; `bash scripts/build_book.sh` → rc=0;
   `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`
   Commit: `ARCHOGEN-PROGRAM-0312 (leaf PROGRAM.47.5.10)`
+
+- ID: `PROGRAM.47.5.11`
+  Status: `done` — `2026-10-02`
+  Goal: *The engine API* in layers.
+  **Done.** It opens with why programs — a web page, an editor, a build server, an AI assistant — need a way in, and
+  that their answer carries the verdict a person sees; then the one-minute summary, the chapter's own opening as how
+  it works, and the precise rules, every section and the example the tests read kept.
+  Verification: `cargo test -q -p archogen-api` → 0 failed; `cargo test -q -p archogen-cli --test api_parity` → `6
+  passed`; `bash scripts/build_book.sh` → rc=0; `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`
+  Commit: `ARCHOGEN-PROGRAM-0313 (leaf PROGRAM.47.5.11)`
 
 ## Roadmap coverage map
 
@@ -1137,6 +1147,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.47.5.8` | `ARCHOGEN-PROGRAM-0310 (leaf PROGRAM.47.5.8)` | ***The catalog* in layers** |
 | `PROGRAM.47.5.9` | `ARCHOGEN-PROGRAM-0311 (leaf PROGRAM.47.5.9)` | ***Where generated systems run* in layers**, and which boards, from a ledgered datasheet |
 | `PROGRAM.47.5.10` | `ARCHOGEN-PROGRAM-0312 (leaf PROGRAM.47.5.10)` | ***The `archogen` command line* in layers** |
+| `PROGRAM.47.5.11` | `ARCHOGEN-PROGRAM-0313 (leaf PROGRAM.47.5.11)` | ***The engine API* in layers** |
 
 ## Changelog
 

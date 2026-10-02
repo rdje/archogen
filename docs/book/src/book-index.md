@@ -27,6 +27,7 @@ a change that leaves it stale, so it is never edited by hand.
 - Absent is a definite answer — [Presence, absence, and relevance](presence.md#absent-is-a-definite-answer)
 - **ACLINT** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - Acronyms and abbreviations — [Words this book uses](glossary.md#acronyms-and-abbreviations)
+- **AI** — [definition](glossary.md), [The engine API](engine-api.md)
 - An example that runs — [The engine API](engine-api.md#an-example-that-runs)
 - analysis-model — [What is versioned, and what changing it costs](versions.md#analysis-model)
 - **API** — [definition](glossary.md), [The runtime: decisions, not actions](runtime.md), [The engine
@@ -158,6 +159,7 @@ a change that leaves it stale, so it is never edited by hand.
 - How it works — [The runtime: decisions, not actions](runtime.md#how-it-works)
 - How it works — [Where generated systems run](targets.md#how-it-works)
 - How it works — [The archogen command line](cli.md#how-it-works)
+- How it works — [The engine API](engine-api.md#how-it-works)
 - How much of this a machine can check — [The boundary: functionality versus
   implementation](boundary.md#how-much-of-this-a-machine-can-check)
 - How the command line is held to it — [The engine API](engine-api.md#how-the-command-line-is-held-to-it)
@@ -238,7 +240,6 @@ a change that leaves it stale, so it is never edited by hand.
 - Offered is a claim, not evidence — [Presence, absence, and relevance](presence.md#offered-is-a-claim-not-evidence)
 - One operation: check — [The engine API](engine-api.md#one-operation-check)
 - One outcome vocabulary — [The engine API](engine-api.md#one-outcome-vocabulary)
-- Opening the page — [The engine API](engine-api.md#opening-the-page)
 - **OS** — [definition](glossary.md), [The boundary: functionality versus implementation](boundary.md), [What this
   project relies on from outside](ledger.md)
 - **OSEK** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [What this project relies on
@@ -383,6 +384,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The idea, in plain words — [The runtime: decisions, not actions](runtime.md#the-idea-in-plain-words)
 - The idea, in plain words — [Where generated systems run](targets.md#the-idea-in-plain-words)
 - The idea, in plain words — [The archogen command line](cli.md#the-idea-in-plain-words)
+- The idea, in plain words — [The engine API](engine-api.md#the-idea-in-plain-words)
 - The language definition travels with the binary — [Checking a
   description](checking.md#the-language-definition-travels-with-the-binary)
 - The list you read is the list the engine uses — [The supported
@@ -404,6 +406,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The precise rules — [The runtime: decisions, not actions](runtime.md#the-precise-rules)
 - The precise rules — [Where generated systems run](targets.md#the-precise-rules)
 - The precise rules — [The archogen command line](cli.md#the-precise-rules)
+- The precise rules — [The engine API](engine-api.md#the-precise-rules)
 - The product runs nothing — [Verifying the toolchain](verification.md#the-product-runs-nothing)
 - The records that hold it — [Where the engine's knowledge comes from: the catalog](catalog.md#the-records-that-hold-it)
 - The sealed set — [The use cases](usecases.md#the-sealed-set)

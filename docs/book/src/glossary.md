@@ -15,6 +15,8 @@ as `F26`, task-tree leaves — are names, not words, and are not listed.
   hold arguments, how the stack is laid out. See [The boundary](boundary.md).
 - **ACLINT** — the RISC-V Advanced Core Local Interruptor: the specification for a hart's timer and software
   interrupts. See [What this project relies on from outside](ledger.md).
+- **AI** — Artificial Intelligence: here, an assistant built on a language model that can drive archogen through its
+  engine API or its MCP server. See [The engine API](engine-api.md).
 - **API** — Application Programming Interface: the functions a program offers other programs. archogen's is the
   engine API. See [The engine API](engine-api.md).
 - **AUTOSAR** — AUTomotive Open System ARchitecture: the car industry's standard software architecture, whose
