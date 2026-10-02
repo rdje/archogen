@@ -59,8 +59,10 @@ implementation may declare which of its packages hold assembly, and a known fact
 only when it points into declared assembly and its record runs on the dialect's targets. The token scan reads the
 assembly itself (`M2.12.4.2`): in a declared package, `asm!` and `naked_asm!` written out in full, inside a function
 built only for the bare-metal target, every line one instruction from the dialect's short list with each operand of
-the kind its position takes, and every register an inline block touches declared to the compiler. What the port's
-record must state of the fault contract is checked next (`M2.12.4.3`). The gate, the check that
+the kind its position takes, and every register an inline block touches declared to the compiler. And what the port's
+record must state of the fault contract is checked (`M2.12.4.3`): the record that supplies the switch states every
+fact the statement owes, the obligatory ones never `no`; it depends on exactly one convention for how a failed check
+reports what it found, and every record selected with it on that same one. The gate, the check that
 protects it and the first records are the next leaves (`M2.7.4` to `M2.7.6`). Until they land, nothing loads a catalog, and `catalog/` is empty.
 
 ### The records that hold it

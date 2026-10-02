@@ -11,6 +11,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::hash::Catalog;
 use crate::record::{Content, Cost, FacetKind, Fact, Record, Targets};
 use crate::refusal::{Code, Refusal};
+use crate::statement;
 
 /// An analysis's selection: a profile, and a target or none.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -76,7 +77,10 @@ fn group_of(name: &str) -> Option<String> {
         "one-request-per-arrival.",
         "external.",
     ];
-    if SWITCH.contains(&name) {
+    if SWITCH.contains(&name)
+        || statement::FACTS.contains(&name)
+        || statement::COSTS.contains(&name)
+    {
         return Some("switch".to_owned());
     }
     if TIMER.contains(&name) {
@@ -280,7 +284,96 @@ impl Catalog {
                         ));
                     }
                 }
+                self.statement_under(selection, &suppliers)?;
             }
+        }
+        Ok(())
+    }
+
+    /// §14.4 under one selection: where a record supplies `switch`, it depends on exactly one check-passing
+    /// convention, and no record in the selection on another (`catalog-conflict`); and it supplies every fact of
+    /// the table that has no read condition or whose condition holds, `one-claim-per-trap`, and both costs
+    /// (`catalog-field`). Under a selection with no `switch`, nothing is checked.
+    fn statement_under(
+        &self,
+        selection: Selection<'_>,
+        suppliers: &BTreeMap<(FacetKind, &str), Vec<Found<'_>>>,
+    ) -> Result<(), Refusal> {
+        let Some([by]) = suppliers
+            .get(&(FacetKind::TimingModel, "switch"))
+            .map(Vec::as_slice)
+        else {
+            return Ok(());
+        };
+        let Some(port) = self.records.get(by.id) else {
+            return Ok(());
+        };
+        let conventions = |record: &Record| -> Vec<String> {
+            record
+                .contract
+                .depends
+                .iter()
+                .map(|d| d.id.clone())
+                .filter(|id| statement::is_convention(id))
+                .collect()
+        };
+        let chosen = conventions(port);
+        if chosen.len() != 1 {
+            return Err(Refusal::new(
+                Code::Conflict,
+                &port.path,
+                "depends",
+                None,
+                format!(
+                    "under {}, `{}` supplies `switch` and depends on {} check-passing conventions; it depends on exactly one (§14.4)",
+                    describe(selection),
+                    port.id,
+                    chosen.len()
+                ),
+            ));
+        }
+        for (id, record) in &self.records {
+            if !facts_drawn(record, selection) {
+                continue;
+            }
+            if let Some(other) = conventions(record).iter().find(|c| **c != chosen[0]) {
+                return Err(Refusal::new(
+                    Code::Conflict,
+                    &record.path,
+                    "depends",
+                    None,
+                    format!(
+                        "under {}, `{id}` depends on `{other}`, and the port, `{}`, on `{}`: one convention per selection (§14.4)",
+                        describe(selection),
+                        port.id,
+                        chosen[0]
+                    ),
+                ));
+            }
+        }
+        let facts = match &port.behavior_model.content {
+            Content::Present(m) => m.facts.as_slice(),
+            Content::None(_) => &[],
+        };
+        // The group rule, checked first, leaves the port the only supplier of every name it owes.
+        let missing = |facet: FacetKind, name: &str| !suppliers.contains_key(&(facet, name));
+        let absent = statement::required(facts)
+            .into_iter()
+            .map(|name| (FacetKind::BehaviorModel, name))
+            .chain(statement::COSTS.map(|name| (FacetKind::TimingModel, name)))
+            .find(|(facet, name)| missing(*facet, name));
+        if let Some((_, name)) = absent {
+            return Err(Refusal::new(
+                Code::Field,
+                &port.path,
+                name,
+                None,
+                format!(
+                    "under {}, `{}` supplies `switch`, so it states `{name}`, `unknown` if need be (§14.4)",
+                    describe(selection),
+                    port.id
+                ),
+            ));
         }
         Ok(())
     }

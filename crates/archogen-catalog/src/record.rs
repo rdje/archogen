@@ -13,6 +13,7 @@ use crate::dialect;
 use crate::grammar::{self, Requirement, Version};
 use crate::hash::encode;
 use crate::refusal::{At, Code, Refusal};
+use crate::statement;
 
 /// Which namespace a record lives in (§6).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -613,6 +614,14 @@ pub fn read_record(path: &str, bytes: &[u8]) -> Result<Record, Refusal> {
     let timing_model = ctx.timing_model(one(12))?;
     ctx.names(&behavior_model, &timing_model)?;
     ctx.section_12(&id, [one(11), one(12)], &behavior_model, &timing_model)?;
+    ctx.section_14_4(
+        &id,
+        contract.catalog,
+        &implementation,
+        one(11),
+        &behavior_model,
+        &timing_model,
+    )?;
     let reviews = slots[13]
         .iter()
         .map(|review| ctx.review(review, &contract.maintainer))
@@ -648,8 +657,18 @@ pub fn position(path: &str, bytes: &[u8], form: &Form) -> Option<At> {
 }
 
 /// The facts §12's facts table names that take any `.<suffix>`: a source's, or a record's id for
-/// `runtime-discipline`.
-const TABLED_FAMILIES: [(&str, FacetKind, bool); 6] = [
+/// `runtime-discipline` and §14.4's two self-named facts.
+const TABLED_FAMILIES: [(&str, FacetKind, bool); 8] = [
+    (
+        statement::GUARD_CHECK_CONTEXTS,
+        FacetKind::BehaviorModel,
+        true,
+    ),
+    (
+        statement::CONVENTION_STATED,
+        FacetKind::BehaviorModel,
+        false,
+    ),
     ("runtime-discipline.", FacetKind::BehaviorModel, true),
     ("no-application-code.", FacetKind::BehaviorModel, true),
     ("acknowledge-at-entry.", FacetKind::BehaviorModel, true),
@@ -724,7 +743,7 @@ pub const PORT_FACTS: [&str; 12] = [
     "primitives-out-of-line",
 ];
 
-/// Whether `name` is a code fact (§2): one §12 lists as about code.
+/// Whether `name` is a code fact (§2): one §12 or §14.4 lists as about code.
 #[must_use]
 pub fn is_code_fact(name: &str) -> bool {
     tabled(name).is_some_and(|(_, code)| code)
@@ -733,6 +752,12 @@ pub fn is_code_fact(name: &str) -> bool {
 /// The facet §12's facts table gives fact `name`, and whether it is about code; `None` for a fact it does not name.
 #[must_use]
 pub fn tabled(name: &str) -> Option<(FacetKind, bool)> {
+    if statement::FACTS.contains(&name) {
+        return Some((
+            FacetKind::BehaviorModel,
+            !statement::NOT_CODE.contains(&name),
+        ));
+    }
     TABLED
         .iter()
         .find(|(n, ..)| *n == name)
@@ -1823,6 +1848,144 @@ impl Ctx<'_> {
                 form,
                 "no primitive is named `completion`, so `masked.completion` is always the completion path's (§12)",
             ));
+        }
+        Ok(())
+    }
+
+    /// The rules of §14.4 one record's text shows (`M2.12.4.3`), its locators before its fields: a fact that takes
+    /// a `file` locator with another; a self-named fact named with another record's id; `convention-stated.<id>`
+    /// outside a convention record, and `guard-check-contexts.<id>` in a record supplying `switch`; an obligatory
+    /// fact's known `no`; a fact stated where its read condition does not hold; `api-trap-preemptible-before-decode`
+    /// `yes` beside `primitives-preemptible` `no`; and a convention record's form.
+    fn section_14_4(
+        &self,
+        id: &str,
+        catalog: Catalog,
+        implementation: &Facet<Packages>,
+        holder: &Form,
+        behavior: &Facet<BehaviorModel>,
+        timing: &Facet<TimingModel>,
+    ) -> Result<(), Refusal> {
+        let facts = match &behavior.content {
+            Content::Present(m) => m.facts.as_slice(),
+            Content::None(_) => &[],
+        };
+        let form_of = |name: &str| {
+            holder
+                .items()
+                .iter()
+                .filter(|f| f.head() == Some("facts"))
+                .flat_map(|f| f.items().iter().skip(1))
+                .find(
+                    |f| matches!(f.items().get(1), Some(Form::Symbol { name: n, .. }) if n == name),
+                )
+        };
+        let refuse = |code: Code, name: &str, message: String| {
+            self.refuse(
+                code,
+                &format!("behavior-model fact[{name}]"),
+                form_of(name),
+                message,
+            )
+        };
+        let known = |name: &str, holds: bool| {
+            facts.iter().any(|f| {
+                f.name == name && matches!(f.value, FactValue::Known { holds: h, .. } if h == holds)
+            })
+        };
+        for fact in facts {
+            if let FactValue::Known { locators, .. } = &fact.value {
+                if statement::file_located(&fact.name)
+                    && locators.iter().any(|l| !matches!(l, Locator::File(_)))
+                {
+                    return Err(refuse(
+                        Code::Locator,
+                        &fact.name,
+                        format!(
+                            "`{}` takes a `file` locator and no other (§14.4)",
+                            fact.name
+                        ),
+                    ));
+                }
+            }
+        }
+        let supplies_switch = matches!(&timing.content, Content::Present(m) if m.costs.iter().any(|c| c.name == "switch"));
+        for fact in facts {
+            let name = fact.name.as_str();
+            if let Some(named) = statement::self_named(name) {
+                if named != id {
+                    return Err(refuse(
+                        Code::Field,
+                        name,
+                        format!("a record states `{name}` only about itself, `{id}` (§14.4)"),
+                    ));
+                }
+                if name.starts_with(statement::CONVENTION_STATED) && !statement::is_convention(id) {
+                    return Err(refuse(
+                        Code::Field,
+                        name,
+                        format!(
+                            "only a check-passing convention record, whose id begins `{}`, states `{name}` (§14.4)",
+                            statement::CONVENTION_PREFIX
+                        ),
+                    ));
+                }
+                if name.starts_with(statement::GUARD_CHECK_CONTEXTS) && supplies_switch {
+                    return Err(refuse(
+                        Code::Field,
+                        name,
+                        format!("a record supplying `switch` states `guard-check-contexts`, not `{name}` (§14.4)"),
+                    ));
+                }
+            }
+            if statement::OBLIGATORY.contains(&name) && known(name, false) {
+                return Err(refuse(
+                    Code::Field,
+                    name,
+                    format!("`{name}` is obligatory: the contract requires it, so a known `no` is refused (§14.4)"),
+                ));
+            }
+            if statement::FACTS.contains(&name) && !statement::condition_holds(name, facts) {
+                return Err(refuse(
+                    Code::Field,
+                    name,
+                    format!("`{name}` is stated where its read condition does not hold (§14.4)"),
+                ));
+            }
+        }
+        if known("api-trap-preemptible-before-decode", true)
+            && known("primitives-preemptible", false)
+        {
+            return Err(refuse(
+                Code::Field,
+                "api-trap-preemptible-before-decode",
+                "`api-trap-preemptible-before-decode` `yes` beside `primitives-preemptible` `no`: the contract's rule 2 makes a primitive's trap the primitive (§14.4)".to_owned(),
+            ));
+        }
+        if statement::is_convention(id) {
+            let own = format!("{}{id}", statement::CONVENTION_STATED);
+            let refuse = |field: &str, message: &str| {
+                Refusal::new(
+                    Code::Field,
+                    self.path,
+                    field,
+                    None,
+                    format!("a check-passing convention record {message} (§14.4)"),
+                )
+            };
+            if catalog != Catalog::Interfaces {
+                return Err(refuse("catalog", "is in the `interfaces` catalog"));
+            }
+            if !matches!(implementation.content, Content::None(_)) {
+                return Err(refuse("implementation", "has implementation `none`"));
+            }
+            let stated = matches!(facts, [f] if f.name == own && matches!(f.value, FactValue::Known { holds: true, .. }));
+            if !stated {
+                return Err(refuse(
+                    "behavior-model",
+                    &format!("states exactly one fact, `{own}`, `yes`"),
+                ));
+            }
         }
         Ok(())
     }

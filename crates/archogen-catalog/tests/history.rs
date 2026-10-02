@@ -33,11 +33,12 @@ fn base() -> String {
     records[..split + 1].to_owned()
 }
 
-/// `example.timed` as the example writes it.
+/// `example.timed` as the example writes it, but for its cost's name, `dispatch`: a record supplying `switch` would
+/// owe §14.4's port statement, which this history is not about (`M2.12.4.3`).
 fn timed() -> String {
     let records = block("(catalog-record example.base");
     let split = records.find("\n(catalog-record example.timed").unwrap();
-    records[split + 1..].to_owned()
+    records[split + 1..].replacen("(cost switch", "(cost dispatch", 1)
 }
 
 /// `example.base` without its review.

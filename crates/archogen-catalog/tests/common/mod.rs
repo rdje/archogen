@@ -232,3 +232,88 @@ pub fn package() -> Vec<(&'static str, &'static str)> {
         ("crates/p/src/lib.rs", "//! p\n"),
     ]
 }
+
+/// The check-passing convention the port fixtures depend on (§14.4).
+pub const CONVENTION: &str = "convention.check-passing.example";
+
+/// A check-passing convention record (§14.4): `interfaces`, implementation `none`, on the example's profile and any
+/// target, its one fact `convention-stated.<id>` `yes`, located in the example's model file.
+pub fn convention() -> String {
+    let record = edit(
+        &edit(
+            &edit(
+                &bare(),
+                "(catalog-record example.base",
+                &format!("(catalog-record {CONVENTION}"),
+            ),
+            "(catalog machine)",
+            "(catalog interfaces)",
+        ),
+        "(targets example-target)",
+        "(targets any)",
+    );
+    edit(
+        &record,
+        "(fact one-processor yes (locator (file \"docs/example/model.txt\")) (basis \"the model says so\"))",
+        &format!(
+            "(fact convention-stated.{CONVENTION} yes (locator (file \"docs/example/model.txt\")) (basis \"the convention, copied\"))"
+        ),
+    )
+}
+
+/// The facts a port that states no read condition `yes` owes (§14.4): every fact of the table with no read
+/// condition, and `one-claim-per-trap`. Typed from §14.4's table, not taken from the crate.
+pub const STATEMENT: [&str; 18] = [
+    "detects-non-job-calls",
+    "services-preempt-completion-interval",
+    "guard-check-contexts",
+    "generated-guard-check-contexts",
+    "guarded-stacks",
+    "decision-placement",
+    "api-entry-by-trap",
+    "primitives-preemptible",
+    "fault-window",
+    "window-trap-preempts-outside",
+    "abandoned-primitive-completion",
+    "fault-path-entries",
+    "checks-trap",
+    "traps-discriminated",
+    "kept-record-readout",
+    "panic-strategy-abort",
+    "vector-direct",
+    "one-claim-per-trap",
+];
+
+/// `record`, which supplies `switch` on `target`, made the port (§14.4): it depends on [`CONVENTION`], states each
+/// fact of [`STATEMENT`] it does not state already, `unknown`, and costs `fatal-path.entry` and `fatal-path.trap` on
+/// `target`, `unknown`.
+pub fn ported(record: &str, target: &str) -> String {
+    let mut out = if record.contains("(depends)") {
+        edit(
+            record,
+            "(depends)",
+            &format!("(depends ({CONVENTION} \"0.1\"))"),
+        )
+    } else {
+        edit(
+            record,
+            "(depends ",
+            &format!("(depends ({CONVENTION} \"0.1\") "),
+        )
+    };
+    let facts: Vec<String> = STATEMENT
+        .iter()
+        .filter(|name| !out.contains(&format!("(fact {name} ")))
+        .map(|name| format!("(fact {name} (unknown \"not stated yet\"))"))
+        .collect();
+    let at = out.find("(behavior-model").expect("a behavioral model");
+    let at = at + out[at..].find("(facts").expect("its facts") + "(facts".len();
+    out.insert_str(at, &format!(" {}", facts.join(" ")));
+    let costs = format!(
+        " (cost fatal-path.entry (target {target}) (unknown \"not measured\")) (cost fatal-path.trap (target {target}) (unknown \"not measured\"))"
+    );
+    let at = out.find("(timing-model").expect("a timing model");
+    let at = at + out[at..].find("(costs").expect("its costs") + "(costs".len();
+    out.insert_str(at, &costs);
+    out
+}

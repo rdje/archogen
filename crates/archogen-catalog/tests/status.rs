@@ -440,7 +440,7 @@ fn a_rejected_cost_reaches_the_same_cost_on_its_target_and_on_a_target_of_the_sa
             &bare(),
             "(timing-model (version \"0.1.0\") (none \"the costs of a machine are its devices'\"))",
             &format!(
-                "(timing-model (version \"0.1.0\") (sources) (measured-with) (facts)\n    (costs (cost switch \
+                "(timing-model (version \"0.1.0\") (sources) (measured-with) (facts)\n    (costs (cost wake \
                  (target {target}) (value 0x28) (unit ns) (scope \"one switch\") (holds-for (tasks 8) (sources 2)) \
                  (holds-under-preemption yes) (binary unbuilt) (evidence assumed) (basis \"a cost\"))))"
             ),
@@ -474,7 +474,8 @@ fn a_rejected_cost_reaches_the_same_cost_on_its_target_and_on_a_target_of_the_sa
     let files: Vec<(&str, &str)> = files.iter().map(|(p, b)| (*p, *b)).collect();
     let with_scope = |r: String| edit(&r, "(scope \"one switch\")", "(scope \"one other switch\")");
     // With the example's `.env`, which gives neither key, the name and target alone reach. Two records cannot
-    // both supply `switch` on one target, so the rejected record's cost is renamed before the other takes it up.
+    // both supply `wake` on one target, so the rejected record's cost is renamed before the other takes it up. The
+    // cost is not `switch`, whose supplier would owe §14.4's port statement (`M2.12.4.3`).
     let base_cost = costed("example-target");
     let t0 = tree(&[&base_cost], &[]);
     let rejected = with(
@@ -482,7 +483,7 @@ fn a_rejected_cost_reaches_the_same_cost_on_its_target_and_on_a_target_of_the_sa
         &review(TIMING, &bound(&t0, "example.base", TIMING), "rejected", &[]),
     );
     let renamed = edit(
-        &edit(&rejected, "(cost switch", "(cost dispatch"),
+        &edit(&rejected, "(cost wake", "(cost dispatch"),
         "(timing-model (version \"0.1.0\")",
         "(timing-model (version \"0.1.1\")",
     );

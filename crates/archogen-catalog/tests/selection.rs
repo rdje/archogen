@@ -299,7 +299,13 @@ fn a_grouped_name_comes_from_its_anchors_record() {
                 &[(anchor, "example-target")],
             )
         };
-        let c = catalog(&[&both]);
+        // A record supplying `switch` is the port, and owes §14.4's statement.
+        let both = if anchor == "switch" {
+            ported(&both, "example-target")
+        } else {
+            both
+        };
+        let c = catalog(&[&both, &convention()]);
         c.check_selections()
             .unwrap_or_else(|e| panic!("{member} with {anchor}: {e}"));
         assert_eq!(
@@ -314,7 +320,10 @@ fn a_grouped_name_comes_from_its_anchors_record() {
         );
     }
     // The rule is checked only where the anchor is supplied.
-    let anchored = rec("rec.a", "any", &[], &[], &[("switch", "twin-target")]);
+    let anchored = ported(
+        &rec("rec.a", "any", &[], &[], &[("switch", "twin-target")]),
+        "twin-target",
+    );
     let elsewhere = rec(
         "rec.b",
         "example-target",
@@ -322,7 +331,7 @@ fn a_grouped_name_comes_from_its_anchors_record() {
         &[],
         &[],
     );
-    catalog(&[&anchored, &elsewhere])
+    catalog(&[&anchored, &elsewhere, &convention()])
         .check_selections()
         .unwrap_or_else(|e| panic!("{e}"));
     // Another source's names are not this source's group.

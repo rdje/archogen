@@ -15,12 +15,13 @@ const P: &str = "rt-static-up-v1";
 const CONTRACT: FacetKind = FacetKind::Contract;
 const IMPLEMENTATION: FacetKind = FacetKind::Implementation;
 
-/// `example.timed` as the example writes it: it depends on `example.base`, and costs a switch on the example's
-/// target.
+/// `example.timed` as the example writes it, but for its cost's name: it depends on `example.base`, and costs a
+/// `dispatch` on the example's target. The example fixes bytes, not a catalog, and a record supplying `switch`
+/// would owe §14.4's port statement, which these claims are not about (`M2.12.4.3`).
 fn timed() -> String {
     let records = block("(catalog-record example.base");
     let split = records.find("\n(catalog-record example.timed").unwrap();
-    records[split + 1..].to_owned()
+    records[split + 1..].replacen("(cost switch", "(cost dispatch", 1)
 }
 
 /// A one-commit history of these records, loaded.
@@ -46,7 +47,7 @@ fn a_claims_citations_are_what_it_read_and_its_closure_what_they_rest_on() {
         Some("example-target"),
         Strength::Exploratory,
     );
-    let found = claim.lookup(TIMING, "switch").unwrap().unwrap();
+    let found = claim.lookup(TIMING, "dispatch").unwrap().unwrap();
     assert_eq!(found.id, "example.timed");
     // The example's printed bound input names these facets, and each of theirs is followed in turn.
     assert_eq!(
@@ -79,7 +80,7 @@ fn a_claims_citations_are_what_it_read_and_its_closure_what_they_rest_on() {
     assert_eq!(
         reads,
         [
-            ("switch", Some("example.timed")),
+            ("dispatch", Some("example.timed")),
             ("wake", None),
             ("one-processor", Some("example.base"))
         ]
@@ -135,7 +136,7 @@ fn a_claims_citations_are_what_it_read_and_its_closure_what_they_rest_on() {
 fn a_closure_outside_the_claims_target_is_unsupported() {
     let (h, l) = loaded(&[&base(), &timed()], &[]);
     let mut claim = Claim::new(&l, &h, None, P, Some("nowhere"), Strength::Exploratory);
-    claim.lookup(TIMING, "switch").unwrap();
+    claim.lookup(TIMING, "dispatch").unwrap();
     let a = claim.admit().unwrap();
     assert_eq!(a.verdict, Verdict::UnsupportedProfile);
     assert!(
@@ -154,7 +155,7 @@ fn a_closure_outside_the_claims_target_is_unsupported() {
     );
     let (h, l) = loaded(&[&base(), &twin], &[]);
     let mut claim = Claim::new(&l, &h, None, P, Some("twin-target"), Strength::Production);
-    claim.lookup(TIMING, "switch").unwrap().unwrap();
+    claim.lookup(TIMING, "dispatch").unwrap().unwrap();
     let a = claim.admit().unwrap();
     assert_eq!(
         a.verdict,
@@ -198,7 +199,7 @@ fn a_production_claim_names_every_cause_it_is_not_established() {
         Some("example-target"),
         Strength::Production,
     );
-    claim.lookup(TIMING, "switch").unwrap().unwrap();
+    claim.lookup(TIMING, "dispatch").unwrap().unwrap();
     claim.input("C_i of task a", Source::Caller);
     claim.input("the plan's interrupt order", Source::Application);
     let a = claim.admit().unwrap();
@@ -208,8 +209,8 @@ fn a_production_claim_names_every_cause_it_is_not_established() {
         "`example.timed` is `experimental`",
         "`C_i of task a` came from the Caller",
         "`the plan's interrupt order` came from the Application",
-        "the cost `switch` is on `example-target`, which is not a board",
-        "the cost `switch` is measured on an image, or none",
+        "the cost `dispatch` is on `example-target`, which is not a board",
+        "the cost `dispatch` is measured on an image, or none",
         "the clone has no `origin/main`",
         "premise 3 has no named commit yet",
     ] {
@@ -282,7 +283,7 @@ fn the_commit_read_holds_every_line_of_its_ancestors_and_of_origin_main() {
         Some("example-target"),
         Strength::Production,
     );
-    claim.lookup(TIMING, "switch").unwrap();
+    claim.lookup(TIMING, "dispatch").unwrap();
     let a = claim.admit().unwrap();
     let lacking: Vec<&String> = a
         .reasons
@@ -303,7 +304,7 @@ fn the_commit_read_holds_every_line_of_its_ancestors_and_of_origin_main() {
         Some("example-target"),
         Strength::Production,
     );
-    same.lookup(TIMING, "switch").unwrap();
+    same.lookup(TIMING, "dispatch").unwrap();
     assert!(!same
         .admit()
         .unwrap()
@@ -397,7 +398,7 @@ fn behavioral_and_timing_model_versions_are_independent() {
         Some("example-target"),
         Strength::Exploratory,
     );
-    on_timing.lookup(TIMING, "switch").unwrap().unwrap();
+    on_timing.lookup(TIMING, "dispatch").unwrap().unwrap();
     let timing_lines = on_timing.result().closure;
     assert!(
         !timing_lines.iter().any(|c| c.facet == BEHAVIOR),
@@ -570,7 +571,7 @@ fn premise_reasons(h: &History, named: Option<char>, tooling: Option<char>) -> V
         tooling: tooling.map(n),
         checker: vec!["scripts/".to_owned(), "Cargo.toml".to_owned()],
     });
-    claim.lookup(TIMING, "switch").unwrap();
+    claim.lookup(TIMING, "dispatch").unwrap();
     claim
         .admit()
         .unwrap()

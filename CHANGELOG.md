@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog checks what the port declares about faults
+
+`ARCHOGEN-M2-0375` (leaf `M2.12.4.3`).
+
+- The catalog now holds the port's record to its statement: every fact it owes about faults is there, the ones the
+  fault contract requires are never `no`, the facts that only make sense under a condition appear only where it
+  holds, and the port and every record selected with it agree on one convention for reporting what a failed check
+  found.
+
 ## archogen — the catalog reads the port's assembly
 
 `ARCHOGEN-M2-0374` (leaf `M2.12.4.2`).

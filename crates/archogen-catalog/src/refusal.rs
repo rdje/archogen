@@ -27,7 +27,8 @@ pub enum Code {
     /// A field's value is outside what §2 admits: an empty text, an unknown name from a closed set, a malformed
     /// fact or cost, a negative integer, a safety factor that does not pad, and the rest of §11's list; an unknown
     /// architecture, a known port fact with no locator into declared assembly, and a record reaching declared
-    /// assembly or stating such a fact off the dialect's targets (§14.2).
+    /// assembly or stating such a fact off the dialect's targets (§14.2); the port's statement, by one record's text
+    /// and under a selection (§14.4).
     Field,
     /// A locator outside what §2 admits for its facet, or missing where §2 requires one; a code fact's locator that
     /// is not a `code` locator (§14.2).
@@ -35,7 +36,8 @@ pub enum Code {
     /// §3's package rules, manifest dialect and workspace rule, and §4's path rules, an `assembly` declaration's
     /// packages among them (§14.2).
     Source,
-    /// An unresolved, unmatched or repeated reference to another record, or a cycle.
+    /// An unresolved, unmatched or repeated reference to another record, or a cycle; a dependency on a check-passing
+    /// convention that does not admit the record's profiles and targets (§14.4).
     Dependency,
     /// §5's review rules.
     Review,
@@ -51,7 +53,8 @@ pub enum Code {
     LockReview,
     /// §9: a retired id's unanswered rejection, a superseded id taken again, a dropped lineage.
     LockRetired,
-    /// §12: two records supply one name under one selection.
+    /// §12: two records supply one name under one selection; §14.4's check per selection, of the check-passing
+    /// convention the port and the records beside it depend on.
     Conflict,
 }
 

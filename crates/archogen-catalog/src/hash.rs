@@ -22,6 +22,7 @@ use crate::record::{
     Review, Targets, PORT_FACTS,
 };
 use crate::refusal::{Code, Refusal};
+use crate::statement;
 use crate::status::env_value;
 use crate::tree::{self, Tree};
 
@@ -445,6 +446,25 @@ impl Catalog {
     }
 }
 
+/// Whether `by`'s profiles and targets admit `record`'s: each of its profiles among them, and each of its targets,
+/// or `any` only by `any`. The profiles' half cannot fail while the engine supports one profile, which every record
+/// names; it is kept so a second profile, added in `eadl-model`, finds it here (`M2.12.4.3`).
+fn admits(by: &Record, record: &Record) -> bool {
+    let profiles = record
+        .contract
+        .profiles
+        .iter()
+        .all(|p| by.contract.profiles.contains(p));
+    let targets = match (&by.contract.targets, &record.contract.targets) {
+        (Targets::Any, _) => true,
+        (Targets::Named(_), Targets::Any) => false,
+        (Targets::Named(admitted), Targets::Named(named)) => {
+            named.iter().all(|t| admitted.contains(t))
+        }
+    };
+    profiles && targets
+}
+
 /// The package an implementation's entry names: its directory's, or the nearest enclosing package's (§3).
 fn package_of(tree: &Tree, entry: &str) -> Option<String> {
     let start = if tree.is_file(entry) {
@@ -546,6 +566,15 @@ impl<'a> Computer<'a> {
                     format!(
                         "`{}` is at {}, which `\"{}\"` does not match",
                         dependency.id, other.contract.version, dependency.requirement
+                    ),
+                ));
+            }
+            if statement::is_convention(&dependency.id) && !admits(other, record) {
+                return Err(refuse(
+                    "depends",
+                    format!(
+                        "`{}`, a check-passing convention, does not admit this record's profiles and targets (§14.4)",
+                        dependency.id
                     ),
                 ));
             }

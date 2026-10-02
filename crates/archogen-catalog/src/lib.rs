@@ -22,7 +22,8 @@
 //! §3's package rules and token scan (`M2.7.3.7`). §14.2 amends the record's form (`M2.12.4.1`): a code fact's
 //! several `code` locators, the [`record::Assembly`] declaration and its [`dialect`], and the rules over declared
 //! assembly that [`hash::Catalog::hashes`] checks once every set is known; and [`assembly`], §3's token scan over a
-//! declared package, which admits `asm!` and `naked_asm!` only as §14.2 states them (`M2.12.4.2`).
+//! declared package, which admits `asm!` and `naked_asm!` only as §14.2 states them (`M2.12.4.2`); and
+//! [`statement`], §14.4's port statement, which the reader and the selection check (`M2.12.4.3`).
 
 pub mod assembly;
 pub mod claim;
@@ -41,6 +42,7 @@ pub mod record;
 pub mod refusal;
 pub mod replay;
 pub mod selection;
+pub mod statement;
 pub mod status;
 pub mod tree;
 
