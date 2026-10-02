@@ -81,14 +81,15 @@ a change that leaves it stale, so it is never edited by hand.
   actions](runtime.md), [The engine API](engine-api.md), [Verifying the toolchain](verification.md), [What is versioned,
   and what changing it costs](versions.md)
 - **description** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
-  board](tour.md), [The boundary: functionality versus implementation](boundary.md), [The use cases](usecases.md),
-  [Reading a description](reading.md), [Kinds and schemas](kinds.md), [Quantities and units](quantities.md), [Modules
-  and composition](modules.md), [Presence, absence, and relevance](presence.md), [Refinement](refinement.md),
-  [Describing a workload](workload.md), [Checking a description](checking.md), [What a report may claim](evidence.md),
-  [Where the engine's knowledge comes from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md),
-  [The S0 early generation path](s0.md), [Where generated systems run](targets.md), [The archogen command line](cli.md),
-  [The engine API](engine-api.md), [Verifying the toolchain](verification.md), [What is versioned, and what changing it
-  costs](versions.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
+  board](tour.md), [The boundary: functionality versus implementation](boundary.md), [The supported
+  profile](profile.md), [The use cases](usecases.md), [Reading a description](reading.md), [Kinds and
+  schemas](kinds.md), [Quantities and units](quantities.md), [Modules and composition](modules.md), [Presence, absence,
+  and relevance](presence.md), [Refinement](refinement.md), [Describing a workload](workload.md), [Checking a
+  description](checking.md), [What a report may claim](evidence.md), [Where the engine's knowledge comes from: the
+  catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [The S0 early generation path](s0.md), [Where
+  generated systems run](targets.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying
+  the toolchain](verification.md), [What is versioned, and what changing it costs](versions.md), [Annex B: The checks
+  that keep the repository honest](annex-repository.md)
 - Diagnostics — [The archogen command line](cli.md#diagnostics)
 - Diagnostics point at the problem — [Reading a description](reading.md#diagnostics-point-at-the-problem)
 - **DMA** — [definition](glossary.md), [The supported profile](profile.md)
@@ -154,6 +155,7 @@ a change that leaves it stale, so it is never edited by hand.
 - How it was reviewed — [Where the engine's knowledge comes from: the catalog](catalog.md#how-it-was-reviewed)
 - How it works — [Introduction](introduction.md#how-it-works)
 - How it works — [The boundary: functionality versus implementation](boundary.md#how-it-works)
+- How it works — [The supported profile](profile.md#how-it-works)
 - How it works — [Reading a description](reading.md#how-it-works)
 - How it works — [Describing a workload](workload.md#how-it-works)
 - How it works — [Checking a description](checking.md#how-it-works)
@@ -278,10 +280,10 @@ a change that leaves it stale, so it is never edited by hand.
   establishes](analysis.md), [The runtime: decisions, not actions](runtime.md), [Where generated systems
   run](targets.md)
 - **priority** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
-  board](tour.md), [The use cases](usecases.md), [Reading a description](reading.md), [Describing a
-  workload](workload.md), [Checking a description](checking.md), [The runtime: decisions, not actions](runtime.md), [The
-  S0 early generation path](s0.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules
-  in detail](annex-runtime.md)
+  board](tour.md), [The supported profile](profile.md), [The use cases](usecases.md), [Reading a
+  description](reading.md), [Describing a workload](workload.md), [Checking a description](checking.md), [The runtime:
+  decisions, not actions](runtime.md), [The S0 early generation path](s0.md), [What this project relies on from
+  outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
 - profile — [What is versioned, and what changing it costs](versions.md#profile)
 - **profile** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The supported profile](profile.md), [The use cases](usecases.md), [Reading a
@@ -330,7 +332,6 @@ a change that leaves it stale, so it is never edited by hand.
 - **RP2350** — [definition](glossary.md), [Where generated systems run](targets.md), [What this project relies on from
   outside](ledger.md)
 - rp2350 — [What this project relies on from outside](ledger.md#rp2350)
-- rt-static-up-v1 — [The supported profile](profile.md#rt-static-up-v1)
 - **runtime** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The supported profile](profile.md), [What a report may claim](evidence.md), [What the scheduling
   checker establishes](analysis.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [The runtime:
@@ -387,6 +388,7 @@ a change that leaves it stale, so it is never edited by hand.
   honest](annex-repository.md#the-histories-are-sealed-as-they-grow)
 - The idea, in plain words — [Introduction](introduction.md#the-idea-in-plain-words)
 - The idea, in plain words — [The boundary: functionality versus implementation](boundary.md#the-idea-in-plain-words)
+- The idea, in plain words — [The supported profile](profile.md#the-idea-in-plain-words)
 - The idea, in plain words — [Reading a description](reading.md#the-idea-in-plain-words)
 - The idea, in plain words — [Describing a workload](workload.md#the-idea-in-plain-words)
 - The idea, in plain words — [Checking a description](checking.md#the-idea-in-plain-words)
@@ -407,6 +409,7 @@ a change that leaves it stale, so it is never edited by hand.
   description](checking.md#the-passes-in-the-order-a-failure-makes-the-next-meaningless)
 - The precise rules — [Introduction](introduction.md#the-precise-rules)
 - The precise rules — [The boundary: functionality versus implementation](boundary.md#the-precise-rules)
+- The precise rules — [The supported profile](profile.md#the-precise-rules)
 - The precise rules — [Reading a description](reading.md#the-precise-rules)
 - The precise rules — [Describing a workload](workload.md#the-precise-rules)
 - The precise rules — [Checking a description](checking.md#the-precise-rules)
@@ -439,6 +442,7 @@ a change that leaves it stale, so it is never edited by hand.
   establishes](analysis.md#three-outcomes-and-one-that-is-easy-to-get-wrong)
 - **TL16C550C** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - Today and ahead — [Introduction](introduction.md#today-and-ahead)
+- Today and ahead — [The supported profile](profile.md#today-and-ahead)
 - Today and ahead — [Where the engine's knowledge comes from: the catalog](catalog.md#today-and-ahead)
 - Today and ahead — [The runtime: decisions, not actions](runtime.md#today-and-ahead)
 - Today and ahead: there is no board — [Where generated systems run](targets.md#today-and-ahead-there-is-no-board)

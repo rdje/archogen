@@ -1,14 +1,35 @@
 # The supported profile
 
+## The idea, in plain words
+
+A bridge carries a sign with its load limit. Within the limit, the engineers who built it stand behind it; beyond
+it, they promise nothing, and the sign is what tells a driver which case they are in. archogen's **profile** is that
+sign. It says which systems archogen will build and what it will promise about them, and a system outside it is
+refused out loud rather than built with its promises quietly weakened.
+
+There is one profile today, `rt-static-up-v1`. Its name reads as what it covers: *real-time* systems that are
+*static*, everything decided before the system starts, on a *uniprocessor*, one processor core; *v1* is its first
+version. Concretely: a fixed list of tasks, each with its own priority, each started by the clock or by an event
+no more often than a declared interval; memory set aside before start-up and none handed out while running; a
+timer, and only the interrupts the description declares.
+
+Much is left out: tasks sharing locks, messages between tasks, several cores, a file system, a network. Each
+refusal says what admitting the capability would cost, so a "no" is also a to-do list.
+
+> **In one minute, for engineers.** `rt-static-up-v1` (`docs/profiles/rt-static-up-v1.md`, `ROADMAP.md` §3.1): one
+> active core; static unique priorities, preemptive, bounded kernel critical sections; a finite static task set,
+> periodic or sporadic, constrained deadlines, bounded jitter; static stacks, no heap, no application mutexes, no
+> general IPC; a timer plus explicitly modelled bounded interrupt sources; one address space and no isolation
+> claim. A request outside it gets `unsupported-profile` (exit `12`), and an unknown capability is a
+> `missing-fact`, never admitted. The exclusions are data in `crates/eadl-model/src/profile.rs`, and a test holds
+> the published page to them.
+
+## How it works
+
 A **profile** is the contract that decides which systems archogen will admit, and what it
 will claim about them. It is not a preference or a default — it is the boundary of every
-guarantee the toolchain makes.
-
-There is one today: `rt-static-up-v1`.
-
-## `rt-static-up-v1`
-
-A small, single-core, statically configured real-time executive:
+guarantee the toolchain makes. `rt-static-up-v1` is a small, single-core, statically
+configured real-time executive:
 
 - **one active core**; one execution context runs at a time;
 - **static unique task priorities**, preemption at the target's supported interrupt points,
@@ -27,7 +48,9 @@ The scheduling model stays fixed-priority **even when a test harness randomizes 
 ordering** at permitted boundaries. Test exploration never changes the policy whose timing is
 being analyzed — otherwise the thing measured is not the thing shipped.
 
-## Refusal is a feature
+## The precise rules
+
+### Refusal is a feature
 
 Ask for something the profile does not admit and you get an `unsupported-profile` diagnostic
 (exit code `12`). You do **not** get a system built to a weaker guarantee without being told.
@@ -45,12 +68,12 @@ says what the work is rather than just "no":
 
 …and thirteen more, all listed on the profile page with their reasons.
 
-## Silence is not admission
+### Silence is not admission
 
 A capability the profile has **never heard of** is not admitted by default. An unknown name
 is a `missing-fact` for the caller to resolve, not a quiet yes.
 
-## The list you read is the list the engine uses
+### The list you read is the list the engine uses
 
 The exclusions are **data** (`crates/eadl-model/src/profile.rs`), and the published page is
 checked against that data by a test. Misspell one slug on the page and the build fails:
@@ -64,7 +87,9 @@ assertion `left == right` failed: docs/profiles/rt-static-up-v1.md has drifted f
 A refusal that names a capability is only trustworthy if the name the engine refuses and the
 name the documentation publishes cannot drift apart.
 
-## Later profiles
+## Today and ahead
+
+### Later profiles
 
 New families are added in the order real examples demand them — bounded IPC and one sharing
 protocol first, then additional scheduling policies, protected tasks and capabilities, timer
