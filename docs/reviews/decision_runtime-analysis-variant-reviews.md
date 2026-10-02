@@ -136,6 +136,29 @@ derive from the record alone:
 It also said it had derived "19 fixtures", where the file holds 18, a miscount in its summary. The fixture file
 is its Part 1, copied verbatim.
 
+**`M2.11`'s first review, `2026-10-02`,** of commit `1c61e70`, which added "every interrupt taken is paid for by an
+arrival" to condition 5. A new read-only context that had not written it judged the change against §1, §2 and §4,
+and built a witness: a set every condition admitted, whose bound for its first task, 27, a trap taken on a lagging
+notification, before the arrival it then served, exceeded on the timeline at 33. Its verdict: "not yet fit to close
+M2.11"; each fix local.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 1 | defect | a service "for one of its arrivals" could start before that arrival, so the ceiling, which counts arrivals at most `J_s` before a start, missed it: 33 against an admitted 27 | the condition stated at the trap: an interrupt other than the timer's is taken only while a request an arrival made is pending; §2 shows the source term then charges everything a source's services run in the window, a trap's entry cut by the window paid for by the request pending when it was taken; a service's start defined (§1); `no-empty-claim` stated at the trap, and step 4 of the composition record amended likewise |
+| 2 | defect | the condition counted interrupts taken, not services, so a claim loop's later service was covered by none | every service, a trap's first or a later one, serves one request; a trap's several services each within their `C_s` (condition 5) |
+| 3 | defect | a timer interrupt still pending after its compare moved on was "raised when a release was due", and its service, releasing nothing, was charged nowhere | condition 6 says *taken*; the platform fact's text and field comment follow |
+| 4 | defect | the catalog composition lacked `external.<source>`, `leaves-interrupt-hardware-alone` and `runtime-discipline.<id>`, stated `no-empty-claim` at the claim, and gave no rule for `no` or `unknown` | every conjunct listed, `one-external-controller` and `raised-only-when-due` with them; `no` if any is `no`, undeclared if any is `unknown` (the catalog's §12) |
+| 5 | defect | "so did `M2.11`'s condition" come before any conclusion: §6, the book and the tests had stated `/1` conclusions | the model is `/2` and every `/1` conclusion void, by the record's own rule (How to apply); the code's `MODEL` and the book follow |
+| 6 | drafting | the expected results did not declare the new fact; `facts=all` was read to cover it | said so: stipulated, not declared (How to apply) |
+| 7 | drafting | `CONDITIONS`, the text every conclusion carries, omitted the new condition and four older ones | all five added |
+| 8 | drafting | "paid for by an arrival" while the timer's are paid for by due releases | "by a due release or by an arrival" |
+| 9 | nit | the refusal text read as if only its second half failed | "every interrupt taken is paid for by a due release or an arrival does not hold" |
+| 10 | nit | the test's comment called its `AtEntry` uart level-triggered and cleared late | put as a hypothetical |
+| 11 | nit | "rounds 4 and 5" | "rounds 4 to 6, N2, O1 and P2" |
+| 12 | nit | the ledger's `riscv-plic` and `qemu` scopes named only the composition record | both name the variant's condition 5; `riscv-privileged` names condition 6 |
+| 13 | nit | the book omitted QEMU's mechanism, and the changelog said "real hardware" | both corrected |
+| 14 | nit | a hyphenated name for a fact that does not exist, and "one composed from others" ambiguous | the field's name; "one with no fact of its own" |
+
 ## Why
 
 The record states the variant as it stands, and this file keeps how it got there, as for the catalog record.

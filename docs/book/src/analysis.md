@@ -227,16 +227,19 @@ resume cost turns a real miss into a false pass.
 The variant is decided (leaf `M2.6.1`, `docs/decisions/decision_runtime-analysis-variant.md`) and built
 (`crates/rt-analysis/src/runtime.rs`, leaf `M2.6.2`). It is a
 response-time analysis with release jitter, interrupt and timer interference, a charge for every context switch,
-and a charge for state a preemption destroys, `fixed-priority-with-overheads/1`. Its costs and platform facts are
+and a charge for state a preemption destroys, `fixed-priority-with-overheads/2`. Its costs and platform facts are
 engine knowledge, and none of them defaults. A task set outside its model is refused before any arithmetic, and a
 bound past a deadline is `not-established`, never a counterexample. Three independent reviews went through the
 design before any code. Each one found something that could have under-estimated a response time: the first two
 in what the analysis is given, and the third in an admission rule that let a kernel release a task early. A later
-review, of how the inputs are composed, found one more gap of the same kind: an interrupt that no arrival pays for. A
-trap can find nothing to claim when the controller's notice lags its last claim, and a level-triggered source completed
-before its device is cleared is served twice for one arrival. The analysis charges a source once per arrival, so
-neither is charged, and the variant now refuses a platform that does not declare that every interrupt taken is paid
-for (leaf `M2.11`). The
+review, of how the inputs are composed, found one more gap of the same kind: an interrupt that nothing pays for. The
+interrupt controller's notice can reach the processor after the claim that emptied it, so a trap is taken with
+nothing to serve, or serves an event that came after the trap. A level-triggered source completed before its device
+is cleared is served twice for one event, and the emulator's controller requests again on any raise of a line. A
+timer interrupt can stay pending after its service has moved the alarm on. The analysis charges a source once per
+event and the timer once per release, so none of these is charged. The variant now refuses a platform that does not
+declare every interrupt it takes paid for, by a due release or by an event, and its model became
+`fixed-priority-with-overheads/2` (leaf `M2.11`). The
 implementation's tests check values derived by hand from the record, and six deliberate breakages are each caught.
 §7.4 also asks for expected results obtained independently (leaf `M2.6.3`). A context that read the record and
 never the code derived 18 fixtures by hand, and the code agrees with every verdict, bound and iterate. Under the
@@ -250,7 +253,7 @@ timer cost nobody knows, an interrupt no arrival pays for, nesting, a task that 
 `unsupported-profile` or `analysis-inconclusive`, and never answered. The idealized baseline cannot stand in for the
 refused answer, because its conclusion names another model and always carries "no overhead".
 
-**What the variant may claim:** that the deadlines hold in `fixed-priority-with-overheads/1`, under its admission
+**What the variant may claim:** that the deadlines hold in `fixed-priority-with-overheads/2`, under its admission
 conditions, with every input not analytically established named as an assumption. When its bound exceeds a
 deadline it may claim only `not-established`.
 

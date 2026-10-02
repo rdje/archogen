@@ -3,8 +3,9 @@
 - **Type:** `decision`
 - **Date:** `2026-09-30`
 - **Status:** `active`
-- **External sources:** [QEMU](../book/src/ledger.md#qemu) and [the PLIC specification](../book/src/ledger.md#riscv-plic)
-  — versions, scope and limits in the ledger
+- **External sources:** [QEMU](../book/src/ledger.md#qemu), [the PLIC specification](../book/src/ledger.md#riscv-plic)
+  and [the RISC-V privileged specification](../book/src/ledger.md#riscv-privileged) — versions, scope and limits in
+  the ledger
 - **Owner / source:** leaf `M2.6.1` (`docs/tasks/M2.md`), deciding what `ROADMAP.md` §7.4 requires before a
   `rt-static-up-v1` timing result may be accepted: "an analysis variant that accounts for its bounded critical
   sections, release jitter, timer/other interrupt interference, and context-switch costs". The review §7.4 asks
@@ -14,8 +15,9 @@
 
 The variant is a fixed-priority preemptive response-time analysis with release jitter, blocking by
 non-preemptible sections, interrupt and timer interference, context-switch costs and a preemption-delay term. Its
-model identifier is `fixed-priority-with-overheads/1`, apart from the baseline's `idealized-zero-overhead/1`, so a
-conclusion of one is never read as the other's.
+model identifier is `fixed-priority-with-overheads/2`, apart from the baseline's `idealized-zero-overhead/1`, so a
+conclusion of one is never read as the other's. It was `/1` until `2026-10-02`, when its admission conditions gained
+what `M2.11` found missing (How to apply).
 
 **It is assembled from published terms, and says where it deviates.** The jitter and blocking form is Tindell,
 Burns and Wellings, "An extendible approach for analysing fixed priority hard real-time tasks" (*Real-Time
@@ -26,7 +28,7 @@ and Wellings' textbook. The preemption-delay term follows the cache-related pree
 (Busquets-Mataix et al., 1996). The deviations are listed in §3. ⚠️ Equation numbers were not checked against the
 papers here; `M2.6.3`'s independent derivation is where the combination is checked.
 
-**Version `/1` is deliberately narrow.** It admits one timer kind (event-driven, one interrupt per due release,
+**The model is deliberately narrow.** It admits one timer kind (event-driven, one interrupt per due release,
 with level compare semantics, as §13.4's fixture and the target's `sifive,clint0` behave), interrupts that do not
 nest, and sections that mask every interrupt. Each of those is a **declared platform fact**, an input the analysis
 checks. Anything else is refused as outside the model (§4), not modelled loosely.
@@ -48,13 +50,13 @@ defaults.** A zero is declared, like any other value, with its evidence.
 | priority, released by | each task | a distinct fixed rank, ascending highest-first (`decision_priority-comparison-direction.md`); the timer, or one named interrupt source, and for a source whether **every** arrival releases the task. A source-released task's nominal release is the arrival |
 | task facts | each task | whether it suspends itself; whether it locks the scheduler or defers preemption; whether it shares data outside its masked sections |
 | `C_rel` | the timer | one timer service: entry, releasing every due task, reprogramming, the scheduling decision up to the switch point whichever way it goes, exit |
-| `C_s`, `T_s`, `J_s` | each other interrupt source | one service, entry to exit, excluding work deferred to a task; minimum separation between arrivals; the most by which its service can start after an arrival, everything included as for `J^release` |
+| `C_s`, `T_s`, `J_s` | each other interrupt source | one service, entry to exit, excluding work deferred to a task; minimum separation between arrivals; the most by which its service can start after an arrival, everything included as for `J^release`. A service starts at its trap's entry, or, when its trap ran another service before it, at its own claim (condition 5) |
 | acknowledge point, interrupt priority, deferred work | each other interrupt source | at entry or at exit; its rank among interrupts; the declared task, if any, that runs work the service defers beyond releasing the tasks declared as `released by` it, whose work is analysed through them |
 | `S` | the platform | one context transition: from a decided switch, saving the outgoing context beyond what interrupt entry saved, to the incoming one running. It bounds the ledger's *task switch*, *initial dispatch* and *idle/wakeup* alike |
 | `W_wake` | the platform | from an interrupt becoming pending while the idle context waits, to interrupts being unmasked: the idle check plus the wake latency. The ledger's *idle/wakeup* is split here: the wake is `W_wake`, before the service; the switch out of idle is `S` |
 | `γ` | the platform | the preemption delay: the most one preemption or service adds to the preempted execution through lost cache, pipeline, predictor or TLB state. `0` only with evidence that the target keeps no such state |
 | `ρ`, `δ` | the platform | the largest delay the compare's rounding adds to a release (at most one resolution step less one unit; `0` when releases fall on ticks); the hardware's delivery latency from an interrupt becoming pending, unmasked, to its entry |
-| the platform facts | the platform | each a declared yes or no, with its evidence: <br>• there is one processor; <br>• the timer is event-driven, its compare has level semantics and rounds up, and the due-check uses the compare's counter and rounding; <br>• **a service releases a task only once its nominal release has passed** (no early release), releases every due one, and is raised only when one is due; <br>• only the timer service releases timer-released tasks; <br>• interrupts do not nest; every masked section masks every interrupt; every service preempts every task; <br>• **every interrupt taken is paid for by an arrival**: it is the timer's, or a service of a declared source for one of that source's arrivals, and no arrival is served twice; <br>• preemption happens at every point outside a masked section, a service or a transition (no scheduler lock, no deferred preemption); <br>• a pending interrupt is taken before the resumed context executes an instruction, and every transition, into idle included, ends unmasked; <br>• context switching is eager, or `S` includes every deferred save and restore a transition causes (lazy floating-point state, for instance); <br>• each cost bound holds under any preemption pattern |
+| the platform facts | the platform | each a declared yes or no, with its evidence: <br>• there is one processor; <br>• the timer is event-driven, its compare has level semantics and rounds up, and the due-check uses the compare's counter and rounding; <br>• **a service releases a task only once its nominal release has passed** (no early release), releases every due one, and is taken only when one is due; <br>• only the timer service releases timer-released tasks; <br>• interrupts do not nest; every masked section masks every interrupt; every service preempts every task; <br>• **every interrupt taken is paid for, by a due release or by an arrival**: an interrupt other than the timer's is taken only while a request an arrival made is pending; every service serves one request, claimed after it was made; an arrival makes at most one request, and none is served twice (condition 5); <br>• preemption happens at every point outside a masked section, a service or a transition (no scheduler lock, no deferred preemption); <br>• a pending interrupt is taken before the resumed context executes an instruction, and every transition, into idle included, ends unmasked; <br>• context switching is eager, or `S` includes every deferred save and restore a transition causes (lazy floating-point state, for instance); <br>• each cost bound holds under any preemption pattern |
 | enabled sources | the build | the interrupts the build enables (§7.5's resolved plan), non-maskable interrupts and firmware traps included, which the declared sources plus the timer must equal |
 
 Every numerical input carries its §7.3 evidence category: assumed, observed maximum, externally supplied bound, or
@@ -97,6 +99,18 @@ R_i        = J_i + w_i          (w_i the fixed point)
   readiness instead. That is a deviation, stated in §3 and checked by `M2.6.3`.
 - The timer term runs over **every** task, lower-priority ones included, because each release is served by the
   timer and every service preempts whatever runs. For `k = i` it counts the task's own release.
+- **The source term charges everything a source's services run in the window** that starts at the analysed job's
+  readiness, by condition 5. Services do not nest, and the job becomes ready inside, or at the start of, the service
+  that releases it, so every other trap starts in the window. Split each trap at its claims. The part
+  from a claim to the next claim, or to the trap's exit, runs for the request claimed, and with the trap's entry
+  when the claim is the trap's first. When that claim falls in the window, the request's arrival came before it and
+  at most `J_s` before the service started (§1), so the ceiling counts it. When a trap's first claim falls after
+  the window, the window holds only the trap's entry. That trap was taken while some request was pending, whose
+  arrival came before the trap. That request is claimed by this trap or later, so its service starts no earlier
+  than the trap and at most `J_s` after its arrival: the ceiling counts that arrival, and its `C_s` covers an
+  entry, which every service that is a trap's first runs. Each arrival is charged once: for its own service, the
+  cut entry included when that service is the cut trap's first, or for one cut entry, its own service then coming
+  after the window.
 - **Before iterating**, if the interference utilisation reaches one, there is no fixed point and the result is
   `not-established` with no iteration. That is `Σ_{hp} (C_j + 2S + γ)/T_j + Σ_{tasks} (C_rel + γ)/T_k +
   Σ_{sources} (C_s + γ)/T_s ≥ 1`, compared exactly in reduced rationals. It is exact in both directions: at or
@@ -165,16 +179,20 @@ among all the failures (§5), with every reason of that verdict. It does not sto
    - Interrupts do not nest.
    - Every masked section masks every interrupt.
    - Every service preempts every task.
-   - **Every interrupt taken is paid for by an arrival.** An interrupt the hart takes is the timer's, or a service of
-     a declared source for one of that source's arrivals, and no arrival is served twice. The source term of `w`
-     counts a source's services by its arrivals, so a service no arrival pays for is charged nowhere, and repeated it
-     can keep the timer from being taken at all. The timer's counterpart is condition 6's "raised only when a
-     release is due". *Added `2026-10-02` by leaf `M2.11`*, after the composition's review found two such services
-     that a conforming platform allows (`decision_runtime-composite-inputs.md`, rounds 4 and 5): a trap that claims
-     nothing, because the [PLIC specification](../book/src/ledger.md#riscv-plic) lets a notification reach the hart
-     after the claim that emptied it; and a second service for one arrival, because the controller forwards a new
-     request on a completion "if the interrupt is level-triggered and the interrupt is still asserted", and
-     [QEMU](../book/src/ledger.md#qemu)'s pends one on any raise of the line.
+   - **Every interrupt taken is paid for, by a due release or by an arrival.** The timer's interrupt is taken only
+     when a release is due (condition 6). Any other interrupt is taken only while a request is pending that an
+     arrival of a declared source made. Every service, a trap's first or one the trap runs after another, serves one
+     request of its source, which it claims after the request was made. An arrival makes at most one request, and no
+     request is served twice. A trap that runs several services spends, on each, at most its source's `C_s`: the
+     first with the trap's entry, each from its own claim to the next claim, and the last with the trap's exit. §2
+     shows why the source term then charges every service. *Added `2026-10-02` by leaf `M2.11`*, after the
+     composition's review found services that a conforming platform allows and no arrival pays for
+     (`decision_runtime-composite-inputs.md`, rounds 4 to 6, N2, O1 and P2): a trap taken on a notification that
+     lags the claim which emptied it, since the [PLIC specification](../book/src/ledger.md#riscv-plic) lets one
+     "take some time to be received", whose claim finds nothing or an arrival made after the trap; and a second
+     service for one arrival, since the controller forwards a new request on a completion "if the interrupt is
+     level-triggered and the interrupt is still asserted", and [QEMU](../book/src/ledger.md#qemu)'s pends one on any
+     raise of the line. Each is charged nowhere, and repeated it can keep the timer from being taken at all.
    - A pending interrupt is taken before the resumed context executes an instruction, and every transition, into
      idle included, ends unmasked.
    - Context switching is eager, or `S` includes every deferred save and restore.
@@ -190,7 +208,10 @@ among all the failures (§5), with every reason of that verdict. It does not sto
    - **No early release.** A service releases a task only once its nominal release has passed. The third review
      showed that a kernel releasing tasks due soon breaks the ceilings, with a deadline missed by 3 in a set this
      analysis would admit.
-   - A timer interrupt is raised only when a release is due, and its service releases every due task.
+   - A timer interrupt is taken only when a release is due, and its service releases every due task. *Taken*, not
+     *raised* (`M2.11`): an interrupt still pending after a service moved the compare on, which the
+     [privileged specification](../book/src/ledger.md#riscv-privileged) allows, since the timer interrupt follows the comparison "eventually, but not necessarily
+     immediately", would be served with no release due, and the timer term counts releases.
    - Only the timer service releases timer-released tasks.
 7. **Floors and no loss.** Write `L` for the longest contiguous masked run:
    `L = max(max_k (CS_k + S), C_rel + S, max_s (C_s + S), W_wake)`.
@@ -213,11 +234,11 @@ among all the failures (§5), with every reason of that verdict. It does not sto
 
 | Situation | Outcome | §5.5 verdict |
 | --- | --- | --- |
-| every task converged with `R_i ≤ D_i` | the deadlines hold in `fixed-priority-with-overheads/1`, under §4's conditions. Every input whose §7.3 evidence is not analytically established is named as an assumption with its category, and so are the enabled set before `M4` and any rate-limited source release | (`HoldsUnderAssumptions`) |
+| every task converged with `R_i ≤ D_i` | the deadlines hold in `fixed-priority-with-overheads/2`, under §4's conditions. Every input whose §7.3 evidence is not analytically established is named as an assumption with its category, and so are the enabled set before `M4` and any rate-limited source release | (`HoldsUnderAssumptions`) |
 | a task converged with `R_i > D_i` | not established: the bound is an envelope, so exceeding the deadline shows no miss | `not-established` |
 | interference utilisation at or above one, a task's `J_i + w_i` past `T_i`, or an overflow | not established: no single-job bound applies | `not-established` |
 | an enabled source undeclared, or declared sources differing from enabled ones (condition 5) | refused (F17) | `unsupported-profile`, the profile's `unmodeled-interrupt-load` |
-| a declared fact with a value outside `/1`: nesting, a threshold mask, a tick timer or edge compare, early release, an interrupt no arrival pays for, a scheduler lock or deferred preemption, lazy switching outside `S`, self-suspension, data shared outside masked sections, undeclared deferred work (conditions 2, 4–6, 8) | refused (F17) | `unsupported-profile` |
+| a declared fact with a value outside `/2`: nesting, a threshold mask, a tick timer or edge compare, early release, an interrupt neither a due release nor an arrival pays for, a scheduler lock or deferred preemption, lazy switching outside `S`, self-suspension, data shared outside masked sections, undeclared deferred work (conditions 2, 4–6, 8) | refused (F17) | `unsupported-profile` |
 | an input, a task fact or a platform fact missing (condition 9), or a declared delay below its floor (condition 7), which is evidence that cannot be true rather than a system outside the model | refused: an unresolved bound | `analysis-inconclusive` |
 | the exact utilisation sum too large for 128 bits, or the iteration budget reached | a named resource limit | `analysis-inconclusive` |
 | any other condition failing (1–3, the no-loss inequalities of 7) | refused as outside the model, naming the condition | `unsupported-profile` |
@@ -266,7 +287,7 @@ fixture's exact timeline, where H responds in 5 and L in 23.
   runs before the pending timer interrupt is taken, where no term of `w` charges it. Dropping the queue from
   `J^release` would therefore under-count by up to one `S` per queued service. That is sound only with those
   transitions kept in `J^release`, or with a platform fact that no switch is decided while another interrupt is
-  pending. `/1` keeps the whole delay in `J^release`, and the double charge stays declared;
+  pending. The model keeps the whole delay in `J^release`, and the double charge stays declared;
 - the exact non-preemptive fixed-priority queueing form that would let the analysis compute `J_s` and
   `J^release` from interrupt priorities, instead of taking them as evidence. **Not settled.** The candidate is
   non-preemptive fixed-priority analysis in its corrected CAN form (Davis, Burns, Bril and Lukkien, 2007). It would
@@ -275,13 +296,13 @@ fixture's exact timeline, where H responds in 5 and L in 23.
 - whether RISC-V takes an interrupt pending at `mret` before any instruction of the resumed context. **Settled
   `2026-09-30` for a conforming hart** (`M2.10.1`): the [privileged specification](../book/src/ledger.md#riscv-privileged)
   says interrupt-trap conditions "must also be evaluated immediately following the execution of an xRET
-  instruction". Whether the target and QEMU conform is a separate fact. `/1` keeps it a declared platform fact
+  instruction". Whether the target and QEMU conform is a separate fact. The model keeps it a declared platform fact
   (condition 5).
 
 ## Why
 
 - **Narrow and exact beats broad and loose.** Each widening, such as nesting, threshold masks or tick timers,
-  changes blocking, delivery and the timer term together. `/1` admits the configuration the target and §13.4
+  changes blocking, delivery and the timer term together. The model admits the configuration the target and §13.4
   actually have, and refuses the rest by name. A later version widens it deliberately.
 - **Admission before arithmetic.** An analysis that returns a number for a set outside its model is how a number
   with no meaning gets quoted. The baseline admits by constructor, and the variant does the same.
@@ -305,19 +326,24 @@ fixture's exact timeline, where H responds in 5 and L in 23.
   set. The catalog cannot know them, and a catalog figure for any of them would under-charge. The model, `/1`, is
   unchanged: these are statements of who supplies an input, not of what the input means.
 - Deriving `C` and `CS` from a trace needs each *critical section* interval to name the task it ran for.
-  `cost-accounting/1` has no such owner, so in `/1` they are declared inputs. A ledger that derives them is a
+  `cost-accounting/1` has no such owner, so in the model they are declared inputs. A ledger that derives them is a
   `cost-accounting/2` change, not this record's.
-- A change to the recurrence, the charging or the conditions after a conclusion has been stated in `/1` is a new
-  model version, `fixed-priority-with-overheads/2`, and invalidates every conclusion stated in `/1` (§15). The
-  revision below came before any conclusion, so it is still `/1`. So did `M2.11`'s condition, on `2026-10-02`: no
-  command reaches the variant yet (`archogen analyze` is `Unimplemented` in `crates/archogen-cli/src/spec.rs`, and no
-  crate but `rt-analysis` depends on it), so its only conclusions are its tests' and the expected results of §6, and
-  each of those declares every platform fact, the new one included. The condition states what the source term
-  already assumed; it changes no bound of a set that met it.
+- A change to the recurrence, the charging or the conditions after a conclusion has been stated is a new model
+  version, and invalidates every conclusion stated in the one before (§15). The review revision below came before
+  any conclusion, so it stayed `/1`.
+- **`/2`, `2026-10-02`, leaf `M2.11`:** condition 5 gained "every interrupt taken is paid for", and condition 6 reads
+  *taken* where it read *raised*. `/1` had stated conclusions: §6's expected results, the book's account of them,
+  and the variant's tests. So `/1` became `/2`, and every conclusion stated in `/1` is void. The recurrence and the
+  charging are unchanged, and the platforms of those sets are stipulated to meet every condition: the expected
+  results' `facts=all` is read as every fact `yes`, the new one included, and the tests declare each `yes`. Re-run
+  under `/2` they give the same verdicts, bounds and iterates (`crates/rt-analysis/tests/runtime_expected.rs`). No
+  command reached the variant under `/1`: `archogen analyze` is `Unimplemented` in
+  `crates/archogen-cli/src/spec.rs`, and no crate but `rt-analysis` depends on it.
 
 ## Review (`ROADMAP.md` §7.4: "reviewed applicability conditions")
 
-Four readers checked this record on `2026-09-30`. Each was a new read-only context that had not written it. Their
+Four readers checked this record on `2026-09-30`, and a fifth `M2.11`'s change on `2026-10-02`. Each was a new
+read-only context that had not written it. Their
 findings, and the answer to each, are kept in
 [`decision_runtime-analysis-variant-reviews.md`](../reviews/decision_runtime-analysis-variant-reviews.md).
 
@@ -327,3 +353,4 @@ findings, and the answer to each, are kept in
 | second review, of the revision | 16 | no term of the recurrence under-counts, given true inputs | all answered |
 | third review, told to break it | 13 | early release, a deadline missed by 3 in a set the draft admitted; the no-blocking bound proved directly | condition 6 gained "no early release"; all answered |
 | `M2.6.3`'s derivation | 9 | what could not be derived from the record alone | all answered; the third review's bounds reproduced |
+| `M2.11`'s first review, `2026-10-02` | 14 | a trap taken before the arrival it serves escaped the source term: 33 against an admitted 27 | 5 defects; condition 5 stated at the trap, condition 6 *taken*, the model `/2`; all answered |

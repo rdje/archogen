@@ -1,4 +1,4 @@
-//! `fixed-priority-with-overheads/1` against the record that defines it (leaf `M2.6.2`,
+//! `fixed-priority-with-overheads/2` against the record that defines it (leaf `M2.6.2`,
 //! `docs/decisions/decision_runtime-analysis-variant.md`).
 //!
 //! Every expected number here was derived by hand from the record's §2 before the test was run; each derivation is
@@ -332,9 +332,9 @@ fn a_source_that_can_lose_an_arrival_is_refused() {
 #[test]
 fn an_interrupt_no_arrival_pays_for_is_outside_the_model() {
     // Condition 5, added by leaf `M2.11`. The source term charges `C_s` once per arrival: for A, `w = 2 + 1 + 2 = 5`
-    // and `R = 3 + 5 = 8`, within a deadline of 9. A level-triggered uart completed before its device is cleared is
-    // served twice for one arrival, so the term would have to charge 4: `w = 2 + 1 + 4 = 7` and `R = 10`, past it.
-    // A trap that claims nothing is charged nowhere at all. The variant refuses such a platform rather than answer.
+    // and `R = 3 + 5 = 8`, within a deadline of 9. Were each arrival served twice, the term would have to charge 4:
+    // `w = 2 + 1 + 4 = 7` and `R = 10`, past it. A trap no request pays for is charged nowhere at all. The variant
+    // refuses a platform that does not declare every interrupt paid for, rather than answer for it.
     let (mut platform, uart) = with_uart(3, Acknowledge::AtEntry);
     let tasks = [task("A", 1, 1, 10, 9, 3)];
     let set = admit(&tasks, std::slice::from_ref(&uart), &platform)
@@ -345,7 +345,7 @@ fn an_interrupt_no_arrival_pays_for_is_outside_the_model() {
     let refusal = refused(admit(&tasks, std::slice::from_ref(&uart), &platform));
     assert_eq!(refusal.verdict, RefusalVerdict::UnsupportedProfile);
     assert!(
-        refusal.reasons[0].contains("no arrival is served twice"),
+        refusal.reasons[0].contains("paid for by a due release or an arrival does not hold"),
         "{refusal}"
     );
 
@@ -353,7 +353,7 @@ fn an_interrupt_no_arrival_pays_for_is_outside_the_model() {
     let refusal = refused(admit(&tasks, &[uart], &platform));
     assert_eq!(refusal.verdict, RefusalVerdict::AnalysisInconclusive);
     assert!(
-        refusal.reasons[0].contains("does not declare whether every interrupt taken"),
+        refusal.reasons[0].contains("does not declare whether every interrupt taken is paid for"),
         "{refusal}"
     );
 }

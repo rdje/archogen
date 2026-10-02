@@ -36,7 +36,7 @@
 | the composition's parts | catalog | timing costs `api.<p>` and `masked.<p>` for each primitive `p` a task can call, and `completion` and `masked.completion`, all from the runtime API record: the one record that supplies `completion` under the selection (the groups below; `decision_runtime-composite-inputs.md` §1) |
 | the composition's preconditions | catalog | behavioral facts, each with its group in the facts table below: the code facts `reprograms-only-in-service`, `releases-never-latched`, `primitives-out-of-line` and `pending-taken-after-unmask`; the hardware facts `external-before-timer` and `one-external-controller`; for each source, the hardware fact `external.<source>` and the code fact `one-request-per-arrival.<source>`; `no-empty-claim`; `one-claim-per-trap`, read when `external-before-timer` is `no`; `starts-by-transition`; and `runtime-discipline.<id>`, from every record whose implementation facet, not `none`, is in the claim's closure, and from `M4` in the image's, about every package its implementation's own and reached sets hold. That set is computed to a fixed point, since reading a statement adds its record's behavioral model to the closure (`decision_runtime-composite-inputs.md` §2) |
 | the order among sources | the plan | the controller's priorities, a strict order over the sources whose `external.<source>` is `yes`, each deliverable to the hart's machine-mode context, its priority above that context's threshold; the timer's place is `external-before-timer`'s. A plan that omits either statement leaves every `J` undeclared |
-| the platform facts | catalog | behavioral facts, one per condition of the variant's `PlatformFacts`, but for one composed from others (listed below). **Code facts** carry a `code` locator into the code they are about (§2). **Hardware facts** are `one-processor` and `compare-level`. The timing fact `eager-switching` must come from the record that supplies `switch`: `yes` means the variant's condition holds for that `switch`, that switching is eager or that `S` includes every deferred save and restore, and its basis says which |
+| the platform facts | catalog | behavioral facts, one per condition of the variant's `PlatformFacts`, but for one with no fact of its own (listed below). **Code facts** carry a `code` locator into the code they are about (§2). **Hardware facts** are `one-processor` and `compare-level`. The timing fact `eager-switching` must come from the record that supplies `switch`: `yes` means the variant's condition holds for that `switch`, that switching is eager or that `S` includes every deferred save and restore, and its basis says which |
 
 The behavioral code facts, one per condition of the variant's `PlatformFacts`:
 
@@ -58,12 +58,22 @@ The behavioral code facts, one per condition of the variant's `PlatformFacts`:
   §4, step 4)
 - `only-timer-releases-timer-tasks`
 
-The variant's `services-paid-by-arrivals`, its condition 5 that every interrupt taken is paid for by an arrival
-(added by leaf `M2.11`), has no fact of its own. It is the conjunction of `no-empty-claim` and each declared source's
-`one-request-per-arrival.<source>`, both already the composition's preconditions: every external trap claims a
-request, and every request a source's service claims was made by an arrival, each arrival making at most one. The
-variant's condition 5 also makes the enabled set the declared sources plus the timer, so no other interrupt is taken.
-`M2.7.5` composes them so, and the conclusion names each.
+The variant's `PlatformFacts::services_paid_by_arrivals`, its condition 5 that every interrupt taken is paid for by
+a due release or an arrival (added by leaf `M2.11`), has no fact of its own. It is `yes` when each of these is
+`yes`, all already the composition's preconditions:
+- `no-empty-claim`: every external trap is taken while a request is pending;
+- for each declared source, `one-request-per-arrival.<source>` and `external.<source>`, so its interrupts reach the
+  hart only through the controller those facts are about;
+- `one-external-controller`;
+- `raised-only-when-due`, for the timer's half;
+- `leaves-interrupt-hardware-alone` and each `runtime-discipline.<id>`, without which no fact about the whole image
+  holds (`decision_runtime-composite-inputs.md` §2): a task that reads the claim register empties a request a trap
+  was taken for.
+
+It is `no` when any of them is `no`, and otherwise undeclared when any is `unknown`. `M2.7.5` composes it so, and the
+conclusion names each. The cost decomposition the condition states for a trap that runs several services is the
+`service.<source>` costs' to hold: such traps exist only when `external-before-timer` is `yes`, and a basis that
+admits a claim loop states that each service's part is within its cost.
 
 The variant's condition 8 for catalog costs is each cost's own `holds-under-preemption`.
 

@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the timing analysis's new rule, corrected by its review
+
+`ARCHOGEN-M2-0344` (leaf `M2.11`, step 2).
+
+- An independent reviewer found the new rule still let through a case: an interrupt taken before the event it ends up
+  serving, which a task set could turn into a missed deadline the analysis said would hold (33 against 27). The rule
+  now looks at the moment the interrupt is taken, a stale timer interrupt is excluded too, and the analysis's model
+  is renamed `fixed-priority-with-overheads/2` so no earlier result is mistaken for a current one. A second review
+  checks these answers next.
+
 ## archogen — the CI protection's review needs a human reviewer
 
 `ARCHOGEN-M2-0343` (leaf `M2.7.6.4`).
@@ -17,8 +27,9 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 
 `ARCHOGEN-M2-0342` (leaf `M2.11`, step 1).
 
-- The timing analysis charges each interrupt source once per event it receives. A review had found two ways real
-  hardware can serve one event twice, or take an interrupt with no event at all; neither was charged. The analysis
+- The timing analysis charges each interrupt source once per event it receives. A review had found two ways an
+  interrupt controller, as its specification and the emulator allow, can serve one event twice, or take an interrupt
+  with no event at all; neither was charged. The analysis
   now refuses a platform that does not declare this never happens, and says so by name. Nothing it already
   concluded changes. An independent review of the change is next.
 

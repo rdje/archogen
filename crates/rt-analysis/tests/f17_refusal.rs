@@ -1,7 +1,7 @@
 //! **F17** — `ROADMAP.md` §13.1: "Unknown interrupt interference or unsupported task behavior — Refuse timing
 //! assurance" (leaf `M2.6.4`, the analysis half; the runtime half is `M4`'s).
 //!
-//! The fixture is one complete task set that `fixed-priority-with-overheads/1` admits, and a list of single
+//! The fixture is one complete task set that `fixed-priority-with-overheads/2` admits, and a list of single
 //! defects, each applied alone. Every defect must be **refused** with the verdict
 //! `docs/decisions/decision_runtime-analysis-variant.md` §5 gives it, `unsupported-profile` or
 //! `analysis-inconclusive`, and **never silently downgraded**:
@@ -142,10 +142,10 @@ const DEFECTS: &[(&str, Defect, RefusalVerdict, &str)] = &[
         "enabled interrupts are not declared",
     ),
     (
-        "an interrupt taken that no arrival pays for",
+        "an interrupt taken that neither a due release nor an arrival pays for",
         |_, _, p| p.facts.services_paid_by_arrivals = Some(false),
         RefusalVerdict::UnsupportedProfile,
-        "no arrival is served twice does not hold",
+        "paid for by a due release or an arrival does not hold",
     ),
     (
         "interrupts nest",

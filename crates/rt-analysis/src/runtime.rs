@@ -1,4 +1,4 @@
-//! The runtime analysis variant `fixed-priority-with-overheads/1` (leaf `M2.6.2`).
+//! The runtime analysis variant `fixed-priority-with-overheads/2` (leaf `M2.6.2`; `/2` since leaf `M2.11`).
 //!
 //! ⛔ **This module implements `docs/decisions/decision_runtime-analysis-variant.md` and nothing else.** Every
 //! input, condition, term and verdict below is a section of that record, cited where it is used. Anything the
@@ -17,7 +17,7 @@ use archogen_evidence::claim::Conclusion;
 
 /// The model this variant reasons in, apart from the baseline's (record, "The fact / decision").
 pub const MODEL: &str =
-    "fixed-priority-with-overheads/1 (docs/decisions/decision_runtime-analysis-variant.md)";
+    "fixed-priority-with-overheads/2 (docs/decisions/decision_runtime-analysis-variant.md)";
 
 /// The iteration budget (record §2): the derived step bound is pseudo-polynomial in `T_i`, so reaching this is a
 /// named resource limit, `analysis-inconclusive`.
@@ -30,10 +30,12 @@ pub const CONDITIONS: &[&str] = &[
     "constrained deadlines (D ≤ T)",
     "no self-suspension, no scheduler lock or deferred preemption, and data shared only inside declared masked sections",
     "every enabled interrupt declared; no nesting; every masked section masks every interrupt; every service \
-     preempts every task; a pending interrupt is taken before a resumed instruction; transitions end unmasked; \
-     eager switching or deferred saves inside S",
-    "an event-driven timer with level compare that rounds up, whose service releases no task before its nominal \
-     release and every due one",
+     preempts every task; every interrupt taken is paid for by a due release or an arrival; a pending interrupt is \
+     taken before a resumed instruction; transitions end unmasked; eager switching or deferred saves inside S; \
+     deferred work runs as a declared task; a task released on every arrival of a source has T ≤ T_s",
+    "an event-driven timer with level compare that rounds up, its due-check on the compare's counter and rounding, \
+     taken only when a release is due, whose service releases no task before its nominal release and every due one, \
+     and which alone releases timer-released tasks",
     "every J^release and J_s is the engine's bound of the full delivery delay; the floors this analysis checks \
      are necessary, not sufficient",
     "every cost bound holds under any preemption pattern, and γ bounds the state one preemption destroys",
@@ -178,8 +180,9 @@ pub struct PlatformFacts {
     pub pending_taken_and_transitions_unmasked: Option<bool>,
     /// Switching is eager, or `S` includes every deferred save and restore (condition 5).
     pub eager_switching: Option<bool>,
-    /// Every interrupt taken is the timer's, or a service of a declared source for one of its arrivals, and no
-    /// arrival is served twice (condition 5, added by leaf `M2.11`): the source term counts services by arrivals.
+    /// Every interrupt taken is paid for by a due release or an arrival (condition 5, added by leaf `M2.11`): none
+    /// but the timer's is taken unless a request an arrival made is pending; every service serves one request of
+    /// its source, claimed after it was made; an arrival makes at most one request, and none is served twice.
     pub services_paid_by_arrivals: Option<bool>,
     /// The timer is event-driven (condition 6).
     pub timer_event_driven: Option<bool>,
@@ -191,8 +194,8 @@ pub struct PlatformFacts {
     pub due_check_matches_compare: Option<bool>,
     /// A service releases a task only once its nominal release has passed (condition 6, the third review).
     pub no_early_release: Option<bool>,
-    /// A timer interrupt is raised only when a release is due, and its service releases every due task
-    /// (condition 6).
+    /// A timer interrupt is taken only when a release is due, not while it reflects a compare a service replaced,
+    /// and its service releases every due task (condition 6; *taken* since leaf `M2.11`).
     pub raised_only_when_due: Option<bool>,
     /// Only the timer service releases timer-released tasks (condition 6).
     pub only_timer_releases_timer_tasks: Option<bool>,
@@ -412,7 +415,7 @@ pub fn admit(
     );
     found.fact(
         facts.services_paid_by_arrivals,
-        "every interrupt taken is the timer's or a declared source's service for one of its arrivals, and no arrival is served twice",
+        "every interrupt taken is paid for by a due release or an arrival",
         5,
     );
     found.fact(facts.timer_event_driven, "the timer is event-driven", 6);
@@ -438,7 +441,7 @@ pub fn admit(
     );
     found.fact(
         facts.raised_only_when_due,
-        "a timer interrupt is raised only when a release is due, and releases every due task",
+        "a timer interrupt is taken only when a release is due, and releases every due task",
         6,
     );
     found.fact(
