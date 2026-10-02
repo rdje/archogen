@@ -170,6 +170,7 @@ a change that leaves it stale, so it is never edited by hand.
 - How it works — [What the scheduling checker establishes](analysis.md#how-it-works)
 - How it works — [Where the engine's knowledge comes from: the catalog](catalog.md#how-it-works)
 - How it works — [The runtime: decisions, not actions](runtime.md#how-it-works)
+- How it works — [The S0 early generation path](s0.md#how-it-works)
 - How it works — [Where generated systems run](targets.md#how-it-works)
 - How it works — [The archogen command line](cli.md#how-it-works)
 - How it works — [The engine API](engine-api.md#how-it-works)
@@ -410,6 +411,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The idea, in plain words — [What the scheduling checker establishes](analysis.md#the-idea-in-plain-words)
 - The idea, in plain words — [Where the engine's knowledge comes from: the catalog](catalog.md#the-idea-in-plain-words)
 - The idea, in plain words — [The runtime: decisions, not actions](runtime.md#the-idea-in-plain-words)
+- The idea, in plain words — [The S0 early generation path](s0.md#the-idea-in-plain-words)
 - The idea, in plain words — [Where generated systems run](targets.md#the-idea-in-plain-words)
 - The idea, in plain words — [The archogen command line](cli.md#the-idea-in-plain-words)
 - The idea, in plain words — [The engine API](engine-api.md#the-idea-in-plain-words)
@@ -438,6 +440,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The precise rules — [What the scheduling checker establishes](analysis.md#the-precise-rules)
 - The precise rules — [Where the engine's knowledge comes from: the catalog](catalog.md#the-precise-rules)
 - The precise rules — [The runtime: decisions, not actions](runtime.md#the-precise-rules)
+- The precise rules — [The S0 early generation path](s0.md#the-precise-rules)
 - The precise rules — [Where generated systems run](targets.md#the-precise-rules)
 - The precise rules — [The archogen command line](cli.md#the-precise-rules)
 - The precise rules — [The engine API](engine-api.md#the-precise-rules)
@@ -466,6 +469,7 @@ a change that leaves it stale, so it is never edited by hand.
 - Today and ahead — [The supported profile](profile.md#today-and-ahead)
 - Today and ahead — [Where the engine's knowledge comes from: the catalog](catalog.md#today-and-ahead)
 - Today and ahead — [The runtime: decisions, not actions](runtime.md#today-and-ahead)
+- Today and ahead — [The S0 early generation path](s0.md#today-and-ahead)
 - Today and ahead: there is no board — [Where generated systems run](targets.md#today-and-ahead-there-is-no-board)
 - **trap** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [The boundary: functionality
   versus implementation](boundary.md), [What the scheduling checker establishes](analysis.md), [The runtime: decisions,
@@ -511,7 +515,6 @@ a change that leaves it stale, so it is never edited by hand.
   establishes](analysis.md#what-it-may-be-used-for-and-what-it-may-not)
 - What one request may cost — [The engine API](engine-api.md#what-one-request-may-cost)
 - What S0 owes the supported path — [The S0 early generation path](s0.md#what-s0-owes-the-supported-path)
-- What survives — [The S0 early generation path](s0.md#what-survives)
 - What that looks like today — [Verifying the toolchain](verification.md#what-that-looks-like-today)
 - What the boundary rules out — [The boundary: functionality versus
   implementation](boundary.md#what-the-boundary-rules-out)
