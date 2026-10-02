@@ -8,7 +8,9 @@
 # WHAT THE INDEX HOLDS, alphabetically, under a letter each:
 #   - every headword of the glossary (`docs/book/src/glossary.md`), with the chapters that use it — an acronym where
 #     it appears as written, a term as a word in any case — and a link to its definition;
-#   - every section heading (`##`, `###`) of every chapter, linked to the section.
+#   - every section heading (`##`, `###`) of every chapter, linked to the section — but the four layer headings every
+#     chapter shares, *The idea, in plain words*, *How it works*, *The precise rules* and *Today and ahead*
+#     (`docs/decisions/decision_book-in-layers.md`), which name a chapter's part and no topic (leaf `PROGRAM.47.6`).
 # A section's link is the anchor mdBook writes, computed as mdBook 0.5.2 does — measured `2026-10-02` on a probe book:
 # the heading's text without its markup, lower-cased, letters, digits, `-` and `_` kept, each space a `-`, every other
 # character dropped, and a repeat on one page suffixed `-1`, `-2`. The self-test pins the measured cases.
@@ -32,6 +34,8 @@ MODE = sys.argv[1]
 BOOK = "docs/book/src"
 INDEX = os.path.join(BOOK, "book-index.md")
 SKIP = {"SUMMARY.md", "book-index.md"}
+# The layer headings name a chapter's part, not a topic: indexed, each listed every chapter under one word.
+LAYERS = {"The idea, in plain words", "How it works", "The precise rules", "Today and ahead"}
 
 def plain(md):
     """A heading's text as a reader sees it: links to their text, code and emphasis marks removed."""
@@ -85,7 +89,7 @@ for f in chapters:
             continue
         shown = plain(m.group(2))
         a = anchor(shown, used)
-        if len(m.group(1)) in (2, 3):
+        if len(m.group(1)) in (2, 3) and shown not in LAYERS:
             entries.append((shown, shown, ["[%s](%s#%s)" % (titles[f], f, a)]))
 
 texts = {f: prose(open(os.path.join(BOOK, f), encoding="utf-8").read()) for f in chapters if f != "glossary.md"}
@@ -149,7 +153,7 @@ self_test() {
     rm -rf "$work"; mkdir -p "$work/docs/book/src"; git -C "$work" init -q
     printf '# Summary\n\n- [The runtime](a.md)\n\n[Words this book uses](glossary.md)\n\n[Index](book-index.md)\n' \
       > "$work/docs/book/src/SUMMARY.md"
-    printf '# A\n\nA task uses an API.\n\n## Why the split\n\n### Third level, it'"'"'s here\n' > "$work/docs/book/src/a.md"
+    printf '# A\n\nA task uses an API.\n\n## How it works\n\n## Why the split\n\n### Third level, it'"'"'s here\n' > "$work/docs/book/src/a.md"
     printf '# Words\n\n## Acronyms and abbreviations\n\n- **API** — x.\n\n## Words with a meaning of their own here\n\n- **task** — y.\n' \
       > "$work/docs/book/src/glossary.md"
   }
@@ -175,6 +179,10 @@ self_test() {
      && grep -qF '**task** — [definition](glossary.md), [The runtime](a.md)' "$work/docs/book/src/book-index.md"; then
     ok=$((ok + 1)); echo "  ✅ sections link to their anchors, and a term to its definition and its chapters"
   else echo "SELF-TEST: the index's links are not the expected ones" >&2; fi
+  arms=$((arms + 1))
+  if ! grep -qF 'How it works' "$work/docs/book/src/book-index.md"; then
+    ok=$((ok + 1)); echo "  ✅ a layer heading names no topic, and is not indexed"
+  else echo "SELF-TEST: the index lists a layer heading" >&2; fi
   printf '\n## A new section\n' >> "$work/docs/book/src/a.md"
   arm "a heading added without regenerating is refused" 1 "stale from line"
   (cd "$work" && bash "$SELF" --write >/dev/null)

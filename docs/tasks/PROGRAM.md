@@ -610,7 +610,7 @@ mdBook that is the director's window into the project.
 
 - ID: `PROGRAM.47`
   Status: `active` — filed `2026-10-02` on the director's ruling; `.1` done
-  Children: `PROGRAM.47.1` … `PROGRAM.47.5`
+  Children: `PROGRAM.47.1` … `PROGRAM.47.6`
   Goal: the book written in layers, as [`decision_book-in-layers.md`](../decisions/decision_book-in-layers.md)
   rules: plain words first for a student, a one-minute summary and the precise rules for an expert, annexes for the
   gory details, a live glossary and a generated index.
@@ -978,6 +978,36 @@ mdBook that is the director's window into the project.
   green ===`
   Commit: `ARCHOGEN-PROGRAM-0325 (leaf PROGRAM.47.5.22)`
 
+- ID: `PROGRAM.47.6`
+  Status: `done` — `2026-10-02`
+  Goal: the index without the layer headings, which name a chapter's part and no topic.
+  Acceptance: the generator leaves the four layer headings out, a RED arm proving it; every index link resolves on
+  the built book; the ledger chapter's own layers no longer read as citations.
+  **Found by** `SOURCE-LEDGER` refusing the ledger chapter's layers: the index linked `ledger.md#how-it-works`, and
+  every link into the ledger is read as a citation of an entry. The cause was the index, not the gate: by then it
+  listed *How it works* and *The idea, in plain words* 23 times each, *The precise rules* 21 and *Today and ahead* 5,
+  about 70 lines of the index under four words that name no topic.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — `git show 8e64d68:docs/book/src/book-index.md | grep -c "^- How it works —"` → 22,
+    and 23 with the ledger chapter layered, when `SOURCE-LEDGER: docs/book/src/book-index.md cites ledger.md#how-it-works, which is no
+    entry`.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — the generator indexed every `##` and `###` heading, and the book's layering
+    (`docs/decisions/decision_book-in-layers.md`) gives every chapter the same four:
+    `git show 8e64d68:scripts/check_book_index.sh | grep -c "if len(m.group(1)) in (2, 3):$"` → 1, the one
+    condition, with no exclusion. WHERE: `scripts/check_book_index.sh`, the heading loop.
+  - [x] **FIX** — `LAYERS`, the four headings, left out of the entries while their anchors are still counted, so a
+    later repeat's `-1` stays mdBook's; a self-test arm with a layer heading in its chapter.
+  - [x] **ADDRESSED (verified)** — `bash scripts/check_book_index.sh --write` → `(270 entries)`, from 342;
+    `--self-test` → `8 pass / 0 fail (8 arms)`; a mutant without the exclusion → `6 pass / 2 fail`; 190 index links
+    checked against the built book's ids, 0 missing.
+  - [x] **NO REGRESSION** — no Rust source changed; `bash scripts/build_book.sh` → rc=0;
+    `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`.
+  - [x] **LOCKSTEP** — `DOCTRINE_ENFORCEMENT.md`'s `BOOK-INDEX` row; the ruling's record; this leaf and the log;
+    `CHANGELOG.md`.
+  Verification: see the checklist.
+  Commit: `ARCHOGEN-PROGRAM-0326 (leaf PROGRAM.47.6)`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1298,6 +1328,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.47.5.20` | `ARCHOGEN-PROGRAM-0323 (leaf PROGRAM.47.5.20)` | ***Refinement* in layers** |
 | `PROGRAM.47.5.21` | `ARCHOGEN-PROGRAM-0324 (leaf PROGRAM.47.5.21)` | ***What is versioned* in layers**, its entries kept where the register gate reads them |
 | `PROGRAM.47.5.22` | `ARCHOGEN-PROGRAM-0325 (leaf PROGRAM.47.5.22)` | ***The S0 early generation path* in layers** |
+| `PROGRAM.47.6` | `ARCHOGEN-PROGRAM-0326 (leaf PROGRAM.47.6)` | **the index without the layer headings**: 342 entries to 270, four words that named no topic gone |
 
 ## Changelog
 

@@ -35,7 +35,7 @@ Three parts frame the chapters:
   by case, the timing composition, the catalog check's protection, the protocols archogen speaks. A chapter keeps
   the idea and the rules a reader needs, and points to its annex for the rest.
 - **An index**, at the end: every glossary term and every chapter and annex heading, alphabetical, each linking to
-  where it is treated. It is generated, never hand-kept, by `scripts/check_book_index.sh`, and a gate, `BOOK-INDEX`,
+  where it is treated — but the four headings that mark a chapter's layers, which name a part and no topic. It is generated, never hand-kept, by `scripts/check_book_index.sh`, and a gate, `BOOK-INDEX`,
   refuses a commit whose index differs from what the generator writes — the Knowledge Map's pattern.
 
 ## The book's ceilings

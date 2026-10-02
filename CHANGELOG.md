@@ -5,6 +5,23 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the book's index lists topics, not layers
+
+`ARCHOGEN-PROGRAM-0326` (leaf `PROGRAM.47.6`).
+
+- Every chapter now opens with the same four headings — the idea in plain words, how it works, the precise rules,
+  today and ahead — and the index had listed each of them once per chapter. It now leaves them out, so what remains
+  is topics: 270 entries instead of 342.
+
+## archogen — the fault contract's eleventh reading
+
+`ARCHOGEN-M2-0319` (leaf `M2.9`).
+
+- The eleventh reading found one gap: when a fault caught by the processor itself enters the fatal handler, and
+  what is kept if a second fault strikes on the way there. Each fault now has a defined moment at which it is raised.
+  The answers were checked six times before landing, and what held was the simplest: leave to each board port what
+  only its design can say.
+
 ## archogen — the fault contract's tenth reading
 
 `ARCHOGEN-M2-0309` (leaf `M2.9`).
