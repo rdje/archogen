@@ -171,7 +171,8 @@ specification's. Round 11 found none live, and the record was accepted. Its hist
 - **The port's facts are unknown, for now.** The architecture port is assembly. Its record format is designed and
   under review (`M2.12.2`, `docs/specs/catalog/decision_catalog-records-port.md`): a record names the packages that
   hold assembly, each instruction from a short list with every operand checked by its position, other code reached
-  only by `sym`, and no directive. Until the
+  only by `sym` or an address the code computes, every register an inline block touches declared, and no
+  directive. Until the
   loader admits it (`M2.12.4`) and a port's record exists, every analysis of the runtime variant over the catalog is
   inconclusive.
 - **No surface makes a production claim.** That needs images, which are `M4`'s, and `M4.10` holds everything the

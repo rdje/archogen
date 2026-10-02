@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the assembly design's third review: what the compiler assumes
+
+`ARCHOGEN-M2-0356` (leaf `M2.12.2`, step 4).
+
+- The third review found that a short piece of inline assembly could change a register without saying so, and the
+  compiler, trusting the declaration, would then jump to whatever number was left there. Inline assembly is now
+  limited to the system-register work a port does inline, with every register it touches declared; full assembly
+  stays in separate hand-written functions whose register discipline the human reviewer checks. A fourth review is
+  next.
+
 ## archogen — the assembly design's second review: two readings that differed
 
 `ARCHOGEN-M2-0355` (leaf `M2.12.2`, step 3).

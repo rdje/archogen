@@ -2,13 +2,13 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-02`
-- **Status:** `active` — rounds 1 and 2 answered; round 3 next; the review closes on the first round that finds no
+- **Status:** `active` — rounds 1 to 3 answered; round 4 next; the review closes on the first round that finds no
   defect
 - **External sources:** [the Rust Reference](../book/src/ledger.md#rust-reference) shipped with the pinned toolchain
   — version, hashes and limits in the ledger
 - **Owner / source:** leaf `M2.12.2` (`docs/tasks/M2.md`). The design under review is §14.2 and §14.3 of the catalog
   record, kept in [`decision_catalog-records-port.md`](../specs/catalog/decision_catalog-records-port.md), with the
-  amendments to §1, §2, §3, §11 and §13 that point to it. Section numbers are the catalog record's.
+  amendments to §1, §2, §3, §4, §11, §12's note and §13 that point to it. Section numbers are the catalog record's.
 
 ## The fact / decision
 
@@ -69,6 +69,42 @@ findings: 2 defects, 3 gaps, 5 drafting points, 4 nits.
 | 12 | nit | "every token lowercase" against placeholder identifiers; `-` before a `const` placeholder; `0x` with no digit | mnemonics and registers lowercase; no `-` before a placeholder; `0x` and one or more digits |
 | 13 | nit | `tail {f}` writes `t1`, which the line does not name | §14.3 says which registers `call`, `tail`, `la` and `li` write, measured on the pin: `ra`, `t1`, and only their operand |
 | 14 | nit | `rust-toolchain.toml` pins two targets | "one of the two" |
+
+**Round 3**, `2026-10-02`, of commit `71b6791`, by a new context with the same probing licence. It confirmed every
+relocation against a `sym` target or a compiler label, named placeholders binding as the gate reads them, the ending
+rule, the `::core` argument and the version reasoning, and found 2 defects. The first broke the reach claim another
+way: an admitted `asm!` writing a register it did not declare, after which the compiled Rust jumped to the integer it
+left there — the image's reset code at 2147483648. 20 findings: 2 defects, 4 gaps, 6 drafting points, 8 nits.
+Defects per round: 8, 2, 2.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 1 | defect | a line writing an undeclared register breaks the compiler's reading of an `asm!` — "Any registers not specified as outputs must have the same value upon exiting …" — so `li a0, …` before a call through `f` jumped to an integer; a naked body writing `s1` likewise | in `asm!`: the inline mnemonics only (§14.3's column), every register operand `zero` or a placeholder of the right direction, no label, no `noreturn`, no `clobber_abi`; for `naked_asm!`, what a body leaves in `sp`, `gp`, `tp` and the callee-saved registers, and what it stores, is the review's; both Reference rules quoted and ledgered |
+| 2 | defect | label numbers alias modulo `2^32`: `4294967296:` caught `j 0b` | a label number has one to four digits; the measured truncation recorded |
+| 3 | gap | an invocation inside no `fn`, in a closure in a `static` or `const`, escaped the `cfg` rule; methods unclear | each invocation lies inside a function, an associated `fn` included; one inside none is refused |
+| 4 | gap | on a riscv64 host, `cfg(target_arch = "riscv64")` holds, and the templates were assembled position-independent | `#[cfg(all(target_arch = "riscv64", target_os = "none"))]`, which no hosted build meets |
+| 5 | gap | a record citing declared assembly through `describes` or its closure was not held to the triple | the port-fact rule also requires every target of the stating record to be among the declaration's triples |
+| 6 | gap | `pure`, `nomem` and `readonly` let the compiler remove a masking line or move memory across it | refused; `options(nostack)` alone remains |
+| 7 | drafting | refusal codes conflicting across §1, §4, §11 and §14.2 | one code per case, listed in §14.2; §4's per-fact locator rule removed, two locators of one fact naming different records admitted |
+| 8 | drafting | "its own record's declared assembly" read two ways | "one of its locators names a record that declares assembly for the package its path lies in" |
+| 9 | drafting | which record a cross-record refusal names; "own or reached set" of which facet | the reaching record at its targets, or the later declaring record in id order at its subform; "in any facet" |
+| 10 | drafting | "written exactly so" — bytes or tokens | "compared as tokens" |
+| 11 | drafting | the reach sentence omitted a trap to a written vector, and the plain words and the book computed addresses | all three added |
+| 12 | drafting | answer columns no longer true; the header's list of amendments | superseded answers named below; §4 and §12's note added to the header |
+| 13 | nit | operand names that are keywords or raw | neither admitted; names compared as §3 compares identifiers |
+| 14 | nit | "and no label line follows it" was vacuous | deleted |
+| 15 | nit | integers wrap modulo `2^64`, hex and, measured here, decimal too: `18446744073709549568` assembled as `-2048` | decimal only, within the signed 64-bit range |
+| 16 | nit | a `sym` naming a `static` in a code position executes data | said to be the review's |
+| 17 | nit | the version paragraph's list omitted §4's per-list reading, which the loader already applies | added |
+| 18 | nit | a later dialect change after the first lock moves every hash | said so in §14.3 |
+| 19 | nit | the `noreturn` quote, and the two register rules, absent from the ledger's scope | all three added to `rust-reference` |
+| 20 | nit | `any` refused for the declaring record only | refused for every record reaching a declared package |
+
+**Superseded by this round's answers**, the earlier rows standing as written: round 1's answers 2 (placeholders, since
+`{}` and `{n}` are refused), 9 (the triple binds every reaching record, and the `cfg` condition names `target_os`),
+10 (integers decimal only; lowercase covers mnemonics and register names), 11 (`clobber_abi` and all options but
+`nostack` refused) and 16 (its reasoning restated by round 2's 9); round 2's 2 (labels bounded to four digits), 4
+(`noreturn` refused in `asm!`), 8 (the `cfg` condition) and 10 (the codes listed per case).
 
 ## Why
 
