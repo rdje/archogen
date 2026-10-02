@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the assembly design's second review: two readings that differed
+
+`ARCHOGEN-M2-0355` (leaf `M2.12.2`, step 3).
+
+- The second review confirmed the reworked design with the compiler's own output, and found two places where the
+  design's wording could be read differently from how the compiler reads the code: unnamed placeholders, and labels
+  written with a leading zero, which the assembler treats as octal. Both are now refused outright. A third review is
+  next.
+
 ## archogen — the assembly design's first review: names that become links
 
 `ARCHOGEN-M2-0354` (leaf `M2.12.2`, step 2).

@@ -2,7 +2,8 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-02`
-- **Status:** `active` — round 1 answered; round 2 next; the review closes on the first round that finds no defect
+- **Status:** `active` — rounds 1 and 2 answered; round 3 next; the review closes on the first round that finds no
+  defect
 - **External sources:** [the Rust Reference](../book/src/ledger.md#rust-reference) shipped with the pinned toolchain
   — version, hashes and limits in the ledger
 - **Owner / source:** leaf `M2.12.2` (`docs/tasks/M2.md`). The design under review is §14.2 and §14.3 of the catalog
@@ -45,6 +46,29 @@ The answers were probed before landing, with the pinned toolchain, outside the r
 with `const` and `reg` placeholders, left no undefined symbol; under `#[cfg(target_arch = "riscv64")]` the host build
 assembled none; and rustc refuses to name an explicit-register operand, so a placeholder can only bind a `reg`, `sym`
 or `const` operand.
+
+**Round 2**, `2026-10-02`, of commit `e9f3a50`, by a new context with the same probing licence. It confirmed round 1's
+approach: every admitted mnemonic with every admitted operand kind left no undefined symbol and no relocation but
+against `sym` targets and the compiler's own labels; out-of-range immediates fail at assembly; `const` operands are
+integers only. But 2 defects, each a place where the text's reading was not the compiler's or the assembler's. 14
+findings: 2 defects, 3 gaps, 5 drafting points, 4 nits.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 1 | defect | "`{}` the next positional operand" read as "after the last placeholder" admitted `call {}` that the compiler bound to a `reg` operand: `call a0`, `U a0` | `{}` and `{<digits>}` refused; `sym`, `const` and `(reg)` operands named, placeholders `{<identifier>}` only |
+| 2 | defect | a label with a leading zero is octal to the assembler: `010:` with `j 10b` jumped to another function's `10:` | a label number is `0` or a decimal not beginning with `0`, compared by value |
+| 3 | drafting | §4's "a written path appears at most once in a facet" refused every declaration, and two facts locating one file | §4 amended: once per list — `sources`, a declaration's packages, one fact's locators — and two facts may locate one file |
+| 4 | gap | `asm!` with `noreturn` falls off into `unimp` on the pin, which is behaviour, not a rule; "the function around it, which its package holds" false under inlining | the terminal transfer required of `noreturn` too, the Reference quoted ("behavior is undefined if it does"); the sentence reworded |
+| 5 | gap | step 2 dropped "from the first lock on, a change is a new rules version" for §14 | §14.2 and §14.3 are part of what `archogen-catalog/1` names, in §14.2 and §3's bullet |
+| 6 | gap | nothing tied a declared package's builds to the dialect's triple, and other records reaching it could name other targets | §14.3 lists its triple; every target of every record reaching a declared package has its `RUST_TARGET` among them |
+| 7 | drafting | the port-fact rule stated three ways, §12's and §13's looser | both now state §14.2's: a locator whose own record declares assembly for the package it locates |
+| 8 | drafting | the `cfg` rule's reach: which `fn`, and `cfg_attr` | the innermost enclosing `fn` item's outer attribute, written exactly, not inside `cfg_attr`; "another architecture" rather than "the host" |
+| 9 | drafting | the version reasoning cited "a corrected implementation", which refuses more, where the amendment relaxes | every amendment named a relaxation; no lock line can hold a record only the amendment admits; no earlier verdict changes |
+| 10 | drafting | which refusal code wins for a mixed locator list, a disallowed record, an empty or doubled declaration | stated in §14.2's refusals: structure `catalog-shape`, an inadmissible locator `catalog-locator`, the rest `catalog-field`, packages `catalog-source` |
+| 11 | nit | `sym` to a sysroot item is covered by premise 1, not the dependency information | said so |
+| 12 | nit | "every token lowercase" against placeholder identifiers; `-` before a `const` placeholder; `0x` with no digit | mnemonics and registers lowercase; no `-` before a placeholder; `0x` and one or more digits |
+| 13 | nit | `tail {f}` writes `t1`, which the line does not name | §14.3 says which registers `call`, `tail`, `la` and `li` write, measured on the pin: `ra`, `t1`, and only their operand |
+| 14 | nit | `rust-toolchain.toml` pins two targets | "one of the two" |
 
 ## Why
 

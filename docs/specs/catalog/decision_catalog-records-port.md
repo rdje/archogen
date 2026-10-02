@@ -147,16 +147,18 @@ is a Rust path the compiler resolves. Nothing else assembly can do is admitted: 
 name, no `global_asm!`.
 
 **`/1` is amended, not replaced.** No catalog record and no lock exist yet (`catalog/` is absent, `2026-10-02`), so
-nothing has been ledgered under `/1`, and no history needs its rules kept (§5). And until `M2.12.4` the loader refuses
-every assembly token and the `assembly` subform, so no lock line written before then can hold a package or a record
-this format admits: when `M2.12.4` lands, after the first lock or before it, the implementation catches up with `/1`
-as amended, as a corrected implementation does (§5). §3's "changing any part of this section changes it" holds from
-the first lock on. `ROADMAP.md` §15's ask that a change be explicit is met here.
+nothing has been ledgered under `/1`, and no history needs its rules kept (§5). Every amendment here relaxes a rule
+— the assembly tokens, the `assembly` subform, several locators, a known port fact — and none refuses what `/1`
+admitted. Until `M2.12.4` the loader refuses all of them, so no lock line written before then can hold a record that
+only the amendment admits; when `M2.12.4` lands, after the first lock or before it, no earlier line's verdict
+changes. §14.2 and §14.3 are part of what `archogen-catalog/1` names: from the first lock on, changing them, like
+changing §3, is a new rules version (§9). `ROADMAP.md` §15's ask that a change be explicit is met here.
 
 **The declaration.** An implementation facet may end with the subform `(assembly <architecture> "<package>" …)`:
 - `<architecture>` names a dialect of §14.3; `riscv64` is the only one;
 - each package is one of the facet's `sources`, and none is named twice;
-- the record's contract names its targets, `any` refused, and each target's `RUST_TARGET` is of that architecture;
+- the record's contract names its targets, `any` refused; and every target of every record whose own or reached set
+  holds a declared package has its `RUST_TARGET` among the triples §14.3 lists for the architecture;
 - the subform is part of the facet's form, so the facet's own hash covers it, and adding or removing it moves that
   hash.
 
@@ -168,16 +170,17 @@ one package name the same architecture. A package that no declaration names hold
 :: arch :: asm ! (` or `:: core :: arch :: naked_asm ! (`. Any other occurrence — a `use` of either, a rename, a bare
 `asm!` — is refused, and `global_asm` stays refused everywhere. Whatever `::core` names, the macro is the toolchain's:
 binding `asm` or `naked_asm` to anything else would need the name as a token outside that sequence, or a macro
-definition, and §3 refuses both in every package a record reaches. Each invocation sits in a function whose
-attributes include `#[cfg(target_arch = "<architecture>")]`, so no build for another architecture, the gate's host
-build among them, assembles a template the gate read by this dialect.
+definition, and §3 refuses both in every package a record reaches. The innermost `fn` item enclosing each invocation
+carries the outer attribute `#[cfg(target_arch = "<architecture>")]`, written exactly so and not inside `cfg_attr`,
+so no build for another architecture assembles a template the gate read by this dialect.
 
 **The arguments**, read as tokens, in this order and no other:
 - one or more template strings, each a string literal that is not raw and holds no `\` and no line feed. The compiler
   joins them with line feeds, so each is exactly one line of the template;
-- operands, each optionally named `<identifier> =`: `sym <path>`; `const <expression>`; and in `asm!` only, `in`,
-  `out`, `lateout`, `inout` or `inlateout`, each with `(reg)` or a register of the dialect written as a string,
-  then its expression, `_` admitted for an output, `inout` and `inlateout` optionally followed by `=> <expression>`;
+- operands: `sym <path>`; `const <expression>`; and in `asm!` only, `in`, `out`, `lateout`, `inout` or `inlateout`,
+  each with `(reg)` or a register of the dialect written as a string, then its expression, `_` admitted for an output,
+  `inout` and `inlateout` optionally followed by `=> <expression>`. Each `sym`, `const` and `(reg)` operand is named,
+  `<identifier> =`; one with an explicit register, which the compiler lets no placeholder name, is not;
 - at most one `clobber_abi("C")`;
 - at most one `options(…)`, holding only `nomem`, `readonly`, `pure`, `preserves_flags`, `noreturn` and `nostack`.
 
@@ -187,23 +190,24 @@ token rules like any other.
 
 **The template.** Each line is, with single spaces (`0x20`) only where the dialect's tokens need separating, and a
 space after each comma:
-- a numeric local label alone, digits then `:`; or
+- a local label alone: a label number, then `:`; or
 - one instruction: a mnemonic from §14.3's list, then exactly the operands its signature there gives, each of the
   kind its position takes.
 
-The kinds, every token lowercase:
+A label number is `0`, or a decimal number not beginning with `0`, since the assembler reads a leading `0` as octal.
+The kinds, every mnemonic and register name lowercase:
 - **register:** a name §14.3 lists, or a placeholder for a `reg` operand;
 - **system register:** a name §14.3 lists, and nothing else;
-- **integer:** `0`, or a decimal number not beginning with `0`, or `0x` and lowercase hex digits, any of them
-  optionally preceded, with no space, by `-`; or a placeholder for a `const` operand;
+- **integer:** `0`, or a decimal number not beginning with `0`, or `0x` and one or more lowercase hex digits, a
+  number optionally preceded, with no space, by `-`; or a placeholder for a `const` operand, with no `-` before it;
 - **memory:** an integer, then a register in parentheses, as `8(sp)` or `{off}({base})`;
 - **code:** a placeholder for a `sym` operand;
-- **label:** digits then `b`, naming the nearest earlier label line of that number in the same invocation, or `f`,
-  the nearest later one; one must exist there.
+- **label:** a label number then `b`, naming the nearest earlier label line of that number, by value, in the same
+  invocation, or `f`, the nearest later one; one must exist there.
 
-A placeholder is `{}`, `{<digits>}` or `{<identifier>}`, with no modifier and no space, and it names the operand the
-compiler binds it to: `{}` the next positional operand, `{<digits>}` the positional operand of that index,
-`{<identifier>}` the named one. Its kind is that operand's.
+A placeholder is `{<identifier>}`, with no modifier and no space, naming a named operand; its kind is that operand's.
+`{}` and `{<digits>}` are refused: how the compiler binds them is not what a reading of "the next" or "the n-th"
+gives (`M2.12.2`'s second review, its probe p2, where `call {}` became `call a0`).
 
 So each of these is refused, naming the line: a directive or any token beginning with `.`; a name in a position
 whose kind it is not — `call mepc`, `la t0, t1` or `j mstatus` would each assemble to a reference to a symbol of that
@@ -212,17 +216,18 @@ does not take, as `call {r}` for a `reg` operand; an integer where a system regi
 zero`; a relocation operator (`%`); a comment; a `;`; `{{` or `}}`; a tab; and a label reference that resolves
 outside its invocation.
 
-**A naked body ends.** In `naked_asm!`, the last line is an instruction that never falls through — `mret`, `ret`,
-`jr`, `tail`, or `j` to a label — and no label line follows it. Otherwise execution would run on into whatever the
-linker places next, which no `sym` names (the first review's probe p5). An `asm!` falls through into the compiled
-function around it, which its package holds.
+**A body that must not fall through ends.** In `naked_asm!`, and in an `asm!` with `noreturn`, the last line is an
+instruction that never falls through — `mret`, `ret`, `jr`, `tail`, or `j` to a label — and no label line follows
+it. Otherwise a naked body runs on into whatever the linker places next, which no `sym` names (the first review's
+probe p5), and for `noreturn` the Reference says "behavior is undefined if it does". An `asm!` without `noreturn`
+falls through into the compiled Rust code around it, wherever the compiler places that, inlined or not.
 
 **What the refused forms would reach, and what remains the review's.** A directive can read a file, place code where
 the image's layout does not expect it, or define a symbol another package could supply in place of a Rust one; a name
 in a code position, a body that falls off its end and a label resolved elsewhere each reach what the linker places.
 Those are what §3 refused assembly for (the catalog's review findings C9 and E7), and they stay refused. What the
-admitted forms reach is a Rust item by `sym`, inside the dependency information §3 scans, or an address the code
-computes, through `jr` or a return. A jump through a computed address, or code written to memory and executed,
+admitted forms reach is a Rust item by `sym`, in the dependency information §3 scans or the pinned toolchain's own
+library (premise 1), or an address the code computes, through `jr` or a return. A jump through a computed address, or code written to memory and executed,
 reaches what Rust's own casts can reach, and the review checks it as for Rust (§13: the token rules are necessary,
 not sufficient).
 
@@ -249,13 +254,16 @@ code. That is restated:
   and carry a locator into it. The loader checks nothing more here; the review checks that the locators reach the
   code the basis rests on (§13: a code locator is necessary, not sufficient).
 
-**Refusals.** A package outside these rules is `catalog-source`; a declaration, or a known value outside the port-fact
-rule, is `catalog-field`; a fact's locators outside §2's form are `catalog-shape` (§11).
+**Refusals** (§11). Structure first: a second `assembly` subform, one naming no package, or a fact's locators out of
+§2's form are `catalog-shape`. A locator §2's rule does not admit, a `file` locator among a code fact's included, is
+`catalog-locator`. A declaration otherwise outside §14.2, or a known port-fact value whose locators are all admitted
+and none into its own record's declared assembly, is `catalog-field`. A package outside these rules is
+`catalog-source`.
 
 #### 14.3 The `riscv64` dialect
 
-For code built for `riscv64imac-unknown-none-elf`, the target `rust-toolchain.toml` pins, running in machine mode on
-one hart (`docs/targets/first-target.md`). The list is what a port needs and no more — its trap entry and exit, its
+Its one target triple is `riscv64imac-unknown-none-elf`, one of the two `rust-toolchain.toml` pins, for code running in
+machine mode on one hart (`docs/targets/first-target.md`). The list is what a port needs and no more — its trap entry and exit, its
 transitions, its masking and its trap vector, as §14.1 found them in the spike — and a later need adds to it by a
 change to this record.
 
@@ -287,7 +295,9 @@ L label):
 | R | `jr` |
 | none | `ret`, `mret`, `wfi`, `nop` |
 
-`ld`, `lw`, `sd` and `sw` take a memory operand only, so the assembler's forms that load or store at a symbol are not
+Beyond its operands, `call` writes `ra` and `tail` writes `t1`; `la` and `li` write only their register operand, a
+large `li` expanding into several instructions on it alone (measured on the pin, `M2.12.2`'s second round). `ld`,
+`lw`, `sd` and `sw` take a memory operand only, so the assembler's forms that load or store at a symbol are not
 admitted. No instruction takes an integer as a branch's or a jump's target, and `lui`, `auipc`, `jal` and `jalr` are
 absent: `la`, `call`, `tail`, `j` and `jr` do what a port needs with a code or label operand. Compressed forms are the
 assembler's to choose, and a `c.` mnemonic is refused. Atomic instructions and floating point are absent: one hart
@@ -301,6 +311,7 @@ to each are in [`decision_catalog-records-port-reviews.md`](../../reviews/decisi
 | Round | Findings | What it turned on | Outcome |
 | --- | --- | --- | --- |
 | 1, `2026-10-02` | 18 | operands typed by spelling: `call mepc` and the like assembled to symbols the linker binds by name; a naked body falling off its end | 8 defects, 4 gaps; typed operand signatures, a terminal transfer, labels within the invocation; all answered |
+| 2, same day | 14 | `call {}` bound by the compiler to a `reg` operand; a leading-zero label read as octal | 2 defects, 3 gaps; named placeholders only, labels by value without a leading zero, `noreturn` ending, the triple; all answered |
 
 ## Why
 

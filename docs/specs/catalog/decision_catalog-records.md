@@ -303,7 +303,9 @@ worked example that pins them.
     does not.
   - The rule applies to paths written in a record and to paths produced by expansion. A path outside it is
     refused.
-  - A written path appears at most once in a facet.
+  - A written path appears at most once in each list it is written in: a facet's `sources`, an `assembly`
+    declaration's packages, and one fact's locators. A declaration's packages are, byte for byte, entries of the
+    facet's `sources` (§14.2), and two facts may locate one file.
 - **Tracked** means present in the git index with mode `100644` or `100755`, matched byte for byte, so case counts
   even on a case-insensitive file system. Refused:
   - a symbolic link (`120000`);
