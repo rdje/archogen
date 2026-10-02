@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the assembly design's sixth review: a quotation restored
+
+`ARCHOGEN-M2-0359` (leaf `M2.12.2`, step 7).
+
+- The sixth review found no way past the design, but one quotation an earlier tidy-up had removed while still claiming
+  it was there, and one more thing for the human reviewer to check when hand-written code calls a function. Both are
+  fixed. Defects found per review: 8, 2, 2, 1, 3, 1. A seventh review is next.
+
 ## archogen — the assembly design's fifth review: words that had drifted
 
 `ARCHOGEN-M2-0358` (leaf `M2.12.2`, step 6).

@@ -2,10 +2,11 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-02`
-- **Status:** `active` — rounds 1 to 5 answered; round 6 next; the review closes on the first round that finds no
+- **Status:** `active` — rounds 1 to 6 answered; round 7 next; the review closes on the first round that finds no
   defect
-- **External sources:** [the Rust Reference](../book/src/ledger.md#rust-reference) shipped with the pinned toolchain
-  — version, hashes and limits in the ledger
+- **External sources:** [the Rust Reference](../book/src/ledger.md#rust-reference) shipped with the pinned toolchain,
+  and [the RISC-V privileged specification](../book/src/ledger.md#riscv-privileged) — versions, hashes and limits in
+  the ledger
 - **Owner / source:** leaf `M2.12.2` (`docs/tasks/M2.md`). The design under review is §14.2 and §14.3 of the catalog
   record, kept in [`decision_catalog-records-port.md`](../specs/catalog/decision_catalog-records-port.md), with the
   amendments to §1, §2, §3, §4, §11, §12's note and §13 that point to it. Section numbers are the catalog record's.
@@ -160,6 +161,31 @@ Defects per round: 8, 2, 2, 1, 3.
 
 **Superseded, found by this round:** round 1's answers 8 and 14 (their "its own record" read as round 3's 8 restates
 it) and round 3's 19 (its `noreturn` quote, replaced by the naked-function rule).
+
+**Round 6**, `2026-10-02`, of commit `8dc1d22`, by a new context asked first for regressions. It found every Reference
+quotation verbatim at the hashed pages and the privileged specification's at its pages, every answer column true but
+one, and no admitted construction breaking the reach claim under its probes — the non-generic `sym` rule, the concrete
+path and the exit rule among them. 1 defect: round 5's compaction of the `riscv-privileged` scope dropped the verbatim
+`mhartid` sentence while saying the record quotes it, which it only paraphrased. 12 findings: 1 defect, 1 gap, 4
+drafting points, 6 nits. Defects per round: 8, 2, 2, 1, 3, 1.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 1 | defect | the `mhartid` read-only sentence lost from the repository, the ledger saying the record quotes it | quoted in §14.3's `mhartid` note: "Attempts to write a read-only register raise illegal-instruction exceptions" |
+| 2 | gap | what a naked body hands a function at a `call` or `tail`: `li sp` and `li a0` before `call {h}` made the compiled callee store to the reset code | "on each exit and at each `call`", and "what it passes to the function a `call` or `tail` enters, in the argument registers that function's signature reads", the review's |
+| 3 | drafting | the non-generic `sym` rule read two ways: the innermost function or every enclosing one | "no enclosing function, `impl` or `trait`, at any depth", an argument-position `impl Trait` counting as a type parameter |
+| 4 | drafting | a code fact's locators not one after another had no code since `1d35a45` | `catalog-shape` |
+| 5 | drafting | the refusal order omitted `catalog-source` | "structure, then locators, then sources, then fields" |
+| 6 | drafting | §14.1's `sym` bullets unqualified after the fifth review's probe p2 | both point to §14.2's generic rule |
+| 7 | nit | "none writes an input", while `inout` operands are inputs and are written | "two `in` operands … no admitted line writes an `in` operand's register" |
+| 8 | nit | the "necessary, not sufficient" citation was §13's for a sentence of §3's | §3 |
+| 9 | nit | "a record that only the amendment admits" false for §4's part, which the loader already applies | "only the rest admits" |
+| 10 | nit | repeated `super::` unclear | "or with one or more `super::`" |
+| 11 | nit | a generic function's `const` or `in` operand chosen by the instantiating crate | named beside the plain generic call, the review's as a computed address |
+| 12 | nit | the vectored-mode sentence's date, and the history's sources | the `riscv-privileged` Retrieved field dates it `2026-10-02`; the history's External sources name the privileged specification |
+
+**Superseded, found by this round:** round 5's answer 11 in part (its "the scope's long quotes replaced by what the
+record quotes" true only once this round's 1 quoted the `mhartid` sentence in the record).
 
 ## Why
 

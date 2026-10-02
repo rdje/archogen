@@ -40,7 +40,8 @@ record. Which part is the image's is `M4`'s to build; what the port's record mus
 shipped with `1.95.0`, ledgered by hash):
 - a `sym` operand "must refer to a fn or static", and "A mangled symbol name referring to the item is substituted
   into the asm template string". A template that reaches code only through `sym` names it by a Rust path, which the
-  compiler resolves, so the reach is in the source and its dependency information;
+  compiler resolves, so the reach is in the source and its dependency information — unless the path goes through a
+  generic parameter, which §14.2 refuses (the fifth review's probe p2);
 - `naked_asm!` and `global_asm!` "can only use sym and const operands";
 - of directives, the Reference lists a subset every supported assembler accepts, and "The result of using other
   directives is assembler-specific (and may cause an error, or may be accepted as-is)". So a directive outside the
@@ -127,7 +128,7 @@ ordinary functions `handler` and `install` were emitted `.p2align 1`. A debug bu
 - **A naked function needs no directive.** The compiler places it, aligns it and makes it global. A template that
   only holds instructions, registers, immediates, `{…}` placeholders and numeric local labels can write the whole
   trap entry, exit and transition.
-- **`sym` keeps every reach in the source.** `call {h}` and `la t0, {e}` assembled to references to the mangled
+- **`sym` keeps every reach in the source**, its path being concrete (§14.2). `call {h}` and `la t0, {e}` assembled to references to the mangled
   symbols of `handler` and `trap_entry`; no name was written. A template that writes a name — a linker-script symbol,
   a `#[no_mangle]` function — reaches code §3 cannot see, and the format must refuse one.
 - **Alignment is measured, not guaranteed.** Both profiles gave the naked trap entry the 4-byte alignment `mtvec`
@@ -150,7 +151,7 @@ name, no `global_asm!`.
 nothing has been ledgered under `/1`, and no history needs its rules kept (§5). Every amendment here relaxes a rule
 — the assembly tokens, the `assembly` subform, several locators, a known port fact, and §4's path rule read per list,
 which the loader already applies — and none refuses what `/1` admitted. Until `M2.12.4` the loader refuses the rest, so no lock line written before then can hold a record that
-only the amendment admits; when `M2.12.4` lands, after the first lock or before it, no earlier line's verdict
+only the rest admits; when `M2.12.4` lands, after the first lock or before it, no earlier line's verdict
 changes. §14.2 and §14.3 are part of what `archogen-catalog/1` names: from the first lock on, changing them, like
 changing §3, is a new rules version (§9). `ROADMAP.md` §15's ask that a change be explicit is met here.
 
@@ -181,15 +182,17 @@ its host among them whatever the host's architecture, assembles a template the g
 - one or more template strings, each a string literal that is not raw and holds no `\` and no line feed. The compiler
   joins them with line feeds, so each is exactly one line of the template;
 - operands, each named `<identifier> =`, the identifier neither a keyword nor raw and compared as §3 compares
-  identifiers: `sym <path>`, the path identifiers joined by `::`, optionally beginning `crate::`, `self::` or
-  `super::`, with no `Self` segment and no generic arguments; `const <expression>`; and in `asm!` only, `in`, `out` or `inout`, each with `(reg)`,
+  identifiers: `sym <path>`, the path identifiers joined by `::`, optionally beginning `crate::` or `self::`, or with
+  one or more `super::`, with no `Self` segment and no generic arguments; `const <expression>`; and in `asm!` only, `in`, `out` or `inout`, each with `(reg)`,
   then its expression, `_` admitted for an output, `inout` optionally followed by `=> <expression>`;
 - in `asm!` only, at most one `options(nostack)`.
 
-An invocation holding a `sym` operand lies in a function that has no type or const parameters and is neither inside
-a `trait` nor inside an `impl` that has type or const parameters: a `sym` through a generic parameter names code the crate that instantiates the function chooses,
-outside every set of the port's record (the fifth review's probe p2). A plain generic call in Rust reaches the same
-way, and is the review's, as Rust is.
+An invocation holding a `sym` operand lies where no enclosing function, `impl` or `trait`, at any depth, has type or
+const parameters — an argument-position `impl Trait` counting as one — and no enclosing item is a `trait`: a `sym`
+through a generic parameter names code the crate that instantiates the function chooses, outside every set of the
+port's record (the fifth review's probe p2). A plain generic call in Rust reaches the same way, and so does a `const`
+or `in` operand of a generic function whose value the instantiating crate chooses, as a computed address: both are the
+review's, as Rust is.
 
 A comma after the last argument, or inside `options(…)`, is admitted, as the compiler admits it.
 
@@ -234,8 +237,9 @@ reset code).
 `lateout` and `inlateout` are refused because the compiler may give such an output an input's register — the
 Reference: "Note that a lateout may be allocated to the same register as an in" — so a line writing it would change
 what a later line reads (the fourth review's probe l3: `li {o}, 2147483648` then `csrw mtvec, {h}` installed the
-integer, not the handler). `out` and `inout` never share one with an `in`. Two inputs of one value may share one
-(measured on the pin, in release builds), which no admitted line observes, since none writes an input. With every
+integer, not the handler). `out` and `inout` never share one with an `in`. Two `in` operands of one value may share one
+(measured on the pin, in release builds), which no admitted line observes, since none writes an `in` operand's
+register. With every
 register declared and no output sharing one, the gate's binding of every placeholder is the compiler's. The values are Rust's, and one detail of them is the
 review's: an input narrower than 64 bits leaves the register's upper bits undefined — the Reference: "If a value is
 of a smaller size than the register it is allocated in then the upper bits of that register will have an undefined
@@ -260,10 +264,11 @@ and byte order of later loads and stores, a trap — is the review's.
 
 **What a naked body leaves is the review's.** The Reference requires of a naked function that "All callee-saved
 registers must have the same value upon return as they had on entry". A transition restores another context's by
-design, so the gate cannot hold a naked body to it. What a body leaves on each exit in `sp`, `gp`, `tp` and the
-callee-saved registers, and on an exit by `mret` or into another context in every register — which holds the
-interrupted context's value, or the incoming one's for a transition, since compiled Rust was interrupted anywhere —
-and what it stores, is the review's, with the code in view.
+design, so the gate cannot hold a naked body to it. What a body leaves on each exit and at each `call` in `sp`, `gp`,
+`tp` and the callee-saved registers, and on an exit by `mret` or into another context in every register — which holds
+the interrupted context's value, or the incoming one's for a transition, since compiled Rust was interrupted anywhere
+— what it passes to the function a `call` or `tail` enters, in the argument registers that function's signature
+reads, and what it stores, is the review's, with the code in view.
 
 **What the refused forms would reach, and what remains the review's.** A directive can read a file, place code where
 the image's layout does not expect it, or define a symbol another package could supply in place of a Rust one; a name
@@ -276,7 +281,7 @@ interrupt to `BASE` "plus four times the interrupt cause number", as the [privil
 specification](../../book/src/ledger.md#riscv-privileged) puts it. A jump through a computed address, code written to memory and executed, and a `sym` naming a `static` in a code
 position, which executes its bytes, and a fixed address reached through `zero` — `jr zero`, or `zero` written to `mtvec`
 or to `mepc` before `mret` — reach what Rust's own casts can reach, and the review checks them as for Rust
-(§13: the token rules are necessary, not sufficient).
+(§3: the token rules are necessary, not sufficient).
 
 **Alignment.** `mtvec` needs a 4-byte-aligned base (§14.1). The pinned compiler gives a naked function that
 alignment, and no attribute asks for it. How the port knows the address it installs as the vector is aligned, and
@@ -302,9 +307,9 @@ code. That is restated:
   and carry a locator into it. The loader checks nothing more here; the review checks that the locators reach the
   code the basis rests on (§13: a code locator is necessary, not sufficient).
 
-**Refusals** (§11), one code per case, taken in this order — structure, then locators, then fields:
+**Refusals** (§11), one code per case, taken in this order — structure, then locators, then sources, then fields:
 - `catalog-shape`: a second `assembly` subform, or one naming no package; two identical locators of one fact; several
-  locators on a fact that is not a code fact;
+  locators on a fact that is not a code fact; a code fact's locators not one after another;
 - `catalog-locator`: a locator §2's rule does not admit, a `file` or `ledger` locator on a code fact among them;
 - `catalog-source`: a declaration naming a package twice, or one not among the facet's `sources` (§4's path rules, as
   §11 files them); a package outside §14.2 and §14.3;
@@ -325,7 +330,7 @@ to this record; from the first lock on, that is a new rules version, which moves
 | Kind | Admitted |
 | --- | --- |
 | registers | `x0`–`x31`; `zero`, `ra`, `sp`, `gp`, `tp`, `fp`, `t0`–`t6`, `s0`–`s11`, `a0`–`a7` |
-| system registers | `mstatus`, `mie`, `mip`, `mtvec`, `mscratch`, `mepc`, `mcause`, `mtval`, `mhartid` — the last read-only in the [privileged specification](../../book/src/ledger.md#riscv-privileged)'s CSR listing, where a write to one raises an illegal-instruction exception, so admitted only as `csrr`'s system register |
+| system registers | `mstatus`, `mie`, `mip`, `mtvec`, `mscratch`, `mepc`, `mcause`, `mtval`, `mhartid` — the last read-only in the [privileged specification](../../book/src/ledger.md#riscv-privileged)'s CSR listing, which says "Attempts to write a read-only register raise illegal-instruction exceptions", so admitted only as `csrr`'s system register |
 
 Each mnemonic, with the kind of each operand in order (R register, C system register, I integer, M memory, S code,
 L label). An R that leads a signature is written, every other R and a memory operand's register are read, and `sd`,
@@ -372,6 +377,7 @@ to each are in [`decision_catalog-records-port-reviews.md`](../../reviews/decisi
 | 3, same day | 20 | an `asm!` writing an undeclared register made compiled Rust jump to an integer; labels aliasing modulo `2^32` | 2 defects, 4 gaps; inline `asm!` narrowed to declared registers and CSR work, labels of four digits, a hosted build's `cfg` excluded; all answered |
 | 4, same day | 13 | `lateout` sharing an input's register installed an integer as the trap vector | 1 defect, 3 gaps; `lateout` and `inlateout` refused, `mret` returns and system-register effects the review's, `mhartid` read only; all answered |
 | 5, same day | 13 | three wording defects — inputs sharing a register, a naked exit's duty narrowed, a lost quote — and a generic `sym` | 3 defects, 3 gaps; words restored, a generic `sym` refused, the trap's address arithmetic stated; all answered |
+| 6, same day | 12 | a quotation lost in round 5's compaction; what a naked body hands a function at a `call` | 1 defect, 1 gap; the `mhartid` sentence quoted, the `call` hand-off the review's; all answered |
 
 ## Why
 
