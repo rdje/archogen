@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — what the processor-specific code needs, measured
+
+`ARCHOGEN-M2-0351` (leaf `M2.12.1`).
+
+- Before designing how the catalog will hold the small amount of assembly code a processor needs, its needs were
+  measured with the project's own compiler: what that code must do, what the compiler does with it, and what the
+  language reference promises. The results, with the experiment that produced them, are in a new part of the
+  catalog's design record; the design itself is next.
+
 ## archogen — the timing analysis's interrupt rule is settled
 
 `ARCHOGEN-M2-0350` (leaf `M2.11`).

@@ -155,6 +155,20 @@ the day a chapter or a decision relies on it, as Miri did.
 | Revalidation trigger | the channel line changing; a toolchain release worth adopting |
 | Named as | `rustc`, `Cargo`, `rustup` |
 
+## `rust-reference`
+
+| Field | Value |
+| --- | --- |
+| Source | The Rust Reference, as the pinned toolchain ships it in its documentation: the chapters "Inline assembly" and "Code generation attributes" |
+| Version | the Reference shipped with `1.95.0`, the toolchain the `rust-toolchain` entry pins |
+| Pinned at | not pinned separately — it ships with that toolchain; no build or check reads it |
+| Retrieved | `2026-10-02`, read from the installed `1.95.0` toolchain's documentation directory |
+| Hash | sha256 `136397d86124651a6c89c2d6bb45175506b4ba04d33e53f352c66251d084796d` of the inline-assembly chapter's page, and `aa9c1a0b0a2d615a690abfbc95819a4cdede12fa70478620ed017c4d2c35e734` of the code-generation attributes chapter's page, as shipped |
+| Scope | what the port's catalog record rests on (`M2.12.1`): a `sym` operand "must refer to a fn or static", and "A mangled symbol name referring to the item is substituted into the asm template string"; `naked_asm!` and `global_asm!` "can only use sym and const operands"; of directives, "The result of using other directives is assembler-specific (and may cause an error, or may be accepted as-is)"; and the code-generation chapter offers no attribute that sets a function's alignment |
+| Known limitations | the Reference describes the language; what the compiler emits, such as a naked function's alignment, is measured on the pin rather than guaranteed (`M2.12.1`) |
+| Revalidation trigger | the toolchain pin moving |
+| Named as | `Rust Reference` |
+
 ## `fsmgen`
 
 | Field | Value |
@@ -275,8 +289,8 @@ the day a chapter or a decision relies on it, as Miri did.
 | Version | Machine-Level ISA, Version 1.13, in the library's `v20260120` release, the release `chipdoc` holds as `risc-v/isa/pinned/v20260120` |
 | Pinned at | not pinned — read at `https://docs.riscv.org/reference/isa/v20260120/priv/machine.html`; no build or check reads it |
 | Retrieved | `2026-09-30` |
-| Hash | not captured for the rendered pages the first two sentences are quoted from; the third's source file is hashed under Known limitations; no figure is adopted |
-| Scope | the sentences `decision_runtime-composite-inputs.md` (`M2.10.1`) and the variant's §6 and condition 6 rest on, two here and a third under Known limitations: "Multiple simultaneous interrupts destined for M-mode are handled in the following decreasing priority order: MEI, MSI, MTI, SEI, SSI, STI, LCOFI"; and interrupt-trap conditions "must also be evaluated immediately following the execution of an xRET instruction or an explicit write to a CSR on which these interrupt trap conditions expressly depend (including mip, mie, mstatus, and mideleg)" |
+| Hash | not captured for the rendered page the Scope's sentences are quoted from; the third sentence's source file is hashed under Known limitations; no figure is adopted |
+| Scope | the sentences `decision_runtime-composite-inputs.md` (`M2.10.1`) and the variant's §6 and condition 6 rest on, two here and a third under Known limitations: "Multiple simultaneous interrupts destined for M-mode are handled in the following decreasing priority order: MEI, MSI, MTI, SEI, SSI, STI, LCOFI"; and interrupt-trap conditions "must also be evaluated immediately following the execution of an xRET instruction or an explicit write to a CSR on which these interrupt trap conditions expressly depend (including mip, mie, mstatus, and mideleg)"; and, for the port's catalog record (`M2.12.1`), why its trap entry must be aligned: "The value in the `BASE` field must always be aligned on a 4-byte boundary, and the `MODE` setting may impose additional alignment constraints on the value in the `BASE` field" |
 | Known limitations | a specification says what a conforming hart does. Whether the target's hart and QEMU conform is a platform fact that the catalog states and a review checks. The Advanced Interrupt Architecture, v1.0 §4.1, read the same day, lets `iprio` give a major interrupt "nominally the same priority as a machine-level external interrupt with priority number" n. So the default order holds only without it, which is why each source's `external.<source>` and the target's `one-external-controller` are facts of their own. A third sentence, which the pinned rendering cuts off before its timer section, was read on `2026-09-30` from the manual's source, `src/priv/machine.adoc` at `51c1291` on `main` (line 2566, file sha256 `d5a817c8…`): "If the result of the comparison between `mtime` and `mtimecmp` changes, it is guaranteed to be reflected in MTIP eventually, but not necessarily immediately." It is why a late compare write is charged apart from `L`, and the variant's *taken* in condition 6 (`M2.11`) |
 | Revalidation trigger | a newer ratified release of the privileged architecture; a target whose interrupts go through the Advanced Interrupt Architecture or platform-local causes |
 | Named as | `privileged specification` |

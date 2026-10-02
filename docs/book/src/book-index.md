@@ -326,6 +326,7 @@ a change that leaves it stale, so it is never edited by hand.
   decisions, not actions](runtime.md), [Where generated systems run](targets.md), [Verifying the
   toolchain](verification.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
   detail](annex-runtime.md)
+- rust-reference — [What this project relies on from outside](ledger.md#rust-reference)
 - rust-toolchain — [What this project relies on from outside](ledger.md#rust-toolchain)
 - **RV32IMAC** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **RV64** — [definition](glossary.md), [Reading a description](reading.md)

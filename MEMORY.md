@@ -16,8 +16,8 @@
 - **Active tree:** `M2` → frontier `M2.12`. `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API`'s is
   `API.7`; `M1`'s only open leaf, `M1.29.4`, is blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M2.12` — the port's assembly in a catalog record: decompose it (research, format, port
-  statement, code, book); groundwork notes from `2026-10-02` were scratch only. Then `M2.15`. `M2.11` closed
+- **Next action:** `M2.12.2` — the format admitting the port's assembly, against §14.1's measurements
+  (`docs/specs/catalog/decision_catalog-records-port.md`); then `.3`–`.5`, then `M2.15`. `M2.11` closed
   `2026-10-02`; `M2.7.6` waits on the director's reviewer. This project uses no branches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4` and `M2.7.6.4` — findings §11, `main`'s protection and a reviewer;
