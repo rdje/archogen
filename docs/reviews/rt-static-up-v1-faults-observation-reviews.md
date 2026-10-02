@@ -2,7 +2,7 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-02`
-- **Status:** `active` — rounds 1 to 4 answered; round 5 next; the review closes on the first round that finds no defect
+- **Status:** `active` — rounds 1 to 5 answered; round 6 next; the review closes on the first round that finds no defect
 - **Owner / source:** leaf `M2.15` (`docs/tasks/M2.md`). The design under review is
   [`rt-static-up-v1-faults-observation.md`](../profiles/rt-static-up-v1-faults-observation.md), part of the profile's
   fault contract, with the routing it makes in the contract's *Still open* and the pointers in `M4.3`, `M4.6`, `M4.7`
@@ -138,6 +138,22 @@ findings: 1 defect, 4 gaps, 3 drafting points, 3 nits. Defects per round: 9, 6, 
 | 9 | nit | after a halt `complete` returns `Halted` | "before a halt" |
 | 10 | nit | `M4.6`'s pointer still named the non-job completion, now `M4.9`'s | dropped; the pointer names every fatal fault |
 | 11 | nit | the facts' parenthesis read as exhaustive, and `one-claim-per-trap` is §12's | "among them … (§14.4) and `one-claim-per-trap` (its §12)" |
+
+## Round 5
+
+`2026-10-03`, of commit `47844a9`, by a new context asked first for regressions, with probes P1–P9. Round 4's answers
+held but two: giving every fatal fault to the hosted run left whether a fault should have been raised at all checked by
+neither the comparison nor the fixtures, dropping round 3's answer 17 ("the rest are the hosted model's"); and the list
+of what may not follow a fatal fault left out idle entry. 5 findings: 2 defects, 1 gap, 1 drafting point, 1 nit.
+Defects per round: 9, 6, 8, 1, 2.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| 1 | defect, regression of round 3's answer 17 | giving every fatal fault left a spurious one, or a missed one, unchecked by both the comparison and the fixtures | narrowed: the runtime's own assertion failures are the hosted model's to raise at the calls and decisions `M4.9` drives, one in one trace only a disagreement, kind and class compared; only those it cannot raise are given, whether one was due stated as a known limit, the fixtures judging each kind in its own scenarios; `M4.3` records every `mask` and `unmask` call so `M4.9` can drive them |
+| 2 | defect | item 5's list omitted idle entry, which rule 7 forbids after a fatal fault | idle entry added |
+| 3 | gap | with the upper bound withdrawn, a lost timer release is undecidable where an outcome-`fault` overrun names no instant, and the lateness check was routed nowhere | every timer overrun `fault` carries its triggering release's nominal instant; §6 and `M4.9`'s pointer route the lateness check to `M4.9`, against a bound the timing analysis states |
+| 4 | drafting | item 5's field list read as exhaustive, leaving the interrupted task and the escalation mark unjudged | every field named, each compared or not, and why |
+| 5 | nit | `M4.9`'s pointer named only the releases given | releases, completions and the fatal faults it cannot raise |
 
 ## Why
 
