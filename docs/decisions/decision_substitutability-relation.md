@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-10-03`
 - **Status:** `active` — written; under independent review (leaf `M3.1.1`'s closure rule: the first round that
-  finds no defect closes it); rounds 1 to 9 answered `2026-10-03`
+  finds no defect closes it); rounds 1 to 10 answered `2026-10-03`
 - **Owner / source:** leaf `M3.1.1` (`docs/tasks/M3.md`). `ROADMAP.md` §5.2 asks for "explicit matching rules in a
   decidable fragment" with "a documented comparison direction" per parameter, declared cross-field implications,
   and no stronger precondition "silently accepted as stronger capabilities"; §5.3 for a "versioned capability
@@ -15,14 +15,13 @@
 The engine decides whether what one party **offers** satisfies what another **requires** by one relation, fact by
 fact, over a small set of value kinds in which every comparison is decidable by exact arithmetic. Every fact a
 description writes is an entry of a **versioned vocabulary**, which fixes the fact's **domain**, its **role** —
-a guarantee the offer makes, or an operating condition the offer imposes — and its **direction**: which way an
-offered value must lie against a required one. A requirement is satisfied when every fact it constrains has a
-value at the offer, directly or by a derivation the vocabulary names, and each value lies in its fact's direction;
-and when every condition the offer imposes is one the requirer meets, the demand compared as the offered value
-against what the requirer has. Nothing is
-inferred from a value being "more" unless the vocabulary says more is better for that fact, and a stronger
-precondition is never a stronger capability, because the vocabulary says which facts are conditions and the
-relation reads those backwards. The relation is a predicate between one requirement and one offer. It induces a
+a guarantee the offer makes, or a statement the requiring side makes about itself — and its **direction**: which
+way an offered value must lie against a required one. A requirement is satisfied when every fact it constrains has
+a value at the offer, directly or by a derivation the vocabulary names, and each value lies in its fact's
+direction. Nothing is inferred from a value being "more" unless the vocabulary says more is better for that fact,
+and a stronger precondition is never a stronger capability, because what a provider accepts of its caller — the
+privilege levels it is reachable from, the power states it works in — is offered as a set and judged by inclusion,
+which reads no order. The relation is a predicate between one requirement and one offer. It induces a
 preorder on the values of each fact and nothing more: no join, no meet, no best offer, and no lattice is claimed
 (§7).
 
@@ -43,16 +42,16 @@ fact, not a claim that the fact is available, as `examples/alternative-timer/sys
 - A **fact** is a name of the vocabulary (§1.1). A **provider** is a block or a platform of the description or, once
   the catalog's records exist (`M2.7.4.5`), a record's contract facet (`docs/specs/catalog/decision_catalog-records.md` §2); the
   relation is the same for both.
-- An **offer** is a provider's statement about a fact: a value of the fact's domain; a bound, in the fact's
-  direction or `exactly` (§1.1); or bare presence, which for a boolean fact, or a group's head, is the value `true`
-  and for any other domain is presence without a value (§2; R4 D3). A service may write `offers` too — `core.eadl` admits the clause on
+- An **offer** is a provider's statement about a fact: a value of the fact's domain, which `(f (exactly v))` also
+  writes; bare presence, which for a boolean fact, or a group's head, is the value `true` and for any other domain is
+  presence without a value (§2; R4 D3); or an abstract platform's bound in the fact's direction, which the
+  refinement check reads (model §3) and the relation does not (§2; R10 J4, J8). A service may write `offers` too — `core.eadl` admits the clause on
   `defservice`, not on `defpolicy` (R7 G5) — but is not a provider, and its offers are not judged in `/1` (R3 C13).
 - A **requirement** is a constraint on a fact: a bound written with its direction, `(f (at-least v))`; a bare value,
   `(f v)`, which is a bound in the fact's own direction; a group, `(f (g …) (h …))`, which requires the boolean head
   `f` and each sub-constraint; or, through `needs`, bare presence.
-- A requirement's **side** is the declaration that writes it — a service, a policy, a system, a platform or a block,
-  whichever writes a `requires` clause (R5 E2) — and the facts that side states about itself are what an offer's
-  conditions are checked against (§3, rule 4).
+- A requirement's **side** is the declaration that writes it — a service, a policy, a system or a task, a platform
+  or a block, whichever writes a `requires` clause or a `needs` (R5 E2; R10 J2).
 
 **The census the vocabulary is written from** (`2026-10-03`, every tracked `.eadl`): offers are written for
 `bus-width`, `clock-rate`, `core-count`, `counter-modulus`, `counter-width`, `debug-port`, `frequency`,
@@ -88,9 +87,9 @@ be run.
 | Clause | Holds | Values | Meaning |
 | --- | --- | --- | --- |
 | `domain` | forms | `boolean`; `count`; `quantity <dimension>`; `interval <dimension>`; `enumeration <symbol>…`, optionally `(ordered <symbol>…)` for a total order, lowest first; `set <symbol>…`; `group <fact>…` | the fact's value kind (§2) |
-| `role` | a symbol | `guarantee`, `condition` or `statement` | a guarantee the offer promises; a condition the offer demands of the requirer (§3 rule 4); or a statement the requiring side makes about itself, which constrains no provider and is read only by the rule, or the leaf, named here for it (§3 rule 6; R6 F4) |
-| `direction` | a symbol | `at-least`, `at-most`, `exact`, `includes`, `within` | how an offered value satisfies a required one (§2's table); for a condition, how the offer's demand must lie against what the requirer has |
-| `derived-from` | forms | facts | the facts a derivation computes this one from, when it is not offered directly (§4); the graph these clauses make is acyclic, and the typed table `crates/eadl-resolve` reads the vocabulary into refuses an entry that would close a cycle (§9; R9 I12) |
+| `role` | a symbol | `guarantee` or `statement` | a guarantee the offer promises, what it accepts of its caller included (§3 rule 4); or a statement the requiring side makes about itself, which constrains no provider and is read only by the rule, or the leaf, named here for it (§3 rule 6; R6 F4; R10 J1) |
+| `direction` | a symbol | `at-least`, `at-most`, `exact`, `includes`, `within` | how an offered value satisfies a required one (§2's table) |
+| `derived-from` | forms | facts | the facts a derivation computes this one from, when it is not offered directly (§4); the graph these clauses and `reads` make is acyclic (R10 J12), and the typed table `crates/eadl-resolve` reads the vocabulary into refuses an entry that would close a cycle (§9; R9 I12) |
 | `reads` | forms | facts | the optional inputs the rule reads beside `derived-from`'s required ones (§4; R5 E9) |
 | `rule` | a symbol | a rule name | the engine's rule that computes it, named here and listed in §4 |
 | `doc` | a string | a string | what the fact means, one line; required, as a kind's `doc` is |
@@ -102,14 +101,16 @@ other as `schema-arity` (R2 B3). `doc`, `domain`, `role` and `direction` appear 
 `reads` and `rule` at most once (R3 C11). A fact's name lives in the vocabulary, not in a
 description's declaration namespace: the module is loaded by the registry as the kinds are, never checked as a
 description, so a block named like a fact (`presence.rs`'s own fixtures write one) collides with nothing — a
-`deffact` written anywhere but the vocabulary module is `invalid-description` (R8 H7) — and
+`deffact` written anywhere but the vocabulary module is `invalid-description`, refused by `crates/eadl-resolve`'s
+loader, which reads the vocabulary module alone (R8 H7; R10 J12) — and
 reference §7 rule 6 — a name declared once — holds among `deffact`s (R1 A15).
 
 A description that writes a fact the vocabulary does not declare may still offer it, declare it absent or need it
 — presence judges those, as today — but a **constraint** on it is `unsupported-profile`: no rule decides a
-parameter without a documented direction (§8). A requirement, or an offer that writes a bound, written in a
+parameter without a documented direction (§8). A requirement, or an abstract platform's bound, written in a
 direction other than the fact's is `invalid-description`, naming both — with one direction either may always
-write: **`exactly`** (R1 A4; R2 B4). Equality is the one bound every direction admits, so it never reads a value
+write: **`exactly`** (R1 A4; R2 B4). In an offer, `(f (exactly v))` is simply the value `v`, judged as any value is
+— the width–modulus check and the two-values rule included — so an offer cannot use it to escape either (R10 J8). Equality is the one bound every direction admits, so it never reads a value
 the wrong way; it refuses what the fact's direction would accept, never the reverse, and it is how a requirer says
 that for it the value is the interface, not a capacity (§6, "more bits"). `exactly` is the written form of the
 direction §2 calls `exact`, as `refinement.rs` reads it (R1 A11). The written direction stays in the description,
@@ -135,13 +136,13 @@ of it satisfies more.
 | `deadlines` | enumeration `constrained arbitrary` | guarantee | `exact` | a policy's word |
 | `debug-port`, `interrupt-source`, `low-power-timer`, `multicore`, `observable-output`, `observation-coherent`, `relative-delay`, `transfer-engine`, `uart` | boolean | guarantee | `exact` | |
 | `delivery-bound` | quantity time | guarantee | `at-most` | a shorter delivery satisfies |
-| `frequency` | interval frequency | guarantee | `within` | the rates the block can run at, a capability the offered range covers; the clock a block must be fed is a condition and another fact (§10; R4 N1) |
+| `frequency` | interval frequency | guarantee | `within` | the rates the block can run at, a capability the offered range covers; the clock a block must be fed is another fact, added when a description needs it (§10; R4 N1) |
 | `min-arrival-separation` | quantity time | guarantee | `at-least` | arrivals further apart satisfy a bound on separation |
 | `or-through-mediation` | enumeration `allowed forbidden` | statement | `exact` | the requirer's word, read by `M3.2` (§3 rule 6) |
 | `preemptive` | boolean | guarantee | `exact` | |
 | `priorities` | set `static unique dynamic` | guarantee | `exact` | a policy's word, like `deadlines`: `unique` is a demand on the task set, not a capability, so a realization offering `static unique` does not satisfy a policy that wrote `static` alone; a policy that wants both writes both (R3 C4) |
 | `queue-capacity` | count | guarantee | `at-least` | capacity |
-| `reachable-at-privilege` | enumeration `(ordered user supervisor machine)` | condition | `at-most` | the offer demands no more privilege than the requirer has (§3 rule 4). Its value is the lowest level from which the function is reachable, every higher level reaching it too: a function whose reachability is not upward-closed — a user mapping a supervisor cannot reach without `sstatus.SUM` — has no value of this fact, its provider offers none, and its requirers get `missing-fact`; a set-valued fact is added when a description needs one (R8 H9; R9 I1) |
+| `reachable-at-privilege` | set `user supervisor machine` | guarantee | `includes` | the levels the function is reachable from, each listed: a requirer states the level it calls from, and the offered set must include it. A machine-mode register offers `machine` and does not satisfy a supervisor caller; a user mapping a supervisor cannot reach without `sstatus.SUM` offers `user` alone. Inclusion reads no order among levels, so a stronger precondition is never a stronger capability (§3 rule 4; R8 H9; R9 I1, I2; R10 J1, J6) |
 | `release-accuracy` | quantity time | guarantee | `at-most` | a tighter accuracy satisfies |
 | `supported-horizon` | quantity time | guarantee | `at-least` | capacity |
 | `tick-rate` | quantity frequency | guarantee | `exact` | interface: a faster counter is another counter, and what is longer or shorter with it is derived (§4) |
@@ -160,7 +161,8 @@ the arithmetic §10 refuses (R8 H2) — the modulus of a 64-bit timebase being `
 (R7 G1) — and a written magnitude its digits with a scale (reference §1, `Rational::decimal`), refused above that as
 it is read, while `i128` is the arithmetic's,
 where a derivation's value lives (R2 B7; R4 N7); nothing is rounded, and a derivation, or the unit conversion inside a
-comparison, whose exact value does not fit is `QuantityError::Overflow` (R5 E8), which the relation reports as `unsupported-profile`, a named limit of the arithmetic and
+comparison, whose computation overflows — `Rational::checked_div` multiplies before it reduces, so a quotient that
+would fit can still overflow, which only ever refuses (R10 J9) — is `QuantityError::Overflow` (R5 E8), which the relation reports as `unsupported-profile`, a named limit of the arithmetic and
 never a verdict on the requirement — `unsupported-profile` rather than `analysis-inconclusive` because the limit is
 the implemented value domain's (model §1), not a search's budget: a description whose numbers pass it asks for a
 wider domain, which §15 versions (R1 A5). The
@@ -170,17 +172,18 @@ fact's domain is `invalid-description`. In the table, `exact` is written `exactl
 
 | Domain | An offer writes | A requirement writes | Direction | Satisfied when |
 | --- | --- | --- | --- | --- |
-| `boolean` | `(f true)`, `(f false)`, or bare `f` for `true`; never a bound (R9 I7) | `(f true)`, `(f false)` or `(f (exactly true))`; `f` inside `needs` is the requirement `(f true)`, the mirror of the bare offer (R7 G2, G12) | `exact` | the values are equal |
+| `boolean` | `(f true)`, `(f false)`, or bare `f` for `true`; `(f (exactly v))` is the value `v`, and any other bound is `invalid-description` (R9 I7; R10 J4) | `(f true)`, `(f false)` or `(f (exactly true))`; `f` inside `needs` is the requirement `(f true)`, the mirror of the bare offer (R7 G2, G12) | `exact` | the values are equal |
 | `count` | `(f 8)` or `(f 8 tick)`, a non-negative integer with an optional dimensionless unit; or `(f (pow2 N))`, `N` an integer from 0 to 126, for a power of two however spelt (R7 G1; R8 H2) | `(f 8)`, `(f 8 tick)`, `(f (pow2 64))`, or a bound in the fact's direction or `exactly`, `(f (at-least 8 tick))` | `at-least`, `at-most`, `exact` | the integers compare in the direction |
 | `quantity <dim>` | `(f 10 MHz)`, a number and a unit of the dimension | `(f (at-least 60 s))` in the fact's direction, `(f (exactly 60 s))`, or `(f 60 s)` in the fact's direction | `at-least`, `at-most`, `exact` | `ComparisonDirection::satisfied_by` in base units; another dimension is `invalid-description` |
 | `interval <dim>` | `(f (range lo hi))`, two quantities of the dimension, `lo ≤ hi`; or a point `(f v)`, the interval `[v, v]` (R3 C10) | a point `(f v)` or an interval `(f (range lo hi))`, or `(f (exactly (range lo hi)))` (R6 F6) | `within`, `exact` | the required point or interval lies inside the offered one: `o.lo ≤ r.lo` and `r.hi ≤ o.hi`; under `exactly`, the intervals are equal (R3 C7) |
 | `enumeration a b c` | `(f b)`, one of the alternatives | `(f b)` or `(f (exactly b))`; with `(ordered …)`, also `(f (at-least b))` or `(f (at-most b))` in the fact's direction | `exact`; with an order, `at-least` or `at-most` | equal; or in the direction over the declared order |
 | `set a b c` | `(f a b)`, alternatives without repetition | `(f b)`, `(f a b)`, or `(f (exactly a b))` | `includes`, `exact` | the offered set contains every required alternative; or the sets are equal |
-| `group g h …` | `(f true)` or bare `f`, and the sub-facts offered on their own | `(f true)`, the head alone, which the head named in `needs` also means (R9 I6); or `(f (g …) (h …))`, the head and sub-constraints; a sub-fact is a fact in its own right and may be constrained flat beside the head, as `examples/alternative-timer/system.eadl` writes `(absolute-deadline true)` beside `(supported-horizon (at-least 10 s))` (R2 B6) | the head is `boolean exact`; each sub-fact its own | the head holds and every sub-constraint, nested or flat, is satisfied, each judged as a requirement on its sub-fact |
+| `group g h …` | `(f true)` or bare `f`, and the sub-facts offered on their own; the head takes a bound as a boolean does (R10 J4) | `(f true)`, the head alone, which the head named in `needs` also means (R9 I6); or `(f (g …) (h …))`, the head and sub-constraints; a sub-fact is a fact in its own right and may be constrained flat beside the head, as `examples/alternative-timer/system.eadl` writes `(absolute-deadline true)` beside `(supported-horizon (at-least 10 s))` (R2 B6) | the head is `boolean exact`; each sub-fact its own | the head holds and every sub-constraint, nested or flat, is satisfied, each judged as a requirement on its sub-fact |
 
-A bound an offer writes (an abstract platform's `(counter-width (at-least 32 bit))`) is not a value: it satisfies
-no valued constraint of a requirement — presence it does satisfy (§3 rule 3; R8 H5) — and is the refinement
-check's business (model §3). A fact offered bare in a domain
+A bound an offer writes (an abstract platform's `(counter-width (at-least 32 bit))`) is not a value — `exactly`
+apart, which is (§1.1) — it satisfies no valued constraint of a requirement — presence it does satisfy (§3 rule 3;
+R8 H5) — and is the refinement check's business (model §3); a provider that writes a bound beside a value of the
+same fact is `invalid-description` (R10 J8). A fact offered bare in a domain
 other than `boolean` or a group's head is **unknown** at that provider (R6 F5): it satisfies presence, a constraint on it
 is `missing-fact` whatever a rule could have derived — the bare offer stops §3 rule 1's chain before derivation —
 and a rule that reads it derives nothing (§4; R3 C5; R5 E3, E7).
@@ -189,11 +192,13 @@ and a rule that reads it derives nothing (§4; R3 C5; R5 E3, E7).
 
 For one requirement `R` on fact `f`, written by side `S`, and one provider `P`:
 
-1. **The value.** `f`'s value at `P` is the value `P` offers for `f`; else, if `P` declares `f` absent, `R` is not
+1. **The value.** A provider that both offers and declares absent one fact is `invalid-description`, judged before
+   anything else (R10 J5). Otherwise `f`'s value at `P` is the value `P` offers for `f`; else, if `P` declares `f` absent, `R` is not
    satisfied by `P`, and the configuration is infeasible where no other provider satisfies it (model §2 rule 2) — a
    declared absence is something the offer says, and no derivation corrects what an offer says (§4; R3 C1; R4 N3).
    Model §2 rule 1 stays description-wide: a fact offered by name anywhere and declared absent anywhere, outside a
-   refinement pair, which model §3 rule 3 judges (R9 I4), is `invalid-description` before the relation runs, and every verdict of the corpus stands (§9), so within one
+   refinement pair, which model §3 judges — rule 1 an abstract's offer against a concrete's absence, rule 3 the
+   reverse (R9 I4; R10 J5) — is `invalid-description` before the relation runs, and every verdict of the corpus stands (§9), so within one
    description another provider satisfies `R` past an absence only by deriving `f` from facts of its own (§4), and,
    once `M3.4` joins the catalog's records, as a record that offers it (R8 H1);
    else, if `P` offers `f` without a value, `f` is unknown at `P` and `R` is `missing-fact` there — a presence
@@ -203,40 +208,33 @@ For one requirement `R` on fact `f`, written by side `S`, and one provider `P`:
    unsatisfied by `P` the same way, since what `f` would be derived from is declared not to exist, and an optional
    input declared absent makes the rule derive nothing (§4; R7 G3); else `f` is undescribed at `P`, and that is
    `missing-fact`: **a constraint written by a declaration inside the closure puts its fact inside the
-   closure** — a provider's demand included, which rule 4 reads from its offers and §5.3 lists among the closure's
-   "provider preconditions" (R7 G9) — so the fact is one model §2 rule 3 blocks
-   on (R1 A2). A declaration outside the closure constrains nothing the enumeration judges (model §2 rule 4).
+   closure** — §5.3's "provider preconditions" included, which in `/1` are guarantees like any other (rule 4; R7 G9;
+   R10 J1) — so the fact is one model §2 rule 3 blocks on (R1 A2). The closure's root is the system: the system and
+   its tasks are inside it, with every declaration they use (R10 J3); a declaration outside it constrains nothing
+   the enumeration judges (model §2 rule 4).
 2. **The domain.** The value is of `f`'s domain, or the offer is `invalid-description`; `R`'s constraint is of `f`'s
    domain and written in `f`'s direction or as `exactly` (§1.1), or `R` is `invalid-description` (R2 B4).
-3. **A presence requirement** — `f` named in `needs` — is satisfied by any offer of `f` other than a boolean `false`
-   — bare, valued or a bound — or by `f`'s derivation where the vocabulary names one (§4; R7 G10), and by nothing
+3. **A presence requirement** — `f` named in `needs`, wherever the `needs` is written, inside `requires` or at a
+   declaration's own level (R10 J2) — is satisfied by any offer of `f` — bare, valued, or an abstract platform's
+   bound — other than a boolean or a group's head whose value is `false`, `(f (exactly false))` included (R10 J4),
+   or by `f`'s derivation where the vocabulary names one (§4; R7 G10), and by nothing
    else: a boolean `f`, or a group's head, named in `needs` is the requirement `(f true)` (R9 I6), so `(f false)` satisfies no presence
    requirement, as `absent` does not (R7 G2); otherwise rule 1's derivation, absence and undescribed arms apply (R6
    F3; R8 H6). **A guarantee** is
    satisfied when the value lies in `f`'s direction against `R`'s bound, by §2's table. `exact`
    admits no "better" value: a tick unit of `us` does not satisfy `ns`, and `20 MHz` does not satisfy a tick rate
    that must be `10 MHz`.
-4. **A condition** puts the demand on the offered side (R7 G7). A condition fact's value at `P` is what `P` demands of whoever uses
-   it — the privilege a call must have, the clock a block must be fed — and `R` on `S`'s side states what `S`
-   has or accepts. It is satisfied when `P`'s demand lies in the fact's direction against `S`'s statement, where
-   the direction is written for the demand: `(direction at-most)` on `reachable-at-privilege` says the offer may
-   demand at most the privilege the requirer has. A demand the requirer does not state is `missing-fact` on `S`'s
-   side. So an offer reachable only at `machine` does not satisfy a requirer at `supervisor`, although `machine`
-   is the higher level: more privilege demanded is a stronger precondition, and §5.2 forbids reading it as a
-   stronger capability. What forbids it mechanically is where the vocabulary puts the operands: a condition's
-   direction is written for the demand, and the relation reads the demand as the offered value and the requirer's
-   statement as the bound, so no comparison can put a demand on the capability side; and rule 5 checks every
-   condition the offer imposes whether or not the requirer wrote a constraint on it. `/1` has one condition,
-   `reachable-at-privilege`, and its direction is `at-most`; an entry that needs another — a block that must be fed
-   at least some rate — is added with its own worked case, so that the reversed reading is checked where it is
-   first used (R1 A8; R2 B2). A demand is a value: a condition fact offered as a bound or bare leaves the demand
-   unknown, and rule 5 finds `missing-fact` at that provider for every requirer; a provider that declares a condition
-   fact absent is reachable on no terms — rule 1's absence arm applies to it as to any fact, and no requirer is
-   satisfied there; a provider with no gate writes the order's minimum, `user` (R5 E5; R9 I2). A provider states its demands in `offers`: a condition fact written in a block's or a
-   platform's `requires` is `invalid-description`, since read as that side's statement about itself it would drop
-   the demand the author meant (R6 F7).
-5. **A `requires` clause** is satisfied by `P` when each of its constraints is, and every condition `P` imposes is
-   met (rule 4); a group's sub-constraints count among its constraints.
+4. **No conditions in `/1`.** What a provider accepts of whoever uses it is offered as a guarantee:
+   `reachable-at-privilege` is the set of levels the function is reachable from, and a requirer's level must be in it
+   (§1.1), as `available-in-state` is the set of states it works in. Inclusion reads no order among levels, so a
+   function reachable only from `machine` does not satisfy a `supervisor` requirer, and a stronger precondition is
+   never a stronger capability; a provider that states no level is `missing-fact` for a requirer that states one
+   (rule 1). A requirer that states no level asks nothing of the relation: which context a plan binds it to, and
+   whether the provider's set includes it, is the joint constraint §5.4 lists as privilege, `M3.3`'s (§10). A
+   reversed condition role, read with the demand on the offered side, drew defects in six of ten review rounds and
+   is deleted (R10 J1, J6).
+5. **A `requires` clause** is satisfied by `P` when each of its constraints is; a group's sub-constraints count
+   among its constraints.
 6. **A statement** — a fact whose role is `statement`, such as `or-through-mediation` — is the requiring side's
    word about itself. It is checked for its domain and nothing else: it constrains no provider, puts no fact
    inside the closure, and is read by the rule or the leaf its entry names, which for `/1`'s one statement is
@@ -293,8 +291,9 @@ the profile asks for the modulus (§3.1), and when `M3.4` wires the relation the
 file carrying nothing its agreement does not check, `cargo xtask target-agreement` and
 `decision_target-platform-description.md` change in the same commit (R8 H8); the device tree carries no modulus, so
 what the agreement checks it against — [the privileged specification](../book/src/ledger.md#riscv-privileged)'s
-`mtime` width — is
-decided there, under that decision's §2 (R9 I9) — a
+`mtime` width, the ledger entry quoting "The `mtime` register has a 64-bit precision on all RV32 and RV64
+systems" and that it "will wrap around if the count overflows" (R10 J13) — is decided there, under that decision's
+§2 (R9 I9) — a
 description gaining a fact §3.1 names, not a requirement weakened (§9). The target's horizon is then
 `2^64 / 10 000 000 s = 1 844 674 407 370.9551616 s`, and fits the arithmetic. With it, the horizon is
 `4294967296 / 10 000 000 s = 429.4967296 s`, and `time.monotonic`'s `(unambiguous-horizon (at-least 60 s))` is
@@ -315,24 +314,22 @@ map (`FactMap`), the closure says which are relevant, and the relation keeps wha
 provider offers which value**. An offer is one provider's statement (§1), so two providers offering one fact with
 two values are two offers, each judged on its own, as two catalog records will be: the enumeration judges a
 requirement against every provider in the closure that offers a value for its fact, derives one from its own facts
-(§4), offers it bare — unknown, §3 rule 1's `missing-fact` — or declares it absent (§3 rule 1; R4 D2; R5 E3; a
-condition fact included, §3 rule 4, R9 I2), and lists each that satisfies it; where none
-does, the diagnostic names each provider's value, bare offer or absence. One provider offering one declared fact
-twice with two values, or bare beside a value, is `invalid-description` — the same value twice is one offer (R5 E10;
-R6 F1) — as §5.3
+(§4), offers it bare — unknown, §3 rule 1's `missing-fact` — declares it absent, or declares absent a required
+input of its derivation (§3 rule 1; R4 D2; R5 E3; R10 J7), and lists each that satisfies it; where none does, the
+diagnostic names each provider's value, bare offer or absence. One provider offering one declared fact twice with
+two values, bare beside a value, or a bound beside a value, is `invalid-description` — the same value twice is one
+offer (R5 E10; R6 F1; R10 J8) — as §5.3
 says of a fact both offered and absent (R2 B5); an undeclared fact has no domain to contradict, so `region`,
 offered once per named region, is untouched (R1 A6; §10). Choosing among the providers that satisfy is `M3.4`'s;
 whether two may both be taken is `M3.3`'s. And the closure the enumeration judges by is presence's closure widened
 by §3 rule 1: every fact a declaration inside it constrains is inside it too (R1 A2); the closure `archogen check`
 reports stays presence's until `M3.4` wires the enumeration and decides whether the report widens with it.
 
-For each declaration in the closure with a `requires` clause — a service, a policy, the system, a platform or a
-block (R5 E2) — the enumeration judges every requirement the clause writes, a `needs` entry naming a vocabulary fact
-as bare presence (§1; one written outside `requires`, at declaration level, is presence's, with the same verdict,
-R7 G11) — one naming a declaration, a service, is presence's as today (R4 N2) — against every provider
-the paragraph above names, and applies rule 5's condition check to each provider that satisfies them:
-a block that demands `(reachable-at-privilege machine)` is checked against a service that only `needs` what it
-offers, and is `missing-fact` on that service's side when the service states no privilege (R3 C2). It lists, per
+For each declaration in the closure — the system and its tasks included (§3 rule 1; R10 J3) — the enumeration
+judges every requirement it writes: each constraint of its `requires`, and each `needs` entry naming a vocabulary
+fact as bare presence, wherever the `needs` is written (§3 rule 3; R5 E2; R7 G11; R10 J2); a `needs` naming a
+declaration, a service, is presence's as today (R4 N2). It judges each against every provider the paragraph above
+names. It lists, per
 constraint, each provider it was judged against and the verdict: satisfied, with the value and the derivation
 used; or not, with the fact, the constraint, the value, the direction and the code of §8. It also emits, per
 `requires` clause and provider, rule 5's verdict — the clause satisfied by that provider or not — and `M3.4`
@@ -355,8 +352,8 @@ Each case is a fact of the vocabulary and a row of §2; the worked values are fr
 | read atomicity | `observation-coherent` | boolean; guarantee; `exact` | offered `true` or bare → satisfied; `false`, or declared absent → not |
 | programming range | `supported-horizon`, under the group `absolute-deadline` | quantity time; guarantee; `at-least` | an offer `(absolute-deadline true) (supported-horizon 3600 s)` satisfies `(at-least 10 s)`; `5 s` does not; a provider with `absent absolute-deadline` does not satisfy the group's head, which is infeasible where it is the only provider, as `timer.delay` is today (R1 A7, A13; R4 N3) |
 | power state | `available-in-state` | set `run idle sleep`; guarantee; `includes` | offered `run idle` ⊇ required `idle`; offered `run` does not include it |
-| access privilege | `reachable-at-privilege` | enumeration `(ordered user supervisor machine)`; **condition**; `at-most` | offer demands `supervisor` or `user`, requirer has `supervisor` → satisfied; offer demands `machine` → not: a stronger precondition, never a stronger capability; a provider declaring the fact absent is reached on no terms, and a target whose reachability is not upward-closed offers no value (§1.1; R9 I1, I2) |
-| mediation | `or-through-mediation` | enumeration `allowed forbidden`; **statement**; `exact` | the requirer's own word that a mediation boundary may stand between it and the function (§4.3's "allowed mediation boundary"). No rule of `/1` reads it: a privilege test that fails is not satisfied, and a mediated path is an adapter — a provider in its own right, whose contract states the privilege it demands and which this relation judges like any other — that `M3.2`'s search may offer only where the requirer wrote `allowed` (R1 A3) |
+| access privilege | `reachable-at-privilege` | set `user supervisor machine`; guarantee; `includes` | offered `supervisor machine`, requirer `supervisor` → satisfied; offered `machine` alone → not: inclusion reads no order, so a stronger precondition is never a stronger capability; a user mapping a supervisor cannot reach offers `user` and does not satisfy `supervisor`; a provider stating nothing is `missing-fact`, and one declaring the fact absent infeasible where it is the only provider; a requirer stating no level is `M3.3`'s (§3 rules 1, 4; R10 J1, J6) |
+| mediation | `or-through-mediation` | enumeration `allowed forbidden`; **statement**; `exact` | the requirer's own word that a mediation boundary may stand between it and the function (§4.3's "allowed mediation boundary"). No rule of `/1` reads it: a privilege test that fails is not satisfied, and a mediated path is an adapter — a provider in its own right, whose contract states the levels it is reachable from and which this relation judges like any other — that `M3.2`'s search may offer only where the requirer wrote `allowed` (R1 A3) |
 | output units | `tick-unit` | enumeration `ns us ms`; guarantee; `exact` | `ns` satisfies `ns`; `us` does not, however a conversion might be arranged: rescaling is an adapter's, a provider in its own right (`M3.2`) |
 | more bits | `counter-width` | quantity information; guarantee; `at-least` | `64 bit` satisfies `(counter-width 32 bit)`, a bound in the fact's direction, and an abstract platform's `(counter-width (at-least 32 bit))` is the same bound owed by a refinement; a service for which the width is the interface — one that reads a 32-bit word and relies on what it read — writes `(counter-width (exactly 32 bit))`, which `64 bit` does not satisfy (§1.1; R1 A4). What is longer with a wider counter is the horizon, which the counter's stated modulus and rate decide (§4), so a requirement on the horizon is written as one |
 
@@ -375,9 +372,9 @@ nobody has made, so none is claimed, as §5.2 asks.
 
 | Code | When |
 | --- | --- |
-| `invalid-description` | a value outside its fact's domain; a direction written against the vocabulary's, `exactly` apart (§1.1); one provider offering one declared fact with two values, or bare beside a value; a derived fact offered beside a fact its rule reads (§4); a `counter-modulus` of 0, above a valued `2^width`, or beside `(wrap-behavior saturating)`; a condition fact written in a block's or platform's `requires`; an offer of a statement fact |
-| `missing-fact` | a constrained fact with no value and no derivation at any provider — inside the closure by §3 rule 1, since its constraint is written there; a condition the requirer's side does not state, or a condition fact a provider offers bare or as a bound (§3 rule 4; R8 H4) |
-| `infeasible-configuration` | a constraint that has a value at some provider and that no provider's value satisfies (R7 G4); a constrained fact, or a group's head, or an input it would be derived from, declared absent where no other provider satisfies the constraint (§3 rule 1); a condition fact a provider declares absent, which no requirer meets there (§3 rule 4; R9 I2) |
+| `invalid-description` | a value outside its fact's domain; a direction written against the vocabulary's, `exactly` apart (§1.1); a provider offering and declaring absent one fact; one provider offering one declared fact with two values, bare beside a value, or a bound beside a value; a boolean or group head offered with a bound other than `exactly`; a derived fact offered beside a fact its rule reads (§4); a `counter-modulus` of 0, above a valued `2^width`, or beside `(wrap-behavior saturating)`; an offer of a statement fact |
+| `missing-fact` | a constrained fact with no value and no derivation at any provider — inside the closure by §3 rule 1, since its constraint is written there |
+| `infeasible-configuration` | a constraint that has a value at some provider and that no provider's value satisfies (R7 G4); a constrained fact, or a group's head, or a required input it would be derived from, declared absent where no other provider satisfies the constraint (§3 rule 1; R10 J7) |
 | `unsupported-profile` | a constraint on a fact the vocabulary does not declare; exact arithmetic that overflows `i128` |
 
 Every diagnostic carries the requirement's span and the offer's, the fact, the constraint as written, the value
@@ -385,7 +382,9 @@ found, the direction, the derivation used, the supported profile and a repair di
 absent fact names each provider the closure holds. One constraint judged against two providers can get two codes —
 one declares the fact absent, another could derive it but offers a required input bare (an offer of the fact by name
 beside the absence is model §2 rule 1's `invalid-description` first; R8 H1); the diagnostic carries both, and the
-verdict is the higher in `Verdict::precedence`, as the checker's is (`crates/eadl-front/src/diagnostic.rs`; R6 F8).
+verdict is the higher in `Verdict::precedence`, as the checker's is (`crates/eadl-front/src/diagnostic.rs`; R6 F8);
+a value refused beside a provider still unknown is reported infeasible, its diagnostic naming the unknown provider,
+whose value could change the answer (R10 J10).
 
 ### 9. Where it lives, and what reads it
 
@@ -416,9 +415,9 @@ source's.
   presence judges them, and a constraint on either is `unsupported-profile` when the enumeration is wired (R1 A10);
   the boundary suite runs the classifier and not the enumeration, so `required-ordering-guarantee.eadl`'s accept
   verdict stands, and `M3.4` keeps it so or adds an entry (R9 I11).
-- Conditions are decided for one ordered enumeration, `reachable-at-privilege`; a condition over a quantity (a
-  clock the block must be fed) takes the same rule 4 and a dimension, and is added to the vocabulary when a
-  description needs it (R2 B2).
+- `/1` has no condition role (§3 rule 4). Which context a plan binds a caller to, and whether the provider's
+  `reachable-at-privilege` includes it, is the joint constraint §5.4 calls privilege, `M3.3`'s; a clock a block must
+  be fed is another fact, added when a description needs it (R2 B2; R10 J1, J6).
 - Arithmetic in a description stays refused — `(pow2 N)` is a literal's spelling (§2), not arithmetic (R8 H2); a new
   derivation is a new named rule here and in the engine.
 - The catalog's contract facet as a provider, and the choice among providers, are `M3.4`'s after `M2.7.4.5`.
@@ -434,10 +433,10 @@ source's.
   already writes directions in requirements; nothing checked them, and `refinement.rs` compared bounds only
   between an abstract platform and its refinement. The vocabulary makes the direction a property of the fact,
   checked wherever the fact is written.
-- The reverse reading of conditions (§3 rule 4) is the one mechanical way to keep §5.2's "stronger preconditions
-  are not silently accepted as stronger capabilities": an engine that compared `machine ≥ supervisor` with the
-  demand on the capability side would accept it, and no reviewer reads every comparison; the vocabulary fixes
-  which side the demand is read on.
+- §5.2's "stronger preconditions are not silently accepted as stronger capabilities" is kept by reading no order
+  where a precondition lives: what a provider accepts of its caller is a set, and inclusion cannot read `machine` as
+  more than `supervisor`. A reversed condition role, which ten rounds tried, drew defects in six; the set needs no
+  reversal (§3 rule 4).
 - Derived facts (§4) are where §5.2's "faster clock is not universally better" bites: the horizon's direction is
   `at-least` and its derivation divides by the rate, so a faster counter of the same modulus is worse. A relation
   without derivations would compare moduli and rates on their own and get the horizon wrong in either direction;
@@ -472,5 +471,6 @@ history is [`decision_substitutability-relation-reviews.md`](../reviews/decision
 | 5 | 10 | 3 (E1, the impossibility bound attached to a derivation's branch, so `(wrap-behavior saturating)` or a bare `wrap-behavior` switched it off and the 16-bit counter's `3600 s` passed again; E2, a platform's or block's `requires` constraint judged by nobody; E3, a bare non-boolean offer with three verdicts) | "not acceptable as it stands"; every §5.2 case right in fact, domain, role and direction; six adversarial offers refused by the sentence named, two not |
 | 6 | 9 | 3 (F1, a bare bounding input switching the bound off, the third round in turn to find an author's horizon beside its grounds; F2, an absent condition fact satisfied by rule 4 and infeasible by §5 and §8; F3, a presence requirement against a bare offer satisfied by §2 and `missing-fact` by rule 1) | "not acceptable as it stands"; every adversarial offer against a valued sibling refused by a sentence named; the restatements (d), (e), (g), (i), (j) one thing everywhere |
 | 7 | 12 | 5 (G1, the target's 64-bit `mtime` unable to write `2^64` as a count, so the one physical counter could state neither modulus nor horizon; G2, a boolean offered `false` meeting a `needs` for it; G3, an optional input declared absent derivable by §4's row and underivable by rule 1; G4, §8's infeasible row swallowing `missing-fact`; G5, `defpolicy` admitting no `offers`) | "not acceptable as it stands"; every §5.2 case right; no condition read as a capability; no undeclared implication used |
-| 9 | 13 | 2 (I1, the round-8 `exactly` escape for a non-nesting privilege the very form rule 4 reads as an unknown demand; I2, a condition fact declared absent read as no demand, the one permissive absence) | "not acceptable as it stands"; every other §5.2 case classified as the fact's meaning requires; no undeclared implication; the arithmetic exact and bounded |
 | 8 | 11 | 1 (H1, the absence rule, §5 and §8's example judging per provider a fact offered at one and absent at another, which model §2 rule 1 refuses description-wide before any relation runs) | "not acceptable as it stands"; no probe made the relation read a demand as a capability, a value the wrong way, or an undeclared implication; every §5.2 case classified as the fact's meaning requires |
+| 9 | 13 | 2 (I1, the round-8 `exactly` escape for a non-nesting privilege the very form rule 4 reads as an unknown demand; I2, a condition fact declared absent read as no demand, the one permissive absence) | "not acceptable as it stands"; every other §5.2 case classified as the fact's meaning requires; no undeclared implication; the arithmetic exact and bounded |
+| 10 | 13 | 8 (J1, a provider stating no privilege accepted where one stating `user` was refused; J2, a declaration-level `needs` escaping rule 3 and the condition check; J3, the system outside the closure, its own constraints judged by nobody; J4, `(exactly false)` meeting `needs`; J5, a provider offering and declaring absent one fact read by its value; J6, a block requirer refused with no legal repair; J7, a required input declared absent given two codes; J8, an `exactly` width escaping the width–modulus check) | "not acceptable as it stands"; probes run against the built checker; every other §5.2 case right, the arithmetic exact |

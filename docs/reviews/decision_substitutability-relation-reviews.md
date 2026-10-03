@@ -229,3 +229,30 @@ Both answers delete a special case. Defects per round: 7, 7, 8, 3, 3, 3, 5, 1, 2
 | I11 — `ordering` constrained in a tracked accept case | no | §10: the classifier runs there, not the enumeration |
 | I12 — acyclicity attributed to the kind registry | no | §1.1: the typed table in `eadl-resolve` |
 | I13 — a modulus of 0 | no | §1.1 and §8: `invalid-description` |
+
+**Round 10**, `2026-10-03`, a new context that had not read rounds 1 to 9, which ran its probes against the built
+`archogen` binary as well as by hand and fetched the privileged specification's `mtime` paragraph. There were 13
+findings, 8 of them defects, and the verdict was "not acceptable as it stands". Defects per round: 7, 7, 8, 3, 3, 3,
+5, 1, 2, 8. They cluster where the record had grown into other leaves' domains — the condition role, the
+enumeration's scope over a description, and bounds written in offers — which the knowledge card on review answers
+reads, in its fifth habit, as the signal to shrink and delegate. The condition role, which had drawn defects in six
+of ten rounds, is deleted: what a provider accepts of its caller is offered as a set and judged by inclusion, and
+the caller's bound context is `M3.3`'s privilege constraint. An offered `exactly` is the value, and no other offered
+bound is read. The closure is rooted at the system, every `needs` judged wherever written, and which closure the
+report carries is `M3.4`'s.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| J1 — a provider stating no privilege imposed nothing, so silence was more permissive than `user`; `target.timer`, machine-mode `mtime`, accepted for any silent requirer | yes | the condition role deleted (§3 rule 4): `reachable-at-privilege` is a guarantee, the set of levels the function is reachable from, judged by inclusion; a provider stating none is `missing-fact` for a requirer that states one; a requirer stating none is `M3.3`'s, added to its acceptance |
+| J2 — a declaration-level `needs` escaped rule 3 and the condition check; `(low-power-timer false)` met it, measured | yes | §3 rule 3 and §5: a `needs` of a vocabulary fact is judged wherever written; with no condition role, nothing else attaches to its placement |
+| J3 — the system never inside presence's closure, its own constraints and its tasks' `needs` judged by nobody, measured | yes | §3 rule 1 and §5: the closure's root is the system, with its tasks; which closure the report carries is `M3.4`'s, added to its goal |
+| J4 — `(f (exactly false))` offered met `needs f`; a group head's bound unaddressed | yes | §1 and §1.1: an offered `exactly` is the value; §2: any other bound on a boolean or group head is `invalid-description`; rule 3 names `(f (exactly false))` |
+| J5 — a provider offering and declaring absent one fact, in a refinement pair, read by its value; the carve-out cited the wrong rule | yes | rule 1: such a provider is `invalid-description` before anything else; the carve-out names model §3 rule 1 and rule 3 for their two directions |
+| J6 — a block requirer satisfied by a privileged provider refused with no legal repair | yes | gone with the condition role: a block that states no level asks nothing of the relation |
+| J7 — a required input declared absent: infeasible by rule 1 and §8, `missing-fact` by §5 | yes | §5: a provider declaring absent a required input of its derivation is enumerated; §8's infeasible row says "required input" |
+| J8 — an `exactly` width escaped the width–modulus check; a bound beside a value read by the value | yes | §1.1: an offered `exactly` is the value, under every check; a bound beside a value at one provider is `invalid-description` |
+| J9 — `checked_div` multiplies before reducing, so a fitting quotient can overflow | no | §2: the computation's overflow, which only refuses |
+| J10 — infeasible reported while a provider is still unknown | no | §8: the diagnostic names the unknown provider |
+| J11 — §5 and §10 on whether `M3.4` takes two providers | no | `M3.4`'s to reconcile, unchanged |
+| J12 — acyclicity over `reads`; who refuses a `deffact` outside the vocabulary | no | §1.1: the graph of `derived-from` and `reads`; `eadl-resolve`'s loader reads the vocabulary module alone |
+| J13 — the `mtime` sentences not yet in the ledger | no | §4: the commit adding the modulus quotes both in the `riscv-privileged` entry |

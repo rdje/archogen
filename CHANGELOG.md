@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability relation's tenth review: the design shrinks again
+
+`ARCHOGEN-M3-0408` (leaf `M3.1.1`, step 11).
+
+- A tenth reader ran its attacks against the built checker and found eight defects, nearly all in parts of the
+  design that had grown into questions other work owns: which privilege a caller actually runs at, which parts of a
+  description are examined, and how a bound written in an offer is read. Rather than patch them, the design lets go:
+  the reversed "condition" rule for privilege, which drew defects in six of ten rounds, is gone — a function now
+  states the set of privilege levels it can be reached from, and a caller's level must be in it — and the question
+  of which level a caller is actually bound to moves to the joint-constraint work (`M3.3`), written into its
+  acceptance. Defects per round: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8.
+
 ## archogen — the trust-dependency gate is designed
 
 `ARCHOGEN-M3-0407` (leaf `M3.6.1`, step 1).
