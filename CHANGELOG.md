@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability relation's ninth review, answered
+
+`ARCHOGEN-M3-0406` (leaf `M3.1.1`, step 10).
+
+- A ninth reader found two defects, both in how the relation treats the privilege a function demands. The previous
+  round's advice for hardware where a higher privilege cannot reach a lower one's memory used a form the record
+  elsewhere reads as "demand unknown", so it could not work; and a block declaring the privilege fact absent was
+  read as demanding nothing at all. Both special cases are gone: the fact now means the lowest level from which a
+  function is reachable, every higher level reaching it too — hardware that does not work that way states no value —
+  and an absent privilege fact is absent like any other fact. Defects per round: 7, 7, 8, 3, 3, 3, 5, 1, 2.
+
 ## archogen — the substitutability relation's eighth review, answered
 
 `ARCHOGEN-M3-0405` (leaf `M3.1.1`, step 9).

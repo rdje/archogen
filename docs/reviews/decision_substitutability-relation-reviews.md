@@ -206,3 +206,26 @@ stands". Defects per round: 7, 7, 8, 3, 3, 3, 5, 1.
 | H9 — the privilege order declares nesting that one hardware case breaks | no | §1.1: the order's meaning stated, `exactly` for a target where it fails |
 | H10 — a failed value beside an unknown sibling takes the checker's precedence | no | a judgement, as the reviewer says; unchanged |
 | H11 — a saturating provider may not write a horizon beside its wrap behaviour | no | deliberate; unchanged |
+
+**Round 9**, `2026-10-03`, a new context that had not read rounds 1 to 8: every `wrap-behavior` state, `(pow2 N)` at
+0, 62, 63, 126 and 127, a boolean `false` and a group head `false` against `needs`, absence against offer and
+against derivation, a `deffact` in a description; every §5.2 case but access privilege classified as the fact's
+meaning requires, no undeclared implication, the arithmetic exact. There were 13 findings, 2 of them defects, both
+in the one condition fact — and the first a regression of round 8's own answer, the knowledge card's first habit.
+Both answers delete a special case. Defects per round: 7, 7, 8, 3, 3, 3, 5, 1, 2.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| I1 — round 8's escape for a target whose privilege order does not nest — write `exactly` — is a condition fact offered as a bound, which rule 4 reads as an unknown demand; so a user mapping without `sstatus.SUM` offering `user` satisfied a supervisor requirer, with no working form to say otherwise | yes | §1.1: the fact's value is the lowest level from which the function is reachable, every higher level reaching it too; a function whose reachability is not upward-closed has no value, offers none, and its requirers get `missing-fact`; the `exactly` escape deleted; §6 says so |
+| I2 — a condition fact declared absent read as no demand, the one permissive absence, against model §2's meaning of `absent` and the exclusion obligation an abstract platform's absence would then put on a refinement | yes | rule 4: rule 1's absence arm applies to a condition fact as to any — reachable on no terms, no requirer satisfied; a provider with no gate writes `user`; the carve-outs in §5 and §8 deleted |
+| I3 — a service named as a provider offering a derived fact | no | §4: an epoch-extending adapter, as a catalog record |
+| I4 — "anywhere" omitted the refinement pair | no | rule 1: outside a refinement pair, which model §3 rule 3 judges |
+| I5 — the rule row's `saturating` branch unreachable | no | the row says so |
+| I6 — a group head `false` against `needs` | no | rule 3 and the group row: a group's head named in `needs` is `(f true)` |
+| I7 — a boolean offered as an `exactly` bound | no | §2 boolean row: never a bound |
+| I8 — a derived fact as an abstract bound cannot be refined by a counter stating its grounds | no | §10: a later leaf teaches refinement a derivation |
+| I9 — what the target's `(pow2 64)` is checked against | no | §4: the privileged specification's `mtime` width, ledgered, decided under the target decision's §2 |
+| I10 — a saturating counter states no horizon | no | §10 says so |
+| I11 — `ordering` constrained in a tracked accept case | no | §10: the classifier runs there, not the enumeration |
+| I12 — acyclicity attributed to the kind registry | no | §1.1: the typed table in `eadl-resolve` |
+| I13 — a modulus of 0 | no | §1.1 and §8: `invalid-description` |
