@@ -119,3 +119,24 @@ Defects per round: 7, 7, 8, 3.
 | N5 — `decision_catalog-records.md` cited as a sibling | no | its path, `docs/specs/catalog/`, written |
 | N6 — rule 4's example named `available-in-state` by description | no | the clock a block must be fed |
 | N7 — a decimal magnitude is digits and a scale; the count row's unit-less requirement | no | §2 |
+
+**Round 5**, `2026-10-03`, a new context that had not read rounds 1 to 4, asked to write, for each §5.2 case, an
+offer that would make the relation accept what the hardware cannot meet: six were refused by the sentence it named,
+two were not. There were 10 findings, 3 of them defects, and the verdict was "not acceptable as it stands". The
+first defect reopened the fourth round's closed case by one symbol — the impossibility bound was attached to a
+derivation's *branch*, so a `wrap-behavior` that was `saturating`, or offered bare, switched it off — and the answer
+makes the bounds properties of the facts, whatever `wrap-behavior` says or omits, and refuses a modulus or a horizon
+beside anything but a modular counter: one rule, no branches. Defects per round: 7, 7, 8, 3, 3.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| E1 — the bound "may not lie beyond the rule's result" vanished where the rule had no result: `(wrap-behavior saturating)` or bare `wrap-behavior` beside a 16-bit, 10 MHz counter let `(unambiguous-horizon 3600 s)` satisfy 60 s, and a modulus of `2^32` on a 16-bit register stood | yes | §4: a `counter-modulus` beside a width may not exceed `2^width`, a horizon beside a rate and a modulus or width may not exceed `modulus / rate`, whatever `wrap-behavior` says or omits; both facts are a modular counter's, and either offered beside a `saturating` or bare `wrap-behavior` is `invalid-description`; worked in §4, §6 and §8 |
+| E2 — a platform's or block's `requires` constraint was in the closure by rule 1 and judged by nobody under §1 and §5; the corpus's one `ordering` constraint never reached §10's `unsupported-profile` | yes | §1 and §5: every declaration in the closure with a `requires` clause — a platform or a block included — is a side and is enumerated |
+| E3 — a bare non-boolean offer had three verdicts: `missing-fact` (§2), derived and satisfied (rule 1, §4), none (§5) | yes | one reading: a bare offer is unknown at that provider and stops rule 1's chain before derivation — `missing-fact` whatever a rule could have derived; §2, rule 1, §4 and §5 say so |
+| E4 — `counter-modulus` `at-least` against `quantity.rs`'s own example of `Exact`, with no requirer in the corpus to argue from | no | taken: `exact` — the modulus is the interface fact §3.1 names, wrapping arithmetic depends on it, and the horizon carries "wraps later"; the crate's comment stands and §9 says so |
+| E5 — a condition fact offered as a bound or bare, or declared absent, had no stated reading | no | §3 rule 4: a demand is a value, a bound or bare demand is `missing-fact` for every requirer; a declared absence imposes no demand, the one place rule 1's absence arm does not apply |
+| E6 — §2's example columns narrower than §1.1's `exactly` | no | §2: `(f (exactly b))` and "a bound in the fact's direction or `exactly`" |
+| E7 — "other than `boolean`" literally covered a group's head | no | §2: "or a group's head" |
+| E8 — a non-whole width is ill-typed, not a limit; a comparison itself cannot overflow, its unit conversion can | no | §2 and §4 say so |
+| E9 — the optional input declared in the engine and the record, not in `vocabulary.eadl` | no | §1.1: a `reads` clause, at most once, holding the optional inputs; the example entry carries `(reads wrap-behavior)` |
+| E10 — one provider offering one fact twice with the same value | no | §5: one offer |

@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability relation's fifth review, answered
+
+`ARCHOGEN-M3-0402` (leaf `M3.1.1`, step 6).
+
+- A fifth reader, asked to attack each timer case with a crafted offer, got through once: the previous round's
+  guard against an author-written horizon hung on the derivation that computes it, and one word about the counter's
+  wrap behaviour switched the derivation — and the guard — off. The guard is now a property of the facts themselves,
+  whatever is said or left unsaid about wrapping, and a modulus or a horizon written for anything but a modular
+  counter is refused outright. Two more seams closed: a platform's own requirements are now judged like a service's,
+  and a fact offered without a value has one verdict everywhere. Defects per round: 7, 7, 8, 3, 3.
+
 ## archogen — the substitutability relation's fourth review, answered
 
 `ARCHOGEN-M3-0401` (leaf `M3.1.1`, step 5).
