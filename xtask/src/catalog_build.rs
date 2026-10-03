@@ -742,11 +742,7 @@ pub fn check(
                         target
                             .as_deref()
                             .map_or(String::new(), |t| format!(" for {t}")),
-                        String::from_utf8_lossy(&output.stderr)
-                            .trim()
-                            .lines()
-                            .last()
-                            .unwrap_or_default()
+                        first_error(&String::from_utf8_lossy(&output.stderr))
                     ),
                 ));
             }
@@ -802,6 +798,106 @@ pub fn check(
         }
     }
     Ok(built)
+}
+
+/// The first line of a cargo or rustc error that says what went wrong, rather than the closing summary.
+fn first_error(stderr: &str) -> String {
+    stderr
+        .lines()
+        .find(|l| l.starts_with("error") && !l.starts_with("error: could not compile"))
+        .or_else(|| stderr.lines().rev().find(|l| !l.trim().is_empty()))
+        .unwrap_or_default()
+        .to_owned()
+}
+
+/// Whether commit `tree` changes, against `parent`, anything §3 says is built for: a file under `catalog/`, a file
+/// in some facet's set, a manifest, `Cargo.lock`, a cargo configuration, a toolchain file or a target file.
+fn changes_what_is_built(tree: &Tree, parent: &Tree, sets: &BTreeSet<String>) -> bool {
+    let relevant = |path: &str| {
+        path.starts_with("catalog/")
+            || path.starts_with("targets/")
+            || sets.contains(path)
+            || path == "Cargo.toml"
+            || path.ends_with("/Cargo.toml")
+            || path == "Cargo.lock"
+            || path.ends_with("/Cargo.lock")
+            || path == "rust-toolchain"
+            || path == "rust-toolchain.toml"
+            || path.ends_with("/rust-toolchain")
+            || path.ends_with("/rust-toolchain.toml")
+            || path.contains(".cargo/config")
+    };
+    tree.paths()
+        .filter(|p| relevant(p))
+        .any(|p| parent.get(p) != tree.get(p))
+        || parent
+            .paths()
+            .filter(|p| relevant(p))
+            .any(|p| tree.get(p).is_none())
+}
+
+/// §3's builds for every commit CI replays between `bases` and `head`, `head` itself excepted, that changes what is
+/// built against each of its parents: each such commit's catalog loaded, its tree written under `scratch`, and
+/// [`check`] run on it (§3, "Who runs these checks").
+///
+/// # Errors
+///
+/// As [`check`], the commit named in the refusal's path.
+pub fn check_replayed(
+    history: &archogen_catalog::history::History,
+    bases: &[&str],
+    head: &str,
+    repo: &Path,
+    pin: &str,
+    scratch: &Path,
+) -> Result<Vec<(String, Built)>, Failure> {
+    let mut out = Vec::new();
+    for name in history.between(bases, head)? {
+        if name == head {
+            continue;
+        }
+        let commit = history.get(&name)?;
+        if !commit.tree.is_dir("catalog") {
+            continue;
+        }
+        let loaded = archogen_catalog::load::load(history, &name)?;
+        let mut sets: BTreeSet<String> = BTreeSet::new();
+        for h in loaded.hashes.facets.values() {
+            sets.extend(h.own_set.iter().cloned());
+            sets.extend(h.reached.iter().cloned());
+        }
+        let changes = commit.parents.is_empty()
+            || commit.parents.iter().any(|p| {
+                history
+                    .get(p)
+                    .is_ok_and(|parent| changes_what_is_built(&commit.tree, &parent.tree, &sets))
+            });
+        if !changes {
+            continue;
+        }
+        let root = scratch.join("replay").join(&name).join("tree");
+        write_tree(&commit.tree, &root)?;
+        let built = check(
+            &loaded,
+            &commit.tree,
+            &root,
+            repo,
+            pin,
+            &scratch.join("replay").join(&name),
+        )
+        .map_err(|f| match f {
+            Failure::Refused(r) => Failure::Refused(Refusal::new(
+                r.code,
+                &format!("{name}:{}", r.path),
+                &r.field,
+                r.at,
+                format!("at the replayed commit {name}: {}", r.message),
+            )),
+            other => other,
+        })?;
+        out.push((name, built));
+    }
+    Ok(out)
 }
 
 #[cfg(test)]
@@ -1182,5 +1278,174 @@ mod tests {
         let built = run(&tree, &dir).unwrap_or_else(|e| panic!("{e:?}"));
         assert_eq!((built.packages, built.builds), (1, 4), "{built:?}");
         let _ = BTreeMap::<u8, u8>::new();
+    }
+
+    #[test]
+    fn the_commits_a_push_replays_are_built_where_they_change_what_is_built() {
+        use super::check_replayed;
+        let (first, dir) = small_workspace("replay", "#![no_std]\npub fn f() -> u32 { 1 }\n", &[]);
+        let first = with_lock(first);
+        // The second commit changes the package and bumps the implementation; the third changes only a document.
+        let mut second = first.clone();
+        second.insert(
+            "crates/p/src/lib.rs",
+            b"#![no_std]\npub fn f() -> u32 { 2 }\n".to_vec(),
+        );
+        let bumped = record("crates/p", "example-target").replace(
+            "(implementation (version \"0.1.0\")",
+            "(implementation (version \"0.1.1\")",
+        );
+        second.insert(
+            "catalog/experimental/example.base.catalog",
+            bumped.into_bytes(),
+        );
+        let second = {
+            let mut t = second;
+            t.remove(PATH);
+            let catalog = Catalog::read(t.clone()).unwrap();
+            let hashes = catalog.hashes().unwrap();
+            let mut lines = blessed(&catalog, &hashes);
+            lines.extend(Lock::parse(first.get(PATH).unwrap()).unwrap().lines);
+            t.insert(PATH, Lock::new(1, lines).render());
+            t
+        };
+        let mut third = second.clone();
+        third.insert("docs/example/model.txt", b"model\n".to_vec());
+        third.insert("NOTES", b"a note\n".to_vec());
+        let mut history = History::default();
+        let names = [
+            "1".repeat(40),
+            "2".repeat(40),
+            "3".repeat(40),
+            "4".repeat(40),
+        ];
+        let date = CommitterDate {
+            seconds: 1_790_812_800,
+            offset_minutes: 0,
+        };
+        history.insert(
+            names[0].clone(),
+            Commit {
+                parents: vec![],
+                date,
+                tree: Tree::new([]),
+                hosting: false,
+            },
+        );
+        history.insert(
+            names[1].clone(),
+            Commit {
+                parents: vec![names[0].clone()],
+                date,
+                tree: first.clone(),
+                hosting: false,
+            },
+        );
+        history.insert(
+            names[2].clone(),
+            Commit {
+                parents: vec![names[1].clone()],
+                date,
+                tree: second.clone(),
+                hosting: false,
+            },
+        );
+        history.insert(
+            names[3].clone(),
+            Commit {
+                parents: vec![names[2].clone()],
+                date,
+                tree: third.clone(),
+                hosting: false,
+            },
+        );
+        let built = check_replayed(
+            &history,
+            &[&names[0]],
+            &names[3],
+            &real_root(),
+            &pin(),
+            &dir.join("scratch"),
+        )
+        .unwrap_or_else(|e| panic!("{e:?}"));
+        // The first catalog commit and the one that changed the package are built; the head is the caller's, and the
+        // document-only commit would not be.
+        let names_built: Vec<&str> = built.iter().map(|(n, _)| n.as_str()).collect();
+        assert_eq!(names_built, [names[1].as_str(), names[2].as_str()]);
+        assert!(built.iter().all(|(_, b)| b.builds == 4), "{built:?}");
+        let mut fourth = third.clone();
+        fourth.insert("NOTES", b"another note\n".to_vec());
+        history.insert(
+            "5".repeat(40),
+            Commit {
+                parents: vec![names[3].clone()],
+                date,
+                tree: fourth,
+                hosting: false,
+            },
+        );
+        let built = check_replayed(
+            &history,
+            &[&names[2]],
+            &"5".repeat(40),
+            &real_root(),
+            &pin(),
+            &dir.join("scratch2"),
+        )
+        .unwrap_or_else(|e| panic!("{e:?}"));
+        assert!(
+            built.is_empty(),
+            "a document-only commit is not built: {built:?}"
+        );
+        // A replayed commit whose package does not build is refused, naming it.
+        let mut broken = first.clone();
+        broken.insert("crates/p/src/lib.rs", b"pub fn f( {\n".to_vec());
+        let broken = with_lock(broken);
+        let mut h = History::default();
+        h.insert(
+            names[0].clone(),
+            Commit {
+                parents: vec![],
+                date,
+                tree: Tree::new([]),
+                hosting: false,
+            },
+        );
+        h.insert(
+            names[1].clone(),
+            Commit {
+                parents: vec![names[0].clone()],
+                date,
+                tree: broken,
+                hosting: false,
+            },
+        );
+        h.insert(
+            names[2].clone(),
+            Commit {
+                parents: vec![names[1].clone()],
+                date,
+                tree: first.clone(),
+                hosting: false,
+            },
+        );
+        match check_replayed(
+            &h,
+            &[&names[0]],
+            &names[2],
+            &real_root(),
+            &pin(),
+            &dir.join("scratch3"),
+        ) {
+            Err(Failure::Refused(r)) => {
+                assert_eq!(r.code, Code::Source, "{r}");
+                assert!(
+                    r.message.contains("at the replayed commit 2222")
+                        && r.message.contains("does not build"),
+                    "{r}"
+                );
+            }
+            other => panic!("{other:?}"),
+        }
     }
 }

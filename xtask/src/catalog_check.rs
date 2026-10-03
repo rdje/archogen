@@ -86,8 +86,10 @@ pub struct Verdict {
     pub lock: bool,
     /// The pin the compiler was held to.
     pub pin: String,
-    /// What §3's builds did.
+    /// What §3's builds did at the judged commit.
     pub built: catalog_build::Built,
+    /// The replayed commits built, with what each did.
+    pub replayed: Vec<(String, catalog_build::Built)>,
 }
 
 /// Parse the subcommand's arguments.
@@ -590,6 +592,8 @@ pub fn judge(cwd: &Path, scratch: &Path, mode: &Mode) -> Result<Verdict, Failure
     replay(&history, &base_refs, &head)?;
     let judged_tree = &history.get(&head)?.tree;
     let built = catalog_build::check(&loaded, judged_tree, &root, &repo, &pin, scratch)?;
+    let replayed =
+        catalog_build::check_replayed(&history, &base_refs, &head, &repo, &pin, scratch)?;
     Ok(Verdict {
         head,
         bases,
@@ -597,6 +601,7 @@ pub fn judge(cwd: &Path, scratch: &Path, mode: &Mode) -> Result<Verdict, Failure
         lock,
         pin,
         built,
+        replayed,
     })
 }
 
@@ -627,6 +632,12 @@ pub fn run(root: &Path, args: &[&str]) -> i32 {
                 verdict.built.builds,
                 verdict.built.units
             );
+            for (name, built) in &verdict.replayed {
+                println!(
+                    "catalog-check: replayed {name}: {} package(s) built {} time(s), {} unit(s) read",
+                    built.packages, built.builds, built.units
+                );
+            }
             0
         }
         Err(Failure::Refused(r)) => {

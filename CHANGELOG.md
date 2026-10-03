@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the checker builds every commit a push replays
+
+`ARCHOGEN-M2-0391` (leaf `M2.7.4.3`, closed).
+
+- When a pull request carries several commits, the checker now builds each one that changes what a record's
+  packages are built from, not only the last, so a commit made with the local gate bypassed is built too, as the
+  design requires. A commit that changes only documents is left alone.
+
 ## archogen — the checker builds what a record names
 
 `ARCHOGEN-M2-0390` (leaf `M2.7.4.3`, step 1).
