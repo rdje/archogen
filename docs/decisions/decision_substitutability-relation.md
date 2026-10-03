@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-10-03`
 - **Status:** `active` — written; under independent review (leaf `M3.1.1`'s closure rule: the first round that
-  finds no defect closes it); rounds 1 to 13 answered `2026-10-03`
+  finds no defect closes it); rounds 1 to 14 answered `2026-10-03`
 - **Owner / source:** leaf `M3.1.1` (`docs/tasks/M3.md`). `ROADMAP.md` §5.2 asks for "explicit matching rules in a
   decidable fragment" with "a documented comparison direction" per parameter, declared cross-field implications,
   and no stronger precondition "silently accepted as stronger capabilities"; §5.3 for a "versioned capability
@@ -51,7 +51,11 @@ fact, not a claim that the fact is available, as `examples/alternative-timer/sys
 not a provider's (R11 K14).
 - A **requirement** is a constraint on a fact: a bound written with its direction, `(f (at-least v))`; a bare value,
   `(f v)`, which is a bound in the fact's own direction; a group, `(f (g …) (h …))`, which requires the boolean head
-  `f` and each sub-constraint; or, through `needs`, bare presence.
+  `f` and each sub-constraint; or, through `needs`, bare presence. Inside `requires`, a bare fact name, or `(f)`
+  with nothing after it, states no constraint and is `invalid-description` — presence is written `(needs f)`; and a
+  list inside `needs` naming a vocabulary fact, `(needs (tick-unit us))`, is `invalid-description` too — a value
+  belongs in `requires` — since presence would otherwise read only its head and drop the value. No tracked
+  description writes either (census `2026-10-03`; R14 6, 7).
 - A requirement's **side** is the declaration that writes it — a service, a policy, a system or a task, a platform
   or a block, whichever writes a `requires` clause or a `needs` (R5 E2; R10 J2).
 
@@ -68,8 +72,11 @@ absences for `absolute-deadline`, `debug-port`, `low-power-timer`; and three nam
 
 #### 1.1 The vocabulary
 
-The vocabulary is an eADL module the engine ships beside its kinds, `docs/semantics/kinds/vocabulary.eadl`,
-versioned with the language, `eadl/1`; an entry changes only by §15's migration process. It is written with one
+The vocabulary is an eADL module the engine ships beside its kinds, in a folder of its own,
+`docs/semantics/vocabulary/vocabulary.eadl` — not under `docs/semantics/kinds/`, every file of which
+`crates/archogen-cli/tests/kind_modules.rs` holds to declaring a kind — and `archogen check` answers it as it answers
+a kind module, the language's own definition and not a description, exit 20, as `crates/archogen-cli/tests/verdicts.txt`
+freezes the kind modules (R14 5). It is versioned with the language, `eadl/1`; an entry changes only by §15's migration process. It is written with one
 kind, `deffact`, declared with `defkind` in a kind module of its own, `docs/semantics/kinds/deffact.eadl`, which
 `crates/eadl-resolve` registers to validate the vocabulary with `kind.rs`'s `validate` and which no description's
 registry holds: a `deffact` written in a description is `schema-unknown-kind`, as any kind its registry does not hold
@@ -78,7 +85,7 @@ is today (R11 K7). So it is no more privileged than a kind a user adds (referenc
 
 ```text
 (deffact unambiguous-horizon
-  (doc "how long a time observation stays unambiguous: the counter's modulus over its rate")
+  (doc "the longest interval across which two reads of the counter stay distinguishable: its modulus less one, over its rate")
   (domain quantity time)
   (role guarantee)
   (direction at-least)
@@ -241,7 +248,9 @@ For one requirement `R` on fact `f`, written by side `S`, and one provider `P`:
    satisfies it in none of the three (R13 M3). A requirer that states no level asks nothing of the relation: which context a plan binds it to, and
    whether the provider's set includes it, is the joint constraint §5.4 lists as privilege, `M3.3`'s (§10); a
    provider that states no level, in any of those three ways, is refused there for any caller a plan binds to it, and
-   `M3.3`'s acceptance says so (R11 K4; R12 L10; R13 M3). A
+   `M3.3`'s acceptance says so (R11 K4; R12 L10; R13 M3). So every provider a plan binds a caller to must state its
+   level; no tracked description does yet, and the migration — the target's level from its agreement and a ledger
+   source, as §4 adds the modulus — is `M3.3`'s, in its acceptance (R14 2). A
    reversed condition role, read with the demand on the offered side, drew defects in six of ten review rounds and
    is deleted (R10 J1, J6).
 5. **A `requires` clause** is satisfied by `P` when each of its constraints is, a statement apart (rule 6); a
@@ -272,7 +281,7 @@ optional, that is offered without a value is unknown, and the rule derives nothi
 declared absent makes the rule derive nothing too, the conservative branch, while a required one declared absent is
 rule 1's (R7 G3). A derived fact offered beside facts the rule does not read stands as a claim: a block offering
 `(counter-width 16 bit)` and `(unambiguous-horizon 3600 s)` and no rate or modulus is believed, since a width does
-not decide a horizon — a 16-bit modular counter at 18 Hz holds an hour (R7 G6). Every derivation is per
+not decide a horizon — a 16-bit modular counter at 18 Hz holds an hour, `65535 / 18 s ≈ 3640.8 s` (R7 G6; R14 9). Every derivation is per
 provider: a horizon is computed from one block's modulus and rate, never one block's modulus and another's rate (R2
 B5). The rules are engine knowledge — exact rational arithmetic in `crates/eadl-resolve`, each named, and each
 listed here. No implication between facts holds unless a rule names it; `/1` has one.
@@ -294,7 +303,14 @@ also read a named optional one, which the entry's `reads` clause names — `wrap
 
 | Rule | Computes | From | Formula |
 | --- | --- | --- | --- |
-| `horizon-from-modulus-and-rate` | `unambiguous-horizon` (quantity, time) | `counter-modulus` (count); `tick-rate` (quantity, frequency, positive by model §1 rule 3); `wrap-behavior`, optional | `modulus / rate` seconds, exact, when `wrap-behavior` is `modular` or undescribed; nothing when it is offered without a value or declared absent (R7 G3) — `saturating` beside a modulus is `invalid-description` (above), so the rule never reads it (R9 I5); a quotient, or the unit conversion inside a comparison, past `i128` is `QuantityError::Overflow`, `unsupported-profile` (§2; R5 E8) |
+| `horizon-from-modulus-and-rate` | `unambiguous-horizon` (quantity, time) | `counter-modulus` (count); `tick-rate` (quantity, frequency, positive by model §1 rule 3); `wrap-behavior`, optional | `(modulus − 1) / rate` seconds, exact, when `wrap-behavior` is `modular` or undescribed; nothing when it is offered without a value or declared absent (R7 G3) — `saturating` beside a modulus is `invalid-description` (above), so the rule never reads it (R9 I5); a quotient, or the unit conversion inside a comparison, past `i128` is `QuantityError::Overflow`, `unsupported-profile` (§2; R5 E8) |
+
+**Why one less than the modulus** (R14 9). Two reads a time `Δ` apart differ by `⌊Δ·rate⌋` or `⌈Δ·rate⌉` ticks,
+whichever the phase gives, and they are equal when that difference is the modulus. They stay distinguishable at
+every phase only while `⌈Δ·rate⌉ ≤ modulus − 1`, which is `Δ ≤ (modulus − 1) / rate`; an interval of `modulus / rate`,
+or just under it, can give two equal reads. So the horizon is inclusive, as `ROADMAP.md` §4.3's "unambiguous across
+at least 60 seconds" reads, and `at-least` compares it as any capacity: `(counter-modulus 600000000)` at `10 MHz` has
+`59.9999999 s` and does not meet `60 s`, where `modulus / rate` would have given exactly `60 s` and met it.
 
 **Worked, from the corpus.** `timer.counter` in `examples/periodic-three/system.eadl` offers `counter-width 32 bit`
 and `tick-rate 10 MHz` and no modulus, so in the library its horizon is undescribed at that provider:
@@ -309,13 +325,14 @@ yet, "The `mtime` register has a 64-bit precision on all RV32 and RV64 systems" 
 count overflows" (R10 J13; R11 K15) — is decided there, under that decision's
 §2 (R9 I9) — a
 description gaining a fact §3.1 names, not a requirement weakened (§9). The target's horizon is then
-`2^64 / 10 000 000 s = 1 844 674 407 370.9551616 s`, and fits the arithmetic. With it, the horizon is
-`4294967296 / 10 000 000 s = 429.4967296 s`, and `time.monotonic`'s `(unambiguous-horizon (at-least 60 s))` is
-satisfied; `timer.delay` in `examples/alternative-timer/system.eadl`, at `1 MHz`, has `4294.967296 s`, slower and
-better here. A 16-bit counter, `(counter-modulus 65536)` at `10 MHz`, has `65536 / 10 000 000 s = 6.5536 ms` and
+`(2^64 − 1) / 10 000 000 s = 1 844 674 407 370.9551615 s`, and fits the arithmetic. With it, the horizon is
+`4294967295 / 10 000 000 s = 429.4967295 s`, and `time.monotonic`'s `(unambiguous-horizon (at-least 60 s))` is
+satisfied; `timer.delay` in `examples/alternative-timer/system.eadl`, at `1 MHz` and with that modulus stated, would
+have `4294.967295 s`, slower and better here. A 16-bit counter, `(counter-modulus 65536)` at `10 MHz`, has
+`65535 / 10 000 000 s = 6.5535 ms` and
 fails the same requirement: the faster wrapping counter §5.2 warns of, caught because the direction belongs to the
 horizon and the derivation to the vocabulary, not to anyone's sense of which counter is better. A reload counter,
-`(counter-modulus 1000000) (tick-rate 10 MHz)`, has `1 000 000 / 10 000 000 s = 0.1 s` and fails it too (R2 B1). A
+`(counter-modulus 1000000) (tick-rate 10 MHz)`, has `999 999 / 10 000 000 s = 0.0999999 s` and fails it too (R2 B1). A
 counter that writes `(unambiguous-horizon 3600 s)` beside its modulus, its rate or its `wrap-behavior`, bare or
 valued, is `invalid-description`: the horizon is derived where its grounds are offered, and a horizon that long over
 that hardware is an epoch extender's, a provider in its own right that offers the horizon alone (R4 D1; R5 E1; R6
@@ -329,8 +346,9 @@ derivation used and the direction; and, per `requires` clause and provider, rule
 that provider or not (R3 C8). An offer is one provider's statement (§1), so two providers offering one fact with two
 values are two offers, each judged on its own, as two catalog records will be (R2 B5). One provider offering one
 declared fact twice with two values, or a bound beside a value, is `invalid-description`; the same value twice is one
-offer, and a bare offer beside a value of the same fact is that value — a bare boolean beside `(f true)` the same
-value twice (R5 E10; R6 F1; R10 J8; R11 K9; R13 M7). An undeclared fact
+offer, and a bare offer beside a value of the same fact is that value, in a domain where bare presence has no value;
+for a boolean or a group's head, where bare is `true`, a bare offer beside `(f true)` is the same value twice and
+beside `(f false)` two values, `invalid-description` (R5 E10; R6 F1; R10 J8; R11 K9; R13 M7; R14 8). An undeclared fact
 has no domain to contradict, so `region`, offered once per named region, is untouched (R1 A6; §10). When `M3.7` gives a
 catalog record's contract offers the relation can judge, a record is one more provider, judged like a block, and a
 record that mediates enters only through `M3.2`'s search (R13 M2, M6).
@@ -345,8 +363,7 @@ the relation into `archogen check` — and its acceptance carries each of these 
 - **absence across providers:** a fact declared absent at one of the description's blocks and platforms and offered
   at another, outside a direct refinement pair, is `invalid-description` (model §2 rule 1), compared over every offer
   and absence, not presence's first of each, and through no chain of refinements (R8 H1; R11 K2); an adapter
-  `M3.2`'s search offers is not one of them, and its offer satisfies past a declared absence, so
-  `examples/alternative-timer` builds after `M3.2` unchanged, as `examples/README.md` seals (R13 M4);
+  `M3.2`'s search offers is not one of them, and its offer satisfies past a declared absence (R13 M4);
 - **one clause, several providers:** which constraints of one clause may be met by different providers — a group and
   its sub-constraints, nested or flat, never (R12 L16) — and the requirements one service makes of one device's facts
   met by the one provider a plan binds it to, which is `M3.3`'s and in its acceptance (R6 F9; R11 K3; R12 L5);
@@ -354,9 +371,7 @@ the relation into `archogen check` — and its acceptance carries each of these 
   declared absent — or an input of `f`'s derivation; one that states neither is silent and decides nothing (R13 M5).
   `missing-fact` while some provider that takes part is unknown or undescribed and none satisfies, so an author is
   sent to the fact that could still decide it, and when none takes part (R12 L4); `infeasible-configuration` once at
-  least one takes part and every one that does is refused or absent, so
-  `docs/semantics/cases/infeasible-required-absence.eadl`, and `examples/alternative-timer` before `M3.2`, keep it;
-  and model §2 rule 2 — "a required fact that is declared absent makes the configuration infeasible" — amended in
+  least one takes part and every one that does is refused or absent; and model §2 rule 2 — "a required fact that is declared absent makes the configuration infeasible" — amended in
   `docs/semantics/model.md`, where a provider's derivation, or an adapter's offer `M3.2`'s search makes, satisfies
   past another's absence (R6 F8; R10 J10; R11 K5, K6; R13 M4).
 
@@ -370,7 +385,7 @@ Each case is a fact of the vocabulary and a row of §2; the worked values are fr
 
 | Case | Fact | Domain, role, direction | Satisfied, not satisfied |
 | --- | --- | --- | --- |
-| wrap interval | `unambiguous-horizon` | quantity time; guarantee; `at-least`; derived (§4) | `(counter-modulus 4294967296)` at `10 MHz` → `429.4967296 s ≥ 60 s`; `(counter-modulus 65536)` at `10 MHz` → `6.5536 ms`, not satisfied; `(unambiguous-horizon 3600 s)` written beside a modulus, a rate or a `wrap-behavior`, bare or valued → `invalid-description` (§4; R4 D1; R5 E1; R6 F1) |
+| wrap interval | `unambiguous-horizon` | quantity time; guarantee; `at-least`; derived (§4) | `(counter-modulus 4294967296)` at `10 MHz` → `429.4967295 s ≥ 60 s`; `(counter-modulus 65536)` at `10 MHz` → `6.5535 ms`, not satisfied; `(unambiguous-horizon 3600 s)` written beside a modulus, a rate or a `wrap-behavior`, bare or valued → `invalid-description` (§4; R4 D1; R5 E1; R6 F1) |
 | read atomicity | `observation-coherent` | boolean; guarantee; `exact` | offered `true` or bare → satisfied; `false`, or declared absent → not |
 | programming range | `supported-horizon`, under the group `absolute-deadline` | quantity time; guarantee; `at-least` | an offer `(absolute-deadline true) (supported-horizon 3600 s)` satisfies `(at-least 10 s)`; `5 s` does not; a provider with `absent absolute-deadline` is absent for the group's head, as `timer.delay` is today (R1 A7, A13; R4 N3) |
 | power state | `available-in-state` | set `run idle sleep`; guarantee; `includes` | offered `run idle` ⊇ required `idle`; offered `run` does not include it |
@@ -396,7 +411,7 @@ The relation's own codes are about an offer or a requirement as written, whateve
 
 | Code | When |
 | --- | --- |
-| `invalid-description` | a value outside its fact's domain; a width that is not a positive whole number of bits; a set written with no member in a requirement, or as `(f (exactly))` in an offer — `(f)` in an offer is bare (§2;
+| `invalid-description` | a bare fact name, or `(f)`, inside `requires`; a list inside `needs` naming a vocabulary fact; a value outside its fact's domain; a width that is not a positive whole number of bits; a set written with no member in a requirement, or as `(f (exactly))` in an offer — `(f)` in an offer is bare (§2;
 R13 M11) — or an interval with `lo > hi` on either side; a `needs` of a statement fact; a direction written against the vocabulary's, `exactly` apart (§1.1); a provider offering and declaring absent one fact; one provider offering one declared fact with two values, or a bound beside a value; a boolean or group head offered with a bound other than `exactly`; a derived fact offered beside a fact its rule reads (§4); a `counter-modulus` of 0, above a valued `2^width`, or beside `(wrap-behavior saturating)`; an offer of a statement fact |
 | `unsupported-profile` | a constraint on a fact the vocabulary does not declare; exact arithmetic that overflows `i128` |
 
@@ -419,7 +434,11 @@ provider but one — `periodic-three`'s `(observation-coherent true)`, which `ti
 `(release-accuracy (at-most 1 ms))`, every policy's `priorities`, `preemptive` and `deadlines`, `bounded-arrival`,
 `queue-capacity` — is a constraint on the realization, which a catalog record's contract will supply
 once `M3.7` gives it offers the relation judges, and no record exists until `M2.7.4.5` (R1 A2; R13 M6). The search
-(`M3.4`) wires it, over the description's providers, and the catalog's after `M3.7`. The relation judges a fact by a provider's offer, never by a
+(`M3.4`) wires it, over the description's providers, and the catalog's after `M3.7`. Beyond the examples, wiring it
+changes other tracked verdicts too — a horizon unknown where a counter offers `tick-rate` bare, a requirement no
+block or platform offers, a description with no platform (R14 3) — and keeping or migrating each, named in the
+commit that changes it, is `M3.4`'s, in its acceptance; this record claims no verdict for a tracked description once
+wired. The relation judges a fact by a provider's offer, never by a
 declaration that bears the fact's name, which presence today counts as satisfying the closure: a block named
 `low-power-timer` that offers nothing of that name passes presence and is undescribed here; the library's
 verdict is the stricter, and which one the report carries is decided when `M3.4` wires it (R2 B9). `quantity.rs`'s
@@ -442,9 +461,15 @@ source's.
   quantity, the same amount.
 - `region` and `ordering` fit no domain of §2: a region is a name with sub-clauses, offered once per name, and an
   ordering is a pair of events; both are placement and ordering, `M3.3`'s, and both stay undeclared in `/1` —
-  presence judges them, and a constraint on either is `unsupported-profile` when the enumeration is wired (R1 A10);
-  the boundary suite runs the classifier and not the enumeration, so `required-ordering-guarantee.eadl`'s accept
-  verdict stands, and `M3.4` keeps it so or adds an entry (R9 I11).
+  presence judges them, and a constraint on either is `unsupported-profile` when the enumeration is wired (R1 A10).
+  `required-ordering-guarantee.eadl` writes one, and `crates/archogen-cli/tests/verdicts.txt` freezes its verdict at
+  `0`, so `M3.3` judges a required ordering and a region's placement and `M3.4` keeps that verdict, each in its
+  acceptance (R9 I11; R14 4).
+- `uc3`'s seal — refused before `M3.2` and built after it with its description unchanged (`examples/README.md`,
+  `docs/usecases/uc3-alternative-timer.md`) — meets this record's rules: `timer.delay` states no modulus, so its
+  horizon is undescribed (§4); no privilege level (§3 rule 4, `M3.3`); and its policy's constraints wait on a catalog
+  record (`M3.7`). Where those facts come from — catalog records, or the description — or whether the seal moves, is
+  `M3.2`'s, and a change to the description is brought to the director before it is made (R14 1).
 - `/1` has no condition role (§3 rule 4). Which context a plan binds a caller to, and whether the provider's
   `reachable-at-privilege` includes it, is the joint constraint §5.4 calls privilege, `M3.3`'s; a clock a block must
   be fed is another fact, added when a description needs it (R2 B2; R10 J1, J6).
@@ -508,3 +533,4 @@ history is [`decision_substitutability-relation-reviews.md`](../reviews/decision
 | 11 | 16 | 7 (K1, the closure stated two ways, one admitting a provider on an unused platform; K2, a declared absence passed by another provider's offer, presence comparing only the first of each; K3, one clause's head and range from two providers; K4, a provider stating no privilege untaken by `M3.3`; K5, model §2 rule 2 cited for its opposite; K6, infeasible while an unknown provider decides; K7, no mechanism refusing a stray `deffact`) | "not acceptable as it stands"; for one provider every §5.2 case right, no stronger precondition passing; the derivation seam closed |
 | 12 | 17 | 8 (L1, an offered `exactly` read as the value would strip refinement's only bound on an `exact` fact; L2, satisfaction stated in the fact's direction, not the requirement's; L3, a bare derived fact beside an absent input two outcomes; L4, `infeasible-configuration` with no provider; L5, one service's facts bound to one counter taken by no acceptance; L6, the mediation gate taken by no acceptance; L7, `M3.1.2` told to put `deffact` in `core.eadl`; L8, §9's corpus claim) | "not acceptable as it stands"; for one provider every §5.2 case right, no stronger precondition passing |
 | 13 | 13 | 9 (M1, refinement keeping no value an abstract platform offers, so a system on an abstract platform is judged on values its refinement lacks; M2, a mediating record or adapter reaching the relation outside `M3.2`'s gate; M3, a bare privilege offer outside rule 4's and `M3.3`'s words; M4, the absence rule over every provider refusing `uc3` after `M3.2`; M5, silent providers turning tracked infeasible cases into `missing-fact`; M6, a record's contract as a provider carried by no leaf; M7, a bare offer beside a value two outcomes; M8, the opening's presence sentence; M9, §9's corpus claim) | "not acceptable as it stands"; for one provider every §5.2 case right, no condition read as a capability |
+| 14 | 18 | 9 (N1, `uc3` said to build after `M3.2` unchanged, which the record's own horizon and privilege rules forbid; N2, the privilege refusal stopping every use case and the target, unsaid; N3, wiring changing seven tracked `0` verdicts, carried by no leaf; N4, the `ordering` and `region` handover uncarried; N5, the vocabulary in the kinds folder, which a tracked test holds to kinds; N6, a bare name inside `requires` with no outcome; N7, a value inside `needs` dropped; N8, a bare boolean beside `false` two outcomes; N9, the horizon's endpoint, `modulus / rate` ambiguous) | "not acceptable as it stands"; for one provider the directions right and the arithmetic exact |

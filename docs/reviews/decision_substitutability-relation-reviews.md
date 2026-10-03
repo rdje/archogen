@@ -338,3 +338,34 @@ refinement keeps handed to `M1.40`, widened.
 | M11 — an empty set in an offer: bare by §2, refused by §8 | no | §8: `(f (exactly))` in an offer, no member in a requirement |
 | M12 — §1 saying the relation does not read a bound | no | §1: does not read it as a value |
 | M13 — refinement's reader refuses some equal values | no | conservative, as §1.1 states; `M1.40`'s acceptance names spelling-only differences as a stated limit |
+
+**Round 14**, `2026-10-03`, a new context that had not read rounds 1 to 13, which ran twenty probes against the
+built checker, took a census of the corpus (37 names over 124 files, reproduced) and recomputed every worked number.
+For one provider the directions were right and the arithmetic exact. There were 18 findings, 9 of them defects, and
+the verdict was "not acceptable as it stands". Defects per round: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9. Four
+defects were what wiring would do to the corpus and the use cases, which the record either claimed — `uc3` built
+after `M3.2` unchanged, a claim round 13's answer added — or left to no acceptance. The fifth habit again: the
+record claims no verdict for a tracked description once wired; each leaf that wires or binds keeps or migrates
+what it moves, in its acceptance. The horizon's endpoint was a real error of the derivation, now `(modulus − 1) /
+rate`.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| N1 — `uc3` cannot build after `M3.2` unchanged: no modulus, so no horizon (§4); no privilege level (`M3.3`); its policy's facts wait on `M3.7` | yes | §5's claim removed; §10 states the conflict; `M3.2`'s acceptance: facts from catalog records, or the description's change brought to the director first |
+| N2 — `M3.3`'s refusal of a provider stating no level stops every use case and the target, unsaid | yes | §3 rule 4 says so; `M3.3`'s acceptance migrates the corpus and the target, the target's level from its agreement and a ledger source, or narrows the refusal under a review |
+| N3 — wiring moves seven tracked `0` verdicts, carried by no leaf | yes | §9: no verdict claimed once wired; `M3.4`'s acceptance keeps or migrates every frozen verdict, the seven named, ordered after `M3.3` and `M3.7` |
+| N4 — the `ordering` and `region` handover uncarried; the classifier argument missed the frozen verdict | yes | §10 restated; `M3.3`'s acceptance judges a required ordering and a region's placement, `required-ordering-guarantee.eadl` keeping its verdict |
+| N5 — a vocabulary file under `docs/semantics/kinds/` breaks `kind_modules.rs` | yes | §1.1: `docs/semantics/vocabulary/`, answered by `check` as a kind module is, exit 20; `M3.1.2`'s goal and acceptance |
+| N6 — a bare name or `(f)` inside `requires` has no outcome; `(requires observation-coherent)` accepted today | yes | §1 and §8: `invalid-description`, presence written `(needs f)`; none in the corpus |
+| N7 — a value inside `needs` dropped, so `(needs (tick-unit us))` met by `ns` | yes | §1 and §8: a list inside `needs` naming a vocabulary fact is `invalid-description`; none in the corpus |
+| N8 — a bare boolean beside `(f false)`: that value, or two values | yes | §5: in a domain where bare has no value; for a boolean or a group's head, two values, `invalid-description` |
+| N9 — two reads `modulus / rate` apart can be equal, so `600000000` at `10 MHz` met `60 s` wrongly | yes | §1.1's entry and §4: `(modulus − 1) / rate`, derived from the reads' tick difference; every worked number recomputed |
+| N10 — `uc3` before `M3.2`: the missing-capability report | no | `M3.2`'s and `M3.4`'s F10 lines carry it |
+| N11 — a block's bound outside §1's offer definition | no | §2's and §8's general wording decide it, as the reviewer found |
+| N12 — `(absent unambiguous-horizon)` beside its inputs reads absent | no | conservative; rule 1's order |
+| N13 — a concrete `(exactly 64 bit)` "no value" in refinement | no | conservative, stated in §1.1 and `M1.40` |
+| N14 — `available-in-state` does not imply `run` | no | inclusion reads only what is listed; a requirer lists every state it runs in |
+| N15 — minor forms: an absent statement fact, `(f)` offered for a boolean, a service's offers | no | §2's domain rule and §1's service sentence decide them |
+| N16 — codes for a library not yet wired; `none:` rows | no | `M3.1.2` decides, reference §4 rule 3 applying |
+| N17 — `quantity-missing` labelled at `core.eadl:1:1` (outside the record) | no | reproduced; `M1.41` filed |
+| N18 — six worked numbers recomputed | no | now recomputed under `(modulus − 1) / rate` |
