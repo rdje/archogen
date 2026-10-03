@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the review histories' folder gets a larger ceiling
+
+`ARCHOGEN-PROGRAM-0400` (leaf `PROGRAM.49`).
+
+- The folder that keeps every design's review history reached the size it was allowed: it was sized for six
+  histories and now holds eleven, and a history runs as long as its review takes, sixteen rounds for the catalog's
+  record. A history is never edited once its review closes, so nothing there can be shortened. The ceiling rises to
+  384 KiB, with the measurement and the rate written into a decision of its own, which also names the next step if
+  the rate holds: an archive for closed histories, not another raise.
+
 ## archogen — the substitutability relation's third review, answered
 
 `ARCHOGEN-M3-0399` (leaf `M3.1.1`, step 4).

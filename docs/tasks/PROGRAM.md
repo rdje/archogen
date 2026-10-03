@@ -711,6 +711,22 @@ mdBook that is the director's window into the project.
   `=== all doctrines green ===` after.
   Commit: `ARCHOGEN-PROGRAM-0392 (leaf PROGRAM.48)`
 
+- ID: `PROGRAM.49`
+  Status: `done` — `2026-10-03`
+  Goal: `docs/reviews/`' total-bytes ceiling raised with its measurement, as `README_POLICY.md` requires of a ceiling:
+  the folder stood at 264 219 bytes against 262 144 after the substitutability record's fourth round was answered;
+  `PROGRAM.36` set the ceiling from 6 histories at 117 623 bytes, there are 11 now, and the closure rule makes a
+  history as long as the rounds it takes — 16 for the catalog's record. A frozen history is never edited, so the
+  folder cannot be compacted, and it has no overflow destination of its own.
+  Acceptance: the ceiling raised in `README_POLICY.md`'s row to 393 216 bytes (384 KiB) and named in "Ceilings a
+  decision fixes", the per-file ceilings unchanged; a decision record, `decision_reviews-folder-ceiling.md`, carrying
+  the measurement, the rate and the next step if the rate holds (a terminal archive for closed histories, not another
+  raise); the containment inventory's row re-measured; `README-ROUTES` green.
+  Verification: `git ls-files docs/reviews | xargs cat | wc -c` → `264219` before, against the refusal
+  `docs/reviews/: 264219 bytes in total, over its ceiling of 262144`; `bash scripts/check_doctrines.sh` → `=== all
+  doctrines green ===` after.
+  Commit: `ARCHOGEN-PROGRAM-0400 (leaf PROGRAM.49)`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -925,6 +941,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.41` | the folder measured at `b8448c6`; the seal with its reconstruction proof; the gate and its self-test; four mutations on a copy; `README-ROUTES` with the new row; every self-test; the enforcer | 376 904 before, 368 643 after; `02 04 08 10, 9745 bytes`; `20 pass / 0 fail`; each mutation red on its own arm, the proof reached by none; all green |
 | `2026-09-30` | `PROGRAM.41.1` | the gate rewritten against the review's D1–D18; its self-test; a matrix of 42 mutations on a copy; the real history; every self-test; the enforcer | `54 pass / 0 fail`; 41 of 42 red, the 42nd unreachable apart from the rows leg; `decision-history: OK (4 sealed section(s) …)`; 37 self-tests passed; all green |
 | `2026-09-30` | `PROGRAM.42` | the `-s ours` merge built on both gates in scratch repositories, before and after the fix; both self-tests; four mutations on copies; both gates on the real trees; every self-test; the enforcer | both passed the merge before and refuse it after; `27 pass / 0 fail`, `17 pass / 0 fail`; each mutation red on its own arm; `task-history: OK`, `history-ledgers: OK`; 37 self-tests passed; all green |
+| `2026-10-03` | `PROGRAM.49` | the folder measured before and after; the refusal reproduced by the enforcer; the enforcer after the raise | `264219` over `262144`; all green |
 
 ## Commit Log
 
@@ -1033,6 +1050,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.47.6` | `ARCHOGEN-PROGRAM-0326 (leaf PROGRAM.47.6)` | **the index without the layer headings**: 342 entries to 270, four words that named no topic gone |
 | `PROGRAM.47.5.23` | `ARCHOGEN-PROGRAM-0327 (leaf PROGRAM.47.5.23)` | ***What this project relies on from outside* in layers**; `PROGRAM.47.5` and `PROGRAM.47` closed, every chapter in layers |
 | `PROGRAM.48` | `ARCHOGEN-PROGRAM-0392 (leaf PROGRAM.48)` | the book's total-bytes ceiling raised to 448 KiB with its measurement, in the decision that owns it |
+| `PROGRAM.49` | `ARCHOGEN-PROGRAM-0400 (leaf PROGRAM.49)` | `docs/reviews/`' total-bytes ceiling raised to 384 KiB with its measurement, in a decision record of its own |
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0331 (leaf PROGRAM)` | **`PROGRAM.47` sealed**, its 30 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` had grown 1 653 bytes over its 819 200-byte ceiling with `API.6.3`'s leaf |
 
 ## Changelog
