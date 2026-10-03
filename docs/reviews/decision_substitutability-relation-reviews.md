@@ -256,3 +256,31 @@ report carries is `M3.4`'s.
 | J11 — §5 and §10 on whether `M3.4` takes two providers | no | `M3.4`'s to reconcile, unchanged |
 | J12 — acyclicity over `reads`; who refuses a `deffact` outside the vocabulary | no | §1.1: the graph of `derived-from` and `reads`; `eadl-resolve`'s loader reads the vocabulary module alone |
 | J13 — the `mtime` sentences not yet in the ledger | no | §4: the commit adding the modulus quotes both in the `riscv-privileged` entry |
+
+**Round 11**, `2026-10-03`, a new context that had not read rounds 1 to 10, which ran seventeen probes against the
+built `archogen` binary. For one provider and a requirer that states its level or state, it found every §5.2 case
+read correctly and no stronger precondition passing; the derivation seam closed; the arithmetic exact. There were 16
+findings, 7 of them defects, and the verdict was "not acceptable as it stands". Defects per round: 7, 7, 8, 3, 3, 3,
+5, 1, 2, 8, 7. Six of the seven concern what a description makes of several providers — the closure, an absence at
+one provider beside an offer at another, a clause split across providers, the description's code — which is the
+search that wires the relation into a description, `M3.4`, and presence's rules beneath it. The relation is narrowed
+to one provider: five outcomes, and the aggregation, with each finding, written into `M3.4`'s acceptance.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| K1 — the closure stated as presence's widened in §5 and as rooted at the system in §3; under the first, a provider on a platform the system does not use satisfies (p02) | yes | §3 rule 1 and §5: the closure is no longer the relation's; `M3.4`'s acceptance carries one closure, rooted at the system with its tasks and platform, `uses` and `needs` followed transitively, a provider on an unused platform never satisfying |
+| K2 — the description-wide absence rule rests on `presence.rs`, which compares only the first offer and first absence, and exempts refinement chains; a decoy chain lets an unrelated offer pass a declared absence (p05) | yes | §5 and `M3.4`'s acceptance: refused over every offer and absence, outside a direct refinement pair, through no chain; `presence.rs`'s comparison corrected there |
+| K3 — §5 chose per clause, §10 let `M3.4` take two providers, so a group's head and its range could come from different providers | yes | §5, §10 and `M3.4`'s acceptance: which constraints of a clause may come from different providers is `M3.4`'s, a group and its sub-constraints never |
+| K4 — `M3.3`'s acceptance took a provider whose privilege set is stated, not one that states none, so a silent provider and a silent requirer passed | yes | §3 rule 4 and `M3.3`'s acceptance: a provider stating no `reachable-at-privilege` is refused for any caller a plan binds to it, and one stating no power state for a plan entering one |
+| K5 — rule 1 cited model §2 rule 2 for a per-provider reading it does not have; presence and the relation gave one `needs` two verdicts (p07) | yes | §5 and `M3.4`'s acceptance: model §2 rule 2 amended in `model.md` where a provider's derivation satisfies past another's absence; the relation itself only reports `absent` at the provider |
+| K6 — infeasible reported while an unknown provider could still satisfy (p15) | yes | §5 and `M3.4`'s acceptance: `missing-fact` while some provider is unknown or undescribed and none satisfies |
+| K7 — the vocabulary "read by the registry", which refuses any non-`defkind` form; `deffact` declared in `core.eadl` admitted in any description, the promised refusal with no mechanism | yes | §1.1: `deffact` declared in a kind module of its own that `eadl-resolve` registers to validate the vocabulary and no description's registry holds, so a `deffact` in a description is `schema-unknown-kind` |
+| K8 — `refinement.rs` reads an offered `exactly` as a quantity bound | no | §1.1: `M3.1.2` changes its reader, a test per domain |
+| K9 — a bare boolean beside `(f true)` matched two clauses of §5 | no | §5: the same value twice, one offer |
+| K10 — a bound written by a block | no | unchanged: not read beyond presence, whoever writes it |
+| K11 — the opening paragraph's wording against rule 3 | no | the opening paragraph names the presence requirement |
+| K12 — `priorities` and `deadlines` `exact` over-refuse | no | conservative, unchanged |
+| K13 — `(f false)` against an absence | no | conservative, unchanged |
+| K14 — a service's `absent` | no | §1: presence's, not a provider's |
+| K15 — the ledger entry does not yet quote the `mtime` sentences | no | §4: the commit adding the modulus adds them |
+| K16 — a `needs` naming both a block and a fact | no | §5's delegation states `needs` of a vocabulary fact; a declaration's name is presence's |

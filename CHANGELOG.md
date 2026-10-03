@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability relation's eleventh review: narrowed to one provider
+
+`ARCHOGEN-M3-0410` (leaf `M3.1.1`, step 12).
+
+- An eleventh reader found the relation sound for one provider — every timer case read correctly, no stronger
+  precondition passing — and seven defects in what it said about whole descriptions with several providers: which
+  providers count, how an absence at one meets an offer at another, and which error a description gets. Those are
+  questions for the search that wires the relation into a description (`M3.4`), and they now live in its acceptance,
+  each with the case the reviews found. The relation itself now gives one of five answers at one provider. Defects
+  per round: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7.
+
 ## archogen — the trust-dependency gate's first review, answered
 
 `ARCHOGEN-M3-0409` (leaf `M3.6.1`, step 2).
