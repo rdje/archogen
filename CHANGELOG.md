@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability relation's first review, answered
+
+`ARCHOGEN-M3-0397` (leaf `M3.1.1`, step 2).
+
+- An independent reader found seven defects in the record's first text: a derivation that, read literally, left the
+  record's own worked horizon undefined; a constraint on a fact nothing depends on that the relation would have
+  passed unexamined; a mediation rule nothing declared; a counter's width read as more-is-better where a service
+  reads one word; an arithmetic limit off by one; a rule that would have refused the target's own description; a
+  unit the language does not know. Each is answered by editing the words it names. The record goes to a second
+  reader.
+
 ## archogen — the substitutability relation is decided, and `M3` begins
 
 `ARCHOGEN-M3-0396` (leaf `M3.1.1`, step 1).
