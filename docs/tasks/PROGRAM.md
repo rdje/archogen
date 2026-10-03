@@ -698,6 +698,19 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM.47.6`
   Status: `done` — sealed in [`PROGRAM/PROGRAM.47.md`](../task-history/PROGRAM/PROGRAM.47.md); commit `ARCHOGEN-PROGRAM-0326`
 
+- ID: `PROGRAM.48`
+  Status: `done` — `2026-10-03`
+  Goal: the book's total-bytes ceiling raised with its measurement, as `README_POLICY.md` requires of a ceiling:
+  `docs/book/` stood at 393 208 of 393 216 bytes, eight bytes of headroom, after 44 commits touched the book in two
+  days; the lockstep rule moves a chapter with every normative change, so the book grows by about a kilobyte a leaf
+  by design, and four of the last six book changes needed a compaction of a stale or redundant passage first.
+  Acceptance: the ceiling raised in `README_POLICY.md`'s two rows to 458 752 bytes (448 KiB), the per-file ceilings
+  unchanged; the decision record that owns the ceiling, `decision_book-in-layers.md`, carries the dated paragraph
+  with the measurement and the rate; `README-ROUTES` green.
+  Verification: `git ls-files docs/book | xargs wc -c` → `393208 total` before; `bash scripts/check_doctrines.sh` →
+  `=== all doctrines green ===` after.
+  Commit: `ARCHOGEN-PROGRAM-0392 (leaf PROGRAM.48)`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1019,6 +1032,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.47.5.22` | `ARCHOGEN-PROGRAM-0325 (leaf PROGRAM.47.5.22)` | ***The S0 early generation path* in layers** |
 | `PROGRAM.47.6` | `ARCHOGEN-PROGRAM-0326 (leaf PROGRAM.47.6)` | **the index without the layer headings**: 342 entries to 270, four words that named no topic gone |
 | `PROGRAM.47.5.23` | `ARCHOGEN-PROGRAM-0327 (leaf PROGRAM.47.5.23)` | ***What this project relies on from outside* in layers**; `PROGRAM.47.5` and `PROGRAM.47` closed, every chapter in layers |
+| `PROGRAM.48` | `ARCHOGEN-PROGRAM-0392 (leaf PROGRAM.48)` | the book's total-bytes ceiling raised to 448 KiB with its measurement, in the decision that owns it |
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0331 (leaf PROGRAM)` | **`PROGRAM.47` sealed**, its 30 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` had grown 1 653 bytes over its 819 200-byte ceiling with `API.6.3`'s leaf |
 
 ## Changelog

@@ -48,6 +48,15 @@ and an opening of one or two kilobytes in each of the chapters account for most 
 move text rather than add it. The per-file ceilings stay — 750 lines, 48 KiB, 1 024 bytes a line — so a chapter
 that outgrows them sheds its details into an annex rather than raising them.
 
+**Raised again `2026-10-03` (leaf `PROGRAM.48`), to 458 752 bytes (448 KiB).** Measured then: 393 208 bytes, eight
+below the ceiling, after 44 commits touched the book in two days; the lockstep rule moves a chapter with every
+normative change, and each such paragraph costs a few hundred bytes, so the book grows by about a kilobyte a leaf by
+design. Below the ceiling, four of the last six book changes needed a compaction first, each taken from a passage
+that had become stale or redundant — a useful discipline that was running out of candidates. The new total gives
+room for sixty-odd leaves at that rate; the per-file ceilings stay, and a chapter that outgrows them still sheds
+into an annex. The next raise, if one is needed, is again a dated paragraph here with the measurement that asks for
+it.
+
 ## Why
 
 A book read only by experts can open with the rule; this one is the director's only view of the project and the
