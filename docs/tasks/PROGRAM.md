@@ -37,7 +37,7 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM`
   Status: `active`
   Goal: own the program spine
-  Children: `PROGRAM.1` … `PROGRAM.35`, and the sub-leaves each of them names
+  Children: `PROGRAM.1` … `PROGRAM.51`, and the sub-leaves each of them names
 
 - ID: `PROGRAM.1`
   Status: `done` — sealed in [`PROGRAM/PROGRAM.1.md`](../task-history/PROGRAM/PROGRAM.1.md); commit `ARCHOGEN-PROGRAM-0002`
@@ -747,6 +747,44 @@ mdBook that is the director's window into the project.
   352584 after; `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`.
   Commit: `ARCHOGEN-PROGRAM-0412 (leaf PROGRAM.50)`
 
+- ID: `PROGRAM.51`
+  Status: `done` — filed and closed `2026-10-03` from `M2.22`'s root cause
+  Goal: `COMMIT.md` step 2's format step enforced at commit time, a project doctrine `RUST-FORMAT`: every Rust source
+  a commit stages is in canonical format, read from the index. `ARCHOGEN-M2-0394 (leaf M2.10.2)` committed two
+  unformatted files after running the tests and clippy alone, and the `focused` tier's `fmt` step failed at HEAD
+  until `M2.22`; nothing at commit time held anyone to the step, and the format step is the one of that tier cheap
+  enough for the pre-commit path.
+  Acceptance: the gate refuses an unformatted staged file by name and passes a canonical one; judges the staged
+  bytes, not the working tree's; follows no `mod`; refuses a file `rustfmt` cannot read; judges every tracked file
+  when nothing is staged; leaves `vendor/` out; an empty population a breach; its RED arms run by
+  `scripts/run_self_tests.sh`; registered, mirrored in `DOCTRINE_ENFORCEMENT.md`, the toolchain fact it rests on in
+  the ledger.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — `ARCHOGEN-M2-0394`'s `compose.rs` through `rustfmt --emit stdout` and `cmp` against
+    itself → `cmp rc=1`, differing; yet that commit passed the pre-commit hook, whose doctrines hold no format check
+    (`grep -c fmt scripts/check_doctrines.project.sh` → 0 before this leaf).
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `printf 'fn  main( ){}' | rustfmt --edition 2021 --check; echo rc=$?` →
+    its diff, then `rc=0`, on rustc 1.95.0's rustfmt; and no doctrine ran a format check before this leaf.
+    WHERE: `COMMIT.md` step 2 asks for `make focused`, whose first step is `fmt`, and nothing at commit time runs it. WHY a staged-file check and not `cargo fmt --check`: the latter reads the
+    working tree, so a fix left unstaged passes over the bytes committed, and it follows `mod` declarations; on
+    stdin, `rustfmt --check` prints its diff and exits 0 (`printf 'fn  main( ){}' | rustfmt --edition 2021
+    --check; echo $?` → `0`), so the gate compares `--emit stdout` with its input.
+  - [x] **FIX** — `scripts/check_rust_format.sh`, `RUST-FORMAT`, registered in `scripts/check_doctrines.project.sh`,
+    mirrored in `DOCTRINE_ENFORCEMENT.md`, named in `COMMIT.md` step 2; the `rustfmt` fact in the ledger's
+    `rust-toolchain` entry → `grep -c RUST-FORMAT` over the four files → 1 each.
+  - [x] **ADDRESSED (verified)** — `bash scripts/check_rust_format.sh --self-test` → `10 pass / 0 fail (10 arms)`:
+    a canonical file passes; an unformatted one refused by name; the staged bytes judged over a working-tree fix,
+    and the reverse; no `mod` followed; an unreadable file refused; `vendor/` outside; a commit staging no Rust
+    passes; nothing staged judges every tracked file; an empty population a breach.
+  - [x] **NO REGRESSION** — `bash scripts/check_rust_format.sh` on the tree → `159 tracked Rust source file(s), each
+    in canonical format`, in about 5 s; `bash scripts/run_self_tests.sh` → `self-tests: OK — 44 self-test(s)
+    passed`; `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`.
+  - [x] **LOCKSTEP** — `DOCTRINE_ENFORCEMENT.md`, `COMMIT.md`, the ledger; this leaf and both logs; `CHANGELOG.md`
+    → one entry.
+  Verification: `2026-10-03` — the Verification Log's row
+  Commit: `ARCHOGEN-PROGRAM-0421 (leaf PROGRAM.51)`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -963,6 +1001,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.42` | the `-s ours` merge built on both gates in scratch repositories, before and after the fix; both self-tests; four mutations on copies; both gates on the real trees; every self-test; the enforcer | both passed the merge before and refuse it after; `27 pass / 0 fail`, `17 pass / 0 fail`; each mutation red on its own arm; `task-history: OK`, `history-ledgers: OK`; 37 self-tests passed; all green |
 | `2026-10-03` | `PROGRAM.49` | the folder measured before and after; the refusal reproduced by the enforcer; the enforcer after the raise | `264219` over `262144`; all green |
 | `2026-10-03` | `PROGRAM.50` | the moved block's sha256 before and after; the folder measured before and after; the enforcer | `5785eb49…57cc9` both; 395 564 → 352584; all green |
+| `2026-10-03` | `PROGRAM.51` | the pre-`M2.22` file through the gate's method; `rustfmt --check` on stdin; ten RED arms; the tree; every gate's self-test; the enforcer | differs, `cmp rc=1`; `--check` exits 0 over a diff; 10 / 10 arms; 159 files canonical; 44 self-tests passed |
 
 ## Commit Log
 
@@ -1073,6 +1112,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.48` | `ARCHOGEN-PROGRAM-0392 (leaf PROGRAM.48)` | the book's total-bytes ceiling raised to 448 KiB with its measurement, in the decision that owns it |
 | `PROGRAM.49` | `ARCHOGEN-PROGRAM-0400 (leaf PROGRAM.49)` | `docs/reviews/`' total-bytes ceiling raised to 384 KiB with its measurement, in a decision record of its own |
 | `PROGRAM.50` | `ARCHOGEN-PROGRAM-0412 (leaf PROGRAM.50)` | the fault contract's review rounds R3–R15 moved byte for byte from `decision_runtime-contract-gaps.md` to `docs/reviews/`, `docs/decisions/` back under its ceiling |
+| `PROGRAM.51` | `ARCHOGEN-PROGRAM-0421 (leaf PROGRAM.51)` | `RUST-FORMAT`: every staged Rust source in canonical format, read from the index, at commit time |
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0331 (leaf PROGRAM)` | **`PROGRAM.47` sealed**, its 30 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` had grown 1 653 bytes over its 819 200-byte ceiling with `API.6.3`'s leaf |
 
 ## Changelog
@@ -1080,3 +1120,4 @@ a clean `git status` means what the handoff rule says it means.
 - `2026-09-13`: Created task tree; seeded the milestone trees from `ROADMAP.md` revision 2.0.
 - `2026-09-30`: `PROGRAM.35` filed and decomposed into `.35.1` and `.35.2`: the README policy the standing instruction names had never been adopted at its revision, and the caps never fitted.
 - `2026-09-30`: `PROGRAM.41` reopened by its independent review; `PROGRAM.41.1` and `PROGRAM.42` filed.
+- `2026-10-03`: `PROGRAM.51` filed and closed — `RUST-FORMAT`, `COMMIT.md` step 2's format step held at commit time.

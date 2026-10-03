@@ -51,7 +51,8 @@ apply to code changes.
 
 1. Ensure the task is complete and tested.
 2. Run the **focused** tier when Rust files changed: `make focused`
-   (= `cargo xtask verify --tier focused` — format, lints, the whole suite). Strict lint must
+   (= `cargo xtask verify --tier focused` — format, lints, the whole suite; the format step is also held at commit
+   time by the `RUST-FORMAT` doctrine, `PROGRAM.51`). Strict lint must
    pass. Before a **push**, and before closing a milestone, run `make integration` as well; it
    adds the doctrine enforcer, every gate's self-test, the book build, the `no_std` build, the
    `wasm32` build and the emulator check. Whether a push is *due* is `bash scripts/push_cadence.sh` (the ruled threshold, and the

@@ -44,6 +44,7 @@ PROJECT_DOCTRINES=(
   "BOOK-GLOSSARY|the book's glossary is live — every acronym a chapter uses is defined there, every entry is still used, each section in order|scripts/check_book_glossary.sh"
   "WORKFLOW-TOKENS|every workflow holds a read-only token and keeps no credentials — top-level permissions granting no write scope, none granted by a job, every checkout with persist-credentials false, no trigger that runs with the base repository's token, and YAML it cannot read refused|scripts/check_workflow_tokens.sh"
   "COMMIT-LOG-ROWS|every work-unit commit — HEAD's history and the pending one — has a row in a task tree's Commit Log, beyond a measured backlog that may only shrink|scripts/check_commit_log_rows.sh"
+  "RUST-FORMAT|every Rust source a commit stages is in canonical format — its staged bytes through rustfmt, byte for byte; with nothing staged, every tracked file|scripts/check_rust_format.sh"
 )
 
 for entry in "${PROJECT_DOCTRINES[@]}"; do

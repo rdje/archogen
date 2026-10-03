@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — formatting checked at every commit
+
+`ARCHOGEN-PROGRAM-0421` (leaf `PROGRAM.51`).
+
+- The commit hook now refuses a staged Rust file that is not in the formatter's canonical form, judging the bytes
+  being committed rather than the working copy. The rule was already written down for authors; nothing held anyone
+  to it, which is how unformatted code reached the main line earlier the same day.
+
 ## archogen — the composition code formatted
 
 `ARCHOGEN-M2-0420` (leaf `M2.22`).
