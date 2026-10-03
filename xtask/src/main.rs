@@ -888,7 +888,7 @@ fn help() {
     println!("    cargo xtask dtb-summary <file.dtb>");
     println!("    cargo xtask dtb-check <file.dtb> <fixture.md>");
     println!("    cargo xtask pin-premises");
-    println!("    cargo xtask catalog-check --index | --commit <sha> | --base <dir> --judged <dir> --base-commit <sha> --judged-commit <sha>");
+    println!("    cargo xtask catalog-check --index [--bless] | --commit <sha> | --base <dir> --judged <dir> --base-commit <sha> --judged-commit <sha>");
     println!();
     println!("TIERS:");
     for tier in TIERS {

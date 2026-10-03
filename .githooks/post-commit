@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# .githooks/post-commit — the catalog's gate run again on the commit as made (leaf M2.7.4.4).
+#
+# An amend's pre-commit is given the replaced commit as parent, so its verdict is advisory; this run judges the commit
+# against its true parents and reports a mismatch at once (the catalog record's §4). It cannot block: exit 0.
+ROOT="$(git rev-parse --show-toplevel)"
+"$ROOT/scripts/catalog_gate.sh" --post-commit
+exit 0

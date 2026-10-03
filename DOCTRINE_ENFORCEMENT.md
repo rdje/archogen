@@ -14,8 +14,11 @@ every human, identically.
 - **E2 — self-check.** `scripts/check_doctrines.sh` (the driver) + each registered
   `scripts/check_*.sh`. The single source of truth for "which doctrine is enforced by
   what". Runnable by hand anytime.
-- **E3 — git hook.** `.githooks/pre-commit` calls the enforcer; `.githooks/commit-msg`
-  checks the subject shape. Activate once per clone: `git config core.hooksPath .githooks`.
+- **E3 — git hook.** `.githooks/pre-commit` calls the enforcer, then the catalog's gate
+  (`scripts/catalog_gate.sh`, which judges the pending commit's catalog and passes at once when there is none);
+  `.githooks/commit-msg` checks the subject shape; `.githooks/pre-merge-commit` runs the gate on a merge git commits
+  itself, advisory, and `.githooks/post-commit` runs it on the commit as made, reporting a mismatch after an amend.
+  Activate once per clone: `git config core.hooksPath .githooks`.
 - **E4 — CI.** The same enforcer runs in CI (`.github/workflows/doctrines.yml`), so a
   locally `--no-verify`'d hook still fails the build. This is the "no matter what" backstop.
 

@@ -324,15 +324,16 @@ worked example that pins them.
     than the history readers' allowlist, since it reads no history and needs `TZ` and `GIT_COMMITTER_DATE`. So the
     gate reads a review's date as CI's replay will (§5). The gate runs from both `pre-commit` and
     `pre-merge-commit`, since a merge that git records without conflicts runs only the second, and §9 routes
-    catalog changes to `main` by merges. `pre-merge-commit` may run before git writes `MERGE_HEAD`, and then the
-    gate sees one parent; `M2.7.4` measures which. Until measured, a catalog merge is made with
-    `git merge --no-commit` and then `git commit`, whose `pre-commit` sees both parents, and the gate's verdict from
-    `pre-merge-commit` is advisory. Rebase, cherry-pick, `am` and revert make commits without running either hook.
+    catalog changes to `main` by merges. Measured `2026-10-03` on git 2.54.0 (`M2.7.4.4`): `pre-merge-commit` runs
+    before git writes `MERGE_HEAD`, so the gate sees one parent there, and `post-commit` does not run for a merge's
+    own commit. So a catalog merge is made with `git merge --no-commit` and then `git commit`, whose `pre-commit`
+    sees both parents — measured too — and the gate's verdict from `pre-merge-commit` is advisory. Rebase, cherry-pick, `am` and revert make commits without running either hook.
     For them, as for a bypassed gate, premise 3's check decides. A pre-commit hook cannot tell an amend from a new
     commit. For an amend, the real parents are
     those of the commit it replaces, so the gate's verdict is advisory: it can pass a commit that its real parents
-    make a ledgering commit that fails verification. `M2.7.4` runs the gate again after the commit, against the
-    commit as made, and reports a mismatch at once; the repair is to reset to the commit the amend replaced. CI's
+    make a ledgering commit that fails verification. The `post-commit` hook runs the gate again, against the commit
+    as made and its true parents, and reports a mismatch at once (`M2.7.4.4`); the repair is to reset to the commit
+    the amend replaced. CI's
     replay, which judges each commit as it was made (§9), decides.
 - **No caller reads a catalog input from the working tree.** Each takes the tracked set from `git ls-files -s -z`
   or `git ls-tree -r -z`, and each file's bytes from its blob, so line-ending conversion on checkout does not matter.

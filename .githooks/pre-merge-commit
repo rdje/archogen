@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# .githooks/pre-merge-commit — the catalog's gate on a merge git commits itself (leaf M2.7.4.4).
+#
+# Measured 2026-10-03 on git 2.54.0: this hook runs before git writes MERGE_HEAD, so the gate sees one parent, and
+# post-commit does not run for the merge's own commit. The verdict is advisory here; a catalog merge is made with
+# `git merge --no-commit` and then `git commit`, whose pre-commit sees both parents (the catalog record's §4).
+set -e
+ROOT="$(git rev-parse --show-toplevel)"
+"$ROOT/scripts/catalog_gate.sh" --merge

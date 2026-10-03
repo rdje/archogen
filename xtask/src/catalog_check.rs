@@ -28,8 +28,11 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
+use archogen_catalog::hash::Catalog;
 use archogen_catalog::history::{Commit, CommitterDate, History};
 use archogen_catalog::load::load;
+use archogen_catalog::lock::{blessed, Lock, KNOWN_VERSIONS, PATH as LOCK_PATH};
+use archogen_catalog::replay::lock_at;
 
 use crate::catalog_build;
 use archogen_catalog::replay::replay;
@@ -41,6 +44,9 @@ use archogen_catalog::Refusal;
 pub enum Mode {
     /// The gate's pending commit, from the index.
     Index,
+    /// The gate's pending commit, after blessing its lock (§9): the lines no parent holds recomputed from the index,
+    /// every line a parent holds kept, the lock written and staged, and the index judged as staged.
+    Bless,
     /// A commit as made, against its parents.
     Commit(String),
     /// The CI check: the judged commit against the base, with the trees the harness wrote.
@@ -100,6 +106,7 @@ pub struct Verdict {
 pub fn parse(args: &[&str]) -> Result<Mode, String> {
     match args {
         ["--index"] => Ok(Mode::Index),
+        ["--index", "--bless"] => Ok(Mode::Bless),
         ["--commit", sha] => Ok(Mode::Commit((*sha).to_owned())),
         _ => {
             let mut map: BTreeMap<&str, &str> = BTreeMap::new();
@@ -509,8 +516,12 @@ pub fn judge(cwd: &Path, scratch: &Path, mode: &Mode) -> Result<Verdict, Failure
     let git = Git::at(cwd);
     git.premise_2()?;
     let (head, bases, tree, date, history) = match mode {
-        Mode::Index => {
-            let mut bases = vec![git.resolve("HEAD")?];
+        Mode::Index | Mode::Bless => {
+            // A root commit has no parent: a repository's first commit is judged against no base.
+            let mut bases = Vec::new();
+            if git.exists("HEAD") {
+                bases.push(git.resolve("HEAD")?);
+            }
             if git.exists("MERGE_HEAD") {
                 bases.push(git.resolve("MERGE_HEAD")?);
             }
@@ -525,10 +536,42 @@ pub fn judge(cwd: &Path, scratch: &Path, mode: &Mode) -> Result<Verdict, Failure
                 )
                 .into());
             }
-            let tree = tree_of(&git, &index_entries(&git)?)?;
+            let mut tree = tree_of(&git, &index_entries(&git)?)?;
             let date = pending_date(&git)?;
             let refs: Vec<&str> = bases.iter().map(String::as_str).collect();
-            let history = history_of(&git, &refs)?;
+            let history = if refs.is_empty() {
+                History::default()
+            } else {
+                history_of(&git, &refs)?
+            };
+            if *mode == Mode::Bless {
+                let mut tree_without = tree.clone();
+                tree_without.remove(LOCK_PATH);
+                let catalog = Catalog::read(tree_without)?;
+                let hashes = catalog.hashes()?;
+                let mut lines = blessed(&catalog, &hashes);
+                let mut version = 1;
+                for base in &bases {
+                    if let Some(lock) = lock_at(&history, base, &KNOWN_VERSIONS)? {
+                        version = version.max(lock.version);
+                        lines.extend(lock.lines);
+                    }
+                }
+                if !catalog.records.is_empty() || !lines.is_empty() {
+                    let worktree =
+                        PathBuf::from(git.text(&["rev-parse", "--show-toplevel"])?.trim());
+                    let rendered = Lock::new(version, lines).render();
+                    let path = worktree.join(LOCK_PATH);
+                    if let Some(parent) = path.parent() {
+                        std::fs::create_dir_all(parent)
+                            .map_err(|e| format!("{}: {e}", parent.display()))?;
+                    }
+                    std::fs::write(&path, &rendered)
+                        .map_err(|e| format!("{}: {e}", path.display()))?;
+                    git.bytes(&["add", "--", LOCK_PATH])?;
+                    tree = tree_of(&git, &index_entries(&git)?)?;
+                }
+            }
             ("index".to_owned(), bases, tree, date, history)
         }
         Mode::Commit(rev) => {
@@ -566,7 +609,7 @@ pub fn judge(cwd: &Path, scratch: &Path, mode: &Mode) -> Result<Verdict, Failure
     let repo = PathBuf::from(git.text(&["rev-parse", "--show-toplevel"])?.trim());
     let root: PathBuf = match mode {
         Mode::Ci { judged_dir, .. } => judged_dir.clone(),
-        Mode::Index | Mode::Commit(_) => {
+        Mode::Index | Mode::Bless | Mode::Commit(_) => {
             let dir = scratch.join("tree");
             catalog_build::write_tree(&tree, &dir)?;
             dir
@@ -893,6 +936,60 @@ mod tests {
             }
             other => panic!("expected {code} about `{says}`, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn blessing_writes_and_stages_the_lock_the_index_then_passes_with() {
+        let repo = Repo::new("bless");
+        let pin = fs::read_to_string(
+            Path::new(env!("CARGO_MANIFEST_DIR"))
+                .parent()
+                .unwrap()
+                .join("rust-toolchain.toml"),
+        )
+        .unwrap();
+        repo.write("rust-toolchain.toml", &pin);
+        repo.write("docs/example/model.txt", "model\n");
+        repo.write("targets/example-target.env", "TARGET_ID=example-target\n");
+        repo.write("targets/example-target.eadl", "(platform)\n");
+        repo.write("catalog/experimental/example.base.catalog", RECORD);
+        repo.git(&["add", "-A"]);
+        refused(repo.judge(&Mode::Index), Code::LockMissing, "");
+        let v = repo.judge(&Mode::Bless).unwrap_or_else(|e| panic!("{e:?}"));
+        assert!(v.lock, "{v:?}");
+        let staged = repo.git(&["ls-files", "-s", "--", "catalog/catalog.lock"]);
+        assert!(staged.contains("catalog/catalog.lock"), "{staged}");
+        assert!(repo.lock().starts_with("# archogen-catalog/1\n"));
+        repo.judge(&Mode::Index).unwrap_or_else(|e| panic!("{e:?}"));
+        let first = repo.commit("blessed");
+        // A second blessing, after a review is added, keeps the parent's lines and adds the review's.
+        repo.write(
+            "catalog/experimental/example.base.catalog",
+            &with_review(RECORD),
+        );
+        repo.git(&["add", "-A"]);
+        refused(repo.judge(&Mode::Index), Code::LockMissing, "");
+        repo.judge(&Mode::Bless).unwrap_or_else(|e| panic!("{e:?}"));
+        let lock = repo.lock();
+        assert!(lock.contains(" review "), "{lock}");
+        assert!(lock.contains("example.base contract 0.1.0"), "{lock}");
+        let second = repo.commit("a review");
+        repo.judge(&Mode::Ci {
+            base_dir: repo.dir.clone(),
+            judged_dir: repo.dir.clone(),
+            base_commit: first,
+            judged_commit: second,
+        })
+        .unwrap_or_else(|e| panic!("{e:?}"));
+        // An empty catalog is not given a lock by blessing.
+        let empty = Repo::new("bless-empty");
+        empty.write("rust-toolchain.toml", &pin);
+        empty.write("README", "x\n");
+        empty.git(&["add", "-A"]);
+        let v = empty
+            .judge(&Mode::Bless)
+            .unwrap_or_else(|e| panic!("{e:?}"));
+        assert!(!v.lock && !empty.dir.join("catalog/catalog.lock").exists());
     }
 
     #[test]

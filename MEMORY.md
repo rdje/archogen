@@ -13,11 +13,11 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M2` → frontier `M2.7.4`. `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API` is
+- **Active tree:** `M2` → frontier `M2.10.2`. `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API` is
   closed; `M1`'s only open leaf, `M1.29.4`, is blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M2.7.4.4`, the local gate from the hooks, blessing and the `MERGE_HEAD` measurement (`.1`–`.3`,
-  the checker and its builds, done `2026-10-03`); `M2.7.4.5`, the records and the lock, is blocked on the director (findings §11); then `M2.20`.
+- **Next action:** `M2.10.2`, the composite inputs' implementation, then `M2.20`; `M2.7.4`'s gate (`.1`–`.4`) is
+  done `2026-10-03` and its records and the lock (`.5`) are blocked on the director (findings §11).
   `M2.15` closed `2026-10-03` (the fault paths' observation events, seven reviews); `M2.12` closed `2026-10-02`. This project uses no branches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4` and `M2.7.6.4` — findings §11, `main`'s protection and a reviewer;

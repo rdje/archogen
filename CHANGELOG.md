@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog's gate runs from the hooks
+
+`ARCHOGEN-M2-0393` (leaf `M2.7.4.4`).
+
+- Every commit now passes the catalog's gate: the pre-commit hook judges the pending commit's catalog against its
+  parents and blocks a refusal, the merge hook reports, and a hook after the commit re-judges it against its true
+  parents, which catches an amended commit. Blessing the lock is a request made on the commit. With no catalog yet,
+  the gate costs a commit nothing. Two facts the design left to measurement — what the merge hook can see, and what an
+  amend's hooks see — are measured and written into the design.
+
 ## archogen — the checker builds every commit a push replays
 
 `ARCHOGEN-M2-0391` (leaf `M2.7.4.3`, closed).

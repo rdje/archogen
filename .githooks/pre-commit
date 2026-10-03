@@ -22,3 +22,7 @@ fi
 # The single general doctrine enforcer (registry + driver) — runs every
 # mechanizable check and exits nonzero on any breach.
 "$ROOT/scripts/check_doctrines.sh"
+
+# The catalog's gate (leaf M2.7.4.4): the pending commit's catalog judged against its parents, HEAD and, during a
+# merge made with `git merge --no-commit`, MERGE_HEAD; passes at once when there is no catalog to judge.
+"$ROOT/scripts/catalog_gate.sh"

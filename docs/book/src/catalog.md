@@ -175,7 +175,8 @@ specification's. Round 11 found none live, and the record was accepted. Its hist
 - **The gate loads the catalog at every commit, and it is empty.** `cargo xtask catalog-check` reads the history
   from git and judges the pending commit, a commit as made, or a pull request's merge against its base (`M2.7.4.2`),
   building every package a record names, for each profile and target, and reading what the compiler read
-  (`M2.7.4.3`); the hooks that run it are next (`M2.7.4.4`). The crate behind it is complete:
+  (`M2.7.4.3`), run from the hooks on every commit and blessing the lock on request (`M2.7.4.4`); the records
+  themselves wait on the director (`M2.7.4.5`). The crate behind it is complete:
   it reads records, hashes them, checks the lock over one tree and a history, derives status and admits claims.
 - **No port's record exists yet.** Its format, its statement and the loader's checks are done (`M2.12`). Until a
   port's record is written, every analysis of the runtime variant over the catalog is inconclusive.
