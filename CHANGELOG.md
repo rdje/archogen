@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust-dependency gate's third review: the design narrows
+
+`ARCHOGEN-M3-0414` (leaf `M3.6.1`, step 4).
+
+- The third reader found more defects than the second, mostly in parts the gate's design had taken on that belong
+  elsewhere: what an unreviewed sharing does to a claim or a release, and how a review is recorded and protected.
+  The design now decides only what is built, what is read and what is shared, and reports it; who accepts a sharing
+  and what an unaccepted one costs are written into the acceptance of the leaves that own them, one of them new and
+  waiting on the director. The reader also showed that a third assembler form can pull in a file unrecorded, now
+  refused.
+
 ## archogen — the substitutability relation's twelfth review, answered
 
 `ARCHOGEN-M3-0413` (leaf `M3.1.1`, step 13).

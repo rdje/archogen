@@ -329,11 +329,14 @@ Until the named commit exists, no production claim can be made. One new role is 
 check, through a defect in the checker for instance, is repaired only by a waiver you rule on, and a waiver can
 only weaken what the catalog says.
 
-**Added `2026-10-03` (`M3.6.1`).** The trust-dependency gate (fixture F30, `decision_trust-inventory.md` §5) accepts
-its baseline and its root set by this same rule, so `trust/` and the gate's code join the code-owned paths above.
-Nothing new is asked: the same settings and the same second reviewer. Until then the gate passes only while no two of
-its roots share anything, as is the case today, and the first shared item — when `M2.7.5` makes the scheduling
-checker read the catalog, which reaches the generator's own reader and model — waits on them.
+**Added `2026-10-03` (`M3.6.1`; amended the same day after its third review).** The trust-dependency gate (fixture
+F30, `decision_trust-inventory.md`) reports what two of the programs whose independence a claim relies on share; a
+shared item is accepted only by the review this section asks for, so `trust/` and the gate's code join the
+code-owned paths above (`M2.7.6.5`). Nothing new is asked: the same settings and the same second reviewer. Until
+then every shared item stays unreviewed — today one, the comparison harness the reference model shares with the
+runtime it validates, by design — no claim rests on a role's independence, and the assurance tier's trust step
+reports Unavailable. When `M2.7.5` makes the scheduling checker read the catalog, which reaches the generator's own
+reader and model, that sharing is reported the same way.
 
 ## 12. The fault contract's narrowings — **approved `2026-10-02`**
 

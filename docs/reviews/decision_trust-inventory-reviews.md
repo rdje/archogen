@@ -85,3 +85,38 @@ so a review is its merge, and makes F30 `not-established` before the named commi
 | B16 — acceptance trusts code ownership of `trust/` from the named commit | no | §5: trusted from the named commit on, `M2.7.6`'s design |
 | B17 — a path-filtered required check is left pending | no | §7: CI unfiltered |
 | B18 — wording: four roots and one empty role; the step-1 bullet | no | the step-1 bullet marked superseded |
+
+**Round 3**, `2026-10-03`, a new context that had not read rounds 1 and 2, which compiled scratch crates under the
+pinned toolchain — `naked_asm!` and `global_asm!` with `.incbin`, doc-attribute includes, `debugger_visualizer`,
+`include!` of a generated path, `#[path]` through a macro — and built a two-crate workspace in two directories, under
+two toolchains, as a library root and as a binary root. It confirmed §1, the reused rules and the configuration's
+stability on one host. There were 22 findings, 16 of them defects, and the verdict was "not acceptable as it stands".
+Defects per round: 11, 12, 16 — rising, and most of them in what the record had decided beyond its domain: what an
+unreviewed item does to a claim, a package or a release, and how acceptance is recorded and protected. The knowledge
+card's fifth habit applies: the record is narrowed to roots, the inventory, what is shared and the report; its gate
+refuses or reports; acceptance and its costs go to the leaves that own them, each carrying its part.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| C1 — `naked_asm!` with `.incbin` reads a file no dependency information names (measured), and was not refused | yes | §3, §6 and How to apply: `naked_asm!` refused with `global_asm!` and `asm!` |
+| C2 — results of a library-rooted role refused, so the reference model's results never fit a package | yes | §5: binding each result to its producer is `M4.7`'s, the comparison harness a producer the trust build inventories; `M4.7`'s acceptance amended |
+| C3 — pending items reached packages and claims | yes | §5: what an unreviewed item costs a claim is `M4.8`'s, `not-established` naming F30, in its acceptance |
+| C4 — before the named commit the release step's outcome undefined | yes | §5 and §7: the trust step reports Unavailable until §5's leaves land, never Passed |
+| C5 — off the named host, nothing compared and the release step passing | yes | §5: Unavailable on every host until then |
+| C6 — `trust/roots.eadl` accepted whole by whichever merge last touched it | yes | §5: acceptance per form, `M2.7.6`'s and `M3.6.5`'s |
+| C7 — code ownership of `trust/` carried by no leaf | yes | `M2.7.6.5`'s goal: `trust/` and the gate's code in `CODEOWNERS` |
+| C8 — a fork's main | yes | §5: the catalog's checks of `origin`, `M2.7.6`'s |
+| C9 — a stale form refused in §5, pending in §6 | yes | §6: `trust-baseline-stale`, refused |
+| C10 — the comparison harness shared today, so the first baseline is not empty | yes | §1, `M3.6.3` and findings §11: today's one shared item stated |
+| C11 — the toolchain in `--extern` hashes and the program path | yes | §3: stripped and dropped |
+| C12 — lint levels from the root manifest in every invocation | yes | §3: lint levels left out; the edition and profiles are configuration |
+| C13 — generated sources sharing a generator unseen and unstated | yes | §3: a stated gap until a leaf makes generated sources declare their generator and input |
+| C14 — a `cdylib` unclassified; a classification never reopened as its closure grows | yes | §2: `cdylib`, `staticlib` and `dylib` classified, with the role libraries their closure reaches; reopened when that grows |
+| C15 — `M3.6.3`'s leaf contradicted the record; no owner for `trust-verify`'s test | yes | `M3.6.3` rewritten: both commands, reported or refused, `trust-verify` tested |
+| C16 — findings §11's paragraph described a gate that waits | yes | amended to the narrowed record |
+| C17 — `write_tree`'s path grammar | no | §3 states it |
+| C18 — the alias-only configuration rule | no | §3 states it |
+| C19 — proposed or accepted roots | no | §2: the roots the commit proposes |
+| C20 — `resolve` and `mcp` | no | `M3.4`'s goal carries `resolve`; `mcp` is the built binary's, which `M2.21`'s rule reaches |
+| C21 — runtime data in `M2.7.5` | no | `M2.7.5`'s acceptance declares it |
+| C22 — the harness identified and built | no | `M3.6.2`'s, by the record's §4 |
