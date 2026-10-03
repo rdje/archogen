@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability relation's thirteenth review: its providers narrowed
+
+`ARCHOGEN-M3-0415` (leaf `M3.1.1`, step 14).
+
+- The thirteenth reader again found every timer case right for one provider, and nine defects at the design's
+  borders. The relation now judges only a description's own blocks and platforms: a catalog record becomes a
+  provider under a new leaf, and an adapter only through the search that holds the mediation gate. A provider that
+  says nothing about a fact no longer changes a description's verdict, so the tracked infeasible cases keep theirs,
+  and the alternative-timer example can build once its adapter exists. The refinement check is handed the finding
+  that it keeps no value an abstract platform offers.
+
 ## archogen — the trust-dependency gate's third review: the design narrows
 
 `ARCHOGEN-M3-0414` (leaf `M3.6.1`, step 4).

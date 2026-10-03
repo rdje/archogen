@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-10-03`
 - **Status:** `active` — written; under independent review (leaf `M3.1.1`'s closure rule: the first round that
-  finds no defect closes it); rounds 1 to 12 answered `2026-10-03`
+  finds no defect closes it); rounds 1 to 13 answered `2026-10-03`
 - **Owner / source:** leaf `M3.1.1` (`docs/tasks/M3.md`). `ROADMAP.md` §5.2 asks for "explicit matching rules in a
   decidable fragment" with "a documented comparison direction" per parameter, declared cross-field implications,
   and no stronger precondition "silently accepted as stronger capabilities"; §5.3 for a "versioned capability
@@ -18,7 +18,7 @@ relation judges is an entry of a **versioned vocabulary** (R12 L9), which fixes 
 a guarantee the offer makes, or a statement the requiring side makes about itself — and its **direction**: which
 way an offered value must lie against a required one. A requirement is satisfied at one provider when the fact it
 constrains has a value there, offered or derived by a rule the vocabulary names, that lies in the requirement's
-written direction — the fact's, or equality under `exactly` (R12 L2) — or, for a presence requirement, when the provider offers the fact (§3 rule 3). Nothing is inferred from a value being "more" unless the vocabulary says more is better for that fact,
+written direction — the fact's, or equality under `exactly` (R12 L2) — or, for a presence requirement, when an offer of the fact other than `false`, or its derivation, meets it by §3 rule 3 (R13 M8). Nothing is inferred from a value being "more" unless the vocabulary says more is better for that fact,
 and a stronger precondition is never a stronger capability, because what a provider accepts of its caller — the
 privilege levels it is reachable from, the power states it works in — is offered as a set and judged by inclusion,
 which reads no order. The relation is a predicate between one requirement and one provider (R12 L9). It induces a
@@ -39,13 +39,14 @@ fact, not a claim that the fact is available, as `examples/alternative-timer/sys
 
 **Definitions.**
 
-- A **fact** is a name of the vocabulary (§1.1). A **provider** is a block or a platform of the description or, once
-  the catalog's records exist (`M2.7.4.5`), a record's contract facet (`docs/specs/catalog/decision_catalog-records.md` §2); the
-  relation is the same for both.
+- A **fact** is a name of the vocabulary (§1.1). A **provider** is a block or a platform of the description. A
+  catalog record's contract facet is not one in `/1`: it holds prose today, and a record is not type-checked
+  (`docs/specs/catalog/decision_catalog-records.md` §1–§2), so giving it offers the relation can judge is `M3.7`'s
+  (R13 M6); an adapter is offered only by `M3.2`'s search (§3 rule 7; R13 M2).
 - An **offer** is a provider's statement about a fact: a value of the fact's domain, which `(f (exactly v))` also
   writes; bare presence, which for a boolean fact, or a group's head, is the value `true` and for any other domain is
   presence without a value (§2; R4 D3); or an abstract platform's bound in the fact's direction, which the
-  refinement check reads (model §3) and the relation does not (§2; R10 J4, J8). A service may write `offers` too — `core.eadl` admits the clause on
+  refinement check reads (model §3) and the relation does not read as a value (§2; R10 J4, J8; R13 M12). A service may write `offers` too — `core.eadl` admits the clause on
   `defservice`, not on `defpolicy` (R7 G5) — but is not a provider, and its offers are not judged in `/1` (R3 C13); a service's `absent` is presence's (model §2),
 not a provider's (R11 K14).
 - A **requirement** is a constraint on a fact: a bound written with its direction, `(f (at-least v))`; a bare value,
@@ -113,7 +114,8 @@ write: **`exactly`** (R1 A4; R2 B4). In an offer, `(f (exactly v))` is, **for th
 — the width–modulus check and the two-values rule included — so an offer cannot use it to escape either (R10 J8);
 **for refinement** it stays the `exact` bound model §3 rule 2 checks on a platform another refines, the only bound
 an abstract platform can write on a fact whose direction is `exact` (R12 L1). The relation reads offers with a
-reader of its own in `crates/eadl-resolve`; `refinement.rs`'s `Facets::of` is unchanged, so it goes on reading an
+reader of its own in `crates/eadl-resolve`; `refinement.rs`'s `Facets::of` is not the relation's to change — what a refinement keeps of an abstract
+platform's values is `M1.40`'s (§10) — so it goes on reading an
 offered direction as a bound holding a quantity, refusing a non-quantity one as `quantity-not-a-number` before the
 relation runs, which only refuses, and keeping model §6's `fires on` inputs for `quantity-missing-unit` and
 `quantity-missing` (R11 K8; R12 L1). Equality is the one bound every direction admits, so it never reads a value
@@ -190,7 +192,7 @@ A bound an offer writes (an abstract platform's `(counter-width (at-least 32 bit
 apart, which is (§1.1) — it satisfies no valued constraint of a requirement — presence it does satisfy (§3 rule 3;
 R8 H5) — and is the refinement check's business (model §3); a provider that writes a bound beside a value of the
 same fact is `invalid-description` (R10 J8). A fact offered bare in a domain
-other than `boolean` or a group's head is **unknown** at that provider (R6 F5): it satisfies presence, a constraint on it
+other than `boolean` or a group's head, with no value of it beside (§5; R13 M7), is **unknown** at that provider (R6 F5): it satisfies presence, a constraint on it
 is unknown there whatever a rule could have derived — the bare offer stops §3 rule 1's chain before derivation —
 and a rule that reads it derives nothing (§4; R3 C5; R5 E3, E7).
 
@@ -212,8 +214,9 @@ For one requirement `R` on fact `f`, written by side `S`, and one provider `P`:
      **undescribed** (R7 G3);
    - **undescribed** — none of these.
 
-   A valued or derived `f` satisfies `R` or is refused by it (rule 3). These are the relation's outcomes at one
-   provider. What they make of a description when several providers are judged together — which providers and which
+   A valued or derived `f` satisfies `R` or is refused by it (rule 3). A derivation or comparison whose arithmetic
+   overflows gives no outcome at `P`: it is §2's `unsupported-profile` (R13 M10). These are the relation's outcomes at
+   one provider. What they make of a description when several providers are judged together — which providers and which
    requirements a description presents, a declared absence at one provider beside an offer at another, and whether
    the description's verdict is `missing-fact` or `infeasible-configuration` — is `M3.4`'s, and its acceptance carries
    what this record's reviews found of each (§5; R11 K1, K2, K5, K6).
@@ -233,11 +236,12 @@ For one requirement `R` on fact `f`, written by side `S`, and one provider `P`:
    `reachable-at-privilege` is the set of levels the function is reachable from, and a requirer's level must be in it
    (§1.1), as `available-in-state` is the set of states it works in. Inclusion reads no order among levels, so a
    function reachable only from `machine` does not satisfy a `supervisor` requirer, and a stronger precondition is
-   never a stronger capability; a provider that states no level is undescribed for a requirer that states one
-   (rule 1). A requirer that states no level asks nothing of the relation: which context a plan binds it to, and
+   never a stronger capability; a provider that states no level — `reachable-at-privilege` undescribed, declared
+   absent, or offered bare — is, by rule 1, undescribed, absent or unknown for a requirer that states one, and
+   satisfies it in none of the three (R13 M3). A requirer that states no level asks nothing of the relation: which context a plan binds it to, and
    whether the provider's set includes it, is the joint constraint §5.4 lists as privilege, `M3.3`'s (§10); a
-   provider that states no level is refused there for any caller a plan binds to it, and `M3.3`'s acceptance says so
-   (R11 K4; R12 L10). A
+   provider that states no level, in any of those three ways, is refused there for any caller a plan binds to it, and
+   `M3.3`'s acceptance says so (R11 K4; R12 L10; R13 M3). A
    reversed condition role, read with the demand on the offered side, drew defects in six of ten review rounds and
    is deleted (R10 J1, J6).
 5. **A `requires` clause** is satisfied by `P` when each of its constraints is, a statement apart (rule 6); a
@@ -250,7 +254,9 @@ For one requirement `R` on fact `f`, written by side `S`, and one provider `P`:
 7. **Not decided here.** Which of several satisfying providers to take (`M3.4`: a deterministic preferred order in
    engine configuration); whether two providers may both be taken (`M3.3`: capacity, ownership, topology); and
    whether a requirement no provider satisfies can be met by an adapter (`M3.2`: an adapter is a provider whose
-   contract this relation judges like any other, with its costs and obligations its own).
+   contract this relation judges like any other, with its costs and obligations its own, offered only by `M3.2`'s
+   search, which holds rule 6's mediation gate; `M3.4`'s enumeration lists the description's blocks and platforms,
+   never an adapter, and a catalog record only after `M3.7`; R13 M2).
 
 ### 4. Derived facts and declared implications
 
@@ -259,7 +265,7 @@ rule reads — required or optional, bare or valued — the derived fact is deri
 there is `invalid-description`, since whoever offers the inputs has offered the result's grounds, and the engine
 computes it (R4 D1; R5 E1; R6 F1). At a provider that offers none of those facts, the derived fact may be offered,
 and the offered value is the value — a claim, as every offer is (§5.3) — such as the horizon an epoch-extending
-adapter guarantees as a catalog record, a provider in its own right (R9 I3). So the derived fact has a value at `P` when `P` offers it alone,
+adapter guarantees once `M3.2`'s search offers it, a provider in its own right (R9 I3; R13 M2). So the derived fact has a value at `P` when `P` offers it alone,
 or when every fact it is derived from has a value at `P`, offered or itself derived, and the named rule computes it;
 `derived-from` is acyclic (§1.1), so the derivation terminates (R1 A1). Any input a rule reads, required or
 optional, that is offered without a value is unknown, and the rule derives nothing (R3 C5); an optional input
@@ -323,9 +329,11 @@ derivation used and the direction; and, per `requires` clause and provider, rule
 that provider or not (R3 C8). An offer is one provider's statement (§1), so two providers offering one fact with two
 values are two offers, each judged on its own, as two catalog records will be (R2 B5). One provider offering one
 declared fact twice with two values, or a bound beside a value, is `invalid-description`; the same value twice is one
-offer, and a bare boolean beside `(f true)` is that value twice (R5 E10; R6 F1; R10 J8; R11 K9). An undeclared fact
-has no domain to contradict, so `region`, offered once per named region, is untouched (R1 A6; §10). When the catalog's
-records join (`M3.4`), a record's contract is one more provider, judged like a block.
+offer, and a bare offer beside a value of the same fact is that value — a bare boolean beside `(f true)` the same
+value twice (R5 E10; R6 F1; R10 J8; R11 K9; R13 M7). An undeclared fact
+has no domain to contradict, so `region`, offered once per named region, is untouched (R1 A6; §10). When `M3.7` gives a
+catalog record's contract offers the relation can judge, a record is one more provider, judged like a block, and a
+record that mediates enters only through `M3.2`'s search (R13 M2, M6).
 
 **What the enumeration is handed, and what its list makes of a description, are `M3.4`'s** — the search that wires
 the relation into `archogen check` — and its acceptance carries each of these as this record's reviews found them:
@@ -334,17 +342,23 @@ the relation into `archogen check` — and its acceptance carries each of these 
   tasks and platform, `uses` and `needs` followed transitively, every requirement judged — each constraint of a
   `requires`, and each `needs` of a vocabulary fact wherever written — and which closure the report carries where it
   and presence's differ (R2 B9; R10 J2, J3; R11 K1);
-- **absence across providers:** a fact declared absent at one provider and offered at another, outside a direct
-  refinement pair, is `invalid-description` (model §2 rule 1), compared over every offer and absence, not presence's
-  first of each, and through no chain of refinements (R8 H1; R11 K2);
+- **absence across providers:** a fact declared absent at one of the description's blocks and platforms and offered
+  at another, outside a direct refinement pair, is `invalid-description` (model §2 rule 1), compared over every offer
+  and absence, not presence's first of each, and through no chain of refinements (R8 H1; R11 K2); an adapter
+  `M3.2`'s search offers is not one of them, and its offer satisfies past a declared absence, so
+  `examples/alternative-timer` builds after `M3.2` unchanged, as `examples/README.md` seals (R13 M4);
 - **one clause, several providers:** which constraints of one clause may be met by different providers — a group and
   its sub-constraints, nested or flat, never (R12 L16) — and the requirements one service makes of one device's facts
   met by the one provider a plan binds it to, which is `M3.3`'s and in its acceptance (R6 F9; R11 K3; R12 L5);
-- **the description's code:** `missing-fact` while some provider is unknown or undescribed and none satisfies, so an
-  author is sent to the fact that could still decide it, and with no provider judged at all (R12 L4);
-  `infeasible-configuration` once at least one provider is judged and every one is refused or absent; and model §2 rule 2 — "a required fact that is declared absent makes the configuration infeasible" —
-  amended in `docs/semantics/model.md`, where a provider's derivation satisfies past another's absence (R6 F8; R10
-  J10; R11 K5, K6).
+- **the description's code:** a provider takes part in `f`'s code when it states `f` — offered in any form, or
+  declared absent — or an input of `f`'s derivation; one that states neither is silent and decides nothing (R13 M5).
+  `missing-fact` while some provider that takes part is unknown or undescribed and none satisfies, so an author is
+  sent to the fact that could still decide it, and when none takes part (R12 L4); `infeasible-configuration` once at
+  least one takes part and every one that does is refused or absent, so
+  `docs/semantics/cases/infeasible-required-absence.eadl`, and `examples/alternative-timer` before `M3.2`, keep it;
+  and model §2 rule 2 — "a required fact that is declared absent makes the configuration infeasible" — amended in
+  `docs/semantics/model.md`, where a provider's derivation, or an adapter's offer `M3.2`'s search makes, satisfies
+  past another's absence (R6 F8; R10 J10; R11 K5, K6; R13 M4).
 
 What the enumeration is not: it does not choose, does not resolve `uses`, and does not run inside `archogen check` in
 `M3.1` (§9).
@@ -382,7 +396,8 @@ The relation's own codes are about an offer or a requirement as written, whateve
 
 | Code | When |
 | --- | --- |
-| `invalid-description` | a value outside its fact's domain; a width that is not a positive whole number of bits; a set written with no member, or an interval with `lo > hi`, on either side; a `needs` of a statement fact; a direction written against the vocabulary's, `exactly` apart (§1.1); a provider offering and declaring absent one fact; one provider offering one declared fact with two values, or a bound beside a value; a boolean or group head offered with a bound other than `exactly`; a derived fact offered beside a fact its rule reads (§4); a `counter-modulus` of 0, above a valued `2^width`, or beside `(wrap-behavior saturating)`; an offer of a statement fact |
+| `invalid-description` | a value outside its fact's domain; a width that is not a positive whole number of bits; a set written with no member in a requirement, or as `(f (exactly))` in an offer — `(f)` in an offer is bare (§2;
+R13 M11) — or an interval with `lo > hi` on either side; a `needs` of a statement fact; a direction written against the vocabulary's, `exactly` apart (§1.1); a provider offering and declaring absent one fact; one provider offering one declared fact with two values, or a bound beside a value; a boolean or group head offered with a bound other than `exactly`; a derived fact offered beside a fact its rule reads (§4); a `counter-modulus` of 0, above a valued `2^width`, or beside `(wrap-behavior saturating)`; an offer of a statement fact |
 | `unsupported-profile` | a constraint on a fact the vocabulary does not declare; exact arithmetic that overflows `i128` |
 
 Whether each cause of a row takes a code of its own, as reference §4 rule 3 asks of a new rule, is `M3.1.2`'s to decide
@@ -397,13 +412,14 @@ found, the direction, the derivation used, the supported profile and a repair di
 `crates/eadl-resolve` (`ROADMAP.md` §4.2's `eadl-resolve`): the vocabulary read into a typed table, the domains,
 the relation, the rules of §4 and the enumeration of §5, over `eadl-model`'s `Quantity`, `ComparisonDirection` and
 `FactMap`. A library in `M3.1`: `archogen check` does not call it, and every verdict the corpus has today stands.
-Wiring it alone would leave every constraint the examples write undescribed or absent at every provider but one —
-`periodic-three`'s `(observation-coherent true)`, which `timer.counter` offers (R12 L8) — the four
-`s0-heartbeat` descriptions write none: a requirement whose fact no block or platform offers — `time.periodic-release`'s
+Wiring it alone would leave every valued constraint the examples write undescribed, unknown or absent at every
+provider but one — `periodic-three`'s `(observation-coherent true)`, which `timer.counter` offers (R12 L8);
+`bounded-queue`'s horizon is unknown at its counter, which offers `tick-rate` bare (R13 M9) — and the four
+`s0-heartbeat` descriptions write no valued constraint: a requirement whose fact no block or platform offers — `time.periodic-release`'s
 `(release-accuracy (at-most 1 ms))`, every policy's `priorities`, `preemptive` and `deadlines`, `bounded-arrival`,
-`queue-capacity` — is a constraint on the realization, which a catalog record's contract supplies
-(`docs/specs/catalog/decision_catalog-records.md` §2), and no record exists until `M2.7.4.5` (R1 A2). The search (`M3.4`) wires it,
-over the description's providers and the catalog's. The relation judges a fact by a provider's offer, never by a
+`queue-capacity` — is a constraint on the realization, which a catalog record's contract will supply
+once `M3.7` gives it offers the relation judges, and no record exists until `M2.7.4.5` (R1 A2; R13 M6). The search
+(`M3.4`) wires it, over the description's providers, and the catalog's after `M3.7`. The relation judges a fact by a provider's offer, never by a
 declaration that bears the fact's name, which presence today counts as satisfying the closure: a block named
 `low-power-timer` that offers nothing of that name passes presence and is undescribed here; the library's
 verdict is the stricter, and which one the report carries is decided when `M3.4` wires it (R2 B9). `quantity.rs`'s
@@ -417,8 +433,12 @@ source's.
   `M3.3`'s, in its acceptance; the relation judges each provider on its own (§5; R3 C3), and which constraints of one
   clause may be met by different providers is `M3.4`'s, a group and its sub-constraints never (§5; R6 F9; R11 K3; R12
   L5).
-- Refinement's own gaps found beside the relation — a concrete `(f false)` keeping an abstract bare boolean
-  guarantee, and two abstract bounds on one fact, the last winning — are model §3's, `M1.40`'s (R12 L17).
+- What a refinement keeps of an abstract platform is model §3's, `M1.40`'s: a concrete `(f false)` keeping an
+  abstract bare boolean guarantee and two abstract bounds on one fact, the last winning (R12 L17), and every value an
+  abstract platform offers, none of which is kept today, so a system written against an abstract platform is judged
+  on values its refinement may not have — `(tick-unit ns)` refined by `us` is accepted (R13 M1). The relation judges
+  the providers the closure reaches; refinement is what makes an abstract platform's values hold of what refines it,
+  and `M1.40`'s acceptance carries each case.
 - `region` and `ordering` fit no domain of §2: a region is a name with sub-clauses, offered once per name, and an
   ordering is a pair of events; both are placement and ordering, `M3.3`'s, and both stay undeclared in `/1` —
   presence judges them, and a constraint on either is `unsupported-profile` when the enumeration is wired (R1 A10);
@@ -429,7 +449,8 @@ source's.
   be fed is another fact, added when a description needs it (R2 B2; R10 J1, J6).
 - Arithmetic in a description stays refused — `(pow2 N)` is a literal's spelling (§2), not arithmetic (R8 H2); a new
   derivation is a new named rule here and in the engine.
-- The catalog's contract facet as a provider, and the choice among providers, are `M3.4`'s after `M2.7.4.5`.
+- A catalog record's contract facet as a provider is `M3.7`'s, after `M2.7.4.5` and `M3.1.2`, a mediating record
+  entering only through `M3.2`'s search; the choice among providers is `M3.4`'s (R13 M2, M6).
 - A derived fact as an abstract platform's bound cannot yet be refined by a concrete platform that states its
   grounds: model §3 rule 2 needs a value in the concrete platform, and §4 forbids the derived fact there; teaching
   refinement a derivation is a later leaf's, filed when a description needs it (R9 I8).
@@ -462,7 +483,7 @@ source's.
 - A new derivation is a new rule in §4's table and in `crates/eadl-resolve`, named by the facts' `rule` clauses.
 - A new value kind extends §2's table, and the implementation's domain enumeration, together.
 - Related: [[decision_eadl-engine-boundary]] (§4.3's cases are the timer cases of §6), [[decision_catalog-records]]
-  (the contract facet as a provider), [[decision_priority-comparison-direction]] (one direction already ruled).
+  (the contract facet as a provider, `M3.7`'s), [[decision_priority-comparison-direction]] (one direction already ruled).
 
 ## Review
 
@@ -485,3 +506,4 @@ history is [`decision_substitutability-relation-reviews.md`](../reviews/decision
 | 10 | 13 | 8 (J1, a provider stating no privilege accepted where one stating `user` was refused; J2, a declaration-level `needs` escaping rule 3 and the condition check; J3, the system outside the closure, its own constraints judged by nobody; J4, `(exactly false)` meeting `needs`; J5, a provider offering and declaring absent one fact read by its value; J6, a block requirer refused with no legal repair; J7, a required input declared absent given two codes; J8, an `exactly` width escaping the width–modulus check) | "not acceptable as it stands"; probes run against the built checker; every other §5.2 case right, the arithmetic exact |
 | 11 | 16 | 7 (K1, the closure stated two ways, one admitting a provider on an unused platform; K2, a declared absence passed by another provider's offer, presence comparing only the first of each; K3, one clause's head and range from two providers; K4, a provider stating no privilege untaken by `M3.3`; K5, model §2 rule 2 cited for its opposite; K6, infeasible while an unknown provider decides; K7, no mechanism refusing a stray `deffact`) | "not acceptable as it stands"; for one provider every §5.2 case right, no stronger precondition passing; the derivation seam closed |
 | 12 | 17 | 8 (L1, an offered `exactly` read as the value would strip refinement's only bound on an `exact` fact; L2, satisfaction stated in the fact's direction, not the requirement's; L3, a bare derived fact beside an absent input two outcomes; L4, `infeasible-configuration` with no provider; L5, one service's facts bound to one counter taken by no acceptance; L6, the mediation gate taken by no acceptance; L7, `M3.1.2` told to put `deffact` in `core.eadl`; L8, §9's corpus claim) | "not acceptable as it stands"; for one provider every §5.2 case right, no stronger precondition passing |
+| 13 | 13 | 9 (M1, refinement keeping no value an abstract platform offers, so a system on an abstract platform is judged on values its refinement lacks; M2, a mediating record or adapter reaching the relation outside `M3.2`'s gate; M3, a bare privilege offer outside rule 4's and `M3.3`'s words; M4, the absence rule over every provider refusing `uc3` after `M3.2`; M5, silent providers turning tracked infeasible cases into `missing-fact`; M6, a record's contract as a provider carried by no leaf; M7, a bare offer beside a value two outcomes; M8, the opening's presence sentence; M9, §9's corpus claim) | "not acceptable as it stands"; for one provider every §5.2 case right, no condition read as a capability |

@@ -312,3 +312,29 @@ statement and not in another, reaching across files.
 | L15 — an optional input offered bare: undescribed, not unknown | no | rule 1: any input the rule reads |
 | L16 — "a group never split" without "nested or flat" | no | §5 and `M3.4`'s acceptance |
 | L17 — refinement's own gaps beside the relation | no | `M1.40` filed |
+
+**Round 13**, `2026-10-03`, a new context that had not read rounds 1 to 12, which ran twenty-two probes against the
+built checker and took a census of the 124 tracked descriptions (37 fact names, matching §1). For a single provider
+judged against a requirement it can see, every §5.2 case came out right and no condition was read as a capability.
+There were 13 findings, 9 of them defects, and the verdict was "not acceptable as it stands". Defects per round: 7,
+7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9. Every defect sat at a border of the record — refinement, catalog records,
+mediation, the codes over several providers — or in a restatement. The knowledge card's fifth habit again: `/1`'s
+providers narrowed to the description's blocks and platforms, a record's contract handed to a new leaf, `M3.7`, and
+an adapter to `M3.2`'s search alone; the cross-provider rules `M3.4` carries corrected in its acceptance; what
+refinement keeps handed to `M1.40`, widened.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| M1 — refinement keeps no value an abstract platform offers: `(tick-unit ns)` refined by `us`, and five more, accepted, so a system on the abstract platform is judged on values its refinement lacks (p11–p17) | yes | §10 and `M1.40`, widened: every value an abstract platform offers kept only by the same value, each measured case refused |
+| M2 — a mediating record or adapter, a provider `M3.4` enumerates, satisfying a requirer that wrote `forbidden` without reaching `M3.2`'s gate | yes | §1, §3 rule 7, §4, §5: `/1`'s providers are the description's blocks and platforms; an adapter is offered only by `M3.2`'s search; a mediating record enters only through it, in `M3.7`'s and `M3.4`'s acceptance |
+| M3 — a bare `reachable-at-privilege` offer: unknown by rule 1, undescribed by rule 4, and outside `M3.3`'s two clauses | yes | rule 4 and `M3.3`'s acceptance: a provider stating no level — undescribed, declared absent, or offered bare — each with rule 1's outcome, refused for any caller a plan binds to it |
+| M4 — the absence rule over every provider makes `uc3` `invalid-description` after `M3.2`, and the amendment covered only a derivation | yes | §5 and `M3.4`'s acceptance: the absence rule among the description's blocks and platforms; an adapter's offer satisfies past an absence; `M3.2`'s acceptance: `alternative-timer` builds unchanged |
+| M5 — providers that say nothing of `f` turn `infeasible-required-absence.eadl` and `alternative-timer` into `missing-fact` | yes | §5 and `M3.4`'s acceptance: a provider stating neither `f` nor an input of its derivation takes no part in the code; both cases keep `infeasible-configuration` |
+| M6 — a record's contract as a provider carried by no leaf, while the contract facet holds prose | yes | `M3.7` filed: the catalog decision's §2 amended so a contract states vocabulary offers, judged by the relation |
+| M7 — a bare non-boolean beside a value of the same fact: unknown by §2, valued by rule 1 | yes | §2 and §5: a bare offer beside a value of the same fact is that value |
+| M8 — the opening's presence sentence admitting `false` and refusing a derivation | yes | the opening: an offer other than `false`, or a derivation, by rule 3 |
+| M9 — §9's claim missed `bounded-queue`'s unknown horizon and said `s0-heartbeat` writes no constraint | yes | §9: undescribed, unknown or absent; no valued constraint |
+| M10 — overflow an outcome rule 1 does not list | no | rule 1: an overflow gives no outcome, §2's `unsupported-profile` |
+| M11 — an empty set in an offer: bare by §2, refused by §8 | no | §8: `(f (exactly))` in an offer, no member in a requirement |
+| M12 — §1 saying the relation does not read a bound | no | §1: does not read it as a value |
+| M13 — refinement's reader refuses some equal values | no | conservative, as §1.1 states; `M1.40`'s acceptance names spelling-only differences as a stated limit |
