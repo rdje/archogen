@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust-dependency gate is designed
+
+`ARCHOGEN-M3-0407` (leaf `M3.6.1`, step 1).
+
+- The roadmap asks that the program which generates a system and the programs that check it never come to share
+  code or data unnoticed. The design for that check is written: each such program is built from scratch, every file
+  its compiler read is recorded with a hash, and whatever two of them share must be accepted in a reviewed list by
+  someone other than the person who changed it. Measured today, they share nothing. The first time they will is
+  already known — when the scheduling checker starts reading the catalog — and that change will then wait for a
+  reviewer, as the roadmap intends. The design goes to independent review before any code.
+
 ## archogen — the substitutability relation's ninth review, answered
 
 `ARCHOGEN-M3-0406` (leaf `M3.1.1`, step 10).

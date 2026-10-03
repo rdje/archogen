@@ -18,7 +18,7 @@
   `docs/TASK_TREE.md`.
 - **Next action:** `M3.1.1`'s review loop — `docs/decisions/decision_substitutability-relation.md` written
   `2026-10-03`; each round a new read-only context, the leaf closing on the first round with no defect; then
-  `M3.1.2`, `crates/eadl-resolve`. `M2`'s open leaves all wait on the director: `M2.7.4.5`, the records and the
+  `M3.1.2`, `crates/eadl-resolve`. In parallel, `M3.6.1`'s, `docs/decisions/decision_trust-inventory.md` (F30). `M2`'s open leaves all wait on the director: `M2.7.4.5`, the records and the
   lock (findings §11), and `M2.7.6`'s review and hosting half.
   `M2.15` closed `2026-10-03` (the fault paths' observation events, seven reviews); `M2.12` closed `2026-10-02`. This project uses no branches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of

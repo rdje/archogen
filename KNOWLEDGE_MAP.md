@@ -196,6 +196,7 @@ justifies the split — the rows below appear as that happens.
 - [`decision_substitutability-relation.md`](docs/decisions/decision_substitutability-relation.md)
 - [`decision_target-platform-description.md`](docs/decisions/decision_target-platform-description.md)
 - [`decision_task-tree-sealing.md`](docs/decisions/decision_task-tree-sealing.md)
+- [`decision_trust-inventory.md`](docs/decisions/decision_trust-inventory.md)
 - [`decision_wasm-binding.md`](docs/decisions/decision_wasm-binding.md)
 - [`decision_zero-dependency-engine-core.md`](docs/decisions/decision_zero-dependency-engine-core.md)
 - [`reference_external-document-source-chipdoc.md`](docs/decisions/reference_external-document-source-chipdoc.md)
