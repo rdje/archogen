@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust-dependency gate's fifth review, answered
+
+`ARCHOGEN-M3-0419` (leaf `M3.6.1`, step 6).
+
+- The fifth reader found the design's hand-offs carried and its measurements sound, and ten places where a rule
+  was loose: an assembler file reached through `include!` went unscanned, a new direct use of an already shared
+  package went unreported, and a result from the wrong build of a checker would have been packaged. The gate's report
+  now has two parts, what changed since the baseline and what still awaits acceptance, so an unrelated change stays
+  silent without hiding anything.
+
 ## archogen — the substitutability relation's fourteenth review: a horizon one tick shorter
 
 `ARCHOGEN-M3-0418` (leaf `M3.1.1`, step 15).

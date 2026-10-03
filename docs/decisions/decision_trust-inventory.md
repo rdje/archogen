@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-10-03`
 - **Status:** `active` — written; under independent review (leaf `M3.6.1`'s closure rule: the first round that finds
-  no defect closes it); rounds 1 to 4 answered `2026-10-03`; narrowed after rounds 3 and 4 to what only it decides
+  no defect closes it); rounds 1 to 5 answered `2026-10-03`; narrowed after rounds 3 and 4 to what only it decides
 - **External sources:** [the pinned Rust toolchain](../book/src/ledger.md#rust-toolchain) — rustc's dependency
   information and cargo's metadata, their version and limits in the ledger
 - **Owner / source:** leaf `M3.6.1` (`docs/tasks/M3.md`). `ROADMAP.md` §4.4 asks for a machine-readable
@@ -23,9 +23,10 @@ two roots **share**, copies and the build configuration included. A **baseline**
 each shared item the project accepts, with its classification, the property it can affect, its residual common-error
 risk and the independent controls that remain. The **gate** refuses what would make the inventory unsound — an input
 it cannot account for, a program running two roles, a baseline form whose item is gone, and, at packaging, a stale
-inventory — and **reports** as unreviewed every shared item that is new or changed against the baseline, and every
-program target not classified or whose closure grew. For a change outside every root and every program target it
-reports "unchanged".
+inventory — and **reports** in two parts: the **change** since the baseline's forms — a shared item new, changed or
+gone, a program target not classified or whose role packages grew — and the **standing list** of every shared item,
+root form and classification not accepted. For a change outside every root and every program target the change is
+empty and the gate reports "unchanged"; the standing list is not a loss-of-independence warning (R5 3, 10).
 
 **What this record does not decide** (narrowed after its third and fourth reviews, R3, R4): who reviews a shared
 item or a classification, how a review is recorded and protected, what an unreviewed item, an unclassified program or
@@ -72,7 +73,9 @@ shares (R2 B7), named in the pair's form. Each root's form also names its **role
 the role's own logic, its root package always, reviewed with the form. **An executable that would run two roles is
 refused** (`trust-shared-program`): an executable root whose build compiles a role package of another role. The
 independence §4.4 asks about is between programs, and one program running both roles has none to disclose; every
-package it holds would be shared, and a real case 1 would be lost among them (R2 B5; R4 5). `ROADMAP.md` §10.2's `archogen analyze`
+package it holds would be shared, and a real case 1 would be lost among them (R2 B5; R4 5). Compiling a role package
+counts, whatever the program calls of it: one that needs only another role's types or constants takes them from a
+third package, which the gate then reports as shared (R5 remark 15). `ROADMAP.md` §10.2's `archogen analyze`
 would make the generator's executable run the scheduling checker; `M2.21` decides how it runs before it is built, and `M3.4` carries the same for `archogen resolve` (R3 C20).
 
 `trust/roots.eadl`, read by the eADL reader as every repository record is, holds one form per root — its role, its
@@ -80,8 +83,9 @@ package and target, its artifact and the runtime data the pipeline hands it (§3
 fills yet, naming the leaf that will (the configuration checker, `M3.5`). It also classifies every other
 **program target** of the workspace — a `[[bin]]`, a `src/main.rs`, a `src/bin/*.rs` cargo discovers, an example, and a
 `cdylib`, `staticlib` or `dylib` crate type, such as the wasm module `ROADMAP.md` §10.4 makes a consumer of the
-engine — as not a root, with a reason and the role packages its build compiles; when that set grows, the
-classification is unreviewed again (R2 B6; R3 C14; R4 5). Programs are targets, not packages: an executable added to a
+engine — as not a root, with a reason and the role packages its build compiles, read from `cargo metadata`'s graph
+by normal edges and, for an example, by its development edges too, since an example compiles them (R5 remark 13);
+when that set grows, the classification is unreviewed again (R2 B6; R3 C14; R4 5). Programs are targets, not packages: an executable added to a
 classified package is still a new program. The gate computes sharing from the roots the commit proposes, never only
 from those last reviewed (R3 C19). A program target the file does not classify is reported unreviewed (`trust-unclassified-program`,
 §6), and a classification, like every change to the file, is accepted only by the review §5's leaves define, so no author removes a
@@ -137,14 +141,17 @@ part of it: a package added elsewhere changes it and no root's compilation (case
   an absolute path written relative (R1 A6, A10; R2 B8, B9; R3 C11, C12). The root manifest's tables that reach
   rustc — the edition, the profiles — are configuration this way, and its lints are not;
 - **every file its compilation read**, from each unit's dependency information, each name — an absolute one with the
-  written tree's prefix stripped first — resolved lexically against the workspace root, and refused only if it then
-  lies outside the tree or is a symbolic link in the commit (R4 remark 7), as a repository path with its sha256 — the package's sources, and every `include_str!`, `include_bytes!` and `#[path]` input — whatever the
+  written tree's prefix stripped first — resolved lexically against the workspace root, and refused if it is then
+  not a blob of the commit, or is a symbolic link in it; after the build each file read holds its blob's bytes, as
+  the catalog's build checker checks (R4 remark 7; R5 remark 14), as a repository path with its sha256 — the package's sources, and every `include_str!`, `include_bytes!` and `#[path]` input — whatever the
   file is, a build-configuration file a unit reads as data included (R1 A6, A9);
 - the root's artifact, the executable or the library, with its sha256;
 - the runtime data the pipeline hands it, as its form in `trust/roots.eadl` declares, each with its sha256: none
   today, and `M2.7.5`'s catalog records for `rt-analysis` once that leaf hands them over (R1 A20).
 
-**An input the inventory cannot account for is refused, not trusted** (`trust-undeclared-input`): a path in a
+**An input the inventory cannot account for is refused, not trusted** (`trust-undeclared-input`), and on any
+refusal the tool writes no inventory, only the report naming it, so `trust-verify` finds none and refuses the package
+(R5 9): a path in a
 unit's dependency information outside the written tree; and, in any root's closure, a build script, a procedural
 macro, a `#[link]` attribute, a `links` key, a link argument in any configuration, or an assembler directive —
 `global_asm!`, `asm!` or `naked_asm!`, whose `.incbin` reads a file no dependency information names: measured with
@@ -153,7 +160,10 @@ feature gate in 1.95.0 (R2 B3; R3 C1). They are refused as the catalog refuses t
 rules (`crates/archogen-catalog/src/package.rs`, `REFUSED` and `ATTRIBUTE_WORDS`): `asm`, `global_asm` and
 `naked_asm` anywhere, and `link` inside an attribute or a macro's arguments — so a renaming `use
 core::arch::global_asm as g;` is refused at its `use`, where `g!` with an `.incbin` would compile and leave its file
-in no dependency information (measured, R4 8). The catalog refuses each of them in a
+in no dependency information (measured, R4 8). The scan runs over every file a root's dependency information names,
+data included, so an `include!` or `#[path]` target is scanned as its includer is — the catalog scans only a
+package's `.rs` files, which is safe there because it refuses `include!` and `#[path]`, and the roots use both
+(measured, R5 1); a file the token rules cannot read is refused too, until a leaf designs its coverage. The catalog refuses each of them in a
 recorded package for the same reason (`decision_catalog-records-hashes.md`) (R1 A5). Each is admitted when a leaf
 designs its coverage. What remains outside the inventory, and is stated in its report: the linker and the host's C
 toolchain, recorded by version; code a `cfg` gates to a target other than the host (R2 B15); what a root reads
@@ -175,13 +185,16 @@ For each pair of roots, a **shared item** is:
 - a **runtime-data file** both roots' forms declare, at one path or two (R2 B4);
 - for a reference model and the implementation it validates, the **comparison harness** the pair's form names —
   today `rt-core`'s test target `differential`, which holds the adapter between them — every file it compiles beside
-  the pair's two libraries, built as §3 says (R2 B7; R4 4);
+  the pair's two libraries, built as §3 says (R2 B7; R4 4); and the harness is paired with every other root as well,
+  as the program that produces the reference model's results (`M4.7`), so a package its development dependencies
+  add is shared with any other root that compiles it (R5 remark 11);
 - for every pair, the **build configuration** of §3: the toolchain's identity and the root manifest's tables that
   reach rustc (R4 7).
 
 An item's **content** is the sha256 of its manifest and of every file it contributes to each side; its
-**configuration**, each side's unit configuration for it (§3); and its **edges**, the set of (root, edge kind)
-through which each side reaches it. A copy edited after copying is not seen, and the gate says so: it enforces
+**configuration**, each side's unit configuration for it (§3); and its **edges**, the set of (root, dependent package,
+edge kind) for every edge into it, so a new consumer of a package already shared is a change though nothing in the
+package is (measured, R5 2). A copy edited after copying is not seen, and the gate says so: it enforces
 disclosure and change control over what is shared verbatim, never semantic independence (§7). Content is taken
 over whole files and whole manifests, which over-approximates: an edit to a shared source file's test module, or to
 a shared manifest's development dependencies or description, changes the item though neither root's build changes,
@@ -202,17 +215,21 @@ consumed** (R3 C3–C9, C16). Each of these leaves carries its part in its accep
   other than its author's, on the protected main line, with the catalog's checks of `origin`
   (`decision_catalog-records.md` §4) — `M2.7.6.5`'s code-owner rule, in its acceptance (R4 1);
 - `M3.6.5`, blocked on the director: acceptance read by the gate per form, so the review of one form accepts that form
-  alone; the first baseline proposed, the comparison harness and the build configuration among it; the step Passed
+  alone, by an identity that authored neither the form nor any commit that changed its item since its last accepted
+  form; the first baseline proposed, the comparison harness and the build configuration among it; the step Passed
   only on the baseline's host, with every root form, role package and classification accepted, no program target
-  unclassified, and every shared item accepted (R4 1, 2, 10);
-- `M3.6.3`'s step: not built for the acceptance it lacks, owned by `M3.6.5`, so never Passed before it, whatever is
-  shared (R4 11);
+  unclassified, and every shared item accepted (R4 1, 2, 10; R5 7);
+- `M3.6.3`'s step: a runner action that runs the gate, `Failed` on a refusal and otherwise not built for the
+  acceptance it lacks, owned by `M3.6.5`, so never Passed before it, whatever is shared (R4 11; R5 8);
 - `M4.8`'s report: a property resting on a role's independence established only when each role it rests on has an
-  inventoried root whose form is accepted, no program target is unclassified, and every shared item of those roles
-  is accepted; otherwise `not-established`, naming F30 (R4 2, 3);
+  inventoried root whose form is accepted, every root form and classification is accepted, no program target is
+  unclassified, and every shared item of those roles is accepted; otherwise `not-established`, naming F30 (R4 2, 3;
+  R5 5);
 - `M4.7`'s package: each result bound to the program that produced it — a role's executable, or for the reference
   model the comparison harness the trust build inventories — so no role's results are refused for want of a
-  program (R3 C2).
+  program (R3 C2); and its manifest records the sha256 of every input the pipeline handed each root (R5 6);
+- the leaves whose roots read data at run time — `M2.7.5`, `M3.4`, `M3.5`, `M4.2` — each declare it in the root's
+  form, in their acceptance (R5 6).
 
 Until they land nothing is accepted, and every shared item is reported unreviewed (R2 B2; R3 C4, C5).
 
@@ -228,20 +245,23 @@ leaves' (R2 B1, B10, B17; R3 C3).
 | `trust-new-shared` | reported | a shared item the baseline does not hold — a package, a file, a copy, a runtime-data file, a comparison harness, the build configuration | 1, and 3 for data |
 | `trust-shared-changed` | reported | an item whose content, configuration or edges differ from its baseline form — a feature activated, a `cfg` set, an edition changed, a source edited — though its name and version are unchanged | 2 |
 | `trust-unclassified-program` | reported | a program target `trust/roots.eadl` does not classify, or whose classification's role packages have grown (§2) | — |
-| `trust-baseline-stale` | refused, on the baseline's host | a baseline form whose item is no longer shared: removed, so a sharing removed and reintroduced is reviewed again (R1 A15; R3 C9) | — |
-| `trust-undeclared-input` | refused | a path outside the written tree, a symbolic link, or a build script, procedural macro, native link input or assembler identifier in a root's closure (§3) | 3 |
+| `trust-baseline-stale` | refused, on the baseline's host | a baseline form whose item is no longer shared, or a classification whose program target is gone: removed, so a sharing removed and reintroduced, or a target re-added under an old name, is reviewed again (R1 A15; R3 C9; R5 remark 12) | — |
+| `trust-undeclared-input` | refused | a name not a blob of the commit, a symbolic link, a file whose bytes after the build are not its blob's, a file the token rules cannot read, or a build script, procedural macro, native link input or assembler identifier in any file a root's compilation read (§3) | 3 |
 | `trust-shared-program` | refused | an executable root whose build compiles a role package of another role (§2) | — |
-| `trust-inventory-stale` | refused, at packaging | the inventory missing, its build identity not the package's commit and toolchain, or an artifact's sha256 not the inventory's | 4 |
+| `trust-inventory-stale` | refused, at packaging | the inventory missing, its build identity not the package's commit and toolchain, an artifact's sha256 not the inventory's, a result naming a program other than its role's inventoried artifact or the pair's harness, or an input handed to a root that its form does not declare | 4 |
 
 **Case 4 is judged where an inventory is consumed** (R1 A8). The gate builds its own inventory and cannot find it
 stale. `cargo xtask trust-verify <package>` refuses a package whose inventory is missing, whose build identity is not
-the package's commit and toolchain, or whose artifact differs from the inventory's; the package ships the artifacts
-the trust build produced, so no reproducibility between two builds is assumed, and how each result is bound to its
-producer is `M4.7`'s (§5). `M3.6.3` builds and tests `trust-verify` against package directories made for the
+the package's commit and toolchain, or whose artifact differs from the inventory's; one in which a result names a
+program other than the inventoried artifact of its role's root, or of the pair's named harness, so a result a debug
+build or another commit's checker produced does not pass (R5 4); and one whose manifest records an input handed to a
+root that the root's form does not declare (R5 6). The package ships the artifacts the trust build produced, so no
+reproducibility between two builds is assumed, and how each result names its producer is `M4.7`'s (§5). `M3.6.3` builds and tests `trust-verify` against package directories made for the
 purpose (R3 C15).
 
 **Case 5.** The gate compares shared items only — their content, configuration and edges — on the host the baseline
-names (§2). A change outside every root's packages and files changes the build identity — the commit's tree hash
+names (§2), and "unchanged" is the change part of its report (§0); the standing list, which holds the build
+configuration until `M3.6.5` accepts it, is no warning (R5 3). A change outside every root's packages and files changes the build identity — the commit's tree hash
 always, `Cargo.lock`'s when a package is added — which the inventory records and the gate does not compare, so it
 reports "unchanged", with no warning (R1 A13). A new package with no program target is such a change; one with a
 program target is reported for classification, never case 5 (R2 B10). Configuration is taken from each root's own
@@ -307,3 +327,4 @@ that the baseline cannot be accepted by its author; every finding answered here.
 | 2 | 18 | 12 (B1, the required check's acceptance unreachable from the pull request that proposes a form; B2, no bootstrap; B3, a file read by the assembler unseen; B4, runtime data at one path unshared; B5, one executable running two roles; B6, programs are targets; B7, the reference model's harness outside every inventory; B8, host-dependent configuration; B9, an edition change uncompared; B10, case 5 stated two ways; B11, results unbound to the program that produced them; B12, `CARGO_HOME` not emptied) | "not acceptable as it stands"; §1 re-measured, the copy rule silent on today's tree, the reused rules real |
 | 3 | 22 | 16 (C1, `naked_asm!` unrefused; C2, the reference model's results refused for ever; C3–C5, pending items reaching packages, claims and releases, and off the named host; C6–C8, the roots accepted whole, `trust/` owned by no leaf, a fork's main; C9, a stale form stated two ways; C10, the harness shared today; C11–C12, the toolchain and lint flags in the compared configuration; C13, generated sources; C14, a `cdylib` and growing closures; C15–C16, `M3.6.3` and findings §11 stale) | "not acceptable as it stands"; the narrowing that followed hands acceptance and its costs to `M2.7.6`, `M3.6.5`, `M4.7` and `M4.8` |
 | 4 | 20 | 11 (D1, `M2.7.6.5` with no acceptance, and "per form" given to a code-owner rule; D2, what an unclassified program or an unaccepted form costs carried by no leaf; D3, `M4.8`'s interim rule vacuous with nothing shared; D4, the harness built and inventoried by no rule; D5, `trust-shared-program` with no mechanism; D6, a file a shared package's macro makes both roots include; D7, the build configuration compared nowhere; D8, `M3.6.2` stale and its scan evaded by a renaming `use`; D9, generated sources handed to no leaf; D10, the step off the baseline's host; D11, the step's outcome decided here and not producible by the runner) | "not acceptable as it stands"; §1 re-measured, the normalised configuration stable across directories and toolchains, the harness buildable from the roots' units |
+| 5 | 16 | 10 (E1, the assembler scan's files unstated, an `include!` or `#[path]` target unscanned; E2, edges without the dependent, a new consumer unreported; E3, a form held but unaccepted hiding its item, or case 5 never silent; E4, a result's producer unchecked; E5, `M4.8` asking only that programs be classified; E6, runtime data handed but undeclared; E7, acceptance tied to the form's author, not the change's; E8, `M3.6.3`'s step unbuildable by the runner; E9, a refused build's inventory still packaged; E10, "closure grew" beside "role packages grown") | "not acceptable as it stands"; §1 re-measured, the harness's units identical to the roots', every renaming caught, the delegations carried bar four |

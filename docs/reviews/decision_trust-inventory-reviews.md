@@ -154,3 +154,30 @@ rules that say what is built and what is shared.
 | D18 — an absolute dependency name inside the tree refused | no | §3: the written tree's prefix stripped, then resolved |
 | D19 — the ledger's scope claimed every file named | no | the ledger's Known limitations name `.incbin`; the refusal is lexical, so no premise is re-measured |
 | D20 — the gate reads its forms with the generator's reader | no | §7 states it |
+
+**Round 5**, `2026-10-03`, a new context that had not read rounds 1 to 4, which measured from a `git archive` copy
+under the pinned toolchain: scratch packages putting an `.incbin` inside an `include!` target and a `#[path]` module,
+a new direct edge to an already shared package, and the renamings of assembler macros. It confirmed §1, the
+harness's units byte for byte against the roots', every renaming, raw identifier and `cfg_attr` form caught, today's
+57 files clean under the scan, off-host behaviour consistent, and every delegation carried bar four. There were 16
+findings, 10 of them defects, and the verdict was "not acceptable as it stands". Defects per round: 11, 12, 16, 11,
+10. None reopened a delegation or asked the record to decide another leaf's part; each sharpened a rule.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| E1 — the catalog's scan reads only `.rs` files under a package; an `.incbin` inside an `include!` target or a `#[path]` module passed (measured); an untokenizable file | yes | §3: the scan over every file the dependency information names, data included; a file the token rules cannot read refused |
+| E2 — edges without the dependent: a new consumer of a shared package unreported (measured) | yes | §4: edges are (root, dependent package, edge kind) for every edge into the item |
+| E3 — a held but unaccepted form hides its item, or case 5 is never silent | yes | §0, §6: the report's change part and its standing list; case 5 reads the change part |
+| E4 — a result's producer never compared with the inventoried artifact | yes | §6 and `M4.7`: `trust-verify` refuses a result naming another program |
+| E5 — `M4.8` asked only that no program be unclassified | yes | §5 and `M4.8`: every root form and classification accepted |
+| E6 — runtime data handed to a root but undeclared passes | yes | §5, §6: `M4.7`'s manifest records every input handed; `trust-verify` refuses an undeclared one; `M3.4`, `M3.5`, `M4.2` declare theirs |
+| E7 — acceptance tied to the form's author, not the change's | yes | §5 and `M3.6.5`: an identity that authored neither the form nor any commit that changed its item since its last accepted form |
+| E8 — `Action::NotBuilt` runs nothing; the step's two possible builds | yes | §5 and `M3.6.3`: a new runner action, `Failed` on a refusal, otherwise not built, owned by `M3.6.5` |
+| E9 — an inventory written on a refusal reaches the package | yes | §3: no inventory on any refusal; `M3.6.2`'s acceptance |
+| E10 — "closure grew" beside "role packages grown" | yes | §0: role packages |
+| E11 — the harness compared only within its pair | no | §4: paired with every other root as well |
+| E12 — a classification whose program is gone | no | §6: stale, refused like a baseline form |
+| E13 — a classified program's role packages unspecified | no | §2: `cargo metadata`'s graph, an example's development edges included |
+| E14 — "outside the tree" against "not a blob" | no | §3: not a blob of the commit, and each file's bytes after the build its blob's |
+| E15 — compiling a role package counted as running it | no | §2: counted; types or constants taken from a third package |
+| E16 — `link` refused inside any macro call | no | benign and absent today; the catalog's rule kept |
