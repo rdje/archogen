@@ -192,6 +192,7 @@ justifies the split — the rows below appear as that happens.
 - [`decision_scaffold-updater-adopted.md`](docs/decisions/decision_scaffold-updater-adopted.md)
 - [`decision_scratch-on-the-repository-volume.md`](docs/decisions/decision_scratch-on-the-repository-volume.md)
 - [`decision_specifications-home.md`](docs/decisions/decision_specifications-home.md)
+- [`decision_substitutability-relation.md`](docs/decisions/decision_substitutability-relation.md)
 - [`decision_target-platform-description.md`](docs/decisions/decision_target-platform-description.md)
 - [`decision_task-tree-sealing.md`](docs/decisions/decision_task-tree-sealing.md)
 - [`decision_wasm-binding.md`](docs/decisions/decision_wasm-binding.md)

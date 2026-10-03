@@ -13,12 +13,13 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M2` → frontier `M2.7.4`, on the director. `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API` is
+- **Active tree:** `M3` → frontier `M3.1`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API` is
   closed; `M1`'s only open leaf, `M1.29.4`, is blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M3.1`, candidate enumeration and the substitutability relation — `M2`'s open leaves all wait
-  on the director: `M2.7.4.5`, the records and the lock (findings §11), and `M2.7.6`'s review and hosting half.
-  `M2.20` and `M2.10` closed `2026-10-03` (the composition implemented, `crates/rt-analysis/src/compose.rs`).
+- **Next action:** `M3.1.1`'s review loop — `docs/decisions/decision_substitutability-relation.md` written
+  `2026-10-03`; each round a new read-only context, the leaf closing on the first round with no defect; then
+  `M3.1.2`, `crates/eadl-resolve`. `M2`'s open leaves all wait on the director: `M2.7.4.5`, the records and the
+  lock (findings §11), and `M2.7.6`'s review and hosting half.
   `M2.15` closed `2026-10-03` (the fault paths' observation events, seven reviews); `M2.12` closed `2026-10-02`. This project uses no branches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4` and `M2.7.6.4` — findings §11, `main`'s protection and a reviewer;

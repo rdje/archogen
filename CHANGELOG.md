@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability relation is decided, and `M3` begins
+
+`ARCHOGEN-M3-0396` (leaf `M3.1.1`, step 1).
+
+- When does what a platform offers satisfy what a service requires? The engine will decide it by one relation,
+  fact by fact, over a small set of value kinds, and every fact a description writes will be an entry of a versioned
+  vocabulary that fixes what kind of value it takes, whether it is a promise or a condition, and which way "better"
+  runs. A condition is read backwards, so an implementation that demands more privilege is never taken for a more
+  capable one; a horizon is computed from a counter's width and rate, so a faster counter of the same width is
+  rightly worse. The design is written and goes to independent review before any code.
+
 ## archogen — the runtime crates' documentation says what the fault contract now says
 
 `ARCHOGEN-M2-0395` (leaf `M2.20`).
