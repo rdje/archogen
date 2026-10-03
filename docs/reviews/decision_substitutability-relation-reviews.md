@@ -72,3 +72,30 @@ whose width then derived a horizon it has not.
 | B8 — 26 of 37 census facts have no stated direction; `core-count` an `at-least` trap | no | §1.1: the entries of `/1`, every census fact with domain, role, direction and reason; `core-count` `exact`; `M3.1.2` adds none without a row |
 | B9 — presence's declared-name exemption passes what rule 1 calls `missing-fact` | no | §9: the relation judges by a provider's offer; the library's verdict is the stricter, which the report carries decided at `M3.4` |
 | B10 — slips: "(rule 4)", "the word is not used", "every example", the enumeration row's `at-most`, the payload's profile, an offer of a statement | no | each fixed in place; an offer of a statement fact is `invalid-description` (§3 rule 6, §8) |
+
+**Round 3**, `2026-10-03`, a new context that had not read rounds 1 or 2: it read all 124 descriptions and `kind.rs`
+whole, re-derived the census name by name, recomputed the horizons and the `i128` limits (`i64::MAX × 10^9` fits
+`in_base`; `Rational::cmp` is 256-bit), and found every §5.2 case right in fact, domain and direction, `exactly` a
+subset of every direction it is written against, the closure rule a widening of `FactMap::closure` as §5.3 requires,
+and "offered value wins" working on the reload counter. There were 13 findings, 8 of them defects, and the verdict
+was "not acceptable as it stands". Three defects came from rules added by earlier answers (`wrap-behavior`, the
+vocabulary rows, `exactly`), which the knowledge card on review answers predicts; two were restatements missed (C3,
+§10's old sentence; §8's dropped *declared*); two were real gaps in the relation's order and scope (C1, C2). Where
+two special cases had grown, one general rule replaces them: any input a rule reads, offered without a value, is
+unknown, and the rule derives nothing.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| C1 — rule 1 derived before it looked for a declared absence, so `(absent unambiguous-horizon)` beside an offered width and rate was satisfied at `429 s` | yes | §3 rule 1: absence is checked before derivation, infeasible by model §2 rule 2 — no derivation corrects what an offer says; an input declared absent leaves the derived fact underivable and a constraint on it infeasible (§8) |
+| C2 — §5 enumerated only clauses that "write constraints", so a provider's condition was never checked against a requirer that only `needs`: a machine-only UART accepted silently | yes | §5: every declaration in the closure with a `requires` clause, `needs` judged as bare presence, rule 5's condition check applied to each provider that satisfies — `missing-fact` on the service's side when it states no privilege |
+| C3 — §10 still called two providers' values a contradiction; §8 dropped *declared* | yes | §10's sentence replaced by the scoping remark; §8 says *declared* |
+| C4 — `priorities` under `includes` read `unique`, a demand on the task set, as a capability | yes | §1.1: `exact`, like `deadlines`; a policy that wants both writes both |
+| C5 — `wrap-behavior` offered bare fell between "modular or not offered" and "saturating"; read by both rules but in neither `derived-from` | yes | §4: any input a rule reads, required or optional, offered without a value is unknown and the rule derives nothing; `derived-from` lists required inputs, a rule may read a named optional one; both table rows say "or offered without a value" |
+| C6 — a modulus beside `(wrap-behavior saturating)` unrefused, and satisfying a modulus requirement | yes | §4 and §8: `invalid-description`, a modulus being what a counter wraps at |
+| C7 — `exactly` granted for every direction with no satisfaction condition for intervals; §1's offer definition lacked "or `exactly`" | yes | §2 interval row: `exact`, the intervals equal; §1: a bound in the fact's direction or `exactly` |
+| C8 — rule 5's clause verdict had no home in §5, so `M3.4` would receive per-constraint lists only | yes | §5: the enumeration emits, per clause and provider, rule 5's verdict; `M3.4` chooses among providers that satisfy the clause |
+| C9 — `quantity.rs`'s `Exact` comment names a counter modulus | no | §9: `M3.1.2` aligns the comment with §1.1's `at-least` |
+| C10 — a fixed-frequency offer had no spelling for an interval fact | no | §2: a point `(f v)` is the interval `[v, v]` |
+| C11 — `deffact`'s cardinalities unstated | no | §1.1: `doc`, `domain`, `role`, `direction` once; `derived-from`, `rule` at most once |
+| C12 — a non-positive width, and `2^width` past 126 against an offered modulus | no | §4: a width is a positive whole number of bits; a written modulus is at most `2^63 − 1`, so against 64 bits or more the bound holds uncomputed |
+| C13 — a service may `offers` but is no provider | no | §1: its offers are not judged in `/1` |

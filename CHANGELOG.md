@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability relation's third review, answered
+
+`ARCHOGEN-M3-0399` (leaf `M3.1.1`, step 4).
+
+- A third reader found eight defects. Two mattered most: the relation would have computed a counter's horizon and
+  accepted it even where the platform had declared that horizon absent, and a block that demands machine privilege
+  would have been accepted by a service that merely depends on it, without anyone checking the privilege. Both are
+  closed — an absence is looked for before anything is derived, and every dependency is checked for the conditions
+  its provider imposes. Three defects came from rules earlier answers had added; where two special cases had grown,
+  one general rule now stands. The record goes to a fourth reader.
+
 ## archogen — the substitutability relation's second review, answered
 
 `ARCHOGEN-M3-0398` (leaf `M3.1.1`, step 3).
