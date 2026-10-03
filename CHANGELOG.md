@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability relation's fifteenth review, answered
+
+`ARCHOGEN-M3-0423` (leaf `M3.1.1`, step 16).
+
+- The fifteenth reader again found the relation itself sound. Writing a fact after `uses`, instead of `needs`,
+  would have slipped a requirement past it, so that form is now refused. Questions about catalog records, which the
+  design had begun to answer for other work, are now handed to that work's own reviewed design instead.
+
 ## archogen — a missing quantity is pointed at where it is missing
 
 `ARCHOGEN-M1-0422` (leaf `M1.41`).

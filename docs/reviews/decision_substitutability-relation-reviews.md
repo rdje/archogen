@@ -369,3 +369,29 @@ rate`.
 | N16 — codes for a library not yet wired; `none:` rows | no | `M3.1.2` decides, reference §4 rule 3 applying |
 | N17 — `quantity-missing` labelled at `core.eadl:1:1` (outside the record) | no | reproduced; `M1.41` filed |
 | N18 — six worked numbers recomputed | no | now recomputed under `(modulus − 1) / rate` |
+
+**Round 15**, `2026-10-03`, a new context that had not read rounds 1 to 14, which ran some forty probes against the
+built checker, re-derived the 37-name census and recomputed every worked number and the endpoint argument. None of its
+probes made the relation accept at one provider a requirement it should refuse. There were 16 findings, 8 of them
+defects, and the verdict was "not acceptable as it stands". Defects per round: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9,
+9, 8. Five defects were in what the record hands over; the answer names the open question for the receiving leaf's
+own reviewed design rather than writing an answer the next round must check.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| O1 — `(requires (uses observation-coherent))` against `false`, and `(uses (tick-unit us))` against `ns`, accepted: presence puts a used fact in the closure | yes | §1, §8 and `M3.4`'s closure bullet: a `uses` naming a vocabulary fact is `invalid-description`; none in the corpus |
+| O2 — the ordering case both `unsupported-profile` once wired and kept at `0`; "`M3.4` keeps that verdict" a claimed verdict | yes | §10: entries under §15 first, or migration by `M3.4`'s rule, decided there; `M3.3`'s acceptance |
+| O3 — §4 still decided how the tracked counters migrate, `uc3`'s included; four counters offer `tick-rate` bare; a dangling "(§9)" | yes | §4: a counter that states its modulus has a horizon; whether each gains one is `M3.4`'s, `uc3`'s `M3.2`'s under the director |
+| O4 — "a counter modulus, a privilege level … supplied by catalog records" joins a record's fact to `timer.delay`'s rate | yes | §10 and `M3.2`: each fact from one provider judged on its own; the round-13 clause qualified |
+| O5 — a record's offer or absence against a block's absence or offer: three outcomes | yes | §10 and `M3.7`: a question for `M3.7`'s and `M3.4`'s reviewed design, named in model §2 rule 2's amendment |
+| O6 — a record's preconditions carried by no acceptance | yes | §10 and `M3.7`: preconditions become offered sets judged by inclusion; a precondition no entry states makes no provider |
+| O7 — the vocabulary module recognised by path or by content, two answers | yes | §1.1 and `M3.1.2`: by content, as a `defkind` is; a `deffact` anywhere answered exit 20 |
+| O8 — the vocabulary's versioning carried by nothing; `deffact.eadl` under the kinds root | yes | §1.1 and `M3.1.2`: `docs/semantics/vocabulary/` a conformance root, the kinds root's purpose amended, a migration note |
+| O9 — the endpoint argument's wording loose | no | §4: the elapsed ticks recovered modulo the modulus; the `doc` line reworded |
+| O10 — `exactly` offers refused by refinement's reader before the relation, two codes | no | §1.1: both codes named; the library's reading until wired |
+| O11 — a concrete `exactly` against an abstract value refused by refinement | no | conservative, as §1.1 states |
+| O12 — an abstract derived value no more refinable than a bound | no | §10: bound or value |
+| O13 — "the same value twice" compared how | no | §5: in the fact's domain |
+| O14 — a group's sub-fact beside its head `false` | no | decided by §2's group row; a sub-fact is a fact in its own right |
+| O15 — contradictory constraints in one clause end `infeasible-configuration` | no | refused either way; `M3.4`'s code rule |
+| O16 — `includes` and `within` wrappers unlisted | no | §8: `invalid-description`, a requirement writing its value |
