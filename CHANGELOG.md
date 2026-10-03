@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the checker builds what a record names
+
+`ARCHOGEN-M2-0390` (leaf `M2.7.4.3`, step 1).
+
+- The checker now does what no scan can: it builds every package a catalog record names, in debug and release, for
+  the host and for each target the record covers, and reads back from the compiler which files it actually read and
+  which environment variables it depended on. A file outside the record's declared sources, a dependency on the
+  environment, a package that fails to build, or a cargo configuration on the build's path that is not the
+  repository's own tracked copy, each is refused with its code.
+
 ## archogen — the catalog's checker, rehearsed through CI's own harness
 
 `ARCHOGEN-M2-0389` (leaf `M2.7.4.2`, closed).

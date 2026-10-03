@@ -39,9 +39,8 @@ This chapter explains the design. It was reviewed independently sixteen times be
 rules, each refusal with its one code; computes every hash, reproducing the worked example's 23 values; checks the
 lock over one tree and over the history; derives each facet's evidence status; names what a later change
 invalidates; answers the analysis's lookups; holds the production namespace; admits claims, judging premise 3; and
-holds the code a record points at to the package rules, the port's assembly to its dialect. The gate, the check that
-protects it and the first records are the next leaves (`M2.7.4` to `M2.7.6`). Until they land, nothing loads a
-catalog, and `catalog/` is empty.
+holds the code a record points at to the package rules, the port's assembly to its dialect. The gate that runs it,
+and the records, are *Today and ahead*'s.
 
 ### The port's record
 
@@ -174,8 +173,9 @@ specification's. Round 11 found none live, and the record was accepted. Its hist
 ## Today and ahead
 
 - **The gate loads the catalog at every commit, and it is empty.** `cargo xtask catalog-check` reads the history
-  from git and judges the pending commit, a commit as made, or a pull request's merge against its base (`M2.7.4.2`);
-  the hooks that run it and the builds it must make are next (`M2.7.4.3`, `.4`). The crate behind it is complete:
+  from git and judges the pending commit, a commit as made, or a pull request's merge against its base (`M2.7.4.2`),
+  building every package a record names, for each profile and target, and reading what the compiler read
+  (`M2.7.4.3`); the hooks that run it are next (`M2.7.4.4`). The crate behind it is complete:
   it reads records, hashes them, checks the lock over one tree and a history, derives status and admits claims.
 - **No port's record exists yet.** Its format, its statement and the loader's checks are done (`M2.12`). Until a
   port's record is written, every analysis of the runtime variant over the catalog is inconclusive.

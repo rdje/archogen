@@ -40,9 +40,11 @@
 //! scope", so a quarantine is a row of [`QUARANTINES`] carrying exactly those, and nothing else
 //! can make a step's exit count as an absence (leaf `PROGRAM.10.1`).
 
+mod catalog_build;
 mod catalog_check;
 mod dtb;
 mod elf;
+mod json;
 mod mutation;
 mod premises;
 mod target;

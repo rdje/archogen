@@ -30,6 +30,8 @@ use std::process::{Command, Stdio};
 
 use archogen_catalog::history::{Commit, CommitterDate, History};
 use archogen_catalog::load::load;
+
+use crate::catalog_build;
 use archogen_catalog::replay::replay;
 use archogen_catalog::tree::Tree;
 use archogen_catalog::Refusal;
@@ -84,6 +86,8 @@ pub struct Verdict {
     pub lock: bool,
     /// The pin the compiler was held to.
     pub pin: String,
+    /// What §3's builds did.
+    pub built: catalog_build::Built,
 }
 
 /// Parse the subcommand's arguments.
@@ -459,32 +463,6 @@ fn history_of(git: &Git, heads: &[&str]) -> Result<History, Failure> {
     Ok(history)
 }
 
-/// The pin: the `channel` of `rust-toolchain.toml` in `tree`, a release number (§3).
-fn pin_of(tree: &Tree) -> Result<String, String> {
-    let bytes = tree
-        .get("rust-toolchain.toml")
-        .ok_or("the tree holds no `rust-toolchain.toml`, so there is no pin (§3)")?;
-    let text = String::from_utf8_lossy(bytes);
-    let channel = text
-        .lines()
-        .find_map(|l| l.trim().strip_prefix("channel"))
-        .and_then(|rest| rest.trim().strip_prefix('='))
-        .map(|v| v.trim().trim_matches('"').to_owned())
-        .ok_or("`rust-toolchain.toml` names no channel")?;
-    let release = channel.split('.').count() == 3
-        && channel.split('.').all(|n| {
-            !n.is_empty()
-                && n.bytes().all(|b| b.is_ascii_digit())
-                && (n == "0" || !n.starts_with('0'))
-        });
-    if !release {
-        return Err(format!(
-            "the pin `{channel}` is not a release number `MAJOR.MINOR.PATCH` (§3)"
-        ));
-    }
-    Ok(channel)
-}
-
 /// `rustc -vV` under §3's allowlist, with `RUSTUP_TOOLCHAIN` the pin, names the pin (premise 1).
 fn compiler_is(pin: &str, scratch: &Path) -> Result<(), String> {
     let cargo_home = scratch.join("cargo-home");
@@ -581,8 +559,17 @@ pub fn judge(cwd: &Path, scratch: &Path, mode: &Mode) -> Result<Verdict, Failure
             (head, vec![base], tree, date, history)
         }
     };
-    let pin = pin_of(&tree)?;
+    let pin = catalog_build::toolchain_file(&tree)?;
     compiler_is(&pin, scratch)?;
+    let repo = PathBuf::from(git.text(&["rev-parse", "--show-toplevel"])?.trim());
+    let root: PathBuf = match mode {
+        Mode::Ci { judged_dir, .. } => judged_dir.clone(),
+        Mode::Index | Mode::Commit(_) => {
+            let dir = scratch.join("tree");
+            catalog_build::write_tree(&tree, &dir)?;
+            dir
+        }
+    };
     let mut history = history;
     let records = tree
         .under("catalog")
@@ -598,15 +585,18 @@ pub fn judge(cwd: &Path, scratch: &Path, mode: &Mode) -> Result<Verdict, Failure
             hosting: false,
         },
     );
-    load(&history, &head)?;
+    let loaded = load(&history, &head)?;
     let base_refs: Vec<&str> = bases.iter().map(String::as_str).collect();
     replay(&history, &base_refs, &head)?;
+    let judged_tree = &history.get(&head)?.tree;
+    let built = catalog_build::check(&loaded, judged_tree, &root, &repo, &pin, scratch)?;
     Ok(Verdict {
         head,
         bases,
         records,
         lock,
         pin,
+        built,
     })
 }
 
@@ -623,7 +613,7 @@ pub fn run(root: &Path, args: &[&str]) -> i32 {
     match judge(&cwd, &root.join("target/catalog-check/scratch"), &mode) {
         Ok(verdict) => {
             println!(
-                "catalog-check: {} against {}: {} record(s), {}, the compiler the pin {}: pass",
+                "catalog-check: {} against {}: {} record(s), {}, the compiler the pin {}, {} package(s) built {} time(s), {} unit(s) read: pass",
                 verdict.head,
                 if verdict.bases.is_empty() {
                     "no base".to_owned()
@@ -632,7 +622,10 @@ pub fn run(root: &Path, args: &[&str]) -> i32 {
                 },
                 verdict.records,
                 if verdict.lock { "a lock" } else { "no lock" },
-                verdict.pin
+                verdict.pin,
+                verdict.built.packages,
+                verdict.built.builds,
+                verdict.built.units
             );
             0
         }

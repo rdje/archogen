@@ -727,8 +727,9 @@ const PREMISES: &[Premise] = &[
 ];
 
 /// The paths a build's dependency information names: every `.d` file under `deps` whose name starts with `prefix`,
-/// its targets' prerequisites, each made absolute against `base`, the package directory cargo ran `rustc` from —
-/// cargo gives `rustc` the source path relative to it, so the prerequisites are written relative to it too.
+/// its targets' prerequisites, each made absolute against `base`, the workspace root cargo ran `rustc` from — it
+/// gives `rustc` the source path relative to that root, so the prerequisites are written relative to it too; in
+/// these probes the package is the workspace root.
 fn dep_info_paths(deps: &Path, prefix: &str, base: &Path) -> Result<Vec<String>, String> {
     let mut out = Vec::new();
     for entry in fs::read_dir(deps).map_err(|e| format!("{}: {e}", deps.display()))? {
