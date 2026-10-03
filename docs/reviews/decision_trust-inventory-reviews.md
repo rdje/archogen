@@ -120,3 +120,37 @@ refuses or reports; acceptance and its costs go to the leaves that own them, eac
 | C20 — `resolve` and `mcp` | no | `M3.4`'s goal carries `resolve`; `mcp` is the built binary's, which `M2.21`'s rule reaches |
 | C21 — runtime data in `M2.7.5` | no | `M2.7.5`'s acceptance declares it |
 | C22 — the harness identified and built | no | `M3.6.2`'s, by the record's §4 |
+
+**Round 4**, `2026-10-03`, a new context that had not read rounds 1 to 3. It built every root clean under the pinned
+toolchain from `git archive` copies, with a fresh `CARGO_HOME` and target directory, and built scratch crates: a
+macro that makes two roots include one file, a renamed `global_asm!` with `.incbin`, a profile edit, per-root against
+workspace-wide feature unification. It confirmed §1's counts and empty intersections, the normalised configuration
+across two checkout directories and three toolchains, per-root features, `debugger_visualizer` in the dependency
+information, and the harness's reuse of the roots' units. There were 20 findings, 11 of them defects, and the verdict
+was "not acceptable as it stands". Defects per round: 11, 12, 16, 11. Seven were delegations the named leaf did not
+carry, or carried weaker; four were holes in the inventory. The answer keeps the narrowing: the step's outcome leaves
+the record for `M3.6.3` and `M3.6.5`, each delegation is written into an acceptance, and the four holes are closed by
+rules that say what is built and what is shared.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| D1 — `M2.7.6.5` had no acceptance, and "per form" was given to a code-owner rule, which approves by path | yes | `M2.7.6.5`'s acceptance written; §5: per form is `M3.6.5`'s alone |
+| D2 — what an unclassified program, or an unaccepted root form or classification, costs carried by no leaf | yes | §5, `M4.8` and `M3.6.5`: established and Passed only with every form and classification accepted and no program unclassified |
+| D3 — `M4.8`'s rule vacuous while nothing is shared | yes | `M4.8` stated positively: established only with an accepted inventoried root for each role and every shared item accepted |
+| D4 — the comparison harness built and inventoried by no rule | yes | §2, §3, §4: the pair's form names the harness target; built with `cargo test --release --no-run`, its files, configuration and artifact recorded |
+| D5 — `trust-shared-program` with no mechanism; "role libraries" undefined | yes | §2: each root's form names its role packages; refused when an executable root's build compiles another role's role package |
+| D6 — a file a shared package's macro makes both roots include, outside that package's dependency information (measured) | yes | §4: a shared file is one both roots' compilations read that no shared package's own compilation reads |
+| D7 — a profile edit changes every root (measured `-C panic=abort`) and was compared nowhere | yes | §3, §4: the build configuration — the toolchain's identity and the root manifest's tables that reach rustc — an item every pair shares |
+| D8 — `M3.6.2` omitted `naked_asm!`, said "reported", and a renamed `global_asm` evades a macro scan (measured) | yes | §3 and `M3.6.2`: the catalog's identifier rules, `asm`, `global_asm`, `naked_asm` anywhere and `link` in an attribute; refused |
+| D9 — generated sources handed to no leaf, though §14.4's case 3 names them | yes | `M3.6.6` filed |
+| D10 — off the baseline's host, the report and a Passed step unstated | yes | §2: every refusal but a stale form applied, every shared item reported unreviewed; `M3.6.5`: never Passed off that host |
+| D11 — the step's outcome decided here, and `Unavailable` not producible by the runner | yes | §0, §5, §7: the outcome is `M3.6.3`'s and `M3.6.5`'s; `M3.6.3`: `Action::NotBuilt` owned by `M3.6.5` |
+| D12 — `--diagnostic-width` differs with the terminal; `--check-cfg` kept | no | §3: the output-format flags and `--check-cfg` left out |
+| D13 — the summary listed two refusals of four | no | the opening lists all four and the grown closure |
+| D14 — the toolchain "accepted as infrastructure" | no | §3: the build configuration, a shared item like any other |
+| D15 — "repairs alone" for a fix that edits `trust/` | no | §6: repaired in the code or in `trust/`, which review accepts |
+| D16 — `M3.6`'s verification and `PROGRAM.md`'s fixture map stale | no | `.1` to `.6`; F30's map names the leaves that carry acceptance and its costs |
+| D17 — `M4.2` and `M3.5` tied to the named commit | no | unreviewed until accepted under `M3.6.5` |
+| D18 — an absolute dependency name inside the tree refused | no | §3: the written tree's prefix stripped, then resolved |
+| D19 — the ledger's scope claimed every file named | no | the ledger's Known limitations name `.incbin`; the refusal is lexical, so no premise is re-measured |
+| D20 — the gate reads its forms with the generator's reader | no | §7 states it |

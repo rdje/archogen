@@ -805,7 +805,7 @@ roadmap item X live?".
 | F27 boundary classification corpus | M0/M1 | [`M0`](M0.md) | `M0.3` |
 | F28 small description to executable | S0 | [`S0`](S0.md) | `S0.4` |
 | F29 repeated preemption cost ledger | M2 | [`M2`](M2.md) | `M2.5` |
-| F30 trust-dependency drift gate | M3/M4 | [`M3`](M3.md) | `M3.6` |
+| F30 trust-dependency drift gate | M3/M4 | [`M3`](M3.md) | `M3.6`; acceptance and its costs `M2.7.6.5`, `M3.6.5`, `M4.7`, `M4.8` |
 
 ## Current Frontier
 
