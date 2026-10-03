@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability relation's second review, answered
+
+`ARCHOGEN-M3-0398` (leaf `M3.1.1`, step 3).
+
+- A second reader, who had not seen the first round, found seven more defects. The sharpest: the record would have
+  refused an honest description of a counter that reloads at a million ticks, and the only description it accepted
+  then computed a seven-minute horizon for a counter that wraps ten times a second. Now an offered value always wins
+  over what a rule would derive, and a counter says whether it wraps. Two of the first round's answers had not
+  reached every place their rule is stated; they do now. Facts are judged per provider, so two timers with
+  different widths are two offers and not a contradiction. The whole first vocabulary — every fact the corpus
+  writes, with its kind of value, its role and which way "better" runs — is now in the record.
+
 ## archogen — the substitutability relation's first review, answered
 
 `ARCHOGEN-M3-0397` (leaf `M3.1.1`, step 2).
@@ -182,186 +194,4 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
   a slip the previous round's fix introduced, and a history line that left out the second amendment. Each is
   corrected in a sentence. The port must now also say how each guarded stack's overflow is noticed. A sixth review is
   next.
-
-## archogen — what the port must declare: the fourth review
-
-`ARCHOGEN-M2-0368` (leaf `M2.12.3`, step 5).
-
-- The fourth review reproduced every experiment exactly and found three defects, two introduced by the previous
-  round's own fixes: a definition that turned an "or" into an "and", and a quotation that narrowed a statement too far.
-  Both are corrected with single sentences, and two refusals are filed where the catalog's rule list shows them. A
-  fifth review is next.
-
-## archogen — what the port must declare: the third review
-
-`ARCHOGEN-M2-0367` (leaf `M2.12.3`, step 4).
-
-- The third review confirmed the design's core and found four defects, among them experiment sources the design said
-  were recorded when only their fingerprints were. The sources are now printed in full, and each fingerprint was
-  re-derived from the printed text. A fourth review is next.
-
-## archogen — what the port must declare: the second review
-
-`ARCHOGEN-M2-0366` (leaf `M2.12.3`, step 3).
-
-- The second review found the cross-record check sound, and six defects in the surrounding text, the sharpest a claim
-  that processor code here cannot trap on purpose, which a single load from an empty address disproves. The claim is
-  gone, a statement for such traps is added, and the rules on what the port must state are tightened. Every compiler
-  fact the design relies on is now re-measured from recorded sources. A third review is next.
-
-## archogen — what the port must declare: the first review
-
-`ARCHOGEN-M2-0364` (leaf `M2.12.3`, step 2).
-
-- The first review found the cross-record check broken in its own mechanism: two records naming the same convention
-  collided with the catalog's one-supplier rule, and a name alone bound no meaning. A convention is now a catalog
-  record of its own, which the port and every record that reports faults must depend on, so its meaning is hashed and
-  a change to it is noticed. Several gaps in coverage are closed, and the fault contract's wording on the panic handler
-  is made consistent throughout. A second review is next.
-
-## archogen — what the processor port must declare
-
-`ARCHOGEN-M2-0363` (leaf `M2.12.3`, step 1).
-
-- The fault-handling contract leaves about twenty questions to the processor port: how it catches misuse, what its
-  traps do, how a failed check reaches the fatal path, how long that path takes. The catalog design now says how the
-  port's record answers each, as a yes-or-no statement explained and pointed at the code, with one of them checked
-  automatically across records. Two facts about the compiler were measured first. A first independent review is
-  next.
-
-## archogen — the design for holding processor assembly is settled
-
-`ARCHOGEN-M2-0360` (leaf `M2.12.2`).
-
-- The seventh independent review of how the catalog may hold a processor port's assembly found nothing wrong, so the
-  design is settled. Over seven reviews, each compiling small experiments with the project's own compiler, the
-  problems found went 8, 2, 2, 1, 3, 1 and then 0, every answer narrowing what is admitted. The checker keeps refusing
-  all assembly until the design is built and tested; next is how the port states the facts the fault contract leaves
-  to it.
-
-## archogen — the assembly design's sixth review: a quotation restored
-
-`ARCHOGEN-M2-0359` (leaf `M2.12.2`, step 7).
-
-- The sixth review found no way past the design, but one quotation an earlier tidy-up had removed while still claiming
-  it was there, and one more thing for the human reviewer to check when hand-written code calls a function. Both are
-  fixed. Defects found per review: 8, 2, 2, 1, 3, 1. A seventh review is next.
-
-## archogen — the assembly design's fifth review: words that had drifted
-
-`ARCHOGEN-M2-0358` (leaf `M2.12.2`, step 6).
-
-- The fifth review found nothing the compiler does wrong with admitted code, but three places where the design's own
-  words had drifted out of true in earlier answers, and one way a generic function could reach code the port does not
-  hold. The words are restored and generic functions are refused that reach. A sixth review is next.
-
-## archogen — the assembly design's fourth review: two names, one register
-
-`ARCHOGEN-M2-0357` (leaf `M2.12.2`, step 5).
-
-- The fourth review found one more way the compiler and the design could disagree: two inline-assembly values the
-  design treats as separate can be given the same register by the compiler, so a value written early is what a later
-  line reads. That form of output is now refused. Defects found per review: 8, 2, 2, 1. A fifth review is next.
-
-## archogen — the assembly design's third review: what the compiler assumes
-
-`ARCHOGEN-M2-0356` (leaf `M2.12.2`, step 4).
-
-- The third review found that a short piece of inline assembly could change a register without saying so, and the
-  compiler, trusting the declaration, would then jump to whatever number was left there. Inline assembly is now
-  limited to the system-register work a port does inline, with every register it touches declared; full assembly
-  stays in separate hand-written functions whose register discipline the human reviewer checks. A fourth review is
-  next.
-
-## archogen — the assembly design's second review: two readings that differed
-
-`ARCHOGEN-M2-0355` (leaf `M2.12.2`, step 3).
-
-- The second review confirmed the reworked design with the compiler's own output, and found two places where the
-  design's wording could be read differently from how the compiler reads the code: unnamed placeholders, and labels
-  written with a leading zero, which the assembler treats as octal. Both are now refused outright. A third review is
-  next.
-
-## archogen — the assembly design's first review: names that become links
-
-`ARCHOGEN-M2-0354` (leaf `M2.12.2`, step 2).
-
-- An independent reviewer compiled small experiments and showed that the draft let some instructions name things,
-  such as a processor register, that the toolchain quietly turns into links to whatever code carries that name — the
-  very kind of hidden link the design exists to rule out. The design now checks every operand by its position in its
-  instruction, keeps a short list of instructions the port actually needs, and requires hand-written functions to
-  end cleanly. A second review is next.
-
-## archogen — the programmatic interface is complete
-
-`ARCHOGEN-API-0353` (leaf `API.7`).
-
-- The book's chapter on the programmatic interface now says, in one table, what each way in can do and what it gets
-  back: the command line, the Rust library, the web page and the AI-agent server. All four check descriptions and
-  always return the verdict a person would see; none can generate a system. With it, the programmatic-interface
-  work is closed. One question remains with the director: whether a request archogen did not judge must still carry
-  a formal verdict.
-
-## archogen — a design for holding processor-specific code in the catalog
-
-`ARCHOGEN-M2-0352` (leaf `M2.12.2`, step 1).
-
-- The catalog's design now says how a record may hold the small amount of assembly a processor port needs: only in
-  packages the record names, written so that every link to other code is visible to the checks, with a closed list
-  of instructions and no assembler directives. It is a draft; independent reviews come next, and the checker keeps
-  refusing all assembly until the design is settled and built.
-
-## archogen — what the processor-specific code needs, measured
-
-`ARCHOGEN-M2-0351` (leaf `M2.12.1`).
-
-- Before designing how the catalog will hold the small amount of assembly code a processor needs, its needs were
-  measured with the project's own compiler: what that code must do, what the compiler does with it, and what the
-  language reference promises. The results, with the experiment that produced them, are in a new part of the
-  catalog's design record; the design itself is next.
-
-## archogen — the timing analysis's interrupt rule is settled
-
-`ARCHOGEN-M2-0350` (leaf `M2.11`).
-
-- The fifth independent review of the new interrupt rule found nothing wrong, so the work closes. Over five reviews
-  the problems found went 5, 1, 3, 3 and then 0. The analysis now refuses a platform unless every interrupt it takes
-  runs exactly one handler, paid for by a timer release or by an event, and it charges the pause before each handler.
-  Its model is `fixed-priority-with-overheads/2`. Next is the format that lets the processor-specific assembly code be
-  catalogued and reviewed.
-
-## archogen — the timing analysis charges the pause between interrupts
-
-`ARCHOGEN-M2-0349` (leaf `M2.11`, step 5).
-
-- The fourth review found a cost the analysis had never charged: when one interrupt handler finishes with another
-  interrupt waiting, the processor pauses for its delivery delay before the next, and a task set could miss a
-  deadline the analysis said it met (237 against 224). Every handler is now charged that pause. No earlier result
-  moves, since every checked example had a delay of zero. A fifth review is next.
-
-## archogen — the timing analysis's rule: a third review catches a lost word
-
-`ARCHOGEN-M2-0348` (leaf `M2.11`, step 4).
-
-- The third review found that the last rewrite had dropped "of a declared source", which let a forgotten interrupt
-  source reopen the missed deadline the first review found. It is restored, and two arguments that reached the right
-  total by charging the wrong thing are corrected. A fourth review is next; the rule closes when one finds nothing.
-
-## archogen — the timing analysis's rule, settled by a second review
-
-`ARCHOGEN-M2-0347` (leaf `M2.11`, step 3).
-
-- A second independent review found the corrected rule sound and no task set that breaks the bound, but one wrong
-  argument and several unclear words. The rule is now simpler: every interrupt the system takes runs exactly one
-  handler, paid for by a timer release or by an event. The words it relies on are defined. A third review is next.
-
-## archogen — the timing analysis's new rule, corrected by its review
-
-`ARCHOGEN-M2-0344` (leaf `M2.11`, step 2).
-
-- An independent reviewer found the new rule still let through a case: an interrupt taken before the event it ends up
-  serving, which a task set could turn into a missed deadline the analysis said would hold (33 against 27). The rule
-  now looks at the moment the interrupt is taken, a stale timer interrupt is excluded too, and the analysis's model
-  is renamed `fixed-priority-with-overheads/2` so no earlier result is mistaken for a current one. A second review
-  checks these answers next.
 

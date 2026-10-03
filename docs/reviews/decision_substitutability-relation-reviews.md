@@ -50,3 +50,25 @@ refinement corpus from the rule.
 | A13 — the absence is `timer.delay`'s, not `soc.delay-only`'s | no | §6 corrected |
 | A14 — the horizon rule assumes a modular counter | no | §4 says so, and that a saturating counter derives no horizon |
 | A15 — `deffact`'s `doc` holds a string and `domain` nests; fact names against reference §7 rule 6 | no | §1.1: the clauses' `holds`, and fact names live in the vocabulary, loaded by the registry and never checked as a description, so a block named like a fact collides with nothing |
+
+**Round 2**, `2026-10-03`, a new context that had not read round 1: it read all 124 tracked descriptions, `rational.rs`
+and `kind.rs`'s `check_values` beside the inputs above, recomputed the horizons and the `i128` limit, and found every
+§5.2 direction right, `exactly` a subset of every direction (conditions, sets, intervals and group heads included),
+the `statement` role unable to pass anything, and the closure rule sound against §5.3 and `presence.rs`. There were
+10 findings, 7 of them defects, and the verdict was "not acceptable as it stands". Two defects (B2, B4) were round-1
+answers that had not reached every restatement of their rule — the habit the knowledge card on review answers names
+fourth — and one (B1) was an acceptance the record would have made: a reload counter forced to omit its modulus,
+whose width then derived a horizon it has not.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| B1 — the agreement rule refuses a 32-bit register reloaded at `1000000` as `invalid-description`, and dropping the modulus derives `2^32` and a `429 s` horizon for a counter that wraps in `0.1 s`; a saturating counter that offers its width derives both | yes | §4: an offered value is the value and wins; a rule is a default for what the offer leaves unsaid; only a modulus above `2^width` is `invalid-description`; `wrap-behavior` (`modular`, `saturating`) enters both rules, and a saturating counter derives nothing from its width; the reload counter worked, `0.1 s`, failing the requirement |
+| B2 — §10 and rule 4 still say "the mediation boolean" and "`at-most` or `exact`" after A3 made mediation a statement | yes | §3 rule 4 and §10: `/1`'s one condition is `reachable-at-privilege`, direction `at-most` |
+| B3 — `derived-from` declared `(holds values symbol)`, one value wide, refuses the record's own example on load (`schema-arity`); "symbols and nothing else" false of `doc` and `domain` | yes | §1.1: `derived-from` `(holds forms)`; the intro says names, lists of names and one line of text |
+| B4 — `exactly` granted in §1.1, refused by §3 rule 2 and §8; an offer's bound `(exactly 10 MHz)`, which `refinement.rs` reads, refused by §1.1 | yes | §1.1 grants it to a requirement and to a bound an offer writes; rule 2 and §8 say "in `f`'s direction or as `exactly`" |
+| B5 — two providers' differing offers called a contradiction while differing records are listed; `app.two-timers`'s intent refused | yes | §5: an offer is one provider's statement, judged per provider, each satisfying provider listed, each value named where none satisfies; one provider offering one fact twice is the contradiction; §4: derivation per provider |
+| B6 — `(absolute-deadline true)` flat, as `alternative-timer` writes it, outside the group domain | yes | §2: a group's head may be required alone, and its sub-facts constrained flat beside it |
+| B7 — a written count is the language's `i64`, not `i128` | yes | §2: a written number is the language's 64-bit integer, refused above it as read; `i128` is the arithmetic's |
+| B8 — 26 of 37 census facts have no stated direction; `core-count` an `at-least` trap | no | §1.1: the entries of `/1`, every census fact with domain, role, direction and reason; `core-count` `exact`; `M3.1.2` adds none without a row |
+| B9 — presence's declared-name exemption passes what rule 1 calls `missing-fact` | no | §9: the relation judges by a provider's offer; the library's verdict is the stricter, which the report carries decided at `M3.4` |
+| B10 — slips: "(rule 4)", "the word is not used", "every example", the enumeration row's `at-most`, the payload's profile, an offer of a statement | no | each fixed in place; an offer of a statement fact is `invalid-description` (§3 rule 6, §8) |
