@@ -23,6 +23,10 @@ pub const MODEL: &str =
 /// named resource limit, `analysis-inconclusive`.
 pub const ITERATION_BUDGET: usize = 1_000_000;
 
+/// How [`admit`] words a missing input (condition 9), after the input's name. The composition
+/// (`crate::compose`) recognises it, to report an input it left without a value by the stop that did so.
+pub(crate) const NOT_DECLARED: &str = " is not declared (condition 9: no input defaults)";
+
 /// The conditions every conclusion of this variant carries (record §4, in the order given there), each of every run
 /// the declared inputs allow.
 pub const CONDITIONS: &[&str] = &[
@@ -319,6 +323,12 @@ impl RuntimeSet {
     pub fn assumptions(&self) -> &[String] {
         &self.assumptions
     }
+
+    /// Add what the record names beside the inputs: a composition's statements of each composed input, with its
+    /// parts, their owners and their categories, and its assumptions (`crate::compose`, the composite record's §6).
+    pub(crate) fn carry(&mut self, more: impl IntoIterator<Item = String>) {
+        self.assumptions.extend(more);
+    }
 }
 
 /// Collects what admission finds, each in the verdict it belongs to.
@@ -333,9 +343,7 @@ impl Findings {
     /// A numerical input: present, recorded as an assumption unless analytical, or missing.
     fn value(&mut self, value: Option<Value>, what: &str) -> Option<u64> {
         let Some(value) = value else {
-            self.unresolved.push(format!(
-                "{what} is not declared (condition 9: no input defaults)"
-            ));
+            self.unresolved.push(format!("{what}{NOT_DECLARED}"));
             return None;
         };
         if value.evidence != Evidence::Analytical {
@@ -810,7 +818,7 @@ pub enum Outcome {
 }
 
 /// `⌈ numerator / denominator ⌉`, for a positive denominator.
-const fn ceil_div(numerator: u128, denominator: u128) -> u128 {
+pub(crate) const fn ceil_div(numerator: u128, denominator: u128) -> u128 {
     numerator / denominator
         + if numerator.is_multiple_of(denominator) {
             0
@@ -819,7 +827,7 @@ const fn ceil_div(numerator: u128, denominator: u128) -> u128 {
         }
 }
 
-const fn gcd(mut a: u128, mut b: u128) -> u128 {
+pub(crate) const fn gcd(mut a: u128, mut b: u128) -> u128 {
     while b != 0 {
         let r = a % b;
         a = b;

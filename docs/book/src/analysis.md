@@ -260,6 +260,19 @@ refused answer, because its conclusion names another model and always carries "n
 conditions, with every input not analytically established named as an assumption. When its bound exceeds a
 deadline it may claim only `not-established`.
 
+**Four of its inputs are put together by the engine, not handed to it** (leaf `M2.10.2`,
+`crates/rt-analysis/src/compose.rs`). A task's cost, its longest masked stretch, and the delays before the timer's
+service and before a source's each include what no single party knows: kernel code run on the job's behalf, the
+application's own code, and the services the plan's interrupt order queues ahead. Each such composite input is added
+up as `docs/specs/catalog/decision_runtime-composite-inputs.md` says — a sum where the definition adds, the longest
+where it takes a maximum, a least fixed point for a queue — under the facts that record states, and the conclusion
+names it with every part, its owner and its evidence category, the whole being as weak as its weakest part. Where the
+composition cannot finish — a part or fact that cannot be read, a fact declared `no`, a queue that never settles, an
+overflow, a step budget — the set gets the verdict the record gives that stop, and no task of it is reported as
+holding. Hand-derived fixtures check every rule, and sixteen deliberate breakages, one rule removed each, are all
+caught. The caller supplies the application's own figures and never a kernel or platform one.
+
 ⚠️ **It still cannot be cited for a real system.** Its inputs, the costs and the platform facts, come from the
-catalog, whose design is decided (see [the catalog chapter](catalog.md)) and whose code and records do not exist yet
-(`M2.7.3` to `M2.7.6`). F17's runtime half, a running system refusing what it cannot bound, is `M4`'s.
+catalog, whose design is decided (see [the catalog chapter](catalog.md)) and whose records do not exist yet
+(`M2.7.4.5`; the path that reads them, `M2.7.5`). F17's runtime half, a running system refusing what it cannot bound,
+is `M4`'s.

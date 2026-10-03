@@ -168,7 +168,8 @@ The composition of four of the analysis's inputs from catalog, application and p
 rule. Its rounds found defects in which platform facts the composition needs and how they are worded, several of
 them live on the emulator, whose interrupt order [QEMU](ledger.md#qemu)'s source showed differs from the
 specification's. Round 11 found none live, and the record was accepted. Its history is kept in
-`docs/reviews/decision_runtime-composite-inputs-reviews.md`.
+`docs/reviews/decision_runtime-composite-inputs-reviews.md`; the engine implements it (`M2.10.2`, [the analysis
+chapter](analysis.md)).
 
 ## Today and ahead
 

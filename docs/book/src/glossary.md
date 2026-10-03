@@ -126,6 +126,9 @@ as `F26`, task-tree leaves — are names, not words, and are not listed.
   content. See [Where the engine's knowledge comes from: the catalog](catalog.md).
 - **check-passing convention** — the one rule, shared by the port and every record whose code makes a check, by
   which a failed check reports what it found. See [Where the engine's knowledge comes from: the catalog](catalog.md).
+- **composite input** — one of the scheduling analysis's four inputs that no single party knows whole — a task's
+  cost, its longest masked stretch, and the two delays before a service starts — which the engine puts together from
+  catalog, application and plan parts. See [What the scheduling checker establishes](analysis.md).
 - **deadline** — how long after its release a task's work must be finished. See [Describing a workload](workload.md).
 - **description** — a text in eADL saying what a system must do, never how. See [Reading a description](reading.md).
 - **fault** — something gone wrong that the runtime must answer: an overrun, a stack overflow, an unexpected trap or

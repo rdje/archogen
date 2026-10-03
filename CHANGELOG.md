@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the engine composes the analysis's four composite inputs
+
+`ARCHOGEN-M2-0394` (leaf `M2.10.2`; `M2.10` closed).
+
+- The runtime analysis no longer takes a task's cost, its longest masked stretch, or the delays before the timer's
+  and a source's service as figures the caller hands over whole. The engine puts each together from its parts — the
+  catalog's costs for kernel code, the application's own figures, the plan's interrupt order — as the composition
+  record says and under the facts it states, and the conclusion names every part with its owner and evidence
+  category. Every way the composition can stop has the verdict the record gives it, and a set that stopped anywhere
+  reports no task as holding. Twenty-one hand-derived tests; sixteen deliberate breakages, one rule each, all caught.
+
 ## archogen — the catalog's gate runs from the hooks
 
 `ARCHOGEN-M2-0393` (leaf `M2.7.4.4`).

@@ -16,12 +16,19 @@
 //!    non-empty assumption list. The sentence "the deadlines are met", detached from the eight
 //!    conditions that make it true, does not exist in this API.
 //!
-//! ⚠️ What is still owed, and is **not** here: §7.4 requires a runtime-applicable variant that
-//! accounts for bounded critical sections, release jitter, timer and other interrupt
-//! interference, and context-switch costs, before any `rt-static-up-v1` timing result may be
-//! accepted. That is leaf `M2.6`, and F29 (§13.4) is its control. Nothing in this crate may be
-//! cited for a runtime claim until it lands.
+//! The runtime-applicable variant §7.4 requires, `fixed-priority-with-overheads/2`, is [`runtime`]
+//! (leaf `M2.6`, F29 of §13.4 its control): bounded critical sections, release jitter, timer and
+//! other interrupt interference, and context-switch costs, every input and fact declared or the set
+//! refused. Four of its inputs are composite — `C_i`, `CS_i`, `J_i^release` and `J_s` — and [`compose`]
+//! puts each together from catalog, application and plan parts, as
+//! `docs/specs/catalog/decision_runtime-composite-inputs.md` says, so that the caller supplies only
+//! the application's own figures and the conclusion names every part with its owner and category.
+//!
+//! ⚠️ Nothing here may yet be cited for a running system: the variant's inputs come from the
+//! catalog, whose records do not exist yet (`M2.7.4.5`, `M2.7.5`), and every application part is a
+//! separately supplied input that `M4` gives its evidence rules.
 
+pub mod compose;
 pub mod cost;
 pub mod model;
 pub mod response;

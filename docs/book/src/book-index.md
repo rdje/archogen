@@ -71,6 +71,7 @@ a change that leaves it stale, so it is never edited by hand.
   the toolchain](verification.md), [What is versioned, and what changing it costs](versions.md)
 - **CLINT** — [definition](glossary.md), [Where generated systems run](targets.md)
 - Comments survive — [Reading a description](reading.md#comments-survive)
+- **composite input** — [definition](glossary.md), [What the scheduling checker establishes](analysis.md)
 - Content hashes — [What a report may claim](evidence.md#content-hashes)
 - Contradictions are rejected, never resolved — [Presence, absence, and
   relevance](presence.md#contradictions-are-rejected-never-resolved)

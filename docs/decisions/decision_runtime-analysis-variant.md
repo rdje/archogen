@@ -65,8 +65,10 @@ analytically established bound.
 ⛔ *Ownership amended `2026-09-30` by leaf `M2.7.1`.* Where this record calls an input "engine knowledge", "the
 engine's" or "the platform's" (`J^release` above, condition 7 in §4, and "Why"), the input's **owner** is the one
 `decision_catalog-records.md` §12 assigns. `C_i`, `CS_i`, `J^release` and `J_s` are composite. How they are composed
-from parts is decided in `decision_runtime-composite-inputs.md` (`M2.10.1`), and the caller supplies them whole until
-`M2.10.2` implements it. So does `C_s` without its `no-application-code` fact. The enabled set and interrupt
+from parts is decided in `decision_runtime-composite-inputs.md` (`M2.10.1`), and the engine composes them
+(`crates/rt-analysis/src/compose.rs`, `M2.10.2`, `2026-10-03`): the caller supplies the application's parts, never a
+kernel or platform figure. `C_s` stays the caller's for a service whose record states `no-application-code` `no`
+(that record's §6). The enabled set and interrupt
 priorities are the plan's. Condition 8 is each catalog cost's `holds-under-preemption`, plus the application's
 declaration for its own figures. The platform fact that sections mask every interrupt is the conjunction of the catalog's
 fact for the kernel's sections and a fourth task fact, that no task masks other than through the runtime API
@@ -346,8 +348,9 @@ fixture's exact timeline, where H responds in 5 and L in 23.
   condition 5 is only as good as that declaration. That limit is stated, not hidden.
 - `C_i`, `CS_i`, `J^release` and `J_s` are **composite**. Each includes what no single owner knows: kernel code
   run for a job, contiguous masked runs, the application's masked activity in progress, and the services the
-  plan's enabled set queues ahead. Until `M2.10` decides and reviews their composition, the caller supplies each
-  whole, as §1 defines it, and the conclusion names it as an assumption with its evidence category.
+  plan's enabled set queues ahead. `M2.10` decided and reviewed their composition, and `M2.10.2` implements it
+  (`2026-10-03`): the engine composes each, as §1 defines it, and the conclusion names it with its parts, their
+  owners and their evidence categories.
   ⛔ *Amended `2026-09-30` by leaf `M2.7.1`.* This bullet first gave the catalog `CS`, `J^release` and the enabled
   set. The catalog cannot know them, and a catalog figure for any of them would under-charge. The model, then `/1`, was
   unchanged: these are statements of who supplies an input, not of what the input means.

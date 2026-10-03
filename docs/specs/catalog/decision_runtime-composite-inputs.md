@@ -475,8 +475,11 @@ This record names what §12 gains; the catalog record's own review checks the wo
 
 ## How to apply
 
-- **The caller**, until `M2.10.2` implements this, still supplies the four inputs whole, as the variant's ownership
-  note says. After it, the caller supplies only the application's parts, and the engine composes them.
+- **The caller** supplies only the application's parts — each task's own code, its call counts, its masked runs with
+  their endings, and its facts — and the engine composes them: `crates/rt-analysis/src/compose.rs` (`M2.10.2`,
+  `2026-10-03`), whose `compose` builds the variant's tasks and sources, and whose `Composition::admit` gives a set
+  that stopped anywhere the verdict §6 names and carries each composite's statement into the conclusion. The catalog
+  path (`M2.7.5`) maps the records' `(facet, name)` lookups onto its inputs.
 - **A new primitive** in the runtime API needs its `api.<p>` and `masked.<p>` costs in the catalog before any task
   that calls it can be composed. It must also be classified:
   - whether it can return with interrupts masked, which would open a run;
