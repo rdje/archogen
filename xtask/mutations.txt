@@ -712,3 +712,71 @@ from
 to
             if false {
 end
+
+mutation refinement-bare-guarantee-kept-by-false
+file crates/eadl-model/src/refinement.rs
+test -p eadl-model --test f07_refinement
+expect killed
+why M1.40: a concrete `(f false)` kept an abstract bare guarantee `f` (the substitutability record's R12 L17). `false` says the fact does not hold.
+from
+                if refined.iter().all(|r| r.reading.is_false()) {
+to
+                if false {
+end
+
+mutation refinement-last-offer-wins
+file crates/eadl-model/src/refinement.rs
+test -p eadl-model --test f07_refinement
+expect killed
+why M1.40: the facets held one offer per fact, so of two abstract bounds the last was checked, silently (R12 L17).
+from
+                                    .entry(offer.name.clone())
+                                    .or_default()
+                                    .push(offer);
+to
+                                    .insert(offer.name.clone(), vec![offer]);
+end
+
+mutation refinement-abstract-quantity-ignored
+file crates/eadl-model/src/refinement.rs
+test -p eadl-model --test f07_refinement
+expect killed
+why M1.40: a quantity an abstract platform offers was read as presence alone, so `(counter-width 32 bit)` was kept by `16 bit` (R13 M1).
+from
+                if kept {
+to
+                if kept || true {
+end
+
+mutation refinement-abstract-value-ignored
+file crates/eadl-model/src/refinement.rs
+test -p eadl-model --test f07_refinement
+expect killed
+why M1.40: a value an abstract platform offers was read as presence alone, so `(tick-unit ns)` was kept by `us` (R13 M1).
+from
+                if refined.iter().any(|r| r.reading.writes(forms)) {
+to
+                if refined.iter().any(|r| r.reading.writes(forms)) || true {
+end
+
+mutation refinement-bare-not-true
+file crates/eadl-model/src/refinement.rs
+test -p eadl-model --test f07_refinement
+expect killed
+why M1.40: a bare boolean is `true`, so a bare concrete offer keeps an abstract `(f true)`. Without it the value rule refuses a refinement the relation's §2 accepts.
+from
+                Self::Bare => matches!(written, [only] if only.as_symbol() == Some("true")),
+to
+                Self::Bare => false,
+end
+
+mutation refinement-one-concrete-value-checked
+file crates/eadl-model/src/refinement.rs
+test -p eadl-model --test f07_refinement
+expect killed
+why M1.40: a bound is on the fact, so every quantity the concrete platform gives it is checked, not the first.
+from
+        for (value, span) in values {
+to
+        for (value, span) in values.into_iter().take(1) {
+end

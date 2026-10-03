@@ -460,6 +460,8 @@ a change that leaves it stale, so it is never edited by hand.
 - What it is built from — [The archogen command line](cli.md#what-it-is-built-from)
 - What it may be used for, and what it may not — [What the scheduling checker
   establishes](analysis.md#what-it-may-be-used-for-and-what-it-may-not)
+- What keeps a value, and what keeps a guarantee —
+  [Refinement](refinement.md#what-keeps-a-value-and-what-keeps-a-guarantee)
 - What one request may cost — [The engine API](engine-api.md#what-one-request-may-cost)
 - What S0 owes the supported path — [The S0 early generation path](s0.md#what-s0-owes-the-supported-path)
 - What that looks like today — [Verifying the toolchain](verification.md#what-that-looks-like-today)

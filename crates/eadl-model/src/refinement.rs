@@ -23,12 +23,36 @@
 //!
 //! | Obligation | Violated when |
 //! |---|---|
-//! | **guarantee** | the abstract offers a fact and the concrete does not |
-//! | **constraint** | the concrete's value does not satisfy the abstract's stated bound |
+//! | **guarantee** | the abstract offers a fact and the concrete does not, or offers it only as `false` |
+//! | **constraint** | a value the concrete gives does not satisfy a bound the abstract states, or the concrete does not offer a value the abstract offers |
 //! | **exclusion** | the abstract declares a fact absent and the concrete offers it |
 //!
 //! Anything the concrete adds that the abstract never mentions is an **addition**: reported,
 //! never refused. That is the unused device.
+//!
+//! # What the abstract description writes, and what keeps it (leaf `M1.40`)
+//!
+//! ⛔ **Every offer is kept, not the last of each name, and every one is an obligation.** Until `M1.40` the
+//! facets held one offer per fact, so an abstract platform writing `(f (at-least 1 s))` and `(f (at-most 5 s))`
+//! was checked against the second alone, silently; and a value the abstract platform offered — `(tick-unit ns)`,
+//! `(counter-width 32 bit)` — was read as nothing but the fact's presence, so `us` and `16 bit` kept them. A
+//! system written against the abstract platform was then judged on values its refinement did not have. Both were
+//! measured beside the substitutability relation (`docs/decisions/decision_substitutability-relation.md` §10,
+//! reviews R12 and R13).
+//!
+//! | The abstract writes | It is kept when the concrete |
+//! |---|---|
+//! | `f` | offers `f` other than as `(f false)`: a bare boolean is `true`, and `false` says the fact does not hold |
+//! | `(f (at-least v))`, `at-most`, `exactly` | gives `f` a quantity, and every quantity it gives `f` satisfies the bound |
+//! | `(f 32 bit)` | offers `f` with the same amount, whatever the unit: `10000 kHz` keeps `10 MHz` |
+//! | `(f ns)`, `(f true)`, `(f 4294967296)`, `(f device.timer (base …))` | offers `f` with the same value as written, a bare `f` reading as `true` |
+//!
+//! ⚠️ **"As written" is the conservative side, and it is a stated limit.** This check reads no vocabulary, so
+//! `(pow2 32)` does not keep `4294967296`, a set's members in another order do not keep it, and a set with one
+//! more member does not keep it either: each is refused, never wrongly accepted. A fact offered more than once,
+//! as a `region` is per named region, is kept one offer at a time. One declaration writing two values of a fact
+//! whose domain allows one is the substitutability relation's `invalid-description` (its §5), decided by the
+//! vocabulary, not here.
 //!
 //! # Why a bound needs a direction
 //!
@@ -72,11 +96,50 @@ impl Obligation {
         match self {
             Self::Guarantee => "a refinement keeps every guarantee the abstract description offers",
             Self::Constraint => {
-                "a refinement's values satisfy every bound the abstract description states"
+                "a refinement's values satisfy every bound the abstract description states, and keep \
+                 every value it offers"
             }
             Self::Exclusion => {
                 "a refinement does not offer what the abstract description declares absent"
             }
+        }
+    }
+}
+
+/// How one offer writes its fact.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum Reading {
+    /// `f`, or `(f)`: the fact, with no value.
+    Bare,
+    /// `(f (at-least 32 bit))`: a bound in a direction, which an abstract description states.
+    Bound(ComparisonDirection, Quantity),
+    /// `(f 32 bit)`: a quantity.
+    Quantity(Quantity),
+    /// Any other value — `(f ns)`, `(f true)`, `(f 4294967296)`, `(f device.timer (base …))` — held as written,
+    /// and compared with [`Form::structurally_eq`], which reads no span.
+    Written(Vec<Form>),
+}
+
+impl Reading {
+    /// Whether this is `(f false)`: the fact stated not to hold.
+    fn is_false(&self) -> bool {
+        match self {
+            Self::Written(forms) => {
+                matches!(forms.as_slice(), [only] if only.as_symbol() == Some("false"))
+            }
+            Self::Bare | Self::Bound(..) | Self::Quantity(_) => false,
+        }
+    }
+
+    /// Whether this offer writes `written`, a bare offer reading as `true`.
+    fn writes(&self, written: &[Form]) -> bool {
+        match self {
+            Self::Written(forms) => {
+                forms.len() == written.len()
+                    && forms.iter().zip(written).all(|(a, b)| a.structurally_eq(b))
+            }
+            Self::Bare => matches!(written, [only] if only.as_symbol() == Some("true")),
+            Self::Bound(..) | Self::Quantity(_) => false,
         }
     }
 }
@@ -86,10 +149,8 @@ impl Obligation {
 struct Offer {
     /// Its name.
     name: String,
-    /// The bound, when the abstract description states one.
-    bound: Option<(ComparisonDirection, Quantity)>,
-    /// The value, when the concrete description gives one.
-    value: Option<Quantity>,
+    /// What it writes of the fact.
+    reading: Reading,
     /// Where it is written.
     span: Span,
 }
@@ -99,7 +160,8 @@ struct Offer {
 pub struct Facets {
     /// The declaration's name, for messages.
     pub name: String,
-    offers: BTreeMap<String, Offer>,
+    /// Every offer, in source order, by fact: a fact offered twice is two obligations, never the last one.
+    offers: BTreeMap<String, Vec<Offer>>,
     absent: BTreeMap<String, Span>,
     /// The name this description claims to refine, if any.
     pub refines: Option<(String, Span)>,
@@ -172,7 +234,11 @@ impl Facets {
                             found.extend(diagnostics);
                         }
                         if let Some(offer) = offer {
-                            facets.offers.insert(offer.name.clone(), offer);
+                            facets
+                                .offers
+                                .entry(offer.name.clone())
+                                .or_default()
+                                .push(offer);
                         }
                     }
                 }
@@ -217,8 +283,7 @@ fn read_offer(item: &Form) -> (Option<Offer>, Vec<Diagnostic>) {
         Form::Symbol { name, span } => (
             Some(Offer {
                 name: name.clone(),
-                bound: None,
-                value: None,
+                reading: Reading::Bare,
                 span: *span,
             }),
             Vec::new(),
@@ -240,8 +305,7 @@ fn read_offer(item: &Form) -> (Option<Offer>, Vec<Diagnostic>) {
                         Ok(quantity) => (
                             Some(Offer {
                                 name,
-                                bound: Some((direction, quantity)),
-                                value: None,
+                                reading: Reading::Bound(direction, quantity),
                                 span: *span,
                             }),
                             Vec::new(),
@@ -261,11 +325,16 @@ fn read_offer(item: &Form) -> (Option<Offer>, Vec<Diagnostic>) {
                 )
             );
             if !shaped_like_a_quantity {
+                // `(f)` is the fact with no value; anything else is a value held as written (`M1.40`).
+                let reading = if rest.is_empty() {
+                    Reading::Bare
+                } else {
+                    Reading::Written(rest.to_vec())
+                };
                 return (
                     Some(Offer {
                         name,
-                        bound: None,
-                        value: None,
+                        reading,
                         span: *span,
                     }),
                     Vec::new(),
@@ -275,8 +344,7 @@ fn read_offer(item: &Form) -> (Option<Offer>, Vec<Diagnostic>) {
                 Ok(value) => (
                     Some(Offer {
                         name,
-                        bound: None,
-                        value: Some(value),
+                        reading: Reading::Quantity(value),
                         span: *span,
                     }),
                     Vec::new(),
@@ -341,9 +409,10 @@ pub fn check(abstract_: &Facets, concrete: &Facets) -> RefinementReport {
     }
     let mut violations = Vec::new();
 
-    // ── Obligation 1: guarantees are kept ────────────────────────────────────────────────────
-    for (name, offer) in &abstract_.offers {
+    // ── Obligations 1 and 2: every offer of the abstract description is kept ──────────────────
+    for (name, written) in &abstract_.offers {
         let Some(refined) = concrete.offers.get(name) else {
+            let offer = &written[0];
             violations.push((
                 Obligation::Guarantee,
                 Diagnostic::error(
@@ -369,70 +438,8 @@ pub fn check(abstract_: &Facets, concrete: &Facets) -> RefinementReport {
             ));
             continue;
         };
-
-        // ── Obligation 2: stated bounds are satisfied ────────────────────────────────────────
-        if let Some((direction, required)) = &offer.bound {
-            let Some(value) = refined.value else {
-                violations.push((
-                    Obligation::Constraint,
-                    Diagnostic::error(
-                        "refinement-violated",
-                        format!(
-                            "`{name}` is bounded by `{}` but `{}` gives it no value",
-                            abstract_.name, concrete.name
-                        ),
-                        Label::new(refined.span, "no value to check the bound against"),
-                        format!(
-                            "give `{name}` a concrete value, e.g. `({name} {required})` — \
-                             violated obligation `{}`: {}",
-                            Obligation::Constraint.slug(),
-                            Obligation::Constraint.statement()
-                        ),
-                    )
-                    .with_secondary(Label::new(offer.span, "bound stated here")),
-                ));
-                continue;
-            };
-
-            match direction.satisfied_by(value, *required) {
-                Ok(true) => {}
-                Ok(false) => violations.push((
-                    Obligation::Constraint,
-                    Diagnostic::error(
-                        "refinement-violated",
-                        format!(
-                            "`{name}` is {value}, which does not satisfy `{} {required}`",
-                            direction.slug()
-                        ),
-                        Label::new(refined.span, "this value violates the bound"),
-                        format!(
-                            "violated obligation `{}`: {} — the direction is `{}`, so a value \
-                             that is merely different is not a substitute",
-                            Obligation::Constraint.slug(),
-                            Obligation::Constraint.statement(),
-                            direction.slug()
-                        ),
-                    )
-                    .with_secondary(Label::new(offer.span, "bound stated here")),
-                )),
-                Err(error) => violations.push((
-                    Obligation::Constraint,
-                    Diagnostic::error(
-                        "refinement-violated",
-                        format!("`{name}` cannot be checked against its bound: {error}"),
-                        Label::new(refined.span, "incompatible with the stated bound"),
-                        match error {
-                            QuantityError::IncompatibleDimensions { .. } => format!(
-                                "the refinement measures something else entirely — violated \
-                                 obligation `{}`",
-                                Obligation::Constraint.slug()
-                            ),
-                            other => other.to_string(),
-                        },
-                    )
-                    .with_secondary(Label::new(offer.span, "bound stated here")),
-                )),
-            }
+        for offer in written {
+            violations.extend(keep(abstract_, concrete, name, offer, refined));
         }
     }
 
@@ -442,7 +449,8 @@ pub fn check(abstract_: &Facets, concrete: &Facets) -> RefinementReport {
     // description declares a fact absent *because something depends on its absence*; a
     // refinement that quietly adds it has changed what the abstract description meant.
     for (name, absent_span) in &abstract_.absent {
-        if let Some(offer) = concrete.offers.get(name) {
+        // Every offer of an absent fact breaks the exclusion; the first is where the author looks.
+        if let Some(offer) = concrete.offers.get(name).and_then(|offers| offers.first()) {
             violations.push((
                 Obligation::Exclusion,
                 Diagnostic::error(
@@ -478,6 +486,189 @@ pub fn check(abstract_: &Facets, concrete: &Facets) -> RefinementReport {
         additions,
         violations,
     }
+}
+
+/// What one offer of the abstract description costs the concrete one, which offers the same fact as `refined`.
+fn keep(
+    abstract_: &Facets,
+    concrete: &Facets,
+    name: &str,
+    offer: &Offer,
+    refined: &[Offer],
+) -> Vec<(Obligation, Diagnostic)> {
+    let first = refined.first().map_or(offer.span, |r| r.span);
+    match &offer.reading {
+        // A bare guarantee is kept by any offer of the fact but `(f false)`.
+        Reading::Bare => {
+            if refined.iter().all(|r| r.reading.is_false()) {
+                vec![(
+                    Obligation::Guarantee,
+                    Diagnostic::error(
+                        "refinement-violated",
+                        format!(
+                            "`{}` offers `{name}` only as `false`, which `{}` guarantees",
+                            concrete.name, abstract_.name
+                        ),
+                        Label::new(first, "`false` is not the guarantee"),
+                        format!(
+                            "violated obligation `{}`: {} — `false` says the fact does not hold, so it \
+                             keeps no guarantee of it",
+                            Obligation::Guarantee.slug(),
+                            Obligation::Guarantee.statement()
+                        ),
+                    )
+                    .with_secondary(Label::new(offer.span, "guaranteed here")),
+                )]
+            } else {
+                Vec::new()
+            }
+        }
+        Reading::Bound(direction, required) => bound(
+            name, offer, *direction, *required, abstract_, concrete, refined,
+        ),
+        Reading::Quantity(value) => {
+            let kept = refined.iter().any(|r| {
+                matches!(&r.reading, Reading::Quantity(given) if given.equals(*value) == Ok(true))
+            });
+            if kept {
+                Vec::new()
+            } else {
+                vec![not_kept(
+                    abstract_,
+                    concrete,
+                    name,
+                    offer,
+                    first,
+                    &value.to_string(),
+                )]
+            }
+        }
+        Reading::Written(forms) => {
+            if refined.iter().any(|r| r.reading.writes(forms)) {
+                Vec::new()
+            } else {
+                let text = forms
+                    .iter()
+                    .map(Form::to_canonical)
+                    .collect::<Vec<_>>()
+                    .join(" ");
+                vec![not_kept(abstract_, concrete, name, offer, first, &text)]
+            }
+        }
+    }
+}
+
+/// A value the abstract description offers, which the concrete one does not.
+fn not_kept(
+    abstract_: &Facets,
+    concrete: &Facets,
+    name: &str,
+    offer: &Offer,
+    first: Span,
+    value: &str,
+) -> (Obligation, Diagnostic) {
+    (
+        Obligation::Constraint,
+        Diagnostic::error(
+            "refinement-violated",
+            format!(
+                "`{}` offers `{name}` as `{value}`, and `{}` does not offer that value",
+                abstract_.name, concrete.name
+            ),
+            Label::new(first, "a refinement keeps the value the abstract description offers"),
+            format!(
+                "offer `({name} {value})` — violated obligation `{}`: {} — a value is kept only by the same \
+                 value: a quantity equal as a quantity, any other value as written",
+                Obligation::Constraint.slug(),
+                Obligation::Constraint.statement()
+            ),
+        )
+        .with_secondary(Label::new(offer.span, "offered here")),
+    )
+}
+
+/// A bound the abstract description states: met by every quantity the concrete one gives the fact, and it must
+/// give one.
+fn bound(
+    name: &str,
+    offer: &Offer,
+    direction: ComparisonDirection,
+    required: Quantity,
+    abstract_: &Facets,
+    concrete: &Facets,
+    refined: &[Offer],
+) -> Vec<(Obligation, Diagnostic)> {
+    let values: Vec<(Quantity, Span)> = refined
+        .iter()
+        .filter_map(|r| match r.reading {
+            Reading::Quantity(value) => Some((value, r.span)),
+            _ => None,
+        })
+        .collect();
+    if values.is_empty() {
+        let first = refined.first().map_or(offer.span, |r| r.span);
+        return vec![(
+            Obligation::Constraint,
+            Diagnostic::error(
+                "refinement-violated",
+                format!(
+                    "`{name}` is bounded by `{}` but `{}` gives it no value",
+                    abstract_.name, concrete.name
+                ),
+                Label::new(first, "no value to check the bound against"),
+                format!(
+                    "give `{name}` a concrete value, e.g. `({name} {required})` — \
+                     violated obligation `{}`: {}",
+                    Obligation::Constraint.slug(),
+                    Obligation::Constraint.statement()
+                ),
+            )
+            .with_secondary(Label::new(offer.span, "bound stated here")),
+        )];
+    }
+    let mut violations = Vec::new();
+    for (value, span) in values {
+        match direction.satisfied_by(value, required) {
+            Ok(true) => {}
+            Ok(false) => violations.push((
+                Obligation::Constraint,
+                Diagnostic::error(
+                    "refinement-violated",
+                    format!(
+                        "`{name}` is {value}, which does not satisfy `{} {required}`",
+                        direction.slug()
+                    ),
+                    Label::new(span, "this value violates the bound"),
+                    format!(
+                        "violated obligation `{}`: {} — the direction is `{}`, so a value \
+                         that is merely different is not a substitute",
+                        Obligation::Constraint.slug(),
+                        Obligation::Constraint.statement(),
+                        direction.slug()
+                    ),
+                )
+                .with_secondary(Label::new(offer.span, "bound stated here")),
+            )),
+            Err(error) => violations.push((
+                Obligation::Constraint,
+                Diagnostic::error(
+                    "refinement-violated",
+                    format!("`{name}` cannot be checked against its bound: {error}"),
+                    Label::new(span, "incompatible with the stated bound"),
+                    match error {
+                        QuantityError::IncompatibleDimensions { .. } => format!(
+                            "the refinement measures something else entirely — violated \
+                             obligation `{}`",
+                            Obligation::Constraint.slug()
+                        ),
+                        other => other.to_string(),
+                    },
+                )
+                .with_secondary(Label::new(offer.span, "bound stated here")),
+            )),
+        }
+    }
+    violations
 }
 
 #[cfg(test)]

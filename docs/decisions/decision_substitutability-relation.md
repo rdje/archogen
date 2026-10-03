@@ -435,10 +435,11 @@ source's.
   L5).
 - What a refinement keeps of an abstract platform is model §3's, `M1.40`'s: a concrete `(f false)` keeping an
   abstract bare boolean guarantee and two abstract bounds on one fact, the last winning (R12 L17), and every value an
-  abstract platform offers, none of which is kept today, so a system written against an abstract platform is judged
-  on values its refinement may not have — `(tick-unit ns)` refined by `us` is accepted (R13 M1). The relation judges
-  the providers the closure reaches; refinement is what makes an abstract platform's values hold of what refines it,
-  and `M1.40`'s acceptance carries each case.
+  abstract platform offers, none of which was kept, so a system written against an abstract platform was judged on
+  values its refinement may not have — `(tick-unit ns)` refined by `us` was accepted (R13 M1). The relation judges
+  the providers the closure reaches; refinement is what makes an abstract platform's values hold of what refines it.
+  `M1.40` closed `2026-10-03`: each case is refused, a value kept only by the same value as written or, for a
+  quantity, the same amount.
 - `region` and `ordering` fit no domain of §2: a region is a name with sub-clauses, offered once per name, and an
   ordering is a pair of events; both are placement and ordering, `M3.3`'s, and both stay undeclared in `/1` —
   presence judges them, and a constraint on either is `unsupported-profile` when the enumeration is wired (R1 A10);

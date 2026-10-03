@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a refinement keeps what the platform it refines offers
+
+`ARCHOGEN-M1-0417` (leaf `M1.40`).
+
+- A concrete platform that claims to refine an abstract one must now keep every value the abstract one offers, and
+  every bound it states: an abstract tick unit of nanoseconds is no longer "kept" by microseconds, two bounds on
+  one fact are both checked, and a guarantee is not kept by offering it as `false`. Values are compared as written,
+  or by amount for quantities, which is the cautious side: a value spelt differently is refused, never wrongly
+  accepted. No tracked description's verdict changed.
+
 ## archogen — the trust-dependency gate's fourth review, answered
 
 `ARCHOGEN-M3-0416` (leaf `M3.6.1`, step 5).

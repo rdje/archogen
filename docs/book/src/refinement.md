@@ -10,7 +10,9 @@ serial port is fine — and what it adds is shown, not hidden.
 
 > **In one minute, for engineers.** `(refines …)` is an obligation to check, not permission to trust
 > (`ROADMAP.md` §5.1.1). Its obligations are guarantee, constraint and exclusion; a violation is
-> `refinement-violated` naming the obligation, and every violation is reported. Additions are allowed and reported
+> `refinement-violated` naming the obligation, and every violation is reported. Every offer of the abstract
+> description is an obligation: each bound is met by every value, a value it offers is kept only by the same
+> value, and `false` keeps no guarantee. Additions are allowed and reported
 > (§5.3: an unused device is not an invalid refinement), while offering what the abstract declares absent violates
 > the exclusion. Bounds carry a direction — `at-least`, `at-most`, `exactly` — compared on the amount, not the
 > spelling, and a bound of the wrong dimension is a type error. The check is `crates/eadl-model/src/refinement.rs`,
@@ -41,8 +43,8 @@ A concrete description can claim to satisfy an abstract one:
 
 | Obligation | Violated when |
 | --- | --- |
-| **guarantee** | the abstract offers a fact and the concrete does not |
-| **constraint** | the concrete's value does not satisfy the abstract's stated bound |
+| **guarantee** | the abstract offers a fact and the concrete does not, or offers it only as `false` |
+| **constraint** | a value the concrete gives does not satisfy a bound the abstract states, or the concrete does not offer a value the abstract offers |
 | **exclusion** | the abstract declares a fact absent and the concrete offers it |
 
 "This refinement is invalid" sends an author to re-read two descriptions and guess. This does
@@ -92,8 +94,8 @@ looking like it says strictly more.
 
 ### Why a bound carries a direction
 
-An abstract description writes `(counter-width (at-least 32 bit))`, not `(counter-width 32
-bit)`. §5.2: *"More bits or a faster clock is not universally better."*
+An abstract description that means "32 bits or more" writes `(counter-width (at-least 32 bit))`.
+§5.2: *"More bits or a faster clock is not universally better."*
 
 | Bound | 64 bit | 16 bit |
 | --- | --- | --- |
@@ -103,9 +105,9 @@ bit)`. §5.2: *"More bits or a faster clock is not universally better."*
 | --- | --- | --- |
 | `(at-most 50 us)` | violates | satisfies |
 
-The same numeric relationship passes one and fails the other. A bare value would leave the
-checker guessing, and guessing right for a counter width while guessing wrong for a delivery
-bound.
+The same numeric relationship passes one and fails the other. Reading a value with no direction as
+"or more" would guess right for a counter width and wrong for a delivery bound, so it is not read that
+way: a value the abstract description offers is kept only by the same value (next section).
 
 `exactly` refuses even a "better" value — a tick rate of 20 MHz does not satisfy a description
 that needs 10 MHz. It does accept `10000000 Hz`, because the comparison is on the amount and not
@@ -117,3 +119,24 @@ And a bound checked against the wrong dimension is a **type error**, not a `fals
 `horizon` cannot be checked against its bound: `MHz` measures frequency and `s` measures time —
 they cannot be compared
 ```
+
+### What keeps a value, and what keeps a guarantee
+
+Until leaf `M1.40` an abstract description's values were read as the fact's presence alone, so a
+concrete chip offering `(tick-unit us)` "kept" an abstract `(tick-unit ns)`, and a system written against
+the abstract description was judged on a tick unit the hardware did not have. Every offer the abstract
+description writes is now an obligation:
+
+| The abstract writes | It is kept when the concrete |
+| --- | --- |
+| `f` | offers `f`, other than as `(f false)` |
+| `(f (at-least v))`, `at-most`, `exactly` | gives `f` a quantity, and every quantity it gives `f` meets the bound |
+| `(f 32 bit)` | offers `f` with the same amount in any unit of the dimension: `10000 kHz` keeps `10 MHz` |
+| `(f ns)`, `(f true)`, `(f 4294967296)` | offers `f` with the same value as written, a bare `f` reading as `true` |
+
+Two bounds on one fact are both checked, not the last. A fact offered more than once, as a `region` is
+once per named region, is kept one offer at a time, so a concrete chip may add a region.
+
+"As written" is the conservative reading, and it is a stated limit: the check reads no vocabulary, so
+`(pow2 32)` does not keep `4294967296`, and a set written in another order, or with another member, does
+not keep the abstract set. Each is refused, never wrongly accepted.

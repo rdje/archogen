@@ -273,3 +273,170 @@ fn every_obligation_states_itself_in_full() {
         );
     }
 }
+
+// ── What the abstract description writes, and what keeps it (leaf `M1.40`) ──────────────────────────────────
+//
+// Each case below was accepted until `M1.40`, measured beside the substitutability relation (its §10; reviews
+// R12 and R13): a system written against the abstract platform was judged on values its refinement did not
+// have. Each test is the rule's witness in `xtask/mutations.txt`.
+
+#[test]
+fn a_bare_guarantee_is_not_kept_by_false() {
+    let (report, rendered) = refine(
+        "(defplatform a (offers observation-coherent))\n\
+         (defplatform b (refines a) (offers (observation-coherent false)))",
+    );
+    assert_eq!(violated(&report), vec![Obligation::Guarantee], "{rendered}");
+    assert!(
+        rendered.contains("offers `observation-coherent` only as `false`"),
+        "{rendered}"
+    );
+}
+
+#[test]
+fn a_bare_offer_keeps_an_abstract_true() {
+    let (report, rendered) = refine(
+        "(defplatform a (offers (observation-coherent true)))\n\
+         (defplatform b (refines a) (offers observation-coherent))",
+    );
+    assert!(report.is_valid(), "a bare boolean is `true`:\n{rendered}");
+}
+
+#[test]
+fn an_abstract_true_is_not_kept_by_false() {
+    let (report, rendered) = refine(
+        "(defplatform a (offers (observation-coherent true)))\n\
+         (defplatform b (refines a) (offers (observation-coherent false)))",
+    );
+    assert_eq!(
+        violated(&report),
+        vec![Obligation::Constraint],
+        "{rendered}"
+    );
+    assert!(
+        rendered
+            .contains("offers `observation-coherent` as `true`, and `b` does not offer that value"),
+        "{rendered}"
+    );
+}
+
+#[test]
+fn every_bound_on_one_fact_is_checked_not_the_last() {
+    let both = "(defplatform a (offers (counter-width (at-least 32 bit)) (counter-width (at-most 64 bit))))\n";
+    let (below, rendered) = refine(&format!(
+        "{both}(defplatform b (refines a) (offers (counter-width 16 bit)))"
+    ));
+    assert_eq!(violated(&below), vec![Obligation::Constraint], "{rendered}");
+    assert!(
+        rendered.contains("does not satisfy `at-least 32 bit`"),
+        "{rendered}"
+    );
+    let (above, rendered) = refine(&format!(
+        "{both}(defplatform b (refines a) (offers (counter-width 128 bit)))"
+    ));
+    assert!(
+        rendered.contains("does not satisfy `at-most 64 bit`"),
+        "{rendered}"
+    );
+    assert!(!above.is_valid());
+    let (inside, rendered) = refine(&format!(
+        "{both}(defplatform b (refines a) (offers (counter-width 48 bit)))"
+    ));
+    assert!(inside.is_valid(), "{rendered}");
+}
+
+#[test]
+fn every_quantity_the_concrete_gives_a_bounded_fact_meets_the_bound() {
+    let (report, rendered) = refine(
+        "(defplatform a (offers (counter-width (at-least 32 bit))))\n\
+         (defplatform b (refines a) (offers (counter-width 64 bit) (counter-width 16 bit)))",
+    );
+    assert_eq!(
+        violated(&report),
+        vec![Obligation::Constraint],
+        "{rendered}"
+    );
+    assert!(rendered.contains("`counter-width` is 16 bit"), "{rendered}");
+}
+
+#[test]
+fn an_abstract_quantity_is_kept_only_by_the_same_amount() {
+    for refined in ["16 bit", "64 bit"] {
+        let (report, rendered) = refine(&format!(
+            "(defplatform a (offers (counter-width 32 bit)))\n\
+             (defplatform b (refines a) (offers (counter-width {refined})))"
+        ));
+        assert_eq!(
+            violated(&report),
+            vec![Obligation::Constraint],
+            "{rendered}"
+        );
+        assert!(rendered.contains("does not offer that value"), "{rendered}");
+    }
+    let (same_amount, rendered) = refine(
+        "(defplatform a (offers (tick-rate 10 MHz)))\n\
+         (defplatform b (refines a) (offers (tick-rate 10000 kHz)))",
+    );
+    assert!(
+        same_amount.is_valid(),
+        "the amount, not the spelling:\n{rendered}"
+    );
+}
+
+#[test]
+fn an_abstract_value_is_kept_only_as_written() {
+    for (fact, offered, refined) in [
+        ("tick-unit", "ns", "us"),
+        ("counter-modulus", "4294967296", "65536"),
+        ("reachable-at-privilege", "supervisor machine", "machine"),
+        ("available-in-state", "run idle", "run"),
+    ] {
+        let (report, rendered) = refine(&format!(
+            "(defplatform a (offers ({fact} {offered})))\n\
+             (defplatform b (refines a) (offers ({fact} {refined})))"
+        ));
+        assert_eq!(
+            violated(&report),
+            vec![Obligation::Constraint],
+            "{fact}:\n{rendered}"
+        );
+        assert!(
+            rendered.contains(&format!("offers `{fact}` as `{offered}`")),
+            "{rendered}"
+        );
+        let (kept, rendered) = refine(&format!(
+            "(defplatform a (offers ({fact} {offered})))\n\
+             (defplatform b (refines a) (offers ({fact} {offered})))"
+        ));
+        assert!(kept.is_valid(), "{fact}:\n{rendered}");
+    }
+}
+
+#[test]
+fn a_value_spelt_differently_is_refused_the_stated_limit() {
+    // ⚠️ Pinned on purpose: the check reads no vocabulary, so `(pow2 32)` and `4294967296` are two values as
+    // written. Refused, never wrongly accepted — the module documentation states it as a limit.
+    let (report, rendered) = refine(
+        "(defplatform a (offers (counter-modulus 4294967296)))\n\
+         (defplatform b (refines a) (offers (counter-modulus (pow2 32))))",
+    );
+    assert_eq!(
+        violated(&report),
+        vec![Obligation::Constraint],
+        "{rendered}"
+    );
+}
+
+#[test]
+fn a_fact_offered_more_than_once_is_kept_one_offer_at_a_time() {
+    let abstract_ = "(defplatform a (offers (region device.timer (base 0x1000_0000))))\n";
+    let (more, rendered) = refine(&format!(
+        "{abstract_}(defplatform b (refines a) (offers (region device.timer (base 0x1000_0000)) \
+         (region device.uart (base 0x1000_1000))))"
+    ));
+    assert!(more.is_valid(), "a region more is an addition:\n{rendered}");
+    let (other, rendered) = refine(&format!(
+        "{abstract_}(defplatform b (refines a) (offers (region device.uart (base 0x1000_1000))))"
+    ));
+    assert_eq!(violated(&other), vec![Obligation::Constraint], "{rendered}");
+}

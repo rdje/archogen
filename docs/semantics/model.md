@@ -94,10 +94,19 @@ A concrete platform may refine an abstract one (`crates/eadl-model/src/refinemen
 the abstract states is checked against the concrete one, and a violated one names the obligation it
 violated: `refinement-violated`.
 
-1. **A guarantee is kept.** The concrete platform offers every fact the abstract one guarantees.
-2. **A bound is met, in its direction.** A bounded quantity has a value in the concrete platform, and
-   the value satisfies the bound's direction. A value that is merely different is not a substitute, and
-   one of another dimension cannot be checked against the bound at all.
+1. **A guarantee is kept.** The concrete platform offers every fact the abstract one offers, and not only
+   as `false`. A bare boolean is `true`, and `(f false)` says the fact does not hold, so it keeps no
+   guarantee of it (leaf `M1.40`).
+2. **A bound is met, in its direction, and a value is kept.** Every bound the abstract platform states on a
+   fact is checked, not the last of them: the concrete platform gives the fact a quantity, and every
+   quantity it gives the fact satisfies the bound's direction. A value that is merely different is not a
+   substitute, and one of another dimension cannot be checked against the bound at all. A value the
+   abstract platform offers is kept only by the same value: a quantity equal as a quantity, so `10000 kHz`
+   keeps `10 MHz`, and any other value equal as written, a bare offer reading as `true`. Written is the
+   conservative reading, because this check reads no vocabulary: `(pow2 32)` does not keep `4294967296`,
+   nor does a set written in another order or with another member, and each is refused, never wrongly
+   accepted. A fact offered more than once, as a `region` is per named region, is kept one offer at a
+   time (leaf `M1.40`).
 3. **An absence is kept.** A fact the abstract platform declares absent is not offered by the concrete
    one. An explicit absence is a constraint something relies on, not an omission to fill in.
 4. **The target is declared.** A refinement names the platform it refines, and that platform must be
