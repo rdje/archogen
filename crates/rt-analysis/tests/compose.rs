@@ -122,7 +122,14 @@ fn calls(pairs: &[(&str, u64)]) -> Vec<Calls> {
         .collect()
 }
 
-fn task(id: &str, priority: i64, own: Option<Value>, t: u64, d: u64, released_by: ReleasedBy) -> TaskParts {
+fn task(
+    id: &str,
+    priority: i64,
+    own: Option<Value>,
+    t: u64,
+    d: u64,
+    released_by: ReleasedBy,
+) -> TaskParts {
     TaskParts {
         id: id.into(),
         priority,
@@ -191,7 +198,9 @@ fn rendered(composition: &Composition, what: &str) -> String {
         .render()
 }
 
-fn refused(result: Result<rt_analysis::runtime::RuntimeSet, NoBound>) -> rt_analysis::runtime::Refusal {
+fn refused(
+    result: Result<rt_analysis::runtime::RuntimeSet, NoBound>,
+) -> rt_analysis::runtime::Refusal {
     match result {
         Err(NoBound::Refused(refusal)) => refusal,
         other => panic!("expected a refusal, got {other:?}"),
@@ -234,7 +243,12 @@ fn fixture_a() -> (Kernel, Platform, Application) {
 fn a_task_s_cost_and_masked_section_are_the_sum_and_the_maximum_the_record_says() {
     let (kernel, platform, application) = fixture_a();
     let composition = compose(&kernel, &platform, &application, &[]);
-    assert_eq!(composition.stops, Stops::default(), "{:?}", composition.stops);
+    assert_eq!(
+        composition.stops,
+        Stops::default(),
+        "{:?}",
+        composition.stops
+    );
     let a = &composition.tasks[0];
     assert_eq!(val(a.computation), 13);
     assert_eq!(a.computation.unwrap().evidence, Evidence::ObservedMaximum);
@@ -258,7 +272,10 @@ fn a_task_s_cost_and_masked_section_are_the_sum_and_the_maximum_the_record_says(
         ),
         "{cs}"
     );
-    assert!(cs.contains("; masked.spin = 3 [masked.spin = 3 (the catalog: analytically established)]"), "{cs}");
+    assert!(
+        cs.contains("; masked.spin = 3 [masked.spin = 3 (the catalog: analytically established)]"),
+        "{cs}"
+    );
     assert!(cs.ends_with("; masked.completion = 1 [masked.completion = 1 (the catalog: analytically established)]"), "{cs}");
     assert_eq!(
         rendered(&composition, "L (the longest masked run)"),
@@ -341,10 +358,16 @@ fn fixture_b() -> (Kernel, Platform, Application, Vec<SourceParts>) {
 }
 
 #[test]
-fn a_service_queued_ahead_is_charged_at_the_fixed_point_and_a_sources_release_jitter_is_its_delay() {
+fn a_service_queued_ahead_is_charged_at_the_fixed_point_and_a_sources_release_jitter_is_its_delay()
+{
     let (kernel, platform, application, sources) = fixture_b();
     let composition = compose(&kernel, &platform, &application, &sources);
-    assert_eq!(composition.stops, Stops::default(), "{:?}", composition.stops);
+    assert_eq!(
+        composition.stops,
+        Stops::default(),
+        "{:?}",
+        composition.stops
+    );
     assert_eq!(val(composition.sources[0].jitter), 5);
     assert_eq!(val(composition.tasks[0].jitter_release), 11);
     assert_eq!(val(composition.tasks[1].jitter_release), 5);
@@ -354,7 +377,10 @@ fn a_service_queued_ahead_is_charged_at_the_fixed_point_and_a_sources_release_ji
          L = 3 (composed here: analytically established) + 2 × δ = 1 (the catalog: analytically established); \
          Δ 5 → 5"
     );
-    let timer = rendered(&composition, "Δ_timer (J^release of every timer-released task)");
+    let timer = rendered(
+        &composition,
+        "Δ_timer (J^release of every timer-released task)",
+    );
     assert!(
         timer.ends_with(
             "+ L = 3 (composed here: analytically established) + 2 × δ = 1 (the catalog: analytically \
@@ -405,7 +431,12 @@ fn with_the_timer_ahead_of_every_source_its_releases_queue_before_a_source() {
     let (mut kernel, platform, application, sources) = fixture_b();
     kernel.facts.external_before_timer = Some(false);
     let composition = compose(&kernel, &platform, &application, &sources);
-    assert_eq!(composition.stops, Stops::default(), "{:?}", composition.stops);
+    assert_eq!(
+        composition.stops,
+        Stops::default(),
+        "{:?}",
+        composition.stops
+    );
     assert_eq!(val(composition.tasks[0].jitter_release), 7);
     assert_eq!(val(composition.sources[0].jitter), 8);
     assert_eq!(val(composition.tasks[1].jitter_release), 8);
@@ -420,17 +451,43 @@ fn with_the_timer_ahead_of_every_source_its_releases_queue_before_a_source() {
     // Without `one-claim-per-trap`, that order is not admitted; unread, it leaves every J undeclared.
     kernel.facts.one_claim_per_trap = None;
     let composition = compose(&kernel, &platform, &application, &sources);
-    assert!(composition.stops.unresolved.iter().any(|r| r.starts_with("`one-claim-per-trap, which admits `external-before-timer` `no`` cannot be read")), "{:?}", composition.stops);
+    assert!(
+        composition.stops.unresolved.iter().any(|r| r.starts_with(
+            "`one-claim-per-trap, which admits `external-before-timer` `no`` cannot be read"
+        )),
+        "{:?}",
+        composition.stops
+    );
     assert!(composition.tasks[0].jitter_release.is_none());
-    assert!(composition.tasks[0].computation.is_some(), "C and CS are composed all the same");
+    assert!(
+        composition.tasks[0].computation.is_some(),
+        "C and CS are composed all the same"
+    );
     kernel.facts.one_claim_per_trap = Some(false);
     let composition = compose(&kernel, &platform, &application, &sources);
-    assert!(composition.stops.unresolved.is_empty(), "{:?}", composition.stops);
-    assert!(composition.stops.unsupported.iter().any(|r| r.contains("one-claim-per-trap") && r.contains("declared `no`")), "{:?}", composition.stops);
+    assert!(
+        composition.stops.unresolved.is_empty(),
+        "{:?}",
+        composition.stops
+    );
+    assert!(
+        composition
+            .stops
+            .unsupported
+            .iter()
+            .any(|r| r.contains("one-claim-per-trap") && r.contains("declared `no`")),
+        "{:?}",
+        composition.stops
+    );
     // `external-before-timer` `yes` does not read `one-claim-per-trap` at all.
     kernel.facts.external_before_timer = Some(true);
     let composition = compose(&kernel, &platform, &application, &sources);
-    assert_eq!(composition.stops, Stops::default(), "{:?}", composition.stops);
+    assert_eq!(
+        composition.stops,
+        Stops::default(),
+        "{:?}",
+        composition.stops
+    );
 }
 
 #[test]
@@ -470,7 +527,10 @@ fn a_source_with_no_fixed_point_is_unsupported_and_what_queues_behind_it_is_name
     assert_eq!(val(composition.sources[0].jitter), 6);
     assert!(composition.sources[1].jitter.is_none());
     assert!(composition.sources[2].jitter.is_none());
-    assert!(composition.tasks[0].jitter_release.is_none(), "the timer is behind the stop");
+    assert!(
+        composition.tasks[0].jitter_release.is_none(),
+        "the timer is behind the stop"
+    );
     assert_eq!(
         composition.stops.unsupported[0],
         "J of source `slow` has no fixed point: what queues ahead of it can arrive at least as fast as it is \
@@ -482,14 +542,34 @@ fn a_source_with_no_fixed_point_is_unsupported_and_what_queues_behind_it_is_name
         "source `late` can lose an arrival: its lower bound B_s = 6 already passes its no-loss limit inside its \
          separation 4 (record §3, the variant's condition 7)"
     );
-    assert!(composition.stops.not_established.is_empty() && composition.stops.unresolved.is_empty());
+    assert!(
+        composition.stops.not_established.is_empty() && composition.stops.unresolved.is_empty()
+    );
     let refusal = refused(composition.admit(&platform));
     assert_eq!(refusal.verdict, RefusalVerdict::UnsupportedProfile);
-    assert!(refusal.reasons.iter().any(|r| r.starts_with("J of source `slow` has no fixed point")), "{refusal}");
-    assert!(refusal.reasons.iter().any(|r| r.starts_with("source `late` can lose an arrival")), "{refusal}");
+    assert!(
+        refusal
+            .reasons
+            .iter()
+            .any(|r| r.starts_with("J of source `slow` has no fixed point")),
+        "{refusal}"
+    );
+    assert!(
+        refusal
+            .reasons
+            .iter()
+            .any(|r| r.starts_with("source `late` can lose an arrival")),
+        "{refusal}"
+    );
     // `fast`'s own value, 6, is past its no-loss limit too; the variant's condition 7 judges that on a complete
     // set only, and this set has two sources without a value, so the stop's verdict is the set's alone.
-    assert!(!refusal.reasons.iter().any(|r| r.contains("is not declared")), "an input the composition left without a value is reported by its stop alone: {refusal}");
+    assert!(
+        !refusal
+            .reasons
+            .iter()
+            .any(|r| r.contains("is not declared")),
+        "an input the composition left without a value is reported by its stop alone: {refusal}"
+    );
 }
 
 fn application_with_task_e_released_by(application: &Application, source: &str) -> Application {
@@ -517,7 +597,12 @@ fn an_iterate_past_a_sources_refusal_bound_stops_it_and_a_fixed_point_reached_is
             source("q2", 2, t2, acknowledge, 2),
         ]
     };
-    let stopped = compose(&kernel, &platform, &application, &sources(9, Acknowledge::AtExit));
+    let stopped = compose(
+        &kernel,
+        &platform,
+        &application,
+        &sources(9, Acknowledge::AtExit),
+    );
     assert_eq!(val(stopped.sources[0].jitter), 3);
     assert!(stopped.sources[1].jitter.is_none());
     assert_eq!(
@@ -526,14 +611,33 @@ fn an_iterate_past_a_sources_refusal_bound_stops_it_and_a_fixed_point_reached_is
          cannot be bounded below its no-loss limit (record §6, the variant's condition 7); behind it, with no \
          value: the timer"
     );
-    let composed = compose(&kernel, &platform, &application, &sources(10, Acknowledge::AtExit));
+    let composed = compose(
+        &kernel,
+        &platform,
+        &application,
+        &sources(10, Acknowledge::AtExit),
+    );
     assert_eq!(composed.stops, Stops::default(), "{:?}", composed.stops);
     assert_eq!(val(composed.sources[1].jitter), 6);
     assert!(composed.admit(&platform).is_ok());
     // Acknowledged at entry the bound is T_s itself: 6 ≥ 6 stops, 6 < 7 is the value.
-    let stopped = compose(&kernel, &platform, &application, &sources(6, Acknowledge::AtEntry));
-    assert!(stopped.stops.unsupported[0].starts_with("J of source `q2` passed its refusal bound 6"), "{:?}", stopped.stops);
-    let composed = compose(&kernel, &platform, &application, &sources(7, Acknowledge::AtEntry));
+    let stopped = compose(
+        &kernel,
+        &platform,
+        &application,
+        &sources(6, Acknowledge::AtEntry),
+    );
+    assert!(
+        stopped.stops.unsupported[0].starts_with("J of source `q2` passed its refusal bound 6"),
+        "{:?}",
+        stopped.stops
+    );
+    let composed = compose(
+        &kernel,
+        &platform,
+        &application,
+        &sources(7, Acknowledge::AtEntry),
+    );
     assert_eq!(val(composed.sources[1].jitter), 6);
     assert!(composed.admit(&platform).is_ok());
 }
@@ -544,11 +648,22 @@ fn a_fixed_point_at_the_no_loss_limit_is_a_value_the_variant_refuses_not_a_stop(
     let (kernel, platform, application, mut sources) = fixture_b();
     sources[0].separation = v(5);
     let composition = compose(&kernel, &platform, &application, &sources);
-    assert_eq!(composition.stops, Stops::default(), "{:?}", composition.stops);
+    assert_eq!(
+        composition.stops,
+        Stops::default(),
+        "{:?}",
+        composition.stops
+    );
     assert_eq!(val(composition.sources[0].jitter), 5);
     let refusal = refused(composition.admit(&platform));
     assert_eq!(refusal.verdict, RefusalVerdict::UnsupportedProfile);
-    assert!(refusal.reasons.iter().any(|r| r.starts_with("source `uart` can lose an arrival")), "{refusal}");
+    assert!(
+        refusal
+            .reasons
+            .iter()
+            .any(|r| r.starts_with("source `uart` can lose an arrival")),
+        "{refusal}"
+    );
 }
 
 #[test]
@@ -571,13 +686,21 @@ fn the_timer_past_the_largest_timer_period_is_not_established() {
     );
     assert!(composition.stops.unsupported.is_empty() && composition.stops.unresolved.is_empty());
     let why = not_established(composition.admit(&platform));
-    assert!(why.starts_with("J of the timer passed its refusal bound 10"), "{why}");
+    assert!(
+        why.starts_with("J of the timer passed its refusal bound 10"),
+        "{why}"
+    );
     // At T_a = 11 the iterate 11 is not past the bound, and the next step finds it the fixed point: a value, which
     // the variant then judges (its busy-period stop).
     application.tasks[0].separation = 11;
     application.tasks[0].deadline = 11;
     let composition = compose(&kernel, &platform, &application, &sources);
-    assert_eq!(composition.stops, Stops::default(), "{:?}", composition.stops);
+    assert_eq!(
+        composition.stops,
+        Stops::default(),
+        "{:?}",
+        composition.stops
+    );
     assert_eq!(val(composition.tasks[0].jitter_release), 11);
 }
 
@@ -591,7 +714,12 @@ fn a_queued_sources_own_delay_widens_the_window_its_arrivals_are_counted_in() {
     application.tasks[1].separation = 12;
     application.tasks[1].deadline = 12;
     let composition = compose(&kernel, &platform, &application, &sources);
-    assert_eq!(composition.stops, Stops::default(), "{:?}", composition.stops);
+    assert_eq!(
+        composition.stops,
+        Stops::default(),
+        "{:?}",
+        composition.stops
+    );
     assert_eq!(val(composition.tasks[0].jitter_release), 15);
     let timer = composition
         .composites
@@ -599,7 +727,13 @@ fn a_queued_sources_own_delay_widens_the_window_its_arrivals_are_counted_in() {
         .find(|c| c.what == "Δ_timer (J^release of every timer-released task)")
         .expect("Δ_timer");
     assert_eq!(timer.iterates, vec![7, 11, 15, 15]);
-    assert!(timer.render().contains("2 × δ + C_s of source `uart` + S, queued ahead (T_s 12, J_s 5) = 4"), "{}", timer.render());
+    assert!(
+        timer
+            .render()
+            .contains("2 × δ + C_s of source `uart` + S, queued ahead (T_s 12, J_s 5) = 4"),
+        "{}",
+        timer.render()
+    );
 }
 
 #[test]
@@ -632,7 +766,11 @@ fn an_overflow_in_c_is_the_busy_period_stop() {
     application.tasks[0].own_code = v(u64::MAX);
     let composition = compose(&kernel, &platform, &application, &[]);
     assert!(composition.tasks[0].computation.is_none());
-    assert_eq!(val(composition.tasks[0].masked_section), 7, "CS is composed all the same");
+    assert_eq!(
+        val(composition.tasks[0].masked_section),
+        7,
+        "CS is composed all the same"
+    );
     assert_eq!(
         composition.stops.not_established,
         vec![
@@ -659,21 +797,33 @@ fn an_overflow_in_cs_l_or_a_base_stops_every_interrupt() {
     assert_eq!(val(composition.tasks[1].masked_section), 1);
     assert_eq!(composition.stops.unsupported, vec!["CS of task `a` overflows, which stops source `uart` as its own overflow would: J_s cannot be bounded below its no-loss limit (record §6, the variant's condition 7)".to_owned()]);
     assert_eq!(composition.stops.not_established, vec!["CS of task `a` overflows, which stops the timer as its own overflow would: no single-job bound applies (record §6)".to_owned()]);
-    assert_eq!(refused(composition.admit(&platform)).verdict, RefusalVerdict::UnsupportedProfile);
+    assert_eq!(
+        refused(composition.admit(&platform)).verdict,
+        RefusalVerdict::UnsupportedProfile
+    );
     // Without a source the timer's verdict is the set's.
     let (kernel, platform, mut application) = fixture_a();
     application.tasks[0].runs[0].own_code = v(u64::MAX);
     let composition = compose(&kernel, &platform, &application, &[]);
     let why = not_established(composition.admit(&platform));
-    assert!(why.starts_with("CS of task `a` overflows, which stops the timer"), "{why}");
+    assert!(
+        why.starts_with("CS of task `a` overflows, which stops the timer"),
+        "{why}"
+    );
     // B_timer: ρ = u64::MAX overflows the base while L fits.
     let (kernel, mut platform, application) = fixture_a();
     platform.rounding = v(u64::MAX);
     let composition = compose(&kernel, &platform, &application, &[]);
     assert_eq!(val(composition.tasks[0].masked_section), 7);
-    assert!(composition.composites.iter().any(|c| c.what == "L (the longest masked run)"));
+    assert!(composition
+        .composites
+        .iter()
+        .any(|c| c.what == "L (the longest masked run)"));
     let why = not_established(composition.admit(&platform));
-    assert!(why.starts_with("a B_x overflows, which stops the timer"), "{why}");
+    assert!(
+        why.starts_with("a B_x overflows, which stops the timer"),
+        "{why}"
+    );
 }
 
 #[test]
@@ -719,31 +869,43 @@ fn the_step_budget_and_the_pre_check_s_width_are_named_resource_limits() {
                 .to_owned()
         ]
     );
-    assert_eq!(refused(composition.admit(&platform)).verdict, RefusalVerdict::AnalysisInconclusive);
+    assert_eq!(
+        refused(composition.admit(&platform)).verdict,
+        RefusalVerdict::AnalysisInconclusive
+    );
 }
 
 // ----- §2's facts and §6's conditions -----
 
 #[test]
-fn a_fact_that_cannot_be_read_leaves_what_it_gates_undeclared_and_a_no_is_outside_the_composition() {
+fn a_fact_that_cannot_be_read_leaves_what_it_gates_undeclared_and_a_no_is_outside_the_composition()
+{
     let (mut kernel, platform, application) = fixture_a();
     kernel.facts.pending_taken_after_unmask = None;
     let composition = compose(&kernel, &platform, &application, &[]);
-    assert!(composition.tasks[0].computation.is_none() && composition.tasks[0].masked_section.is_none());
+    assert!(
+        composition.tasks[0].computation.is_none() && composition.tasks[0].masked_section.is_none()
+    );
     assert_eq!(
         composition.stops.unresolved,
         vec!["`pending-taken-after-unmask` cannot be read, which leaves every composite undeclared (record §2)".to_owned()]
     );
     let refusal = refused(composition.admit(&platform));
     assert_eq!(refusal.verdict, RefusalVerdict::AnalysisInconclusive);
-    assert_eq!(refusal.reasons, composition.stops.unresolved, "the variant's own `not declared` lines for these inputs are not repeated");
+    assert_eq!(
+        refusal.reasons, composition.stops.unresolved,
+        "the variant's own `not declared` lines for these inputs are not repeated"
+    );
     kernel.facts.pending_taken_after_unmask = Some(false);
     let composition = compose(&kernel, &platform, &application, &[]);
     assert_eq!(
         composition.stops.unsupported,
         vec!["`pending-taken-after-unmask` is declared `no`, outside what the composition covers (record §6)".to_owned()]
     );
-    assert_eq!(refused(composition.admit(&platform)).verdict, RefusalVerdict::UnsupportedProfile);
+    assert_eq!(
+        refused(composition.admit(&platform)).verdict,
+        RefusalVerdict::UnsupportedProfile
+    );
     // A fact gating every J leaves C and CS composed.
     let (mut kernel, platform, application) = fixture_a();
     kernel.facts.external_before_timer = None;
@@ -752,17 +914,30 @@ fn a_fact_that_cannot_be_read_leaves_what_it_gates_undeclared_and_a_no_is_outsid
     assert!(composition.tasks[0].jitter_release.is_none());
     assert_eq!(
         composition.stops.unresolved,
-        vec!["`external-before-timer` cannot be read, which leaves every J undeclared (record §2)".to_owned()]
+        vec![
+            "`external-before-timer` cannot be read, which leaves every J undeclared (record §2)"
+                .to_owned()
+        ]
     );
     // Each record's discipline, and the application's own fact.
     let (mut kernel, platform, application) = fixture_a();
     kernel.discipline.push(("uart-driver".into(), None));
     let composition = compose(&kernel, &platform, &application, &[]);
-    assert!(composition.stops.unresolved[0].starts_with("`runtime-discipline.uart-driver` cannot be read"), "{:?}", composition.stops);
+    assert!(
+        composition.stops.unresolved[0]
+            .starts_with("`runtime-discipline.uart-driver` cannot be read"),
+        "{:?}",
+        composition.stops
+    );
     let (kernel, platform, mut application) = fixture_a();
     application.leaves_interrupt_hardware_alone = Some(false);
     let composition = compose(&kernel, &platform, &application, &[]);
-    assert!(composition.stops.unsupported[0].starts_with("`leaves-interrupt-hardware-alone` is declared `no`"), "{:?}", composition.stops);
+    assert!(
+        composition.stops.unsupported[0]
+            .starts_with("`leaves-interrupt-hardware-alone` is declared `no`"),
+        "{:?}",
+        composition.stops
+    );
 }
 
 #[test]
@@ -773,7 +948,12 @@ fn the_timers_facts_are_read_only_when_a_release_or_a_source_waits_on_the_timer(
     application.tasks[0].released_by = by_source("uart");
     application.releases_after_initialisation = None;
     let composition = compose(&kernel, &platform, &application, &sources);
-    assert_eq!(composition.stops, Stops::default(), "{:?}", composition.stops);
+    assert_eq!(
+        composition.stops,
+        Stops::default(),
+        "{:?}",
+        composition.stops
+    );
     assert_eq!(val(composition.tasks[0].jitter_release), 5);
     // With the timer ahead of every source it gates every J.
     let mut kernel = kernel;
@@ -785,8 +965,15 @@ fn the_timers_facts_are_read_only_when_a_release_or_a_source_waits_on_the_timer(
     let (mut kernel, platform, application, sources) = fixture_b();
     kernel.facts.reprograms_only_in_service = None;
     let composition = compose(&kernel, &platform, &application, &sources);
-    assert!(composition.tasks[0].jitter_release.is_none(), "the timer-released task");
-    assert_eq!(val(composition.tasks[1].jitter_release), 5, "the source-released task, its source ahead of the timer");
+    assert!(
+        composition.tasks[0].jitter_release.is_none(),
+        "the timer-released task"
+    );
+    assert_eq!(
+        val(composition.tasks[1].jitter_release),
+        5,
+        "the source-released task, its source ahead of the timer"
+    );
     assert_eq!(val(composition.sources[0].jitter), 5);
 }
 
@@ -802,7 +989,10 @@ fn the_plan_must_order_its_sources_strictly_and_leave_each_deliverable() {
     let composition = compose(&kernel, &platform, &application, &sources);
     assert_eq!(
         composition.stops.unsupported,
-        vec!["the plan's order among sources is not strict: `q1` and `q2` share rank 1 (record §6)".to_owned()]
+        vec![
+            "the plan's order among sources is not strict: `q1` and `q2` share rank 1 (record §6)"
+                .to_owned()
+        ]
     );
     sources[1].priority = None;
     let composition = compose(&kernel, &platform, &application, &sources);
@@ -819,8 +1009,16 @@ fn the_plan_must_order_its_sources_strictly_and_leave_each_deliverable() {
     );
     sources[1].deliverable = Some(false);
     let composition = compose(&kernel, &platform, &application, &sources);
-    assert!(composition.stops.unsupported[0].starts_with("the plan leaves source `q2` enabled and undeliverable"), "{:?}", composition.stops);
-    assert!(composition.sources[0].jitter.is_none(), "every J is undeclared");
+    assert!(
+        composition.stops.unsupported[0]
+            .starts_with("the plan leaves source `q2` enabled and undeliverable"),
+        "{:?}",
+        composition.stops
+    );
+    assert!(
+        composition.sources[0].jitter.is_none(),
+        "every J is undeclared"
+    );
 }
 
 #[test]
@@ -837,7 +1035,10 @@ fn a_sources_service_comes_from_its_record_or_from_the_caller_and_needs_a_record
     let composition = compose(&kernel, &platform, &application, &sources);
     assert_eq!(
         composition.stops.unresolved,
-        vec!["C_s of source `uart` cannot be read, which leaves every J undeclared (record §6)".to_owned()]
+        vec![
+            "C_s of source `uart` cannot be read, which leaves every J undeclared (record §6)"
+                .to_owned()
+        ]
     );
     // The caller's figure composes like the catalog's, and the conclusion names it as the caller's.
     sources[0].service = Service::Caller {
@@ -845,16 +1046,49 @@ fn a_sources_service_comes_from_its_record_or_from_the_caller_and_needs_a_record
         leaves_interrupt_hardware_alone: Some(true),
     };
     let composition = compose(&kernel, &platform, &application, &sources);
-    assert_eq!(composition.stops, Stops::default(), "{:?}", composition.stops);
+    assert_eq!(
+        composition.stops,
+        Stops::default(),
+        "{:?}",
+        composition.stops
+    );
     assert_eq!(val(composition.sources[0].jitter), 5);
-    assert_eq!(composition.sources[0].service.unwrap().evidence, Evidence::ObservedMaximum);
-    let l = composition.composites.iter().find(|c| c.what == "L (the longest masked run)").expect("L");
-    assert_eq!(l.value.evidence, Evidence::ObservedMaximum, "the weakest of its parts");
-    assert!(l.terms.iter().any(|term| term.parts.iter().any(|part| part.owner == Owner::Caller && part.symbol == "C_s of source `uart`")), "{l:?}");
+    assert_eq!(
+        composition.sources[0].service.unwrap().evidence,
+        Evidence::ObservedMaximum
+    );
+    let l = composition
+        .composites
+        .iter()
+        .find(|c| c.what == "L (the longest masked run)")
+        .expect("L");
+    assert_eq!(
+        l.value.evidence,
+        Evidence::ObservedMaximum,
+        "the weakest of its parts"
+    );
+    assert!(
+        l.terms.iter().any(|term| term
+            .parts
+            .iter()
+            .any(|part| part.owner == Owner::Caller && part.symbol == "C_s of source `uart`")),
+        "{l:?}"
+    );
     assert!(composition.assumptions.iter().any(|line| line == "C_s of source `uart` = 2 is the caller's figure, beginning at the trap, for a service that runs application code, an observed maximum (record §6)"), "{:?}", composition.assumptions);
-    let timer = rendered(&composition, "Δ_timer (J^release of every timer-released task)");
-    assert!(timer.contains("(an observed maximum, the weakest of its parts)"), "{timer}");
-    assert!(timer.contains("queued ahead (T_s 25, J_s 5) = 4 (the caller's figure: an observed maximum)"), "{timer}");
+    let timer = rendered(
+        &composition,
+        "Δ_timer (J^release of every timer-released task)",
+    );
+    assert!(
+        timer.contains("(an observed maximum, the weakest of its parts)"),
+        "{timer}"
+    );
+    assert!(
+        timer.contains(
+            "queued ahead (T_s 25, J_s 5) = 4 (the caller's figure: an observed maximum)"
+        ),
+        "{timer}"
+    );
     // The caller's declaration for the service's application code.
     sources[0].service = Service::Caller {
         cost: observed(2),
@@ -873,7 +1107,13 @@ fn a_sources_service_comes_from_its_record_or_from_the_caller_and_needs_a_record
     sources[0].external = None;
     sources[0].one_request_per_arrival = Some(false);
     let composition = compose(&kernel, &platform, &application, &sources);
-    assert_eq!(composition.stops.unresolved, vec!["`external.uart` cannot be read, which leaves every J undeclared (record §2)".to_owned()]);
+    assert_eq!(
+        composition.stops.unresolved,
+        vec![
+            "`external.uart` cannot be read, which leaves every J undeclared (record §2)"
+                .to_owned()
+        ]
+    );
     assert_eq!(composition.stops.unsupported, vec!["`one-request-per-arrival.uart` is declared `no`, outside what the composition covers (record §6)".to_owned()]);
 }
 
@@ -885,7 +1125,9 @@ fn a_primitive_the_catalog_does_not_cost_or_one_named_completion_cannot_be_compo
         count: 1,
     });
     let composition = compose(&kernel, &platform, &application, &[]);
-    assert!(composition.tasks[0].computation.is_none() && composition.tasks[0].masked_section.is_none());
+    assert!(
+        composition.tasks[0].computation.is_none() && composition.tasks[0].masked_section.is_none()
+    );
     assert_eq!(
         composition.stops.unresolved,
         vec![
@@ -916,20 +1158,34 @@ fn the_sets_verdict_is_the_highest_precedence_among_the_stops_and_the_variants_c
     application.tasks[0].own_code = v(u64::MAX);
     kernel.facts.external_before_timer = None;
     let composition = compose(&kernel, &platform, &application, &[]);
-    assert!(!composition.stops.not_established.is_empty() && !composition.stops.unresolved.is_empty());
-    assert!(matches!(composition.admit(&platform), Err(NoBound::NotEstablished { .. })));
+    assert!(
+        !composition.stops.not_established.is_empty() && !composition.stops.unresolved.is_empty()
+    );
+    assert!(matches!(
+        composition.admit(&platform),
+        Err(NoBound::NotEstablished { .. })
+    ));
     // unsupported-profile outranks not-established, whether the composition or the variant finds it.
     kernel.facts.external_before_timer = Some(false);
     kernel.facts.one_claim_per_trap = Some(false);
     let composition = compose(&kernel, &platform, &application, &[]);
-    assert_eq!(refused(composition.admit(&platform)).verdict, RefusalVerdict::UnsupportedProfile);
+    assert_eq!(
+        refused(composition.admit(&platform)).verdict,
+        RefusalVerdict::UnsupportedProfile
+    );
     let (kernel, platform, mut application) = fixture_a();
     application.tasks[0].own_code = v(u64::MAX);
     application.tasks[0].facts.suspends = Some(true);
     let composition = compose(&kernel, &platform, &application, &[]);
     let refusal = refused(composition.admit(&platform));
     assert_eq!(refusal.verdict, RefusalVerdict::UnsupportedProfile);
-    assert!(refusal.reasons.iter().any(|r| r.contains("suspends itself")), "{refusal}");
+    assert!(
+        refusal
+            .reasons
+            .iter()
+            .any(|r| r.contains("suspends itself")),
+        "{refusal}"
+    );
     // The variant's own `analysis-inconclusive` reasons join the composition's.
     let (mut kernel, platform, application) = fixture_a();
     kernel.facts.external_before_timer = None;
@@ -940,10 +1196,32 @@ fn the_sets_verdict_is_the_highest_precedence_among_the_stops_and_the_variants_c
     let composition = compose(&kernel, &platform, &application, &[]);
     let refusal = refused(composition.admit(&platform));
     assert_eq!(refusal.verdict, RefusalVerdict::AnalysisInconclusive);
-    assert!(refusal.reasons.iter().any(|r| r.starts_with("`external-before-timer` cannot be read")), "{refusal}");
-    assert!(refusal.reasons.iter().any(|r| r.starts_with("W_wake (the idle wake) is not declared")), "{refusal}");
-    assert!(refusal.reasons.iter().any(|r| r.starts_with("W_wake (the idle wake) cannot be read, which leaves every J undeclared")), "{refusal}");
-    assert!(!refusal.reasons.iter().any(|r| r.starts_with("J^release of task `a` is not declared")), "{refusal}");
+    assert!(
+        refusal
+            .reasons
+            .iter()
+            .any(|r| r.starts_with("`external-before-timer` cannot be read")),
+        "{refusal}"
+    );
+    assert!(
+        refusal
+            .reasons
+            .iter()
+            .any(|r| r.starts_with("W_wake (the idle wake) is not declared")),
+        "{refusal}"
+    );
+    assert!(
+        refusal.reasons.iter().any(|r| r
+            .starts_with("W_wake (the idle wake) cannot be read, which leaves every J undeclared")),
+        "{refusal}"
+    );
+    assert!(
+        !refusal
+            .reasons
+            .iter()
+            .any(|r| r.starts_with("J^release of task `a` is not declared")),
+        "{refusal}"
+    );
 }
 
 #[test]
@@ -962,11 +1240,21 @@ fn a_composite_s_category_is_the_weakest_of_its_parts() {
     let composition = compose(&kernel, &platform, &application, &sources);
     let a = &composition.tasks[0];
     assert_eq!(a.computation.unwrap().evidence, Evidence::Assumed);
-    assert_eq!(a.masked_section.unwrap().evidence, Evidence::Analytical, "masked.mask and masked.completion");
+    assert_eq!(
+        a.masked_section.unwrap().evidence,
+        Evidence::Analytical,
+        "masked.mask and masked.completion"
+    );
     assert_eq!(a.jitter_release.unwrap().evidence, Evidence::Analytical);
     let e = &composition.tasks[1];
     assert_eq!(e.computation.unwrap().evidence, Evidence::Analytical);
     let set = composition.admit(&platform).expect("admitted");
-    assert!(set.assumptions().iter().any(|line| line == "C of task `a` = 5 (assumed)"), "{:?}", set.assumptions());
+    assert!(
+        set.assumptions()
+            .iter()
+            .any(|line| line == "C of task `a` = 5 (assumed)"),
+        "{:?}",
+        set.assumptions()
+    );
     assert!(set.assumptions().iter().any(|line| line.starts_with("C of task `a` = 5 (assumed, the weakest of its parts): C^app = 2 (the application: assumed) + api.mask = 1 (the catalog: an externally supplied bound) + completion = 2")), "{:?}", set.assumptions());
 }

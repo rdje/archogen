@@ -21,8 +21,7 @@ use core::fmt;
 
 use crate::runtime::{
     self, ceil_div, gcd, Acknowledge, Deferred, Evidence, Platform, Refusal, RefusalVerdict,
-    ReleasedBy, RuntimeSet, RuntimeTask, Source, TaskFacts, Value, ITERATION_BUDGET,
-    NOT_DECLARED,
+    ReleasedBy, RuntimeSet, RuntimeTask, Source, TaskFacts, Value, ITERATION_BUDGET, NOT_DECLARED,
 };
 
 /// The primitive a masked run begins with (record §1: "a stretch from a `mask` call").
@@ -162,7 +161,10 @@ impl Composite {
                 .join(" + ")
         };
         match self.rule {
-            Rule::Sum => format!("{head}: {}", self.terms.first().map_or_else(String::new, parts)),
+            Rule::Sum => format!(
+                "{head}: {}",
+                self.terms.first().map_or_else(String::new, parts)
+            ),
             Rule::Maximum => format!(
                 "{head}: the largest of {}",
                 self.terms
@@ -534,7 +536,6 @@ impl Sum {
                 .and_then(|product| total.checked_add(product))
         });
     }
-
 }
 
 /// What a sum or a maximum came to.
@@ -779,7 +780,13 @@ impl Composer<'_> {
             .primitives
             .iter()
             .find(|primitive| primitive.name == name)
-            .and_then(|primitive| if masked { primitive.masked } else { primitive.call });
+            .and_then(|primitive| {
+                if masked {
+                    primitive.masked
+                } else {
+                    primitive.call
+                }
+            });
         if cost.is_none() {
             self.out.stops.unresolved.push(format!(
                 "the catalog does not cost primitive `{name}` (`{kind}.{name}`), which leaves {needs} undeclared \
@@ -789,7 +796,14 @@ impl Composer<'_> {
         cost
     }
 
-    fn composite(&mut self, what: &str, value: u128, evidence: Evidence, rule: Rule, terms: Vec<Term>) -> Value {
+    fn composite(
+        &mut self,
+        what: &str,
+        value: u128,
+        evidence: Evidence,
+        rule: Rule,
+        terms: Vec<Term>,
+    ) -> Value {
         let value = Value {
             value: u64::try_from(value).unwrap_or(u64::MAX),
             evidence,
@@ -813,7 +827,11 @@ impl Composer<'_> {
     fn computation(&mut self, task: &TaskParts) -> Option<Value> {
         let what = format!("C of task `{}`", task.id);
         let mut sum = Sum::new();
-        let own = self.part(task.own_code, &format!("C^app of task `{}`", task.id), &what);
+        let own = self.part(
+            task.own_code,
+            &format!("C^app of task `{}`", task.id),
+            &what,
+        );
         sum.add(own, "C^app", Owner::Application, 1);
         for call in &task.calls {
             if call.count == 0 {
@@ -963,15 +981,28 @@ pub fn compose_within(
     // §2: the facts that gate every composite.
     let mut every_composite = true;
     for (fact, name) in [
-        (kernel.facts.pending_taken_after_unmask, "pending-taken-after-unmask"),
-        (kernel.facts.releases_never_latched, "releases-never-latched"),
-        (kernel.facts.primitives_out_of_line, "primitives-out-of-line"),
+        (
+            kernel.facts.pending_taken_after_unmask,
+            "pending-taken-after-unmask",
+        ),
+        (
+            kernel.facts.releases_never_latched,
+            "releases-never-latched",
+        ),
+        (
+            kernel.facts.primitives_out_of_line,
+            "primitives-out-of-line",
+        ),
         (kernel.facts.starts_by_transition, "starts-by-transition"),
     ] {
         every_composite &= c.fact(fact, name, "every composite");
     }
     for (id, fact) in &kernel.discipline {
-        every_composite &= c.fact(*fact, &format!("runtime-discipline.{id}"), "every composite");
+        every_composite &= c.fact(
+            *fact,
+            &format!("runtime-discipline.{id}"),
+            "every composite",
+        );
     }
     every_composite &= c.fact(
         application.leaves_interrupt_hardware_alone,
@@ -989,7 +1020,8 @@ pub fn compose_within(
             let computation = c.computation(task);
             let (masked, overflowed) = c.masked_section(task);
             if overflowed && overflow_stops_every_interrupt.is_none() {
-                overflow_stops_every_interrupt = Some(format!("CS of task `{}` overflows", task.id));
+                overflow_stops_every_interrupt =
+                    Some(format!("CS of task `{}` overflows", task.id));
             }
             (computation, masked)
         } else {
@@ -1072,11 +1104,7 @@ pub fn compose_within(
             }
         };
         if !matches!(source.service, Service::Unanchored) {
-            every_j_ok &= c.fact(
-                source.external,
-                &format!("external.{}", source.id),
-                every_j,
-            );
+            every_j_ok &= c.fact(source.external, &format!("external.{}", source.id), every_j);
             every_j_ok &= c.fact(
                 source.one_request_per_arrival,
                 &format!("one-request-per-arrival.{}", source.id),
@@ -1124,7 +1152,12 @@ pub fn compose_within(
     // The plan's order is strict (§6).
     let mut ranked: Vec<(i64, &str)> = read
         .iter()
-        .filter_map(|source| source.parts.priority.map(|rank| (rank, source.parts.id.as_str())))
+        .filter_map(|source| {
+            source
+                .parts
+                .priority
+                .map(|rank| (rank, source.parts.id.as_str()))
+        })
         .collect();
     ranked.sort_unstable();
     for pair in ranked.windows(2) {
@@ -1197,8 +1230,16 @@ pub fn compose_within(
     let s = c.part(platform.switch, "S (one context transition)", every_j);
     let wake = c.part(platform.wake, "W_wake (the idle wake)", every_j);
     let c_rel = c.part(platform.timer_service, "C_rel (one timer service)", every_j);
-    let rho = c.part(platform.rounding, "ρ (the compare's rounding delay)", every_j);
-    let delta = c.part(platform.delivery, "δ (the hardware delivery latency)", every_j);
+    let rho = c.part(
+        platform.rounding,
+        "ρ (the compare's rounding delay)",
+        every_j,
+    );
+    let delta = c.part(
+        platform.delivery,
+        "δ (the hardware delivery latency)",
+        every_j,
+    );
 
     let name_every_j_without_value = |c: &mut Composer<'_>| {
         for task in &ordered {
@@ -1214,17 +1255,24 @@ pub fn compose_within(
         name_every_j_without_value(&mut c);
         return c.out;
     }
-    let (Some(s), Some(wake), Some(c_rel), Some(rho), Some(delta)) = (s, wake, c_rel, rho, delta) else {
+    let (Some(s), Some(wake), Some(c_rel), Some(rho), Some(delta)) = (s, wake, c_rel, rho, delta)
+    else {
         name_every_j_without_value(&mut c);
         return c.out;
     };
-    let every_service: Option<Vec<(Value, Owner)>> = read.iter().map(|source| source.service).collect();
+    let every_service: Option<Vec<(Value, Owner)>> =
+        read.iter().map(|source| source.service).collect();
     let every_masked: Option<Vec<Value>> = masked_sections.iter().copied().collect();
     let separations_positive = ordered.iter().all(|task| task.separation > 0)
-        && read.iter().all(|source| source.separation.is_some_and(|t| t > 0));
-    let (Some(every_service), Some(every_masked), true, true) =
-        (every_service, every_masked, every_j_ok, separations_positive)
-    else {
+        && read
+            .iter()
+            .all(|source| source.separation.is_some_and(|t| t > 0));
+    let (Some(every_service), Some(every_masked), true, true) = (
+        every_service,
+        every_masked,
+        every_j_ok,
+        separations_positive,
+    ) else {
         name_every_j_without_value(&mut c);
         return c.out;
     };
@@ -1261,9 +1309,13 @@ pub fn compose_within(
     sum.add(Some(wake), "W_wake", Owner::Catalog, 1);
     maximum.alternative("W_wake", sum);
     let l = match maximum.finish() {
-        Formed::Value(value, evidence, terms) => {
-            Some(c.composite("L (the longest masked run)", value, evidence, Rule::Maximum, terms))
-        }
+        Formed::Value(value, evidence, terms) => Some(c.composite(
+            "L (the longest masked run)",
+            value,
+            evidence,
+            Rule::Maximum,
+            terms,
+        )),
         Formed::Overflow => {
             overflow_stops_every_interrupt.get_or_insert_with(|| "L overflows".to_owned());
             None
@@ -1357,7 +1409,10 @@ pub fn compose_within(
     let base_evidence = |timer: bool| {
         let mut weakest = weaker(l.evidence, delta.evidence);
         if timer {
-            weakest = weaker(weaker(weaker(weakest, rho.evidence), c_rel.evidence), s.evidence);
+            weakest = weaker(
+                weaker(weaker(weakest, rho.evidence), c_rel.evidence),
+                s.evidence,
+            );
         }
         weakest
     };
@@ -1369,7 +1424,10 @@ pub fn compose_within(
     let mut source_jitter: Vec<Option<Value>> = vec![None; sources.len()];
     for entry in order {
         let (what, name) = match entry {
-            Queued::Timer => ("Δ_timer (J^release of every timer-released task)".to_owned(), "the timer".to_owned()),
+            Queued::Timer => (
+                "Δ_timer (J^release of every timer-released task)".to_owned(),
+                "the timer".to_owned(),
+            ),
             Queued::Source(index) => (
                 format!("J_s of source `{}`", read[index].parts.id),
                 format!("source `{}`", read[index].parts.id),
@@ -1424,7 +1482,8 @@ pub fn compose_within(
                             charge,
                             ceilings: Vec::new(),
                             part: Part {
-                                symbol: "δ + C_rel + S, the timer queued ahead of no release".to_owned(),
+                                symbol: "δ + C_rel + S, the timer queued ahead of no release"
+                                    .to_owned(),
                                 owner: Owner::Plan,
                                 times: 0,
                                 value: charge,
@@ -1499,7 +1558,8 @@ pub fn compose_within(
                         });
                     }
                     Err((stop, iterates)) => {
-                        let (message, which) = stop_message(&stop, &name, &iterates, largest_t, false);
+                        let (message, which) =
+                            stop_message(&stop, &name, &iterates, largest_t, false);
                         stopped = Some((which, c.out.stops.push(which, message)));
                     }
                 }
@@ -1623,7 +1683,9 @@ pub fn compose_within(
     for (index, source) in c.out.sources.iter_mut().enumerate() {
         source.jitter = source_jitter[index];
         if source_jitter[index].is_none() {
-            c.out.without_value.push(format!("J_s of source `{}`", source.id));
+            c.out
+                .without_value
+                .push(format!("J_s of source `{}`", source.id));
         }
     }
     c.out
@@ -1646,7 +1708,13 @@ fn stop_every_interrupt(c: &mut Composer<'_>, why: &str, sources: &[SourceParts]
 
 /// The stop's statement and its verdict: a source's stop is `unsupported-profile`, the timer's `not-established`,
 /// and a limit `analysis-inconclusive` for either (record §6).
-fn stop_message(stop: &Stop, name: &str, iterates: &[u128], limit: u128, source: bool) -> (String, Which) {
+fn stop_message(
+    stop: &Stop,
+    name: &str,
+    iterates: &[u128],
+    limit: u128,
+    source: bool,
+) -> (String, Which) {
     let trail = iterates
         .iter()
         .map(u128::to_string)
@@ -1658,7 +1726,10 @@ fn stop_message(stop: &Stop, name: &str, iterates: &[u128], limit: u128, source:
             Which::Unsupported,
         )
     } else {
-        ("so no single-job bound applies (record §6)", Which::NotEstablished)
+        (
+            "so no single-job bound applies (record §6)",
+            Which::NotEstablished,
+        )
     };
     match stop {
         Stop::NoFixedPoint => (

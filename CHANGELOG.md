@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the composition code formatted
+
+`ARCHOGEN-M2-0420` (leaf `M2.22`).
+
+- The scheduling checker's composition code, added earlier the same day, had been committed without the repository's
+  formatter, so its focused verification tier failed on format alone. It is formatted now, with no change to what it
+  does.
+
 ## archogen — the trust-dependency gate's fifth review, answered
 
 `ARCHOGEN-M3-0419` (leaf `M3.6.1`, step 6).
