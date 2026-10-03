@@ -780,3 +780,14 @@ from
 to
         for (value, span) in values.into_iter().take(1) {
 end
+
+mutation quantity-missing-labelled-in-file-zero
+file crates/eadl-model/src/quantity.rs
+test -p eadl-model --test f03_units
+expect killed
+why M1.41: a missing magnitude was labelled with SourceId(0), a shipped kind module's first line under archogen check (the substitutability record's review R14).
+from
+                        Label::new(within, "no quantity is written here"),
+to
+                        Label::new(Span::new(eadl_front::SourceId(0), 0, 0), "no quantity is written here"),
+end

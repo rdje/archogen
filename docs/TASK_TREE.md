@@ -55,7 +55,7 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 | --- | --- | --- | --- |
 | [`S0`](tasks/S0.md) | `done` | — every leaf closed; F28 green, and the chapter's counts are measured (`S0.8`) | repo-local |
 | [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.34` awaits the director's yes; `PROGRAM.47` done, every chapter in layers; `.41.1` and `.42` done, every sealing gate reads history whole; `.10.5` the next push | repo-local |
-| [`M1`](tasks/M1.md) | `active` | `M1.29.4` — blocked: module parameters wait on the director's call (findings §7); `M1.41`, a misplaced label, open | repo-local |
+| [`M1`](tasks/M1.md) | `active` | `M1.29.4` — blocked: module parameters wait on the director's call (findings §7) | repo-local |
 | [`API`](tasks/API.md) | `done` | closed `2026-10-02`: one engine API, the wasm binding and its page, `archogen mcp`, and the book's chapter; findings §9 with the director | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |
 | [`M2`](tasks/M2.md) | `active` | `M2.7.4` — the catalog's gate, `.1`–`.4` done; `.5`, the records and the lock, and `M2.7.6`'s review and hosting half, wait on the director; `M2.21`, `archogen analyze`'s owner, open | repo-local |

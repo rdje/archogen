@@ -301,7 +301,7 @@ fn read_offer(item: &Form) -> (Option<Offer>, Vec<Diagnostic>) {
             if let Some(first) = rest.first() {
                 if let Some(direction) = first.head().and_then(direction_of) {
                     let parts = first.items();
-                    return match Quantity::read(parts.get(1), parts.get(2)) {
+                    return match Quantity::read(parts.get(1), parts.get(2), first.span()) {
                         Ok(quantity) => (
                             Some(Offer {
                                 name,
@@ -340,7 +340,7 @@ fn read_offer(item: &Form) -> (Option<Offer>, Vec<Diagnostic>) {
                     Vec::new(),
                 );
             }
-            match Quantity::read(rest.first(), rest.get(1)) {
+            match Quantity::read(rest.first(), rest.get(1), *span) {
                 Ok(value) => (
                     Some(Offer {
                         name,

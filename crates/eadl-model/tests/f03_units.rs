@@ -36,7 +36,8 @@ fn read_quantity(text: &str) -> Result<Quantity, String> {
         return Err(diagnostics.render(&sources));
     }
     let items = document.forms[0].items().to_vec();
-    Quantity::read(items.get(1), items.get(2)).map_err(|d| d.render(&sources))
+    Quantity::read(items.get(1), items.get(2), document.forms[0].span())
+        .map_err(|d| d.render(&sources))
 }
 
 #[test]
@@ -441,4 +442,29 @@ fn f03_the_suite_s_zero_frequency_case_is_refused_for_the_reason_its_header_clai
         "{relative} must exercise a zero frequency and nothing else: {}",
         outcome.render(&sources)
     );
+}
+
+#[test]
+fn a_missing_quantity_is_labelled_where_it_is_missing_not_in_the_first_file() {
+    // ⛔ Leaf `M1.41`. The reader labelled a missing magnitude with `SourceId(0)`, the first file the source map
+    // took — under `archogen check`, a shipped kind module. The description here is the second file, so a label
+    // built from file zero lands in `first.eadl`.
+    let mut sources = SourceMap::new();
+    sources
+        .add("first.eadl", "(defkind something)")
+        .expect("small");
+    let id = sources.add("t.eadl", "(x (exactly))").expect("small");
+    let (document, diagnostics) = read(&sources, id);
+    assert!(
+        !diagnostics.has_errors(),
+        "{}",
+        diagnostics.render(&sources)
+    );
+    let bound = &document.forms[0].items()[1];
+    let refused = Quantity::read(bound.items().get(1), bound.items().get(2), bound.span())
+        .expect_err("nothing is written, so nothing is read");
+    let rendered = refused.render(&sources);
+    assert_eq!(refused.code, "quantity-missing", "{rendered}");
+    assert!(rendered.contains("t.eadl:1:4"), "{rendered}");
+    assert!(!rendered.contains("first.eadl"), "{rendered}");
 }

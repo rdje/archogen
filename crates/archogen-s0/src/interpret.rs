@@ -197,7 +197,7 @@ fn task(form: &Form) -> Result<Task, Box<Diagnostic>> {
 fn whole_milliseconds(clause: &Form, task_name: &str) -> Result<i64, Box<Diagnostic>> {
     // S0-ASSUMPTION: whole-millisecond-periods — S0's modeled clock has no finer tick. `M4.1`
     // carries exact rational time in the plan.
-    let quantity = Quantity::read(clause.items().get(1), clause.items().get(2))?;
+    let quantity = Quantity::read(clause.items().get(1), clause.items().get(2), clause.span())?;
     let millisecond = unit("ms").expect("`ms` is in the unit table");
     let Ok(converted) = quantity.convert_to(millisecond) else {
         return Err(Box::new(Diagnostic::error(

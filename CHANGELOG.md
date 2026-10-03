@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a missing quantity is pointed at where it is missing
+
+`ARCHOGEN-M1-0422` (leaf `M1.41`).
+
+- When a description wrote a bound with no quantity, such as `(tick-rate (exactly))`, the error pointed at the first
+  line of one of the language's own kind modules instead of at the description. It now points at the empty bound in
+  the description's own file.
+
 ## archogen — formatting checked at every commit
 
 `ARCHOGEN-PROGRAM-0421` (leaf `PROGRAM.51`).

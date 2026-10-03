@@ -793,7 +793,9 @@ fn check_values(clause: &Form, types: &[ValueType], errors: &mut Vec<Diagnostic>
             // would give an author two names for one mistake. Arity was checked above, so both forms
             // exist; `Quantity::read` still takes them as `Option` because every other caller reads a
             // clause whose shape nothing has declared.
-            if let Err(diagnostic) = Quantity::read(Some(values[at]), Some(values[at + 1])) {
+            if let Err(diagnostic) =
+                Quantity::read(Some(values[at]), Some(values[at + 1]), values[at].span())
+            {
                 errors.push(*diagnostic);
             }
             at += 2;

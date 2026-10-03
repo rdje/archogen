@@ -384,13 +384,23 @@ impl Quantity {
         }
     }
 
-    /// Read `<number> <unit>` from two adjacent forms.
+    /// Read `<number> <unit>` from two adjacent forms, written inside the form whose span is `within`.
+    ///
+    /// ⛔ **`within` is required, and it is the label when nothing is written.** A missing magnitude has no form
+    /// of its own to point at, and this function used to build its label from `SourceId(0)`, which is whichever
+    /// file the source map took first — a shipped kind module — so `(tick-rate (exactly))` was refused with a
+    /// label on `docs/semantics/kinds/core.eadl:1:1` (leaf `M1.41`, found by the substitutability record's review
+    /// R14). Taking the enclosing form's span as an argument leaves no caller able to produce that label.
     ///
     /// # Errors
     ///
     /// A diagnostic with the offending span: a missing or non-numeric magnitude, a missing or
     /// unknown unit, or a violated domain constraint.
-    pub fn read(number: Option<&Form>, unit_form: Option<&Form>) -> Result<Self, Box<Diagnostic>> {
+    pub fn read(
+        number: Option<&Form>,
+        unit_form: Option<&Form>,
+        within: Span,
+    ) -> Result<Self, Box<Diagnostic>> {
         let (value, number_span) = match number {
             Some(Form::Integer { value, span }) => (Rational::integer(*value), *span),
             Some(Form::Decimal { value, scale, span }) => (
@@ -416,7 +426,7 @@ impl Quantity {
                 return Err(Box::new(Diagnostic::error(
                     "quantity-missing",
                     "expected a quantity",
-                    Label::new(Span::new(eadl_front::SourceId(0), 0, 0), "nothing here"),
+                    Label::new(within, "no quantity is written here"),
                     "write a quantity as a number followed by a unit, e.g. `10 ms`",
                 )));
             }

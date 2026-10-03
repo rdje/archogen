@@ -193,7 +193,7 @@ fn constrained_deadline(task: &Task<'_>, out: &mut Vec<Diagnostic>) {
 }
 
 fn quantity(clause: &Form) -> Result<Quantity, ()> {
-    Quantity::read(clause.items().get(1), clause.items().get(2)).map_err(|_| ())
+    Quantity::read(clause.items().get(1), clause.items().get(2), clause.span()).map_err(|_| ())
 }
 
 /// `docs/decisions/decision_priority-comparison-direction.md`: a priority is a rank, an integer from 1,
