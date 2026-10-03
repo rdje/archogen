@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability relation's twelfth review, answered
+
+`ARCHOGEN-M3-0413` (leaf `M3.1.1`, step 13).
+
+- A twelfth reader again found every timer case right at one provider, and eight defects around it. The most
+  consequential was an earlier answer's instruction that would have quietly weakened the existing refinement check;
+  that check is now left as it is, and the new relation reads offers its own way. Three handovers to other work had
+  been named in the design but not written into the acceptance of the work that takes them; they are now. Two gaps
+  in the refinement check found along the way are filed as `M1.40`. Defects per round: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8,
+  7, 8.
+
 ## archogen — a closed review's rounds move to where review histories live
 
 `ARCHOGEN-PROGRAM-0412` (leaf `PROGRAM.50`).

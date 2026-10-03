@@ -14,7 +14,7 @@
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M3` → frontier `M3.1`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API` is
-  closed; `M1`'s only open leaf, `M1.29.4`, is blocked on the director. Every other tree's frontier head is in
+  closed; `M1`'s open leaves are `M1.29.4`, blocked on the director, and `M1.40`, two refinement gaps. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
 - **Next action:** `M3.1.1`'s review loop — `docs/decisions/decision_substitutability-relation.md` written
   `2026-10-03`; each round a new read-only context, the leaf closing on the first round with no defect; then

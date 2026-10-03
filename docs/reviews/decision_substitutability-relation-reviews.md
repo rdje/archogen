@@ -284,3 +284,31 @@ to one provider: five outcomes, and the aggregation, with each finding, written 
 | K14 — a service's `absent` | no | §1: presence's, not a provider's |
 | K15 — the ledger entry does not yet quote the `mtime` sentences | no | §4: the commit adding the modulus adds them |
 | K16 — a `needs` naming both a block and a fact | no | §5's delegation states `needs` of a vocabulary fact; a declaration's name is presence's |
+
+**Round 12**, `2026-10-03`, a new context that had not read rounds 1 to 11, which ran sixteen probes against the built
+checker and fetched the `mtime` sentences from the manual's source. For one provider and a requirer that states its
+level or state, every §5.2 case classified correctly and no stronger precondition passed. There were 17 findings, 8
+of them defects, and the verdict was "not acceptable as it stands". Defects per round: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8,
+7, 8. One defect was an answer of round 10 reaching into the refinement check (L1); three were handovers not carried
+into the acceptance of the leaf they named (L5, L6, L7) — the knowledge card's fourth habit, a rule changed in one
+statement and not in another, reaching across files.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| L1 — reading an offered `exactly` as the value in `refinement.rs` would remove an abstract platform's only bound on every `exact` fact (p01 refused today would be accepted), and stop two model §6 rows firing | yes | §1.1: the value for the relation, read by `eadl-resolve`'s own reader; still the `exact` bound for refinement, `refinement.rs` unchanged; `M3.1.2`'s acceptance tests both sides |
+| L2 — "satisfied when the value lies in `f`'s direction" accepts `64 bit` against `(exactly 32 bit)` | yes | the opening and rule 3: the requirement's written direction, the fact's or equality under `exactly` |
+| L3 — a bare derived fact beside an absent required input both absent and unknown | yes | rule 1: the input arm applies only where `P` does not offer `f` |
+| L4 — "every provider refused or absent" vacuously true with none, making `app.system` infeasible | yes | §5 and `M3.4`'s acceptance: with no provider judged, `missing-fact`; infeasible once at least one is judged |
+| L5 — one service's facts met by two counters (horizon at one, coherence at another), handed to `M3.3` and taken by no acceptance | yes | `M3.3`'s acceptance: one service's requirements of one device's facts met by the one provider the plan binds |
+| L6 — the mediation gate handed to `M3.2`, taken by no acceptance | yes | `M3.2`'s acceptance: a mediating adapter only where the requirer wrote `allowed` |
+| L7 — `M3.1.2`'s goal still put `deffact` in `core.eadl` | yes | `M3.1.2`'s goal: `docs/semantics/kinds/deffact.eadl` |
+| L8 — §9's claim that every example constraint would be undescribed or absent | yes | §9: all but `periodic-three`'s `(observation-coherent true)` |
+| L9 — the signature called requirement–offer, and "every fact a description writes" | no | the opening and §7: a requirement and a provider; every fact the relation judges |
+| L10 — rule 4's "unknown to `M3.3`" and the power-state simile | no | rule 4 reworded; `M3.3`'s acceptance states the privilege case alone |
+| L11 — rule 1 ordered only one of §8's offer refusals first | no | rule 1: every offer §8 refuses first |
+| L12 — required intervals' `lo ≤ hi`, an empty set, a negative width | no | §2 and §4; §8's row |
+| L13 — statements inside `requires`; a `needs` of a statement | no | rules 5 and 6 |
+| L14 — a width not a whole number missing from §8; one code for many rules; `M3.1.2`'s tests | no | §8's row; the code convention `M3.1.2`'s; its acceptance tests §1.1, §5 and §8 |
+| L15 — an optional input offered bare: undescribed, not unknown | no | rule 1: any input the rule reads |
+| L16 — "a group never split" without "nested or flat" | no | §5 and `M3.4`'s acceptance |
+| L17 — refinement's own gaps beside the relation | no | `M1.40` filed |
