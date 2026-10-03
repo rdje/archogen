@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a closed review's rounds move to where review histories live
+
+`ARCHOGEN-PROGRAM-0412` (leaf `PROGRAM.50`).
+
+- The folder of decision records reached its ceiling again. Rather than ask for a larger one, thirteen sections that
+  were really the round-by-round history of the fault contract's review moved, unchanged and with their digest
+  recorded, into a review history of their own — where every other design's review history already lives. The
+  decision itself, and its first two rounds, stay where they were.
+
 ## archogen — the trust-dependency gate's second review, answered
 
 `ARCHOGEN-M3-0411` (leaf `M3.6.1`, step 3).

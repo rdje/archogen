@@ -15,7 +15,8 @@ existing description or result is invalidated.
 
 **Amendments, 2026-10-01 and 2026-10-02 (leaves `M2.9`, `M2.17`, `M2.19`, and `M2.12.3` where marked).** They answer the director's rulings
 (findings §6) and fifteen independent reviews of this text, *R1*–*R15*, whose findings and answers are tabled in
-`docs/decisions/decision_runtime-contract-gaps.md`; the rule each answer touched is marked below. `M2.12.3`'s edits,
+`docs/decisions/decision_runtime-contract-gaps.md` (R1, R2) and `docs/reviews/rt-static-up-v1-faults-reviews.md`
+(R3–R15); the rule each answer touched is marked below. `M2.12.3`'s edits,
 marked where they stand, answer the reviews of the catalog record's §14.4, in
 `docs/reviews/decision_catalog-records-port-statement-reviews.md`.
 - **Corrections of the 2026-09-13 text** (§14.1): a second release latched in a masked region is contained, not fatal

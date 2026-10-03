@@ -727,6 +727,26 @@ mdBook that is the director's window into the project.
   doctrines green ===` after.
   Commit: `ARCHOGEN-PROGRAM-0400 (leaf PROGRAM.49)`
 
+- ID: `PROGRAM.50`
+  Status: `done` — `2026-10-03`
+  Goal: `docs/decisions/` back under its ceiling of 393 216 bytes without raising it: the fault contract's review
+  rounds R3–R15, appended to `decision_runtime-contract-gaps.md` while the contract was reviewed, moved byte for byte
+  into a review history of their own, `docs/reviews/rt-static-up-v1-faults-reviews.md`, as `docs/reviews/INDEX.md`
+  places a design's review history and `PROGRAM.36` moved the catalog's.
+  Why: on `2026-10-03` `M3.1.1`'s thirteenth step took the folder to 395 564 bytes, which `README-ROUTES` refused.
+  The ceiling is the director's one-time raise (`decision_decisions-folder-ceiling.md`); `docs/specs/` has 8 KB of
+  room, too little for an accepted design to move there (`decision_specifications-home.md`); the record's sections
+  are unnumbered, so `DECISION-HISTORY` cannot seal them. The thirteen sections are review history — rounds of an
+  independent review of `docs/profiles/rt-static-up-v1-faults.md`, each with its findings and answers — which
+  belongs in `docs/reviews/`.
+  Acceptance: the block moved unchanged, its sha256 the same before and after; a stub where it stood naming the new
+  file; the profile's header and the review index pointing at it; `README-ROUTES` green, `docs/decisions/` under its
+  ceiling.
+  Verification: `git show HEAD:docs/decisions/decision_runtime-contract-gaps.md | sed -n 186,549p | shasum -a 256` → `5785eb49…57cc9`, and the same digest over
+  the new file from its first round's heading; `git ls-files docs/decisions | xargs cat | wc -c` → 395 564 before,
+  352584 after; `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`.
+  Commit: `ARCHOGEN-PROGRAM-0412 (leaf PROGRAM.50)`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -942,6 +962,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-09-30` | `PROGRAM.41.1` | the gate rewritten against the review's D1–D18; its self-test; a matrix of 42 mutations on a copy; the real history; every self-test; the enforcer | `54 pass / 0 fail`; 41 of 42 red, the 42nd unreachable apart from the rows leg; `decision-history: OK (4 sealed section(s) …)`; 37 self-tests passed; all green |
 | `2026-09-30` | `PROGRAM.42` | the `-s ours` merge built on both gates in scratch repositories, before and after the fix; both self-tests; four mutations on copies; both gates on the real trees; every self-test; the enforcer | both passed the merge before and refuse it after; `27 pass / 0 fail`, `17 pass / 0 fail`; each mutation red on its own arm; `task-history: OK`, `history-ledgers: OK`; 37 self-tests passed; all green |
 | `2026-10-03` | `PROGRAM.49` | the folder measured before and after; the refusal reproduced by the enforcer; the enforcer after the raise | `264219` over `262144`; all green |
+| `2026-10-03` | `PROGRAM.50` | the moved block's sha256 before and after; the folder measured before and after; the enforcer | `5785eb49…57cc9` both; 395 564 → 352584; all green |
 
 ## Commit Log
 
@@ -1051,6 +1072,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.47.5.23` | `ARCHOGEN-PROGRAM-0327 (leaf PROGRAM.47.5.23)` | ***What this project relies on from outside* in layers**; `PROGRAM.47.5` and `PROGRAM.47` closed, every chapter in layers |
 | `PROGRAM.48` | `ARCHOGEN-PROGRAM-0392 (leaf PROGRAM.48)` | the book's total-bytes ceiling raised to 448 KiB with its measurement, in the decision that owns it |
 | `PROGRAM.49` | `ARCHOGEN-PROGRAM-0400 (leaf PROGRAM.49)` | `docs/reviews/`' total-bytes ceiling raised to 384 KiB with its measurement, in a decision record of its own |
+| `PROGRAM.50` | `ARCHOGEN-PROGRAM-0412 (leaf PROGRAM.50)` | the fault contract's review rounds R3–R15 moved byte for byte from `decision_runtime-contract-gaps.md` to `docs/reviews/`, `docs/decisions/` back under its ceiling |
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0331 (leaf PROGRAM)` | **`PROGRAM.47` sealed**, its 30 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` had grown 1 653 bytes over its 819 200-byte ceiling with `API.6.3`'s leaf |
 
 ## Changelog
