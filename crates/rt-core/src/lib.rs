@@ -37,10 +37,15 @@
 //!
 //! §8.1: *"Model synchronization and interrupt masking explicitly. Banning a mutex type does not
 //! eliminate races or blocking."* So [`Scheduler::mask`] exists, a release arriving while masked
-//! is **latched** rather than lost, and the latched set is delivered on unmask — which is the
-//! same rule §13.4 states for its non-preemptible sections. A release that arrives while an
-//! earlier one is still pending is an **overrun**, not a second pending bit: there is nowhere to
-//! put it, and pretending otherwise is how a queue appears in a profile that excludes queues.
+//! is **latched** rather than lost, and the latched arrivals are delivered when the outermost
+//! section closes — which is the same rule §13.4 states for its non-preemptible sections. A
+//! latched arrival is observed only at that delivery, where each task's arrivals are judged in
+//! arrival order against the task's state then: fresh if the task owes no job, an overrun if it
+//! does (the fault contract's rule 1, `docs/profiles/rt-static-up-v1-faults.md`). A second arrival
+//! while one is latched is kept as a mark beside it, not a second slot, and at that delivery a
+//! hosted model judges the arrivals its mark stands for as one (the contract's Terms): a queue is
+//! the one structure a profile that excludes queues must not grow. Unmasked, a release for a task that still owes a job is an
+//! overrun the moment it arrives.
 
 #![cfg_attr(not(test), no_std)]
 

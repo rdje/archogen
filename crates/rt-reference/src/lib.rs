@@ -93,6 +93,16 @@
 //! interrupted the task the runtime held as running (rule 2). What the text still leaves to an
 //! implementer keeps, or newly carries, a `⚠️ CONTRACT SILENT` note.
 //!
+//! ⭐ **Refreshed `2026-10-03` (leaf `M2.20`), after `M2.15`'s seven reviews reworded the contract
+//! again.** The words above describe the second rewrite as it then read; the contract now says
+//! these things otherwise, and every quotation below reads as it does today: the Terms, that a
+//! hosted model "judges the earlier arrivals its mark stands for as one, so for one delivery it
+//! can report fewer overruns than the target, which judges each due release"; rule 1, that "across
+//! tasks the order changes no task's state; across interrupts it is the hardware's and the plan's";
+//! rule 4, that "on a port the decision precedes that delivery … a hosted model, which takes no
+//! trap, may deliver first. Both reach the same schedule." Nothing in this model moved: it is the
+//! hosted model those sentences describe.
+//!
 //! ⭐ **Then a third reader reviewed it, and it was rewritten a third time.** The review is *R3*
 //! in the fault contract's amendment header, and the text as amended on 2026-10-01 answers it.
 //! **No answer moves this model's behaviour.** The new sentences either state a port's
@@ -1095,9 +1105,11 @@ pub struct Unmasked {
     /// ⭐ This includes an overrun a latch's **mark** stands for. Rule 1: "At delivery a task's
     /// latched arrivals are judged in arrival order against the task's state then: the first is
     /// fresh if the task owes no job (one that completed inside the region included) and an
-    /// overrun if it does; each later one is an overrun under `SkipLateJob`, and is discarded under
-    /// `Fault`, whose first overrun took the task out; the earlier arrivals a hosted latch's mark
-    /// stands for are judged as one." So a marked latch is two arrivals — the mark's, earliest,
+    /// overrun if it does; each later one is judged against the state the earlier ones left, in
+    /// which the task owes the job an earlier one released. Under `SkipLateJob` each is an overrun
+    /// in turn; under `Fault` the first overrun, whichever arrival it is, faults the task, and
+    /// every arrival after it is discarded." And the Terms: a hosted model "judges the earlier
+    /// arrivals its mark stands for as one". So a marked latch is two arrivals — the mark's, earliest,
     /// then the held one, most recent — and counts here once or twice under `SkipLateJob`, exactly
     /// as the same two arrivals would be judged one instruction after the region closed. Under
     /// `Fault` it counts here at most once: a held release after the task's overrun is counted in
@@ -1138,9 +1150,9 @@ pub struct Unmasked {
     /// still runs exactly once at the end, and the result is one `Switch` (or one `ToIdle`) that
     /// names it as the outgoing task. A completion is folded in the same way, so after
     /// [`Runtime::complete`] this is always `Some` and names the completing task as outgoing. That
-    /// is the order rule 4 calls "a hosted model" — the delivery, then the decision — which it
-    /// leaves to the port beside the target's opposite order: "Both reach the same schedule"; see
-    /// [`Runtime::complete`].
+    /// is the order rule 4 allows "a hosted model, which takes no trap" — the delivery, then the
+    /// decision — beside a port's, where "the decision precedes that delivery": "Both reach the
+    /// same schedule"; see [`Runtime::complete`].
     pub transition: Option<Transition>,
 }
 
@@ -1534,8 +1546,8 @@ impl<const N: usize> Runtime<N> {
     /// contract's Terms: a hosted model's latch is "the runtime's own record: the most recent
     /// release, and a mark that an earlier one also came".
     ///
-    /// At delivery the mark is judged first, since its arrivals came first, and "the earlier
-    /// arrivals a hosted latch's mark stands for are judged as one" (rule 1); the held release is
+    /// At delivery the mark is judged first, since its arrivals came first, and a hosted model
+    /// "judges the earlier arrivals its mark stands for as one" (Terms); the held release is
     /// judged after it, against the state the mark left — an overrun if the task then owes a job,
     /// discarded if the mark's own overrun took the task out under `Fault`. Until delivery nothing
     /// about the task has changed and no fault is recorded — see [`Unmasked::overruns`].
@@ -1588,8 +1600,10 @@ impl<const N: usize> Runtime<N> {
     /// used to read `⚠️ CONTRACT SILENT — which overrun is first at one delivery`: rule 1 ordered a
     /// task's own latched arrivals, not different tasks', and the latch keeps no order between
     /// tasks. Rule 1 now decides it by giving it away: "Across tasks the order changes no task's
-    /// state and is the port's (`M2.15` traces it)." This model, as its own port, judges tasks in
-    /// ascending rank (see [`Runtime::unmask`]), so of two overruns found at one delivery the
+    /// state; across interrupts it is the hardware's and the plan's (the composition's `ahead`),
+    /// among interrupts one trap serves the port's code's … (`M2.15` traces it)." This model, which
+    /// takes no trap, judges tasks in ascending rank (see [`Runtime::unmask`]), so of two overruns
+    /// found at one delivery the
     /// higher-priority task's is named here. It changes no task's state, as rule 1 says; this is
     /// the one place it shows, and an adapter comparing this value against another port's after a
     /// delivery that found two tasks' overruns compares two ports' choices, not one contract.
@@ -1634,14 +1648,18 @@ impl<const N: usize> Runtime<N> {
     /// written states it for every arrival inside a region, not only the second:
     ///
     /// > Every release that arrives while a masked region is open is latched, and is observed —
-    /// > for this rule and every other — only at its **delivery**, when the region closes. At
-    /// > delivery a task's latched arrivals are judged in arrival order against the task's state
-    /// > then: the first is fresh if the task owes no job (one that completed inside the region
-    /// > included) and an overrun if it does; each later one is an overrun under `SkipLateJob`, and
-    /// > is discarded under `Fault`, whose first overrun took the task out; the earlier arrivals a
-    /// > hosted latch's mark stands for are judged as one. … So an overrun is not lost, nor fatal
-    /// > for landing inside a region rather than one instruction after it — for arrivals the
-    /// > platform delivers as distinct requests.
+    /// > for this rule and every other — only at its **delivery**, after the region closes — at
+    /// > once at an outermost `unmask`, and after a completion as rule 4 says. At delivery a task's
+    /// > latched arrivals are judged in arrival order against the task's state then: the first is
+    /// > fresh if the task owes no job (one that completed inside the region included) and an
+    /// > overrun if it does; each later one is judged against the state the earlier ones left, in
+    /// > which the task owes the job an earlier one released. Under `SkipLateJob` each is an
+    /// > overrun in turn; under `Fault` the first overrun, whichever arrival it is, faults the
+    /// > task, and every arrival after it is discarded. … So, save where the job a release finds
+    /// > owed is panicking or its failed check has yet to raise what it found, as the Terms leave
+    /// > to the port, no release that finds its task owing a job at delivery escapes its policy,
+    /// > nor is fatal for landing inside a region rather than one instruction after it — for
+    /// > arrivals the platform delivers as distinct requests.
     ///
     /// So every release inside a region reports [`ReleaseEffect::Latched`] and changes nothing but
     /// the latch ([`Runtime::is_overrun_latched`]); no policy runs and no fault is recorded at
@@ -1748,15 +1766,16 @@ impl<const N: usize> Runtime<N> {
     ///
     /// ⭐ **AMENDED — rule 4, the order of decision and delivery (the second review's finding
     /// 30, then R3).** Rule 4 used to say the latched releases are "delivered as at its closing
-    /// `unmask`, and the schedule is decided after", which is the order above. It now gives the
-    /// order to the port: "Whether the next scheduling decision precedes that delivery — the
-    /// target: decided in the completion path, delivered when the following transition unmasks — or
-    /// follows it — a hosted model — is the port's. Both reach the same schedule; a fault raised
-    /// during the delivery is the completion path's, the completing task's, in the first and the
-    /// trap path's in the second, and `M2.15` states how a trace shows each." This model keeps the
-    /// hosted order, delivery then decision. What may differ between the two is the trace, which
-    /// `M2.15` reads, and whose a fault raised during the delivery is; the schedule the event ends
-    /// in does not, and the schedule is what this model is compared on.
+    /// `unmask`, and the schedule is decided after", which is the order above. It now reads: "On
+    /// a port the decision precedes that delivery — decided in the completion path, delivered when
+    /// the following transition unmasks (the composition's `releases-never-latched`); a hosted
+    /// model, which takes no trap, may deliver first. Both reach the same schedule." A fault other
+    /// than an overrun raised during a delivery is, on a port, "the context's that raises it, as
+    /// rule 2 says", and "in a hosted model that delivers inside `unmask` or the completion path,
+    /// such a fault is that task's"; "`M2.15` maps the two records as it maps their traces". This
+    /// model keeps the hosted order, delivery then decision. What may differ between the two is
+    /// the trace, which `M2.15` reads, and whose a fault raised during the delivery is; the
+    /// schedule the event ends in does not, and the schedule is what this model is compared on.
     ///
     /// So a fault raised during this delivery is [`Context::TrapPath`]'s. The call is atomic, so an
     /// adapter raises it before the call or after it, and the trap path then records as interrupted
@@ -1903,17 +1922,18 @@ impl<const N: usize> Runtime<N> {
     /// A task whose latch also holds the mark ([`Runtime::is_overrun_latched`]) has two arrivals to
     /// judge, and rule 1 orders them: "At delivery a task's latched arrivals are judged in arrival
     /// order against the task's state then". The mark's arrivals came first, so they are judged
-    /// first — "the earlier arrivals a hosted latch's mark stands for are judged as one" — and the
-    /// held release,
-    /// the most recent, after them. Both are judged before the next task, so the pair ends as the
+    /// first — a hosted model "judges the earlier arrivals its mark stands for as one" (Terms) —
+    /// and the held release, the most recent, after them, "against the state the earlier ones
+    /// left". Both are judged before the next task, so the pair ends as the
     /// same two arrivals would one instruction after the region closed: "not lost, nor fatal for
     /// landing inside a region rather than one instruction after it". Only the transition count
     /// differs, by the single-transition rule above.
     ///
     /// ⭐ **AMENDED — rule 1, the order across tasks (the second review's finding 42).** This note
     /// used to read `⚠️ CONTRACT SILENT`: rule 1 ordered one task's arrivals, not different tasks'.
-    /// It now says: "Across tasks the order changes no task's state and is the port's (`M2.15`
-    /// traces it)." This model, as its own port, takes tasks in ascending rank, on the ground it
+    /// It now says: "Across tasks the order changes no task's state; across interrupts it is the
+    /// hardware's and the plan's" (`M2.15` traces it). This model, which takes no trap and has no
+    /// plan to read, takes tasks in ascending rank, on the ground it
     /// gave before: every latched release is observed at one instant — the closing — so they are
     /// coincident, which the priority-direction record orders: "A release trace emits coincident
     /// releases in ascending `N`". The order changes no task's state or the transition; it shows
@@ -2443,9 +2463,10 @@ impl<const N: usize> Runtime<N> {
     /// `stood_down` is a task that gave up the processor just before — the completing one — so the
     /// one transition still names it as outgoing.
     ///
-    /// Tasks are taken in ascending rank — rule 1 makes the order across tasks "the port's" — and
-    /// each task's arrivals in the order they arrived: the earlier arrivals the mark stands for,
-    /// "judged as one", then the most recent, which the latch holds. Each is judged against the
+    /// Tasks are taken in ascending rank — rule 1 says the order across tasks "changes no task's
+    /// state" — and each task's arrivals in the order they arrived: the earlier arrivals the mark
+    /// stands for, which a hosted model "judges … as one" (Terms), then the most recent, which the
+    /// latch holds. Each is judged against the
     /// task's state at that moment, exactly as [`Runtime::release`] would judge it unmasked. If the
     /// first left the task owing a job, the held release is an overrun, and under `SkipLateJob` it
     /// is the one that "makes the task ready for its next job, with that release's nominal
@@ -2520,8 +2541,8 @@ enum Contained {
 /// Three states and no more, because the fault contract's Terms give a hosted model's latch
 /// exactly two things to keep: "the runtime's own record: the most recent release, and a mark that
 /// an earlier one also came". A queue would be the `general-ipc` §3.1 excludes, and a counter of
-/// arrivals would keep what rule 1 says is not kept: "the earlier arrivals a hosted latch's mark
-/// stands for are judged as one". (This model had reached the same shape before the first rewrite,
+/// arrivals would keep what the Terms say a hosted model does not: it "judges the earlier arrivals
+/// its mark stands for as one". (This model had reached the same shape before the first rewrite,
 /// by arguing that under each policy the state after delivering two arrivals is the state after
 /// delivering more; the Terms now state it. The second rewrite moved which release the latch
 /// *holds* — the most recent rather than the first — which a model with no instants cannot tell
@@ -3416,8 +3437,8 @@ mod tests {
     #[test]
     fn the_earlier_arrivals_a_mark_stands_for_are_judged_as_one() {
         // Three arrivals of H inside one region: the latch holds the third, the most recent, and
-        // its mark stands for the first two. Rule 1: "the earlier arrivals a hosted latch's mark
-        // stands for are judged as one". Judged one by one they would be a fresh release and an
+        // its mark stands for the first two. The Terms: a hosted model "judges the earlier
+        // arrivals its mark stands for as one". Judged one by one they would be a fresh release and an
         // overrun, and the held third a second overrun under SkipLateJob, or a discarded release
         // under Fault.
         for (policy, after) in [

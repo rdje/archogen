@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the runtime crates' documentation says what the fault contract now says
+
+`ARCHOGEN-M2-0395` (leaf `M2.20`).
+
+- `rt-core`'s crate documentation no longer calls a second release arriving while one is latched an overrun on
+  arrival: it is kept as a mark and judged, with the first, when the masked section closes, as the contract's rule 1
+  says. `rt-reference`'s eleven quotations of the contract's earlier wording read as the contract does today. No
+  behaviour moved.
+
 ## archogen — the engine composes the analysis's four composite inputs
 
 `ARCHOGEN-M2-0394` (leaf `M2.10.2`; `M2.10` closed).
