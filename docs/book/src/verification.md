@@ -83,18 +83,18 @@ Rendered from a run, not retyped:
 ```console
 $ cargo xtask verify --tier integration
 tier: integration — before a push, and before closing a milestone
-  ✅ fmt                  0.53s  every Rust source is in canonical format
-  ✅ clippy             249.68s  no lint fires anywhere, including in tests and examples
-  ✅ tests              103.46s  every contract test passes, F28 and the semantic corpus included
-  ✅ doctrines           21.30s  every repository invariant holds on the working tree
-  ✅ self-tests         104.20s  every doctrine gate's RED arms still fire — a gate that stopped being able to fail is caught here
-  ✅ book                 0.14s  the mdBook builds, with its pinned release — it is the director's window, so a broken book is a broken deliverable
-  ✅ no-std-build         0.05s  the runtime core compiles for a bare-metal target (§14.3's "compile targets")
-  ✅ pin-premises         1.16s  every premise the port's record states as measured on the pinned toolchain still holds, each probe the record prints read at its hash (§14.1–§14.4)
-  ✅ wasm-build          13.61s  the engine's I/O-free crates, derived from the workspace, compile for the browser target
-  ✅ wasm-binding         0.76s  the browser artifact imports nothing, exports what its record lists, and answers every tracked description byte for byte as the host build does, with archogen check's exit code
-  ✅ emulator             0.21s  the pinned riscv-virt-up configuration renders and its toolchain is present (§3.2)
-  ✅ spike                0.13s  code runs on the verified target: boot, a timer interrupt taken and returned from, the context preserved, output on the UART — and a clobbered context is caught (M2.8.4)
+  ✅ fmt                  0.59s  every Rust source is in canonical format
+  ✅ clippy              11.09s  no lint fires anywhere, including in tests and examples
+  ✅ tests              117.82s  every contract test passes, F28 and the semantic corpus included
+  ✅ doctrines           40.93s  every repository invariant holds on the working tree
+  ✅ self-tests         167.49s  every doctrine gate's RED arms still fire — a gate that stopped being able to fail is caught here
+  ✅ book                 0.23s  the mdBook builds, with its pinned release — it is the director's window, so a broken book is a broken deliverable
+  ✅ no-std-build         0.24s  the runtime core compiles for a bare-metal target (§14.3's "compile targets")
+  ✅ pin-premises         2.51s  every premise the catalog rests on about the pinned toolchain still holds: the port record's, each probe it prints read at its hash (§14.1–§14.4), and the gate's three claims (§3)
+  ✅ wasm-build           0.65s  the engine's I/O-free crates, derived from the workspace, compile for the browser target
+  ✅ wasm-binding         1.24s  the browser artifact imports nothing, exports what its record lists, and answers every tracked description byte for byte as the host build does, with archogen check's exit code
+  ✅ emulator             0.33s  the pinned riscv-virt-up configuration renders and its toolchain is present (§3.2)
+  ✅ spike                0.22s  code runs on the verified target: boot, a timer interrupt taken and returned from, the context preserved, output on the UART — and a clobbered context is caught (M2.8.4)
 tier integration: passed — 12 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined
 $ echo $?
 0

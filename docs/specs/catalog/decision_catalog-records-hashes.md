@@ -210,8 +210,9 @@ set** and reads the compiler's dependency information:
   - every source path in the compiler's dependency information that is in neither set. A path is resolved
     lexically against the written index's root, `.` and `..` included, and must then satisfy §4's grammar. One
     outside the written index is refused, the toolchain's sysroot included: no package's own sources live there,
-    and measured on `2026-09-30` no workspace crate's dependency information names one. `M2.7.4` measures that
-    again before relying on it;
+    and measured on `2026-09-30` no workspace crate's dependency information names one. `M2.7.4.1` measured that
+    again on `2026-10-03`, with the ledger's two other toolchain claims, and `cargo xtask pin-premises` re-measures
+    each on every integration run;
   - a source path whose bytes after the build differ from its blob's;
   - every environment dependency except `CARGO_PKG_*`, `CARGO_CRATE_NAME`, `CARGO_MANIFEST_DIR` and
     `CARGO_MANIFEST_PATH`.

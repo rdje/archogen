@@ -330,15 +330,16 @@ const TIERS: &[Tier] = &[
             },
             Step {
                 name: "pin-premises",
-                proves: "every premise the port's record states as measured on the pinned toolchain still holds, each \
-                         probe the record prints read at its hash (§14.1–§14.4)",
+                proves: "every premise the catalog rests on about the pinned toolchain still holds: the port record's, \
+                         each probe it prints read at its hash (§14.1–§14.4), and the gate's three claims (§3)",
                 action: Action::Run {
                     program: "cargo",
                     args: &["xtask", "pin-premises"],
                     requires: Some(RUST_TARGET_REQUIREMENT),
-                    matters: "the port's assembly format rests on what the pinned compiler, assembler and linker do; \
-                              a pin bump that changes one must fail here before any record rests on it (leaf \
-                              `M2.12.4.4`). `rustup target add` the `RUST_TARGET` of `targets/riscv-virt-up.env`",
+                    matters: "the port's assembly format and the catalog's gate rest on what the pinned compiler, \
+                              assembler, linker, Cargo and rustup do; a pin bump that changes one must fail here \
+                              before any record rests on it (leaves `M2.12.4.4`, `M2.7.4.1`). `rustup target add` \
+                              the `RUST_TARGET` of `targets/riscv-virt-up.env`",
                 },
             },
             Step {

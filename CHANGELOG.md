@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the gate's three toolchain claims, measured
+
+`ARCHOGEN-M2-0387` (leaf `M2.7.4.1`).
+
+- The catalog's gate rests on three things the pinned toolchain does: the compiler lists every source file it read,
+  `rustc --print sysroot` points at the toolchain's own files, and Cargo and rustup find their configuration files
+  only above the working directory and in `CARGO_HOME`. Each was written down and never measured. Each is now
+  measured on the pin and re-measured, with a control, on every integration run.
+
 ## archogen — what a trace shows on each fault path: decided
 
 `ARCHOGEN-M2-0385` (leaf `M2.15`, closed).

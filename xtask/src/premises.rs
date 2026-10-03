@@ -1,14 +1,19 @@
-//! `cargo xtask pin-premises` — the port record's premises about the pinned toolchain, held as compile-only tests
-//! (leaf `M2.12.4.4`; `docs/specs/catalog/decision_catalog-records-port.md`, How to apply).
+//! `cargo xtask pin-premises` — the catalog's premises about the pinned toolchain, held as compile-only tests: the
+//! port record's (leaf `M2.12.4.4`; `docs/specs/catalog/decision_catalog-records-port.md`, How to apply) and the
+//! three claims the gate rests on (leaf `M2.7.4.1`; the ledger's `rust-toolchain` entry, `docs/book/src/ledger.md`).
 //!
 //! > A changed result is a change to §14.2 or §14.3, so a new rules version from the first lock on. `M2.12.4` holds
 //! > these premises as compile-only tests built with the pinned toolchain, so the bump's own run fails first.
 //!
-//! The record prints five probes with their sha256: §14.1's naked-function probe and §14.4's four. Each is read from
-//! the record, its hash checked, and built as the record says. §14.2's premises were measured in its reviews
-//! without printed sources; their probes are written here, each named by the record's own words. Every premise is
+//! The port record prints five probes with their sha256: §14.1's naked-function probe and §14.4's four. Each is read
+//! from the record, its hash checked, and built as the record says. §14.2's premises were measured in its reviews
+//! without printed sources; their probes are written here, each named by the record's own words. The gate's three
+//! claims — that the compiler's dependency information names every source file it read, that `rustc --print
+//! sysroot` names the toolchain's own files, and that rustup and Cargo discover their files from the working
+//! directory upward and nowhere else but `CARGO_HOME` — are measured here with a control each. Every premise is
 //! built with the toolchain `rust-toolchain.toml` pins — the run refuses another — and judged on what the compiler,
-//! the assembler or the linker answered: a message, an alignment, or the object code itself ([`crate::elf`]).
+//! the assembler, the linker, Cargo or rustup answered: a message, an alignment, a path list, or the object code
+//! itself ([`crate::elf`]).
 //!
 //! It runs the compiler, so it is tooling, outside the product (`NO-SUBPROCESS`), and the integration tier runs it.
 //! Exit 0: every premise holds. 1: one does not, named. 2: the record's probes or the pin could not be read.
@@ -136,8 +141,25 @@ impl From<Output> for Answer {
 
 impl Bench {
     fn run(&self, program: &str, args: &[&str], env: &[(&str, &str)], at: &Path) -> Answer {
+        self.run_without(program, args, env, &[], at)
+    }
+
+    /// `run`, with the variables `remove` names taken out of the child's environment first: `cargo xtask` runs under
+    /// rustup's proxy, which sets `RUSTUP_TOOLCHAIN`, and a premise about what rustup reads from files must not see
+    /// it.
+    fn run_without(
+        &self,
+        program: &str,
+        args: &[&str],
+        env: &[(&str, &str)],
+        remove: &[&str],
+        at: &Path,
+    ) -> Answer {
         let mut command = Command::new(program);
         command.args(args).current_dir(at);
+        for k in remove {
+            command.env_remove(k);
+        }
         for (k, v) in env {
             command.env(k, v);
         }
@@ -571,7 +593,179 @@ const PREMISES: &[Premise] = &[
             }
         },
     },
+    Premise {
+        says: "the gate's first claim: `rustc`'s dependency information names every source file the compiler read — a module file, one under `#[path]`, a nested module's, and the files `include_str!`, `include_bytes!` and `include!` read — and no file it did not",
+        check: |bench, _| {
+            let dir = bench.dir.join("dep_info");
+            for sub in ["src/x", "src/nested"] {
+                fs::create_dir_all(dir.join(sub)).map_err(|e| e.to_string())?;
+            }
+            let files: [(&str, &str); 9] = [
+                ("Cargo.toml", "[package]\nname = \"depinfo\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[workspace]\n"),
+                ("src/lib.rs", "mod a;\n#[path = \"x/b.rs\"]\nmod b;\nmod nested;\npub const TEXT: &str = include_str!(\"data.txt\");\npub const BYTES: &[u8] = include_bytes!(\"blob.bin\");\ninclude!(\"inc.rs\");\npub fn all() -> usize { a::A + b::B + nested::inner::N + INC + TEXT.len() + BYTES.len() }\n"),
+                ("src/a.rs", "pub const A: usize = 1;\n"),
+                ("src/x/b.rs", "pub const B: usize = 2;\n"),
+                ("src/nested/mod.rs", "pub mod inner;\n"),
+                ("src/nested/inner.rs", "pub const N: usize = 3;\n"),
+                ("src/data.txt", "hello\n"),
+                ("src/blob.bin", "xyz"),
+                ("src/inc.rs", "pub const INC: usize = 4;\n"),
+            ];
+            for (path, text) in files {
+                fs::write(dir.join(path), text).map_err(|e| e.to_string())?;
+            }
+            fs::write(dir.join("src/unread.rs"), "pub const UNREAD: usize = 9;\n").map_err(|e| e.to_string())?;
+            let answer = bench.run("cargo", &["build", "-q"], &[], &dir);
+            expect(&answer, true, "")?;
+            let named = dep_info_paths(&dir.join("target/debug/deps"), "depinfo-", &dir)?;
+            let read: Vec<String> = files[1..].iter().map(|(p, _)| dir.join(p).display().to_string()).collect();
+            for path in &read {
+                if !named.contains(path) {
+                    return Err(format!("the dependency information does not name `{path}`: {named:?}"));
+                }
+            }
+            if named.iter().any(|p| p.ends_with("unread.rs")) {
+                return Err("the dependency information names `unread.rs`, which the compiler did not read".to_owned());
+            }
+            Ok(())
+        },
+    },
+    Premise {
+        says: "the gate's second claim: `rustc --print sysroot` names the toolchain's own files — `core`'s and `std`'s libraries for the host and `core`'s for the target under it — and a crate's dependency information names no path under it",
+        check: |bench, _| {
+            let sysroot = bench.run("rustc", &["--print", "sysroot"], &[], &bench.dir);
+            expect(&sysroot, true, "")?;
+            let sysroot = sysroot.text.trim().to_owned();
+            let version = bench.run("rustc", &["-vV"], &[], &bench.dir);
+            let host = version
+                .text
+                .lines()
+                .find_map(|l| l.strip_prefix("host: "))
+                .ok_or("`rustc -vV` names no host")?
+                .to_owned();
+            let libs = |triple: &str, name: &str| -> Result<(), String> {
+                let dir = Path::new(&sysroot).join("lib/rustlib").join(triple).join("lib");
+                let found = fs::read_dir(&dir)
+                    .map_err(|e| format!("{}: {e}", dir.display()))?
+                    .filter_map(Result::ok)
+                    .any(|e| e.file_name().to_string_lossy().starts_with(&format!("lib{name}-")));
+                if found {
+                    Ok(())
+                } else {
+                    Err(format!("no `lib{name}-*` under {}", dir.display()))
+                }
+            };
+            libs(&host, "core")?;
+            libs(&host, "std")?;
+            libs(TARGET, "core")?;
+            let dir = bench.dir.join("uses_std");
+            fs::create_dir_all(dir.join("src")).map_err(|e| e.to_string())?;
+            fs::write(
+                dir.join("Cargo.toml"),
+                "[package]\nname = \"usesstd\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[workspace]\n",
+            )
+            .map_err(|e| e.to_string())?;
+            fs::write(dir.join("src/lib.rs"), "pub fn f() -> String { format!(\"{}\", std::env::args().count()) }\n")
+                .map_err(|e| e.to_string())?;
+            expect(&bench.run("cargo", &["build", "-q"], &[], &dir), true, "")?;
+            let named = dep_info_paths(&dir.join("target/debug/deps"), "usesstd-", &dir)?;
+            if let Some(inside) = named.iter().find(|p| p.starts_with(&sysroot)) {
+                return Err(format!("the dependency information names `{inside}`, under the sysroot"));
+            }
+            if named.is_empty() {
+                return Err("the dependency information names nothing".to_owned());
+            }
+            Ok(())
+        },
+    },
+    Premise {
+        says: "the gate's third claim: rustup and Cargo discover `rust-toolchain.toml` and `.cargo/config.toml` from the working directory upward — the nearest file winning — and nowhere else but `CARGO_HOME`; `RUSTUP_TOOLCHAIN` outranks every file",
+        check: |bench, _| {
+            let dir = bench.dir.join("discovery");
+            for sub in ["anc/.cargo", "anc/sub/deep", "sib", "home", "outer/inner/sub"] {
+                fs::create_dir_all(dir.join(sub)).map_err(|e| e.to_string())?;
+            }
+            fs::write(dir.join("anc/.cargo/config.toml"), "[alias]\nzz = \"version\"\n").map_err(|e| e.to_string())?;
+            fs::write(dir.join("home/config.toml"), "[alias]\nyy = \"version\"\n").map_err(|e| e.to_string())?;
+            let channel = pinned_channel(&repo_root_of(&bench.dir)?)?;
+            let toolchain = format!("[toolchain]\nchannel = \"{channel}\"\n");
+            fs::write(dir.join("outer/rust-toolchain.toml"), &toolchain).map_err(|e| e.to_string())?;
+            fs::write(dir.join("outer/inner/rust-toolchain.toml"), &toolchain).map_err(|e| e.to_string())?;
+            let home = dir.join("home").display().to_string();
+            let cargo_home = [("CARGO_HOME", home.as_str())];
+            // `cargo xtask` runs under rustup's proxy, which sets `RUSTUP_TOOLCHAIN`; the files are read only without it.
+            let no_pin = ["RUSTUP_TOOLCHAIN"];
+            let deep = dir.join("anc/sub/deep");
+            let sib = dir.join("sib");
+            expect(&bench.run_without("cargo", &["zz"], &cargo_home, &no_pin, &deep), true, "cargo ")?;
+            expect(&bench.run_without("cargo", &["zz"], &cargo_home, &no_pin, &sib), false, "no such command: `zz`")?;
+            expect(&bench.run_without("cargo", &["yy"], &cargo_home, &no_pin, &sib), true, "cargo ")?;
+            let active = |at: &Path, env: &[(&str, &str)]| -> Result<String, String> {
+                let answer = bench.run_without("rustup", &["show", "active-toolchain"], env, &no_pin, at);
+                expect(&answer, true, "")?;
+                Ok(answer.text.lines().next().unwrap_or_default().to_owned())
+            };
+            let nearest = active(&dir.join("outer/inner/sub"), &[])?;
+            if !nearest.contains("outer/inner/rust-toolchain.toml") {
+                return Err(format!("from `outer/inner/sub` rustup names not the nearest file: {nearest}"));
+            }
+            let outer = active(&dir.join("outer"), &[])?;
+            if !outer.contains("outer/rust-toolchain.toml") || outer.contains("inner") {
+                return Err(format!("from `outer` rustup names not its own file: {outer}"));
+            }
+            let sibling = active(&dir.join("sib"), &[])?;
+            if sibling.contains("outer") {
+                return Err(format!("from a sibling rustup names `outer`'s file: {sibling}"));
+            }
+            let forced = active(&dir.join("outer/inner/sub"), &[("RUSTUP_TOOLCHAIN", channel.as_str())])?;
+            if !forced.contains("environment variable RUSTUP_TOOLCHAIN") {
+                return Err(format!("`RUSTUP_TOOLCHAIN` did not outrank the file: {forced}"));
+            }
+            Ok(())
+        },
+    },
 ];
+
+/// The paths a build's dependency information names: every `.d` file under `deps` whose name starts with `prefix`,
+/// its targets' prerequisites, each made absolute against `base`, the package directory cargo ran `rustc` from —
+/// cargo gives `rustc` the source path relative to it, so the prerequisites are written relative to it too.
+fn dep_info_paths(deps: &Path, prefix: &str, base: &Path) -> Result<Vec<String>, String> {
+    let mut out = Vec::new();
+    for entry in fs::read_dir(deps).map_err(|e| format!("{}: {e}", deps.display()))? {
+        let path = entry.map_err(|e| e.to_string())?.path();
+        let name = path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or_default();
+        if !name.starts_with(prefix) || !name.ends_with(".d") {
+            continue;
+        }
+        let text = fs::read_to_string(&path).map_err(|e| e.to_string())?;
+        for line in text.lines() {
+            let Some((_, prerequisites)) = line.split_once(": ") else {
+                continue;
+            };
+            out.extend(
+                prerequisites
+                    .split(' ')
+                    .filter(|p| !p.is_empty())
+                    .map(|p| base.join(p).display().to_string()),
+            );
+        }
+    }
+    out.sort();
+    out.dedup();
+    Ok(out)
+}
+
+/// The repository root above the bench directory, where `rust-toolchain.toml` is.
+fn repo_root_of(bench: &Path) -> Result<PathBuf, String> {
+    bench
+        .ancestors()
+        .find(|a| a.join("rust-toolchain.toml").is_file())
+        .map(Path::to_path_buf)
+        .ok_or_else(|| "no `rust-toolchain.toml` above the bench directory".to_owned())
+}
 
 /// Run every premise; exit 0 when each holds.
 pub fn run(root: &Path) -> i32 {
