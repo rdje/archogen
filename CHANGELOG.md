@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog's checker, rehearsed through CI's own harness
+
+`ARCHOGEN-M2-0389` (leaf `M2.7.4.2`, closed).
+
+- The CI job that had failed closed for want of a checker now passes on the empty catalog: rehearsed from a clean
+  checkout exactly as the workflow runs it, the checker built from the base commit and run on the judged tree.
+
 ## archogen — the catalog's checker
 
 `ARCHOGEN-M2-0388` (leaf `M2.7.4.2`, step 1).
