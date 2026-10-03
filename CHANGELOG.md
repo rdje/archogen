@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust-dependency gate's second review, answered
+
+`ARCHOGEN-M3-0411` (leaf `M3.6.1`, step 3).
+
+- The second reader found the gate, as written, would have blocked for ever: a reviewed change could never pass the
+  pull request that proposed it. Now each finding is refused (the author can fix it alone), pending (only a review
+  settles it, and only the release's assurance step waits for it), or accepted — so the review is the merge. Before
+  the director's protected commit exists, the gate claims nothing about independence at all. The same reader showed,
+  by compiling a three-line crate, that the assembler can pull a file into a program without the compiler recording
+  it; that is now refused. The reader also found that `archogen analyze` is still assigned to a leaf that closed long
+  ago, now filed as `M2.21`.
+
 ## archogen — the substitutability relation's eleventh review: narrowed to one provider
 
 `ARCHOGEN-M3-0410` (leaf `M3.1.1`, step 12).
