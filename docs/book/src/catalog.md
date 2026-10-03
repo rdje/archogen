@@ -173,10 +173,10 @@ specification's. Round 11 found none live, and the record was accepted. Its hist
 
 ## Today and ahead
 
-- **Nothing loads a catalog.** `catalog/` is empty. The crate reads records, computes their hashes and checks the
-  lock, over one tree and over a history, derives evidence status, checks each review where it was recorded and
-  traces invalidation, answers lookups, holds the production namespace, admits claims, judging premise 3, and holds
-  code to the package rules: the crate is complete. The gate that gives it the history is `M2.7.4`'s.
+- **The gate loads the catalog at every commit, and it is empty.** `cargo xtask catalog-check` reads the history
+  from git and judges the pending commit, a commit as made, or a pull request's merge against its base (`M2.7.4.2`);
+  the hooks that run it and the builds it must make are next (`M2.7.4.3`, `.4`). The crate behind it is complete:
+  it reads records, hashes them, checks the lock over one tree and a history, derives status and admits claims.
 - **No port's record exists yet.** Its format, its statement and the loader's checks are done (`M2.12`). Until a
   port's record is written, every analysis of the runtime variant over the catalog is inconclusive.
 - **No surface makes a production claim.** That needs images, which are `M4`'s, and `M4.10` holds everything the

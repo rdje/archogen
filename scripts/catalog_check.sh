@@ -30,7 +30,8 @@
 #      built-in name, and nothing else (review round 1, V3). The judged tree is never on that path;
 #   6. the checker is built in `checker/`, `--offline --locked --release`, into `checker-target/`, and run from there,
 #      never copied, with `CARGO_TARGET_DIR` a fresh `records-target/`, so no build it makes can reach its binary.
-#      Each argument after `--` has `{judged}` replaced by the judged tree's directory and `{base}` by the base's.
+#      Each argument after `--` has `{judged}` replaced by the judged tree's directory, `{base}` by the base's,
+#      `{judged-commit}` by the judged commit's full object name and `{base-commit}` by the base's (`M2.7.4.2`).
 # The verdict is the checker's exit code.
 #
 # ⚠️ OPEN, for the design's review (`M2.7.6.4`): the judged tree is written under the base checkout, so the
@@ -238,7 +239,9 @@ if r.returncode or not os.path.isfile(program):
     refuse("the checker `%s:%s` did not build from the base" % (package, binary))
 print("catalog-check: the checker built from the base %s, judging %s" % (base[:12], judged[:12]), file=sys.stderr)
 sys.stderr.flush()
-run = subprocess.run([program, *[a.replace("{judged}", JUDGED).replace("{base}", CHECKER) for a in extra]],
+substituted = [a.replace("{judged}", JUDGED).replace("{base}", CHECKER)
+               .replace("{judged-commit}", judged).replace("{base-commit}", base) for a in extra]
+run = subprocess.run([program, *substituted],
                      env=dict(env, CARGO_TARGET_DIR=os.path.join(WORK, "records-target")), cwd=CHECKER)
 print("catalog-check: the checker's verdict: exit %d" % run.returncode, file=sys.stderr)
 sys.exit(run.returncode)
@@ -267,6 +270,7 @@ fn main() {
     let rustc = rustc.map(|o| String::from_utf8_lossy(&o.stdout).into_owned()).unwrap_or_default();
     let release = rustc.lines().find(|l| l.starts_with("release: ")).unwrap_or("release: none");
     println!("stub checker: in the judged tree, {release}");
+    println!("stub checker: further arguments: {}", std::env::args().skip(2).collect::<Vec<_>>().join(" "));
     if verdict.trim() == "fail" {
         std::process::exit(1);
     }
@@ -305,8 +309,26 @@ RS
     fi
     ok=$((ok + 1)); echo "  ✅ $name"
   }
+  arm_with_args() { # $1 = name, $2 = expected rc, $3 = text the output must carry, $4 = the judged commit, then the
+    local name="$1" want="$2" must="$3" commit="$4" out rc # arguments after `--`, placeholders included
+    shift 4
+    arms=$((arms + 1)); rm -f "$marker"
+    out="$(cd "$repo" && bash "$SELF" --base "$base" --judged "$commit" --checker checker:checker -- '{judged}' "$@" 2>&1)"
+    rc=$?
+    if [ -e "$marker" ]; then
+      echo "SELF-TEST: $name — the planted program ran" >&2; return
+    fi
+    if [ "$rc" -ne "$want" ]; then
+      echo "SELF-TEST: $name — expected exit $want, got $rc" >&2; printf '%s\n' "$out" | tail -4 | sed 's/^/    /' >&2; return
+    fi
+    if [ -n "$must" ] && ! printf '%s' "$out" | grep -qF -- "$must"; then
+      echo "SELF-TEST: $name — not about \`$must\`:" >&2; printf '%s\n' "$out" | tail -4 | sed 's/^/    /' >&2; return
+    fi
+    ok=$((ok + 1)); echo "  ✅ $name"
+  }
   local same pin; same="$(judged)"
   pin="$(sed -n 's/^channel = "\(.*\)"$/\1/p' "$ROOT/rust-toolchain.toml")"
+  arm_with_args "the commit placeholders name the judged commit and the base" 0 "further arguments: $same $base" "$same" '{judged-commit}' '{base-commit}'
   arm "an unchanged tree: the checker runs from its own target directory" 0 "checker-target/release/checker" "$same"
   arm "the checker's builds go to a fresh target directory, not its own" 0 "builds into $repo/target/catalog-check/run/records-target" "$same"
   arm "a judged build script never runs" 0 "the checker's verdict: exit 0" \

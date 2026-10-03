@@ -84,6 +84,7 @@ name = "xtask"
 version = "0.1.0"
 dependencies = [
  "archogen-api",
+ "archogen-catalog",
  "archogen-evidence",
  "eadl-front",
 ]

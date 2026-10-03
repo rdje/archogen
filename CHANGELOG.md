@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog's checker
+
+`ARCHOGEN-M2-0388` (leaf `M2.7.4.2`, step 1).
+
+- The catalog now has its checker: a tool that reads the repository's history from git exactly as the design
+  prescribes, loads the catalog at the commit being judged, and replays the lock against the commits it builds on. It
+  judges the commit about to be made, a commit already made, or a pull request's merge against its base. On this
+  repository's empty catalog it passes; in test repositories it refuses a record changed without a version bump, a
+  removed review and a hand-edited lock, each with its code.
+
 ## archogen — the gate's three toolchain claims, measured
 
 `ARCHOGEN-M2-0387` (leaf `M2.7.4.1`).

@@ -40,6 +40,7 @@
 //! scope", so a quarantine is a row of [`QUARANTINES`] carrying exactly those, and nothing else
 //! can make a step's exit count as an absence (leaf `PROGRAM.10.1`).
 
+mod catalog_check;
 mod dtb;
 mod elf;
 mod mutation;
@@ -885,6 +886,7 @@ fn help() {
     println!("    cargo xtask dtb-summary <file.dtb>");
     println!("    cargo xtask dtb-check <file.dtb> <fixture.md>");
     println!("    cargo xtask pin-premises");
+    println!("    cargo xtask catalog-check --index | --commit <sha> | --base <dir> --judged <dir> --base-commit <sha> --judged-commit <sha>");
     println!();
     println!("TIERS:");
     for tier in TIERS {
@@ -923,6 +925,7 @@ fn main() {
         ["target-agreement", env, dtb] => target_agreement(env, dtb),
         ["mutate"] => mutation::run(&repo_root(), &[]),
         ["pin-premises"] => premises::run(&repo_root()),
+        ["catalog-check", rest @ ..] => catalog_check::run(&repo_root(), rest),
         ["mutate", "--only", ids @ ..] if !ids.is_empty() => mutation::run(
             &repo_root(),
             &ids.iter().map(|s| (*s).to_string()).collect::<Vec<_>>(),
