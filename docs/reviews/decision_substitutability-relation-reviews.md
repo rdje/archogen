@@ -99,3 +99,23 @@ unknown, and the rule derives nothing.
 | C11 — `deffact`'s cardinalities unstated | no | §1.1: `doc`, `domain`, `role`, `direction` once; `derived-from`, `rule` at most once |
 | C12 — a non-positive width, and `2^width` past 126 against an offered modulus | no | §4: a width is a positive whole number of bits; a written modulus is at most `2^63 − 1`, so against 64 bits or more the bound holds uncomputed |
 | C13 — a service may `offers` but is no provider | no | §1: its offers are not judged in `/1` |
+
+**Round 4**, `2026-10-03`, a new context that had not read rounds 1 to 3: it was asked to check eight restated rules
+statement by statement and to walk `periodic-three`, `alternative-timer`, `bounded-queue` and `app.two-timers`
+through the relation by hand. It found every verdict of the walk-through right, six of the eight restatements one
+thing everywhere, every §5.2 case right through the derived path, the `deffact` example admitted by `check_values`,
+and the numbers exact. There were 10 findings, 3 of them defects, and the verdict was "not acceptable as it stands".
+Defects per round: 7, 7, 8, 3.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| D1 — an offered `unambiguous-horizon` beside derivable inputs was never checked against them, so a 16-bit counter at `10 MHz` writing `(unambiguous-horizon 3600 s)` passed a 60 s requirement the record's own prose said it caught | yes | §4: one rule in place of the modulus special case — an offered derived fact beside the values its rule would compute from may not lie beyond the rule's result in the fact's direction (a modulus above `2^width`, a horizon above `modulus / rate`), `invalid-description`; below it the offer is the value; worked in §4 and §6, and in §8 |
+| D2 — §5 enumerated providers "that have a value" and called a fact no provider offers or derives `missing-fact`, where rule 1 makes a provider's declared absence infeasible (`alternative-timer`'s `absolute-deadline`) | yes | §5: providers that have a value or declare the fact absent; `missing-fact` only where no provider offers, derives or declares absent |
+| D3 — §1 made bare presence `true` for a boolean fact alone; §2's group row made a bare head `true` | yes | §1: for a boolean fact, or a group's head |
+| N1 — `frequency`'s role undecided between a capability and an input clock | no | §1.1: the rates the block can run at, a capability; the clock a block must be fed is a condition and another fact |
+| N2 — `needs time.monotonic` read alone as `missing-fact` | no | §5: a `needs` entry naming a vocabulary fact; one naming a declaration is presence's |
+| N3 — rule 1's "the configuration is infeasible" from one provider's absence | no | §3 rule 1, §6, §8: not satisfied by `P`, infeasible where no other provider satisfies |
+| N4 — the `modular` assumption against a constraint on `wrap-behavior` | no | §4: the assumption serves the rules alone; a constraint on the fact is judged on what is offered |
+| N5 — `decision_catalog-records.md` cited as a sibling | no | its path, `docs/specs/catalog/`, written |
+| N6 — rule 4's example named `available-in-state` by description | no | the clock a block must be fed |
+| N7 — a decimal magnitude is digits and a scale; the count row's unit-less requirement | no | §2 |

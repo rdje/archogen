@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability relation's fourth review, answered
+
+`ARCHOGEN-M3-0401` (leaf `M3.1.1`, step 5).
+
+- A fourth reader walked four of the corpus's descriptions through the relation by hand and found every verdict
+  right, but also found that an author could write a counter's horizon outright and have it believed over what its
+  width and rate allow — the one shape in which §5.2's faster-wrapping counter still slipped through. Now no offered
+  value may claim more than the facts it is computed from allow, for every derived fact alike. Two restatements
+  were aligned. Defects per round: 7, 7, 8, 3.
+
 ## archogen — the review histories' folder gets a larger ceiling
 
 `ARCHOGEN-PROGRAM-0400` (leaf `PROGRAM.49`).
