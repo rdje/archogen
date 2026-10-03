@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability relation's sixth review: the design shrinks
+
+`ARCHOGEN-M3-0403` (leaf `M3.1.1`, step 7).
+
+- For the third round running a reader found a way for an author-written horizon to slip past the guard meant for
+  it — this time by leaving a sibling fact's digits out. Three rounds on one seam is the signal to stop patching:
+  the guard, and the rule that guessed a counter's modulus from its width, are gone. A counter states its modulus,
+  as the profile has always asked; a derived fact is either computed from its grounds or offered alone, never both;
+  and there is nothing left for a sibling's spelling to switch off. Two restatements aligned. Defects per round:
+  7, 7, 8, 3, 3, 3.
+
 ## archogen — the substitutability relation's fifth review, answered
 
 `ARCHOGEN-M3-0402` (leaf `M3.1.1`, step 6).

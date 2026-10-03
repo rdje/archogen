@@ -140,3 +140,27 @@ beside anything but a modular counter: one rule, no branches. Defects per round:
 | E8 — a non-whole width is ill-typed, not a limit; a comparison itself cannot overflow, its unit conversion can | no | §2 and §4 say so |
 | E9 — the optional input declared in the engine and the record, not in `vocabulary.eadl` | no | §1.1: a `reads` clause, at most once, holding the optional inputs; the example entry carries `(reads wrap-behavior)` |
 | E10 — one provider offering one fact twice with the same value | no | §5: one offer |
+
+**Round 6**, `2026-10-03`, a new context that had not read rounds 1 to 5, given the adversarial brief and the ten
+restated rules: it refused every adversarial offer against a *valued* sibling fact by a sentence it named, found the
+§5.2 cases right in fact, domain, role and direction, and walked the corpus again. There were 9 findings, 3 of them
+defects, and the verdict was "not acceptable as it stands". F1 was the third round in turn to find an author's
+horizon beside its own grounds slipping past a bound — this time because a bounding input offered *bare* made the
+bound vacuous. Defects per round: 7, 7, 8, 3, 3, 3 — not falling on that seam, which the knowledge card on review
+answers reads as a class to refuse rather than charge. The answer shrinks the design: `modulus-from-width` is
+deleted — §3.1 asks for an explicit counter modulus, and a register's width does not decide where it wraps — leaving
+one rule, and a derived fact is **derived or stands alone**: offered beside any fact its rule reads, bare or valued,
+it is `invalid-description`; offered alone, it is a claim like any other offer. No bounds, no branches, nothing for
+a sibling's spelling to switch off.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| F1 — §4's bound bound on the inputs' *values*, so `(counter-width 16 bit) tick-rate (unambiguous-horizon 3600 s)` — the rate bare — made it vacuous and the 60 s requirement was satisfied; a bare width beside a modulus the same; bare beside valued at one provider unstated | yes | §4 rewritten: a derived fact is derived or stands alone — offered beside any fact its rule reads, bare or valued, `invalid-description`; `modulus-from-width` deleted, the modulus offered never derived, with the one consistency check that a valued modulus beside a valued width may not exceed `2^width`; §5: bare beside valued at one provider is the two-values rule's `invalid-description`; §1.1, §6, §8 and the Why follow |
+| F2 — an absent condition fact: rule 4 satisfied, §5 and §8 infeasible | yes | §5 and §8 carve out a condition fact declared absent — no demand, by rule 4 |
+| F3 — a presence requirement against a bare or bound offer: §2 satisfied, rule 1 `missing-fact` | yes | rule 3: a presence requirement is satisfied by any offer of the fact, bare, valued or a bound, and by nothing else; rule 1's bare arm says "a presence requirement apart" |
+| F4 — a statement entry said to name "the leaf" with no clause that can | no | §1.1: the rule, or the leaf, named here for it |
+| F5 — "other than `boolean`, or a group's head" parsed as making a bare head unknown | no | §2: "other than `boolean` or a group's head" |
+| F6 — `exactly`'s spelling absent from the quantity, interval and set rows | no | §2: each row writes it |
+| F7 — a condition fact written in a block's or platform's `requires` read as a self-statement, dropping the demand | no | §3 rule 4 and §8: `invalid-description` — a provider states its demands in `offers` |
+| F8 — precedence between `infeasible-configuration` and `missing-fact` across providers unstated; §9 said `missing-fact` alone | no | §8: both codes carried, the verdict the higher in `Verdict::precedence`; §9 names both |
+| F9 — a clause whose constraints span two providers is satisfied by no single provider | no | §10 says so, and that `M3.4` is what may take two |
