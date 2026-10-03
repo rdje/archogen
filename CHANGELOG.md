@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability relation's seventh review, answered
+
+`ARCHOGEN-M3-0404` (leaf `M3.1.1`, step 8).
+
+- A seventh reader checked the shrunk design against the repository's one physical counter and found it could not
+  describe itself: the target's timer is 64 bits wide, its modulus `2^64` is past what a 64-bit literal can write,
+  and the previous round's rule forbade writing the horizon beside the rate instead. A count may now be written as a
+  power of two, `(pow2 64)`, and the target's horizon — some 58 000 years — fits the arithmetic. The same reader
+  found that a block declaring its reads tear, `(observation-coherent false)`, still met a service that merely
+  depended on coherence; a boolean a service depends on now means `true`. Two restatements aligned, one word
+  corrected against the kind definitions. Defects per round: 7, 7, 8, 3, 3, 3, 5.
+
 ## archogen — the substitutability relation's sixth review: the design shrinks
 
 `ARCHOGEN-M3-0403` (leaf `M3.1.1`, step 7).

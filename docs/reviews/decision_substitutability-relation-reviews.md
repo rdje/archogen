@@ -164,3 +164,24 @@ a sibling's spelling to switch off.
 | F7 — a condition fact written in a block's or platform's `requires` read as a self-statement, dropping the demand | no | §3 rule 4 and §8: `invalid-description` — a provider states its demands in `offers` |
 | F8 — precedence between `infeasible-configuration` and `missing-fact` across providers unstated; §9 said `missing-fact` alone | no | §8: both codes carried, the verdict the higher in `Verdict::precedence`; §9 names both |
 | F9 — a clause whose constraints span two providers is satisfied by no single provider | no | §10 says so, and that `M3.4` is what may take two |
+
+**Round 7**, `2026-10-03`, a new context that had not read rounds 1 to 6, briefed against the shrunk §4: it refused
+every adversarial offer against a valued sibling, found each §5.2 case right, no condition read as a capability and no
+undeclared implication used, and read the target's spike source to find `mtime`'s width. There were 12 findings, 5 of
+them defects — two of them consequences of round 6's shrink, which the reviewer found where the record's own sentence
+about the corpus's counters was false. Defects per round: 7, 7, 8, 3, 3, 3, 5.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| G1 — the target's `mtime` is 64 bits wide; its modulus `2^64` is `read-number-overflow` as a literal, and with `tick-rate` offered a horizon may not be written beside it, so the one physical counter could state neither in `/1` | yes | §2: a count may be written `(pow2 N)`, `N ≤ 126`, where the 64-bit literal cannot hold a power of two; §4: `target.timer` states `(counter-modulus (pow2 64))` when `M3.4` wires the relation, its horizon `1 844 674 407 370.9551616 s` fitting the arithmetic |
+| G2 — `(observation-coherent false)` satisfied `needs observation-coherent` while `absent` failed it | yes | §2 boolean row and rule 3: a boolean named in `needs` is the requirement `(f true)`, the mirror of the bare offer; `false` satisfies no presence requirement |
+| G3 — an optional input declared absent: derivable by the rule row's "not offered", underivable by rule 1 | yes | rule 1 names `derived-from`'s inputs; §4 and the row: an optional input declared absent derives nothing, the conservative branch; the row says "undescribed" where it said "not offered" |
+| G4 — §8's infeasible row, "a constraint no provider satisfies", swallowed `missing-fact` under the precedence tie-break | yes | §8: a constraint that has a value at some provider and that no provider's value satisfies |
+| G5 — `core.eadl` admits `offers` on a service, not a policy | yes | §1 says so |
+| G6 — a horizon beside a width alone accepted | no | §4 states the probe's outcome and why: a width does not decide a horizon |
+| G7 — "read the other way round" invites a search for an operand swap that is not there | no | §1 and rule 4: the demand on the offered side |
+| G8 — `2^width` needs whole bits and a short-circuit | no | §4: whole bits; 127 bits or more holds every writable modulus |
+| G9 — "precondition" in two senses across rules 1 and 4 | no | rule 1: a provider's demand, read from its offers, §5.3's "provider preconditions" |
+| G10 — a `needs` on a derived fact met only by a stand-alone offer | no | rule 3: or by its derivation |
+| G11 — a `needs` outside `requires` not among "every requirement the clause writes" | no | §5: presence's, with the same verdict |
+| G12 — `(f (exactly true))` absent from the boolean row | no | §2 row |
