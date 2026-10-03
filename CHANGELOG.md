@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability relation's eighth review, answered
+
+`ARCHOGEN-M3-0405` (leaf `M3.1.1`, step 9).
+
+- An eighth reader found one defect: the record had worked an example in which one block offers a fact and another
+  declares it absent, a description the language already refuses as contradictory before any matching runs. The
+  record now says so, and says what can stand in for an absent fact within one description — a derivation from a
+  provider's own facts — and what will once the catalog's records join. Ten smaller points answered in a sentence
+  each. No probe made the relation read a demand as a capability or a value the wrong way. Defects per round:
+  7, 7, 8, 3, 3, 3, 5, 1.
+
 ## archogen — the substitutability relation's seventh review, answered
 
 `ARCHOGEN-M3-0404` (leaf `M3.1.1`, step 8).

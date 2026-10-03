@@ -185,3 +185,24 @@ about the corpus's counters was false. Defects per round: 7, 7, 8, 3, 3, 3, 5.
 | G10 — a `needs` on a derived fact met only by a stand-alone offer | no | rule 3: or by its derivation |
 | G11 — a `needs` outside `requires` not among "every requirement the clause writes" | no | §5: presence's, with the same verdict |
 | G12 — `(f (exactly true))` absent from the boolean row | no | §2 row |
+
+**Round 8**, `2026-10-03`, a new context that had not read rounds 1 to 7: it probed `(pow2 N)` at 63, 64, 126, 127,
+negative and non-integer, every `wrap-behavior` state beside a modulus, the width check at 127 bits, a boolean
+`false` against both forms, and a fact absent at one provider and offered at another; no probe made the relation read
+a demand as a capability, a value the wrong way or an undeclared implication, and every §5.2 case was classified as
+the fact's meaning requires. There were 11 findings, 1 of them a defect, and the verdict was "not acceptable as it
+stands". Defects per round: 7, 7, 8, 3, 3, 3, 5, 1.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| H1 — the absence rule, §5 and §8's worked example judged per provider a fact offered by one block and declared absent by another, which model §2 rule 1 refuses description-wide (`invalid-contradictory-presence.eadl`) before the relation runs, while §9 pledges the corpus's verdicts stand | yes | §3 rule 1: model §2 rule 1 stays description-wide, so within a description another provider satisfies past an absence only by deriving the fact from its own facts, and after `M3.4` as a catalog record; §8's example is an absence beside a provider that could derive but offers an input bare |
+| H2 — `(pow2 N)`'s lower bound, integrality and the case where a literal would do unstated, beside two sentences refusing arithmetic | no | §2 and §10: `N` an integer from 0 to 126, anything else `invalid-description`, a literal's spelling and not arithmetic |
+| H3 — a width not a whole number of bits had no verdict | no | §4: `invalid-description` |
+| H4 — §8's `missing-fact` row omitted a provider's unknown demand | no | §8 names it |
+| H5 — "a bound satisfies no constraint" against rule 3's presence | no | §2: no valued constraint; presence it satisfies |
+| H6 — rule 3's clauses over-reached and self-corrected | no | rule 3: any offer other than a boolean `false`, or the derivation; otherwise rule 1's three arms |
+| H7 — a `deffact` written in a description neither admitted nor refused | no | §1.1: `invalid-description` outside the vocabulary module |
+| H8 — the target file carries nothing its agreement does not check | no | §4: the agreement tool and its decision change in the same commit |
+| H9 — the privilege order declares nesting that one hardware case breaks | no | §1.1: the order's meaning stated, `exactly` for a target where it fails |
+| H10 — a failed value beside an unknown sibling takes the checker's precedence | no | a judgement, as the reviewer says; unchanged |
+| H11 — a saturating provider may not write a horizon beside its wrap behaviour | no | deliberate; unchanged |
