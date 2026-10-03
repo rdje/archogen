@@ -329,6 +329,12 @@ Until the named commit exists, no production claim can be made. One new role is 
 check, through a defect in the checker for instance, is repaired only by a waiver you rule on, and a waiver can
 only weaken what the catalog says.
 
+**Added `2026-10-03` (`M3.6.1`).** The trust-dependency gate (fixture F30, `decision_trust-inventory.md` §5) accepts
+its baseline and its root set by this same rule, so `trust/` and the gate's code join the code-owned paths above.
+Nothing new is asked: the same settings and the same second reviewer. Until then the gate passes only while no two of
+its roots share anything, as is the case today, and the first shared item — when `M2.7.5` makes the scheduling
+checker read the catalog, which reaches the generator's own reader and model — waits on them.
+
 ## 12. The fault contract's narrowings — **approved `2026-10-02`**
 
 The fault contract (`docs/profiles/rt-static-up-v1-faults.md`) lists in its header, under *Narrowings*, each claim its

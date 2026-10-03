@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust-dependency gate's first review, answered
+
+`ARCHOGEN-M3-0409` (leaf `M3.6.1`, step 2).
+
+- The first reader of the trust-gate design found eleven ways sharing could slip past it: it watched the generator's
+  library instead of the program that actually generates, never compared the reference model with the code it
+  checks, let an author edit the list of watched programs, read the working copy rather than the commit, and could
+  not see what build scripts, macros, linked libraries or outside build settings bring in. Most answers adopt rules
+  the catalog's build checker already enforces — build from the commit, clear the environment, refuse what cannot be
+  seen — and the watched list and the accepted list both now need the director's second reviewer, the request in
+  findings §11 extended to cover them.
+
 ## archogen — the substitutability relation's tenth review: the design shrinks again
 
 `ARCHOGEN-M3-0408` (leaf `M3.1.1`, step 11).
