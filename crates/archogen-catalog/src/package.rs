@@ -247,7 +247,7 @@ pub struct Token {
 }
 
 /// Rust's tokens in `source`, comments dropped and literals kept whole — the tokens §3's rules read, which the trust
-/// instrument also reads to find a refused site's extent (`docs/decisions/decision_trust-inventory.md` §3).
+/// instrument also reads to find a refused site's extent (`docs/specs/trust/decision_trust-inventory.md` §3).
 ///
 /// # Errors
 ///

@@ -51,7 +51,7 @@ const SPECIAL: [&str; 7] = [
 type FacetPackages = BTreeMap<(String, FacetKind), (BTreeSet<String>, BTreeSet<String>)>;
 
 /// The environment variables a build may depend on (§3); the trust instrument adopts the same list
-/// (`docs/decisions/decision_trust-inventory.md` §3, R8 remark 22).
+/// (`docs/specs/trust/decision_trust-inventory.md` §3, R8 remark 22).
 pub(crate) const ENV_ALLOWED: [&str; 3] = [
     "CARGO_CRATE_NAME",
     "CARGO_MANIFEST_DIR",

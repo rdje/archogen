@@ -1,5 +1,5 @@
 ; trust/roots.eadl — the programs whose independence a claim relies on, the comparison harness, and the sites the
-; catalog's rules refuse that a review admits (docs/decisions/decision_trust-inventory.md §2, §3). Read by
+; catalog's rules refuse that a review admits (docs/specs/trust/decision_trust-inventory.md §2, §3). Read by
 ; `cargo xtask trust-inventory` (leaf M3.6.2) from the commit's own blob. Every form here is proposed and unaccepted
 ; until M3.6.5 reads acceptance; a change to this file is code-owned (M2.7.6.5).
 

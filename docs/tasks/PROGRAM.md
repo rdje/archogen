@@ -811,6 +811,35 @@ mdBook that is the director's window into the project.
   Verification: `2026-10-05` — the Verification Log's row
   Commit: `ARCHOGEN-PROGRAM-0442 (leaf PROGRAM.55.1)`
 
+- ID: `PROGRAM.56`
+  Status: `done` — filed and closed `2026-10-05`
+  Goal: room in `docs/decisions/` by the director's ruling of `2026-10-01`
+  (`docs/decisions/decision_specifications-home.md`): the trust gate's design, its review closed by `M3.6.1`, moves to
+  `docs/specs/trust/`, every live reference following it; `docs/specs/`' ceiling raised to hold it, by a decision
+  record with the measurement (`docs/decisions/decision_specs-folder-ceiling.md`); `docs/decisions/`' ceiling untouched.
+  Acceptance: the record moved byte for byte but for its two relative links; every reference outside sealed history and
+  dated rows repointed; both folders under their ceilings; every check green.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — `git ls-files docs/decisions | xargs cat | wc -c` → 393 061 of 393 216 after
+    `ARCHOGEN-M3-0444`, the substitutability review still open; `docs/specs/` → 253 792 of 262 144, so the 46 125-byte
+    record would breach it.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: `README_POLICY.md`'s `docs/specs/` row, sized by `PROGRAM.43` for one
+    subject (186 667 bytes); WHY: the ruling sends every design whose review closes to `docs/specs/`, and the trust
+    design is the second (`rc=1` from `README-ROUTES` without the raise).
+  - [x] **FIX** — `git mv` of the record, its two links one level deeper; the path repointed in `crates/archogen-catalog/src/package.rs`, `xtask/src/catalog_build.rs`, `xtask/src/trust.rs`, `trust/roots.eadl`, `docs/semantics/conformance.md`, `docs/tasks/M3.md` and both indexes; the
+    decision record, its index row, the policy's two rows, the inventory's two rows; the knowledge map regenerated →
+    `bash knowledge-map/scripts/check_knowledge_map.sh` → `OK`.
+  - [x] **ADDRESSED (verified)** — `docs/decisions/` → 4 154 lines, 349 217 bytes; `docs/specs/` → 3 311 lines,
+    300 288 bytes; `bash scripts/check_readme_routes.sh` → `readme-routes: OK`; `git grep` for the old path outside
+    sealed history and dated rows → 0 lines.
+  - [x] **NO REGRESSION** — `make focused` → `tier focused: passed — 3 passed, 0 failed`; `bash scripts/check_doctrines.sh` → `=== all doctrines
+    green ===`.
+  - [x] **LOCKSTEP** — the book cites the record by name only; both indexes, the policy, the inventory, this leaf and
+    its log rows, `CHANGELOG.md`.
+  Verification: `2026-10-05` — the Verification Log's row
+  Commit: `ARCHOGEN-PROGRAM-0445 (leaf PROGRAM.56)`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1032,6 +1061,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-10-05` | `PROGRAM.52.2` | the two ledgers through `HANDOFF-LEDGER`; the prose census of each record against its ledger; each rewritten leaf against its previous text; the enforcer | 46 hand-offs, each quoted; no hand-off left in prose; one dropped item restored; all green |
 | `2026-10-05` | `PROGRAM.55` | the self-test; three legs broken in turn; the seal on the closed catalog history and `cmp` against `HEAD`; both folders measured; every gate's self-test; the focused tier; the enforcer | 38 / 38 arms; each broken leg failed its arms; byte for byte; `docs/reviews/` 317 648 bytes; all green |
 | `2026-10-05` | `PROGRAM.55.1` | the review's constructions armed; the self-test; a mutation matrix, one per refusal and leg; the real repository; every gate's self-test; the focused tier; the enforcer | 65 / 65 arms; 38 of 38 killed; OK; all green |
+| `2026-10-05` | `PROGRAM.56` | both folders measured before and after; every reference to the old path searched; the routes; the focused tier; the enforcer | decisions 393 061 → 349 217, specs 253 792 → 300 288; 0 stale references; all green |
 
 ## Commit Log
 
@@ -1150,6 +1180,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.52.2` | `ARCHOGEN-PROGRAM-0430 (leaf PROGRAM.52.2)` | **step 2 — the substitutability record's ledger**: 22 hand-offs in its new §11, each quoted by its leaf; `PROGRAM.52` closed |
 | `PROGRAM.55` | `ARCHOGEN-PROGRAM-0438 (leaf PROGRAM.55)` | **the review-history archive**: `REVIEW-HISTORY`, `--seal <FILE>`, 38 arms; the closed catalog history archived behind a stub; `docs/reviews/` back under its ceiling |
 | `PROGRAM.55.1` | `ARCHOGEN-PROGRAM-0442 (leaf PROGRAM.55.1)` | **`REVIEW-HISTORY` hardened after its review**: 17 findings answered; the review's row read from the table; merged rounds, staging, frozen histories, stub shapes; 65 arms; 38 of 38 killed |
+| `PROGRAM.56` | `ARCHOGEN-PROGRAM-0445 (leaf PROGRAM.56)` | **the trust design moves to `docs/specs/trust/`**, by the ruling of `2026-10-01`; `docs/specs/`' ceiling raised to 384 KiB by a decision record; `docs/decisions/` back to 349 217 bytes |
 
 ## Changelog
 

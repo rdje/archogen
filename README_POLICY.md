@@ -53,7 +53,7 @@ leaf. "Overflows to" is where that destination's own guard sends what does not f
 | `docs/history/` | overflow | `PROGRAM.31` | archive_terminal | HISTORY-LEDGERS | 1200 | 131072 | 256 | HISTORY-LEDGERS | — |
 | `docs/reviews/` | overflow | `PROGRAM.36` | partitioned_canonical | 16 | 1200 | 131072 | 1024 | 393216 | `docs/review-history/` |
 | `docs/decisions/` | navigation + overflow | `PROGRAM.39` | partitioned_canonical | 40 | 1200 | 98304 | 1536 | 393216 | `docs/reviews/`, `docs/specs/`, `docs/decision-history/` |
-| `docs/specs/` | overflow | `PROGRAM.43` | partitioned_canonical | 16 | 1200 | 98304 | 1536 | 262144 | — |
+| `docs/specs/` | overflow | `PROGRAM.43` | partitioned_canonical | 16 | 1200 | 98304 | 1536 | 393216 | — |
 | `docs/decision-history/` | overflow | `PROGRAM.41` | archive_terminal | DECISION-HISTORY | 1200 | 98304 | 1536 | DECISION-HISTORY | — |
 | `docs/review-history/` | overflow | `PROGRAM.55` | archive_terminal | REVIEW-HISTORY | 1200 | 131072 | 1024 | REVIEW-HISTORY | — |
 | `docs/tasks/` | overflow | `PROGRAM.32` | partitioned_canonical | 20 | 3000 | 327680 | 3072 | 819200 | `docs/task-history/` |
@@ -71,6 +71,7 @@ needs a new ruling, recorded as a new decision, and this table changed with it.
 | `docs/book/` | Files | 48 | `docs/decisions/decision_book-in-layers.md` |
 | `docs/book/` | Total bytes | 458752 | `docs/decisions/decision_book-in-layers.md` |
 | `docs/reviews/` | Total bytes | 393216 | `docs/decisions/decision_reviews-folder-ceiling.md` |
+| `docs/specs/` | Total bytes | 393216 | `docs/decisions/decision_specs-folder-ceiling.md` |
 <!-- README-POLICY-LOCAL-ADOPTION:END -->
 
 ---

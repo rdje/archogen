@@ -1,5 +1,5 @@
 //! `cargo xtask trust-inventory` — the trust gate's measuring instrument (leaf `M3.6.2`,
-//! `docs/decisions/decision_trust-inventory.md` §2–§4, `docs/decisions/decision_executable-design-reviews.md`).
+//! `docs/specs/trust/decision_trust-inventory.md` §2–§4, `docs/decisions/decision_executable-design-reviews.md`).
 //!
 //! > The compiler, not a scan, decides completeness — and where it cannot, the input is refused, not trusted.
 //!

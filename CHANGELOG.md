@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust design moves to the specifications folder
+
+`ARCHOGEN-PROGRAM-0445` (leaf `PROGRAM.56`).
+
+- The trust gate's design has passed review, so by the director's earlier ruling it moved from the decisions folder
+  to `docs/specs/trust/`, freeing 46 KB for decisions still under review. The specifications folder's size limit was
+  raised to make room for it, with a recorded decision and the measurement that asked for it. The decisions folder's
+  own limit, which only the director may reopen, is unchanged.
+
 ## archogen — the substitutability design's twenty-first review
 
 `ARCHOGEN-M3-0444` (leaf `M3.1.1`, step 22).
