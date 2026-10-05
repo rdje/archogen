@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability design made executable
+
+`ARCHOGEN-M3-0431` (leaf `M3.1.1.1`).
+
+- The design for deciding when an offer satisfies a requirement now has an executable model, written rule by rule
+  from the design, and a checker that runs it over tens of thousands of inputs: no value is read the wrong way, no
+  stronger precondition passes as a capability, and a counter's wrap horizon matches a simulation of its reads.
+  Every problem past reviewers found with a concrete input is now a permanent test.
+
 ## archogen — both design records' hand-offs in ledgers
 
 `ARCHOGEN-PROGRAM-0430` (leaf `PROGRAM.52.2`).

@@ -142,3 +142,15 @@ resolver nobody reviewed.
 stays admissible) and **F06** (offered and absent together → `invalid-description`) are the two
 halves of §5.3's single decision, in `crates/eadl-model/tests/f04_f06_presence.rs`, with worked
 cases in `docs/semantics/cases/`.
+
+### What comes after presence: substitutability, in design
+
+Presence asks whether a fact is known. The next question is whether what a provider offers is *good enough* for
+what a requirement asks — whether a 64-bit counter satisfies a service that needs 32 bits, or an idle-only timer
+one that must keep running. That relation is still a design under review
+(`docs/decisions/decision_substitutability-relation.md`), and its rules are held to an executable model rather than
+to prose alone: `crates/eadl-resolve/src/model/` transcribes the design rule by rule, an exhaustive checker
+(`crates/eadl-resolve/tests/checker.rs`) asserts on thousands of inputs that no value is read the wrong way and that
+no stronger precondition passes as a capability, and every probe its reviewers ran is a permanent fixture
+(`crates/eadl-resolve/tests/corpus.rs`). `archogen check` does not call it yet; the chapter on the relation itself
+comes with the relation (leaf `M3.1.3`).

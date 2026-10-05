@@ -791,3 +791,74 @@ from
 to
                         Label::new(Span::new(eadl_front::SourceId(0), 0, 0), "no quantity is written here"),
 end
+
+mutation model-horizon-full-modulus
+file crates/eadl-resolve/src/model/value.rs
+test -p eadl-resolve --test checker
+expect killed
+why M3.1.1.1: the horizon is (modulus − 1) / rate (the substitutability record's R14 N9); modulus / rate meets "unambiguous across T" where two reads T apart can be equal. The simulation must see it.
+from
+        let ticks = Rational::new(modulus - 1, 1).ok_or(Overflow)?;
+to
+        let ticks = Rational::new(modulus, 1).ok_or(Overflow)?;
+end
+
+mutation model-power-state-without-run
+file crates/eadl-resolve/src/model/value.rs
+test -p eadl-resolve --test checker
+expect killed
+why M3.1.1.1: a power-state requirement asks for run too (R16 2); without it an idle-only provider passes as a capability.
+from
+                r.iter().all(|m| o.contains(m)) && implied.iter().all(|m| o.contains(*m))
+to
+                r.iter().all(|m| o.contains(m))
+end
+
+mutation model-direction-of-the-fact
+file crates/eadl-resolve/src/model/judge.rs
+test -p eadl-resolve --test checker
+expect killed
+why M3.1.1.1: a constraint is judged in its written direction, the fact's or exactly (R12 L2); judged in the fact's direction alone, 64 bit meets (exactly 32 bit).
+from
+                        match satisfies(&v, value, *direction, order, implied) {
+to
+                        match satisfies(&v, value, e.direction, order, implied) {
+end
+
+mutation model-false-meets-presence
+file crates/eadl-resolve/src/model/judge.rs
+test -p eadl-resolve --test checker
+expect killed
+why M3.1.1.1: a boolean named in needs is (f true), so (f false) meets no presence (R7 G2; R9 I6).
+from
+                        if b {
+to
+                        if b || !b {
+end
+
+mutation model-two-values-admitted
+file crates/eadl-resolve/src/model/provider.rs
+test -p eadl-resolve --test checker
+expect killed
+why M3.1.1.1: one provider offering one declared fact with two values is invalid-description (R5 E10; R10 J8).
+from
+                    Some(_) => {
+                        return refuse(
+                            fact,
+                            "one provider offering one declared fact with two values",
+                        )
+                    }
+to
+                    Some(_) => {}
+end
+
+mutation model-bound-read-as-value
+file crates/eadl-resolve/src/model/provider.rs
+test -p eadl-resolve --test checker
+expect killed
+why M3.1.1.1: an abstract platform's bound is not a value and meets no valued constraint (record §2; R10 J4, J8).
+from
+                        .map(|_| Written::Bound)
+to
+                        .map(Written::Value)
+end

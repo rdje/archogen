@@ -442,6 +442,8 @@ a change that leaves it stale, so it is never edited by hand.
 - What a task does not carry — [Describing a workload](workload.md#what-a-task-does-not-carry)
 - What an instance is — [The engine API](engine-api.md#what-an-instance-is)
 - What CI does with an incomplete tier — [Verifying the toolchain](verification.md#what-ci-does-with-an-incomplete-tier)
+- What comes after presence: substitutability, in design — [Presence, absence, and
+  relevance](presence.md#what-comes-after-presence-substitutability-in-design)
 - What comes from outside is written down — [Annex B: The checks that keep the repository
   honest](annex-repository.md#what-comes-from-outside-is-written-down)
 - What each consumer can do, and what it receives — [The engine

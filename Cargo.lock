@@ -62,6 +62,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "eadl-resolve"
+version = "0.1.0"
+dependencies = [
+ "eadl-front",
+ "eadl-model",
+]
+
+[[package]]
 name = "rt-analysis"
 version = "0.1.0"
 dependencies = [
