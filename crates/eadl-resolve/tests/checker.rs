@@ -20,7 +20,9 @@
 //! - **a clause holds one value per equality**: two statements or equalities on one fact with two values refused, one
 //!   value twice accepted (R19 2), whatever `uses` and services the clause also names (R20 1);
 //! - **a clause is decided without conversion and unsupported past it**: one unit compared as written, two units whose
-//!   conversion overflows `unsupported-profile`, never silence (R20 2).
+//!   conversion overflows `unsupported-profile`, never silence (R20 2);
+//! - **a clause's code is order-free and a side is read whole**: the same code in every order of a clause's items, and
+//!   a contradiction split across a declaration's clauses or beside its `needs` judged as in one clause (R21 1, 2).
 //!
 //! Each property also has a catalogued mutation in `xtask/mutations.txt` that breaks the rule it guards, and this
 //! file must kill it.
@@ -31,8 +33,8 @@ use eadl_front::{read, Form, SourceMap};
 use eadl_model::quantity::{unit, Quantity};
 use eadl_model::{Dimension, Rational};
 use eadl_resolve::model::{
-    judge, read_clause, read_constraint, read_needs, read_provider, Direction, Domain, Requirement,
-    Role, Value, Verdict, VOCABULARY,
+    judge, read_clause, read_constraint, read_needs, read_provider, read_side, Direction, Domain,
+    NotJudged, Requirement, Role, Value, Verdict, VOCABULARY,
 };
 
 fn forms(text: &str) -> Vec<Form> {
@@ -857,4 +859,88 @@ fn a_clause_is_decided_in_one_unit_and_unsupported_past_the_arithmetic() {
         }
     }
     println!("read {clauses} clauses at the arithmetic's edge");
+}
+
+fn code(r: &Result<Vec<Requirement>, NotJudged>) -> &'static str {
+    match r {
+        Ok(_) => "read",
+        Err(NotJudged::Invalid(_)) => "invalid-description",
+        Err(NotJudged::Unsupported(_)) => "unsupported-profile",
+        Err(NotJudged::NotAFact) => "not a fact",
+    }
+}
+
+#[test]
+fn a_clause_s_code_is_the_same_in_every_order_of_its_items() {
+    // R21 2: the reader stopped at the first item it could not read, so the code hung on the order.
+    let pool = [
+        "(ordering (before a b))",
+        "(tick-unit ns)",
+        "(tick-unit us)",
+        "(or-through-mediation allowed)",
+        "(or-through-mediation forbidden)",
+        "(uses time.monotonic)",
+        "(uses observation-coherent)",
+        "(needs time.monotonic)",
+        "something",
+        "(counter-width (at-least 16 bit))",
+    ];
+    let mut clauses = 0usize;
+    for a in pool {
+        for b in pool {
+            for c in pool {
+                let read = |x: &str, y: &str, z: &str| {
+                    code(&read_clause(&forms(&format!("(requires {x} {y} {z})"))[0]))
+                };
+                let first = read(a, b, c);
+                for (x, y, z) in [(a, c, b), (b, a, c), (b, c, a), (c, a, b), (c, b, a)] {
+                    assert_eq!(
+                        read(x, y, z),
+                        first,
+                        "{a} {b} {c} read otherwise as {x} {y} {z}"
+                    );
+                }
+                clauses += 1;
+            }
+        }
+    }
+    println!("read {clauses} three-item clauses in all six orders");
+}
+
+#[test]
+fn a_contradiction_split_across_a_side_is_one() {
+    // R21 1: two clauses of one declaration, or a clause beside its own `needs`, are one side.
+    let mut sides = 0usize;
+    for e in VOCABULARY
+        .iter()
+        .filter(|e| e.direction == Direction::Exact)
+    {
+        let pool = samples(e.domain);
+        for a in &pool {
+            for b in &pool {
+                let (x, y) = (format!("({} {a})", e.name), format!("({} {b})", e.name));
+                let (Ok(_), Ok(_)) = (constraint(&x), constraint(&y)) else {
+                    continue;
+                };
+                let one = code(&read_clause(&forms(&format!("(requires {x} {y})"))[0]));
+                let split = code(&read_side(
+                    &forms(&format!("(defservice s (requires {x}) (requires {y}))"))[0],
+                ));
+                assert_eq!(split, one, "{x} and {y} in two clauses");
+                sides += 1;
+            }
+            if matches!(e.domain, Domain::Boolean | Domain::Group(_)) {
+                let x = format!("({} {a})", e.name);
+                let one = code(&read_clause(
+                    &forms(&format!("(requires {x} (needs {}))", e.name))[0],
+                ));
+                let split = code(&read_side(
+                    &forms(&format!("(defservice s (requires {x}) (needs {}))", e.name))[0],
+                ));
+                assert_eq!(split, one, "{x} beside its own `needs`");
+                sides += 1;
+            }
+        }
+    }
+    println!("read {sides} sides split across two places");
 }

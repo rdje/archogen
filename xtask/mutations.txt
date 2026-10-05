@@ -1138,6 +1138,50 @@ to
                         let _ = &past;
 end
 
+mutation model-clause-unsupported-outranks-invalid
+file crates/eadl-resolve/src/model/requirement.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 21: a clause is `invalid-description` when any item or contradiction gives it, whatever else; an undeclared fact written first hid a contradiction behind `unsupported-profile` (rule 5).
+from
+            (Some(w), _) => Err(NotJudged::Invalid(w)),
+to
+            (Some(w), None) => Err(NotJudged::Invalid(w)), (Some(_), Some(w)) => Err(NotJudged::Unsupported(w)),
+end
+
+mutation model-side-first-clause-only
+file crates/eadl-resolve/src/model/requirement.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 21: a side is every `requires` clause of a declaration; read one clause at a time, a contradiction split across two passed and `SR-H8` let the adapter through (rules 5, 6).
+from
+                Some("requires") => items.extend(c.items().iter().skip(1)),
+to
+                Some("requires") if items.is_empty() => items.extend(c.items().iter().skip(1)),
+end
+
+mutation model-side-needs-ignored
+file crates/eadl-resolve/src/model/requirement.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 21: a side holds the `needs` a declaration writes at its own level; ignored, `(requires (uart false))` beside `(needs uart)` passed (rule 3, rule 5).
+from
+                Some("needs") => items.push(c),
+to
+                Some("needs-never-read") => items.push(c),
+end
+
+mutation model-bare-name-unread
+file crates/eadl-resolve/src/model/requirement.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 21: a bare name inside `requires`, fact or not, states no constraint and is `invalid-description`; read as no fact, it vanished and its clause was judged without it (§1, §8).
+from
+                _ => invalid(BARE_NAME),
+to
+                _ => Err(NotJudged::NotAFact),
+end
+
 mutation model-same-unit-compared-in-base
 file crates/eadl-resolve/src/model/value.rs
 test -p eadl-resolve

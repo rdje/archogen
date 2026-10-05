@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability design's twenty-first review
+
+`ARCHOGEN-M3-0444` (leaf `M3.1.1`, step 22).
+
+- The twenty-first reader found three defects, all in where a contradiction is judged. A requirement could say
+  "allowed" in one clause and "forbidden" in another of the same declaration, and nothing noticed. A clause's result
+  could depend on the order of its parts. A bare unknown name was silently dropped. Each declaration's requirements
+  are now read together, every part of a clause is read, and a bare name is refused.
+
 ## archogen — the trust gate's design passes review
 
 `ARCHOGEN-M3-0443` (leaf `M3.6.1`).

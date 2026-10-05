@@ -43,6 +43,10 @@ pub enum NotJudged {
     NotAFact,
 }
 
+/// Why a bare name inside `requires` is refused, fact or not (§1, §8; R21 3).
+const BARE_NAME: &str =
+    "a bare name inside `requires` states no constraint; presence is `(needs f)`";
+
 fn invalid<T>(why: impl Into<String>) -> Result<T, NotJudged> {
     Err(NotJudged::Invalid(why.into()))
 }
@@ -79,7 +83,8 @@ pub fn read_constraint(item: &Form) -> Result<Requirement, NotJudged> {
             Form::List { .. } => Err(NotJudged::Unsupported(format!(
                 "a constraint on `{head}`, which the vocabulary does not declare"
             ))),
-            _ => Err(NotJudged::NotAFact),
+            // A bare name inside `requires` states no constraint, fact or not (§1, §8; R21 3).
+            _ => invalid(BARE_NAME),
         };
     };
     let rest: &[Form] =
@@ -218,36 +223,84 @@ pub fn read_declaration_name(name: &str) -> Result<(), NotJudged> {
     }
 }
 
-/// Read a `requires` clause: its constraints and its `(needs …)`, then [`check_clause`].
+/// Read a `requires` clause, its every item, then [`check_clause`] (record §3 rule 5).
 ///
 /// # Errors
 ///
-/// [`NotJudged`] for the first item the clause cannot hold, or a contradiction among them.
+/// As [`read_side`].
 pub fn read_clause(clause: &Form) -> Result<Vec<Requirement>, NotJudged> {
+    read_items(clause.items().iter().skip(1))
+}
+
+/// Read one side of a declaration — every `requires` clause it writes and every `needs` at its own level — whose
+/// constraints are checked together, since a contradiction split across two clauses is one (record §3 rules 5, 6;
+/// R21 1).
+///
+/// # Errors
+///
+/// `invalid-description` when any item, or a contradiction among them, gives it; else `unsupported-profile` when any
+/// does — whatever order the items are written in (R21 2).
+pub fn read_side(decl: &Form) -> Result<Vec<Requirement>, NotJudged> {
+    let mut items: Vec<&Form> = Vec::new();
+    for c in decl.items().iter().skip(2) {
+        match c.head() {
+            Some("requires") => items.extend(c.items().iter().skip(1)),
+            Some("needs") => items.push(c),
+            _ => {}
+        }
+    }
+    read_items(items)
+}
+
+/// Every item read, none abandoning the rest: a `uses` operand through [`read_uses`], a service's `needs` left to
+/// presence (§1), every constraint read; then the contradiction check over those that read.
+fn read_items<'a>(
+    items: impl IntoIterator<Item = &'a Form>,
+) -> Result<Vec<Requirement>, NotJudged> {
     let mut out = Vec::new();
-    for item in clause.items().iter().skip(1) {
+    let (mut invalid_why, mut unsupported_why): (Option<String>, Option<String>) = (None, None);
+    let mut fail = |e: NotJudged| match e {
+        NotJudged::Invalid(w) => {
+            invalid_why.get_or_insert(w);
+        }
+        NotJudged::Unsupported(w) => {
+            unsupported_why.get_or_insert(w);
+        }
+        // A service, or a name the vocabulary does not declare, in `needs`: presence's and the closure's (§1).
+        NotJudged::NotAFact => {}
+    };
+    for item in items {
         match item.head() {
             Some("needs") => {
                 for n in &item.items()[1..] {
                     match read_needs(n) {
                         Ok(r) => out.push(r),
-                        // A service, or a name the vocabulary does not declare: presence's and the closure's (§1).
-                        Err(NotJudged::NotAFact) => {}
-                        Err(e) => return Err(e),
+                        Err(e) => fail(e),
                     }
                 }
             }
             // A declaration used, never a fact: an operand naming one is refused (§1; R15 1, R20 1).
             Some("uses") => {
                 for n in &item.items()[1..] {
-                    read_uses(n)?;
+                    if let Err(e) = read_uses(n) {
+                        fail(e);
+                    }
                 }
             }
-            _ => out.push(read_constraint(item)?),
+            _ => match read_constraint(item) {
+                Ok(r) => out.push(r),
+                Err(e) => fail(e),
+            },
         }
     }
-    check_clause(&out)?;
-    Ok(out)
+    if let Err(e) = check_clause(&out) {
+        fail(e);
+    }
+    match (invalid_why, unsupported_why) {
+        (Some(w), _) => Err(NotJudged::Invalid(w)),
+        (None, Some(w)) => Err(NotJudged::Unsupported(w)),
+        (None, None) => Ok(out),
+    }
 }
 
 /// Refuse constraints of one clause on one fact that no value satisfies together — contradictory requirements, which

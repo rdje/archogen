@@ -8,7 +8,7 @@
 use eadl_front::{read, Form, SourceMap};
 use eadl_resolve::model::{
     clause_satisfied, judge, read_clause, read_constraint, read_declaration_name, read_needs,
-    read_provider, read_uses, NotJudged, Verdict,
+    read_provider, read_side, read_uses, NotJudged, Verdict,
 };
 
 fn forms(text: &str) -> Vec<Form> {
@@ -869,5 +869,56 @@ fn a_clause_reads_its_uses_and_services_and_is_unsupported_past_the_arithmetic()
         ("(requires (absolute-deadline (supported-horizon (at-least 1 s))) (supported-horizon (exactly 0.0000000000000000000000000000001 ns)))", "a group beside its sub-fact"),
     ] {
         assert!(matches!(clause(text), Err(NotJudged::Unsupported(_))), "{why}: {text}");
+    }
+}
+
+#[test]
+fn a_side_is_read_whole_and_a_clause_whatever_its_items_order() {
+    // R21 1: a contradiction split across a declaration's clauses, or beside its own `needs`, is one contradiction.
+    let side = |t: &str| read_side(&forms(t)[0]);
+    for text in [
+        "(defservice time.mediated (requires (reachable-at-privilege supervisor) (or-through-mediation allowed)) (requires (or-through-mediation forbidden)))",
+        "(defservice console.write (requires (uart false)) (needs uart))",
+        "(defservice s (requires (tick-unit ns)) (requires (tick-unit us)))",
+    ] {
+        assert!(matches!(side(text), Err(NotJudged::Invalid(_))), "{text}");
+    }
+    assert_eq!(
+        side("(defservice s (requires (tick-unit ns)) (requires (tick-unit (exactly ns))) (needs uart time.monotonic))").map(|c| c.len()),
+        Ok(3)
+    );
+    // R21 2: an item the clause cannot read abandons nothing; the code is the same in either order.
+    for (a, b) in [
+        (
+            "(ordering (before a b))",
+            "(or-through-mediation allowed) (or-through-mediation forbidden)",
+        ),
+        ("(ordering (before a b))", "(tick-unit (exact ns))"),
+    ] {
+        for text in [format!("(requires {a} {b})"), format!("(requires {b} {a})")] {
+            assert!(
+                matches!(clause(&text), Err(NotJudged::Invalid(_))),
+                "{text}"
+            );
+        }
+    }
+    // R21 3: a bare name inside `requires`, fact or not, states no constraint.
+    for text in [
+        "(requires something (unambiguous-horizon (at-least 60 s)))",
+        "(requires something (tick-unit ns) (tick-unit us))",
+        "(requires something)",
+    ] {
+        assert!(matches!(clause(text), Err(NotJudged::Invalid(_))), "{text}");
+    }
+}
+
+#[test]
+fn a_service_offering_or_declaring_absent_a_statement_is_refused() {
+    // R21 remark 6: rule 6's "a service's offers included", held by the reader a service shares with a block.
+    for text in [
+        "(defservice s (offers (or-through-mediation allowed)))",
+        "(defservice s (absent or-through-mediation))",
+    ] {
+        assert!(read_provider(&forms(text)[0]).is_err(), "{text}");
     }
 }

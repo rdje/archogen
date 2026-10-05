@@ -493,3 +493,19 @@ findings, 2 of them defects, and the verdict was "not acceptable as it stands". 
 | R5 — `SR-H16` refuses one block's absence beside another's offer | no | `SR-H16`: `M3.4` records why, in both copies |
 | R6 — a required `false` against a declared absence | no | already stated (R19 4): conservative, absence not falsity |
 | R7 — ordered enumerations and time intervals unexercised | no | both held at the value level |
+
+**Round 21**, `2026-10-05`: a new context that had not read rounds 1 to 20 ran the model over all 125 tracked
+descriptions — 89 providers, 105 clauses — and found the value domains, directions, derivation and §5.2 cases right;
+its three defects were all in where a contradiction is judged, each with a reproducer, each landing first as a test
+failing on the model as the round found it. There were 7 findings, 3 of them defects, and the verdict was "not
+acceptable as it stands". Defects per round: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2, 2, 2, 3.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| S1 — a contradiction split across a declaration's two clauses, or beside its own `needs`, passed; `SR-H8` let the adapter through | yes | rules 5, 6 and §8: one side, every clause and declaration-level `needs`, read whole (`read_side`); a property over 622 split sides; mutations `model-side-first-clause-only`, `model-side-needs-ignored` |
+| S2 — `read_clause` stopped at the first item it could not read: 51 of 165 three-item clauses coded by order | yes | rule 5: every item read, `invalid-description` over `unsupported-profile` whatever the order; a property over 1000 clauses in six orders; mutation `model-clause-unsupported-outranks-invalid` |
+| S3 — `(requires something …)` got no outcome, from the relation or from presence | yes | §1, §8: a bare name inside `requires`, fact or not, `invalid-description`; mutation `model-bare-name-unread` |
+| S4 — a contradiction through a derivation not refused | no | rule 5: stated, every provider refusing it |
+| S5 — `SR-H16` and two timers that differ | no | `SR-H16`: `M3.4`'s reason covers it, both copies |
+| S6 — no reader for a service's offers | no | a corpus test: a service offering or declaring absent a statement refused |
+| S7 — the checker's universe: two-item clauses only, no permutation, no split side | no | the two properties above |
