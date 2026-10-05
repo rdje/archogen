@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-10-03`
 - **Status:** `active` — written; under independent review (leaf `M3.1.1`'s closure rule: the first round that
-  finds no defect closes it); rounds 1 to 15 answered `2026-10-03`
+  finds no defect closes it); rounds 1 to 15 answered `2026-10-03`, round 16 `2026-10-05`
 - **Owner / source:** leaf `M3.1.1` (`docs/tasks/M3.md`). `ROADMAP.md` §5.2 asks for "explicit matching rules in a
   decidable fragment" with "a documented comparison direction" per parameter, declared cross-field implications,
   and no stronger precondition "silently accepted as stronger capabilities"; §5.3 for a "versioned capability
@@ -83,7 +83,9 @@ migration note (R15 8). It is versioned with the language, `eadl/1`; an entry ch
 kind, `deffact`, declared with `defkind` in a kind module of its own, `docs/semantics/kinds/deffact.eadl`, which
 `crates/eadl-resolve` registers to validate the vocabulary with `kind.rs`'s `validate` and which no description's
 registry holds. `archogen check` recognises the language's own definitions by content, as `archogen-api`'s
-`kind_module` recognises a `defkind`: a file whose declarations include a `deffact` is answered as the vocabulary is,
+`kind_module` recognises a `defkind`: a module file is classified first, as today, so a `deffact` inside a module's body is `schema-unknown-kind` and one
+beside a `defmodule` `module-multiple-forms`, exit 10, both refusals (R16 3); any other file whose declarations include
+a `deffact` is answered as the vocabulary is,
 exit 20, the language's own definition and not a description — the vocabulary file, a copy of it, or a description
 that writes a `deffact` alike — so no description's registry is ever asked for the kind (R11 K7; R15 7). So it is no more privileged than a kind a user adds (reference §7 rule 1) and carries no behaviour
 (rule 3): its clauses hold names, lists of names and one line of text, and nothing that could be run.
@@ -114,8 +116,12 @@ which list facts; `(holds values string)` for `doc`; and `(holds values symbol)`
 `rule`, each exactly one value — reference §7 rule 4 makes `values` a fixed number, and `kind.rs` refuses any
 other as `schema-arity` (R2 B3). `doc`, `domain`, `role` and `direction` appear exactly once, `derived-from`,
 `reads` and `rule` at most once (R3 C11). A fact's name lives in the vocabulary, not in a
-description's declaration namespace: the vocabulary is validated on its own, never checked as a description, so a
-block named like a fact (`presence.rs`'s own fixtures write one) collides with nothing (R8 H7; R10 J12; R11 K7), and
+description's declaration namespace: the vocabulary is validated on its own, never checked as a description. A
+declaration whose local name is a vocabulary fact is `invalid-description`: module resolution (reference §6 rule 10)
+binds a `uses`, `needs` or `refines` operand to a declaration of its own instance before anything else, so such a
+declaration would capture a requirement on the fact, and an import would rename it out of the relation's sight
+(measured, R16 1). No tracked description declares one; `presence.rs`'s unit fixtures that do judge presence alone
+and are untouched (R8 H7; R10 J12; R11 K7; R16 1). And
 reference §7 rule 6 — a name declared once — holds among `deffact`s (R1 A15).
 
 A description that writes a fact the vocabulary does not declare may still offer it, declare it absent or need it
@@ -130,13 +136,15 @@ reader of its own in `crates/eadl-resolve`; `refinement.rs`'s `Facets::of` is no
 platform's values is `M1.40`'s (§10) — so it goes on reading an
 offered direction as a bound holding a quantity, refusing a non-quantity one as `quantity-not-a-number`, and a count
 with no unit as `quantity-missing-unit`, before the relation runs, which only refuses — so §2's `exactly` offers of a
-boolean, a set, an interval or a unitless count are the library's reading until `M3.4` wires it (R15 10), and keeping model §6's `fires on` inputs for `quantity-missing-unit` and
+boolean, an enumeration, a set, an interval or a unitless count are the library's reading, and `archogen check`
+goes on refusing them (R15 10; R16 6), and keeping model §6's `fires on` inputs for `quantity-missing-unit` and
 `quantity-missing` (R11 K8; R12 L1). Equality is the one bound every direction admits, so it never reads a value
 the wrong way; it refuses what the fact's direction would accept, never the reverse, and it is how a requirer says
 that for it the value is the interface, not a capacity (§6, "more bits"). `exactly` is the written form of the
 direction §2 calls `exact`, as `refinement.rs` reads it (R1 A11). The written direction stays in the description,
-as today's corpus writes it, because a reader should see which way a bound runs without the vocabulary open; the
-vocabulary is what makes it checkable.
+as today's corpus writes it, because a reader of a bound should see which way it runs without the vocabulary open;
+a bare value, `(counter-width 32 bit)`, takes its direction from the vocabulary, which is what makes both checkable
+(R16 9).
 
 **The entries of `/1`**, one per fact the census writes, each direction with its reason; `M3.1.2` ships them as
 `vocabulary.eadl` and adds none without a row here (R2 B8). A fact marked *interface* takes `exact` because a
@@ -147,7 +155,7 @@ of it satisfies more.
 | --- | --- | --- | --- | --- |
 | `absolute-deadline` | group `supported-horizon delivery-bound` | guarantee | `exact` | a boolean head |
 | `application-mutexes`, `general-ipc`, `descriptor-format` | boolean | guarantee | `exact` | presence facts; the first two are §3.1 exclusions |
-| `available-in-state` | set `run idle sleep` | guarantee | `includes` | the offer covers every state required |
+| `available-in-state` | set `run idle sleep` | guarantee | `includes` | the offer covers every state required and `run`, the state every use runs in: `(available-in-state idle)` asks for `run` and `idle` (R16 2) |
 | `bounded-arrival` | boolean | guarantee | `exact` | |
 | `bus-width` | quantity information | guarantee | `exact` | interface: a wider bus is another bus |
 | `clock-rate` | quantity frequency | guarantee | `exact` | interface: a block's timing is its rate's |
@@ -219,7 +227,9 @@ For one requirement `R` on fact `f`, written by side `S`, and one provider `P`:
    - **valued** — the value `P` offers for `f`;
    - **absent** — `P` declares `f` absent, or, where `P` does not offer `f`, declares absent a required input of its
      derivation (R12 L3): a declared absence
-     is something the offer says, and no derivation corrects it (§4; R3 C1; R7 G3; R10 J7);
+     is something the offer says, and no derivation corrects it (§4; R3 C1; R7 G3; R10 J7) — save that a derived fact
+     declared absent where `P` offers a fact its rule reads is `invalid-description`, as an offer of it there is (§4),
+     since `ROADMAP.md` §5.3 rejects contradictory declarations rather than choosing one (R16 8);
    - **unknown** — `P` offers `f`, or an input its rule reads, required or optional, without a value (§2, §4; R3 C5;
      R5 E3; R12 L15);
    - **derived** — the value §4's rule computes from the facts that have a value at `P`, offered or themselves
@@ -265,7 +275,8 @@ For one requirement `R` on fact `f`, written by side `S`, and one provider `P`:
    word about itself. It is checked for its domain and nothing else: it constrains no provider, puts no fact
    inside the closure, and is read by the rule or the leaf its entry names, which for `/1`'s one statement is
    `M3.2`'s adapter search (§6, "mediation"; R1 A3), whose acceptance carries it. It is the requiring side's word
-   alone: an offer of a statement fact, and a `needs` of one, is `invalid-description` (R2 B10; R12 L6, L13).
+   alone: an offer of a statement fact, wherever written, a service's `offers` included, and a `needs` of one, is
+   `invalid-description` (R2 B10; R12 L6, L13; R16 7).
 7. **Not decided here.** Which of several satisfying providers to take (`M3.4`: a deterministic preferred order in
    engine configuration); whether two providers may both be taken (`M3.3`: capacity, ownership, topology); and
    whether a requirement no provider satisfies can be met by an adapter (`M3.2`: an adapter is a provider whose
@@ -334,7 +345,8 @@ yet, "The `mtime` register has a 64-bit precision on all RV32 and RV64 systems" 
 count overflows" (R10 J13; R11 K15) — is decided there, under that decision's
 §2 (R9 I9) — a
 description gaining a fact §3.1 names, not a requirement weakened. The target's horizon is then
-`(2^64 − 1) / 10 000 000 s = 1 844 674 407 370.9551615 s`, and fits the arithmetic. With it, the horizon is
+`(2^64 − 1) / 10 000 000 s = 1 844 674 407 370.9551615 s`, and fits the arithmetic. With `(counter-modulus 4294967296)`
+at `10 MHz`, the horizon is
 `4294967295 / 10 000 000 s = 429.4967295 s`, and `time.monotonic`'s `(unambiguous-horizon (at-least 60 s))` is
 satisfied; `timer.delay` in `examples/alternative-timer/system.eadl`, at `1 MHz` and with that modulus stated, would
 have `4294.967295 s`, slower and better here. A 16-bit counter, `(counter-modulus 65536)` at `10 MHz`, has
@@ -397,7 +409,7 @@ Each case is a fact of the vocabulary and a row of §2; the worked values are fr
 | wrap interval | `unambiguous-horizon` | quantity time; guarantee; `at-least`; derived (§4) | `(counter-modulus 4294967296)` at `10 MHz` → `429.4967295 s ≥ 60 s`; `(counter-modulus 65536)` at `10 MHz` → `6.5535 ms`, not satisfied; `(unambiguous-horizon 3600 s)` written beside a modulus, a rate or a `wrap-behavior`, bare or valued → `invalid-description` (§4; R4 D1; R5 E1; R6 F1) |
 | read atomicity | `observation-coherent` | boolean; guarantee; `exact` | offered `true` or bare → satisfied; `false`, or declared absent → not |
 | programming range | `supported-horizon`, under the group `absolute-deadline` | quantity time; guarantee; `at-least` | an offer `(absolute-deadline true) (supported-horizon 3600 s)` satisfies `(at-least 10 s)`; `5 s` does not; a provider with `absent absolute-deadline` is absent for the group's head, as `timer.delay` is today (R1 A7, A13; R4 N3) |
-| power state | `available-in-state` | set `run idle sleep`; guarantee; `includes` | offered `run idle` ⊇ required `idle`; offered `run` does not include it |
+| power state | `available-in-state` | set `run idle sleep`; guarantee; `includes` | offered `run idle` ⊇ required `idle` with `run`; offered `run` does not include `idle`, and offered `idle` alone does not include `run` (R16 2) |
 | access privilege | `reachable-at-privilege` | set `user supervisor machine`; guarantee; `includes` | offered `supervisor machine`, requirer `supervisor` → satisfied; offered `machine` alone → not: inclusion reads no order, so a stronger precondition is never a stronger capability; a user mapping a supervisor cannot reach offers `user` and does not satisfy `supervisor`; a provider stating nothing is undescribed, one declaring the fact absent absent; a requirer stating no level, and a provider stating none against the context a plan binds, are `M3.3`'s (§3 rules 1, 4; R10 J1, J6; R11 K4) |
 | mediation | `or-through-mediation` | enumeration `allowed forbidden`; **statement**; `exact` | the requirer's own word that a mediation boundary may stand between it and the function (§4.3's "allowed mediation boundary"). No rule of `/1` reads it: a privilege test that fails is not satisfied, and a mediated path is an adapter — a provider in its own right, whose contract states the levels it is reachable from and which this relation judges like any other — that `M3.2`'s search may offer only where the requirer wrote `allowed` (R1 A3) |
 | output units | `tick-unit` | enumeration `ns us ms`; guarantee; `exact` | `ns` satisfies `ns`; `us` does not, however a conversion might be arranged: rescaling is an adapter's, a provider in its own right (`M3.2`) |
@@ -420,7 +432,7 @@ The relation's own codes are about an offer or a requirement as written, whateve
 
 | Code | When |
 | --- | --- |
-| `invalid-description` | a bare fact name, or `(f)`, inside `requires`; a list inside `needs` naming a vocabulary fact; a `uses` naming a vocabulary fact; a wrapper other than `at-least`, `at-most` and `exactly` — `(f (includes …))`, `(f (within …))` — since a requirement writes its value and the direction is the fact's (R15 16); a value outside its fact's domain; a width that is not a positive whole number of bits; a set written with no member in a requirement, or as `(f (exactly))` in an offer — `(f)` in an offer is bare (§2;
+| `invalid-description` | a bare fact name, or `(f)`, inside `requires`; a list inside `needs` naming a vocabulary fact; a `uses` naming a vocabulary fact; a declaration whose local name is a vocabulary fact (R16 1); a derived fact declared absent beside a fact its rule reads (R16 8); a direction wrapper other than `at-least`, `at-most` and `exactly` — a list headed by a direction's name, `(f (includes …))`, `(f (within …))`, `(f (exact …))` — since a requirement writes its value and the direction is the fact's (R15 16; R16 4); a value outside its fact's domain; a width that is not a positive whole number of bits; a set written with no member in a requirement, or as `(f (exactly))` in an offer — `(f)` in an offer is bare (§2;
 R13 M11) — or an interval with `lo > hi` on either side; a `needs` of a statement fact; a direction written against the vocabulary's, `exactly` apart (§1.1); a provider offering and declaring absent one fact; one provider offering one declared fact with two values, or a bound beside a value; a boolean or group head offered with a bound other than `exactly`; a derived fact offered beside a fact its rule reads (§4); a `counter-modulus` of 0, above a valued `2^width`, or beside `(wrap-behavior saturating)`; an offer of a statement fact |
 | `unsupported-profile` | a constraint on a fact the vocabulary does not declare; exact arithmetic that overflows `i128` |
 
@@ -449,7 +461,7 @@ block or platform offers, a description with no platform (R14 3) — and keeping
 commit that changes it, is `M3.4`'s, in its acceptance; this record claims no verdict for a tracked description once
 wired. The relation judges a fact by a provider's offer, never by a
 declaration that bears the fact's name, which presence today counts as satisfying the closure: a block named
-`low-power-timer` that offers nothing of that name passes presence and is undescribed here; the library's
+`low-power-timer` passes presence today and is `invalid-description` here (§1.1; R16 1); the library's
 verdict is the stricter, and which one the report carries is decided when `M3.4` wires it (R2 B9). `quantity.rs`'s
 comment on `ComparisonDirection::Exact` names a counter modulus as its example, and §1.1 agrees (R3 C9; R5 E4). `docs/semantics/model.md` gains a section normative over the crate when
 the crate lands (`M3.1.2`), so that `reference.rs` holds its codes to the document as it holds every other
@@ -549,3 +561,4 @@ history is [`decision_substitutability-relation-reviews.md`](../reviews/decision
 | 13 | 13 | 9 (M1, refinement keeping no value an abstract platform offers, so a system on an abstract platform is judged on values its refinement lacks; M2, a mediating record or adapter reaching the relation outside `M3.2`'s gate; M3, a bare privilege offer outside rule 4's and `M3.3`'s words; M4, the absence rule over every provider refusing `uc3` after `M3.2`; M5, silent providers turning tracked infeasible cases into `missing-fact`; M6, a record's contract as a provider carried by no leaf; M7, a bare offer beside a value two outcomes; M8, the opening's presence sentence; M9, §9's corpus claim) | "not acceptable as it stands"; for one provider every §5.2 case right, no condition read as a capability |
 | 14 | 18 | 9 (N1, `uc3` said to build after `M3.2` unchanged, which the record's own horizon and privilege rules forbid; N2, the privilege refusal stopping every use case and the target, unsaid; N3, wiring changing seven tracked `0` verdicts, carried by no leaf; N4, the `ordering` and `region` handover uncarried; N5, the vocabulary in the kinds folder, which a tracked test holds to kinds; N6, a bare name inside `requires` with no outcome; N7, a value inside `needs` dropped; N8, a bare boolean beside `false` two outcomes; N9, the horizon's endpoint, `modulus / rate` ambiguous) | "not acceptable as it stands"; for one provider the directions right and the arithmetic exact |
 | 15 | 16 | 8 (O1, a `uses` naming a fact bypassing rule 3 and the value; O2, the ordering case both `unsupported-profile` and kept at `0`; O3, §4 still deciding how the tracked counters migrate; O4, a record's modulus joined to `timer.delay`'s rate; O5, a record's absence against a block's offer decided by no leaf; O6, a record's preconditions carried by no acceptance; O7, the vocabulary module classified two ways; O8, the vocabulary's versioning carried by nothing) | "not acceptable as it stands"; the relation sound at one provider, every worked number and the endpoint argument right |
+| 16 | 9 | 3 (P1, a declaration named like a vocabulary fact capturing a `needs` or `uses` of it, and an import renaming it out of sight; P2, an idle-only provider satisfying a power-state requirement, a use running in `run`; P3, a `deffact` in a module file given two outcomes) | "not acceptable as it stands"; every worked number and the endpoint argument right; every restated rule saying one thing; every handover carried |

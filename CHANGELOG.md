@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability relation's sixteenth review: three defects
+
+`ARCHOGEN-M3-0427` (leaf `M3.1.1`, step 17).
+
+- The sixteenth reader found three defects, the fewest in seven rounds. A block named after a fact could capture a
+  requirement on that fact once imported as a module, so such a name is refused. A provider available only in an
+  idle power state no longer satisfies an idle-state requirement, because every use also runs in the running state.
+
 ## archogen — every hand-off checked in both places
 
 `ARCHOGEN-PROGRAM-0426` (leaf `PROGRAM.52.1`).

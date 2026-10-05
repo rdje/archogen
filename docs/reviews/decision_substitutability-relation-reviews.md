@@ -395,3 +395,21 @@ own reviewed design rather than writing an answer the next round must check.
 | O14 — a group's sub-fact beside its head `false` | no | decided by §2's group row; a sub-fact is a fact in its own right |
 | O15 — contradictory constraints in one clause end `infeasible-configuration` | no | refused either way; `M3.4`'s code rule |
 | O16 — `includes` and `within` wrappers unlisted | no | §8: `invalid-description`, a requirement writing its value |
+
+**Round 16**, `2026-10-05`, a new context that had not read rounds 1 to 15, which probed the built checker at the root
+and through imported modules, re-derived the census and every worked number, and read each handover back. There were 9
+findings, 3 of them defects, and the verdict was "not acceptable as it stands". Defects per round: 7, 7, 8, 3, 3, 3, 5,
+1, 2, 8, 7, 8, 9, 9, 8, 3 — the first fall below four since round 9, after round 15's answer handed questions to other
+leaves instead of answering them here. Every restated rule said one thing, and every handover was carried.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| P1 — a block named `observation-coherent` in an imported module captured a `needs` of the fact, and the import renamed it out of the relation's sight (measured) | yes | §1.1, §8, §9 and `M3.1.2`: a declaration whose local name is a vocabulary fact is `invalid-description`; none in the corpus |
+| P2 — an idle-only provider met `(available-in-state idle)`, though every use runs in `run` | yes | §1.1 and §6: a power-state requirement asks for `run` too |
+| P3 — a `deffact` in a module file `schema-unknown-kind` or `module-multiple-forms`, against §1.1's exit 20 | yes | §1.1 and `M3.1.2`: a module file classified first, its `deffact` refused exit 10 |
+| P4 — "a wrapper other than …" would cover `range`, `pow2` and a group | no | §8: a direction wrapper, a list headed by a direction's name |
+| P5 — "With it" pointing at the wrong number | no | §4: the modulus and rate named |
+| P6 — an enumeration's `exactly` left out; "until wired" implying a change no leaf carries | no | §1.1: an enumeration listed; `archogen check` goes on refusing them |
+| P7 — a service offering a statement fact, two readings | no | rule 6: wherever written, a service's `offers` included |
+| P8 — a derived fact absent beside its grounds resolved by choosing the absence | no | rule 1 and §8: `invalid-description`, as `ROADMAP.md` §5.3 asks; none in the corpus |
+| P9 — §1.1's rationale overstated for bare values | no | §1.1: a bound shows its direction; a bare value takes the vocabulary's |
