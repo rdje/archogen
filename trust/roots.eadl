@@ -36,89 +36,90 @@
   (leaf "M3.5"))
 
 ; The sites the catalog's rules refuse in today's roots, each admitted by review once M3.6.5 reads acceptance: the
-; file, the rule as the catalog's scanner names it, and the sha256 of the line it stands on (of the whole manifest,
-; for a manifest rule). Measured 2026-10-05 by `cargo xtask trust-inventory` over the 55 compiled `.rs` files.
+; file, the rule as the catalog's scanner names it, and the sha256 of the site's extent — the statement or item it
+; stands in (of the whole manifest, for a manifest rule) — one admission per site. Measured 2026-10-05 by
+; `cargo xtask trust-inventory` over the compiled `.rs` files.
 
 (defadmit
   (file "crates/archogen-api/src/lib.rs")
   (rule "include_str")
-  (line "1b2ca081039ad9198d59b54f66cf353c156e8c13bb64f8d3dc6347b58e18b7f8")
+  (sha256 "8b9a2e4f89d1847a6091e5d2b2cefb0122c4f42aa49902360ee4d7f55e2d0b92")
   (reason "crates/archogen-api/src/lib.rs:77: embeds a shipped kind module as text, the data `archogen-api` registers"))
 
 (defadmit
   (file "crates/archogen-api/src/lib.rs")
   (rule "include_str")
-  (line "bda0dd18ba2d4efe54c1443a9d9a75304697453de4849c2858ad23eaa07d704b")
+  (sha256 "8b9a2e4f89d1847a6091e5d2b2cefb0122c4f42aa49902360ee4d7f55e2d0b92")
   (reason "crates/archogen-api/src/lib.rs:81: embeds a shipped kind module as text, the data `archogen-api` registers"))
 
 (defadmit
   (file "crates/archogen-cli/src/spec.rs")
   (rule "include_str")
-  (line "cc22d17a5541c5c5599eb627cd75320de75af638eee5e06fd6a54837bf4370b8")
+  (sha256 "372ccdafb5eeab0235f3dff631ea29fc16d4310e66875a80092b2bdfe4394725")
   (reason "crates/archogen-cli/src/spec.rs:334: embeds `ROADMAP.md` as text, which the command specification quotes"))
 
 (defadmit
   (file "crates/archogen-s0/src/emit.rs")
   (rule "include_str")
-  (line "2201da0838c1aaa676d73836cc44f1971d8bebb82e9ec6ddc91c67f7e327cef8")
+  (sha256 "fc9dffd54da3be9007d6d2e99859ca40bf1ad3f147c429ffa92bc1ec32587191")
   (reason "crates/archogen-s0/src/emit.rs:37: embeds an S0 runtime template as text, which the S0 generator writes out"))
 
 (defadmit
   (file "crates/archogen-s0/src/emit.rs")
   (rule "include_str")
-  (line "404731377f4fe4f15eb4eb380d076228d0d3c38dbd2daab142447bf06987c01c")
+  (sha256 "fc9dffd54da3be9007d6d2e99859ca40bf1ad3f147c429ffa92bc1ec32587191")
   (reason "crates/archogen-s0/src/emit.rs:38: embeds an S0 runtime template as text, which the S0 generator writes out"))
 
 (defadmit
   (file "crates/archogen-s0/src/emit.rs")
   (rule "include_str")
-  (line "7d7ef8cb090c672273906f1c6014ccbb0b3a332cb77013a1bafc74dd359da41d")
+  (sha256 "d80c207fbd441ffc00937558acd6ab7b203e421c1b8b93d00e401cebd569c178")
   (reason "crates/archogen-s0/src/emit.rs:282: embeds an S0 runtime template as text, which the S0 generator writes out"))
 
 (defadmit
   (file "crates/archogen-s0/src/emit.rs")
   (rule "include_str")
-  (line "847681a9859fe5c9a89297fb2774bb36af56ce536f2a51e76707db443e05236d")
+  (sha256 "0c47b7f562d8011c88e828abb606a166f194aa56feeb9a218ff993630b41b165")
   (reason "crates/archogen-s0/src/emit.rs:283: embeds an S0 runtime template as text, which the S0 generator writes out"))
 
 (defadmit
   (file "crates/archogen-wasm/Cargo.toml")
   (rule "`crates/archogen-wasm/Cargo.toml`: `lib.crate-type` holds `crate-type`, which can make the package another kind of crate")
-  (line "d70b6e20510eda7b3c5ac323903510c33ea974b5c62c48861edb898df344240a")
+  (sha256 "d70b6e20510eda7b3c5ac323903510c33ea974b5c62c48861edb898df344240a")
   (reason "crates/archogen-wasm/Cargo.toml: the wasm module's `cdylib` crate type, the one way to build a module a browser loads (`ROADMAP.md` §10.4)"))
 
 (defadmit
   (file "crates/archogen-wasm/src/lib.rs")
   (rule "no_mangle")
-  (line "e423b69db12c815b0a2976b559471ae4ce0641f598a0fd1b17cf4a9af3697128")
+  (sha256 "c1b32d846eb9e5645eae364f8df70eafecdb6253ba9e814dc27407df07bd5234")
   (reason "crates/archogen-wasm/src/lib.rs:88: one of the wasm module's three exports, `pub extern 'C' fn`, which a host calls by name"))
 
 (defadmit
   (file "crates/archogen-wasm/src/lib.rs")
   (rule "no_mangle")
-  (line "e423b69db12c815b0a2976b559471ae4ce0641f598a0fd1b17cf4a9af3697128")
+  (sha256 "d2a9a44e061a736a97dd0cf0d0803032b816a10fe6adb628c488cefee8575bae")
   (reason "crates/archogen-wasm/src/lib.rs:105: one of the wasm module's three exports, `pub extern 'C' fn`, which a host calls by name"))
 
 (defadmit
   (file "crates/archogen-wasm/src/lib.rs")
   (rule "no_mangle")
-  (line "e423b69db12c815b0a2976b559471ae4ce0641f598a0fd1b17cf4a9af3697128")
+  (sha256 "d5b762356a219b6702562e361298dba0fb3e36865d5f8f4d0479fb28f5084856")
   (reason "crates/archogen-wasm/src/lib.rs:116: one of the wasm module's three exports, `pub extern 'C' fn`, which a host calls by name"))
 
 (defadmit
   (file "crates/eadl-front/src/module.rs")
   (rule "path")
-  (line "9bffcc2be3a3ab091df473e10ed1a0a42e7cafa198b9b72fd68615b3b76e36e3")
+  (sha256 "b9d67cdde5b5d02249afb9ae0401e13aac5e65b8826843cfe3b1816d0a5b7415")
   (reason "crates/eadl-front/src/module.rs:303: a field named `path` inside `format!`, no attribute"))
 
 (defadmit
   (file "crates/eadl-model/src/profile.rs")
   (rule "include_str")
-  (line "e8cf0f2b5ba3a9cd82adead5476ae7ae38a35028c026f646632998074b63653e")
+  (sha256 "4a5f0459f9b25e8f4fa6ef79231db6a997007f4080dcc38d529f8c52a67b5ff8")
   (reason "crates/eadl-model/src/profile.rs:424: embeds the profile page as text"))
 
 (defadmit
   (file "crates/rt-analysis/src/cost.rs")
   (rule "path")
-  (line "46a06bace4711afe6d0856b5a5b7c278093215af10998cb186eef4f7a19f1bf5")
+  (sha256 "79e261019d5fdfa251075a64fb9a21ec17e0cdf55d05b5cabb3d8227220be53d")
   (reason "crates/rt-analysis/src/cost.rs:543: a variable named `path` inside `panic!`, no attribute"))

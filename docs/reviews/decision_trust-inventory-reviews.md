@@ -238,3 +238,38 @@ whole, default-deny, and admits by review only the sites today's roots need — 
 | G16 — `M4.7` before `M2.21` | no | `M4.7`'s producer for the scheduling checker is the executable `M2.21` decides; ordered in `M4.7` |
 | G17 — subject against dependency decided by the pipeline | no | a stated gap: §3 lists what a root reads at run time that the pipeline does not hand it |
 | G18 — today's role packages unlisted | no | §2 lists them; `eadl-front` and `eadl-model` are no role's |
+
+**Round 8**, `2026-10-05`, the first against the instrument (`docs/decisions/decision_executable-design-reviews.md`):
+a new context that had not read rounds 1 to 7 copied `xtask/src/trust.rs` into a scratch crate and ran 16 probes
+through the instrument's own fixtures, one of them on a `git archive` copy of the repository. Every defect came with a
+reproducer the instrument answered wrongly, and every one sat in how it measured, none in what the record decides
+about acceptance. Each landed first as a fixture of `xtask/src/trust.rs`: 17 of them, 14 failing on the instrument as
+the round found it, the other three guards of what already held. Then the rule, then the record's words. There were
+23 findings, 11 of them defects, and the verdict was "not acceptable as it stands". Defects per round: 11, 12, 16,
+11, 10, 10, 8, 11.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| H1 — `[lib] path = "src/lib.txt"` compiled as Rust and never tokenised; its `.incbin` reads a file both roots read (measured) | yes | §3: a crate root that is not `.rs` refused from `cargo metadata` before any build; the catalog's own hole routed to `M2.7.7` |
+| H2 — a unit's package guessed from its path: a `.txt` root or a nested package's directory hides a role package (measured) | yes | §3: a unit belongs to the package whose target names its crate root and crate name; one no target names is refused |
+| H3 — one admission admits every identical line, a fourth `#[no_mangle]` taking over `memcmp` on today's admissions (measured) | yes | §3: an admission admits one site; sites of one text pass only as many as their admissions |
+| H4 — an admission covers one line of a multi-line site: an `.incbin` on an admitted `global_asm!`'s second line passes (measured) | yes | §3: the sha256 of the site's extent, the statement or item it stands in |
+| H5 — a value compiled in through `env!` changes and no shared item does (measured) | yes | §4: an item's configuration holds its units' env lines; §3: a variable outside cargo's own refused |
+| H6 — a development profile, an override for a package no root compiles, a comment in the pin change every pair's build configuration (measured) | yes | §3: `[profile.release]` and overrides for compiled packages only; the pin in the identity, the edition in each unit |
+| H7 — the harness item holds only its test unit: an adapter edit changes nothing; a test named with `-` gives an empty item (measured) | yes | §4: every unit the harness compiles beside its pair's builds, with files and configurations |
+| H8 — the harness paired with its own pair: 10 pairs and 13 items where the record gives 8 and 9 (measured) | yes | §4: paired with every root but its pair's two; re-measured, 8 and 9 |
+| H9 — no artifact, no per-package manifest or edge kinds recorded | yes | §3: the artifact from cargo's own report, each package's manifest sha256 and edges; `TI-H23` |
+| H10 — "every `.rs` file" against "data … never tokenised" for S0's templates, read both ways | yes | §3: a `.rs` file is Rust however read; only other files are data |
+| H11 — `roots.eadl` read loosely: a name twice empties two roots, a pair naming no root drops the harness item, a misspelt clause is ignored (measured) | yes | the reader refuses an unknown form or clause, a clause twice, a name twice, a pair naming no root |
+| H12 — the harness compiling a third role's package only reported | no | §2: refused, its exemption is its pair's two |
+| H13 — a library root compiling another role's package only reported | no | §2: refused, a library root runs its role until an executable does |
+| H14 — an unadmitted site under two codes | no | §6: `trust-undeclared-input` alone; `trust-form-missing` covers items, roots and targets |
+| H15 — no code refuses an admission whose site is gone | no | §6: `trust-baseline-stale` on the baseline's host; listed with the inventory; `TI-H4` |
+| H16 — "whole" is not whole; `links` attributed to `check_manifest` | no | §3: `check_workspace` adopted, the rules not adopted named with their reasons; cargo refuses `links` |
+| H17 — a sentence of §3 unreadable | no | rewritten |
+| H18 — the inventory's bytes differ between two runs of one commit | no | units sorted; a fixture writes the inventory twice |
+| H19 — `-L` and `--out-dir` dropped unstated; the harness built apart, not reusing | no | §3 states both |
+| H20 — `refused-sites` counts compilations | no | each file scanned once; a fixture of one site two roots compile |
+| H21 — fixtures `M3.6.2` names not held literally | no | `.incbin` under `asm!` and `naked_asm!`, and `memcmp` in the harness's own test file, each a fixture; a file changed after the build stays a stated limit |
+| H22 — `HOME` and `PATH` recorded as-is | no | refused: the catalog's list of cargo's own variables adopted |
+| H23 — `TI-H23`, `TI-H4`, `TI-H9` inherit the holes or leave case 5's survivors open | no | all three rewritten, with `TI-H24`, in both copies |

@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate's first review against its instrument
+
+`ARCHOGEN-M3-0435` (leaf `M3.6.1`, step 9).
+
+- The eighth reader of the trust design ran its measuring instrument rather than reading about it. All eleven
+  defects it found were in what the instrument measured, each shown by a probe the instrument answered wrongly. One
+  was a library whose source file was named `.txt`: it was compiled and never inspected. Another was a single
+  approval quietly covering every identical line in its file. A third left an approved assembler block's later lines
+  unchecked. Each probe is now a test that failed first. The instrument now rejects non-Rust crate roots, ties every
+  approval to one site and to its whole statement, and records each program's built artifact.
+
 ## archogen — the substitutability design's first review against its model
 
 `ARCHOGEN-M3-0434` (leaf `M3.1.1`, step 18).

@@ -880,9 +880,9 @@ test -p xtask trust::tests
 expect killed
 why M3.6.2: default-deny — every refused site in a compiled .rs file needs an admission (§3; R7); with the scan skipped, every assembler, include, path and extern channel passes.
 from
-                    match refused_sites(blob) {
+            match refused_sites(blob) {
 to
-                    match Ok::<Vec<(usize, String)>, String>(Vec::new()) {
+            match Ok::<Vec<(usize, usize, String)>, String>(Vec::new()) {
 end
 
 mutation trust-two-role-program-admitted
@@ -894,6 +894,72 @@ from
                     if compiled.contains(rp) {
 to
                     if compiled.contains(rp) && false {
+end
+
+mutation trust-one-admission-for-many-sites
+file xtask/src/trust.rs
+test -p xtask trust::tests
+expect killed
+why M3.6.1 R8 3: one admission admits one site; matched as a set, it admitted every later site with the same text, a fourth `#[no_mangle]` taking over `memcmp` included.
+from
+            if at.len() > admitted {
+to
+            if admitted == 0 {
+end
+
+mutation trust-extent-is-the-site-s-token
+file xtask/src/trust.rs
+test -p xtask trust::tests
+expect killed
+why M3.6.1 R8 4: an admission hashes the site's whole extent; hashing less left an `.incbin` added on an admitted `global_asm!`'s second line unreviewed.
+from
+        Ok(&source[toks[start].at..toks[end].end])
+to
+        Ok(&source[toks[k].at..toks[k].end])
+end
+
+mutation trust-non-rs-crate-root-admitted
+file xtask/src/trust.rs
+test -p xtask trust::tests
+expect killed
+why M3.6.1 R8 1: rustc compiles a crate root whatever its extension and no token rule reads a file that is not `.rs`; admitted, `[lib] path = "src/lib.txt"` hid a `global_asm!` reading a file both roots read.
+from
+                        .is_none_or(|e| e != "rs")
+to
+                        .is_none_or(|_| false)
+end
+
+mutation trust-foreign-environment-admitted
+file xtask/src/trust.rs
+test -p xtask trust::tests
+expect killed
+why M3.6.1 R8 remark 22: a unit may depend on cargo's own variables only, the catalog's list; another is an input the commit does not hold.
+from
+                    if !(var.starts_with("CARGO_PKG_") || ENV_ALLOWED.contains(&var)) {
+to
+                    if false {
+end
+
+mutation trust-harness-paired-with-its-pair
+file xtask/src/trust.rs
+test -p xtask trust::tests
+expect killed
+why M3.6.1 R8 8: the harness is paired with every root but its pair's two, whose sharing with it is the pair's own harness item.
+from
+                if own_pair(a, b) || own_pair(b, a) {
+to
+                if false {
+end
+
+mutation trust-every-profile-override-configures
+file xtask/src/trust.rs
+test -p xtask trust::tests
+expect killed
+why M3.6.1 R8 6: an override for a package no program compiles reaches no root; counted, an unrelated edit changed every pair's build configuration (case 5).
+from
+                            name == "*" || compiled_names.iter().any(|n| n.as_str() == name)
+to
+                            true
 end
 
 mutation model-implies-ignored

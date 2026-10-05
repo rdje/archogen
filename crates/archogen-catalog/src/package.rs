@@ -218,8 +218,9 @@ pub struct Found {
     pub why: String,
 }
 
+/// What a token is ([`tokens`]).
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum Kind {
+pub enum Kind {
     /// An identifier, by its name, `r#asm`'s among them; `true` when it holds a byte outside ASCII.
     Ident(String, bool),
     /// A string literal of any kind.
@@ -234,17 +235,24 @@ pub(crate) enum Kind {
     Close(char),
 }
 
+/// One token of a Rust source ([`tokens`]).
 #[derive(Debug, Clone)]
-pub(crate) struct Token {
-    pub(crate) kind: Kind,
+pub struct Token {
+    /// What it is.
+    pub kind: Kind,
     /// Its first byte's offset.
-    pub(crate) at: usize,
+    pub at: usize,
     /// The offset just past it.
-    pub(crate) end: usize,
+    pub end: usize,
 }
 
-/// Rust's tokens in `source`, comments dropped and literals kept whole.
-pub(crate) fn tokens(source: &[u8]) -> Result<Vec<Token>, (usize, String)> {
+/// Rust's tokens in `source`, comments dropped and literals kept whole — the tokens §3's rules read, which the trust
+/// instrument also reads to find a refused site's extent (`docs/decisions/decision_trust-inventory.md` §3).
+///
+/// # Errors
+///
+/// The offset and reason where `source` does not tokenize.
+pub fn tokens(source: &[u8]) -> Result<Vec<Token>, (usize, String)> {
     let mut out = Vec::new();
     let mut i = 0;
     let n = source.len();

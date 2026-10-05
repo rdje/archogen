@@ -10,9 +10,10 @@
 //!
 //! ⛔ **Default-deny** (§3, R7). Every manifest and token rule the catalog applies to a recorded package —
 //! `check_manifest` and `scan` in `crates/archogen-catalog/src/package.rs`, unchanged — applies to every `.rs` file a
-//! program's compilation reads, the harness's development edges followed; a site the rules refuse passes only when an
-//! admission in `trust/roots.eadl` names its file, its rule and the sha256 of its line. Data a compilation reads is
-//! hashed and never tokenised (R6 7).
+//! program's compilation reads, however it is read, the harness's development edges followed; a crate root that is
+//! not a `.rs` file is refused before any build (R8 1). A site the rules refuse passes only when an admission in
+//! `trust/roots.eadl` names its file, its rule and the sha256 of its extent — the statement or item it stands in
+//! (R8 4) — one admission per site (R8 3). Data other than a `.rs` file is hashed and never tokenised (R6 7; R8 10).
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -25,7 +26,9 @@ use archogen_catalog::tree::Tree;
 use archogen_evidence::sha256::Digest;
 use eadl_front::{read, Form, SourceMap};
 
-use crate::catalog_build::{configurations_on_path, environment, toolchain_file, write_tree};
+use crate::catalog_build::{
+    configurations_on_path, environment, toolchain_file, write_tree, ENV_ALLOWED,
+};
 use crate::catalog_check::{tree_entries, tree_of, Git};
 use crate::json::{self, Json};
 
@@ -69,8 +72,8 @@ pub struct Admission {
     pub file: String,
     /// The rule: the refused word as the catalog's scanner names it.
     pub rule: String,
-    /// The sha256 of the line the site stands on.
-    pub line: String,
+    /// The sha256 of the site's extent ([`site_extent`]), or, for a manifest rule, of the whole manifest.
+    pub sha256: String,
 }
 
 /// The roots file, read.
@@ -78,9 +81,18 @@ pub struct Admission {
 pub struct Roots {
     /// Every root and the harness.
     pub programs: Vec<Program>,
-    /// Every admission.
-    pub admissions: BTreeSet<Admission>,
+    /// Every admission, with how many forms name it: each admits one site (R8 3).
+    pub admissions: BTreeMap<Admission, usize>,
 }
+
+/// Each form the instrument reads, and the clauses it takes; any other form or clause is refused (R8 11).
+const FORMS: &[(&str, &[&str])] = &[
+    ("defroot", &["role", "package", "target", "role-packages"]),
+    ("defharness", &["pair", "package", "test"]),
+    ("defadmit", &["file", "rule", "sha256", "reason"]),
+    // A role no root fills yet (§2): the gate's, `M3.6.3`.
+    ("defrole", &["leaf"]),
+];
 
 fn clause<'a>(form: &'a Form, head: &str) -> Option<&'a Form> {
     // Every item after the form's head: a name is a bare word, never a clause, so it is never found.
@@ -109,7 +121,8 @@ fn one(form: &Form, head: &str, what: &str) -> Result<String, String> {
     }
 }
 
-/// Read the roots file.
+/// Read the roots file, strictly: a form or a clause the instrument does not know, a clause twice, a name twice, and
+/// a harness whose pair names no root are refused (R8 11).
 ///
 /// # Errors
 ///
@@ -124,10 +137,42 @@ pub fn read_roots(text: &str) -> Result<Roots, String> {
         return Err(diags.render(&sources));
     }
     let mut roots = Roots::default();
+    let mut names: BTreeSet<String> = BTreeSet::new();
     for form in &doc.forms {
-        let name = form.items().get(1).and_then(word).unwrap_or_default();
-        match form.head() {
-            Some("defroot") => {
+        let head = form.head().unwrap_or("?");
+        let Some((_, allowed)) = FORMS.iter().find(|(h, _)| *h == head) else {
+            return Err(format!(
+                "{ROOTS}: a form `{head}` the instrument does not know"
+            ));
+        };
+        // An admission has no name; every other form names itself first.
+        let named = head != "defadmit";
+        let name = if named {
+            form.items().get(1).and_then(word).unwrap_or_default()
+        } else {
+            "an admission".to_owned()
+        };
+        if named && !names.insert(name.clone()) {
+            return Err(format!("{ROOTS}: `{name}` is named twice"));
+        }
+        let mut seen = BTreeSet::new();
+        for c in form.items().iter().skip(if named { 2 } else { 1 }) {
+            let Some(h) = c.head() else {
+                return Err(format!(
+                    "{ROOTS}: `{name}` holds something that is not a clause"
+                ));
+            };
+            if !allowed.contains(&h) {
+                return Err(format!(
+                    "{ROOTS}: `{name}` holds a clause `{h}` its form does not take"
+                ));
+            }
+            if !seen.insert(h) {
+                return Err(format!("{ROOTS}: `{name}` holds `{h}` twice"));
+            }
+        }
+        match head {
+            "defroot" => {
                 let target = match values(form, "target").as_slice() {
                     [k] if k == "lib" => Target::Lib,
                     [k, n] if k == "bin" => Target::Bin(n.clone()),
@@ -150,7 +195,7 @@ pub fn read_roots(text: &str) -> Result<Roots, String> {
                     name,
                 });
             }
-            Some("defharness") => {
+            "defharness" => {
                 let pair = values(form, "pair");
                 let [a, b] = pair.as_slice() else {
                     return Err(format!("{ROOTS}: `{name}` names `(pair ROOT ROOT)`"));
@@ -164,21 +209,37 @@ pub fn read_roots(text: &str) -> Result<Roots, String> {
                     name,
                 });
             }
-            Some("defadmit") => {
-                roots.admissions.insert(Admission {
-                    file: one(form, "file", "an admission")?,
-                    rule: one(form, "rule", "an admission")?,
-                    line: one(form, "line", "an admission")?,
-                });
+            "defadmit" => {
+                one(form, "reason", "an admission")?;
+                *roots
+                    .admissions
+                    .entry(Admission {
+                        file: one(form, "file", "an admission")?,
+                        rule: one(form, "rule", "an admission")?,
+                        sha256: one(form, "sha256", "an admission")?,
+                    })
+                    .or_default() += 1;
             }
-            // A role no root fills yet, and a classification (§2), are the gate's: `M3.6.3` reads them.
-            Some("defrole" | "defclassify") => {}
-            other => {
+            _ => {}
+        }
+    }
+    // A harness compares two distinct roots the file declares.
+    for h in &roots.programs {
+        let Some((a, b)) = &h.pair else { continue };
+        for x in [a, b] {
+            if !roots
+                .programs
+                .iter()
+                .any(|p| &p.name == x && p.pair.is_none())
+            {
                 return Err(format!(
-                    "{ROOTS}: a form `{}` the instrument does not know",
-                    other.unwrap_or("?")
-                ))
+                    "{ROOTS}: `{}`'s pair names `{x}`, which names no root",
+                    h.name
+                ));
             }
+        }
+        if a == b {
+            return Err(format!("{ROOTS}: `{}`'s pair names `{a}` twice", h.name));
         }
     }
     Ok(roots)
@@ -199,6 +260,17 @@ pub struct Unit {
     pub files: BTreeSet<String>,
     /// Every `# env-dep` line, with its value.
     pub env: Vec<String>,
+}
+
+/// A unit's configuration as an item compares it: its normalised command line and every `# env-dep` line with its
+/// value, since a value compiled in through `env!` is configuration as much as a flag is (§3, R8 5).
+fn unit_configuration(u: &Unit) -> String {
+    let mut c = u.configuration.join(" ");
+    for e in &u.env {
+        c.push_str(" env-dep:");
+        c.push_str(e);
+    }
+    c
 }
 
 /// Split one `rustc` command line as cargo's `-v` prints it: on spaces outside single quotes.
@@ -324,15 +396,24 @@ fn lexical(path: &str) -> Option<String> {
 /// What one build of one program reports.
 struct Build {
     units: Vec<Unit>,
+    /// The root's artifact — the executable, the library or the test binary — relative to its own target directory,
+    /// with its sha256 (§3, R8 9).
+    artifact: (String, String),
 }
 
-fn run_cargo(args: &[&str], env: &[(String, String)], cwd: &Path) -> Result<String, String> {
+/// What cargo printed: its standard output (the JSON messages) and its standard error (`-v`'s command lines).
+fn run_cargo(
+    args: &[&str],
+    env: &[(String, String)],
+    cwd: &Path,
+) -> Result<(String, String), String> {
     let mut c = Command::new("cargo");
     c.args(args).current_dir(cwd).env_clear();
     for (k, v) in env {
         c.env(k, v);
     }
     let out = c.output().map_err(|e| format!("cargo did not run: {e}"))?;
+    let stdout = String::from_utf8_lossy(&out.stdout).into_owned();
     let stderr = String::from_utf8_lossy(&out.stderr).into_owned();
     if !out.status.success() {
         let first = stderr
@@ -342,15 +423,23 @@ fn run_cargo(args: &[&str], env: &[(String, String)], cwd: &Path) -> Result<Stri
             .to_owned();
         return Err(format!("`cargo {}` failed: {first}", args.join(" ")));
     }
-    Ok(stderr)
+    Ok((stdout, stderr))
 }
 
-/// Build `p` clean in `tree_dir`, into its own target directory, and read every unit's dependency information.
+/// The packages' targets from `cargo metadata`: each crate root, as a repository path, with its crate name (a
+/// target's name, `-` written `_`, as rustc's `--crate-name` takes it), to its package's directory (R8 2).
+pub type Targets = BTreeMap<(String, String), String>;
+
+/// Build `p` clean in `tree_dir`, into `target_dir`, and read every unit's dependency information.
+#[allow(clippy::too_many_arguments)]
 fn build(
     p: &Program,
     package_names: &BTreeMap<String, String>,
+    targets: &Targets,
+    id_dir: &BTreeMap<String, String>,
     env: &[(String, String)],
     tree_dir: &Path,
+    target_dir: &Path,
     refused: &mut Vec<String>,
 ) -> Result<Build, String> {
     let name = package_names
@@ -368,6 +457,7 @@ fn build(
             "--locked",
             "--offline",
             "--no-default-features",
+            "--message-format=json",
             "-v",
             "-p",
         ]
@@ -375,11 +465,17 @@ fn build(
     );
     args.push(name.clone());
     let argv: Vec<&str> = args.iter().map(String::as_str).collect();
-    let stderr = run_cargo(&argv, env, tree_dir)?;
+    let (stdout, stderr) = run_cargo(&argv, env, tree_dir)?;
     let scratch = format!("{}/", tree_dir.display());
     let canonical_scratch = fs::canonicalize(tree_dir)
         .map(|c| format!("{}/", c.display()))
         .unwrap_or_else(|_| scratch.clone());
+    let strip = |t: &str| -> String {
+        t.strip_prefix(&scratch)
+            .or_else(|| t.strip_prefix(&canonical_scratch))
+            .unwrap_or(t)
+            .to_owned()
+    };
     let mut units = Vec::new();
     for line in stderr.lines() {
         let Some(start) = line.find("Running `") else {
@@ -406,23 +502,25 @@ fn build(
                     .then(|| w[1]["extra-filename=".len()..].to_owned())
             })
             .unwrap_or_default();
-        let src = tokens
+        // The unit's package is the one whose target names its crate root, as cargo's metadata states it — never
+        // the longest directory prefixing the source, which a crate root in a nested package's directory defeats
+        // (R8 2).
+        let owners: BTreeSet<&String> = tokens
             .iter()
             .skip(1)
-            .find(|t| t.ends_with(".rs") && !t.starts_with('-'))
-            .cloned()
-            .unwrap_or_default();
-        let src_rel = src
-            .strip_prefix(&scratch)
-            .or_else(|| src.strip_prefix(&canonical_scratch))
-            .unwrap_or(&src)
-            .to_owned();
-        let package = package_names
-            .keys()
-            .filter(|dir| src_rel.starts_with(&format!("{dir}/")) || dir.is_empty())
-            .max_by_key(|d| d.len())
-            .cloned()
-            .unwrap_or_default();
+            .filter_map(|t| targets.get(&(strip(t), crate_name.clone())))
+            .collect();
+        let package = match owners.into_iter().collect::<Vec<_>>().as_slice() {
+            [one] => (*one).clone(),
+            _ => {
+                refused.push(format!(
+                    "trust-undeclared-input: `{}` compiles `{crate_name}`, a unit whose crate root no one target of \
+                     the commit's packages names",
+                    p.name
+                ));
+                continue;
+            }
+        };
         let d = PathBuf::from(&out_dir).join(format!("{crate_name}{extra}.d"));
         let text = fs::read_to_string(&d).map_err(|e| format!("{}: {e}", d.display()))?;
         let mut files = BTreeSet::new();
@@ -430,6 +528,15 @@ fn build(
         let mut first = true;
         for l in text.lines() {
             if let Some(dep) = l.strip_prefix("# env-dep:") {
+                // Only cargo's own variables, which the commit's manifests decide: the catalog's list (R8 remark 22).
+                let var = dep.split('=').next().unwrap_or_default();
+                if !(var.starts_with("CARGO_PKG_") || ENV_ALLOWED.contains(&var)) {
+                    refused.push(format!(
+                        "trust-undeclared-input: `{crate_name}` in `{}` depends on the environment variable `{var}`, \
+                         which the commit does not hold",
+                        p.name
+                    ));
+                }
                 env_deps.push(dep.replace(&scratch, "").replace(&canonical_scratch, ""));
                 continue;
             }
@@ -472,13 +579,88 @@ fn build(
             env: env_deps,
         });
     }
-    Ok(Build { units })
+    // In a fixed order, not cargo's scheduling order, so one commit's inventory is one sequence of bytes (R8 remark
+    // 18).
+    units.sort_by(|a, b| {
+        (&a.package, &a.crate_name, &a.configuration).cmp(&(
+            &b.package,
+            &b.crate_name,
+            &b.configuration,
+        ))
+    });
+    if !units.iter().any(|u| u.package == p.package) {
+        return Err(format!(
+            "`{}`'s build compiled nothing of its own package `{}`",
+            p.name, p.package
+        ));
+    }
+    // The root's artifact, from cargo's own report of what it wrote (R8 9).
+    let mut artifact = None;
+    for line in stdout.lines() {
+        let Ok(m) = json::parse(line) else { continue };
+        if m.get("reason").and_then(Json::as_str) != Some("compiler-artifact") {
+            continue;
+        }
+        let pkg = m
+            .get("package_id")
+            .and_then(Json::as_str)
+            .and_then(|id| id_dir.get(id));
+        if pkg != Some(&p.package) {
+            continue;
+        }
+        let target = m.get("target");
+        let tname = target
+            .and_then(|t| t.get("name"))
+            .and_then(Json::as_str)
+            .unwrap_or_default();
+        let kinds: Vec<String> = target
+            .and_then(|t| t.get("kind"))
+            .map(Json::elements)
+            .unwrap_or_default()
+            .iter()
+            .filter_map(Json::as_str)
+            .map(str::to_owned)
+            .collect();
+        let executable = m.get("executable").and_then(Json::as_str);
+        let file = match &p.target {
+            Target::Bin(b) if tname == b && kinds.iter().any(|k| k == "bin") => {
+                executable.map(str::to_owned)
+            }
+            Target::Test(t) if tname == t && kinds.iter().any(|k| k == "test") => {
+                executable.map(str::to_owned)
+            }
+            Target::Lib if kinds.iter().any(|k| k.ends_with("lib")) => m
+                .get("filenames")
+                .map(Json::elements)
+                .unwrap_or_default()
+                .iter()
+                .filter_map(Json::as_str)
+                .find(|f| f.ends_with(".rlib"))
+                .map(str::to_owned),
+            _ => None,
+        };
+        if let Some(f) = file {
+            let bytes = fs::read(&f).map_err(|e| format!("{f}: {e}"))?;
+            let canonical_target = fs::canonicalize(target_dir)
+                .map(|c| format!("{}/", c.display()))
+                .unwrap_or_default();
+            let rel = f
+                .strip_prefix(&format!("{}/", target_dir.display()))
+                .or_else(|| f.strip_prefix(&canonical_target))
+                .unwrap_or(&f)
+                .to_owned();
+            artifact = Some((rel, Digest::of(&bytes).hex()));
+        }
+    }
+    let artifact = artifact.ok_or_else(|| format!("`{}`'s build reported no artifact", p.name))?;
+    Ok(Build { units, artifact })
 }
 
 // ── Refusals by the catalog's rules (§3) ────────────────────────────────────────────────────────────────────────
 
-/// Every site the catalog's token rules refuse in `source`, by blanking each and scanning again: `(line, rule)`.
-fn refused_sites(source: &[u8]) -> Result<Vec<(usize, String)>, String> {
+/// Every site the catalog's token rules refuse in `source`, by blanking each and scanning again: `(line, column,
+/// rule)`.
+fn refused_sites(source: &[u8]) -> Result<Vec<(usize, usize, String)>, String> {
     let mut bytes = source.to_vec();
     let mut sites = Vec::new();
     for _ in 0..10_000 {
@@ -490,7 +672,7 @@ fn refused_sites(source: &[u8]) -> Result<Vec<(usize, String)>, String> {
                     .split('`')
                     .nth(1)
                     .map_or_else(|| found.why.clone(), str::to_owned);
-                sites.push((found.line, rule));
+                sites.push((found.line, found.column, rule));
                 let line_start = bytes
                     .split(|&b| b == b'\n')
                     .take(found.line - 1)
@@ -515,12 +697,98 @@ fn refused_sites(source: &[u8]) -> Result<Vec<(usize, String)>, String> {
     Err("more than ten thousand refused sites".to_owned())
 }
 
-fn line_hash(source: &[u8], line: usize) -> String {
-    let text = source
+/// The extent of the site the catalog's scanner refused at `line` and `column`: the statement or item it stands in
+/// (§3, R8 4). Over the catalog's own tokens, at the innermost brace level holding the site — the file, a module, a
+/// block or a brace-delimited macro's body — it runs from the token after the previous `;` or brace group at that
+/// level, or the level's start, through the next `;` or the end of the next brace group at that level, so parentheses
+/// and brackets never end it. A macro invocation is whole within it, an attribute runs with the item it marks through
+/// the item's body, and an edit anywhere in either changes the extent's sha256.
+///
+/// # Errors
+///
+/// A source that does not tokenize, a position on no token, or a delimiter without its partner.
+pub fn site_extent(source: &[u8], line: usize, column: usize) -> Result<&[u8], String> {
+    use archogen_catalog::package::Kind;
+    let toks = package::tokens(source).map_err(|(at, why)| format!("byte {at}: {why}"))?;
+    let offset = source
         .split(|&b| b == b'\n')
-        .nth(line - 1)
-        .unwrap_or_default();
-    Digest::of(text).hex()
+        .take(line.saturating_sub(1))
+        .map(|l| l.len() + 1)
+        .sum::<usize>()
+        + column.saturating_sub(1);
+    let k = toks
+        .iter()
+        .position(|t| t.at == offset)
+        .ok_or_else(|| format!("line {line} column {column} starts no token"))?;
+    let mut partner = vec![usize::MAX; toks.len()];
+    let mut stack = Vec::new();
+    let mut enclosing = Vec::new();
+    for (i, t) in toks.iter().enumerate() {
+        if i == k {
+            enclosing.clone_from(&stack);
+        }
+        match t.kind {
+            Kind::Open(_) => stack.push(i),
+            Kind::Close(_) => {
+                let o = stack
+                    .pop()
+                    .ok_or_else(|| format!("byte {}: a delimiter closes nothing", t.at))?;
+                partner[o] = i;
+                partner[i] = o;
+            }
+            _ => {}
+        }
+    }
+    if !stack.is_empty() {
+        return Err("a delimiter is never closed".to_owned());
+    }
+    // The innermost brace holding the site sets the level; the outermost group inside it holding the site, or the
+    // site's own token, is where the walk starts.
+    let level = enclosing
+        .iter()
+        .rposition(|&o| toks[o].kind == Kind::Open('{'));
+    let (lo, hi) = level.map_or((0, toks.len()), |j| {
+        let o = enclosing[j];
+        (o + 1, partner[o])
+    });
+    let anchor = level
+        .map_or(enclosing.first(), |j| enclosing.get(j + 1))
+        .copied()
+        .unwrap_or(k);
+    let mut start = anchor;
+    let mut i = anchor;
+    while i > lo {
+        let t = &toks[i - 1];
+        match t.kind {
+            Kind::Punct(';') | Kind::Close('}') => break,
+            Kind::Close(_) => i = partner[i - 1],
+            _ => i -= 1,
+        }
+        start = i;
+    }
+    let mut end = anchor;
+    let mut i = anchor;
+    while i < hi {
+        match toks[i].kind {
+            Kind::Open('{') => {
+                end = partner[i];
+                break;
+            }
+            Kind::Open(_) => {
+                end = partner[i];
+                i = partner[i] + 1;
+            }
+            Kind::Punct(';') => {
+                end = i;
+                break;
+            }
+            _ => {
+                end = i;
+                i += 1;
+            }
+        }
+    }
+    Ok(&source[toks[start].at..toks[end].end])
 }
 
 // ── The inventory ───────────────────────────────────────────────────────────────────────────────────────────────
@@ -637,6 +905,8 @@ pub fn inventory_with(
     );
     let mut package_names: BTreeMap<String, String> = BTreeMap::new();
     let mut id_dir: BTreeMap<String, String> = BTreeMap::new();
+    let mut targets: Targets = BTreeMap::new();
+    let mut package_targets: BTreeMap<String, Vec<String>> = BTreeMap::new();
     for p in meta.get("packages").map(Json::elements).unwrap_or_default() {
         let manifest_path = p
             .get("manifest_path")
@@ -657,6 +927,20 @@ pub fn inventory_with(
             .and_then(Json::as_str)
             .unwrap_or_default()
             .to_owned();
+        for t in p.get("targets").map(Json::elements).unwrap_or_default() {
+            let src = t.get("src_path").and_then(Json::as_str).unwrap_or_default();
+            let src = src.strip_prefix(&root_prefix).unwrap_or(src).to_owned();
+            let crate_name = t
+                .get("name")
+                .and_then(Json::as_str)
+                .unwrap_or_default()
+                .replace('-', "_");
+            package_targets
+                .entry(dir.clone())
+                .or_default()
+                .push(src.clone());
+            targets.insert((src, crate_name), dir.clone());
+        }
         package_names.insert(dir.clone(), name);
         id_dir.insert(id, dir);
     }
@@ -688,12 +972,39 @@ pub fn inventory_with(
         }
     }
 
+    let mut sites = 0usize;
+    let mut used: BTreeMap<Admission, usize> = BTreeMap::new();
+    let mut manifests_checked = BTreeSet::new();
+    // The catalog's rules on a workspace manifest — no `[patch]` or `[replace]` swapping a dependency's source, no
+    // `cargo-features`, no `rustflags` — over the root manifest every build reads (R8 remark 16), admitted, like a
+    // package's manifest rule, only by the manifest's sha256.
+    if let Some(bytes) = tree.get("Cargo.toml") {
+        match manifest::parse(&String::from_utf8_lossy(bytes)) {
+            Ok(m) => {
+                if let Err(why) = package::check_workspace("Cargo.toml", &m) {
+                    sites += 1;
+                    let admission = Admission {
+                        file: "Cargo.toml".to_owned(),
+                        rule: why.clone(),
+                        sha256: Digest::of(bytes).hex(),
+                    };
+                    if roots.admissions.contains_key(&admission) {
+                        *used.entry(admission).or_default() += 1;
+                    } else {
+                        refused.push(format!("trust-undeclared-input: {why}, and no admission names it (manifest sha256 {})", admission.sha256));
+                    }
+                }
+            }
+            Err(o) => refused.push(format!(
+                "trust-undeclared-input: `Cargo.toml` line {}: {}",
+                o.line, o.why
+            )),
+        }
+    }
+
     // The manifest rules over every package in a program's closure, from the metadata graph, before any build:
     // a build script or a procedural macro is refused here, so none runs (§3, R2 B12); the harness's development
     // edges are followed, since its build compiles them (R7 3).
-    let mut sites = 0usize;
-    let mut used_admissions = BTreeSet::new();
-    let mut manifests_checked = BTreeSet::new();
     for p in &roots.programs {
         let mut closure: BTreeSet<String> = BTreeSet::new();
         let mut todo = vec![p.package.clone()];
@@ -709,6 +1020,17 @@ pub fn inventory_with(
             }
         }
         for pkg in closure {
+            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not `.rs`; `mod`
+            // finds only `.rs` files, and `#[path]` and `include!` are refused, so with this every Rust source a root
+            // compiles is a `.rs` file (R8 1).
+            for src in package_targets.get(&pkg).into_iter().flatten() {
+                if std::path::Path::new(src)
+                    .extension()
+                    .is_none_or(|e| e != "rs")
+                {
+                    refused.push(format!("trust-undeclared-input: `{}` reaches `{src}`, a crate root that is not a `.rs` file, which rustc compiles and no rule reads", p.name));
+                }
+            }
             if !manifests_checked.insert(pkg.clone()) {
                 continue;
             }
@@ -730,12 +1052,12 @@ pub fn inventory_with(
                         let admission = Admission {
                             file: path.clone(),
                             rule: why.clone(),
-                            line: Digest::of(bytes).hex(),
+                            sha256: Digest::of(bytes).hex(),
                         };
-                        if roots.admissions.contains(&admission) {
-                            used_admissions.insert(admission);
+                        if roots.admissions.contains_key(&admission) {
+                            *used.entry(admission).or_default() += 1;
                         } else {
-                            refused.push(format!("trust-undeclared-input: `{}` reaches `{pkg}`: {why}, and no admission names it (manifest sha256 {})", p.name, admission.line));
+                            refused.push(format!("trust-undeclared-input: `{}` reaches `{pkg}`: {why}, and no admission names it (manifest sha256 {})", p.name, admission.sha256));
                         }
                     }
                 }
@@ -761,66 +1083,103 @@ pub fn inventory_with(
     let mut builds: BTreeMap<String, Build> = BTreeMap::new();
     for p in &roots.programs {
         let _ = fs::remove_dir_all(&cargo_home);
-        let env = environment(&pin, &cargo_home, &out.join("target").join(&p.name))?;
+        let target_dir = out.join("target").join(&p.name);
+        let env = environment(&pin, &cargo_home, &target_dir)?;
         builds.insert(
             p.name.clone(),
-            build(p, &package_names, &env, &tree_dir, &mut refused)?,
+            build(
+                p,
+                &package_names,
+                &targets,
+                &id_dir,
+                &env,
+                &tree_dir,
+                &target_dir,
+                &mut refused,
+            )?,
         );
     }
 
-    // The token rules over every `.rs` file a compilation read (§3).
+    // The token rules over every `.rs` file a compilation read, however it read it (§3; R8 10), each file once, so a
+    // site two programs compile is one site (R8 remark 20).
+    let mut compiled: BTreeMap<&String, BTreeSet<&String>> = BTreeMap::new();
     for (name, b) in &builds {
         for u in &b.units {
             for f in &u.files {
-                if symlinks.contains(f) {
-                    refused.push(format!("trust-undeclared-input: `{name}` reads `{f}`, a symbolic link in the commit"));
-                    continue;
-                }
-                let Some(blob) = tree.get(f) else {
-                    refused.push(format!("trust-undeclared-input: `{name}` reads `{f}`, which is not a blob of the commit"));
-                    continue;
-                };
-                if fs::read(tree_dir.join(f)).ok().as_deref() != Some(blob) {
-                    refused.push(format!(
-                        "trust-undeclared-input: `{f}`'s bytes after the build are not its blob's"
-                    ));
-                }
-                if !std::path::Path::new(f)
-                    .extension()
-                    .is_some_and(|e| e.eq_ignore_ascii_case("rs"))
-                {
-                    continue; // data is hashed and never tokenised (R6 7)
-                }
-                match refused_sites(blob) {
-                    Ok(found) => {
-                        for (line, rule) in found {
-                            sites += 1;
-                            let admission = Admission {
-                                file: f.clone(),
-                                rule: rule.clone(),
-                                line: line_hash(blob, line),
-                            };
-                            if roots.admissions.contains(&admission) {
-                                used_admissions.insert(admission);
-                            } else {
-                                refused.push(format!("trust-undeclared-input: `{f}:{line}`: `{rule}`, refused by the catalog's rules, and no admission names it (line sha256 {})", admission.line));
-                            }
-                        }
-                    }
-                    Err(why) => refused.push(format!(
-                        "trust-undeclared-input: `{f}` does not tokenize: {why}"
-                    )),
-                }
+                compiled.entry(f).or_default().insert(name);
             }
         }
     }
+    let mut found_sites: BTreeMap<Admission, Vec<String>> = BTreeMap::new();
+    for (f, readers) in &compiled {
+        let name = readers.iter().next().map_or("", |n| n.as_str());
+        if symlinks.contains(*f) {
+            refused.push(format!(
+                "trust-undeclared-input: `{name}` reads `{f}`, a symbolic link in the commit"
+            ));
+            continue;
+        }
+        let Some(blob) = tree.get(f) else {
+            refused.push(format!(
+                "trust-undeclared-input: `{name}` reads `{f}`, which is not a blob of the commit"
+            ));
+            continue;
+        };
+        if fs::read(tree_dir.join(f)).ok().as_deref() != Some(blob) {
+            refused.push(format!(
+                "trust-undeclared-input: `{f}`'s bytes after the build are not its blob's"
+            ));
+        }
+        if !std::path::Path::new(f.as_str())
+            .extension()
+            .is_some_and(|e| e.eq_ignore_ascii_case("rs"))
+        {
+            continue; // data other than Rust is hashed and never tokenised (R6 7)
+        }
+        match refused_sites(blob) {
+            Ok(found) => {
+                for (line, column, rule) in found {
+                    sites += 1;
+                    match site_extent(blob, line, column) {
+                        Ok(extent) => found_sites
+                            .entry(Admission {
+                                file: (*f).clone(),
+                                rule,
+                                sha256: Digest::of(extent).hex(),
+                            })
+                            .or_default()
+                            .push(format!("{f}:{line}")),
+                        Err(why) => refused.push(format!(
+                            "trust-undeclared-input: `{f}:{line}`: `{rule}`, a site whose extent cannot be read: {why}"
+                        )),
+                    }
+                }
+            }
+            Err(why) => refused.push(format!(
+                "trust-undeclared-input: `{f}` does not tokenize: {why}"
+            )),
+        }
+    }
+    // One admission per site: sites sharing a file, a rule and an extent's text pass only as many as the admissions
+    // naming them (R8 3).
+    for (key, at) in &found_sites {
+        let admitted = roots.admissions.get(key).copied().unwrap_or(0);
+        if at.len() > admitted {
+            for site in at {
+                if admitted == 0 {
+                    refused.push(format!("trust-undeclared-input: `{site}`: `{}`, refused by the catalog's rules, and no admission names it (site sha256 {})", key.rule, key.sha256));
+                } else {
+                    refused.push(format!("trust-undeclared-input: `{site}`: `{}`, refused by the catalog's rules: {} sites share this text and {admitted} admission(s) name it (site sha256 {})", key.rule, at.len(), key.sha256));
+                }
+            }
+        }
+        *used.entry(key.clone()).or_default() += at.len().min(admitted);
+    }
 
-    // An executable that runs two roles (§2).
-    for p in roots
-        .programs
-        .iter()
-        .filter(|p| matches!(p.target, Target::Bin(_)))
-    {
+    // A program that runs two roles (§2): any root whose build compiles a role package of another role — a library
+    // root too, which runs its role until an executable does (R8 remark 13) — and the harness, whose exemption is its
+    // pair's two (R8 remark 12).
+    for p in &roots.programs {
         let compiled: BTreeSet<&String> =
             builds[&p.name].units.iter().map(|u| &u.package).collect();
         for other in roots
@@ -828,6 +1187,13 @@ pub fn inventory_with(
             .iter()
             .filter(|o| o.role != p.role && o.role != "harness")
         {
+            let in_pair = p
+                .pair
+                .as_ref()
+                .is_some_and(|(a, b)| *a == other.name || *b == other.name);
+            if in_pair {
+                continue;
+            }
             for rp in &other.role_packages {
                 if compiled.contains(rp) {
                     refused.push(format!(
@@ -859,15 +1225,33 @@ pub fn inventory_with(
         .find_map(|l| l.strip_prefix("host: "))
         .unwrap_or("")
         .to_owned();
+    // The profile tables that apply to a root's units: `[profile.release]` and its overrides for a package some
+    // program compiles, by name or by `*`, never the build overrides, which apply to build scripts and procedural
+    // macros, both refused. The edition reaches rustc only as a unit's `--edition`, which its configuration holds, and
+    // the toolchain only as its identity, so neither the edition key nor the toolchain file's bytes are here (R8 6).
+    let compiled_names: BTreeSet<&String> = builds
+        .values()
+        .flat_map(|b| b.units.iter())
+        .filter_map(|u| package_names.get(&u.package))
+        .collect();
     let mut profile = Vec::new();
     if let Some(Ok(m)) = tree
         .get("Cargo.toml")
         .map(|b| manifest::parse(&String::from_utf8_lossy(b)))
     {
         for (path, value) in &m.values {
-            if path.first().is_some_and(|k| k == "profile")
-                || path == &["workspace", "package", "edition"]
-            {
+            let applies = match path.as_slice() {
+                [p, r, rest @ ..] if p == "profile" && r == "release" => match rest {
+                    [o, ..] if o == "build-override" => false,
+                    [o, spec, ..] if o == "package" => {
+                        let name = spec.split('@').next().unwrap_or_default();
+                        name == "*" || compiled_names.iter().any(|n| n.as_str() == name)
+                    }
+                    _ => true,
+                },
+                _ => false,
+            };
+            if applies {
                 profile.push(format!("{}={value:?}", path.join(".")));
             }
         }
@@ -875,7 +1259,6 @@ pub fn inventory_with(
     profile.sort();
     let build_configuration = obj(vec![
         ("toolchain", s(&rustc)),
-        ("rust-toolchain.toml", s(hash("rust-toolchain.toml"))),
         ("profiles", strings(profile.clone())),
     ]);
 
@@ -888,10 +1271,43 @@ pub fn inventory_with(
     for p in &roots.programs {
         let b = &builds[&p.name];
         let packages: BTreeSet<String> = b.units.iter().map(|u| u.package.clone()).collect();
+        // Each package with its manifest's sha256 and the kind of every edge that reached it in this build — the
+        // harness's development edges from its own package, no other (§3, R8 9).
+        let package_records: Vec<Json> = packages
+            .iter()
+            .map(|pkg| {
+                let manifest = if pkg.is_empty() {
+                    "Cargo.toml".to_owned()
+                } else {
+                    format!("{pkg}/Cargo.toml")
+                };
+                let edges: BTreeSet<String> = graph
+                    .iter()
+                    .filter(|(from, to, kind)| {
+                        to == pkg
+                            && packages.contains(from)
+                            && (kind != "dev" || p.role == "harness" && *from == p.package)
+                    })
+                    .map(|(from, _, kind)| format!("{from}:{kind}"))
+                    .collect();
+                obj(vec![
+                    ("package", s(pkg)),
+                    ("manifest", s(file_hash(&manifest))),
+                    ("edges", strings(edges)),
+                ])
+            })
+            .collect();
         programs.push(obj(vec![
             ("name", s(&p.name)),
             ("role", s(&p.role)),
-            ("packages", strings(packages)),
+            (
+                "artifact",
+                obj(vec![
+                    ("path", s(&b.artifact.0)),
+                    ("sha256", s(&b.artifact.1)),
+                ]),
+            ),
+            ("packages", Json::Array(package_records)),
             (
                 "units",
                 Json::Array(
@@ -925,6 +1341,16 @@ pub fn inventory_with(
     let names: Vec<&Program> = roots.programs.iter().collect();
     for (i, a) in names.iter().enumerate() {
         for b in names.iter().skip(i + 1) {
+            // The harness is paired with every root but its pair's two, whose sharing with it is the pair's own
+            // harness item (§4, R8 8).
+            let own_pair = |h: &Program, x: &Program| {
+                h.pair
+                    .as_ref()
+                    .is_some_and(|(p, q)| *p == x.name || *q == x.name)
+            };
+            if own_pair(a, b) || own_pair(b, a) {
+                continue;
+            }
             let (ba, bb) = (&builds[&a.name], &builds[&b.name]);
             let pk = |x: &Build| {
                 x.units
@@ -990,7 +1416,7 @@ pub fn inventory_with(
                     x.units
                         .iter()
                         .filter(|u| &&u.package == pkg)
-                        .map(|u| u.configuration.join(" "))
+                        .map(unit_configuration)
                         .collect::<Vec<_>>()
                 };
                 let mut e = edges(a, &pa);
@@ -1058,20 +1484,35 @@ pub fn inventory_with(
                 }
             }
             if let Some(h) = harness {
-                // Every file it compiles beside the pair's two libraries: its own package's test unit.
-                let Target::Test(test) = &h.target else {
-                    return Err(format!("`{}` is a harness without a test target", h.name));
+                // Every unit it compiles beside the pair's two roots' builds: its test target, the adapters its
+                // development dependencies add, and any unit compiled otherwise than in either root's build (§4,
+                // R8 7).
+                let key = |u: &Unit| {
+                    (
+                        u.package.clone(),
+                        u.crate_name.clone(),
+                        unit_configuration(u),
+                    )
                 };
-                let own: BTreeSet<String> = builds[&h.name]
+                let in_pair: BTreeSet<_> =
+                    ba.units.iter().chain(bb.units.iter()).map(key).collect();
+                let beside: Vec<&Unit> = builds[&h.name]
                     .units
                     .iter()
-                    .filter(|u| &u.crate_name == test)
+                    .filter(|u| !in_pair.contains(&key(u)))
+                    .collect();
+                let content: BTreeSet<String> = beside
+                    .iter()
                     .flat_map(|u| u.files.iter().map(|f| format!("{f}={}", file_hash(f))))
                     .collect();
                 items.push(obj(vec![
                     ("kind", s("comparison-harness")),
                     ("harness", s(&h.name)),
-                    ("content", strings(own)),
+                    ("content", strings(content)),
+                    (
+                        "configuration",
+                        strings(beside.iter().map(|u| unit_configuration(u))),
+                    ),
                 ]));
             }
             shared.push(obj(vec![
@@ -1081,10 +1522,15 @@ pub fn inventory_with(
         }
     }
 
+    // An admission no current site uses: listed here, refused by the gate on the baseline's host as
+    // `trust-baseline-stale` (§6, R8 remark 15).
     let unused: Vec<String> = roots
         .admissions
-        .difference(&used_admissions)
-        .map(|a| format!("{}:{}", a.file, a.rule))
+        .iter()
+        .flat_map(|(a, n)| {
+            let left = n.saturating_sub(used.get(a).copied().unwrap_or(0));
+            std::iter::repeat_n(format!("{}:{}:{}", a.file, a.rule, a.sha256), left)
+        })
         .collect();
     let inv = obj(vec![
         ("format", s("archogen-trust-inventory/0")),
@@ -1176,7 +1622,7 @@ mod tests {
     //! Every channel a review measured by hand, a fixture (ledger `TI-H24`): a scratch repository under
     //! `target/trust-tests/`, committed, inventoried by the real instrument from its commit.
 
-    use super::{inventory_with, line_hash, Outcome};
+    use super::{inventory_with, read_roots, Digest, Outcome};
     use crate::json::Json;
     use std::path::{Path, PathBuf};
     use std::process::Command;
@@ -1535,23 +1981,27 @@ mod tests {
     #[test]
     fn an_admitted_site_passes_and_an_edited_one_is_refused() {
         let line = "pub const T: &str = include_str!(\"t.txt\");";
-        let admit = |l: &str| {
-            format!("{ROOTS}(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (line \"{}\"))\n", line_hash(l.as_bytes(), 1))
-        };
         let f = two_roots(
             "admitted",
             "fn main() {}\n",
             &format!("{line}\n"),
             &[
                 ("crates/b/src/t.txt", "table".to_owned()),
-                ("trust/roots.eadl", admit(line)),
+                ("crates/b/src/u.txt", "other".to_owned()),
+                (
+                    "trust/roots.eadl",
+                    format!(
+                        "{ROOTS}{}",
+                        admit("crates/b/src/lib.rs", "include_str", line)
+                    ),
+                ),
             ],
         );
         let inv = written(f.run());
         assert_eq!(inv.get("refused-sites").and_then(Json::as_str), Some("1"));
         f.commit(&[(
             "crates/b/src/lib.rs",
-            "pub const T: &str = include_str!(\"t.txt\"); // edited\n".to_owned(),
+            "pub const T: &str = include_str!(\"u.txt\");\n".to_owned(),
         )]);
         says(&refused(f.run()), "no admission names it");
         assert!(
@@ -1677,7 +2127,7 @@ mod tests {
         // ... and, admitted, a feature another manifest enables does not reach a root's unit (R1 A10).
         let why = "`crates/common/Cargo.toml`: `[features]` makes a second configuration";
         let admitted = format!(
-            "{ROOTS}(defadmit (file \"crates/common/Cargo.toml\") (rule \"{why}\") (line \"{}\"))\n",
+            "{ROOTS}(defadmit (file \"crates/common/Cargo.toml\") (rule \"{why}\") (sha256 \"{}\") (reason \"a fixture\"))\n",
             archogen_evidence::sha256::Digest::of(common.as_bytes()).hex()
         );
         let g = two_roots(
@@ -1709,10 +2159,9 @@ mod tests {
         let common_line = "pub const T: &str = include_str!(\"t.txt\");";
         let b_line = "pub const U: &str = include_str!(\"../../common/src/t.txt\");";
         let roots = format!(
-            "{ROOTS}(defadmit (file \"crates/common/src/lib.rs\") (rule \"include_str\") (line \"{}\"))\n\
-             (defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (line \"{}\"))\n",
-            line_hash(common_line.as_bytes(), 1),
-            line_hash(b_line.as_bytes(), 1)
+            "{ROOTS}{}{}",
+            admit("crates/common/src/lib.rs", "include_str", common_line),
+            admit("crates/b/src/lib.rs", "include_str", b_line)
         );
         let dep = "[dependencies]\ncommon = { path = \"../common\" }\n";
         let f = two_roots(
@@ -1820,6 +2269,537 @@ mod tests {
         says(
             &refused(f.run()),
             "trust-shared-program: `gen` compiles `crates/b`",
+        );
+    }
+
+    // ── Round 8 (`M3.6.1` step 9): each reproducer the reader ran, as a fixture ─────────────────────────────────────
+
+    /// The clause an admission names its site's sha256 in.
+    const ADMIT: &str = "sha256";
+
+    /// An admission of the site whose extent — the text §3 hashes — is `extent`.
+    fn admit(file: &str, rule: &str, extent: &str) -> String {
+        format!(
+            "(defadmit (file \"{file}\") (rule \"{rule}\") ({ADMIT} \"{}\") (reason \"a fixture\"))\n",
+            Digest::of(extent.as_bytes()).hex()
+        )
+    }
+
+    fn program<'a>(inv: &'a Json, name: &str) -> &'a Json {
+        inv.get("programs")
+            .map(Json::elements)
+            .unwrap_or_default()
+            .iter()
+            .find(|p| p.get("name").and_then(Json::as_str) == Some(name))
+            .expect("the program")
+    }
+
+    fn pairs(inv: &Json) -> Vec<String> {
+        let mut out: Vec<String> = items(inv).into_iter().map(|(p, _)| p).collect();
+        out.dedup();
+        out
+    }
+
+    /// Three roots and a harness: `refm` and `imp` its pair, `chk` a third role, `d` a package only the harness may
+    /// compile.
+    fn three_roots(name: &str, test: &str, test_src: &str, dev: &str, c_deps: &str) -> Fixture {
+        let roots = format!(
+            "(defroot refm (role reference-model) (package \"crates/r\") (target lib) (role-packages \"crates/r\"))\n\
+             (defroot imp (role implementation) (package \"crates/i\") (target lib) (role-packages \"crates/i\"))\n\
+             (defroot chk (role scheduling-checker) (package \"crates/c\") (target lib) (role-packages \"crates/c\"))\n\
+             (defharness diff (pair refm imp) (package \"crates/i\") (test {test}))\n"
+        );
+        let test_path = format!("crates/i/tests/{test}.rs");
+        fixture(
+            name,
+            "1.95.0",
+            &[
+                ("Cargo.toml", WS.to_owned()),
+                ("trust/roots.eadl", roots),
+                ("crates/r/Cargo.toml", manifest("r", "")),
+                (
+                    "crates/r/src/lib.rs",
+                    "pub fn refm(x: u32) -> u32 { x }\n".to_owned(),
+                ),
+                ("crates/c/Cargo.toml", manifest("c", c_deps)),
+                ("crates/c/src/lib.rs", "pub fn c() {}\n".to_owned()),
+                (
+                    "crates/i/Cargo.toml",
+                    manifest(
+                        "i",
+                        &format!("[dev-dependencies]\nr = {{ path = \"../r\" }}\n{dev}"),
+                    ),
+                ),
+                (
+                    "crates/i/src/lib.rs",
+                    "pub fn imp(x: u32) -> u32 { x }\n".to_owned(),
+                ),
+                (&test_path, test_src.to_owned()),
+                ("crates/d/Cargo.toml", manifest("d", "")),
+                (
+                    "crates/d/src/lib.rs",
+                    "pub fn adapt(x: u32) -> u32 { x }\n".to_owned(),
+                ),
+            ],
+        )
+    }
+
+    const SAME: &str = "#[test]\nfn same() { assert_eq!(i::imp(3), r::refm(3)); }\n";
+
+    fn harness_item(inv: &Json) -> Json {
+        items(inv)
+            .into_iter()
+            .find(|(p, i)| p == "refm+imp" && kind(i) == "comparison-harness")
+            .expect("the pair's harness item")
+            .1
+    }
+
+    #[test]
+    fn a_crate_root_that_is_not_a_rs_file_is_refused_before_any_build() {
+        // R8 1: rustc compiles `lib.txt` as Rust, and no token rule read it.
+        let f = two_roots(
+            "r8-1-crate-root",
+            "fn main() {}\n",
+            "pub fn f() {}\n",
+            &[
+                ("crates/b/Cargo.toml", manifest("b", "[lib]\npath = \"src/lib.txt\"\n")),
+                (
+                    "crates/b/src/lib.txt",
+                    "core::arch::global_asm!(\".data\\n.incbin \\\"shared.bin\\\"\");\npub fn f() {}\n".to_owned(),
+                ),
+                ("shared.bin", "SECRET-SHARED-BYTES".to_owned()),
+            ],
+        );
+        says(
+            &refused(f.run()),
+            "`crates/b/src/lib.txt`, a crate root that is not a `.rs` file",
+        );
+        assert!(
+            !f.base.join("out/target").exists(),
+            "a build ran before the refusal"
+        );
+    }
+
+    #[test]
+    fn a_unit_belongs_to_the_package_whose_target_names_its_crate_root() {
+        // R8 2: `b`'s library lives in a nested package's directory; by path prefix it was that package's.
+        let f = two_roots(
+            "r8-2-nested",
+            "fn main() { b::f(); }\n",
+            "pub fn f() {}\n",
+            &[
+                (
+                    "Cargo.toml",
+                    "[workspace]\nresolver = \"2\"\nmembers = [\"crates/a\", \"crates/b\", \"crates/b/x\"]\n".to_owned(),
+                ),
+                ("crates/a/Cargo.toml", manifest("a", "[dependencies]\nb = { path = \"../b\" }\n")),
+                ("crates/b/Cargo.toml", manifest("b", "[lib]\npath = \"x/src/lib.rs\"\n")),
+                ("crates/b/x/Cargo.toml", manifest("x", "")),
+                ("crates/b/x/src/lib.rs", "pub fn f() {}\n".to_owned()),
+            ],
+        );
+        says(
+            &refused(f.run()),
+            "trust-shared-program: `gen` compiles `crates/b`, a role package of `chk`",
+        );
+    }
+
+    #[test]
+    fn each_site_needs_an_admission_of_its_own() {
+        // R8 3: two sites with one text need two admissions; a new `#[no_mangle]` beside an admitted one is refused.
+        let item = "pub static X: &str = include_str!(\"../d.txt\");";
+        let src = format!("pub mod m1 {{ {item} }}\npub mod m2 {{ {item} }}\n");
+        let one = admit("crates/b/src/lib.rs", "include_str", item);
+        let f = two_roots(
+            "r8-3-two-sites",
+            "fn main() {}\n",
+            &src,
+            &[
+                ("crates/b/d.txt", "data".to_owned()),
+                ("trust/roots.eadl", format!("{ROOTS}{one}{one}")),
+            ],
+        );
+        assert_eq!(
+            written(f.run()).get("refused-sites").and_then(Json::as_str),
+            Some("2")
+        );
+        f.commit(&[("trust/roots.eadl", format!("{ROOTS}{one}"))]);
+        says(&refused(f.run()), "`crates/b/src/lib.rs:2`: `include_str`");
+
+        let first = "#[no_mangle]\npub extern \"C\" fn one() -> u32 { 1 }";
+        let f = two_roots(
+            "r8-3-no-mangle",
+            "fn main() {}\n",
+            &format!("{first}\n"),
+            &[(
+                "trust/roots.eadl",
+                format!(
+                    "{ROOTS}{}",
+                    admit("crates/b/src/lib.rs", "no_mangle", first)
+                ),
+            )],
+        );
+        assert_eq!(
+            written(f.run()).get("refused-sites").and_then(Json::as_str),
+            Some("1")
+        );
+        f.commit(&[(
+            "crates/b/src/lib.rs",
+            format!("{first}\n#[no_mangle]\npub extern \"C\" fn memcmp() -> u32 {{ 2 }}\n"),
+        )]);
+        says(&refused(f.run()), "`crates/b/src/lib.rs:3`: `no_mangle`");
+    }
+
+    #[test]
+    fn an_admission_covers_its_site_s_whole_extent() {
+        // R8 4: an `.incbin` added on the second line of an admitted `global_asm!`.
+        let asm = "core::arch::global_asm!(\n    \".data\"\n);";
+        let f = two_roots(
+            "r8-4-extent",
+            "fn main() {}\n",
+            &format!("{asm}\npub fn f() {{}}\n"),
+            &[
+                ("crates/b/blob.bin", "SECRET-BYTES".to_owned()),
+                (
+                    "trust/roots.eadl",
+                    format!("{ROOTS}{}", admit("crates/b/src/lib.rs", "global_asm", asm)),
+                ),
+            ],
+        );
+        assert_eq!(
+            written(f.run()).get("refused-sites").and_then(Json::as_str),
+            Some("1")
+        );
+        f.commit(&[(
+            "crates/b/src/lib.rs",
+            "core::arch::global_asm!(\n    \".data\\n.incbin \\\"crates/b/blob.bin\\\"\"\n);\npub fn f() {}\n".to_owned(),
+        )]);
+        says(&refused(f.run()), "`crates/b/src/lib.rs:1`: `global_asm`");
+    }
+
+    #[test]
+    fn a_shared_package_s_environment_is_in_its_item_and_a_foreign_variable_is_refused() {
+        // R8 5: a value compiled in through `env!` changes; R8 remark 22: a variable from outside the commit.
+        let dep = "[dependencies]\ncommon = { path = \"../common\" }\n";
+        let common = "[package]\nname = \"common\"\nversion = \"0.1.0\"\nedition = \"2021\"\nlicense.workspace = true\n";
+        let f = two_roots(
+            "r8-5-env",
+            "fn main() { println!(\"{}\", common::L); }\n",
+            "pub fn f() -> &'static str { common::L }\n",
+            &[
+                (
+                    "Cargo.toml",
+                    format!("{WS}\n[workspace.package]\nlicense = \"MIT\"\n"),
+                ),
+                ("crates/common/Cargo.toml", common.to_owned()),
+                (
+                    "crates/common/src/lib.rs",
+                    "pub const L: &str = env!(\"CARGO_PKG_LICENSE\");\n".to_owned(),
+                ),
+                ("crates/a/Cargo.toml", manifest("a", dep)),
+                ("crates/b/Cargo.toml", manifest("b", dep)),
+            ],
+        );
+        let before = written(f.run());
+        f.commit(&[(
+            "Cargo.toml",
+            format!("{WS}\n[workspace.package]\nlicense = \"GPL-3.0-only\"\n"),
+        )]);
+        let after = written(f.run());
+        assert_ne!(
+            package_item(&items(&before), "crates/common").get("configuration"),
+            package_item(&items(&after), "crates/common").get("configuration"),
+            "a value compiled into a shared package changed and its item did not"
+        );
+        let f = two_roots(
+            "r8-5-foreign-env",
+            "fn main() {}\n",
+            "pub const H: Option<&str> = option_env!(\"HOME\");\n",
+            &[],
+        );
+        says(&refused(f.run()), "the environment variable `HOME`");
+    }
+
+    #[test]
+    fn an_edit_no_root_s_compilation_reads_leaves_the_build_configuration() {
+        // R8 6: a development profile, an override for a package no root compiles, a comment in the pin.
+        let f = two_roots("r8-6-unrelated", "fn main() {}\n", "pub fn f() {}\n", &[]);
+        let v0 = written(f.run());
+        f.commit(&[(
+            "Cargo.toml",
+            format!("{WS}\n[profile.dev]\nopt-level = 1\n\n[profile.release.package.nobody]\nopt-level = 1\n"),
+        )]);
+        let v1 = written(f.run());
+        assert_eq!(v0.get("build-configuration"), v1.get("build-configuration"));
+        let pin = std::fs::read_to_string(f.repo.join("rust-toolchain.toml")).unwrap();
+        f.commit(&[("rust-toolchain.toml", format!("# the pin\n{pin}"))]);
+        let v2 = written(f.run());
+        assert_eq!(v1.get("build-configuration"), v2.get("build-configuration"));
+        f.commit(&[(
+            "Cargo.toml",
+            format!("{WS}\n[profile.release.package.b]\nopt-level = 1\n"),
+        )]);
+        assert_ne!(
+            v2.get("build-configuration"),
+            written(f.run()).get("build-configuration"),
+            "an override for a package a root compiles changed nothing"
+        );
+    }
+
+    #[test]
+    fn the_harness_item_holds_what_it_compiles_beside_its_pair() {
+        // R8 7: the adapter in a development dependency; a test named with a `-`.
+        let f = three_roots(
+            "r8-7-adapter",
+            "diff",
+            "#[test]\nfn same() { assert_eq!(d::adapt(i::imp(3)), r::refm(3)); }\n",
+            "d = { path = \"../d\" }\n",
+            "",
+        );
+        let before = harness_item(&written(f.run()));
+        assert!(
+            list(&before, "content")
+                .iter()
+                .any(|c| c.starts_with("crates/d/src/lib.rs=")),
+            "{before:?}"
+        );
+        f.commit(&[(
+            "crates/d/src/lib.rs",
+            "pub fn adapt(x: u32) -> u32 { x.min(2) }\n".to_owned(),
+        )]);
+        assert_ne!(before, harness_item(&written(f.run())));
+        let f = three_roots("r8-7-hyphen", "diff-check", SAME, "", "");
+        assert!(!list(&harness_item(&written(f.run())), "content").is_empty());
+    }
+
+    #[test]
+    fn the_harness_is_paired_with_every_root_but_its_pair_s() {
+        // R8 8.
+        let f = three_roots("r8-8-pairs", "diff", SAME, "", "");
+        let p = pairs(&written(f.run()));
+        assert!(
+            !p.iter().any(|x| x == "refm+diff" || x == "imp+diff"),
+            "{p:?}"
+        );
+        assert!(p.iter().any(|x| x == "chk+diff"), "{p:?}");
+    }
+
+    #[test]
+    fn each_root_records_its_artifact_and_its_packages() {
+        // R8 9: the artifact with its sha256; each package with its manifest's sha256 and the edges that reached it.
+        let dep = "[dependencies]\ncommon = { path = \"../common\" }\n";
+        let f = two_roots(
+            "r8-9-artifact",
+            "fn main() { common::c(); }\n",
+            "pub fn f() {}\n",
+            &[
+                ("crates/common/Cargo.toml", manifest("common", "")),
+                ("crates/common/src/lib.rs", "pub fn c() {}\n".to_owned()),
+                ("crates/a/Cargo.toml", manifest("a", dep)),
+            ],
+        );
+        let inv = written(f.run());
+        let gen = program(&inv, "gen");
+        let artifact = gen.get("artifact").expect("the root's artifact");
+        let path = artifact.get("path").and_then(Json::as_str).unwrap();
+        let bytes = std::fs::read(f.base.join("out/target/gen").join(path)).unwrap();
+        assert_eq!(
+            artifact.get("sha256").and_then(Json::as_str),
+            Some(Digest::of(&bytes).hex().as_str())
+        );
+        let common = gen
+            .get("packages")
+            .map(Json::elements)
+            .unwrap_or_default()
+            .iter()
+            .find(|p| p.get("package").and_then(Json::as_str) == Some("crates/common"))
+            .expect("common among gen's packages");
+        let manifest_bytes = std::fs::read(f.repo.join("crates/common/Cargo.toml")).unwrap();
+        assert_eq!(
+            common.get("manifest").and_then(Json::as_str),
+            Some(Digest::of(&manifest_bytes).hex().as_str())
+        );
+        assert_eq!(list(common, "edges"), ["crates/a:normal"]);
+    }
+
+    #[test]
+    fn a_rs_file_read_as_data_is_tokenised_too() {
+        // R8 10: a `.rs` template read through an admitted `include_str!` is still Rust to the rules.
+        let line = "pub const T: &str = include_str!(\"tpl.rs\");";
+        let f = two_roots(
+            "r8-10-rs-data",
+            "fn main() {}\n",
+            &format!("{line}\n"),
+            &[
+                (
+                    "crates/b/src/tpl.rs",
+                    "#[no_mangle]\npub extern \"C\" fn entry() {}\n".to_owned(),
+                ),
+                (
+                    "trust/roots.eadl",
+                    format!(
+                        "{ROOTS}{}",
+                        admit("crates/b/src/lib.rs", "include_str", line)
+                    ),
+                ),
+            ],
+        );
+        says(&refused(f.run()), "`crates/b/src/tpl.rs:1`: `no_mangle`");
+    }
+
+    #[test]
+    fn the_roots_file_is_read_strictly() {
+        // R8 11: a name twice, a pair naming no root, a misspelt clause, a form no reader knows yet.
+        let gen = "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\"))\n";
+        for (text, why) in [
+            (
+                format!("{gen}(defroot gen (role scheduling-checker) (package \"crates/b\") (target lib))\n"),
+                "`gen` is named twice",
+            ),
+            (
+                format!("{gen}(defharness diff (pair gen implementation) (package \"crates/a\") (test d))\n"),
+                "`implementation`, which names no root",
+            ),
+            (
+                "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-pakages \"crates/x\"))\n".to_owned(),
+                "a clause `role-pakages`",
+            ),
+            (
+                format!("{gen}(defclassify w (target \"crates/w\"))\n"),
+                "a form `defclassify`",
+            ),
+        ] {
+            let e = read_roots(&text).expect_err(why);
+            assert!(e.contains(why), "{why}: {e}");
+        }
+    }
+
+    #[test]
+    fn a_harness_or_a_library_root_compiling_another_role_s_package_is_refused() {
+        // R8 remarks 12, 13: the harness's exemption is its pair's two; a library root runs its role as an executable
+        // would.
+        let f = three_roots(
+            "r8-12-harness",
+            "diff",
+            SAME,
+            "c = { path = \"../c\" }\n",
+            "",
+        );
+        says(
+            &refused(f.run()),
+            "trust-shared-program: `diff` compiles `crates/c`, a role package of `chk`",
+        );
+        let f = three_roots(
+            "r8-13-library",
+            "diff",
+            SAME,
+            "",
+            "[dependencies]\nr = { path = \"../r\" }\n",
+        );
+        says(
+            &refused(f.run()),
+            "trust-shared-program: `chk` compiles `crates/r`, a role package of `refm`",
+        );
+    }
+
+    #[test]
+    fn an_incbin_under_asm_and_under_naked_asm_is_refused() {
+        // R8 remark 21: the channel itself, not `nop` or `ret`.
+        for (name, src) in [
+            (
+                "r8-21-asm",
+                "pub fn f() { unsafe { core::arch::asm!(\".data\\n.incbin \\\"crates/b/blob.bin\\\"\\n.text\") } }\n",
+            ),
+            (
+                "r8-21-naked-asm",
+                "#[unsafe(naked)]\npub extern \"C\" fn f() { core::arch::naked_asm!(\".data\\n.incbin \\\"crates/b/blob.bin\\\"\\n.text\\nret\") }\n",
+            ),
+        ] {
+            let f = two_roots(
+                name,
+                "fn main() {}\n",
+                src,
+                &[("crates/b/blob.bin", "SECRET-BYTES".to_owned())],
+            );
+            says(&refused(f.run()), "asm`, refused by the catalog's rules");
+        }
+    }
+
+    #[test]
+    fn a_no_mangle_memcmp_in_the_harness_is_refused() {
+        // R8 remark 21: the interposition R7 measured, in the harness's own test file.
+        let f = three_roots(
+            "r8-21-memcmp",
+            "diff",
+            &format!("#[no_mangle]\npub extern \"C\" fn memcmp(a: *const u8, b: *const u8, n: usize) -> i32 {{ let _ = (a, b, n); 0 }}\n{SAME}"),
+            "",
+            "",
+        );
+        says(&refused(f.run()), "`crates/i/tests/diff.rs:1`: `no_mangle`");
+    }
+
+    #[test]
+    fn a_second_run_writes_the_same_bytes() {
+        // R8 remark 18: units in a fixed order, not cargo's scheduling order.
+        let f = three_roots(
+            "r8-18-order",
+            "diff",
+            "#[test]\nfn same() { assert_eq!(d::adapt(i::imp(3)), r::refm(3)); }\n",
+            "d = { path = \"../d\" }\n",
+            "",
+        );
+        let _ = written(f.run());
+        let first = std::fs::read(f.base.join("out/trust-dependencies.json")).unwrap();
+        let _ = written(f.run());
+        let second = std::fs::read(f.base.join("out/trust-dependencies.json")).unwrap();
+        assert!(
+            first == second,
+            "two runs of one commit wrote different inventories"
+        );
+    }
+
+    #[test]
+    fn a_patch_in_the_workspace_manifest_is_refused() {
+        // R8 remark 16: the catalog's workspace rules, adopted over the root manifest.
+        let f = two_roots(
+            "r8-16-patch",
+            "fn main() {}\n",
+            "pub fn f() {}\n",
+            &[(
+                "Cargo.toml",
+                format!("{WS}\n[patch.crates-io]\nb = {{ path = \"crates/b\" }}\n"),
+            )],
+        );
+        says(&refused(f.run()), "`[patch]` swaps a dependency's source");
+    }
+
+    #[test]
+    fn a_site_two_roots_compile_is_counted_once() {
+        // R8 remark 20: `refused-sites` counts sites, not compilations.
+        let dep = "[dependencies]\ncommon = { path = \"../common\" }\n";
+        let line = "pub const T: &str = include_str!(\"t.txt\");";
+        let f = two_roots(
+            "r8-20-count",
+            "fn main() { let _ = common::T; }\n",
+            "pub fn f() -> &'static str { common::T }\n",
+            &[
+                ("crates/common/Cargo.toml", manifest("common", "")),
+                ("crates/common/src/lib.rs", format!("{line}\n")),
+                ("crates/common/src/t.txt", "table".to_owned()),
+                ("crates/a/Cargo.toml", manifest("a", dep)),
+                ("crates/b/Cargo.toml", manifest("b", dep)),
+                (
+                    "trust/roots.eadl",
+                    format!(
+                        "{ROOTS}{}",
+                        admit("crates/common/src/lib.rs", "include_str", line)
+                    ),
+                ),
+            ],
+        );
+        assert_eq!(
+            written(f.run()).get("refused-sites").and_then(Json::as_str),
+            Some("1")
         );
     }
 }

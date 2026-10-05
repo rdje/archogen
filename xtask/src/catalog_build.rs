@@ -50,8 +50,9 @@ const SPECIAL: [&str; 7] = [
 /// For each facet with packages in its own set: those packages' directories, and every package's it reads (§3).
 type FacetPackages = BTreeMap<(String, FacetKind), (BTreeSet<String>, BTreeSet<String>)>;
 
-/// The environment variables a build may depend on (§3).
-const ENV_ALLOWED: [&str; 3] = [
+/// The environment variables a build may depend on (§3); the trust instrument adopts the same list
+/// (`docs/decisions/decision_trust-inventory.md` §3, R8 remark 22).
+pub(crate) const ENV_ALLOWED: [&str; 3] = [
     "CARGO_CRATE_NAME",
     "CARGO_MANIFEST_DIR",
     "CARGO_MANIFEST_PATH",
