@@ -31,6 +31,8 @@ At 384 KiB the folder has room for some thirty rounds at the measured rate. If t
 archive, with the closed histories' bytes proven against an index as `TASK-HISTORY` and `DECISION-HISTORY` prove
 theirs — not another raise.
 
+**`2026-10-05`.** The rate held (393 216 reached in two days), so the archive came, not a raise: `PROGRAM.55`.
+
 ## How to apply
 
 - `README_POLICY.md`: the `docs/reviews/` row's total is 393 216, and "Ceilings a decision fixes" names this record

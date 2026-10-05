@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — closed review histories archived
+
+`ARCHOGEN-PROGRAM-0438` (leaf `PROGRAM.55`).
+
+- A review history stops growing when its review closes, but it stayed in the folder whose size is capped, crowding
+  out the reviews still running. A closed history can now move to `docs/review-history/`, unchanged to the byte,
+  leaving a short note at its old path so every link to it still works. A new check proves each moved file against
+  the original. The catalog's 75 KB history moved first.
+
 ## archogen — the trust gate's ninth review: four defects left
 
 `ARCHOGEN-M3-0437` (leaf `M3.6.1`, step 10).

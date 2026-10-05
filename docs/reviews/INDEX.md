@@ -8,7 +8,8 @@ No bootstrap read includes this directory.
 - **Adding a round:** append its paragraph and table to the design's file, and its summary row to the design
   record's `## Review`.
 - **A new design under review:** a file named as its design record with `-reviews` added, and its row below.
-- **When the review closes,** the file is frozen: its last round is the one that found no defect.
+- **When the review closes,** the file is frozen: its last round is the one that found no defect. It may then move
+  to `docs/review-history/`, byte for byte, behind a stub (`bash scripts/check_review_history.sh --seal <FILE>`).
 
 | Review history | Design record | Rounds | Status |
 | --- | --- | --- | --- |
