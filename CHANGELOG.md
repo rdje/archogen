@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability design's twenty-fourth review
+
+`ARCHOGEN-M3-0448` (leaf `M3.1.1`, step 25).
+
+- The twenty-fourth reader found two defects. A requirement written inside a system's platform binding, or inside
+  another requirement, was never read, though a dependency beside it was; the model now reads requirements wherever
+  presence reads dependencies, and the checker places both at every position. And two sections of the design
+  disagreed on how amounts in one unit are compared; they now agree. A service that states two values for one fact
+  is now refused, as a block is.
+
 ## archogen — the substitutability design's twenty-third review
 
 `ARCHOGEN-M3-0447` (leaf `M3.1.1`, step 24).

@@ -316,38 +316,14 @@ pub fn read(decl: &Form) -> Result<Provider, Refused> {
     Ok(Provider { name, stated })
 }
 
-/// Read a service's `offers` and `absent`. A service is no provider: its offers are judged against no requirement in
-/// `/1` (record §1; R3 C13), so none of a provider's causes across offers — two values, a bound beside a value, a
-/// derived fact beside its grounds — applies. Each item is still read as §8 reads a value wherever written: refused
-/// when it names nothing, offers or declares absent a statement fact, writes a value outside its domain or a list
-/// inside `absent`; and the service is refused when its name is a vocabulary fact (§1.1; R16 1, R22 2, R23 2).
+/// Read a service's `offers` and `absent` as a provider's are read. A service is no provider: its offers are judged
+/// against no requirement in `/1` (record §1; R3 C13). But a declaration offering one fact with two values contradicts
+/// itself whoever writes it, and `ROADMAP.md` §5.3 rejects contradictory declarations rather than choosing one, so §8
+/// refuses in a service all it refuses in a provider's offers and absences (R24 4; R22 2 and R23 2 withdrawn).
 ///
 /// # Errors
 ///
-/// [`Refused`] — `invalid-description` — for the first of those.
+/// [`Refused`] — `invalid-description` — as [`read`].
 pub fn read_service(decl: &Form) -> Result<(), Refused> {
-    let name = decl
-        .items()
-        .get(1)
-        .and_then(Form::as_symbol)
-        .unwrap_or("<unnamed>");
-    if vocab::entry(name).is_some() {
-        return refuse(name, "a declaration whose local name is a vocabulary fact");
-    }
-    for clause in decl.items().iter().skip(2) {
-        match clause.head() {
-            Some("offers") => {
-                for item in &clause.items()[1..] {
-                    offered(item)?;
-                }
-            }
-            Some("absent") => {
-                for item in &clause.items()[1..] {
-                    declared_absent(item)?;
-                }
-            }
-            _ => {}
-        }
-    }
-    Ok(())
+    read(decl).map(|_| ())
 }

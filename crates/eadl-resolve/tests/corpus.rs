@@ -725,6 +725,12 @@ const CASES: &[Case] = &[
         "(unambiguous-horizon (at-least 60 s))",
         Judged(Unknown),
     ),
+    Case(
+        "R24 2 one unit compared as written, where the base unit's arithmetic overflows",
+        "(offers (delivery-bound 0.0000000000000000000000000000001 ns))",
+        "(delivery-bound (at-most 0.0000000000000000000000000000002 ns))",
+        Judged(Satisfied),
+    ),
 ];
 
 fn run(case: &Case) -> Want {
@@ -919,8 +925,9 @@ fn a_side_is_read_whole_and_a_clause_whatever_its_items_order() {
 }
 
 #[test]
-fn a_service_is_refused_only_where_rule_6_and_its_name_refuse() {
-    // R21 remark 6, R22 2: a service is no provider; its offers are judged against no requirement in `/1`.
+fn a_service_is_read_as_a_provider_is() {
+    // R21 remark 6: a service is no provider; its offers are judged against no requirement in `/1`. R24 4: a declaration
+    // contradicting itself is refused whoever writes it (`ROADMAP.md` §5.3), so a service is read as a provider is.
     for text in [
         "(defservice s (offers (or-through-mediation allowed)))",
         "(defservice s (absent or-through-mediation))",
@@ -930,13 +937,17 @@ fn a_service_is_refused_only_where_rule_6_and_its_name_refuse() {
         "(defservice s (offers (counter-width 1.5 bit)))",
         "(defservice s (absent (available-in-state sleep)))",
         "(defservice s (offers 5))",
+        "(defservice s (requires (uart true)) (offers (tick-rate 10 MHz) (tick-rate 20 MHz)))",
+        "(defservice s (offers (counter-width 32 bit) (counter-width (at-least 16 bit))))",
+        "(defservice s (offers (counter-modulus 65536) (wrap-behavior saturating)))",
+        "(defservice s (offers (tick-rate 10 MHz)) (absent tick-rate))",
     ] {
         assert!(read_service(&forms(text)[0]).is_err(), "{text}");
     }
     for text in [
-        "(defservice s (requires (uart true)) (offers (tick-rate 10 MHz) (tick-rate 20 MHz)))",
-        "(defservice s (offers (counter-width 32 bit) (counter-width (at-least 16 bit))))",
-        "(defservice s (offers (counter-modulus 65536) (wrap-behavior saturating)))",
+        "(defservice s (requires (uart true)) (offers (tick-rate 10 MHz) (tick-rate 10000 kHz)))",
+        "(defservice time.monotonic (offers something))",
+        "(defservice s (requires (uart true)) (absent debug-port))",
     ] {
         assert_eq!(read_service(&forms(text)[0]), Ok(()), "{text}");
     }
@@ -983,6 +994,39 @@ fn every_needs_and_uses_presence_reads_is_read() {
     assert_eq!(
         side("(defsystem s (platform (uses soc.p) (needs counter-width)))").map(|c| c.len()),
         Ok(1)
+    );
+}
+
+#[test]
+fn every_requires_a_side_writes_is_read() {
+    // R24 1: a `requires` inside a system's `platform` clause, or inside another `requires`, is a clause of the side.
+    let side = |t: &str| read_side(&forms(t)[0]);
+    let p = "(defsystem s (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1))";
+    for (text, want) in [
+        (format!("{p} (platform (uses soc.p) (requires (tick-unit ns) (tick-unit us))))"), "invalid"),
+        (format!("{p} (platform (uses soc.p) (requires (uart false) (needs uart))))"), "invalid"),
+        (format!("{p} (requires (tick-unit ns)) (platform (uses soc.p) (requires (tick-unit us))))"), "invalid"),
+        (format!("{p} (platform (uses soc.p) (requires (unambiguous-horizon (at-most 60 s)))))"), "invalid"),
+        (format!("{p} (platform (uses soc.p) (requires 5)))"), "invalid"),
+        (format!("{p} (platform (uses soc.p) (requires (ordering (before a b)))))"), "unsupported"),
+        (format!("{p} (platform (uses soc.p) (requires (or-through-mediation allowed) (or-through-mediation forbidden))))"), "invalid"),
+        ("(defservice s (requires (requires (tick-unit ns) (tick-unit us))))".to_string(), "invalid"),
+    ] {
+        let got = match side(&text) {
+            Err(NotJudged::Invalid(_)) => "invalid",
+            Err(NotJudged::Unsupported(_)) => "unsupported",
+            _ => "read",
+        };
+        assert_eq!(got, want, "{text}");
+    }
+    // A `requires` inside another is read as a clause, never as a constraint on a fact named `requires`.
+    assert_eq!(
+        side("(defservice s (requires (requires (tick-unit ns))))").map(|c| c.len()),
+        Ok(1)
+    );
+    assert_eq!(
+        clause("(requires (requires (tick-unit ns)) (needs uart))").map(|c| c.len()),
+        Ok(2)
     );
 }
 

@@ -545,3 +545,18 @@ acceptable as it stands". Defects per round: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8,
 | U5 — §1's side predated R22 6's `uses` | no | §1 restated: a `uses` makes a side, and a system's side holds its tasks' |
 | U6 — `SR-H17`'s scope across two clauses of one side | no | stated, both copies |
 | U7 — the checker's universe: no property over positions or operands; no `GHz`, `KiB` or fractional `byte`; the totality property's name claimed more than it held | no | the two properties above; the samples widened; the totality property also holds the spellings of one offer to one verdict |
+
+**Round 24**, `2026-10-05`: a new context that had not read rounds 1 to 23 ran 54 probes over every case of
+`ROADMAP.md` §5.2, read 205 declarations of the tracked descriptions and measured `archogen check` beside the model;
+the model matched the record function by function but for its first defect. Its two defects each came with a
+reproducer; the model's landed first as tests failing on the model as the round found it, and the record's as a
+fixture the model met already. There were 5 findings, 2 of them defects, and the verdict was "not acceptable as it
+stands". Defects per round: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2, 2, 2, 3, 3, 3, 2.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| V1 — a `requires` inside a system's `platform` clause, or inside another `requires`, was read by nothing, a `needs` beside it read: `(platform (requires (tick-unit ns) (tick-unit us)))` accepted | yes | §1: a side holds every `requires` where presence reads a `needs`, one inside another a clause of its own; one walker for both; the presence-oracle property places a constraint at every position; mutations `model-nested-requires-unread`, `model-nested-requires-read-as-constraint` |
+| V2 — §2 compared every quantity in its base unit, §5 two amounts in one unit by their written numbers | yes | §2 and its table say what §5 says; the reviewer's fixture, which the model met already |
+| V3 — a clause headed by no name was read where presence skips it | no | skipped as presence skips it, so the oracle holds over every placement; mutation `model-headless-clause-read` |
+| V4 — a service's two values of one fact accepted, though `ROADMAP.md` §5.3 rejects contradictory declarations | no | a service read as a provider is and judged against nothing; R22 2's narrower reading withdrawn; no tracked description changes outcome; mutation `model-service-read-apart` |
+| V5 — `SR-H16`'s reason for refusing across two blocks | no | the reason `M3.4` records covers two distinct blocks, both copies |

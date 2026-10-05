@@ -1090,7 +1090,9 @@ fn a_group_nested_and_the_same_group_flat_agree() {
 
 #[test]
 fn the_relation_reads_every_needs_and_uses_presence_reads() {
-    // R23 1: presence's own reader is the oracle, so no position it reads can go unread by the relation.
+    // R23 1: presence's own reader is the oracle, so no position it reads can go unread by the relation, and none it
+    // skips is read (R24 3). R24 1: a `requires` is read at the same positions, so no constraint stands unread where a
+    // `needs` beside it would be read.
     let places = [
         "X",
         "(requires X)",
@@ -1104,10 +1106,13 @@ fn the_relation_reads_every_needs_and_uses_presence_reads() {
         "(absent X)",
         "(refines X)",
         "((X))",
+        "(5 X)",
+        "(\"s\" X)",
     ];
     let mut read = 0usize;
-    for list in ["(needs uart)", "(uses uart)"] {
-        for place in places {
+    for place in places {
+        let mut presence_at = Vec::new();
+        for list in ["(needs uart)", "(uses uart)"] {
             let decl = format!("(defservice s {})", place.replace('X', list));
             let text = format!("(defsystem sys (requires (uses s)))\n{decl}");
             let all = forms(&text);
@@ -1123,10 +1128,27 @@ fn the_relation_reads_every_needs_and_uses_presence_reads() {
                     .any(|o| o.as_symbol() == Some("uart"))
             });
             assert_eq!(model_reads, presence_reads, "{list} at {place}");
+            presence_at.push(presence_reads);
             read += 1;
         }
+        assert!(
+            presence_at[0] == presence_at[1],
+            "presence reads `needs` and `uses` at {place} alike"
+        );
+        // A constraint there contradicts the declaration's own exactly where presence reads a `needs`.
+        let decl = format!(
+            "(defservice s (requires (tick-unit ns)) {})",
+            place.replace('X', "(requires (tick-unit us))")
+        );
+        let got = code(&read_side(&forms(&decl)[0]));
+        assert_eq!(
+            got == "invalid-description",
+            presence_at[0],
+            "{decl}: {got}"
+        );
+        read += 1;
     }
-    println!("read {read} placements of a fact against presence's closure");
+    println!("read {read} placements of a fact and a constraint against presence's closure");
 }
 
 #[test]
