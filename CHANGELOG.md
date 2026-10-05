@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability design's twenty-second review
+
+`ARCHOGEN-M3-0446` (leaf `M3.1.1`, step 23).
+
+- The twenty-second reader found three defects. For the fourth round running, one was a way of writing a requirement
+  that the design gave no answer for. This time the whole class is closed: the design lists every form a requirement
+  may take, and the model's checker tries a grammar of them. A service's offers were also being judged by rules meant
+  for blocks, and one hand-off sentence let a later step weaken a refusal the design makes unconditional. Both are
+  fixed.
+
 ## archogen — the trust design moves to the specifications folder
 
 `ARCHOGEN-PROGRAM-0445` (leaf `PROGRAM.56`).

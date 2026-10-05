@@ -1182,6 +1182,50 @@ to
                 _ => Err(NotJudged::NotAFact),
 end
 
+mutation model-group-head-first
+file crates/eadl-resolve/src/model/judge.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 22: a group's head is ranked among its parts, as the flat spelling is judged; returned first, an undescribed head hid a refused part (rule 5).
+from
+                let verdicts: Vec<Verdict> = std::iter::once(head)
+to
+                if head != Verdict::Satisfied { return head; } let verdicts: Vec<Verdict> = std::iter::once(head)
+end
+
+mutation model-non-name-item-unread
+file crates/eadl-resolve/src/model/requirement.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 22: an item of `requires` with no name at its head is `invalid-description`; read as no fact, it vanished from its clause (§1, §8).
+from
+            return invalid(NO_HEAD);
+to
+            return Err(NotJudged::NotAFact);
+end
+
+mutation model-side-uses-ignored
+file crates/eadl-resolve/src/model/requirement.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 22: a side reads its declaration's own `uses`, an operand naming a fact refused (§1).
+from
+                Some("uses") => items.push(c),
+to
+                Some("uses-never-read") => items.push(c),
+end
+
+mutation model-service-statement-admitted
+file crates/eadl-resolve/src/model/provider.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 22: a service is refused where rule 6 refuses, an offer or declared absence of a statement fact (§3 rule 6).
+from
+                if vocab::entry(head).is_some_and(|e| e.role == Role::Statement) {
+to
+                if false {
+end
+
 mutation model-same-unit-compared-in-base
 file crates/eadl-resolve/src/model/value.rs
 test -p eadl-resolve

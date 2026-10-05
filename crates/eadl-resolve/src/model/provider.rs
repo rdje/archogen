@@ -297,3 +297,39 @@ pub fn read(decl: &Form) -> Result<Provider, Refused> {
     }
     Ok(Provider { name, stated })
 }
+
+/// Read a service's `offers` and `absent`. A service is no provider: its offers are judged against no requirement in
+/// `/1` (record §1; R3 C13) and its `absent` is presence's (R11 K14), so it is refused only where rule 6 refuses — an
+/// offer or a declared absence of a statement fact — and where its name is a vocabulary fact (§1.1; R16 1, R22 2).
+///
+/// # Errors
+///
+/// [`Refused`] — `invalid-description` — for the first of those.
+pub fn read_service(decl: &Form) -> Result<(), Refused> {
+    let name = decl
+        .items()
+        .get(1)
+        .and_then(Form::as_symbol)
+        .unwrap_or("<unnamed>");
+    if vocab::entry(name).is_some() {
+        return refuse(name, "a declaration whose local name is a vocabulary fact");
+    }
+    for clause in decl.items().iter().skip(2) {
+        if !matches!(clause.head(), Some("offers" | "absent")) {
+            continue;
+        }
+        for item in &clause.items()[1..] {
+            let head = match item {
+                Form::Symbol { name, .. } => name.as_str(),
+                _ => item.head().unwrap_or(""),
+            };
+            if vocab::entry(head).is_some_and(|e| e.role == Role::Statement) {
+                return refuse(
+                    head,
+                    "a statement fact offered or declared absent, a service's included (§3 rule 6)",
+                );
+            }
+        }
+    }
+    Ok(())
+}

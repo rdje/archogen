@@ -43,6 +43,9 @@ pub enum NotJudged {
     NotAFact,
 }
 
+/// Why an item of `requires` with no name at its head is refused (§1, §8; R22 1).
+const NO_HEAD: &str = "an item of `requires` is a name or a list headed by one";
+
 /// Why a bare name inside `requires` is refused, fact or not (§1, §8; R21 3).
 const BARE_NAME: &str =
     "a bare name inside `requires` states no constraint; presence is `(needs f)`";
@@ -74,7 +77,9 @@ fn head_of(item: &Form) -> Option<&str> {
 /// [`NotJudged`] for what the relation refuses or does not judge.
 pub fn read_constraint(item: &Form) -> Result<Requirement, NotJudged> {
     let Some(head) = head_of(item) else {
-        return invalid("a constraint names its fact first");
+        // An item that is neither a name nor a list headed by one — a number, a string, `()`, a list headed by any of
+        // them — is `invalid-description` (§1, §8; R22 1).
+        return invalid(NO_HEAD);
     };
     let Some(e) = vocab::entry(head) else {
         // `(x)` or `(x v)` naming no vocabulary fact is a constraint on an undeclared fact, §8's second row; a bare
@@ -117,9 +122,20 @@ pub fn read_constraint(item: &Form) -> Result<Requirement, NotJudged> {
         // A head value beside sub-constraints is neither form, and is read below as the head's value, which refuses
         // it: `invalid-description` (§2's group row; R19 remark 7).
         if nested {
+            // Every part read, ranked as a clause's items are: `invalid-description` over the rest (R22 remark 9).
             let mut parts = Vec::new();
+            let mut other = None;
             for r in rest {
-                parts.push(read_constraint(r)?);
+                match read_constraint(r) {
+                    Ok(p) => parts.push(p),
+                    Err(NotJudged::Invalid(w)) => return Err(NotJudged::Invalid(w)),
+                    Err(e) => {
+                        other.get_or_insert(e);
+                    }
+                }
+            }
+            if let Some(e) = other {
+                return Err(e);
             }
             return Ok(Requirement::Group {
                 fact: e.name.to_string(),
@@ -246,6 +262,8 @@ pub fn read_side(decl: &Form) -> Result<Vec<Requirement>, NotJudged> {
         match c.head() {
             Some("requires") => items.extend(c.items().iter().skip(1)),
             Some("needs") => items.push(c),
+            // Its own `uses`, read as §1 says: an operand naming a fact refused (R22 remark 6).
+            Some("uses") => items.push(c),
             _ => {}
         }
     }

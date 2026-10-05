@@ -8,7 +8,7 @@
 use eadl_front::{read, Form, SourceMap};
 use eadl_resolve::model::{
     clause_satisfied, judge, read_clause, read_constraint, read_declaration_name, read_needs,
-    read_provider, read_side, read_uses, NotJudged, Verdict,
+    read_provider, read_service, read_side, read_uses, NotJudged, Verdict,
 };
 
 fn forms(text: &str) -> Vec<Form> {
@@ -672,6 +672,12 @@ const CASES: &[Case] = &[
         Judged(Absent),
     ),
     Case(
+        "R22 4 a group's refused part is not hidden behind an undescribed head",
+        "(offers (supported-horizon 5 s) (delivery-bound 1 us))",
+        "(absolute-deadline (supported-horizon (at-least 10 s)) (delivery-bound (at-most 50 us)))",
+        Judged(Refused),
+    ),
+    Case(
         "R18 7 an interval /1 can write is ordered exactly: lo > hi, refused",
         "(offers (frequency (range 9.000000000000000001 Hz 0.0000000000000000000000000000001 Hz)))",
         "(frequency 9.2 Hz)",
@@ -913,12 +919,47 @@ fn a_side_is_read_whole_and_a_clause_whatever_its_items_order() {
 }
 
 #[test]
-fn a_service_offering_or_declaring_absent_a_statement_is_refused() {
-    // R21 remark 6: rule 6's "a service's offers included", held by the reader a service shares with a block.
+fn a_service_is_refused_only_where_rule_6_and_its_name_refuse() {
+    // R21 remark 6, R22 2: a service is no provider; its offers are judged against no requirement in `/1`.
     for text in [
         "(defservice s (offers (or-through-mediation allowed)))",
         "(defservice s (absent or-through-mediation))",
+        "(defservice uart (offers (tick-rate 10 MHz)))",
     ] {
-        assert!(read_provider(&forms(text)[0]).is_err(), "{text}");
+        assert!(read_service(&forms(text)[0]).is_err(), "{text}");
     }
+    for text in [
+        "(defservice s (requires (uart true)) (offers (tick-rate 10 MHz) (tick-rate 20 MHz)))",
+        "(defservice s (offers (counter-width 32 bit) (counter-width (at-least 16 bit))))",
+        "(defservice s (offers (counter-modulus 65536) (wrap-behavior saturating)))",
+        "(defservice s (absent (available-in-state sleep)))",
+    ] {
+        assert_eq!(read_service(&forms(text)[0]), Ok(()), "{text}");
+    }
+}
+
+#[test]
+fn an_item_with_no_name_at_its_head_is_refused_and_ranked() {
+    // R22 1: a number, a string, `()`, a list headed by one of them.
+    for text in [
+        "(requires 5)",
+        "(requires \"text\")",
+        "(requires (5 6))",
+        "(requires ())",
+    ] {
+        assert!(matches!(clause(text), Err(NotJudged::Invalid(_))), "{text}");
+    }
+    for text in [
+        "(requires 5 (ordering (before a b)))",
+        "(requires (ordering (before a b)) \"text\")",
+    ] {
+        assert!(matches!(clause(text), Err(NotJudged::Invalid(_))), "{text}");
+    }
+    // R22 remark 6: a side's own `uses` is read as §1 says.
+    assert!(matches!(
+        read_side(
+            &forms("(defservice s (requires (tick-unit ns)) (uses observation-coherent))")[0]
+        ),
+        Err(NotJudged::Invalid(_))
+    ));
 }

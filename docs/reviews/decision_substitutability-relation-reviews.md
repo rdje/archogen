@@ -509,3 +509,22 @@ acceptable as it stands". Defects per round: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8,
 | S5 — `SR-H16` and two timers that differ | no | `SR-H16`: `M3.4`'s reason covers it, both copies |
 | S6 — no reader for a service's offers | no | a corpus test: a service offering or declaring absent a statement refused |
 | S7 — the checker's universe: two-item clauses only, no permutation, no split side | no | the two properties above |
+
+**Round 22**, `2026-10-05`: a new context that had not read rounds 1 to 21 ran 118 edge probes, its own oracle for rule
+1 and §4 over 1200 combinations, a brute-force witness search for rule 5 over 5388 pairs, and 40 000 random inputs,
+and found the relation's values, directions and derivation right. Its three defects each came with a reproducer;
+the two in the model landed first as tests failing on the model as the round found it, and the first, a gap in the
+record, was answered for its class. There were 9 findings, 3 of them defects, and the verdict was "not acceptable as
+it stands". Defects per round: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2, 2, 2, 3, 3.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| T1 — an item of `requires` headed by no name — `5`, `"text"`, `()`, `(5 6)` — had no outcome in the record; the model refused it on no sentence | yes | the fourth round running to find a spelling without an outcome, so the class is closed: §8 states every form an item may take, anything else `invalid-description`; a property reads 49 items of a grammar of small forms by their shape; mutation `model-non-name-item-unread` |
+| T2 — a service's offers refused for a provider's causes, two values among them | yes | §1: a service is refused only by rule 6 and the name rule; `provider::read_service`; mutation `model-service-statement-admitted` |
+| T3 — `SR-H12` let `M3.3` narrow rule 4's unconditional refusal | yes | the escape deleted, both copies |
+| T4 — an undescribed head hid a refused part; nested and flat differed | no | rule 5: the head ranked among its parts; a property over 48 providers; mutation `model-group-head-first` |
+| T5 — a required `false` against an absence | no | already stated (R19 4) |
+| T6 — a side's own `uses` unread | no | rule 5: read as §1 says; mutation `model-side-uses-ignored` |
+| T7 — `SR-H16` and `SR-H18` judged an offered and a derived value two ways | no | both: one rule for each, both copies |
+| T8 — contradictions across two facts not refused | no | rule 5: stated, every provider refusing them |
+| T9 — a group's parts read first-error-wins | no | read and ranked; unreachable in `/1`, so no mutation |

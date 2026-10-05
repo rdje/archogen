@@ -22,7 +22,10 @@
 //! - **a clause is decided without conversion and unsupported past it**: one unit compared as written, two units whose
 //!   conversion overflows `unsupported-profile`, never silence (R20 2);
 //! - **a clause's code is order-free and a side is read whole**: the same code in every order of a clause's items, and
-//!   a contradiction split across a declaration's clauses or beside its `needs` judged as in one clause (R21 1, 2).
+//!   a contradiction split across a declaration's clauses or beside its `needs` judged as in one clause (R21 1, 2);
+//! - **every item of `requires` has its one code**: over a grammar of small forms, the code the record's shape rule
+//!   gives, never "not a fact" (R22 1);
+//! - **a group nested and the same group flat agree**: the head ranked among its parts (R22 4).
 //!
 //! Each property also has a catalogued mutation in `xtask/mutations.txt` that breaks the rule it guards, and this
 //! file must kill it.
@@ -924,9 +927,14 @@ fn a_contradiction_split_across_a_side_is_one() {
                 };
                 let one = code(&read_clause(&forms(&format!("(requires {x} {y})"))[0]));
                 let split = code(&read_side(
-                    &forms(&format!("(defservice s (requires {x}) (requires {y}))"))[0],
+                    &forms(&format!(
+                        "(defservice s (requires {x}) (uses time.monotonic) (requires {y}))"
+                    ))[0],
                 ));
-                assert_eq!(split, one, "{x} and {y} in two clauses");
+                assert_eq!(
+                    split, one,
+                    "{x} and {y} in two clauses, a `uses` between them"
+                );
                 sides += 1;
             }
             if matches!(e.domain, Domain::Boolean | Domain::Group(_)) {
@@ -943,4 +951,98 @@ fn a_contradiction_split_across_a_side_is_one() {
         }
     }
     println!("read {sides} sides split across two places");
+}
+
+#[test]
+fn every_item_of_requires_has_its_one_code() {
+    // R22 1: a spelling with no outcome in the record, refused by the model on no sentence. Over a grammar of small
+    // forms, the shape decides: a bare name, a number, a string, `()` or a list headed by no name is
+    // `invalid-description`; a list headed by an undeclared name `unsupported-profile`; never "not a fact".
+    let atoms = ["uart", "something", "5", "\"t\"", "()", "true"];
+    let mut items: Vec<String> = atoms.iter().map(|a| (*a).to_string()).collect();
+    for a in atoms {
+        items.push(format!("({a})"));
+        for b in atoms {
+            items.push(format!("({a} {b})"));
+        }
+    }
+    items.push("((uart))".to_owned());
+    for item in &items {
+        let clause = forms(&format!("(requires {item})"));
+        let form = &clause[0].items()[1];
+        let got = code(&read_constraint(form).map(|r| vec![r]));
+        assert_ne!(got, "not a fact", "{item}");
+        let want = match form {
+            Form::List { items, .. } => match items.first() {
+                Some(Form::Symbol { name, .. }) => {
+                    if eadl_resolve::model::vocab::entry(name).is_some() {
+                        continue; // a fact's constraint: its value decides, which the other properties hold
+                    }
+                    "unsupported-profile"
+                }
+                _ => "invalid-description",
+            },
+            _ => "invalid-description",
+        };
+        assert_eq!(got, want, "{item}");
+    }
+    println!("read {} items of `requires` by their shape", items.len());
+}
+
+#[test]
+fn a_group_nested_and_the_same_group_flat_agree() {
+    // R22 4: the head ranked among the parts, as the flat spelling is judged.
+    let rank = [
+        Verdict::Refused,
+        Verdict::Absent,
+        Verdict::Unsupported,
+        Verdict::Unknown,
+        Verdict::Undescribed,
+    ];
+    let heads = [
+        "",
+        "(absolute-deadline true)",
+        "(absolute-deadline false)",
+        "absolute-deadline",
+    ];
+    let horizons = [
+        "",
+        "(supported-horizon 5 s)",
+        "(supported-horizon 60 s)",
+        "supported-horizon",
+    ];
+    let bounds = ["", "(delivery-bound 1 us)", "(delivery-bound 1 ms)"];
+    let mut providers = 0usize;
+    let group = constraint(
+        "(absolute-deadline (supported-horizon (at-least 10 s)) (delivery-bound (at-most 50 us)))",
+    )
+    .expect("a group");
+    let flat = [
+        constraint("(absolute-deadline true)").expect("the head"),
+        constraint("(supported-horizon (at-least 10 s))").expect("a part"),
+        constraint("(delivery-bound (at-most 50 us))").expect("a part"),
+    ];
+    for h in heads {
+        for s in horizons {
+            for b in bounds {
+                let offers = [h, s, b]
+                    .iter()
+                    .filter(|x| !x.is_empty())
+                    .copied()
+                    .collect::<Vec<_>>()
+                    .join(" ");
+                let Ok(p) = provider(&format!("(offers {offers})")) else {
+                    continue;
+                };
+                let verdicts: Vec<Verdict> = flat.iter().map(|r| judge(&p, r)).collect();
+                let want = rank
+                    .into_iter()
+                    .find(|v| verdicts.contains(v))
+                    .unwrap_or(Verdict::Satisfied);
+                assert_eq!(judge(&p, &group), want, "{offers}");
+                providers += 1;
+            }
+        }
+    }
+    println!("judged {providers} providers against a group nested and flat");
 }

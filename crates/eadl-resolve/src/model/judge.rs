@@ -159,9 +159,9 @@ pub fn judge(p: &Provider, r: &Requirement) -> Verdict {
             }
         }
         Requirement::Group { fact, parts } => {
-            // The head first; then every sub-constraint on its own sub-fact, the group satisfied when each is, and
-            // otherwise the first of refused, absent, unsupported, unknown and undescribed among them, whatever order
-            // they are written in (§3 rule 5; R17 4).
+            // The head, judged as `(f true)`, ranked among the sub-constraints, each on its own sub-fact: the first of
+            // refused, absent, unsupported, unknown and undescribed among them all, whatever order they are written
+            // in, satisfied when every one is — as the flat spelling is judged (§3 rule 5; R17 4, R22 4).
             let head = judge(
                 p,
                 &Requirement::Constraint {
@@ -170,10 +170,9 @@ pub fn judge(p: &Provider, r: &Requirement) -> Verdict {
                     value: Value::Bool(true),
                 },
             );
-            if head != Verdict::Satisfied {
-                return head;
-            }
-            let verdicts: Vec<Verdict> = parts.iter().map(|part| judge(p, part)).collect();
+            let verdicts: Vec<Verdict> = std::iter::once(head)
+                .chain(parts.iter().map(|part| judge(p, part)))
+                .collect();
             [
                 Verdict::Refused,
                 Verdict::Absent,

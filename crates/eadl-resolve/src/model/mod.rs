@@ -21,7 +21,7 @@ pub mod value;
 pub mod vocab;
 
 pub use judge::{clause_satisfied, judge, outcome, Outcome, Verdict};
-pub use provider::{read as read_provider, Provider, Refused, Stated};
+pub use provider::{read as read_provider, read_service, Provider, Refused, Stated};
 pub use requirement::{
     check_clause, read_clause, read_constraint, read_declaration_name, read_needs, read_side,
     read_uses, NotJudged, Requirement,

@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-10-03`
 - **Status:** `active` — written; under independent review (leaf `M3.1.1`'s closure rule: the first round that
-  finds no defect closes it); rounds 1 to 15 answered `2026-10-03`, rounds 16 to 21 `2026-10-05`, its hand-offs
+  finds no defect closes it); rounds 1 to 15 answered `2026-10-03`, rounds 16 to 22 `2026-10-05`, its hand-offs
   in a ledger since (§11), reviewed beside its executable model since round 17 (`M3.1.1.1`)
 - **Owner / source:** leaf `M3.1.1` (`docs/tasks/M3.md`). `ROADMAP.md` §5.2 asks for "explicit matching rules in a
   decidable fragment" with "a documented comparison direction" per parameter, declared cross-field implications,
@@ -54,7 +54,8 @@ fact, not a claim that the fact is available, as `examples/alternative-timer/sys
   presence without a value (§2; R4 D3); or an abstract platform's bound in the fact's direction, which the
   refinement check reads (model §3) and the relation does not read as a value (§2; R10 J4, J8; R13 M12). A service may write `offers` too — `core.eadl` admits the clause on
   `defservice`, not on `defpolicy` (R7 G5) — but is not a provider, and its offers are not judged in `/1` (R3 C13); a service's `absent` is presence's (model §2),
-not a provider's (R11 K14).
+not a provider's (R11 K14). A service is refused only where rule 6 refuses its offers or absences and where §1.1's
+name rule does, never for a provider's causes (R22 2).
 - A **requirement** is a constraint on a fact: a bound written with its direction, `(f (at-least v))`; a bare value,
   `(f v)`, which is a bound in the fact's own direction; a group, `(f (g …) (h …))`, which requires the boolean head
   `f` and each sub-constraint; or, through `needs`, bare presence. Inside `requires`, a bare fact name, or `(f)`
@@ -278,17 +279,17 @@ For one requirement `R` on fact `f`, written by side `S`, and one provider `P`:
    reversed condition role, read with the demand on the offered side, drew defects in six of ten review rounds and
    is deleted (R10 J1, J6).
 5. **A `requires` clause** is satisfied by `P` when each of its constraints is, a statement apart (rule 6); a
-   group's sub-constraints count among its constraints (R12 L13). A group requirement's outcome at `P` is its head's
-   when the head is not satisfied; otherwise each sub-constraint is judged on its own sub-fact, and the group is
-   satisfied when every one is, and else takes the first of refused, absent, unsupported, unknown and undescribed among
-   them — whatever order they are written in (R17 4). One side's constraints — every `requires` clause a declaration
-   writes and every `needs` at its own level (R21 1) — that no value satisfies together on one fact — a statement with
+   group's sub-constraints count among its constraints (R12 L13). A group requirement's outcome at `P` is the first of
+   refused, absent, unsupported, unknown and undescribed among its head, judged as `(f true)`, and its sub-constraints,
+   each on its own sub-fact, whatever order they are written in, and satisfied when every one is: the nested and flat
+   spellings agree, and an undescribed head hides no refused part (R17 4; R22 4). One side's constraints — every `requires` clause a declaration
+   writes, every `needs` and `uses` at its own level (R21 1; R22 6) — that no value satisfies together on one fact — a statement with
    two values, two equalities that differ, an equality another constraint refuses — are `invalid-description`:
    contradictory requirements are refused, never one chosen (`ROADMAP.md` §5.3; R19 2, 8); past the arithmetic,
    `unsupported-profile`. Its `uses` and services are §1's, never constraints (R20 1, 2). Every item is read: a clause
    is `invalid-description` when an item or a contradiction gives it, else `unsupported-profile` when one does,
-   whatever their order (R21 2). A contradiction through a derivation is not refused here: every provider refuses it
-   (R21 4).
+   whatever their order (R21 2). A contradiction through a derivation, or across two facts §4 relates — a width and
+   a modulus, a modulus and `saturating` — is not refused here: every provider refuses it (R21 4; R22 8).
 6. **A statement** — a fact whose role is `statement`, such as `or-through-mediation` — is the requiring side's
    word about itself. It is checked for its domain and nothing else: it constrains no provider, puts no fact
    inside the closure, and is read by the rule or the leaf its entry names, which for `/1`'s one statement is
@@ -441,7 +442,7 @@ The relation's own codes are about an offer or a requirement as written, whateve
 
 | Code | When |
 | --- | --- |
-| `invalid-description` | a bare name, fact or not, or `(f)`, inside `requires` (R21 3); one side's constraints on one fact that no value satisfies together (§3 rule 5; R19 2; R21 1); a list inside `needs` naming a vocabulary fact; a list inside `absent` naming a vocabulary fact, since `absent` names a fact by name alone and a value there would read as the whole fact absent (R18 2); a `uses` naming a vocabulary fact; a declaration whose local name is a vocabulary fact (R16 1); a derived fact declared absent beside a fact its rule reads (R16 8); a direction wrapper other than `at-least`, `at-most` and `exactly` — a list headed by a direction's name, `(f (includes …))`, `(f (within …))`, `(f (exact …))` — since a requirement writes its value and the direction is the fact's (R15 16; R16 4); a value outside its fact's domain; a value of information that is not a positive whole number of bits, and a `counter-modulus` of 0, wherever written — an offer, a bound or a requirement (R17 6); a statement fact declared absent (R17 R4); a provider's own name a vocabulary fact (R17 R5); a set written with no member in a requirement, or as `(f (exactly))` in an offer — `(f)` in an offer is bare (§2;
+| `invalid-description` | an item of `requires` that is not a list headed by a name — a bare name, fact or not, a number, a string, `()`, a list headed by one of them — or `(f)` (R21 3; R22 1); one side's constraints on one fact that no value satisfies together (§3 rule 5; R19 2; R21 1); a list inside `needs` naming a vocabulary fact; a list inside `absent` naming a vocabulary fact, since `absent` names a fact by name alone and a value there would read as the whole fact absent (R18 2); a `uses` naming a vocabulary fact; a declaration whose local name is a vocabulary fact (R16 1); a derived fact declared absent beside a fact its rule reads (R16 8); a direction wrapper other than `at-least`, `at-most` and `exactly` — a list headed by a direction's name, `(f (includes …))`, `(f (within …))`, `(f (exact …))` — since a requirement writes its value and the direction is the fact's (R15 16; R16 4); a value outside its fact's domain; a value of information that is not a positive whole number of bits, and a `counter-modulus` of 0, wherever written — an offer, a bound or a requirement (R17 6); a statement fact declared absent (R17 R4); a provider's own name a vocabulary fact (R17 R5); a set written with no member in a requirement, or as `(f (exactly))` in an offer — `(f)` in an offer is bare (§2;
 R13 M11) — or an interval with `lo > hi` on either side; a `needs` of a statement fact; a direction written against the vocabulary's, `exactly` apart (§1.1); a provider offering and declaring absent one fact; one provider offering one declared fact with two values, or a bound beside a value; a boolean or group head offered with a bound other than `exactly`; a derived fact offered beside a fact its rule reads (§4); a `counter-modulus` above a valued `2^width`, or beside `(wrap-behavior saturating)`; an offer of a statement fact |
 | `unsupported-profile` | a constraint on a fact the vocabulary does not declare, `(x)` or `(x v)` (R19 7); exact arithmetic that overflows `i128` |
 
@@ -518,13 +519,13 @@ the review history the rounds that found each.
 | `SR-H9` | `M3.2` | An adapter's offer satisfies past a declared absence, model §2 rule 2 amended to say so, and the absence across providers is judged among the description's blocks and platforms, the adapter not one of them. |
 | `SR-H10` | `M3.2` | `examples/alternative-timer` builds as `examples/README.md` seals, each fact the relation needs of it — a horizon, a privilege level, its policy's constraints — offered by one provider judged on its own, `timer.delay`, the adapter — an epoch extender offering its extended modulus and rate beside the counter's other facts where a service needs them of one provider (`SR-H14`) — or a record after `M3.7`, never a record's fact joined to `timer.delay`'s, and a change to its description is brought to the director before it is made. |
 | `SR-H11` | `M3.3` | A caller bound to an execution context that its provider's `reachable-at-privilege` does not include is refused, a requirer that states no level included. |
-| `SR-H12` | `M3.3` | A provider that states no level — `reachable-at-privilege` undescribed, declared absent or offered bare — is refused for any caller a plan binds to it, so every provider a plan binds a caller to states its level, the tracked descriptions and the target migrated in this leaf, the target's level from its agreement and a ledger source, or the refusal narrowed here under a review. |
+| `SR-H12` | `M3.3` | A provider that states no level — `reachable-at-privilege` undescribed, declared absent or offered bare — is refused for any caller a plan binds to it, so every provider a plan binds a caller to states its level, the tracked descriptions and the target migrated in this leaf, the target's level from its agreement and a ledger source. |
 | `SR-H13` | `M3.3` | A required ordering, `ordering`, and a region's placement, both undeclared in `/1`, are judged here, with entries and domains added under §15 first, or `required-ordering-guarantee.eadl` migrated by `M3.4`'s rule. |
 | `SR-H14` | `M3.3` | The requirements one service makes of one device's facts are met by the one provider the plan binds it to, or by an adapter `M3.2` selects, so a service whose horizon one counter meets and whose coherent reads another does is refused. |
 | `SR-H15` | `M3.4` | The closure is rooted at the system with its tasks and platform, `uses` and `needs` followed transitively, every constraint of a `requires` and every `needs` of a vocabulary fact judged wherever written, a `uses` naming a vocabulary fact refused, and the closure the report carries decided where it and presence's differ, a provider on a platform the system does not use never satisfying. |
-| `SR-H16` | `M3.4` | A fact declared absent at one of the description's blocks and platforms and offered at another, outside a direct refinement pair, is refused as `invalid-description` over every offer and absence and through no chain of refinements, `presence.rs`'s first-of-each comparison corrected, an adapter `M3.2`'s search offers not being one of them, with the reason it records for reading two providers' absence and offer as one contradiction, two timers of one platform that differ included. |
+| `SR-H16` | `M3.4` | A fact declared absent at one of the description's blocks and platforms and offered at another, outside a direct refinement pair, is refused as `invalid-description` over every offer and absence and through no chain of refinements, `presence.rs`'s first-of-each comparison corrected, an adapter `M3.2`'s search offers not being one of them, one rule for a value offered there and one derived there, with the reason it records for reading two providers' absence and value as one contradiction. |
 | `SR-H17` | `M3.4` | No group and its sub-constraints, nested or flat, are met by different providers, and this leaf decides which other constraints of one clause may be. |
-| `SR-H18` | `M3.4` | The description's code is decided over the providers that take part — those stating `f`, offered in any form or declared absent, or an input of its derivation, a silent one deciding nothing — `unsupported-profile` while one that takes part is past the arithmetic and none satisfies, before the others; `missing-fact` while one that takes part is unknown or undescribed and none satisfies, and when none takes part; `infeasible-configuration` once at least one takes part and every one that does is refused or absent, with model §2 rule 2 amended where a provider's derivation or an adapter's offer satisfies past another's absence. |
+| `SR-H18` | `M3.4` | The description's code is decided over the providers that take part — those stating `f`, offered in any form or declared absent, or an input of its derivation, a silent one deciding nothing — `unsupported-profile` while one that takes part is past the arithmetic and none satisfies, before the others; `missing-fact` while one that takes part is unknown or undescribed and none satisfies, and when none takes part; `infeasible-configuration` once at least one takes part and every one that does is refused or absent, with model §2 rule 2 amended where an adapter's offer satisfies past another's absence, a provider's derivation judged as `SR-H16` judges its offer. |
 | `SR-H19` | `M3.4` | The enumeration lists the description's blocks and platforms, a catalog record only after `M3.7`, and a mediating record never directly. |
 | `SR-H20` | `M3.4` | Every verdict `crates/archogen-cli/tests/verdicts.txt` and `module_cases.rs` freeze is kept, or changed only in the commit that names the case, the rule that moves it and its migration — a description gaining a fact, the target's agreement and its ledger source included — ordered after `M3.3` and `M3.7` where a migration needs them, the seven `0` verdicts `M3.1.1`'s round 14 measured among them. |
 | `SR-H21` | `M3.7` | The catalog record decision's §2 is amended so a contract facet states offers and absences of vocabulary facts, read by the relation's reader and judged like a block's, and a record whose path crosses a mediation boundary says so and enters only through `M3.2`'s search, where the requirer wrote `or-through-mediation` as `allowed`, bare or under `exactly`. |
@@ -565,6 +566,6 @@ satisfies that it should not — a stronger precondition read as a capability, a
 an implication assumed that nothing declares — and no case of §5.2 misclassified; every finding answered here. The
 history is [`decision_substitutability-relation-reviews.md`](../reviews/decision_substitutability-relation-reviews.md).
 
-Defects per round, oldest first: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2, 2, 2, 3. Each round's findings, its reader's measurements and every answer are in
+Defects per round, oldest first: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2, 2, 2, 3, 3. Each round's findings, its reader's measurements and every answer are in
 the review history linked above, which holds them whole; this record keeps only the count (`PROGRAM.52.2`, the
 folder's ceiling).
