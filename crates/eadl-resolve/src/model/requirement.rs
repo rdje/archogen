@@ -466,33 +466,18 @@ pub fn check_clause(constraints: &[Requirement]) -> Result<(), NotJudged> {
                  refused, never one chosen (§5.3)"
             ))
         };
-        // The equalities: one value when those that compare make one class, in any spelling (§5; R27 1).
-        let mut class: Vec<usize> = (0..equalities.len()).collect();
-        fn root(class: &mut [usize], i: usize) -> usize {
-            let mut r = i;
-            while class[r] != r {
-                r = class[r];
-            }
-            class[i] = r;
-            r
-        }
-        for i in 0..equalities.len() {
-            for j in i + 1..equalities.len() {
-                match value::same(&equalities[i], &equalities[j]) {
-                    Ok(true) => {
-                        let (a, b) = (root(&mut class, i), root(&mut class, j));
-                        class[a] = b;
-                    }
+        // The equalities: one value in several spellings when every two compare equal within the arithmetic, as a
+        // provider's offers are (§5; R27 1, R28 1); two that compare unequal are a contradiction.
+        let mut decided = true;
+        for (i, v) in equalities.iter().enumerate() {
+            for w in &equalities[i + 1..] {
+                match value::same(v, w) {
+                    Ok(true) => {}
                     Ok(false) => return clash(),
-                    Err(_) => {}
+                    Err(_) => decided = false,
                 }
             }
         }
-        let mut decided = (0..equalities.len())
-            .map(|i| root(&mut class, i))
-            .collect::<BTreeSet<_>>()
-            .len()
-            <= 1;
         // Each bound against the value, met by any spelling that compares, refused by any that refuses.
         for (_, d, w) in flat
             .iter()

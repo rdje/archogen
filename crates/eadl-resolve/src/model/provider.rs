@@ -138,6 +138,15 @@ fn item_name(item: &Form) -> Option<&str> {
     }
 }
 
+/// Whether `form` is, or holds at any depth, a list headed by one of the relation's clauses (R27 2, R28 3).
+fn holds_clause(form: &Form) -> bool {
+    matches!(form, Form::List { .. })
+        && (matches!(
+            form.head(),
+            Some("requires" | "needs" | "uses" | "offers" | "absent")
+        ) || form.items().iter().any(holds_clause))
+}
+
 /// One item of `offers`, read and judged as §8 judges a value wherever written: refused when it names nothing (R23 3)
 /// or offers a statement fact (§3 rule 6); `None` for a name the vocabulary does not declare, which has no domain to
 /// contradict (§5; R1 A6).
@@ -145,13 +154,12 @@ fn offered(item: &Form) -> Result<Option<(&'static vocab::Entry, Written)>, Refu
     let Some(head) = item_name(item) else {
         return refuse("offers", "an item of `offers` that names nothing — a number, a string, `()`, a list headed by none");
     };
-    // A clause written where an offer stands: its constraints, or the facts it names, would stand unread (R27 2).
-    if matches!(item, Form::List { .. })
-        && matches!(head, "requires" | "needs" | "uses" | "offers" | "absent")
-    {
+    // A clause written where an offer stands, or inside one at any depth: its constraints, or the facts it names, would
+    // stand unread (R27 2, R28 3).
+    if holds_clause(item) {
         return refuse(
             head,
-            "a clause written as an item of `offers`, read by nothing",
+            "a clause written inside an item of `offers`, read by nothing",
         );
     }
     let Some(e) = vocab::entry(head) else {

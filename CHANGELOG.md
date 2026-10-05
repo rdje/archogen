@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability design's twenty-eighth review
+
+`ARCHOGEN-M3-0453` (leaf `M3.1.1`, step 29).
+
+- The twenty-eighth reader found two places where the design's wording promised more than its rule gives, both
+  about one tiny value written in two units that the arithmetic cannot compare. The model already gave the honest
+  answer — that nothing can be decided — so the wording was corrected, and the checker now tries such values too.
+  A requirement hidden inside an offer, at any depth, is now refused.
+
 ## archogen — the substitutability design's twenty-seventh review
 
 `ARCHOGEN-M3-0452` (leaf `M3.1.1`, step 28).

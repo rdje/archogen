@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-10-03`
 - **Status:** `active` — written; under independent review (leaf `M3.1.1`'s closure rule: the first round that
-  finds no defect closes it); rounds 1 to 15 answered `2026-10-03`, rounds 16 to 27 `2026-10-05`, its hand-offs
+  finds no defect closes it); rounds 1 to 15 answered `2026-10-03`, rounds 16 to 28 `2026-10-05`, its hand-offs
   in a ledger since (§11), reviewed beside its executable model since round 17 (`M3.1.1.1`)
 - **Owner / source:** leaf `M3.1.1` (`docs/tasks/M3.md`). `ROADMAP.md` §5.2 asks for "explicit matching rules in a
   decidable fragment" with "a documented comparison direction" per parameter, declared cross-field implications,
@@ -56,7 +56,8 @@ fact, not a claim that the fact is available, as `examples/alternative-timer/sys
   writes; bare presence, which for a boolean fact, or a group's head, is the value `true` and for any other domain is
   presence without a value (§2; R4 D3); or an abstract platform's bound in the fact's direction, which the
   refinement check reads (model §3) and the relation does not read as a value (§2; R10 J4, J8; R13 M12). An item of
-  `offers` that is a clause, `(offers (requires …))`, is `invalid-description`, its contents read by nothing (R27 2). A service may write `offers` too — `core.eadl` admits the clause on
+  `offers` that is or holds a clause, `(offers (requires …))` or `(offers (foo (requires …)))`, is
+  `invalid-description`, its contents read by nothing (R27 2; R28 3). A service may write `offers` too — `core.eadl` admits the clause on
   `defservice`, not on `defpolicy` (R7 G5) — but is not a provider, and its offers are judged against no requirement in `/1` (R3 C13); a service's `absent` is
 judged by presence (model §2) and by no requirement, never a provider's absence at rule 1 (R11 K14; R25 3). Its offers
 and absences are read, and refused, as a provider's are, §8 refusing in a service all it refuses in a provider's — an item that names nothing, a value outside its domain, two values of
@@ -301,9 +302,12 @@ For one requirement `R` on fact `f`, written by side `S`, and one provider `P`:
    two values, two equalities that differ, an equality another constraint refuses — are `invalid-description`:
    contradictory requirements are refused, never one chosen (`ROADMAP.md` §5.3; R19 2, 8); past the arithmetic,
    `unsupported-profile`. Any comparison that refuses proves a contradiction, whatever else overflows; the constraints
-   on one fact hold together when its equalities compare equal — one value in several spellings — and that value
-   meets each bound by some spelling whose comparison does not overflow, as §5 decides an offer; only what neither
-   proves is past the arithmetic, so a spelling written again may decide a side, never undo its decision (R27 1). Its `uses` and services are §1's, never constraints (R20 1, 2). Every item is read: a clause
+   on one fact hold together when every two of its equalities compare equal — one value in several spellings — and
+   that value meets each bound by some spelling whose comparison does not overflow, as §5 decides an offer; only what
+   neither proves is past the arithmetic (R27 1). So a spelling written again that compares with every one already
+   written may decide a side, never undo its decision; one that does not is not known to be the value, and leaves a
+   side no refusal decides past the arithmetic, as two such offers leave a provider (§5; R28 1, 2). A comparison is
+   of two values, an interval's two endpoints together, past the arithmetic when either is (§2; R18 7; R28 4). Its `uses` and services are §1's, never constraints (R20 1, 2). Every item is read: a clause
    is `invalid-description` when an item or a contradiction gives it, else `unsupported-profile` when one does,
    whatever their order (R21 2). A contradiction through a derivation, or across two facts §4 relates — a width and
    a modulus, a modulus and `saturating` — is not refused here: every provider refuses it (R21 4; R22 8).
@@ -351,7 +355,10 @@ C12); a width whose value in bits is not a positive whole number is `invalid-des
 more holds every writable modulus, `(pow2 126)`
 the largest, so the check is made only below that (R7 G8). The rule is a modular counter's, one that wraps at its modulus — which is what `counter-modulus` means: a
 modulus offered beside a `wrap-behavior` that is `saturating` is `invalid-description`, and a saturating counter's
-range is another fact, added when a description needs it (R1 A14; R3 C6). The `modular` reading of an omitted
+range is another fact, added when a description needs it (R1 A14; R3 C6). These two refusals, a modulus above
+`2^width` and a modulus beside `saturating`, are cross-field rules of the vocabulary, declared here and in §8, the
+record `vocabulary.eadl` is read with: they only refuse, and no requirement is met through them (`ROADMAP.md` §5.2;
+R28 5). The `modular` reading of an omitted
 `wrap-behavior` serves the rule alone: a constraint on `wrap-behavior` itself is judged on what is offered, so
 against an unstated offer it is undescribed (R4 N4). `derived-from` lists a rule's required inputs; a rule may
 also read a named optional one, which the entry's `reads` clause names — `wrap-behavior` here (R5 E9).
@@ -413,7 +420,8 @@ offers of one fact overflows the exact arithmetic, the fact is `unsupported-prof
 too (R20 4), never two values — unless two of its offers compare unequal without overflowing, which are two values whatever the others and
 whatever order they are written in (R17 5; R18 1). Two amounts in one unit are compared as written, by their
 numbers, in every comparison: one value written twice is one offer, two that differ two values (R19 1, 6; R20 2). One
-value in several spellings is compared with a requirement in each, and decided by any comparison that does not
+value in several spellings — offers every two of which compare equal within the arithmetic, the sentence before last
+deciding where two do not — is compared with a requirement in each, and decided by any comparison that does not
 overflow — all such agree, the value being one — so the spelling written first decides nothing; it is
 `unsupported-profile` only when every spelling's comparison overflows. A derivation, or a check across two facts, reads
 any spelling, each converting to the one value, since two spellings in two units were compared in the base unit as the
@@ -466,7 +474,7 @@ The relation's own codes are about an offer or a requirement as written, whateve
 
 | Code | When |
 | --- | --- |
-| `invalid-description` | an item of `requires` that is not a list headed by a name — a bare name, fact or not, a number, a string, `()`, a list headed by one of them — or `(f)` (R21 3; R22 1); an operand of `needs` or `uses`, or an item of `absent`, that is not a name — any list included, since what follows its head would be dropped, or inside `absent` read as the whole fact absent — and an item of `offers` that is not a name or a list headed by one, or is a clause headed by `requires`, `needs`, `uses`, `offers` or `absent`, a service's included (R18 2; R23 3; R26 1; R27 2); one side's constraints on one fact that no value satisfies together (§3 rule 5; R19 2; R21 1); a `uses` naming a vocabulary fact; a declaration whose local name is a vocabulary fact (R16 1); a derived fact declared absent beside a fact its rule reads (R16 8); a direction wrapper other than `at-least`, `at-most` and `exactly` — a list headed by a direction's name, `(f (includes …))`, `(f (within …))`, `(f (exact …))` — since a requirement writes its value and the direction is the fact's (R15 16; R16 4); a value outside its fact's domain; a value of information that is not a positive whole number of bits, and a `counter-modulus` of 0, wherever written — an offer, a bound or a requirement (R17 6); a statement fact declared absent (R17 R4); a provider's own name a vocabulary fact (R17 R5); a set written with no member in a requirement, or as `(f (exactly))` in an offer — `(f)` in an offer is bare (§2;
+| `invalid-description` | an item of `requires` that is not a list headed by a name — a bare name, fact or not, a number, a string, `()`, a list headed by one of them — or `(f)` (R21 3; R22 1); an operand of `needs` or `uses`, or an item of `absent`, that is not a name — any list included, since what follows its head would be dropped, or in `absent` read as the whole fact absent — and an item of `offers` that is not a name or a list headed by one, or holds at any depth a clause headed by `requires`, `needs`, `uses`, `offers` or `absent`, a service's too (R18 2; R23 3; R26 1; R27 2; R28 3); one side's constraints on one fact that no value satisfies together (§3 rule 5; R19 2; R21 1); a `uses` naming a vocabulary fact; a declaration whose local name is a vocabulary fact (R16 1); a derived fact declared absent beside a fact its rule reads (R16 8); a direction wrapper other than `at-least`, `at-most` and `exactly` — a list headed by a direction's name, `(f (includes …))`, `(f (within …))`, `(f (exact …))` — since a requirement writes its value and the direction is the fact's (R15 16; R16 4); a value outside its fact's domain; a value of information that is not a positive whole number of bits, and a `counter-modulus` of 0, wherever written — an offer, a bound or a requirement (R17 6); a statement fact declared absent (R17 R4); a provider's own name a vocabulary fact (R17 R5); a set written with no member in a requirement, or as `(f (exactly))` in an offer — `(f)` in an offer is bare (§2;
 R13 M11) — or an interval with `lo > hi` on either side; a `needs` of a statement fact; a direction written against the vocabulary's, `exactly` apart (§1.1); a provider offering and declaring absent one fact; one provider offering one declared fact with two values, or a bound beside a value; a boolean or group head offered with a bound other than `exactly`; a derived fact offered beside a fact its rule reads (§4); a `counter-modulus` above a valued `2^width`, or beside `(wrap-behavior saturating)`; an offer of a statement fact |
 | `unsupported-profile` | a constraint on a fact the vocabulary does not declare, `(x)` or `(x v)` (R19 7); exact arithmetic that overflows `i128` |
 
@@ -599,6 +607,6 @@ satisfies that it should not — a stronger precondition read as a capability, a
 an implication assumed that nothing declares — and no case of §5.2 misclassified; every finding answered here. The
 history is [`decision_substitutability-relation-reviews.md`](../reviews/decision_substitutability-relation-reviews.md).
 
-Defects per round, oldest first: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2, 2, 2, 3, 3, 3, 2, 1, 2, 1. Each round's findings, its reader's measurements and every answer are in
+Defects per round, oldest first: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2, 2, 2, 3, 3, 3, 2, 1, 2, 1, 2. Each round's findings, its reader's measurements and every answer are in
 the review history linked above, which holds them whole; this record keeps only the count (`PROGRAM.52.2`, the
 folder's ceiling).

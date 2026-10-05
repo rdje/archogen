@@ -1248,18 +1248,10 @@ expect killed
 why M3.1.1 round 19: constraints of one clause on one fact that no value satisfies together are refused; admitted, a mediation statement written both ways passed and `SR-H8` let the adapter through (§3 rules 5, 6; §8).
 from
                         Ok(false) => return clash(),
-                        Err(_) => {}
-                    }
-                }
-            }
-            let mut decided = (0..equalities.len())
+                        Err(_) => decided = false,
 to
                         Ok(false) => {}
-                        Err(_) => {}
-                    }
-                }
-            }
-            let mut decided = (0..equalities.len())
+                        Err(_) => decided = false,
 end
 
 mutation model-platform-name-lists-unread
@@ -1446,9 +1438,13 @@ test -p eadl-resolve
 expect killed
 why M3.1.1 round 27: equalities that compare equal are one value in several spellings; kept apart, a side holding one amount in `s` and in `ns` was `unsupported-profile` beside a bound it met (§3 rule 5, §5).
 from
-                            class[a] = b;
+                        Ok(true) => {}
+                        Ok(false) => return clash(),
+                        Err(_) => decided = false,
 to
-                            let _ = (a, b);
+                        Ok(true) => decided = false,
+                        Ok(false) => return clash(),
+                        Err(_) => decided = false,
 end
 
 mutation model-side-bound-first-spelling-only
@@ -1468,9 +1464,31 @@ test -p eadl-resolve
 expect killed
 why M3.1.1 round 27 remark 2: an item of `offers` that is a clause is refused, its contents read by nothing; admitted, `(offers (requires (tick-unit ns) (tick-unit us)))` hid a contradiction (§1, §8).
 from
-        if matches!(item, Form::List { .. })
-            && matches!(head, "requires" | "needs" | "uses" | "offers" | "absent")
+        if holds_clause(item) {
 to
-        if false
-            && matches!(head, "requires" | "needs" | "uses" | "offers" | "absent")
+        if false && holds_clause(item) {
+end
+
+mutation model-side-uncompared-spellings-read-as-one
+file crates/eadl-resolve/src/model/requirement.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 28: two equalities whose comparison overflows are not known to be one value; read as one, `(exactly 0.0000000000000000000000000000001 ns)` beside `(exactly 0.0000000000000000000000000000000001 us)` was read where nothing decides it (§3 rule 5, §5).
+from
+                        Ok(false) => return clash(),
+                        Err(_) => decided = false,
+to
+                        Ok(false) => return clash(),
+                        Err(_) => {}
+end
+
+mutation model-nested-clause-in-offer-admitted
+file crates/eadl-resolve/src/model/provider.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 28 remark 3: a clause inside an offer at any depth is refused, read by nothing; admitted one level down, `(offers (foo (requires (tick-unit ns) (tick-unit us))))` hid a contradiction (§1, §8).
+from
+            ) || form.items().iter().any(holds_clause))
+to
+            ) || false)
 end

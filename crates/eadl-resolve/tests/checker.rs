@@ -926,18 +926,25 @@ fn code(r: &Result<Vec<Requirement>, NotJudged>) -> &'static str {
 fn a_respelling_of_an_equality_changes_no_clause_s_code() {
     // R27 1: one value in several spellings is one value on a side, as at a provider (§5). Every clause of up to three
     // constraints from a pool of equalities, respellings and bounds — some past the arithmetic in another unit — keeps
-    // a decided code when an equality it holds is written again in another spelling: a spelling adds comparisons, so it
-    // may decide what was past the arithmetic, and never undoes a decision.
-    let equalities = [
-        ["1 ms", "1000000 ns", "0.001 s"],
-        [
+    // a decided code when an equality it holds is written again in another spelling that compares with it: a spelling
+    // adds comparisons, so it may decide what was past the arithmetic, and never undoes a decision. R28 1: a spelling
+    // that compares with none is not known to be the value, and may leave the clause past the arithmetic — never refuse
+    // a clause that read, nor lift a refusal.
+    let equalities: [&[&str]; 4] = [
+        &["1 ms", "1000000 ns", "0.001 s"],
+        &[
             "0.000000000001 ns",
             "0.000000000000000000001 s",
             "0.000000000000001 us",
         ],
-        ["2 ms", "2000 us", "0.002 s"],
+        &["2 ms", "2000 us", "0.002 s"],
+        &[
+            "0.0000000000000000000000000000001 ns",
+            "0.0000000000000000000000000000000001 us",
+        ],
     ];
     let bounds = [
+        "1 ns",
         "1 ms",
         "5 ms",
         "0.5 ms",
@@ -960,7 +967,7 @@ fn a_respelling_of_an_equality_changes_no_clause_s_code() {
             &forms(&format!("(requires {})", items.join(" ")))[0],
         ))
     };
-    let (mut clauses, mut decided) = (0usize, 0usize);
+    let (mut clauses, mut decided, mut apart) = (0usize, 0usize, 0usize);
     for i in 0..pool.len() {
         for j in i..pool.len() {
             for k in j..pool.len() {
@@ -971,7 +978,16 @@ fn a_respelling_of_an_equality_changes_no_clause_s_code() {
                     for respelt in &equalities[*class][1..] {
                         let extra = format!("(delivery-bound (exactly {respelt}))");
                         let after = code_of(&[items[0], items[1], items[2], extra.as_str()]);
-                        if before == "unsupported-profile" {
+                        let original =
+                            format!("(delivery-bound (exactly {}))", equalities[*class][0]);
+                        if code_of(&[original.as_str(), extra.as_str()]) != "read" {
+                            assert!(
+                                (before != "invalid-description" || after == before)
+                                    && (before != "read" || after != "invalid-description"),
+                                "{items:?} with {extra}: {before} became {after}"
+                            );
+                            apart += 1;
+                        } else if before == "unsupported-profile" {
                             decided += usize::from(after != before);
                         } else {
                             assert_eq!(after, before, "{items:?} with {extra}");
@@ -983,7 +999,8 @@ fn a_respelling_of_an_equality_changes_no_clause_s_code() {
         }
     }
     println!(
-        "read {clauses} clauses with an equality written again in another spelling, {decided} decided by it"
+        "read {clauses} clauses with an equality written again in another spelling, {decided} decided by it, \
+         {apart} in a spelling that compares with none"
     );
 }
 

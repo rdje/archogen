@@ -774,6 +774,24 @@ const CASES: &[Case] = &[
         Judged(Unsupported),
     ),
     Case(
+        "R28 2 two spellings that do not compare are not known to be one value, as written",
+        "(offers (delivery-bound 0.0000000000000000000000000000001 ns) (delivery-bound 0.0000000000000000000000000000000001 us))",
+        "(delivery-bound (at-most 1 ns))",
+        Judged(Unsupported),
+    ),
+    Case(
+        "R28 2 two spellings that do not compare are not known to be one value, reversed",
+        "(offers (delivery-bound 0.0000000000000000000000000000000001 us) (delivery-bound 0.0000000000000000000000000000001 ns))",
+        "(delivery-bound (at-most 1 ns))",
+        Judged(Unsupported),
+    ),
+    Case(
+        "R28 2 two spellings that do not compare, for presence too",
+        "(offers (delivery-bound 0.0000000000000000000000000000001 ns) (delivery-bound 0.0000000000000000000000000000000001 us))",
+        "needs delivery-bound",
+        Judged(Unsupported),
+    ),
+    Case(
         "R24 2 one unit compared as written, where the base unit's arithmetic overflows",
         "(offers (delivery-bound 0.0000000000000000000000000000001 ns))",
         "(delivery-bound (at-most 0.0000000000000000000000000000002 ns))",
@@ -1124,6 +1142,14 @@ fn one_value_in_several_spellings_on_a_side_is_one_value() {
     for items in [[e1, e2, tight], [tight, e1, e2]] {
         assert_eq!(code(&items), "invalid", "a refusal proves it: {items:?}");
     }
+    // R28 1: a spelling that compares with none is not known to be the value: the side is past the arithmetic.
+    let t_ns = "(delivery-bound (exactly 0.0000000000000000000000000000001 ns))";
+    let t_us = "(delivery-bound (exactly 0.0000000000000000000000000000000001 us))";
+    let one_ns = "(delivery-bound (at-most 1 ns))";
+    assert_eq!(code(&[t_ns]), "read 1");
+    assert_eq!(code(&[t_ns, one_ns]), "read 2");
+    assert_eq!(code(&[t_ns, t_us]), "unsupported");
+    assert_eq!(code(&[t_us, t_ns, one_ns]), "unsupported");
 }
 
 #[test]
@@ -1134,6 +1160,9 @@ fn a_clause_written_as_an_offer_is_refused() {
         "(defblock b (offers (needs uart)))",
         "(defblock b (offers (uses console.write)))",
         "(defservice s (requires (uart true)) (offers (requires (tick-unit us))))",
+        // R28 3: inside an offer, at any depth.
+        "(defservice s (requires (uart true)) (offers (foo (requires (tick-unit ns) (tick-unit us)))))",
+        "(defblock b (offers (foo (bar (needs uart)))))",
     ] {
         assert!(read_service(&forms(text)[0]).is_err(), "{text}");
     }

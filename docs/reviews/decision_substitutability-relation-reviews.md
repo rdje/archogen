@@ -607,3 +607,19 @@ tests failing on the model as the round found it. There were 6 findings, 1 of th
 | Y4 — §2's boolean row omitted `(f (exactly false))` | no | added |
 | Y5 — the checker's oracle shares `eadl-model`'s arithmetic | no | by §2, comparisons are `eadl-model`'s, reviewed and mutation-tested there (`saturating-comparison`, among others); this round's own oracle, written apart, agreed over 5250 providers |
 | Y6 — no side of three constraints mixing spellings | no | Y1's property |
+
+**Round 28**, `2026-10-05`: a new context that had not read rounds 1 to 27 probed every case of `ROADMAP.md` §5.2,
+read the model over 125 tracked files, 89 providers and 205 sides, and found the transcription faithful outside its
+two defects. Both were the record against itself, at one root — two spellings of one value whose comparison
+overflows — and the model's answers were the honest ones: the record's sentences were changed, the property that
+round 27 stated was measured failing on the model as found once its pool held such a spelling, and was restated.
+There were 5 findings, 2 of them defects, and the verdict was "not acceptable as it stands". Defects per round: 7,
+7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2, 2, 2, 3, 3, 3, 2, 1, 2, 1, 2.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| Z1 — rule 5 said a spelling written again never undoes a side's decision; `(exactly 0.0000000000000000000000000000001 ns)` read, with `(exactly 0.0000000000000000000000000000000001 us)` beside it `unsupported-profile` | yes | rule 5: a spelling that compares with every one written may decide a side, never undo it; one that does not is not known to be the value; the side reads its equalities by the provider's every-pair rule; the property restated, its pool holding such a spelling (78 clauses); mutation `model-side-uncompared-spellings-read-as-one` |
+| Z2 — §5 called two spellings that do not compare one offer, and `unsupported-profile` | yes | §5: one value in several spellings is offers every two of which compare equal; the rest is the sentence on overflowing offers; three fixtures, both orders and presence |
+| Z3 — a clause inside an undeclared fact's offered value read by nothing | no | refused at any depth inside an offer; mutation `model-nested-clause-in-offer-admitted` |
+| Z4 — an interval endpoint that refuses beside one that overflows | no | rule 5: a comparison is of two values, an interval's endpoints together, past the arithmetic when either is (R18 7); no `/1` fact reaches it |
+| Z5 — §4's counter refusals carried by no vocabulary clause | no | §4: cross-field rules of the vocabulary, declared in this record, refusing only |
