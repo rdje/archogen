@@ -36,7 +36,7 @@ pub enum Requirement {
 /// What reading a requirement gives besides a requirement.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NotJudged {
-    /// `invalid-description`: §8's first row.
+    /// `invalid-description`: §8's `invalid-description` rows.
     Invalid(String),
     /// `unsupported-profile`: a constraint on a fact the vocabulary does not declare (§8's second row), or a value
     /// past the exact arithmetic (§2).
@@ -88,9 +88,7 @@ fn head_of(item: &Form) -> Option<&str> {
 pub fn read_constraint(item: &Form) -> Result<Requirement, NotJudged> {
     // A provider's clause where a constraint stands, at any depth: an offer or an absence nothing reads (§1; R29 1).
     if holds_provider_clause(item) {
-        return invalid(
-            "an `offers` or `absent` written inside `requires`, where a constraint stands",
-        );
+        return invalid("a clause written inside `requires`, where a constraint stands");
     }
     let Some(head) = head_of(item) else {
         // An item that is neither a name nor a list headed by one — a number, a string, `()`, a list headed by any of
@@ -282,11 +280,33 @@ fn clause_own<'a>(clause: &'a Form, nested: &mut Vec<&'a Form>) -> Vec<&'a Form>
     constraint_items(clause).chain(lists).collect()
 }
 
-/// Whether `form` is, or holds at any depth, an `offers` or `absent` list (R29 1).
+/// Every clause a kind of `/1` declares — `docs/semantics/kinds/`' `(clause …)` names, held to them by the checker — the
+/// words §1's grammar of positions calls a clause (R30 1).
+pub const CLAUSE_WORDS: &[&str] = &[
+    "absent",
+    "deadline",
+    "deadline-from",
+    "jitter",
+    "min-separation",
+    "needs",
+    "offers",
+    "on-overrun",
+    "period",
+    "platform",
+    "priority",
+    "refines",
+    "requires",
+    "task",
+    "uses",
+];
+
+/// Whether `form` is, or holds at any depth, a list headed by a clause word but those `requires` reads where they
+/// stand — `needs`, `uses` and `requires` (§1; R29 1, R30 1).
 fn holds_provider_clause(form: &Form) -> bool {
     matches!(form, Form::List { .. })
-        && (matches!(form.head(), Some("offers" | "absent"))
-            || form.items().iter().any(holds_provider_clause))
+        && (form.head().is_some_and(|h| {
+            CLAUSE_WORDS.contains(&h) && !matches!(h, "needs" | "uses" | "requires")
+        }) || form.items().iter().any(holds_provider_clause))
 }
 
 /// Every item one side writes: the own items of every `requires` clause and every `needs` and `uses` at any depth of

@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability design's thirtieth review
+
+`ARCHOGEN-M3-0455` (leaf `M3.1.1`, step 31).
+
+- The thirtieth reader found one defect: the design refused "a clause" written inside an offer but never said which
+  words are clauses, so a refinement written there slipped through unchecked. A clause is now any clause the
+  language's kinds declare, and the checker reads that list from the kind files themselves. The checker also now
+  tries values just past the edge of every domain.
+
 ## archogen — the substitutability design's twenty-ninth review
 
 `ARCHOGEN-M3-0454` (leaf `M3.1.1`, step 30).

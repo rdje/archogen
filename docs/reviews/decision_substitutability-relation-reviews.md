@@ -640,3 +640,21 @@ hold, so the answer closes the class with a grammar. There were 6 findings, 1 of
 | P4 — rule 1's order over the derivation's inputs rested on hand fixtures | no | a property enumerates 400 providers against an oracle from rule 1, §4 and §8 |
 | P5 — rule 3 did not point to §5's exception for offers that do not compare | no | it does |
 | P6 — `SR-H16` fixed an outcome and asked `M3.4` for a reason the record cannot give | no | `SR-H16` makes it `M3.4`'s question, decided in a reviewed record with its reason; both copies, §10 aligned |
+
+**Round 30**, `2026-10-05`: a new context that had not read rounds 1 to 29 probed every case of `ROADMAP.md` §5.2,
+read the model over 112 tracked descriptions, and ran mutations of its own in a scratch copy, which found the
+universe's remaining holes. Its defect came with reproducers, which landed first as fixtures failing on the model as
+the round found it. There were 6 findings, 1 of them a defect, and the verdict was "not acceptable as it stands".
+Defects per round: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2, 2, 2, 3, 3, 3, 2, 1, 2, 1, 2, 1, 1.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| Q1 — "clause" named no set: `(offers (refines soc.abstract))` read as an offer, and a refinement written there went unchecked | yes | §1: a clause is a list headed by a clause word, any name a kind of `/1` declares with `clause`; `CLAUSE_WORDS` in both checks, pinned by a property to `docs/semantics/kinds/`; inside `requires` every clause word but `needs`, `uses` and `requires` refused; three fixtures; mutations `model-offer-clause-words-narrowed`, `model-constraint-clause-words-narrowed`, `model-clause-words-drifted` |
+| Q2 — no value past a domain's edge in the universe; four domain mutations survived | no | a property refuses 420 such values as an offer, under `exactly` and as a requirement; mutations `model-enumeration-any-symbol`, `model-set-repetition-admitted`, `model-count-any-unit`, `model-count-negative` |
+| Q3 — no misnamed or misdirected offer form in the universe | no | direction-name wrappers and bounds against the fact's direction asserted refused for every sample |
+| Q4 — a group's parts all sub-facts held by nothing | no | a fixture |
+| Q5 — `SR-H18`'s "those stating f" for a group | no | for a group requirement, its head and every sub-fact it constrains; both copies |
+| Q6 — presence's closure omits a system's own and its tasks' `needs` | no | `SR-H15` names it among what `M3.4` decides; both copies |
+
+§8's `invalid-description` row was split in two, written forms and values, its longest line having reached the
+folder's ceiling; a newline inside it, which broke the table, was mended.

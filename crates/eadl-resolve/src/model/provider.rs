@@ -4,6 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use eadl_front::Form;
 
+use super::requirement::CLAUSE_WORDS;
 use super::value::{self, same, Value};
 use super::vocab::{self, Direction, Domain, Role};
 
@@ -30,12 +31,12 @@ pub struct Provider {
     pub stated: BTreeMap<String, Stated>,
 }
 
-/// Why a provider is refused: record §8's first row, `invalid-description`.
+/// Why a provider is refused: record §8's `invalid-description` rows.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Refused {
     /// The fact the refusal is about.
     pub fact: String,
-    /// Which cause of §8's row.
+    /// Which cause of §8's rows.
     pub why: String,
 }
 
@@ -138,13 +139,12 @@ fn item_name(item: &Form) -> Option<&str> {
     }
 }
 
-/// Whether `form` is, or holds at any depth, a list headed by one of the relation's clauses (R27 2, R28 3).
+/// Whether `form` is, or holds at any depth, a list headed by a clause word — any clause a kind of `/1` declares,
+/// `refines` and `platform` among them (§1; R27 2, R28 3, R30 1).
 fn holds_clause(form: &Form) -> bool {
     matches!(form, Form::List { .. })
-        && (matches!(
-            form.head(),
-            Some("requires" | "needs" | "uses" | "offers" | "absent")
-        ) || form.items().iter().any(holds_clause))
+        && (form.head().is_some_and(|h| CLAUSE_WORDS.contains(&h))
+            || form.items().iter().any(holds_clause))
 }
 
 /// One item of `offers`, read and judged as §8 judges a value wherever written: refused when it names nothing (R23 3)
@@ -198,7 +198,7 @@ fn declared_absent(item: &Form) -> Result<Option<&'static vocab::Entry>, Refused
 ///
 /// # Errors
 ///
-/// [`Refused`] — `invalid-description` — for the first cause of §8's first row the provider meets, in the order
+/// [`Refused`] — `invalid-description` — for the first cause of §8's `invalid-description` rows the provider meets, in the order
 /// rule 1 judges them before anything else.
 pub fn read(decl: &Form) -> Result<Provider, Refused> {
     let name = decl

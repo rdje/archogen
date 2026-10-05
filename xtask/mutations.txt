@@ -1488,9 +1488,9 @@ test -p eadl-resolve
 expect killed
 why M3.1.1 round 28 remark 3: a clause inside an offer at any depth is refused, read by nothing; admitted one level down, `(offers (foo (requires (tick-unit ns) (tick-unit us))))` hid a contradiction (§1, §8).
 from
-            ) || form.items().iter().any(holds_clause))
+                || form.items().iter().any(holds_clause))
 to
-            ) || false)
+                || false)
 end
 
 mutation model-platform-stray-admitted
@@ -1573,4 +1573,84 @@ from
             implies: &["run"],
 to
             implies: &[],
+end
+
+mutation model-offer-clause-words-narrowed
+file crates/eadl-resolve/src/model/provider.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 30: an item of `offers` holds no clause, any a kind declares; with the relation's five alone, `(offers (refines soc.abstract))` read as an offer and the refinement went unchecked (§1, §8; `ROADMAP.md` §5.1.1).
+from
+            && (form.head().is_some_and(|h| CLAUSE_WORDS.contains(&h))
+to
+            && (form.head().is_some_and(|h| matches!(h, "requires" | "needs" | "uses" | "offers" | "absent"))
+end
+
+mutation model-constraint-clause-words-narrowed
+file crates/eadl-resolve/src/model/requirement.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 30: inside `requires` every clause word but `needs`, `uses` and `requires` stands where a constraint does; with `offers` and `absent` alone, `(requires (refines soc.abstract))` was `unsupported-profile` (§1, §8).
+from
+                CLAUSE_WORDS.contains(&h) && !matches!(h, "needs" | "uses" | "requires")
+to
+                matches!(h, "offers" | "absent")
+end
+
+mutation model-clause-words-drifted
+file crates/eadl-resolve/src/model/requirement.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 30: the clause words are every clause a kind of `/1` declares, pinned to `docs/semantics/kinds/`; one dropped, the model's grammar drifted from the kinds unseen (§1).
+from
+        "period",
+        "platform",
+to
+        "platform",
+end
+
+mutation model-enumeration-any-symbol
+file crates/eadl-resolve/src/model/value.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 30 remark 2: a value outside its enumeration is refused wherever written; admitted, `(tick-unit ps)` met `(tick-unit ps)` (§2, §8).
+from
+                [Form::Symbol { name, .. }] if alternatives.contains(&name.as_str()) => {
+                    Ok(Value::Enum(name.clone()))
+to
+                [Form::Symbol { name, .. }] => {
+                    Ok(Value::Enum(name.clone()))
+end
+
+mutation model-set-repetition-admitted
+file crates/eadl-resolve/src/model/value.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 30 remark 2: a set is written without repetition; admitted, `(available-in-state run run)` read as one member (§2's set row).
+from
+                            if !set.insert(name.clone()) {
+to
+                            if !set.insert(name.clone()) && false {
+end
+
+mutation model-count-any-unit
+file crates/eadl-resolve/src/model/value.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 30 remark 2: a count's unit is dimensionless or absent; any admitted, `(queue-capacity 8 bit)` read as 8 (§2's count row).
+from
+                    Some(u) if u.dimension == Dimension::Dimensionless => Ok(i128::from(*value)),
+to
+                    Some(_) => Ok(i128::from(*value)),
+end
+
+mutation model-count-negative
+file crates/eadl-resolve/src/model/value.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 30 remark 2: a count is non-negative; `-1` admitted, `(counter-modulus -5)` read (§2's count row).
+from
+            [Form::Integer { value, .. }] if *value >= 0 => Ok(i128::from(*value)),
+to
+            [Form::Integer { value, .. }] => Ok(i128::from(*value)),
 end

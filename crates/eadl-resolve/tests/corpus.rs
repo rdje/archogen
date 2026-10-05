@@ -792,6 +792,30 @@ const CASES: &[Case] = &[
         Judged(Unsupported),
     ),
     Case(
+        "R30 1 a refines clause written as an item of offers",
+        "(offers (refines soc.abstract) (counter-width 16 bit))",
+        "(counter-width 16 bit)",
+        ProviderInvalid,
+    ),
+    Case(
+        "R30 1 a refines clause inside an item of offers",
+        "(offers (region r (refines soc.abstract)) (counter-width 16 bit))",
+        "(counter-width 16 bit)",
+        ProviderInvalid,
+    ),
+    Case(
+        "R30 1 a platform clause written as an item of offers",
+        "(offers (platform soc.p) (uart true))",
+        "(uart true)",
+        ProviderInvalid,
+    ),
+    Case(
+        "R30 remark 4 a group whose part is no sub-fact of its head",
+        "(offers (absolute-deadline true))",
+        "(absolute-deadline (supported-horizon (at-least 10 s)) (uart true))",
+        RequirementInvalid,
+    ),
+    Case(
         "R24 2 one unit compared as written, where the base unit's arithmetic overflows",
         "(offers (delivery-bound 0.0000000000000000000000000000001 ns))",
         "(delivery-bound (at-most 0.0000000000000000000000000000002 ns))",
@@ -1176,11 +1200,15 @@ fn a_platform_clause_holds_needs_uses_and_requires_alone() {
         .map(|c| c.len()),
         Ok(2)
     );
-    // An offer or an absence inside `requires`, at any depth, stands where a constraint does.
+    // An offer or an absence inside `requires`, at any depth, stands where a constraint does; R30 1: so does every
+    // clause word but `needs`, `uses` and `requires`.
     for text in [
         "(requires (offers (or-through-mediation allowed)))",
         "(requires (absent debug-port))",
         "(requires (ordering (before a b) (offers uart)))",
+        "(requires (refines soc.abstract))",
+        "(requires (platform soc.p))",
+        "(requires (ordering (before a b) (period 10 ms)))",
     ] {
         assert!(matches!(clause(text), Err(NotJudged::Invalid(_))), "{text}");
     }
@@ -1197,6 +1225,10 @@ fn a_clause_written_as_an_offer_is_refused() {
         // R28 3: inside an offer, at any depth.
         "(defservice s (requires (uart true)) (offers (foo (requires (tick-unit ns) (tick-unit us)))))",
         "(defblock b (offers (foo (bar (needs uart)))))",
+        // R30 1: every clause a kind declares, `refines` and `platform` among them.
+        "(defservice s (requires (uart true)) (offers (refines soc.abstract)))",
+        "(defblock b (offers (uart (absent debug-port))))",
+        "(defblock b (offers (region r (task t))))",
     ] {
         assert!(read_service(&forms(text)[0]).is_err(), "{text}");
     }

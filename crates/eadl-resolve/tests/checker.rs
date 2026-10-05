@@ -40,7 +40,8 @@ use eadl_model::quantity::{unit, Quantity};
 use eadl_model::{Dimension, Rational};
 use eadl_resolve::model::{
     judge, read_clause, read_constraint, read_needs, read_provider, read_service, read_side,
-    side_name_lists, Direction, Domain, NotJudged, Requirement, Role, Value, Verdict, VOCABULARY,
+    side_name_lists, Direction, Domain, NotJudged, Requirement, Role, Value, Verdict, CLAUSE_WORDS,
+    VOCABULARY,
 };
 
 fn forms(text: &str) -> Vec<Form> {
@@ -370,6 +371,27 @@ fn every_written_form_of_one_offer_has_exactly_one_reading() {
                 !matches!(v, Verdict::Statement),
                 "{offer}: presence judged as a statement"
             );
+        }
+        // R30 remark 3: a direction's name as a wrapper, and an abstract bound against the fact's direction, are
+        // refused in an offer (§1.1, §8).
+        let own = match e.direction {
+            Direction::AtLeast => Some("at-least"),
+            Direction::AtMost => Some("at-most"),
+            _ => None,
+        };
+        for v in samples(e.domain) {
+            for wrapper in ["includes", "within", "exact"] {
+                let offer = format!("(offers ({} ({wrapper} {v})))", e.name);
+                assert!(provider(&offer).is_err(), "{offer}");
+                readings += 1;
+            }
+            for bound in ["at-least", "at-most"] {
+                if Some(bound) != own {
+                    let offer = format!("(offers ({} ({bound} {v})))", e.name);
+                    assert!(provider(&offer).is_err(), "{offer}");
+                    readings += 1;
+                }
+            }
         }
         // R23 remark 7: one offer written three ways — a value, the value under `exactly`, the value twice — is read
         // or refused as one, and judged by presence and by every sampled constraint to one verdict.
@@ -1189,6 +1211,7 @@ fn the_relation_reads_every_needs_and_uses_presence_reads() {
         "(platform (uses soc.p) (absent X))",
         "(platform (tick-unit ns) X)",
         "(requires (offers X))",
+        "(requires (refines X))",
     ];
     let places = [
         "X",
@@ -1209,6 +1232,7 @@ fn the_relation_reads_every_needs_and_uses_presence_reads() {
         refused[1],
         refused[2],
         refused[3],
+        refused[4],
     ];
     let mut read = 0usize;
     for place in places {
@@ -1389,6 +1413,102 @@ fn the_vocabulary_is_the_record_s_table_row_by_row() {
         names.len(),
         rules.len()
     );
+}
+
+#[test]
+fn the_clause_words_are_every_clause_a_kind_declares() {
+    // R30 1: §1's grammar calls a clause any name a kind of `/1` declares with `clause`; the model's list is pinned to
+    // the kind modules themselves, so a clause a kind gains is refused inside an offer without a word changed here.
+    let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../../docs/semantics/kinds");
+    fn clauses(form: &Form, out: &mut BTreeSet<String>) {
+        if form.head() == Some("clause") {
+            if let Some(name) = form.items().get(1).and_then(Form::as_symbol) {
+                out.insert(name.to_string());
+            }
+        }
+        for item in form.items() {
+            if matches!(item, Form::List { .. }) {
+                clauses(item, out);
+            }
+        }
+    }
+    let mut declared = BTreeSet::new();
+    for entry in std::fs::read_dir(dir).expect("the kind modules") {
+        let path = entry.expect("an entry").path();
+        if path.extension().is_some_and(|x| x == "eadl") {
+            let text = std::fs::read_to_string(&path).expect("a kind module");
+            for f in forms(&text) {
+                clauses(&f, &mut declared);
+            }
+        }
+    }
+    let model: BTreeSet<String> = CLAUSE_WORDS.iter().map(|w| (*w).to_string()).collect();
+    assert_eq!(
+        model, declared,
+        "the model's clause words against the kind modules"
+    );
+    println!("pinned {} clause words to the kind modules", declared.len());
+}
+
+#[test]
+fn a_value_outside_its_domain_is_refused_wherever_written() {
+    // R30 remark 2: a value past each domain's edge — an alternative the entry does not list, a member twice, a
+    // negative or fractional count, a count in a unit, a power past 126, another dimension, an interval turned round —
+    // refused as an offer, under `exactly`, and as a requirement (§2, §8).
+    let mut refused = 0usize;
+    for e in VOCABULARY.iter().filter(|e| e.role == Role::Guarantee) {
+        let outside: Vec<String> = match e.domain {
+            Domain::Boolean | Domain::Group(_) => {
+                vec!["maybe".into(), "1".into(), "true false".into()]
+            }
+            Domain::Count => vec![
+                "-1".into(),
+                "1.5".into(),
+                "8 bit".into(),
+                "(pow2 -1)".into(),
+                "(pow2 127)".into(),
+            ],
+            Domain::Quantity(d) => {
+                let other = if d == Dimension::Time { "8 bit" } else { "8 s" };
+                vec![other.into(), "5".into(), "zzz".into()]
+            }
+            Domain::Interval(_) => vec![
+                "(range 10 s 20 s)".into(),
+                "(range 200 MHz 1 MHz)".into(),
+                "8 s".into(),
+            ],
+            Domain::Enumeration { alternatives, .. } => vec![
+                "zzz".into(),
+                format!("{} {}", alternatives[0], alternatives[1]),
+            ],
+            Domain::Set(members) => vec![
+                "zzz".into(),
+                format!("{} zzz", members[0]),
+                format!("{} {}", members[0], members[0]),
+            ],
+        };
+        for v in outside {
+            for offer in [
+                format!("(offers ({} {v}))", e.name),
+                format!("(offers ({} (exactly {v})))", e.name),
+            ] {
+                assert!(provider(&offer).is_err(), "{offer}");
+                refused += 1;
+            }
+            for req in [
+                format!("({} {v})", e.name),
+                format!("({} (exactly {v}))", e.name),
+            ] {
+                assert!(
+                    matches!(constraint(&req), Err(NotJudged::Invalid(_))),
+                    "{req}: {:?}",
+                    constraint(&req).map(|_| ())
+                );
+                refused += 1;
+            }
+        }
+    }
+    println!("refused {refused} values outside their domain");
 }
 
 #[test]
