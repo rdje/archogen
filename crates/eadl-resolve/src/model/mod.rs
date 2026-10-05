@@ -24,7 +24,7 @@ pub use judge::{clause_satisfied, judge, outcome, Outcome, Verdict};
 pub use provider::{read as read_provider, read_service, Provider, Refused, Stated};
 pub use requirement::{
     check_clause, read_clause, read_constraint, read_declaration_name, read_needs, read_side,
-    read_uses, NotJudged, Requirement,
+    read_uses, side_name_lists, NotJudged, Requirement,
 };
 pub use value::{Overflow, Value};
 pub use vocab::{Direction, Domain, Entry, Role, Rule, VOCABULARY};

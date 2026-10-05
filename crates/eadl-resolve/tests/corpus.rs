@@ -925,6 +925,11 @@ fn a_service_is_refused_only_where_rule_6_and_its_name_refuse() {
         "(defservice s (offers (or-through-mediation allowed)))",
         "(defservice s (absent or-through-mediation))",
         "(defservice uart (offers (tick-rate 10 MHz)))",
+        // R23 2: a value is read as §8 reads it wherever written, a service's offers included.
+        "(defservice s (requires (uart true)) (offers (counter-modulus 0)))",
+        "(defservice s (offers (counter-width 1.5 bit)))",
+        "(defservice s (absent (available-in-state sleep)))",
+        "(defservice s (offers 5))",
     ] {
         assert!(read_service(&forms(text)[0]).is_err(), "{text}");
     }
@@ -932,7 +937,6 @@ fn a_service_is_refused_only_where_rule_6_and_its_name_refuse() {
         "(defservice s (requires (uart true)) (offers (tick-rate 10 MHz) (tick-rate 20 MHz)))",
         "(defservice s (offers (counter-width 32 bit) (counter-width (at-least 16 bit))))",
         "(defservice s (offers (counter-modulus 65536) (wrap-behavior saturating)))",
-        "(defservice s (absent (available-in-state sleep)))",
     ] {
         assert_eq!(read_service(&forms(text)[0]), Ok(()), "{text}");
     }
@@ -962,4 +966,43 @@ fn an_item_with_no_name_at_its_head_is_refused_and_ranked() {
         ),
         Err(NotJudged::Invalid(_))
     ));
+}
+
+#[test]
+fn every_needs_and_uses_presence_reads_is_read() {
+    // R23 1: a system's `platform` clause, and a `uses` nested in a constraint, name facts presence reads.
+    let side = |t: &str| read_side(&forms(t)[0]);
+    for text in [
+        "(defsystem s (requires (uses time.monotonic)) (platform (uses soc.p observation-coherent)))",
+        "(defsystem s (requires (uses time.monotonic)) (platform (uses soc.p) (needs (tick-unit us))))",
+        "(defservice s (requires (needs tick-rate) (ordering (uses observation-coherent))))",
+        "(defsystem s (task t (period 10 ms) (needs uart)) (requires (uart false)))",
+    ] {
+        assert!(matches!(side(text), Err(NotJudged::Invalid(_))), "{text}");
+    }
+    assert_eq!(
+        side("(defsystem s (platform (uses soc.p) (needs counter-width)))").map(|c| c.len()),
+        Ok(1)
+    );
+}
+
+#[test]
+fn an_operand_or_an_item_that_names_nothing_is_refused() {
+    // R23 3: an operand of `needs` or `uses`, an item of `offers` or `absent`, that is no name nor a list headed by one.
+    for text in [
+        "(requires (needs 5))",
+        "(requires (needs \"x\") (tick-unit ns))",
+        "(requires (uses 7))",
+        "(requires (needs ((tick-unit us))))",
+    ] {
+        assert!(matches!(clause(text), Err(NotJudged::Invalid(_))), "{text}");
+    }
+    for text in [
+        "(defblock b (offers 5))",
+        "(defblock b (offers \"x\" (tick-rate 10 MHz)))",
+        "(defblock b (offers (7 bit)))",
+        "(defblock b (absent 3))",
+    ] {
+        assert!(read_provider(&forms(text)[0]).is_err(), "{text}");
+    }
 }

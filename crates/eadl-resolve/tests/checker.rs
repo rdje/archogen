@@ -25,7 +25,10 @@
 //!   a contradiction split across a declaration's clauses or beside its `needs` judged as in one clause (R21 1, 2);
 //! - **every item of `requires` has its one code**: over a grammar of small forms, the code the record's shape rule
 //!   gives, never "not a fact" (R22 1);
-//! - **a group nested and the same group flat agree**: the head ranked among its parts (R22 4).
+//! - **a group nested and the same group flat agree**: the head ranked among its parts (R22 4);
+//! - **the relation reads every `needs` and `uses` presence reads**: presence's own closure is the oracle (R23 1);
+//! - **every operand and item names something**: a `needs` or `uses` operand, an `offers` or `absent` item, that names
+//!   nothing is refused (R23 3).
 //!
 //! Each property also has a catalogued mutation in `xtask/mutations.txt` that breaks the rule it guards, and this
 //! file must kill it.
@@ -36,8 +39,8 @@ use eadl_front::{read, Form, SourceMap};
 use eadl_model::quantity::{unit, Quantity};
 use eadl_model::{Dimension, Rational};
 use eadl_resolve::model::{
-    judge, read_clause, read_constraint, read_needs, read_provider, read_side, Direction, Domain,
-    NotJudged, Requirement, Role, Value, Verdict, VOCABULARY,
+    judge, read_clause, read_constraint, read_needs, read_provider, read_service, read_side,
+    side_name_lists, Direction, Domain, NotJudged, Requirement, Role, Value, Verdict, VOCABULARY,
 };
 
 fn forms(text: &str) -> Vec<Form> {
@@ -88,12 +91,18 @@ fn samples(domain: Domain) -> Vec<String> {
             "60 s",
             "3600 s",
         ]),
-        Domain::Quantity(Dimension::Frequency) => {
-            s(&["1 Hz", "18 Hz", "1 MHz", "10 MHz", "10000 kHz", "20 MHz"])
-        }
-        Domain::Quantity(Dimension::Information) => {
-            s(&["8 bit", "16 bit", "32 bit", "4 byte", "64 bit"])
-        }
+        Domain::Quantity(Dimension::Frequency) => s(&[
+            "1 Hz",
+            "18 Hz",
+            "1 MHz",
+            "10 MHz",
+            "10000 kHz",
+            "20 MHz",
+            "1 GHz",
+        ]),
+        Domain::Quantity(Dimension::Information) => s(&[
+            "8 bit", "16 bit", "32 bit", "4 byte", "64 bit", "0.5 byte", "1 KiB",
+        ]),
         Domain::Quantity(Dimension::Dimensionless) => s(&["1 tick", "8 tick"]),
         Domain::Interval(_) => s(&[
             "(range 1 MHz 200 MHz)",
@@ -317,7 +326,7 @@ fn no_stronger_precondition_passes_as_a_capability() {
 fn every_written_form_of_one_offer_has_exactly_one_reading() {
     // Bare, valued, `exactly`, bound, absent, twice, beside `false`: each provider is refused or read, and each
     // requirement judged to exactly one verdict — the model is total over the universe.
-    let mut readings = 0usize;
+    let (mut readings, mut spelt) = (0usize, 0usize);
     for e in VOCABULARY.iter() {
         let mut offers = vec![
             format!("(offers {})", e.name),
@@ -359,8 +368,40 @@ fn every_written_form_of_one_offer_has_exactly_one_reading() {
                 "{offer}: presence judged as a statement"
             );
         }
+        // R23 remark 7: one offer written three ways — a value, the value under `exactly`, the value twice — is read
+        // or refused as one, and judged by presence and by every sampled constraint to one verdict.
+        if e.role == Role::Statement {
+            continue;
+        }
+        let mut wanted = vec![read_needs(&forms(e.name)[0]).expect("a guarantee fact is needed")];
+        wanted.extend(
+            samples(e.domain)
+                .iter()
+                .filter_map(|v| constraint(&format!("({} {v})", e.name)).ok()),
+        );
+        for v in samples(e.domain) {
+            let spellings = [
+                format!("(offers ({} {v}))", e.name),
+                format!("(offers ({} (exactly {v})))", e.name),
+                format!("(offers ({} {v}) ({} {v}))", e.name, e.name),
+            ];
+            let read: Vec<_> = spellings.iter().map(|o| provider(o).ok()).collect();
+            assert!(
+                read.iter().all(Option::is_some) || read.iter().all(Option::is_none),
+                "{spellings:?}: read and refused at once"
+            );
+            let Some(first) = &read[0] else { continue };
+            for r in &wanted {
+                let one = judge(first, r);
+                for (o, p) in spellings.iter().zip(&read).skip(1) {
+                    let p = p.as_ref().expect("read above");
+                    assert_eq!(judge(p, r), one, "{o} against {r:?}");
+                    spelt += 1;
+                }
+            }
+        }
     }
-    println!("read {readings} written offers");
+    println!("read {readings} written offers; judged {spelt} spellings of one offer as it");
 }
 
 /// The largest number of ticks two reads `delta` apart can be separated by, over every phase — computed at the
@@ -1045,4 +1086,89 @@ fn a_group_nested_and_the_same_group_flat_agree() {
         }
     }
     println!("judged {providers} providers against a group nested and flat");
+}
+
+#[test]
+fn the_relation_reads_every_needs_and_uses_presence_reads() {
+    // R23 1: presence's own reader is the oracle, so no position it reads can go unread by the relation.
+    let places = [
+        "X",
+        "(requires X)",
+        "(requires (tick-unit ns) X)",
+        "(requires (ordering (before a b) X))",
+        "(platform X)",
+        "(platform (uses soc.p) X)",
+        "(task t (period 10 ms) X)",
+        "(somewhere (deeper X))",
+        "(offers X)",
+        "(absent X)",
+        "(refines X)",
+        "((X))",
+    ];
+    let mut read = 0usize;
+    for list in ["(needs uart)", "(uses uart)"] {
+        for place in places {
+            let decl = format!("(defservice s {})", place.replace('X', list));
+            let text = format!("(defsystem sys (requires (uses s)))\n{decl}");
+            let all = forms(&text);
+            let mut map = eadl_model::presence::FactMap::new();
+            for f in &all {
+                map.collect(f);
+            }
+            let presence_reads = map.closure().contains("uart");
+            let model_reads = side_name_lists(&all[1]).iter().any(|l| {
+                l.items()
+                    .iter()
+                    .skip(1)
+                    .any(|o| o.as_symbol() == Some("uart"))
+            });
+            assert_eq!(model_reads, presence_reads, "{list} at {place}");
+            read += 1;
+        }
+    }
+    println!("read {read} placements of a fact against presence's closure");
+}
+
+#[test]
+fn every_operand_and_item_names_something() {
+    // R23 3: the grammar of R22 1, one level down: operands of `needs` and `uses`, items of `offers` and `absent`.
+    let nothing = ["5", "\"t\"", "()", "(5 6)", "((uart))"];
+    let mut read = 0usize;
+    for n in nothing {
+        for clause in [
+            format!("(requires (needs {n}))"),
+            format!("(requires (uses {n}))"),
+        ] {
+            assert_eq!(
+                code(&read_clause(&forms(&clause)[0])),
+                "invalid-description",
+                "{clause}"
+            );
+            read += 1;
+        }
+        for decl in [
+            format!("(defblock b (offers {n}))"),
+            format!("(defblock b (absent {n}))"),
+        ] {
+            assert!(read_provider(&forms(&decl)[0]).is_err(), "{decl}");
+            read += 1;
+        }
+        for decl in [
+            format!("(defservice s (offers {n}))"),
+            format!("(defservice s (absent {n}))"),
+        ] {
+            assert!(read_service(&forms(&decl)[0]).is_err(), "{decl}");
+            read += 1;
+        }
+    }
+    for (clause, want) in [
+        ("(requires (needs uart))", "read"),
+        ("(requires (needs time.monotonic))", "read"),
+        ("(requires (uses time.monotonic))", "read"),
+        ("(requires (uses uart))", "invalid-description"),
+    ] {
+        assert_eq!(code(&read_clause(&forms(clause)[0])), want, "{clause}");
+        read += 1;
+    }
+    println!("read {read} operands and items by what they name");
 }

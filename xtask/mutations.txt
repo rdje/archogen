@@ -1111,9 +1111,11 @@ test -p eadl-resolve
 expect killed
 why M3.1.1 round 18: `absent` names a fact; a value inside it read as the whole fact absent, an infeasibility the description never stated (§8).
 from
-                            if matches!(item, Form::List { .. }) {
+        if matches!(item, Form::List { .. }) {
+            return refuse(e.name, "a list inside `absent` naming a vocabulary fact");
 to
-                            if false {
+        if false {
+            return refuse(e.name, "a list inside `absent` naming a vocabulary fact");
 end
 
 mutation model-clause-uses-read-as-constraint
@@ -1155,20 +1157,20 @@ test -p eadl-resolve
 expect killed
 why M3.1.1 round 21: a side is every `requires` clause of a declaration; read one clause at a time, a contradiction split across two passed and `SR-H8` let the adapter through (rules 5, 6).
 from
-                Some("requires") => items.extend(c.items().iter().skip(1)),
+            if c.head() == Some("requires") {
 to
-                Some("requires") if items.is_empty() => items.extend(c.items().iter().skip(1)),
+            if c.head() == Some("requires") && items.is_empty() {
 end
 
 mutation model-side-needs-ignored
 file crates/eadl-resolve/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
-why M3.1.1 round 21: a side holds the `needs` a declaration writes at its own level; ignored, `(requires (uart false))` beside `(needs uart)` passed (rule 3, rule 5).
+why M3.1.1 round 21: a side holds the `needs` its declaration writes; ignored, `(requires (uart false))` beside `(needs uart)` passed (rule 3, rule 5).
 from
-                Some("needs") => items.push(c),
+            Some("needs" | "uses") => out.push(form),
 to
-                Some("needs-never-read") => items.push(c),
+            Some("uses") => out.push(form),
 end
 
 mutation model-bare-name-unread
@@ -1210,20 +1212,22 @@ test -p eadl-resolve
 expect killed
 why M3.1.1 round 22: a side reads its declaration's own `uses`, an operand naming a fact refused (§1).
 from
-                Some("uses") => items.push(c),
+            Some("needs" | "uses") => out.push(form),
 to
-                Some("uses-never-read") => items.push(c),
+            Some("needs") => out.push(form),
 end
 
 mutation model-service-statement-admitted
 file crates/eadl-resolve/src/model/provider.rs
 test -p eadl-resolve
 expect killed
-why M3.1.1 round 22: a service is refused where rule 6 refuses, an offer or declared absence of a statement fact (§3 rule 6).
+why M3.1.1 round 22: a service is refused where rule 6 refuses, an offer of a statement fact (§3 rule 6); the provider and the service read an offer through one function since round 23.
 from
-                if vocab::entry(head).is_some_and(|e| e.role == Role::Statement) {
+        if e.role == Role::Statement {
+            return refuse(e.name, "an offer of a statement fact (§3 rule 6)");
 to
-                if false {
+        if false {
+            return refuse(e.name, "an offer of a statement fact (§3 rule 6)");
 end
 
 mutation model-same-unit-compared-in-base
@@ -1246,4 +1250,59 @@ from
                 if clash {
 to
                 if false {
+end
+
+mutation model-platform-name-lists-unread
+file crates/eadl-resolve/src/model/requirement.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 23: a side reads every `needs` and `uses` presence reads, a system's `platform` clause among them; skipped, a fact entered the closure the relation never judged (§1, §3 rules 3, 5).
+from
+            if !matches!(c.head(), Some("offers" | "absent" | "refines")) {
+to
+            if !matches!(c.head(), Some("offers" | "absent" | "refines" | "platform")) {
+end
+
+mutation model-nested-name-lists-unread
+file crates/eadl-resolve/src/model/requirement.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 23: a `needs` or `uses` at any depth of a clause is read, as presence reads it; read one level down only, a nested operand naming a fact passed (§1, §3 rule 3).
+from
+                        name_lists(item, out);
+to
+                        if matches!(item.head(), Some("needs" | "uses")) { out.push(item); }
+end
+
+mutation model-needs-operand-naming-nothing-dropped
+file crates/eadl-resolve/src/model/requirement.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 23: an operand of `needs` that names nothing is `invalid-description`; read as no fact, `(needs 5)` vanished (§1, §8).
+from
+            return invalid(NO_NAME_OPERAND);
+to
+            return Err(NotJudged::NotAFact);
+end
+
+mutation model-offer-naming-nothing-dropped
+file crates/eadl-resolve/src/model/provider.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 23: an item of `offers` that names nothing is `invalid-description`; read as no fact, `(offers 5)` was a provider offering nothing (§8).
+from
+            return refuse("offers", "an item of `offers` that names nothing — a number, a string, `()`, a list headed by none");
+to
+            return Ok(None);
+end
+
+mutation model-service-offer-unread
+file crates/eadl-resolve/src/model/provider.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 23: a service's offers are read as §8 reads a value wherever written; unread, `(counter-modulus 0)` in a service passed (§1, §8).
+from
+                        offered(item)?;
+to
+                        let _ = offered(item);
 end

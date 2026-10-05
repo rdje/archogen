@@ -528,3 +528,20 @@ it stands". Defects per round: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6
 | T7 — `SR-H16` and `SR-H18` judged an offered and a derived value two ways | no | both: one rule for each, both copies |
 | T8 — contradictions across two facts not refused | no | rule 5: stated, every provider refusing them |
 | T9 — a group's parts read first-error-wins | no | read and ranked; unreachable in `/1`, so no mutation |
+
+**Round 23**, `2026-10-05`: a new context that had not read rounds 1 to 22 probed every case of `ROADMAP.md` §5.2,
+ran 625 combinations of modulus, rate, wrap and horizon states against its own oracle written from rule 1 and §4
+alone, read 299 sides of the tracked descriptions and measured `archogen check` beside the model; the relation's
+values, directions and derivations held. Its three defects each came with a reproducer, and each landed first as a
+test failing on the model as the round found it. There were 7 findings, 3 of them defects, and the verdict was "not
+acceptable as it stands". Defects per round: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2, 2, 2, 3, 3, 3.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| U1 — a system's `platform` clause, and a `uses` nested in a constraint, named facts presence put in the closure and no rule of the relation read: `(platform (uses soc.p observation-coherent))` accepted | yes | §1 names every position a side holds, those presence reads, a system's tasks among them; rules 3 and 5 read them; a property takes presence's own reader as its oracle over every placement; mutations `model-platform-name-lists-unread`, `model-nested-name-lists-unread` |
+| U2 — §1 refused a service "only" by rule 6 and the name rule, §8 reads a value "wherever written": `(offers (counter-modulus 0))` and `(absent (available-in-state sleep))` passed on a service, the second read by presence as the whole fact absent | yes | §8's reading kept, by `ROADMAP.md` §5.5: a service is refused for an item's written form, never for a provider's causes; one reader of an offer and of an absence for both; mutation `model-service-offer-unread` |
+| U3 — an operand of `needs` or `uses`, an item of `offers` or `absent`, naming nothing — `(needs 5)`, `(uses 7)`, `(offers 5)` — had no outcome | yes | §8's first row, R22 1's class closed one level down; a grammar property over `read_clause`, `read_provider` and `read_service`; mutations `model-needs-operand-naming-nothing-dropped`, `model-offer-naming-nothing-dropped` |
+| U4 — no spelling of a negative requirement that a declared absence meets | no | §10: refused or unmet, never wrongly met; a spelling waits for a description that needs one |
+| U5 — §1's side predated R22 6's `uses` | no | §1 restated: a `uses` makes a side, and a system's side holds its tasks' |
+| U6 — `SR-H17`'s scope across two clauses of one side | no | stated, both copies |
+| U7 — the checker's universe: no property over positions or operands; no `GHz`, `KiB` or fractional `byte`; the totality property's name claimed more than it held | no | the two properties above; the samples widened; the totality property also holds the spellings of one offer to one verdict |

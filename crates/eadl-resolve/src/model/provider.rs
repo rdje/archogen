@@ -129,6 +129,49 @@ fn written(v: Value) -> Written {
     }
 }
 
+/// The name an item of `offers` or `absent` writes — itself, or a list's head — or `None` when it names nothing.
+fn item_name(item: &Form) -> Option<&str> {
+    match item {
+        Form::Symbol { name, .. } => Some(name.as_str()),
+        _ => item.head(),
+    }
+}
+
+/// One item of `offers`, read and judged as §8 judges a value wherever written: refused when it names nothing (R23 3)
+/// or offers a statement fact (§3 rule 6); `None` for a name the vocabulary does not declare, which has no domain to
+/// contradict (§5; R1 A6).
+fn offered(item: &Form) -> Result<Option<(&'static vocab::Entry, Written)>, Refused> {
+    let Some(head) = item_name(item) else {
+        return refuse("offers", "an item of `offers` that names nothing — a number, a string, `()`, a list headed by none");
+    };
+    let Some(e) = vocab::entry(head) else {
+        return Ok(None);
+    };
+    if e.role == Role::Statement {
+        return refuse(e.name, "an offer of a statement fact (§3 rule 6)");
+    }
+    classify(e, item).map(|w| Some((e, w)))
+}
+
+/// One item of `absent`: refused when it names nothing (R23 3), declares a statement fact absent — the requiring
+/// side's word alone (§3 rule 6; R17 R4) — or writes a value, which would read as absence of the whole fact, as a list
+/// inside `needs` would (§8; R18 2).
+fn declared_absent(item: &Form) -> Result<Option<&'static vocab::Entry>, Refused> {
+    let Some(head) = item_name(item) else {
+        return refuse("absent", "an item of `absent` that names nothing");
+    };
+    let Some(e) = vocab::entry(head) else {
+        return Ok(None);
+    };
+    if e.role == Role::Statement {
+        return refuse(e.name, "a statement fact declared absent");
+    }
+    if matches!(item, Form::List { .. }) {
+        return refuse(e.name, "a list inside `absent` naming a vocabulary fact");
+    }
+    Ok(Some(e))
+}
+
 /// Read a block or platform declaration, refusing what record §8 refuses of an offer.
 ///
 /// # Errors
@@ -152,39 +195,14 @@ pub fn read(decl: &Form) -> Result<Provider, Refused> {
         match clause.head() {
             Some("offers") => {
                 for item in &clause.items()[1..] {
-                    let head = match item {
-                        Form::Symbol { name, .. } => name.as_str(),
-                        _ => item.head().unwrap_or(""),
-                    };
-                    let Some(e) = vocab::entry(head) else {
-                        continue; // an undeclared fact has no domain to contradict (§5; R1 A6)
-                    };
-                    if e.role == Role::Statement {
-                        return refuse(e.name, "an offer of a statement fact (§3 rule 6)");
+                    if let Some((e, w)) = offered(item)? {
+                        written.entry(e.name.to_string()).or_default().push(w);
                     }
-                    let w = classify(e, item)?;
-                    written.entry(e.name.to_string()).or_default().push(w);
                 }
             }
             Some("absent") => {
                 for item in &clause.items()[1..] {
-                    let head = match item {
-                        Form::Symbol { name, .. } => name.as_str(),
-                        _ => item.head().unwrap_or(""),
-                    };
-                    if let Some(e) = vocab::entry(head) {
-                        if e.role == Role::Statement {
-                            // A statement is the requiring side's word alone (§3 rule 6; R17 R4).
-                            return refuse(e.name, "a statement fact declared absent");
-                        }
-                        if matches!(item, Form::List { .. }) {
-                            // `absent` names a fact; a value there would read as absence of the whole fact, so
-                            // `(absent (available-in-state sleep))` is refused, as a list inside `needs` is (§8; R18 2).
-                            return refuse(
-                                e.name,
-                                "a list inside `absent` naming a vocabulary fact",
-                            );
-                        }
+                    if let Some(e) = declared_absent(item)? {
                         absent.insert(e.name.to_string());
                     }
                 }
@@ -299,8 +317,10 @@ pub fn read(decl: &Form) -> Result<Provider, Refused> {
 }
 
 /// Read a service's `offers` and `absent`. A service is no provider: its offers are judged against no requirement in
-/// `/1` (record §1; R3 C13) and its `absent` is presence's (R11 K14), so it is refused only where rule 6 refuses — an
-/// offer or a declared absence of a statement fact — and where its name is a vocabulary fact (§1.1; R16 1, R22 2).
+/// `/1` (record §1; R3 C13), so none of a provider's causes across offers — two values, a bound beside a value, a
+/// derived fact beside its grounds — applies. Each item is still read as §8 reads a value wherever written: refused
+/// when it names nothing, offers or declares absent a statement fact, writes a value outside its domain or a list
+/// inside `absent`; and the service is refused when its name is a vocabulary fact (§1.1; R16 1, R22 2, R23 2).
 ///
 /// # Errors
 ///
@@ -315,20 +335,18 @@ pub fn read_service(decl: &Form) -> Result<(), Refused> {
         return refuse(name, "a declaration whose local name is a vocabulary fact");
     }
     for clause in decl.items().iter().skip(2) {
-        if !matches!(clause.head(), Some("offers" | "absent")) {
-            continue;
-        }
-        for item in &clause.items()[1..] {
-            let head = match item {
-                Form::Symbol { name, .. } => name.as_str(),
-                _ => item.head().unwrap_or(""),
-            };
-            if vocab::entry(head).is_some_and(|e| e.role == Role::Statement) {
-                return refuse(
-                    head,
-                    "a statement fact offered or declared absent, a service's included (§3 rule 6)",
-                );
+        match clause.head() {
+            Some("offers") => {
+                for item in &clause.items()[1..] {
+                    offered(item)?;
+                }
             }
+            Some("absent") => {
+                for item in &clause.items()[1..] {
+                    declared_absent(item)?;
+                }
+            }
+            _ => {}
         }
     }
     Ok(())
