@@ -560,3 +560,19 @@ stands". Defects per round: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2
 | V3 — a clause headed by no name was read where presence skips it | no | skipped as presence skips it, so the oracle holds over every placement; mutation `model-headless-clause-read` |
 | V4 — a service's two values of one fact accepted, though `ROADMAP.md` §5.3 rejects contradictory declarations | no | a service read as a provider is and judged against nothing; R22 2's narrower reading withdrawn; no tracked description changes outcome; mutation `model-service-read-apart` |
 | V5 — `SR-H16`'s reason for refusing across two blocks | no | the reason `M3.4` records covers two distinct blocks, both copies |
+
+**Round 25**, `2026-10-05`: a new context that had not read rounds 1 to 24 probed every case of `ROADMAP.md` §5.2,
+swept 3840 provider–requirement pairs of the five time facts in two orders, and read the model over 120 tracked
+descriptions; every model function matched its record sentence but for the defect and one remark. Its defect came
+with reproducers, which landed first as fixtures and a property failing on the model as the round found it. There
+were 6 findings, 1 of them a defect, and the verdict was "not acceptable as it stands". Defects per round: 7, 7, 8,
+3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2, 2, 2, 3, 3, 3, 2, 1.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| W1 — one value in two spellings judged by the one written first: against `(at-most 0.0000000000000000000000000000001 ns)`, `1 ms` beside `1000000 ns` was `unsupported-profile`, reversed `Refused`; 160 of 3840 swept pairs | yes | §5: compared in every spelling, decided by any comparison that does not overflow, `unsupported-profile` only when each does; eight fixtures, both orders; the order-free property holds one amount in three units against probes in every direction; mutation `model-first-spelling-only` |
+| W2 — `SR-H15` judged "wherever written", past §1's positions | no | "wherever §1 says a side holds one, and nowhere else", both copies |
+| W3 — a service's `absent` "presence's" beside "read as a provider's" | no | §1: judged by presence and no requirement, read and refused as a provider's |
+| W4 — a policy's side named like a fact read | no | `read_side` reads its declaration's name, whatever its kind; mutation `model-side-name-unread` |
+| W5 — a value whose own reading overflows never compared for two values | no | §5: it has no reading to compare, `unsupported-profile` beside one other value; two others that differ remain two values; no `/1` fact reaches it |
+| W6 — the order-free pool held no amount in two units of time | no | W1's property |

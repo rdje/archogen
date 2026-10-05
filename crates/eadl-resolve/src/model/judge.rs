@@ -8,8 +8,8 @@ use super::vocab::{self, Domain, Rule};
 /// Rule 1's outcome of a fact at one provider.
 #[derive(Debug, Clone)]
 pub enum Outcome {
-    /// The value the provider offers.
-    Valued(Value),
+    /// The value the provider offers, in every spelling written (`Stated::Valued`; R25 1).
+    Valued(Vec<Value>),
     /// Declared absent, or a required input of its derivation declared absent.
     Absent,
     /// Offered, or an input its rule reads offered, without a value.
@@ -64,11 +64,22 @@ pub fn outcome(p: &Provider, fact: &str) -> Result<Outcome, Overflow> {
     match rule {
         Rule::HorizonFromModulusAndRate => {
             let modulus = match outcome(p, "counter-modulus")? {
-                Outcome::Valued(Value::Count(m)) | Outcome::Derived(Value::Count(m)) => m,
+                Outcome::Valued(ms) => match ms.first() {
+                    Some(Value::Count(m)) => *m,
+                    _ => return Ok(Outcome::Undescribed),
+                },
+                Outcome::Derived(Value::Count(m)) => m,
                 _ => return Ok(Outcome::Undescribed),
             };
+            // The first spelling of the rate: two spellings in two units were compared in the base unit when the
+            // provider was read, else the fact is `Stated::Overflow`, so each converts to the one value and gives the
+            // one horizon (§5; R25 1).
             let rate = match outcome(p, "tick-rate")? {
-                Outcome::Valued(Value::Quantity(r)) | Outcome::Derived(Value::Quantity(r)) => r,
+                Outcome::Valued(rs) => match rs.first() {
+                    Some(Value::Quantity(r)) => *r,
+                    _ => return Ok(Outcome::Undescribed),
+                },
+                Outcome::Derived(Value::Quantity(r)) => r,
                 _ => return Ok(Outcome::Undescribed),
             };
             // `wrap-behavior` `modular` or undescribed; `saturating` beside a modulus was refused (§4).
@@ -96,6 +107,27 @@ pub enum Verdict {
     Unsupported,
 }
 
+/// Rule 3 over one value's spellings: decided by the first comparison whose arithmetic does not overflow — the value
+/// being one, every such comparison agrees — and `unsupported-profile` only when each overflows (§5; R25 1).
+fn verdict(
+    spellings: &[Value],
+    required: &Value,
+    direction: vocab::Direction,
+    order: &[&str],
+    implied: &[&str],
+) -> Verdict {
+    spellings
+        .iter()
+        .find_map(|v| satisfies(v, required, direction, order, implied).ok())
+        .map_or(Verdict::Unsupported, |holds| {
+            if holds {
+                Verdict::Satisfied
+            } else {
+                Verdict::Refused
+            }
+        })
+}
+
 fn of(outcome: Outcome) -> Verdict {
     match outcome {
         Outcome::Absent => Verdict::Absent,
@@ -114,9 +146,14 @@ pub fn judge(p: &Provider, r: &Requirement) -> Verdict {
             match outcome(p, fact) {
                 Err(Overflow) => Verdict::Unsupported,
                 // A boolean or a group's head named in `needs` is `(f true)`, so `false` satisfies no presence.
-                Ok(Outcome::Valued(Value::Bool(b)) | Outcome::Derived(Value::Bool(b)))
+                Ok(o @ (Outcome::Valued(_) | Outcome::Derived(_)))
                     if matches!(e.domain, Domain::Boolean | Domain::Group(_)) =>
                 {
+                    let b = match o {
+                        Outcome::Valued(vs) => matches!(vs.first(), Some(Value::Bool(true))),
+                        Outcome::Derived(v) => matches!(v, Value::Bool(true)),
+                        _ => false,
+                    };
                     if b {
                         Verdict::Satisfied
                     } else {
@@ -148,13 +185,8 @@ pub fn judge(p: &Provider, r: &Requirement) -> Verdict {
             let implied = e.implies;
             match outcome(p, fact) {
                 Err(Overflow) => Verdict::Unsupported,
-                Ok(Outcome::Valued(v) | Outcome::Derived(v)) => {
-                    match satisfies(&v, value, *direction, order, implied) {
-                        Ok(true) => Verdict::Satisfied,
-                        Ok(false) => Verdict::Refused,
-                        Err(Overflow) => Verdict::Unsupported,
-                    }
-                }
+                Ok(Outcome::Valued(vs)) => verdict(&vs, value, *direction, order, implied),
+                Ok(Outcome::Derived(v)) => verdict(&[v], value, *direction, order, implied),
                 Ok(o) => of(o),
             }
         }

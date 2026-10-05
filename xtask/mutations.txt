@@ -820,9 +820,9 @@ test -p eadl-resolve --test checker
 expect killed
 why M3.1.1.1: a constraint is judged in its written direction, the fact's or exactly (R12 L2); judged in the fact's direction alone, 64 bit meets (exactly 32 bit).
 from
-                        match satisfies(&v, value, *direction, order, implied) {
+                    Ok(Outcome::Valued(vs)) => verdict(&vs, value, *direction, order, implied),
 to
-                        match satisfies(&v, value, e.direction, order, implied) {
+                    Ok(Outcome::Valued(vs)) => verdict(&vs, value, e.direction, order, implied),
 end
 
 mutation model-false-meets-presence
@@ -1338,4 +1338,26 @@ from
             if !matches!(c.head(), None | Some("offers" | "absent" | "refines")) {
 to
             if !matches!(c.head(), Some("offers" | "absent" | "refines")) {
+end
+
+mutation model-first-spelling-only
+file crates/eadl-resolve/src/model/judge.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 25: one value in several spellings is decided by any comparison that does not overflow; by the first written alone, `(offers (delivery-bound 1 ms) (delivery-bound 1000000 ns))` was `unsupported-profile` against a bound in `ns` and `Refused` reversed (§5).
+from
+            .find_map(|v| satisfies(v, required, direction, order, implied).ok())
+to
+            .take(1).find_map(|v| satisfies(v, required, direction, order, implied).ok())
+end
+
+mutation model-side-name-unread
+file crates/eadl-resolve/src/model/requirement.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 25 remark 4: a side's declaration named like a fact is refused whatever its kind; unread, `(defpolicy preemptive (requires (preemptive true)))` read (§1.1, §8).
+from
+            read_declaration_name(name)?;
+to
+            let _ = read_declaration_name(name);
 end

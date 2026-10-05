@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability design's twenty-fifth review
+
+`ARCHOGEN-M3-0449` (leaf `M3.1.1`, step 26).
+
+- The twenty-fifth reader found one defect: a value written two ways, such as `1 ms` and `1000000 ns`, could be
+  judged differently depending on which was written first, because only the first was compared. Every way of
+  writing it is now compared, and the checker writes one amount in three units to prove the order no longer
+  matters.
+
 ## archogen — the substitutability design's twenty-fourth review
 
 `ARCHOGEN-M3-0448` (leaf `M3.1.1`, step 25).

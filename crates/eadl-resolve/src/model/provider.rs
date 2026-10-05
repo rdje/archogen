@@ -10,8 +10,9 @@ use super::vocab::{self, Direction, Domain, Role};
 /// What a provider states of one fact (record §1's definitions, §2).
 #[derive(Debug, Clone)]
 pub enum Stated {
-    /// A value — written, `(f (exactly v))`, or a bare boolean read as `true`.
-    Valued(Value),
+    /// One value — written, `(f (exactly v))`, or a bare boolean read as `true` — with every spelling of it written, in
+    /// written order, never empty: `10 MHz` beside `10000 kHz` is one value in two spellings (§5; R25 1).
+    Valued(Vec<Value>),
     /// Offered with no value: bare in a domain where bare has none, or only an abstract platform's bound.
     Unvalued,
     /// Declared absent.
@@ -249,7 +250,9 @@ pub fn read(decl: &Form) -> Result<Provider, Refused> {
                 }
             }
         }
-        let value = values.into_iter().next();
+        // Every pair being the same value, every spelling is kept: a comparison is decided by any of them whose
+        // arithmetic does not overflow, so no spelling's place in the text decides it (§5; R25 1).
+        let value = (!values.is_empty()).then_some(values);
         let _ = bare; // a bare offer beside a value is that value (§5; R13 M7)
         if bound && value.is_some() {
             return refuse(fact, "a bound beside a value of the same fact");
@@ -289,24 +292,27 @@ pub fn read(decl: &Form) -> Result<Provider, Refused> {
         }
     }
     // The counter's own refusals (§4; R3 C12, C6); a modulus of 0 and a width that is no whole number of bits are
-    // refused as values, wherever written (`value::fact_value`).
-    if let Some(Stated::Valued(Value::Quantity(w))) = stated.get("counter-width") {
-        if let (Ok(b), Some(Stated::Valued(Value::Count(m)))) =
-            (w.in_base(), stated.get("counter-modulus"))
-        {
-            let width = b.numerator();
-            if width < 127 && *m > (1i128 << width) {
-                return refuse(
-                    "counter-modulus",
-                    "a `counter-modulus` above a valued `2^width`",
-                );
+    // refused as values, wherever written (`value::fact_value`). The first spelling of each: spellings in two units
+    // were compared in the base unit as the provider was read, so each converts to the one value (§5; R25 1).
+    if let (Some(Stated::Valued(ws)), Some(Stated::Valued(ms))) =
+        (stated.get("counter-width"), stated.get("counter-modulus"))
+    {
+        if let (Some(Value::Quantity(w)), Some(Value::Count(m))) = (ws.first(), ms.first()) {
+            if let Ok(b) = w.in_base() {
+                let width = b.numerator();
+                if width < 127 && *m > (1i128 << width) {
+                    return refuse(
+                        "counter-modulus",
+                        "a `counter-modulus` above a valued `2^width`",
+                    );
+                }
             }
         }
     }
     if matches!(
         stated.get("counter-modulus"),
         Some(Stated::Valued(_) | Stated::Unvalued | Stated::Overflow)
-    ) && matches!(stated.get("wrap-behavior"), Some(Stated::Valued(Value::Enum(w))) if w == "saturating")
+    ) && matches!(stated.get("wrap-behavior"), Some(Stated::Valued(ws)) if matches!(ws.first(), Some(Value::Enum(w)) if w == "saturating"))
     {
         return refuse(
             "counter-modulus",

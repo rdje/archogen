@@ -726,6 +726,54 @@ const CASES: &[Case] = &[
         Judged(Unknown),
     ),
     Case(
+        "R25 1 one value in two spellings, the requirement's unit written second, as written",
+        "(offers (delivery-bound 1 ms) (delivery-bound 1000000 ns))",
+        "(delivery-bound (at-most 0.0000000000000000000000000000001 ns))",
+        Judged(Refused),
+    ),
+    Case(
+        "R25 1 one value in two spellings, the requirement's unit written second, reversed",
+        "(offers (delivery-bound 1000000 ns) (delivery-bound 1 ms))",
+        "(delivery-bound (at-most 0.0000000000000000000000000000001 ns))",
+        Judged(Refused),
+    ),
+    Case(
+        "R25 1 one value in two spellings, a satisfied requirement never lost to order, as written",
+        "(offers (supported-horizon 1 s) (supported-horizon 1000000000 ns))",
+        "(supported-horizon (at-least 0.0000000000000000000000000000001 ns))",
+        Judged(Satisfied),
+    ),
+    Case(
+        "R25 1 one value in two spellings, a satisfied requirement never lost to order, reversed",
+        "(offers (supported-horizon 1000000000 ns) (supported-horizon 1 s))",
+        "(supported-horizon (at-least 0.0000000000000000000000000000001 ns))",
+        Judged(Satisfied),
+    ),
+    Case(
+        "R25 1 one value in two spellings, the requirement's unit written first, as written",
+        "(offers (delivery-bound 0.000000000000000000000000001 ns) (delivery-bound 0.000000000000000000000000000001 us))",
+        "(delivery-bound (at-most 0.0000000000009000000000000000001 ns))",
+        Judged(Satisfied),
+    ),
+    Case(
+        "R25 1 one value in two spellings, the requirement's unit written first, reversed",
+        "(offers (delivery-bound 0.000000000000000000000000000001 us) (delivery-bound 0.000000000000000000000000001 ns))",
+        "(delivery-bound (at-most 0.0000000000009000000000000000001 ns))",
+        Judged(Satisfied),
+    ),
+    Case(
+        "R25 1 one value in two spellings, no spelling compared within the arithmetic, as written",
+        "(offers (delivery-bound 1 ms) (delivery-bound 1000 us))",
+        "(delivery-bound (at-most 0.0000000000000000000000000000001 ns))",
+        Judged(Unsupported),
+    ),
+    Case(
+        "R25 1 one value in two spellings, no spelling compared within the arithmetic, reversed",
+        "(offers (delivery-bound 1000 us) (delivery-bound 1 ms))",
+        "(delivery-bound (at-most 0.0000000000000000000000000000001 ns))",
+        Judged(Unsupported),
+    ),
+    Case(
         "R24 2 one unit compared as written, where the base unit's arithmetic overflows",
         "(offers (delivery-bound 0.0000000000000000000000000000001 ns))",
         "(delivery-bound (at-most 0.0000000000000000000000000000002 ns))",
@@ -1018,6 +1066,13 @@ fn every_requires_a_side_writes_is_read() {
             _ => "read",
         };
         assert_eq!(got, want, "{text}");
+    }
+    // R25 remark 4: a declaration named like a fact is refused whatever its kind, a policy's side included.
+    for text in [
+        "(defpolicy preemptive (requires (preemptive true)))",
+        "(defsystem uart (requires (uses console.write)))",
+    ] {
+        assert!(matches!(side(text), Err(NotJudged::Invalid(_))), "{text}");
     }
     // A `requires` inside another is read as a clause, never as a constraint on a fact named `requires`.
     assert_eq!(

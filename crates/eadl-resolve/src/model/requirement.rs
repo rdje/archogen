@@ -322,6 +322,10 @@ pub fn read_clause(clause: &Form) -> Result<Vec<Requirement>, NotJudged> {
 /// `invalid-description` when any item, or a contradiction among them, gives it; else `unsupported-profile` when any
 /// does — whatever order the items are written in (R21 2).
 pub fn read_side(decl: &Form) -> Result<Vec<Requirement>, NotJudged> {
+    // A declaration whose local name is a vocabulary fact, whatever its kind (§1.1; R16 1, R25 4).
+    if let Some(name) = decl.items().get(1).and_then(Form::as_symbol) {
+        read_declaration_name(name)?;
+    }
     let (clauses, lists) = side_parts(decl);
     read_parts(&clauses, lists)
 }

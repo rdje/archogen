@@ -636,13 +636,14 @@ fn same_by_oracle(domain: Domain, x: &str, y: &str) -> bool {
 #[test]
 fn a_provider_reads_the_same_in_every_order_of_its_offers() {
     // R18 1: an overflowing comparison first made every later one overflow, so two plain values beside it went
-    // uncompared.
+    // uncompared. R25 1: one amount in three units, judged against probes in every direction and against one past the
+    // arithmetic in another unit, so the spelling written first decides nothing.
     const TINY: &str = "0.0000000000000000000000000000001 ns";
     let mut providers = 0usize;
     for e in VOCABULARY.iter().filter(|e| e.role == Role::Guarantee) {
         let mut pool: Vec<String> = samples(e.domain).into_iter().take(4).collect();
         if e.domain == Domain::Quantity(Dimension::Time) {
-            pool.push(TINY.to_owned());
+            pool.extend(["1 ms", "1000000 ns", "0.001 s", TINY].map(str::to_owned));
         }
         let readable: Vec<String> = pool
             .into_iter()
@@ -650,7 +651,11 @@ fn a_provider_reads_the_same_in_every_order_of_its_offers() {
             .collect();
         let probes: Vec<Requirement> = readable
             .iter()
-            .filter_map(|v| constraint(&format!("({} (exactly {v}))", e.name)).ok())
+            .flat_map(|v| {
+                ["exactly", "at-least", "at-most"]
+                    .map(|d| constraint(&format!("({} ({d} {v}))", e.name)).ok())
+            })
+            .flatten()
             .collect();
         let reading = |offers: &[&String; 3]| -> Option<Vec<Verdict>> {
             let text: String = offers

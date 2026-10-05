@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-10-03`
 - **Status:** `active` — written; under independent review (leaf `M3.1.1`'s closure rule: the first round that
-  finds no defect closes it); rounds 1 to 15 answered `2026-10-03`, rounds 16 to 24 `2026-10-05`, its hand-offs
+  finds no defect closes it); rounds 1 to 15 answered `2026-10-03`, rounds 16 to 25 `2026-10-05`, its hand-offs
   in a ledger since (§11), reviewed beside its executable model since round 17 (`M3.1.1.1`)
 - **Owner / source:** leaf `M3.1.1` (`docs/tasks/M3.md`). `ROADMAP.md` §5.2 asks for "explicit matching rules in a
   decidable fragment" with "a documented comparison direction" per parameter, declared cross-field implications,
@@ -55,8 +55,8 @@ fact, not a claim that the fact is available, as `examples/alternative-timer/sys
   presence without a value (§2; R4 D3); or an abstract platform's bound in the fact's direction, which the
   refinement check reads (model §3) and the relation does not read as a value (§2; R10 J4, J8; R13 M12). A service may write `offers` too — `core.eadl` admits the clause on
   `defservice`, not on `defpolicy` (R7 G5) — but is not a provider, and its offers are judged against no requirement in `/1` (R3 C13); a service's `absent` is
-presence's (model §2), not a provider's (R11 K14). Its offers and absences are read as a provider's are, §8 refusing
-in a service all it refuses in a provider's — an item that names nothing, a value outside its domain, two values of
+judged by presence (model §2) and by no requirement, never a provider's absence at rule 1 (R11 K14; R25 3). Its offers
+and absences are read, and refused, as a provider's are, §8 refusing in a service all it refuses in a provider's — an item that names nothing, a value outside its domain, two values of
 one fact, an offer beside an absence — since a declaration that contradicts itself does so whoever writes it, and
 `ROADMAP.md` §5.3 rejects contradictory declarations rather than choosing one (R24 4); R22 2 and R23 2's narrower
 reading, which left two values of one fact in a service unrefused, is withdrawn.
@@ -404,7 +404,14 @@ beside `(f false)` two values, `invalid-description` (R5 E10; R6 F1; R10 J8; R11
 offers of one fact overflows the exact arithmetic, the fact is `unsupported-profile` at that provider (§2), for presence
 too (R20 4), never two values — unless two of its offers compare unequal without overflowing, which are two values whatever the others and
 whatever order they are written in (R17 5; R18 1). Two amounts in one unit are compared as written, by their
-numbers, in every comparison: one value written twice is one offer, two that differ two values (R19 1, 6; R20 2). An undeclared fact
+numbers, in every comparison: one value written twice is one offer, two that differ two values (R19 1, 6; R20 2). One
+value in several spellings is compared with a requirement in each, and decided by any comparison that does not
+overflow — all such agree, the value being one — so the spelling written first decides nothing; it is
+`unsupported-profile` only when every spelling's comparison overflows. A derivation, or a check across two facts, reads
+any spelling, each converting to the one value, since two spellings in two units were compared in the base unit as the
+provider was read (R25 1). A value whose own reading overflows — an interval whose endpoints cannot be ordered — has no
+reading to compare, so beside one other value it is `unsupported-profile`, never two values; no `/1` fact reaches it,
+`frequency`'s endpoints always comparing (R18 7; R25 5). An undeclared fact
 has no domain to contradict, so `region`, offered once per named region, is untouched (R1 A6; §10). When `M3.7` gives a
 catalog record's contract offers the relation can judge, a record is one more provider, judged like a block, and a
 record that mediates enters only through `M3.2`'s search (R13 M2, M6).
@@ -536,7 +543,7 @@ the review history the rounds that found each.
 | `SR-H12` | `M3.3` | A provider that states no level — `reachable-at-privilege` undescribed, declared absent or offered bare — is refused for any caller a plan binds to it, so every provider a plan binds a caller to states its level, the tracked descriptions and the target migrated in this leaf, the target's level from its agreement and a ledger source. |
 | `SR-H13` | `M3.3` | A required ordering, `ordering`, and a region's placement, both undeclared in `/1`, are judged here, with entries and domains added under §15 first, or `required-ordering-guarantee.eadl` migrated by `M3.4`'s rule. |
 | `SR-H14` | `M3.3` | The requirements one service makes of one device's facts are met by the one provider the plan binds it to, or by an adapter `M3.2` selects, so a service whose horizon one counter meets and whose coherent reads another does is refused. |
-| `SR-H15` | `M3.4` | The closure is rooted at the system with its tasks and platform, `uses` and `needs` followed transitively, every constraint of a `requires` and every `needs` of a vocabulary fact judged wherever written, a `uses` naming a vocabulary fact refused, and the closure the report carries decided where it and presence's differ, a provider on a platform the system does not use never satisfying. |
+| `SR-H15` | `M3.4` | The closure is rooted at the system with its tasks and platform, `uses` and `needs` followed transitively, every constraint of a `requires` and every `needs` of a vocabulary fact judged wherever §1 says a side holds one, and nowhere else (R25 2), a `uses` naming a vocabulary fact refused, and the closure the report carries decided where it and presence's differ, a provider on a platform the system does not use never satisfying. |
 | `SR-H16` | `M3.4` | A fact declared absent at one of the description's blocks and platforms and offered at another, outside a direct refinement pair, is refused as `invalid-description` over every offer and absence and through no chain of refinements, `presence.rs`'s first-of-each comparison corrected, an adapter `M3.2`'s search offers not being one of them, one rule for a value offered there and one derived there, with the reason it records for reading two providers' absence and value as one contradiction, two distinct blocks among them — one with no debug port beside one with one (R24 5). |
 | `SR-H17` | `M3.4` | No group and its sub-constraints, nested or flat, are met by different providers — a flat head and a sub-constraint in two `requires` clauses of one side one group, a side being read whole (R21 1; R23 6) — and this leaf decides which other constraints of one side may be. |
 | `SR-H18` | `M3.4` | The description's code is decided over the providers that take part — those stating `f`, offered in any form or declared absent, or an input of its derivation, a silent one deciding nothing — `unsupported-profile` while one that takes part is past the arithmetic and none satisfies, before the others; `missing-fact` while one that takes part is unknown or undescribed and none satisfies, and when none takes part; `infeasible-configuration` once at least one takes part and every one that does is refused or absent, with model §2 rule 2 amended where an adapter's offer satisfies past another's absence, a provider's derivation judged as `SR-H16` judges its offer. |
@@ -580,6 +587,6 @@ satisfies that it should not — a stronger precondition read as a capability, a
 an implication assumed that nothing declares — and no case of §5.2 misclassified; every finding answered here. The
 history is [`decision_substitutability-relation-reviews.md`](../reviews/decision_substitutability-relation-reviews.md).
 
-Defects per round, oldest first: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2, 2, 2, 3, 3, 3, 2. Each round's findings, its reader's measurements and every answer are in
+Defects per round, oldest first: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2, 2, 2, 3, 3, 3, 2, 1. Each round's findings, its reader's measurements and every answer are in
 the review history linked above, which holds them whole; this record keeps only the count (`PROGRAM.52.2`, the
 folder's ceiling).
