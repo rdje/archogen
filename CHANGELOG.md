@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — every hand-off checked in both places
+
+`ARCHOGEN-PROGRAM-0426` (leaf `PROGRAM.52.1`).
+
+- A design that hands work to another task now writes each hand-off once, as one sentence in a table, and the commit
+  hook refuses the commit unless the receiving task quotes that sentence word for word. A hand-off can no longer be
+  dropped, or carried in weaker words, without a commit failing.
+
 ## archogen — design reviews made executable
 
 `ARCHOGEN-PROGRAM-0425` (leaf `PROGRAM.52`, step 1).

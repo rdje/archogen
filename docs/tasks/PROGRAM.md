@@ -721,8 +721,45 @@ mdBook that is the director's window into the project.
   registered and mirrored; `decision_substitutability-relation.md` and `decision_trust-inventory.md` holding their
   hand-offs in ledgers, every receiving leaf quoting them, the doctrine green; `M3.1.1.1` and `M3.6.2` carrying the
   model and the instrument.
-  Verification: `pending`
+  Children: `PROGRAM.52.1` the doctrine; `PROGRAM.52.2` the two records moved to ledgers, after their running rounds
+  Verification: `pending` — through `.1` and `.2`
   Commit: step 1, `ARCHOGEN-PROGRAM-0425 (leaf PROGRAM.52)`
+
+- ID: `PROGRAM.52.1`
+  Status: `done` — `2026-10-05`
+  Goal: `HANDOFF-LEDGER`, `scripts/check_handoff_ledger.sh`, registered and mirrored.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — the review histories' late defects: `M3.1.1` R10–R15 and `M3.6.1` R3–R6 each found a
+    hand-off its leaf did not carry or carried in weaker words (`docs/reviews/decision_substitutability-relation-reviews.md`,
+    `docs/reviews/decision_trust-inventory-reviews.md`); `git ls-files scripts | grep -c handoff` → 0 before this leaf.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `bash scripts/check_doctrines.sh` → `=== all doctrines green ===` over a tree
+    whose hand-offs had been found uncarried by a reader: each hand-off was two independent prose statements, the
+    record's and the leaf's, and nothing compared them.
+  - [x] **FIX** — a ledger table per record and `[<id>] <sentence>` in the leaf, compared after whitespace
+    normalisation, in both directions; registered in `scripts/check_doctrines.project.sh`, mirrored in
+    `DOCTRINE_ENFORCEMENT.md`.
+  - [x] **ADDRESSED (verified)** — `bash scripts/check_handoff_ledger.sh --self-test` → `12 pass / 0 fail (12 arms)`:
+    a quote across a line wrap passes; a dropped quote, weaker words, an unheld identifier, another leaf's quote, one
+    identifier twice, a leaf found nowhere, a malformed identifier and a quote outside every block are refused; a
+    sealed leaf's quote passes; no ledger is clean. The first run failed one arm, which found a quote outside every
+    leaf's block passing unchecked; the gate now refuses it.
+  - [x] **NO REGRESSION** — `bash scripts/check_handoff_ledger.sh` on the tree → `handoff-ledger: OK (0 hand-off(s)
+    in 0 ledger(s) …)`; `bash scripts/run_self_tests.sh` → every self-test passed; `bash scripts/check_doctrines.sh`
+    → `=== all doctrines green ===`.
+  - [x] **LOCKSTEP** — `DOCTRINE_ENFORCEMENT.md`; this leaf and both logs; `CHANGELOG.md` → one entry.
+  Verification: `2026-10-05` — the Verification Log's row
+  Commit: `ARCHOGEN-PROGRAM-0426 (leaf PROGRAM.52.1)`
+
+- ID: `PROGRAM.52.2`
+  Status: `pending` — after `M3.1.1`'s round 16 and `M3.6.1`'s round 7 report, so their findings are answered on the
+    text they read
+  Goal: `decision_substitutability-relation.md` and `decision_trust-inventory.md` holding every hand-off in a ledger,
+  prefixes `SR` and `TI`, and every receiving leaf quoting its sentences.
+  Acceptance: `bash scripts/check_handoff_ledger.sh` green with both ledgers populated; no hand-off left in prose
+  that the ledger does not hold, by a census of each record's "is `M…`'s" sentences.
+  Verification: `pending`
+  Commit: `pending`
 
 ## Roadmap coverage map
 
@@ -941,6 +978,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-10-03` | `PROGRAM.49` | the folder measured before and after; the refusal reproduced by the enforcer; the enforcer after the raise | `264219` over `262144`; all green |
 | `2026-10-03` | `PROGRAM.50` | the moved block's sha256 before and after; the folder measured before and after; the enforcer | `5785eb49…57cc9` both; 395 564 → 352584; all green |
 | `2026-10-03` | `PROGRAM.51` | the pre-`M2.22` file through the gate's method; `rustfmt --check` on stdin; ten RED arms; the tree; every gate's self-test; the enforcer | differs, `cmp rc=1`; `--check` exits 0 over a diff; 10 / 10 arms; 159 files canonical; 44 self-tests passed |
+| `2026-10-05` | `PROGRAM.52.1` | twelve RED arms, one of which first failed and found a quote outside every block unchecked; the tree; every gate's self-test; the README routes after compacting two rows; the enforcer | 12 / 12 arms; 0 hand-offs, 0 ledgers, clean; all self-tests passed; `DOCTRINE_ENFORCEMENT.md` 36 537 bytes under 36 864; all green |
 
 ## Commit Log
 
@@ -1054,6 +1092,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.51` | `ARCHOGEN-PROGRAM-0421 (leaf PROGRAM.51)` | `RUST-FORMAT`: every staged Rust source in canonical format, read from the index, at commit time |
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0331 (leaf PROGRAM)` | **`PROGRAM.47` sealed**, its 30 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` had grown 1 653 bytes over its 819 200-byte ceiling with `API.6.3`'s leaf |
 | `PROGRAM.52` | `ARCHOGEN-PROGRAM-0425 (leaf PROGRAM.52)` | **step 1 — design reviews made executable**: the method record; `M3.1.1.1` filed; `M3.6.2` begun as the instrument; closed leaves sealed |
+| `PROGRAM.52.1` | `ARCHOGEN-PROGRAM-0426 (leaf PROGRAM.52.1)` | `HANDOFF-LEDGER`: a design record's hand-offs in a machine-read ledger, each quoted word for word by its leaf |
 
 ## Changelog
 
@@ -1062,3 +1101,4 @@ a clean `git status` means what the handoff rule says it means.
 - `2026-09-30`: `PROGRAM.41` reopened by its independent review; `PROGRAM.41.1` and `PROGRAM.42` filed.
 - `2026-10-03`: `PROGRAM.51` filed and closed — `RUST-FORMAT`, `COMMIT.md` step 2's format step held at commit time.
 - `2026-10-05`: `PROGRAM.52` filed — design reviews made executable (`decision_executable-design-reviews.md`).
+- `2026-10-05`: `PROGRAM.52.1` done — `HANDOFF-LEDGER`; `PROGRAM.52.2` filed for the two records' ledgers.
