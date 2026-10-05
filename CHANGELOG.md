@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — both design records' hand-offs in ledgers
+
+`ARCHOGEN-PROGRAM-0430` (leaf `PROGRAM.52.2`).
+
+- The two designs under review now state each piece of work they hand to another task once, in a table; the
+  receiving tasks quote those sentences word for word, and a commit check holds the two together. Forty-six
+  hand-offs, none left in prose.
+
 ## archogen — the trust-dependency gate made default-deny
 
 `ARCHOGEN-M3-0428` (leaf `M3.6.1`, step 8).

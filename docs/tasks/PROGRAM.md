@@ -711,7 +711,8 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.51.md`](../task-history/PROGRAM/PROGRAM.51.md); commit `ARCHOGEN-PROGRAM-0421`
 
 - ID: `PROGRAM.52`
-  Status: `active` — filed `2026-10-05` on the director's word that a stuck review loop is an engineering problem
+  Status: `done` — filed and closed `2026-10-05` on the director's word that a stuck review loop is an engineering
+  problem
   Goal: the method of `docs/decisions/decision_executable-design-reviews.md` in place for every design reviewed under
   the closure rule — a reference model or measuring instrument, a falsification corpus, and the hand-off ledger — and
   the doctrine `HANDOFF-LEDGER`, `scripts/check_handoff_ledger.sh`: a record's `<!-- machine-read: handoffs -->` table
@@ -722,7 +723,7 @@ mdBook that is the director's window into the project.
   hand-offs in ledgers, every receiving leaf quoting them, the doctrine green; `M3.1.1.1` and `M3.6.2` carrying the
   model and the instrument.
   Children: `PROGRAM.52.1` the doctrine; `PROGRAM.52.2` the two records moved to ledgers, after their running rounds
-  Verification: `pending` — through `.1` and `.2`
+  Verification: `2026-10-05` — through `.1` and `.2`
   Commit: step 1, `ARCHOGEN-PROGRAM-0425 (leaf PROGRAM.52)`
 
 - ID: `PROGRAM.52.1`
@@ -752,13 +753,17 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0426 (leaf PROGRAM.52.1)`
 
 - ID: `PROGRAM.52.2`
-  Status: `active` — step 1, the trust record's ledger, `2026-10-05`; the substitutability record's next
+  Status: `done` — `2026-10-05`: step 1 the trust record's ledger, step 2 the substitutability record's
   Goal: `decision_substitutability-relation.md` and `decision_trust-inventory.md` holding every hand-off in a ledger,
   prefixes `SR` and `TI`, and every receiving leaf quoting its sentences.
   Acceptance: `bash scripts/check_handoff_ledger.sh` green with both ledgers populated; no hand-off left in prose
   that the ledger does not hold, by a census of each record's "is `M…`'s" sentences.
-  Verification: `pending`
-  Commit: step 1, `ARCHOGEN-PROGRAM-0429 (leaf PROGRAM.52.2)`
+  Verification: `bash scripts/check_handoff_ledger.sh` → `handoff-ledger: OK (46 hand-off(s) in 2 ledger(s), each
+  quoted word for word by its leaf; 46 quote(s), each held)`; a census of every "`M…`'s" in each record's prose
+  against its ledger's leaves → the names absent from a ledger are the record's own leaf, the closed `M1.40`, and
+  two named inside ledger sentences, so no hand-off is left in prose; each rewritten leaf read against its previous
+  text, one dropped item restored (step 1) and one retracted corpus claim left out of `M3.4` (step 2)
+  Commit: step 1, `ARCHOGEN-PROGRAM-0429 (leaf PROGRAM.52.2)`; step 2, `ARCHOGEN-PROGRAM-0430 (leaf PROGRAM.52.2)`
 
 ## Roadmap coverage map
 
@@ -978,6 +983,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-10-03` | `PROGRAM.50` | the moved block's sha256 before and after; the folder measured before and after; the enforcer | `5785eb49…57cc9` both; 395 564 → 352584; all green |
 | `2026-10-03` | `PROGRAM.51` | the pre-`M2.22` file through the gate's method; `rustfmt --check` on stdin; ten RED arms; the tree; every gate's self-test; the enforcer | differs, `cmp rc=1`; `--check` exits 0 over a diff; 10 / 10 arms; 159 files canonical; 44 self-tests passed |
 | `2026-10-05` | `PROGRAM.52.1` | twelve RED arms, one of which first failed and found a quote outside every block unchecked; the tree; every gate's self-test; the README routes after compacting two rows; the enforcer | 12 / 12 arms; 0 hand-offs, 0 ledgers, clean; all self-tests passed; `DOCTRINE_ENFORCEMENT.md` 36 537 bytes under 36 864; all green |
+| `2026-10-05` | `PROGRAM.52.2` | the two ledgers through `HANDOFF-LEDGER`; the prose census of each record against its ledger; each rewritten leaf against its previous text; the enforcer | 46 hand-offs, each quoted; no hand-off left in prose; one dropped item restored; all green |
 
 ## Commit Log
 
@@ -1093,6 +1099,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.52` | `ARCHOGEN-PROGRAM-0425 (leaf PROGRAM.52)` | **step 1 — design reviews made executable**: the method record; `M3.1.1.1` filed; `M3.6.2` begun as the instrument; closed leaves sealed |
 | `PROGRAM.52.1` | `ARCHOGEN-PROGRAM-0426 (leaf PROGRAM.52.1)` | `HANDOFF-LEDGER`: a design record's hand-offs in a machine-read ledger, each quoted word for word by its leaf |
 | `PROGRAM.52.2` | `ARCHOGEN-PROGRAM-0429 (leaf PROGRAM.52.2)` | **step 1 — the trust record's ledger**: 24 hand-offs, each quoted word for word by its leaf; the receiving leaves rewritten around their quotes |
+| `PROGRAM.52.2` | `ARCHOGEN-PROGRAM-0430 (leaf PROGRAM.52.2)` | **step 2 — the substitutability record's ledger**: 22 hand-offs in its new §11, each quoted by its leaf; `PROGRAM.52` closed |
 
 ## Changelog
 
@@ -1102,3 +1109,4 @@ a clean `git status` means what the handoff rule says it means.
 - `2026-10-03`: `PROGRAM.51` filed and closed — `RUST-FORMAT`, `COMMIT.md` step 2's format step held at commit time.
 - `2026-10-05`: `PROGRAM.52` filed — design reviews made executable (`decision_executable-design-reviews.md`).
 - `2026-10-05`: `PROGRAM.52.1` done — `HANDOFF-LEDGER`; `PROGRAM.52.2` filed for the two records' ledgers.
+- `2026-10-05`: `PROGRAM.52` closed — both design records hold their hand-offs in ledgers `HANDOFF-LEDGER` checks.

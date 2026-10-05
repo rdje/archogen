@@ -3,7 +3,8 @@
 - **Type:** `decision`
 - **Date:** `2026-10-03`
 - **Status:** `active` — written; under independent review (leaf `M3.1.1`'s closure rule: the first round that
-  finds no defect closes it); rounds 1 to 15 answered `2026-10-03`, round 16 `2026-10-05`
+  finds no defect closes it); rounds 1 to 15 answered `2026-10-03`, round 16 `2026-10-05`, its hand-offs in a
+  ledger since (§11)
 - **Owner / source:** leaf `M3.1.1` (`docs/tasks/M3.md`). `ROADMAP.md` §5.2 asks for "explicit matching rules in a
   decidable fragment" with "a documented comparison direction" per parameter, declared cross-field implications,
   and no stronger precondition "silently accepted as stronger capabilities"; §5.3 for a "versioned capability
@@ -375,26 +376,10 @@ catalog record's contract offers the relation can judge, a record is one more pr
 record that mediates enters only through `M3.2`'s search (R13 M2, M6).
 
 **What the enumeration is handed, and what its list makes of a description, are `M3.4`'s** — the search that wires
-the relation into `archogen check` — and its acceptance carries each of these as this record's reviews found them:
-
-- **the closure:** which requirements and which providers a description presents, rooted at the system with its
-  tasks and platform, `uses` and `needs` followed transitively, every requirement judged — each constraint of a
-  `requires`, and each `needs` of a vocabulary fact wherever written — and which closure the report carries where it
-  and presence's differ (R2 B9; R10 J2, J3; R11 K1);
-- **absence across providers:** a fact declared absent at one of the description's blocks and platforms and offered
-  at another, outside a direct refinement pair, is `invalid-description` (model §2 rule 1), compared over every offer
-  and absence, not presence's first of each, and through no chain of refinements (R8 H1; R11 K2); an adapter
-  `M3.2`'s search offers is not one of them, and its offer satisfies past a declared absence (R13 M4);
-- **one clause, several providers:** which constraints of one clause may be met by different providers — a group and
-  its sub-constraints, nested or flat, never (R12 L16) — and the requirements one service makes of one device's facts
-  met by the one provider a plan binds it to, which is `M3.3`'s and in its acceptance (R6 F9; R11 K3; R12 L5);
-- **the description's code:** a provider takes part in `f`'s code when it states `f` — offered in any form, or
-  declared absent — or an input of `f`'s derivation; one that states neither is silent and decides nothing (R13 M5).
-  `missing-fact` while some provider that takes part is unknown or undescribed and none satisfies, so an author is
-  sent to the fact that could still decide it, and when none takes part (R12 L4); `infeasible-configuration` once at
-  least one takes part and every one that does is refused or absent; and model §2 rule 2 — "a required fact that is declared absent makes the configuration infeasible" — amended in
-  `docs/semantics/model.md`, where a provider's derivation, or an adapter's offer `M3.2`'s search makes, satisfies
-  past another's absence (R6 F8; R10 J10; R11 K5, K6; R13 M4).
+the relation into `archogen check` — in the hand-off ledger's `SR-H15` to `SR-H20` (§11): the closure, absence across
+providers, one clause across several providers, the description's code, the providers enumerated and the tracked
+verdicts wiring moves (R2 B9; R6 F8, F9; R8 H1; R10 J2, J3, J10; R11 K1–K3, K5, K6; R12 L4, L16; R13 M4, M5; R14 3;
+R15 1).
 
 What the enumeration is not: it does not choose, does not resolve `uses`, and does not run inside `archogen check` in
 `M3.1` (§9).
@@ -509,6 +494,39 @@ source's.
 - A saturating counter states no horizon in `/1` — no modulus, and not the horizon beside its rate; its range is
   another fact (§4; R9 I10).
 
+
+### 11. The hand-off ledger
+
+Every obligation this record hands to another leaf is one sentence here, quoted word for word beside its identifier
+by the leaf that takes it, which `HANDOFF-LEDGER` checks (`PROGRAM.52.2`); the sections above give the reasons, and
+the review history the rounds that found each.
+
+<!-- machine-read: handoffs -->
+| Id | Leaf | Obligation |
+| --- | --- | --- |
+| `SR-H1` | `M3.1.2` | `crates/eadl-resolve` holds the vocabulary as a typed table, the domains, the relation with an offer reader of its own, the derivation rule and the enumeration as the record decides, each rule of its §1.1, §2, §3, §4, §5 and §8 a test that fails when the rule is removed, a test per domain, and every row of its §6 a test. |
+| `SR-H2` | `M3.1.2` | `deffact` lives in its own kind module, `docs/semantics/kinds/deffact.eadl`, which no description's registry holds, and the vocabulary in `docs/semantics/vocabulary/`, a root of `docs/semantics/conformance.md`, with the kinds root's purpose amended and a migration note covering both in `eadl/1`'s baseline. |
+| `SR-H3` | `M3.1.2` | `archogen check` classifies a module file first, refusing its `deffact` exit 10, and answers any other file with a `deffact`, recognised by content as a `defkind` is, exit 20 as the language's own definition, frozen in `verdicts.txt`, while `kind_modules.rs` holds every file under `docs/semantics/kinds/` to declaring a kind. |
+| `SR-H4` | `M3.1.2` | A declaration whose local name is a vocabulary fact is refused, at the root and inside an imported module. |
+| `SR-H5` | `M3.1.2` | `docs/semantics/model.md` becomes normative over the crate and decides whether each cause of the record's §8 rows takes a code of its own. |
+| `SR-H6` | `M3.1.2` | `refinement.rs`'s reader is not the relation's to change, and an abstract `exactly` still refuses a different concrete value. |
+| `SR-H7` | `M3.1.2` | The production relation is tested against `M3.1.1.1`'s executable model over the same bounded universe. |
+| `SR-H8` | `M3.2` | A mediating adapter — a path across a privilege boundary through firmware or another mediator — is offered only where the requirer wrote `(or-through-mediation allowed)`. |
+| `SR-H9` | `M3.2` | An adapter's offer satisfies past a declared absence, model §2 rule 2 amended to say so, and the absence across providers is judged among the description's blocks and platforms, the adapter not one of them. |
+| `SR-H10` | `M3.2` | `examples/alternative-timer` builds as `examples/README.md` seals, each fact the relation needs of it — a horizon, a privilege level, its policy's constraints — offered by one provider judged on its own, `timer.delay`, the adapter or a record after `M3.7`, never a record's fact joined to `timer.delay`'s, and a change to its description is brought to the director before it is made. |
+| `SR-H11` | `M3.3` | A caller bound to an execution context that its provider's `reachable-at-privilege` does not include is refused, a requirer that states no level included. |
+| `SR-H12` | `M3.3` | A provider that states no level — `reachable-at-privilege` undescribed, declared absent or offered bare — is refused for any caller a plan binds to it, so every provider a plan binds a caller to states its level, the tracked descriptions and the target migrated in this leaf, the target's level from its agreement and a ledger source, or the refusal narrowed here under a review. |
+| `SR-H13` | `M3.3` | A required ordering, `ordering`, and a region's placement, both undeclared in `/1`, are judged here, with entries and domains added under §15 first, or `required-ordering-guarantee.eadl` migrated by `M3.4`'s rule. |
+| `SR-H14` | `M3.3` | The requirements one service makes of one device's facts are met by the one provider the plan binds it to, or by an adapter `M3.2` selects, so a service whose horizon one counter meets and whose coherent reads another does is refused. |
+| `SR-H15` | `M3.4` | The closure is rooted at the system with its tasks and platform, `uses` and `needs` followed transitively, every constraint of a `requires` and every `needs` of a vocabulary fact judged wherever written, a `uses` naming a vocabulary fact refused, and the closure the report carries decided where it and presence's differ, a provider on a platform the system does not use never satisfying. |
+| `SR-H16` | `M3.4` | A fact declared absent at one of the description's blocks and platforms and offered at another, outside a direct refinement pair, is refused as `invalid-description` over every offer and absence and through no chain of refinements, `presence.rs`'s first-of-each comparison corrected, an adapter `M3.2`'s search offers not being one of them. |
+| `SR-H17` | `M3.4` | No group and its sub-constraints, nested or flat, are met by different providers, and this leaf decides which other constraints of one clause may be. |
+| `SR-H18` | `M3.4` | The description's code is decided over the providers that take part — those stating `f`, offered in any form or declared absent, or an input of its derivation, a silent one deciding nothing — `missing-fact` while one that takes part is unknown or undescribed and none satisfies, and when none takes part, `infeasible-configuration` once at least one takes part and every one that does is refused or absent, with model §2 rule 2 amended where a provider's derivation or an adapter's offer satisfies past another's absence. |
+| `SR-H19` | `M3.4` | The enumeration lists the description's blocks and platforms, a catalog record only after `M3.7`, and a mediating record never directly. |
+| `SR-H20` | `M3.4` | Every verdict `crates/archogen-cli/tests/verdicts.txt` and `module_cases.rs` freeze is kept, or changed only in the commit that names the case, the rule that moves it and its migration — a description gaining a fact, the target's agreement and its ledger source included — ordered after `M3.3` and `M3.7` where a migration needs them, the seven `0` verdicts `M3.1.1`'s round 14 measured among them. |
+| `SR-H21` | `M3.7` | The catalog record decision's §2 is amended so a contract facet states offers and absences of vocabulary facts, read by the relation's reader and judged like a block's, and a record whose path crosses a mediation boundary says so and enters only through `M3.2`'s search, where the requirer wrote `(or-through-mediation allowed)`. |
+| `SR-H22` | `M3.7` | A design reviewed by a context that did not write it answers how a record's offer or absence meets a block's absence or offer, named in model §2 rule 2's amendment and decided with `M3.4`, and how a record's preconditions become offered sets judged by inclusion, a record with a precondition no entry states being no provider. |
+
 ## Why
 
 - §5.2 asks for explicit rules in a decidable fragment and a documented direction per parameter. The corpus
@@ -544,21 +562,6 @@ satisfies that it should not — a stronger precondition read as a capability, a
 an implication assumed that nothing declares — and no case of §5.2 misclassified; every finding answered here. The
 history is [`decision_substitutability-relation-reviews.md`](../reviews/decision_substitutability-relation-reviews.md).
 
-| Round | Findings | Defects | Verdict |
-| --- | --- | --- | --- |
-| 1 | 15 | 7 (A1, derivation chaining as written un-satisfied the worked case; A2, a constraint on a fact nobody `needs` judged "nothing"; A3, mediation an undeclared implication over a domain the corpus contradicts; A4, `counter-width` read as more-is-better where the width is the interface; A5, the width limit off by one and the comparison's overflow unstated; A6, the two-values rule refusing the target's three regions; A7, a unit the language refuses) | "not acceptable as it stands"; the §5.2 cases none misclassified in direction, the worked numbers right |
-| 2 | 10 | 7 (B1, the agreement rule forcing a reload counter to omit its modulus, whose width then derived a horizon it has not; B2, mediation still a boolean condition in §10 and rule 4; B3, `derived-from` declared one symbol wide; B4, `exactly` granted in §1.1 and refused by rule 2 and §8; B5, two providers' differing offers called a contradiction; B6, a group's head alone outside the domain as the corpus writes it; B7, a written count called `i128`) | "not acceptable as it stands"; every direction right, `exactly` a subset of every direction, the statement role and the closure rule sound, the numbers exact |
-| 3 | 13 | 8 (C1, a derivation reached before a declared absence; C2, conditions unchecked against a requirer that only `needs`; C3, §10 still calling two providers' values a contradiction and §8 dropping *declared*; C4, `priorities` under `includes` reading `unique`, a demand, as a capability; C5, `wrap-behavior` offered bare between the rule's branches; C6, a modulus beside `saturating` unrefused; C7, `exactly` with no satisfaction condition for intervals; C8, rule 5's clause verdict with no home in §5) | "not acceptable as it stands"; every §5.2 case right in fact, domain and direction, the arithmetic exact and bounded |
-| 4 | 10 | 3 (D1, an offered horizon beside derivable inputs escaping the impossibility rule that caught a modulus, so a 16-bit counter writing `3600 s` passed; D2, §5 leaving out a provider that declares the fact absent, `missing-fact` where rule 1 says infeasible; D3, a bare group head `true` in §2 and valueless in §1) | "not acceptable as it stands"; the four corpus descriptions walked by hand, every verdict right; six of eight restatements one thing everywhere |
-| 5 | 10 | 3 (E1, the impossibility bound attached to a derivation's branch, so `(wrap-behavior saturating)` or a bare `wrap-behavior` switched it off and the 16-bit counter's `3600 s` passed again; E2, a platform's or block's `requires` constraint judged by nobody; E3, a bare non-boolean offer with three verdicts) | "not acceptable as it stands"; every §5.2 case right in fact, domain, role and direction; six adversarial offers refused by the sentence named, two not |
-| 6 | 9 | 3 (F1, a bare bounding input switching the bound off, the third round in turn to find an author's horizon beside its grounds; F2, an absent condition fact satisfied by rule 4 and infeasible by §5 and §8; F3, a presence requirement against a bare offer satisfied by §2 and `missing-fact` by rule 1) | "not acceptable as it stands"; every adversarial offer against a valued sibling refused by a sentence named; the restatements (d), (e), (g), (i), (j) one thing everywhere |
-| 7 | 12 | 5 (G1, the target's 64-bit `mtime` unable to write `2^64` as a count, so the one physical counter could state neither modulus nor horizon; G2, a boolean offered `false` meeting a `needs` for it; G3, an optional input declared absent derivable by §4's row and underivable by rule 1; G4, §8's infeasible row swallowing `missing-fact`; G5, `defpolicy` admitting no `offers`) | "not acceptable as it stands"; every §5.2 case right; no condition read as a capability; no undeclared implication used |
-| 8 | 11 | 1 (H1, the absence rule, §5 and §8's example judging per provider a fact offered at one and absent at another, which model §2 rule 1 refuses description-wide before any relation runs) | "not acceptable as it stands"; no probe made the relation read a demand as a capability, a value the wrong way, or an undeclared implication; every §5.2 case classified as the fact's meaning requires |
-| 9 | 13 | 2 (I1, the round-8 `exactly` escape for a non-nesting privilege the very form rule 4 reads as an unknown demand; I2, a condition fact declared absent read as no demand, the one permissive absence) | "not acceptable as it stands"; every other §5.2 case classified as the fact's meaning requires; no undeclared implication; the arithmetic exact and bounded |
-| 10 | 13 | 8 (J1, a provider stating no privilege accepted where one stating `user` was refused; J2, a declaration-level `needs` escaping rule 3 and the condition check; J3, the system outside the closure, its own constraints judged by nobody; J4, `(exactly false)` meeting `needs`; J5, a provider offering and declaring absent one fact read by its value; J6, a block requirer refused with no legal repair; J7, a required input declared absent given two codes; J8, an `exactly` width escaping the width–modulus check) | "not acceptable as it stands"; probes run against the built checker; every other §5.2 case right, the arithmetic exact |
-| 11 | 16 | 7 (K1, the closure stated two ways, one admitting a provider on an unused platform; K2, a declared absence passed by another provider's offer, presence comparing only the first of each; K3, one clause's head and range from two providers; K4, a provider stating no privilege untaken by `M3.3`; K5, model §2 rule 2 cited for its opposite; K6, infeasible while an unknown provider decides; K7, no mechanism refusing a stray `deffact`) | "not acceptable as it stands"; for one provider every §5.2 case right, no stronger precondition passing; the derivation seam closed |
-| 12 | 17 | 8 (L1, an offered `exactly` read as the value would strip refinement's only bound on an `exact` fact; L2, satisfaction stated in the fact's direction, not the requirement's; L3, a bare derived fact beside an absent input two outcomes; L4, `infeasible-configuration` with no provider; L5, one service's facts bound to one counter taken by no acceptance; L6, the mediation gate taken by no acceptance; L7, `M3.1.2` told to put `deffact` in `core.eadl`; L8, §9's corpus claim) | "not acceptable as it stands"; for one provider every §5.2 case right, no stronger precondition passing |
-| 13 | 13 | 9 (M1, refinement keeping no value an abstract platform offers, so a system on an abstract platform is judged on values its refinement lacks; M2, a mediating record or adapter reaching the relation outside `M3.2`'s gate; M3, a bare privilege offer outside rule 4's and `M3.3`'s words; M4, the absence rule over every provider refusing `uc3` after `M3.2`; M5, silent providers turning tracked infeasible cases into `missing-fact`; M6, a record's contract as a provider carried by no leaf; M7, a bare offer beside a value two outcomes; M8, the opening's presence sentence; M9, §9's corpus claim) | "not acceptable as it stands"; for one provider every §5.2 case right, no condition read as a capability |
-| 14 | 18 | 9 (N1, `uc3` said to build after `M3.2` unchanged, which the record's own horizon and privilege rules forbid; N2, the privilege refusal stopping every use case and the target, unsaid; N3, wiring changing seven tracked `0` verdicts, carried by no leaf; N4, the `ordering` and `region` handover uncarried; N5, the vocabulary in the kinds folder, which a tracked test holds to kinds; N6, a bare name inside `requires` with no outcome; N7, a value inside `needs` dropped; N8, a bare boolean beside `false` two outcomes; N9, the horizon's endpoint, `modulus / rate` ambiguous) | "not acceptable as it stands"; for one provider the directions right and the arithmetic exact |
-| 15 | 16 | 8 (O1, a `uses` naming a fact bypassing rule 3 and the value; O2, the ordering case both `unsupported-profile` and kept at `0`; O3, §4 still deciding how the tracked counters migrate; O4, a record's modulus joined to `timer.delay`'s rate; O5, a record's absence against a block's offer decided by no leaf; O6, a record's preconditions carried by no acceptance; O7, the vocabulary module classified two ways; O8, the vocabulary's versioning carried by nothing) | "not acceptable as it stands"; the relation sound at one provider, every worked number and the endpoint argument right |
-| 16 | 9 | 3 (P1, a declaration named like a vocabulary fact capturing a `needs` or `uses` of it, and an import renaming it out of sight; P2, an idle-only provider satisfying a power-state requirement, a use running in `run`; P3, a `deffact` in a module file given two outcomes) | "not acceptable as it stands"; every worked number and the endpoint argument right; every restated rule saying one thing; every handover carried |
+Defects per round, oldest first: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3. Each round's findings, its reader's measurements and every answer are in
+the review history linked above, which holds them whole; this record keeps only the count (`PROGRAM.52.2`, the
+folder's ceiling).
