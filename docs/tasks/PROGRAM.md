@@ -732,6 +732,20 @@ mdBook that is the director's window into the project.
   cites `make focused` when the staged tree has no passing stamp. Open: how unstaged changes beside the staged ones are
   handled, and a stamp's relation to a tier other than `focused`.
 
+- ID: `PROGRAM.54`
+  Status: `pending`
+  Goal: the handoff census (`scripts/check_no_background_jobs.sh`) tells a background job from a transient helper
+  without an allowlist.
+  Reproduce / issue: found `2026-10-05` by three review readers (`M3.1.1` rounds 18 and 19, `M3.6.1` round 9), each
+  told to end on `handoff: OK`: the census named iTerm's `pidinfo --git-state <repo> 4 1`, whose command line names
+  the checkout — the census's PROJECT-WORK arm — respawned every few seconds by the terminal (PIDs 2171, 6514, 10743;
+  38355, 42120, each 4–5 s old), while a run between two respawns prints `handoff: OK`. So the verdict depends on when
+  it runs. Direction, to be designed here: a process counts only if a second sample a few seconds later still holds
+  it, since a job that can rewrite tracked files outlives that and a helper does not — a property, as the census's
+  own header asks, not a list of names. The script is the scaffold's (`scripts/update_scaffold.sh`'s `NEUTRAL` list),
+  so an edit here would be overwritten by the next update: the fix is proposed to the scaffold's owner, never written
+  into another repository (`decision_repository-boundary-read-only.md`), with a project-side second sample meanwhile.
+
 - ID: `PROGRAM.55`
   Status: `done` — filed and closed `2026-10-05`
   Goal: the archive `decision_reviews-folder-ceiling.md` names as the step after its raise: a closed review history

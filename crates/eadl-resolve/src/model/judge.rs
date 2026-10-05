@@ -108,7 +108,7 @@ fn of(outcome: Outcome) -> Verdict {
 #[must_use]
 pub fn judge(p: &Provider, r: &Requirement) -> Verdict {
     match r {
-        Requirement::Statement(_) => Verdict::Statement,
+        Requirement::Statement(..) => Verdict::Statement,
         Requirement::Presence(fact) => {
             let e = vocab::entry(fact).expect("a presence requirement names a vocabulary fact");
             match outcome(p, fact) {
@@ -195,6 +195,6 @@ pub fn judge(p: &Provider, r: &Requirement) -> Verdict {
 pub fn clause_satisfied(p: &Provider, constraints: &[Requirement]) -> bool {
     constraints
         .iter()
-        .filter(|r| !matches!(r, Requirement::Statement(_)))
+        .filter(|r| !matches!(r, Requirement::Statement(..)))
         .all(|r| judge(p, r) == Verdict::Satisfied)
 }

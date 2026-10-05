@@ -7,8 +7,8 @@
 
 use eadl_front::{read, Form, SourceMap};
 use eadl_resolve::model::{
-    clause_satisfied, judge, read_constraint, read_declaration_name, read_needs, read_provider,
-    read_uses, NotJudged, Verdict,
+    clause_satisfied, judge, read_clause, read_constraint, read_declaration_name, read_needs,
+    read_provider, read_uses, NotJudged, Verdict,
 };
 
 fn forms(text: &str) -> Vec<Form> {
@@ -677,6 +677,48 @@ const CASES: &[Case] = &[
         "(frequency 9.2 Hz)",
         ProviderInvalid,
     ),
+    Case(
+        "R19 1 an overflowing value once meets presence",
+        "(offers (delivery-bound 0.0000000000000000000000000000001 ns))",
+        "needs delivery-bound",
+        Judged(Satisfied),
+    ),
+    Case(
+        "R19 1 the same value written twice is one offer, and meets it too",
+        "(offers (delivery-bound 0.0000000000000000000000000000001 ns) (delivery-bound 0.0000000000000000000000000000001 ns))",
+        "needs delivery-bound",
+        Judged(Satisfied),
+    ),
+    Case(
+        "R19 6 two values in one unit compared as written, though the base unit would overflow",
+        "(offers (delivery-bound 0.0000000000000000000000000000001 ns) (delivery-bound 0.0000000000000000000000000000002 ns))",
+        "needs delivery-bound",
+        ProviderInvalid,
+    ),
+    Case(
+        "R19 4 a false required of a fact declared absent is absent, not satisfied",
+        "(absent debug-port)",
+        "(debug-port false)",
+        Judged(Absent),
+    ),
+    Case(
+        "R19 5 a sub-fact offered beside its head declared absent is a fact in its own right",
+        "(offers (supported-horizon 60 s)) (absent absolute-deadline)",
+        "(supported-horizon (at-least 10 s))",
+        Judged(Satisfied),
+    ),
+    Case(
+        "R19 9 an explicit modular wrap derives the horizon",
+        "(offers (counter-modulus 4294967296) (tick-rate 1 MHz) (wrap-behavior modular))",
+        "(unambiguous-horizon (at-least 60 s))",
+        Judged(Satisfied),
+    ),
+    Case(
+        "R19 9 a bare wrap-behavior beside its inputs leaves the horizon unknown",
+        "(offers (counter-modulus 4294967296) (tick-rate 1 MHz) wrap-behavior)",
+        "(unambiguous-horizon (at-least 60 s))",
+        Judged(Unknown),
+    ),
 ];
 
 fn run(case: &Case) -> Want {
@@ -756,4 +798,49 @@ fn a_clause_is_satisfied_when_each_constraint_is_a_statement_apart() {
         &[c("(uart true)"), c("(debug-port true)")]
     ));
     assert!(clause_satisfied(&p, &[]));
+}
+
+fn clause(text: &str) -> Result<Vec<eadl_resolve::model::Requirement>, NotJudged> {
+    read_clause(&forms(text)[0])
+}
+
+#[test]
+fn a_clause_holding_constraints_no_value_satisfies_together_is_refused() {
+    // R19 2: a mediation statement written both ways was satisfied, and `SR-H8` let the adapter through; R19 remark 8:
+    // two units required of one counter were unsatisfiable rather than diagnosed.
+    for (text, why) in [
+        ("(requires (reachable-at-privilege supervisor) (or-through-mediation allowed) (or-through-mediation forbidden))", "a statement both ways"),
+        ("(requires (or-through-mediation allowed) (or-through-mediation (exactly forbidden)))", "bare beside exactly"),
+        ("(requires (tick-unit ns) (tick-unit us))", "two equalities"),
+        ("(requires (counter-width (exactly 16 bit)) (counter-width (at-least 32 bit)))", "an equality a bound refuses"),
+        ("(requires (needs uart) (uart false))", "presence beside false"),
+        ("(requires (absolute-deadline (supported-horizon (at-least 10 s))) (absolute-deadline false))", "a group beside its head false"),
+        ("(requires (available-in-state (exactly idle)) (available-in-state sleep))", "an exact set a member outside it"),
+    ] {
+        assert!(matches!(clause(text), Err(NotJudged::Invalid(_))), "{why}: {text}");
+    }
+    for (text, why) in [
+        (
+            "(requires (or-through-mediation allowed) (or-through-mediation (exactly allowed)))",
+            "one statement twice",
+        ),
+        (
+            "(requires (counter-width (at-least 16 bit)) (counter-width (at-least 32 bit)))",
+            "two bounds",
+        ),
+        (
+            "(requires (counter-width (exactly 32 bit)) (counter-width (at-least 16 bit)))",
+            "an equality the bound admits",
+        ),
+        (
+            "(requires (available-in-state (exactly idle)) (available-in-state run))",
+            "an implied member",
+        ),
+        (
+            "(requires (tick-rate 10 MHz) (tick-rate 10000 kHz))",
+            "one amount in two units",
+        ),
+    ] {
+        assert!(clause(text).is_ok(), "{why}: {text}");
+    }
 }

@@ -23,7 +23,8 @@ pub mod vocab;
 pub use judge::{clause_satisfied, judge, outcome, Outcome, Verdict};
 pub use provider::{read as read_provider, Provider, Refused, Stated};
 pub use requirement::{
-    read_constraint, read_declaration_name, read_needs, read_uses, NotJudged, Requirement,
+    check_clause, read_clause, read_constraint, read_declaration_name, read_needs, read_uses,
+    NotJudged, Requirement,
 };
 pub use value::{Overflow, Value};
 pub use vocab::{Direction, Domain, Entry, Role, Rule, VOCABULARY};

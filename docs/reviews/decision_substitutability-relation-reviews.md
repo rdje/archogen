@@ -457,3 +457,23 @@ stands". Defects per round: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2
 | P7 — an interval past the arithmetic read as malformed; `within` short-circuiting before an overflow | no | §2: `unsupported-profile`, both endpoints compared first; held at the value level, since no `/1` fact reaches it (measured: `frequency` compares exactly) |
 | P8 — the `holds` sentence omits `implies` | no | §1.1: `(holds forms)` for `implies` |
 | P9 — the checker's universe: never three offers, never a list in `absent`, no `tick` count, widths to 32 bits only | no | four properties: every order, `absent` by name, the modulus at widths to 127 bits; counts written with `tick` |
+
+**Round 19**, `2026-10-05`: a new context that had not read rounds 1 to 18 read every model function beside its
+sentence and found the model a faithful transcription, swept 600 000 random inputs, and found both defects in the
+record's own rules, which the model inherited. Each landed first as a test — two fixtures and the duplicate-offer
+property failing on the model as the round found it, and the reader's clause satisfied there — then the rule, then
+the words. There were 10 findings, 2 of them defects, and the verdict was "not acceptable as it stands". Defects per
+round: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2, 2.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| Q1 — one overflowing value written twice fails a presence requirement it meets written once: §5's "one offer" against its overflow sentence | yes | §5: amounts in one unit compared as written; `value::same`; a duplicate-offer property; mutation `model-same-unit-compared-in-base` |
+| Q2 — a requirer writing `or-through-mediation` as `allowed` and `forbidden`: the clause satisfied, `SR-H8` letting the adapter through | yes | rules 5 and 6, §8: constraints on one fact no value satisfies together are `invalid-description`; `read_clause`; a clause property; mutation `model-contradictory-clause-admitted` |
+| Q3 — `SR-H18` gives no code for a provider past the arithmetic | no | `SR-H18`: `unsupported-profile` first, in both copies |
+| Q4 — `(f false)` at a provider declaring `f` absent is absent, unstated | no | rule 3: stated, absence offering no value |
+| Q5 — a sub-fact beside its head declared absent or `false` | no | §2's group row: judged on its own, as R17 decided |
+| Q6 — two values in one unit read as unsupported | no | §5: compared as written, two values |
+| Q7 — three model choices unstated | no | §2 and §8 state them; the model's comments name the sentences |
+| Q8 — contradictory guarantee constraints unsatisfiable, not diagnosed | no | refused with Q2's rule |
+| Q9 — the checker's universe | no | an offer twice, one value per equality, `exactly` offers as their values; two wrap fixtures |
+| Q10 — the epoch extender offering the horizon alone cannot serve `time.monotonic` | no | §4 and `SR-H10`: its extended modulus and rate beside the counter's other facts |

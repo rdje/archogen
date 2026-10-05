@@ -45,7 +45,15 @@ fn malformed<T>(why: impl Into<String>) -> Result<T, Malformed> {
 /// [`Overflow`] when comparing two amounts overflows the exact arithmetic: §2's `unsupported-profile`, never "two
 /// values" (record §5, R17 5).
 pub fn same(a: &Value, b: &Value) -> Result<bool, Overflow> {
-    let eq = |x: Quantity, y: Quantity| x.equals(y).map_err(|_| Overflow);
+    // Two amounts in one unit are compared as written, by their exact numbers, with no conversion to overflow; in two
+    // units, in the base unit, which may (record §5; R19 1, remark 6).
+    let eq = |x: Quantity, y: Quantity| {
+        if x.unit == y.unit {
+            Ok(x.value == y.value)
+        } else {
+            x.equals(y).map_err(|_| Overflow)
+        }
+    };
     Ok(match (a, b) {
         (Value::Bool(x), Value::Bool(y)) => x == y,
         (Value::Count(x), Value::Count(y)) => x == y,
@@ -178,6 +186,7 @@ pub fn read(domain: Domain, forms: &[Form], within: Span) -> Result<Value, Malfo
             for f in forms {
                 match f {
                     Form::Symbol { name, .. } if alternatives.contains(&name.as_str()) => {
+                        // Without repetition, in an offer and a requirement alike (§2's set row; R19 remark 7).
                         if !set.insert(name.clone()) {
                             return malformed(format!("`{name}` written twice"));
                         }

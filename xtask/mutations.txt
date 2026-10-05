@@ -1104,3 +1104,25 @@ from
 to
                             if false {
 end
+
+mutation model-same-unit-compared-in-base
+file crates/eadl-resolve/src/model/value.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 19: two amounts in one unit are compared as written; converted to the base unit first, one value written twice overflowed and failed a presence requirement it met written once (§5).
+from
+            if x.unit == y.unit {
+to
+            if false {
+end
+
+mutation model-contradictory-clause-admitted
+file crates/eadl-resolve/src/model/requirement.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 19: constraints of one clause on one fact that no value satisfies together are refused; admitted, a mediation statement written both ways passed and `SR-H8` let the adapter through (§3 rules 5, 6; §8).
+from
+                if clash {
+to
+                if false {
+end

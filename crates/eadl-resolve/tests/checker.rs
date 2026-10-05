@@ -15,7 +15,10 @@
 //! - **a provider's reading is order-free**: three offers of one fact read alike in all six orders, one of them past
 //!   the arithmetic where the domain has one, and two unequal ones are two values whatever the third (R18 1);
 //! - **`absent` names a fact by name alone**: a value written inside it is refused (R18 2);
-//! - **the modulus is bounded by its width at every width**, to 127 bits (R18 9).
+//! - **the modulus is bounded by its width at every width**, to 127 bits (R18 9);
+//! - **writing an offer twice changes nothing** (R19 1);
+//! - **a clause holds one value per equality**: two statements or equalities on one fact with two values refused, one
+//!   value twice accepted (R19 2).
 //!
 //! Each property also has a catalogued mutation in `xtask/mutations.txt` that breaks the rule it guards, and this
 //! file must kill it.
@@ -26,8 +29,8 @@ use eadl_front::{read, Form, SourceMap};
 use eadl_model::quantity::{unit, Quantity};
 use eadl_model::{Dimension, Rational};
 use eadl_resolve::model::{
-    judge, read_constraint, read_needs, read_provider, Direction, Domain, Requirement, Role, Value,
-    Verdict, VOCABULARY,
+    judge, read_clause, read_constraint, read_needs, read_provider, Direction, Domain, Requirement,
+    Role, Value, Verdict, VOCABULARY,
 };
 
 fn forms(text: &str) -> Vec<Form> {
@@ -711,4 +714,101 @@ fn a_modulus_above_its_width_is_refused_at_every_width() {
         }
     }
     println!("checked {pairs} width and modulus pairs");
+}
+
+#[test]
+fn writing_an_offer_twice_changes_nothing() {
+    // R19 1: an overflowing value written twice failed a presence requirement it met written once.
+    const TINY: &str = "0.0000000000000000000000000000001 ns";
+    let mut providers = 0usize;
+    for e in VOCABULARY.iter().filter(|e| e.role == Role::Guarantee) {
+        let mut pool = samples(e.domain);
+        if e.domain == Domain::Quantity(Dimension::Time) {
+            pool.push(TINY.to_owned());
+        }
+        let mut probes: Vec<Requirement> = pool
+            .iter()
+            .filter_map(|v| constraint(&format!("({} (exactly {v}))", e.name)).ok())
+            .collect();
+        probes.push(read_needs(&forms(e.name)[0]).expect("a vocabulary fact"));
+        let reading = |offers: &str| {
+            provider(&format!("(offers {offers})"))
+                .ok()
+                .map(|p| probes.iter().map(|r| judge(&p, r)).collect::<Vec<_>>())
+        };
+        for v in &pool {
+            let once = format!("({} {v})", e.name);
+            assert_eq!(
+                reading(&once),
+                reading(&format!("{once} {once}")),
+                "{once} twice"
+            );
+            providers += 1;
+        }
+    }
+    println!("read {providers} offers once and twice");
+}
+
+#[test]
+fn a_clause_holds_one_value_per_equality() {
+    // R19 2: a statement written both ways passed; two equalities on one fact are one value or a contradiction.
+    let mut clauses = 0usize;
+    for e in VOCABULARY
+        .iter()
+        .filter(|e| e.direction == Direction::Exact)
+    {
+        let pool = samples(e.domain);
+        for a in &pool {
+            for b in &pool {
+                for (x, y) in [
+                    (format!("({} {a})", e.name), format!("({} {b})", e.name)),
+                    (
+                        format!("({} {a})", e.name),
+                        format!("({} (exactly {b}))", e.name),
+                    ),
+                ] {
+                    let (Ok(_), Ok(_)) = (constraint(&x), constraint(&y)) else {
+                        continue;
+                    };
+                    let read = read_clause(&forms(&format!("(requires {x} {y})"))[0]);
+                    let same = same_by_oracle(e.domain, a, b);
+                    assert_eq!(read.is_ok(), same, "{x} beside {y}");
+                    clauses += 1;
+                }
+            }
+        }
+    }
+    println!("read {clauses} clauses of two equalities on one fact");
+}
+
+#[test]
+fn an_offer_under_exactly_reads_as_its_value() {
+    // R19 remark 9: the oracle judged plain `(f v)` offers only; `(f (exactly v))` is that value (§1.1; R10 J8).
+    let mut offers = 0usize;
+    for e in VOCABULARY.iter().filter(|e| e.role == Role::Guarantee) {
+        let pool = samples(e.domain);
+        let mut probes: Vec<Requirement> = pool
+            .iter()
+            .filter_map(|v| constraint(&format!("({} {v})", e.name)).ok())
+            .collect();
+        probes.push(read_needs(&forms(e.name)[0]).expect("a vocabulary fact"));
+        for v in &pool {
+            let (Ok(plain), Ok(exact)) = (
+                provider(&format!("(offers ({} {v}))", e.name)),
+                provider(&format!("(offers ({} (exactly {v})))", e.name)),
+            ) else {
+                continue;
+            };
+            for r in &probes {
+                assert_eq!(
+                    judge(&plain, r),
+                    judge(&exact, r),
+                    "{}: `{v}` under `exactly`",
+                    e.name
+                );
+            }
+            offers += 1;
+        }
+    }
+    println!("judged {offers} offers under `exactly` as their values");
 }
