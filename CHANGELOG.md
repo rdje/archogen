@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — design reviews made executable
+
+`ARCHOGEN-PROGRAM-0425` (leaf `PROGRAM.52`, step 1).
+
+- Two design reviews had stopped converging: each round's reader found eight to sixteen new defects in tens of
+  kilobytes of prose. The method changes, not the bar: each design now ships an executable model or a measuring
+  instrument with an exhaustive checker, every past probe becomes a permanent test, and every hand-off to other work
+  is one sentence a commit check holds in both places. A design still closes only on a round that finds nothing.
+
 ## archogen — the trust-dependency gate's sixth review, answered
 
 `ARCHOGEN-M3-0424` (leaf `M3.6.1`, step 7).

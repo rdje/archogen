@@ -178,6 +178,7 @@ justifies the split — the rows below appear as that happens.
 - [`decision_eadl1-value-domain.md`](docs/decisions/decision_eadl1-value-domain.md)
 - [`decision_emulator-independence-retained.md`](docs/decisions/decision_emulator-independence-retained.md)
 - [`decision_engine-api.md`](docs/decisions/decision_engine-api.md)
+- [`decision_executable-design-reviews.md`](docs/decisions/decision_executable-design-reviews.md)
 - [`decision_findings-for-director-review.md`](docs/decisions/decision_findings-for-director-review.md)
 - [`decision_history-ledgers.md`](docs/decisions/decision_history-ledgers.md)
 - [`decision_incomplete-blocking-policy.md`](docs/decisions/decision_incomplete-blocking-policy.md)

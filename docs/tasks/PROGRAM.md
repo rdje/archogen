@@ -699,91 +699,30 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.47.md`](../task-history/PROGRAM/PROGRAM.47.md); commit `ARCHOGEN-PROGRAM-0326`
 
 - ID: `PROGRAM.48`
-  Status: `done` — `2026-10-03`
-  Goal: the book's total-bytes ceiling raised with its measurement, as `README_POLICY.md` requires of a ceiling:
-  `docs/book/` stood at 393 208 of 393 216 bytes, eight bytes of headroom, after 44 commits touched the book in two
-  days; the lockstep rule moves a chapter with every normative change, so the book grows by about a kilobyte a leaf
-  by design, and four of the last six book changes needed a compaction of a stale or redundant passage first.
-  Acceptance: the ceiling raised in `README_POLICY.md`'s two rows to 458 752 bytes (448 KiB), the per-file ceilings
-  unchanged; the decision record that owns the ceiling, `decision_book-in-layers.md`, carries the dated paragraph
-  with the measurement and the rate; `README-ROUTES` green.
-  Verification: `git ls-files docs/book | xargs wc -c` → `393208 total` before; `bash scripts/check_doctrines.sh` →
-  `=== all doctrines green ===` after.
-  Commit: `ARCHOGEN-PROGRAM-0392 (leaf PROGRAM.48)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.48.md`](../task-history/PROGRAM/PROGRAM.48.md); commit `ARCHOGEN-PROGRAM-0392`
 
 - ID: `PROGRAM.49`
-  Status: `done` — `2026-10-03`
-  Goal: `docs/reviews/`' total-bytes ceiling raised with its measurement, as `README_POLICY.md` requires of a ceiling:
-  the folder stood at 264 219 bytes against 262 144 after the substitutability record's fourth round was answered;
-  `PROGRAM.36` set the ceiling from 6 histories at 117 623 bytes, there are 11 now, and the closure rule makes a
-  history as long as the rounds it takes — 16 for the catalog's record. A frozen history is never edited, so the
-  folder cannot be compacted, and it has no overflow destination of its own.
-  Acceptance: the ceiling raised in `README_POLICY.md`'s row to 393 216 bytes (384 KiB) and named in "Ceilings a
-  decision fixes", the per-file ceilings unchanged; a decision record, `decision_reviews-folder-ceiling.md`, carrying
-  the measurement, the rate and the next step if the rate holds (a terminal archive for closed histories, not another
-  raise); the containment inventory's row re-measured; `README-ROUTES` green.
-  Verification: `git ls-files docs/reviews | xargs cat | wc -c` → `264219` before, against the refusal
-  `docs/reviews/: 264219 bytes in total, over its ceiling of 262144`; `bash scripts/check_doctrines.sh` → `=== all
-  doctrines green ===` after.
-  Commit: `ARCHOGEN-PROGRAM-0400 (leaf PROGRAM.49)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.49.md`](../task-history/PROGRAM/PROGRAM.49.md); commit `ARCHOGEN-PROGRAM-0400`
 
 - ID: `PROGRAM.50`
-  Status: `done` — `2026-10-03`
-  Goal: `docs/decisions/` back under its ceiling of 393 216 bytes without raising it: the fault contract's review
-  rounds R3–R15, appended to `decision_runtime-contract-gaps.md` while the contract was reviewed, moved byte for byte
-  into a review history of their own, `docs/reviews/rt-static-up-v1-faults-reviews.md`, as `docs/reviews/INDEX.md`
-  places a design's review history and `PROGRAM.36` moved the catalog's.
-  Why: on `2026-10-03` `M3.1.1`'s thirteenth step took the folder to 395 564 bytes, which `README-ROUTES` refused.
-  The ceiling is the director's one-time raise (`decision_decisions-folder-ceiling.md`); `docs/specs/` has 8 KB of
-  room, too little for an accepted design to move there (`decision_specifications-home.md`); the record's sections
-  are unnumbered, so `DECISION-HISTORY` cannot seal them. The thirteen sections are review history — rounds of an
-  independent review of `docs/profiles/rt-static-up-v1-faults.md`, each with its findings and answers — which
-  belongs in `docs/reviews/`.
-  Acceptance: the block moved unchanged, its sha256 the same before and after; a stub where it stood naming the new
-  file; the profile's header and the review index pointing at it; `README-ROUTES` green, `docs/decisions/` under its
-  ceiling.
-  Verification: `git show HEAD:docs/decisions/decision_runtime-contract-gaps.md | sed -n 186,549p | shasum -a 256` → `5785eb49…57cc9`, and the same digest over
-  the new file from its first round's heading; `git ls-files docs/decisions | xargs cat | wc -c` → 395 564 before,
-  352584 after; `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`.
-  Commit: `ARCHOGEN-PROGRAM-0412 (leaf PROGRAM.50)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.50.md`](../task-history/PROGRAM/PROGRAM.50.md); commit `ARCHOGEN-PROGRAM-0412`
 
 - ID: `PROGRAM.51`
-  Status: `done` — filed and closed `2026-10-03` from `M2.22`'s root cause
-  Goal: `COMMIT.md` step 2's format step enforced at commit time, a project doctrine `RUST-FORMAT`: every Rust source
-  a commit stages is in canonical format, read from the index. `ARCHOGEN-M2-0394 (leaf M2.10.2)` committed two
-  unformatted files after running the tests and clippy alone, and the `focused` tier's `fmt` step failed at HEAD
-  until `M2.22`; nothing at commit time held anyone to the step, and the format step is the one of that tier cheap
-  enough for the pre-commit path.
-  Acceptance: the gate refuses an unformatted staged file by name and passes a canonical one; judges the staged
-  bytes, not the working tree's; follows no `mod`; refuses a file `rustfmt` cannot read; judges every tracked file
-  when nothing is staged; leaves `vendor/` out; an empty population a breach; its RED arms run by
-  `scripts/run_self_tests.sh`; registered, mirrored in `DOCTRINE_ENFORCEMENT.md`, the toolchain fact it rests on in
-  the ledger.
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.51.md`](../task-history/PROGRAM/PROGRAM.51.md); commit `ARCHOGEN-PROGRAM-0421`
 
-  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
-  - [x] **REPRODUCE / ISSUE** — `ARCHOGEN-M2-0394`'s `compose.rs` through `rustfmt --emit stdout` and `cmp` against
-    itself → `cmp rc=1`, differing; yet that commit passed the pre-commit hook, whose doctrines hold no format check
-    (`grep -c fmt scripts/check_doctrines.project.sh` → 0 before this leaf).
-  - [x] **ROOT CAUSE (WHY + WHERE)** — `printf 'fn  main( ){}' | rustfmt --edition 2021 --check; echo rc=$?` →
-    its diff, then `rc=0`, on rustc 1.95.0's rustfmt; and no doctrine ran a format check before this leaf.
-    WHERE: `COMMIT.md` step 2 asks for `make focused`, whose first step is `fmt`, and nothing at commit time runs it. WHY a staged-file check and not `cargo fmt --check`: the latter reads the
-    working tree, so a fix left unstaged passes over the bytes committed, and it follows `mod` declarations; on
-    stdin, `rustfmt --check` prints its diff and exits 0 (`printf 'fn  main( ){}' | rustfmt --edition 2021
-    --check; echo $?` → `0`), so the gate compares `--emit stdout` with its input.
-  - [x] **FIX** — `scripts/check_rust_format.sh`, `RUST-FORMAT`, registered in `scripts/check_doctrines.project.sh`,
-    mirrored in `DOCTRINE_ENFORCEMENT.md`, named in `COMMIT.md` step 2; the `rustfmt` fact in the ledger's
-    `rust-toolchain` entry → `grep -c RUST-FORMAT` over the four files → 1 each.
-  - [x] **ADDRESSED (verified)** — `bash scripts/check_rust_format.sh --self-test` → `10 pass / 0 fail (10 arms)`:
-    a canonical file passes; an unformatted one refused by name; the staged bytes judged over a working-tree fix,
-    and the reverse; no `mod` followed; an unreadable file refused; `vendor/` outside; a commit staging no Rust
-    passes; nothing staged judges every tracked file; an empty population a breach.
-  - [x] **NO REGRESSION** — `bash scripts/check_rust_format.sh` on the tree → `159 tracked Rust source file(s), each
-    in canonical format`, in about 5 s; `bash scripts/run_self_tests.sh` → `self-tests: OK — 44 self-test(s)
-    passed`; `bash scripts/check_doctrines.sh` → `=== all doctrines green ===`.
-  - [x] **LOCKSTEP** — `DOCTRINE_ENFORCEMENT.md`, `COMMIT.md`, the ledger; this leaf and both logs; `CHANGELOG.md`
-    → one entry.
-  Verification: `2026-10-03` — the Verification Log's row
-  Commit: `ARCHOGEN-PROGRAM-0421 (leaf PROGRAM.51)`
+- ID: `PROGRAM.52`
+  Status: `active` — filed `2026-10-05` on the director's word that a stuck review loop is an engineering problem
+  Goal: the method of `docs/decisions/decision_executable-design-reviews.md` in place for every design reviewed under
+  the closure rule — a reference model or measuring instrument, a falsification corpus, and the hand-off ledger — and
+  the doctrine `HANDOFF-LEDGER`, `scripts/check_handoff_ledger.sh`: a record's `<!-- machine-read: handoffs -->` table
+  holds each hand-off's identifier, receiving leaf and obligation sentence; the commit is refused when a row's
+  sentence is not quoted verbatim beside its identifier in that leaf, or a leaf quotes an identifier no ledger holds.
+  Acceptance: the decision record and its index row; the doctrine with RED arms run by `scripts/run_self_tests.sh`,
+  registered and mirrored; `decision_substitutability-relation.md` and `decision_trust-inventory.md` holding their
+  hand-offs in ledgers, every receiving leaf quoting them, the doctrine green; `M3.1.1.1` and `M3.6.2` carrying the
+  model and the instrument.
+  Verification: `pending`
+  Commit: step 1, `ARCHOGEN-PROGRAM-0425 (leaf PROGRAM.52)`
 
 ## Roadmap coverage map
 
@@ -1114,6 +1053,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.50` | `ARCHOGEN-PROGRAM-0412 (leaf PROGRAM.50)` | the fault contract's review rounds R3–R15 moved byte for byte from `decision_runtime-contract-gaps.md` to `docs/reviews/`, `docs/decisions/` back under its ceiling |
 | `PROGRAM.51` | `ARCHOGEN-PROGRAM-0421 (leaf PROGRAM.51)` | `RUST-FORMAT`: every staged Rust source in canonical format, read from the index, at commit time |
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0331 (leaf PROGRAM)` | **`PROGRAM.47` sealed**, its 30 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` had grown 1 653 bytes over its 819 200-byte ceiling with `API.6.3`'s leaf |
+| `PROGRAM.52` | `ARCHOGEN-PROGRAM-0425 (leaf PROGRAM.52)` | **step 1 — design reviews made executable**: the method record; `M3.1.1.1` filed; `M3.6.2` begun as the instrument; closed leaves sealed |
 
 ## Changelog
 
@@ -1121,3 +1061,4 @@ a clean `git status` means what the handoff rule says it means.
 - `2026-09-30`: `PROGRAM.35` filed and decomposed into `.35.1` and `.35.2`: the README policy the standing instruction names had never been adopted at its revision, and the caps never fitted.
 - `2026-09-30`: `PROGRAM.41` reopened by its independent review; `PROGRAM.41.1` and `PROGRAM.42` filed.
 - `2026-10-03`: `PROGRAM.51` filed and closed — `RUST-FORMAT`, `COMMIT.md` step 2's format step held at commit time.
+- `2026-10-05`: `PROGRAM.52` filed — design reviews made executable (`decision_executable-design-reviews.md`).
