@@ -1116,6 +1116,28 @@ to
                             if false {
 end
 
+mutation model-clause-uses-read-as-constraint
+file crates/eadl-resolve/src/model/requirement.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 20: a clause's `uses` names declarations; read as a constraint it made 51 of the corpus's 101 clauses `unsupported-profile` and hid a contradiction behind it (§1, rule 5).
+from
+                Some("uses") => {
+to
+                Some("uses-never-read") => {
+end
+
+mutation model-clause-past-arithmetic-silent
+file crates/eadl-resolve/src/model/requirement.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 20: whether a clause's constraints hold together, past the arithmetic, is `unsupported-profile`; ignored, a contradiction in two units was read without a word (§2, rule 5).
+from
+                        past.get_or_insert_with(|| f.clone());
+to
+                        let _ = &past;
+end
+
 mutation model-same-unit-compared-in-base
 file crates/eadl-resolve/src/model/value.rs
 test -p eadl-resolve

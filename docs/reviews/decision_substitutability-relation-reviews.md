@@ -477,3 +477,19 @@ round: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2, 2.
 | Q8 — contradictory guarantee constraints unsatisfiable, not diagnosed | no | refused with Q2's rule |
 | Q9 — the checker's universe | no | an offer twice, one value per equality, `exactly` offers as their values; two wrap fixtures |
 | Q10 — the epoch extender offering the horizon alone cannot serve `time.monotonic` | no | §4 and `SR-H10`: its extended modulus and rate beside the counter's other facts |
+
+**Round 20**, `2026-10-05`: a new context that had not read rounds 1 to 19 found the model faithful elsewhere and ran
+step 20's clause reader over the 101 `requires` clauses the tracked corpus writes. Both defects were in that reader,
+each with a reproducer, and each landed first as a test failing on the model as the round found it. There were 7
+findings, 2 of them defects, and the verdict was "not acceptable as it stands". Defects per round: 7, 7, 8, 3, 3, 3,
+5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2, 2, 2.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| R1 — `read_clause` read `uses` as a constraint and let a service's `needs` abandon the clause: 51 of 101 corpus clauses `unsupported-profile`, 2 unread, a contradiction hidden behind them | yes | rule 5: `uses` and services are §1's; the reader sends each where §1 does; mutation `model-clause-uses-read-as-constraint` |
+| R2 — a contradiction past the arithmetic read silently; one-unit equality beside a bound compared in the base unit | yes | §5, rule 5: every comparison in one unit as written (`value::order_of`), a clause past the arithmetic `unsupported-profile`; mutation `model-clause-past-arithmetic-silent` |
+| R3 — interval sameness short-circuited at its low endpoint | no | both endpoints compared before either decides |
+| R4 — presence beside an overflowing pair of offers | no | §5: `unsupported-profile` reaches presence, stated |
+| R5 — `SR-H16` refuses one block's absence beside another's offer | no | `SR-H16`: `M3.4` records why, in both copies |
+| R6 — a required `false` against a declared absence | no | already stated (R19 4): conservative, absence not falsity |
+| R7 — ordered enumerations and time intervals unexercised | no | both held at the value level |

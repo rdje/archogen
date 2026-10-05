@@ -226,12 +226,24 @@ pub fn read_declaration_name(name: &str) -> Result<(), NotJudged> {
 pub fn read_clause(clause: &Form) -> Result<Vec<Requirement>, NotJudged> {
     let mut out = Vec::new();
     for item in clause.items().iter().skip(1) {
-        if item.head() == Some("needs") {
-            for n in &item.items()[1..] {
-                out.push(read_needs(n)?);
+        match item.head() {
+            Some("needs") => {
+                for n in &item.items()[1..] {
+                    match read_needs(n) {
+                        Ok(r) => out.push(r),
+                        // A service, or a name the vocabulary does not declare: presence's and the closure's (§1).
+                        Err(NotJudged::NotAFact) => {}
+                        Err(e) => return Err(e),
+                    }
+                }
             }
-        } else {
-            out.push(read_constraint(item)?);
+            // A declaration used, never a fact: an operand naming one is refused (§1; R15 1, R20 1).
+            Some("uses") => {
+                for n in &item.items()[1..] {
+                    read_uses(n)?;
+                }
+            }
+            _ => out.push(read_constraint(item)?),
         }
     }
     check_clause(&out)?;
@@ -241,11 +253,12 @@ pub fn read_clause(clause: &Form) -> Result<Vec<Requirement>, NotJudged> {
 /// Refuse constraints of one clause on one fact that no value satisfies together — contradictory requirements, which
 /// `ROADMAP.md` §5.3 rejects rather than choosing one (record §3 rules 5, 6; §8; R19 2, remark 8): a statement written
 /// with two values, two equalities that differ, or an equality another constraint on its fact refuses. Two bounds in
-/// the fact's own direction never contradict; a comparison past the arithmetic decides nothing here.
+/// the fact's own direction never contradict. Where no pair clashes and deciding one is past the exact arithmetic, the
+/// clause is `unsupported-profile` (§2; R20 2), whatever order its constraints are written in.
 ///
 /// # Errors
 ///
-/// `invalid-description`, naming the fact.
+/// `invalid-description`, naming the fact; or `unsupported-profile`.
 pub fn check_clause(constraints: &[Requirement]) -> Result<(), NotJudged> {
     fn walk(r: &Requirement, flat: &mut Vec<(String, Direction, Value)>) {
         match r {
@@ -277,6 +290,7 @@ pub fn check_clause(constraints: &[Requirement]) -> Result<(), NotJudged> {
     for r in constraints {
         walk(r, &mut flat);
     }
+    let mut past: Option<String> = None;
     for (i, (f, d, v)) in flat.iter().enumerate() {
         for (g, d2, w) in &flat[i + 1..] {
             if f != g {
@@ -299,15 +313,18 @@ pub fn check_clause(constraints: &[Requirement]) -> Result<(), NotJudged> {
                 }
                 _ => x.clone(),
             };
-            let clash = match (*d == Direction::Exact, *d2 == Direction::Exact) {
-                (true, true) => value::same(&admitted(v), &admitted(w)) == Ok(false),
-                (true, false) => {
-                    value::satisfies(&admitted(v), w, *d2, order, e.implies) == Ok(false)
+            let holds = match (*d == Direction::Exact, *d2 == Direction::Exact) {
+                (true, true) => value::same(&admitted(v), &admitted(w)),
+                (true, false) => value::satisfies(&admitted(v), w, *d2, order, e.implies),
+                (false, true) => value::satisfies(&admitted(w), v, *d, order, e.implies),
+                (false, false) => Ok(true),
+            };
+            let clash = match holds {
+                Ok(h) => !h,
+                Err(_) => {
+                    past.get_or_insert_with(|| f.clone());
+                    false
                 }
-                (false, true) => {
-                    value::satisfies(&admitted(w), v, *d, order, e.implies) == Ok(false)
-                }
-                (false, false) => false,
             };
             if clash {
                 return invalid(format!(
@@ -317,5 +334,10 @@ pub fn check_clause(constraints: &[Requirement]) -> Result<(), NotJudged> {
             }
         }
     }
-    Ok(())
+    match past {
+        Some(f) => Err(NotJudged::Unsupported(format!(
+            "whether the constraints on `{f}` can hold together is past the exact arithmetic (§2)"
+        ))),
+        None => Ok(()),
+    }
 }

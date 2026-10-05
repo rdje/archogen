@@ -18,7 +18,9 @@
 //! - **the modulus is bounded by its width at every width**, to 127 bits (R18 9);
 //! - **writing an offer twice changes nothing** (R19 1);
 //! - **a clause holds one value per equality**: two statements or equalities on one fact with two values refused, one
-//!   value twice accepted (R19 2).
+//!   value twice accepted (R19 2), whatever `uses` and services the clause also names (R20 1);
+//! - **a clause is decided without conversion and unsupported past it**: one unit compared as written, two units whose
+//!   conversion overflows `unsupported-profile`, never silence (R20 2).
 //!
 //! Each property also has a catalogued mutation in `xtask/mutations.txt` that breaks the rule it guards, and this
 //! file must kill it.
@@ -770,7 +772,12 @@ fn a_clause_holds_one_value_per_equality() {
                     let (Ok(_), Ok(_)) = (constraint(&x), constraint(&y)) else {
                         continue;
                     };
-                    let read = read_clause(&forms(&format!("(requires {x} {y})"))[0]);
+                    // A `uses` and a service's `needs` beside them change nothing the relation reads (R20 1).
+                    let read = read_clause(
+                        &forms(&format!(
+                            "(requires (uses timer.counter) (needs time.monotonic) {x} {y})"
+                        ))[0],
+                    );
                     let same = same_by_oracle(e.domain, a, b);
                     assert_eq!(read.is_ok(), same, "{x} beside {y}");
                     clauses += 1;
@@ -811,4 +818,43 @@ fn an_offer_under_exactly_reads_as_its_value() {
         }
     }
     println!("judged {offers} offers under `exactly` as their values");
+}
+
+#[test]
+fn a_clause_is_decided_in_one_unit_and_unsupported_past_the_arithmetic() {
+    // R20 2: a contradiction past the arithmetic was read without a word.
+    const TINY: &str = "0.0000000000000000000000000000001 ns";
+    const TINY2: &str = "0.0000000000000000000000000000002 ns";
+    let pool = [TINY, TINY2, "1 s", "1 ms"];
+    let mut clauses = 0usize;
+    for e in VOCABULARY
+        .iter()
+        .filter(|e| e.domain == Domain::Quantity(Dimension::Time))
+    {
+        let bound = match e.direction {
+            Direction::AtLeast => "at-least",
+            Direction::AtMost => "at-most",
+            _ => continue,
+        };
+        for a in pool {
+            for b in pool {
+                for y in [
+                    format!("({} (exactly {b}))", e.name),
+                    format!("({} ({bound} {b}))", e.name),
+                ] {
+                    let x = format!("({} (exactly {a}))", e.name);
+                    let read = read_clause(&forms(&format!("(requires {x} {y})"))[0]);
+                    let tiny = |v: &str| v.ends_with(" ns") && v.starts_with("0.000");
+                    let past = tiny(a) != tiny(b);
+                    assert_eq!(
+                        matches!(read, Err(eadl_resolve::model::NotJudged::Unsupported(_))),
+                        past,
+                        "{x} beside {y}: {read:?}"
+                    );
+                    clauses += 1;
+                }
+            }
+        }
+    }
+    println!("read {clauses} clauses at the arithmetic's edge");
 }

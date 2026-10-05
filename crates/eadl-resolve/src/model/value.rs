@@ -58,11 +58,31 @@ pub fn same(a: &Value, b: &Value) -> Result<bool, Overflow> {
         (Value::Bool(x), Value::Bool(y)) => x == y,
         (Value::Count(x), Value::Count(y)) => x == y,
         (Value::Quantity(x), Value::Quantity(y)) => eq(*x, *y)?,
-        (Value::Interval(a0, a1), Value::Interval(b0, b1)) => eq(*a0, *b0)? && eq(*a1, *b1)?,
+        // Both endpoints compared before either decides: a decided difference makes two values whatever the other
+        // gives, and an overflow decides only when nothing else does (§5; R18 1, R20 remark 3).
+        (Value::Interval(a0, a1), Value::Interval(b0, b1)) => match (eq(*a0, *b0), eq(*a1, *b1)) {
+            (Ok(false), _) | (_, Ok(false)) => false,
+            (Ok(true), Ok(true)) => true,
+            _ => return Err(Overflow),
+        },
         (Value::Enum(x), Value::Enum(y)) => x == y,
         (Value::Set(x), Value::Set(y)) => x == y,
         _ => false,
     })
+}
+
+/// The order of two amounts of one dimension: by their written numbers when their units are the same, needing no
+/// conversion; otherwise in the base unit, which may overflow (record §2, §5; R19 1, 6; R20 2).
+///
+/// # Errors
+///
+/// [`Overflow`] when the conversion overflows.
+pub fn order_of(a: Quantity, b: Quantity) -> Result<Ordering, Overflow> {
+    if a.unit == b.unit {
+        Ok(a.value.cmp(&b.value))
+    } else {
+        a.compare(b).map_err(|_| Overflow)
+    }
 }
 
 /// Whether an interval's endpoints can be ordered within the exact arithmetic: a value whose cannot is §2's
@@ -73,7 +93,7 @@ pub fn same(a: &Value, b: &Value) -> Result<bool, Overflow> {
 /// [`Overflow`] when comparing the endpoints overflows.
 pub fn interval_order(v: &Value) -> Result<(), Overflow> {
     match v {
-        Value::Interval(lo, hi) => lo.compare(*hi).map(|_| ()).map_err(|_| Overflow),
+        Value::Interval(lo, hi) => order_of(*lo, *hi).map(|_| ()),
         _ => Ok(()),
     }
 }
@@ -157,7 +177,7 @@ pub fn read(domain: Domain, forms: &[Form], within: Span) -> Result<Value, Malfo
                 [_, ln, lu, hn, hu] => {
                     let lo = quantity(Some(ln), Some(lu), within, dim)?;
                     let hi = quantity(Some(hn), Some(hu), within, dim)?;
-                    match lo.compare(hi) {
+                    match order_of(lo, hi) {
                         Ok(Ordering::Greater) => malformed("an interval with `lo > hi`"),
                         // Endpoints whose order is past the exact arithmetic are read, and `interval_order` makes
                         // the value §2's `unsupported-profile`, never `invalid-description` (R18 7).
@@ -216,8 +236,10 @@ pub fn satisfies(
     order: &[&str],
     implied: &[&str],
 ) -> Result<bool, Overflow> {
+    // A comparison converts to the base unit only when its two amounts' units differ; in one unit they are compared
+    // as written, by their exact numbers (record §2, §5; R19 1, 6; R20 2).
     let q = |o: Quantity, r: Quantity, d: ComparisonDirection| {
-        o.compare(r).map_err(|_| Overflow).map(|ord| match d {
+        order_of(o, r).map(|ord| match d {
             ComparisonDirection::AtLeast => ord.is_ge(),
             ComparisonDirection::AtMost => ord.is_le(),
             ComparisonDirection::Exact => ord.is_eq(),
@@ -306,14 +328,43 @@ mod tests {
     }
 
     #[test]
+    fn an_ordered_enumeration_is_judged_by_its_order() {
+        // R20 remark 7: no `/1` entry is ordered, so the order's reading is held here.
+        let order = ["low", "mid", "high"];
+        let e = |n: &str| Value::Enum(n.to_owned());
+        assert_eq!(
+            satisfies(&e("high"), &e("mid"), Direction::AtLeast, &order, &[]),
+            Ok(true)
+        );
+        assert_eq!(
+            satisfies(&e("low"), &e("mid"), Direction::AtLeast, &order, &[]),
+            Ok(false)
+        );
+        assert_eq!(
+            satisfies(&e("low"), &e("mid"), Direction::AtMost, &order, &[]),
+            Ok(true)
+        );
+        assert_eq!(
+            satisfies(&e("other"), &e("mid"), Direction::AtLeast, &order, &[]),
+            Ok(false)
+        );
+    }
+
+    #[test]
     fn an_interval_past_the_arithmetic_is_overflow_whichever_endpoint_decides_first() {
         let tiny = q(Rational::decimal(1, 31).expect("fits"), "ns");
+        let tiny_us = q(Rational::decimal(1, 34).expect("fits"), "us");
         let one = q(Rational::integer(1), "s");
         let zero = q(Rational::integer(0), "s");
-        assert_eq!(interval_order(&Value::Interval(tiny, tiny)), Err(Overflow));
+        // In one unit two tiny amounts are ordered as written (R20 2); in two, the base unit overflows.
+        assert_eq!(interval_order(&Value::Interval(tiny, tiny)), Ok(()));
+        assert_eq!(
+            interval_order(&Value::Interval(tiny_us, tiny)),
+            Err(Overflow)
+        );
         // The low endpoint decides `false` exactly; the high one overflows: §2's overflow, never a refusal.
         let offered = Value::Interval(one, tiny);
-        let required = Value::Interval(zero, tiny);
+        let required = Value::Interval(zero, tiny_us);
         assert_eq!(
             satisfies(&offered, &required, Direction::Within, &[], &[]),
             Err(Overflow)

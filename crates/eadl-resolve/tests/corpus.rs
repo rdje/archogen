@@ -844,3 +844,30 @@ fn a_clause_holding_constraints_no_value_satisfies_together_is_refused() {
         assert!(clause(text).is_ok(), "{why}: {text}");
     }
 }
+
+#[test]
+fn a_clause_reads_its_uses_and_services_and_is_unsupported_past_the_arithmetic() {
+    // R20 1: the tracked corpus's clauses hold `uses` and service `needs`, which the reader abandoned or misread.
+    let read = |t: &str| clause(t).map(|c| c.len());
+    assert_eq!(
+        read("(requires (release-accuracy (at-most 1 ms)) (needs time.monotonic))"),
+        Ok(1)
+    );
+    assert_eq!(read("(requires (uses timer.counter console.uart))"), Ok(0));
+    for (text, why) in [
+        ("(requires (uses time.monotonic) (or-through-mediation allowed) (or-through-mediation forbidden))", "a contradiction behind a `uses`"),
+        ("(requires (needs time.monotonic) (tick-unit ns) (tick-unit us))", "a contradiction behind a service"),
+        ("(requires (uses observation-coherent))", "a `uses` naming a fact"),
+        ("(requires (delivery-bound (exactly 0.0000000000000000000000000000002 ns)) (delivery-bound (at-most 0.0000000000000000000000000000001 ns)))", "one unit, compared as written"),
+    ] {
+        assert!(matches!(clause(text), Err(NotJudged::Invalid(_))), "{why}: {text}");
+    }
+    // R20 2: whether two constraints can hold together, past the arithmetic, is `unsupported-profile`, never silence.
+    for (text, why) in [
+        ("(requires (delivery-bound (exactly 1 s)) (delivery-bound (at-most 0.0000000000000000000000000000001 ns)))", "an equality and a bound in two units"),
+        ("(requires (delivery-bound (exactly 0.0000000000000000000000000000002 ns)) (delivery-bound (exactly 0.0000000000000000000000000000000001 us)))", "two equalities in two units"),
+        ("(requires (absolute-deadline (supported-horizon (at-least 1 s))) (supported-horizon (exactly 0.0000000000000000000000000000001 ns)))", "a group beside its sub-fact"),
+    ] {
+        assert!(matches!(clause(text), Err(NotJudged::Unsupported(_))), "{why}: {text}");
+    }
+}
