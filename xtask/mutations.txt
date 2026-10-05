@@ -962,6 +962,72 @@ to
                             true
 end
 
+mutation trust-incremental-path-kept
+file xtask/src/trust.rs
+test -p xtask trust::tests
+expect killed
+why M3.6.1 R9 1: `-C incremental=` names the scratch build's own directory; kept, a unit's configuration differed between two checkouts, and the absolute path is refused.
+from
+                        || v.starts_with("incremental=")
+to
+                        || false
+end
+
+mutation trust-any-role-admitted
+file xtask/src/trust.rs
+test -p xtask trust::tests
+expect killed
+why M3.6.1 R9 2: a root's role is one the record names; `(role harness)` on a root escaped the two-roles rule.
+from
+                    if !ROLES.contains(&role.as_str()) {
+to
+                    if false {
+end
+
+mutation trust-const-generic-ends-the-extent
+file xtask/src/trust.rs
+test -p xtask trust::tests
+expect killed
+why M3.6.1 R9 3: a brace-delimited const generic argument is part of an item's header; ending the extent there left the item's body out of it.
+from
+                Kind::Open('{') if generic(i) => {
+to
+                Kind::Open('{') if false => {
+end
+
+mutation trust-data-path-unchecked
+file xtask/src/trust.rs
+test -p xtask trust::tests
+expect killed
+why M3.6.1 R9 remark 6: a root's declared run-time data is a blob of the commit, or refused.
+from
+                if symlinks.contains(d) || tree.get(d).is_none() {
+to
+                if false {
+end
+
+mutation trust-role-package-unchecked
+file xtask/src/trust.rs
+test -p xtask trust::tests
+expect killed
+why M3.6.1 R9 remark 5: a role package names a package of the commit; a misspelt one turned the two-roles rule off for the package it meant.
+from
+                if !package_names.contains_key(pkg) {
+to
+                if false {
+end
+
+mutation trust-include-target-unchecked
+file xtask/src/trust.rs
+test -p xtask trust::tests
+expect killed
+why M3.6.1 R9 remark 7: an admitted `include!` or `path = "…"` names a `.rs` file; one naming `m.txt` compiled a file no rule reads.
+from
+                for named in compiled_names(&key.rule, extent) {
+to
+                for named in Vec::<String>::new() {
+end
+
 mutation model-implies-ignored
 file crates/eadl-resolve/src/model/judge.rs
 test -p eadl-resolve

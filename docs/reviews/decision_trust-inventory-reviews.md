@@ -273,3 +273,19 @@ the round found it, the other three guards of what already held. Then the rule, 
 | H21 — fixtures `M3.6.2` names not held literally | no | `.incbin` under `asm!` and `naked_asm!`, and `memcmp` in the harness's own test file, each a fixture; a file changed after the build stays a stated limit |
 | H22 — `HOME` and `PATH` recorded as-is | no | refused: the catalog's list of cargo's own variables adopted |
 | H23 — `TI-H23`, `TI-H4`, `TI-H9` inherit the holes or leave case 5's survivors open | no | all three rewritten, with `TI-H24`, in both copies |
+
+**Round 9**, `2026-10-05`, the second against the instrument: a new context that had not read rounds 1 to 8 ran the
+instrument on the repository and its fixtures, and five probes of its own in a scratch copy. Every defect came with a
+reproducer, and each landed first as a fixture, all six failing on the instrument as the round found it, then the
+rule, then the record's words. There were 7 findings, 4 of them defects, and the verdict was "not acceptable as it
+stands". Defects per round: 11, 12, 16, 11, 10, 10, 8, 11, 4.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| I1 — `[profile.release] incremental = true` leaves `-C incremental=` naming the checkout, two directories configured differently (measured) | yes | §3: dropped with `--out-dir` and `-L`; any path left absolute refused |
+| I2 — a root declared `(role harness)` escapes `trust-shared-program` (measured) | yes | §2: a root's role is one of the five; the harness is exempt by its form, never by a role's name |
+| I3 — the extent ends at `A<{ 1 }>`'s const generic argument, before the item's body (measured) | yes | §3: a brace group between `<` or `,` and `>` or `,` never ends the extent |
+| I4 — How to apply says an admission names a line; §3 says the extent | yes | How to apply and `M3.6.2`'s goal: the sha256 of its extent |
+| I5 — a role package naming no package accepted | no | §2: refused, every package a form names is one of the commit |
+| I6 — no clause for the run-time data §2 says the form holds | no | §2: a `(data …)` clause, each path a blob, hashed and shared as a file; `TI-H23` |
+| I7 — an admitted `#[path]` or `include!` onto a file that is not `.rs` | no | §3: refused whatever admits it, so every Rust source stays a `.rs` file |

@@ -63,7 +63,19 @@ pub struct Program {
     pub role_packages: BTreeSet<String>,
     /// For the harness: the two roots it compares.
     pub pair: Option<(String, String)>,
+    /// The fixed data the pipeline hands it at run time, by repository path (§2, R9 remark 6).
+    pub data: Vec<String>,
 }
+
+/// The roles a root runs (§2): `ROADMAP.md` §4.4's four and the implementation a reference model validates. The
+/// comparison harness is a form of its own, never a root's role (R9 2).
+pub const ROLES: &[&str] = &[
+    "generator",
+    "configuration-checker",
+    "scheduling-checker",
+    "reference-model",
+    "implementation",
+];
 
 /// A refused site admitted by review (§3).
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -87,7 +99,10 @@ pub struct Roots {
 
 /// Each form the instrument reads, and the clauses it takes; any other form or clause is refused (R8 11).
 const FORMS: &[(&str, &[&str])] = &[
-    ("defroot", &["role", "package", "target", "role-packages"]),
+    (
+        "defroot",
+        &["role", "package", "target", "role-packages", "data"],
+    ),
     ("defharness", &["pair", "package", "test"]),
     ("defadmit", &["file", "rule", "sha256", "reason"]),
     // A role no root fills yet (§2): the gate's, `M3.6.3`.
@@ -186,12 +201,20 @@ pub fn read_roots(text: &str) -> Result<Roots, String> {
                 let mut role_packages: BTreeSet<String> =
                     values(form, "role-packages").into_iter().collect();
                 role_packages.insert(package.clone());
+                let role = one(form, "role", &name)?;
+                if !ROLES.contains(&role.as_str()) {
+                    return Err(format!(
+                        "{ROOTS}: `{name}`'s role `{role}` is none of the record's: {}",
+                        ROLES.join(", ")
+                    ));
+                }
                 roots.programs.push(Program {
-                    role: one(form, "role", &name)?,
+                    role,
                     package,
                     target,
                     role_packages,
                     pair: None,
+                    data: values(form, "data"),
                     name,
                 });
             }
@@ -206,6 +229,7 @@ pub fn read_roots(text: &str) -> Result<Roots, String> {
                     target: Target::Test(one(form, "test", &name)?),
                     role_packages: BTreeSet::new(),
                     pair: Some((a.clone(), b.clone())),
+                    data: Vec::new(),
                     name,
                 });
             }
@@ -348,7 +372,11 @@ fn normalise(tokens: &[String], scratch: &str) -> Vec<String> {
         }
         if t == "-C" {
             if let Some(v) = tokens.get(i + 1) {
-                if v.starts_with("metadata=") || v.starts_with("extra-filename=") {
+                // `-C incremental=` names the scratch build's own cache directory, as `--out-dir` does (R9 1).
+                if v.starts_with("metadata=")
+                    || v.starts_with("extra-filename=")
+                    || v.starts_with("incremental=")
+                {
                     i += 2;
                     continue;
                 }
@@ -571,10 +599,22 @@ fn build(
                 }
             }
         }
+        let configuration = normalise(&tokens, &scratch);
+        // A path the normalisation leaves absolute names something outside the written tree, which the commit does
+        // not hold and another checkout would spell otherwise (R9 1).
+        for t in &configuration {
+            if t.starts_with('/') || t.contains("=/") {
+                refused.push(format!(
+                    "trust-undeclared-input: `{crate_name}` in `{}` is configured with `{t}`, a path outside the \
+                     written tree",
+                    p.name
+                ));
+            }
+        }
         units.push(Unit {
             crate_name,
             package,
-            configuration: normalise(&tokens, &scratch),
+            configuration,
             files,
             env: env_deps,
         });
@@ -755,11 +795,22 @@ pub fn site_extent(source: &[u8], line: usize, column: usize) -> Result<&[u8], S
         .map_or(enclosing.first(), |j| enclosing.get(j + 1))
         .copied()
         .unwrap_or(k);
+    // A brace group between `<` or `,` and `>` or `,` is a const generic argument, `A<{ 1 }>`, inside an item's
+    // header, never the end of a statement (R9 3).
+    let generic = |open: usize| {
+        let close = partner[open];
+        open > 0
+            && matches!(toks[open - 1].kind, Kind::Punct('<' | ','))
+            && toks
+                .get(close + 1)
+                .is_some_and(|t| matches!(t.kind, Kind::Punct('>' | ',')))
+    };
     let mut start = anchor;
     let mut i = anchor;
     while i > lo {
         let t = &toks[i - 1];
         match t.kind {
+            Kind::Close('}') if generic(partner[i - 1]) => i = partner[i - 1],
             Kind::Punct(';') | Kind::Close('}') => break,
             Kind::Close(_) => i = partner[i - 1],
             _ => i -= 1,
@@ -770,6 +821,10 @@ pub fn site_extent(source: &[u8], line: usize, column: usize) -> Result<&[u8], S
     let mut i = anchor;
     while i < hi {
         match toks[i].kind {
+            Kind::Open('{') if generic(i) => {
+                end = partner[i];
+                i = partner[i] + 1;
+            }
             Kind::Open('{') => {
                 end = partner[i];
                 break;
@@ -789,6 +844,53 @@ pub fn site_extent(source: &[u8], line: usize, column: usize) -> Result<&[u8], S
         }
     }
     Ok(&source[toks[start].at..toks[end].end])
+}
+
+/// What an `include!` or a `path = "…"` in `extent` compiles as Rust, where it is not one `.rs` file named by a single
+/// string literal: each offending name, or a description of what stands in its place (R9 remark 7).
+fn compiled_names(rule: &str, extent: &[u8]) -> Vec<String> {
+    use archogen_catalog::package::Kind;
+    let Ok(toks) = package::tokens(extent) else {
+        return vec!["a text that does not tokenize".to_owned()];
+    };
+    let literal = |t: &package::Token| -> String {
+        let text = String::from_utf8_lossy(&extent[t.at..t.end]).into_owned();
+        match (text.find('"'), text.rfind('"')) {
+            (Some(a), Some(b)) if a < b => text[a + 1..b].to_owned(),
+            _ => text,
+        }
+    };
+    let mut out = Vec::new();
+    for (i, t) in toks.iter().enumerate() {
+        if t.kind != Kind::Ident(rule.to_owned(), false) {
+            continue;
+        }
+        let next = |k: usize| toks.get(i + k).map(|t| &t.kind);
+        let named = match rule {
+            // `include!( "x.rs" )`: one string literal between the delimiters.
+            "include" if next(1) == Some(&Kind::Punct('!')) => match (next(2), next(3), next(4)) {
+                (Some(Kind::Open(_)), Some(Kind::Str), Some(Kind::Close(_))) => {
+                    Some(literal(&toks[i + 3]))
+                }
+                _ => Some("an argument other than one string literal".to_owned()),
+            },
+            // `path = "x.rs"`, in an attribute or a macro's arguments.
+            "path" if next(1) == Some(&Kind::Punct('=')) => match next(2) {
+                Some(Kind::Str) => Some(literal(&toks[i + 2])),
+                _ => Some("a value other than one string literal".to_owned()),
+            },
+            _ => None,
+        };
+        if let Some(n) = named {
+            if std::path::Path::new(&n)
+                .extension()
+                .is_none_or(|e| e != "rs")
+            {
+                out.push(n);
+            }
+        }
+    }
+    out
 }
 
 // ── The inventory ───────────────────────────────────────────────────────────────────────────────────────────────
@@ -872,6 +974,17 @@ pub fn inventory_with(
         .ok_or_else(|| format!("the commit holds no `{ROOTS}`"))?;
     let roots = read_roots(&String::from_utf8_lossy(roots_text))?;
     let mut refused: Vec<String> = Vec::new();
+    // The fixed data a root is handed, by path: a blob of the commit, never a symbolic link (§2, §3; R9 remark 6).
+    for p in &roots.programs {
+        for d in &p.data {
+            if symlinks.contains(d) || tree.get(d).is_none() {
+                refused.push(format!(
+                    "trust-undeclared-input: `{}` declares `{d}`, which is not a blob of the commit",
+                    p.name
+                ));
+            }
+        }
+    }
 
     let tree_dir = out.join("tree");
     write_tree(&tree, &tree_dir).map_err(|f| format!("{f:?}"))?;
@@ -944,6 +1057,19 @@ pub fn inventory_with(
         package_names.insert(dir.clone(), name);
         id_dir.insert(id, dir);
     }
+    // Every package a form names is a package of the commit, so a misspelt role package cannot turn the two-roles
+    // rule off for the package it meant (R9 remark 5).
+    for p in &roots.programs {
+        for pkg in std::iter::once(&p.package).chain(p.role_packages.iter()) {
+            if !package_names.contains_key(pkg) {
+                return Err(format!(
+                    "{ROOTS}: `{}` names `{pkg}`, which is no package of the commit",
+                    p.name
+                ));
+            }
+        }
+    }
+
     // The resolved graph: (dependent, dependency, kind).
     let mut graph: Vec<(String, String, String)> = Vec::new();
     for node in meta
@@ -1110,7 +1236,7 @@ pub fn inventory_with(
             }
         }
     }
-    let mut found_sites: BTreeMap<Admission, Vec<String>> = BTreeMap::new();
+    let mut found_sites: BTreeMap<Admission, (Vec<String>, Vec<u8>)> = BTreeMap::new();
     for (f, readers) in &compiled {
         let name = readers.iter().next().map_or("", |n| n.as_str());
         if symlinks.contains(*f) {
@@ -1147,7 +1273,8 @@ pub fn inventory_with(
                                 rule,
                                 sha256: Digest::of(extent).hex(),
                             })
-                            .or_default()
+                            .or_insert_with(|| (Vec::new(), extent.to_vec()))
+                            .0
                             .push(format!("{f}:{line}")),
                         Err(why) => refused.push(format!(
                             "trust-undeclared-input: `{f}:{line}`: `{rule}`, a site whose extent cannot be read: {why}"
@@ -1162,7 +1289,16 @@ pub fn inventory_with(
     }
     // One admission per site: sites sharing a file, a rule and an extent's text pass only as many as the admissions
     // naming them (R8 3).
-    for (key, at) in &found_sites {
+    for (key, (at, extent)) in &found_sites {
+        // An `include!` or a `path = "…"` compiles the file it names as Rust, and the rules read only `.rs` files:
+        // admitted, it must name one in a single string literal, or what it compiles would go unread (R9 remark 7).
+        if key.rule == "include" || key.rule == "path" {
+            for named in compiled_names(&key.rule, extent) {
+                for site in at {
+                    refused.push(format!("trust-undeclared-input: `{site}`: `{}` names `{named}`, which is not a `.rs` file, so no rule would read what it compiles", key.rule));
+                }
+            }
+        }
         let admitted = roots.admissions.get(key).copied().unwrap_or(0);
         if at.len() > admitted {
             for site in at {
@@ -1185,7 +1321,7 @@ pub fn inventory_with(
         for other in roots
             .programs
             .iter()
-            .filter(|o| o.role != p.role && o.role != "harness")
+            .filter(|o| o.pair.is_none() && o.role != p.role)
         {
             let in_pair = p
                 .pair
@@ -1308,6 +1444,15 @@ pub fn inventory_with(
                 ]),
             ),
             ("packages", Json::Array(package_records)),
+            (
+                "data",
+                Json::Object(
+                    p.data
+                        .iter()
+                        .map(|d| (d.clone(), s(file_hash(d))))
+                        .collect(),
+                ),
+            ),
             (
                 "units",
                 Json::Array(
@@ -1438,13 +1583,15 @@ pub fn inventory_with(
             }
             // A file both read that no shared package's own compilation reads (§4, R4 6; files handed at run time
             // are `M2.7.5`'s and `M4`'s, not built yet).
-            let files = |x: &Build| {
+            // What each reads: what its compilation read, and the data it is handed at run time (§4, R6 2).
+            let files = |x: &Build, prog: &Program| {
                 x.units
                     .iter()
                     .flat_map(|u| u.files.iter().cloned())
+                    .chain(prog.data.iter().cloned())
                     .collect::<BTreeSet<_>>()
             };
-            let (fa, fb) = (files(ba), files(bb));
+            let (fa, fb) = (files(ba, a), files(bb, b));
             let in_shared: BTreeSet<String> = ba
                 .units
                 .iter()
@@ -1622,7 +1769,7 @@ mod tests {
     //! Every channel a review measured by hand, a fixture (ledger `TI-H24`): a scratch repository under
     //! `target/trust-tests/`, committed, inventoried by the real instrument from its commit.
 
-    use super::{inventory_with, read_roots, Digest, Outcome};
+    use super::{inventory_with, read_roots, site_extent, Digest, Outcome};
     use crate::json::Json;
     use std::path::{Path, PathBuf};
     use std::process::Command;
@@ -2794,6 +2941,130 @@ mod tests {
                         "{ROOTS}{}",
                         admit("crates/common/src/lib.rs", "include_str", line)
                     ),
+                ),
+            ],
+        );
+        assert_eq!(
+            written(f.run()).get("refused-sites").and_then(Json::as_str),
+            Some("1")
+        );
+    }
+
+    // ── Round 9 (`M3.6.1` step 10) ───────────────────────────────────────────────────────────────────────────────
+
+    #[test]
+    fn an_incremental_profile_leaves_the_configuration_the_same_from_two_directories() {
+        // R9 1: `-C incremental=` names the scratch build's own directory.
+        let f = two_roots(
+            "r9-1-incremental",
+            "fn main() {}\n",
+            "pub fn f() {}\n",
+            &[(
+                "Cargo.toml",
+                format!("{WS}\n[profile.release]\nincremental = true\n"),
+            )],
+        );
+        let one = configurations(&written(f.run_into("one")));
+        let two = configurations(&written(f.run_into("elsewhere/two")));
+        assert_eq!(one, two, "a unit's configuration names where it was built");
+    }
+
+    #[test]
+    fn a_root_s_role_is_one_the_record_names() {
+        // R9 2: a root declared `(role harness)` escaped the two-roles rule.
+        let text = "(defroot gen (role generator) (package \"crates/a\") (target bin a))\n\
+                    (defroot chk (role harness) (package \"crates/b\") (target lib))\n";
+        let e = read_roots(text).expect_err("a root with the harness's role");
+        assert!(e.contains("`chk`'s role `harness`"), "{e}");
+    }
+
+    #[test]
+    fn an_extent_runs_past_a_brace_delimited_const_generic_argument() {
+        // R9 3: the first brace group after an attribute was `{ 1 }` in `A<{ 1 }>`, not the item's body.
+        let src = b"#[no_mangle]\npub extern \"C\" fn f() -> A<{ 1 }> { A }\n";
+        let extent = site_extent(src, 1, 3).expect("an extent");
+        assert_eq!(
+            String::from_utf8_lossy(extent),
+            "#[no_mangle]\npub extern \"C\" fn f() -> A<{ 1 }> { A }"
+        );
+    }
+
+    #[test]
+    fn a_role_package_that_names_no_package_is_refused() {
+        // R9 remark 5: a misspelt role package turned the two-roles rule off for the package it meant.
+        let roots = "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\"))\n\
+                     (defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\" \"crates/cc\"))\n";
+        let f = two_roots(
+            "r9-5-role-package",
+            "fn main() {}\n",
+            "pub fn f() {}\n",
+            &[("trust/roots.eadl", roots.to_owned())],
+        );
+        let Err(e) = inventory_with(&f.repo, "HEAD", &f.base.join("out"), &real_root()) else {
+            panic!("a role package that is no package was read");
+        };
+        assert!(e.contains("`crates/cc`"), "{e}");
+    }
+
+    #[test]
+    fn a_root_s_run_time_data_is_hashed_and_shared() {
+        // R9 remark 6: §2's run-time data, declared by path in a root's form, read and hashed, and shared as a file.
+        let roots = "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\") (data \"docs/table.txt\"))\n\
+                     (defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\") (data \"docs/table.txt\"))\n";
+        let f = two_roots(
+            "r9-6-data",
+            "fn main() {}\n",
+            "pub fn f() {}\n",
+            &[
+                ("trust/roots.eadl", roots.to_owned()),
+                ("docs/table.txt", "rows".to_owned()),
+            ],
+        );
+        let inv = written(f.run());
+        let data = program(&inv, "gen").get("data").expect("the root's data");
+        assert_eq!(
+            data.get("docs/table.txt").and_then(Json::as_str),
+            Some(Digest::of(b"rows").hex().as_str())
+        );
+        assert!(items(&inv).iter().any(|(_, i)| kind(i) == "file"
+            && i.get("file").and_then(Json::as_str) == Some("docs/table.txt")));
+        f.commit(&[(
+            "trust/roots.eadl",
+            roots.replace("docs/table.txt", "docs/missing.txt"),
+        )]);
+        says(&refused(f.run()), "`docs/missing.txt`");
+    }
+
+    #[test]
+    fn an_admitted_include_or_path_names_a_rs_file() {
+        // R9 remark 7: an admitted `#[path]` onto a file that is not `.rs` compiled it and left it untokenised.
+        let txt = "#[path = \"m.txt\"]\nmod m;";
+        let f = two_roots(
+            "r9-7-path-txt",
+            "fn main() {}\n",
+            &format!("{txt}\npub use m::*;\n"),
+            &[
+                ("crates/b/src/m.txt", "pub fn m() {}\n".to_owned()),
+                (
+                    "trust/roots.eadl",
+                    format!("{ROOTS}{}", admit("crates/b/src/lib.rs", "path", txt)),
+                ),
+            ],
+        );
+        says(
+            &refused(f.run()),
+            "names `m.txt`, which is not a `.rs` file",
+        );
+        let rs = "#[path = \"inner.rs\"]\nmod m;";
+        let f = two_roots(
+            "r9-7-path-rs",
+            "fn main() {}\n",
+            &format!("{rs}\npub use m::*;\n"),
+            &[
+                ("crates/b/src/inner.rs", "pub fn m() {}\n".to_owned()),
+                (
+                    "trust/roots.eadl",
+                    format!("{ROOTS}{}", admit("crates/b/src/lib.rs", "path", rs)),
                 ),
             ],
         );

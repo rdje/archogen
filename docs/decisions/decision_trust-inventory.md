@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-10-03`
 - **Status:** `active` — written; under independent review (leaf `M3.6.1`'s closure rule: the first round that finds
-  no defect closes it); rounds 1 to 6 answered `2026-10-03`, rounds 7 and 8 `2026-10-05`, its hand-offs in a ledger since, reviewed beside its instrument since round 8; narrowed after rounds 3 and 4 to what only it decides
+  no defect closes it); rounds 1 to 6 answered `2026-10-03`, rounds 7 to 9 `2026-10-05`, its hand-offs in a ledger since, reviewed beside its instrument since round 8; narrowed after rounds 3 and 4 to what only it decides
 - **External sources:** [the pinned Rust toolchain](../book/src/ledger.md#rust-toolchain) — rustc's dependency
   information and cargo's metadata, their version and limits in the ledger
 - **Owner / source:** leaf `M3.6.1` (`docs/tasks/M3.md`). `ROADMAP.md` §4.4 asks for a machine-readable
@@ -85,9 +85,10 @@ counts, whatever the program calls of it: one that needs only another role's typ
 third package, which the gate then reports as shared (R5 remark 15). `ROADMAP.md` §10.2's `archogen analyze`
 would make the generator's executable run the scheduling checker; `M2.21` decides how it runs before it is built, and `M3.4` carries the same for `archogen resolve` (R3 C20).
 
-`trust/roots.eadl`, read by the eADL reader as every repository record is, holds one form per root — its role, its
-package and target, its artifact and the runtime data the pipeline hands it (§3) — and one form per role no root
-fills yet, naming the leaf that will (the configuration checker, `M3.5`). It also classifies every other
+`trust/roots.eadl`, read by the eADL reader as every repository record is, holds one form per root — its role, one
+of the five above, the harness being a form of its own (R9 2); its package and target, which fix its artifact; its
+role packages, each a package of the commit (R9 remark 5); and its fixed run-time data, a `(data "path" …)` clause of
+blobs, hashed and shared as files (§3, §4; R9 remark 6) — and one form per role no root fills yet, naming the leaf that will (the configuration checker, `M3.5`). It also classifies every other
 **program target** of the workspace — a `[[bin]]`, a `src/main.rs`, a `src/bin/*.rs` cargo discovers, an example, and a
 `cdylib`, `staticlib` or `dylib` crate type, such as the wasm module `ROADMAP.md` §10.4 makes a consumer of the
 engine — as not a root, with a reason and the role packages its build compiles, read from `cargo metadata`'s graph
@@ -149,8 +150,9 @@ part of it: a package added elsewhere changes it and no root's compilation (case
   which a crate root inside a nested package's directory defeats — and a unit no one target names is refused (R8 2);
 - each compilation unit's **configuration**: its whole rustc invocation as cargo reports it with `-v` — `--edition`,
   `--cfg` and features, every `-C` option — with every path written relative to the scratch directory, the program path dropped, the `-<hash>` stripped from
-  every `--extern` file name, `--out-dir` and `-L` dropped, which name the scratch build's own directories while each
-  dependency is named by its `--extern` (R8 remark 19), and `-C metadata`, `-C extra-filename`, the lint levels (`--warn`, `--allow`, `--deny`,
+  every `--extern` file name, `--out-dir`, `-L` and `-C incremental` dropped, which name the scratch build's own
+  directories while each dependency is named by its `--extern` (R8 remark 19; R9 1), and any path still absolute
+  after that refused, since it names what the commit does not hold and another checkout spells otherwise (R9 1), and `-C metadata`, `-C extra-filename`, the lint levels (`--warn`, `--allow`, `--deny`,
   `--forbid`, `--cap-lints`), `--check-cfg` and the output-format flags (`--error-format`, `--json`,
   `--diagnostic-width`, `--color`) left out — the first three hash the toolchain, which the build configuration
   holds by identity, the lint levels and `--check-cfg` change only what is warned about, and the format flags only
@@ -197,11 +199,15 @@ that is not a blob of the commit, or is a symbolic link, is refused. A site the 
 manifest rule, which has none, of the whole manifest — reviewed as every form is (§5). The extent is the statement or
 item the site stands in: at the innermost brace level holding it — the file, a module, a block, a brace-delimited
 macro's body — from the token after the previous `;` or brace group at that level through the next `;` or the end of
-the next brace group, so parentheses and brackets never end it, a macro invocation is whole within it, and an
-attribute runs with the item it marks through the item's body; an `.incbin` added on an admitted `global_asm!`'s
+the next brace group, so parentheses and brackets never end it, nor a brace group between `<` or `,` and `>` or `,`,
+which is a const generic argument, `A<{ 1 }>` (R9 3), a macro invocation is whole within it, and an attribute runs
+with the item it marks through the item's body; an `.incbin` added on an admitted `global_asm!`'s
 second line, or an admitted `#[no_mangle]` function renamed `memcmp`, changes it (R8 4). **An admission admits one
 site**: sites with one file, rule and extent pass only as many as the admissions naming them, so a second
 `#[no_mangle]` beside an admitted one is a new site (R8 3); a site two roots compile is one site (R8 remark 20). An
+`include!` or a `path = "…"` compiles the file it names as Rust, so its admission holds only when it names a `.rs`
+file in one string literal, which the rules then read; one naming another file, or written otherwise, is refused
+whatever admits it, and every Rust source a root compiles stays a `.rs` file (R9 remark 7). An
 edit anywhere in a site's extent or manifest, or a new site, is refused until a new admission is, and an admission no
 site uses is listed with the inventory and refused by the gate as `trust-baseline-stale` on the baseline's host (§6;
 R8 remark 15). A manifest rule is applied over each program's closure from `cargo metadata` before any build, so a
@@ -213,9 +219,7 @@ admission: one manifest rule, the wasm module's `crate-type`, which builds the m
 (`crates/archogen-cli/src/spec.rs`) and four of S0's runtime templates (`crates/archogen-s0/src/emit.rs`); three
 `#[no_mangle]` on the wasm module's exports (`crates/archogen-wasm/src/lib.rs`); and two uses of the word `path` in an
 ordinary macro call (`crates/eadl-front/src/module.rs`, `crates/rt-analysis/src/cost.rs`). Everything else is
-refused. Re-measured after round 8 with each admission by its extent: the same 14 sites, two of them pairs sharing
-one statement (the kind modules' table, the runtime templates' array), each admitted, none unused; 8 pairs and 9
-shared items. One rule set so closes the channels five rounds found one at a time — an `.incbin` under the assembler
+refused. Re-measured by extent after round 8: the same 14 sites, all admitted; 8 pairs, 9 shared items. One rule set so closes the channels five rounds found one at a time — an `.incbin` under the assembler
 macros, its bytes in the rlib and in no `.d` (R2 B3; R3 C1), a renaming `use` (R4 8), a link-time binding through an
 `extern` block (R6 1), a macro assembling `#[path]` onto a file that is not `.rs` (R7 1), a `#[no_mangle]` interposing
 a symbol in the harness, measured taking over `memcmp` (R7 2), a procedural macro on a development edge (R7 3) — and
@@ -301,7 +305,7 @@ that found each, are in the sections above and the review history:
 | `TI-H20` | `M4.2` | The executable that runs the generator is classified in `trust/roots.eadl` as the generator's root with its fixed run-time data declared there by path, the description it generates from being a claim subject and not a dependency, unreviewed until accepted under `M3.6.5`. |
 | `TI-H21` | `M2.21` | `archogen analyze` gets an open owner and a program that is the root of the scheduling checker's role alone, decided before it is built, since as a subcommand of the `archogen` executable it would be refused as `trust-shared-program`. |
 | `TI-H22` | `M3.6.6` | Committed generated sources declare their generator and input, which become items of the inventory, with a case-3 fixture of a generated-source input on both sides of a pair and a design reviewed by a context that did not write it. |
-| `TI-H23` | `M3.6.2` | `cargo xtask trust-inventory` applies the catalog's package and workspace rules unchanged over every `.rs` file a root or the harness compiles, however read, following the harness's development edges, refuses a crate root that is not a `.rs` file and the manifest rules before any build, attributes each unit by the target naming its crate root, passes a refused site only by an admission of its own naming its file, rule and extent's sha256, records each root's artifact and packages, writes no inventory on any refusal, and commits `trust/roots.eadl`'s root forms and the admissions of today's 14 refused sites, unaccepted. |
+| `TI-H23` | `M3.6.2` | `cargo xtask trust-inventory` applies the catalog's package and workspace rules unchanged over every `.rs` file a root or the harness compiles, however read, following the harness's development edges, refuses a crate root that is not a `.rs` file and the manifest rules before any build, attributes each unit by the target naming its crate root, passes a refused site only by an admission of its own naming its file, rule and extent's sha256, records each root's artifact, packages and declared run-time data, writes no inventory on any refusal, and commits `trust/roots.eadl`'s root forms and the admissions of today's 14 refused sites, unaccepted. |
 | `TI-H24` | `M3.6.2` | Every channel a review measured by hand is a fixture of the instrument's tests — an `.incbin` under each assembler macro, a renaming `use`, a macro-made include, a macro assembling `#[path]`, an `extern` block calling another package's `#[no_mangle]` function, a `#[no_mangle]` interposing `memcmp` in the harness, a procedural macro on a development edge, a new consumer edge, a new reader of a shared package's file, a profile edit, per-root against workspace-wide features, two checkout directories and two toolchains, a crate root that is not `.rs`, a crate root in a nested package's directory, two sites of one text, a multi-line site, a value compiled in through `env!`, an unrelated profile edit, the harness's adapter, and a harness or library root compiling another role's package. |
 
 Until they land nothing is accepted, and every shared item is reported unreviewed (R2 B2; R3 C4, C5).
@@ -321,7 +325,7 @@ leaves' (R2 B1, B10, B17; R3 C3).
 | `trust-shared-changed` | reported | an item whose content, configuration, edges or file readers differ from the base commit's form — a feature activated, a `cfg` set, an edition changed, a source edited, a new reader — though its name and version are unchanged | 2 |
 | `trust-unclassified-program` | reported | a program target `trust/roots.eadl` does not classify, or whose classification's role packages have grown (§2) | — |
 | `trust-baseline-stale` | refused, on the baseline's host | a baseline form whose item is no longer shared, a root form or classification whose package or program target is gone (R7 remark e), or an admission no current site uses (R8 remark 15): removed, so a sharing removed and reintroduced, or a target re-added under an old name, is reviewed again (R1 A15; R3 C9; R5 remark 12) | — |
-| `trust-undeclared-input` | refused | a name not a blob of the commit, a symbolic link, a file whose bytes after the build are not its blob's, a crate root that is not a `.rs` file, a unit no one target names, an environment variable outside cargo's own, or a site the catalog's rules refuse, in any `.rs` file a root or the harness compiles, with no admission of its own (§3) | 3 |
+| `trust-undeclared-input` | refused | a name not a blob of the commit, a symbolic link, a file whose bytes after the build are not its blob's, a crate root that is not a `.rs` file, a unit no one target names, an environment variable outside cargo's own, a path left absolute in a unit's configuration, declared run-time data that is not a blob, an admitted `include!` or `path` naming a file that is not `.rs`, or a site the catalog's rules refuse, in any `.rs` file a root or the harness compiles, with no admission of its own (§3) | 3 |
 | `trust-form-missing` | refused, on the baseline's host | a current shared item, root or program target with no form, proposed or accepted, in the commit's own `trust/` — a refused site with no admission is `trust-undeclared-input`'s alone (R8 remark 14) — repaired by the tool's proposal, committed, so the base commit's forms always cover its inventory and case 5's change part is the commit's own (R7 4) | — |
 | `trust-shared-program` | refused | a root whose build compiles a role package of another role, an executable or a library alike, or a harness compiling one of a role outside its pair (§2; R8 remarks 12, 13) | — |
 | `trust-inventory-stale` | refused, at packaging | the inventory missing, its build identity not the package's commit and toolchain, an artifact's sha256 not the inventory's, the report not of that inventory, a result naming a program other than its role's inventoried artifact or the pair's harness, or a dependency handed to a root that its form does not declare by path and the inventory's sha256 | 4 |
@@ -394,7 +398,8 @@ code and nothing else.
   never accepts.
 - A site the catalog's rules refuse in a root's or the harness's `.rs` files — an assembler macro, an `extern` block,
   `include!`, `#[path]`, `#[no_mangle]`, a macro definition, a build script, a procedural macro — passes only by a
-  reviewed admission naming its file, rule and line (§3; R7).
+  reviewed admission of its own naming its file, rule and the sha256 of its extent, an `include!` or `#[path]` only
+  onto a `.rs` file (§3; R7; R8 3, 4; R9 4, remark 7).
 - Related: [[decision_zero-dependency-engine-core]], [[decision_findings-for-director-review]] (§11),
   [[decision_catalog-records]].
 
@@ -405,6 +410,6 @@ exercises each of §14.4's five cases, that no input a root's build reads can be
 that the baseline cannot be accepted by its author; every finding answered here. The history is
 [`decision_trust-inventory-reviews.md`](../reviews/decision_trust-inventory-reviews.md).
 
-Defects per round, oldest first: 11, 12, 16, 11, 10, 10, 8, 11. Each round's findings, its reader's measurements and every answer are in
+Defects per round, oldest first: 11, 12, 16, 11, 10, 10, 8, 11, 4. Each round's findings, its reader's measurements and every answer are in
 the review history linked above, which holds them whole; this record keeps only the count (`PROGRAM.52.2`, the
 folder's ceiling).

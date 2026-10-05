@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate's ninth review: four defects left
+
+`ARCHOGEN-M3-0437` (leaf `M3.6.1`, step 10).
+
+- The ninth reader of the trust design found four defects, down from eleven, each shown by a probe. One was a
+  build-cache directory left in the recorded build settings, which made two checkouts of one commit look different.
+  Another was a program that could dodge the "one program, one role" rule by calling itself the comparison harness.
+  Both are fixed, and a program's declared run-time data files are now read, hashed and compared like any other
+  shared file.
+
 ## archogen — the substitutability design's eighteenth review: two defects left
 
 `ARCHOGEN-M3-0436` (leaf `M3.1.1`, step 19).
