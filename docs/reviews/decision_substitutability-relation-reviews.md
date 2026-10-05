@@ -658,3 +658,17 @@ Defects per round: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2, 2, 2, 3
 
 §8's `invalid-description` row was split in two, written forms and values, its longest line having reached the
 folder's ceiling; a newline inside it, which broke the table, was mended.
+
+**Round 31**, `2026-10-05`: a new context that had not read rounds 1 to 30 read the model over the 125 tracked files,
+probed every case of `ROADMAP.md` §5.2, ran two scratch copies of the crate — one with a fact named like a clause
+word added — and `archogen check` beside the model, and found no requirement satisfied that should not be, no case
+misclassified and no two sentences of the record in contradiction. There were 4 findings, none a defect, and the
+verdict was "acceptable as it stands": `M3.1.1`'s closure rule is met, and the review closes after 31 rounds.
+Defects per round: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2, 2, 2, 3, 3, 3, 2, 1, 2, 1, 2, 1, 1, 0.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| O1 — a future fact named like a clause word could never be written | no | §1.1: no fact is named like a clause word, the typed table refusing such a `deffact` as it refuses a cycle; the vocabulary pin asserts `/1`'s names apart from the clause words |
+| O2 — `deffact.eadl`, once it lands, would make its own clauses clause words | no | §1: `deffact`'s clauses describe the vocabulary and are not clause words; the clause-word pin skips that kind |
+| O3 — "refused by this grammar first" overstated what refuses a policy's or a system's own offer | no | §1: refused first by the kind's schema, `schema-unknown-clause`, or by the grammar |
+| O4 — one value a side requires in two spellings, two requirements for rule 3 | no | `SR-H18`: such a value takes the code any spelling decides, as rule 5 reads it as one; both copies |

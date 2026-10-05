@@ -15,7 +15,7 @@ one of those changes, and only then. What each closed leaf did lives in its tree
 | `S0` — early executable generation (F28) | Done | **F28 green**; every leaf closed — `S0.8` made the book chapter's counts and corpus table measured |
 | `M1` — eADL description foundation | Mostly Done | §12 M1's exit gate met; `M1.29.4` waits on the director (findings §7) |
 | `M2` — one engine realization + controls | In Progress | **F17 (analysis half), F18 and F29 green**; `riscv-virt-up` verified (`M2.8`); frontier `M2.7.4`, on the director: the gate done, its records and `M2.7.6` waiting; `M2.20`, `M2.10`, `M2.15`, `M2.12`, `M2.11`, `M2.9` closed; the catalog crate built |
-| `M3` — joint resolver + checked plan | In Progress | frontier `M3.1`: its design, `M3.1.1`, under review; `M3.6`'s design (F30) closed `2026-10-05`, `M3.6.3`, the trust gate, next |
+| `M3` — joint resolver + checked plan | In Progress | frontier `M3.1`: its design, `M3.1.1`, closed `2026-10-05`, `M3.1.2` next; `M3.6`'s design (F30) closed `2026-10-05`, `M3.6.3`, the trust gate, next |
 | `M4` — generated system + simulator | Not Started | frontier `M4.1` |
 | `M5` — physical execution evidence | Not Started | **blocked: no board procured** (2026-09-13) — director decision |
 | `M6` — reuse and extension | Not Started | gated on `M4` |

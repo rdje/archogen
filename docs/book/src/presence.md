@@ -147,9 +147,9 @@ cases in `docs/semantics/cases/`.
 
 Presence asks whether a fact is known. The next question is whether what a provider offers is *good enough* for
 what a requirement asks — whether a 64-bit counter satisfies a service that needs 32 bits, or an idle-only timer
-one that must keep running. That relation is still a design under review
-(`docs/decisions/decision_substitutability-relation.md`), and its rules are held to an executable model rather than
-to prose alone: `crates/eadl-resolve/src/model/` transcribes the design rule by rule, an exhaustive checker
+one that must keep running. That relation is a design whose review, by readers who had not written it, closed on
+`2026-10-05` (`docs/decisions/decision_substitutability-relation.md`), and its rules are held to an executable model
+rather than to prose alone: `crates/eadl-resolve/src/model/` transcribes the design rule by rule, an exhaustive checker
 (`crates/eadl-resolve/tests/checker.rs`) asserts on thousands of inputs that no value is read the wrong way and that
 no stronger precondition passes as a capability, and every probe its reviewers ran is a permanent fixture
 (`crates/eadl-resolve/tests/corpus.rs`). `archogen check` does not call it yet; the chapter on the relation itself

@@ -1350,6 +1350,10 @@ fn the_vocabulary_is_the_record_s_table_row_by_row() {
         stated.keys().cloned().collect(),
         "the vocabulary's names"
     );
+    // R31 1: no fact is named like a clause word, which an offer or a requirement on it would read as (§1.1).
+    for w in CLAUSE_WORDS {
+        assert!(!names.contains(*w), "`{w}` is a clause word and a fact");
+    }
     for e in VOCABULARY.iter() {
         let list = |xs: &[&str]| xs.join(" ");
         let domain = match e.domain {
@@ -1421,6 +1425,12 @@ fn the_clause_words_are_every_clause_a_kind_declares() {
     // the kind modules themselves, so a clause a kind gains is refused inside an offer without a word changed here.
     let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../../docs/semantics/kinds");
     fn clauses(form: &Form, out: &mut BTreeSet<String>) {
+        // `deffact`'s clauses describe the vocabulary, never a description (§1, §1.1; R31 2).
+        if form.head() == Some("defkind")
+            && form.items().get(1).and_then(Form::as_symbol) == Some("deffact")
+        {
+            return;
+        }
         if form.head() == Some("clause") {
             if let Some(name) = form.items().get(1).and_then(Form::as_symbol) {
                 out.insert(name.to_string());

@@ -2,9 +2,9 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-03`
-- **Status:** `active` — written; under independent review (leaf `M3.1.1`'s closure rule: the first round that
-  finds no defect closes it); rounds 1 to 15 answered `2026-10-03`, rounds 16 to 30 `2026-10-05`, its hand-offs
-  in a ledger since (§11), reviewed beside its executable model since round 17 (`M3.1.1.1`)
+- **Status:** `active` — written, and its review closed `2026-10-05` by `M3.1.1`'s rule: round 31 found no defect;
+  rounds 1 to 15 answered `2026-10-03`, rounds 16 to 30 `2026-10-05`, its hand-offs in a ledger since (§11),
+  reviewed beside its executable model since round 17 (`M3.1.1.1`)
 - **Owner / source:** leaf `M3.1.1` (`docs/tasks/M3.md`). `ROADMAP.md` §5.2 asks for "explicit matching rules in a
   decidable fragment" with "a documented comparison direction" per parameter, declared cross-field implications,
   and no stronger precondition "silently accepted as stronger capabilities"; §5.3 for a "versioned capability
@@ -84,9 +84,11 @@ reading, which left two values of one fact in a service unrefused, is withdrawn.
   constraints, `needs`, `uses` and `requires`, any other clause inside it, at any depth, standing where a constraint
   does; `needs`, `uses` and `absent` hold names; an item of `offers` holds no clause (§8; R26 1; R27 2; R28 3; R29 1).
   A clause here is a list headed by a clause word: any name a kind of `/1` declares with `clause` in
-  `docs/semantics/kinds/` — `refines`, `platform` and a task's own among them — to which the checker holds the
-  model's list, so a clause a kind gains is refused there unread (R30 1). So an offer of a statement fact "wherever written" is one a declaration's own `offers` writes, any
-  other being refused by this grammar first.
+  `docs/semantics/kinds/` — `refines`, `platform` and a task's own among them; `deffact`'s apart, which describe the
+  vocabulary and never a description (§1.1; R31 2) — to which the checker holds the model's list, so a clause a kind
+  gains is refused there unread (R30 1). So an offer of a statement fact "wherever written" is one a declaration's own
+  `offers` writes, any other being refused first by the kind's schema, `schema-unknown-clause`, or by this grammar
+  (R31 3).
 
 **The census the vocabulary is written from** (`2026-10-03`, every tracked `.eadl`): offers are written for
 `bus-width`, `clock-rate`, `core-count`, `counter-modulus`, `counter-width`, `debug-port`, `frequency`,
@@ -150,7 +152,9 @@ binds a `uses`, `needs` or `refines` operand to a declaration of its own instanc
 declaration would capture a requirement on the fact, and an import would rename it out of the relation's sight
 (measured, R16 1). No tracked description declares one; `presence.rs`'s unit fixtures that do judge presence alone
 and are untouched (R8 H7; R10 J12; R11 K7; R16 1). And
-reference §7 rule 6 — a name declared once — holds among `deffact`s (R1 A15).
+reference §7 rule 6 — a name declared once — holds among `deffact`s (R1 A15). No fact is named like a clause word
+(§1): an offer or a requirement on it would read as a clause, so the typed table refuses such a `deffact` as it
+refuses a cycle, and the checker holds `/1`'s names apart from the clause words (R31 1).
 
 A description that writes a fact the vocabulary does not declare may still offer it, declare it absent or need it
 — presence judges those, as today — but a **constraint** on it is `unsupported-profile`: no rule decides a
@@ -575,7 +579,7 @@ the review history the rounds that found each.
 | `SR-H15` | `M3.4` | The closure is rooted at the system with its tasks and platform, `uses` and `needs` followed transitively, every constraint of a `requires` and every `needs` of a vocabulary fact judged wherever §1 says a side holds one, and nowhere else (R25 2), a `uses` naming a vocabulary fact refused, and the closure the report carries decided where it and presence's differ — a system's own and its tasks' `needs`, which presence's closure omits, among them (R30 6) — a provider on a platform the system does not use never satisfying. |
 | `SR-H16` | `M3.4` | Whether a fact declared absent at one of the description's blocks and platforms and offered at another, outside a direct refinement pair, contradicts the description is this leaf's to decide in a reviewed record, with its reason — model §2 rule 1 refuses it today, two distinct blocks among them, one with no debug port beside one with one — and what it decides holds over every offer and absence and through no chain of refinements, `presence.rs`'s first-of-each comparison corrected, an adapter `M3.2`'s search offers not being one of them, one rule for a value offered there and one derived there (R24 5; R29 6). |
 | `SR-H17` | `M3.4` | No group and its sub-constraints, nested or flat, are met by different providers — a flat head and a sub-constraint in two `requires` clauses of one side one group, a side being read whole (R21 1; R23 6) — and this leaf decides which other constraints of one side may be. |
-| `SR-H18` | `M3.4` | The description's code is decided over the providers that take part — those stating `f`, offered in any form or declared absent, or an input of its derivation, a silent one deciding nothing, `f` being for a group requirement its head and every sub-fact it constrains (R30 5) — `unsupported-profile` while one that takes part is past the arithmetic and none satisfies, before the others; `missing-fact` while one that takes part is unknown or undescribed and none satisfies, and when none takes part; `infeasible-configuration` once at least one takes part and every one that does is refused or absent, with model §2 rule 2 amended where an adapter's offer satisfies past another's absence, a provider's derivation judged as `SR-H16` judges its offer. |
+| `SR-H18` | `M3.4` | The description's code is decided over the providers that take part — those stating `f`, offered in any form or declared absent, or an input of its derivation, a silent one deciding nothing, `f` being for a group requirement its head and every sub-fact it constrains (R30 5), and one value a side requires in several spellings taking the code any spelling decides, as rule 5 reads them as one (§5; R31 4) — `unsupported-profile` while one that takes part is past the arithmetic and none satisfies, before the others; `missing-fact` while one that takes part is unknown or undescribed and none satisfies, and when none takes part; `infeasible-configuration` once at least one takes part and every one that does is refused or absent, with model §2 rule 2 amended where an adapter's offer satisfies past another's absence, a provider's derivation judged as `SR-H16` judges its offer. |
 | `SR-H19` | `M3.4` | The enumeration lists the description's blocks and platforms, a catalog record only after `M3.7`, and a mediating record never directly. |
 | `SR-H20` | `M3.4` | Every verdict `crates/archogen-cli/tests/verdicts.txt` and `module_cases.rs` freeze is kept, or changed only in the commit that names the case, the rule that moves it and its migration — a description gaining a fact, the target's agreement and its ledger source included — ordered after `M3.3` and `M3.7` where a migration needs them, the seven `0` verdicts `M3.1.1`'s round 14 measured among them. |
 | `SR-H21` | `M3.7` | The catalog record decision's §2 is amended so a contract facet states offers and absences of vocabulary facts, read by the relation's reader and judged like a block's, and a record whose path crosses a mediation boundary says so and enters only through `M3.2`'s search, where the requirer wrote `or-through-mediation` as `allowed`, bare or under `exactly`. |
@@ -616,6 +620,6 @@ satisfies that it should not — a stronger precondition read as a capability, a
 an implication assumed that nothing declares — and no case of §5.2 misclassified; every finding answered here. The
 history is [`decision_substitutability-relation-reviews.md`](../reviews/decision_substitutability-relation-reviews.md).
 
-Defects per round, oldest first: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2, 2, 2, 3, 3, 3, 2, 1, 2, 1, 2, 1, 1. Each round's findings, its reader's measurements and every answer are in
+Defects per round, oldest first: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2, 2, 2, 3, 3, 3, 2, 1, 2, 1, 2, 1, 1, 0. Each round's findings, its reader's measurements and every answer are in
 the review history linked above, which holds them whole; this record keeps only the count (`PROGRAM.52.2`, the
 folder's ceiling).
