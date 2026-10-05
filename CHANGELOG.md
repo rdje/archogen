@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the review-history archive hardened after its review
+
+`ARCHOGEN-PROGRAM-0442` (leaf `PROGRAM.55.1`).
+
+- An independent review of the new archive check found the first move correct, but the check too easy to fool. An
+  open review could be passed off as closed by its wording, a late round merged in afterwards could be lost, and a
+  file left out of the commit only failed later in CI. The check now reads the review's real table row, follows
+  every later commit at the old path, and judges exactly what the commit will hold. Each of its refusals was proven
+  by deliberately breaking it.
+
 ## archogen — the substitutability design's twentieth review
 
 `ARCHOGEN-M3-0441` (leaf `M3.1.1`, step 21).

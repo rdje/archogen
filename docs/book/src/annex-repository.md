@@ -188,6 +188,20 @@ $ bash scripts/check_decision_history.sh --seal <RECORD> <N>...            # sea
 $ bash scripts/check_decision_history.sh --self-test                       # its RED arms, on scratch repositories
 ```
 
+A design's review history only grows while its review is open. Once the review closes, the whole file can move,
+byte for byte, into `docs/review-history/`, leaving a short stub at its old path that links to it, so every
+citation of it still resolves. `REVIEW-HISTORY` checks every archived file against its row and the history it came from, and
+holds the review's row in `docs/reviews/INDEX.md` to `closed`, the history to what it was when it closed, and every
+later commit at that path to the stub, so a round merged in afterwards cannot be lost. It reads the staged
+copies, so a file left out of the commit is refused before it lands. The first archiving, on `2026-10-05`, took the
+catalog's 75 KB history out of `docs/reviews/` (`PROGRAM.55`, hardened by `PROGRAM.55.1`).
+
+```console
+$ bash scripts/check_review_history.sh                     # the gate
+$ bash scripts/check_review_history.sh --seal <FILE>       # archive a closed review's history, with the proof
+$ bash scripts/check_review_history.sh --self-test         # its RED arms, on scratch repositories
+```
+
 ## Where the landing page sends things
 
 A size limit on `README.md` does not remove the need to write things down; it moves it somewhere else. So
@@ -196,7 +210,8 @@ author to move detail to, is itself kept in bounds. `README-ROUTES` works that l
 from what its two checks actually print. It follows each place on to wherever that place's own check sends overflow,
 and holds each one to the ceiling registered for it in the policy. The changelog and the development notes are
 bounded as rolling ledgers (above). A design's review history, which grows by a round at a time, overflows from the
-decisions folder to `docs/reviews/`, which has ceilings of its own. The task trees are bounded too, and their
+decisions folder to `docs/reviews/`, which has ceilings of its own, and a closed review's history overflows on to
+`docs/review-history/` (above). The task trees are bounded too, and their
 finished parts overflow to `docs/task-history/`, as settled sections of a decision record do to
 `docs/decision-history/` (above). A folder grown too large is split by subject into sub-folders, each with ceilings
 of its own, while the folder's own limits still count everything in them, so a split adds no room; and no ceiling

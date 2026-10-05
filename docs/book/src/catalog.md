@@ -73,7 +73,7 @@ no review sees. The port's record admits it narrowly (the design's §14,
 | `docs/specs/catalog/decision_catalog-records-variant-inputs.md` | its §12, what the runtime analysis takes from the catalog, and from whom |
 | `docs/specs/catalog/decision_catalog-records-limits.md` | its §13, what the design does not do |
 | `docs/specs/catalog/decision_runtime-composite-inputs.md` | how four of the analysis's inputs are put together from catalog, application and plan parts |
-| `docs/reviews/decision_catalog-records-reviews.md` | every review round, every finding, and the answer to each |
+| `docs/review-history/decision_catalog-records-reviews.md` | every review round, every finding, and the answer to each, archived since the review closed |
 | `docs/specs/catalog/decision_catalog-records-port.md` | its §14, the port's assembly and what the port's record must state |
 | `crates/archogen-catalog/src/record.rs` | one record read, and every rule of the design that needs only the file, each refusal with its one code |
 | `crates/archogen-catalog/tests/record.rs` | one valid record and one change of it per rule, each refused with that rule's code |

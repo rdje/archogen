@@ -2,3 +2,6 @@
 docs/decision-history/** -text
 docs/task-history/** -text
 docs/history/** -text
+# Review histories, and the archive they leave for, are compared byte for byte too (PROGRAM.55.1).
+docs/reviews/** -text
+docs/review-history/** -text

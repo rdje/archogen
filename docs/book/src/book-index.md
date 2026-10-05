@@ -56,7 +56,8 @@ a change that leaves it stale, so it is never edited by hand.
   [Where the engine's knowledge comes from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md),
   [The S0 early generation path](s0.md), [Where generated systems run](targets.md), [Verifying the
   toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
-  changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
+  changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that
+  keep the repository honest](annex-repository.md)
 - catalog-rules — [What is versioned, and what changing it costs](versions.md#catalog-rules)
 - catalog-s0 — [What is versioned, and what changing it costs](versions.md#catalog-s0)
 - **check-passing convention** — [definition](glossary.md), [Where the engine's knowledge comes from: the
@@ -200,7 +201,8 @@ a change that leaves it stale, so it is never edited by hand.
 
 ## K
 
-- **KB** — [definition](glossary.md), [Reading a description](reading.md), [Quantities and units](quantities.md)
+- **KB** — [definition](glossary.md), [Reading a description](reading.md), [Quantities and units](quantities.md), [Annex
+  B: The checks that keep the repository honest](annex-repository.md)
 
 ## L
 

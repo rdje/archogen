@@ -769,13 +769,47 @@ mdBook that is the director's window into the project.
   - [x] **ADDRESSED (verified)** — `bash scripts/check_review_history.sh --self-test` → `38 pass / 0 fail (38 arms)`;
     three legs broken in turn → provenance `37 pass / 1 fail`, closed status `37 pass / 1 fail`, history `36 pass /
     2 fail`; `--seal decision_catalog-records-reviews.md` → `archived, 75383 bytes, byte for byte`, `cmp` against
-    `HEAD`'s copy → `rc=0`; `docs/reviews/` → 317 648 bytes.
+    `HEAD`'s copy → `rc=0`; `docs/reviews/` → 317 648 bytes. ⛔ **Corrected by `PROGRAM.55.1`:** at this commit the
+    folder held 2 589 lines and 317 779 bytes; 317 648 was measured before the reviews index's note.
   - [x] **NO REGRESSION** — `make focused` → `tier focused: passed — 3 passed, 0 failed`; `bash scripts/run_self_tests.sh` → `self-tests: OK — 46 self-test(s) passed`; `bash
     scripts/check_doctrines.sh` → `=== all doctrines green ===`.
   - [x] **LOCKSTEP** — the doctrine's row, the policy's two rows, the inventory's two rows, the ceiling record, the
     reviews index's note, this leaf and its log rows, `CHANGELOG.md`; the book states no folder's ceiling.
   Verification: `2026-10-05` — the Verification Log's row
   Commit: `ARCHOGEN-PROGRAM-0438 (leaf PROGRAM.55)`
+
+- ID: `PROGRAM.55.1`
+  Status: `done` — filed and closed `2026-10-05`
+  Goal: `REVIEW-HISTORY` hardened after its independent review (`docs/reviews/review-history-reviews.md`, 17
+  findings, 5 defects), as `PROGRAM.41.1` hardened `DECISION-HISTORY`: every finding answered, every construction a
+  RED arm, the claim of proof measured by a mutation matrix.
+  Acceptance: each of E1–E17 answered in the gate, its header, the documents or the book; the self-test green; every
+  mutation of the matrix killed, or its survival stated; `PROGRAM.55`'s figure corrected; every check green.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — the review's constructions on the gate at `49c44ed`, each `rc=0` where a refusal was
+    due: an open review archived by `closedness not reached`, a fifth cell, a hidden row; a merged round lost; a file
+    ignored or unstaged passing the hook; 14 of 30 mutations surviving the 38 arms.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: `scripts/check_review_history.sh`'s `statuses` read any line opening
+    `| [` by its first word; leg 5 looked no later than the archiving commit; legs 1 and 4 read the working tree;
+    the stub was any line matching. WHY: `PROGRAM.55` ported `DECISION-HISTORY`'s legs for files but not the
+    review's own row, merge, staging or quoting cases, and its claim "each leg proven by a mutation" rested on three
+    mutations (`36 pass / 2 fail` at most).
+  - [x] **FIX** — the gate rewritten: the review's row read from the table alone, four cells, `closed: `, linked
+    once; every later commit at the stub's path its stub; staged copies read; a closed history frozen; stubs by shape;
+    merges refused; the seal's read-back; the self-test from 38 arms to 65; `.gitattributes`; the doctrine rows
+    (D11's clause restored); the book; the review history and its index row → `bash -n
+    scripts/check_review_history.sh` → `rc=0`.
+  - [x] **ADDRESSED (verified)** — `bash scripts/check_review_history.sh --self-test` → `65 pass / 0 fail`; a matrix
+    of mutations, one per refusal and leg, each run against the self-test → 38 of 38 killed; `bash
+    scripts/check_review_history.sh` on this repository → `OK (1 archived history(ies)`.
+  - [x] **NO REGRESSION** — `make focused` → `tier focused: passed — 3 passed, 0 failed`; `bash scripts/run_self_tests.sh` → `self-tests: OK — 46 self-test(s) passed`; `bash
+    scripts/check_doctrines.sh` → `=== all doctrines green ===`.
+  - [x] **LOCKSTEP** — the gate's header; `DOCTRINE_ENFORCEMENT.md`'s two rows; `LIVE_DOCUMENT_SIZE_CONTAINMENT.md`'s
+    reviews row re-measured, with E12's decision; `.gitattributes`; `annex-repository.md` and `catalog.md`, the book's
+    index regenerated; the review history and its index row; this leaf and its log rows; `CHANGELOG.md`.
+  Verification: `2026-10-05` — the Verification Log's row
+  Commit: `ARCHOGEN-PROGRAM-0442 (leaf PROGRAM.55.1)`
 
 ## Roadmap coverage map
 
@@ -997,6 +1031,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-10-05` | `PROGRAM.52.1` | twelve RED arms, one of which first failed and found a quote outside every block unchecked; the tree; every gate's self-test; the README routes after compacting two rows; the enforcer | 12 / 12 arms; 0 hand-offs, 0 ledgers, clean; all self-tests passed; `DOCTRINE_ENFORCEMENT.md` 36 537 bytes under 36 864; all green |
 | `2026-10-05` | `PROGRAM.52.2` | the two ledgers through `HANDOFF-LEDGER`; the prose census of each record against its ledger; each rewritten leaf against its previous text; the enforcer | 46 hand-offs, each quoted; no hand-off left in prose; one dropped item restored; all green |
 | `2026-10-05` | `PROGRAM.55` | the self-test; three legs broken in turn; the seal on the closed catalog history and `cmp` against `HEAD`; both folders measured; every gate's self-test; the focused tier; the enforcer | 38 / 38 arms; each broken leg failed its arms; byte for byte; `docs/reviews/` 317 648 bytes; all green |
+| `2026-10-05` | `PROGRAM.55.1` | the review's constructions armed; the self-test; a mutation matrix, one per refusal and leg; the real repository; every gate's self-test; the focused tier; the enforcer | 65 / 65 arms; 38 of 38 killed; OK; all green |
 
 ## Commit Log
 
@@ -1112,8 +1147,9 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.52` | `ARCHOGEN-PROGRAM-0425 (leaf PROGRAM.52)` | **step 1 — design reviews made executable**: the method record; `M3.1.1.1` filed; `M3.6.2` begun as the instrument; closed leaves sealed |
 | `PROGRAM.52.1` | `ARCHOGEN-PROGRAM-0426 (leaf PROGRAM.52.1)` | `HANDOFF-LEDGER`: a design record's hand-offs in a machine-read ledger, each quoted word for word by its leaf |
 | `PROGRAM.52.2` | `ARCHOGEN-PROGRAM-0429 (leaf PROGRAM.52.2)` | **step 1 — the trust record's ledger**: 24 hand-offs, each quoted word for word by its leaf; the receiving leaves rewritten around their quotes |
-| `PROGRAM.55` | `ARCHOGEN-PROGRAM-0438 (leaf PROGRAM.55)` | **the review-history archive**: `REVIEW-HISTORY`, `--seal <FILE>`, 38 arms; the closed catalog history archived behind a stub; `docs/reviews/` back under its ceiling |
 | `PROGRAM.52.2` | `ARCHOGEN-PROGRAM-0430 (leaf PROGRAM.52.2)` | **step 2 — the substitutability record's ledger**: 22 hand-offs in its new §11, each quoted by its leaf; `PROGRAM.52` closed |
+| `PROGRAM.55` | `ARCHOGEN-PROGRAM-0438 (leaf PROGRAM.55)` | **the review-history archive**: `REVIEW-HISTORY`, `--seal <FILE>`, 38 arms; the closed catalog history archived behind a stub; `docs/reviews/` back under its ceiling |
+| `PROGRAM.55.1` | `ARCHOGEN-PROGRAM-0442 (leaf PROGRAM.55.1)` | **`REVIEW-HISTORY` hardened after its review**: 17 findings answered; the review's row read from the table; merged rounds, staging, frozen histories, stub shapes; 65 arms; 38 of 38 killed |
 
 ## Changelog
 
