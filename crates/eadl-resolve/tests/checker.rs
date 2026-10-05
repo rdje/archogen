@@ -169,8 +169,9 @@ fn oracle(domain: Domain, name: &str, offered: &str, required: &str, dir: Direct
         }
         Domain::Set(_) => {
             let (o, mut r) = (set(offered), set(required));
-            if name == "available-in-state" {
-                r.insert("run".to_string());
+            // §2's set row: the members the entry's `implies` names join the required set (R17 1, 2).
+            if let Some(e) = eadl_resolve::model::vocab::entry(name) {
+                r.extend(e.implies.iter().map(|m| (*m).to_string()));
             }
             match dir {
                 Direction::Includes => r.is_subset(&o),
@@ -202,7 +203,18 @@ fn every_constraint_is_judged_in_its_direction_by_the_oracle() {
                     written.push((format!("({} ({w} {r}))", e.name), e.direction));
                 }
                 for (text, dir) in written {
-                    let Ok(req) = constraint(&text) else { continue };
+                    let Ok(req) = constraint(&text) else {
+                        // The reader refuses a requirement only where §8 refuses its value (R17 R6): a modulus of 0, or
+                        // a value of information that is no positive whole number of bits.
+                        let refused_by_record = (e.name == "counter-modulus" && r == "0")
+                            || (matches!(e.domain, Domain::Quantity(Dimension::Information))
+                                && !base(&r).is_positive());
+                        assert!(
+                            refused_by_record,
+                            "`{text}` refused by the reader, which §8 does not refuse"
+                        );
+                        continue;
+                    };
                     let v = judge(&p, &req);
                     let want = oracle(e.domain, e.name, &o, &r, dir);
                     assert_eq!(
@@ -506,5 +518,53 @@ fn a_statement_constrains_no_provider_and_is_offered_by_none() {
             "a `needs` of {}",
             e.name
         );
+    }
+}
+
+#[test]
+fn a_group_is_judged_the_same_whatever_order_its_parts_are_written_in() {
+    // R17 4: rule 5 gives a clause's parts no order, so neither does a group's outcome.
+    let states = [
+        "(supported-horizon 3600 s)",
+        "(supported-horizon 5 s)",
+        "supported-horizon",
+        "",
+    ];
+    let bounds = [
+        "(delivery-bound 1 us)",
+        "(delivery-bound 1 ms)",
+        "delivery-bound",
+        "",
+    ];
+    let mut judged = 0usize;
+    for s in states {
+        for b in bounds {
+            for absent in ["", "(absent supported-horizon)", "(absent delivery-bound)"] {
+                let offers = format!("(offers (absolute-deadline true) {s} {b}) {absent}");
+                let Ok(p) = provider(&offers) else { continue };
+                let one = constraint("(absolute-deadline (supported-horizon (at-least 10 s)) (delivery-bound (at-most 50 us)))").expect("reads");
+                let two = constraint("(absolute-deadline (delivery-bound (at-most 50 us)) (supported-horizon (at-least 10 s)))").expect("reads");
+                assert_eq!(judge(&p, &one), judge(&p, &two), "{offers}");
+                judged += 1;
+            }
+        }
+    }
+    println!("judged {judged} providers against a group in both orders");
+    assert!(judged > 20);
+}
+
+#[test]
+fn a_statement_reads_bare_or_under_exactly() {
+    for e in VOCABULARY.iter().filter(|e| e.role == Role::Statement) {
+        for v in samples(e.domain) {
+            let p = provider("").expect("an empty provider reads");
+            for text in [
+                format!("({} {v})", e.name),
+                format!("({} (exactly {v}))", e.name),
+            ] {
+                let req = constraint(&text).unwrap_or_else(|e| panic!("{text}: {e:?}"));
+                assert_eq!(judge(&p, &req), Verdict::Statement, "{text}");
+            }
+        }
     }
 }

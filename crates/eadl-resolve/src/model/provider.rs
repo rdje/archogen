@@ -16,6 +16,8 @@ pub enum Stated {
     Unvalued,
     /// Declared absent.
     Absent,
+    /// The same value offered twice, where comparing the two overflows: §2's `unsupported-profile` (R17 5).
+    Overflow,
 }
 
 /// A provider read.
@@ -83,6 +85,7 @@ fn classify(e: &vocab::Entry, item: &Form) -> Result<Written, Refused> {
                         return refuse(e.name, "`(f (exactly))` writes no value");
                     }
                     return value::read(e.domain, inner, item.span())
+                        .and_then(|v| value::fact_value(e.name, e.domain, &v).map(|()| v))
                         .map(Written::Value)
                         .or_else(|m| refuse(e.name, m.0));
                 }
@@ -104,12 +107,14 @@ fn classify(e: &vocab::Entry, item: &Form) -> Result<Written, Refused> {
                 // An abstract platform's bound: refinement's, not a value (§2; R10 J4, J8). Its value must still be
                 // of the domain.
                 return value::read(e.domain, inner, item.span())
-                    .map(|_| Written::Bound)
+                    .and_then(|v| value::fact_value(e.name, e.domain, &v))
+                    .map(|()| Written::Bound)
                     .or_else(|m| refuse(e.name, m.0));
             }
         }
     }
     value::read(e.domain, rest, item.span())
+        .and_then(|v| value::fact_value(e.name, e.domain, &v).map(|()| v))
         .map(Written::Value)
         .or_else(|m| refuse(e.name, m.0))
 }
@@ -127,6 +132,10 @@ pub fn read(decl: &Form) -> Result<Provider, Refused> {
         .and_then(Form::as_symbol)
         .unwrap_or("<unnamed>")
         .to_string();
+    if vocab::entry(&name).is_some() {
+        // A declaration whose local name is a vocabulary fact (§1.1; R16 1), a provider's own name included (R17 R5).
+        return refuse(&name, "a declaration whose local name is a vocabulary fact");
+    }
     let mut written: BTreeMap<String, Vec<Written>> = BTreeMap::new();
     let mut absent: BTreeSet<String> = BTreeSet::new();
     for clause in decl.items().iter().skip(2) {
@@ -154,6 +163,10 @@ pub fn read(decl: &Form) -> Result<Provider, Refused> {
                         _ => item.head().unwrap_or(""),
                     };
                     if let Some(e) = vocab::entry(head) {
+                        if e.role == Role::Statement {
+                            // A statement is the requiring side's word alone (§3 rule 6; R17 R4).
+                            return refuse(e.name, "a statement fact declared absent");
+                        }
                         absent.insert(e.name.to_string());
                     }
                 }
@@ -172,6 +185,7 @@ pub fn read(decl: &Form) -> Result<Provider, Refused> {
         let e = vocab::entry(fact).expect("only vocabulary facts are kept");
         let boolean = matches!(e.domain, Domain::Boolean | Domain::Group(_));
         let mut value: Option<Value> = None;
+        let mut overflow = false;
         let mut bound = false;
         let mut bare = false;
         for w in ws {
@@ -189,33 +203,42 @@ pub fn read(decl: &Form) -> Result<Provider, Refused> {
             };
             match &value {
                 None => value = Some(v),
-                Some(prev) if same(prev, &v) => {}
-                Some(_) => {
-                    return refuse(
-                        fact,
-                        "one provider offering one declared fact with two values",
-                    )
-                }
+                Some(prev) => match same(prev, &v) {
+                    Ok(true) => {}
+                    Ok(false) => {
+                        return refuse(
+                            fact,
+                            "one provider offering one declared fact with two values",
+                        )
+                    }
+                    Err(_) => overflow = true,
+                },
             }
         }
         let _ = bare; // a bare offer beside a value is that value (§5; R13 M7)
         if bound && value.is_some() {
             return refuse(fact, "a bound beside a value of the same fact");
         }
-        stated.insert(fact.clone(), value.map_or(Stated::Unvalued, Stated::Valued));
+        let state = if overflow {
+            Stated::Overflow
+        } else {
+            value.map_or(Stated::Unvalued, Stated::Valued)
+        };
+        stated.insert(fact.clone(), state);
     }
     for fact in &absent {
         stated.insert(fact.clone(), Stated::Absent);
     }
     // A derived fact beside a fact its rule reads (§4; R4 D1, R5 E1, R6 F1; absent too, R16 8).
     for e in vocab::VOCABULARY.iter().filter(|e| e.rule.is_some()) {
-        let inputs_offered = e
-            .derived_from
-            .iter()
-            .chain(e.reads.iter())
-            .any(|i| matches!(stated.get(*i), Some(Stated::Valued(_) | Stated::Unvalued)));
+        let inputs_offered = e.derived_from.iter().chain(e.reads.iter()).any(|i| {
+            matches!(
+                stated.get(*i),
+                Some(Stated::Valued(_) | Stated::Unvalued | Stated::Overflow)
+            )
+        });
         match stated.get(e.name) {
-            Some(Stated::Valued(_) | Stated::Unvalued) if inputs_offered => {
+            Some(Stated::Valued(_) | Stated::Unvalued | Stated::Overflow) if inputs_offered => {
                 return refuse(
                     e.name,
                     "a derived fact offered beside a fact its rule reads",
@@ -230,23 +253,11 @@ pub fn read(decl: &Form) -> Result<Provider, Refused> {
             _ => {}
         }
     }
-    // The counter's own refusals (§4; R3 C12, C6; R8 H3; R9 I13).
-    if let Some(Stated::Valued(Value::Count(m))) = stated.get("counter-modulus") {
-        if *m == 0 {
-            return refuse("counter-modulus", "a `counter-modulus` of 0");
-        }
-    }
+    // The counter's own refusals (§4; R3 C12, C6); a modulus of 0 and a width that is no whole number of bits are
+    // refused as values, wherever written (`value::fact_value`).
     if let Some(Stated::Valued(Value::Quantity(w))) = stated.get("counter-width") {
-        let bits = w.in_base().ok();
-        let whole = bits.is_some_and(|b| b.is_integer() && b.is_positive());
-        if !whole {
-            return refuse(
-                "counter-width",
-                "a width that is not a positive whole number of bits",
-            );
-        }
-        if let (Some(b), Some(Stated::Valued(Value::Count(m)))) =
-            (bits, stated.get("counter-modulus"))
+        if let (Ok(b), Some(Stated::Valued(Value::Count(m)))) =
+            (w.in_base(), stated.get("counter-modulus"))
         {
             let width = b.numerator();
             if width < 127 && *m > (1i128 << width) {
@@ -259,7 +270,7 @@ pub fn read(decl: &Form) -> Result<Provider, Refused> {
     }
     if matches!(
         stated.get("counter-modulus"),
-        Some(Stated::Valued(_) | Stated::Unvalued)
+        Some(Stated::Valued(_) | Stated::Unvalued | Stated::Overflow)
     ) && matches!(stated.get("wrap-behavior"), Some(Stated::Valued(Value::Enum(w))) if w == "saturating")
     {
         return refuse(

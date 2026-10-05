@@ -3,8 +3,8 @@
 - **Type:** `decision`
 - **Date:** `2026-10-03`
 - **Status:** `active` — written; under independent review (leaf `M3.1.1`'s closure rule: the first round that
-  finds no defect closes it); rounds 1 to 15 answered `2026-10-03`, round 16 `2026-10-05`, its hand-offs in a
-  ledger since (§11)
+  finds no defect closes it); rounds 1 to 15 answered `2026-10-03`, rounds 16 and 17 `2026-10-05`, its hand-offs
+  in a ledger since (§11), reviewed beside its executable model since round 17 (`M3.1.1.1`)
 - **Owner / source:** leaf `M3.1.1` (`docs/tasks/M3.md`). `ROADMAP.md` §5.2 asks for "explicit matching rules in a
   decidable fragment" with "a documented comparison direction" per parameter, declared cross-field implications,
   and no stronger precondition "silently accepted as stronger capabilities"; §5.3 for a "versioned capability
@@ -110,13 +110,14 @@ that writes a `deffact` alike — so no description's registry is ever asked for
 | `derived-from` | forms | facts | the facts a derivation computes this one from, when it is not offered directly (§4); the graph these clauses and `reads` make is acyclic (R10 J12), and the typed table `crates/eadl-resolve` reads the vocabulary into refuses an entry that would close a cycle (§9; R9 I12) |
 | `reads` | forms | facts | the optional inputs the rule reads beside `derived-from`'s required ones (§4; R5 E9) |
 | `rule` | a symbol | a rule name | the engine's rule that computes it, named here and listed in §4 |
+| `implies` | forms | members of the fact's set | for a set fact, the members every requirement on it holds beside what it writes, under every written direction — `available-in-state` implies `run`, the state every use runs in (§2; R16 2; R17 1, 2) |
 | `doc` | a string | a string | what the fact means, one line; required, as a kind's `doc` is |
 
 `deffact`'s clauses are `(holds forms)` for `domain`, since `(ordered …)` nests, and for `derived-from` and `reads`,
 which list facts; `(holds values string)` for `doc`; and `(holds values symbol)` for `role`, `direction` and
 `rule`, each exactly one value — reference §7 rule 4 makes `values` a fixed number, and `kind.rs` refuses any
 other as `schema-arity` (R2 B3). `doc`, `domain`, `role` and `direction` appear exactly once, `derived-from`,
-`reads` and `rule` at most once (R3 C11). A fact's name lives in the vocabulary, not in a
+`reads`, `rule` and `implies` at most once, `implies` only on a set fact (R3 C11; R17 2). A fact's name lives in the vocabulary, not in a
 description's declaration namespace: the vocabulary is validated on its own, never checked as a description. A
 declaration whose local name is a vocabulary fact is `invalid-description`: module resolution (reference §6 rule 10)
 binds a `uses`, `needs` or `refines` operand to a declaration of its own instance before anything else, so such a
@@ -156,7 +157,7 @@ of it satisfies more.
 | --- | --- | --- | --- | --- |
 | `absolute-deadline` | group `supported-horizon delivery-bound` | guarantee | `exact` | a boolean head |
 | `application-mutexes`, `general-ipc`, `descriptor-format` | boolean | guarantee | `exact` | presence facts; the first two are §3.1 exclusions |
-| `available-in-state` | set `run idle sleep` | guarantee | `includes` | the offer covers every state required and `run`, the state every use runs in: `(available-in-state idle)` asks for `run` and `idle` (R16 2) |
+| `available-in-state` | set `run idle sleep`, `(implies run)` | guarantee | `includes` | the offer covers every state required and `run`, the state every use runs in, which the entry's `implies` names: `(available-in-state idle)` asks for `run` and `idle`, and `(available-in-state (exactly idle))` for exactly those two (R16 2; R17 1, 2) |
 | `bounded-arrival` | boolean | guarantee | `exact` | |
 | `bus-width` | quantity information | guarantee | `exact` | interface: a wider bus is another bus |
 | `clock-rate` | quantity frequency | guarantee | `exact` | interface: a block's timing is its rate's |
@@ -207,7 +208,7 @@ fact's domain is `invalid-description`. In the table, `exact` is written `exactl
 | `quantity <dim>` | `(f 10 MHz)`, a number and a unit of the dimension | `(f (at-least 60 s))` in the fact's direction, `(f (exactly 60 s))`, or `(f 60 s)` in the fact's direction | `at-least`, `at-most`, `exact` | `ComparisonDirection::satisfied_by` in base units; another dimension is `invalid-description` |
 | `interval <dim>` | `(f (range lo hi))`, two quantities of the dimension, `lo ≤ hi`; or a point `(f v)`, the interval `[v, v]` (R3 C10) | a point `(f v)` or an interval `(f (range lo hi))`, `lo ≤ hi` here too (R12 L12), or `(f (exactly (range lo hi)))` (R6 F6) | `within`, `exact` | the required point or interval lies inside the offered one: `o.lo ≤ r.lo` and `r.hi ≤ o.hi`; under `exactly`, the intervals are equal (R3 C7) |
 | `enumeration a b c` | `(f b)`, one of the alternatives | `(f b)` or `(f (exactly b))`; with `(ordered …)`, also `(f (at-least b))` or `(f (at-most b))` in the fact's direction | `exact`; with an order, `at-least` or `at-most` | equal; or in the direction over the declared order |
-| `set a b c` | `(f a b)`, alternatives without repetition, at least one — `(f)` with none is a bare offer (R12 L12) | `(f b)`, `(f a b)`, or `(f (exactly a b))` | `includes`, `exact` | the offered set contains every required alternative; or the sets are equal |
+| `set a b c` | `(f a b)`, alternatives without repetition, at least one — `(f)` with none is a bare offer (R12 L12) | `(f b)`, `(f a b)`, or `(f (exactly a b))` | `includes`, `exact` | the required set, with every member the entry's `implies` names joined to it, is contained in the offered one; under `exactly`, equal to it (R17 1, 2) |
 | `group g h …` | `(f true)` or bare `f`, and the sub-facts offered on their own; the head takes a bound as a boolean does (R10 J4) | `(f true)`, the head alone, which the head named in `needs` also means (R9 I6); or `(f (g …) (h …))`, the head and sub-constraints; a sub-fact is a fact in its own right and may be constrained flat beside the head, as `examples/alternative-timer/system.eadl` writes `(absolute-deadline true)` beside `(supported-horizon (at-least 10 s))` (R2 B6) | the head is `boolean exact`; each sub-fact its own | the head holds and every sub-constraint, nested or flat, is satisfied, each judged as a requirement on its sub-fact |
 
 A bound an offer writes (an abstract platform's `(counter-width (at-least 32 bit))`) is not a value — `exactly`
@@ -271,13 +272,17 @@ For one requirement `R` on fact `f`, written by side `S`, and one provider `P`:
    reversed condition role, read with the demand on the offered side, drew defects in six of ten review rounds and
    is deleted (R10 J1, J6).
 5. **A `requires` clause** is satisfied by `P` when each of its constraints is, a statement apart (rule 6); a
-   group's sub-constraints count among its constraints (R12 L13).
+   group's sub-constraints count among its constraints (R12 L13). A group requirement's outcome at `P` is its head's
+   when the head is not satisfied; otherwise each sub-constraint is judged on its own sub-fact, and the group is
+   satisfied when every one is, and else takes the first of refused, absent, unsupported, unknown and undescribed among
+   them — whatever order they are written in (R17 4).
 6. **A statement** — a fact whose role is `statement`, such as `or-through-mediation` — is the requiring side's
    word about itself. It is checked for its domain and nothing else: it constrains no provider, puts no fact
    inside the closure, and is read by the rule or the leaf its entry names, which for `/1`'s one statement is
    `M3.2`'s adapter search (§6, "mediation"; R1 A3), whose acceptance carries it. It is the requiring side's word
-   alone: an offer of a statement fact, wherever written, a service's `offers` included, and a `needs` of one, is
-   `invalid-description` (R2 B10; R12 L6, L13; R16 7).
+   alone: an offer of a statement fact, wherever written, a service's `offers` included, a declared absence of one,
+   and a `needs` of one, are `invalid-description` (R2 B10; R12 L6, L13; R16 7; R17 R4). It is written bare or under
+   `exactly`, the one direction either side may always write (§1.1; R17 3).
 7. **Not decided here.** Which of several satisfying providers to take (`M3.4`: a deterministic preferred order in
    engine configuration); whether two providers may both be taken (`M3.3`: capacity, ownership, topology); and
    whether a requirement no provider satisfies can be met by an adapter (`M3.2`: an adapter is a provider whose
@@ -370,7 +375,9 @@ values are two offers, each judged on its own, as two catalog records will be (R
 declared fact twice with two values, or a bound beside a value, is `invalid-description`; the same value twice — the same in the fact's domain, `10 MHz` beside `10000 kHz` included (R15 13) — is one
 offer, and a bare offer beside a value of the same fact is that value, in a domain where bare presence has no value;
 for a boolean or a group's head, where bare is `true`, a bare offer beside `(f true)` is the same value twice and
-beside `(f false)` two values, `invalid-description` (R5 E10; R6 F1; R10 J8; R11 K9; R13 M7; R14 8). An undeclared fact
+beside `(f false)` two values, `invalid-description` (R5 E10; R6 F1; R10 J8; R11 K9; R13 M7; R14 8). Where comparing two
+offers of one fact overflows the exact arithmetic, the fact is `unsupported-profile` at that provider (§2), never two
+values (R17 5). An undeclared fact
 has no domain to contradict, so `region`, offered once per named region, is untouched (R1 A6; §10). When `M3.7` gives a
 catalog record's contract offers the relation can judge, a record is one more provider, judged like a block, and a
 record that mediates enters only through `M3.2`'s search (R13 M2, M6).
@@ -417,8 +424,8 @@ The relation's own codes are about an offer or a requirement as written, whateve
 
 | Code | When |
 | --- | --- |
-| `invalid-description` | a bare fact name, or `(f)`, inside `requires`; a list inside `needs` naming a vocabulary fact; a `uses` naming a vocabulary fact; a declaration whose local name is a vocabulary fact (R16 1); a derived fact declared absent beside a fact its rule reads (R16 8); a direction wrapper other than `at-least`, `at-most` and `exactly` — a list headed by a direction's name, `(f (includes …))`, `(f (within …))`, `(f (exact …))` — since a requirement writes its value and the direction is the fact's (R15 16; R16 4); a value outside its fact's domain; a width that is not a positive whole number of bits; a set written with no member in a requirement, or as `(f (exactly))` in an offer — `(f)` in an offer is bare (§2;
-R13 M11) — or an interval with `lo > hi` on either side; a `needs` of a statement fact; a direction written against the vocabulary's, `exactly` apart (§1.1); a provider offering and declaring absent one fact; one provider offering one declared fact with two values, or a bound beside a value; a boolean or group head offered with a bound other than `exactly`; a derived fact offered beside a fact its rule reads (§4); a `counter-modulus` of 0, above a valued `2^width`, or beside `(wrap-behavior saturating)`; an offer of a statement fact |
+| `invalid-description` | a bare fact name, or `(f)`, inside `requires`; a list inside `needs` naming a vocabulary fact; a `uses` naming a vocabulary fact; a declaration whose local name is a vocabulary fact (R16 1); a derived fact declared absent beside a fact its rule reads (R16 8); a direction wrapper other than `at-least`, `at-most` and `exactly` — a list headed by a direction's name, `(f (includes …))`, `(f (within …))`, `(f (exact …))` — since a requirement writes its value and the direction is the fact's (R15 16; R16 4); a value outside its fact's domain; a value of information that is not a positive whole number of bits, and a `counter-modulus` of 0, wherever written — an offer, a bound or a requirement (R17 6); a statement fact declared absent (R17 R4); a provider's own name a vocabulary fact (R17 R5); a set written with no member in a requirement, or as `(f (exactly))` in an offer — `(f)` in an offer is bare (§2;
+R13 M11) — or an interval with `lo > hi` on either side; a `needs` of a statement fact; a direction written against the vocabulary's, `exactly` apart (§1.1); a provider offering and declaring absent one fact; one provider offering one declared fact with two values, or a bound beside a value; a boolean or group head offered with a bound other than `exactly`; a derived fact offered beside a fact its rule reads (§4); a `counter-modulus` above a valued `2^width`, or beside `(wrap-behavior saturating)`; an offer of a statement fact |
 | `unsupported-profile` | a constraint on a fact the vocabulary does not declare; exact arithmetic that overflows `i128` |
 
 Whether each cause of a row takes a code of its own, as reference §4 rule 3 asks of a new rule, is `M3.1.2`'s to decide
@@ -511,7 +518,7 @@ the review history the rounds that found each.
 | `SR-H5` | `M3.1.2` | `docs/semantics/model.md` becomes normative over the crate and decides whether each cause of the record's §8 rows takes a code of its own. |
 | `SR-H6` | `M3.1.2` | `refinement.rs`'s reader is not the relation's to change, and an abstract `exactly` still refuses a different concrete value. |
 | `SR-H7` | `M3.1.2` | The production relation is tested against `M3.1.1.1`'s executable model over the same bounded universe. |
-| `SR-H8` | `M3.2` | A mediating adapter — a path across a privilege boundary through firmware or another mediator — is offered only where the requirer wrote `(or-through-mediation allowed)`. |
+| `SR-H8` | `M3.2` | A mediating adapter — a path across a privilege boundary through firmware or another mediator — is offered only where the requirer wrote `or-through-mediation` as `allowed`, bare or under `exactly`. |
 | `SR-H9` | `M3.2` | An adapter's offer satisfies past a declared absence, model §2 rule 2 amended to say so, and the absence across providers is judged among the description's blocks and platforms, the adapter not one of them. |
 | `SR-H10` | `M3.2` | `examples/alternative-timer` builds as `examples/README.md` seals, each fact the relation needs of it — a horizon, a privilege level, its policy's constraints — offered by one provider judged on its own, `timer.delay`, the adapter or a record after `M3.7`, never a record's fact joined to `timer.delay`'s, and a change to its description is brought to the director before it is made. |
 | `SR-H11` | `M3.3` | A caller bound to an execution context that its provider's `reachable-at-privilege` does not include is refused, a requirer that states no level included. |
@@ -521,10 +528,10 @@ the review history the rounds that found each.
 | `SR-H15` | `M3.4` | The closure is rooted at the system with its tasks and platform, `uses` and `needs` followed transitively, every constraint of a `requires` and every `needs` of a vocabulary fact judged wherever written, a `uses` naming a vocabulary fact refused, and the closure the report carries decided where it and presence's differ, a provider on a platform the system does not use never satisfying. |
 | `SR-H16` | `M3.4` | A fact declared absent at one of the description's blocks and platforms and offered at another, outside a direct refinement pair, is refused as `invalid-description` over every offer and absence and through no chain of refinements, `presence.rs`'s first-of-each comparison corrected, an adapter `M3.2`'s search offers not being one of them. |
 | `SR-H17` | `M3.4` | No group and its sub-constraints, nested or flat, are met by different providers, and this leaf decides which other constraints of one clause may be. |
-| `SR-H18` | `M3.4` | The description's code is decided over the providers that take part — those stating `f`, offered in any form or declared absent, or an input of its derivation, a silent one deciding nothing — `missing-fact` while one that takes part is unknown or undescribed and none satisfies, and when none takes part, `infeasible-configuration` once at least one takes part and every one that does is refused or absent, with model §2 rule 2 amended where a provider's derivation or an adapter's offer satisfies past another's absence. |
+| `SR-H18` | `M3.4` | The description's code is decided over the providers that take part — those stating `f`, offered in any form or declared absent, or an input of its derivation, a silent one deciding nothing — `missing-fact` while one that takes part is unknown or undescribed and none satisfies, and when none takes part; `infeasible-configuration` once at least one takes part and every one that does is refused or absent, with model §2 rule 2 amended where a provider's derivation or an adapter's offer satisfies past another's absence. |
 | `SR-H19` | `M3.4` | The enumeration lists the description's blocks and platforms, a catalog record only after `M3.7`, and a mediating record never directly. |
 | `SR-H20` | `M3.4` | Every verdict `crates/archogen-cli/tests/verdicts.txt` and `module_cases.rs` freeze is kept, or changed only in the commit that names the case, the rule that moves it and its migration — a description gaining a fact, the target's agreement and its ledger source included — ordered after `M3.3` and `M3.7` where a migration needs them, the seven `0` verdicts `M3.1.1`'s round 14 measured among them. |
-| `SR-H21` | `M3.7` | The catalog record decision's §2 is amended so a contract facet states offers and absences of vocabulary facts, read by the relation's reader and judged like a block's, and a record whose path crosses a mediation boundary says so and enters only through `M3.2`'s search, where the requirer wrote `(or-through-mediation allowed)`. |
+| `SR-H21` | `M3.7` | The catalog record decision's §2 is amended so a contract facet states offers and absences of vocabulary facts, read by the relation's reader and judged like a block's, and a record whose path crosses a mediation boundary says so and enters only through `M3.2`'s search, where the requirer wrote `or-through-mediation` as `allowed`, bare or under `exactly`. |
 | `SR-H22` | `M3.7` | A design reviewed by a context that did not write it answers how a record's offer or absence meets a block's absence or offer, named in model §2 rule 2's amendment and decided with `M3.4`, and how a record's preconditions become offered sets judged by inclusion, a record with a precondition no entry states being no provider. |
 
 ## Why
@@ -562,6 +569,6 @@ satisfies that it should not — a stronger precondition read as a capability, a
 an implication assumed that nothing declares — and no case of §5.2 misclassified; every finding answered here. The
 history is [`decision_substitutability-relation-reviews.md`](../reviews/decision_substitutability-relation-reviews.md).
 
-Defects per round, oldest first: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3. Each round's findings, its reader's measurements and every answer are in
+Defects per round, oldest first: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6. Each round's findings, its reader's measurements and every answer are in
 the review history linked above, which holds them whole; this record keeps only the count (`PROGRAM.52.2`, the
 folder's ceiling).

@@ -78,6 +78,9 @@ pub struct Entry {
     pub reads: &'static [&'static str],
     /// The rule that computes it.
     pub rule: Option<Rule>,
+    /// For a set fact: members every requirement on it holds beside what it writes — the entry's `implies` clause
+    /// (record §1.1, R17 2): `available-in-state` implies `run`, the state every use runs in.
+    pub implies: &'static [&'static str],
 }
 
 const fn plain(name: &'static str, domain: Domain, direction: Direction) -> Entry {
@@ -89,6 +92,7 @@ const fn plain(name: &'static str, domain: Domain, direction: Direction) -> Entr
         derived_from: &[],
         reads: &[],
         rule: None,
+        implies: &[],
     }
 }
 
@@ -106,11 +110,16 @@ pub const VOCABULARY: &[Entry] = &[
     boolean("application-mutexes"),
     boolean("general-ipc"),
     boolean("descriptor-format"),
-    plain(
-        "available-in-state",
-        Domain::Set(&["run", "idle", "sleep"]),
-        Direction::Includes,
-    ),
+    Entry {
+        name: "available-in-state",
+        domain: Domain::Set(&["run", "idle", "sleep"]),
+        role: Role::Guarantee,
+        direction: Direction::Includes,
+        derived_from: &[],
+        reads: &[],
+        rule: None,
+        implies: &["run"],
+    },
     boolean("bounded-arrival"),
     plain(
         "bus-width",
@@ -172,6 +181,7 @@ pub const VOCABULARY: &[Entry] = &[
         derived_from: &[],
         reads: &[],
         rule: None,
+        implies: &[],
     },
     boolean("preemptive"),
     plain(
@@ -216,6 +226,7 @@ pub const VOCABULARY: &[Entry] = &[
         derived_from: &["counter-modulus", "tick-rate"],
         reads: &["wrap-behavior"],
         rule: Some(Rule::HorizonFromModulusAndRate),
+        implies: &[],
     },
     plain(
         "wrap-behavior",

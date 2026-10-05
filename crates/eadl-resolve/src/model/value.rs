@@ -39,19 +39,41 @@ fn malformed<T>(why: impl Into<String>) -> Result<T, Malformed> {
 
 /// Whether two values are the same in their domain: quantities by amount, `10 MHz` beside `10000 kHz` (record §5,
 /// R15 13).
-#[must_use]
-pub fn same(a: &Value, b: &Value) -> bool {
-    match (a, b) {
+///
+/// # Errors
+///
+/// [`Overflow`] when comparing two amounts overflows the exact arithmetic: §2's `unsupported-profile`, never "two
+/// values" (record §5, R17 5).
+pub fn same(a: &Value, b: &Value) -> Result<bool, Overflow> {
+    let eq = |x: Quantity, y: Quantity| x.equals(y).map_err(|_| Overflow);
+    Ok(match (a, b) {
         (Value::Bool(x), Value::Bool(y)) => x == y,
         (Value::Count(x), Value::Count(y)) => x == y,
-        (Value::Quantity(x), Value::Quantity(y)) => x.equals(*y) == Ok(true),
-        (Value::Interval(a0, a1), Value::Interval(b0, b1)) => {
-            a0.equals(*b0) == Ok(true) && a1.equals(*b1) == Ok(true)
-        }
+        (Value::Quantity(x), Value::Quantity(y)) => eq(*x, *y)?,
+        (Value::Interval(a0, a1), Value::Interval(b0, b1)) => eq(*a0, *b0)? && eq(*a1, *b1)?,
         (Value::Enum(x), Value::Enum(y)) => x == y,
         (Value::Set(x), Value::Set(y)) => x == y,
         _ => false,
+    })
+}
+
+/// What §8 refuses of one fact's value wherever it is written — offer, bound or requirement (record §4, §8; R17 6): a
+/// value of information that is not a positive whole number of bits, and a `counter-modulus` of 0.
+///
+/// # Errors
+///
+/// [`Malformed`], `invalid-description`.
+pub fn fact_value(fact: &str, domain: Domain, v: &Value) -> Result<(), Malformed> {
+    if let (Domain::Quantity(Dimension::Information), Value::Quantity(q)) = (domain, v) {
+        let whole = q.in_base().is_ok_and(|b| b.is_integer() && b.is_positive());
+        if !whole {
+            return malformed("a value of information that is not a positive whole number of bits");
+        }
     }
+    if fact == "counter-modulus" && matches!(v, Value::Count(0)) {
+        return malformed("a `counter-modulus` of 0");
+    }
+    Ok(())
 }
 
 fn quantity(

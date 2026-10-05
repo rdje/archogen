@@ -842,14 +842,14 @@ test -p eadl-resolve --test checker
 expect killed
 why M3.1.1.1: one provider offering one declared fact with two values is invalid-description (R5 E10; R10 J8).
 from
-                    Some(_) => {
-                        return refuse(
-                            fact,
-                            "one provider offering one declared fact with two values",
-                        )
-                    }
+                        Ok(false) => {
+                            return refuse(
+                                fact,
+                                "one provider offering one declared fact with two values",
+                            )
+                        }
 to
-                    Some(_) => {}
+                        Ok(false) => {}
 end
 
 mutation model-bound-read-as-value
@@ -858,9 +858,9 @@ test -p eadl-resolve --test checker
 expect killed
 why M3.1.1.1: an abstract platform's bound is not a value and meets no valued constraint (record §2; R10 J4, J8).
 from
-                        .map(|_| Written::Bound)
+                        .map(|()| Written::Bound)
 to
-                        .map(Written::Value)
+                        .map(|()| Written::Value(Value::Bool(true)))
 end
 
 mutation trust-dev-edges-not-followed
@@ -894,4 +894,59 @@ from
                     if compiled.contains(rp) {
 to
                     if compiled.contains(rp) && false {
+end
+
+mutation model-implies-ignored
+file crates/eadl-resolve/src/model/judge.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 17: the members a set fact's entry implies join the required set under every direction (§1.1's implies, §2); ignored, an idle-only provider meets a power-state requirement.
+from
+                let implied = e.implies;
+to
+                let implied: &[&str] = &[];
+end
+
+mutation model-statement-under-exactly-refused
+file crates/eadl-resolve/src/model/requirement.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 17: a statement reads bare or under exactly, the one direction either side may always write (§1.1, rule 6).
+from
+                [w @ Form::List { .. }] if w.head() == Some("exactly") => &w.items()[1..],
+to
+                [w @ Form::List { .. }] if w.head() == Some("never") => &w.items()[1..],
+end
+
+mutation model-overflow-read-as-two-values
+file crates/eadl-resolve/src/model/provider.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 17: the same value offered twice whose comparison overflows is unsupported-profile, never two values (§5, §2).
+from
+                        Err(_) => overflow = true,
+to
+                        Err(_) => return refuse(fact, "two values"),
+end
+
+mutation model-group-in-written-order
+file crates/eadl-resolve/src/model/judge.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 17: a group's outcome does not depend on the order its parts are written in (rule 5).
+from
+                .find(|v| verdicts.contains(v))
+to
+                .find(|v| verdicts.first() == Some(v))
+end
+
+mutation model-modulus-zero-admitted
+file crates/eadl-resolve/src/model/value.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 17: a counter-modulus of 0 is invalid-description wherever written (§4, §8).
+from
+        if fact == "counter-modulus" && matches!(v, Value::Count(0)) {
+to
+        if fact == "counter-modulus" && matches!(v, Value::Count(0)) && false {
 end

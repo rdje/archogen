@@ -413,3 +413,28 @@ leaves instead of answering them here. Every restated rule said one thing, and e
 | P7 — a service offering a statement fact, two readings | no | rule 6: wherever written, a service's `offers` included |
 | P8 — a derived fact absent beside its grounds resolved by choosing the absence | no | rule 1 and §8: `invalid-description`, as `ROADMAP.md` §5.3 asks; none in the corpus |
 | P9 — §1.1's rationale overstated for bare values | no | §1.1: a bound shows its direction; a bare value takes the vocabulary's |
+
+**Round 17**, `2026-10-05`, the first round under `docs/decisions/decision_executable-design-reviews.md`: a new context
+that had not read rounds 1 to 16 ran the model's checker and corpus (`crates/eadl-resolve`), read each model function
+beside the sentence it cites, and wrote 122 probes in the corpus's own form; 16 disagreed, all inside six findings.
+Every defect came with a reproducer — a fixture the model and the record answer differently, or two quoted sentences
+— and the 18 landed first as fixtures, 12 of them failing on the model as the round found it (the other six held
+already: A1 and A2, where the model was right and the record wrong, D2 and D4, D3 and E1), then the rule, then the
+record's words. There were 12 findings, 6
+of them defects, and the verdict was "not acceptable as it stands". Defects per round: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8,
+7, 8, 9, 9, 8, 3, 6.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| O1 — `(available-in-state (exactly idle))`: §2's "the sets are equal" left `run` out, which the fact's own direction asks for (A1, A2) | yes | §2's set row and §1.1: the implied members joined under every written direction; fixtures A1, A2 |
+| O2 — the `run` rule lived in a fact's name, in no `deffact` clause, so a faithful implementation accepts an idle-only provider (A3) | yes | §1.1: `deffact` gains `implies`, `available-in-state` `(implies run)`; the model reads `Entry::implies`; mutation `model-implies-ignored` |
+| O3 — `(or-through-mediation (exactly allowed))` refused, though `exactly` is always written (C1) | yes | rule 6: a statement bare or under `exactly`; `SR-H8`, `SR-H21` reworded in both copies; mutation `model-statement-under-exactly-refused` |
+| O4 — a group's outcome hung on its parts' written order: unknown or refused, absent or unknown (D1–D7) | yes | rule 5: the head's outcome, or the first of refused, absent, unsupported, unknown, undescribed; a checker property; mutation `model-group-in-written-order` |
+| O5 — the same value twice refused as two values when comparing them overflowed (E2) | yes | §5: `unsupported-profile` at that provider; mutation `model-overflow-read-as-two-values` |
+| O6 — the whole-bits rule held of `counter-width` offered only, and a zero modulus of offers only (F1–F7) | yes | §8: a value of information and a `counter-modulus` of 0, wherever written; `value::fact_value`; mutation `model-modulus-zero-admitted` |
+| O7 — rule 5's clause verdict not modelled | no | stated in `mod.rs`; the group rule now modelled |
+| O8 — a group's head absent beside its sub-fact offered | no | decided: a sub-fact is a fact in its own right (§2's group row); the head's absence fails every group requirement |
+| O9 — `SR-H18`'s punctuation read two ways | no | a semicolon, in both copies |
+| O10 — `(absent or-through-mediation)` accepted | no | rule 6 and §8: refused |
+| O11 — a provider's own name never checked | no | §8 and the model: refused |
+| O12 — the checker's universe: no group, statements bare only, the oracle's `run` by name, over-refusal skipped, four properties without a mutation | no | a group-order property, a statement property, the oracle reading `implies`, over-refusal asserted against §8; mutations now cover `exactly`, statements, overflow and groups |

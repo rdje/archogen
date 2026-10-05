@@ -82,7 +82,13 @@ pub fn read_constraint(item: &Form) -> Result<Requirement, NotJudged> {
         return invalid("`(f)` inside `requires` states no constraint");
     }
     if e.role == Role::Statement {
-        return value::read(e.domain, rest, item.span())
+        // Checked for its domain and nothing else (§3 rule 6), bare or under `exactly`, the one direction either side
+        // may always write (§1.1; R17 3).
+        let written = match rest {
+            [w @ Form::List { .. }] if w.head() == Some("exactly") => &w.items()[1..],
+            _ => rest,
+        };
+        return value::read(e.domain, written, item.span())
             .map(|_| Requirement::Statement(e.name.to_string()))
             .or_else(|m| invalid(m.0));
     }
@@ -123,7 +129,9 @@ pub fn read_constraint(item: &Form) -> Result<Requirement, NotJudged> {
                 if inner.is_empty() {
                     return invalid("a bound with no value; a set written with no member");
                 }
-                let v = value::read(e.domain, inner, item.span()).or_else(|m| invalid(m.0))?;
+                let v = value::read(e.domain, inner, item.span())
+                    .and_then(|v| value::fact_value(e.name, e.domain, &v).map(|()| v))
+                    .or_else(|m| invalid(m.0))?;
                 return Ok(Requirement::Constraint {
                     fact: e.name.to_string(),
                     direction: dir,
@@ -132,7 +140,9 @@ pub fn read_constraint(item: &Form) -> Result<Requirement, NotJudged> {
             }
         }
     }
-    let v = value::read(e.domain, rest, item.span()).or_else(|m| invalid(m.0))?;
+    let v = value::read(e.domain, rest, item.span())
+        .and_then(|v| value::fact_value(e.name, e.domain, &v).map(|()| v))
+        .or_else(|m| invalid(m.0))?;
     // A bare value is a bound in the fact's own direction (§1).
     Ok(Requirement::Constraint {
         fact: e.name.to_string(),

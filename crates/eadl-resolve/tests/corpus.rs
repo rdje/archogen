@@ -522,6 +522,114 @@ const CASES: &[Case] = &[
         "decl observation-coherent",
         RequirementInvalid,
     ),
+    Case(
+        "R17 A1 exactly on a power state asks for run too",
+        "(offers (available-in-state run idle))",
+        "(available-in-state (exactly idle))",
+        Judged(Satisfied),
+    ),
+    Case(
+        "R17 A2 exactly idle refused to an idle-only provider",
+        "(offers (available-in-state idle))",
+        "(available-in-state (exactly idle))",
+        Judged(Refused),
+    ),
+    Case(
+        "R17 C1 a statement written under exactly",
+        "",
+        "(or-through-mediation (exactly allowed))",
+        Judged(Statement),
+    ),
+    Case(
+        "R17 D1 a group, unknown before refused",
+        "(offers (absolute-deadline true) supported-horizon (delivery-bound 1 ms))",
+        "(absolute-deadline (supported-horizon (at-least 10 s)) (delivery-bound (at-most 50 us)))",
+        Judged(Refused),
+    ),
+    Case(
+        "R17 D2 the same group, the other order",
+        "(offers (absolute-deadline true) supported-horizon (delivery-bound 1 ms))",
+        "(absolute-deadline (delivery-bound (at-most 50 us)) (supported-horizon (at-least 10 s)))",
+        Judged(Refused),
+    ),
+    Case(
+        "R17 D3 a group whose sub-fact is undescribed",
+        "(offers (absolute-deadline true))",
+        "(absolute-deadline (supported-horizon (at-least 10 s)))",
+        Judged(Undescribed),
+    ),
+    Case(
+        "R17 D4 absent before unknown",
+        "(offers (absolute-deadline true) delivery-bound) (absent supported-horizon)",
+        "(absolute-deadline (supported-horizon (at-least 10 s)) (delivery-bound (at-most 50 us)))",
+        Judged(Absent),
+    ),
+    Case(
+        "R17 D5 the same, the other order",
+        "(offers (absolute-deadline true) delivery-bound) (absent supported-horizon)",
+        "(absolute-deadline (delivery-bound (at-most 50 us)) (supported-horizon (at-least 10 s)))",
+        Judged(Absent),
+    ),
+    Case(
+        "R17 E2 the same value twice whose comparison overflows",
+        "(offers (delivery-bound 0.0000000000000000000000000000001 ns) (delivery-bound 0.0000000000000000000000000000001 ns))",
+        "(delivery-bound (at-most 1 us))",
+        Judged(Unsupported),
+    ),
+    Case(
+        "R17 E1 the value once whose comparison overflows",
+        "(offers (delivery-bound 0.0000000000000000000000000000001 ns))",
+        "(delivery-bound (at-most 1 us))",
+        Judged(Unsupported),
+    ),
+    Case(
+        "R17 F7 a negative bus width offered",
+        "(offers (bus-width -8 bit))",
+        "(bus-width 8 bit)",
+        ProviderInvalid,
+    ),
+    Case(
+        "R17 F6 a bus width of 1.5 bit offered",
+        "(offers (bus-width 1.5 bit))",
+        "(bus-width 8 bit)",
+        ProviderInvalid,
+    ),
+    Case(
+        "R17 F1 a width of 1.5 bit required",
+        "(offers (counter-width 32 bit))",
+        "(counter-width (at-least 1.5 bit))",
+        RequirementInvalid,
+    ),
+    Case(
+        "R17 F2 a width of 0 bit required",
+        "(offers (counter-width 32 bit))",
+        "(counter-width 0 bit)",
+        RequirementInvalid,
+    ),
+    Case(
+        "R17 F3 an abstract bound of 0 bit",
+        "(offers (counter-width (at-least 0 bit)))",
+        "(counter-width 8 bit)",
+        ProviderInvalid,
+    ),
+    Case(
+        "R17 F4 a modulus of 0 required",
+        "",
+        "(counter-modulus 0)",
+        RequirementInvalid,
+    ),
+    Case(
+        "R17 F5 a modulus of exactly 0 required",
+        "",
+        "(counter-modulus (exactly 0))",
+        RequirementInvalid,
+    ),
+    Case(
+        "R17 R4 a statement fact declared absent",
+        "(absent or-through-mediation)",
+        "(uart true)",
+        ProviderInvalid,
+    ),
 ];
 
 fn run(case: &Case) -> Want {
@@ -573,4 +681,11 @@ fn every_fixture_gets_the_outcome_the_record_gives_it() {
         CASES.len(),
         wrong.join("\n")
     );
+}
+
+#[test]
+fn a_provider_named_like_a_fact_is_refused() {
+    // R17 R5: the declaration-name rule (§1.1; R16 1) holds of a provider's own name.
+    let provider = &forms("(defblock observation-coherent (offers uart))")[0];
+    assert!(read_provider(provider).is_err());
 }

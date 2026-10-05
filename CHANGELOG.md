@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability design's first review against its model
+
+`ARCHOGEN-M3-0434` (leaf `M3.1.1`, step 18).
+
+- The seventeenth reader worked against the executable model and backed each of its six defects with a test the
+  model and the design answered differently. The tests landed first, twelve of them failing on the model as it stood, then the rules that make them pass: the
+  "must keep running" part of a power-state requirement now lives in the vocabulary rather than in code, and a group of
+  requirements no longer gives a different answer when its parts are written in another order.
+
 ## archogen — the trust configuration's place in the conformance suite
 
 `ARCHOGEN-M3-0433` (leaf `M3.6.2.1`).

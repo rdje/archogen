@@ -30,6 +30,7 @@ pub fn outcome(p: &Provider, fact: &str) -> Result<Outcome, Overflow> {
         Some(Stated::Valued(v)) => return Ok(Outcome::Valued(v.clone())),
         Some(Stated::Absent) => return Ok(Outcome::Absent),
         Some(Stated::Unvalued) => return Ok(Outcome::Unknown),
+        Some(Stated::Overflow) => return Err(Overflow),
         None => {}
     }
     let Some(e) = vocab::entry(fact) else {
@@ -135,14 +136,16 @@ pub fn judge(p: &Provider, r: &Requirement) -> Verdict {
             value,
         } => {
             let e = vocab::entry(fact).expect("a constraint names a vocabulary fact");
-            let (order, implied): (&[&str], &[&str]) = match e.domain {
+            // The members a set fact's entry implies join the required set under every written direction (§1.1's
+            // `implies`; R16 2, R17 1, 2); an ordered enumeration's order is the entry's.
+            let order: &[&str] = match e.domain {
                 Domain::Enumeration {
                     alternatives,
                     ordered: true,
-                } => (alternatives, &[]),
-                _ if e.name == "available-in-state" => (&[], &["run"]),
-                _ => (&[], &[]),
+                } => alternatives,
+                _ => &[],
             };
+            let implied = e.implies;
             match outcome(p, fact) {
                 Err(Overflow) => Verdict::Unsupported,
                 Ok(Outcome::Valued(v) | Outcome::Derived(v)) => {
@@ -156,6 +159,9 @@ pub fn judge(p: &Provider, r: &Requirement) -> Verdict {
             }
         }
         Requirement::Group { fact, parts } => {
+            // The head first; then every sub-constraint on its own sub-fact, the group satisfied when each is, and
+            // otherwise the first of refused, absent, unsupported, unknown and undescribed among them, whatever order
+            // they are written in (§3 rule 5; R17 4).
             let head = judge(
                 p,
                 &Requirement::Constraint {
@@ -167,13 +173,17 @@ pub fn judge(p: &Provider, r: &Requirement) -> Verdict {
             if head != Verdict::Satisfied {
                 return head;
             }
-            for part in parts {
-                let v = judge(p, part);
-                if v != Verdict::Satisfied {
-                    return v;
-                }
-            }
-            Verdict::Satisfied
+            let verdicts: Vec<Verdict> = parts.iter().map(|part| judge(p, part)).collect();
+            [
+                Verdict::Refused,
+                Verdict::Absent,
+                Verdict::Unsupported,
+                Verdict::Unknown,
+                Verdict::Undescribed,
+            ]
+            .into_iter()
+            .find(|v| verdicts.contains(v))
+            .unwrap_or(Verdict::Satisfied)
         }
     }
 }
