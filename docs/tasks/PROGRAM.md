@@ -747,98 +747,13 @@ mdBook that is the director's window into the project.
   into another repository (`decision_repository-boundary-read-only.md`), with a project-side second sample meanwhile.
 
 - ID: `PROGRAM.55`
-  Status: `done` — filed and closed `2026-10-05`
-  Goal: the archive `decision_reviews-folder-ceiling.md` names as the step after its raise: a closed review history
-  leaves `docs/reviews/` for `docs/review-history/`, byte for byte, behind a stub at its path so every citation
-  resolves, proven against an index as `TASK-HISTORY` and `DECISION-HISTORY` prove theirs.
-  Acceptance: `REVIEW-HISTORY` registered, with RED arms in `--self-test`, each leg proven by a mutation; the closed
-  catalog history archived; the folders' rows in `README_POLICY.md` and `LIVE_DOCUMENT_SIZE_CONTAINMENT.md`; every
-  check green.
-
-  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
-  - [x] **REPRODUCE / ISSUE** — `M3.1.1` step 20's commit → `README-ROUTES: docs/reviews/: 395098 bytes in total, over
-    its ceiling of 393216`; the ceiling record: a frozen history "cannot be compacted", and "if the rate holds, the
-    next step is that archive … not another raise"; 264 219 bytes on `2026-10-03`.
-  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: `docs/reviews/` keeps closed histories for good, 75 383 bytes of them the
-    catalog's, closed; WHY: no mechanism let a frozen file leave (`rc=1` from `README-ROUTES`), which the record left
-    to a `PROGRAM` leaf.
-  - [x] **FIX** — `scripts/check_review_history.sh`: `--seal <FILE>`, six legs, a self-test; registered in
-    `scripts/check_doctrines.project.sh` and `DOCTRINE_ENFORCEMENT.md` (the `DECISION-HISTORY` row tightened to fit);
-    `docs/review-history/` in `README_POLICY.md` and `LIVE_DOCUMENT_SIZE_CONTAINMENT.md`; the record's dated line; the
-    reviews index's note → `bash -n scripts/check_review_history.sh` → `rc=0`.
-  - [x] **ADDRESSED (verified)** — `bash scripts/check_review_history.sh --self-test` → `38 pass / 0 fail (38 arms)`;
-    three legs broken in turn → provenance `37 pass / 1 fail`, closed status `37 pass / 1 fail`, history `36 pass /
-    2 fail`; `--seal decision_catalog-records-reviews.md` → `archived, 75383 bytes, byte for byte`, `cmp` against
-    `HEAD`'s copy → `rc=0`; `docs/reviews/` → 317 648 bytes. ⛔ **Corrected by `PROGRAM.55.1`:** at this commit the
-    folder held 2 589 lines and 317 779 bytes; 317 648 was measured before the reviews index's note.
-  - [x] **NO REGRESSION** — `make focused` → `tier focused: passed — 3 passed, 0 failed`; `bash scripts/run_self_tests.sh` → `self-tests: OK — 46 self-test(s) passed`; `bash
-    scripts/check_doctrines.sh` → `=== all doctrines green ===`.
-  - [x] **LOCKSTEP** — the doctrine's row, the policy's two rows, the inventory's two rows, the ceiling record, the
-    reviews index's note, this leaf and its log rows, `CHANGELOG.md`; the book states no folder's ceiling.
-  Verification: `2026-10-05` — the Verification Log's row
-  Commit: `ARCHOGEN-PROGRAM-0438 (leaf PROGRAM.55)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.55.md`](../task-history/PROGRAM/PROGRAM.55.md); commit `ARCHOGEN-PROGRAM-0438`
 
 - ID: `PROGRAM.55.1`
-  Status: `done` — filed and closed `2026-10-05`
-  Goal: `REVIEW-HISTORY` hardened after its independent review (`docs/reviews/review-history-reviews.md`, 17
-  findings, 5 defects), as `PROGRAM.41.1` hardened `DECISION-HISTORY`: every finding answered, every construction a
-  RED arm, the claim of proof measured by a mutation matrix.
-  Acceptance: each of E1–E17 answered in the gate, its header, the documents or the book; the self-test green; every
-  mutation of the matrix killed, or its survival stated; `PROGRAM.55`'s figure corrected; every check green.
-
-  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
-  - [x] **REPRODUCE / ISSUE** — the review's constructions on the gate at `49c44ed`, each `rc=0` where a refusal was
-    due: an open review archived by `closedness not reached`, a fifth cell, a hidden row; a merged round lost; a file
-    ignored or unstaged passing the hook; 14 of 30 mutations surviving the 38 arms.
-  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: `scripts/check_review_history.sh`'s `statuses` read any line opening
-    `| [` by its first word; leg 5 looked no later than the archiving commit; legs 1 and 4 read the working tree;
-    the stub was any line matching. WHY: `PROGRAM.55` ported `DECISION-HISTORY`'s legs for files but not the
-    review's own row, merge, staging or quoting cases, and its claim "each leg proven by a mutation" rested on three
-    mutations (`36 pass / 2 fail` at most).
-  - [x] **FIX** — the gate rewritten: the review's row read from the table alone, four cells, `closed: `, linked
-    once; every later commit at the stub's path its stub; staged copies read; a closed history frozen; stubs by shape;
-    merges refused; the seal's read-back; the self-test from 38 arms to 65; `.gitattributes`; the doctrine rows
-    (D11's clause restored); the book; the review history and its index row → `bash -n
-    scripts/check_review_history.sh` → `rc=0`.
-  - [x] **ADDRESSED (verified)** — `bash scripts/check_review_history.sh --self-test` → `65 pass / 0 fail`; a matrix
-    of mutations, one per refusal and leg, each run against the self-test → 38 of 38 killed; `bash
-    scripts/check_review_history.sh` on this repository → `OK (1 archived history(ies)`.
-  - [x] **NO REGRESSION** — `make focused` → `tier focused: passed — 3 passed, 0 failed`; `bash scripts/run_self_tests.sh` → `self-tests: OK — 46 self-test(s) passed`; `bash
-    scripts/check_doctrines.sh` → `=== all doctrines green ===`.
-  - [x] **LOCKSTEP** — the gate's header; `DOCTRINE_ENFORCEMENT.md`'s two rows; `LIVE_DOCUMENT_SIZE_CONTAINMENT.md`'s
-    reviews row re-measured, with E12's decision; `.gitattributes`; `annex-repository.md` and `catalog.md`, the book's
-    index regenerated; the review history and its index row; this leaf and its log rows; `CHANGELOG.md`.
-  Verification: `2026-10-05` — the Verification Log's row
-  Commit: `ARCHOGEN-PROGRAM-0442 (leaf PROGRAM.55.1)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.55.md`](../task-history/PROGRAM/PROGRAM.55.md); commit `ARCHOGEN-PROGRAM-0442`
 
 - ID: `PROGRAM.56`
-  Status: `done` — filed and closed `2026-10-05`
-  Goal: room in `docs/decisions/` by the director's ruling of `2026-10-01`
-  (`docs/decisions/decision_specifications-home.md`): the trust gate's design, its review closed by `M3.6.1`, moves to
-  `docs/specs/trust/`, every live reference following it; `docs/specs/`' ceiling raised to hold it, by a decision
-  record with the measurement (`docs/decisions/decision_specs-folder-ceiling.md`); `docs/decisions/`' ceiling untouched.
-  Acceptance: the record moved byte for byte but for its two relative links; every reference outside sealed history and
-  dated rows repointed; both folders under their ceilings; every check green.
-
-  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
-  - [x] **REPRODUCE / ISSUE** — `git ls-files docs/decisions | xargs cat | wc -c` → 393 061 of 393 216 after
-    `ARCHOGEN-M3-0444`, the substitutability review still open; `docs/specs/` → 253 792 of 262 144, so the 46 125-byte
-    record would breach it.
-  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: `README_POLICY.md`'s `docs/specs/` row, sized by `PROGRAM.43` for one
-    subject (186 667 bytes); WHY: the ruling sends every design whose review closes to `docs/specs/`, and the trust
-    design is the second (`rc=1` from `README-ROUTES` without the raise).
-  - [x] **FIX** — `git mv` of the record, its two links one level deeper; the path repointed in `crates/archogen-catalog/src/package.rs`, `xtask/src/catalog_build.rs`, `xtask/src/trust.rs`, `trust/roots.eadl`, `docs/semantics/conformance.md`, `docs/tasks/M3.md` and both indexes; the
-    decision record, its index row, the policy's two rows, the inventory's two rows; the knowledge map regenerated →
-    `bash knowledge-map/scripts/check_knowledge_map.sh` → `OK`.
-  - [x] **ADDRESSED (verified)** — `docs/decisions/` → 4 154 lines, 349 217 bytes; `docs/specs/` → 3 311 lines,
-    300 288 bytes; `bash scripts/check_readme_routes.sh` → `readme-routes: OK`; `git grep` for the old path outside
-    sealed history and dated rows → 0 lines.
-  - [x] **NO REGRESSION** — `make focused` → `tier focused: passed — 3 passed, 0 failed`; `bash scripts/check_doctrines.sh` → `=== all doctrines
-    green ===`.
-  - [x] **LOCKSTEP** — the book cites the record by name only; both indexes, the policy, the inventory, this leaf and
-    its log rows, `CHANGELOG.md`.
-  Verification: `2026-10-05` — the Verification Log's row
-  Commit: `ARCHOGEN-PROGRAM-0445 (leaf PROGRAM.56)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.56.md`](../task-history/PROGRAM/PROGRAM.56.md); commit `ARCHOGEN-PROGRAM-0445`
 
 ## Roadmap coverage map
 
@@ -1181,6 +1096,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.55` | `ARCHOGEN-PROGRAM-0438 (leaf PROGRAM.55)` | **the review-history archive**: `REVIEW-HISTORY`, `--seal <FILE>`, 38 arms; the closed catalog history archived behind a stub; `docs/reviews/` back under its ceiling |
 | `PROGRAM.55.1` | `ARCHOGEN-PROGRAM-0442 (leaf PROGRAM.55.1)` | **`REVIEW-HISTORY` hardened after its review**: 17 findings answered; the review's row read from the table; merged rounds, staging, frozen histories, stub shapes; 65 arms; 38 of 38 killed |
 | `PROGRAM.56` | `ARCHOGEN-PROGRAM-0445 (leaf PROGRAM.56)` | **the trust design moves to `docs/specs/trust/`**, by the ruling of `2026-10-01`; `docs/specs/`' ceiling raised to 384 KiB by a decision record; `docs/decisions/` back to 349 217 bytes |
+| `PROGRAM` | `ARCHOGEN-PROGRAM-0450 (leaf PROGRAM)` | **`PROGRAM.55` and `PROGRAM.56` sealed**, their 3 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` had grown 1 324 bytes over its 819 200-byte ceiling with `M3.1.1`'s step 27 |
 
 ## Changelog
 
