@@ -2,8 +2,8 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-03`
-- **Status:** `active` — written; under independent review (leaf `M3.6.1`'s closure rule: the first round that finds
-  no defect closes it); rounds 1 to 6 answered `2026-10-03`, rounds 7 to 10 `2026-10-05`, its hand-offs in a ledger since, reviewed beside its instrument since round 8; narrowed after rounds 3 and 4 to what only it decides
+- **Status:** `active` — written, and its review closed `2026-10-05` by `M3.6.1`'s rule: round 11 found no defect;
+  rounds 1 to 6 answered `2026-10-03`, rounds 7 to 10 `2026-10-05`, its hand-offs in a ledger since, reviewed beside its instrument since round 8; narrowed after rounds 3 and 4 to what only it decides
 - **External sources:** [the pinned Rust toolchain](../book/src/ledger.md#rust-toolchain) — rustc's dependency
   information and cargo's metadata, their version and limits in the ledger
 - **Owner / source:** leaf `M3.6.1` (`docs/tasks/M3.md`). `ROADMAP.md` §4.4 asks for a machine-readable
@@ -413,6 +413,6 @@ exercises each of §14.4's five cases, that no input a root's build reads can be
 that the baseline cannot be accepted by its author; every finding answered here. The history is
 [`decision_trust-inventory-reviews.md`](../reviews/decision_trust-inventory-reviews.md).
 
-Defects per round, oldest first: 11, 12, 16, 11, 10, 10, 8, 11, 4, 1. Each round's findings, its reader's measurements and every answer are in
+Defects per round, oldest first: 11, 12, 16, 11, 10, 10, 8, 11, 4, 1, 0. Each round's findings, its reader's measurements and every answer are in
 the review history linked above, which holds them whole; this record keeps only the count (`PROGRAM.52.2`, the
 folder's ceiling).

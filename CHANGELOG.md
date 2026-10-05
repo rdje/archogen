@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate's design passes review
+
+`ARCHOGEN-M3-0443` (leaf `M3.6.1`).
+
+- The trust design's eleventh independent reader found no defect, which closes its review under the project's rule.
+  Its defects per round ran 11, 12, 16, 11, 10, 10, 8, 11, 4, 1 and 0. Since round 8, readers tested the measuring
+  instrument itself rather than the prose, and every defect came with a probe. Next is the gate itself and its F30
+  test cases.
+
 ## archogen — the review-history archive hardened after its review
 
 `ARCHOGEN-PROGRAM-0442` (leaf `PROGRAM.55.1`).

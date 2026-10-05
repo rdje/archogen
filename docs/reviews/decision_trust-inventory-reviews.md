@@ -299,3 +299,13 @@ and the verdict was "not acceptable as it stands". Defects per round: 11, 12, 16
 | --- | --- | --- |
 | J1 — an admitted `use std::include as inc;` lets `inc!("m.txt")` compile a file no rule reads; an admitted `use … as g` or `macro_rules!` wrapper frees every later `.incbin` in its invocations (measured) | yes | §3: a site renaming its refused identifier or defining a macro that wraps a refused construct is inadmissible; mutation `trust-alias-admitted` |
 | J2 — a manifest admission names only the first rule `check_manifest` reports | no | §3: stated; the whole manifest's sha256 re-opens it on any edit, and its review reads every rule |
+
+**Round 11**, `2026-10-05`, the fourth against the instrument: a new context that had not read rounds 1 to 10 ran the
+instrument on the repository and its 40 fixtures, then seven probes of its own through a byte-for-byte copy of the
+instrument, checked against the binary's own counts: a module-path alias of an assembler macro; a renaming `use`
+inside a dependency; a file one root reads at build time and another is handed at run time; a refused construct as a
+macro's argument; an admitted `#[path]` onto a `.rs` file holding a `#[no_mangle]`; an admitted `include_bytes!` of
+data. Each was caught as the record says. It searched stable Rust for a file or symbol channel outside both the
+dependency information and the catalog's refusals, and found none. There were no findings, and the verdict was
+"acceptable as it stands". Defects per round: 11, 12, 16, 11, 10, 10, 8, 11, 4, 1, 0. **The review is closed**: the
+first round that found no defect, under `M3.6.1`'s closure rule.
