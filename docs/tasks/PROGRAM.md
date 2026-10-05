@@ -752,14 +752,13 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0426 (leaf PROGRAM.52.1)`
 
 - ID: `PROGRAM.52.2`
-  Status: `pending` — after `M3.1.1`'s round 16 and `M3.6.1`'s round 7 report, so their findings are answered on the
-    text they read
+  Status: `active` — step 1, the trust record's ledger, `2026-10-05`; the substitutability record's next
   Goal: `decision_substitutability-relation.md` and `decision_trust-inventory.md` holding every hand-off in a ledger,
   prefixes `SR` and `TI`, and every receiving leaf quoting its sentences.
   Acceptance: `bash scripts/check_handoff_ledger.sh` green with both ledgers populated; no hand-off left in prose
   that the ledger does not hold, by a census of each record's "is `M…`'s" sentences.
   Verification: `pending`
-  Commit: `pending`
+  Commit: step 1, `ARCHOGEN-PROGRAM-0429 (leaf PROGRAM.52.2)`
 
 ## Roadmap coverage map
 
@@ -1093,6 +1092,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0331 (leaf PROGRAM)` | **`PROGRAM.47` sealed**, its 30 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` had grown 1 653 bytes over its 819 200-byte ceiling with `API.6.3`'s leaf |
 | `PROGRAM.52` | `ARCHOGEN-PROGRAM-0425 (leaf PROGRAM.52)` | **step 1 — design reviews made executable**: the method record; `M3.1.1.1` filed; `M3.6.2` begun as the instrument; closed leaves sealed |
 | `PROGRAM.52.1` | `ARCHOGEN-PROGRAM-0426 (leaf PROGRAM.52.1)` | `HANDOFF-LEDGER`: a design record's hand-offs in a machine-read ledger, each quoted word for word by its leaf |
+| `PROGRAM.52.2` | `ARCHOGEN-PROGRAM-0429 (leaf PROGRAM.52.2)` | **step 1 — the trust record's ledger**: 24 hand-offs, each quoted word for word by its leaf; the receiving leaves rewritten around their quotes |
 
 ## Changelog
 

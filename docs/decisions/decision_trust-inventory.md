@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-10-03`
 - **Status:** `active` — written; under independent review (leaf `M3.6.1`'s closure rule: the first round that finds
-  no defect closes it); rounds 1 to 6 answered `2026-10-03`, round 7 `2026-10-05`; narrowed after rounds 3 and 4 to what only it decides
+  no defect closes it); rounds 1 to 6 answered `2026-10-03`, round 7 `2026-10-05`, its hand-offs in a ledger since; narrowed after rounds 3 and 4 to what only it decides
 - **External sources:** [the pinned Rust toolchain](../book/src/ledger.md#rust-toolchain) — rustc's dependency
   information and cargo's metadata, their version and limits in the ledger
 - **Owner / source:** leaf `M3.6.1` (`docs/tasks/M3.md`). `ROADMAP.md` §4.4 asks for a machine-readable
@@ -231,35 +231,37 @@ residual common-error risk, and the independent controls that remain (§14.4). T
 it and reports the difference; a form the tool writes is a proposal, never an acceptance (§14.4).
 
 **Accepting a form is decided where reviews are protected, and what an unreviewed item costs is decided where it is
-consumed** (R3 C3–C9, C16). Each of these leaves carries its part in its acceptance:
+consumed** (R3 C3–C9, C16). Each hand-off is one sentence in this ledger, quoted word for word beside its identifier
+by the leaf that takes it, which `HANDOFF-LEDGER` checks (`PROGRAM.52.2`; R7 remark a); the reasons, and the rounds
+that found each, are in the sections above and the review history:
 
-- `M2.7.6`'s protection, under findings §11: a change to `trust/` or to the gate's code approved by an identity
-  other than its author's, on the protected main line, with the catalog's checks of `origin`
-  (`decision_catalog-records.md` §4) — `M2.7.6.5`'s code-owner rule, in its acceptance (R4 1);
-- `M3.6.5`, blocked on the director: acceptance read by the gate per form, so the review of one form accepts that form
-  alone, by an identity that authored neither the form nor any commit that changed its item since its last accepted
-  form, or, for a first acceptance, since the commit that proposed it — authorship being the identity the hosting
-  authenticates for the pull request that merged each commit, read as `M2.7.6` designs, or a verified signature, and a
-  commit whose author cannot be established counting as authored by every identity (R6 10; R7 7); the forms `M3.6.3` proposed
-  accepted, not proposed again; the step Passed only on the baseline's host, with every root form, role package and
-  classification accepted, no program target unclassified, and every shared item accepted; otherwise, on that host,
-  `Failed`, and off it `Failed` on a refusal and `Unavailable` else (R4 1, 2, 10; R5 7; R6 remark 13; R7 6);
-- `M3.6.3`'s step: a runner action that runs the gate, `Failed` on a refusal and otherwise not built for the
-  acceptance it lacks, owned by `M3.6.5`, so never Passed before it, whatever is shared (R4 11; R5 8); and `M3.6.3`
-  commits, unaccepted, the proposed forms of today's shared items, the baseline's host, and the classifications of
-  today's program targets that are not roots — `xtask`, the wasm module and the examples — so case 5's change part is
-  silent before any acceptance exists (R6 6);
-- `M4.8`'s report: a property resting on a role's independence established only when each role it rests on has an
-  inventoried root whose form is accepted, every root form and classification is accepted, no program target is
-  unclassified, and every shared item of those roles is accepted; otherwise `not-established`, naming F30 (R4 2, 3;
-  R5 5);
-- `M4.7`'s package: each result bound to the program that produced it — a role's executable, or for the reference
-  model the comparison harness the trust build inventories — so no role's results are refused for want of a
-  program (R3 C2); its manifest records each root's handed dependencies by path and sha256, and each claim's subject
-  apart (R5 6; R6 3); packaging runs `trust-verify` on the package it writes and fails on any refusal, a stale
-  inventory among its tests; and an unaccepted item costs a package nothing beyond `M4.8`'s `not-established` (R6 8);
-- the leaves whose roots read data at run time — `M2.7.5`, `M3.4`, `M3.5`, `M4.2` — each declare it in the root's
-  form, in their acceptance (R5 6).
+<!-- machine-read: handoffs -->
+| Id | Leaf | Obligation |
+| --- | --- | --- |
+| `TI-H1` | `M2.7.6.5` | `.github/CODEOWNERS` owns `trust/` and the trust gate's code by owners the director named, so a change to either is approved only by an identity other than its author's, on the protected main line with the catalog's checks of `origin`, shown by `M2.7.6`'s scratch-branch tests. |
+| `TI-H2` | `M3.6.3` | `cargo xtask trust-gate` writes its report in two parts — the change against the base commit's forms, and the standing list of every shared item, root form, classification and admission not accepted — naming the build identity and the inventory's and the baseline's sha256. |
+| `TI-H3` | `M3.6.3` | This leaf commits, unaccepted, the proposed forms of today's shared items, the baseline's host, the classifications of today's non-root program targets and the admissions of today's 13 refused sites, so case 5's change part is empty before any acceptance exists. |
+| `TI-H4` | `M3.6.3` | `trust-form-missing` refuses, on the baseline's host, a current shared item, root, program target or refused site with no form in the commit's own `trust/`, and an unrelated commit after a merged sharing reports "unchanged". |
+| `TI-H5` | `M3.6.3` | Off the baseline's host the gate applies every refusal but `trust-baseline-stale` and `trust-form-missing`, reports every shared item unreviewed, and says "not compared" in its change part. |
+| `TI-H6` | `M3.6.3` | The gate's program is built from the base commit, as the catalog's checker is. |
+| `TI-H7` | `M3.6.3` | The `assurance` tier's `trust-inventory` step is a runner action that runs the gate, `Failed` on a refusal and otherwise not built for the acceptance it lacks, owned by `M3.6.5`, so never Passed before it whatever is shared. |
+| `TI-H8` | `M3.6.3` | `cargo xtask trust-verify` refuses a package whose inventory is missing, stale or of another build, whose report is of another inventory, in which a result names a program other than its role's inventoried artifact or the pair's harness, or which records a dependency handed to a root that its form does not declare by path and sha256, each tested on package directories made for the purpose. |
+| `TI-H9` | `M3.6.3` | F30's five cases are built in scratch workspaces, each asserting the code and outcome the record's §6 gives it, case 5 reporting "unchanged", and a mutation matrix removes each refusal in turn. |
+| `TI-H10` | `M3.6.3` | CI runs the gate on every pull request and on `main`, unfiltered. |
+| `TI-H11` | `M3.6.5` | A form is accepted only by an identity that authored neither the form nor any commit that changed its item since its last accepted form, or for a first acceptance since the commit that proposed it, authorship being the identity the hosting authenticates for the pull request that merged each commit or a verified signature, and a commit whose author cannot be established counting as every identity's, with a forged-author test. |
+| `TI-H12` | `M3.6.5` | Acceptance is read per form, on the protected main line with the catalog's checks of `origin`, so the review of one form accepts that form alone, and the forms `M3.6.3` proposed are accepted rather than proposed again. |
+| `TI-H13` | `M3.6.5` | The assurance step is Passed only on the baseline's host with every root form, role package, classification, admission and shared item accepted and no program target unclassified; otherwise it is `Failed` on that host, and off it `Failed` on a refusal and `Unavailable` else. |
+| `TI-H14` | `M4.7` | Each result in the assurance package names the sha256 of the program that produced it — a role's executable, the scheduling checker's being the one `M2.21` decides, or for the reference model the comparison harness the trust build inventories — and the manifest records each root's handed dependencies by path and sha256 and each claim's subject apart. |
+| `TI-H15` | `M4.7` | Packaging runs `cargo xtask trust-verify` on the package it writes and fails on any refusal, a stale inventory among its tests, and an unaccepted item costs a package nothing beyond `M4.8`'s `not-established`. |
+| `TI-H16` | `M4.8` | A property resting on a role's independence is established only when each role it rests on has an inventoried root whose form is accepted, every root form, classification and admission is accepted, no program target is unclassified, and every shared item of those roles is accepted under `M3.6.5`; otherwise it is `not-established`, naming F30. |
+| `TI-H17` | `M2.7.5` | The catalog records the scheduling checker reads at run time are declared, by path, in its root's form in `trust/roots.eadl`. |
+| `TI-H18` | `M3.4` | `archogen resolve` runs as a program that is the root of one role only, and the fixed data its root reads at run time is declared, by path, in that root's form in `trust/roots.eadl`. |
+| `TI-H19` | `M3.5` | `archogen-check`'s executable is classified in `trust/roots.eadl` as the configuration checker's root with its fixed run-time data declared there by path, the description and plan it checks being claim subjects and not dependencies, unreviewed until accepted under `M3.6.5`. |
+| `TI-H20` | `M4.2` | The executable that runs the generator is classified in `trust/roots.eadl` as the generator's root with its fixed run-time data declared there by path, the description it generates from being a claim subject and not a dependency, unreviewed until accepted under `M3.6.5`. |
+| `TI-H21` | `M2.21` | `archogen analyze` gets an open owner and a program that is the root of the scheduling checker's role alone, decided before it is built, since as a subcommand of the `archogen` executable it would be refused as `trust-shared-program`. |
+| `TI-H22` | `M3.6.6` | Committed generated sources declare their generator and input, which become items of the inventory, with a case-3 fixture of a generated-source input on both sides of a pair and a design reviewed by a context that did not write it. |
+| `TI-H23` | `M3.6.2` | `cargo xtask trust-inventory` applies the catalog's manifest and token rules whole and unchanged over every `.rs` file a root or the harness compiles, following the harness's development edges, a refused site passing only by an admission naming its file, rule and line's sha256, and writes no inventory on any refusal. |
+| `TI-H24` | `M3.6.2` | Every channel a review measured by hand is a fixture of the instrument's tests — an `.incbin` under each assembler macro, a renaming `use`, a macro-made include, a macro assembling `#[path]`, an `extern` block calling another package's `#[no_mangle]` function, a `#[no_mangle]` interposing `memcmp` in the harness, a procedural macro on a development edge, a new consumer edge, a new reader of a shared package's file, a profile edit, per-root against workspace-wide features, two checkout directories and two toolchains. |
 
 Until they land nothing is accepted, and every shared item is reported unreviewed (R2 B2; R3 C4, C5).
 
