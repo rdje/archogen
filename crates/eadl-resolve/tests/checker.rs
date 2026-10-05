@@ -11,7 +11,11 @@
 //!   required member, and `run` for a power state, is offered;
 //! - **one outcome per input**: every reading is total — refused, or judged to exactly one verdict;
 //! - **the derivation agrees with what it derives**: the horizon satisfies `(at-least T)` exactly when two reads `T`
-//!   apart are unambiguous at every phase, by an exact simulation that never uses the rule's formula.
+//!   apart are unambiguous at every phase, by an exact simulation that never uses the rule's formula;
+//! - **a provider's reading is order-free**: three offers of one fact read alike in all six orders, one of them past
+//!   the arithmetic where the domain has one, and two unequal ones are two values whatever the third (R18 1);
+//! - **`absent` names a fact by name alone**: a value written inside it is refused (R18 2);
+//! - **the modulus is bounded by its width at every width**, to 127 bits (R18 9).
 //!
 //! Each property also has a catalogued mutation in `xtask/mutations.txt` that breaks the rule it guards, and this
 //! file must kill it.
@@ -60,6 +64,9 @@ fn samples(domain: Domain) -> Vec<String> {
             "4294967296",
             "(pow2 64)",
             "(pow2 126)",
+            // The corpus's own spelling, a count with its dimensionless unit (R18 9).
+            "8 tick",
+            "65536 tick",
         ]),
         Domain::Quantity(Dimension::Time) => s(&[
             "0 s",
@@ -118,6 +125,7 @@ fn base(text: &str) -> Rational {
 }
 
 fn count_of(text: &str) -> i128 {
+    let text = text.strip_suffix(" tick").unwrap_or(text);
     if let Some(n) = text
         .strip_prefix("(pow2 ")
         .and_then(|t| t.strip_suffix(')'))
@@ -567,4 +575,140 @@ fn a_statement_reads_bare_or_under_exactly() {
             }
         }
     }
+}
+
+/// Sameness by the oracle alone, no fact's `implies` joined: what "two values" compares.
+fn same_by_oracle(domain: Domain, x: &str, y: &str) -> bool {
+    oracle(domain, "", x, y, Direction::Exact) && oracle(domain, "", y, x, Direction::Exact)
+}
+
+#[test]
+fn a_provider_reads_the_same_in_every_order_of_its_offers() {
+    // R18 1: an overflowing comparison first made every later one overflow, so two plain values beside it went
+    // uncompared.
+    const TINY: &str = "0.0000000000000000000000000000001 ns";
+    let mut providers = 0usize;
+    for e in VOCABULARY.iter().filter(|e| e.role == Role::Guarantee) {
+        let mut pool: Vec<String> = samples(e.domain).into_iter().take(4).collect();
+        if e.domain == Domain::Quantity(Dimension::Time) {
+            pool.push(TINY.to_owned());
+        }
+        let readable: Vec<String> = pool
+            .into_iter()
+            .filter(|v| provider(&format!("(offers ({} {v}))", e.name)).is_ok())
+            .collect();
+        let probes: Vec<Requirement> = readable
+            .iter()
+            .filter_map(|v| constraint(&format!("({} (exactly {v}))", e.name)).ok())
+            .collect();
+        let reading = |offers: &[&String; 3]| -> Option<Vec<Verdict>> {
+            let text: String = offers
+                .iter()
+                .map(|v| format!(" ({} {v})", e.name))
+                .collect();
+            provider(&format!("(offers{text})"))
+                .ok()
+                .map(|p| probes.iter().map(|r| judge(&p, r)).collect())
+        };
+        for a in &readable {
+            for b in &readable {
+                for c in &readable {
+                    let orders = [
+                        [a, b, c],
+                        [a, c, b],
+                        [b, a, c],
+                        [b, c, a],
+                        [c, a, b],
+                        [c, b, a],
+                    ];
+                    let first = reading(&orders[0]);
+                    for o in &orders[1..] {
+                        assert_eq!(
+                            reading(o),
+                            first,
+                            "{}: {a}, {b}, {c} read otherwise as {o:?}",
+                            e.name
+                        );
+                    }
+                    let plain: Vec<&String> = [a, b, c]
+                        .into_iter()
+                        .filter(|v| v.as_str() != TINY)
+                        .collect();
+                    let unequal = plain.iter().enumerate().any(|(i, x)| {
+                        plain[i + 1..]
+                            .iter()
+                            .any(|y| !same_by_oracle(e.domain, x, y))
+                    });
+                    if unequal {
+                        assert!(
+                            first.is_none(),
+                            "{}: {a}, {b}, {c} hold two values and were read",
+                            e.name
+                        );
+                    }
+                    providers += 1;
+                }
+            }
+        }
+    }
+    println!("read {providers} three-offer providers in all six orders");
+}
+
+#[test]
+fn absent_names_a_fact_by_name_alone() {
+    // R18 2: `(absent (available-in-state sleep))` read as the whole fact absent.
+    let mut written = 0usize;
+    for e in VOCABULARY.iter().filter(|e| e.role == Role::Guarantee) {
+        assert!(
+            provider(&format!("(absent {})", e.name)).is_ok(),
+            "{}",
+            e.name
+        );
+        assert!(
+            provider(&format!("(absent ({}))", e.name)).is_err(),
+            "{}",
+            e.name
+        );
+        for v in samples(e.domain) {
+            assert!(
+                provider(&format!("(absent ({} {v}))", e.name)).is_err(),
+                "{}: `{v}` inside `absent`",
+                e.name
+            );
+            written += 1;
+        }
+    }
+    println!("refused {written} values written inside `absent`");
+}
+
+#[test]
+fn a_modulus_above_its_width_is_refused_at_every_width() {
+    // R18 9: §4's `2^width` bound held beyond 32 bits, to the arithmetic's last width.
+    let mut pairs = 0usize;
+    for w in [1u32, 8, 16, 32, 63, 64, 125, 126, 127] {
+        let bound = 1u128 << w;
+        for m in [
+            "1",
+            "255",
+            "256",
+            "4294967296",
+            "(pow2 64)",
+            "(pow2 125)",
+            "(pow2 126)",
+        ] {
+            let mv: u128 = m
+                .strip_prefix("(pow2 ")
+                .and_then(|t| t.strip_suffix(')'))
+                .map_or_else(
+                    || m.parse().expect("an integer"),
+                    |n| 1u128 << n.parse::<u32>().expect("N"),
+                );
+            let p = provider(&format!(
+                "(offers (counter-width {w} bit) (counter-modulus {m}))"
+            ));
+            assert_eq!(p.is_err(), mv > bound, "width {w} bit, modulus {m}");
+            pairs += 1;
+        }
+    }
+    println!("checked {pairs} width and modulus pairs");
 }

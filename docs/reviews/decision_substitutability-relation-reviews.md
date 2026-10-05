@@ -438,3 +438,22 @@ of them defects, and the verdict was "not acceptable as it stands". Defects per 
 | O10 — `(absent or-through-mediation)` accepted | no | rule 6 and §8: refused |
 | O11 — a provider's own name never checked | no | §8 and the model: refused |
 | O12 — the checker's universe: no group, statements bare only, the oracle's `run` by name, over-refusal skipped, four properties without a mutation | no | a group-order property, a statement property, the oracle reading `implies`, over-refusal asserted against §8; mutations now cover `exactly`, statements, overflow and groups |
+
+**Round 18**, `2026-10-05`, the second under the method: a new context that had not read rounds 1 to 17 ran the
+model's checker and corpus, read each model function beside its sentence, and wrote 81 probes against the model; four
+disagreed with the record, all inside two findings, each with a reproducer. Each landed first as a fixture, then the
+rule, then the record's words: of nine fixtures four failed on the model as the round found it, and of four new
+checker properties two did. There were 9 findings, 2 of them defects, and the verdict was "not acceptable as it
+stands". Defects per round: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| P1 — three offers, one past the arithmetic: written first, it left `1 ms` and `2 ms` uncompared, the reading hanging on the order (R18 1) | yes | §5: two offers unequal without overflowing are two values whatever the rest; the model compares every pair; an order property over 1455 three-offer providers; mutation `model-first-value-only` |
+| P2 — `(absent (available-in-state sleep))` read as the whole fact absent (R18 2) | yes | §1, §8: `absent` names a fact by name alone, a list there `invalid-description`; an `absent` property; mutation `model-absent-list-read-as-name` |
+| P3 — presence of a set fact and `implies` | no | §1.1: `implies` joins a valued constraint's members; presence writes none and asks only for an offer; the opening says so |
+| P4 — a block's bound, which the record said only an abstract platform writes | no | §1 and rule 3: read the same way from a block, as `archogen check` admits one |
+| P5 — a group head required `false` | no | §2's group row: the head required false, as a boolean's row reads |
+| P6 — rule 5's clause verdict not modelled, so `SR-H7` cannot cover it | no | `judge::clause_satisfied`, with a corpus test |
+| P7 — an interval past the arithmetic read as malformed; `within` short-circuiting before an overflow | no | §2: `unsupported-profile`, both endpoints compared first; held at the value level, since no `/1` fact reaches it (measured: `frequency` compares exactly) |
+| P8 — the `holds` sentence omits `implies` | no | §1.1: `(holds forms)` for `implies` |
+| P9 — the checker's universe: never three offers, never a list in `absent`, no `tick` count, widths to 32 bits only | no | four properties: every order, `absent` by name, the modulus at widths to 127 bits; counts written with `tick` |

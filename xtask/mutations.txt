@@ -1016,3 +1016,25 @@ from
 to
         if fact == "counter-modulus" && matches!(v, Value::Count(0)) && false {
 end
+
+mutation model-first-value-only
+file crates/eadl-resolve/src/model/provider.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 18: every pair of a fact's offers is compared; comparing each with the first only, an overflowing first made two plain values unrefused, and the reading hung on the offers' order (§5).
+from
+            for (i, a) in values.iter().enumerate() {
+to
+            for (i, a) in values.iter().enumerate().take(1) {
+end
+
+mutation model-absent-list-read-as-name
+file crates/eadl-resolve/src/model/provider.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 18: `absent` names a fact; a value inside it read as the whole fact absent, an infeasibility the description never stated (§8).
+from
+                            if matches!(item, Form::List { .. }) {
+to
+                            if false {
+end

@@ -36,7 +36,8 @@ pub enum Requirement {
 pub enum NotJudged {
     /// `invalid-description`: §8's first row.
     Invalid(String),
-    /// `unsupported-profile`: a constraint on a fact the vocabulary does not declare (§8's second row).
+    /// `unsupported-profile`: a constraint on a fact the vocabulary does not declare (§8's second row), or a value
+    /// past the exact arithmetic (§2).
     Unsupported(String),
     /// Not the relation's: a name that is not a vocabulary fact, where presence or the closure judges it.
     NotAFact,
@@ -44,6 +45,15 @@ pub enum NotJudged {
 
 fn invalid<T>(why: impl Into<String>) -> Result<T, NotJudged> {
     Err(NotJudged::Invalid(why.into()))
+}
+
+/// An interval whose endpoints cannot be ordered within the exact arithmetic is §2's `unsupported-profile` (R18 7).
+fn ordered(v: &Value) -> Result<(), NotJudged> {
+    value::interval_order(v).map_err(|_| {
+        NotJudged::Unsupported(
+            "an interval whose endpoints' order is past the exact arithmetic (§2)".to_owned(),
+        )
+    })
 }
 
 fn head_of(item: &Form) -> Option<&str> {
@@ -132,6 +142,7 @@ pub fn read_constraint(item: &Form) -> Result<Requirement, NotJudged> {
                 let v = value::read(e.domain, inner, item.span())
                     .and_then(|v| value::fact_value(e.name, e.domain, &v).map(|()| v))
                     .or_else(|m| invalid(m.0))?;
+                ordered(&v)?;
                 return Ok(Requirement::Constraint {
                     fact: e.name.to_string(),
                     direction: dir,
@@ -143,6 +154,7 @@ pub fn read_constraint(item: &Form) -> Result<Requirement, NotJudged> {
     let v = value::read(e.domain, rest, item.span())
         .and_then(|v| value::fact_value(e.name, e.domain, &v).map(|()| v))
         .or_else(|m| invalid(m.0))?;
+    ordered(&v)?;
     // A bare value is a bound in the fact's own direction (§1).
     Ok(Requirement::Constraint {
         fact: e.name.to_string(),

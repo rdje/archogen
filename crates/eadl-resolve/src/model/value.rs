@@ -57,6 +57,19 @@ pub fn same(a: &Value, b: &Value) -> Result<bool, Overflow> {
     })
 }
 
+/// Whether an interval's endpoints can be ordered within the exact arithmetic: a value whose cannot is §2's
+/// `unsupported-profile` at the provider that offers it, or for the requirement that writes it (record §2, R18 7).
+///
+/// # Errors
+///
+/// [`Overflow`] when comparing the endpoints overflows.
+pub fn interval_order(v: &Value) -> Result<(), Overflow> {
+    match v {
+        Value::Interval(lo, hi) => lo.compare(*hi).map(|_| ()).map_err(|_| Overflow),
+        _ => Ok(()),
+    }
+}
+
 /// What §8 refuses of one fact's value wherever it is written — offer, bound or requirement (record §4, §8; R17 6): a
 /// value of information that is not a positive whole number of bits, and a `counter-modulus` of 0.
 ///
@@ -138,8 +151,9 @@ pub fn read(domain: Domain, forms: &[Form], within: Span) -> Result<Value, Malfo
                     let hi = quantity(Some(hn), Some(hu), within, dim)?;
                     match lo.compare(hi) {
                         Ok(Ordering::Greater) => malformed("an interval with `lo > hi`"),
-                        Ok(_) => Ok(Value::Interval(lo, hi)),
-                        Err(e) => malformed(e.to_string()),
+                        // Endpoints whose order is past the exact arithmetic are read, and `interval_order` makes
+                        // the value §2's `unsupported-profile`, never `invalid-description` (R18 7).
+                        Ok(_) | Err(_) => Ok(Value::Interval(lo, hi)),
                     }
                 }
                 _ => malformed("`(range lo hi)`, two quantities"),
@@ -212,12 +226,23 @@ pub fn satisfies(
             q(*o, *r, ComparisonDirection::AtMost)?
         }
         (Value::Quantity(o), Value::Quantity(r), _) => q(*o, *r, ComparisonDirection::Exact)?,
+        // Both endpoints are compared before either decides, so an overflow is `unsupported-profile` whatever the
+        // other endpoint gives (§2; R18 7).
         (Value::Interval(olo, ohi), Value::Interval(rlo, rhi), Direction::Within) => {
-            q(*olo, *rlo, ComparisonDirection::AtMost)?
-                && q(*ohi, *rhi, ComparisonDirection::AtLeast)?
+            let (lo, hi) = (
+                q(*olo, *rlo, ComparisonDirection::AtMost),
+                q(*ohi, *rhi, ComparisonDirection::AtLeast),
+            );
+            let (lo, hi) = (lo?, hi?);
+            lo && hi
         }
         (Value::Interval(olo, ohi), Value::Interval(rlo, rhi), _) => {
-            q(*olo, *rlo, ComparisonDirection::Exact)? && q(*ohi, *rhi, ComparisonDirection::Exact)?
+            let (lo, hi) = (
+                q(*olo, *rlo, ComparisonDirection::Exact),
+                q(*ohi, *rhi, ComparisonDirection::Exact),
+            );
+            let (lo, hi) = (lo?, hi?);
+            lo && hi
         }
         (Value::Enum(o), Value::Enum(r), Direction::AtLeast | Direction::AtMost) => {
             let (Some(oi), Some(ri)) = (
@@ -256,4 +281,37 @@ pub fn horizon(modulus: i128, rate: Quantity) -> Result<Quantity, Overflow> {
     let seconds = ticks.checked_div(hz).ok_or(Overflow)?;
     let unit = eadl_model::quantity::unit("s").ok_or(Overflow)?;
     Quantity::new(seconds, unit).map_err(|_| Overflow)
+}
+
+#[cfg(test)]
+mod tests {
+    //! What no `/1` fact reaches — `frequency`, the one interval, converts and compares exactly — held at the value
+    //! level, on a time interval whose endpoints are past the arithmetic (R18 7).
+
+    use super::{interval_order, satisfies, Direction, Overflow, Value};
+    use eadl_model::quantity::{unit, Quantity};
+    use eadl_model::Rational;
+
+    fn q(value: Rational, u: &str) -> Quantity {
+        Quantity::new(value, unit(u).expect("a unit")).expect("a quantity")
+    }
+
+    #[test]
+    fn an_interval_past_the_arithmetic_is_overflow_whichever_endpoint_decides_first() {
+        let tiny = q(Rational::decimal(1, 31).expect("fits"), "ns");
+        let one = q(Rational::integer(1), "s");
+        let zero = q(Rational::integer(0), "s");
+        assert_eq!(interval_order(&Value::Interval(tiny, tiny)), Err(Overflow));
+        // The low endpoint decides `false` exactly; the high one overflows: §2's overflow, never a refusal.
+        let offered = Value::Interval(one, tiny);
+        let required = Value::Interval(zero, tiny);
+        assert_eq!(
+            satisfies(&offered, &required, Direction::Within, &[], &[]),
+            Err(Overflow)
+        );
+        assert_eq!(
+            satisfies(&offered, &required, Direction::Exact, &[], &[]),
+            Err(Overflow)
+        );
+    }
 }

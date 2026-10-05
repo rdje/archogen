@@ -7,8 +7,8 @@
 
 use eadl_front::{read, Form, SourceMap};
 use eadl_resolve::model::{
-    judge, read_constraint, read_declaration_name, read_needs, read_provider, read_uses, NotJudged,
-    Verdict,
+    clause_satisfied, judge, read_constraint, read_declaration_name, read_needs, read_provider,
+    read_uses, NotJudged, Verdict,
 };
 
 fn forms(text: &str) -> Vec<Form> {
@@ -629,6 +629,53 @@ const CASES: &[Case] = &[
         "(absent or-through-mediation)",
         "(uart true)",
         ProviderInvalid,
+    ),    Case(
+        "R18 1 two values beside an overflow written first",
+        "(offers (delivery-bound 0.0000000000000000000000000000001 ns) (delivery-bound 1 ms) (delivery-bound 2 ms))",
+        "(delivery-bound (at-most 1 us))",
+        ProviderInvalid,
+    ),
+    Case(
+        "R18 1 the same, the overflow written last",
+        "(offers (delivery-bound 1 ms) (delivery-bound 2 ms) (delivery-bound 0.0000000000000000000000000000001 ns))",
+        "(delivery-bound (at-most 1 us))",
+        ProviderInvalid,
+    ),
+    Case(
+        "R18 1 two values beside an overflow, for presence",
+        "(offers (supported-horizon 0.0000000000000000000000000000001 ns) (supported-horizon 10 s) (supported-horizon 20 s))",
+        "needs supported-horizon",
+        ProviderInvalid,
+    ),
+    Case(
+        "R18 1 one value twice beside an overflow is unsupported",
+        "(offers (delivery-bound 0.0000000000000000000000000000001 ns) (delivery-bound 1 ms) (delivery-bound 1000 us))",
+        "(delivery-bound (at-most 1 us))",
+        Judged(Unsupported),
+    ),
+    Case(
+        "R18 2 a value inside absent",
+        "(absent (available-in-state sleep))",
+        "(available-in-state idle)",
+        ProviderInvalid,
+    ),
+    Case(
+        "R18 2 an input's value inside absent",
+        "(offers (tick-rate 10 MHz)) (absent (counter-modulus 65536))",
+        "(unambiguous-horizon (at-least 60 s))",
+        ProviderInvalid,
+    ),
+    Case(
+        "R18 2 a name inside absent stays an absence",
+        "(absent available-in-state)",
+        "(available-in-state idle)",
+        Judged(Absent),
+    ),
+    Case(
+        "R18 7 an interval /1 can write is ordered exactly: lo > hi, refused",
+        "(offers (frequency (range 9.000000000000000001 Hz 0.0000000000000000000000000000001 Hz)))",
+        "(frequency 9.2 Hz)",
+        ProviderInvalid,
     ),
 ];
 
@@ -688,4 +735,25 @@ fn a_provider_named_like_a_fact_is_refused() {
     // R17 R5: the declaration-name rule (§1.1; R16 1) holds of a provider's own name.
     let provider = &forms("(defblock observation-coherent (offers uart))")[0];
     assert!(read_provider(provider).is_err());
+}
+
+#[test]
+fn a_clause_is_satisfied_when_each_constraint_is_a_statement_apart() {
+    // R18 6: rule 5's clause, modelled so the production relation is held to it (`SR-H7`).
+    let p = read_provider(&forms("(defblock p (offers (uart true) (preemptive false)))")[0])
+        .expect("reads");
+    let c = |t: &str| read_constraint(&forms(t)[0]).expect("a constraint");
+    assert!(clause_satisfied(
+        &p,
+        &[c("(uart true)"), c("(or-through-mediation allowed)")]
+    ));
+    assert!(!clause_satisfied(
+        &p,
+        &[c("(uart true)"), c("(preemptive true)")]
+    ));
+    assert!(!clause_satisfied(
+        &p,
+        &[c("(uart true)"), c("(debug-port true)")]
+    ));
+    assert!(clause_satisfied(&p, &[]));
 }

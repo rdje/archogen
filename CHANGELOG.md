@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability design's eighteenth review: two defects left
+
+`ARCHOGEN-M3-0436` (leaf `M3.1.1`, step 19).
+
+- The eighteenth reader found two defects, down from six in the round before, each shown by a test. When three
+  values were written for one fact, the answer could depend on the order they were written in. A value written
+  inside `absent` was quietly read as "this fact does not exist at all". Both are fixed, and the model's checker now
+  tries every order of three offers and every value written inside `absent`.
+
 ## archogen — the trust gate's first review against its instrument
 
 `ARCHOGEN-M3-0435` (leaf `M3.6.1`, step 9).

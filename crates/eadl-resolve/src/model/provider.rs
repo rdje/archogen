@@ -51,6 +51,8 @@ enum Written {
     Bare,
     Value(Value),
     Bound,
+    /// A value whose endpoints' order is past the exact arithmetic (§2, R18 7).
+    Overflow,
 }
 
 fn direction_word(word: &str) -> Option<Direction> {
@@ -86,7 +88,7 @@ fn classify(e: &vocab::Entry, item: &Form) -> Result<Written, Refused> {
                     }
                     return value::read(e.domain, inner, item.span())
                         .and_then(|v| value::fact_value(e.name, e.domain, &v).map(|()| v))
-                        .map(Written::Value)
+                        .map(written)
                         .or_else(|m| refuse(e.name, m.0));
                 }
                 if word != "at-least" && word != "at-most" {
@@ -115,8 +117,16 @@ fn classify(e: &vocab::Entry, item: &Form) -> Result<Written, Refused> {
     }
     value::read(e.domain, rest, item.span())
         .and_then(|v| value::fact_value(e.name, e.domain, &v).map(|()| v))
-        .map(Written::Value)
+        .map(written)
         .or_else(|m| refuse(e.name, m.0))
+}
+
+/// A value read, or §2's overflow when its interval's endpoints cannot be ordered (R18 7).
+fn written(v: Value) -> Written {
+    match value::interval_order(&v) {
+        Ok(()) => Written::Value(v),
+        Err(_) => Written::Overflow,
+    }
 }
 
 /// Read a block or platform declaration, refusing what record §8 refuses of an offer.
@@ -167,6 +177,14 @@ pub fn read(decl: &Form) -> Result<Provider, Refused> {
                             // A statement is the requiring side's word alone (§3 rule 6; R17 R4).
                             return refuse(e.name, "a statement fact declared absent");
                         }
+                        if matches!(item, Form::List { .. }) {
+                            // `absent` names a fact; a value there would read as absence of the whole fact, so
+                            // `(absent (available-in-state sleep))` is refused, as a list inside `needs` is (§8; R18 2).
+                            return refuse(
+                                e.name,
+                                "a list inside `absent` naming a vocabulary fact",
+                            );
+                        }
                         absent.insert(e.name.to_string());
                     }
                 }
@@ -184,26 +202,24 @@ pub fn read(decl: &Form) -> Result<Provider, Refused> {
     for (fact, ws) in &written {
         let e = vocab::entry(fact).expect("only vocabulary facts are kept");
         let boolean = matches!(e.domain, Domain::Boolean | Domain::Group(_));
-        let mut value: Option<Value> = None;
+        let mut values: Vec<Value> = Vec::new();
         let mut overflow = false;
         let mut bound = false;
         let mut bare = false;
         for w in ws {
-            let v = match w {
-                Written::Bare if boolean => Value::Bool(true),
-                Written::Bare => {
-                    bare = true;
-                    continue;
-                }
-                Written::Bound => {
-                    bound = true;
-                    continue;
-                }
-                Written::Value(v) => v.clone(),
-            };
-            match &value {
-                None => value = Some(v),
-                Some(prev) => match same(prev, &v) {
+            match w {
+                Written::Bare if boolean => values.push(Value::Bool(true)),
+                Written::Bare => bare = true,
+                Written::Bound => bound = true,
+                Written::Overflow => overflow = true,
+                Written::Value(v) => values.push(v.clone()),
+            }
+        }
+        // Every pair compared: two offers unequal without overflowing are two values, whatever the others and their
+        // order; otherwise a comparison that overflows makes the fact §2's `unsupported-profile` (§5; R17 5, R18 1).
+        for (i, a) in values.iter().enumerate() {
+            for b in &values[i + 1..] {
+                match same(a, b) {
                     Ok(true) => {}
                     Ok(false) => {
                         return refuse(
@@ -212,9 +228,10 @@ pub fn read(decl: &Form) -> Result<Provider, Refused> {
                         )
                     }
                     Err(_) => overflow = true,
-                },
+                }
             }
         }
+        let value = values.into_iter().next();
         let _ = bare; // a bare offer beside a value is that value (§5; R13 M7)
         if bound && value.is_some() {
             return refuse(fact, "a bound beside a value of the same fact");

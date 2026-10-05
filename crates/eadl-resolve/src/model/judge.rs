@@ -187,3 +187,14 @@ pub fn judge(p: &Provider, r: &Requirement) -> Verdict {
         }
     }
 }
+
+/// Rule 5: a `requires` clause is satisfied by `p` when each of its constraints is, a statement apart; a group's
+/// sub-constraints count among its constraints through the group's own verdict (record §3 rule 5; R18 6). What an
+/// unsatisfied clause makes of a description is `M3.4`'s.
+#[must_use]
+pub fn clause_satisfied(p: &Provider, constraints: &[Requirement]) -> bool {
+    constraints
+        .iter()
+        .filter(|r| !matches!(r, Requirement::Statement(_)))
+        .all(|r| judge(p, r) == Verdict::Satisfied)
+}

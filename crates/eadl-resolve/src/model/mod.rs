@@ -12,7 +12,7 @@
 //! - [`value`] — the domains of §2: reading a value, equality in a domain, the comparisons, the horizon;
 //! - [`provider`] — a block or platform read into one state per fact, refusing what §8 refuses of an offer;
 //! - [`requirement`] — what `requires`, `needs` and `uses` write, refusing what §8 refuses of a requirement;
-//! - [`judge`] — rule 1's outcome and rule 3's judgement.
+//! - [`judge`] — rule 1's outcome, rule 3's judgement and rule 5's clause.
 
 pub mod judge;
 pub mod provider;
@@ -20,7 +20,7 @@ pub mod requirement;
 pub mod value;
 pub mod vocab;
 
-pub use judge::{judge, outcome, Outcome, Verdict};
+pub use judge::{clause_satisfied, judge, outcome, Outcome, Verdict};
 pub use provider::{read as read_provider, Provider, Refused, Stated};
 pub use requirement::{
     read_constraint, read_declaration_name, read_needs, read_uses, NotJudged, Requirement,
