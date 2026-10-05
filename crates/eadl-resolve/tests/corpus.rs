@@ -1153,6 +1153,40 @@ fn one_value_in_several_spellings_on_a_side_is_one_value() {
 }
 
 #[test]
+fn a_platform_clause_holds_needs_uses_and_requires_alone() {
+    // R29 1: anything else inside `platform` — an offer, an absence, a constraint — is read by nothing, so refused.
+    let side = |t: &str| read_side(&forms(t)[0]);
+    let p = "(defsystem s (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1))";
+    for rest in [
+        "(offers (or-through-mediation allowed))",
+        "(absent or-through-mediation)",
+        "(offers (counter-modulus 0))",
+        "(tick-unit ns)",
+        "(absent debug-port)",
+        "soc.q",
+        "(platform (uses soc.q))",
+    ] {
+        let text = format!("{p} (platform (uses soc.p) {rest}))");
+        assert!(matches!(side(&text), Err(NotJudged::Invalid(_))), "{text}");
+    }
+    assert_eq!(
+        side(&format!(
+            "{p} (platform (uses soc.p) (needs uart) (requires (tick-unit ns))))"
+        ))
+        .map(|c| c.len()),
+        Ok(2)
+    );
+    // An offer or an absence inside `requires`, at any depth, stands where a constraint does.
+    for text in [
+        "(requires (offers (or-through-mediation allowed)))",
+        "(requires (absent debug-port))",
+        "(requires (ordering (before a b) (offers uart)))",
+    ] {
+        assert!(matches!(clause(text), Err(NotJudged::Invalid(_))), "{text}");
+    }
+}
+
+#[test]
 fn a_clause_written_as_an_offer_is_refused() {
     // R27 2: a clause where an offer stands would hold constraints, or name facts, that nothing reads.
     for text in [

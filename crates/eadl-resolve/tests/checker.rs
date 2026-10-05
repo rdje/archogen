@@ -1182,7 +1182,14 @@ fn a_group_nested_and_the_same_group_flat_agree() {
 fn the_relation_reads_every_needs_and_uses_presence_reads() {
     // R23 1: presence's own reader is the oracle, so no position it reads can go unread by the relation, and none it
     // skips is read (R24 3). R24 1: a `requires` is read at the same positions, so no constraint stands unread where a
-    // `needs` beside it would be read.
+    // `needs` beside it would be read. R29 1: a placement §1's grammar refuses — anything but `needs`, `uses` and
+    // `requires` in `platform`, an offer inside `requires` — refuses the side, so nothing there enters unjudged.
+    let refused = [
+        "(platform (offers X))",
+        "(platform (uses soc.p) (absent X))",
+        "(platform (tick-unit ns) X)",
+        "(requires (offers X))",
+    ];
     let places = [
         "X",
         "(requires X)",
@@ -1198,9 +1205,14 @@ fn the_relation_reads_every_needs_and_uses_presence_reads() {
         "((X))",
         "(5 X)",
         "(\"s\" X)",
+        refused[0],
+        refused[1],
+        refused[2],
+        refused[3],
     ];
     let mut read = 0usize;
     for place in places {
+        let refuses = refused.contains(&place);
         let mut presence_at = Vec::new();
         for list in ["(needs uart)", "(uses uart)"] {
             let decl = format!("(defservice s {})", place.replace('X', list));
@@ -1217,7 +1229,15 @@ fn the_relation_reads_every_needs_and_uses_presence_reads() {
                     .skip(1)
                     .any(|o| o.as_symbol() == Some("uart"))
             });
-            assert_eq!(model_reads, presence_reads, "{list} at {place}");
+            if refuses {
+                assert_eq!(
+                    code(&read_side(&all[1])),
+                    "invalid-description",
+                    "{list} at {place}"
+                );
+            } else {
+                assert_eq!(model_reads, presence_reads, "{list} at {place}");
+            }
             presence_at.push(presence_reads);
             read += 1;
         }
@@ -1233,12 +1253,236 @@ fn the_relation_reads_every_needs_and_uses_presence_reads() {
         let got = code(&read_side(&forms(&decl)[0]));
         assert_eq!(
             got == "invalid-description",
-            presence_at[0],
+            presence_at[0] || refuses,
             "{decl}: {got}"
         );
         read += 1;
     }
     println!("read {read} placements of a fact and a constraint against presence's closure");
+}
+
+#[test]
+fn the_vocabulary_is_the_record_s_table_row_by_row() {
+    // R29 remark 3: every other property reads the model's own table, so a row is pinned here to the record's §1.1
+    // and §4, read from the record itself: a direction changed in either fails.
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../docs/decisions/decision_substitutability-relation.md"
+    );
+    let record = std::fs::read_to_string(path).expect("the record");
+    let rows = |header: &str| -> Vec<Vec<String>> {
+        let at = record.find(header).expect("the table");
+        record[at..]
+            .lines()
+            .skip(2)
+            .take_while(|l| l.starts_with("| "))
+            .map(|l| {
+                l.trim_matches('|')
+                    .split(" | ")
+                    .map(|c| c.trim().to_string())
+                    .collect()
+            })
+            .collect()
+    };
+    let ticked = |cell: &str| -> Vec<String> {
+        cell.split('`')
+            .skip(1)
+            .step_by(2)
+            .map(str::to_string)
+            .collect()
+    };
+    let mut stated = std::collections::BTreeMap::new();
+    for r in rows("| Fact | Domain | Role | Direction | Why |") {
+        for name in ticked(&r[0]) {
+            let row = (r[1].clone(), r[2].clone(), r[3].clone());
+            assert!(stated.insert(name.clone(), row).is_none(), "{name} twice");
+        }
+    }
+    let mut rules = std::collections::BTreeMap::new();
+    for r in rows("| Rule | Computes | From | Formula |") {
+        let inputs: Vec<&str> = r[2].split("; ").collect();
+        let (optional, required): (Vec<&str>, Vec<&str>) =
+            inputs.iter().partition(|i| i.ends_with(", optional"));
+        let first =
+            |xs: &[&str]| -> Vec<String> { xs.iter().map(|i| ticked(i)[0].clone()).collect() };
+        rules.insert(
+            ticked(&r[1])[0].clone(),
+            (ticked(&r[0])[0].clone(), first(&required), first(&optional)),
+        );
+    }
+    let kebab = |s: String| -> String {
+        let mut out = String::new();
+        for (i, c) in s.chars().enumerate() {
+            if c.is_uppercase() && i > 0 {
+                out.push('-');
+            }
+            out.extend(c.to_lowercase());
+        }
+        out
+    };
+    let names: BTreeSet<String> = VOCABULARY.iter().map(|e| e.name.to_string()).collect();
+    assert_eq!(
+        names,
+        stated.keys().cloned().collect(),
+        "the vocabulary's names"
+    );
+    for e in VOCABULARY.iter() {
+        let list = |xs: &[&str]| xs.join(" ");
+        let domain = match e.domain {
+            Domain::Boolean => "boolean".to_string(),
+            Domain::Count => "count".to_string(),
+            Domain::Quantity(d) => format!("quantity {}", d.slug()),
+            Domain::Interval(d) => format!("interval {}", d.slug()),
+            Domain::Enumeration {
+                alternatives,
+                ordered: false,
+            } => {
+                format!("enumeration `{}`", list(alternatives))
+            }
+            Domain::Enumeration {
+                alternatives,
+                ordered: true,
+            } => {
+                format!("enumeration `(ordered {})`", list(alternatives))
+            }
+            Domain::Set(members) if e.implies.is_empty() => format!("set `{}`", list(members)),
+            Domain::Set(members) => {
+                format!("set `{}`, `(implies {})`", list(members), list(e.implies))
+            }
+            Domain::Group(subs) => format!("group `{}`", list(subs)),
+        };
+        let role = match e.role {
+            Role::Guarantee => "guarantee",
+            Role::Statement => "statement",
+        };
+        let direction = match e.direction {
+            Direction::AtLeast => "`at-least`",
+            Direction::AtMost => "`at-most`",
+            Direction::Exact => "`exact`",
+            Direction::Includes => "`includes`",
+            Direction::Within => "`within`",
+        };
+        assert_eq!(
+            stated[e.name],
+            (domain, role.to_string(), direction.to_string()),
+            "{}: §1.1's row",
+            e.name
+        );
+        let derived: Vec<String> = e.derived_from.iter().map(|s| (*s).to_string()).collect();
+        let reads: Vec<String> = e.reads.iter().map(|s| (*s).to_string()).collect();
+        match (e.rule, rules.get(e.name)) {
+            (Some(rule), Some((name, required, optional))) => {
+                assert_eq!(&kebab(format!("{rule:?}")), name, "{}: §4's rule", e.name);
+                assert_eq!(
+                    (&derived, &reads),
+                    (required, optional),
+                    "{}: §4's inputs",
+                    e.name
+                );
+            }
+            (None, None) => assert!(derived.is_empty() && reads.is_empty(), "{}", e.name),
+            _ => panic!("{}: a rule in one of the model and §4 alone", e.name),
+        }
+    }
+    println!(
+        "pinned {} facts and {} rule(s) to the record",
+        names.len(),
+        rules.len()
+    );
+}
+
+#[test]
+fn rule_1_over_every_state_of_the_horizon_and_its_inputs() {
+    // R29 remark 4: the derivation's precedence, enumerated against an oracle written from rule 1, §4 and §8 alone.
+    #[derive(Clone, Copy, PartialEq)]
+    enum S {
+        None,
+        Bare,
+        Value(&'static str),
+        Absent,
+    }
+    let offered = |s: S| matches!(s, S::Bare | S::Value(_));
+    let horizon_states = [S::None, S::Bare, S::Value("60 s"), S::Absent];
+    let modulus_states = [
+        S::None,
+        S::Bare,
+        S::Value("4294967296"),
+        S::Value("65536"),
+        S::Absent,
+    ];
+    let rate_states = [S::None, S::Bare, S::Value("10 MHz"), S::Absent];
+    let wrap_states = [
+        S::None,
+        S::Bare,
+        S::Value("modular"),
+        S::Value("saturating"),
+        S::Absent,
+    ];
+    let constraint = constraint("(unambiguous-horizon (at-least 60 s))").expect("a constraint");
+    let presence = read_needs(&forms("unambiguous-horizon")[0]).expect("a guarantee");
+    let mut providers = 0usize;
+    for h in horizon_states {
+        for m in modulus_states {
+            for r in rate_states {
+                for w in wrap_states {
+                    let (mut offers, mut absent) = (String::new(), String::new());
+                    for (fact, s) in [
+                        ("unambiguous-horizon", h),
+                        ("counter-modulus", m),
+                        ("tick-rate", r),
+                        ("wrap-behavior", w),
+                    ] {
+                        match s {
+                            S::None => {}
+                            S::Bare => offers.push_str(&format!(" {fact}")),
+                            S::Value(v) => offers.push_str(&format!(" ({fact} {v})")),
+                            S::Absent => absent.push_str(&format!(" {fact}")),
+                        }
+                    }
+                    let mut text = String::new();
+                    if !offers.is_empty() {
+                        text.push_str(&format!("(offers{offers})"));
+                    }
+                    if !absent.is_empty() {
+                        text.push_str(&format!(" (absent{absent})"));
+                    }
+                    let model = provider(&text);
+                    // §8: a derived fact offered or declared absent beside a fact its rule reads; a modulus beside a
+                    // saturating wrap.
+                    let inputs_offered = offered(m) || offered(r) || offered(w);
+                    let refused = (h != S::None && inputs_offered)
+                        || (offered(m) && w == S::Value("saturating"));
+                    assert_eq!(model.is_err(), refused, "{text}");
+                    let Ok(p) = model else {
+                        providers += 1;
+                        continue;
+                    };
+                    // Rule 1 in its order: stated; a required input absent; an input unvalued; the optional one
+                    // absent; derived from values; else undescribed.
+                    let want = |for_presence: bool| match h {
+                        S::Value(_) => Verdict::Satisfied,
+                        S::Absent => Verdict::Absent,
+                        S::Bare if for_presence => Verdict::Satisfied,
+                        S::Bare => Verdict::Unknown,
+                        S::None if m == S::Absent || r == S::Absent => Verdict::Absent,
+                        S::None if [m, r, w].contains(&S::Bare) => Verdict::Unknown,
+                        S::None if w == S::Absent => Verdict::Undescribed,
+                        S::None => match (m, r) {
+                            (S::Value(_), S::Value(_)) if for_presence => Verdict::Satisfied,
+                            // (2^32 − 1) / 10 MHz is 429.4967295 s; (65536 − 1) / 10 MHz is 6.5535 ms.
+                            (S::Value("4294967296"), S::Value(_)) => Verdict::Satisfied,
+                            (S::Value(_), S::Value(_)) => Verdict::Refused,
+                            _ => Verdict::Undescribed,
+                        },
+                    };
+                    assert_eq!(judge(&p, &constraint), want(false), "{text}: a constraint");
+                    assert_eq!(judge(&p, &presence), want(true), "{text}: presence");
+                    providers += 1;
+                }
+            }
+        }
+    }
+    println!("judged {providers} providers over every state of the horizon and its inputs");
 }
 
 #[test]

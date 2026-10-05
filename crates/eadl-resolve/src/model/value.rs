@@ -58,13 +58,14 @@ pub fn same(a: &Value, b: &Value) -> Result<bool, Overflow> {
         (Value::Bool(x), Value::Bool(y)) => x == y,
         (Value::Count(x), Value::Count(y)) => x == y,
         (Value::Quantity(x), Value::Quantity(y)) => eq(*x, *y)?,
-        // Both endpoints compared before either decides: a decided difference makes two values whatever the other
-        // gives, and an overflow decides only when nothing else does (§5; R18 1, R20 remark 3).
-        (Value::Interval(a0, a1), Value::Interval(b0, b1)) => match (eq(*a0, *b0), eq(*a1, *b1)) {
-            (Ok(false), _) | (_, Ok(false)) => false,
-            (Ok(true), Ok(true)) => true,
-            _ => return Err(Overflow),
-        },
+        // A comparison of two intervals is one comparison of two values: both endpoints compared, past the arithmetic
+        // when either is, so one endpoint's difference never hides the other's overflow — as `satisfies` judges an
+        // interval (§2; R18 7, R28 4, R29 2).
+        (Value::Interval(a0, a1), Value::Interval(b0, b1)) => {
+            let (lo, hi) = (eq(*a0, *b0), eq(*a1, *b1));
+            let (lo, hi) = (lo?, hi?);
+            lo && hi
+        }
         (Value::Enum(x), Value::Enum(y)) => x == y,
         (Value::Set(x), Value::Set(y)) => x == y,
         _ => false,
@@ -319,7 +320,7 @@ mod tests {
     //! What no `/1` fact reaches — `frequency`, the one interval, converts and compares exactly — held at the value
     //! level, on a time interval whose endpoints are past the arithmetic (R18 7).
 
-    use super::{interval_order, satisfies, Direction, Overflow, Value};
+    use super::{interval_order, same, satisfies, Direction, Overflow, Value};
     use eadl_model::quantity::{unit, Quantity};
     use eadl_model::Rational;
 
@@ -348,6 +349,25 @@ mod tests {
             satisfies(&e("other"), &e("mid"), Direction::AtLeast, &order, &[]),
             Ok(false)
         );
+    }
+
+    #[test]
+    fn two_intervals_are_compared_whole_by_same_as_by_satisfies() {
+        // R29 2: one endpoint unequal, the other past the arithmetic: one comparison, past it, never two values.
+        let zero = q(Rational::integer(0), "ns");
+        let tiny = q(Rational::decimal(1, 31).expect("fits"), "ns");
+        let (lo, hi) = (
+            q(Rational::decimal(5, 1).expect("fits"), "us"),
+            q(Rational::decimal(6, 1).expect("fits"), "us"),
+        );
+        for (a, b) in [
+            (Value::Interval(zero, tiny), Value::Interval(lo, hi)),
+            (Value::Interval(tiny, tiny), Value::Interval(lo, hi)),
+        ] {
+            assert_eq!(same(&a, &b), Err(Overflow));
+            assert_eq!(same(&b, &a), Err(Overflow));
+            assert_eq!(satisfies(&a, &b, Direction::Exact, &[], &[]), Err(Overflow));
+        }
     }
 
     #[test]

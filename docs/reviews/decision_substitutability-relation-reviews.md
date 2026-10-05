@@ -623,3 +623,20 @@ There were 5 findings, 2 of them defects, and the verdict was "not acceptable as
 | Z3 — a clause inside an undeclared fact's offered value read by nothing | no | refused at any depth inside an offer; mutation `model-nested-clause-in-offer-admitted` |
 | Z4 — an interval endpoint that refuses beside one that overflows | no | rule 5: a comparison is of two values, an interval's endpoints together, past the arithmetic when either is (R18 7); no `/1` fact reaches it |
 | Z5 — §4's counter refusals carried by no vocabulary clause | no | §4: cross-field rules of the vocabulary, declared in this record, refusing only |
+
+**Round 29**, `2026-10-05`: a new context that had not read rounds 1 to 28 ran 37 probes over every case of
+`ROADMAP.md` §5.2, 40 000 random declarations, its own oracle for rule 1 over 320 providers (no disagreement), the
+model over 121 tracked files and `archogen check` beside it. Its defect came with reproducers, which landed first as
+tests failing on the model as the round found it; it was the sixth round to find a position the relation did not
+hold, so the answer closes the class with a grammar. There were 6 findings, 1 of them a defect, and the verdict was
+"not acceptable as it stands". Defects per round: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2, 2, 2, 3, 3,
+3, 2, 1, 2, 1, 2, 1.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| P1 — an offer, an absence or a constraint inside a system's `platform` clause read and refused by nothing: `(platform (uses soc.p) (offers (or-through-mediation allowed)))` read; `archogen check` exit 0 | yes | §1: a grammar of positions — `platform` holds `needs`, `uses` and `requires`; `requires` holds constraints and those three, an `offers` or `absent` inside it refused at any depth; `needs`, `uses`, `absent` hold names; `offers` holds no clause — anything else `invalid-description`; §8's row says so once; the presence-oracle property places refused forms; mutations `model-platform-stray-admitted`, `model-offers-inside-requires-admitted` |
+| P2 — `value::same` let a refusing endpoint decide where `satisfies` reads two intervals past the arithmetic | no | `same` compares intervals whole, as §2 and R28 4 say; a unit test; mutation `model-interval-refusal-hides-overflow` |
+| P3 — no check holds the vocabulary to the record; four turned directions passed | no | a property reads §1.1's and §4's tables from the record and pins every row; mutations `model-vocab-clock-rate-faster-is-better`, `model-vocab-release-accuracy-turned`, `model-vocab-implies-dropped` |
+| P4 — rule 1's order over the derivation's inputs rested on hand fixtures | no | a property enumerates 400 providers against an oracle from rule 1, §4 and §8 |
+| P5 — rule 3 did not point to §5's exception for offers that do not compare | no | it does |
+| P6 — `SR-H16` fixed an outcome and asked `M3.4` for a reason the record cannot give | no | `SR-H16` makes it `M3.4`'s question, decided in a reviewed record with its reason; both copies, §10 aligned |

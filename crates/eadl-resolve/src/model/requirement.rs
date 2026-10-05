@@ -86,6 +86,12 @@ fn head_of(item: &Form) -> Option<&str> {
 ///
 /// [`NotJudged`] for what the relation refuses or does not judge.
 pub fn read_constraint(item: &Form) -> Result<Requirement, NotJudged> {
+    // A provider's clause where a constraint stands, at any depth: an offer or an absence nothing reads (§1; R29 1).
+    if holds_provider_clause(item) {
+        return invalid(
+            "an `offers` or `absent` written inside `requires`, where a constraint stands",
+        );
+    }
     let Some(head) = head_of(item) else {
         // An item that is neither a name nor a list headed by one — a number, a string, `()`, a list headed by any of
         // them — is `invalid-description` (§1, §8; R22 1).
@@ -276,30 +282,53 @@ fn clause_own<'a>(clause: &'a Form, nested: &mut Vec<&'a Form>) -> Vec<&'a Form>
     constraint_items(clause).chain(lists).collect()
 }
 
+/// Whether `form` is, or holds at any depth, an `offers` or `absent` list (R29 1).
+fn holds_provider_clause(form: &Form) -> bool {
+    matches!(form, Form::List { .. })
+        && (matches!(form.head(), Some("offers" | "absent"))
+            || form.items().iter().any(holds_provider_clause))
+}
+
 /// Every item one side writes: the own items of every `requires` clause and every `needs` and `uses` at any depth of
 /// every clause headed by a name but `offers`, `absent` and `refines` — a system's `platform` and its tasks among them
 /// — the positions presence reads, so no fact enters the closure that the relation does not read, and no constraint
-/// stands where it is not read (record §1; R23 1, R24 1, R24 3, R26 2).
-fn side_items(decl: &Form) -> Vec<&Form> {
+/// stands where it is not read (record §1; R23 1, R24 1, R24 3, R26 2). A system's `platform` clause holds `needs`,
+/// `uses` and `requires` alone: anything else there — an offer, an absence, a constraint — is read by nothing and
+/// refused (§1; R29 1).
+fn side_items(decl: &Form) -> Result<Vec<&Form>, NotJudged> {
     let (mut clauses, mut items) = (Vec::new(), Vec::new());
     for c in decl.items().iter().skip(1) {
         match c.head() {
             None | Some("offers" | "absent" | "refines") => {}
             Some("needs" | "uses") => items.push(c),
             Some("requires") => clauses.push(c),
+            Some("platform") => {
+                for item in c.items().iter().skip(1) {
+                    match item.head() {
+                        Some("needs" | "uses") => items.push(item),
+                        Some("requires") => clauses.push(item),
+                        _ => {
+                            return invalid(
+                                "a `platform` clause holds `needs`, `uses` and `requires` alone",
+                            )
+                        }
+                    }
+                }
+            }
             Some(_) => walk(c, &mut clauses, &mut items),
         }
     }
     while let Some(c) = clauses.pop() {
         items.extend(clause_own(c, &mut clauses));
     }
-    items
+    Ok(items)
 }
 
-/// Every `needs` and `uses` one side writes, at [`side_items`]' positions.
+/// Every `needs` and `uses` one side writes, at [`side_items`]' positions; none for a side refused there.
 #[must_use]
 pub fn side_name_lists(decl: &Form) -> Vec<&Form> {
     side_items(decl)
+        .unwrap_or_default()
         .into_iter()
         .filter(|i| matches!(i.head(), Some("needs" | "uses")))
         .collect()
@@ -339,7 +368,7 @@ pub fn read_side(decl: &Form) -> Result<Vec<Requirement>, NotJudged> {
     if let Some(name) = decl.items().get(1).and_then(Form::as_symbol) {
         read_declaration_name(name)?;
     }
-    read_items(side_items(decl))
+    read_items(side_items(decl)?)
 }
 
 /// Every item read, none abandoning the rest: a `uses` operand through [`read_uses`], a service's `needs` left to

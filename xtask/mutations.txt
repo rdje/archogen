@@ -1492,3 +1492,85 @@ from
 to
             ) || false)
 end
+
+mutation model-platform-stray-admitted
+file crates/eadl-resolve/src/model/requirement.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 29: a system's `platform` clause holds `needs`, `uses` and `requires` alone; admitted, `(platform (uses soc.p) (offers (or-through-mediation allowed)))` was an offer of a statement fact nothing read (§1, §8).
+from
+                            Some("requires") => clauses.push(item),
+                            _ => {
+                                return invalid(
+to
+                            Some("requires") => clauses.push(item),
+                            _ if true => {}
+                            _ => {
+                                return invalid(
+end
+
+mutation model-offers-inside-requires-admitted
+file crates/eadl-resolve/src/model/requirement.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 29: an `offers` or `absent` inside `requires`, at any depth, stands where a constraint does and is refused; admitted, `(requires (offers (or-through-mediation allowed)))` was `unsupported-profile` (§1, §8).
+from
+        if holds_provider_clause(item) {
+to
+        if false && holds_provider_clause(item) {
+end
+
+mutation model-interval-refusal-hides-overflow
+file crates/eadl-resolve/src/model/value.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 29 remark 2: two intervals are one comparison, past the arithmetic when either endpoint is; with a refusing endpoint deciding, `same` and `satisfies` disagreed on one pair (§2; R18 7).
+from
+                let (lo, hi) = (eq(*a0, *b0), eq(*a1, *b1));
+                let (lo, hi) = (lo?, hi?);
+to
+                let (lo, hi) = (eq(*a0, *b0), eq(*a1, *b1));
+                if matches!(lo, Ok(false)) || matches!(hi, Ok(false)) { return Ok(false); }
+                let (lo, hi) = (lo?, hi?);
+end
+
+mutation model-vocab-clock-rate-faster-is-better
+file crates/eadl-resolve/src/model/vocab.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 29 remark 3: a row of the vocabulary is pinned to the record's §1.1; `clock-rate` read `at-least`, §5.2's "a faster clock is better" as a rule, passed every other property.
+from
+            "clock-rate",
+            Domain::Quantity(Dimension::Frequency),
+            Direction::Exact,
+to
+            "clock-rate",
+            Domain::Quantity(Dimension::Frequency),
+            Direction::AtLeast,
+end
+
+mutation model-vocab-release-accuracy-turned
+file crates/eadl-resolve/src/model/vocab.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 29 remark 3: `release-accuracy` turned to `at-least` failed only an incidental fixture before the vocabulary was pinned to §1.1.
+from
+            "release-accuracy",
+            Domain::Quantity(Dimension::Time),
+            Direction::AtMost,
+to
+            "release-accuracy",
+            Domain::Quantity(Dimension::Time),
+            Direction::AtLeast,
+end
+
+mutation model-vocab-implies-dropped
+file crates/eadl-resolve/src/model/vocab.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 29 remark 3: `available-in-state`'s `implies run` is §1.1's; dropped, a requirement of `idle` was met by an offer that never runs (R16 2).
+from
+            implies: &["run"],
+to
+            implies: &[],
+end
