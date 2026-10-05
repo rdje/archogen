@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate's tenth review: one defect left
+
+`ARCHOGEN-M3-0440` (leaf `M3.6.1`, step 11).
+
+- The tenth reader of the trust design found one defect, down from four. Approving a renamed copy of a forbidden
+  construct, such as `use std::include as inc;`, quietly approved every later use of the new name. Renames and
+  wrappers of forbidden constructs can no longer be approved, so each use must stand where the check sees it.
+
 ## archogen — the substitutability design's nineteenth review
 
 `ARCHOGEN-M3-0439` (leaf `M3.1.1`, step 20).

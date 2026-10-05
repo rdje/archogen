@@ -1028,6 +1028,17 @@ to
                 for named in Vec::<String>::new() {
 end
 
+mutation trust-alias-admitted
+file xtask/src/trust.rs
+test -p xtask trust::tests
+expect killed
+why M3.6.1 R10 1: an alias or a wrapper of a refused construct is inadmissible; admitted, `use std::include as inc;` let `inc!("m.txt")` compile a file no rule reads, and a wrapper's invocations went unpinned.
+from
+            if let Some(how) = inadmissible(&key.rule, extent) {
+to
+            if let Some(how) = None::<&str> {
+end
+
 mutation model-implies-ignored
 file crates/eadl-resolve/src/model/judge.rs
 test -p eadl-resolve

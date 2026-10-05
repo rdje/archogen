@@ -846,6 +846,32 @@ pub fn site_extent(source: &[u8], line: usize, column: usize) -> Result<&[u8], S
     Ok(&source[toks[start].at..toks[end].end])
 }
 
+/// Why a site may not be admitted, if it may not: its extent renames its refused identifier with `use … as`, or defines
+/// a macro whose body holds a refused construct. Either makes a name no rule refuses stand for the construct, so its
+/// invocations would escape every extent (R10 1).
+fn inadmissible(rule: &str, extent: &[u8]) -> Option<&'static str> {
+    use archogen_catalog::package::Kind;
+    let Ok(toks) = package::tokens(extent) else {
+        return Some("in a text that does not tokenize");
+    };
+    let ident = |t: &package::Token, name: &str| matches!(&t.kind, Kind::Ident(n, _) if n == name);
+    if toks
+        .windows(2)
+        .any(|w| ident(&w[0], rule) && ident(&w[1], "as"))
+    {
+        return Some("renamed by `use … as`");
+    }
+    let defines = toks
+        .iter()
+        .any(|t| ident(t, "macro_rules") || ident(t, "macro"));
+    let wraps = refused_sites(extent).map_or(true, |found| {
+        found
+            .iter()
+            .any(|(_, _, r)| r != "macro_rules" && r != "macro")
+    });
+    (defines && wraps).then_some("defined in a macro that wraps a refused construct")
+}
+
 /// What an `include!` or a `path = "…"` in `extent` compiles as Rust, where it is not one `.rs` file named by a single
 /// string literal: each offending name, or a description of what stands in its place (R9 remark 7).
 fn compiled_names(rule: &str, extent: &[u8]) -> Vec<String> {
@@ -1290,6 +1316,13 @@ pub fn inventory_with(
     // One admission per site: sites sharing a file, a rule and an extent's text pass only as many as the admissions
     // naming them (R8 3).
     for (key, (at, extent)) in &found_sites {
+        // An alias or a wrapper of a refused construct is inadmissible: its invocations name nothing a rule refuses,
+        // so no extent would pin them (R10 1).
+        if let Some(how) = inadmissible(&key.rule, extent) {
+            for site in at {
+                refused.push(format!("trust-undeclared-input: `{site}`: `{}` {how}, so every invocation of it would go unpinned — inadmissible, whatever admits it", key.rule));
+            }
+        }
         // An `include!` or a `path = "…"` compiles the file it names as Rust, and the rules read only `.rs` files:
         // admitted, it must name one in a single string literal, or what it compiles would go unread (R9 remark 7).
         if key.rule == "include" || key.rule == "path" {
@@ -3072,5 +3105,51 @@ mod tests {
             written(f.run()).get("refused-sites").and_then(Json::as_str),
             Some("1")
         );
+    }
+
+    // ── Round 10 (`M3.6.1` step 11) ──────────────────────────────────────────────────────────────────────────────
+
+    #[test]
+    fn an_alias_or_a_wrapper_of_a_refused_construct_is_inadmissible() {
+        // R10 1: admitting the `use … as` or the `macro_rules!` freed every invocation of it, which no rule names.
+        let renamed_include = "use std::include as inc;";
+        let renamed_asm = "use core::arch::global_asm as g;";
+        let wrapper = "macro_rules! put {\n    ($s:expr) => {\n        core::arch::global_asm!($s);\n    };\n}";
+        for (name, src, extra, admitted) in [
+            (
+                "r10-1-renamed-include",
+                format!("{renamed_include}\ninc!(\"m.txt\");\n"),
+                vec![("crates/b/src/m.txt", "pub fn f() {}\n".to_owned())],
+                admit("crates/b/src/lib.rs", "include", renamed_include),
+            ),
+            (
+                "r10-1-renamed-asm",
+                format!("{renamed_asm}\ng!(\".data\");\npub fn f() {{}}\n"),
+                vec![],
+                admit("crates/b/src/lib.rs", "global_asm", renamed_asm),
+            ),
+            (
+                "r10-1-wrapper",
+                format!("{wrapper}\nput!(\".data\");\npub fn f() {{}}\n"),
+                vec![],
+                format!(
+                    "{}{}",
+                    admit("crates/b/src/lib.rs", "macro_rules", wrapper),
+                    admit(
+                        "crates/b/src/lib.rs",
+                        "global_asm",
+                        "core::arch::global_asm!($s);"
+                    )
+                ),
+            ),
+        ] {
+            let mut files = extra;
+            files.push(("trust/roots.eadl", format!("{ROOTS}{admitted}")));
+            let f = two_roots(name, "fn main() {}\n", &src, &files);
+            says(
+                &refused(f.run()),
+                "so every invocation of it would go unpinned",
+            );
+        }
     }
 }

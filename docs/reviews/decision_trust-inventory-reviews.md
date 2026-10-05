@@ -289,3 +289,13 @@ stands". Defects per round: 11, 12, 16, 11, 10, 10, 8, 11, 4.
 | I5 — a role package naming no package accepted | no | §2: refused, every package a form names is one of the commit |
 | I6 — no clause for the run-time data §2 says the form holds | no | §2: a `(data …)` clause, each path a blob, hashed and shared as a file; `TI-H23` |
 | I7 — an admitted `#[path]` or `include!` onto a file that is not `.rs` | no | §3: refused whatever admits it, so every Rust source stays a `.rs` file |
+
+**Round 10**, `2026-10-05`, the third against the instrument: a new context that had not read rounds 1 to 9 ran the
+instrument and seven probes of its own. One defect, with a reproducer, landed first as a fixture failing on the
+instrument as the round found it, then the rule, then the record's words. There were 2 findings, 1 of them a defect,
+and the verdict was "not acceptable as it stands". Defects per round: 11, 12, 16, 11, 10, 10, 8, 11, 4, 1.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| J1 — an admitted `use std::include as inc;` lets `inc!("m.txt")` compile a file no rule reads; an admitted `use … as g` or `macro_rules!` wrapper frees every later `.incbin` in its invocations (measured) | yes | §3: a site renaming its refused identifier or defining a macro that wraps a refused construct is inadmissible; mutation `trust-alias-admitted` |
+| J2 — a manifest admission names only the first rule `check_manifest` reports | no | §3: stated; the whole manifest's sha256 re-opens it on any edit, and its review reads every rule |

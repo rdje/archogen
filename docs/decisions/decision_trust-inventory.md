@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-10-03`
 - **Status:** `active` — written; under independent review (leaf `M3.6.1`'s closure rule: the first round that finds
-  no defect closes it); rounds 1 to 6 answered `2026-10-03`, rounds 7 to 9 `2026-10-05`, its hand-offs in a ledger since, reviewed beside its instrument since round 8; narrowed after rounds 3 and 4 to what only it decides
+  no defect closes it); rounds 1 to 6 answered `2026-10-03`, rounds 7 to 10 `2026-10-05`, its hand-offs in a ledger since, reviewed beside its instrument since round 8; narrowed after rounds 3 and 4 to what only it decides
 - **External sources:** [the pinned Rust toolchain](../book/src/ledger.md#rust-toolchain) — rustc's dependency
   information and cargo's metadata, their version and limits in the ledger
 - **Owner / source:** leaf `M3.6.1` (`docs/tasks/M3.md`). `ROADMAP.md` §4.4 asks for a machine-readable
@@ -196,7 +196,8 @@ refused with the manifest rules, before any build; `mod` finds only `.rs` files 
 refused, so every Rust source a root compiles is then a `.rs` file (R8 1). A name in a unit's dependency information
 that is not a blob of the commit, or is a symbolic link, is refused. A site the rules refuse passes only when an
 **admission** in `trust/roots.eadl` names it — the file, the rule, and the sha256 of the site's **extent**, or, for a
-manifest rule, which has none, of the whole manifest — reviewed as every form is (§5). The extent is the statement or
+manifest rule, which has none, of the whole manifest, naming the first rule the catalog reports, which the
+manifest's review reads past (R10 2) — reviewed as every form is (§5). The extent is the statement or
 item the site stands in: at the innermost brace level holding it — the file, a module, a block, a brace-delimited
 macro's body — from the token after the previous `;` or brace group at that level through the next `;` or the end of
 the next brace group, so parentheses and brackets never end it, nor a brace group between `<` or `,` and `>` or `,`,
@@ -207,7 +208,9 @@ site**: sites with one file, rule and extent pass only as many as the admissions
 `#[no_mangle]` beside an admitted one is a new site (R8 3); a site two roots compile is one site (R8 remark 20). An
 `include!` or a `path = "…"` compiles the file it names as Rust, so its admission holds only when it names a `.rs`
 file in one string literal, which the rules then read; one naming another file, or written otherwise, is refused
-whatever admits it, and every Rust source a root compiles stays a `.rs` file (R9 remark 7). An
+whatever admits it, and every Rust source a root compiles stays a `.rs` file (R9 remark 7). A site whose extent
+renames its refused identifier with `use … as`, or defines a macro whose body holds a refused construct, is
+inadmissible: the alias's or wrapper's invocations name nothing a rule refuses, so no extent would pin them (R10 1). An
 edit anywhere in a site's extent or manifest, or a new site, is refused until a new admission is, and an admission no
 site uses is listed with the inventory and refused by the gate as `trust-baseline-stale` on the baseline's host (§6;
 R8 remark 15). A manifest rule is applied over each program's closure from `cargo metadata` before any build, so a
@@ -325,7 +328,7 @@ leaves' (R2 B1, B10, B17; R3 C3).
 | `trust-shared-changed` | reported | an item whose content, configuration, edges or file readers differ from the base commit's form — a feature activated, a `cfg` set, an edition changed, a source edited, a new reader — though its name and version are unchanged | 2 |
 | `trust-unclassified-program` | reported | a program target `trust/roots.eadl` does not classify, or whose classification's role packages have grown (§2) | — |
 | `trust-baseline-stale` | refused, on the baseline's host | a baseline form whose item is no longer shared, a root form or classification whose package or program target is gone (R7 remark e), or an admission no current site uses (R8 remark 15): removed, so a sharing removed and reintroduced, or a target re-added under an old name, is reviewed again (R1 A15; R3 C9; R5 remark 12) | — |
-| `trust-undeclared-input` | refused | a name not a blob of the commit, a symbolic link, a file whose bytes after the build are not its blob's, a crate root that is not a `.rs` file, a unit no one target names, an environment variable outside cargo's own, a path left absolute in a unit's configuration, declared run-time data that is not a blob, an admitted `include!` or `path` naming a file that is not `.rs`, or a site the catalog's rules refuse, in any `.rs` file a root or the harness compiles, with no admission of its own (§3) | 3 |
+| `trust-undeclared-input` | refused | a name not a blob of the commit, a symbolic link, a file whose bytes after the build are not its blob's, a crate root that is not a `.rs` file, a unit no one target names, an environment variable outside cargo's own, a path left absolute in a unit's configuration, declared run-time data that is not a blob, an admitted `include!` or `path` naming a file that is not `.rs`, an alias or wrapper of a refused construct, or a site the catalog's rules refuse, in any `.rs` file a root or the harness compiles, with no admission of its own (§3) | 3 |
 | `trust-form-missing` | refused, on the baseline's host | a current shared item, root or program target with no form, proposed or accepted, in the commit's own `trust/` — a refused site with no admission is `trust-undeclared-input`'s alone (R8 remark 14) — repaired by the tool's proposal, committed, so the base commit's forms always cover its inventory and case 5's change part is the commit's own (R7 4) | — |
 | `trust-shared-program` | refused | a root whose build compiles a role package of another role, an executable or a library alike, or a harness compiling one of a role outside its pair (§2; R8 remarks 12, 13) | — |
 | `trust-inventory-stale` | refused, at packaging | the inventory missing, its build identity not the package's commit and toolchain, an artifact's sha256 not the inventory's, the report not of that inventory, a result naming a program other than its role's inventoried artifact or the pair's harness, or a dependency handed to a root that its form does not declare by path and the inventory's sha256 | 4 |
@@ -410,6 +413,6 @@ exercises each of §14.4's five cases, that no input a root's build reads can be
 that the baseline cannot be accepted by its author; every finding answered here. The history is
 [`decision_trust-inventory-reviews.md`](../reviews/decision_trust-inventory-reviews.md).
 
-Defects per round, oldest first: 11, 12, 16, 11, 10, 10, 8, 11, 4. Each round's findings, its reader's measurements and every answer are in
+Defects per round, oldest first: 11, 12, 16, 11, 10, 10, 8, 11, 4, 1. Each round's findings, its reader's measurements and every answer are in
 the review history linked above, which holds them whole; this record keeps only the count (`PROGRAM.52.2`, the
 folder's ceiling).
