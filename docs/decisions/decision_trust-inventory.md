@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-10-03`
 - **Status:** `active` — written; under independent review (leaf `M3.6.1`'s closure rule: the first round that finds
-  no defect closes it); rounds 1 to 6 answered `2026-10-03`; narrowed after rounds 3 and 4 to what only it decides
+  no defect closes it); rounds 1 to 6 answered `2026-10-03`, round 7 `2026-10-05`; narrowed after rounds 3 and 4 to what only it decides
 - **External sources:** [the pinned Rust toolchain](../book/src/ledger.md#rust-toolchain) — rustc's dependency
   information and cargo's metadata, their version and limits in the ledger
 - **Owner / source:** leaf `M3.6.1` (`docs/tasks/M3.md`). `ROADMAP.md` §4.4 asks for a machine-readable
@@ -19,8 +19,9 @@ The integration pipeline builds each **root** — each program whose independenc
 commit's own files, under the pinned toolchain and a cleared environment, reads what the compiler read for it, and
 writes an **inventory**: the build's identity, and for each root the packages it reaches, every file its compilation
 read with its content hash, and each compilation unit's configuration. From the inventories it derives every item
-two roots **share**, copies and the build configuration included. A **baseline**, committed and reviewed, lists
-each shared item the project accepts, with its classification, the property it can affect, its residual common-error
+two roots **share**, copies and the build configuration included. A **baseline**, committed, holds one form per
+shared item, proposed or accepted — accepted only as `M3.6.5` reads acceptance, never by a form's presence (R7 5) —
+with its classification, the property it can affect, its residual common-error
 risk and the independent controls that remain. The **gate** refuses what would make the inventory unsound — an input
 it cannot account for, a program running two roles, a baseline form whose item is gone, and, at packaging, a stale
 inventory — and **reports** in two parts: the **change** against the base commit's forms — the merge base of a
@@ -71,8 +72,12 @@ exceptions stated rather than left: a role no executable runs yet is rooted at i
 today — and replaced by the first executable that runs it; and a reference model and the implementation it
 validates are rooted at their libraries, since what runs them is a test harness, which §4 makes an item the pair
 shares (R2 B7), named in the pair's form. Each root's form also names its **role packages**: the packages holding
-the role's own logic, its root package always, reviewed with the form. **An executable that would run two roles is
-refused** (`trust-shared-program`): an executable root whose build compiles a role package of another role. The
+the role's own logic, its root package always, reviewed with the form — today the generator's `archogen-cli`,
+`archogen-api` and `archogen-s0`, the scheduling checker's `rt-analysis`, the reference model's `rt-reference` and the
+implementation's `rt-core`; the language's reader and model, `eadl-front` and `eadl-model`, are no role's, so a
+checker that compiles them shares them, reported as case 1 (R7 remark j). **An executable that would run two roles is
+refused** (`trust-shared-program`): an executable root whose build compiles a role package of another role — the
+comparison harness apart, which compiles its pair's two by design (R7 remark d). The
 independence §4.4 asks about is between programs, and one program running both roles has none to disclose; every
 package it holds would be shared, and a real case 1 would be lost among them (R2 B5; R4 5). Compiling a role package
 counts, whatever the program calls of it: one that needs only another role's types or constants takes them from a
@@ -93,9 +98,10 @@ from those last reviewed (R3 C19). A program target the file does not classify i
 root or classifies their own checker away to silence a sharing (R1 A3). Libraries are not classified: a library
 matters only through the roots that reach it. Every root is built in the release profile with
 `--no-default-features` and no `--features` (R1 A19), for **one host triple**, the CI runner's
-(`x86_64-unknown-linux-gnu`), which the baseline names: cargo's unit hashes and a host's `cfg` differ by host, so on
-another host the gate builds, applies every refusal but `trust-baseline-stale`, and reports every shared item as
-unreviewed, comparing nothing with the baseline (R2 B8; R4 10).
+(`x86_64-unknown-linux-gnu`), which the base commit's baseline names — a change to it is in the commit's change part —
+since cargo's unit hashes and a host's `cfg` differ by host; on another host the gate builds, applies every refusal but
+`trust-baseline-stale` and `trust-form-missing`, reports every shared item as unreviewed, and its change part says
+"not compared", never "unchanged" (R2 B8; R4 10; R7 8).
 
 ### 3. The inventory
 
@@ -157,31 +163,28 @@ part of it: a package added elsewhere changes it and no root's compilation (case
 
 **An input the inventory cannot account for is refused, not trusted** (`trust-undeclared-input`), and on any
 refusal the tool writes no inventory, only the report naming it, so `trust-verify` finds none and refuses the package
-(R5 9): a path in a
-unit's dependency information outside the written tree; and, in any root's closure, a build script, a procedural
-macro, a `#[link]` attribute, a `links` key, a link argument in any configuration, a **link-time symbol binding** — an
-`extern` block, `unsafe extern` included, through which one package calls a symbol another defines with no Cargo edge
-between them: measured, a reference package declaring `extern "Rust" { fn transition(…); }` ran the implementation's
-`#[no_mangle]` function with no shared package, file or copy in any inventory (R6 1) — or an assembler directive —
-`global_asm!`, `asm!` or `naked_asm!`, whose `.incbin` reads a file no dependency information names: measured with
-the pinned rustc, a `.incbin` file's bytes are in the rlib and not in its `.d`, for `naked_asm!` too, which needs no
-feature gate in 1.95.0 (R2 B3; R3 C1). They are refused as the catalog refuses them, by identifier with its token
-rules (`crates/archogen-catalog/src/package.rs`, `REFUSED` and `ATTRIBUTE_WORDS`, and its `extern` rule): `asm`,
-`global_asm`, `naked_asm` and `include` anywhere; `link` and `path` inside an attribute, and an attribute whose name
-is a macro's metavariable, `#[$…]`, so no macro assembles one from its arguments; and `extern` other than `extern
-crate` or an `extern fn`. The catalog's wider rule, `link` or `path` anywhere in a macro's arguments, is not adopted:
-today's generator writes `format!("{}.{name}", self.path)` (`crates/eadl-front/src/module.rs`) and the scheduling
-checker a `panic!` naming `path` (`crates/rt-analysis/src/cost.rs`), and no root defines a macro (counted, R6 7) — so a renaming `use core::arch::global_asm as g;` is refused at
-its `use`, where `g!` with an `.incbin` would compile and leave its file in no dependency information (measured, R4
-8). With `include!` and `#[path]` refused, as the catalog refuses them, every Rust file a root compiles is a
-package's own, reached by `mod`, and the scan runs over every `.rs` file the dependency information names; the
-roots use neither today — round 5's answer said they used both, which was wrong (R6 7) — and their only `extern`
-tokens are three `pub extern "C" fn` definitions in `crates/archogen-wasm/src/lib.rs`, which the rule admits. Data a
-compilation reads, `include_str!` and `include_bytes!`, is hashed and never tokenised: the kind modules' comments
-hold characters the Rust tokenizer refuses (measured, R6 7), and a string cannot become code once `include!` and
-the assembler macros are refused. A `.rs` file the token rules cannot read is refused. The catalog refuses each of them in a
-recorded package for the same reason (`decision_catalog-records-hashes.md`) (R1 A5). Each is admitted when a leaf
-designs its coverage. What remains outside the inventory, and is stated in its report: the linker and the host's C
+(R5 9). **The rules are the catalog's, whole, and the gate is default-deny** (R7): every manifest and token rule the
+catalog applies to a recorded package — `check_manifest` and `scan` in `crates/archogen-catalog/src/package.rs`,
+unchanged: a build script, a procedural macro, a `links` key, a link argument, `asm`, `global_asm`, `naked_asm`,
+`include` and its kin, `no_mangle`, `export_name`, `link_section`, the global hooks, `macro_rules` and `macro`,
+`link`, `path` and `used` inside an attribute or a macro's arguments, `extern` other than `extern crate` or an `extern
+fn`, a non-ASCII identifier, a file that does not tokenize — applies to every `.rs` file a root's compilation reads,
+and to the comparison harness's closure with its development edges followed, since the harness is built from them (R7
+3); and a name in a unit's dependency information that is not a blob of the commit, or is a symbolic link, is
+refused. A site the rules refuse passes only when an **admission** in `trust/roots.eadl` names it — the file, the
+rule, and the sha256 of the line it stands on — reviewed as every form is (§5); an edit to that line, or a new site,
+is refused until a new admission is. Measured `2026-10-05` over the 55 `.rs` files today's roots and harness compile,
+the rules refuse 13 sites, each proposed as an admission: eight `include_str!` of data — the two kind modules
+(`crates/archogen-api/src/lib.rs`), the profile page (`crates/eadl-model/src/profile.rs`), the roadmap
+(`crates/archogen-cli/src/spec.rs`) and four of S0's runtime templates (`crates/archogen-s0/src/emit.rs`); three
+`#[no_mangle]` on the wasm module's exports (`crates/archogen-wasm/src/lib.rs`); and two uses of the word `path` in an
+ordinary macro call (`crates/eadl-front/src/module.rs`, `crates/rt-analysis/src/cost.rs`). Everything else is
+refused. One rule set so closes the channels five rounds found one at a time — an `.incbin` under the assembler
+macros, its bytes in the rlib and in no `.d` (R2 B3; R3 C1), a renaming `use` (R4 8), a link-time binding through an
+`extern` block (R6 1), a macro assembling `#[path]` onto a file that is not `.rs` (R7 1), a `#[no_mangle]` interposing
+a symbol in the harness, measured taking over `memcmp` (R7 2), a procedural macro on a development edge (R7 3) — and
+refuses the next such channel before anyone finds it. Data a compilation reads through an admitted `include_str!` or
+`include_bytes!` is hashed and never tokenised (R6 7). A refusal the catalog has not yet adopted is designs its coverage. What remains outside the inventory, and is stated in its report: the linker and the host's C
 toolchain, recorded by version; code a `cfg` gates to a target other than the host (R2 B15); what a root reads
 at run time that the pipeline does not hand it; and **generated sources**: a file committed as a generator's output is
 judged as a file, and two files generated from one input by one generator, differing in bytes, share nothing the
@@ -221,8 +224,8 @@ and is reported for review (R1 A12).
 
 ### 5. The baseline, and what is decided elsewhere
 
-`trust/baseline.eadl` holds one form per shared item a review has accepted: the item, the pair of roots, its content,
-configuration and edges as reviewed, its classification — infrastructure, interpretation/normalization,
+`trust/baseline.eadl` holds one form per shared item, proposed or accepted (R7 5): the item, the pair of roots, its
+content, configuration, edges and file readers as proposed (R7 remark b), its classification — infrastructure, interpretation/normalization,
 semantic/analysis logic, authoritative data, or reference derivation (§4.4) — the property it can affect, its
 residual common-error risk, and the independent controls that remain (§14.4). The gate compares the inventory with
 it and reports the difference; a form the tool writes is a proposal, never an acceptance (§14.4).
@@ -235,11 +238,12 @@ consumed** (R3 C3–C9, C16). Each of these leaves carries its part in its accep
   (`decision_catalog-records.md` §4) — `M2.7.6.5`'s code-owner rule, in its acceptance (R4 1);
 - `M3.6.5`, blocked on the director: acceptance read by the gate per form, so the review of one form accepts that form
   alone, by an identity that authored neither the form nor any commit that changed its item since its last accepted
-  form — authorship being the identity the hosting authenticates, the pusher or a verified signature, and a commit
-  whose author cannot be established counting as authored by every identity (R6 10); the forms `M3.6.3` proposed
+  form, or, for a first acceptance, since the commit that proposed it — authorship being the identity the hosting
+  authenticates for the pull request that merged each commit, read as `M2.7.6` designs, or a verified signature, and a
+  commit whose author cannot be established counting as authored by every identity (R6 10; R7 7); the forms `M3.6.3` proposed
   accepted, not proposed again; the step Passed only on the baseline's host, with every root form, role package and
-  classification accepted, no program target unclassified, and every shared item accepted, and otherwise `Failed` on
-  a refusal or anything unaccepted, `Unavailable` off that host (R4 1, 2, 10; R5 7; R6 remark 13);
+  classification accepted, no program target unclassified, and every shared item accepted; otherwise, on that host,
+  `Failed`, and off it `Failed` on a refusal and `Unavailable` else (R4 1, 2, 10; R5 7; R6 remark 13; R7 6);
 - `M3.6.3`'s step: a runner action that runs the gate, `Failed` on a refusal and otherwise not built for the
   acceptance it lacks, owned by `M3.6.5`, so never Passed before it, whatever is shared (R4 11; R5 8); and `M3.6.3`
   commits, unaccepted, the proposed forms of today's shared items, the baseline's host, and the classifications of
@@ -273,8 +277,9 @@ leaves' (R2 B1, B10, B17; R3 C3).
 | `trust-new-shared` | reported | a shared item the base commit's baseline does not hold — a package, a file compiled or handed, a copy, a comparison harness, the build configuration | 1, and 3 for data |
 | `trust-shared-changed` | reported | an item whose content, configuration, edges or file readers differ from the base commit's form — a feature activated, a `cfg` set, an edition changed, a source edited, a new reader — though its name and version are unchanged | 2 |
 | `trust-unclassified-program` | reported | a program target `trust/roots.eadl` does not classify, or whose classification's role packages have grown (§2) | — |
-| `trust-baseline-stale` | refused, on the baseline's host | a baseline form whose item is no longer shared, or a classification whose program target is gone: removed, so a sharing removed and reintroduced, or a target re-added under an old name, is reviewed again (R1 A15; R3 C9; R5 remark 12) | — |
-| `trust-undeclared-input` | refused | a name not a blob of the commit, a symbolic link, a file whose bytes after the build are not its blob's, a `.rs` file the token rules cannot read, or a build script, procedural macro, native link input, `extern` block, `include!`, `#[path]` or assembler identifier in any `.rs` file a root's compilation read (§3) | 3 |
+| `trust-baseline-stale` | refused, on the baseline's host | a baseline form whose item is no longer shared, or a root form or classification whose package or program target is gone (R7 remark e): removed, so a sharing removed and reintroduced, or a target re-added under an old name, is reviewed again (R1 A15; R3 C9; R5 remark 12) | — |
+| `trust-undeclared-input` | refused | a name not a blob of the commit, a symbolic link, a file whose bytes after the build are not its blob's, or a site the catalog's rules refuse, in any `.rs` file a root or the harness compiles, with no admission (§3) | 3 |
+| `trust-form-missing` | refused, on the baseline's host | a current shared item, root, program target or refused site with no form, proposed or accepted, in the commit's own `trust/` — repaired by the tool's proposal, committed, so the base commit's forms always cover its inventory and case 5's change part is the commit's own (R7 4) | — |
 | `trust-shared-program` | refused | an executable root whose build compiles a role package of another role (§2) | — |
 | `trust-inventory-stale` | refused, at packaging | the inventory missing, its build identity not the package's commit and toolchain, an artifact's sha256 not the inventory's, the report not of that inventory, a result naming a program other than its role's inventoried artifact or the pair's harness, or a dependency handed to a root that its form does not declare by path and the inventory's sha256 | 4 |
 
@@ -291,7 +296,8 @@ purpose (R3 C15).
 
 **Case 5.** The gate compares shared items only — their content, configuration and edges — on the host the baseline
 names (§2), and "unchanged" is the change part of its report (the opening), measured against the base commit's
-forms, which `M3.6.3` first commits; the standing list, which holds every item until `M3.6.5` accepts it, is no
+forms, which `M3.6.3` first commits and `trust-form-missing` keeps whole, so a merged sharing cannot leave a later,
+unrelated commit to report it (R7 4); the standing list, which holds every item until `M3.6.5` accepts it, is no
 warning (R5 3; R6 5, 6, remark 15). A change outside every root's packages and files changes the build identity — the commit's tree hash
 always, `Cargo.lock`'s when a package is added — which the inventory records and the gate does not compare, so it
 reports "unchanged", with no warning (R1 A13). A new package with no program target is such a change; one with a
@@ -310,6 +316,8 @@ code and nothing else.
   unfiltered, since case 5 makes it silent on an unrelated change and a path-filtered required check would be left
   pending (R1 A16; R2 B17); and the package verifier of §6. The artifact package (`M4`) carries the inventory, the report and the
   trust build's artifacts.
+- **Built from the base commit:** the gate's own program is built from the base commit, as the catalog's checker is
+  (`M2.7.6`), so a pull request that changes the gate is judged by the gate it changes nothing of (R7 remark c).
 - **What it is not:** a proof of semantic independence. Different crate names do not establish independent
   derivation; a copy edited after copying, or a formula re-derived by hand, is not seen. The gate enforces disclosure
   and change control, and the classification and the controls are the reviewer's (§4.4). The gate reads
@@ -340,8 +348,9 @@ code and nothing else.
   reported. A comparison harness is named in its pair's form.
 - A shared item is accepted only by a reviewed baseline form, under §5's leaves; regenerating the baseline proposes,
   never accepts.
-- A build script, procedural macro, native link input or assembler directive (`global_asm!`, `asm!`, `naked_asm!`)
-  in a root's closure needs a leaf that designs its coverage first (§3; R3 C1).
+- A site the catalog's rules refuse in a root's or the harness's `.rs` files — an assembler macro, an `extern` block,
+  `include!`, `#[path]`, `#[no_mangle]`, a macro definition, a build script, a procedural macro — passes only by a
+  reviewed admission naming its file, rule and line (§3; R7).
 - Related: [[decision_zero-dependency-engine-core]], [[decision_findings-for-director-review]] (§11),
   [[decision_catalog-records]].
 
@@ -360,3 +369,4 @@ that the baseline cannot be accepted by its author; every finding answered here.
 | 4 | 20 | 11 (D1, `M2.7.6.5` with no acceptance, and "per form" given to a code-owner rule; D2, what an unclassified program or an unaccepted form costs carried by no leaf; D3, `M4.8`'s interim rule vacuous with nothing shared; D4, the harness built and inventoried by no rule; D5, `trust-shared-program` with no mechanism; D6, a file a shared package's macro makes both roots include; D7, the build configuration compared nowhere; D8, `M3.6.2` stale and its scan evaded by a renaming `use`; D9, generated sources handed to no leaf; D10, the step off the baseline's host; D11, the step's outcome decided here and not producible by the runner) | "not acceptable as it stands"; §1 re-measured, the normalised configuration stable across directories and toolchains, the harness buildable from the roots' units |
 | 5 | 16 | 10 (E1, the assembler scan's files unstated, an `include!` or `#[path]` target unscanned; E2, edges without the dependent, a new consumer unreported; E3, a form held but unaccepted hiding its item, or case 5 never silent; E4, a result's producer unchecked; E5, `M4.8` asking only that programs be classified; E6, runtime data handed but undeclared; E7, acceptance tied to the form's author, not the change's; E8, `M3.6.3`'s step unbuildable by the runner; E9, a refused build's inventory still packaged; E10, "closure grew" beside "role packages grown") | "not acceptable as it stands"; §1 re-measured, the harness's units identical to the roots', every renaming caught, the delegations carried bar four |
 | 6 | 15 | 10 (F1, a link-time symbol binding through an `extern` block, unseen; F2, a file one root compiles and another is handed; F3, a claim's subject a declared dependency; F4, a new reader of a shared package's file; F5, the change part measured against forms the commit writes, root forms outside it; F6, the first baseline in the blocked leaf, so case 5 never silent; F7, data tokenised, refusing the generator's kind modules, on round 5's false premise; F8, packaging never failing on `trust-verify`; F9, the report unbound to its build; F10, authorship not an authenticated identity) | "not acceptable as it stands"; §1 re-measured, the harness's units identical, the reused code as the record says, every delegation carried as worded bar one |
+| 7 | 18 | 8 (G1, a macro assembling `#[path]` onto a non-`.rs` file, scanned by nothing; G2, a `#[no_mangle]` interposing `memcmp` in the harness; G3, the harness's development edges outside every refusal; G4, a merged sharing without its form leaving later commits to report it; G5, the baseline described as accepted forms only; G6, the off-host outcome read two ways; G7, a first acceptance's window unanchored; G8, the host read from the wrong commit) | "not acceptable as it stands"; §1 re-measured, the subset spared today's roots, the delegations carried bar two |

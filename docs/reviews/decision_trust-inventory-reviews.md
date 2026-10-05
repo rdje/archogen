@@ -208,3 +208,33 @@ review-answers card, a justification resting on a charge never checked.
 | F13 — the step after `M3.6.5` when not Passed | no | `M3.6.5`: `Failed` on a refusal or anything unaccepted, `Unavailable` off the host |
 | F14 — a non-root package's profile override trips every pair | no | §3: profile tables that apply to a root's units |
 | F15 — "(§0)" dangling | no | "the opening" |
+
+**Round 7**, `2026-10-05`, a new context that had not read rounds 1 to 6, which built a `git archive` copy and three
+scratch workspaces and ran the catalog's tokenizer, limited to the record's subset, over the real roots. It confirmed
+§1, that the subset spared today's roots, and every delegation carried bar two. There were 18 findings, 8 of them
+defects, and the verdict was "not acceptable as it stands". Defects per round: 11, 12, 16, 11, 10, 10, 8. For the
+fifth round running, a reader found a channel the hand-built subset of refusals admitted. That is the defect seen from
+the right angle: an enumeration of forbidden constructs is never complete. The answer applies the catalog's rules
+whole, default-deny, and admits by review only the sites today's roots need — 13, measured with the catalog's own
+`scan` over every compiled `.rs` file.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| G1 — `macro_rules!` assembling `#[path]` onto `evil.txt`, compiled as Rust and never scanned; an `extern` block and an `.incbin` inside (measured) | yes | §3: the catalog's rules whole, `macro_rules` and `macro` refused; default-deny with admissions |
+| G2 — a reference package's `#[no_mangle] memcmp` taking over the implementation's comparison in the harness (measured) | yes | §3: `no_mangle` refused, the wasm module's three exports admitted by review |
+| G3 — a procedural macro on the harness's development edge runs during the trust build (measured) | yes | §3, `M3.6.2`: every refusal over the harness's closure with development edges followed |
+| G4 — a merged sharing without its form leaves every later commit to report it, against case 5 | yes | §6: `trust-form-missing`, refused on the host; `M3.6.3`'s unrelated-commit fixture |
+| G5 — the baseline described as accepted forms while `M3.6.3` commits proposed ones | yes | the opening and §5: proposed or accepted, accepted only as `M3.6.5` reads it |
+| G6 — the off-host outcome read two ways | yes | §5, `M3.6.5`: off the host, `Failed` on a refusal and `Unavailable` else |
+| G7 — a first acceptance's window unanchored; the pusher's source unnamed | yes | §5, `M3.6.5`: from the commit that proposed the form; the hosting's record of the merging pull request |
+| G8 — the host read from the commit's own baseline would let a commit turn its comparison off | yes | §2: the base commit's host; a host change in the change part; off-host "not compared" |
+| G9 — §5 restates the leaves' acceptance, two places to keep in step | no | `PROGRAM.52.2` moves §5 into the hand-off ledger |
+| G10 — file readers missing from a form's fields | no | §5: content, configuration, edges and file readers |
+| G11 — which commit the gate is built from | no | §7: the base commit, as the catalog's checker is |
+| G12 — `trust-shared-program` and the harness | no | §2: the harness apart |
+| G13 — a root form whose target is gone | no | `trust-form-missing` and `trust-baseline-stale` together cover it |
+| G14 — `M3.6.2`'s symbolic-link wording broader than §3's | no | `M3.6.2`: the rule is §3's, a name the dependency information holds |
+| G15 — How to apply omitted `extern`, `include!`, `#[path]` | no | rewritten: any refused site, by admission |
+| G16 — `M4.7` before `M2.21` | no | `M4.7`'s producer for the scheduling checker is the executable `M2.21` decides; ordered in `M4.7` |
+| G17 — subject against dependency decided by the pipeline | no | a stated gap: §3 lists what a root reads at run time that the pipeline does not hand it |
+| G18 — today's role packages unlisted | no | §2 lists them; `eadl-front` and `eadl-model` are no role's |

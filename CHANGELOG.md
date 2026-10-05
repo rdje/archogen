@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust-dependency gate made default-deny
+
+`ARCHOGEN-M3-0428` (leaf `M3.6.1`, step 8).
+
+- For five reviews in a row, a reader found one more way for code or data to slip into a program unseen, past a
+  hand-built list of forbidden constructs. The list was the problem: the gate now applies the catalog's complete
+  rules and admits, by review, only the exact lines today's programs need — thirteen, measured. Anything else is
+  refused before anyone has to find it.
+
 ## archogen — the substitutability relation's sixteenth review: three defects
 
 `ARCHOGEN-M3-0427` (leaf `M3.1.1`, step 17).
