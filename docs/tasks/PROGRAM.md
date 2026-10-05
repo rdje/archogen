@@ -719,6 +719,19 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM.52.2`
   Status: `done` — sealed in [`PROGRAM/PROGRAM.52.md`](../task-history/PROGRAM/PROGRAM.52.md); commit `ARCHOGEN-PROGRAM-0429`
 
+- ID: `PROGRAM.53`
+  Status: `pending`
+  Goal: a ticked NO REGRESSION box that cites a test run is backed by a run made on the tree it is committed with —
+  measured, not remembered.
+  Reproduce / issue: found `2026-10-05` by `M3.6.2.1`. `M3.6.2`'s box read `make focused` → `tier focused: passed — 3
+  passed, 0 failed`; the session's only run before its commit `ARCHOGEN-M3-0432` was at 08:08, and the file that
+  broke `eadl-front`'s population test, `trust/roots.eadl`, was written at 08:27. The doctrines run no test suite, so
+  nothing at commit time compares a cited run with the tree. CI runs the suite only after a push.
+  Direction, to be designed in this leaf: `make focused` writes a stamp in `target/` naming the tree it ran on (the
+  working tree's own tree id, through a temporary index) and its verdict; `TASK-ACCEPTANCE` refuses a ticked box that
+  cites `make focused` when the staged tree has no passing stamp. Open: how unstaged changes beside the staged ones are
+  handled, and a stamp's relation to a tier other than `focused`.
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does

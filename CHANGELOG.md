@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust configuration's place in the conformance suite
+
+`ARCHOGEN-M3-0433` (leaf `M3.6.2.1`).
+
+- `trust/roots.eadl`, added by the previous commit, broke a test: every description in the repository must be either
+  in the language's conformance suite or excluded from it with a reason, and this one was neither. It is now
+  excluded, since it configures the trust gate rather than describing a system. The previous commit's record said
+  the full test tier passed, but that run came before the file existed. The record is corrected, and a leaf is filed
+  for a check that ties a cited run to the tree it is committed with.
+
 ## archogen — the trust gate's measuring instrument
 
 `ARCHOGEN-M3-0432` (leaf `M3.6.2`).
