@@ -1097,6 +1097,54 @@ fn every_requires_a_side_writes_is_read() {
 }
 
 #[test]
+fn one_value_in_several_spellings_on_a_side_is_one_value() {
+    // R27 1: the side's equalities compare equal, and the bound is decided through the spelling that compares; any
+    // comparison that refuses proves a contradiction, whatever else overflows.
+    let e1 = "(delivery-bound (exactly 0.000000000000000000001 s))";
+    let e2 = "(delivery-bound (exactly 0.000000000001 ns))";
+    let b = "(delivery-bound (at-most 0.000000000009000000000000000001 ns))";
+    let tight = "(delivery-bound (at-most 0.0000000000005 ns))";
+    let code = |items: &[&str]| match clause(&format!("(requires {})", items.join(" "))) {
+        Ok(c) => format!("read {}", c.len()),
+        Err(NotJudged::Invalid(_)) => "invalid".to_string(),
+        Err(NotJudged::Unsupported(_)) => "unsupported".to_string(),
+        Err(NotJudged::NotAFact) => "not a fact".to_string(),
+    };
+    for items in [
+        [e1, e2, b],
+        [e1, b, e2],
+        [e2, e1, b],
+        [e2, b, e1],
+        [b, e1, e2],
+        [b, e2, e1],
+    ] {
+        assert_eq!(code(&items), "read 3", "{items:?}");
+    }
+    assert_eq!(code(&[e1, b]), "unsupported", "no spelling compares");
+    for items in [[e1, e2, tight], [tight, e1, e2]] {
+        assert_eq!(code(&items), "invalid", "a refusal proves it: {items:?}");
+    }
+}
+
+#[test]
+fn a_clause_written_as_an_offer_is_refused() {
+    // R27 2: a clause where an offer stands would hold constraints, or name facts, that nothing reads.
+    for text in [
+        "(defblock b (offers (requires (tick-unit ns) (tick-unit us))))",
+        "(defblock b (offers (needs uart)))",
+        "(defblock b (offers (uses console.write)))",
+        "(defservice s (requires (uart true)) (offers (requires (tick-unit us))))",
+    ] {
+        assert!(read_service(&forms(text)[0]).is_err(), "{text}");
+    }
+    assert!(read_provider(&forms("(defblock b (offers (requires (tick-unit ns))))")[0]).is_err());
+    assert_eq!(
+        read_provider(&forms("(defblock b (offers requires))")[0]).map(|_| ()),
+        Ok(())
+    );
+}
+
+#[test]
 fn a_list_inside_needs_uses_or_absent_is_refused_whatever_its_head() {
     // R26 1: what follows a list's head would be dropped — a constraint, or a value, never judged.
     let side = |t: &str| read_side(&forms(t)[0]);

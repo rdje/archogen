@@ -1,6 +1,8 @@
 //! A requirement read from what a side writes: a constraint inside `requires`, a fact named in `needs`, and what
 //! `uses` may not name (record §1's definitions, §8).
 
+use std::collections::BTreeSet;
+
 use eadl_front::Form;
 
 use super::value::{self, Value};
@@ -394,8 +396,10 @@ fn read_items<'a>(
 /// Refuse constraints of one clause on one fact that no value satisfies together — contradictory requirements, which
 /// `ROADMAP.md` §5.3 rejects rather than choosing one (record §3 rules 5, 6; §8; R19 2, remark 8): a statement written
 /// with two values, two equalities that differ, or an equality another constraint on its fact refuses. Two bounds in
-/// the fact's own direction never contradict. Where no pair clashes and deciding one is past the exact arithmetic, the
-/// clause is `unsupported-profile` (§2; R20 2), whatever order its constraints are written in.
+/// the fact's own direction never contradict. Any comparison that refuses proves a contradiction, whatever else
+/// overflows; the constraints hold together when the equalities compare equal — one value in several spellings — and
+/// that value meets each bound by some spelling whose comparison does not overflow, as §5 decides an offer. What
+/// neither proves is `unsupported-profile` (§2; R20 2, R27 1), whatever order the constraints are written in.
 ///
 /// # Errors
 ///
@@ -432,47 +436,80 @@ pub fn check_clause(constraints: &[Requirement]) -> Result<(), NotJudged> {
         walk(r, &mut flat);
     }
     let mut past: Option<String> = None;
-    for (i, (f, d, v)) in flat.iter().enumerate() {
-        for (g, d2, w) in &flat[i + 1..] {
-            if f != g {
-                continue;
+    let facts: BTreeSet<&String> = flat.iter().map(|(f, _, _)| f).collect();
+    for f in facts {
+        let e = vocab::entry(f).expect("a constraint names a vocabulary fact");
+        let order: &[&str] = match e.domain {
+            Domain::Enumeration {
+                alternatives,
+                ordered: true,
+            } => alternatives,
+            _ => &[],
+        };
+        // What an equality admits: its value, a set's implied members joined (§1.1's `implies`).
+        let admitted = |x: &Value| match x {
+            Value::Set(s) => {
+                let mut s = s.clone();
+                s.extend(e.implies.iter().map(|m| (*m).to_string()));
+                Value::Set(s)
             }
-            let e = vocab::entry(f).expect("a constraint names a vocabulary fact");
-            let order: &[&str] = match e.domain {
-                Domain::Enumeration {
-                    alternatives,
-                    ordered: true,
-                } => alternatives,
-                _ => &[],
-            };
-            // What an equality admits: its value, a set's implied members joined (§1.1's `implies`).
-            let admitted = |x: &Value| match x {
-                Value::Set(s) => {
-                    let mut s = s.clone();
-                    s.extend(e.implies.iter().map(|m| (*m).to_string()));
-                    Value::Set(s)
-                }
-                _ => x.clone(),
-            };
-            let holds = match (*d == Direction::Exact, *d2 == Direction::Exact) {
-                (true, true) => value::same(&admitted(v), &admitted(w)),
-                (true, false) => value::satisfies(&admitted(v), w, *d2, order, e.implies),
-                (false, true) => value::satisfies(&admitted(w), v, *d, order, e.implies),
-                (false, false) => Ok(true),
-            };
-            let clash = match holds {
-                Ok(h) => !h,
-                Err(_) => {
-                    past.get_or_insert_with(|| f.clone());
-                    false
-                }
-            };
-            if clash {
-                return invalid(format!(
-                    "two constraints on `{f}` that no value satisfies together: contradictory requirements are \
-                     refused, never one chosen (§5.3)"
-                ));
+            _ => x.clone(),
+        };
+        let equalities: Vec<Value> = flat
+            .iter()
+            .filter(|(g, d, _)| g == f && *d == Direction::Exact)
+            .map(|(_, _, v)| admitted(v))
+            .collect();
+        let clash = || {
+            invalid(format!(
+                "two constraints on `{f}` that no value satisfies together: contradictory requirements are \
+                 refused, never one chosen (§5.3)"
+            ))
+        };
+        // The equalities: one value when those that compare make one class, in any spelling (§5; R27 1).
+        let mut class: Vec<usize> = (0..equalities.len()).collect();
+        fn root(class: &mut [usize], i: usize) -> usize {
+            let mut r = i;
+            while class[r] != r {
+                r = class[r];
             }
+            class[i] = r;
+            r
+        }
+        for i in 0..equalities.len() {
+            for j in i + 1..equalities.len() {
+                match value::same(&equalities[i], &equalities[j]) {
+                    Ok(true) => {
+                        let (a, b) = (root(&mut class, i), root(&mut class, j));
+                        class[a] = b;
+                    }
+                    Ok(false) => return clash(),
+                    Err(_) => {}
+                }
+            }
+        }
+        let mut decided = (0..equalities.len())
+            .map(|i| root(&mut class, i))
+            .collect::<BTreeSet<_>>()
+            .len()
+            <= 1;
+        // Each bound against the value, met by any spelling that compares, refused by any that refuses.
+        for (_, d, w) in flat
+            .iter()
+            .filter(|(g, d, _)| g == f && *d != Direction::Exact)
+        {
+            let mut met = equalities.is_empty();
+            for v in &equalities {
+                match value::satisfies(v, w, *d, order, e.implies) {
+                    Ok(true) => met = true,
+                    Ok(false) => return clash(),
+                    Err(_) => {}
+                }
+            }
+            decided &= met;
+        }
+        if !decided {
+            past.get_or_insert_with(|| f.to_string());
         }
     }
     match past {

@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability design's twenty-seventh review
+
+`ARCHOGEN-M3-0452` (leaf `M3.1.1`, step 28).
+
+- The twenty-seventh reader found one defect: writing the same required value twice, in two units, could turn a
+  description that checks into one the arithmetic gives up on. A side's requirements are now read as an offer is:
+  one value in any spelling, any comparison that disproves them refused at once, and only what nothing decides left
+  as beyond the arithmetic. The checker now proves that writing a value again never undoes a verdict.
+
 ## archogen — the substitutability design's twenty-sixth review
 
 `ARCHOGEN-M3-0451` (leaf `M3.1.1`, step 27).

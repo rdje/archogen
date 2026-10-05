@@ -145,6 +145,15 @@ fn offered(item: &Form) -> Result<Option<(&'static vocab::Entry, Written)>, Refu
     let Some(head) = item_name(item) else {
         return refuse("offers", "an item of `offers` that names nothing — a number, a string, `()`, a list headed by none");
     };
+    // A clause written where an offer stands: its constraints, or the facts it names, would stand unread (R27 2).
+    if matches!(item, Form::List { .. })
+        && matches!(head, "requires" | "needs" | "uses" | "offers" | "absent")
+    {
+        return refuse(
+            head,
+            "a clause written as an item of `offers`, read by nothing",
+        );
+    }
     let Some(e) = vocab::entry(head) else {
         return Ok(None);
     };

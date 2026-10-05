@@ -923,6 +923,71 @@ fn code(r: &Result<Vec<Requirement>, NotJudged>) -> &'static str {
 }
 
 #[test]
+fn a_respelling_of_an_equality_changes_no_clause_s_code() {
+    // R27 1: one value in several spellings is one value on a side, as at a provider (§5). Every clause of up to three
+    // constraints from a pool of equalities, respellings and bounds — some past the arithmetic in another unit — keeps
+    // a decided code when an equality it holds is written again in another spelling: a spelling adds comparisons, so it
+    // may decide what was past the arithmetic, and never undoes a decision.
+    let equalities = [
+        ["1 ms", "1000000 ns", "0.001 s"],
+        [
+            "0.000000000001 ns",
+            "0.000000000000000000001 s",
+            "0.000000000000001 us",
+        ],
+        ["2 ms", "2000 us", "0.002 s"],
+    ];
+    let bounds = [
+        "1 ms",
+        "5 ms",
+        "0.5 ms",
+        "0.000000000009000000000000000001 ns",
+        "0.0000000000005 ns",
+        "0.0000000000000000000000000000001 ns",
+    ];
+    let mut pool: Vec<(String, Option<usize>)> = Vec::new();
+    for (k, spellings) in equalities.iter().enumerate() {
+        pool.push((
+            format!("(delivery-bound (exactly {}))", spellings[0]),
+            Some(k),
+        ));
+    }
+    for b in bounds {
+        pool.push((format!("(delivery-bound (at-most {b}))"), None));
+    }
+    let code_of = |items: &[&str]| {
+        code(&read_clause(
+            &forms(&format!("(requires {})", items.join(" ")))[0],
+        ))
+    };
+    let (mut clauses, mut decided) = (0usize, 0usize);
+    for i in 0..pool.len() {
+        for j in i..pool.len() {
+            for k in j..pool.len() {
+                let items = [pool[i].0.as_str(), pool[j].0.as_str(), pool[k].0.as_str()];
+                let before = code_of(&items);
+                for (_, class) in [&pool[i], &pool[j], &pool[k]] {
+                    let Some(class) = class else { continue };
+                    for respelt in &equalities[*class][1..] {
+                        let extra = format!("(delivery-bound (exactly {respelt}))");
+                        let after = code_of(&[items[0], items[1], items[2], extra.as_str()]);
+                        if before == "unsupported-profile" {
+                            decided += usize::from(after != before);
+                        } else {
+                            assert_eq!(after, before, "{items:?} with {extra}");
+                        }
+                        clauses += 1;
+                    }
+                }
+            }
+        }
+    }
+    println!(
+        "read {clauses} clauses with an equality written again in another spelling, {decided} decided by it"
+    );
+}
+
+#[test]
 fn a_clause_s_code_is_the_same_in_every_order_of_its_items() {
     // R21 2: the reader stopped at the first item it could not read, so the code hung on the order.
     let pool = [

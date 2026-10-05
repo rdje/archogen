@@ -591,3 +591,19 @@ round: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2, 2, 2, 3, 3, 3, 2, 1
 | X4 — every interval sample in `MHz` | no | two samples with endpoints in two units, judged against the oracle |
 | X5 — `SR-H16` refuses two distinct blocks that differ in one fact | no | conservative, never a wrong satisfaction; the ledger leaves the question and its recorded reason to `M3.4`, which round 24 widened to name this case |
 | X6 — 125 tracked descriptions against the record's 124 | no | re-counted: the new `trust/roots.eadl` names no vocabulary fact; the source line says so |
+
+**Round 27**, `2026-10-05`: a new context that had not read rounds 1 to 26 probed every case of `ROADMAP.md` §5.2,
+wrote its own oracle for rule 1, §4 and the counter's refusals from the record's words over 5250 providers (no
+disagreement), and read the model over 125 tracked files. Its defect came with a reproducer, which landed first as
+tests failing on the model as the round found it. There were 6 findings, 1 of them a defect, and the verdict was
+"not acceptable as it stands". Defects per round: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2, 2, 2, 3, 3,
+3, 2, 1, 2, 1.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| Y1 — one value in two spellings on a side, `(exactly 0.000000000000000000001 s)` and `(exactly 0.000000000001 ns)`, beside `(at-most 0.000000000009000000000000000001 ns)` it meets, was `unsupported-profile`: any overflowing pair was read as past the arithmetic | yes | rule 5: a refusing comparison proves a contradiction whatever else overflows; equalities that compare equal are one value, meeting each bound by any spelling that compares, as §5 decides an offer; a property holds that writing a value again never undoes a decision (330 clauses, 11 decided by it); mutations `model-side-spellings-not-one-value`, `model-side-bound-first-spelling-only`, `model-bound-clash-admitted` |
+| Y2 — a `requires` written as an item of `offers` stood unread | no | an item of `offers` that is a clause is `invalid-description`; mutation `model-clause-offer-admitted` |
+| Y3 — `SR-H16` refuses two blocks that differ in one fact | no | §10 states why: model §2 rule 1 reads presence description-wide; `(f false)` at one block beside an offer at another is two providers' two values |
+| Y4 — §2's boolean row omitted `(f (exactly false))` | no | added |
+| Y5 — the checker's oracle shares `eadl-model`'s arithmetic | no | by §2, comparisons are `eadl-model`'s, reviewed and mutation-tested there (`saturating-comparison`, among others); this round's own oracle, written apart, agreed over 5250 providers |
+| Y6 — no side of three constraints mixing spellings | no | Y1's property |

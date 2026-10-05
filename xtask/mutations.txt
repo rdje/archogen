@@ -1135,9 +1135,9 @@ test -p eadl-resolve
 expect killed
 why M3.1.1 round 20: whether a clause's constraints hold together, past the arithmetic, is `unsupported-profile`; ignored, a contradiction in two units was read without a word (§2, rule 5).
 from
-                        past.get_or_insert_with(|| f.clone());
+                past.get_or_insert_with(|| f.to_string());
 to
-                        let _ = &past;
+                let _ = &past;
 end
 
 mutation model-clause-unsupported-outranks-invalid
@@ -1247,9 +1247,19 @@ test -p eadl-resolve
 expect killed
 why M3.1.1 round 19: constraints of one clause on one fact that no value satisfies together are refused; admitted, a mediation statement written both ways passed and `SR-H8` let the adapter through (§3 rules 5, 6; §8).
 from
-                if clash {
+                        Ok(false) => return clash(),
+                        Err(_) => {}
+                    }
+                }
+            }
+            let mut decided = (0..equalities.len())
 to
-                if false {
+                        Ok(false) => {}
+                        Err(_) => {}
+                    }
+                }
+            }
+            let mut decided = (0..equalities.len())
 end
 
 mutation model-platform-name-lists-unread
@@ -1409,4 +1419,58 @@ from
 to
     pub fn read_uses(item: &Form) -> Result<(), NotJudged> {
         if false {
+end
+
+mutation model-bound-clash-admitted
+file crates/eadl-resolve/src/model/requirement.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 27: an equality a bound on its fact refuses is a contradiction, proved by that comparison whatever else overflows; admitted, `(exactly 0.000000000001 ns)` beside `(at-most 0.0000000000005 ns)` was read (§3 rule 5).
+from
+                        Ok(false) => return clash(),
+                        Err(_) => {}
+                    }
+                }
+                decided &= met;
+to
+                        Ok(false) => {}
+                        Err(_) => {}
+                    }
+                }
+                decided &= met;
+end
+
+mutation model-side-spellings-not-one-value
+file crates/eadl-resolve/src/model/requirement.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 27: equalities that compare equal are one value in several spellings; kept apart, a side holding one amount in `s` and in `ns` was `unsupported-profile` beside a bound it met (§3 rule 5, §5).
+from
+                            class[a] = b;
+to
+                            let _ = (a, b);
+end
+
+mutation model-side-bound-first-spelling-only
+file crates/eadl-resolve/src/model/requirement.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 27: a bound on a side is decided through any spelling of its fact's value that compares; through the first written alone, `(exactly 0.000000000000000000001 s)` before `(exactly 0.000000000001 ns)` left `(at-most 0.000000000009000000000000000001 ns)` undecided (§3 rule 5, §5).
+from
+                for v in &equalities {
+to
+                for v in equalities.iter().take(1) {
+end
+
+mutation model-clause-offer-admitted
+file crates/eadl-resolve/src/model/provider.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 27 remark 2: an item of `offers` that is a clause is refused, its contents read by nothing; admitted, `(offers (requires (tick-unit ns) (tick-unit us)))` hid a contradiction (§1, §8).
+from
+        if matches!(item, Form::List { .. })
+            && matches!(head, "requires" | "needs" | "uses" | "offers" | "absent")
+to
+        if false
+            && matches!(head, "requires" | "needs" | "uses" | "offers" | "absent")
 end
