@@ -244,22 +244,6 @@ pub fn entry(name: &str) -> Option<&'static Entry> {
     VOCABULARY.iter().find(|e| e.name == name)
 }
 
-/// The group whose sub-facts include `name`, if any.
-#[must_use]
-pub fn group_of(name: &str) -> Option<&'static Entry> {
-    VOCABULARY
-        .iter()
-        .find(|e| matches!(e.domain, Domain::Group(subs) if subs.contains(&name)))
-}
-
-/// Whether `name` is read by some entry's rule — a required or optional input.
-#[must_use]
-pub fn read_by_rule(name: &str) -> Option<&'static Entry> {
-    VOCABULARY
-        .iter()
-        .find(|e| e.derived_from.contains(&name) || e.reads.contains(&name))
-}
-
 #[cfg(test)]
 mod tests {
     use super::{entry, VOCABULARY};

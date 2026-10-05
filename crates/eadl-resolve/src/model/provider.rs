@@ -161,14 +161,18 @@ fn declared_absent(item: &Form) -> Result<Option<&'static vocab::Entry>, Refused
     let Some(head) = item_name(item) else {
         return refuse("absent", "an item of `absent` that names nothing");
     };
+    // `absent` names a fact by its name alone; a list, whatever its head, would drop what follows it (R18 2, R26 1).
+    if matches!(item, Form::List { .. }) {
+        return refuse(
+            head,
+            "a list inside `absent`; `absent` names a fact by its name alone",
+        );
+    }
     let Some(e) = vocab::entry(head) else {
         return Ok(None);
     };
     if e.role == Role::Statement {
         return refuse(e.name, "a statement fact declared absent");
-    }
-    if matches!(item, Form::List { .. }) {
-        return refuse(e.name, "a list inside `absent` naming a vocabulary fact");
     }
     Ok(Some(e))
 }

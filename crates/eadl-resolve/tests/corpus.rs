@@ -1079,10 +1079,43 @@ fn every_requires_a_side_writes_is_read() {
         side("(defservice s (requires (requires (tick-unit ns))))").map(|c| c.len()),
         Ok(1)
     );
+    // R26 2: a clause of its own, with a verdict of its own; the side reads both.
     assert_eq!(
         clause("(requires (requires (tick-unit ns)) (needs uart))").map(|c| c.len()),
+        Ok(1)
+    );
+    let p = read_provider(&forms("(defblock p (offers (tick-unit ns)))")[0]).expect("reads");
+    let outer = &forms("(requires (tick-unit ns) (requires (counter-width 32 bit)))")[0];
+    let inner = &outer.items()[2];
+    assert!(clause_satisfied(&p, &read_clause(outer).expect("reads")));
+    assert!(!clause_satisfied(&p, &read_clause(inner).expect("reads")));
+    assert_eq!(
+        side("(defservice s (requires (tick-unit ns) (requires (counter-width 32 bit))))")
+            .map(|c| c.len()),
         Ok(2)
     );
+}
+
+#[test]
+fn a_list_inside_needs_uses_or_absent_is_refused_whatever_its_head() {
+    // R26 1: what follows a list's head would be dropped — a constraint, or a value, never judged.
+    let side = |t: &str| read_side(&forms(t)[0]);
+    for text in [
+        "(defservice time.user (requires (needs (time.monotonic (tick-unit us)))))",
+        "(defservice time.user (requires (uses (time.monotonic (requires (unambiguous-horizon (at-least 3600 s)))))))",
+        "(defservice s (requires (tick-unit ns)) (uses (time.monotonic (requires (tick-unit us)))))",
+        "(defsystem s (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses (time.deadline (supported-horizon (at-least 3600 s))))))",
+        "(defservice s (requires (needs (uart))))",
+    ] {
+        assert!(matches!(side(text), Err(NotJudged::Invalid(_))), "{text}");
+    }
+    for text in [
+        "(defblock b (absent (foo 5)))",
+        "(defservice s (absent (foo x)))",
+    ] {
+        assert!(read_service(&forms(text)[0]).is_err(), "{text}");
+    }
+    assert!(read_provider(&forms("(defblock b (absent (foo 5)))")[0]).is_err());
 }
 
 #[test]

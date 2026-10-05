@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the substitutability design's twenty-sixth review
+
+`ARCHOGEN-M3-0451` (leaf `M3.1.1`, step 27).
+
+- The twenty-sixth reader found two defects. A dependency written as a list — a service's name followed by a
+  requirement — silently dropped the requirement, so a horizon of an hour could go unchecked; a dependency or an
+  absence is now a plain name, and anything else is refused. And a requirement block nested inside another was
+  merged into it, though the design calls it a block of its own; it now gets its own verdict.
+
 ## archogen — the substitutability design's twenty-fifth review
 
 `ARCHOGEN-M3-0449` (leaf `M3.1.1`, step 26).

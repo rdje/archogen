@@ -44,7 +44,12 @@ pub enum NotJudged {
 }
 
 /// Why an operand of `needs` or `uses` that names nothing is refused (§8; R23 3).
-const NO_NAME_OPERAND: &str = "an operand of `needs` or `uses` is a name or a list headed by one";
+const NO_NAME_OPERAND: &str = "an operand of `needs` or `uses` is a name";
+
+/// Why a list operand of `needs` or `uses` is refused, whatever its head: what follows the head would be dropped, a
+/// value or a constraint never judged (§1, §8; R14 7, R26 1).
+const LIST_OPERAND: &str =
+    "a list inside `needs` or `uses`; an operand is a name, and a value or a constraint belongs in `requires`";
 
 /// Why an item of `requires` with no name at its head is refused (§1, §8; R22 1).
 const NO_HEAD: &str = "an item of `requires` is a name or a list headed by one";
@@ -195,32 +200,33 @@ pub fn read_constraint(item: &Form) -> Result<Requirement, NotJudged> {
 ///
 /// # Errors
 ///
-/// [`NotJudged::Invalid`] for a list naming a vocabulary fact, or a statement fact; [`NotJudged::NotAFact`] for a
-/// name that is not one.
+/// [`NotJudged::Invalid`] for anything but a name — a list whatever its head (R26 1) — or a statement fact;
+/// [`NotJudged::NotAFact`] for a name that is not one.
 pub fn read_needs(item: &Form) -> Result<Requirement, NotJudged> {
+    if matches!(item, Form::List { .. }) {
+        return invalid(LIST_OPERAND);
+    }
     let Some(head) = head_of(item) else {
         return invalid(NO_NAME_OPERAND);
     };
     let Some(e) = vocab::entry(head) else {
         return Err(NotJudged::NotAFact);
     };
-    if matches!(item, Form::List { .. }) {
-        return invalid(
-            "a list inside `needs` naming a vocabulary fact; a value belongs in `requires` (R14 7)",
-        );
-    }
     if e.role == Role::Statement {
         return invalid("a `needs` of a statement fact (§3 rule 6)");
     }
     Ok(Requirement::Presence(e.name.to_string()))
 }
 
-/// Judge one operand of a `uses`: a vocabulary fact, bare or as a list, is refused (§1; R15 1).
+/// Judge one operand of a `uses`: a vocabulary fact is refused (§1; R15 1), and a list whatever its head (R26 1).
 ///
 /// # Errors
 ///
-/// [`NotJudged::Invalid`] when it names a vocabulary fact.
+/// [`NotJudged::Invalid`] when it is a list, names a vocabulary fact or names nothing.
 pub fn read_uses(item: &Form) -> Result<(), NotJudged> {
+    if matches!(item, Form::List { .. }) {
+        return invalid(LIST_OPERAND);
+    }
     match head_of(item) {
         Some(head) if vocab::entry(head).is_some() => {
             invalid("a `uses` naming a vocabulary fact; a fact is needed, never used")
@@ -243,17 +249,15 @@ pub fn read_declaration_name(name: &str) -> Result<(), NotJudged> {
     }
 }
 
-/// The `requires` clauses and the `needs` and `uses` lists inside `form`, itself included, at any depth, never looking
-/// inside a `needs` or a `uses` — where presence reads `needs` and `uses` (`eadl_model::presence::FactMap::collect`;
-/// record §1, §3 rules 3, 5; R23 1, R24 1).
+/// The `needs` and `uses` lists and the `requires` clauses among the items of `form`, at any depth, never looking
+/// inside one of them — where presence reads `needs` and `uses` (`eadl_model::presence::FactMap::collect`), a
+/// `requires` nested anywhere being a clause of its own (record §1, §3 rules 3, 5; R23 1, R24 1, R26 2).
 fn walk<'a>(form: &'a Form, clauses: &mut Vec<&'a Form>, lists: &mut Vec<&'a Form>) {
-    match form.head() {
-        Some("needs" | "uses") => lists.push(form),
-        head => {
-            if head == Some("requires") {
-                clauses.push(form);
-            }
-            for item in form.items().iter().skip(1) {
+    for item in form.items().iter().skip(1) {
+        match item.head() {
+            Some("needs" | "uses") => lists.push(item),
+            Some("requires") => clauses.push(item),
+            _ => {
                 if matches!(item, Form::List { .. }) {
                     walk(item, clauses, lists);
                 }
@@ -262,24 +266,41 @@ fn walk<'a>(form: &'a Form, clauses: &mut Vec<&'a Form>, lists: &mut Vec<&'a For
     }
 }
 
-/// Every `requires` clause and every `needs` and `uses` one side writes: at any depth of every clause headed by a name
-/// but `offers`, `absent` and `refines` — a system's `platform` and its tasks among them — the positions presence
-/// reads, so no fact enters the closure that the relation does not read, and no constraint stands where it is not read
-/// (record §1; R23 1, R24 1, R24 3).
-fn side_parts(decl: &Form) -> (Vec<&Form>, Vec<&Form>) {
-    let (mut clauses, mut lists) = (Vec::new(), Vec::new());
-    for c in decl.items().iter().skip(1) {
-        if !matches!(c.head(), None | Some("offers" | "absent" | "refines")) {
-            walk(c, &mut clauses, &mut lists);
-        }
-    }
-    (clauses, lists)
+/// One clause's own items — its constraints and the `needs` and `uses` inside them — with the `requires` clauses nested
+/// in it pushed to `nested`, never read as its own (record §3 rule 5; R26 2).
+fn clause_own<'a>(clause: &'a Form, nested: &mut Vec<&'a Form>) -> Vec<&'a Form> {
+    let mut lists = Vec::new();
+    walk(clause, nested, &mut lists);
+    constraint_items(clause).chain(lists).collect()
 }
 
-/// Every `needs` and `uses` one side writes, at [`side_parts`]' positions.
+/// Every item one side writes: the own items of every `requires` clause and every `needs` and `uses` at any depth of
+/// every clause headed by a name but `offers`, `absent` and `refines` — a system's `platform` and its tasks among them
+/// — the positions presence reads, so no fact enters the closure that the relation does not read, and no constraint
+/// stands where it is not read (record §1; R23 1, R24 1, R24 3, R26 2).
+fn side_items(decl: &Form) -> Vec<&Form> {
+    let (mut clauses, mut items) = (Vec::new(), Vec::new());
+    for c in decl.items().iter().skip(1) {
+        match c.head() {
+            None | Some("offers" | "absent" | "refines") => {}
+            Some("needs" | "uses") => items.push(c),
+            Some("requires") => clauses.push(c),
+            Some(_) => walk(c, &mut clauses, &mut items),
+        }
+    }
+    while let Some(c) = clauses.pop() {
+        items.extend(clause_own(c, &mut clauses));
+    }
+    items
+}
+
+/// Every `needs` and `uses` one side writes, at [`side_items`]' positions.
 #[must_use]
 pub fn side_name_lists(decl: &Form) -> Vec<&Form> {
-    side_parts(decl).1
+    side_items(decl)
+        .into_iter()
+        .filter(|i| matches!(i.head(), Some("needs" | "uses")))
+        .collect()
 }
 
 /// The constraint items of a `requires` clause: its items but the `needs` and `uses` lists and the `requires` clauses
@@ -292,28 +313,18 @@ fn constraint_items(clause: &Form) -> impl Iterator<Item = &Form> {
         .filter(|i| !matches!(i.head(), Some("needs" | "uses" | "requires")))
 }
 
-/// The constraints of `clauses` and the `needs` and `uses` of `lists`, read together.
-fn read_parts<'a>(
-    clauses: &[&'a Form],
-    lists: Vec<&'a Form>,
-) -> Result<Vec<Requirement>, NotJudged> {
-    let items: Vec<&Form> = clauses.iter().flat_map(|c| constraint_items(c)).collect();
-    read_items(items.into_iter().chain(lists))
-}
-
-/// Read a `requires` clause, its every item, and every `requires`, `needs` and `uses` inside it, then [`check_clause`]
-/// (record §3 rule 5).
+/// Read one `requires` clause — its own constraints and every `needs` and `uses` inside them, a `requires` nested in it
+/// being a clause of its own with a verdict of its own — then [`check_clause`] (record §3 rule 5; R26 2).
 ///
 /// # Errors
 ///
 /// As [`read_side`].
 pub fn read_clause(clause: &Form) -> Result<Vec<Requirement>, NotJudged> {
-    let (mut clauses, mut lists) = (Vec::new(), Vec::new());
-    walk(clause, &mut clauses, &mut lists);
-    read_parts(&clauses, lists)
+    let mut nested = Vec::new();
+    read_items(clause_own(clause, &mut nested))
 }
 
-/// Read one side of a declaration — every `requires` clause, `needs` and `uses` at [`side_parts`]' positions — whose
+/// Read one side of a declaration — every item at [`side_items`]' positions, every clause's together — whose
 /// constraints are checked together, since a contradiction split across two clauses is one (record §3 rules 5, 6;
 /// R21 1, R23 1, R24 1).
 ///
@@ -326,8 +337,7 @@ pub fn read_side(decl: &Form) -> Result<Vec<Requirement>, NotJudged> {
     if let Some(name) = decl.items().get(1).and_then(Form::as_symbol) {
         read_declaration_name(name)?;
     }
-    let (clauses, lists) = side_parts(decl);
-    read_parts(&clauses, lists)
+    read_items(side_items(decl))
 }
 
 /// Every item read, none abandoning the rest: a `uses` operand through [`read_uses`], a service's `needs` left to

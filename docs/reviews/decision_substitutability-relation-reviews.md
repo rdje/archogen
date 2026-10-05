@@ -576,3 +576,18 @@ were 6 findings, 1 of them a defect, and the verdict was "not acceptable as it s
 | W4 — a policy's side named like a fact read | no | `read_side` reads its declaration's name, whatever its kind; mutation `model-side-name-unread` |
 | W5 — a value whose own reading overflows never compared for two values | no | §5: it has no reading to compare, `unsupported-profile` beside one other value; two others that differ remain two values; no `/1` fact reaches it |
 | W6 — the order-free pool held no amount in two units of time | no | W1's property |
+
+**Round 26**, `2026-10-05`: a new context that had not read rounds 1 to 25 probed every case of `ROADMAP.md` §5.2,
+read the model over 125 tracked descriptions and ran `archogen check` beside it; every other rule matched its record
+sentence. Its two defects each came with reproducers, which landed first as tests failing on the model as the round
+found it. There were 6 findings, 2 of them defects, and the verdict was "not acceptable as it stands". Defects per
+round: 7, 7, 8, 3, 3, 3, 5, 1, 2, 8, 7, 8, 9, 9, 8, 3, 6, 2, 2, 2, 3, 3, 3, 2, 1, 2.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| X1 — a list operand of `needs` or `uses` headed by a service's name dropped what followed it: `(needs (time.monotonic (tick-unit us)))` read nothing, and a 3600 s horizon written so was never judged | yes | §1 and §8: `needs`, `uses` and `absent` take names alone, any list there `invalid-description`, the class closed; the grammar property holds list operands; mutations `model-needs-list-operand-admitted`, `model-uses-list-operand-admitted` |
+| X2 — a `requires` nested in a clause was folded into it, though §1 calls it a clause of its own | yes | rule 5: its constraints never the outer clause's, a verdict of its own; the side still reads every clause together; mutation `model-nested-clause-folded` |
+| X3 — `vocab::read_by_rule` and `group_of` used nowhere | no | deleted |
+| X4 — every interval sample in `MHz` | no | two samples with endpoints in two units, judged against the oracle |
+| X5 — `SR-H16` refuses two distinct blocks that differ in one fact | no | conservative, never a wrong satisfaction; the ledger leaves the question and its recorded reason to `M3.4`, which round 24 widened to name this case |
+| X6 — 125 tracked descriptions against the record's 124 | no | re-counted: the new `trust/roots.eadl` names no vocabulary fact; the source line says so |

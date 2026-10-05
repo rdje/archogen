@@ -1109,13 +1109,13 @@ mutation model-absent-list-read-as-name
 file crates/eadl-resolve/src/model/provider.rs
 test -p eadl-resolve
 expect killed
-why M3.1.1 round 18: `absent` names a fact; a value inside it read as the whole fact absent, an infeasibility the description never stated (§8).
+why M3.1.1 round 18: `absent` names a fact by its name alone; a value inside it read as the whole fact absent, an infeasibility the description never stated (§8); round 26: a list there refused whatever its head.
 from
+        // `absent` names a fact by its name alone; a list, whatever its head, would drop what follows it (R18 2, R26 1).
         if matches!(item, Form::List { .. }) {
-            return refuse(e.name, "a list inside `absent` naming a vocabulary fact");
 to
+        // `absent` names a fact by its name alone; a list, whatever its head, would drop what follows it (R18 2, R26 1).
         if false {
-            return refuse(e.name, "a list inside `absent` naming a vocabulary fact");
 end
 
 mutation model-clause-uses-read-as-constraint
@@ -1157,9 +1157,9 @@ test -p eadl-resolve
 expect killed
 why M3.1.1 round 21: a side is every `requires` clause of a declaration; read one clause at a time, a contradiction split across two passed and `SR-H8` let the adapter through (rules 5, 6).
 from
-        let items: Vec<&Form> = clauses.iter().flat_map(|c| constraint_items(c)).collect();
+        while let Some(c) = clauses.pop() {
 to
-        let items: Vec<&Form> = clauses.iter().take(1).flat_map(|c| constraint_items(c)).collect();
+        if let Some(c) = clauses.pop() {
 end
 
 mutation model-side-needs-ignored
@@ -1168,9 +1168,9 @@ test -p eadl-resolve
 expect killed
 why M3.1.1 round 21: a side holds the `needs` its declaration writes; ignored, `(requires (uart false))` beside `(needs uart)` passed (rule 3, rule 5).
 from
-            Some("needs" | "uses") => lists.push(form),
+                Some("needs" | "uses") => items.push(c),
 to
-            Some("uses") => lists.push(form),
+                Some("uses") => items.push(c),
 end
 
 mutation model-bare-name-unread
@@ -1212,9 +1212,9 @@ test -p eadl-resolve
 expect killed
 why M3.1.1 round 22: a side reads its declaration's own `uses`, an operand naming a fact refused (§1).
 from
-            Some("needs" | "uses") => lists.push(form),
+                Some("needs" | "uses") => items.push(c),
 to
-            Some("needs") => lists.push(form),
+                Some("needs") => items.push(c),
 end
 
 mutation model-service-statement-admitted
@@ -1258,9 +1258,9 @@ test -p eadl-resolve
 expect killed
 why M3.1.1 round 23: a side reads every `needs` and `uses` presence reads, a system's `platform` clause among them; skipped, a fact entered the closure the relation never judged (§1, §3 rules 3, 5).
 from
-            if !matches!(c.head(), None | Some("offers" | "absent" | "refines")) {
+                None | Some("offers" | "absent" | "refines") => {}
 to
-            if !matches!(c.head(), None | Some("offers" | "absent" | "refines" | "platform")) {
+                None | Some("offers" | "absent" | "refines" | "platform") => {}
 end
 
 mutation model-nested-name-lists-unread
@@ -1311,11 +1311,11 @@ mutation model-nested-requires-unread
 file crates/eadl-resolve/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
-why M3.1.1 round 24: a `requires` is read wherever presence reads a `needs`, a system's `platform` clause and another `requires` among them; read at the declaration's own level only, `(platform (requires (tick-unit ns) (tick-unit us)))` passed (§1, §3 rule 5, `SR-H15`).
+why M3.1.1 round 24: a `requires` is read wherever presence reads a `needs`, a system's `platform` clause among them; read at the declaration's own level only, `(platform (requires (tick-unit ns) (tick-unit us)))` passed (§1, §3 rule 5, `SR-H15`).
 from
-        let (clauses, lists) = side_parts(decl);
+                Some(_) => walk(c, &mut clauses, &mut items),
 to
-        let (mut clauses, lists) = side_parts(decl); clauses.retain(|c| decl.items().iter().any(|d| std::ptr::eq(d, *c)));
+                Some(_) => walk(c, &mut Vec::new(), &mut items),
 end
 
 mutation model-nested-requires-read-as-constraint
@@ -1335,9 +1335,10 @@ test -p eadl-resolve
 expect killed
 why M3.1.1 round 24 remark 3: a clause headed by no name is skipped as presence skips it, so presence's closure is the oracle over every placement; read, `(5 (needs uart))` named a fact presence never reads (§1).
 from
-            if !matches!(c.head(), None | Some("offers" | "absent" | "refines")) {
+                None | Some("offers" | "absent" | "refines") => {}
 to
-            if !matches!(c.head(), Some("offers" | "absent" | "refines")) {
+                Some("offers" | "absent" | "refines") => {}
+                None => walk(c, &mut clauses, &mut items),
 end
 
 mutation model-first-spelling-only
@@ -1360,4 +1361,52 @@ from
             read_declaration_name(name)?;
 to
             let _ = read_declaration_name(name);
+end
+
+mutation model-requires-in-requires-unread
+file crates/eadl-resolve/src/model/requirement.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 24: a `requires` inside another is a clause of the side; dropped, `(requires (requires (tick-unit ns) (tick-unit us)))` passed (§1, §3 rule 5).
+from
+            items.extend(clause_own(c, &mut clauses));
+to
+            items.extend(clause_own(c, &mut Vec::new()));
+end
+
+mutation model-nested-clause-folded
+file crates/eadl-resolve/src/model/requirement.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 26: a `requires` nested in a clause is a clause with a verdict of its own; folded into the outer one, `(requires (tick-unit ns) (requires (counter-width 32 bit)))` was unsatisfied where its own constraint held (§3 rule 5).
+from
+        read_items(clause_own(clause, &mut nested))
+to
+        let mut items = clause_own(clause, &mut nested); while let Some(c) = nested.pop() { items.extend(clause_own(c, &mut nested)); } read_items(items)
+end
+
+mutation model-needs-list-operand-admitted
+file crates/eadl-resolve/src/model/requirement.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 26: an operand of `needs` is a name; a list headed by a service's name dropped what followed it, `(needs (time.monotonic (tick-unit us)))` read with nothing judged (§1, §8).
+from
+    pub fn read_needs(item: &Form) -> Result<Requirement, NotJudged> {
+        if matches!(item, Form::List { .. }) {
+to
+    pub fn read_needs(item: &Form) -> Result<Requirement, NotJudged> {
+        if matches!(item, Form::List { .. }) && head_of(item).and_then(vocab::entry).is_some() {
+end
+
+mutation model-uses-list-operand-admitted
+file crates/eadl-resolve/src/model/requirement.rs
+test -p eadl-resolve
+expect killed
+why M3.1.1 round 26: an operand of `uses` is a name; `(uses (time.monotonic (requires (tick-unit us))))` beside `(requires (tick-unit ns))` hid a contradiction (§1, §8).
+from
+    pub fn read_uses(item: &Form) -> Result<(), NotJudged> {
+        if matches!(item, Form::List { .. }) {
+to
+    pub fn read_uses(item: &Form) -> Result<(), NotJudged> {
+        if false {
 end

@@ -110,6 +110,9 @@ fn samples(domain: Domain) -> Vec<String> {
             "(range 50 MHz 300 MHz)",
             "10 MHz",
             "250 MHz",
+            // R26 remark 4: endpoints in two units, compared in the base unit (§2, §5).
+            "(range 1000 kHz 0.2 GHz)",
+            "(range 1 MHz 200000 kHz)",
         ]),
         Domain::Enumeration { alternatives, .. } => s(alternatives),
         Domain::Set(alternatives) => {
@@ -1187,6 +1190,35 @@ fn every_operand_and_item_names_something() {
             assert!(read_service(&forms(&decl)[0]).is_err(), "{decl}");
             read += 1;
         }
+    }
+    // R26 1: a list inside `needs`, `uses` or `absent`, whatever its head, would drop what follows it.
+    for l in [
+        "(time.monotonic (tick-unit us))",
+        "(time.monotonic (requires (tick-unit us)))",
+        "(time.monotonic)",
+        "(uart)",
+        "(foo 5)",
+    ] {
+        for clause in [
+            format!("(requires (needs {l}))"),
+            format!("(requires (uses {l}))"),
+        ] {
+            assert_eq!(
+                code(&read_clause(&forms(&clause)[0])),
+                "invalid-description",
+                "{clause}"
+            );
+            read += 1;
+        }
+        assert!(
+            read_provider(&forms(&format!("(defblock b (absent {l}))"))[0]).is_err(),
+            "{l}"
+        );
+        assert!(
+            read_service(&forms(&format!("(defservice s (absent {l}))"))[0]).is_err(),
+            "{l}"
+        );
+        read += 2;
     }
     for (clause, want) in [
         ("(requires (needs uart))", "read"),
