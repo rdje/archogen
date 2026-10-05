@@ -181,3 +181,30 @@ findings, 10 of them defects, and the verdict was "not acceptable as it stands".
 | E14 — "outside the tree" against "not a blob" | no | §3: not a blob of the commit, and each file's bytes after the build its blob's |
 | E15 — compiling a role package counted as running it | no | §2: counted; types or constants taken from a third package |
 | E16 — `link` refused inside any macro call | no | benign and absent today; the catalog's rule kept |
+
+**Round 6**, `2026-10-03`, a new context that had not read rounds 1 to 5. It built the five programs from a `git
+archive` copy with a fresh `CARGO_HOME`, built scratch workspaces for a link-time symbol binding and for a new reader of
+a shared package's file, and ran both a copy of the catalog's tokenizer limited to the record's subset and the
+catalog's own `scan` over the real roots. It confirmed §1, the harness's units identical to the roots', the reused code
+as the record describes it, and every delegation carried as worded bar one. There were 15 findings, 10 of them
+defects, and the verdict was "not acceptable as it stands". Defects per round: 11, 12, 16, 11, 10, 10. One defect was
+round 5's own answer, which asserted the roots use `include!` and `#[path]` without counting — the second habit of the
+review-answers card, a justification resting on a charge never checked.
+
+| Finding | Defect | Answer |
+| --- | --- | --- |
+| F1 — an `extern "Rust"` block in a reference package ran the implementation's `#[no_mangle]` function with no shared package, file or copy (measured) | yes | §3: link-time symbol binding refused, the catalog's `extern` rule in the subset; today's three `pub extern "C" fn` admitted |
+| F2 — a file one root compiles and another is handed, at one path, no shared item | yes | §4: one file bullet, compiled or handed, at one path or two |
+| F3 — a claim's subject, the description or the plan, cannot be a declared dependency | yes | §3, §6, `M4.7`, `M3.5`, `M4.2`: dependencies declared by path, subjects recorded with the claim |
+| F4 — a non-shared package starting to read a shared package's file unreported (measured) | yes | §4: each file of a package item carries its readers, compared |
+| F5 — the change part measured against forms the commit writes; root forms outside it | yes | the opening, §6: against the base commit's forms; a root form added, changed or removed in it |
+| F6 — the first baseline in the blocked leaf, so case 5 is never silent before the director acts | yes | §5, `M3.6.3`: the proposed forms, the host and today's classifications committed unaccepted; `M3.6.5` accepts them |
+| F7 — the catalog's tokenizer over data refuses the kind modules (measured); the roots use neither `include!` nor `#[path]` | yes | §3: `include` refused anywhere, `path` and `link` inside an attribute or one named by a metavariable — the catalog's macro-argument rule left out, since `eadl-front` and `rt-analysis` write `path` there; `.rs` files scanned, data hashed; round 5's premise corrected |
+| F8 — no leaf fails packaging on `trust-verify`; what an unaccepted item costs a package decided nowhere | yes | §5, `M4.7`: packaging runs `trust-verify` and fails on a refusal; nothing beyond `M4.8`'s `not-established` |
+| F9 — the report unbound to its build | yes | §6: the gate's report names the build identity and the inventory's and baseline's sha256; `trust-verify` refuses another's |
+| F10 — authorship free text | yes | §5, `M3.6.5`: the hosting's authenticated identity; an unestablished author counts as everyone |
+| F11 — the linker's version promised, not listed | no | §3: `cc --version`'s first line |
+| F12 — the harness's edges and pairing | no | §4: a `development` edge; paired with every root other than its pair's |
+| F13 — the step after `M3.6.5` when not Passed | no | `M3.6.5`: `Failed` on a refusal or anything unaccepted, `Unavailable` off the host |
+| F14 — a non-root package's profile override trips every pair | no | §3: profile tables that apply to a root's units |
+| F15 — "(§0)" dangling | no | "the opening" |

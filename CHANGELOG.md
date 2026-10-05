@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust-dependency gate's sixth review, answered
+
+`ARCHOGEN-M3-0424` (leaf `M3.6.1`, step 7).
+
+- The sixth reader showed a reference model could call its implementation's code through a link-time symbol without
+  sharing any package or file, which is now refused, and that the previous answer had assumed the programs use two
+  file-inclusion forms they do not use. Those forms are now refused, as the catalog refuses them, and only Rust
+  sources are scanned. What a change reports is now measured against the forms the commit started from, so
+  regenerating the baseline in the same commit hides nothing.
+
 ## archogen — the substitutability relation's fifteenth review, answered
 
 `ARCHOGEN-M3-0423` (leaf `M3.1.1`, step 16).
