@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate's measuring instrument
+
+`ARCHOGEN-M3-0432` (leaf `M3.6.2`).
+
+- `cargo xtask trust-inventory` builds each program whose independence a claim relies on from the commit's own
+  files, records everything its compiler read, and lists what any two of them share. It refuses, before anything
+  runs, a build script or any construct the catalog's rules refuse unless a reviewed admission names the exact line.
+  On this repository it finds no two programs sharing code and fourteen admitted lines; sixteen test repositories
+  show each way past reviewers found for code to slip in unseen now being caught.
+
 ## archogen — the substitutability design made executable
 
 `ARCHOGEN-M3-0431` (leaf `M3.1.1.1`).

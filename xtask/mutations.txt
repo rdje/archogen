@@ -862,3 +862,36 @@ from
 to
                         .map(Written::Value)
 end
+
+mutation trust-dev-edges-not-followed
+file xtask/src/trust.rs
+test -p xtask trust::tests
+expect killed
+why M3.6.2: the harness's development edges are followed (decision_trust-inventory.md §3; R7 3); without them a procedural macro on a development edge runs unrefused.
+from
+                    let followed = kind != "dev" || (p.role == "harness" && *from == p.package);
+to
+                    let followed = kind != "dev";
+end
+
+mutation trust-token-rules-skipped
+file xtask/src/trust.rs
+test -p xtask trust::tests
+expect killed
+why M3.6.2: default-deny — every refused site in a compiled .rs file needs an admission (§3; R7); with the scan skipped, every assembler, include, path and extern channel passes.
+from
+                    match refused_sites(blob) {
+to
+                    match Ok::<Vec<(usize, String)>, String>(Vec::new()) {
+end
+
+mutation trust-two-role-program-admitted
+file xtask/src/trust.rs
+test -p xtask trust::tests
+expect killed
+why M3.6.2: an executable root compiling another role's role package is refused (§2; R4 5).
+from
+                    if compiled.contains(rp) {
+to
+                    if compiled.contains(rp) && false {
+end

@@ -125,3 +125,4 @@
 0 - examples/s0-heartbeat/system-unsupported.eadl
 0 - examples/s0-heartbeat/system.eadl
 0 - targets/riscv-virt-up.eadl
+10 schema-unknown-kind trust/roots.eadl

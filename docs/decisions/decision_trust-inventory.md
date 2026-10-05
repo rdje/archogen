@@ -172,9 +172,13 @@ fn`, a non-ASCII identifier, a file that does not tokenize — applies to every 
 and to the comparison harness's closure with its development edges followed, since the harness is built from them (R7
 3); and a name in a unit's dependency information that is not a blob of the commit, or is a symbolic link, is
 refused. A site the rules refuse passes only when an **admission** in `trust/roots.eadl` names it — the file, the
-rule, and the sha256 of the line it stands on — reviewed as every form is (§5); an edit to that line, or a new site,
-is refused until a new admission is. Measured `2026-10-05` over the 55 `.rs` files today's roots and harness compile,
-the rules refuse 13 sites, each proposed as an admission: eight `include_str!` of data — the two kind modules
+rule, and the sha256 of the line it stands on, or, for a manifest rule, which has no line, of the whole manifest —
+reviewed as every form is (§5); an edit to that line or manifest, or a new site, is refused until a new admission
+is. A manifest rule is applied over each program's closure from `cargo metadata` before any build, so a build script
+or a procedural macro is refused before it runs (R2 B12). Measured `2026-10-05` by `cargo xtask trust-inventory`
+(`M3.6.2`) over the 55 `.rs` files today's roots and harness compile, the rules refuse 14 sites, each proposed as an
+admission: one manifest rule, the wasm module's `crate-type`, which builds the module a browser loads
+(`crates/archogen-wasm/Cargo.toml`, `ROADMAP.md` §10.4); eight `include_str!` of data — the two kind modules
 (`crates/archogen-api/src/lib.rs`), the profile page (`crates/eadl-model/src/profile.rs`), the roadmap
 (`crates/archogen-cli/src/spec.rs`) and four of S0's runtime templates (`crates/archogen-s0/src/emit.rs`); three
 `#[no_mangle]` on the wasm module's exports (`crates/archogen-wasm/src/lib.rs`); and two uses of the word `path` in an
@@ -240,7 +244,7 @@ that found each, are in the sections above and the review history:
 | --- | --- | --- |
 | `TI-H1` | `M2.7.6.5` | `.github/CODEOWNERS` owns `trust/` and the trust gate's code by owners the director named, so a change to either is approved only by an identity other than its author's, on the protected main line with the catalog's checks of `origin`, shown by `M2.7.6`'s scratch-branch tests. |
 | `TI-H2` | `M3.6.3` | `cargo xtask trust-gate` writes its report in two parts — the change against the base commit's forms, and the standing list of every shared item, root form, classification and admission not accepted — naming the build identity and the inventory's and the baseline's sha256. |
-| `TI-H3` | `M3.6.3` | This leaf commits, unaccepted, the proposed forms of today's shared items, the baseline's host, the classifications of today's non-root program targets and the admissions of today's 13 refused sites, so case 5's change part is empty before any acceptance exists. |
+| `TI-H3` | `M3.6.3` | This leaf commits, unaccepted, the proposed forms of today's shared items, the baseline's host and the classifications of today's non-root program targets, so case 5's change part is empty before any acceptance exists. |
 | `TI-H4` | `M3.6.3` | `trust-form-missing` refuses, on the baseline's host, a current shared item, root, program target or refused site with no form in the commit's own `trust/`, and an unrelated commit after a merged sharing reports "unchanged". |
 | `TI-H5` | `M3.6.3` | Off the baseline's host the gate applies every refusal but `trust-baseline-stale` and `trust-form-missing`, reports every shared item unreviewed, and says "not compared" in its change part. |
 | `TI-H6` | `M3.6.3` | The gate's program is built from the base commit, as the catalog's checker is. |
@@ -260,7 +264,7 @@ that found each, are in the sections above and the review history:
 | `TI-H20` | `M4.2` | The executable that runs the generator is classified in `trust/roots.eadl` as the generator's root with its fixed run-time data declared there by path, the description it generates from being a claim subject and not a dependency, unreviewed until accepted under `M3.6.5`. |
 | `TI-H21` | `M2.21` | `archogen analyze` gets an open owner and a program that is the root of the scheduling checker's role alone, decided before it is built, since as a subcommand of the `archogen` executable it would be refused as `trust-shared-program`. |
 | `TI-H22` | `M3.6.6` | Committed generated sources declare their generator and input, which become items of the inventory, with a case-3 fixture of a generated-source input on both sides of a pair and a design reviewed by a context that did not write it. |
-| `TI-H23` | `M3.6.2` | `cargo xtask trust-inventory` applies the catalog's manifest and token rules whole and unchanged over every `.rs` file a root or the harness compiles, following the harness's development edges, a refused site passing only by an admission naming its file, rule and line's sha256, and writes no inventory on any refusal. |
+| `TI-H23` | `M3.6.2` | `cargo xtask trust-inventory` applies the catalog's manifest and token rules whole and unchanged over every `.rs` file a root or the harness compiles, following the harness's development edges, a refused site passing only by an admission naming its file, rule and line's sha256, the manifest rules before any build, writes no inventory on any refusal, and commits `trust/roots.eadl`'s root forms and the admissions of today's 14 refused sites, unaccepted. |
 | `TI-H24` | `M3.6.2` | Every channel a review measured by hand is a fixture of the instrument's tests — an `.incbin` under each assembler macro, a renaming `use`, a macro-made include, a macro assembling `#[path]`, an `extern` block calling another package's `#[no_mangle]` function, a `#[no_mangle]` interposing `memcmp` in the harness, a procedural macro on a development edge, a new consumer edge, a new reader of a shared package's file, a profile edit, per-root against workspace-wide features, two checkout directories and two toolchains. |
 
 Until they land nothing is accepted, and every shared item is reported unreviewed (R2 B2; R3 C4, C5).

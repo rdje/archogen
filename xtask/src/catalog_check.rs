@@ -141,13 +141,13 @@ pub fn parse(args: &[&str]) -> Result<Mode, String> {
 }
 
 /// Git, run under §4's allowlist from `cwd`, in the repository git discovers from there.
-struct Git {
+pub(crate) struct Git {
     cwd: PathBuf,
     env: Vec<(&'static str, OsString)>,
 }
 
 impl Git {
-    fn at(cwd: &Path) -> Self {
+    pub(crate) fn at(cwd: &Path) -> Self {
         let mut env: Vec<(&'static str, OsString)> = Vec::new();
         for key in ["PATH", "HOME", "GIT_DIR", "GIT_INDEX_FILE", "GIT_WORK_TREE"] {
             if let Some(value) = std::env::var_os(key) {
@@ -175,7 +175,7 @@ impl Git {
     }
 
     /// Run git, taking its standard output as bytes.
-    fn bytes(&self, args: &[&str]) -> Result<Vec<u8>, String> {
+    pub(crate) fn bytes(&self, args: &[&str]) -> Result<Vec<u8>, String> {
         let output = self
             .command(args)
             .output()
@@ -190,7 +190,7 @@ impl Git {
         Ok(output.stdout)
     }
 
-    fn text(&self, args: &[&str]) -> Result<String, String> {
+    pub(crate) fn text(&self, args: &[&str]) -> Result<String, String> {
         let bytes = self.bytes(args)?;
         String::from_utf8(bytes)
             .map_err(|_| format!("`git {}` printed bytes that are not UTF-8", args.join(" ")))
@@ -269,14 +269,14 @@ impl Git {
 }
 
 /// One entry of a tree or index listing.
-struct Entry {
-    mode: String,
-    sha: String,
-    path: String,
+pub(crate) struct Entry {
+    pub(crate) mode: String,
+    pub(crate) sha: String,
+    pub(crate) path: String,
 }
 
 /// `git ls-tree -r -z --full-tree <commit>`'s entries.
-fn tree_entries(git: &Git, commit: &str) -> Result<Vec<Entry>, String> {
+pub(crate) fn tree_entries(git: &Git, commit: &str) -> Result<Vec<Entry>, String> {
     let out = git.bytes(&["ls-tree", "-r", "-z", "--full-tree", commit])?;
     let mut entries = Vec::new();
     for record in out.split(|&b| b == 0).filter(|r| !r.is_empty()) {
@@ -326,7 +326,7 @@ fn index_entries(git: &Git) -> Result<Vec<Entry>, String> {
 
 /// A tree from entries: every file of mode `100644` or `100755`, its bytes from its blob (§4's "tracked"); a
 /// symbolic link or a submodule entry under `catalog/` is refused, since no reader of the catalog may follow one.
-fn tree_of(git: &Git, entries: &[Entry]) -> Result<Tree, Failure> {
+pub(crate) fn tree_of(git: &Git, entries: &[Entry]) -> Result<Tree, Failure> {
     let mut files: Vec<&Entry> = Vec::new();
     for entry in entries {
         match entry.mode.as_str() {

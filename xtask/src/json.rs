@@ -60,6 +60,60 @@ struct Parser<'a> {
 /// # Errors
 ///
 /// The byte offset and what was expected there.
+/// Write `value` deterministically: object keys in order (a `BTreeMap`'s), no spaces, strings escaped as JSON
+/// requires — the form an inventory's hash is taken over (leaf `M3.6.2`).
+#[must_use]
+pub fn write(value: &Json) -> String {
+    let mut out = String::new();
+    write_into(value, &mut out);
+    out
+}
+
+fn write_into(value: &Json, out: &mut String) {
+    match value {
+        Json::Null => out.push_str("null"),
+        Json::Bool(b) => out.push_str(if *b { "true" } else { "false" }),
+        Json::Number(n) => out.push_str(n),
+        Json::Str(s) => {
+            out.push('"');
+            for c in s.chars() {
+                match c {
+                    '"' => out.push_str("\\\""),
+                    '\\' => out.push_str("\\\\"),
+                    '\n' => out.push_str("\\n"),
+                    '\r' => out.push_str("\\r"),
+                    '\t' => out.push_str("\\t"),
+                    c if (c as u32) < 0x20 => out.push_str(&format!("\\u{:04x}", c as u32)),
+                    c => out.push(c),
+                }
+            }
+            out.push('"');
+        }
+        Json::Array(items) => {
+            out.push('[');
+            for (i, item) in items.iter().enumerate() {
+                if i > 0 {
+                    out.push(',');
+                }
+                write_into(item, out);
+            }
+            out.push(']');
+        }
+        Json::Object(map) => {
+            out.push('{');
+            for (i, (k, v)) in map.iter().enumerate() {
+                if i > 0 {
+                    out.push(',');
+                }
+                write_into(&Json::Str(k.clone()), out);
+                out.push(':');
+                write_into(v, out);
+            }
+            out.push('}');
+        }
+    }
+}
+
 pub fn parse(text: &str) -> Result<Json, String> {
     let mut parser = Parser {
         bytes: text.as_bytes(),
