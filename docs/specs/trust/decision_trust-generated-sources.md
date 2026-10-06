@@ -2,7 +2,7 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-06`
-- **Status:** `active` — written `2026-10-06` by leaf `M3.6.6.1`; rounds 1 to 5 answered the same day; under review,
+- **Status:** `active` — written `2026-10-06` by leaf `M3.6.6.1`; rounds 1 to 6 answered the same day; under review,
   by a context that did not write it, until a round finds no defect (`decision_executable-design-reviews.md`)
 - **External sources:** [the pinned Rust toolchain](../../book/src/ledger.md#rust-toolchain) — rustc's dependency
   information, which, with a root's declared run-time data, is what the inventory knows of the files a program reads;
@@ -64,7 +64,7 @@ take, a clause twice, a missing or empty `generator`, a `command` or `reason` mi
 and these: a declared path twice; an entry twice in one clause; a
 file in both `generator` and `inputs`; a declared file that is its own form's generator or input; and, for a live form,
 a generator or input that is not a blob of the commit or is a symbolic link. A form that is not live is held to its
-syntax alone and is stale (§6), so a deleted file has one code, not two; a declared file that is a symbolic link is
+syntax alone and, unless a live form's chain holds it, is stale (§6), so a deleted file has one code, not two; a declared file that is a symbolic link is
 refused as every symbolic link a program reads is (the parent's §3).
 
 **Refused until `M3.6.6.4` decides them**, `trust-undeclared-input`, wherever the gate runs:
@@ -75,8 +75,7 @@ refused as every symbolic link a program reads is (the parent's §3).
 **A tool a script runs** — protoc, bindgen, an interpreter — is no generator file: it is the script's own dependency,
 believed (§8). So a file a tool wrote is declared with the script that ran the tool as its generator, and is then
 decided like any other; undeclared and marked it is refused (§3); unmarked it is judged as a plain file (§8). A file a tool writes outside any committed script, such as cargo writing `Cargo.lock`, has no admissible declaration
-naming what wrote it — one naming another file is a wrong declaration, believed (§8) — and is refused if a program
-reads it marked, and a plain file otherwise.
+naming what wrote it — one naming another file is a wrong declaration, believed (§8) — and is refused if a program reads it marked and no form declares it, and a plain file otherwise.
 
 A `defgenerated` form is a form of `trust/roots.eadl` like a root's: added, changed or removed against the base
 commit's, it is in the change part, as the parent's opening puts every root form and `trust_gate.rs`'s `root_forms`
@@ -91,7 +90,8 @@ neither whitespace nor inside a comment — holds, in any case, `@generated`, `d
 
 **The rule is stated as code:** `xtask/src/generated_header.rs` — `TABLE`, `syntax`, `header`, `marked` — with its
 corpus in its tests. Its comment syntax is by a file's exact name first, then by its extension in any case — what follows
-the name's last `.`, when a `.` comes after its first character, so a dotfile such as `.env` is read by its name. This
+the name's last `.`, when a `.` comes after its first character and something follows it, so a dotfile such as
+`.env` is read by its name and `foo.` has no extension. This
 table and the extensionless `#!` rule below are the whole of its reach; a test holds the table equal to the code's
 `TABLE`:
 
@@ -110,12 +110,15 @@ A file with no extension whose first line, after a byte-order mark, is a `#!` is
 alone — `<?xml` and then whitespace or `?` — may come before an `<!-- -->` file's comments; any other processing
 instruction is content. A `#!` first line is a comment where `#` is; in Rust it is one when rustc reads it as a
 shebang — unless what follows the `#!` is `[`, with Rust's `Pattern_White_Space` and plain comments skipped, block
-comments nesting and a line comment ending at a line feed, while a doc comment (`///`, `//!`, `/**`, `/*!`) ends the
-look-ahead — and it ends at a line feed, as rustc's does. **This is a fixture's result, not a sentence:** the test
-`the_shebang_rule_is_rustc_s` compiles each case with the pinned rustc, against a control whose unused function draws
-a warning, and holds `rust_shebang` to what rustc did; on rustc 1.95.0 a `#!` followed by `[` after a space, a plain
-block comment, a nested one, a plain line comment or U+200E is an inner attribute, and one followed by a doc comment or
-U+00A0 is a shebang. Any other line of a header ends at a line feed or a carriage return; an unclosed block comment runs
+comments nesting, a line comment ending at a line feed, and `////`, `/**/` and `/***` plain, while a doc comment
+(`///`, `//!`, `/**`, `/*!`) ends the look-ahead — and a Rust shebang ends at a line feed alone, as rustc's does; a `#`
+language's `#!` line ends as any of its lines. **This is a fixture's result, not a sentence:** the test
+`the_shebang_rule_is_rustc_s` compiles fifteen cases and a control with the pinned rustc, each written to compile
+under either reading — read as a shebang the line is skipped and the control's unused function draws its warning, read
+as an inner attribute `allow(dead_code)` silences it — so every case must compile and the warning alone decides, and
+`rust_shebang` is held to it. On rustc 1.95.0 a `#!` followed by `[` after a space, a plain block comment, a nested one,
+a plain line comment, `////`, `/**/`, `/***` or U+200E is an inner attribute; one followed by a doc comment or U+00A0,
+or by a path, is a shebang; and a shebang runs through a carriage return to the line feed. Any other line of a header ends at a line feed or a carriage return; an unclosed block comment runs
 to the end of the file. The
 corpus holds every case the reviews raised, each with its outcome. Where this text and the code differ, both are
 reviewed together; a case the corpus does not hold is added to it before it is decided.
@@ -165,11 +168,12 @@ program reads, once §2 admits it, is judged; for the harness, "other roles" mea
   computes them for every program target (§2: `cargo metadata`'s graph by normal edges, and an example's development
   edges too), the union of them when one file is the crate root of two targets — holding one of another role, it is
   refused, `trust-shared-program`. The target is also built, as the parent builds and checks a root (§3): the parent's
-  manifest and workspace rules over its closure by the same edges, before any build; `cargo build --release --locked
+  manifest and workspace rules over its closure by the same edges, before its own build; `cargo build --release --locked
   --offline --no-default-features -p <package>` with `--bin <name>`, `--example <name>` or, for a `cdylib`,
   `staticlib` or `dylib`, `--lib`, under the parent's environment; the catalog's token rules and admissions over every
-  `.rs` file it compiles, and the parent's refusals of what its units read; its record part of no pair, since it is no
-  root; a build that fails, the gate unable to judge, as a root's is. Every file that build reads is subject to §3 and
+  `.rs` file it compiles, and every refusal of the parent's §6 `trust-undeclared-input` row over its units; nothing of it recorded in
+the inventory but what §3 and the chain rule judge, and no artifact required of it; a build that fails, the gate unable
+to judge, as a root's is. A generator target that is itself a root is that root's own build. Every file that build reads is subject to §3 and
   to §2's chain rule, so a marked module compiled into the generator cannot pass unseen; a crate root that is not a
   `.rs` file is refused there, as the parent refuses one in any program's closure (R8 1);
 - a `.rs` file that is no program target's crate root — a library's, a test's, a module — is refused,
@@ -189,8 +193,10 @@ then reports.
 
 **A case this foresees.** `cargo xtask catalog-check --index --bless` writes `catalog/catalog.lock`, and `xtask`'s
 build compiles `crates/archogen-api`, the generator's; should the scheduling checker read the lock at run time, as
-`TI-H17`'s catalog records lead toward, its form declares it, and none of its generator files is one §5 refuses for the
-scheduling checker (`GS-H12`). A lock has no comment syntax, so undeclared it would not be recognised (§8): the obligation
+`TI-H17`'s catalog records lead toward, its form names every generator file that wrote it, each program target a
+script drives among them, and none of them is one §5 refuses for the scheduling checker (`GS-H12`). Today's `xtask`
+is refused, its classification's role packages holding `crates/archogen-api`, so the lock would need a writer outside
+both roles. A lock has no comment syntax, so undeclared it would not be recognised (§8): the obligation
 is carried by its leaf rather than left to the recogniser.
 
 ### 6. A declaration no program reads
@@ -202,7 +208,7 @@ not stale: it is part of §2's chain, whose refusal is its one code until `M3.6.
 
 ### 7. Case 5, and the parent's text
 
-A change outside every root, program target and provenance file reports "unchanged", as §14.4's case 5 asks
+A change outside every root, program target, provenance file and form of `trust/` reports "unchanged", as §14.4's case 5 asks
 ("outside the recorded roots and provenance"). An edit to a provenance file moves an item when two paired programs both
 hold or read it, and is otherwise "unchanged" like any file one side alone reads; an edit to a script no live form
 names as a generator or an input changes nothing. The parent says otherwise in places, each amended by a dated
@@ -211,6 +217,9 @@ clarification when the instrument lands (`GS-H8`):
 - §2's list of the forms `trust/roots.eadl` holds, and its definition of `trust-shared-program` — "a root whose build
   compiles a role package of another role … and the comparison harness compiling one of a role outside its pair" —
   which §5 joins with a generator file of another role;
+- §3's "Where it builds", its default-deny scope sentence — "every `.rs` file a root's compilation reads … and … the
+  comparison harness's closure" — and "A manifest rule is applied over each program's closure", each naming roots and
+  the harness alone, beside which §5 builds a generator's program target under the same rules;
 - §3's paragraph on generated sources; its list of what is recorded for each root, which gains provenance; and its
   sentence that `Cargo.lock` is recorded and is not part of the build configuration, which stands, beside this record's
   refusal of a marked file no form can declare;
@@ -233,12 +242,12 @@ these:
   script alone, escapes §5's refusal, and so does a tool a script runs. A wrong
   declaration is the review's to catch, reading the form and its command, which the standing list names and
   `M3.6.5` requires accepted; regenerating in CI is a check of its own, not this design's.
-- **A generated file the recogniser does not mark**, judged as a plain file — unless it has no extension and its first
-  line is a `#!`: one whose generator writes no marker;
-  one with no comment syntax the table names — a `.txt`, `.lock`, `.json` or `.csv`, a binary, a linker script, a
-  `.cs`, `.tsx`, `.jsx` or `.mjs`; one whose marker comes after content — a Markdown heading, YAML's `---`; one marked
+- **A generated file the recogniser does not mark**, judged as a plain file: one whose generator writes no marker; one
+  with no comment syntax the table names, unless it has no extension and its first line is a `#!` — a `.txt`, `.lock`,
+  `.json` or `.csv`, a binary, a linker script, a `.cs`, `.tsx`, `.jsx` or `.mjs`; one whose marker comes after content — a Markdown heading, YAML's `---`; one marked
   in a comment syntax the table does not read — a marker on a later line of Lua's `--[[ ]]`, SQL's `/* */`, GNU
-  assembler's `#` and `/* */`; a file whose name or extension the table does not hold.
+  assembler's `#` and `/* */`; a file whose name or extension the table does not hold, unless it has no extension and
+  its first line is a `#!`.
 - **A generator's own dependencies** — a script's interpreter, the modules its executable's build compiles beside its
   crate root — are not provenance files: a crate-root generator is hashed by its crate root alone, so an edit elsewhere
   in its build changes no item until its output is regenerated, which then does; that build's files are read for §3
@@ -261,13 +270,13 @@ Each obligation is one sentence, quoted word for word beside its identifier by t
 | `GS-H11` | `M3.6.6.2` | For each generator file §2 admits of each live form a program reads, each program target whose crate root it is, is built as §5 states, every file that build reads subject to §3 and to §2's chain rule, and is refused as `trust-shared-program` when its role packages, by the parent's §2 computation and their union for a crate root of two targets, hold one of a role other than the program's own — for the harness, other than its pair's two; a `.rs` file that is no program target's crate root is refused as `trust-undeclared-input`; and a file neither `.rs` nor a program target's crate root, lying by the innermost workspace member whose directory contains it in a role package of such a role, is refused as `trust-shared-program`. |
 | `GS-H4` | `M3.6.6.2` | A `defgenerated` form whose declared file no program reads, and that no live form's chain holds, is `trust-baseline-stale` on the baseline's host. |
 | `GS-H5` | `M3.6.6.2` | The instrument's tests hold a case-3 fixture of two roots whose differently-named generated sources share an input through two generators, and others for a generator shared over two inputs, a generator with no input, a data file one side reads that the other's generated source was made from, a copy matched by sha256, the harness, a third program, a script running a tool declared and decided, a chain refused, a marked module of a crate-root generator's build refused, a gitlink input refused, a marked file no form can declare refused, another role's program target and script refused as generator files, a library's crate root refused as one, a `defgenerated` form added, changed and removed in the change part, an edit to a declared generator reported and to an undeclared script "unchanged", and each refusal, each removed in turn by a catalogued mutation. |
-| `GS-H7` | `M3.6.6.2` | The gate's standing list names every `defgenerated` form, its change part every one added, changed or removed against the base commit's, and its report states the parent's §3 list of what the inventory does not see and §8's three exclusions. |
+| `GS-H7` | `M3.6.6.2` | The gate's standing list names every `defgenerated` form, its change part every one added, changed or removed against the base commit's, and its report states the parent's §3 list of what the inventory does not see and every exclusion §8 lists. |
 | `GS-H8` | `M3.6.6.2` | `decision_trust-inventory.md` gains a dated clarification amending each passage §7 lists to say what this record decides. |
 | `GS-H9` | `M3.6.5` | A `defgenerated` form is accepted per form as every form in `trust/` is, a change to it needs a new acceptance, and the assurance step's Passed requires every live form accepted. |
 | `GS-H10` | `M4.8` | A property resting on a role's independence is established only when every live `defgenerated` form reached, as §4 defines reaching, by a root of a role it rests on or by the comparison harness of a pair holding such a role is accepted, beside `TI-H16`'s conditions. |
-| `GS-H12` | `M2.7.5` | Should the scheduling checker read `catalog/catalog.lock` or any other generated file, that file is declared by a `defgenerated` form none of whose generator files §5 refuses for the scheduling checker. |
+| `GS-H12` | `M2.7.5` | Should the scheduling checker read `catalog/catalog.lock` or any other generated file, that file is declared by a `defgenerated` form naming every generator file that wrote it, each program target a script drives among them, none of which §5 refuses for the scheduling checker. |
 | `GS-H13` | `M3.6.6.4` | Each shape §2 refuses until this leaf — a chain, through a crate-root generator's own build too, and a generator or an input at or under a gitlink — and the tool a script runs that §8 believes, is declared with its provenance a shared item or refused with a reason, under a design reviewed by a context that did not write it. |
-| `GS-H6` | `M3.6.6.3` | The trust chapter states what a generated source must declare, how an undeclared one is recognised and what the recogniser does not reach, what is refused until `M3.6.6.4`, the new shared item and the new triggers in the chapter's codes table, and §8's three exclusions. |
+| `GS-H6` | `M3.6.6.3` | The trust chapter states what a generated source must declare, how an undeclared one is recognised and what the recogniser does not reach, what is refused until `M3.6.6.4`, the new shared item and the new triggers in the chapter's codes table, and every exclusion §8 lists. |
 
 ## Why
 
@@ -294,7 +303,7 @@ Each obligation is one sentence, quoted word for word beside its identifier by t
 - Generating a source a program reads: commit it with a marker in its first comment and its `defgenerated` form in the
   same commit; the gate on the baseline's host then asks for the proposed forms of any provenance two programs share.
 - `M3.6.6.2` implements §2–§8 against the hand-offs; `M3.6.6.3` puts it in the trust chapter; `M3.6.5`, `M4.8` and
-  `M2.7.5` take theirs; `M3.6.6.4` decides chains and vendored inputs, and whether a tool a script runs becomes
+  `M2.7.5` take theirs; `M3.6.6.4` decides chains, generators and inputs at or under a gitlink, and whether a tool a script runs becomes
   provenance.
 - Related: `decision_trust-inventory.md`, `decision_executable-design-reviews.md`.
 
@@ -310,3 +319,4 @@ answered here. The history is [`decision_trust-generated-sources-reviews.md`](..
 | 3 | `2026-10-06` | 12, and 8 remarks | answered by narrowing: one generator step decided, chains, tools and vendored inputs refused until `M3.6.6.4`; a generator judged by the parent's own computation of a program target's role packages; the recogniser's text and code agreed — a spaced shebang, nesting in Kotlin, Swift and Scala, a carriage return, an XML declaration, an extensionless script — and its reach stated, recall measured; the parent's amendment list completed; a hand-off to `M2.7.5` for the catalog lock |
 | 4 | `2026-10-06` | 9, and 6 remarks | every finding answered: a tool a script runs a believed dependency, not a refused shape; a crate-root generator built as a root, its build's files under §3 and the chain rule; the shebang look-ahead nesting and stopping at doc comments, measured on rustc 1.95.0; the table of comment syntax machine-read and held equal to the code's; the parent's `trust-shared-program` definition and per-root list added to the amendments; `program` and `generator file` kept apart |
 | 5 | `2026-10-06` | 9, and 9 remarks | every finding answered: §14.4's case 3 quoted verbatim; the shebang rule a fixture compiled with the pinned rustc; a generator's build stated as a command and its checks; the XML declaration alone skipped, rustc's whitespace and line end followed, dotfiles by name; one rule and one message for a chain, its upstream form not stale; a ledger row for `M3.6.6.4` |
+| 6 | `2026-10-06` | 7, and 10 remarks | every finding answered: the rustc fixture made discriminating — every case compiles, the warning decides, a line-feed case and the three plain-comment exceptions added; an extension's first character by its width, `foo.` decided; §2, §6 and §8 agreed; `GS-H12` naming every generator file, today's `xtask` refused for the lock; the parent's build-scope passages added to the amendments |

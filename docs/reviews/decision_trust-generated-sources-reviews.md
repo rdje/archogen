@@ -180,3 +180,32 @@ day: the code gained `.env` by name and the lockstep test failed until the recor
 | R5-16 | remark | "program" left for a generator's executable | §5's heading and §8 reworded |
 | R5-17 | remark | what a program reads depends on the host | §8 states it |
 | R5-18 | remark | the leaf's counts predated round 4 | cited from runs on the committed tree |
+
+**Round 6**, `2026-10-06`: the reviewer confirmed the three tests, every hand-off quoted, the census, the four marked
+files, the gitlink, `root_forms`, every quotation verbatim, the corpus's 58 cases, and that `rust_shebang` matches how
+rustc's lexer strips a shebang. There were 17 findings, 7 of them defects — the fewest yet. The weightiest was in round
+5's own answer: the rustc fixture scored a failed compile as a shebang, so for every case that expected one the other
+reading — a parse error — could not fail it, and the line-feed claim had no case (R6-6). The fixture now asks every case
+to compile, each written so that both readings compile and only the warning differs, and holds fifteen cases and a
+control, a line-feed case and the three plain-comment exceptions among them; round 5's row R5-4 counted "twelve cases",
+which were eleven and the control.
+
+| Finding | Class | What it found | The answer |
+| --- | --- | --- | --- |
+| R6-1 | defect | `GS-H6` and `GS-H7` said "§8's three exclusions"; §8 has four | both say "every exclusion §8 lists" |
+| R6-2 | defect | §8's extensionless exception was attached to the whole item | attached to the comment-syntax and name clauses alone |
+| R6-3 | defect | §2 made every non-live form stale; §6 exempts a chain's | §2: "unless a live form's chain holds it" |
+| R6-4 | defect | `extension` sliced the first byte, not the first character; `foo.` undecided | sliced by the first character's width; an empty extension is none; corpus cases `é.md`, `foo.` |
+| R6-5 | defect | §3 named `///` and `/**` doc comments without `////`, `/**/` and `/***` | §3 states the three; fixture and corpus cases, each an attribute |
+| R6-6 | defect | the fixture scored a failed compile as a shebang, so six assertions could not fail | every case must compile, the warning decides; the line-doc cases without the attribute line; a line-feed case |
+| R6-7 | defect | `GS-H12` let a wrapper script stand in for `xtask` | `GS-H12` names every generator file, each program target a script drives; §5: today's `xtask` is refused for the lock |
+| R6-r1 | remark | "before any build" would apply the rules before liveness is known | "before its own build" |
+| R6-r2 | remark | what a generator's build records, and its artifact | §5: nothing recorded but what §3 and the chain rule judge, no artifact required; a generator that is a root is its own build |
+| R6-r3 | remark | "refusals of what its units read" fell short of the parent's row | §5 cites §6's `trust-undeclared-input` row whole |
+| R6-r4 | remark | a tool-written file is refused only when undeclared | §2: "and no form declares it" |
+| R6-r5 | remark | a form's edit lies outside §7's three | §7: "and form of `trust/`" |
+| R6-r6 | remark | the module's comment was out of date | corrected |
+| R6-r7 | remark | "twelve cases" were eleven and a control | the leaf and this round say so |
+| R6-r8 | remark | `M3.6.6.4` said "vendored" | "at or under a gitlink", in the leaf and the record |
+| R6-r9 | remark | no corpus case for a marker in prose, nor a `#` language's carriage-return shebang | both added; §3 says a Rust shebang ends at a line feed, a `#` language's as any line |
+| R6-r10 | remark | three parent passages name roots and the harness alone | §7 lists them |
