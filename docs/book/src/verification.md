@@ -208,6 +208,12 @@ the tests that must catch it. The harness checks each step:
 A defect that does not even compile is a broken entry, never a "kill". A run that is interrupted
 leaves a marker, and the next run refuses to start until the file is restored.
 
+An entry can also break without anyone running it: the code it names moves, and its text is no longer there.
+One entry went that way when an import line gained a name, and the whole catalog then refused to run, unseen,
+until the next full run found it (leaf `PROGRAM.61`). So `cargo test` now applies every entry to its file in
+memory, with no build and no mutation, and fails naming any entry whose text its file does not hold exactly
+once. A change that moves an entry's code fails in the same commit, in the focused tier.
+
 One entry is expected to **survive**. S0's first oracle could not tell the hyperperiod (`lcm`) from
 the longest period (`max`), because all its fixtures were harmonic. That blind spot is kept as a
 reproduction you can run: the harmonic tests alone let the defect through, and the full suite

@@ -782,19 +782,32 @@ mdBook that is the director's window into the project.
   new file then still needs the build, but its absence from the record becomes visible at commit time.
 
 - ID: `PROGRAM.61`
-  Status: `pending` — filed `2026-10-06` by `M3.1.2.2`; next
+  Status: `done` — filed by `M3.1.2.2` and closed `2026-10-06`
   Goal: the mutation catalog runs whole again, and an entry whose source moved is refused at commit time rather
   than found by the next `extended` run.
   Reproduce / issue: `cargo xtask mutate` on `2026-10-06` → exit 2, *"`cli-reaches-the-engine-directly`: its `from`
   text occurs 0 time(s) in crates/archogen-cli/src/check_cmd.rs — it must occur exactly once"*, then *"1 broken
   entr(ies) — fix the catalog"*. So the `extended` tier's `mutation` step cannot pass.
-  Root cause: `git show f51bca9 -- crates/archogen-cli/src/check_cmd.rs` (`API.4.2`, `2026-09-30 05:10`) turned
-  `use archogen_api::{Closure, Request, Response};` into `use archogen_api::{Closure, Limits, Request, Response};`,
-  the line the entry matches. The tier runs the catalog; the commit path and CI run no part of it, so the entry has
-  been broken since, unseen.
-  Direction: the entry repointed at the line as it now reads; then a check cheap enough for the commit path, every
-  entry's `from` text occurring exactly once in its file, with no build, as a doctrine or a focused-tier step.
 
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — as above; the new test, run before the fix → `test result: FAILED`, naming
+    `cli-reaches-the-engine-directly` and nothing else.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: `git show f51bca9 -- crates/archogen-cli/src/check_cmd.rs` (`API.4.2`,
+    `2026-09-30 05:10`) turned `use archogen_api::{Closure, Request, Response};` into `use archogen_api::{Closure,
+    Limits, Request, Response};`, the line the entry matches. WHY: the catalog runs whole only in the `extended` tier,
+    and the commit path and CI run no part of it, so a moved text broke the run and nothing said so.
+  - [x] **FIX** — the entry repointed at the line as it now reads. In `xtask/src/mutation.rs`'s tests,
+    `every_entry_of_the_real_catalog_names_a_text_its_file_holds_once` parses the real catalog with the harness's own
+    `parse` and applies each entry in memory with its own `apply`, so no second reader of the format exists to drift;
+    it needs no build. `TOOLBOX.md`'s row says so, and its stale "~10 s" is now the measured figure.
+  - [x] **ADDRESSED (verified)** — the test → `test result: ok. 1 passed` after the fix, `FAILED` before;
+    `cargo xtask mutate --only cli-reaches-the-engine-directly` → `killed by
+    the_cli_judges_nothing_except_through_the_engine_api`; `cargo xtask mutate` → exit 0, *"mutate: OK — 152
+    mutation(s), each killed or surviving exactly as the catalog expects"*, in 177 s.
+  - [x] **NO REGRESSION** — `make focused` → `tier focused: passed — 3 passed, 0 failed`; `cargo test --all -q` →
+    1237 passed, 0 failed over 92 suites; the doctrine gate at commit.
+  - [x] **LOCKSTEP** — the book's verification chapter describes the check under the `mutation` step; `TOOLBOX.md`;
+    `CHANGELOG.md`.
 - ID: `PROGRAM.62`
   Status: `done` — filed and closed `2026-10-06`
   Goal: a tree's Current Frontier holds its frontier, not the closure narratives of leaves it sealed long ago, so
@@ -883,7 +896,7 @@ roadmap item X live?".
 | 2 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
 
 Both rows wait on something outside this repository's commits: `PROGRAM.34` on the director's yes, `PROGRAM.10` on
-the next push. The pending leaves beside them — `PROGRAM.53`, `.54`, `.60`, `.61` — are filed and owned. Every closed
+the next push. The pending leaves beside them — `PROGRAM.53`, `.54`, `.60` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and its full record is sealed under `docs/task-history/PROGRAM/`.
 
 ## Decisions
@@ -1018,6 +1031,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `2026-10-06` | `PROGRAM.57` | the trigger off the record's commit; a full inventory; each name looked up for an owner, a citation and its leaf's status; a residue census; the adopted policies' sources re-hashed; the provisioner, the focused tier, the whole suite and the gate, cold | 11 GB → 1.6 GB; twelve of twelve paths `gone`; 1 454 953 object files in `deps` → `PROGRAM.58`; sources unchanged; `already in place`; `passed — 3 passed`; 1 218 passed / 0 failed over 91 suites; all green |
 | `2026-10-06` | `PROGRAM.58` | the leak reproduced in a scratch crate under each mode; the `OSO` entries read with `nm -ap`; Cargo's and rustc's pages quoted; before and after on the real `target/debug`; the way back; the integration tier, Miri's arm, then the focused tier and the gate on the committed tree | +6 098 objects per relink → 0; `at ./src/main.rs:1:52` restored by the override; `passed — 12 passed, 0 quarantined`; the arm fired; all green |
 | `2026-10-06` | `PROGRAM.59` | two `git grep` censuses over the live documents, each hit read in context; the lifting commit's stat; `git log -L` on the book's lines; the censuses re-run; the book, the focused tier and the gate | four stale present-tense claims corrected, the dated history left; every remaining hit true; all green |
+| `2026-10-06` | `PROGRAM.61` | the new catalog test before and after the fix; the entry alone; the whole catalog; the focused tier and the suite | FAILED naming the one entry, then ok; killed; 152 as expected in 177 s; 1237 passed, 0 failed |
 | `2026-10-06` | `PROGRAM.62` | every closure a removed paragraph narrates looked up in its tree's Commit Log; the folder measured before and after; the stated order; the gate | 31 of 31 with a row; 819 056 → 786 004 bytes; OK; all green |
 
 ## Commit Log
@@ -1144,6 +1158,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.59` | `ARCHOGEN-PROGRAM-0459 (leaf PROGRAM.59)` | **no live document says the emulator is still quarantined**: `COMMIT.md` step 2, the book, a decision's "Today" and this tree's Blockers corrected six days after `M2.8.3.4` lifted the quarantine |
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0460 (leaf PROGRAM)` | **`PROGRAM.57`, `PROGRAM.58` and `PROGRAM.59` sealed**, their 3 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` would have grown 1 331 bytes over its 819 200-byte ceiling with `M3.1.2`'s decomposition |
 | `PROGRAM.62` | `ARCHOGEN-PROGRAM-0464 (leaf PROGRAM.62)` | **the frontiers hold the frontier**: `M1`'s and `PROGRAM`'s closure narratives removed, each closure's row checked present in its Commit Log; `docs/tasks/` 819 056 → 786 004 bytes |
+| `PROGRAM.61` | `ARCHOGEN-PROGRAM-0465 (leaf PROGRAM.61)` | **the mutation catalog runs whole again**: one entry repointed after `API.4.2` moved its line, and `cargo test` now refuses an entry whose text its file no longer holds once |
 
 ## Changelog
 
@@ -1160,3 +1175,4 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 - `2026-10-06`: `PROGRAM.60` filed by `M3.1.2.1`: the third reader's record fell four files behind; it runs only by hand.
 - `2026-10-06`: `PROGRAM.61` filed by `M3.1.2.2`: one mutation entry broken since `API.4.2`, so the catalog cannot run whole.
 - `2026-10-06`: `PROGRAM.62` filed and closed — `M1`'s and `PROGRAM`'s Current Frontier sections cut to the frontier; 33 KB of closure narratives, each already a Commit Log row.
+- `2026-10-06`: `PROGRAM.61` closed — the catalog's broken entry repointed; every entry checked by `cargo test`.

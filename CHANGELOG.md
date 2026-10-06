@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the deliberate-defect catalog runs again, and cannot rot unseen
+
+`ARCHOGEN-PROGRAM-0465` (leaf `PROGRAM.61`).
+
+- The catalog of deliberate defects, each of which some test must catch, had stopped running as a whole a week ago:
+  one entry named a line of code that had since changed. That entry now names the line as it reads, all 152 entries
+  behave as expected again, and the ordinary test run now refuses any entry whose code has moved, in the same change
+  that moves it.
+
 ## archogen — the task trees' frontiers show the frontier again
 
 `ARCHOGEN-PROGRAM-0464` (leaf `PROGRAM.62`).

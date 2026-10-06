@@ -468,6 +468,30 @@ end
     }
 
     #[test]
+    fn every_entry_of_the_real_catalog_names_a_text_its_file_holds_once() {
+        // The catalog runs whole only in the `extended` tier, so an entry whose source moved stayed broken from
+        // `API.4.2` until `PROGRAM.61` found it. This leg needs no build and no mutation: it parses the real catalog
+        // and applies each entry to its file in memory, so `cargo test` — the focused tier and CI — refuses the
+        // entry in the commit that moves its text (leaf `PROGRAM.61`).
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("xtask/ is one level below the root");
+        let catalog = parse(
+            &std::fs::read_to_string(root.join("xtask/mutations.txt"))
+                .expect("the catalog is readable"),
+        )
+        .expect("the catalog parses");
+        let broken: Vec<String> = catalog
+            .iter()
+            .filter_map(|m| match std::fs::read_to_string(root.join(&m.file)) {
+                Ok(original) => apply(&original, m).err(),
+                Err(e) => Some(format!("`{}`: {} cannot be read: {e}", m.id, m.file)),
+            })
+            .collect();
+        assert!(broken.is_empty(), "{}", broken.join("\n"));
+    }
+
+    #[test]
     fn a_text_that_is_not_there_exactly_once_is_not_applied() {
         let m = &parse(ONE).expect("valid")[0];
         assert_eq!(apply("x = a < b;", m).expect("once"), "x = a > b;");

@@ -453,9 +453,9 @@ test -p archogen-cli --test api_parity
 expect killed
 why API.3.3: a CLI that imports the engine's registry can judge a description its own way, a capability behind one surface and not the other (§10.4). The structural leg must see the import.
 from
-    use archogen_api::{Closure, Request, Response};
+    use archogen_api::{Closure, Limits, Request, Response};
 to
-    use archogen_api::{Closure, Request, Response};
+    use archogen_api::{Closure, Limits, Request, Response};
     #[allow(unused_imports)]
     use eadl_model::check::shipped_registry;
 end
