@@ -149,3 +149,34 @@ again; the shebang look-ahead was measured on rustc 1.95.0, case by case, before
 | R4-r4 | remark | the completeness of the generator list is believed | §8 says so, with the script-driving-a-target case |
 | R4-r5 | remark | the Owner line's quotation was not §14.4's wording | quoted verbatim |
 | R4-r6 | remark | the reader's errors uncoded; the corpus's comment stale | §2 and `GS-H1`: each a coded refusal; the comment corrected |
+
+**Round 5**, `2026-10-06`: the reviewer confirmed the census, the four marked files, the gitlink, `root_forms`, every
+quotation of §4.4 and of case 5, all twelve hand-offs quoted, the corpus's 49 cases and both tests, and that the code's
+doc-comment and nesting rules agree with how rustc's lexer strips a shebang. There were 18 findings, 9 of them
+defects — as many as round 4's, and narrower still: words written loosely, and the recogniser's text and code apart at
+their edges. Two were of method: the record's quotation of §14.4's case 3, which round 4 had answered as "quoted
+verbatim", was again a paraphrase (R5-1) — copied this time from the line; and the rustc facts were a sentence, where
+the review method asks for a fixture (R5-4) — now a test that compiles each case with the pinned rustc and holds the
+recogniser to it, which passed all twelve cases on its first run. The machine-read table caught its own drift the same
+day: the code gained `.env` by name and the lockstep test failed until the record did.
+
+| Finding | Class | What it found | The answer |
+| --- | --- | --- | --- |
+| R5-1 | defect | the Owner line's quotation of case 3 was not `ROADMAP.md`'s | quoted from `ROADMAP.md:873`, both clauses |
+| R5-2 | defect | §3's "whole of its reach" and §8 left out the extensionless `#!` rule | §3: the table and that rule are the whole reach; §8: "unless it has no extension and its first line is a `#!`" |
+| R5-3 | defect | the code skipped any `<?…?>`, the text an XML declaration | the code skips `<?xml` followed by whitespace or `?` alone; corpus cases for `<?php` and `<?xml-stylesheet` |
+| R5-4 | defect | the rustc facts were a sentence | `the_shebang_rule_is_rustc_s` compiles twelve cases with the pinned rustc against a control and holds `rust_shebang` to it |
+| R5-5 | defect | "built as a root is" left the selector, the pre-build rules, the token rules, the record and a failure open | §5 states each: the command by target kind, the parent's manifest rules over the closure by the same edges, the token rules and admissions, no pair, a failed build unable to judge |
+| R5-6 | defect | a non-`.rs` crate root fell under two bullets | bullet 1 takes any crate root, refused by the parent's rule when not `.rs`; bullet 3 a file neither `.rs` nor a crate root |
+| R5-7 | defect | `GS-H11` attached the build to the refused target only | `GS-H11` reworded: every such target is built, and refused when its role packages hold another role's |
+| R5-8 | defect | Why said no new reading of a build was introduced | reworded: the role judgment reuses the parent's set; the build is read for §3 and the chain rule alone |
+| R5-9 | defect | no ledger row for `M3.6.6.4` | `GS-H13`, quoted in the leaf |
+| R5-10 | remark | §3's chain triggers duplicated §2's | one rule, one message: §3 refuses an undeclared marked file a program reads; a chain is §2's |
+| R5-11 | remark | a chain's upstream form drew a second code | §6: a form a live form's chain holds is not stale |
+| R5-12 | remark | shape violations were not among the coded refusals | §2 and `GS-H1`: every departure from the shape |
+| R5-13 | remark | "cannot be declared" was not true of the mechanism | §2: no admissible declaration naming what wrote it; another is a wrong declaration, believed |
+| R5-14 | remark | an input under a gitlink | §2: a generator or input at or under a gitlink |
+| R5-15 | remark | rustc's whitespace, a shebang's line end, dotfiles, a byte-order mark | the code follows `Pattern_White_Space` and the line feed; an extension defined, `.env` by name; the mark dropped before the extensionless test; corpus cases for each |
+| R5-16 | remark | "program" left for a generator's executable | §5's heading and §8 reworded |
+| R5-17 | remark | what a program reads depends on the host | §8 states it |
+| R5-18 | remark | the leaf's counts predated round 4 | cited from runs on the committed tree |

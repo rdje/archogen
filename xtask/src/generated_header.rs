@@ -71,6 +71,7 @@ pub const TABLE: &[(Syntax, &[&str], &[&str])] = &[
             "GNUmakefile",
             "Dockerfile",
             "CMakeLists.txt",
+            ".env",
         ],
     ),
     (
@@ -86,13 +87,18 @@ pub const TABLE: &[(Syntax, &[&str], &[&str])] = &[
     (Syntax::Angle, &["md", "html", "htm", "xml", "svg"], &[]),
 ];
 
+/// A file name's extension: what follows its last `.`, when a `.` comes after its first character — so a dotfile such
+/// as `.env` has none, and is read by its name.
+fn extension(name: &str) -> Option<String> {
+    let rest = name.get(1..)?;
+    rest.rsplit_once('.').map(|(_, e)| e.to_ascii_lowercase())
+}
+
 /// The comment syntax of the file at `path`: by its exact name first, then by its extension in any case.
 #[must_use]
 pub fn syntax(path: &str) -> Syntax {
     let name = path.rsplit('/').next().unwrap_or(path);
-    let ext = name
-        .rsplit_once('.')
-        .map_or(String::new(), |(_, e)| e.to_ascii_lowercase());
+    let ext = extension(name).unwrap_or_default();
     TABLE
         .iter()
         .find(|(_, _, names)| names.contains(&name))
@@ -104,19 +110,77 @@ pub fn syntax(path: &str) -> Syntax {
         .map_or(Syntax::None, |(syn, _, _)| *syn)
 }
 
+/// Rust's `Pattern_White_Space`, which rustc's lexer skips between `#!` and `[`.
+fn pattern_white_space(c: char) -> bool {
+    matches!(
+        c,
+        '\u{9}'..='\u{d}' | ' ' | '\u{85}' | '\u{200e}' | '\u{200f}' | '\u{2028}' | '\u{2029}'
+    )
+}
+
+/// Whether rustc reads a Rust file opening `#!` as a shebang: unless what follows the `#!` is `[`, with
+/// `Pattern_White_Space` and plain comments skipped — block comments nesting, a line comment ending at a line feed —
+/// while a doc comment (`///` but not `////`, `//!`, `/**` but not `/**/` or `/***`, `/*!`) ends the look-ahead. The
+/// test `the_shebang_rule_is_rustc_s` compiles each case with the pinned rustc and holds this to it.
+#[must_use]
+pub fn rust_shebang(s: &[char]) -> bool {
+    let at = |i: usize, pat: &str| -> bool {
+        pat.chars()
+            .enumerate()
+            .all(|(k, c)| s.get(i + k) == Some(&c))
+    };
+    if !at(0, "#!") {
+        return false;
+    }
+    let mut j = 2;
+    loop {
+        while j < s.len() && pattern_white_space(s[j]) {
+            j += 1;
+        }
+        let doc = (at(j, "///") && !at(j, "////"))
+            || at(j, "//!")
+            || (at(j, "/**") && !at(j, "/**/") && !at(j, "/***"))
+            || at(j, "/*!");
+        if doc {
+            return true;
+        }
+        if at(j, "//") {
+            while j < s.len() && s[j] != '\n' {
+                j += 1;
+            }
+        } else if at(j, "/*") {
+            j += 2;
+            let mut depth = 1usize;
+            while j < s.len() && depth > 0 {
+                if at(j, "/*") {
+                    depth += 1;
+                    j += 2;
+                } else if at(j, "*/") {
+                    depth -= 1;
+                    j += 2;
+                } else {
+                    j += 1;
+                }
+            }
+        } else {
+            return s.get(j) != Some(&'[');
+        }
+    }
+}
+
 /// The header's comment text, or `None` when the file has no comment syntax or is not UTF-8.
 #[must_use]
 pub fn header(path: &str, bytes: &[u8]) -> Option<String> {
     let name = path.rsplit('/').next().unwrap_or(path);
+    let text = std::str::from_utf8(bytes).ok()?;
+    let text = text.strip_prefix('\u{feff}').unwrap_or(text);
     let syn = match syntax(path) {
-        Syntax::None if !name.contains('.') && bytes.starts_with(b"#!") => Syntax::Hash,
+        Syntax::None if extension(name).is_none() && text.starts_with("#!") => Syntax::Hash,
         other => other,
     };
     if syn == Syntax::None {
         return None;
     }
-    let text = std::str::from_utf8(bytes).ok()?;
-    let text = text.strip_prefix('\u{feff}').unwrap_or(text);
     let s: Vec<char> = text.chars().collect();
     let (mut i, mut out) = (0usize, String::new());
     let at = |i: usize, pat: &str| -> bool {
@@ -131,48 +195,15 @@ pub fn header(path: &str, bytes: &[u8]) -> Option<String> {
         }
         out.push('\n');
     };
-    // A `#!` first line: a comment where `#` is; in Rust a shebang unless `[` follows, whitespace and comments aside —
-    // block comments nesting, a line comment ending at a line feed, and a doc comment (`///` but not `////`, `//!`,
-    // `/**` but not `/**/` or `/***`, `/*!`) ending the look-ahead: measured on rustc 1.95.0 (the record's §3).
-    let rust_attribute = || {
-        let mut j = 2;
-        loop {
-            while j < s.len() && s[j].is_whitespace() {
-                j += 1;
-            }
-            let doc = (at(j, "///") && !at(j, "////"))
-                || at(j, "//!")
-                || (at(j, "/**") && !at(j, "/**/") && !at(j, "/***"))
-                || at(j, "/*!");
-            if doc {
-                return false;
-            }
-            if at(j, "//") {
-                while j < s.len() && s[j] != '\n' {
-                    j += 1;
-                }
-            } else if at(j, "/*") {
-                j += 2;
-                let mut depth = 1usize;
-                while j < s.len() && depth > 0 {
-                    if at(j, "/*") {
-                        depth += 1;
-                        j += 2;
-                    } else if at(j, "*/") {
-                        depth -= 1;
-                        j += 2;
-                    } else {
-                        j += 1;
-                    }
-                }
-            } else {
-                return s.get(j) == Some(&'[');
-            }
-        }
-    };
+    // A `#!` first line: a comment where `#` is, and in Rust when `rust_shebang` says rustc reads it as one; it ends at a
+    // line feed, as rustc's does.
     let is_rust = path.to_ascii_lowercase().ends_with(".rs");
-    if at(0, "#!") && (syn == Syntax::Hash || (is_rust && !rust_attribute())) {
-        line(&mut i, &mut out);
+    if at(0, "#!") && (syn == Syntax::Hash || (is_rust && rust_shebang(&s))) {
+        while i < s.len() && s[i] != '\n' {
+            out.push(s[i]);
+            i += 1;
+        }
+        out.push('\n');
     }
     // An XML declaration before an `<!-- -->` file's comments.
     if syn == Syntax::Angle {
@@ -180,7 +211,8 @@ pub fn header(path: &str, bytes: &[u8]) -> Option<String> {
         while j < s.len() && s[j].is_whitespace() {
             j += 1;
         }
-        if at(j, "<?") {
+        // The XML declaration alone — `<?xml` and then whitespace or `?` — not any processing instruction.
+        if at(j, "<?xml") && s.get(j + 5).is_some_and(|c| c.is_whitespace() || *c == '?') {
             while j < s.len() && !at(j, "?>") {
                 j += 1;
             }
@@ -531,9 +563,119 @@ mod tests {
                 true,
                 "a CSS block comment",
             ),
+            (
+                "x.html",
+                b"<?php echo 1; ?>\n<!-- generated by x -->\n",
+                false,
+                "a PHP instruction is content",
+            ),
+            (
+                "x.xml",
+                b"<?xml-stylesheet href=\"a\"?>\n<!-- generated by x -->\n",
+                false,
+                "a stylesheet instruction is content",
+            ),
+            (
+                "x.xml",
+                b"<?xml version=\"1.0\"?>\n<?xml-stylesheet href=\"a\"?>\n<!-- generated -->\n",
+                false,
+                "the declaration alone is skipped",
+            ),
+            (
+                "scripts/foo",
+                "\u{feff}#!/bin/sh\n# generated by x\n".as_bytes(),
+                true,
+                "a byte-order mark before an extensionless shebang",
+            ),
+            (
+                ".env",
+                b"# generated by x\nA=1\n",
+                true,
+                "a dotfile read by its name",
+            ),
+            (
+                ".envrc",
+                b"# generated by x\n",
+                false,
+                "a dotfile neither named nor with a shebang",
+            ),
+            (
+                "x.rs",
+                "#!\u{200e}[allow(x)]\n// @generated\n".as_bytes(),
+                false,
+                "rustc skips U+200E before `[`",
+            ),
+            (
+                "x.rs",
+                "#!\u{a0}[allow(x)]\n// @generated\n".as_bytes(),
+                true,
+                "but not U+00A0: a shebang",
+            ),
+            (
+                "x.rs",
+                b"#!/usr/bin/x\r// @generated\nfn f() {}\n",
+                true,
+                "a shebang ends at a line feed, not a carriage return",
+            ),
         ];
         for (path, bytes, want, why) in cases {
             assert_eq!(marked(path, bytes), *want, "{why}: {path}");
+        }
+    }
+
+    #[test]
+    fn the_shebang_rule_is_rustc_s() {
+        // The record's §3: what rustc does with a `#!` line is a fixture's result, compiled with the pinned toolchain
+        // against a control whose unused function draws a warning; `rust_shebang` must say the same of each case.
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .to_path_buf();
+        let dir = root.join("target/generated-header-rustc");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let attr = "[allow(dead_code)]";
+        let cases: Vec<(String, bool)> = vec![
+            (String::new(), false),
+            (format!("#! {attr}"), false),
+            (format!("#! /* c */ {attr}"), false),
+            (format!("#! /* a /* b */ c */ {attr}"), false),
+            (format!("#! // c\n{attr}"), false),
+            (format!("#!\u{200e}{attr}"), false),
+            (format!("#! /*! d */ {attr}"), true),
+            (format!("#! /** d */ {attr}"), true),
+            (format!("#! //! d\n{attr}"), true),
+            (format!("#! /// d\n{attr}"), true),
+            (format!("#!\u{a0}{attr}"), true),
+            ("#!/usr/bin/env run-cargo-script".to_owned(), true),
+        ];
+        for (n, (head, shebang)) in cases.iter().enumerate() {
+            let file = dir.join(format!("c{n}.rs"));
+            std::fs::write(&file, format!("{head}\nfn unused() {{}}\nfn main() {{}}\n")).unwrap();
+            let out = std::process::Command::new("rustc")
+                .args(["--edition", "2021", "--emit=metadata", "-o"])
+                .arg(dir.join(format!("c{n}.rmeta")))
+                .arg(&file)
+                .current_dir(&root)
+                .output()
+                .expect("rustc");
+            let said = String::from_utf8_lossy(&out.stderr);
+            if n == 0 {
+                assert!(
+                    said.contains("never used"),
+                    "the control draws its warning: {said}"
+                );
+                continue;
+            }
+            // An attribute applied: it compiles, and the unused function draws no warning.
+            let attribute = out.status.success() && !said.contains("never used");
+            assert_eq!(!attribute, *shebang, "rustc on {head:?}: {said}");
+            let chars: Vec<char> = head.chars().collect();
+            assert_eq!(
+                super::rust_shebang(&chars),
+                *shebang,
+                "rust_shebang on {head:?}"
+            );
         }
     }
 
