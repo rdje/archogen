@@ -440,10 +440,12 @@ mdBook that is the director's window into the project.
     `git var GIT_COMMITTER_IDENT` failed: Committer identity unknown … fatal: empty ident name (for
     <runner@runnervm8df0l…>) not allowed
     ```
-    Reproduced here with no identity outside the scratch repository — `HOME` an empty directory whose
-    `.gitconfig` says `user.useConfigOnly = true`, `CARGO_HOME` and `RUSTUP_HOME` the real ones: `cargo test -p
-    xtask catalog_check` → `test result: FAILED. 2 passed; 6 failed`, each *"fatal: no email was given and
-    auto-detection is disabled"*.
+    Reproduced here with no identity outside the scratch repository — `HOME` an empty directory under
+    `target/m3121/` whose `.gitconfig` says `user.useConfigOnly = true`: `cargo test -p xtask catalog_check` →
+    `test result: FAILED. 2 passed; 6 failed`, each *"fatal: no email was given and auto-detection is disabled"*.
+    Corrected `2026-10-06`: this record first said `CARGO_HOME` and `RUSTUP_HOME` were the machine's. They were not
+    — bash expanded `CARGO_HOME=$HOME/.cargo` after `HOME=` had been assigned, so rustup installed the pinned 1.95.0
+    into the empty home (2.8 GB, since deleted), as the runner does. Every run below used that same pin.
   - [x] **ROOT CAUSE (WHY + WHERE)** — two, one under the other. WHERE, the code: `pending_date` in
     `xtask/src/catalog_check.rs` ran `git var GIT_COMMITTER_IDENT` through `Git`, whose `command` calls
     `env_clear()` and passes back the history readers' allowlist alone (`PATH`, `HOME`, `GIT_DIR`,
@@ -1314,6 +1316,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.63` | `ARCHOGEN-PROGRAM-0472 (leaf PROGRAM.63)` | **a subtree carrying hand-offs can be sealed**: `HANDOFF-LEDGER` reads a sealed leaf's quotes past its stub; `docs/task-history/`' line ceiling raised to the trees' 3 072 by a decision record |
 | `PROGRAM.10.5.1` | `ARCHOGEN-PROGRAM-0478 (leaf PROGRAM.10.5.1)` | **the catalog gate reads its pending date where §4 says**: `git var` in the hook's own environment, not the history readers' allowlist; the scratch repositories carry their own identity, which the first CI run found missing |
 | `PROGRAM.10.5.2` | `ARCHOGEN-PROGRAM-0479 (leaf PROGRAM.10.5.2)` | **the `.incbin` fixture assembles on ELF**: `.previous`, not `.text`, so a naked function's `.size` is measured in its own section |
+| `PROGRAM.10.5.1` | `ARCHOGEN-PROGRAM-0480 (leaf PROGRAM.10.5.1)` | **a reproduction's description corrected**: the leaf said the identity-less runs used the machine's `CARGO_HOME` and `RUSTUP_HOME`; bash had expanded them inside the empty home, where rustup installed the same pin |
 
 ## Changelog
 
