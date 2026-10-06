@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — every program the workspace builds is accounted for
+
+`ARCHOGEN-M3-0476` (leaf `M3.6.3.1`).
+
+- The trust instrument now lists every program the workspace can build — executables, examples, the browser module
+  — and each that is not one of the programs a claim relies on is declared as such, with a reason and the parts of
+  the engine it compiles. A new program, or one that starts compiling another role's code, is reported for review.
+  Today's eight are declared. This is the first step of the trust gate.
+
 ## archogen — finished work that carried promises can be archived
 
 `ARCHOGEN-PROGRAM-0472` (leaf `PROGRAM.63`).

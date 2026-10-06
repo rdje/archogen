@@ -130,6 +130,16 @@ what keeps the gate meaningful:
 An unrelated change produces **no** warning. §14.4 requires that too, and a gate that cries
 wolf is a gate that gets disabled.
 
+The design is `docs/specs/trust/decision_trust-inventory.md`, and its measuring instrument is built:
+`cargo xtask trust-inventory` (`xtask/src/trust.rs`) builds each **root** — the program that runs a role, such as
+the `archogen` executable for the generator — clean from the commit's own files, reads what the compiler read for
+it, and writes `target/trust/trust-dependencies.json` with every item two roots share. The roots are declared in
+`trust/roots.eadl`, and so is every other **program target** of the workspace — an executable, an example, the
+browser module — as not a root, with a reason and the role packages its build compiles. A program target the file
+does not classify, or one that has started compiling another role's package, is reported for review
+(`trust-unclassified-program`), so no one can add a checker beside the generator unseen (leaf `M3.6.3.1`). The gate
+that compares the inventory with a reviewed baseline is being built (leaf `M3.6.3`).
+
 ⚠️ The honest limit, from §4.4 itself: *"This check enforces disclosure and change control; it
 does not prove semantic independence."* Two separately written implementations of the same
 misread specification share nothing any inventory can see.

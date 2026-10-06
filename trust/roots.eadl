@@ -35,6 +35,59 @@
 (defrole configuration-checker
   (leaf "M3.5"))
 
+; Every other program target of the workspace, classified as not a root (§2, leaf M3.6.3.1): the reason, and the role
+; packages its build compiles — its package's normal edges, an example's development edges too — so a set that grows
+; is unreviewed again. Proposed, unaccepted until M3.6.5 reads acceptance. Measured 2026-10-06 by
+; `cargo xtask trust-inventory`'s `program-targets`.
+
+(defprogram engine-api-example
+  (package "crates/archogen-api")
+  (target example in_memory)
+  (reason "shows the engine API answering a request from memory; run by the book's example test, no claim rests on it")
+  (role-packages "crates/archogen-api"))
+
+(defprogram browser-module
+  (package "crates/archogen-wasm")
+  (target cdylib archogen_wasm)
+  (reason "the module a browser loads, ROADMAP.md §10.4's consumer of the engine API; it answers check requests and is no role's program")
+  (role-packages "crates/archogen-api"))
+
+(defprogram browser-module-answers
+  (package "crates/archogen-wasm")
+  (target example answers)
+  (reason "prints the host build's answers, which scripts/wasm_binding.sh compares with the module's; a test tool")
+  (role-packages "crates/archogen-api"))
+
+(defprogram diagnose
+  (package "crates/eadl-front")
+  (target example diagnose)
+  (reason "TOOLBOX.md's reader diagnostic: where a description stops reading and what it parsed to")
+  (role-packages))
+
+(defprogram language-freeze
+  (package "crates/eadl-front")
+  (target example language_freeze)
+  (reason "enumerates eadl/1's frozen constructs for scripts/language_baseline.sh and the freeze gate")
+  (role-packages))
+
+(defprogram literals
+  (package "crates/eadl-front")
+  (target example literals)
+  (reason "TOOLBOX.md's literal census over a population of descriptions")
+  (role-packages))
+
+(defprogram reader-shape
+  (package "crates/eadl-front")
+  (target example reader_shape)
+  (reason "prints each description's forms for the third reader, scripts/third_opinion.sh")
+  (role-packages))
+
+(defprogram verification-runner
+  (package "xtask")
+  (target bin xtask)
+  (reason "the repository's tiers, gates and measuring instruments, this gate's among them; it judges commits, and no claim's result is its output")
+  (role-packages "crates/archogen-api"))
+
 ; The sites the catalog's rules refuse in today's roots, each admitted by review once M3.6.5 reads acceptance: the
 ; file, the rule as the catalog's scanner names it, and the sha256 of the site's extent — the statement or item it
 ; stands in (of the whole manifest, for a manifest rule) — one admission per site. Measured 2026-10-05 by

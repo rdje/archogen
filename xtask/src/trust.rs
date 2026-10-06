@@ -88,6 +88,26 @@ pub struct Admission {
     pub sha256: String,
 }
 
+/// The kinds of program target a classification names (§2): an executable — a `[[bin]]`, a `src/main.rs`, a
+/// `src/bin/*.rs` — an example, and a library built as a `cdylib`, `staticlib` or `dylib`.
+pub const PROGRAM_KINDS: &[&str] = &["bin", "example", "cdylib", "staticlib", "dylib"];
+
+/// A program target that is not a root, classified by review (§2): the reason, and the role packages its build
+/// compiles, so a set that grows is unreviewed again (R2 B6; R4 5; R5 remark 13).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Classification {
+    /// Its name in the roots file.
+    pub name: String,
+    /// Its package's directory, relative to the repository.
+    pub package: String,
+    /// Which of [`PROGRAM_KINDS`] it is.
+    pub kind: String,
+    /// The target's name.
+    pub target: String,
+    /// The role packages its build compiles, as reviewed.
+    pub role_packages: BTreeSet<String>,
+}
+
 /// The roots file, read.
 #[derive(Debug, Clone, Default)]
 pub struct Roots {
@@ -95,6 +115,8 @@ pub struct Roots {
     pub programs: Vec<Program>,
     /// Every admission, with how many forms name it: each admits one site (R8 3).
     pub admissions: BTreeMap<Admission, usize>,
+    /// Every program target classified as not a root (§2).
+    pub classified: Vec<Classification>,
 }
 
 /// Each form the instrument reads, and the clauses it takes; any other form or clause is refused (R8 11).
@@ -105,6 +127,11 @@ const FORMS: &[(&str, &[&str])] = &[
     ),
     ("defharness", &["pair", "package", "test"]),
     ("defadmit", &["file", "rule", "sha256", "reason"]),
+    // A program target that is not a root (§2): `M3.6.3.1`.
+    (
+        "defprogram",
+        &["package", "target", "reason", "role-packages"],
+    ),
     // A role no root fills yet (§2): the gate's, `M3.6.3`.
     ("defrole", &["leaf"]),
 ];
@@ -230,6 +257,25 @@ pub fn read_roots(text: &str) -> Result<Roots, String> {
                     role_packages: BTreeSet::new(),
                     pair: Some((a.clone(), b.clone())),
                     data: Vec::new(),
+                    name,
+                });
+            }
+            "defprogram" => {
+                one(form, "reason", &name)?;
+                let (kind, target) = match values(form, "target").as_slice() {
+                    [k, n] if PROGRAM_KINDS.contains(&k.as_str()) => (k.clone(), n.clone()),
+                    _ => {
+                        return Err(format!(
+                            "{ROOTS}: `{name}`'s target is `(target KIND NAME)`, KIND one of {}",
+                            PROGRAM_KINDS.join(", ")
+                        ))
+                    }
+                };
+                roots.classified.push(Classification {
+                    package: one(form, "package", &name)?,
+                    kind,
+                    target,
+                    role_packages: values(form, "role-packages").into_iter().collect(),
                     name,
                 });
             }
@@ -950,6 +996,94 @@ fn tool_line(program: &str, args: &[&str], env: &[(String, String)], cwd: &Path)
     )
 }
 
+/// Every program target of the commit, each a root's, classified, unclassified, or classified with role packages that
+/// have grown since its review (§2), and every classification whose program target is gone, which the gate refuses as
+/// `trust-baseline-stale` on the baseline's host (§6, R7 remark e). A target's role packages are those its build
+/// compiles — its package's closure by normal edges, an example's by its package's development edges too, since an
+/// example compiles them (R5 remark 13) — among every root's role packages.
+fn classify_programs(
+    roots: &Roots,
+    program_targets: &[(String, String, String)],
+    graph: &[(String, String, String)],
+) -> (Vec<Json>, Vec<String>) {
+    let role_packages: BTreeSet<&String> = roots
+        .programs
+        .iter()
+        .filter(|p| p.role != "harness")
+        .flat_map(|p| p.role_packages.iter())
+        .collect();
+    let mut out = Vec::new();
+    let mut matched: BTreeSet<&String> = BTreeSet::new();
+    for (package, kind, name) in program_targets {
+        let root = roots.programs.iter().find(|p| {
+            p.role != "harness"
+                && p.package == *package
+                && kind == "bin"
+                && p.target == Target::Bin(name.clone())
+        });
+        let mut closure: BTreeSet<String> = BTreeSet::new();
+        let mut todo = vec![package.clone()];
+        while let Some(pkg) = todo.pop() {
+            if !closure.insert(pkg.clone()) {
+                continue;
+            }
+            for (from, to, edge) in graph {
+                let followed =
+                    edge == "normal" || (kind == "example" && edge == "dev" && *from == *package);
+                if *from == pkg && followed && !closure.contains(to) {
+                    todo.push(to.clone());
+                }
+            }
+        }
+        let compiled: BTreeSet<String> = closure
+            .into_iter()
+            .filter(|p| role_packages.contains(p))
+            .collect();
+        let classification = roots
+            .classified
+            .iter()
+            .find(|c| c.package == *package && c.kind == *kind && c.target == *name);
+        let status = match (root, classification) {
+            (Some(r), _) => format!("root {}", r.name),
+            (None, Some(c)) => {
+                matched.insert(&c.name);
+                let grown: Vec<&String> = compiled.difference(&c.role_packages).collect();
+                if grown.is_empty() {
+                    format!("classified {}", c.name)
+                } else {
+                    format!(
+                        "trust-unclassified-program: `{}` compiles {} beside the role packages its classification reviewed",
+                        c.name,
+                        grown.iter().map(|g| format!("`{g}`")).collect::<Vec<_>>().join(", ")
+                    )
+                }
+            }
+            (None, None) => format!(
+                "trust-unclassified-program: the {kind} `{name}` of `{package}` is neither a root nor classified in {ROOTS}"
+            ),
+        };
+        out.push(obj(vec![
+            ("package", s(package)),
+            ("kind", s(kind)),
+            ("name", s(name)),
+            ("status", s(status)),
+            ("role-packages", strings(compiled)),
+        ]));
+    }
+    let unused = roots
+        .classified
+        .iter()
+        .filter(|c| !matched.contains(&c.name))
+        .map(|c| {
+            format!(
+                "{}: the {} `{}` of `{}` is no program target of the commit",
+                c.name, c.kind, c.target, c.package
+            )
+        })
+        .collect();
+    (out, unused)
+}
+
 /// What one run concluded.
 pub enum Outcome {
     /// The inventory, written.
@@ -1046,6 +1180,8 @@ pub fn inventory_with(
     let mut id_dir: BTreeMap<String, String> = BTreeMap::new();
     let mut targets: Targets = BTreeMap::new();
     let mut package_targets: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    // Every program target (§2): (package, kind, name).
+    let mut program_targets: Vec<(String, String, String)> = Vec::new();
     for p in meta.get("packages").map(Json::elements).unwrap_or_default() {
         let manifest_path = p
             .get("manifest_path")
@@ -1078,6 +1214,17 @@ pub fn inventory_with(
                 .entry(dir.clone())
                 .or_default()
                 .push(src.clone());
+            let kinds: Vec<&str> = t
+                .get("kind")
+                .map(Json::elements)
+                .unwrap_or_default()
+                .iter()
+                .filter_map(Json::as_str)
+                .collect();
+            if let Some(kind) = PROGRAM_KINDS.iter().find(|k| kinds.contains(k)) {
+                let name = t.get("name").and_then(Json::as_str).unwrap_or_default();
+                program_targets.push((dir.clone(), (*kind).to_owned(), name.to_owned()));
+            }
             targets.insert((src, crate_name), dir.clone());
         }
         package_names.insert(dir.clone(), name);
@@ -1085,12 +1232,30 @@ pub fn inventory_with(
     }
     // Every package a form names is a package of the commit, so a misspelt role package cannot turn the two-roles
     // rule off for the package it meant (R9 remark 5).
-    for p in &roots.programs {
-        for pkg in std::iter::once(&p.package).chain(p.role_packages.iter()) {
+    let named_packages = roots
+        .programs
+        .iter()
+        .map(|p| {
+            (
+                &p.name,
+                std::iter::once(&p.package)
+                    .chain(p.role_packages.iter())
+                    .collect::<Vec<_>>(),
+            )
+        })
+        .chain(roots.classified.iter().map(|c| {
+            (
+                &c.name,
+                std::iter::once(&c.package)
+                    .chain(c.role_packages.iter())
+                    .collect(),
+            )
+        }));
+    for (name, packages) in named_packages {
+        for pkg in packages {
             if !package_names.contains_key(pkg) {
                 return Err(format!(
-                    "{ROOTS}: `{}` names `{pkg}`, which is no package of the commit",
-                    p.name
+                    "{ROOTS}: `{name}` names `{pkg}`, which is no package of the commit"
                 ));
             }
         }
@@ -1123,6 +1288,9 @@ pub fn inventory_with(
             }
         }
     }
+
+    let (program_targets, classifications_unused) =
+        classify_programs(&roots, &program_targets, &graph);
 
     let mut sites = 0usize;
     let mut used: BTreeMap<Admission, usize> = BTreeMap::new();
@@ -1741,6 +1909,8 @@ pub fn inventory_with(
         ("shared", Json::Array(shared)),
         ("refused-sites", s(sites.to_string())),
         ("admissions-unused", strings(unused)),
+        ("program-targets", Json::Array(program_targets)),
+        ("classifications-unused", strings(classifications_unused)),
     ]);
     fs::create_dir_all(out).map_err(|e| e.to_string())?;
     fs::write(&target_json, json::write(&inv)).map_err(|e| e.to_string())?;
@@ -1978,6 +2148,144 @@ mod tests {
             files.push((p, t.clone()));
         }
         fixture(name, "1.95.0", &files)
+    }
+
+    /// Each program target's status, by `package kind name`.
+    fn statuses(inv: &Json) -> Vec<(String, String)> {
+        inv.get("program-targets")
+            .map(Json::elements)
+            .unwrap_or_default()
+            .iter()
+            .map(|t| {
+                let f = |k: &str| {
+                    t.get(k)
+                        .and_then(Json::as_str)
+                        .unwrap_or_default()
+                        .to_owned()
+                };
+                (
+                    format!("{} {} {}", f("package"), f("kind"), f("name")),
+                    f("status"),
+                )
+            })
+            .collect()
+    }
+
+    #[test]
+    fn every_program_target_is_a_root_or_classified_and_the_rest_is_reported() {
+        // Record §2, leaf `M3.6.3.1`: a binary `c` beside the two roots, then an example of `b` whose development edge
+        // reaches the generator's package, which an example compiles (R5 remark 13).
+        let f = two_roots(
+            "programs",
+            "fn main() {}\n",
+            "pub fn f() -> u32 { 1 }\n",
+            &[
+                ("crates/c/Cargo.toml", manifest("c", "")),
+                ("crates/c/src/main.rs", "fn main() {}\n".to_owned()),
+            ],
+        );
+        let inv = written(f.run());
+        let s = statuses(&inv);
+        assert!(
+            s.contains(&("crates/a bin a".to_owned(), "root gen".to_owned())),
+            "{s:?}"
+        );
+        let c = &s
+            .iter()
+            .find(|(t, _)| t == "crates/c bin c")
+            .expect("c is a program target")
+            .1;
+        assert!(
+            c.starts_with("trust-unclassified-program: the bin `c`"),
+            "{c}"
+        );
+        // Classified, it passes; the gate reads acceptance, never this file's presence (§5).
+        f.commit(&[(
+            "trust/roots.eadl",
+            format!("{ROOTS}(defprogram tool (package \"crates/c\") (target bin c) (reason \"a tool\") (role-packages))\n"),
+        )]);
+        let inv = written(f.run());
+        assert!(
+            statuses(&inv).contains(&("crates/c bin c".to_owned(), "classified tool".to_owned()))
+        );
+        // An example of `c` whose development edge reaches `a`, a role package: the classification's set has grown.
+        f.commit(&[
+            ("crates/c/Cargo.toml", manifest("c", "[dev-dependencies]\na = { path = \"../a\" }\n")),
+            ("crates/a/src/lib.rs", "pub fn g() {}\n".to_owned()),
+            ("crates/c/examples/e.rs", "fn main() {}\n".to_owned()),
+            (
+                "trust/roots.eadl",
+                format!(
+                    "{ROOTS}(defprogram tool (package \"crates/c\") (target bin c) (reason \"a tool\") (role-packages))\n\
+                     (defprogram demo (package \"crates/c\") (target example e) (reason \"a demo\") (role-packages))\n"
+                ),
+            ),
+        ]);
+        let inv = written(f.run());
+        let s = statuses(&inv);
+        let e = &s
+            .iter()
+            .find(|(t, _)| t == "crates/c example e")
+            .expect("an example")
+            .1;
+        assert_eq!(e, "trust-unclassified-program: `demo` compiles `crates/a` beside the role packages its classification reviewed");
+        let c = &s.iter().find(|(t, _)| t == "crates/c bin c").expect("c").1;
+        assert_eq!(
+            c, "classified tool",
+            "a binary follows normal edges alone: {c}"
+        );
+        // A classification whose target is gone is listed for `trust-baseline-stale` (§6, R7 remark e).
+        f.commit(&[(
+            "trust/roots.eadl",
+            format!(
+                "{ROOTS}(defprogram tool (package \"crates/c\") (target bin c) (reason \"a tool\") (role-packages))\n\
+                 (defprogram demo (package \"crates/c\") (target example e) (reason \"a demo\") (role-packages \"crates/a\"))\n\
+                 (defprogram gone (package \"crates/c\") (target bin old) (reason \"renamed\") (role-packages))\n"
+            ),
+        )]);
+        let inv = written(f.run());
+        let unused: Vec<&str> = inv
+            .get("classifications-unused")
+            .map(Json::elements)
+            .unwrap_or_default()
+            .iter()
+            .filter_map(Json::as_str)
+            .collect();
+        assert_eq!(
+            unused,
+            ["gone: the bin `old` of `crates/c` is no program target of the commit"]
+        );
+        assert!(statuses(&inv).contains(&(
+            "crates/c example e".to_owned(),
+            "classified demo".to_owned()
+        )));
+    }
+
+    #[test]
+    fn a_classification_is_read_strictly() {
+        for (text, why) in [
+            (
+                "(defprogram x (package \"p\") (target test t) (reason \"r\"))",
+                "KIND one of",
+            ),
+            (
+                "(defprogram x (package \"p\") (target bin t))",
+                "needs exactly one `(reason",
+            ),
+            (
+                "(defprogram x (package \"p\") (target bin t) (reason \"r\") (role \"g\"))",
+                "a clause `role`",
+            ),
+        ] {
+            let err = read_roots(text).expect_err(text);
+            assert!(err.contains(why), "{text}: {err}");
+        }
+        let roots = read_roots(
+            "(defprogram x (package \"p\") (target cdylib m) (reason \"r\") (role-packages \"q\"))",
+        )
+        .expect("reads");
+        assert_eq!(roots.classified[0].kind, "cdylib");
+        assert!(roots.classified[0].role_packages.contains("q"));
     }
 
     #[test]

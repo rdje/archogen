@@ -2360,3 +2360,49 @@ from
 to
             "exactly" => ComparisonDirection::AtLeast,
 end
+
+mutation trust-example-dev-edges-unfollowed
+file xtask/src/trust.rs
+test -p xtask trust::tests::every_program_target_is_a_root_or_classified_and_the_rest_is_reported
+expect killed
+why M3.6.3.1: an example compiles its package's development dependencies, so its role packages follow them (record §2, R5 remark 13).
+from
+                    let followed =
+                        edge == "normal" || (kind == "example" && edge == "dev" && *from == *package);
+to
+                    let followed = edge == "normal";
+end
+
+mutation trust-grown-classification-unreported
+file xtask/src/trust.rs
+test -p xtask trust::tests::every_program_target_is_a_root_or_classified_and_the_rest_is_reported
+expect killed
+why M3.6.3.1: a classification whose program target compiles a role package it did not review is unreviewed again (record §2, R2 B6).
+from
+                    if grown.is_empty() {
+to
+                    if grown.is_empty() || grown.len() < 99 {
+end
+
+mutation trust-gone-classification-unlisted
+file xtask/src/trust.rs
+test -p xtask trust::tests::every_program_target_is_a_root_or_classified_and_the_rest_is_reported
+expect killed
+why M3.6.3.1: a classification whose program target is gone is listed for trust-baseline-stale (record §6, R7 remark e).
+from
+            .filter(|c| !matched.contains(&c.name))
+to
+            .filter(|c| !matched.contains(&c.name) && c.name.is_empty())
+end
+
+mutation trust-root-target-unrecognised
+file xtask/src/trust.rs
+test -p xtask trust::tests::every_program_target_is_a_root_or_classified_and_the_rest_is_reported
+expect killed
+why M3.6.3.1: a root's own binary is its root's program target, never an unclassified one (record §2).
+from
+                    && p.target == Target::Bin(name.clone())
+to
+                    && p.target == Target::Bin(name.clone())
+                    && p.name.is_empty()
+end
