@@ -137,8 +137,12 @@ it, and writes `target/trust/trust-dependencies.json` with every item two roots 
 `trust/roots.eadl`, and so is every other **program target** of the workspace — an executable, an example, the
 browser module — as not a root, with a reason and the role packages its build compiles. A program target the file
 does not classify, or one that has started compiling another role's package, is reported for review
-(`trust-unclassified-program`), so no one can add a checker beside the generator unseen (leaf `M3.6.3.1`). The gate
-that compares the inventory with a reviewed baseline is being built (leaf `M3.6.3`).
+(`trust-unclassified-program`), so no one can add a checker beside the generator unseen (leaf `M3.6.3.1`).
+`cargo xtask trust-baseline --propose` writes the **baseline** a review starts from, `trust/baseline.eadl`: one form
+per shared item with the digests the inventory measured, and the review's part — the item's classification, the
+property it can affect, its residual risk, the controls that remain — left `unstated`; nothing in the file can say a
+form is accepted (leaf `M3.6.3.2`). Its digests hold only on the host they were taken on, and the baseline the gate
+compares against is the CI runner's, so it is proposed there. The gate itself is being built (leaf `M3.6.3`).
 
 ⚠️ The honest limit, from §4.4 itself: *"This check enforces disclosure and change control; it
 does not prove semantic independence."* Two separately written implementations of the same

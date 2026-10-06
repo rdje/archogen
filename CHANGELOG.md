@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate can propose its baseline
+
+`ARCHOGEN-M3-0477` (leaf `M3.6.3.2`).
+
+- The trust gate's reference list — one entry per piece of code or data two independent programs share — can now be
+  written by the tool as a proposal for review, with the review's own judgements left blank and no way to mark an
+  entry approved from the file itself. Its fingerprints depend on the machine they were taken on, and the design fixes
+  that machine as the CI runner, so the list to commit must be proposed there: that waits on the next push.
+
 ## archogen — every program the workspace builds is accounted for
 
 `ARCHOGEN-M3-0476` (leaf `M3.6.3.1`).

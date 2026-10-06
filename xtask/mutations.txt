@@ -2406,3 +2406,47 @@ to
                     && p.target == Target::Bin(name.clone())
                     && p.name.is_empty()
 end
+
+mutation baseline-package-identity-lost
+file xtask/src/trust_gate.rs
+test -p xtask trust_gate
+expect killed
+why M3.6.3.2: a package item is identified by its path (record §4); without it, two packages share one form.
+from
+            "package" => Some("package"),
+to
+            "package" => None,
+end
+
+mutation baseline-review-dropped-on-regeneration
+file xtask/src/trust_gate.rs
+test -p xtask trust_gate
+expect killed
+why M3.6.3.2: regenerating the baseline proposes, and keeps what a review wrote of each item (record §5, How to apply).
+from
+                |f: fn(&Shared) -> &String| prior.map_or(UNSTATED.to_owned(), |p| f(p).clone());
+to
+                |_f: fn(&Shared) -> &String| UNSTATED.to_owned();
+end
+
+mutation baseline-classification-unchecked
+file xtask/src/trust_gate.rs
+test -p xtask trust_gate
+expect killed
+why M3.6.3.2: a classification is one of §4.4's five or unstated (record §5).
+from
+            if classification != UNSTATED && !CLASSIFICATIONS.contains(&classification.as_str()) {
+to
+            if classification != UNSTATED && !CLASSIFICATIONS.contains(&classification.as_str()) && false {
+end
+
+mutation baseline-name-unchecked
+file xtask/src/trust_gate.rs
+test -p xtask trust_gate
+expect killed
+why M3.6.3.2: a form is named by its item, so one item cannot hold two forms under two names (record §5).
+from
+            if id.name() != name {
+to
+            if id.name() != name && false {
+end

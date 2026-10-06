@@ -65,9 +65,9 @@ a change that leaves it stale, so it is never edited by hand.
 - **check-passing convention** — [definition](glossary.md), [Where the engine's knowledge comes from: the
   catalog](catalog.md)
 - chipdoc — [What this project relies on from outside](ledger.md#chipdoc)
-- **CI** — [definition](glossary.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying
-  the toolchain](verification.md), [What this project relies on from outside](ledger.md), [Annex B: The checks that keep
-  the repository honest](annex-repository.md)
+- **CI** — [definition](glossary.md), [What a report may claim](evidence.md), [The archogen command line](cli.md), [The
+  engine API](engine-api.md), [Verifying the toolchain](verification.md), [What this project relies on from
+  outside](ledger.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
 - Claims cite what they read — [Where the engine's knowledge comes from: the
   catalog](catalog.md#claims-cite-what-they-read)
 - **CLI** — [definition](glossary.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying

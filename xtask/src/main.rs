@@ -49,6 +49,7 @@ mod mutation;
 mod premises;
 mod target;
 mod trust;
+mod trust_gate;
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
@@ -891,6 +892,7 @@ fn help() {
     println!("    cargo xtask pin-premises");
     println!("    cargo xtask catalog-check --index [--bless] | --commit <sha> | --base <dir> --judged <dir> --base-commit <sha> --judged-commit <sha>");
     println!("    cargo xtask trust-inventory [--commit <rev>] [--out <dir>]");
+    println!("    cargo xtask trust-baseline --propose [--commit <rev>] [--out <file>]");
     println!();
     println!("TIERS:");
     for tier in TIERS {
@@ -931,6 +933,7 @@ fn main() {
         ["pin-premises"] => premises::run(&repo_root()),
         ["catalog-check", rest @ ..] => catalog_check::run(&repo_root(), rest),
         ["trust-inventory", rest @ ..] => trust::run(&repo_root(), rest),
+        ["trust-baseline", rest @ ..] => trust_gate::run(&repo_root(), rest),
         ["mutate", "--only", ids @ ..] if !ids.is_empty() => mutation::run(
             &repo_root(),
             &ids.iter().map(|s| (*s).to_string()).collect::<Vec<_>>(),
