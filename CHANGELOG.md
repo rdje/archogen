@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a package's trust record can be checked where it is used
+
+`ARCHOGEN-M3-0485` (leaf `M3.6.3.5`).
+
+- A new command checks an assurance package: that the record of what each independent program was built from
+  belongs to the same commit and compiler as the package, that the programs shipped are the ones recorded, that each
+  result was produced by the program its role names, and that every file handed to a program at run time was
+  declared. The package's exact layout is set provisionally, for the later work that will write real packages.
+
 ## archogen — the trust gate runs in CI, built from the commit before
 
 `ARCHOGEN-M3-0484` (leaf `M3.6.3.4`).

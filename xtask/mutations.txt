@@ -2555,3 +2555,69 @@ to
             Ok(()) => {}
             Err(crate::catalog_check::Failure::Refused(r)) => return Err(format!("{r:?}")),
 end
+
+mutation trust-verify-another-build-s-inventory-passes
+file xtask/src/trust_verify.rs
+test -p xtask trust_verify::tests
+expect killed
+why M3.6.3.5, TI-H8: an inventory whose commit or toolchain is not the package's describes another build.
+from
+            if identity(key) != mine || mine.is_empty() {
+to
+            if false {
+end
+
+mutation trust-verify-another-inventory-s-report-passes
+file xtask/src/trust_verify.rs
+test -p xtask trust_verify::tests
+expect killed
+why M3.6.3.5, TI-H8 (R6 9): a report names the inventory it describes by sha256, and one naming another is refused.
+from
+                if named != inventory_sha {
+to
+                if false {
+end
+
+mutation trust-verify-an-artifact-is-not-compared
+file xtask/src/trust_verify.rs
+test -p xtask trust_verify::tests
+expect killed
+why M3.6.3.5, TI-H8: an artifact whose bytes are not the inventory's — a debug build, another commit's — is refused.
+from
+            if actual != listed || listed != inventoried {
+to
+            if false {
+end
+
+mutation trust-verify-any-producer-passes
+file xtask/src/trust_verify.rs
+test -p xtask trust_verify::tests
+expect killed
+why M3.6.3.5, TI-H8 (R5 4): a result names its role's inventoried artifact or the pair's harness, and nothing else passes.
+from
+            if producer.is_empty() || !(by_root || by_harness) {
+to
+            if producer.is_empty() {
+end
+
+mutation trust-verify-the-harness-serves-every-role
+file xtask/src/trust_verify.rs
+test -p xtask trust_verify::tests
+expect killed
+why M3.6.3.5, TI-H8: the pair's harness produces the reference model's results only, never a checker's.
+from
+            let by_harness = role == "reference-model"
+to
+            let by_harness = !role.is_empty()
+end
+
+mutation trust-verify-an-undeclared-handed-dependency-passes
+file xtask/src/trust_verify.rs
+test -p xtask trust_verify::tests
+expect killed
+why M3.6.3.5, TI-H8 (R5 6): a dependency handed to a root is declared by its form with the inventory's sha256.
+from
+            if declared != Some(sha) {
+to
+            if false {
+end

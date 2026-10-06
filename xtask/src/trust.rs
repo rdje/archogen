@@ -1690,6 +1690,12 @@ pub fn inventory_with(
         programs.push(obj(vec![
             ("name", s(&p.name)),
             ("role", s(&p.role)),
+            // The harness's two roots, so a package's reference-model result can name the pair's harness as its
+            // producer (`trust-verify`, `M3.6.3.5`); empty for a root.
+            (
+                "pair",
+                strings(p.pair.iter().flat_map(|(x, y)| [x.clone(), y.clone()])),
+            ),
             (
                 "artifact",
                 obj(vec![

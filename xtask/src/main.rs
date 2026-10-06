@@ -50,6 +50,7 @@ mod premises;
 mod target;
 mod trust;
 mod trust_gate;
+mod trust_verify;
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
@@ -952,6 +953,7 @@ fn help() {
     println!(
         "    cargo xtask trust-gate [--repo <dir>] [--commit <rev>] [--base <rev>] [--out <dir>]"
     );
+    println!("    cargo xtask trust-verify <package>");
     println!();
     println!("TIERS:");
     for tier in TIERS {
@@ -994,6 +996,7 @@ fn main() {
         ["trust-inventory", rest @ ..] => trust::run(&repo_root(), rest),
         ["trust-baseline", rest @ ..] => trust_gate::run(&repo_root(), rest),
         ["trust-gate", rest @ ..] => trust_gate::run_gate(&repo_root(), rest),
+        ["trust-verify", rest @ ..] => trust_verify::run(rest),
         ["mutate", "--only", ids @ ..] if !ids.is_empty() => mutation::run(
             &repo_root(),
             &ids.iter().map(|s| (*s).to_string()).collect::<Vec<_>>(),

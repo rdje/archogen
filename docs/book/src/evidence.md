@@ -153,6 +153,12 @@ nothing and says so. A form naming a package the commit no longer has is refused
 built without it. In CI the gate is built from the base commit and runs on every pull request and every push to
 `main` ([Verifying the toolchain](verification.md)); in the `assurance` tier its step fails on a refusal and is
 otherwise *not built*, never a pass, until forms can be accepted (`M3.6.5`).
+`cargo xtask trust-verify <package>` checks a package that carries an inventory, where a claim is consumed (leaf
+`M3.6.3.5`): it refuses one whose inventory is missing or of another commit or toolchain, whose report names another
+inventory, whose artifacts are not the inventory's, in which a result was produced by anything but its role's
+inventoried program — or, for the reference model, its pair's comparison harness — or which hands a root a
+dependency its form does not declare (`trust-inventory-stale`). The package's layout is fixed there provisionally,
+since the package is `M4.7`'s to write.
 
 ⚠️ The honest limit, from §4.4 itself: *"This check enforces disclosure and change control; it
 does not prove semantic independence."* Two separately written implementations of the same
