@@ -1,0 +1,238 @@
+; docs/semantics/vocabulary/vocabulary.eadl — `/1`, the capability vocabulary of `eadl/1`.
+;
+; ROADMAP.md §5.3 asks for a "versioned capability vocabulary"; §5.2 for explicit matching rules, each parameter
+; with "a documented comparison direction". This file is that vocabulary: one `deffact` entry per fact the
+; substitutability relation judges, each fixing the fact's value kind, whom it speaks for, and which way an
+; offered value must lie against a required one. The kind is `docs/semantics/kinds/deffact.eadl`.
+;
+; ⭐ THE RECORD IS THE AUTHORITY. Every entry is one row of the table in
+; `docs/decisions/decision_substitutability-relation.md` §1.1, in its order, with the reason for its direction
+; given there and not repeated here; an entry is added only with a row there first (record §1.1, R2 B8). The
+; vocabulary is versioned with the language, `eadl/1`, and an entry changes only by ROADMAP.md §15's migration
+; process: `docs/semantics/BASELINE.txt` freezes this file's canonical form, so editing it needs a note in
+; `docs/semantics/migrations/`.
+;
+; ⛔ THIS IS NOT A DESCRIPTION. `archogen check` answers a file that writes a `deffact` as the language's own
+; definition, exit 20, as it answers a kind module (record §1.1, `SR-H3`), and no description's registry holds
+; `deffact`. `crates/eadl-resolve` reads this file, validates each entry against the kind, and builds the typed
+; table the relation consults (leaf `M3.1.2.2`). A fact a description writes and this file does not declare may
+; still be offered, declared absent or needed, but a constraint on it is `unsupported-profile` (record §1.1).
+;
+; Two facts the corpus names have no entry, `region` and `ordering`: they fit no domain of record §2, and placement
+; and ordering are `M3.3`'s (record §10).
+
+(eadl-version eadl/1)
+
+(deffact absolute-deadline
+  (doc "a deadline programmed at an absolute time: the head of a group whose sub-facts are how far ahead it can be programmed and how late it may be delivered")
+  (domain group supported-horizon delivery-bound)
+  (role guarantee)
+  (direction exact))
+
+(deffact application-mutexes
+  (doc "mutual exclusion offered to application tasks, which the first profile excludes")
+  (domain boolean)
+  (role guarantee)
+  (direction exact))
+
+(deffact general-ipc
+  (doc "general communication between tasks, which the first profile excludes")
+  (domain boolean)
+  (role guarantee)
+  (direction exact))
+
+(deffact descriptor-format
+  (doc "the descriptor format a transfer engine reads its work from")
+  (domain boolean)
+  (role guarantee)
+  (direction exact))
+
+(deffact available-in-state
+  (doc "the power states the function works in, every use running in run")
+  (domain set run idle sleep)
+  (role guarantee)
+  (direction includes)
+  (implies run))
+
+(deffact bounded-arrival
+  (doc "the events a function serves arrive at a bounded rate")
+  (domain boolean)
+  (role guarantee)
+  (direction exact))
+
+(deffact bus-width
+  (doc "the width of a bus, an interface: a wider bus is another bus")
+  (domain quantity information)
+  (role guarantee)
+  (direction exact))
+
+(deffact clock-rate
+  (doc "the rate of a block's clock, an interface: the block's timing is its rate's")
+  (domain quantity frequency)
+  (role guarantee)
+  (direction exact))
+
+(deffact core-count
+  (doc "how many cores a platform has, an interface: two do not satisfy a uniprocessor profile")
+  (domain count)
+  (role guarantee)
+  (direction exact))
+
+(deffact counter-modulus
+  (doc "the count at which a counter wraps, an interface: offered, never derived, and positive")
+  (domain count)
+  (role guarantee)
+  (direction exact))
+
+(deffact counter-width
+  (doc "the width of a counter's register, a capacity: a modulus offered beside it may not exceed two to the width")
+  (domain quantity information)
+  (role guarantee)
+  (direction at-least))
+
+(deffact deadlines
+  (doc "the deadline model a policy states, constrained or arbitrary")
+  (domain enumeration constrained arbitrary)
+  (role guarantee)
+  (direction exact))
+
+(deffact debug-port
+  (doc "a port through which a debugger reaches the platform")
+  (domain boolean)
+  (role guarantee)
+  (direction exact))
+
+(deffact interrupt-source
+  (doc "a source of interrupts a service can be released by")
+  (domain boolean)
+  (role guarantee)
+  (direction exact))
+
+(deffact low-power-timer
+  (doc "a timer that goes on counting in a low-power state")
+  (domain boolean)
+  (role guarantee)
+  (direction exact))
+
+(deffact multicore
+  (doc "a platform with more than one active core")
+  (domain boolean)
+  (role guarantee)
+  (direction exact))
+
+(deffact observable-output
+  (doc "an output an observer outside the system can read")
+  (domain boolean)
+  (role guarantee)
+  (direction exact))
+
+(deffact observation-coherent
+  (doc "a read of the value never observes a torn update")
+  (domain boolean)
+  (role guarantee)
+  (direction exact))
+
+(deffact relative-delay
+  (doc "a delay programmed relative to the time it is set")
+  (domain boolean)
+  (role guarantee)
+  (direction exact))
+
+(deffact transfer-engine
+  (doc "an engine that moves data without the processor")
+  (domain boolean)
+  (role guarantee)
+  (direction exact))
+
+(deffact uart
+  (doc "a serial port")
+  (domain boolean)
+  (role guarantee)
+  (direction exact))
+
+(deffact delivery-bound
+  (doc "the longest an event may take to be delivered after its programmed time: a shorter delivery satisfies")
+  (domain quantity time)
+  (role guarantee)
+  (direction at-most))
+
+(deffact frequency
+  (doc "the rates a block can run at, a range the offered one must cover")
+  (domain interval frequency)
+  (role guarantee)
+  (direction within))
+
+(deffact min-arrival-separation
+  (doc "the least time between two arrivals: arrivals further apart satisfy")
+  (domain quantity time)
+  (role guarantee)
+  (direction at-least))
+
+(deffact or-through-mediation
+  (doc "the requirer's word that a mediation boundary may stand between it and the function it uses")
+  (domain enumeration allowed forbidden)
+  (role statement)
+  (direction exact))
+
+(deffact preemptive
+  (doc "a running task gives way to a higher-priority one that becomes ready")
+  (domain boolean)
+  (role guarantee)
+  (direction exact))
+
+(deffact priorities
+  (doc "the priority model a policy states: static, unique and dynamic, each a demand on the task set")
+  (domain set static unique dynamic)
+  (role guarantee)
+  (direction exact))
+
+(deffact queue-capacity
+  (doc "how many entries a queue holds, a capacity")
+  (domain count)
+  (role guarantee)
+  (direction at-least))
+
+(deffact reachable-at-privilege
+  (doc "the privilege levels a function is reachable from, each listed: a requirer's level must be among them")
+  (domain set user supervisor machine)
+  (role guarantee)
+  (direction includes))
+
+(deffact release-accuracy
+  (doc "how far a release may fall from its scheduled time: a tighter accuracy satisfies")
+  (domain quantity time)
+  (role guarantee)
+  (direction at-most))
+
+(deffact supported-horizon
+  (doc "how far ahead an absolute deadline can be programmed, a capacity")
+  (domain quantity time)
+  (role guarantee)
+  (direction at-least))
+
+(deffact tick-rate
+  (doc "the rate a counter ticks at, an interface: a faster counter is another counter")
+  (domain quantity frequency)
+  (role guarantee)
+  (direction exact))
+
+(deffact tick-unit
+  (doc "the unit a function reports time in, an interface")
+  (domain enumeration ns us ms)
+  (role guarantee)
+  (direction exact))
+
+(deffact unambiguous-horizon
+  (doc "the longest interval whose elapsed ticks two reads of the counter determine without wrap ambiguity: its modulus less one, over its rate")
+  (domain quantity time)
+  (role guarantee)
+  (direction at-least)
+  (derived-from counter-modulus tick-rate)
+  (reads wrap-behavior)
+  (rule horizon-from-modulus-and-rate))
+
+(deffact wrap-behavior
+  (doc "what a counter does at its modulus, modular or saturating")
+  (domain enumeration modular saturating)
+  (role guarantee)
+  (direction exact))

@@ -203,13 +203,32 @@ system (leaf `M1.32`):
 ```console
 $ archogen check docs/semantics/kinds/os-rt.eadl ; echo $?
 archogen: unimplemented: docs/semantics/kinds/os-rt.eadl:27:1 declares a kind, `(defkind task …)`, and no command loads a kind module a user writes yet
-  hint: the kinds a description may use are the ones this toolchain ships, embedded in the binary and checked on every run (docs/semantics/kinds/). Loading a kind you write is task-tree leaf M6.3 (docs/TASK_TREE.md); until then, check a description that uses the shipped kinds
+  hint: the kinds a description may use are the ones this toolchain ships, embedded in the binary and checked on every run (docs/semantics/kinds/core.eadl and docs/semantics/kinds/os-rt.eadl). Loading a kind you write is task-tree leaf M6.3 (docs/TASK_TREE.md); until then, check a description that uses the shipped kinds
 20
 ```
 
 The toolchain loads only the kind modules it ships. Loading one you write is leaf `M6.3`, the first
 extension experiment. Checking such a file on its own would not be enough: a kind that redefines a
 shipped one is well-formed by itself, and the clash shows only when the two are loaded together.
+
+The **capability vocabulary** is part of the language's definition too. It lists every fact a requirement
+may constrain — its kind of value, and which way an offered value must lie against a required one — and
+lives in `docs/semantics/vocabulary/vocabulary.eadl`, written with one more kind, `deffact`, declared in
+`docs/semantics/kinds/deffact.eadl` (`docs/decisions/decision_substitutability-relation.md` §1.1). No
+description's registry holds `deffact`. So any file that writes one — the vocabulary itself, a copy of it, or a
+description with an entry in it — is the language's own definition rather than a description, and `check` answers
+it the way it answers a kind module (leaf `M3.1.2.1`):
+
+```console
+$ archogen check docs/semantics/vocabulary/vocabulary.eadl ; echo $?
+archogen: unimplemented: docs/semantics/vocabulary/vocabulary.eadl:26:1 declares a fact of the capability vocabulary, `(deffact absolute-deadline …)`: the language's own definition, not a description, and no command loads vocabulary a user writes yet
+  hint: the facts a description may constrain are the vocabulary this toolchain ships with `eadl/1` (docs/semantics/vocabulary/vocabulary.eadl). Extending the vocabulary is task-tree leaf M6.3 (docs/TASK_TREE.md); until then, check a description that offers and requires the shipped facts
+20
+```
+
+A module file is classified first, as always: a `deffact` inside a module is `schema-unknown-kind`, and one beside
+its `defmodule` is `module-multiple-forms`, both exit `10`. The engine reads the vocabulary itself, validating
+each entry against `deffact`, as the matching chapter will describe (leaf `M3.1.3`).
 
 ### The semantic corpus
 

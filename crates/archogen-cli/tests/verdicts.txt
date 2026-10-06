@@ -74,6 +74,7 @@
 12 unsupported-profile docs/semantics/cases/unsupported-overrun-policy.eadl
 12 missing-fact,unsupported-profile docs/semantics/cases/unsupported-precedence-over-missing-fact.eadl
 20 - docs/semantics/kinds/core.eadl
+20 - docs/semantics/kinds/deffact.eadl
 20 - docs/semantics/kinds/os-rt.eadl
 0 - docs/semantics/modules/app.sibling.eadl
 0 - docs/semantics/modules/app.system.eadl
@@ -116,6 +117,7 @@
 0 - docs/semantics/modules/hw.soc.eadl
 0 - docs/semantics/modules/hw.timer.eadl
 0 - docs/semantics/modules/os.time.eadl
+20 - docs/semantics/vocabulary/vocabulary.eadl
 13 infeasible-configuration examples/alternative-timer/system.eadl
 12 unsupported-profile examples/bounded-queue/system.eadl
 0 - examples/high-interference/system.eadl

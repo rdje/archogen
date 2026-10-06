@@ -45,6 +45,7 @@ agree docs/semantics/cases/invalid-execution-bound-in-task.eadl
 agree docs/semantics/cases/invalid-implementation-in-description.eadl
 agree docs/semantics/cases/invalid-missing-name.eadl
 agree docs/semantics/cases/invalid-missing-required-clause.eadl
+agree docs/semantics/cases/invalid-priority-below-one.eadl
 agree docs/semantics/cases/invalid-quantity-without-unit.eadl
 agree docs/semantics/cases/invalid-repeated-at-most-one.eadl
 agree docs/semantics/cases/invalid-two-release-models.eadl
@@ -59,6 +60,7 @@ agree docs/semantics/cases/missing-relevant-fact.eadl
 agree docs/semantics/cases/positive-decimal-quantity.eadl
 agree docs/semantics/cases/positive-explicit-absence-unused.eadl
 agree docs/semantics/cases/positive-minimal-system.eadl
+agree docs/semantics/cases/positive-skip-late-job.eadl
 agree docs/semantics/cases/positive-sporadic-release.eadl
 agree docs/semantics/cases/positive-unrelated-unknown.eadl
 agree docs/semantics/cases/positive-valid-refinement.eadl
@@ -68,8 +70,10 @@ agree docs/semantics/cases/unsupported-duplicate-priority.eadl
 agree docs/semantics/cases/unsupported-dynamic-task-creation.eadl
 agree docs/semantics/cases/unsupported-general-ipc.eadl
 agree docs/semantics/cases/unsupported-multicore.eadl
+agree docs/semantics/cases/unsupported-overrun-policy.eadl
 agree docs/semantics/cases/unsupported-precedence-over-missing-fact.eadl
 agree docs/semantics/kinds/core.eadl
+agree docs/semantics/kinds/deffact.eadl
 agree docs/semantics/kinds/os-rt.eadl
 agree docs/semantics/modules/app.sibling.eadl
 agree docs/semantics/modules/app.system.eadl
@@ -112,6 +116,7 @@ agree docs/semantics/modules/hw.sized.eadl
 agree docs/semantics/modules/hw.soc.eadl
 agree docs/semantics/modules/hw.timer.eadl
 agree docs/semantics/modules/os.time.eadl
+agree docs/semantics/vocabulary/vocabulary.eadl
 agree examples/alternative-timer/system.eadl
 agree examples/bounded-queue/system.eadl
 agree examples/high-interference/system.eadl
@@ -121,3 +126,4 @@ agree examples/s0-heartbeat/system-non-harmonic.eadl
 agree examples/s0-heartbeat/system-unsupported.eadl
 agree examples/s0-heartbeat/system.eadl
 agree targets/riscv-virt-up.eadl
+agree trust/roots.eadl

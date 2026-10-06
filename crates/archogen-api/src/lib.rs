@@ -480,28 +480,65 @@ pub fn is_module_file(sources: &SourceMap, id: SourceId) -> bool {
             .any(|form| form.head() == Some("defmodule"))
 }
 
-/// The first `(defkind …)` of a file that declares one: the kind it names, and where.
+/// What a file that defines part of the language declares: a kind, or a fact of the capability vocabulary.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Definition {
+    /// `(defkind …)`: a kind module (leaf `M1.32`).
+    Kind,
+    /// `(deffact …)`: an entry of the capability vocabulary,
+    /// `docs/decisions/decision_substitutability-relation.md` §1.1 (leaf `M3.1.2.1`).
+    Fact,
+}
+
+impl Definition {
+    /// The definition a declaration's head makes, if it makes one.
+    fn of(head: &str) -> Option<Self> {
+        match head {
+            "defkind" => Some(Self::Kind),
+            "deffact" => Some(Self::Fact),
+            _ => None,
+        }
+    }
+
+    /// The head that writes it.
+    #[must_use]
+    pub const fn head(self) -> &'static str {
+        match self {
+            Self::Kind => "defkind",
+            Self::Fact => "deffact",
+        }
+    }
+}
+
+/// The first `(defkind …)` or `(deffact …)` of a file that declares one: which definition, the name it gives,
+/// and where.
 #[derive(Debug)]
 pub struct KindModule {
-    /// The kind's head symbol, when the declaration names one.
+    /// Whether it declares a kind or a fact.
+    pub definition: Definition,
+    /// The kind's or the fact's name, when the declaration gives one.
     pub name: Option<String>,
-    /// Where the `(defkind …)` begins.
+    /// Where the declaration begins.
     pub position: Position,
 }
 
-/// The first kind the description at `id` declares, if it declares any (leaf `M1.32`), by the rule
-/// [`is_module_file`] uses and for its reason. A file that does not read is not classified.
+/// The first kind or vocabulary fact the description at `id` declares, if it declares any (leaves `M1.32` and
+/// `M3.1.2.1`), by the rule [`is_module_file`] uses and for its reason. A file that does not read is not
+/// classified. So the vocabulary file, a copy of it and a description that writes a `deffact` are each the
+/// language's own definition and not a description (record §1.1, `SR-H3`); a module file is classified first,
+/// and a `deffact` inside it is the schema's to refuse.
 #[must_use]
 pub fn kind_module(sources: &SourceMap, id: SourceId) -> Option<KindModule> {
     let (document, diagnostics) = read(sources, id);
     if diagnostics.has_errors() {
         return None;
     }
-    let form = document
+    let (form, definition) = document
         .declarations()
-        .find(|form| form.head() == Some("defkind"))?;
+        .find_map(|form| form.head().and_then(Definition::of).map(|d| (form, d)))?;
     let source = sources.get(id)?;
     Some(KindModule {
+        definition,
         name: form
             .items()
             .get(1)
@@ -513,25 +550,54 @@ pub fn kind_module(sources: &SourceMap, id: SourceId) -> Option<KindModule> {
 
 /// A kind module is not judged: the toolchain loads only the kind modules it ships (leaf `M1.32`). Nor is it
 /// validated alone, because a kind that redefines a shipped one is well-formed by itself and clashes only when
-/// both are loaded, so a standalone `ok` would be one the tool cannot stand behind.
+/// both are loaded, so a standalone `ok` would be one the tool cannot stand behind. The vocabulary is answered
+/// the same way, for the same reason: an entry is well-formed alone, and the vocabulary a description is judged
+/// against is the one the toolchain ships (`docs/decisions/decision_substitutability-relation.md` §1.1).
 fn refuse_kind_module(name: &str, kind: &KindModule, sources: SourceMap) -> Response {
+    let head = kind.definition.head();
     let declared = kind.name.as_deref().map_or_else(
-        || "(defkind …)".to_string(),
-        |name| format!("(defkind {name} …)"),
+        || format!("({head} …)"),
+        |name| format!("({head} {name} …)"),
     );
+    let (line, column) = (kind.position.line, kind.position.column);
+    // Derived from what is embedded, never listed here: `docs/semantics/kinds/` also holds `deffact.eadl`, which
+    // writes the vocabulary and is no description's kind.
+    let shipped = KIND_MODULES
+        .iter()
+        .map(|(path, _)| *path)
+        .collect::<Vec<_>>()
+        .join(" and ");
+    let (message, hint) = match kind.definition {
+        Definition::Kind => (
+            format!(
+                "{name}:{line}:{column} declares a kind, `{declared}`, and no command loads a kind module a user \
+                 writes yet"
+            ),
+            format!(
+                "the kinds a description may use are the ones this toolchain ships, embedded in the binary and \
+                 checked on every run ({shipped}). Loading a kind you write is task-tree leaf \
+                 {KIND_MODULE_OWNER} (docs/TASK_TREE.md); until then, check a description that uses the shipped \
+                 kinds"
+            ),
+        ),
+        Definition::Fact => (
+            format!(
+                "{name}:{line}:{column} declares a fact of the capability vocabulary, `{declared}`: the \
+                 language's own definition, not a description, and no command loads vocabulary a user writes yet"
+            ),
+            format!(
+                "the facts a description may constrain are the vocabulary this toolchain ships with `eadl/1` \
+                 (docs/semantics/vocabulary/vocabulary.eadl). Extending the vocabulary is task-tree leaf \
+                 {KIND_MODULE_OWNER} (docs/TASK_TREE.md); until then, check a description that offers and \
+                 requires the shipped facts"
+            ),
+        ),
+    };
     Response::not_judged(
         Status::Unimplemented,
         sources,
-        vec![format!(
-            "{name}:{}:{} declares a kind, `{declared}`, and no command loads a kind module a user writes yet",
-            kind.position.line, kind.position.column
-        )],
-        Some(format!(
-            "the kinds a description may use are the ones this toolchain ships, embedded in the binary and \
-             checked on every run (docs/semantics/kinds/). Loading a kind you write is task-tree leaf \
-             {KIND_MODULE_OWNER} (docs/TASK_TREE.md); until then, check a description that uses the shipped \
-             kinds"
-        )),
+        vec![message],
+        Some(hint),
         Vec::new(),
     )
 }

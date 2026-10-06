@@ -37,7 +37,7 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM`
   Status: `active`
   Goal: own the program spine
-  Children: `PROGRAM.1` … `PROGRAM.59`, and the sub-leaves each of them names
+  Children: `PROGRAM.1` … `PROGRAM.60`, and the sub-leaves each of them names
 
 - ID: `PROGRAM.1`
   Status: `done` — sealed in [`PROGRAM/PROGRAM.1.md`](../task-history/PROGRAM/PROGRAM.1.md); commit `ARCHOGEN-PROGRAM-0002`
@@ -764,6 +764,23 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM.59`
   Status: `done` — sealed in [`PROGRAM/PROGRAM.59.md`](../task-history/PROGRAM/PROGRAM.59.md); commit in the tree's Commit Log
 
+- ID: `PROGRAM.60`
+  Status: `pending` — filed `2026-10-06` by `M3.1.2.1`
+  Goal: the third reader's record, `docs/semantics/third-opinion.txt`, cannot fall behind the tracked descriptions
+  unseen.
+  Reproduce / issue: `bash scripts/third_opinion.sh` on `2026-10-06` → `125 document(s) — 125 agree`, then exit 1:
+  four files *"agree, and not in the record"*. They were added by `M2.13` (`49638bf`, `2026-10-01`), `M2.14`
+  (`d65d836`, `2026-10-01`, two files) and `M3.6.2` (`1d6415d`, `2026-10-05`), and the record was last written by
+  `947cdc2` on `2026-09-30`. Each leaf's commit passed every gate.
+  Root cause: the script needs LinkedSpec's `sexpr_file`, built under `.app-data/`, and exits 2 without it. So it
+  runs only by hand: census `git grep -n third_opinion -- scripts xtask Makefile .github .githooks
+  ':!scripts/third_opinion.sh'` → no match, so no tier, hook, doctrine or workflow invokes it. A description added after the record
+  was last written goes unrecorded until somebody runs the script by hand. `M3.1.2.1` blessed the four (all
+  `agree`) beside its own two files.
+  Direction, to be designed here: the frozen verdict table (`verdicts.txt`) and the record share one population, so
+  a check needing no vendor build can refuse a tracked description that the record lacks. The reader's verdict on a
+  new file then still needs the build, but its absence from the record becomes visible at commit time.
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1127,3 +1144,4 @@ a clean `git status` means what the handoff rule says it means.
 - `2026-10-06`: `PROGRAM.57` filed and closed — the fifth artifact cleanup, the first since `PROGRAM.19`'s seal; `PROGRAM.58` filed for the object files a macOS build leaves in `target/debug/deps`.
 - `2026-10-06`: `PROGRAM.58` closed — the dev profile keeps no object files for their debug information, so `target/debug/deps` no longer grows with every build on macOS.
 - `2026-10-06`: `PROGRAM.59` filed and closed — four present-tense claims that the emulator step is quarantined, stale since `2026-09-30`, corrected.
+- `2026-10-06`: `PROGRAM.60` filed by `M3.1.2.1`: the third reader's record fell four files behind; it runs only by hand.

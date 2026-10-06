@@ -1235,3 +1235,42 @@ fn rule_6_the_corpus_case_is_refused_by_the_pipeline_with_exactly_that_code() {
     );
     assert!(!outcome.is_ok());
 }
+
+#[test]
+fn every_vocabulary_entry_has_the_frame_deffact_declares_and_no_shipped_registry_holds_it() {
+    // `docs/decisions/decision_substitutability-relation.md` §1.1 (`SR-H2`, leaf `M3.1.2.1`): the vocabulary is
+    // written with `deffact`, a kind declared with `defkind` in a module of its own that no description's
+    // registry holds. Through the production loader, as `registry_from` explains.
+    let vocabulary = registry_from(&["docs/semantics/kinds/deffact.eadl"]);
+    assert_eq!(vocabulary.heads(), ["deffact"]);
+    let (forms, sources) = parse_file("docs/semantics/vocabulary/vocabulary.eadl");
+    let entries = declarations(&forms);
+    assert!(
+        !entries.is_empty(),
+        "the vocabulary holds no entry — the population this leg reads is gone"
+    );
+    for entry in &entries {
+        assert_eq!(entry.head(), Some("deffact"), "{entry:?}");
+        let errors = validate(&vocabulary, entry);
+        assert!(
+            errors.is_empty(),
+            "{}",
+            errors
+                .iter()
+                .map(|d| d.render(&sources))
+                .collect::<Vec<_>>()
+                .join("\n")
+        );
+    }
+    // A name declared once among the entries (reference §7 rule 6; record §1.1, R1 A15).
+    let repeated = duplicate_names(&vocabulary, &entries);
+    assert!(repeated.is_empty(), "{repeated:?}");
+    // The shipped registry is the two modules a description is checked against, and `deffact` is in neither.
+    let shipped = core_registry();
+    assert!(shipped.kind("deffact").is_none());
+    let errors = validate(&shipped, entries[0]);
+    assert_eq!(
+        errors.iter().map(|d| d.code).collect::<Vec<_>>(),
+        ["schema-unknown-kind"]
+    );
+}

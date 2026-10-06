@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the capability vocabulary becomes part of the language
+
+`ARCHOGEN-M3-0462` (leaf `M3.1.2.1`).
+
+- The list of facts a requirement may constrain — for each, its kind of value and which way an offered value must
+  lie against a required one — is now a file of the language itself, `docs/semantics/vocabulary/vocabulary.eadl`,
+  with its 35 entries written in a new kind, `deffact`. It is frozen with `eadl/1`, so changing an entry needs a
+  migration note. `archogen check` answers a file that writes such an entry as the language's own definition rather
+  than judging it as a system, exactly as it already answers a kind module. Every existing verdict is unchanged.
+
 ## archogen — the integration tier is no longer described as incomplete
 
 `ARCHOGEN-PROGRAM-0459` (leaf `PROGRAM.59`).
@@ -181,183 +191,4 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 - The tenth reader of the trust design found one defect, down from four. Approving a renamed copy of a forbidden
   construct, such as `use std::include as inc;`, quietly approved every later use of the new name. Renames and
   wrappers of forbidden constructs can no longer be approved, so each use must stand where the check sees it.
-
-## archogen — the substitutability design's nineteenth review
-
-`ARCHOGEN-M3-0439` (leaf `M3.1.1`, step 20).
-
-- The nineteenth reader found the executable model faithful to the design, and two defects in the design itself.
-  Writing one value twice could change a result, because two copies of a tiny value were compared through an
-  arithmetic that overflows. A requirement could ask for mediation both "allowed" and "forbidden" at once, and the
-  first would win. Values in one unit are now compared as written, and contradictory requirements are refused.
-## archogen — closed review histories archived
-
-`ARCHOGEN-PROGRAM-0438` (leaf `PROGRAM.55`).
-
-- A review history stops growing when its review closes, but it stayed in the folder whose size is capped, crowding
-  out the reviews still running. A closed history can now move to `docs/review-history/`, unchanged to the byte,
-  leaving a short note at its old path so every link to it still works. A new check proves each moved file against
-  the original. The catalog's 75 KB history moved first.
-
-## archogen — the trust gate's ninth review: four defects left
-
-`ARCHOGEN-M3-0437` (leaf `M3.6.1`, step 10).
-
-- The ninth reader of the trust design found four defects, down from eleven, each shown by a probe. One was a
-  build-cache directory left in the recorded build settings, which made two checkouts of one commit look different.
-  Another was a program that could dodge the "one program, one role" rule by calling itself the comparison harness.
-  Both are fixed, and a program's declared run-time data files are now read, hashed and compared like any other
-  shared file.
-
-## archogen — the substitutability design's eighteenth review: two defects left
-
-`ARCHOGEN-M3-0436` (leaf `M3.1.1`, step 19).
-
-- The eighteenth reader found two defects, down from six in the round before, each shown by a test. When three
-  values were written for one fact, the answer could depend on the order they were written in. A value written
-  inside `absent` was quietly read as "this fact does not exist at all". Both are fixed, and the model's checker now
-  tries every order of three offers and every value written inside `absent`.
-
-## archogen — the trust gate's first review against its instrument
-
-`ARCHOGEN-M3-0435` (leaf `M3.6.1`, step 9).
-
-- The eighth reader of the trust design ran its measuring instrument rather than reading about it. All eleven
-  defects it found were in what the instrument measured, each shown by a probe the instrument answered wrongly. One
-  was a library whose source file was named `.txt`: it was compiled and never inspected. Another was a single
-  approval quietly covering every identical line in its file. A third left an approved assembler block's later lines
-  unchecked. Each probe is now a test that failed first. The instrument now rejects non-Rust crate roots, ties every
-  approval to one site and to its whole statement, and records each program's built artifact.
-
-## archogen — the substitutability design's first review against its model
-
-`ARCHOGEN-M3-0434` (leaf `M3.1.1`, step 18).
-
-- The seventeenth reader worked against the executable model and backed each of its six defects with a test the
-  model and the design answered differently. The tests landed first, twelve of them failing on the model as it stood, then the rules that make them pass: the
-  "must keep running" part of a power-state requirement now lives in the vocabulary rather than in code, and a group of
-  requirements no longer gives a different answer when its parts are written in another order.
-
-## archogen — the trust configuration's place in the conformance suite
-
-`ARCHOGEN-M3-0433` (leaf `M3.6.2.1`).
-
-- `trust/roots.eadl`, added by the previous commit, broke a test: every description in the repository must be either
-  in the language's conformance suite or excluded from it with a reason, and this one was neither. It is now
-  excluded, since it configures the trust gate rather than describing a system. The previous commit's record said
-  the full test tier passed, but that run came before the file existed. The record is corrected, and a leaf is filed
-  for a check that ties a cited run to the tree it is committed with.
-
-## archogen — the trust gate's measuring instrument
-
-`ARCHOGEN-M3-0432` (leaf `M3.6.2`).
-
-- `cargo xtask trust-inventory` builds each program whose independence a claim relies on from the commit's own
-  files, records everything its compiler read, and lists what any two of them share. It refuses, before anything
-  runs, a build script or any construct the catalog's rules refuse unless a reviewed admission names the exact line.
-  On this repository it finds no two programs sharing code and fourteen admitted lines; sixteen test repositories
-  show each way past reviewers found for code to slip in unseen now being caught.
-
-## archogen — the substitutability design made executable
-
-`ARCHOGEN-M3-0431` (leaf `M3.1.1.1`).
-
-- The design for deciding when an offer satisfies a requirement now has an executable model, written rule by rule
-  from the design, and a checker that runs it over tens of thousands of inputs: no value is read the wrong way, no
-  stronger precondition passes as a capability, and a counter's wrap horizon matches a simulation of its reads.
-  Every problem past reviewers found with a concrete input is now a permanent test.
-
-## archogen — both design records' hand-offs in ledgers
-
-`ARCHOGEN-PROGRAM-0430` (leaf `PROGRAM.52.2`).
-
-- The two designs under review now state each piece of work they hand to another task once, in a table; the
-  receiving tasks quote those sentences word for word, and a commit check holds the two together. Forty-six
-  hand-offs, none left in prose.
-
-## archogen — the trust-dependency gate made default-deny
-
-`ARCHOGEN-M3-0428` (leaf `M3.6.1`, step 8).
-
-- For five reviews in a row, a reader found one more way for code or data to slip into a program unseen, past a
-  hand-built list of forbidden constructs. The list was the problem: the gate now applies the catalog's complete
-  rules and admits, by review, only the exact lines today's programs need — thirteen, measured. Anything else is
-  refused before anyone has to find it.
-
-## archogen — the substitutability relation's sixteenth review: three defects
-
-`ARCHOGEN-M3-0427` (leaf `M3.1.1`, step 17).
-
-- The sixteenth reader found three defects, the fewest in seven rounds. A block named after a fact could capture a
-  requirement on that fact once imported as a module, so such a name is refused. A provider available only in an
-  idle power state no longer satisfies an idle-state requirement, because every use also runs in the running state.
-
-## archogen — every hand-off checked in both places
-
-`ARCHOGEN-PROGRAM-0426` (leaf `PROGRAM.52.1`).
-
-- A design that hands work to another task now writes each hand-off once, as one sentence in a table, and the commit
-  hook refuses the commit unless the receiving task quotes that sentence word for word. A hand-off can no longer be
-  dropped, or carried in weaker words, without a commit failing.
-
-## archogen — design reviews made executable
-
-`ARCHOGEN-PROGRAM-0425` (leaf `PROGRAM.52`, step 1).
-
-- Two design reviews had stopped converging: each round's reader found eight to sixteen new defects in tens of
-  kilobytes of prose. The method changes, not the bar: each design now ships an executable model or a measuring
-  instrument with an exhaustive checker, every past probe becomes a permanent test, and every hand-off to other work
-  is one sentence a commit check holds in both places. A design still closes only on a round that finds nothing.
-
-## archogen — the trust-dependency gate's sixth review, answered
-
-`ARCHOGEN-M3-0424` (leaf `M3.6.1`, step 7).
-
-- The sixth reader showed a reference model could call its implementation's code through a link-time symbol without
-  sharing any package or file, which is now refused, and that the previous answer had assumed the programs use two
-  file-inclusion forms they do not use. Those forms are now refused, as the catalog refuses them, and only Rust
-  sources are scanned. What a change reports is now measured against the forms the commit started from, so
-  regenerating the baseline in the same commit hides nothing.
-
-## archogen — the substitutability relation's fifteenth review, answered
-
-`ARCHOGEN-M3-0423` (leaf `M3.1.1`, step 16).
-
-- The fifteenth reader again found the relation itself sound. Writing a fact after `uses`, instead of `needs`,
-  would have slipped a requirement past it, so that form is now refused. Questions about catalog records, which the
-  design had begun to answer for other work, are now handed to that work's own reviewed design instead.
-
-## archogen — a missing quantity is pointed at where it is missing
-
-`ARCHOGEN-M1-0422` (leaf `M1.41`).
-
-- When a description wrote a bound with no quantity, such as `(tick-rate (exactly))`, the error pointed at the first
-  line of one of the language's own kind modules instead of at the description. It now points at the empty bound in
-  the description's own file.
-
-## archogen — formatting checked at every commit
-
-`ARCHOGEN-PROGRAM-0421` (leaf `PROGRAM.51`).
-
-- The commit hook now refuses a staged Rust file that is not in the formatter's canonical form, judging the bytes
-  being committed rather than the working copy. The rule was already written down for authors; nothing held anyone
-  to it, which is how unformatted code reached the main line earlier the same day.
-
-## archogen — the composition code formatted
-
-`ARCHOGEN-M2-0420` (leaf `M2.22`).
-
-- The scheduling checker's composition code, added earlier the same day, had been committed without the repository's
-  formatter, so its focused verification tier failed on format alone. It is formatted now, with no change to what it
-  does.
-
-## archogen — the trust-dependency gate's fifth review, answered
-
-`ARCHOGEN-M3-0419` (leaf `M3.6.1`, step 6).
-
-- The fifth reader found the design's hand-offs carried and its measurements sound, and ten places where a rule
-  was loose: an assembler file reached through `include!` went unscanned, a new direct use of an already shared
-  package went unreported, and a result from the wrong build of a checker would have been packaged. The gate's report
-  now has two parts, what changed since the baseline and what still awaits acceptance, so an unrelated change stays
-  silent without hiding anything.
 

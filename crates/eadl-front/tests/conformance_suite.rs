@@ -176,11 +176,15 @@ fn the_population_is_the_size_the_census_pins() {
     //
     // 108 → 110 at leaf `M2.14`: `positive-skip-late-job.eadl` and `unsupported-overrun-policy.eadl`, the
     // worked cases for §4 rule 6 — the two overrun policies `rt-static-up-v1` performs, one admitted, one not.
+    //
+    // 110 → 112 at leaf `M3.1.2.1`: `docs/semantics/kinds/deffact.eadl`, the kind the capability vocabulary is
+    // written with, and the new `docs/semantics/vocabulary` root's `vocabulary.eadl`, `/1` — the language's own
+    // definitions, frozen with `eadl/1` (`decision_substitutability-relation.md` §1.1, `SR-H2`).
     let suite = suite();
     assert_eq!(
         suite.len(),
-        110,
-        "the conformance suite holds {} descriptions and this census pins 110 — if a case was added or \
+        112,
+        "the conformance suite holds {} descriptions and this census pins 112 — if a case was added or \
          removed deliberately, update the census in the same commit and say why in the leaf; if not, a \
          root stopped being walked",
         suite.len()

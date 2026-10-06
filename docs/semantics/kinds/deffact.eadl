@@ -1,0 +1,48 @@
+; docs/semantics/kinds/deffact.eadl — the kind the capability vocabulary is written with.
+;
+; ROADMAP.md §5.3 asks for a "versioned capability vocabulary", and §5.2 for "a documented comparison
+; direction" for every parameter the engine compares. `docs/decisions/decision_substitutability-relation.md`
+; §1.1 decides both: every fact the relation judges is one `deffact` entry of
+; `docs/semantics/vocabulary/vocabulary.eadl`, which fixes the fact's value kind, whom it speaks for, and which
+; way an offered value must lie against a required one.
+;
+; ⭐ DECLARED WITH `defkind`, LIKE EVERY OTHER KIND. So `deffact` is no more privileged than a kind a user adds
+; (reference §7 rule 1), and it carries no behaviour (§7 rule 3): its clauses hold names, lists of names and one
+; line of text, and nothing that could be run. The rules that compute a derived fact are engine knowledge in
+; `crates/eadl-resolve`, each named here by its `rule` clause and listed in the record's §4.
+;
+; ⛔ NO DESCRIPTION'S REGISTRY HOLDS THIS KIND. The shipped registry is `core.eadl` and `os-rt.eadl`
+; (`crates/archogen-api/src/lib.rs`'s `KIND_MODULES`), so a `deffact` inside a module is `schema-unknown-kind`.
+; Any other file that writes one is the language's own definition and not a description, and `archogen check`
+; answers it as it answers a kind module (record §1.1, `SR-H3`). `crates/eadl-resolve` registers this kind to
+; validate the vocabulary with `kind.rs`'s `validate`, and reads the entries into its typed table (leaf
+; `M3.1.2.2`), which checks what a frame cannot: that `implies` is written only on a set fact, that no fact is
+; named like a clause word, and that `derived-from` and `reads` close no cycle.
+;
+; THE CLAUSES, as the record's §1.1 table states them:
+;
+;   doc           what the fact means, one line; required, as a kind's `doc` is
+;   domain        its value kind: `boolean`; `count`; `quantity <dimension>`; `interval <dimension>`;
+;                 `enumeration <symbol>…`, or `enumeration (ordered <symbol>…)` for a total order, lowest
+;                 first; `set <symbol>…`; `group <fact>…`
+;   role          `guarantee`, a promise the offer makes; or `statement`, the requiring side's word about itself
+;   direction     `at-least`, `at-most`, `exact`, `includes` or `within`: how an offered value satisfies a
+;                 required one
+;   derived-from  the facts a derivation computes this one from, when it is not offered directly
+;   reads         the optional inputs the rule reads beside `derived-from`'s required ones
+;   rule          the engine's rule that computes it
+;   implies       for a set fact, the members every valued constraint on it holds beside what it writes
+
+(eadl-version eadl/1)
+
+(defkind deffact
+  (doc "a fact of the capability vocabulary: its value kind, whom it speaks for, and which way an offered value satisfies a required one")
+  (name required)
+  (clause doc (cardinality one) (holds values string))
+  (clause domain (cardinality one) (holds forms))
+  (clause role (cardinality one) (holds values symbol))
+  (clause direction (cardinality one) (holds values symbol))
+  (clause derived-from (cardinality at-most-one) (holds forms))
+  (clause reads (cardinality at-most-one) (holds forms))
+  (clause rule (cardinality at-most-one) (holds values symbol))
+  (clause implies (cardinality at-most-one) (holds forms)))

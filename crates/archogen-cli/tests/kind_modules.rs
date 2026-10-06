@@ -5,8 +5,14 @@
 //! toolchain's own language definition. Both commands now refuse a kind module as `unimplemented`, naming the
 //! leaf that will load a kind a user writes, and generate nothing.
 //!
-//! The population of shipped kind modules is derived from `docs/semantics/kinds/`, never listed here. Scratch
-//! files are written into `CARGO_TARGET_TMPDIR`, on the repository's own volume.
+//! The population of shipped kind modules is derived from `docs/semantics/kinds/`, never listed here, and every
+//! file under it must declare a kind (`SR-H3`). Scratch files are written into `CARGO_TARGET_TMPDIR`, on the
+//! repository's own volume.
+//!
+//! The capability vocabulary is answered the same way (leaf `M3.1.2.1`,
+//! `docs/decisions/decision_substitutability-relation.md` §1.1): a file that writes a `deffact` is the language's
+//! own definition and not a description, exit 20, while a module file is classified first and its `deffact` is the
+//! schema's to refuse, exit 10.
 
 use std::path::{Path, PathBuf};
 
@@ -180,31 +186,126 @@ fn the_kind_refusal_names_a_leaf_the_tree_declares_and_has_not_closed() {
     );
 }
 
-#[test]
-fn the_books_kind_module_transcript_is_what_the_command_prints() {
-    // `book_transcripts.rs` checks only blocks holding an `error[` line, and a refusal has none, so this
-    // block is held here: the lines under the command equal a run, with the exit code it echoes.
-    let command = "$ archogen check docs/semantics/kinds/os-rt.eadl ; echo $?";
+/// The lines the book shows under `$ archogen check <relative> ; echo $?`, and the lines a run prints with the exit
+/// code it echoes.
+fn transcript(relative: &str) -> (Vec<String>, Vec<String>) {
+    let command = format!("$ archogen check {relative} ; echo $?");
     let chapter = std::fs::read_to_string(repo_root().join("docs/book/src/checking.md"))
         .expect("the checking chapter is readable");
-    let shown: Vec<&str> = chapter
+    let shown: Vec<String> = chapter
         .lines()
         .skip_while(|line| *line != command)
         .skip(1)
         .take_while(|line| *line != "```")
+        .map(str::to_string)
         .collect();
     assert!(
         !shown.is_empty(),
         "docs/book/src/checking.md no longer shows `{command}`"
     );
     let root = format!("{}/", repo_root().display());
-    let path = repo_root()
-        .join("docs/semantics/kinds/os-rt.eadl")
-        .display()
-        .to_string();
+    let path = repo_root().join(relative).display().to_string();
     let (status, out, err) = invoke(&["check", &path]);
     let printed = format!("{out}{err}").replace(&root, "");
     let mut expected: Vec<String> = printed.lines().map(str::to_string).collect();
     expected.push(status.code().to_string());
-    assert_eq!(shown, expected, "the book's transcript differs from a run");
+    (shown, expected)
+}
+
+#[test]
+fn the_books_kind_module_transcript_is_what_the_command_prints() {
+    // `book_transcripts.rs` checks only blocks holding an `error[` line, and a refusal has none, so these blocks
+    // are held here: the lines under each command equal a run, with the exit code it echoes.
+    for relative in [
+        "docs/semantics/kinds/os-rt.eadl",
+        "docs/semantics/vocabulary/vocabulary.eadl",
+    ] {
+        let (shown, expected) = transcript(relative);
+        assert_eq!(
+            shown, expected,
+            "the book's transcript of {relative} differs from a run"
+        );
+    }
+}
+
+#[test]
+fn every_file_that_writes_a_deffact_is_the_language_s_own_definition() {
+    // The vocabulary through `check` and `build`, then a description that writes an entry after another
+    // declaration: classifying by the first declaration would hand it to the schema (record §1.1, `SR-H3`).
+    let vocabulary = repo_root()
+        .join("docs/semantics/vocabulary/vocabulary.eadl")
+        .display()
+        .to_string();
+    let (status, out, err) = invoke(&["check", &vocabulary]);
+    assert_eq!(status, Status::Unimplemented, "{err}");
+    assert!(out.is_empty(), "a refusal prints no verdict: {out}");
+    assert!(
+        err.contains(
+            "declares a fact of the capability vocabulary, `(deffact absolute-deadline …)`"
+        ),
+        "{err}"
+    );
+    assert!(
+        err.contains(&format!("task-tree leaf {KIND_MODULE_OWNER}")),
+        "{err}"
+    );
+    assert!(!err.contains("error["), "no diagnostic, no verdict: {err}");
+
+    let dir = scratch("deffact");
+    let out_dir = dir.join("out");
+    let (status, _, err) = invoke(&[
+        "build",
+        &vocabulary,
+        "--out",
+        &out_dir.display().to_string(),
+    ]);
+    assert_eq!(status, Status::Unimplemented, "{err}");
+    assert!(
+        !out_dir.exists(),
+        "a refused build must not create its output directory"
+    );
+
+    let path = write(
+        &dir,
+        "mine.eadl",
+        "(eadl-version eadl/1)\n(defblock console.uart (offers (observable-output true)))\n(deffact parity\n  (doc \"a parity bit\")\n  (domain boolean)\n  (role guarantee)\n  (direction exact))\n",
+    );
+    let (status, _, err) = invoke(&["check", &path]);
+    assert_eq!(status, Status::Unimplemented, "{err}");
+    assert!(
+        err.contains(
+            "mine.eadl:3:1 declares a fact of the capability vocabulary, `(deffact parity …)`"
+        ),
+        "{err}"
+    );
+}
+
+#[test]
+fn a_module_file_is_classified_first_and_its_deffact_refused() {
+    // Record §1.1: a `deffact` inside a module's body is `schema-unknown-kind`, no description's registry holding the
+    // kind; one beside its `defmodule` is `module-multiple-forms`. Both exit 10, both refusals.
+    let dir = scratch("module-deffact");
+    let entry = "(deffact parity (doc \"a parity bit\") (domain boolean) (role guarantee) (direction exact))";
+    for (name, text, code) in [
+        (
+            "inside.eadl",
+            format!("(eadl-version eadl/1)\n(defmodule lib.parity\n  (version 1 0)\n  (export parity)\n  {entry})\n"),
+            "schema-unknown-kind",
+        ),
+        (
+            "beside.eadl",
+            format!("(eadl-version eadl/1)\n(defmodule lib.parity\n  (version 1 0)\n  (export uart)\n  (defblock uart (offers (observable-output true))))\n{entry}\n"),
+            "module-multiple-forms",
+        ),
+    ] {
+        let path = write(&dir, name, &text);
+        let (status, _, err) = invoke(&["check", &path]);
+        assert_eq!(status, Status::InvalidDescription, "{name}: {err}");
+        let codes: Vec<&str> = err
+            .lines()
+            .filter_map(|l| l.strip_prefix("error[")?.split(']').next())
+            .collect();
+        assert_eq!(codes, [code], "{name}: {err}");
+        assert!(!err.contains("capability vocabulary"), "{name}: {err}");
+    }
 }

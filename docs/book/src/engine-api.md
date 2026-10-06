@@ -61,7 +61,8 @@ description was judged, the status is its `ROADMAP.md` §5.5 verdict. When it wa
 why, and `notes` explain it:
 
 - a profile nobody supports: `unsupported-profile`;
-- a kind module, which nothing loads yet (leaf `M6.3`): `unimplemented`;
+- a kind module, or a file that writes an entry of the capability vocabulary — the language's own definition,
+  which nothing loads from a user yet (leaf `M6.3`): `unimplemented`;
 - an import that exists and cannot be read: `usage`, never `module-not-found`, which would be a
   false statement about the description;
 - a language definition that fails to load, or a description too large to address: `tool-failure`.
