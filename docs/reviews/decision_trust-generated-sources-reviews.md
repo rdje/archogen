@@ -341,3 +341,23 @@ feed and carriage return; their first run found seven survivors, each now a case
 | R11-r6 | remark | which refusals stand beside "unable to judge" | the shape and text-only ones, all that can be decided with nothing built |
 | R11-r7 | remark | §7 listed an unamended sentence among the amended | moved out: it stands, unamended |
 | R11-r8 | remark | "no sentence of this section states another" was false for the gate's rules | "the recogniser's rules are the rows below and the comment syntax the table above names; no sentence of this section states another of them" |
+
+**Round 12**, `2026-10-06`: the reviewer confirmed the 280 mutations by `--list`, 43 `lit` and 4 `chr`, the two
+equivalents by hand and by the sweep, three catalogued mutations run, the 48 rows, the 134 cases, the fixture's thirty,
+the 277 catalogue entries, the rustc paragraph case by case, the census, the hand-offs and the quotations, and that
+round 11's answers hold. There were 8 findings, 3 of them defects. The largest: §2's order did not say whether a step
+runs after a refusal, and two `GS-H5` fixtures assumed staleness reported beside one, which the parent forbids — *"on
+any refusal the tool writes no inventory"* (R12-1). The run now ends at the first step that refuses, as the parent's
+does, and staleness is decided only in a run that refuses nothing; a form a chain or the blob rule touches is then never
+stale, since its run refuses. The order is a hand-off of its own, `GS-H14`.
+
+| Finding | Class | What it found | The answer |
+| --- | --- | --- | --- |
+| R12-1 | defect | whether the last step runs beside a refusal; staleness beside a refusal, which the parent forbids; what is live when the parent refuses before the programs' builds | §2: each step runs only when those before it refused nothing, a refusal ending the run as the parent's does; only a run that refuses nothing decides staleness and stale admissions; `GS-H14`; `GS-H5`'s fixtures rewritten; §6 and `GS-H4`: stale is not live, in a run that refuses nothing |
+| R12-2 | defect | the reader's stop at another form's departure was carried by no hand-off | `GS-H1` carries it; `GS-H5` a fixture: a shape refusal reported beside another form's departure, and one after it not |
+| R12-3 | defect | a nested block's `/*` stayed in the header's text and its `*/` did not, so neither reading of "the comments" gave both outcomes | both leave it, the block's own text staying: `/* auto/**/-generated */` and `/* /* auto*/-generated */` marked; rows `gh-nested-open-kept`, `gh-nested-close-kept`, each killed |
+| R12-r1 | remark | which entries a live form departing from the shape names | none: its refusal ends the run at the forms' text |
+| R12-r2 | remark | §6's "whose refusal is its one code" false for the blob rule | §6: the chain's, or the blob rule's, refusal |
+| R12-r3 | remark | "each syntax's delimiters" while `lit` takes two characters or more | "each delimiter of two or more characters" |
+| R12-r4 | remark | the method's item 5 said one table | item 5: with any table of the code's data the rule reads, held by its own test |
+| R12-r5 | remark | §5's case read the classification's role packages, its rule the computed ones | "its role packages, as the parent computes them" |

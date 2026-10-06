@@ -3187,3 +3187,37 @@ from
 to
             Syntax::None if false && extension(name).is_none() && text.starts_with("#!") => Syntax::Hash,
 end
+
+mutation gh-nested-open-kept
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests::the_corpus
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its twelfth review): a nested block's `/*` leaves the header's text; kept, `auto/**/-generated` would not read as `auto-generated`.
+from
+                                depth += 1;
+                                i += 2;
+                            } else if at(i, "*/") {
+to
+                                depth += 1;
+                                out.push_str("/*");
+                                i += 2;
+                            } else if at(i, "*/") {
+end
+
+mutation gh-nested-close-kept
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests::the_corpus
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its twelfth review): a nested block's `*/` leaves the header's text, as its `/*` does; kept, `/* auto*/-generated` would not read as `auto-generated`.
+from
+                            } else if at(i, "*/") {
+                                depth -= 1;
+                                i += 2;
+to
+                            } else if at(i, "*/") {
+                                depth -= 1;
+                                if depth > 0 {
+                                    out.push_str("*/");
+                                }
+                                i += 2;
+end
