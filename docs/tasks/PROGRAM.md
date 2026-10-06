@@ -577,6 +577,18 @@ mdBook that is the director's window into the project.
   Verification: `2026-10-06` — the Verification Log's row
   Commit: `ARCHOGEN-PROGRAM-0490 (leaf PROGRAM.66)`
 
+- ID: `PROGRAM.67`
+  Status: `pending` — filed `2026-10-06` by `M3.6.6.1`'s round 10
+  Goal: `cargo xtask mutate` runs each entry under a timeout that kills the test's whole process group and says
+  which entry hung, so a mutation that makes a loop never end is reported, not waited on.
+  Acceptance: an entry that hangs is reported within its timeout as a hang the tests reach, and the file is restored;
+  a self-test arm holds it; the `extended` tier's `mutation` step finishes whatever the catalogue holds.
+  Why: measured `2026-10-06`, a catalogue entry of `M3.6.6.1`'s, `gh-header-reads-past-code`, made the header's loop
+  step past the end of a file forever once a redundant end test was removed: the whole-catalogue run waited 1 507.5 s
+  until the test was killed by hand, and only then counted it killed. `scripts/mutation_sweep.sh` has such a timeout;
+  the harness has none (`grep -n timeout xtask/src/mutation.rs` → nothing). The entry was rewritten to end, so nothing
+  hangs today.
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does

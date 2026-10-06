@@ -2795,7 +2795,7 @@ why M3.6.6.1, the generated-sources record §3 (its seventh review): a file's by
 from
         let decoded = String::from_utf8_lossy(bytes);
 to
-        let decoded = String::from_utf8(bytes.to_vec()).ok()?;
+        let decoded = std::borrow::Cow::Borrowed(std::str::from_utf8(bytes).unwrap_or(""));
 end
 
 mutation gh-marker-at-generated
@@ -2870,9 +2870,9 @@ test -p xtask generated_header::tests
 expect killed
 why M3.6.6.1, the generated-sources record §3 (its eighth review): markers are compared without regard to case; each rule §3 states has a mutation the corpus or the fixture kills.
 from
-            let h = h.to_lowercase();
+        let h = header(path, bytes).to_lowercase();
 to
-            let h = h;
+        let h = header(path, bytes);
 end
 
 mutation gh-outer-block-doc-skipped
@@ -2998,4 +2998,181 @@ from
             .find(|(_, _, names)| names.contains(&name))
 to
             .find(|(_, _, names)| names.iter().any(|n| n.eq_ignore_ascii_case(name)))
+end
+
+mutation gh-names-ignored
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests::the_corpus
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its tenth review): a file whose exact name the table holds is read by that name; ignored, `Makefile` and `.env` would go unread.
+from
+            .find(|(_, _, names)| names.contains(&name))
+to
+            .find(|(_, _, names)| false && names.contains(&name))
+end
+
+mutation gh-dotfile-extension
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests::the_corpus
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its tenth review): a `.` that is a name's first character opens no extension; taken as one, `.md` would be read as Markdown.
+from
+        let rest = &name[first.len_utf8()..];
+to
+        let rest = &name[first.len_utf8() * 0..];
+end
+
+mutation gh-extension-case-sensitive
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests::the_corpus
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its tenth review): an extension is matched in any case; matched in its case, `X.RS` would go unread.
+from
+            .map(|(_, e)| e.to_ascii_lowercase())
+to
+            .map(|(_, e)| e.to_string())
+end
+
+mutation gh-unknown-file-read-as-hash
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests::the_corpus
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its tenth review): a file neither named nor with an extension the table holds has no syntax; read with `#`, a `.txt` would be marked.
+from
+            .map_or(Syntax::None, |(syn, _, _)| *syn)
+to
+            .map_or(Syntax::Hash, |(syn, _, _)| *syn)
+end
+
+mutation gh-extensionless-rule-on-hash
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests::the_corpus
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its tenth review): the extensionless rule takes a `#!` first line, not a `#` one.
+from
+            Syntax::None if extension(name).is_none() && text.starts_with("#!") => Syntax::Hash,
+to
+            Syntax::None if extension(name).is_none() && text.starts_with('#') => Syntax::Hash,
+end
+
+mutation gh-extensionless-rule-before-bom
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests::the_corpus
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its tenth review): the extensionless rule's `#!` is sought after a byte-order mark.
+from
+            Syntax::None if extension(name).is_none() && text.starts_with("#!") => Syntax::Hash,
+to
+            Syntax::None if extension(name).is_none() && decoded.starts_with("#!") => Syntax::Hash,
+end
+
+mutation gh-header-reads-past-code
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests::the_corpus
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its tenth review): the header ends at the first character that is neither whitespace nor inside a comment; read past it, a body marker would mark.
+from
+                _ => break,
+to
+                _ if i < s.len() => i += 1,
+                _ => break,
+end
+
+mutation gh-header-whitespace-ascii
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests::the_corpus
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its tenth review): the header skips Unicode's whitespace, not ASCII's alone.
+from
+            while i < s.len() && s[i].is_whitespace() {
+to
+            while i < s.len() && s[i].is_ascii_whitespace() {
+end
+
+mutation gh-unclosed-slash-block-dropped
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests::the_corpus
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its tenth review): an unclosed `/*` where `//` is runs to the end of the file.
+from
+                    } else if at(i, "/*") {
+to
+                    } else if at(i, "/*") && (i..s.len()).any(|k| at(k, "*/")) {
+end
+
+mutation gh-unclosed-css-block-dropped
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests::the_corpus
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its tenth review): an unclosed CSS block runs to the end of the file.
+from
+                Syntax::Block if at(i, "/*") => {
+to
+                Syntax::Block if at(i, "/*") && (i..s.len()).any(|k| at(k, "*/")) => {
+end
+
+mutation gh-unclosed-angle-block-dropped
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests::the_corpus
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its tenth review): an unclosed `<!--` runs to the end of the file.
+from
+                Syntax::Angle if at(i, "<!--") => {
+to
+                Syntax::Angle if at(i, "<!--") && (i..s.len()).any(|k| at(k, "-->")) => {
+end
+
+mutation gh-xml-declaration-after-whitespace-refused
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests::the_corpus
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its tenth review): the XML declaration may come after whitespace.
+from
+            while j < s.len() && s[j].is_whitespace() {
+to
+            while false && j < s.len() && s[j].is_whitespace() {
+end
+
+mutation gh-xml-declaration-in-every-file
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests::the_corpus
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its tenth review): the XML declaration is skipped in an `<!-- -->` file alone.
+from
+        if syn == Syntax::Angle {
+to
+        if syn == Syntax::Angle || syn != Syntax::Angle {
+end
+
+mutation gh-rust-shebang-not-a-comment
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests::the_corpus
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its tenth review): in Rust, a `#!` first line rustc reads as a shebang is a comment.
+from
+        if is_rust && rust_shebang(&s) {
+to
+        if false && is_rust && rust_shebang(&s) {
+end
+
+mutation gh-rust-rule-for-every-nesting-language
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests::the_corpus
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its tenth review): Rust's shebang rule is `.rs`'s alone, not Kotlin's, Swift's or Scala's.
+from
+        let is_rust = extension(name).as_deref() == Some("rs");
+to
+        let is_rust = syn == (Syntax::Slash { nests: true });
+end
+
+mutation gh-xml-declaration-not-skipped
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests::the_corpus
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its tenth review): in an `<!-- -->` file the XML declaration may come before the comments; not skipped, it would end the header.
+from
+                i = j + 2;
+to
+                i = j * 0;
 end

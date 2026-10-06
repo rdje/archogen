@@ -288,3 +288,31 @@ two rules have rows, corpus cases and mutations, thirty-one in all, each killed.
 | R9-r4 | remark | "a writer outside both roles" misstated §5's rule | "a writer in no role but the scheduling checker's" |
 | R9-r5 | remark | one content under three unmatched paths read as three items or one; `GS-H3` lagged §5 | §5 and `GS-H3`: one item per content over its unmatched paths, the parent's copy item per hash |
 | R9-r6 | remark | the leaf cited round 7's test count | 136, on the tree that commits it |
+
+**Round 10**, `2026-10-06`: the reviewer confirmed all thirteen hand-offs quoted, the corpus's 83 cases, the fixture's
+twenty-four and its control, the table's 31 rows equal to the catalogue's, every one of the 31 `gh-` mutations traced by
+hand and three run, the census and the quotations. There were 13 findings, 4 of them defects. The largest was round 9's
+class again: rules §3 states in prose — a dotfile's missing extension, Unicode's whitespace, the declaration's scope, an
+unclosed block outside Rust, Rust's rule for `.rs` alone — that a change could remove with every test green (R10-1).
+Four rounds running had found one of these, each by a reader thinking of a change; so the answer is a method, not a
+case. §3's rules are now the rows of its table and nothing else, forty-seven, each removed by a catalogued mutation the
+corpus or the fixture kills; and a sweep, `scripts/mutation_sweep.sh`, makes every mutation a fixed list of operators
+makes of the recogniser's code and runs the tests against each. Its first run, of 252 mutations, found 63 survivors, each now a
+case — or a simplification, where the code held a branch no outcome could see — and its last run, of 233, leaves two
+equivalents, listed with their reasons, and no survivor.
+
+| Finding | Class | What it found | The answer |
+| --- | --- | --- | --- |
+| R10-1 | defect | a dotfile's extension, Unicode's whitespace, the declaration's scope, unclosed blocks outside Rust and Rust's rule for `.rs` alone could each be changed with every test green | §3's rules are its table's rows, no sentence stating another; sixteen rows added, forty-seven, each with a mutation killed; corpus cases for each; the sweep over the code, every mutation killed or listed equivalent |
+| R10-2 | defect | `GS-H2` still promised a mutation for every rule §3 states | `GS-H2`: the rules §3's rows state, each removed by a catalogued mutation, and every mutation the sweep makes killed or listed equivalent |
+| R10-3 | defect | a path two forms declare: whether both, or one, drew the refusal and which was admitted | §2: each form declaring it is refused, none eligible; "read from the forms' text alone, no build consulted" |
+| R10-4 | defect | a content whose unmatched paths lie on one side made an item, or not, three ways | §5 and `GS-H3`: by content as the parent matches a copy — each side's paths of it held or read, one item when both sides have one, the sets differ and one is a provenance file; roles from each side's own paths |
+| R10-r1 | remark | a missing `generator` clause was no longer listed | "a `generator` clause missing or holding no entry" |
+| R10-r2 | remark | a declared file its own generator drew two messages; a malformed form no program reads two codes | §2: the self-reference rule alone for generator or input; §2, §6 and `GS-H4`: stale only when it draws none of the shape and text-only refusals |
+| R10-r3 | remark | "before any build" while liveness comes from the programs' builds; a generator that is a root is built anyway | §2: "before any generator's build", the order stated — the programs' builds, §2's checks, §5's judgments and builds, then §3 and the chain's second clause; a generator target that is a root built as that root either way |
+| R10-r4 | remark | `GS-H5` had no fixture for round 9's two rules | added: a chain found in an eligible form's build withdrawing nothing; a target refused before its build reading nothing, so a form only it would read is stale |
+| R10-r5 | remark | "admitted" collided with the parent's admissions | the form's state is **eligible** |
+| R10-r6 | remark | "first lines" set no count | "first ten lines", re-measured: four, seven within twenty |
+| R10-r7 | remark | an edit to an undeclared script "changes nothing" was false for the parent's items | "changes no generated-provenance item, and moves the parent's items only as any file's edit does" |
+| R10-r8 | remark | CMake's bracket comment is Lua's case | named in §8 |
+| R10-r9 | remark | a `defgenerated` departure "behind" the parent's stop; "the same strict reader" | §2: the parent's reader stops at the first other form that departs; the `defgenerated` forms before it are read and reported beside it, those after once it is repaired; "a form this section's reader reads strictly" |

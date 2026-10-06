@@ -12,3 +12,4 @@ To prove a file, compare `sha256sum docs/review-history/<FILE>` with its row.
 | File | Lines | Bytes | sha256 | Archived |
 | --- | --- | --- | --- | --- |
 | `decision_catalog-records-reviews.md` | 541 | 75383 | `d4fbec48d178a9c74e3e47de1df287f9ac6092a98208449bc7f85a20fa3cd811` | `2026-10-05` |
+| `rt-static-up-v1-faults-reviews.md` | 384 | 44524 | `5df5e66854f18b152bdc544d3af856f88986804112404e17ce7e603aa1ced7b9` | `2026-10-06` |

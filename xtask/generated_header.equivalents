@@ -1,0 +1,13 @@
+# The equivalent mutations of `xtask/src/generated_header.rs`: each a change `scripts/mutation_sweep.sh` makes of the
+# recogniser's code that no file's outcome can see, with the reason. The sweep reads this file (`--equivalents`) and
+# fails on a survivor it does not list, and on a listed one it no longer makes or that no longer survives — so the list
+# can neither hide a rule no test holds nor outlive the code it describes. Leaf `M3.6.6.1`; the generated-sources record
+# §3. Entries are matched by text, three lines and a blank: the original line, trimmed; the mutated one; why.
+
+from while j < s.len() && depth > 0 {
+to while j <= s.len() && depth > 0 {
+why an unclosed block in the look-ahead: at the end, neither `/*` nor `*/` is there, so the step goes one past it, and the look-ahead then says "shebang", finding no `[` — as it does stopping at the end
+
+from while j < s.len() && !at(j, "?>") {
+to while j <= s.len() && !at(j, "?>") {
+why an unclosed declaration: at the end no `?>` is there, so the step goes one past it, and the header then starts beyond the end either way and reads nothing more

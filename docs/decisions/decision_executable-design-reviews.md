@@ -47,6 +47,12 @@ The method moves each of them out of the reader's judgement and into something t
    leaf or differs from it, or a leaf quotes an identifier no ledger holds. So no hand-off can be left uncarried, and
    none can be carried in weaker words than the record's: there is one copy of each sentence, checked against the
    other.
+5. **A rule stated as code is held by rows and a sweep** (added `2026-10-06` by leaf `M3.6.6.1`, after its rounds 7 to
+   10). Where a design's rule is code with a corpus, the record states its rules as the rows of one machine-read table,
+   and no sentence states another; each row names a catalogued mutation that removes it, which the corpus or an
+   instrument's fixture kills, and a test holds the rows equal to the catalogue. What the code does beyond the rows is
+   held by `scripts/mutation_sweep.sh`: every mutation its operators make of the code is killed, or listed as
+   equivalent with its reason in a file the sweep reads, and refuses when stale.
 
 **What a round reviews.** The record, the model or instrument, and the corpus. The reader runs the checker and the
 corpus, and spends its judgement on what no machine can settle: whether the rules are the right rules, whether the
@@ -58,6 +64,9 @@ model transcribes the record faithfully, and whether the universe misses a case.
   phrasing. Round 14's horizon endpoint, `modulus / rate` where the reads allow only `(modulus − 1) / rate`, was in
   the record for thirteen rounds of reading, and a simulation of a 4-tick counter at 1 Hz finds it in milliseconds.
 - Hand-offs were the largest late class in the first loop, and a hand-off is a string equality across two files.
+- Four rounds of `M3.6.6.1` running each found a rule its record stated that some change could remove with every test
+  green, each by a reader imagining one change. A sweep makes all of them: its first run over the recogniser found 63
+  such changes at once, where a round had found two to five.
 - In the second loop, every round's new defect was a channel a reader measured in a scratch workspace that nobody
   kept. Kept as fixtures, those measurements accumulate instead of being redone, and the next channel is the only
   thing left to find.
