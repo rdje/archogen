@@ -448,10 +448,424 @@ pub fn run(repo: &Path, args: &[&str]) -> i32 {
     }
 }
 
+// ── The gate (§6; leaf `M3.6.3.3`) ──────────────────────────────────────────────────────────────────────────────
+
+/// The report's file, under the gate's output directory (§6).
+pub const REPORT: &str = "report.txt";
+
+/// The base commit, as the gate compares against it: the commit, or none for a root commit, and its baseline's forms
+/// with the sha256 of the file they were read from, or none when it holds no baseline.
+pub struct Base<'a> {
+    /// The base commit.
+    pub commit: Option<&'a str>,
+    /// Its `trust/baseline.eadl`, read, and the file's sha256.
+    pub baseline: Option<(&'a Baseline, String)>,
+}
+
+/// What the gate concluded: the refusals that fail it, and the two parts of its report.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Judgement {
+    /// Every refusal, its code first.
+    pub refused: Vec<String>,
+    /// The change against the base commit's forms: its lines, "unchanged", or "not compared" and why.
+    pub change: Vec<String>,
+    /// Every shared item, root form, classification and admission not accepted, and every program target the
+    /// inventory reports unclassified.
+    pub standing: Vec<String>,
+}
+
+/// The aspects whose digests differ between a form and the item measured now, by name.
+fn differing(was: &BTreeMap<String, String>, now: &BTreeMap<String, String>) -> Vec<String> {
+    was.keys()
+        .chain(now.keys())
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .filter(|k| was.get(*k) != now.get(*k))
+        .cloned()
+        .collect()
+}
+
+/// Judge an inventory (§6): `own` is the commit's own baseline, `roots` its own roots file, `base` the base commit's
+/// baseline. On the baseline's host — the inventory's, named by `own` — `trust-form-missing` and `trust-baseline-stale`
+/// apply; the change part is compared only when the base commit's baseline names the inventory's host.
+///
+/// # Errors
+///
+/// An inventory that names no host, or whose items the gate cannot read.
+pub fn judge(
+    inventory: &Json,
+    roots: &crate::trust::Roots,
+    own: Option<&Baseline>,
+    base: &Base,
+) -> Result<Judgement, String> {
+    let host = inventory
+        .get("identity")
+        .and_then(|i| i.get("host"))
+        .and_then(Json::as_str)
+        .filter(|h| !h.is_empty())
+        .ok_or("the inventory names no host")?;
+    let current = items(inventory)?;
+    let strings = |key: &str| -> Vec<String> {
+        inventory
+            .get(key)
+            .map(Json::elements)
+            .unwrap_or_default()
+            .iter()
+            .filter_map(Json::as_str)
+            .map(str::to_owned)
+            .collect()
+    };
+    // A program target the inventory reports unclassified: with no classification at all, a form missing; with one
+    // whose role packages grew, reported for review (§2, §6).
+    let mut unclassified = Vec::new();
+    let mut formless = Vec::new();
+    for t in inventory
+        .get("program-targets")
+        .map(Json::elements)
+        .unwrap_or_default()
+    {
+        let field = |k: &str| t.get(k).and_then(Json::as_str).unwrap_or_default();
+        let status = field("status");
+        if !status.starts_with("trust-unclassified-program") {
+            continue;
+        }
+        unclassified.push(status.to_owned());
+        let classified = roots.classified.iter().any(|c| {
+            c.package == field("package") && c.kind == field("kind") && c.target == field("name")
+        });
+        if !classified {
+            formless.push(format!(
+                "trust-form-missing: the {} `{}` of `{}` has no form in {} — classify it, or make it a root",
+                field("kind"),
+                field("name"),
+                field("package"),
+                crate::trust::ROOTS
+            ));
+        }
+    }
+
+    let mut refused = Vec::new();
+    if let Some(own) = own.filter(|b| b.host == host) {
+        for id in current.keys().filter(|id| !own.forms.contains_key(id)) {
+            refused.push(format!(
+                "trust-form-missing: `{}` is shared and {BASELINE} holds no form for it — commit the tool's proposal, `cargo xtask trust-baseline --propose`",
+                id.name()
+            ));
+        }
+        refused.extend(formless);
+        for id in own.forms.keys().filter(|id| !current.contains_key(id)) {
+            refused.push(format!(
+                "trust-baseline-stale: {BASELINE}: `{}` is no longer shared — remove its form, so a sharing reintroduced is reviewed again",
+                id.name()
+            ));
+        }
+        for c in strings("classifications-unused") {
+            refused.push(format!(
+                "trust-baseline-stale: {}: {c}",
+                crate::trust::ROOTS
+            ));
+        }
+        for a in strings("admissions-unused") {
+            refused.push(format!(
+                "trust-baseline-stale: {}: the admission `{a}` admits no current site",
+                crate::trust::ROOTS
+            ));
+        }
+    }
+
+    let change = match (base.commit, &base.baseline) {
+        (None, _) => vec!["not compared — the commit has no parent to compare against".to_owned()],
+        (Some(commit), None) => vec![format!(
+            "not compared — the base commit `{commit}` holds no {BASELINE}"
+        )],
+        (Some(_), Some((b, _))) if b.host != host => vec![format!(
+            "not compared — the base commit's baseline names the host `{}`, and this inventory was built on `{host}`",
+            b.host
+        )],
+        (Some(_), Some((b, _))) => {
+            let mut lines = Vec::new();
+            for (id, now) in &current {
+                match b.forms.get(id) {
+                    None => lines.push(format!("trust-new-shared: `{}`", id.name())),
+                    Some(form) => {
+                        let moved = differing(&form.digests, now);
+                        if !moved.is_empty() {
+                            lines.push(format!(
+                                "trust-shared-changed: `{}` — {}",
+                                id.name(),
+                                moved.join(", ")
+                            ));
+                        }
+                    }
+                }
+            }
+            for id in b.forms.keys().filter(|id| !current.contains_key(id)) {
+                lines.push(format!("no longer shared: `{}`", id.name()));
+            }
+            if lines.is_empty() {
+                lines.push("unchanged".to_owned());
+            }
+            lines
+        }
+    };
+
+    // Nothing is accepted before `M3.6.5` reads acceptance, so every entry is unreviewed (§5).
+    let mut standing = Vec::new();
+    for id in current.keys() {
+        let state = match own.and_then(|b| b.forms.get(id)) {
+            None => "no form".to_owned(),
+            Some(f) => format!("proposed, classification {}", f.classification),
+        };
+        standing.push(format!("shared item `{}`: {state}", id.name()));
+    }
+    for p in &roots.programs {
+        standing.push(format!(
+            "root form `{}`: {}, `{}`",
+            p.name, p.role, p.package
+        ));
+    }
+    for c in &roots.classified {
+        standing.push(format!(
+            "classification `{}`: the {} `{}` of `{}`",
+            c.name, c.kind, c.target, c.package
+        ));
+    }
+    for (a, n) in &roots.admissions {
+        for _ in 0..*n {
+            standing.push(format!("admission `{}`: {} {}", a.file, a.rule, a.sha256));
+        }
+    }
+    standing.extend(unclassified);
+    Ok(Judgement {
+        refused,
+        change,
+        standing,
+    })
+}
+
+/// The report (§6): the build identity, the inventory's and the baseline's sha256, the verdict, the refusals, then its
+/// two parts.
+#[must_use]
+pub fn report(inventory: Option<(&Json, &str)>, base: &Base, j: &Judgement) -> String {
+    let mut out =
+        String::from("trust-gate report — docs/specs/trust/decision_trust-inventory.md §6\n");
+    if let Some((inv, sha)) = inventory {
+        let id = |k: &str| {
+            inv.get("identity")
+                .and_then(|i| i.get(k))
+                .and_then(Json::as_str)
+                .unwrap_or("")
+                .lines()
+                .next()
+                .unwrap_or("")
+                .to_owned()
+        };
+        out.push_str(&format!("commit: {}\ntree: {}\n", id("commit"), id("tree")));
+        out.push_str(&format!(
+            "host: {}\nrustc: {}\ncargo: {}\n",
+            id("host"),
+            id("rustc"),
+            id("cargo")
+        ));
+        out.push_str(&format!("Cargo.lock: sha256 {}\n", id("Cargo.lock")));
+        out.push_str(&format!("inventory: sha256 {sha}\n"));
+    } else {
+        out.push_str("inventory: none — refused before it was written\n");
+    }
+    match (base.commit, &base.baseline) {
+        (Some(c), Some((b, sha))) => out.push_str(&format!(
+            "baseline: sha256 {sha} — {BASELINE} of the base commit {c}, host {}\n",
+            b.host
+        )),
+        (Some(c), None) => out.push_str(&format!(
+            "baseline: none — the base commit {c} holds no {BASELINE}\n"
+        )),
+        (None, _) => out.push_str("baseline: none — the commit has no parent\n"),
+    }
+    if j.refused.is_empty() {
+        out.push_str("verdict: passed\n");
+    } else {
+        out.push_str(&format!(
+            "verdict: refused — {} refusal(s)\n",
+            j.refused.len()
+        ));
+        for r in &j.refused {
+            out.push_str(&format!("  {r}\n"));
+        }
+    }
+    out.push_str("\n== the change, against the base commit's forms ==\n");
+    for l in &j.change {
+        out.push_str(&format!("{l}\n"));
+    }
+    out.push_str("\n== the standing list: nothing is accepted before M3.6.5, so every entry is unreviewed ==\n");
+    for l in &j.standing {
+        out.push_str(&format!("{l}\n"));
+    }
+    out
+}
+
+/// A file of a commit's tree, or none when the tree does not hold it.
+fn blob_at(
+    git: &crate::catalog_check::Git,
+    rev: &str,
+    path: &str,
+) -> Result<Option<Vec<u8>>, String> {
+    if git
+        .text(&["ls-tree", "--name-only", rev, "--", path])?
+        .trim()
+        .is_empty()
+    {
+        return Ok(None);
+    }
+    git.bytes(&["cat-file", "blob", &format!("{rev}:{path}")])
+        .map(Some)
+}
+
+/// Run the gate on `commit` against `base` in the repository at `repo`, scratch and report under `out`, the cargo
+/// configurations on the build's path judged against `config_root`'s tracked copy (as [`crate::trust::inventory_with`]).
+/// Returns the judgement and the report written.
+///
+/// # Errors
+///
+/// What kept the gate from judging: git, cargo or the file system did not answer, or a file of `trust/` did not read.
+pub fn gate(
+    repo: &Path,
+    commit: &str,
+    base: Option<&str>,
+    out: &Path,
+    config_root: &Path,
+) -> Result<(Judgement, String), String> {
+    let git = crate::catalog_check::Git::at(repo);
+    let commit = git
+        .text(&[
+            "rev-parse",
+            "--verify",
+            "--end-of-options",
+            &format!("{commit}^{{commit}}"),
+        ])?
+        .trim()
+        .to_owned();
+    let base = match base {
+        Some(b) => Some(b.to_owned()),
+        None => git
+            .text(&[
+                "rev-parse",
+                "--verify",
+                "-q",
+                "--end-of-options",
+                &format!("{commit}^1^{{commit}}"),
+            ])
+            .ok(),
+    }
+    .map(|b| {
+        git.text(&[
+            "rev-parse",
+            "--verify",
+            "--end-of-options",
+            &format!("{}^{{commit}}", b.trim()),
+        ])
+        .map(|s| s.trim().to_owned())
+    })
+    .transpose()?;
+    let read_at = |rev: &str| -> Result<Option<(Baseline, String)>, String> {
+        blob_at(&git, rev, BASELINE)?
+            .map(|bytes| {
+                let text = String::from_utf8(bytes.clone())
+                    .map_err(|_| format!("{BASELINE} of {rev} is not UTF-8"))?;
+                Ok((read_baseline(&text)?, Digest::of(&bytes).hex()))
+            })
+            .transpose()
+    };
+    let own = read_at(&commit)?;
+    let base_baseline = match &base {
+        Some(b) => read_at(b)?,
+        None => None,
+    };
+    let base_view = Base {
+        commit: base.as_deref(),
+        baseline: base_baseline.as_ref().map(|(b, sha)| (b, sha.clone())),
+    };
+    fs::create_dir_all(out).map_err(|e| format!("{}: {e}", out.display()))?;
+    let (judgement, text) = match crate::trust::inventory_with(repo, &commit, out, config_root)? {
+        crate::trust::Outcome::Refused(refusals) => {
+            let j = Judgement {
+                refused: refusals,
+                change: vec!["not compared — the inventory was refused".to_owned()],
+                standing: Vec::new(),
+            };
+            let mut text = format!("commit: {commit}\n");
+            text.push_str(&report(None, &base_view, &j));
+            (j, text)
+        }
+        crate::trust::Outcome::Written(inv) => {
+            let bytes = fs::read(out.join("trust-dependencies.json"))
+                .map_err(|e| format!("the inventory it wrote: {e}"))?;
+            let roots_text = blob_at(&git, &commit, crate::trust::ROOTS)?
+                .ok_or_else(|| format!("the commit holds no {}", crate::trust::ROOTS))?;
+            let roots = crate::trust::read_roots(&String::from_utf8_lossy(&roots_text))?;
+            let j = judge(&inv, &roots, own.as_ref().map(|(b, _)| b), &base_view)?;
+            let text = report(Some((&inv, &Digest::of(&bytes).hex())), &base_view, &j);
+            (j, text)
+        }
+    };
+    fs::write(out.join(REPORT), &text)
+        .map_err(|e| format!("{}: {e}", out.join(REPORT).display()))?;
+    Ok((judgement, text))
+}
+
+/// `cargo xtask trust-gate [--commit REV] [--base REV] [--out DIR]`: exit 0 passed, 1 refused, 2 not judged.
+pub fn run_gate(repo: &Path, args: &[&str]) -> i32 {
+    let (mut commit, mut base, mut out) =
+        ("HEAD".to_owned(), None, repo.join("target").join("trust"));
+    let mut i = 0;
+    while i < args.len() {
+        match (args[i], args.get(i + 1)) {
+            ("--commit", Some(v)) => commit = (*v).to_owned(),
+            ("--base", Some(v)) => base = Some((*v).to_owned()),
+            ("--out", Some(v)) => out = repo.join(v),
+            (other, _) => {
+                eprintln!("trust-gate: unknown argument `{other}`; write `[--commit REV] [--base REV] [--out DIR]`");
+                return 2;
+            }
+        }
+        i += 2;
+    }
+    match gate(repo, &commit, base.as_deref(), &out, repo) {
+        Ok((j, _)) => {
+            for r in &j.refused {
+                eprintln!("{r}");
+            }
+            let first = j.change.first().map_or("", String::as_str);
+            println!(
+                "trust-gate: {} — the change: {}; {} standing entr{} unreviewed; report {}",
+                if j.refused.is_empty() {
+                    "passed"
+                } else {
+                    "refused"
+                },
+                if j.change.len() == 1 {
+                    first.to_owned()
+                } else {
+                    format!("{} line(s)", j.change.len())
+                },
+                j.standing.len(),
+                if j.standing.len() == 1 { "y" } else { "ies" },
+                out.join(REPORT).display()
+            );
+            i32::from(!j.refused.is_empty())
+        }
+        Err(e) => {
+            eprintln!("trust-gate: {e}");
+            2
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{items, propose, read_baseline, ItemId, UNSTATED};
-    use crate::json;
+    use super::{gate, items, judge, propose, read_baseline, Base, ItemId, UNSTATED};
+    use crate::json::{self, Json};
+    use crate::trust::read_roots;
 
     /// An inventory as `trust-inventory` writes one: every kind of shared item, on a host of its own.
     const INVENTORY: &str = r#"{"identity":{"host":"test-host-triple"},"shared":[
@@ -533,6 +947,306 @@ mod tests {
         );
         let baseline = read_baseline(&reviewed).expect("the reviewed file reads");
         assert_eq!(propose(&inv, Some(&baseline)).expect("again"), reviewed);
+    }
+
+    // ── The gate (§6) ──────────────────────────────────────────────────────────────────────────────────────────
+
+    const CONFIG: &str = r#"{"kind":"build-configuration","content":{"toolchain":"rustc x"}}"#;
+    const LIB: &str = r#"{"kind":"package","package":"crates/lib","content":["crates/lib/src/lib.rs=bb"],"edges":["gen crates/a normal"]}"#;
+    const FILE: &str = r#"{"kind":"file","file":"docs/data.txt","sha256":"cc"}"#;
+
+    /// Two roots, a classified tool and one admission, as the gate reads a commit's roots file.
+    const ROOTS_TEXT: &str = "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\"))\n\
+         (defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\"))\n\
+         (defprogram tool (package \"crates/t\") (target bin t) (reason \"a tool\") (role-packages \"crates/a\"))\n\
+         (defadmit (file \"crates/a/src/main.rs\") (rule \"include_str\") (sha256 \"ab\") (reason \"r\"))\n";
+
+    /// An inventory on `host`, its shared items, program targets and the two lists the gate refuses on the host.
+    fn inv(host: &str, items: &[&str], targets: &[&str], unused: (&[&str], &[&str])) -> Json {
+        let list = |xs: &[&str]| {
+            xs.iter()
+                .map(|x| format!("\"{x}\""))
+                .collect::<Vec<_>>()
+                .join(",")
+        };
+        json::parse(&format!(
+            r#"{{"identity":{{"host":"{host}"}},"shared":[{{"pair":["gen","chk"],"items":[{}]}}],"program-targets":[{}],"classifications-unused":[{}],"admissions-unused":[{}]}}"#,
+            items.join(","),
+            targets.join(","),
+            list(unused.0),
+            list(unused.1)
+        ))
+        .expect("an inventory")
+    }
+
+    fn baseline_of(j: &Json) -> super::Baseline {
+        read_baseline(&propose(j, None).expect("a proposal")).expect("it reads")
+    }
+
+    const UNCLASSIFIED: &str = r#"{"package":"crates/x","kind":"bin","name":"x","status":"trust-unclassified-program: the bin `x` of `crates/x` is neither a root nor classified in trust/roots.eadl"}"#;
+    const GROWN: &str = r#"{"package":"crates/t","kind":"bin","name":"t","status":"trust-unclassified-program: `tool` compiles `crates/b` beside the role packages its classification reviewed"}"#;
+
+    fn has(lines: &[String], text: &str) -> bool {
+        lines.iter().any(|l| l.contains(text))
+    }
+
+    #[test]
+    fn on_the_baseline_s_host_a_missing_form_and_a_stale_one_are_refused() {
+        // TI-H4: the commit's own `trust/` covers its inventory, and holds nothing the inventory no longer has.
+        let roots = read_roots(ROOTS_TEXT).expect("roots");
+        let own = baseline_of(&inv("h", &[CONFIG, FILE], &[], (&[], &[])));
+        let now = inv(
+            "h",
+            &[CONFIG, LIB],
+            &[UNCLASSIFIED],
+            (
+                &["tool: the bin `t` of `crates/t` is no program target of the commit"],
+                &["crates/a/src/main.rs:include_str:ab"],
+            ),
+        );
+        let base = Base {
+            commit: Some("b"),
+            baseline: Some((&own, "s".to_owned())),
+        };
+        let j = judge(&now, &roots, Some(&own), &base).expect("judged");
+        for want in [
+            "trust-form-missing: `gen+chk package crates/lib` is shared",
+            "trust-form-missing: the bin `x` of `crates/x` has no form",
+            "trust-baseline-stale: trust/baseline.eadl: `gen+chk file docs/data.txt` is no longer shared",
+            "trust-baseline-stale: trust/roots.eadl: tool: the bin `t`",
+            "trust-baseline-stale: trust/roots.eadl: the admission `crates/a/src/main.rs:include_str:ab`",
+        ] {
+            assert!(has(&j.refused, want), "{want}: {:#?}", j.refused);
+        }
+        assert_eq!(j.refused.len(), 5, "{:#?}", j.refused);
+        assert_eq!(
+            j.change,
+            [
+                "trust-new-shared: `gen+chk package crates/lib`",
+                "no longer shared: `gen+chk file docs/data.txt`"
+            ]
+        );
+    }
+
+    #[test]
+    fn off_the_baseline_s_host_nothing_is_compared_and_only_the_host_free_refusals_apply() {
+        // TI-H5: every item unreviewed, "not compared", neither `trust-form-missing` nor `trust-baseline-stale`.
+        let roots = read_roots(ROOTS_TEXT).expect("roots");
+        let elsewhere = baseline_of(&inv("other-host", &[CONFIG, FILE], &[], (&[], &[])));
+        let now = inv(
+            "h",
+            &[CONFIG, LIB],
+            &[UNCLASSIFIED],
+            (&["tool: gone"], &["crates/a/src/main.rs:include_str:ab"]),
+        );
+        let base = Base {
+            commit: Some("b"),
+            baseline: Some((&elsewhere, "s".to_owned())),
+        };
+        for own in [Some(&elsewhere), None] {
+            let j = judge(&now, &roots, own, &base).expect("judged");
+            assert!(j.refused.is_empty(), "{:#?}", j.refused);
+            assert_eq!(j.change.len(), 1);
+            assert!(j.change[0].starts_with(
+                "not compared — the base commit's baseline names the host `other-host`"
+            ));
+            assert!(has(
+                &j.standing,
+                "shared item `gen+chk package crates/lib`: no form"
+            ));
+            assert!(has(&j.standing, "trust-unclassified-program: the bin `x`"));
+        }
+        let none = Base {
+            commit: Some("b"),
+            baseline: None,
+        };
+        let j = judge(&now, &roots, None, &none).expect("judged");
+        assert_eq!(
+            j.change,
+            ["not compared — the base commit `b` holds no trust/baseline.eadl"]
+        );
+    }
+
+    #[test]
+    fn the_change_part_names_what_moved_and_says_unchanged_when_nothing_did() {
+        let roots = read_roots(ROOTS_TEXT).expect("roots");
+        let before = baseline_of(&inv("h", &[CONFIG, LIB], &[], (&[], &[])));
+        let base = Base {
+            commit: Some("b"),
+            baseline: Some((&before, "s".to_owned())),
+        };
+        let same = inv("h", &[CONFIG, LIB], &[], (&[], &[]));
+        let j = judge(&same, &roots, Some(&before), &base).expect("judged");
+        assert_eq!(j.change, ["unchanged"]);
+        assert!(j.refused.is_empty(), "{:#?}", j.refused);
+        let edited = LIB
+            .replace("=bb", "=b2")
+            .replace("normal\"]", "normal\",\"chk crates/b normal\"]");
+        let moved = inv("h", &[CONFIG, &edited], &[], (&[], &[]));
+        let j = judge(&moved, &roots, Some(&before), &base).expect("judged");
+        assert_eq!(
+            j.change,
+            ["trust-shared-changed: `gen+chk package crates/lib` — content, edges"]
+        );
+        assert!(
+            j.refused.is_empty(),
+            "a change is reported, never refused: {:#?}",
+            j.refused
+        );
+    }
+
+    #[test]
+    fn a_classification_that_grew_is_reported_in_the_standing_list_and_not_refused() {
+        let roots = read_roots(ROOTS_TEXT).expect("roots");
+        let own = baseline_of(&inv("h", &[CONFIG], &[], (&[], &[])));
+        let base = Base {
+            commit: Some("b"),
+            baseline: Some((&own, "s".to_owned())),
+        };
+        let j = judge(
+            &inv("h", &[CONFIG], &[GROWN], (&[], &[])),
+            &roots,
+            Some(&own),
+            &base,
+        )
+        .expect("judged");
+        assert!(j.refused.is_empty(), "{:#?}", j.refused);
+        assert_eq!(j.change, ["unchanged"], "a standing entry is no change");
+        assert!(has(
+            &j.standing,
+            "trust-unclassified-program: `tool` compiles `crates/b`"
+        ));
+        for want in [
+            "shared item `gen+chk build-configuration`: proposed, classification unstated",
+            "root form `gen`: generator, `crates/a`",
+            "root form `chk`: scheduling-checker, `crates/b`",
+            "classification `tool`: the bin `t` of `crates/t`",
+            "admission `crates/a/src/main.rs`: include_str ab",
+        ] {
+            assert!(has(&j.standing, want), "{want}: {:#?}", j.standing);
+        }
+    }
+
+    #[test]
+    fn the_gate_over_a_scratch_repository_s_commits() {
+        // From a commit with no baseline to one whose forms cover it, then an unrelated commit, a shared source
+        // edited and a new sharing — each judged against its parent by the real instrument.
+        use crate::trust::tests::{manifest, real_root, two_roots};
+        let dep = "[dependencies]\ncommon = { path = \"../common\" }\n";
+        let f = two_roots(
+            "gate-commits",
+            "fn main() { common::c(); }\n",
+            "pub fn f() -> u32 { common::c() }\n",
+            &[
+                ("crates/common/Cargo.toml", manifest("common", "")),
+                (
+                    "crates/common/src/lib.rs",
+                    "pub fn c() -> u32 { 1 }\n".to_owned(),
+                ),
+                ("crates/a/Cargo.toml", manifest("a", dep)),
+                ("crates/b/Cargo.toml", manifest("b", dep)),
+            ],
+        );
+        let run = |out: &str| {
+            gate(&f.repo, "HEAD", None, &f.base.join(out), &real_root()).expect("judged")
+        };
+        let (j, text) = run("g1");
+        assert!(
+            j.refused.is_empty(),
+            "no baseline, so off its host: {:#?}",
+            j.refused
+        );
+        assert_eq!(
+            j.change,
+            ["not compared — the commit has no parent to compare against"]
+        );
+        assert!(has(
+            &j.standing,
+            "shared item `gen+chk package crates/common`: no form"
+        ));
+        for header in [
+            "commit: ",
+            "host: ",
+            "inventory: sha256 ",
+            "baseline: none",
+            "verdict: passed",
+        ] {
+            assert!(text.contains(header), "{header}: {text}");
+        }
+        assert_eq!(
+            std::fs::read_to_string(f.base.join("g1/report.txt")).expect("written"),
+            text
+        );
+
+        let measured = json::parse(
+            &std::fs::read_to_string(f.base.join("g1/trust-dependencies.json"))
+                .expect("the inventory"),
+        )
+        .expect("parses");
+        f.commit(&[(
+            "trust/baseline.eadl",
+            propose(&measured, None).expect("a proposal"),
+        )]);
+        let (j, _) = run("g2");
+        assert!(
+            j.refused.is_empty(),
+            "on its host, every form present: {:#?}",
+            j.refused
+        );
+        assert!(
+            j.change[0].contains("holds no trust/baseline.eadl"),
+            "{:?}",
+            j.change
+        );
+
+        f.commit(&[("README.md", "a change outside every root\n".to_owned())]);
+        let (j, text) = run("g3");
+        assert!(j.refused.is_empty(), "{:#?}", j.refused);
+        assert_eq!(j.change, ["unchanged"], "case 5");
+        assert!(text.contains("baseline: sha256 "), "{text}");
+
+        f.commit(&[(
+            "crates/common/src/lib.rs",
+            "pub fn c() -> u32 { 2 }\n".to_owned(),
+        )]);
+        let (j, _) = run("g4");
+        assert!(
+            j.refused.is_empty(),
+            "a change is reported: {:#?}",
+            j.refused
+        );
+        assert!(
+            has(
+                &j.change,
+                "trust-shared-changed: `gen+chk package crates/common` — content"
+            ),
+            "{:?}",
+            j.change
+        );
+
+        let dep2 =
+            "[dependencies]\ncommon = { path = \"../common\" }\nmore = { path = \"../more\" }\n";
+        f.commit(&[
+            ("crates/more/Cargo.toml", manifest("more", "")),
+            ("crates/more/src/lib.rs", "pub fn m() {}\n".to_owned()),
+            ("crates/a/Cargo.toml", manifest("a", dep2)),
+            ("crates/b/Cargo.toml", manifest("b", dep2)),
+        ]);
+        let (j, text) = run("g5");
+        assert!(
+            has(
+                &j.refused,
+                "trust-form-missing: `gen+chk package crates/more`"
+            ),
+            "{:#?}",
+            j.refused
+        );
+        assert!(
+            has(&j.change, "trust-new-shared: `gen+chk package crates/more`"),
+            "{:?}",
+            j.change
+        );
+        assert!(text.contains("verdict: refused"), "{text}");
     }
 
     #[test]

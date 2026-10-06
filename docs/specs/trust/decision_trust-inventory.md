@@ -333,6 +333,12 @@ leaves' (R2 B1, B10, B17; R3 C3).
 | `trust-shared-program` | refused | a root whose build compiles a role package of another role, an executable or a library alike, or a harness compiling one of a role outside its pair (§2; R8 remarks 12, 13) | — |
 | `trust-inventory-stale` | refused, at packaging | the inventory missing, its build identity not the package's commit and toolchain, an artifact's sha256 not the inventory's, the report not of that inventory, a result naming a program other than its role's inventoried artifact or the pair's harness, or a dependency handed to a root that its form does not declare by path and the inventory's sha256 | 4 |
 
+**Clarified `2026-10-06`, by the gate's leaf (`M3.6.3.3`).** A root form or classification naming a package the commit
+no longer has, or a root naming a target its package no longer has, is `trust-baseline-stale` wherever the gate runs,
+not on the baseline's host alone: no inventory can be built without what the form names, so off that host there would
+be nothing else to report. A `trust-unclassified-program` is reported in the standing list, beside what it reports on,
+so a classification whose role packages grew does not make every later commit's change part non-empty (case 5).
+
 **Case 4 is judged where an inventory is consumed** (R1 A8). The gate builds its own inventory and cannot find it
 stale. `cargo xtask trust-verify <package>` refuses a package whose inventory is missing, whose build identity is not
 the package's commit and toolchain, or whose artifact differs from the inventory's; one whose report names another

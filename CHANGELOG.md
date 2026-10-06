@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate judges a commit
+
+`ARCHOGEN-M3-0483` (leaf `M3.6.3.3`).
+
+- A new command compares what the independent programs share now with what the previous commit's reviewed list
+  holds, and writes a two-part report: what changed, and everything still awaiting review. On the machine the list was
+  measured on, it refuses a commit that shares something new without proposing an entry for it, or that keeps an entry
+  for something gone; elsewhere it says plainly that it could not compare. It is not yet run by CI.
+
 ## archogen — the local stand-in for CI no longer borrows the developer's identity
 
 `ARCHOGEN-PROGRAM-0482` (leaf `PROGRAM.64`).

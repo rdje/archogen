@@ -893,6 +893,7 @@ fn help() {
     println!("    cargo xtask catalog-check --index [--bless] | --commit <sha> | --base <dir> --judged <dir> --base-commit <sha> --judged-commit <sha>");
     println!("    cargo xtask trust-inventory [--commit <rev>] [--out <dir>]");
     println!("    cargo xtask trust-baseline --propose [--commit <rev>] [--out <file>]");
+    println!("    cargo xtask trust-gate [--commit <rev>] [--base <rev>] [--out <dir>]");
     println!();
     println!("TIERS:");
     for tier in TIERS {
@@ -934,6 +935,7 @@ fn main() {
         ["catalog-check", rest @ ..] => catalog_check::run(&repo_root(), rest),
         ["trust-inventory", rest @ ..] => trust::run(&repo_root(), rest),
         ["trust-baseline", rest @ ..] => trust_gate::run(&repo_root(), rest),
+        ["trust-gate", rest @ ..] => trust_gate::run_gate(&repo_root(), rest),
         ["mutate", "--only", ids @ ..] if !ids.is_empty() => mutation::run(
             &repo_root(),
             &ids.iter().map(|s| (*s).to_string()).collect::<Vec<_>>(),

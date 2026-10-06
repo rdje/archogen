@@ -1182,6 +1182,8 @@ pub fn inventory_with(
     let mut package_targets: BTreeMap<String, Vec<String>> = BTreeMap::new();
     // Every program target (§2): (package, kind, name).
     let mut program_targets: Vec<(String, String, String)> = Vec::new();
+    // Every target, by package: its kinds and its name, so a root's target is known to exist.
+    let mut every_target: BTreeMap<String, Vec<(Vec<String>, String)>> = BTreeMap::new();
     for p in meta.get("packages").map(Json::elements).unwrap_or_default() {
         let manifest_path = p
             .get("manifest_path")
@@ -1221,10 +1223,14 @@ pub fn inventory_with(
                 .iter()
                 .filter_map(Json::as_str)
                 .collect();
+            let target_name = t.get("name").and_then(Json::as_str).unwrap_or_default();
             if let Some(kind) = PROGRAM_KINDS.iter().find(|k| kinds.contains(k)) {
-                let name = t.get("name").and_then(Json::as_str).unwrap_or_default();
-                program_targets.push((dir.clone(), (*kind).to_owned(), name.to_owned()));
+                program_targets.push((dir.clone(), (*kind).to_owned(), target_name.to_owned()));
             }
+            every_target.entry(dir.clone()).or_default().push((
+                kinds.iter().map(|k| (*k).to_owned()).collect(),
+                target_name.to_owned(),
+            ));
             targets.insert((src, crate_name), dir.clone());
         }
         package_names.insert(dir.clone(), name);
@@ -1251,14 +1257,44 @@ pub fn inventory_with(
                     .collect(),
             )
         }));
+    // A form naming a package, or a root naming a target, the commit no longer has is stale (§6, R7 remark e): refused
+    // wherever the gate runs, since no inventory can be built without it (`M3.6.3.3`).
+    let mut stale = Vec::new();
     for (name, packages) in named_packages {
         for pkg in packages {
             if !package_names.contains_key(pkg) {
-                return Err(format!(
-                    "{ROOTS}: `{name}` names `{pkg}`, which is no package of the commit"
+                stale.push(format!(
+                    "trust-baseline-stale: {ROOTS}: `{name}` names `{pkg}`, which is no package of the commit"
                 ));
             }
         }
+    }
+    for p in &roots.programs {
+        let Some(have) = every_target.get(&p.package) else {
+            continue;
+        };
+        let (kind, wanted) = match &p.target {
+            Target::Lib => ("lib", None),
+            Target::Bin(n) => ("bin", Some(n)),
+            Target::Test(n) => ("test", Some(n)),
+        };
+        let found = have.iter().any(|(kinds, n)| {
+            kinds
+                .iter()
+                .any(|k| k == kind || (kind == "lib" && k.ends_with("lib")))
+                && wanted.is_none_or(|w| w == n)
+        });
+        if !found {
+            stale.push(format!(
+                "trust-baseline-stale: {ROOTS}: `{}` names the {kind} target{} of `{}`, which the commit no longer has",
+                p.name,
+                wanted.map_or(String::new(), |w| format!(" `{w}`")),
+                p.package
+            ));
+        }
+    }
+    if !stale.is_empty() {
+        return Ok(Outcome::Refused(stale));
     }
 
     // The resolved graph: (dependent, dependency, kind).
@@ -1968,7 +2004,7 @@ pub fn run(repo: &Path, args: &[&str]) -> i32 {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     //! Every channel a review measured by hand, a fixture (ledger `TI-H24`): a scratch repository under
     //! `target/trust-tests/`, committed, inventoried by the real instrument from its commit.
 
@@ -1977,7 +2013,7 @@ mod tests {
     use std::path::{Path, PathBuf};
     use std::process::Command;
 
-    fn real_root() -> PathBuf {
+    pub(crate) fn real_root() -> PathBuf {
         Path::new(env!("CARGO_MANIFEST_DIR"))
             .parent()
             .unwrap()
@@ -2005,14 +2041,14 @@ mod tests {
         );
     }
 
-    struct Fixture {
-        repo: PathBuf,
-        base: PathBuf,
+    pub(crate) struct Fixture {
+        pub(crate) repo: PathBuf,
+        pub(crate) base: PathBuf,
     }
 
     const WS: &str = "[workspace]\nresolver = \"2\"\nmembers = [\"crates/*\"]\n";
 
-    fn manifest(name: &str, extra: &str) -> String {
+    pub(crate) fn manifest(name: &str, extra: &str) -> String {
         format!("[package]\nname = \"{name}\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n{extra}")
     }
 
@@ -2065,7 +2101,7 @@ mod tests {
     }
 
     impl Fixture {
-        fn commit(&self, files: &[(&str, String)]) {
+        pub(crate) fn commit(&self, files: &[(&str, String)]) {
             write(&self.repo, files);
             // A dependency changed is a lock changed: `--locked` refuses a stale one, rightly.
             let toolchain = std::fs::read_to_string(self.repo.join("rust-toolchain.toml")).unwrap();
@@ -2134,7 +2170,12 @@ mod tests {
         item.get("kind").and_then(Json::as_str).unwrap_or_default()
     }
 
-    fn two_roots(name: &str, a_src: &str, b_src: &str, extra: &[(&str, String)]) -> Fixture {
+    pub(crate) fn two_roots(
+        name: &str,
+        a_src: &str,
+        b_src: &str,
+        extra: &[(&str, String)],
+    ) -> Fixture {
         let mut files = vec![
             ("Cargo.toml", WS.to_owned()),
             ("trust/roots.eadl", ROOTS.to_owned()),
@@ -2286,6 +2327,33 @@ mod tests {
         .expect("reads");
         assert_eq!(roots.classified[0].kind, "cdylib");
         assert!(roots.classified[0].role_packages.contains("q"));
+    }
+
+    #[test]
+    fn a_form_naming_a_package_or_a_target_the_commit_no_longer_has_is_stale() {
+        // §6, R7 remark e: `trust-baseline-stale`, refused wherever the gate runs, since no inventory can be built
+        // without what the form names (`M3.6.3.3`).
+        for (name, roots, why) in [
+            (
+                "stale-package",
+                ROOTS.replace("\"crates/b\") (target lib) (role-packages \"crates/b\")", "\"crates/gone\") (target lib) (role-packages \"crates/gone\")"),
+                "`chk` names `crates/gone`, which is no package of the commit",
+            ),
+            (
+                "stale-target",
+                ROOTS.replace("(target bin a)", "(target bin gone)"),
+                "`gen` names the bin target `gone` of `crates/a`, which the commit no longer has",
+            ),
+            (
+                "stale-classified",
+                format!("{ROOTS}(defprogram t (package \"crates/gone\") (target bin t) (reason \"r\") (role-packages \"crates/a\"))\n"),
+                "`t` names `crates/gone`, which is no package of the commit",
+            ),
+        ] {
+            let f = two_roots(name, "fn main() {}\n", "pub fn f() {}\n", &[("trust/roots.eadl", roots)]);
+            let r = refused(f.run());
+            says(&r, &format!("trust-baseline-stale: trust/roots.eadl: {why}"));
+        }
     }
 
     #[test]
@@ -3343,10 +3411,12 @@ mod tests {
             "pub fn f() {}\n",
             &[("trust/roots.eadl", roots.to_owned())],
         );
-        let Err(e) = inventory_with(&f.repo, "HEAD", &f.base.join("out"), &real_root()) else {
-            panic!("a role package that is no package was read");
-        };
-        assert!(e.contains("`crates/cc`"), "{e}");
+        // Refused, and since `M3.6.3.3` as `trust-baseline-stale` rather than an error: the form names what the commit
+        // does not hold.
+        says(
+            &refused(f.run()),
+            "trust-baseline-stale: trust/roots.eadl: `chk` names `crates/cc`, which is no package of the commit",
+        );
     }
 
     #[test]

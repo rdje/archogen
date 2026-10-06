@@ -2461,3 +2461,80 @@ from
 to
             .envs(env.into_iter().filter(|(k, _)| k == "PATH" || k == "HOME"))
 end
+
+mutation trust-gate-a-shared-item-needs-no-form
+file xtask/src/trust_gate.rs
+test -p xtask trust_gate::tests
+expect killed
+why M3.6.3.3, TI-H4: on the baseline's host a current shared item with no form in the commit's own baseline is `trust-form-missing`; without it a merged sharing leaves a later commit to report it.
+from
+            for id in current.keys().filter(|id| !own.forms.contains_key(id)) {
+to
+            for id in current.keys().filter(|_| false) {
+end
+
+mutation trust-gate-a-stale-form-is-kept
+file xtask/src/trust_gate.rs
+test -p xtask trust_gate::tests
+expect killed
+why M3.6.3.3, TI-H4: a form whose item is no longer shared is `trust-baseline-stale`, so a sharing removed and reintroduced is reviewed again.
+from
+            for id in own.forms.keys().filter(|id| !current.contains_key(id)) {
+to
+            for id in own.forms.keys().filter(|_| false) {
+end
+
+mutation trust-gate-an-unclassified-target-needs-no-form
+file xtask/src/trust_gate.rs
+test -p xtask trust_gate::tests
+expect killed
+why M3.6.3.3, TI-H4: a program target neither a root nor classified is `trust-form-missing` on the baseline's host.
+from
+            if !classified {
+to
+            if false {
+end
+
+mutation trust-gate-the-host-is-not-read
+file xtask/src/trust_gate.rs
+test -p xtask trust_gate::tests
+expect killed
+why M3.6.3.3, TI-H5: off the baseline's host neither `trust-form-missing` nor `trust-baseline-stale` applies, since a form's digests compare only on the host they were taken on.
+from
+        if let Some(own) = own.filter(|b| b.host == host) {
+to
+        if let Some(own) = own {
+end
+
+mutation trust-gate-another-host-s-forms-are-compared
+file xtask/src/trust_gate.rs
+test -p xtask trust_gate::tests
+expect killed
+why M3.6.3.3, TI-H5: the change part says "not compared" when the base commit's baseline names another host.
+from
+            (Some(_), Some((b, _))) if b.host != host => vec![format!(
+to
+            (Some(_), Some((b, _))) if false => vec![format!(
+end
+
+mutation trust-gate-a-changed-item-reads-unchanged
+file xtask/src/trust_gate.rs
+test -p xtask trust_gate::tests
+expect killed
+why M3.6.3.3, §6 case 2: an item whose aspects differ from the base commit's form is `trust-shared-changed`.
+from
+                            if !moved.is_empty() {
+to
+                            if false {
+end
+
+mutation trust-inventory-a-gone-target-is-built
+file xtask/src/trust.rs
+test -p xtask trust::tests::a_form_naming
+expect killed
+why M3.6.3.3, §6 (R7 remark e): a root naming a target its package no longer has is `trust-baseline-stale`, not a build error.
+from
+        if !found {
+to
+        if false {
+end

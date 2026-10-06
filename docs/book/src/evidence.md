@@ -142,7 +142,15 @@ does not classify, or one that has started compiling another role's package, is 
 per shared item with the digests the inventory measured, and the review's part — the item's classification, the
 property it can affect, its residual risk, the controls that remain — left `unstated`; nothing in the file can say a
 form is accepted (leaf `M3.6.3.2`). Its digests hold only on the host they were taken on, and the baseline the gate
-compares against is the CI runner's, so it is proposed there. The gate itself is being built (leaf `M3.6.3`).
+compares against is the CI runner's, so it is proposed there.
+`cargo xtask trust-gate` judges a commit against its base (leaf `M3.6.3.3`): it builds the inventory and writes
+`target/trust/report.txt` in two parts. The **change** names each shared item new since the base commit's baseline
+(`trust-new-shared`) or measured otherwise (`trust-shared-changed`), or says *unchanged*; the **standing list** names
+every shared item, root, classification and admission, none accepted until reviews are read where they are protected
+(`M3.6.5`). On the baseline's host the gate refuses a commit whose own `trust/` holds no form for something it shares
+or builds (`trust-form-missing`), or keeps one for something gone (`trust-baseline-stale`); off it, it compares
+nothing and says so. A form naming a package the commit no longer has is refused everywhere, since nothing can be
+built without it. Where the gate runs, and from which commit's build, is the next slice (`M3.6.3.4`).
 
 ⚠️ The honest limit, from §4.4 itself: *"This check enforces disclosure and change control; it
 does not prove semantic independence."* Two separately written implementations of the same
