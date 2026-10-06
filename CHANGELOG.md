@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate's five required cases are tests
+
+`ARCHOGEN-M3-0487` (leaf `M3.6.3.6`).
+
+- The five situations the roadmap says the trust check must handle — new sharing, a shared part changed behind an
+  unchanged name, shared data, an out-of-date record in a package, and an unrelated change that must raise no warning —
+  are now automated tests run against small throwaway projects. Writing them found a gap: a changed shared part merged
+  without its reviewed entry updated would have been reported by every later change; such a change is now refused
+  until its entry is re-proposed. Every refusal the check can make is shown to be caught by a deliberate breakage.
+
 ## archogen — a package's trust record can be checked where it is used
 
 `ARCHOGEN-M3-0485` (leaf `M3.6.3.5`).

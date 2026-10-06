@@ -889,7 +889,7 @@ mutation trust-token-rules-skipped
 file xtask/src/trust.rs
 test -p xtask trust::tests
 expect killed
-why M3.6.2: default-deny — every refused site in a compiled .rs file needs an admission (§3; R7); with the scan skipped, every assembler, include, path and extern channel passes.
+why M3.6.2: default-deny — every refused site in a compiled .rs file needs an admission (§3; R7), or it is `trust-undeclared-input`; with the scan skipped, every assembler, include, path and extern channel passes.
 from
             match refused_sites(blob) {
 to
@@ -900,7 +900,7 @@ mutation trust-two-role-program-admitted
 file xtask/src/trust.rs
 test -p xtask trust::tests
 expect killed
-why M3.6.2: an executable root compiling another role's role package is refused (§2; R4 5).
+why M3.6.2: an executable root compiling another role's role package is `trust-shared-program`, refused (§2; R4 5).
 from
                     if compiled.contains(rp) {
 to
@@ -2377,7 +2377,7 @@ mutation trust-grown-classification-unreported
 file xtask/src/trust.rs
 test -p xtask trust::tests::every_program_target_is_a_root_or_classified_and_the_rest_is_reported
 expect killed
-why M3.6.3.1: a classification whose program target compiles a role package it did not review is unreviewed again (record §2, R2 B6).
+why M3.6.3.1: a classification whose program target compiles a role package it did not review is unreviewed again, `trust-unclassified-program` (record §2, R2 B6).
 from
                     if grown.is_empty() {
 to
@@ -2468,9 +2468,20 @@ test -p xtask trust_gate::tests
 expect killed
 why M3.6.3.3, TI-H4: on the baseline's host a current shared item with no form in the commit's own baseline is `trust-form-missing`; without it a merged sharing leaves a later commit to report it.
 from
-            for id in current.keys().filter(|id| !own.forms.contains_key(id)) {
+                    None => format!("`{}` is shared and {BASELINE} holds no form for it", id.name()),
 to
-            for id in current.keys().filter(|_| false) {
+                    None => continue,
+end
+
+mutation trust-gate-a-form-with-other-digests-covers-its-item
+file xtask/src/trust_gate.rs
+test -p xtask trust_gate::tests
+expect killed
+why M3.6.3.6, F30 case 5 (R7 4): a form proposes its item's digests, so on the baseline's host one proposing others is `trust-form-missing`; passed, a change merged once is reported by every later commit.
+from
+                    Some(form) if form.digests != *now => format!(
+to
+                    Some(form) if false => format!(
 end
 
 mutation trust-gate-a-stale-form-is-kept
@@ -2560,7 +2571,7 @@ mutation trust-verify-another-build-s-inventory-passes
 file xtask/src/trust_verify.rs
 test -p xtask trust_verify::tests
 expect killed
-why M3.6.3.5, TI-H8: an inventory whose commit or toolchain is not the package's describes another build.
+why M3.6.3.5, `trust-inventory-stale`, TI-H8: an inventory whose commit or toolchain is not the package's describes another build.
 from
             if identity(key) != mine || mine.is_empty() {
 to
@@ -2571,7 +2582,7 @@ mutation trust-verify-another-inventory-s-report-passes
 file xtask/src/trust_verify.rs
 test -p xtask trust_verify::tests
 expect killed
-why M3.6.3.5, TI-H8 (R6 9): a report names the inventory it describes by sha256, and one naming another is refused.
+why M3.6.3.5, `trust-inventory-stale`, TI-H8 (R6 9): a report names the inventory it describes by sha256, and one naming another is refused.
 from
                 if named != inventory_sha {
 to
@@ -2582,7 +2593,7 @@ mutation trust-verify-an-artifact-is-not-compared
 file xtask/src/trust_verify.rs
 test -p xtask trust_verify::tests
 expect killed
-why M3.6.3.5, TI-H8: an artifact whose bytes are not the inventory's — a debug build, another commit's — is refused.
+why M3.6.3.5, `trust-inventory-stale`, TI-H8: an artifact whose bytes are not the inventory's — a debug build, another commit's — is refused.
 from
             if actual != listed || listed != inventoried {
 to
@@ -2593,7 +2604,7 @@ mutation trust-verify-any-producer-passes
 file xtask/src/trust_verify.rs
 test -p xtask trust_verify::tests
 expect killed
-why M3.6.3.5, TI-H8 (R5 4): a result names its role's inventoried artifact or the pair's harness, and nothing else passes.
+why M3.6.3.5, `trust-inventory-stale`, TI-H8 (R5 4): a result names its role's inventoried artifact or the pair's harness, and nothing else passes.
 from
             if producer.is_empty() || !(by_root || by_harness) {
 to
@@ -2604,7 +2615,7 @@ mutation trust-verify-the-harness-serves-every-role
 file xtask/src/trust_verify.rs
 test -p xtask trust_verify::tests
 expect killed
-why M3.6.3.5, TI-H8: the pair's harness produces the reference model's results only, never a checker's.
+why M3.6.3.5, `trust-inventory-stale`, TI-H8: the pair's harness produces the reference model's results only, never a checker's.
 from
             let by_harness = role == "reference-model"
 to
@@ -2615,9 +2626,20 @@ mutation trust-verify-an-undeclared-handed-dependency-passes
 file xtask/src/trust_verify.rs
 test -p xtask trust_verify::tests
 expect killed
-why M3.6.3.5, TI-H8 (R5 6): a dependency handed to a root is declared by its form with the inventory's sha256.
+why M3.6.3.5, `trust-inventory-stale`, TI-H8 (R5 6): a dependency handed to a root is declared by its form with the inventory's sha256.
 from
             if declared != Some(sha) {
 to
             if false {
+end
+
+mutation trust-gate-a-new-sharing-reads-unchanged
+file xtask/src/trust_gate.rs
+test -p xtask trust_gate::tests
+expect killed
+why M3.6.3.6, F30 case 1: an item the base commit's baseline does not hold is `trust-new-shared` in the change part.
+from
+                        None => lines.push(format!("trust-new-shared: `{}`", id.name())),
+to
+                        None => {}
 end

@@ -19,7 +19,9 @@
 //! independence.**" Two separately written implementations of the same misread specification
 //! share nothing this module can see.
 
-/// A root whose reachable dependencies are inventoried (`ROADMAP.md` §4.4).
+/// A root whose reachable dependencies are inventoried: the role it runs (`ROADMAP.md` §4.4;
+/// `docs/specs/trust/decision_trust-inventory.md` §2). §4.4's four, and the implementation a reference model validates,
+/// since §6.3 makes their independence the point of having one. The slugs are the roles `trust/roots.eadl` writes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TrustRoot {
     /// The generator: elaboration, resolution, planning, emission.
@@ -28,8 +30,10 @@ pub enum TrustRoot {
     ConfigurationChecker,
     /// The scheduling checker.
     SchedulingChecker,
-    /// The reference-model build used for behavioral comparison.
-    ReferenceModelBuild,
+    /// The reference model used for behavioral comparison.
+    ReferenceModel,
+    /// The implementation the reference model validates.
+    Implementation,
 }
 
 impl TrustRoot {
@@ -38,17 +42,31 @@ impl TrustRoot {
         Self::Generator,
         Self::ConfigurationChecker,
         Self::SchedulingChecker,
-        Self::ReferenceModelBuild,
+        Self::ReferenceModel,
+        Self::Implementation,
     ];
 
-    /// The stable machine-readable name.
+    /// The stable machine-readable name: the role as `trust/roots.eadl` writes it.
     #[must_use]
     pub const fn slug(self) -> &'static str {
         match self {
             Self::Generator => "generator",
             Self::ConfigurationChecker => "configuration-checker",
             Self::SchedulingChecker => "scheduling-checker",
-            Self::ReferenceModelBuild => "reference-model-build",
+            Self::ReferenceModel => "reference-model",
+            Self::Implementation => "implementation",
+        }
+    }
+
+    /// Whether `self` and `other` are meant to reach their results independently of each other: a judging root and
+    /// the generator it judges, and a reference model and the implementation it validates (record §2).
+    #[must_use]
+    pub const fn must_be_independent_of(self, other: Self) -> bool {
+        match (self, other) {
+            (Self::Generator, x) | (x, Self::Generator) => x.must_be_independent_of_generator(),
+            (Self::ReferenceModel, Self::Implementation)
+            | (Self::Implementation, Self::ReferenceModel) => true,
+            _ => false,
         }
     }
 
@@ -57,11 +75,13 @@ impl TrustRoot {
     /// This is what makes sharing *matter*: an item shared between two roots that are both
     /// meant to be independent of the generator is a different event from one shared between
     /// the generator and its own planner.
+    ///
+    /// The implementation is not: it is what the reference model validates, not a judge of the generator's output.
     #[must_use]
     pub const fn must_be_independent_of_generator(self) -> bool {
         matches!(
             self,
-            Self::ConfigurationChecker | Self::SchedulingChecker | Self::ReferenceModelBuild
+            Self::ConfigurationChecker | Self::SchedulingChecker | Self::ReferenceModel
         )
     }
 }
@@ -162,18 +182,18 @@ impl TrustItem {
         self.reachable_from.len() > 1
     }
 
-    /// Whether this item costs a root its claimed independence from the generator.
+    /// Whether this item costs two roots their claimed independence from each other.
     ///
-    /// True when the generator reaches it, a root that must be independent of the generator
-    /// also reaches it, and the role is one that can carry a shared mistake.
+    /// True when two roots that must be independent reach it — the generator and a root that judges it, or a
+    /// reference model and the implementation it validates — and the role is one that can carry a shared mistake.
     #[must_use]
     pub fn compromises_independence(&self) -> bool {
-        let generator = self.reachable_from.contains(&TrustRoot::Generator);
-        let independent = self
-            .reachable_from
-            .iter()
-            .any(|root| root.must_be_independent_of_generator());
-        generator && independent && self.role.compromises_independence()
+        let pair = self.reachable_from.iter().enumerate().any(|(i, a)| {
+            self.reachable_from[i + 1..]
+                .iter()
+                .any(|b| a.must_be_independent_of(*b))
+        });
+        pair && self.role.compromises_independence()
     }
 
     /// A one-line inventory rendering.
@@ -364,15 +384,51 @@ mod tests {
     }
 
     #[test]
-    fn every_root_except_the_generator_must_be_independent_of_it() {
+    fn every_judging_root_must_be_independent_of_the_generator_and_a_reference_model_of_its_implementation(
+    ) {
+        // Record §2: §4.4's three judges of the generator, and §6.3's pair. The implementation judges nothing.
         for root in TrustRoot::ALL {
             assert_eq!(
                 root.must_be_independent_of_generator(),
-                *root != TrustRoot::Generator,
+                !matches!(root, TrustRoot::Generator | TrustRoot::Implementation),
                 "{}",
                 root.slug()
             );
+            for other in TrustRoot::ALL {
+                assert_eq!(
+                    root.must_be_independent_of(*other),
+                    other.must_be_independent_of(*root),
+                    "symmetric"
+                );
+            }
         }
+        assert!(TrustRoot::ReferenceModel.must_be_independent_of(TrustRoot::Implementation));
+        assert!(!TrustRoot::Implementation.must_be_independent_of(TrustRoot::Generator));
+        assert!(
+            !TrustRoot::SchedulingChecker.must_be_independent_of(TrustRoot::ConfigurationChecker)
+        );
+    }
+
+    #[test]
+    fn a_semantic_item_shared_by_a_reference_model_and_its_implementation_costs_independence() {
+        let shared = item(
+            TrustRole::SemanticAnalysis,
+            &[TrustRoot::ReferenceModel, TrustRoot::Implementation],
+        );
+        assert!(shared.compromises_independence());
+        let infrastructure = item(
+            TrustRole::Infrastructure,
+            &[TrustRoot::ReferenceModel, TrustRoot::Implementation],
+        );
+        assert!(!infrastructure.compromises_independence());
+        let generator_and_implementation = item(
+            TrustRole::SemanticAnalysis,
+            &[TrustRoot::Generator, TrustRoot::Implementation],
+        );
+        assert!(
+            !generator_and_implementation.compromises_independence(),
+            "the implementation is generated-side, no judge of the generator"
+        );
     }
 
     #[test]

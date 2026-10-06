@@ -296,12 +296,12 @@ a change that leaves it stale, so it is never edited by hand.
 - **profile** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The supported profile](profile.md), [The use cases](usecases.md), [Reading a
   description](reading.md), [Quantities and units](quantities.md), [Refinement](refinement.md), [Describing a
-  workload](workload.md), [Checking a description](checking.md), [Where the engine's knowledge comes from: the
-  catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [The S0 early generation path](s0.md), [Where
-  generated systems run](targets.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [What this
-  project relies on from outside](ledger.md), [What is versioned, and what changing it costs](versions.md), [Annex A:
-  The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that keep the repository
-  honest](annex-repository.md)
+  workload](workload.md), [Checking a description](checking.md), [What a report may claim](evidence.md), [Where the
+  engine's knowledge comes from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [The S0
+  early generation path](s0.md), [Where generated systems run](targets.md), [The archogen command line](cli.md), [The
+  engine API](engine-api.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
+  changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that
+  keep the repository honest](annex-repository.md)
 - provenance-format — [What is versioned, and what changing it costs](versions.md#provenance-format)
 - **provider** — [definition](glossary.md), [Introduction](introduction.md), [The boundary: functionality versus
   implementation](boundary.md), [Presence, absence, and relevance](presence.md), [Matching an offer to a
@@ -318,8 +318,8 @@ a change that leaves it stale, so it is never edited by hand.
 
 - **R24-11** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **RAM** — [definition](glossary.md), [Where generated systems run](targets.md)
-- **README** — [definition](glossary.md), [Verifying the toolchain](verification.md), [Annex B: The checks that keep the
-  repository honest](annex-repository.md)
+- **README** — [definition](glossary.md), [What a report may claim](evidence.md), [Verifying the
+  toolchain](verification.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
 - **RED** — [definition](glossary.md), [Verifying the toolchain](verification.md), [Annex B: The checks that keep the
   repository honest](annex-repository.md)
 - Refusal is a feature — [The supported profile](profile.md#refusal-is-a-feature)

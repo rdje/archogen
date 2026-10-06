@@ -148,8 +148,10 @@ compares against is the CI runner's, so it is proposed there.
 (`trust-new-shared`) or measured otherwise (`trust-shared-changed`), or says *unchanged*; the **standing list** names
 every shared item, root, classification and admission, none accepted until reviews are read where they are protected
 (`M3.6.5`). On the baseline's host the gate refuses a commit whose own `trust/` holds no form for something it shares
-or builds (`trust-form-missing`), or keeps one for something gone (`trust-baseline-stale`); off it, it compares
-nothing and says so. A form naming a package the commit no longer has is refused everywhere, since nothing can be
+or builds, or a form proposing other digests than the commit measures (`trust-form-missing`), or keeps one for
+something gone (`trust-baseline-stale`); off it, it compares nothing and says so. So a change to what two roots share
+comes with its re-proposed form, is reported once, by the commit that makes it, and the next unrelated commit reads
+*unchanged*. A form naming a package the commit no longer has is refused everywhere, since nothing can be
 built without it. In CI the gate is built from the base commit and runs on every pull request and every push to
 `main` ([Verifying the toolchain](verification.md)); in the `assurance` tier its step fails on a refusal and is
 otherwise *not built*, never a pass, until forms can be accepted (`M3.6.5`).
@@ -158,7 +160,12 @@ otherwise *not built*, never a pass, until forms can be accepted (`M3.6.5`).
 inventory, whose artifacts are not the inventory's, in which a result was produced by anything but its role's
 inventoried program — or, for the reference model, its pair's comparison harness — or which hands a root a
 dependency its form does not declare (`trust-inventory-stale`). The package's layout is fixed there provisionally,
-since the package is `M4.7`'s to write.
+since the package is `M4.7`'s to write. Each of §14.4's cases is a test of the gate, each in a scratch workspace judged commit by commit
+(`M3.6.3.6`): a package both roots come to compile, a shared package edited or given a feature behind an unchanged name,
+a data file both roots are handed and an input declared but absent, a package carrying an earlier commit's inventory,
+and — reading *unchanged* — a README, a development profile, an override for a package no root compiles and a comment
+in the toolchain pin. Every code of the gate is removed in turn by a catalogued mutation, and a test holds the
+catalogue to the record's table.
 
 ⚠️ The honest limit, from §4.4 itself: *"This check enforces disclosure and change control; it
 does not prove semantic independence."* Two separately written implementations of the same

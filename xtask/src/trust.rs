@@ -2353,6 +2353,16 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn the_roles_the_roots_file_names_are_the_evidence_vocabulary_s_roots() {
+        // `M3.6.3.6`: the vocabulary brought to the record's roles, and held there (§2).
+        let slugs: Vec<&str> = archogen_evidence::TrustRoot::ALL
+            .iter()
+            .map(|r| r.slug())
+            .collect();
+        assert_eq!(slugs, super::ROLES);
+    }
+
+    #[test]
     fn a_cargo_configuration_on_the_build_s_path_is_a_refusal_and_not_an_error() {
         // The catalog's §3, adopted (R8 remark 16): the commit is refused, so the gate reports it, exit 1, rather than
         // saying it could not judge (`M3.6.3.4`).

@@ -550,10 +550,20 @@ pub fn judge(
 
     let mut refused = Vec::new();
     if let Some(own) = own.filter(|b| b.host == host) {
-        for id in current.keys().filter(|id| !own.forms.contains_key(id)) {
+        // A form proposes its item's digests: one proposing others is no form for the item as this commit has it, or
+        // a change merged once would be reported by every later commit (case 5; R7 4; `M3.6.3.6`).
+        for (id, now) in &current {
+            let why = match own.forms.get(id) {
+                None => format!("`{}` is shared and {BASELINE} holds no form for it", id.name()),
+                Some(form) if form.digests != *now => format!(
+                    "`{}`'s form in {BASELINE} proposes other digests than this commit measures — {}",
+                    id.name(),
+                    differing(&form.digests, now).join(", ")
+                ),
+                Some(_) => continue,
+            };
             refused.push(format!(
-                "trust-form-missing: `{}` is shared and {BASELINE} holds no form for it — commit the tool's proposal, `cargo xtask trust-baseline --propose`",
-                id.name()
+                "trust-form-missing: {why} — commit the tool's proposal, `cargo xtask trust-baseline --propose`"
             ));
         }
         refused.extend(formless);
@@ -890,6 +900,7 @@ mod tests {
     use super::{gate, items, judge, propose, read_baseline, Base, ItemId, UNSTATED};
     use crate::json::{self, Json};
     use crate::trust::read_roots;
+    use archogen_evidence::sha256::Digest;
 
     /// An inventory as `trust-inventory` writes one: every kind of shared item, on a host of its own.
     const INVENTORY: &str = r#"{"identity":{"host":"test-host-triple"},"shared":[
@@ -1107,7 +1118,8 @@ mod tests {
             .replace("=bb", "=b2")
             .replace("normal\"]", "normal\",\"chk crates/b normal\"]");
         let moved = inv("h", &[CONFIG, &edited], &[], (&[], &[]));
-        let j = judge(&moved, &roots, Some(&before), &base).expect("judged");
+        // With the commit's own form re-proposed, the change is reported against the base's and passes.
+        let j = judge(&moved, &roots, Some(&baseline_of(&moved)), &base).expect("judged");
         assert_eq!(
             j.change,
             ["trust-shared-changed: `gen+chk package crates/lib` — content, edges"]
@@ -1116,6 +1128,12 @@ mod tests {
             j.refused.is_empty(),
             "a change is reported, never refused: {:#?}",
             j.refused
+        );
+        // With the old form kept, the commit's own baseline no longer covers the item as it is (case 5, R7 4).
+        let j = judge(&moved, &roots, Some(&before), &base).expect("judged");
+        assert_eq!(
+            j.refused,
+            ["trust-form-missing: `gen+chk package crates/lib`'s form in trust/baseline.eadl proposes other digests than this commit measures — content, edges — commit the tool's proposal, `cargo xtask trust-baseline --propose`"]
         );
     }
 
@@ -1151,30 +1169,49 @@ mod tests {
         }
     }
 
-    #[test]
-    fn the_gate_over_a_scratch_repository_s_commits() {
-        // From a commit with no baseline to one whose forms cover it, then an unrelated commit, a shared source
-        // edited and a new sharing — each judged against its parent by the real instrument.
-        use crate::trust::tests::{manifest, real_root, two_roots};
-        let dep = "[dependencies]\ncommon = { path = \"../common\" }\n";
+    // ── F30: §14.4's five cases, each in a scratch workspace judged commit by commit (ledger `TI-H9`) ─────────────
+
+    use crate::trust::tests::{manifest, real_root, two_roots, Fixture};
+
+    const DEP: &str = "[dependencies]\ncommon = { path = \"../common\" }\n";
+
+    /// `common`'s manifest, whose feature the catalog's rules refuse unless admitted by the manifest's sha256 (R7).
+    fn common_manifest() -> String {
+        manifest("common", "[features]\nextra = []\n")
+    }
+
+    /// The two roots, `data` added to each, and the admission of `common`'s feature.
+    fn f30_roots(data: &str) -> String {
+        format!(
+            "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\"){data})\n\
+             (defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\"){data})\n\
+             (defadmit (file \"crates/common/Cargo.toml\") (rule \"`crates/common/Cargo.toml`: `[features]` makes a second configuration\") (sha256 \"{}\") (reason \"the feature case 2 activates\"))\n",
+            Digest::of(common_manifest().as_bytes()).hex()
+        )
+    }
+
+    /// Two roots that both compile `common`, a package `unused` no root compiles, and the baseline the gate proposed
+    /// for the first commit, committed second — so every later commit is judged on the baseline's host.
+    fn f30(name: &str) -> Fixture {
         let f = two_roots(
-            "gate-commits",
+            name,
             "fn main() { common::c(); }\n",
             "pub fn f() -> u32 { common::c() }\n",
             &[
-                ("crates/common/Cargo.toml", manifest("common", "")),
+                ("crates/common/Cargo.toml", common_manifest()),
+                ("trust/roots.eadl", f30_roots("")),
                 (
                     "crates/common/src/lib.rs",
-                    "pub fn c() -> u32 { 1 }\n".to_owned(),
+                    "pub fn c() -> u32 { 1 }\n#[cfg(feature = \"extra\")]\npub fn e() {}\n"
+                        .to_owned(),
                 ),
-                ("crates/a/Cargo.toml", manifest("a", dep)),
-                ("crates/b/Cargo.toml", manifest("b", dep)),
+                ("crates/unused/Cargo.toml", manifest("unused", "")),
+                ("crates/unused/src/lib.rs", "pub fn u() {}\n".to_owned()),
+                ("crates/a/Cargo.toml", manifest("a", DEP)),
+                ("crates/b/Cargo.toml", manifest("b", DEP)),
             ],
         );
-        let run = |out: &str| {
-            gate(&f.repo, "HEAD", None, &f.base.join(out), &real_root()).expect("judged")
-        };
-        let (j, text) = run("g1");
+        let (j, text) = judge_head(&f, "first");
         assert!(
             j.refused.is_empty(),
             "no baseline, so off its host: {:#?}",
@@ -1184,10 +1221,6 @@ mod tests {
             j.change,
             ["not compared — the commit has no parent to compare against"]
         );
-        assert!(has(
-            &j.standing,
-            "shared item `gen+chk package crates/common`: no form"
-        ));
         for header in [
             "commit: ",
             "host: ",
@@ -1197,57 +1230,72 @@ mod tests {
         ] {
             assert!(text.contains(header), "{header}: {text}");
         }
-        assert_eq!(
-            std::fs::read_to_string(f.base.join("g1/report.txt")).expect("written"),
-            text
-        );
-
-        let measured = json::parse(
-            &std::fs::read_to_string(f.base.join("g1/trust-dependencies.json"))
-                .expect("the inventory"),
-        )
-        .expect("parses");
-        f.commit(&[(
-            "trust/baseline.eadl",
-            propose(&measured, None).expect("a proposal"),
-        )]);
-        let (j, _) = run("g2");
+        commit_proposal(&f, "first");
+        let (j, _) = judge_head(&f, "proposed");
         assert!(
             j.refused.is_empty(),
             "on its host, every form present: {:#?}",
             j.refused
         );
-        assert!(
-            j.change[0].contains("holds no trust/baseline.eadl"),
-            "{:?}",
-            j.change
-        );
+        f
+    }
 
-        f.commit(&[("README.md", "a change outside every root\n".to_owned())]);
-        let (j, text) = run("g3");
-        assert!(j.refused.is_empty(), "{:#?}", j.refused);
-        assert_eq!(j.change, ["unchanged"], "case 5");
-        assert!(text.contains("baseline: sha256 "), "{text}");
-
-        f.commit(&[(
-            "crates/common/src/lib.rs",
-            "pub fn c() -> u32 { 2 }\n".to_owned(),
-        )]);
-        let (j, _) = run("g4");
-        assert!(
-            j.refused.is_empty(),
-            "a change is reported: {:#?}",
-            j.refused
+    fn judge_head(f: &Fixture, out: &str) -> (super::Judgement, String) {
+        let (j, text) =
+            gate(&f.repo, "HEAD", None, &f.base.join(out), &real_root()).expect("judged");
+        assert_eq!(
+            std::fs::read_to_string(f.base.join(out).join(super::REPORT)).expect("written"),
+            text
         );
-        assert!(
-            has(
-                &j.change,
-                "trust-shared-changed: `gen+chk package crates/common` — content"
-            ),
-            "{:?}",
-            j.change
-        );
+        (j, text)
+    }
 
+    /// Commit the baseline the gate proposed in `out` — the repair `trust-form-missing` names.
+    fn commit_proposal(f: &Fixture, out: &str) {
+        let proposal =
+            std::fs::read_to_string(f.base.join(out).join(super::PROPOSAL)).expect("a proposal");
+        f.commit(&[("trust/baseline.eadl", proposal)]);
+    }
+
+    #[test]
+    fn every_code_of_the_gate_has_a_catalogued_mutation_that_removes_it() {
+        // TI-H9's mutation matrix, mechanized: each code of the record's §6 table is removed by an entry of
+        // `xtask/mutations.txt` that names it and is expected killed — `cargo xtask mutate` runs each — so a code the
+        // record gains with nothing removing it fails here.
+        let root = real_root();
+        let record =
+            std::fs::read_to_string(root.join("docs/specs/trust/decision_trust-inventory.md"))
+                .expect("the record");
+        let section = record
+            .split("### 6. The gate")
+            .nth(1)
+            .and_then(|r| r.split("### 7.").next())
+            .expect("§6");
+        let codes: Vec<&str> = section
+            .lines()
+            .filter_map(|l| l.strip_prefix("| `"))
+            .filter_map(|l| l.split('`').next())
+            .filter(|c| c.starts_with("trust-"))
+            .collect();
+        assert_eq!(codes.len(), 8, "§6's table: {codes:?}");
+        let catalog =
+            std::fs::read_to_string(root.join("xtask/mutations.txt")).expect("the catalog");
+        for code in codes {
+            let named = format!("`{code}`");
+            assert!(
+                catalog.split("\nmutation ").skip(1).any(|e| {
+                    e.lines().any(|l| l == "expect killed")
+                        && e.lines()
+                            .any(|l| l.starts_with("why ") && l.contains(&named))
+                }),
+                "no catalogued mutation expected killed names {named}"
+            );
+        }
+    }
+
+    #[test]
+    fn f30_case_1_a_package_both_roots_come_to_compile_is_new_shared() {
+        let f = f30("f30-case-1");
         let dep2 =
             "[dependencies]\ncommon = { path = \"../common\" }\nmore = { path = \"../more\" }\n";
         f.commit(&[
@@ -1256,21 +1304,187 @@ mod tests {
             ("crates/a/Cargo.toml", manifest("a", dep2)),
             ("crates/b/Cargo.toml", manifest("b", dep2)),
         ]);
-        let (j, text) = run("g5");
-        assert!(
-            has(
-                &j.refused,
-                "trust-form-missing: `gen+chk package crates/more`"
-            ),
-            "{:#?}",
-            j.refused
-        );
+        let (j, text) = judge_head(&f, "shared");
         assert!(
             has(&j.change, "trust-new-shared: `gen+chk package crates/more`"),
             "{:?}",
             j.change
         );
+        assert!(
+            has(
+                &j.refused,
+                "trust-form-missing: `gen+chk package crates/more` is shared"
+            ),
+            "{:#?}",
+            j.refused
+        );
         assert!(text.contains("verdict: refused"), "{text}");
+        // Its proposed form committed, the sharing is reported against the base and the commit passes.
+        commit_proposal(&f, "shared");
+        let (j, _) = judge_head(&f, "repaired");
+        assert!(j.refused.is_empty(), "{:#?}", j.refused);
+        assert_eq!(
+            j.change,
+            ["trust-new-shared: `gen+chk package crates/more`"],
+            "reported against the base, which held no form for it"
+        );
+        // TI-H4: an unrelated commit after the merged sharing reports "unchanged".
+        f.commit(&[("README.md", "an unrelated commit\n".to_owned())]);
+        let (j, _) = judge_head(&f, "after");
+        assert!(j.refused.is_empty(), "{:#?}", j.refused);
+        assert_eq!(j.change, ["unchanged"]);
+    }
+
+    #[test]
+    fn f30_case_2_an_already_shared_package_changed_behind_its_name_is_shared_changed() {
+        let f = f30("f30-case-2");
+        // A source edited, the package's name and version unchanged.
+        f.commit(&[(
+            "crates/common/src/lib.rs",
+            "pub fn c() -> u32 { 2 }\n#[cfg(feature = \"extra\")]\npub fn e() {}\n".to_owned(),
+        )]);
+        let (j, _) = judge_head(&f, "edited");
+        assert!(
+            has(
+                &j.change,
+                "trust-shared-changed: `gen+chk package crates/common` — content"
+            ),
+            "{:?}",
+            j.change
+        );
+        assert!(
+            has(
+                &j.refused,
+                "proposes other digests than this commit measures"
+            ),
+            "{:#?}",
+            j.refused
+        );
+        commit_proposal(&f, "edited");
+        let (j, _) = judge_head(&f, "edited-proposed");
+        assert!(j.refused.is_empty(), "{:#?}", j.refused);
+        // A feature activated by one root.
+        f.commit(&[(
+            "crates/a/Cargo.toml",
+            manifest(
+                "a",
+                "[dependencies]\ncommon = { path = \"../common\", features = [\"extra\"] }\n",
+            ),
+        )]);
+        let (j, _) = judge_head(&f, "feature");
+        assert!(
+            has(
+                &j.change,
+                "trust-shared-changed: `gen+chk package crates/common` — "
+            ),
+            "{:?}",
+            j.change
+        );
+        assert!(
+            has(&j.change, "configuration"),
+            "a feature is configuration: {:?}",
+            j.change
+        );
+    }
+
+    #[test]
+    fn f30_case_3_data_both_roots_are_handed_is_new_shared_and_an_undeclared_input_is_refused() {
+        let f = f30("f30-case-3");
+        let roots = f30_roots(" (data \"docs/table.txt\")");
+        f.commit(&[
+            ("docs/table.txt", "an authoritative table\n".to_owned()),
+            ("trust/roots.eadl", roots.clone()),
+        ]);
+        let (j, _) = judge_head(&f, "data");
+        assert!(
+            has(&j.change, "trust-new-shared: `gen+chk file docs/table.txt`"),
+            "{:?}",
+            j.change
+        );
+        // A declared input the commit does not hold: refused wherever the gate runs.
+        f.commit(&[(
+            "trust/roots.eadl",
+            roots.replacen("docs/table.txt", "docs/gone.txt", 1),
+        )]);
+        let (j, text) = judge_head(&f, "undeclared");
+        assert!(
+            has(
+                &j.refused,
+                "trust-undeclared-input: `gen` declares `docs/gone.txt`"
+            ),
+            "{:#?}",
+            j.refused
+        );
+        assert!(
+            text.contains("inventory: none"),
+            "no inventory is written on a refusal: {text}"
+        );
+    }
+
+    #[test]
+    fn f30_case_4_a_package_whose_inventory_is_of_the_commit_before_is_stale() {
+        let f = f30("f30-case-4");
+        let out = f.base.join("proposed");
+        let inventory =
+            std::fs::read_to_string(out.join("trust-dependencies.json")).expect("the inventory");
+        let measured = json::parse(&inventory).expect("parses");
+        f.commit(&[("README.md", "a later commit\n".to_owned())]);
+        let head = String::from_utf8(
+            std::process::Command::new("git")
+                .args(["rev-parse", "HEAD"])
+                .current_dir(&f.repo)
+                .output()
+                .expect("git")
+                .stdout,
+        )
+        .expect("utf-8");
+        // The package of the later commit, carrying the earlier commit's inventory and report.
+        let package = f.base.join("package");
+        std::fs::create_dir_all(package.join("trust")).expect("a directory");
+        std::fs::write(package.join("trust/trust-dependencies.json"), &inventory).expect("written");
+        std::fs::copy(out.join(super::REPORT), package.join("trust/report.txt")).expect("copied");
+        let toolchain = measured
+            .get("identity")
+            .and_then(|i| i.get("rustc"))
+            .and_then(Json::as_str)
+            .expect("the toolchain");
+        let manifest_json = format!(
+            "{{\"format\":\"{}\",\"commit\":\"{}\",\"toolchain\":{},\"artifacts\":[],\"results\":[],\"handed\":[]}}",
+            crate::trust_verify::FORMAT,
+            head.trim(),
+            json::write(&Json::Str(toolchain.to_owned()))
+        );
+        std::fs::write(package.join("manifest.json"), manifest_json).expect("written");
+        let refused = crate::trust_verify::verify(&package).expect("a directory");
+        assert!(
+            refused.iter().any(|r| r.starts_with(
+                "trust-inventory-stale: the inventory is of another build: its commit"
+            )),
+            "{refused:#?}"
+        );
+    }
+
+    #[test]
+    fn f30_case_5_an_unrelated_change_is_unchanged_and_warns_of_nothing() {
+        // TI-H9: a README, a development profile, an override for a package no root compiles, a comment in the pin.
+        let f = f30("f30-case-5");
+        let ws = "[workspace]\nresolver = \"2\"\nmembers = [\"crates/*\"]\n";
+        let pin = std::fs::read_to_string(f.repo.join("rust-toolchain.toml")).expect("the pin");
+        for (step, files) in [
+            ("readme", vec![("README.md", "a change outside every root\n".to_owned())]),
+            ("dev-profile", vec![("Cargo.toml", format!("{ws}\n[profile.dev]\nopt-level = 1\n"))]),
+            (
+                "override",
+                vec![("Cargo.toml", format!("{ws}\n[profile.dev]\nopt-level = 1\n\n[profile.release.package.unused]\nopt-level = 1\n"))],
+            ),
+            ("pin-comment", vec![("rust-toolchain.toml", format!("# the pin, commented\n{pin}"))]),
+        ] {
+            f.commit(&files);
+            let (j, text) = judge_head(&f, step);
+            assert!(j.refused.is_empty(), "{step}: {:#?}", j.refused);
+            assert_eq!(j.change, ["unchanged"], "{step}");
+            assert!(!text.contains("trust-new-shared") && !text.contains("trust-shared-changed"), "{step}: {text}");
+        }
     }
 
     #[test]

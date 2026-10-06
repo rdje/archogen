@@ -337,7 +337,11 @@ leaves' (R2 B1, B10, B17; R3 C3).
 no longer has, or a root naming a target its package no longer has, is `trust-baseline-stale` wherever the gate runs,
 not on the baseline's host alone: no inventory can be built without what the form names, so off that host there would
 be nothing else to report. A `trust-unclassified-program` is reported in the standing list, beside what it reports on,
-so a classification whose role packages grew does not make every later commit's change part non-empty (case 5).
+so a classification whose role packages grew does not make every later commit's change part non-empty (case 5). And,
+by F30's second case (`M3.6.3.6`): a form proposes its item's digests, so on the baseline's host a commit whose own form
+for a shared item proposes other digests than the commit measures holds no form for the item as it is, and is
+`trust-form-missing` until the tool's proposal is committed; otherwise a change to a shared item, merged once, would be
+reported by every later commit, which R7 4 forbids for a new sharing alike.
 
 **Case 4 is judged where an inventory is consumed** (R1 A8). The gate builds its own inventory and cannot find it
 stale. `cargo xtask trust-verify <package>` refuses a package whose inventory is missing, whose build identity is not
