@@ -399,13 +399,107 @@ mdBook that is the director's window into the project.
     `DOCTRINE_ENFORCEMENT.md`, `TOOLBOX.md`. ⚠️ Not verified: a run on the runner itself — `.10.5`.
 
 - ID: `PROGRAM.10.5`
-  Status: `blocked` — on the next push, which the ruled cadence decides (`bash scripts/push_cadence.sh`)
+  Status: `in-progress` — the first run read `2026-10-06`; its two defects are `.5.1` and `.5.2`, and the leaf closes
+  on the run after their push
   Goal: read the first real run of the `integration` job, and fix what the runner's userland finds.
+  The first run, `2026-10-06`: the push of `32e6b14..a3c0cbd`, `gh run view 37427933725` (`rust`) and `37427933648`
+  (`doctrines`). `enforce` passed; `focused` and `integration` failed at one step each, the same one:
+  ```text
+  $ gh api --allow-escape-sequences repos/{owner}/{repo}/actions/jobs/112151765745/logs
+  info: the active toolchain `1.95.0-x86_64-unknown-linux-gnu` has been installed
+  info: it's active because: overridden by '<the runner's checkout>/rust-toolchain.toml'
+    ❌ tests               49.55s  FAILED
+       test result: FAILED. 99 passed; 7 failed; 0 ignored; 0 measured; 0 filtered out; finished in 16.47s
+  tier integration: failed — 11 passed, 1 failed, 0 unavailable, 0 not built, 0 quarantined
+  ```
+  Both assumptions held: rustup installed the pin from `rust-toolchain.toml`, and every commit-pinned action resolved
+  (checkout, cache, the QEMU build and the mdBook provision all `success`). The seven failures are two defects, both
+  in `xtask`'s tests, neither in the runner's userland: six `catalog_check` tests (`.5.1`) and one `trust` test
+  (`.5.2`).
   Acceptance: the run's verdict and log are recorded here — and two assumptions `PROGRAM.30` could not test from
   here: the runner's rustup installs from `rust-toolchain.toml` (rustup ≥ 1.28), and the commit-pinned actions
   resolve. ⚠️ It cannot happen before the next push, which the ruled
   cadence (`decision_push-cadence.md`; `bash scripts/push_cadence.sh` for the distance) decides; until then the job's evidence is a rehearsal
   on macOS, not a run on the runner's GNU userland, and the parent says so rather than closing on it.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `PROGRAM.10.5.1`
+  Status: `done` — closed `2026-10-06`; the runner's verdict is `.5`'s
+  Goal: the catalog gate reads its pending commit's date in the hook's own environment, as its record's §4 says, and
+  the six `catalog_check` tests give their scratch repositories an identity of their own.
+  Acceptance: the six tests pass where no git identity is configured outside the scratch repository; a test fails if
+  the date's read loses the hook's environment.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — the first CI run (`.5`), six of seven failures:
+    ```text
+    thread 'catalog_check::tests::an_untracked_file_under_catalog_and_a_missing_pin_are_refused' panicked at
+    xtask/src/catalog_check.rs:1086:44:
+    `git var GIT_COMMITTER_IDENT` failed: Committer identity unknown … fatal: empty ident name (for
+    <runner@runnervm8df0l…>) not allowed
+    ```
+    Reproduced here with no identity outside the scratch repository — `HOME` an empty directory whose
+    `.gitconfig` says `user.useConfigOnly = true`, `CARGO_HOME` and `RUSTUP_HOME` the real ones: `cargo test -p
+    xtask catalog_check` → `test result: FAILED. 2 passed; 6 failed`, each *"fatal: no email was given and
+    auto-detection is disabled"*.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — two, one under the other. WHERE, the code: `pending_date` in
+    `xtask/src/catalog_check.rs` ran `git var GIT_COMMITTER_IDENT` through `Git`, whose `command` calls
+    `env_clear()` and passes back the history readers' allowlist alone (`PATH`, `HOME`, `GIT_DIR`,
+    `GIT_INDEX_FILE`, `GIT_WORK_TREE`). The catalog record's §4 says otherwise: the date is read *"in the hook's own
+    environment rather than the history readers' allowlist, since it reads no history and needs `TZ` and
+    `GIT_COMMITTER_DATE`"* (`docs/specs/catalog/decision_catalog-records.md`, the gate's pending commit). So a
+    committer's `GIT_COMMITTER_DATE`, `TZ` or identity set in the environment never reached `git var`. WHERE, the
+    tests: the scratch repository's identity was `-c user.name=t -c user.email=t@t` on the test's own git calls only,
+    so the checker's `git var` found an identity only in the machine's `~/.gitconfig` — here, and not on the runner.
+    WHY it stayed hidden: every run before this one was on a machine with a global identity.
+    ```text
+    $ git grep -n -e 'env_clear' -e 'fn pending_date' -e 'git.text(&["var"' HEAD -- xtask/src/catalog_check.rs
+    HEAD:xtask/src/catalog_check.rs:170:            .env_clear();
+    HEAD:xtask/src/catalog_check.rs:424:fn pending_date(git: &Git) -> Result<CommitterDate, String> {
+    HEAD:xtask/src/catalog_check.rs:425:    let ident = git.text(&["var", "GIT_COMMITTER_IDENT"])?;
+    $ git grep -n 'own environment rather' HEAD -- docs/specs/catalog/decision_catalog-records.md
+    HEAD:docs/specs/catalog/decision_catalog-records.md:323:    are those `git var GIT_COMMITTER_IDENT` gives when …
+    ```
+  - [x] **FIX** — `pending_date(cwd, env)` runs `git var` with `env` and nothing else, and `judge` gives it
+    `std::env::vars_os()`, the hook's environment; the module's header says which calls the allowlist governs.
+    `Repo::new` writes `user.name`, `user.email` and `commit.gpgsign` into the scratch repository's own
+    configuration, where every git run in it reads them, and the `-c` flags go. A new test,
+    `the_pending_date_is_read_in_the_hook_s_environment`, gives `git var` an environment of `PATH` and
+    `GIT_COMMITTER_DATE=@1700000000 +0130`; the mutation `catalog-pending-date-under-the-allowlist` puts the
+    allowlist back.
+  - [x] **ADDRESSED (verified)** — with no identity outside the scratch repository, as above: `cargo test -p xtask
+    catalog_check` → `test result: ok. 9 passed; 0 failed`; in the ordinary environment, `ok. 9 passed`. `cargo xtask
+    mutate --only catalog-pending-date-under-the-allowlist` → *"killed by
+    catalog_check::tests::the_pending_date_is_read_in_the_hook_s_environment (2.7s)"*, the pre-fix behaviour failing
+    the new test.
+  - [x] **NO REGRESSION** — the whole suite with no identity outside the scratch repositories: `cargo test --all -q`
+    → 97 suites, 1274 passed, 0 failed; `cargo clippy -p xtask --all-targets -- -D warnings` → clean; `make focused`
+    → `tier focused: passed — 3 passed, 0 failed`; the doctrine gate at commit. ⚠️ Not verified here: the runner
+    itself, which `.5` reads after the push.
+  - [x] **LOCKSTEP** — the code now does what §4 already said, so neither the record nor the book's catalog chapter
+    moves; `xtask/mutations.txt`; this leaf and both logs; `CHANGELOG.md`.
+  Verification: `2026-10-06` — the Verification Log's row
+  Commit: `ARCHOGEN-PROGRAM-0478 (leaf PROGRAM.10.5.1)`
+
+- ID: `PROGRAM.10.5.2`
+  Status: `in-progress`
+  Goal: the `.incbin` fixture of `trust`'s test `an_incbin_under_asm_and_under_naked_asm_is_refused` assembles on an
+  ELF host as it does on Mach-O.
+  Acceptance: both of the test's packages build for an ELF target; the blob's bytes are in what they build.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — the first CI run (`.5`), the seventh failure:
+    ```text
+    thread 'trust::tests::an_incbin_under_asm_and_under_naked_asm_is_refused' panicked at xtask/src/trust.rs:2088:84:
+    called `Result::unwrap()` on an `Err` value: "`cargo build --lib --release --locked --offline
+    --no-default-features --message-format=json -v -p b` failed: error: could not compile `b` (lib)"
+    ```
+  - [ ] **ROOT CAUSE (WHY + WHERE)** — pending
+  - [ ] **FIX** — pending
+  - [ ] **ADDRESSED (verified)** — pending
+  - [ ] **NO REGRESSION** — pending
+  - [ ] **LOCKSTEP** — pending
   Verification: `pending`
   Commit: `pending`
 
@@ -1067,6 +1161,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `2026-10-06` | `PROGRAM.61` | the new catalog test before and after the fix; the entry alone; the whole catalog; the focused tier and the suite | FAILED naming the one entry, then ok; killed; 152 as expected in 177 s; 1237 passed, 0 failed |
 | `2026-10-06` | `PROGRAM.62` | every closure a removed paragraph narrates looked up in its tree's Commit Log; the folder measured before and after; the stated order; the gate | 31 of 31 with a row; 819 056 → 786 004 bytes; OK; all green |
 | `2026-10-06` | `PROGRAM.63` | the ledger's self-test before and after; a trial seal of `M3.1`; the routes and their self-test; the decision index; the focused tier | 12 / 2 then 14 / 0; OK; OK, 20 / 0; OK; passed |
+| `2026-10-06` | `PROGRAM.10.5.1` | the catalog tests with no identity outside the scratch repository, before and after; the same in the ordinary environment; the new entry alone; the whole suite with no identity; the focused tier | 2 passed, 6 failed, then 9 passed; 9 passed; killed by the new test; 1274 passed, 0 failed; passed |
 
 ## Commit Log
 
@@ -1194,6 +1289,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.62` | `ARCHOGEN-PROGRAM-0464 (leaf PROGRAM.62)` | **the frontiers hold the frontier**: `M1`'s and `PROGRAM`'s closure narratives removed, each closure's row checked present in its Commit Log; `docs/tasks/` 819 056 → 786 004 bytes |
 | `PROGRAM.61` | `ARCHOGEN-PROGRAM-0465 (leaf PROGRAM.61)` | **the mutation catalog runs whole again**: one entry repointed after `API.4.2` moved its line, and `cargo test` now refuses an entry whose text its file no longer holds once |
 | `PROGRAM.63` | `ARCHOGEN-PROGRAM-0472 (leaf PROGRAM.63)` | **a subtree carrying hand-offs can be sealed**: `HANDOFF-LEDGER` reads a sealed leaf's quotes past its stub; `docs/task-history/`' line ceiling raised to the trees' 3 072 by a decision record |
+| `PROGRAM.10.5.1` | `ARCHOGEN-PROGRAM-0478 (leaf PROGRAM.10.5.1)` | **the catalog gate reads its pending date where §4 says**: `git var` in the hook's own environment, not the history readers' allowlist; the scratch repositories carry their own identity, which the first CI run found missing |
 
 ## Changelog
 

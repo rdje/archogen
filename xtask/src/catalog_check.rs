@@ -7,14 +7,14 @@
 //!
 //! Three modes judge three commits:
 //! - `--index`: the gate's pending commit, read from the index, its parents `HEAD` and, during a merge,
-//!   `MERGE_HEAD`, its date the one `git var GIT_COMMITTER_IDENT` gives (§4);
+//!   `MERGE_HEAD`, its date the one `git var GIT_COMMITTER_IDENT` gives in the hook's own environment (§4);
 //! - `--commit <sha>`: a commit as made, against its parents — what the hook runs again after an amend (§4);
 //! - `--base <dir> --judged <dir> --base-commit <sha> --judged-commit <sha>`: the CI check, the judged commit
 //!   against the base (`M2.7.6.3`'s entry; the two directories are the trees the harness wrote from blobs, which
 //!   §3's builds take, `M2.7.4.3`).
 //!
-//! Every git call runs under §4's allowlist — `PATH`, `HOME`, the `GIT_DIR`, `GIT_INDEX_FILE` and `GIT_WORK_TREE` a
-//! hook is given, and `GIT_NO_REPLACE_OBJECTS` — with `core.commitGraph=false`, and the run refuses a shallow
+//! Every git call that reads history runs under §4's allowlist — `PATH`, `HOME`, the `GIT_DIR`, `GIT_INDEX_FILE` and
+//! `GIT_WORK_TREE` a hook is given, and `GIT_NO_REPLACE_OBJECTS` — with `core.commitGraph=false`, and the run refuses a shallow
 //! repository and a grafts file (premise 2). Every file is read from its blob, never from the working tree. A
 //! commit with no `catalog/` holds an empty catalog, which reads nothing else, so its tree is given empty; the
 //! blobs of a commit holding records are read whole, since a record's hashes reach any file it names.
@@ -420,9 +420,27 @@ fn committer_date(seconds: &str, offset: &str) -> Result<CommitterDate, String> 
     })
 }
 
-/// The pending commit's date: what `git var GIT_COMMITTER_IDENT` gives, `… <seconds> <+hhmm>` (§4).
-fn pending_date(git: &Git) -> Result<CommitterDate, String> {
-    let ident = git.text(&["var", "GIT_COMMITTER_IDENT"])?;
+/// The pending commit's date: what `git var GIT_COMMITTER_IDENT` gives, `… <seconds> <+hhmm>`, run in the hook's own
+/// environment `env` rather than the history readers' allowlist — it reads no history, and needs `TZ`,
+/// `GIT_COMMITTER_DATE` and whatever names the committer (§4).
+fn pending_date(
+    cwd: &Path,
+    env: impl IntoIterator<Item = (OsString, OsString)>,
+) -> Result<CommitterDate, String> {
+    let output = Command::new("git")
+        .args(["var", "GIT_COMMITTER_IDENT"])
+        .current_dir(cwd)
+        .env_clear()
+        .envs(env)
+        .output()
+        .map_err(|e| format!("git did not run: {e}"))?;
+    if !output.status.success() {
+        return Err(format!(
+            "`git var GIT_COMMITTER_IDENT` failed: {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        ));
+    }
+    let ident = String::from_utf8_lossy(&output.stdout);
     let mut tokens = ident.split_whitespace().rev();
     let offset = tokens.next().ok_or("an empty `GIT_COMMITTER_IDENT`")?;
     let seconds = tokens
@@ -537,7 +555,7 @@ pub fn judge(cwd: &Path, scratch: &Path, mode: &Mode) -> Result<Verdict, Failure
                 .into());
             }
             let mut tree = tree_of(&git, &index_entries(&git)?)?;
-            let date = pending_date(&git)?;
+            let date = pending_date(cwd, std::env::vars_os())?;
             let refs: Vec<&str> = bases.iter().map(String::as_str).collect();
             let history = if refs.is_empty() {
                 History::default()
@@ -696,6 +714,7 @@ pub fn run(root: &Path, args: &[&str]) -> i32 {
 
 #[cfg(test)]
 mod tests {
+    use std::ffi::OsString;
     use std::fs;
     use std::path::{Path, PathBuf};
     use std::process::Command;
@@ -705,7 +724,7 @@ mod tests {
     use archogen_catalog::tree::Tree;
     use archogen_catalog::Code;
 
-    use super::{committer_date, judge, parse, Failure, Mode};
+    use super::{committer_date, judge, parse, pending_date, Failure, Mode};
 
     #[test]
     fn the_arguments_parse_or_say_why() {
@@ -740,6 +759,19 @@ mod tests {
         assert!(committer_date("5", "0200").is_err());
     }
 
+    #[test]
+    fn the_pending_date_is_read_in_the_hook_s_environment() {
+        // §4: `git var` runs in the hook's own environment, so the date a committer sets reaches it; the history
+        // readers' allowlist would drop `GIT_COMMITTER_DATE`, and the gate would read the clock instead.
+        let repo = Repo::new("pending-date");
+        let mut env: Vec<(OsString, OsString)> = std::env::vars_os()
+            .filter(|(key, _)| key == "PATH")
+            .collect();
+        env.push(("GIT_COMMITTER_DATE".into(), "@1700000000 +0130".into()));
+        let d = pending_date(&repo.dir, env).unwrap();
+        assert_eq!((d.seconds, d.offset_minutes), (1_700_000_000, 90));
+    }
+
     /// The worked example's `example.base`, without its review: a record that loads over the example's files.
     const RECORD: &str = r#"(catalog-record example.base
   (version "0.1.0")
@@ -770,7 +802,8 @@ mod tests {
         format!("{}\n{REVIEW}", &body[..body.len() - 1])
     }
 
-    /// A scratch repository under `target/`, with git's identity fixed.
+    /// A scratch repository under `target/`, its identity in its own configuration, where the checker's git reads it
+    /// too — never the machine's (`PROGRAM.10.5.1`).
     struct Repo {
         dir: PathBuf,
     }
@@ -786,19 +819,18 @@ mod tests {
             fs::create_dir_all(&dir).unwrap();
             let repo = Self { dir };
             repo.git(&["init", "-q"]);
+            for (key, value) in [
+                ("user.name", "t"),
+                ("user.email", "t@t"),
+                ("commit.gpgsign", "false"),
+            ] {
+                repo.git(&["config", key, value]);
+            }
             repo
         }
 
         fn git(&self, args: &[&str]) -> String {
             let out = Command::new("git")
-                .args([
-                    "-c",
-                    "user.name=t",
-                    "-c",
-                    "user.email=t@t",
-                    "-c",
-                    "commit.gpgsign=false",
-                ])
                 .args(args)
                 .current_dir(&self.dir)
                 .output()

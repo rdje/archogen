@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog gate reads a commit's date as its design says
+
+`ARCHOGEN-PROGRAM-0478` (leaf `PROGRAM.10.5.1`).
+
+- The first run on GitHub's machines failed six of the catalog gate's tests: they had relied on the developer's own
+  git identity, which those machines do not have. Behind that was a real departure from the design: the gate read the
+  date of the commit being made with most of the committer's environment removed, so a date or time zone the committer
+  set never reached it. It now reads that date in the committer's own environment, as the design says, and the tests
+  bring their own identity.
+
 ## archogen — the trust gate can propose its baseline
 
 `ARCHOGEN-M3-0477` (leaf `M3.6.3.2`).

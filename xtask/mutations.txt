@@ -2450,3 +2450,14 @@ from
 to
             if id.name() != name && false {
 end
+
+mutation catalog-pending-date-under-the-allowlist
+file xtask/src/catalog_check.rs
+test -p xtask catalog_check::tests
+expect killed
+why PROGRAM.10.5.1: the pending commit's date read under the history readers' allowlist, as it was until the first CI run, rather than in the hook's own environment §4 names; `GIT_COMMITTER_DATE` and the committer's identity never reached `git var`.
+from
+            .envs(env)
+to
+            .envs(env.into_iter().filter(|(k, _)| k == "PATH" || k == "HOME"))
+end

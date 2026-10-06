@@ -16,8 +16,10 @@
 - **Active tree:** `M3` → frontier `M3.6`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M3.6.3.3`, `cargo xtask trust-gate` and its two-part report — third of the trust gate's slices
-  (F30); `.1` and `.2` closed `2026-10-06`; `.2.1`, the runner's baseline, waits on a push (the director's). `M3.6.1` closed `2026-10-05`; `M3.6.3`, the trust gate and F30,
+- **Next action:** `PROGRAM.10.5` — the first CI run (`2026-10-06`) failed on two `xtask` test defects: `.5.1`
+  closed, `.5.2` (an `.incbin` fixture that ELF cannot assemble) next; then push and read the run until green (the
+  director's instruction). After it, `M3.6.3.3`, `cargo xtask trust-gate` and its two-part report (F30); `.2.1`, the
+  runner's baseline, waits on the CI job `.4` adds. `M3.6.1` closed `2026-10-05`; `M3.6.3`, the trust gate and F30,
   is next in `M3.6`.
   `M2`'s open leaves all wait on the director: `M2.7.4.5`, the records and the
   lock (findings §11), and `M2.7.6`'s review and hosting half.
