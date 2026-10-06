@@ -824,7 +824,7 @@ mdBook that is the director's window into the project.
     frontier head or blocker moved; `PROGRAM.58` is filed `pending`, as `PROGRAM.53` and `.54` are.
 
 - ID: `PROGRAM.58`
-  Status: `pending` — filed `2026-10-06` by `PROGRAM.57`
+  Status: `done` — filed by `PROGRAM.57` and closed `2026-10-06`
   Goal: on macOS, a build of the workspace stops leaving every object file it compiles in `target/debug/deps`.
   Reproduce / issue: found by `PROGRAM.57`'s inventory. `target/debug` was 8.1 GB, and 5.8 GB of it was `deps`, which
   held **1 454 953** `*.rcgu.o` names over 208 crate hashes (`find target/debug/deps -maxdepth 1 -name '*.rcgu.o' |
@@ -849,6 +849,38 @@ mdBook that is the director's window into the project.
   `CARGO_PROFILE_DEV_SPLIT_DEBUGINFO=unpacked` brings line numbers back for one debugging session, written into
   `TOOLBOX.md`. Acceptance: a workspace relink leaves 0 objects, measured; the tiers green, the `wasm32`, `no_std`
   and Miri steps included, because the profile reaches their builds.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — `find target/debug/deps -maxdepth 1 -name '*.rcgu.o' | wc -l` → 1 454 953 at
+    `PROGRAM.57`'s inventory. In the scratch crate, five builds on 1.95.0 left 6 → 12 → 18 → 24 → 30 objects.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: Cargo's profile default, *"`unpacked` on macOS for profiles that have
+    debug information otherwise enabled"* (Cargo's profile reference), which the workspace manifest, holding no
+    `[profile.dev]`, inherited. WHY: under `unpacked` rustc keeps each object file for its debug information.
+    `nm -ap` on `archogen_cli-58307b0c11ca3660` lists 473 `OSO` entries naming objects by absolute path and the
+    session suffix `00we9kb`, so a later session's names are new and the old ones are referenced by nothing.
+    `CARGO_PROFILE_DEV_SPLIT_DEBUGINFO=off` and `=packed` each left 0 objects over the same five `cargo build`
+    runs, which isolates the setting. rustc's codegen-options page: `off` is *"the default for platforms with ELF
+    binaries"*, and *"all other platforms support `off`"*, `packed` being supported on Linux, Apple and Windows
+    MSVC alone.
+  - [x] **FIX** — `[profile.dev] split-debuginfo = "off"` in the workspace `Cargo.toml`, with a comment giving the
+    measurement, the macOS cost, the way back and the Windows MSVC limit. The test profile inherits it. No
+    `.cargo/config.toml` flag, which the catalog's rules refuse (`package.rs`, a configuration holds only `alias`
+    keys).
+  - [x] **ADDRESSED (verified)** — on the real `target/debug`, one one-line `eadl-front` edit then `cargo test --all
+    --no-run`. Before: 7 394 → 13 492 objects (+6 098, rc=0). After the change, and after removing the leftovers once:
+    0 → 0 → 0 over two such edits (rc=0). The first build after the change added nothing (13 492 → 13 492). The
+    way back works: with `off` in a scratch manifest, `CARGO_PROFILE_DEV_SPLIT_DEBUGINFO=unpacked` into its own
+    target directory turns `5: hatch::inner` into `6: hatch::inner at ./src/main.rs:1:52` (cargo 1.95.0).
+  - [x] **NO REGRESSION** — `make integration` → `tier integration: passed — 12 passed, 0 failed, 0 unavailable, 0
+    not built, 0 quarantined`, rc=0 in 186 s, its `no-std-build`, `wasm-build`, `wasm-binding` and `pin-premises`
+    steps included. `bash scripts/extended_miri.sh --arm-only` → `✓ arm: Miri refused the seeded dangling-pointer
+    read`, rc=0. After the documentation edits, `make focused` and the doctrine gate were re-run on the tree as
+    committed (the Commit Log row).
+  - [x] **LOCKSTEP** — `Cargo.toml`'s comment; `TOOLBOX.md`, a row for the way back; the book's ledger, the
+    `rust-toolchain` entry's known limitations, where claims about Cargo live; `CHANGELOG.md`. No snapshot moves.
+    No decision record: the setting, its reason and its measured alternatives live beside it and in this leaf.
+  - **Hand-off.** rustc refuses `off` on Windows MSVC, and `ROADMAP.md` §3.1 schedules Windows hosts after the primary
+    pipeline. No leaf owns that yet; the comment in `Cargo.toml` is the note that leaf will meet.
 
 ## Roadmap coverage map
 
@@ -1073,6 +1105,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-10-05` | `PROGRAM.55.1` | the review's constructions armed; the self-test; a mutation matrix, one per refusal and leg; the real repository; every gate's self-test; the focused tier; the enforcer | 65 / 65 arms; 38 of 38 killed; OK; all green |
 | `2026-10-05` | `PROGRAM.56` | both folders measured before and after; every reference to the old path searched; the routes; the focused tier; the enforcer | decisions 393 061 → 349 217, specs 253 792 → 300 288; 0 stale references; all green |
 | `2026-10-06` | `PROGRAM.57` | the trigger off the record's commit; a full inventory; each name looked up for an owner, a citation and its leaf's status; a residue census; the adopted policies' sources re-hashed; the provisioner, the focused tier, the whole suite and the gate, cold | 11 GB → 1.6 GB; twelve of twelve paths `gone`; 1 454 953 object files in `deps` → `PROGRAM.58`; sources unchanged; `already in place`; `passed — 3 passed`; 1 218 passed / 0 failed over 91 suites; all green |
+| `2026-10-06` | `PROGRAM.58` | the leak reproduced in a scratch crate under each mode; the `OSO` entries read with `nm -ap`; Cargo's and rustc's pages quoted; before and after on the real `target/debug`; the way back; the integration tier, Miri's arm, then the focused tier and the gate on the committed tree | +6 098 objects per relink → 0; `at ./src/main.rs:1:52` restored by the override; `passed — 12 passed, 0 quarantined`; the arm fired; all green |
 
 ## Commit Log
 
@@ -1194,6 +1227,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.56` | `ARCHOGEN-PROGRAM-0445 (leaf PROGRAM.56)` | **the trust design moves to `docs/specs/trust/`**, by the ruling of `2026-10-01`; `docs/specs/`' ceiling raised to 384 KiB by a decision record; `docs/decisions/` back to 349 217 bytes |
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0450 (leaf PROGRAM)` | **`PROGRAM.55` and `PROGRAM.56` sealed**, their 3 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` had grown 1 324 bytes over its 819 200-byte ceiling with `M3.1.1`'s step 27 |
 | `PROGRAM.57` | `ARCHOGEN-PROGRAM-0457 (leaf PROGRAM.57)` | **the fifth artifact cleanup, ≈9.4 GB released**: `target/debug` deleted whole because its `deps` held 1 454 953 leaked object files, which is filed as `PROGRAM.58`; closed reviews' scratch removed; cited mutation scripts kept |
+| `PROGRAM.58` | `ARCHOGEN-PROGRAM-0458 (leaf PROGRAM.58)` | **a macOS build stops leaving its object files behind**: `[profile.dev] split-debuginfo = "off"`, measured +6 098 objects per relink → 0; the way back to backtrace lines in `TOOLBOX.md`; Cargo's default recorded in the ledger |
 
 ## Changelog
 
@@ -1205,3 +1239,4 @@ a clean `git status` means what the handoff rule says it means.
 - `2026-10-05`: `PROGRAM.52.1` done — `HANDOFF-LEDGER`; `PROGRAM.52.2` filed for the two records' ledgers.
 - `2026-10-05`: `PROGRAM.52` closed — both design records hold their hand-offs in ledgers `HANDOFF-LEDGER` checks.
 - `2026-10-06`: `PROGRAM.57` filed and closed — the fifth artifact cleanup, the first since `PROGRAM.19`'s seal; `PROGRAM.58` filed for the object files a macOS build leaves in `target/debug/deps`.
+- `2026-10-06`: `PROGRAM.58` closed — the dev profile keeps no object files for their debug information, so `target/debug/deps` no longer grows with every build on macOS.

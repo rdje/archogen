@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — macOS builds stop piling up object files
+
+`ARCHOGEN-PROGRAM-0458` (leaf `PROGRAM.58`).
+
+- On macOS, Cargo's default kept every object file each build compiled and never deleted any, so the build directory
+  grew without limit: about 6 100 files per rebuild of the tests, 1.45 million in six days. The workspace now sets
+  `split-debuginfo = "off"`, which is already what Linux uses, and a rebuild leaves none behind. The one cost: on
+  macOS a crash's backtrace names functions but not file and line. The toolbox gives a one-line way to get them back
+  for a debugging session. Every tier step passes, including the browser and bare-metal builds.
+
 ## archogen — the fifth artifact cleanup
 
 `ARCHOGEN-PROGRAM-0457` (leaf `PROGRAM.57`).

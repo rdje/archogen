@@ -21,3 +21,17 @@ license = "MIT OR Apache-2.0"
 # `[lints] workspace = true`). clippy runs at deny-warnings in `make check` / CI.
 [workspace.lints.clippy]
 all = "warn"
+
+# No object file is kept for its debug information (leaf `PROGRAM.58`). Cargo's default for
+# `split-debuginfo` on macOS is `unpacked`: rustc keeps every object file a build compiles so that a
+# debugger can read its debug information there, each later build names its objects afresh, and nothing
+# ever deletes the old ones. Measured, each relink of the test suite left about 6 100 objects in
+# `target/debug/deps`, and six days had left 1 454 953. `off` is rustc's own default on Linux, where the
+# debug information is linked into the executable, so nothing changes there. On macOS, backtraces keep
+# their function names and lose file and line; the panic location is still printed. To get line numbers
+# back for one debugging session, see "a backtrace with file and line" in `TOOLBOX.md`. rustc does not
+# support `off` on Windows MSVC, so the leaf that takes up Windows hosts (ROADMAP.md §3.1) revisits this
+# line; `packed` is no way out, since the `wasm32` and bare-metal targets support `off` alone. The test
+# profile inherits this one.
+[profile.dev]
+split-debuginfo = "off"
