@@ -29,6 +29,8 @@ pub enum Syntax {
         /// Whether a `/*` inside a block opens another.
         nests: bool,
     },
+    /// `/* */` blocks alone, not nesting (CSS).
+    Block,
     /// `#` lines.
     Hash,
     /// `;` lines.
@@ -41,28 +43,65 @@ pub enum Syntax {
     None,
 }
 
-/// The comment syntax of the file at `path`, by its extension, or for a file with none by its name.
+/// The extensions and the file names each syntax is read for: the whole of the recogniser's reach. §3 of the
+/// generated-sources record holds the same table, machine-read, and a test holds the two equal.
+pub const TABLE: &[(Syntax, &[&str], &[&str])] = &[
+    (
+        Syntax::Slash { nests: true },
+        &["rs", "kt", "swift", "scala"],
+        &[],
+    ),
+    (
+        Syntax::Slash { nests: false },
+        &[
+            "c", "h", "cc", "cpp", "cxx", "hh", "hpp", "hxx", "js", "ts", "go", "java", "proto",
+        ],
+        &[],
+    ),
+    (Syntax::Block, &["css"], &[]),
+    (
+        Syntax::Hash,
+        &[
+            "sh", "bash", "zsh", "py", "rb", "pl", "r", "toml", "yml", "yaml", "cmake", "mk",
+            "env", "conf",
+        ],
+        &[
+            "Makefile",
+            "makefile",
+            "GNUmakefile",
+            "Dockerfile",
+            "CMakeLists.txt",
+        ],
+    ),
+    (
+        Syntax::Semicolon,
+        &["eadl", "el", "lisp", "clj", "s", "asm", "ini"],
+        &[],
+    ),
+    (
+        Syntax::Dash,
+        &["sql", "lua", "hs", "ada", "adb", "ads", "vhd", "vhdl"],
+        &[],
+    ),
+    (Syntax::Angle, &["md", "html", "htm", "xml", "svg"], &[]),
+];
+
+/// The comment syntax of the file at `path`: by its exact name first, then by its extension in any case.
 #[must_use]
 pub fn syntax(path: &str) -> Syntax {
     let name = path.rsplit('/').next().unwrap_or(path);
     let ext = name
         .rsplit_once('.')
-        .map_or("", |(_, e)| e)
-        .to_ascii_lowercase();
-    match ext.as_str() {
-        "rs" | "kt" | "swift" | "scala" => Syntax::Slash { nests: true },
-        "c" | "h" | "cc" | "cpp" | "cxx" | "hpp" | "js" | "ts" | "go" | "java" | "proto"
-        | "css" => Syntax::Slash { nests: false },
-        "sh" | "bash" | "zsh" | "py" | "rb" | "pl" | "toml" | "yml" | "yaml" | "cmake" | "mk"
-        | "r" | "env" | "conf" => Syntax::Hash,
-        "eadl" | "el" | "lisp" | "clj" | "s" | "asm" | "ini" => Syntax::Semicolon,
-        "sql" | "lua" | "hs" | "ada" | "vhd" | "vhdl" => Syntax::Dash,
-        "md" | "html" | "htm" | "xml" | "svg" => Syntax::Angle,
-        "" if matches!(name, "Makefile" | "makefile" | "GNUmakefile" | "Dockerfile") => {
-            Syntax::Hash
-        }
-        _ => Syntax::None,
-    }
+        .map_or(String::new(), |(_, e)| e.to_ascii_lowercase());
+    TABLE
+        .iter()
+        .find(|(_, _, names)| names.contains(&name))
+        .or_else(|| {
+            TABLE
+                .iter()
+                .find(|(_, exts, _)| !ext.is_empty() && exts.contains(&ext.as_str()))
+        })
+        .map_or(Syntax::None, |(syn, _, _)| *syn)
 }
 
 /// The header's comment text, or `None` when the file has no comment syntax or is not UTF-8.
@@ -92,12 +131,21 @@ pub fn header(path: &str, bytes: &[u8]) -> Option<String> {
         }
         out.push('\n');
     };
-    // A `#!` first line: a comment where `#` is; in Rust a shebang unless `[` follows, comments and whitespace aside.
+    // A `#!` first line: a comment where `#` is; in Rust a shebang unless `[` follows, whitespace and comments aside —
+    // block comments nesting, a line comment ending at a line feed, and a doc comment (`///` but not `////`, `//!`,
+    // `/**` but not `/**/` or `/***`, `/*!`) ending the look-ahead: measured on rustc 1.95.0 (the record's §3).
     let rust_attribute = || {
         let mut j = 2;
         loop {
             while j < s.len() && s[j].is_whitespace() {
                 j += 1;
+            }
+            let doc = (at(j, "///") && !at(j, "////"))
+                || at(j, "//!")
+                || (at(j, "/**") && !at(j, "/**/") && !at(j, "/***"))
+                || at(j, "/*!");
+            if doc {
+                return false;
             }
             if at(j, "//") {
                 while j < s.len() && s[j] != '\n' {
@@ -105,10 +153,18 @@ pub fn header(path: &str, bytes: &[u8]) -> Option<String> {
                 }
             } else if at(j, "/*") {
                 j += 2;
-                while j < s.len() && !at(j, "*/") {
-                    j += 1;
+                let mut depth = 1usize;
+                while j < s.len() && depth > 0 {
+                    if at(j, "/*") {
+                        depth += 1;
+                        j += 2;
+                    } else if at(j, "*/") {
+                        depth -= 1;
+                        j += 2;
+                    } else {
+                        j += 1;
+                    }
                 }
-                j += 2;
             } else {
                 return s.get(j) == Some(&'[');
             }
@@ -163,6 +219,15 @@ pub fn header(path: &str, bytes: &[u8]) -> Option<String> {
                     break;
                 }
             }
+            Syntax::Block if at(i, "/*") => {
+                i += 2;
+                while i < s.len() && !at(i, "*/") {
+                    out.push(s[i]);
+                    i += 1;
+                }
+                i += 2;
+                out.push('\n');
+            }
             Syntax::Hash if at(i, "#") => line(&mut i, &mut out),
             Syntax::Semicolon if at(i, ";") => line(&mut i, &mut out),
             Syntax::Dash if at(i, "--") => line(&mut i, &mut out),
@@ -192,7 +257,8 @@ pub fn marked(path: &str, bytes: &[u8]) -> bool {
 
 #[cfg(test)]
 mod tests {
-    //! The corpus: every case the record's two review rounds raised, each with the outcome the rule gives it.
+    //! The corpus: every case the record's review rounds raised, each with the outcome the rule gives it; and the
+    //! record's machine-read table of comment syntax, held equal to [`super::TABLE`].
 
     use super::marked;
 
@@ -416,9 +482,115 @@ mod tests {
                 "an inner doc comment is a comment",
             ),
             ("X.RS", b"// @generated\n", true, "an extension in capitals"),
+            (
+                "x.rs",
+                b"#! /* a /* b */ c */ [allow(dead_code)]\n// @generated\nfn f() {}\n",
+                false,
+                "the look-ahead nests",
+            ),
+            (
+                "x.rs",
+                b"#! /*! d */ [allow(dead_code)]\n// @generated\nfn f() {}\n",
+                true,
+                "a doc comment ends the look-ahead: a shebang",
+            ),
+            (
+                "x.rs",
+                b"#! /// d\n// @generated\n",
+                true,
+                "a line doc comment too",
+            ),
+            (
+                "x.rs",
+                b"#! // c\n[allow(dead_code)]\n// @generated\n",
+                false,
+                "a plain line comment is skipped",
+            ),
+            (
+                "x.adb",
+                b"-- generated by gnatprep\nprocedure P is\n",
+                true,
+                "Ada's body file",
+            ),
+            ("x.r", b"# generated by roxygen2\nf <- 1\n", true, "R"),
+            (
+                "CMakeLists.txt",
+                b"# generated by a template\nproject(x)\n",
+                true,
+                "CMake by its name",
+            ),
+            (
+                "x.css",
+                b"// generated by x\na {}\n",
+                false,
+                "CSS has no line comments",
+            ),
+            (
+                "x.css",
+                b"/* generated by x */\na {}\n",
+                true,
+                "a CSS block comment",
+            ),
         ];
         for (path, bytes, want, why) in cases {
             assert_eq!(marked(path, bytes), *want, "{why}: {path}");
         }
+    }
+
+    #[test]
+    fn the_record_s_table_of_comment_syntax_is_the_code_s() {
+        use super::{Syntax, TABLE};
+        let record = std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../docs/specs/trust/decision_trust-generated-sources.md"),
+        )
+        .expect("the record");
+        let table = record
+            .split("<!-- machine-read: comment-syntax -->")
+            .nth(1)
+            .expect("the record's machine-read table");
+        let words = |cell: &str| -> Vec<String> {
+            let mut w: Vec<String> = cell
+                .split('`')
+                .skip(1)
+                .step_by(2)
+                .map(str::to_owned)
+                .collect();
+            w.sort();
+            w
+        };
+        let mut rows = Vec::new();
+        for line in table.lines().skip(3) {
+            let cells: Vec<&str> = line.split('|').map(str::trim).collect();
+            if cells.len() < 5 {
+                break;
+            }
+            let syn = match cells[1] {
+                "`//` and `/* */`, nesting" => Syntax::Slash { nests: true },
+                "`//` and `/* */`" => Syntax::Slash { nests: false },
+                "`/* */`" => Syntax::Block,
+                "`#`" => Syntax::Hash,
+                "`;`" => Syntax::Semicolon,
+                "`--`" => Syntax::Dash,
+                "`<!-- -->`" => Syntax::Angle,
+                other => panic!("a syntax the code does not name: {other}"),
+            };
+            rows.push((syn, words(cells[2]), words(cells[3])));
+        }
+        let code: Vec<(Syntax, Vec<String>, Vec<String>)> = TABLE
+            .iter()
+            .map(|(syn, exts, names)| {
+                let sorted = |xs: &[&str]| {
+                    let mut v: Vec<String> = xs.iter().map(|x| (*x).to_owned()).collect();
+                    v.sort();
+                    v
+                };
+                (*syn, sorted(exts), sorted(names))
+            })
+            .collect();
+        assert_eq!(
+            rows, code,
+            "the record's §3 table and generated_header::TABLE"
+        );
     }
 }

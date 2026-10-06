@@ -123,3 +123,29 @@ measured against rustc 1.95.0.
 | R3-18 | remark | the harness's reads were unrestricted; a file read by both made two items | §1: the harness's reads count through its beside-the-pair units too; §5 states both items |
 | R3-19 | remark | refusing is stricter than `ROADMAP.md` asks | §5 says it is a deliberate tightening and cites §4.4 and §14.4 |
 | R3-20 | remark | a form's place in the change part was carried by no hand-off | `GS-H7` and `GS-H5` carry it |
+
+**Round 4**, `2026-10-06`, on the narrowed record: the reviewer confirmed the census against the inventory, the four
+marked files, the one gitlink, every hand-off quoted, `root_forms` keying a form, and the `ROADMAP.md` quotations
+verbatim. There were 15 findings, 9 of them defects — fewer than round 3's 12, and most of precision: words two readers
+take differently, and the recogniser's table drifting from §3's prose. Two were of substance: a tool behind a script
+could not be told from a script (R4-1), and a chain through a crate-root generator's own modules passed unseen (R4-2).
+The table is now machine-read in the record and held equal to the code's by a test, so the prose cannot drift from it
+again; the shebang look-ahead was measured on rustc 1.95.0, case by case, before it was coded.
+
+| Finding | Class | What it found | The answer |
+| --- | --- | --- | --- |
+| R4-1 | defect | "a generator outside the commit" could not be told from a script that runs a tool; `M3.6.6.4` listed `Cargo.lock`, which is unmarked | §2: a tool a script runs is the script's believed dependency (§8); a marked file no form can declare refused, an unmarked one plain; `M3.6.6.4` corrected |
+| R4-2 | defect | a chain through a crate-root generator's own modules was neither refused nor seen | §5: the target is built as a root is, and every file its build reads is under §3 and the chain rule; `GS-H11`, `GS-H5` |
+| R4-3 | defect | a non-live form's symbolic-link declared file had two rules | §2: the item dropped — the parent refuses every symbolic link a program reads |
+| R4-4 | defect | the look-ahead did not nest, nor stop at doc comments | the code nests and stops at `///`, `//!`, `/**`, `/*!`, each measured on rustc 1.95.0; four corpus cases; §3 states the line feed |
+| R4-5 | defect | §3's languages and the code's extensions disagreed | §3's table machine-read and held equal to `TABLE` by a test; Ada's `.adb`/`.ads`, `.hh`/`.hxx`, `CMakeLists.txt` added; CSS read for `/* */` alone; §8's Lua item corrected |
+| R4-6 | defect | `GS-H11`'s "any other `.rs` file" refused every crate root | `GS-H11` reworded: "a `.rs` file that is no program target's crate root" |
+| R4-7 | defect | "program" meant a root or the harness and also any executable | §1 keeps `program` and `generator file` apart; `GS-H12` reworded |
+| R4-8 | defect | the parent's §2 definition of `trust-shared-program` and its per-root list were not in the amendments | §7 lists both |
+| R4-9 | defect | the census gave the harness 5 where §1 counts 1 | §1: 1 beside its pair's builds, 5 in its whole build |
+| R4-r1 | remark | "longest prefix" string-wise or by components; a crate root of two targets | §5: the innermost member by whole path components; the union of two targets' sets |
+| R4-r2 | remark | a generator file failing §2 and §5 drew two codes | §5 judges what §2 admits |
+| R4-r3 | remark | `read` beside provenance roles; a path match and a sha256 match | §5: `read` among the roles; a sha256 match only between paths that match no path; `GS-H3` carries the identity |
+| R4-r4 | remark | the completeness of the generator list is believed | §8 says so, with the script-driving-a-target case |
+| R4-r5 | remark | the Owner line's quotation was not §14.4's wording | quoted verbatim |
+| R4-r6 | remark | the reader's errors uncoded; the corpus's comment stale | §2 and `GS-H1`: each a coded refusal; the comment corrected |
