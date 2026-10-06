@@ -209,3 +209,31 @@ which were eleven and the control.
 | R6-r8 | remark | `M3.6.6.4` said "vendored" | "at or under a gitlink", in the leaf and the record |
 | R6-r9 | remark | no corpus case for a marker in prose, nor a `#` language's carriage-return shebang | both added; §3 says a Rust shebang ends at a line feed, a `#` language's as any line |
 | R6-r10 | remark | three parent passages name roots and the harness alone | §7 lists them |
+
+**Round 7**, `2026-10-06`: the reviewer confirmed the census, the marked files, the gitlink, `root_forms`, `xtask`'s
+build and the lock's writer, every quotation, all thirteen hand-offs quoted, the counts, and `rust_shebang` against
+rustc's lexer — measuring five more whitespace characters, on which the code agreed. There were 15 findings, 8 of them
+defects, and most were in the tests: half the fixture's cases did not compile under both readings as §3 said (R7-1),
+two rules could be deleted with every test green (R7-2), and two corpus cases held what they were written to hold under
+either behaviour (R7-3, R7-4). A reviewer finding vacuous cases one at a time is the loop the review method says to
+mechanize, so the answer is a mutation per recogniser rule: thirteen, each removing or weakening one rule, each
+expected killed and each killed. The fixture now scores three outcomes — the warning, silence, or rustc's refusal —
+names each case's, and checks it runs the pinned rustc.
+
+| Finding | Class | What it found | The answer |
+| --- | --- | --- | --- |
+| R7-1 | defect | eight of the fifteen cases fail to compile under the reading the test does not expect | the fixture scores warning, silence or refusal ("expected item, found `[`"), each case naming its outcome; §3 states each |
+| R7-2 | defect | the line doc comments' rule and the look-ahead's line end could be deleted with every test green | fixture cases `#! /// d` and `#! //! d` before `[` (refused), `#! // c\r[…]` (warning); corpus cases; mutations `gh-inner-line-doc-skipped`, `gh-outer-line-doc-skipped`, `gh-look-ahead-line-comment-ends-at-cr`, each killed |
+| R7-3 | defect | the corpus case for a Rust shebang's line feed held under either line end | `#!/usr/bin/x\rfn f() {}\n// @generated\n`, true only at the line feed; `gh-rust-shebang-ends-at-cr` killed |
+| R7-4 | defect | one invalid byte anywhere hid a clean header, against §3's words | bytes read as UTF-8 with U+FFFD for an invalid sequence; the reviewer's reproducer a corpus case; `gh-strict-utf8` killed |
+| R7-5 | defect | a file named `.rs` took Rust's shebang rule | Rust's rule by extension, `.rs` a dotfile; a corpus case; `gh-rust-by-suffix` killed |
+| R7-6 | defect | a declared tool-written file was called a plain file | §2: declared, decided as its form says, believed; undeclared and unmarked, a plain file; §8's item "undeclared" |
+| R7-7 | defect | a generator build's admitted site had no use, so stale, or no admission, so refused | §5: its sites are sites and its admissions uses, one admission to one site; §7 the parent's admission passages |
+| R7-8 | defect | the parent's change-part, standing-list and §6-clarification enumerations were not amended | §7 lists them and `TI-H2`'s |
+| R7-r1 | remark | "held to its syntax alone" read two ways | §2 and `GS-H1`: its shape and the text-only constructions |
+| R7-r2 | remark | §3's precedence of the chain carried by no hand-off | `GS-H2`: "and that no chain of §2 holds" |
+| R7-r3 | remark | `GS-H7`'s standing list without "not accepted" | added |
+| R7-r4 | remark | `GS-H13` forbade keeping a tool believed | `GS-H13`: made provenance or kept believed with a reason |
+| R7-r5 | remark | the fixture did not check its rustc | it checks `rustc -V` against the pin |
+| R7-r6 | remark | `Syntax::Slash`'s comment named Rust alone | corrected |
+| R7-r7 | remark | §8 described one set twice | one clause |

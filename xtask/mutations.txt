@@ -2654,3 +2654,146 @@ from
 to
                     Some(then) if false => {
 end
+
+mutation gh-inner-line-doc-skipped
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its seventh review): an inner line doc comment `//!` after `#!` ends rustc's look-ahead; a rule no case holds could be deleted with every test green.
+from
+                || at(j, "//!")
+to
+                || false
+end
+
+mutation gh-outer-line-doc-skipped
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its seventh review): an outer line doc comment `///` after `#!` ends rustc's look-ahead; a rule no case holds could be deleted with every test green.
+from
+            let doc = (at(j, "///") && !at(j, "////"))
+to
+            let doc = false
+end
+
+mutation gh-look-ahead-line-comment-ends-at-cr
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its seventh review): the look-ahead's line comment ends at a line feed alone; a rule no case holds could be deleted with every test green.
+from
+                while j < s.len() && s[j] != '\n' {
+to
+                while j < s.len() && s[j] != '\n' && s[j] != '\r' {
+end
+
+mutation gh-rust-shebang-ends-at-cr
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its seventh review): a Rust shebang ends at a line feed alone, as rustc's does; a rule no case holds could be deleted with every test green.
+from
+            while i < s.len() && s[i] != '\n' {
+to
+            while i < s.len() && s[i] != '\n' && s[i] != '\r' {
+end
+
+mutation gh-rust-by-suffix
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its seventh review): Rust's shebang rule applies to a `.rs` extension, not a file named `.rs`; a rule no case holds could be deleted with every test green.
+from
+        let is_rust = extension(name).as_deref() == Some("rs");
+to
+        let is_rust = path.to_ascii_lowercase().ends_with(".rs");
+end
+
+mutation gh-any-processing-instruction-skipped
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its seventh review): the XML declaration alone is skipped, not any processing instruction; a rule no case holds could be deleted with every test green.
+from
+            if at(j, "<?xml") && s.get(j + 5).is_some_and(|c| c.is_whitespace() || *c == '?') {
+to
+            if at(j, "<?") {
+end
+
+mutation gh-header-line-ignores-cr
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its seventh review): a header's line ends at a line feed or a carriage return; a rule no case holds could be deleted with every test green.
+from
+            while *i < s.len() && s[*i] != '\n' && s[*i] != '\r' {
+to
+            while *i < s.len() && s[*i] != '\n' {
+end
+
+mutation gh-byte-order-mark-kept
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its seventh review): a byte-order mark is dropped before the header is read; a rule no case holds could be deleted with every test green.
+from
+        let text = decoded.strip_prefix('\u{feff}').unwrap_or(&decoded);
+to
+        let text: &str = &decoded;
+end
+
+mutation gh-extension-by-first-byte
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its seventh review): an extension skips the name's first character by its width, not one byte; a rule no case holds could be deleted with every test green.
+from
+        let rest = &name[first.len_utf8()..];
+to
+        let rest = name.get(1..).unwrap_or("");
+end
+
+mutation gh-empty-extension-kept
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its seventh review): a trailing dot is no extension; a rule no case holds could be deleted with every test green.
+from
+            .filter(|e| !e.is_empty())
+to
+            .filter(|_| true)
+end
+
+mutation gh-look-ahead-whitespace-unicode
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its seventh review): the look-ahead skips rustc's Pattern_White_Space, not Unicode's White_Space; a rule no case holds could be deleted with every test green.
+from
+            while j < s.len() && pattern_white_space(s[j]) {
+to
+            while j < s.len() && s[j].is_whitespace() {
+end
+
+mutation gh-blocks-never-nest
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its seventh review): Rust's, Kotlin's, Swift's and Scala's block comments nest; a rule no case holds could be deleted with every test green.
+from
+                            if nests && at(i, "/*") {
+to
+                            if false && at(i, "/*") {
+end
+
+mutation gh-strict-utf8
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its seventh review): a file's bytes are read as UTF-8 with an invalid sequence as U+FFFD, so one bad byte does not hide a clean header; a rule no case holds could be deleted with every test green.
+from
+        let decoded = String::from_utf8_lossy(bytes);
+to
+        let decoded = String::from_utf8(bytes.to_vec()).ok()?;
+end
