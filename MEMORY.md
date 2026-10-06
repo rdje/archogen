@@ -16,8 +16,8 @@
 - **Active tree:** `M3` → frontier `M3.1`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M3.1.2.6`, `model.md` normative over the crate and its codes (`SR-H5`), then `M3.1.2`
-  closes; `.1`–`.5` closed `2026-10-06`, the relation held to `M3.1.1.1`'s model by `SR-H7`. `M3.6.1` closed `2026-10-05`; `M3.6.3`, the trust gate and F30,
+- **Next action:** `M3.1.3`, the book's chapter on matching, in layers; `M3.1.2`, the production relation, closed
+  `2026-10-06`, held to `M3.1.1.1`'s model and with `model.md` §7 normative over it. `M3.6.1` closed `2026-10-05`; `M3.6.3`, the trust gate and F30,
   is next in `M3.6`.
   `M2`'s open leaves all wait on the director: `M2.7.4.5`, the records and the
   lock (findings §11), and `M2.7.6`'s review and hosting half.

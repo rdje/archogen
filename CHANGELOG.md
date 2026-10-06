@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the matching rules become normative, and their implementation is complete
+
+`ARCHOGEN-M3-0469` (leaf `M3.1.2.6`).
+
+- The model layer's normative document now governs the matching engine: its rules are stated there, and a check holds
+  every diagnostic code the engine can produce to that document. Each refusal reports one of the design's two
+  verdicts, names exactly what is wrong and says what to do about it. With this the production implementation of
+  the matching rules is complete, held throughout to the design's executable model; every existing verdict is
+  unchanged. The book's chapter on matching comes next.
+
 ## archogen — the engine decides whether an offer satisfies a requirement
 
 `ARCHOGEN-M3-0468` (leaf `M3.1.2.5`).

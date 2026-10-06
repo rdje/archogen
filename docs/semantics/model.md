@@ -36,6 +36,12 @@ nothing re-derives.
 | `crates/eadl-model/src/workload.rs` | §4 the workload a profile admits: release models, deadlines and priorities |
 | `crates/eadl-model/src/check.rs` | §4 profile admission, §3 the target a refinement names, and §6's `tool-failure` |
 | `crates/eadl-model/src/boundary.rs` | §5 the implementation boundary |
+| `crates/eadl-resolve/src/vocabulary.rs` | §7 rule 1, the capability vocabulary read into a typed table |
+| `crates/eadl-resolve/src/value.rs` | §7 rule 2, the domains' values and their exact comparison |
+| `crates/eadl-resolve/src/offer.rs` | §7 rule 3, what a provider offers and declares absent |
+| `crates/eadl-resolve/src/requirement.rs` | §7 rule 4, what a side requires, read whole |
+| `crates/eadl-resolve/src/relation.rs` | §7 rule 5, each fact's outcome at a provider and each requirement's verdict there |
+| `crates/eadl-resolve/src/refusal.rs` | §7 rule 6, the relation's refusals, their codes and their repair directions |
 
 The census over this declaration runs in both directions, in `crates/eadl-front/tests/reference.rs`. A code
 these sources can emit and §6 does not state is a rule nobody has written down. A code §6 states and no
@@ -172,10 +178,57 @@ the one code that names more than one rule today says so.
 | `quantity-overflow` | a decimal is too precise to represent exactly (§1 rule 5) | reduce the precision, or change the unit so fewer digits are needed | `check (defblock timer.counter (offers (tick-rate 0.0000000000000000000000000000000000000001 MHz)))` |
 | `quantity-invalid` | no input today: the totality arm for a refusal `Quantity::new` may grow (§1 rule 6) | write a quantity as a number followed by a known unit | `none: the catch-all arm of Quantity::read, for a refusal Quantity::new may grow later; today it refuses only what the frequency and duration rows state, and each has its own code (section 1 rule 6)` |
 | `priority-below-one` | a task's priority is below 1 (§4 rule 5) | write a rank of 1 or more: 1 is the highest priority, and a larger number is a lower one | `check (defsystem s (task t (period 10 ms) (deadline 10 ms) (priority 0)))` |
-| `invalid-description` | a description contradicts itself: a fact both offered and absent (§2 rule 1), or a task with two release models (§4 rule 1) | remove one of the two declarations; only the author knows which was meant | `check (defblock b (offers counter-width) (absent counter-width))` |
+| `invalid-description` | a description contradicts itself: a fact both offered and absent (§2 rule 1), or a task with two release models (§4 rule 1); or the substitutability relation refuses what it writes, each refusal naming its cause (§7 rule 6) | remove one of the two declarations; only the author knows which was meant | `check (defblock b (offers counter-width) (absent counter-width))` |
 | `infeasible-configuration` | a required fact is declared absent (§2 rule 2) | correct the requirement or the platform | `check (defblock timer.counter (offers counter-width) (absent low-power-timer)) (defservice time.lowpower (requires (needs low-power-timer))) (defsystem s (requires (uses time.lowpower)))` |
 | `missing-fact` | something the system requires is described nowhere: a required fact (§2 rule 3), a task's release model (§4 rule 1), or the platform a refinement names (§3 rule 4) | declare the fact offered or absent on the platform; give a task a `period` or a `min-separation`; for a refinement, import the module that declares the target, or correct its name | `check (defservice time.monotonic (requires (needs wrap-behavior))) (defsystem s (requires (uses time.monotonic)))` |
 | `refinement-violated` | a concrete platform breaks an obligation of the abstract one it refines (§3 rules 1–3) | honour the obligation the diagnostic names: offer the guarantee, give the bounded value, or drop what the abstract declares absent | `check (defplatform soc.abstract (offers counter-width) (absent debug-port)) (defplatform soc.concrete (refines soc.abstract) (offers counter-width debug-port))` |
-| `unsupported-profile` | the description asks for something the active profile does not admit (§4 rules 2–4 and 6) | request a profile that supports it, or change the description to fit this one; nothing is silently weakened | `check (defsystem s (task a (period 10 ms) (deadline 10 ms) (priority 1)) (task b (period 10 ms) (deadline 10 ms) (priority 1)))` |
+| `unsupported-profile` | the description asks for something the active profile does not admit (§4 rules 2–4 and 6); or the substitutability relation meets a constraint on a fact no rule decides, or a comparison past the exact arithmetic (§7 rule 6) | request a profile that supports it, or change the description to fit this one; nothing is silently weakened | `check (defsystem s (task a (period 10 ms) (deadline 10 ms) (priority 1)) (task b (period 10 ms) (deadline 10 ms) (priority 1)))` |
 | `tool-failure` | the toolchain could not proceed (§4 rule 7) | this is a failure of the toolchain, not a verdict about the description; report it | `none: only a shipped kind module over 4 GiB reaches it, and the kind modules are embedded in the toolchain (shipped_registry in crates/eadl-model/src/check.rs)` |
 | `boundary-implementation-in-description` | a construct is implementation, which eADL does not contain (§5) | move it to the layer the diagnostic names; the description states what, not how | `check (defsystem app.rt (task sensor (period 10 ms) (deadline 10 ms) (wcet 850 us)))` |
+
+## 7. Whether an offer satisfies a requirement
+
+The substitutability relation decides whether what one provider offers satisfies one requirement. Its design is
+`docs/decisions/decision_substitutability-relation.md`, reviewed until a round found no defect, and its executable
+model is `crates/eadl-resolve/src/model/`; this section is normative over the production code in `crates/eadl-resolve`,
+which is held to the model over the model checker's whole universe (`crates/eadl-resolve/tests/production.rs`).
+`archogen check` does not call the relation yet: `M3.4` wires it, keeping or migrating every verdict it moves.
+
+1. **The vocabulary decides each fact's domain, role and direction.** `docs/semantics/vocabulary/vocabulary.eadl`,
+   written with the kind `docs/semantics/kinds/deffact.eadl`, is read into a typed table
+   (`crates/eadl-resolve/src/vocabulary.rs`). Each entry's frame is held to the kind; then the table refuses what no
+   frame can say — a direction its domain does not admit, a derivation without the rule that computes it or with
+   inputs that rule does not read, a cycle among derivations, `implies` off a set fact, a name twice, a fact named like
+   a clause word. A fact the table does not declare may be offered, absent or needed, and presence judges it (§2); a
+   constraint on it is `unsupported-profile`.
+2. **Values are exact** (`crates/eadl-resolve/src/value.rs`). A quantity is §1's, two amounts in one unit compared by
+   their written numbers and in two units in the base unit; a count is an integer or `(pow2 N)`; nothing is rounded.
+   A comparison whose arithmetic overflows decides nothing: `unsupported-profile`, the value domain's limit, never a
+   verdict on the requirement.
+3. **A provider states one value per fact** (`crates/eadl-resolve/src/offer.rs`). A block's or platform's offers and
+   absences are read into one state per fact: valued, in every spelling written; offered without a value; absent; or
+   past the arithmetic. Two values of one fact, an offer beside its absence, a bound beside a value, a derived fact
+   beside the facts it is derived from, and a counter's modulus above its width or beside a saturating wrap are each
+   `invalid-description`, as is an offer of a statement fact. A service's offers are read and refused alike, and judged
+   against nothing.
+4. **A side is read whole** (`crates/eadl-resolve/src/requirement.rs`). Every `requires`, `needs` and `uses` a
+   declaration writes, at the positions §2's presence reads, is read as one side, so a contradiction split across two
+   clauses is one: constraints on one fact that no value satisfies together are `invalid-description`, and what the
+   exact arithmetic cannot decide is `unsupported-profile`. The positions hold a grammar, and a form written where it
+   does not belong is `invalid-description`. A declaration whose local name is a vocabulary fact is refused, at the
+   root and inside every imported module.
+5. **Each fact has one outcome at a provider, and a requirement is judged against it**
+   (`crates/eadl-resolve/src/relation.rs`). The outcome is, in order, the value offered; absent; unknown; derived by the
+   fact's rule — a counter's horizon is its modulus less one over its rate; or undescribed. A value satisfies a
+   requirement when it lies in the requirement's written direction: the fact's own, or equality under `exactly`. A set
+   is judged by inclusion, which reads no order, so a stronger precondition never passes as a stronger capability. The
+   relation chooses no provider and claims no lattice: it lists every provider's answer, with the value found, the
+   derivation used and the direction, for the resolver to choose from.
+6. **Codes.** The relation reports every refusal under the record's two codes, rows of §6:
+   `invalid-description` for what a description writes that cannot mean anything, and `unsupported-profile` for a fact
+   no rule decides or a comparison past the arithmetic. The diagnostic names the fact and what is wrong, says what to
+   do, and points where it is written (`crates/eadl-resolve/src/refusal.rs`'s `Refusal::diagnostic`); the library
+   keeps each rule a typed `Cause` for any consumer that must tell one from another. A code of its own per cause, as
+   the reference's §4 rule 3 asks of a new rule, is declined for now: while `archogen check` does not call the
+   relation, each would be a row whose `fires on` no command reaches, naming a rule its typed cause and its message
+   already name. `M3.4`, which makes the causes reachable from a command, takes the question up again.

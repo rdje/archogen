@@ -4,9 +4,11 @@
 //! ⭐ **Typed causes, one per rule.** Each cause names one rule of the record's §8, so a test can say which rule
 //! refused an input, not only that something did. Which code each cause is reported under, `invalid-description`,
 //! `unsupported-profile` or a code of its own, is `docs/semantics/model.md`'s to decide when it becomes normative
-//! over this crate (record §8, `SR-H5`, leaf `M3.1.2.6`); until then [`Cause::code`] gives the record's two.
+//! over this crate (record §8, `SR-H5`). It decides the record's two (`docs/semantics/model.md` §7): every cause is
+//! reported under `invalid-description` or `unsupported-profile`, named in the diagnostic's message, and kept typed
+//! here for any consumer that must tell one rule from another (leaf `M3.1.2.6`).
 
-use eadl_front::Span;
+use eadl_front::{Diagnostic, Label, Span};
 
 /// The record's two codes for the relation's refusals (§8).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -113,6 +115,66 @@ impl Cause {
             _ => Code::InvalidDescription,
         }
     }
+
+    /// What the author does about it: the repair direction §5.5 requires of every diagnostic.
+    #[must_use]
+    pub const fn repair(self) -> &'static str {
+        match self {
+            Self::DeclarationNamedLikeFact => {
+                "rename the declaration: a fact's name belongs to the vocabulary, and a declaration called by it \
+                 captures every requirement on the fact"
+            }
+            Self::ItemNamesNothing => "write a fact's name, or a list headed by one",
+            Self::ClauseInOffer => "move the clause out of `offers`: an offer is a fact and its value",
+            Self::ListInAbsent => "name the fact alone inside `absent`; a value belongs in `offers` or `requires`",
+            Self::StatementOffered | Self::StatementAbsent => {
+                "remove it: the requiring side writes this fact about itself, in `requires`"
+            }
+            Self::OutsideDomain => {
+                "write a value of the fact's domain, which docs/semantics/vocabulary/vocabulary.eadl states"
+            }
+            Self::EmptyValue => "write the value: at least one member, or the bound's amount",
+            Self::ReversedInterval => "write the lower endpoint first: `(range lo hi)` with `lo` at most `hi`",
+            Self::NotWholeBits => "write a positive whole number of bits",
+            Self::ZeroModulus => "write the count at which the counter wraps, which is positive",
+            Self::DirectionNameAsWrapper => {
+                "write the value alone, or under `at-least`, `at-most` or `exactly`: the direction is the fact's"
+            }
+            Self::BoundOnBoolean => "write `true` or `false`, alone or under `exactly`",
+            Self::DirectionAgainstFact => "write the bound in the fact's own direction, or under `exactly`",
+            Self::OfferedAndAbsent | Self::Contradiction => {
+                "remove one of the two: only the author knows which was meant"
+            }
+            Self::TwoValues => "offer the fact once: a provider with two values is two providers",
+            Self::BoundBesideValue => "keep the value or the bound, not both",
+            Self::DerivedBesideInput | Self::DerivedAbsentBesideInput => {
+                "remove the derived fact: the engine computes it from the inputs this provider offers"
+            }
+            Self::ModulusAboveWidth => "offer a modulus the register's width holds, or the width that holds it",
+            Self::ModulusBesideSaturating => {
+                "remove one: a saturating counter wraps at no modulus, and a modulus is where a counter wraps"
+            }
+            Self::NotAConstraint => "write a constraint: a list headed by a fact's name, such as `(tick-unit ns)`",
+            Self::BareNameInRequires | Self::NoConstraintWritten => {
+                "write a value or a bound after the fact, or `(needs f)` for presence"
+            }
+            Self::ClauseInRequires => {
+                "move the clause out of `requires`, which holds constraints, `needs`, `uses` and `requires`"
+            }
+            Self::NotPlatformItem => "write `needs`, `uses` or `requires` inside `platform`, and nothing else",
+            Self::OperandNamesNothing => "write a name",
+            Self::ListOperand => "name the fact or the declaration alone; a value or a constraint belongs in `requires`",
+            Self::UsesNamesFact => "write `(needs f)`: a fact is needed, never used",
+            Self::NeedsStatement => "write the statement's value in `requires`",
+            Self::UndeclaredFact => {
+                "constrain a fact the vocabulary declares (docs/semantics/vocabulary/vocabulary.eadl); a new fact \
+                 enters it with a migration note first"
+            }
+            Self::PastTheArithmetic => {
+                "write the amounts in one unit, or in units whose conversion stays within the exact arithmetic"
+            }
+        }
+    }
 }
 
 /// One refusal: the rule, the fact it is about, where it is written, and what is wrong in a sentence.
@@ -144,5 +206,24 @@ impl Refusal {
     #[must_use]
     pub const fn code(&self) -> Code {
         self.cause.code()
+    }
+
+    /// The refusal as the toolchain reports a diagnostic: its code, a message naming the fact and what is wrong, a
+    /// label where it is written, and the cause's repair direction (`docs/semantics/model.md` §7).
+    #[must_use]
+    pub fn diagnostic(&self) -> Diagnostic {
+        let message = match &self.fact {
+            Some(fact) => format!("`{fact}`: {}", self.detail),
+            None => self.detail.clone(),
+        };
+        let label = Label::new(self.span, "written here");
+        match self.code() {
+            Code::InvalidDescription => {
+                Diagnostic::error("invalid-description", message, label, self.cause.repair())
+            }
+            Code::UnsupportedProfile => {
+                Diagnostic::error("unsupported-profile", message, label, self.cause.repair())
+            }
+        }
     }
 }

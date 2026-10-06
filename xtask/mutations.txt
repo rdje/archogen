@@ -2338,3 +2338,25 @@ from
 to
             .filter(|_| true)
 end
+
+mutation refusal-code-unstated
+file crates/eadl-resolve/src/refusal.rs
+test -p eadl-front --test reference
+expect killed
+why M3.1.2.6: model.md is normative over the relation (SR-H5), so a code the crate emits and §6 does not state fails the census.
+from
+                    Diagnostic::error("invalid-description", message, label, self.cause.repair())
+to
+                    Diagnostic::error("relation-refused", message, label, self.cause.repair())
+end
+
+mutation refinement-exactly-read-as-at-least
+file crates/eadl-model/src/refinement.rs
+test -p eadl-model --test f07_refinement
+expect killed
+why M3.1.2.6 (SR-H6): refinement's reader is not the relation's to change, and an abstract exactly still refuses a different concrete value; read as at-least, 20 MHz keeps an exact 10 MHz.
+from
+            "exactly" => ComparisonDirection::Exact,
+to
+            "exactly" => ComparisonDirection::AtLeast,
+end
