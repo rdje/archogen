@@ -160,5 +160,9 @@ named like a clause — and the table is held, entry by entry, to the model's ow
 what a block or a platform offers (`crates/eadl-resolve/src/offer.rs`, over the values of
 `crates/eadl-resolve/src/value.rs`): it refuses what the design refuses of an offer, such as two values of one fact,
 an offer beside its absence, a derived fact beside the facts it is derived from, and it reads every provider the
-model's checker can generate exactly as the model does (`crates/eadl-resolve/tests/production.rs`). `archogen check`
-does not call the relation yet; the chapter on the relation itself comes with it (leaf `M3.1.3`).
+model's checker can generate exactly as the model does (`crates/eadl-resolve/tests/production.rs`). The third reads
+what a declaration requires (`crates/eadl-resolve/src/requirement.rs`): every `requires`, `needs` and `uses` at the
+positions presence reads them, the declaration read as one side, so two clauses that contradict each other are
+refused as one would be, and a declaration named like a fact is refused even inside an imported module, where its
+qualified name would hide it. `archogen check` does not call the relation yet; the chapter on the relation itself
+comes with it (leaf `M3.1.3`).

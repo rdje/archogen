@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the engine reads what a declaration requires
+
+`ARCHOGEN-M3-0467` (leaf `M3.1.2.4`).
+
+- The engine now reads every requirement a declaration writes, wherever the language lets it stand, and reads the
+  declaration as one whole: two clauses that contradict each other are refused just as two constraints in one clause
+  would be. A declaration named like a fact is refused even inside an imported module, where its full name would hide
+  it. More than eleven thousand generated requirements, clauses and declarations read exactly as the design's model
+  reads them. The first comparison found an input that crashed both this reader and the previous slice's offer reader;
+  both are fixed, and the input is now generated.
+
 ## archogen — the engine reads what a provider offers
 
 `ARCHOGEN-M3-0466` (leaf `M3.1.2.3`).

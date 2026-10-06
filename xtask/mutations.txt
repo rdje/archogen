@@ -2003,3 +2003,234 @@ from
 to
         let ticks = Rational::new(modulus, 1).ok_or(Overflow)?;
 end
+
+mutation offer-empty-wrapper-sliced
+file crates/eadl-resolve/src/offer.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.4: a list with no head where a value stands, (f ()), must be read without slicing past its end; M3.1.2.3's reader sliced first and panicked, found by .4's universe.
+from
+            let inner = wrapper.items().get(1..).unwrap_or_default();
+to
+            let inner = &wrapper.items()[1..];
+end
+
+mutation requirement-empty-wrapper-sliced
+file crates/eadl-resolve/src/requirement.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.4: (uart ()) inside requires must be refused, not panic: the wrapper is read only once it has a head.
+from
+            let inner = wrapper.items().get(1..).unwrap_or_default();
+to
+            let inner = &wrapper.items()[1..];
+end
+
+mutation requirement-clause-in-requires-unchecked
+file crates/eadl-resolve/src/requirement.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.4: a provider's clause inside requires is refused, never read as a constraint (record §1, R29 1).
+from
+        if holds_other_clause(item, vocabulary) {
+to
+        if holds_other_clause(item, vocabulary) && false {
+end
+
+mutation requirement-empty-constraint-read
+file crates/eadl-resolve/src/requirement.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.4: (f) inside requires states no constraint (record §1, R14 6).
+from
+        if rest.is_empty() {
+to
+        if rest.is_empty() && false {
+end
+
+mutation requirement-direction-against-fact
+file crates/eadl-resolve/src/requirement.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.4: a bound written against the fact's direction is refused, exactly apart (record §1.1).
+from
+                if written != Direction::Exact && written != fact.direction {
+to
+                if written != Direction::Exact && written != fact.direction && false {
+end
+
+mutation requirement-needs-statement
+file crates/eadl-resolve/src/requirement.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.4: a needs of a statement fact is refused (record §3 rule 6).
+from
+        if fact.role == Role::Statement {
+            return Err(refusal(
+                Cause::NeedsStatement,
+to
+        if fact.role == Role::Statement && false {
+            return Err(refusal(
+                Cause::NeedsStatement,
+end
+
+mutation requirement-uses-names-fact
+file crates/eadl-resolve/src/requirement.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.4: a uses naming a vocabulary fact is refused: a fact is needed, never used (record §1, R15 1).
+from
+            Some(name) if vocabulary.fact(name).is_some() => Err(refusal(
+to
+            Some(name) if vocabulary.fact(name).is_some() && false => Err(refusal(
+end
+
+mutation requirement-nested-requires-own
+file crates/eadl-resolve/src/requirement.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.4: a requires nested in another is a clause of its own, never one of its constraints (record §3 rule 5, R26 2).
+from
+            .filter(|i| !matches!(i.head(), Some("needs" | "uses" | "requires")))
+to
+            .filter(|i| !matches!(i.head(), Some("needs" | "uses")))
+end
+
+mutation requirement-refines-walked
+file crates/eadl-resolve/src/requirement.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.4: a side reads no needs or uses inside offers, absent and refines, where presence reads none (record §1, R24 3).
+from
+                None | Some("offers" | "absent" | "refines") => {}
+to
+                None | Some("offers" | "absent") => {}
+end
+
+mutation requirement-platform-grammar-unchecked
+file crates/eadl-resolve/src/requirement.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.4: a system's platform clause holds needs, uses and requires alone (record §1, R29 1).
+from
+                            _ => refused.push(refusal(
+                                Cause::NotPlatformItem,
+                                named(item),
+                                item.span(),
+                                "a `platform` clause holds `needs`, `uses` and `requires` alone",
+                            )),
+to
+                            _ => {}
+end
+
+mutation requirement-declaration-name-unchecked
+file crates/eadl-resolve/src/requirement.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.4: a declaration whose local name is a vocabulary fact is refused (record §1.1, R16 1, SR-H4).
+from
+                vocabulary.fact(name).map(|_| {
+to
+                vocabulary.fact(name).filter(|_| false).map(|_| {
+end
+
+mutation requirement-boolean-presence-not-true
+file crates/eadl-resolve/src/requirement.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.4: a boolean named in needs is (f true), so (f false) beside it contradicts (record §3 rule 3, rule 5).
+from
+                    .is_some_and(|f| matches!(f.domain, Domain::Boolean | Domain::Group(_)))
+to
+                    .is_some_and(|f| matches!(f.domain, Domain::Group(_)))
+end
+
+mutation requirement-implied-ignored-on-a-side
+file crates/eadl-resolve/src/requirement.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.4: an equality on a set fact admits its implied members (record §1.1, R17 1): exactly idle and exactly run idle are one value.
+from
+                    all.extend(fact.implies.iter().cloned());
+to
+                    let _ = &fact.implies;
+end
+
+mutation requirement-two-equalities-unchecked
+file crates/eadl-resolve/src/requirement.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.4: two equalities on one fact that differ are a contradiction (record §3 rule 5, R19 2).
+from
+                        Ok(false) => contradiction = contradiction.or(Some(*at)),
+to
+                        Ok(false) => {}
+end
+
+mutation requirement-refused-bound-unchecked
+file crates/eadl-resolve/src/requirement.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.4: an equality another constraint refuses is a contradiction (record §3 rule 5).
+from
+                        Ok(false) => contradiction = contradiction.or(Some(bound.span)),
+to
+                        Ok(false) => {}
+end
+
+mutation requirement-undecided-read
+file crates/eadl-resolve/src/requirement.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.4: what neither proves contradictory nor holding together is past the arithmetic (record §3 rule 5, R27 1).
+from
+            } else if !decided {
+to
+            } else if !decided && false {
+end
+
+mutation requirement-group-never-nested
+file crates/eadl-resolve/src/requirement.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.4: a group written with its sub-constraints is the head and each part (record §2's group row).
+from
+                .all(|r| r.head().is_some_and(|h| subs.iter().any(|s| s == h)))
+to
+                .all(|r| r.head().is_some_and(|h| subs.iter().any(|s| s == h) && false))
+end
+
+mutation requirement-code-never-invalid
+file crates/eadl-resolve/src/requirement.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.4: a side is invalid-description when any item gives it, whatever else is past the arithmetic (record §3 rule 5, R21 2).
+from
+            .any(|r| r.code() == Code::InvalidDescription)
+to
+            .any(|r| r.code() == Code::InvalidDescription && false)
+end
+
+mutation refusal-undeclared-fact-invalid
+file crates/eadl-resolve/src/refusal.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.4: a constraint on an undeclared fact is unsupported-profile, not invalid-description (record §8's second row).
+from
+                Self::UndeclaredFact | Self::PastTheArithmetic => Code::UnsupportedProfile,
+to
+                Self::PastTheArithmetic => Code::UnsupportedProfile,
+end
+
+mutation requirement-imported-declarations-skipped
+file crates/eadl-resolve/src/requirement.rs
+test -p eadl-resolve --test declarations
+expect killed
+why M3.1.2.4: a declaration named like a fact is refused inside an imported module too, by its local name (SR-H4, record §1.1, R16 1); reading only the root misses the one an import renames out of sight.
+from
+                .flat_map(|instance| instance.declarations.iter()),
+to
+                .rev()
+                .take(1)
+                .flat_map(|instance| instance.declarations.iter()),
+end

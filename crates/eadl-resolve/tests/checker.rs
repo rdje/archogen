@@ -37,7 +37,10 @@ mod common;
 
 use std::collections::BTreeSet;
 
-use common::universe::{outside, samples, written_offers, TINY};
+use common::universe::{
+    outside, samples, small_items, written_offers, LISTS_FOR_NAMES, NAMES_NOTHING, ORDER_POOL,
+    PLACES, REFUSED_PLACES, RESPELT, RESPELT_BOUNDS, TINY,
+};
 use eadl_front::{read, Form, SourceMap};
 use eadl_model::quantity::{unit, Quantity};
 use eadl_model::{Dimension, Rational};
@@ -867,28 +870,8 @@ fn a_respelling_of_an_equality_changes_no_clause_s_code() {
     // adds comparisons, so it may decide what was past the arithmetic, and never undoes a decision. R28 1: a spelling
     // that compares with none is not known to be the value, and may leave the clause past the arithmetic — never refuse
     // a clause that read, nor lift a refusal.
-    let equalities: [&[&str]; 4] = [
-        &["1 ms", "1000000 ns", "0.001 s"],
-        &[
-            "0.000000000001 ns",
-            "0.000000000000000000001 s",
-            "0.000000000000001 us",
-        ],
-        &["2 ms", "2000 us", "0.002 s"],
-        &[
-            "0.0000000000000000000000000000001 ns",
-            "0.0000000000000000000000000000000001 us",
-        ],
-    ];
-    let bounds = [
-        "1 ns",
-        "1 ms",
-        "5 ms",
-        "0.5 ms",
-        "0.000000000009000000000000000001 ns",
-        "0.0000000000005 ns",
-        "0.0000000000000000000000000000001 ns",
-    ];
+    let equalities = RESPELT;
+    let bounds = RESPELT_BOUNDS;
     let mut pool: Vec<(String, Option<usize>)> = Vec::new();
     for (k, spellings) in equalities.iter().enumerate() {
         pool.push((
@@ -944,18 +927,7 @@ fn a_respelling_of_an_equality_changes_no_clause_s_code() {
 #[test]
 fn a_clause_s_code_is_the_same_in_every_order_of_its_items() {
     // R21 2: the reader stopped at the first item it could not read, so the code hung on the order.
-    let pool = [
-        "(ordering (before a b))",
-        "(tick-unit ns)",
-        "(tick-unit us)",
-        "(or-through-mediation allowed)",
-        "(or-through-mediation forbidden)",
-        "(uses time.monotonic)",
-        "(uses observation-coherent)",
-        "(needs time.monotonic)",
-        "something",
-        "(counter-width (at-least 16 bit))",
-    ];
+    let pool = ORDER_POOL;
     let mut clauses = 0usize;
     for a in pool {
         for b in pool {
@@ -1026,15 +998,7 @@ fn every_item_of_requires_has_its_one_code() {
     // R22 1: a spelling with no outcome in the record, refused by the model on no sentence. Over a grammar of small
     // forms, the shape decides: a bare name, a number, a string, `()` or a list headed by no name is
     // `invalid-description`; a list headed by an undeclared name `unsupported-profile`; never "not a fact".
-    let atoms = ["uart", "something", "5", "\"t\"", "()", "true"];
-    let mut items: Vec<String> = atoms.iter().map(|a| (*a).to_string()).collect();
-    for a in atoms {
-        items.push(format!("({a})"));
-        for b in atoms {
-            items.push(format!("({a} {b})"));
-        }
-    }
-    items.push("((uart))".to_owned());
+    let items = small_items();
     for item in &items {
         let clause = forms(&format!("(requires {item})"));
         let form = &clause[0].items()[1];
@@ -1121,37 +1085,11 @@ fn the_relation_reads_every_needs_and_uses_presence_reads() {
     // skips is read (R24 3). R24 1: a `requires` is read at the same positions, so no constraint stands unread where a
     // `needs` beside it would be read. R29 1: a placement §1's grammar refuses — anything but `needs`, `uses` and
     // `requires` in `platform`, an offer inside `requires` — refuses the side, so nothing there enters unjudged.
-    let refused = [
-        "(platform (offers X))",
-        "(platform (uses soc.p) (absent X))",
-        "(platform (tick-unit ns) X)",
-        "(requires (offers X))",
-        "(requires (refines X))",
-    ];
-    let places = [
-        "X",
-        "(requires X)",
-        "(requires (tick-unit ns) X)",
-        "(requires (ordering (before a b) X))",
-        "(platform X)",
-        "(platform (uses soc.p) X)",
-        "(task t (period 10 ms) X)",
-        "(somewhere (deeper X))",
-        "(offers X)",
-        "(absent X)",
-        "(refines X)",
-        "((X))",
-        "(5 X)",
-        "(\"s\" X)",
-        refused[0],
-        refused[1],
-        refused[2],
-        refused[3],
-        refused[4],
-    ];
+    let refused = REFUSED_PLACES;
+    let places = PLACES;
     let mut read = 0usize;
     for place in places {
-        let refuses = refused.contains(&place);
+        let refuses = refused.contains(place);
         let mut presence_at = Vec::new();
         for list in ["(needs uart)", "(uses uart)"] {
             let decl = format!("(defservice s {})", place.replace('X', list));
@@ -1504,7 +1442,7 @@ fn rule_1_over_every_state_of_the_horizon_and_its_inputs() {
 #[test]
 fn every_operand_and_item_names_something() {
     // R23 3: the grammar of R22 1, one level down: operands of `needs` and `uses`, items of `offers` and `absent`.
-    let nothing = ["5", "\"t\"", "()", "(5 6)", "((uart))"];
+    let nothing = NAMES_NOTHING;
     let mut read = 0usize;
     for n in nothing {
         for clause in [
@@ -1534,13 +1472,7 @@ fn every_operand_and_item_names_something() {
         }
     }
     // R26 1: a list inside `needs`, `uses` or `absent`, whatever its head, would drop what follows it.
-    for l in [
-        "(time.monotonic (tick-unit us))",
-        "(time.monotonic (requires (tick-unit us)))",
-        "(time.monotonic)",
-        "(uart)",
-        "(foo 5)",
-    ] {
+    for l in LISTS_FOR_NAMES {
         for clause in [
             format!("(requires (needs {l}))"),
             format!("(requires (uses {l}))"),

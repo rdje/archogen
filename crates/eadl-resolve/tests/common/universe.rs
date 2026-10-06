@@ -129,6 +129,9 @@ pub fn written_offers(e: &Entry) -> Vec<String> {
         format!("(offers ({f}))"),
         format!("(absent {f})"),
         String::new(),
+        // A list with no head where a value or a bound would stand (the shape `M3.1.2.4`'s universe found crashing).
+        format!("(offers ({f} ()))"),
+        format!("(offers ({f} (exactly ())))"),
     ];
     let own = match e.direction {
         Direction::AtLeast => Some("at-least"),
@@ -313,5 +316,320 @@ pub fn provider_bodies() -> Vec<String> {
     }
     // Names the vocabulary does not declare, beside declared ones: presence's, never refused here (R1 A6).
     out.push("(offers (region a) (region b) (p 1 bit) uart)".to_string());
+    out
+}
+
+/// Placements of a `needs` or `uses` list, `X`, in a service — the positions presence reads, and those §1's grammar
+/// refuses (R23 1, R24 1, R24 3, R29 1).
+pub const PLACES: &[&str] = &[
+    "X",
+    "(requires X)",
+    "(requires (tick-unit ns) X)",
+    "(requires (ordering (before a b) X))",
+    "(platform X)",
+    "(platform (uses soc.p) X)",
+    "(task t (period 10 ms) X)",
+    "(somewhere (deeper X))",
+    "(offers X)",
+    "(absent X)",
+    "(refines X)",
+    "((X))",
+    "(5 X)",
+    "(\"s\" X)",
+    "(platform (offers X))",
+    "(platform (uses soc.p) (absent X))",
+    "(platform (tick-unit ns) X)",
+    "(requires (offers X))",
+    "(requires (refines X))",
+];
+
+/// The placements among [`PLACES`] that §1's grammar refuses: anything but `needs`, `uses` and `requires` in
+/// `platform`, a provider's clause inside `requires` (R29 1).
+pub const REFUSED_PLACES: &[&str] = &[
+    "(platform (offers X))",
+    "(platform (uses soc.p) (absent X))",
+    "(platform (tick-unit ns) X)",
+    "(requires (offers X))",
+    "(requires (refines X))",
+];
+
+/// The items a clause's code is read in every order of (R21 2).
+pub const ORDER_POOL: &[&str] = &[
+    "(ordering (before a b))",
+    "(tick-unit ns)",
+    "(tick-unit us)",
+    "(or-through-mediation allowed)",
+    "(or-through-mediation forbidden)",
+    "(uses time.monotonic)",
+    "(uses observation-coherent)",
+    "(needs time.monotonic)",
+    "something",
+    "(counter-width (at-least 16 bit))",
+];
+
+/// One value in several spellings per row, some past the arithmetic in another unit (R27 1, R28 1).
+pub const RESPELT: &[&[&str]] = &[
+    &["1 ms", "1000000 ns", "0.001 s"],
+    &[
+        "0.000000000001 ns",
+        "0.000000000000000000001 s",
+        "0.000000000000001 us",
+    ],
+    &["2 ms", "2000 us", "0.002 s"],
+    &[
+        "0.0000000000000000000000000000001 ns",
+        "0.0000000000000000000000000000000001 us",
+    ],
+];
+
+/// Bounds beside [`RESPELT`]'s equalities.
+pub const RESPELT_BOUNDS: &[&str] = &[
+    "1 ns",
+    "1 ms",
+    "5 ms",
+    "0.5 ms",
+    "0.000000000009000000000000000001 ns",
+    "0.0000000000005 ns",
+    "0.0000000000000000000000000000001 ns",
+];
+
+/// The atoms of the grammar of small forms every item of `requires` is read over (R22 1).
+pub const ATOMS: &[&str] = &["uart", "something", "5", "\"t\"", "()", "true"];
+
+/// Every small item of `requires`: an atom, a list of one or two atoms, a list headed by a list (R22 1).
+pub fn small_items() -> Vec<String> {
+    let mut items: Vec<String> = ATOMS.iter().map(|a| (*a).to_string()).collect();
+    for a in ATOMS {
+        items.push(format!("({a})"));
+        for b in ATOMS {
+            items.push(format!("({a} {b})"));
+        }
+    }
+    items.push("((uart))".to_owned());
+    items
+}
+
+/// Every constraint the universe writes: each fact's sampled and out-of-domain values in every written form,
+/// a direction's name as a wrapper, a bound with no value, the group's spellings and the item grammar.
+pub fn constraint_texts() -> Vec<String> {
+    let mut out = Vec::new();
+    for e in VOCABULARY {
+        let f = e.name;
+        out.push(f.to_string());
+        out.push(format!("({f})"));
+        out.push(format!("({f} (at-least))"));
+        out.push(format!("({f} (exactly))"));
+        for v in samples(e.domain).into_iter().chain(outside(e.domain)) {
+            for written in [
+                format!("({f} {v})"),
+                format!("({f} (exactly {v}))"),
+                format!("({f} (at-least {v}))"),
+                format!("({f} (at-most {v}))"),
+                format!("({f} (includes {v}))"),
+                format!("({f} (within {v}))"),
+                format!("({f} (exact {v}))"),
+            ] {
+                out.push(written);
+            }
+        }
+    }
+    for group in [
+        "(absolute-deadline (supported-horizon (at-least 10 s)) (delivery-bound (at-most 50 us)))",
+        "(absolute-deadline (delivery-bound (at-most 50 us)) (supported-horizon (at-least 10 s)))",
+        "(absolute-deadline (supported-horizon 3600 s))",
+        "(absolute-deadline true (supported-horizon (at-least 10 s)))",
+        "(absolute-deadline (supported-horizon (at-least 10 s)) (tick-unit ns))",
+        "(absolute-deadline (supported-horizon 5))",
+        "(absolute-deadline (supported-horizon (at-most 5 s)))",
+        "(absolute-deadline (supported-horizon (offers x)))",
+        "(absolute-deadline (delivery-bound (exactly)))",
+    ] {
+        out.push(group.to_string());
+    }
+    // An interval whose endpoints cannot be ordered within the arithmetic (R18 7).
+    out.push("(frequency (range 0.0000000000000000000000000000001 Hz 1 MHz))".to_string());
+    out.push(
+        "(frequency (exactly (range 0.0000000000000000000000000000001 Hz 1 MHz)))".to_string(),
+    );
+    out.extend(small_items());
+    out
+}
+
+/// Every `requires` clause the universe writes.
+pub fn clause_texts() -> Vec<String> {
+    let mut out = Vec::new();
+    // Two equalities on one fact, a `uses` and a service's `needs` beside them (R19 2, R20 1).
+    for e in VOCABULARY
+        .iter()
+        .filter(|e| e.direction == Direction::Exact)
+    {
+        let pool = samples(e.domain);
+        for a in &pool {
+            for b in &pool {
+                let f = e.name;
+                out.push(format!(
+                    "(requires (uses timer.counter) (needs time.monotonic) ({f} {a}) ({f} {b}))"
+                ));
+                out.push(format!("(requires (uses timer.counter) (needs time.monotonic) ({f} {a}) ({f} (exactly {b})))"));
+            }
+            if matches!(e.domain, Domain::Boolean | Domain::Group(_)) {
+                out.push(format!("(requires ({} {a}) (needs {}))", e.name, e.name));
+            }
+        }
+    }
+    // At the arithmetic's edge: one unit compared as written, two whose conversion overflows (R20 2).
+    let tiny = [TINY, "0.0000000000000000000000000000002 ns", "1 s", "1 ms"];
+    for e in VOCABULARY
+        .iter()
+        .filter(|e| e.domain == Domain::Quantity(Dimension::Time))
+    {
+        let bound = match e.direction {
+            Direction::AtLeast => "at-least",
+            Direction::AtMost => "at-most",
+            _ => continue,
+        };
+        for a in tiny {
+            for b in tiny {
+                out.push(format!(
+                    "(requires ({0} (exactly {a})) ({0} (exactly {b})))",
+                    e.name
+                ));
+                out.push(format!(
+                    "(requires ({0} (exactly {a})) ({0} ({bound} {b})))",
+                    e.name
+                ));
+            }
+        }
+    }
+    // Up to three constraints from equalities and bounds, then each with an equality respelt (R27 1, R28 1).
+    let mut pool: Vec<(String, Option<usize>)> = Vec::new();
+    for (k, spellings) in RESPELT.iter().enumerate() {
+        pool.push((
+            format!("(delivery-bound (exactly {}))", spellings[0]),
+            Some(k),
+        ));
+    }
+    for b in RESPELT_BOUNDS {
+        pool.push((format!("(delivery-bound (at-most {b}))"), None));
+    }
+    for i in 0..pool.len() {
+        for j in i..pool.len() {
+            for k in j..pool.len() {
+                let items = [pool[i].0.as_str(), pool[j].0.as_str(), pool[k].0.as_str()];
+                out.push(format!("(requires {})", items.join(" ")));
+                for (_, class) in [&pool[i], &pool[j], &pool[k]] {
+                    let Some(class) = class else { continue };
+                    for respelt in &RESPELT[*class][1..] {
+                        out.push(format!(
+                            "(requires {} (delivery-bound (exactly {respelt})))",
+                            items.join(" ")
+                        ));
+                    }
+                }
+            }
+        }
+    }
+    // Three items in all six orders (R21 2).
+    for a in ORDER_POOL {
+        for b in ORDER_POOL {
+            for c in ORDER_POOL {
+                for [x, y, z] in [
+                    [a, b, c],
+                    [a, c, b],
+                    [b, a, c],
+                    [b, c, a],
+                    [c, a, b],
+                    [c, b, a],
+                ] {
+                    out.push(format!("(requires {x} {y} {z})"));
+                }
+            }
+        }
+    }
+    // Operands that name nothing, lists for names, and names (R23 3, R26 1).
+    for n in NAMES_NOTHING.iter().chain(LISTS_FOR_NAMES) {
+        out.push(format!("(requires (needs {n}))"));
+        out.push(format!("(requires (uses {n}))"));
+    }
+    for clause in [
+        "(requires (needs uart))",
+        "(requires (needs time.monotonic))",
+        "(requires (uses time.monotonic))",
+        "(requires (uses uart))",
+        "(requires (needs or-through-mediation))",
+        // A `requires` nested in another is a clause of its own (R26 2).
+        "(requires (tick-unit ns) (requires (tick-unit us)))",
+        "(requires (ordering (before a b) (needs uart)))",
+        // A group nested and flat, and its head required false beside it.
+        "(requires (absolute-deadline true) (supported-horizon (at-least 10 s)))",
+        "(requires (absolute-deadline false) (absolute-deadline (supported-horizon (at-least 10 s))))",
+        "(requires (needs absolute-deadline) (absolute-deadline false))",
+        // A set's implied member on both sides of an equality, and an equality a bound refuses (R16 2, R17 1).
+        "(requires (available-in-state (exactly idle)) (available-in-state (exactly run idle)))",
+        "(requires (available-in-state (exactly idle)) (available-in-state sleep))",
+        "(requires (available-in-state (exactly idle)) (available-in-state idle))",
+        "(requires (queue-capacity (exactly 8)) (queue-capacity (at-least 9)))",
+        "(requires (queue-capacity (exactly 8)) (queue-capacity (at-least 8 tick)))",
+        "(requires (or-through-mediation allowed) (or-through-mediation (exactly allowed)))",
+        "(requires (or-through-mediation allowed) (or-through-mediation forbidden))",
+    ] {
+        out.push(clause.to_string());
+    }
+    for item in small_items() {
+        out.push(format!("(requires {item})"));
+    }
+    out
+}
+
+/// Every side the universe writes: a whole declaration.
+pub fn side_texts() -> Vec<String> {
+    let mut out = Vec::new();
+    // A contradiction split across two clauses, a `uses` between them, or beside the side's own `needs` (R21 1).
+    for e in VOCABULARY
+        .iter()
+        .filter(|e| e.direction == Direction::Exact)
+    {
+        let pool = samples(e.domain);
+        for a in &pool {
+            for b in &pool {
+                out.push(format!(
+                    "(defservice s (requires ({0} {a})) (uses time.monotonic) (requires ({0} {b})))",
+                    e.name
+                ));
+            }
+            if matches!(e.domain, Domain::Boolean | Domain::Group(_)) {
+                out.push(format!(
+                    "(defservice s (requires ({0} {a})) (needs {0}))",
+                    e.name
+                ));
+            }
+        }
+    }
+    // Every placement of a `needs`, a `uses` and a constraint (R23 1, R24 1, R29 1).
+    for place in PLACES {
+        for list in [
+            "(needs uart)",
+            "(uses uart)",
+            "(needs observation-coherent)",
+            "(uses tick-unit)",
+        ] {
+            out.push(format!("(defservice s {})", place.replace('X', list)));
+        }
+        out.push(format!(
+            "(defservice s (requires (tick-unit ns)) {})",
+            place.replace('X', "(requires (tick-unit us))")
+        ));
+    }
+    for side in [
+        // A declaration whose local name is a vocabulary fact, whatever its kind (§1.1, R16 1, R25 4).
+        "(defservice low-power-timer (requires (needs uart)))",
+        "(defsystem tick-unit (requires (uses s)))",
+        "(defpolicy observation-coherent (requires (preemptive true)))",
+        // A system with its platform and its tasks, read as one side.
+        "(defsystem sys (platform (uses soc.p) (needs uart)) (task t (period 10 ms) (needs observation-coherent)) (requires (uses s)))",
+        "(defsystem sys (platform (uses soc.p)) (task t (period 10 ms) (requires (tick-unit us))) (requires (tick-unit ns)))",
+    ] {
+        out.push(side.to_string());
+    }
     out
 }

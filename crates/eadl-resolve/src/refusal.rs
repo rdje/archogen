@@ -74,13 +74,44 @@ pub enum Cause {
     ModulusAboveWidth,
     /// A `counter-modulus` beside `(wrap-behavior saturating)` (§4, R1 A14).
     ModulusBesideSaturating,
+    /// An item of `requires` that is not a list headed by a name: a number, a string, `()`, a list headed by none
+    /// (§1, R22 1).
+    NotAConstraint,
+    /// A bare name inside `requires`, fact or not: it states no constraint, and presence is `(needs f)` (§1, R21 3).
+    BareNameInRequires,
+    /// `(f)` inside `requires`: no constraint written (§1, R14 6).
+    NoConstraintWritten,
+    /// A clause but `needs`, `uses` and `requires` written inside `requires`, at any depth, where a constraint
+    /// stands (§1, R29 1).
+    ClauseInRequires,
+    /// An item of a system's `platform` clause but `needs`, `uses` and `requires` (§1, R29 1).
+    NotPlatformItem,
+    /// An operand of `needs` or `uses` that names nothing (§1, R23 3).
+    OperandNamesNothing,
+    /// A list inside `needs` or `uses`, whatever its head: what follows it would be dropped unjudged (§1, R14 7,
+    /// R26 1).
+    ListOperand,
+    /// A `uses` naming a vocabulary fact: a fact is needed, never used (§1, R15 1).
+    UsesNamesFact,
+    /// A `needs` of a statement fact (§3 rule 6).
+    NeedsStatement,
+    /// One side's constraints on one fact that no value satisfies together (§3 rule 5, ROADMAP.md §5.3).
+    Contradiction,
+    /// A constraint on a fact the vocabulary does not declare, `(x)` or `(x v)` (§1.1, §8; R19 7).
+    UndeclaredFact,
+    /// What a side requires cannot be decided within the exact arithmetic: an interval whose endpoints cannot be
+    /// ordered, or constraints neither proven contradictory nor proven to hold together (§2, §3 rule 5; R18 7, R27 1).
+    PastTheArithmetic,
 }
 
 impl Cause {
     /// The record's code for this cause (§8).
     #[must_use]
     pub const fn code(self) -> Code {
-        Code::InvalidDescription
+        match self {
+            Self::UndeclaredFact | Self::PastTheArithmetic => Code::UnsupportedProfile,
+            _ => Code::InvalidDescription,
+        }
     }
 }
 

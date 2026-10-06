@@ -147,7 +147,8 @@ fn classify(fact: &Fact, item: &Form) -> Result<Written, Refusal> {
         return Ok(Written::Bare);
     }
     if let [wrapper @ Form::List { .. }] = rest {
-        let inner = &wrapper.items()[1..];
+        // `()` has no head and holds nothing, so there is nothing after one to slice.
+        let inner = wrapper.items().get(1..).unwrap_or_default();
         match wrapper.head() {
             Some("exactly") if inner.is_empty() => {
                 return Err(refusal(
