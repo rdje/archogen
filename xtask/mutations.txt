@@ -373,10 +373,10 @@ test -p archogen-cli --test kind_modules
 expect killed
 why M1.32: a kind declared after another declaration is still a kind module. Classifying by the first declaration hands the file to the schema pass, the reason is_module_file looks at every declaration.
 from
-        .find_map(|form| form.head().and_then(Definition::of).map(|d| (form, d)))?;
+            .find_map(|form| form.head().and_then(Definition::of).map(|d| (form, d)))?;
 to
-        .next()
-        .and_then(|form| form.head().and_then(Definition::of).map(|d| (form, d)))?;
+            .next()
+            .and_then(|form| form.head().and_then(Definition::of).map(|d| (form, d)))?;
 end
 
 mutation deffact-not-the-language-s-definition
@@ -385,9 +385,9 @@ test -p archogen-cli --test kind_modules
 expect killed
 why M3.1.2.1: a file that writes a `deffact` is the language's own definition (decision_substitutability-relation.md §1.1, SR-H3). Unrecognised, `check` judges the vocabulary as a description and answers schema-unknown-kind, exit 10.
 from
-            "deffact" => Some(Self::Fact),
+                "deffact" => Some(Self::Fact),
 to
-            "deffact" => None,
+                "deffact" => None,
 end
 
 mutation undeclared-target-judged-infeasible
@@ -1664,4 +1664,118 @@ from
             [Form::Integer { value, .. }] if *value >= 0 => Ok(i128::from(*value)),
 to
             [Form::Integer { value, .. }] => Ok(i128::from(*value)),
+end
+
+mutation vocabulary-frame-unchecked
+file crates/eadl-resolve/src/vocabulary.rs
+test -p eadl-resolve --test vocabulary
+expect killed
+why M3.1.2.2: an entry is held to the frame deffact declares (record §1.1); without the frame, an entry missing its role is read anyway.
+from
+                if !frame.is_empty() {
+to
+                if frame.is_empty() && !frame.is_empty() {
+end
+
+mutation vocabulary-duplicate-unchecked
+file crates/eadl-resolve/src/vocabulary.rs
+test -p eadl-resolve --test vocabulary
+expect killed
+why M3.1.2.2: a name is declared once among the entries (reference §7 rule 6; record §1.1, R1 A15).
+from
+                duplicate_names(&entries_kind, &entries)
+to
+                duplicate_names(&entries_kind, &[])
+end
+
+mutation vocabulary-clause-word-unchecked
+file crates/eadl-resolve/src/vocabulary.rs
+test -p eadl-resolve --test vocabulary
+expect killed
+why M3.1.2.2: no fact is named like a clause word, since an offer or a requirement on it would read as the clause (record §1.1, R31 1).
+from
+            if words.contains(&fact.name) {
+to
+            if words.contains(&fact.name) && words.is_empty() {
+end
+
+mutation vocabulary-direction-unchecked
+file crates/eadl-resolve/src/vocabulary.rs
+test -p eadl-resolve --test vocabulary
+expect killed
+why M3.1.2.2: a direction is one its domain admits (record §2's table); without it a boolean could be judged at-least.
+from
+            if !fact.domain.admits(fact.direction) {
+to
+            if fact.domain.admits(fact.direction) && !fact.domain.admits(fact.direction) {
+end
+
+mutation vocabulary-order-not-read
+file crates/eadl-resolve/src/vocabulary.rs
+test -p eadl-resolve --test vocabulary
+expect killed
+why M3.1.2.2: an ordered enumeration admits at-least and at-most (record §2's enumeration row); a reader that forgot the order would refuse an entry the record admits.
+from
+                    direction == Exact || (*ordered && matches!(direction, AtLeast | AtMost))
+to
+                    direction == Exact || (*ordered && matches!(direction, AtLeast) && false)
+end
+
+mutation vocabulary-undeclared-unchecked
+file crates/eadl-resolve/src/vocabulary.rs
+test -p eadl-resolve --test vocabulary
+expect killed
+why M3.1.2.2: derived-from, reads and a group name declared facts; an undeclared one would be a derivation from nothing.
+from
+                if !by_name.contains_key(other.as_str()) {
+to
+                if by_name.contains_key(other.as_str()) && !by_name.contains_key(other.as_str()) {
+end
+
+mutation vocabulary-derivation-without-rule
+file crates/eadl-resolve/src/vocabulary.rs
+test -p eadl-resolve --test vocabulary
+expect killed
+why M3.1.2.2: a derivation names the rule that computes it (record §1.1's derived-from and rule rows, §4).
+from
+                (None, false) => refuse(
+                    Cause::Rule,
+                    fact,
+                    "a derivation names the rule that computes it".to_string(),
+                ),
+to
+                (None, false) => {}
+end
+
+mutation vocabulary-rule-signature-unchecked
+file crates/eadl-resolve/src/vocabulary.rs
+test -p eadl-resolve --test vocabulary
+expect killed
+why M3.1.2.2: a derivation's inputs are the ones its rule reads (record §4's table): the horizon from a count then a frequency, reading a modular wrap.
+from
+                        .then(|| rule.mismatch(fact, &required, &optional))
+to
+                        .then(|| rule.mismatch(fact, &required, &optional).filter(|_| false))
+end
+
+mutation vocabulary-implies-on-any-fact
+file crates/eadl-resolve/src/vocabulary.rs
+test -p eadl-resolve --test vocabulary
+expect killed
+why M3.1.2.2: implies is written only on a set fact (record §1.1, R17 2).
+from
+            if !fact.implies.is_empty() {
+to
+            if !fact.implies.is_empty() && matches!(fact.domain, Domain::Set(_)) {
+end
+
+mutation vocabulary-cycle-unchecked
+file crates/eadl-resolve/src/vocabulary.rs
+test -p eadl-resolve --test vocabulary
+expect killed
+why M3.1.2.2: derived-from and reads close no cycle, so a derivation terminates (record §1.1, §9; R9 I12, R10 J12).
+from
+        refusals.extend(cycles(facts));
+to
+        refusals.extend(cycles(facts).into_iter().filter(|_| false));
 end

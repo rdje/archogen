@@ -152,5 +152,9 @@ one that must keep running. That relation is a design whose review, by readers w
 rather than to prose alone: `crates/eadl-resolve/src/model/` transcribes the design rule by rule, an exhaustive checker
 (`crates/eadl-resolve/tests/checker.rs`) asserts on thousands of inputs that no value is read the wrong way and that
 no stronger precondition passes as a capability, and every probe its reviewers ran is a permanent fixture
-(`crates/eadl-resolve/tests/corpus.rs`). `archogen check` does not call it yet; the chapter on the relation itself
-comes with the relation (leaf `M3.1.3`).
+(`crates/eadl-resolve/tests/corpus.rs`). The production relation is being built beside that model, slice by slice
+(leaf `M3.1.2`). Its first piece is the vocabulary as a typed table (`crates/eadl-resolve/src/vocabulary.rs`): every
+entry of `docs/semantics/vocabulary/vocabulary.eadl` is held to the kind `deffact`, then checked for what a kind
+cannot say — a direction its domain does not admit, a derivation without its rule, a cycle among derivations, a fact
+named like a clause — and the table is held, entry by entry, to the model's own copy. `archogen check` does not call
+the relation yet; the chapter on the relation itself comes with it (leaf `M3.1.3`).

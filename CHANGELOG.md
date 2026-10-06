@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the engine reads the capability vocabulary
+
+`ARCHOGEN-M3-0463` (leaf `M3.1.2.2`).
+
+- The engine now reads the vocabulary file into a table it can consult, and checks what the file's own format cannot
+  express: that each fact's direction suits its kind of value, that a derived fact names the rule that computes it
+  and the inputs that rule reads, that no derivation goes round in a circle, and that no fact is named like a word
+  the language reserves. The table matches, fact for fact, the hand-written copy the design's reviewers checked. Each
+  rule has a test that fails when the rule is removed.
+
 ## archogen — the capability vocabulary becomes part of the language
 
 `ARCHOGEN-M3-0462` (leaf `M3.1.2.1`).

@@ -37,7 +37,7 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM`
   Status: `active`
   Goal: own the program spine
-  Children: `PROGRAM.1` … `PROGRAM.60`, and the sub-leaves each of them names
+  Children: `PROGRAM.1` … `PROGRAM.61`, and the sub-leaves each of them names
 
 - ID: `PROGRAM.1`
   Status: `done` — sealed in [`PROGRAM/PROGRAM.1.md`](../task-history/PROGRAM/PROGRAM.1.md); commit `ARCHOGEN-PROGRAM-0002`
@@ -781,6 +781,20 @@ mdBook that is the director's window into the project.
   a check needing no vendor build can refuse a tracked description that the record lacks. The reader's verdict on a
   new file then still needs the build, but its absence from the record becomes visible at commit time.
 
+- ID: `PROGRAM.61`
+  Status: `pending` — filed `2026-10-06` by `M3.1.2.2`; next
+  Goal: the mutation catalog runs whole again, and an entry whose source moved is refused at commit time rather
+  than found by the next `extended` run.
+  Reproduce / issue: `cargo xtask mutate` on `2026-10-06` → exit 2, *"`cli-reaches-the-engine-directly`: its `from`
+  text occurs 0 time(s) in crates/archogen-cli/src/check_cmd.rs — it must occur exactly once"*, then *"1 broken
+  entr(ies) — fix the catalog"*. So the `extended` tier's `mutation` step cannot pass.
+  Root cause: `git show f51bca9 -- crates/archogen-cli/src/check_cmd.rs` (`API.4.2`, `2026-09-30 05:10`) turned
+  `use archogen_api::{Closure, Request, Response};` into `use archogen_api::{Closure, Limits, Request, Response};`,
+  the line the entry matches. The tier runs the catalog; the commit path and CI run no part of it, so the entry has
+  been broken since, unseen.
+  Direction: the entry repointed at the line as it now reads; then a check cheap enough for the commit path, every
+  entry's `from` text occurring exactly once in its file, with no build, as a doctrine or a focused-tier step.
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1145,3 +1159,4 @@ a clean `git status` means what the handoff rule says it means.
 - `2026-10-06`: `PROGRAM.58` closed — the dev profile keeps no object files for their debug information, so `target/debug/deps` no longer grows with every build on macOS.
 - `2026-10-06`: `PROGRAM.59` filed and closed — four present-tense claims that the emulator step is quarantined, stale since `2026-09-30`, corrected.
 - `2026-10-06`: `PROGRAM.60` filed by `M3.1.2.1`: the third reader's record fell four files behind; it runs only by hand.
+- `2026-10-06`: `PROGRAM.61` filed by `M3.1.2.2`: one mutation entry broken since `API.4.2`, so the catalog cannot run whole.

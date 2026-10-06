@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-10-06
 - leaf: M3.1.2.1 (`docs/tasks/M3.md`)
-- status: pending
+- status: applied
 - constructs: suite/docs/semantics/kinds/deffact.eadl, suite/docs/semantics/vocabulary/vocabulary.eadl
 - invalidates: none, measured — every tracked description's `archogen check` verdict, frozen in `crates/archogen-cli/tests/verdicts.txt`, is unchanged; the table gains the two new files at exit 20; outside this repository, a description that writes a `deffact` outside a module, which was `invalid-description` (`schema-unknown-kind`) and is now answered exit 20 as the language's own definition
 
