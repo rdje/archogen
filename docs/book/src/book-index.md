@@ -10,6 +10,8 @@ a change that leaves it stale, so it is never edited by hand.
 
 - A bug report says what its issue says — [Annex B: The checks that keep the repository
   honest](annex-repository.md#a-bug-report-says-what-its-issue-says)
+- A commit holds what was run — [Annex B: The checks that keep the repository
+  honest](annex-repository.md#a-commit-holds-what-was-run)
 - A kind defines well-formedness, never behavior — [Kinds and
   schemas](kinds.md#a-kind-defines-well-formedness-never-behavior)
 - A lesson from the corpus — [Reading a description](reading.md#a-lesson-from-the-corpus)

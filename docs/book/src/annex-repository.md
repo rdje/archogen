@@ -53,11 +53,27 @@ written down for the scaffold's owner in `docs/decisions/decision_scratch-on-the
 
 Moving a fixture changes what surrounds it. Two self-tests broke when their scratch moved under
 `target/`: one because git ignores that whole directory, and one because [Cargo](ledger.md#rust-toolchain), walking up from the
-fixture, now found this workspace. The second is why the root `Cargo.toml` excludes `target`.
+fixture, now found this workspace. The second is why the root `Cargo.toml` excludes `target`. For the same reason
+the CI rehearsal checks out beside this repository rather than under it, the one exception the director ruled, and
+the repository's own data store is a git-ignored `.archogen-data/`
+(`docs/decisions/decision_ci-rehearsal-beside-the-repository.md`).
 
 ```console
 $ bash scripts/check_scratch_locality.sh              # the gate
 $ bash scripts/check_scratch_locality.sh --self-test  # its RED arms, on scratch repositories
+```
+
+## A commit holds what was run
+
+Every check before a commit reads the working tree, and a commit records the index. A new file left untracked is
+in the first and not the second, so a commit can record a tree nobody ran: one did, a module declared and its file
+not committed, so the committed tree did not build. `UNTRACKED-CODE` refuses a commit while a file in a code path —
+what `.doctrine/code_paths.txt` says is code — is untracked; an ignored file, or a note outside every code path,
+passes.
+
+```console
+$ bash scripts/check_untracked_code.sh              # the gate
+$ bash scripts/check_untracked_code.sh --self-test  # its RED arms, on scratch repositories
 ```
 
 ## What comes from outside is written down

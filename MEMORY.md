@@ -16,8 +16,8 @@
 - **Active tree:** `M3` → frontier `M3.6`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `PROGRAM.66`, a gate refusing a commit while an untracked file sits in a code path (`0485`
-  committed without its new module); then `M3.6.4`, the trust gate's chapter in layers. `M3.6.3.2.1`, the runner's
+- **Next action:** `M3.6.4`, the trust gate's chapter in layers (a draft waits in the session's scratchpad; it is
+  rewritten from the record if lost). `M3.6.3.2.1`, the runner's
   baseline, waits on the `trust-gate` workflow's first run, at the next cadence push. `M2`'s open leaves all wait on the director:
   `M2.7.4.5` and `M2.7.6`'s review and hosting half. This project uses no branches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of

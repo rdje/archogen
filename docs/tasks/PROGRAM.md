@@ -543,6 +543,40 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM.65`
   Status: `done` — sealed in [`PROGRAM/PROGRAM.65.md`](../task-history/PROGRAM/PROGRAM.65.md); commit `ARCHOGEN-PROGRAM-0488`
 
+- ID: `PROGRAM.66`
+  Status: `done` — filed and closed `2026-10-06`, after `M3.6.3.5`'s correction
+  Goal: no commit is made while a file in a code path is untracked, so a commit cannot record a tree nobody ran.
+  Acceptance: `UNTRACKED-CODE` refuses a commit beside an untracked file `.doctrine/code_paths.txt` matches, names it,
+  and passes an ignored or a non-code one; its self-test's arms each fail first; on the real tree it passes.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — `ARCHOGEN-M3-0485` (`948b1b6`) was made with `git commit -a` beside an untracked
+    `xtask/src/trust_verify.rs` that its own `main.rs:53` declared: `git ls-tree --name-only 948b1b6 -- xtask/src/`
+    lists no `trust_verify.rs`, and that tree fails, `error[E0583]: file not found for module \`trust_verify\``.
+    Every check before it — `make focused`, the doctrine gate — read the working tree, where the file was, and passed.
+    `M3.6.3.5`'s correction, `0486`, committed it.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: the commit path. `git commit -a` stages modified tracked files and no
+    new one, and `COMMIT.md` step 8's `git status --short` after the commit is a reading nothing enforces; every gate
+    the pre-commit hook runs judges the working tree or the staged changes, so none sees a file that is in neither the
+    index nor the commit. `git grep -n -e 'ls-files --others' HEAD -- scripts/check_doctrines.sh
+    scripts/check_doctrines.project.sh` → nothing: no gate asked git for untracked files.
+  - [x] **FIX** — `scripts/check_untracked_code.sh`, `UNTRACKED-CODE`: `git ls-files --others --exclude-standard`
+    filtered by `.doctrine/code_paths.txt`'s patterns, each such path a breach named with what to do; no statement of
+    what is code is a breach. Registered in `scripts/check_doctrines.project.sh`; its self-test found by
+    `scripts/run_self_tests.sh`'s glob.
+  - [x] **ADDRESSED (verified)** — `bash scripts/check_untracked_code.sh --self-test` → `untracked-code self-test: 7
+    pass / 0 fail (7 arms)`; with the code-path match removed → `5 pass / 2 fail`, the two refusal arms; with the
+    missing-statement check removed → `6 pass / 1 fail`. On the real tree before the script was staged → *"`scripts/
+    check_untracked_code.sh` is in a code path and untracked"*, exit 1 — the case it exists for, on itself; staged,
+    `untracked-code: OK`.
+  - [x] **NO REGRESSION** — `bash scripts/check_doctrines.sh` → `=== all doctrines green ===` with the script staged;
+    `DOCTRINE_ENFORCEMENT.md` within its 36 864-byte ceiling after two closure narratives became pointers to their
+    leaves (`PROGRAM.27`, `PROGRAM.35`) and a third shortened.
+  - [x] **LOCKSTEP** — `DOCTRINE_ENFORCEMENT.md`'s row; the book's Annex B, *A commit holds what was run*, and its
+    index regenerated; this leaf and both logs; `CHANGELOG.md`.
+  Verification: `2026-10-06` — the Verification Log's row
+  Commit: `ARCHOGEN-PROGRAM-0490 (leaf PROGRAM.66)`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -752,6 +786,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `2026-10-06` | `PROGRAM.10.5` | the first and second CI runs, each job's log fetched by the API; the two assumptions | `focused` and `integration` failed at `tests`, 7 of 106, `enforce` passed; then every job `success`, `tier integration: passed — 12 passed`; both held |
 | `2026-10-06` | `PROGRAM.64` | the catalog tests in the rehearsal's checkout of `a3c0cbd`, the old job environment and the new; the same on `e2baf65`; the job home afterwards; a whole rehearsal of `a3c0cbd` | 8 passed, then 2 passed, 6 failed; 9 passed; `.gitconfig` alone; 57 passed, 49 failed: the six, and 43 (38 `trust`, 5 `catalog_build`) `PROGRAM.65`'s |
 | `2026-10-06` | `PROGRAM.65` | a whole rehearsal of `HEAD` and of `a3c0cbd` beside the repository; the directory afterwards; the scratch gate | passed, 12 of 12; the runner's six and no other; gone; OK |
+| `2026-10-06` | `PROGRAM.66` | the gate's self-test, and with each protection removed; the real tree before and after the script was staged; the doctrine gate | 7 / 0, then 5 / 2 and 6 / 1; refused on itself, then OK; all green |
 
 ## Commit Log
 
@@ -886,6 +921,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.64` | `ARCHOGEN-PROGRAM-0482 (leaf PROGRAM.64)` | **the rehearsal's job has a home of its own**, naming no git identity, so a tool that clears its environment and keeps `HOME` sees what the runner gives; `PROGRAM.65` filed for its checkout's place |
 | `PROGRAM.65` | `ARCHOGEN-PROGRAM-0488 (leaf PROGRAM.65)` | **a whole CI rehearsal passes again**: its checkout beside the repository, by the director's ruling, no cargo configuration above it; `.archogen-data/` ignored, a store |
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0489 (leaf PROGRAM)` | **`PROGRAM.10` and `.61`–`.65` sealed**, 13 closed leaves into `docs/task-history/PROGRAM/`, when `README-ROUTES` refused `docs/tasks/` at 820 957 bytes over its 819 200; `docs/tasks/` 817 470 → 752 861 bytes, measured from `HEAD` and the tree |
+| `PROGRAM.66` | `ARCHOGEN-PROGRAM-0490 (leaf PROGRAM.66)` | **a commit holds what was run**: `UNTRACKED-CODE` refuses a commit while a file in a code path is untracked, after `0485` recorded a tree that did not build |
 
 ## Changelog
 

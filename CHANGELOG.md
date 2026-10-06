@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a commit can no longer leave a new source file behind
+
+`ARCHOGEN-PROGRAM-0490` (leaf `PROGRAM.66`).
+
+- One earlier commit recorded code that referred to a new file without including the file, so that commit could not
+  be built, although every check had passed on the working copy. A new check now refuses to commit while a source
+  file sits beside the commit untracked.
+
 ## archogen — the local stand-in for CI passes as a whole again
 
 `ARCHOGEN-PROGRAM-0488` (leaf `PROGRAM.65`).
