@@ -38,8 +38,8 @@ mod common;
 use std::collections::BTreeSet;
 
 use common::universe::{
-    outside, samples, small_items, written_offers, LISTS_FOR_NAMES, NAMES_NOTHING, ORDER_POOL,
-    PLACES, REFUSED_PLACES, RESPELT, RESPELT_BOUNDS, TINY,
+    outside, samples, small_items, widest_advance, written_offers, LISTS_FOR_NAMES, NAMES_NOTHING,
+    ORDER_POOL, PLACES, REFUSED_PLACES, RESPELT, RESPELT_BOUNDS, TINY,
 };
 use eadl_front::{read, Form, SourceMap};
 use eadl_model::quantity::{unit, Quantity};
@@ -348,27 +348,6 @@ fn every_written_form_of_one_offer_has_exactly_one_reading() {
         }
     }
     println!("read {readings} written offers; judged {spelt} spellings of one offer as it");
-}
-
-/// The largest number of ticks two reads `delta` apart can be separated by, over every phase — computed at the
-/// phase breakpoints, where a read's floor changes, never from the rule's formula.
-fn widest_advance(delta: Rational, rate_hz: Rational) -> i128 {
-    let x = delta.checked_mul(rate_hz).expect("small");
-    // A phase φ ∈ [0, 1) of the counter's tick: the advance is ⌊φ + x⌋. It is piecewise constant, changing where
-    // φ + x crosses an integer, so trying φ = 0 and the one breakpoint inside [0, 1) covers every phase.
-    let floor = |r: Rational| r.floor().expect("small");
-    let frac = x
-        .checked_sub(Rational::new(floor(x), 1).expect("whole"))
-        .expect("small");
-    let mut widest = floor(x);
-    if !frac.is_zero() {
-        let phase = Rational::new(1, 1)
-            .expect("one")
-            .checked_sub(frac)
-            .expect("small");
-        widest = widest.max(floor(phase.checked_add(x).expect("small")));
-    }
-    widest
 }
 
 #[test]

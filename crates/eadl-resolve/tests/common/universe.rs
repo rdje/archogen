@@ -2,7 +2,7 @@
 //! families `tests/checker.rs` enumerates (leaf `M3.1.1.1`), defined once for the model's checker and for the
 //! production relation's comparison with the model (`tests/production.rs`, `SR-H7`).
 
-use eadl_model::Dimension;
+use eadl_model::{Dimension, Rational};
 use eadl_resolve::model::{Direction, Domain, Entry, Role, VOCABULARY};
 
 /// An amount whose conversion to another unit overflows the exact arithmetic (R18 1, R19 1, R25 1).
@@ -314,6 +314,47 @@ pub fn provider_bodies() -> Vec<String> {
     ] {
         out.push(clause.to_string());
     }
+    // A group's head and sub-facts in every state the checker judges a group nested and flat by (R22 4), and in
+    // the states its parts' order is judged by (R17 4): a head absent or false beside a part refused or absent.
+    for h in [
+        "",
+        "(absolute-deadline true)",
+        "(absolute-deadline false)",
+        "absolute-deadline",
+        "!absolute-deadline",
+    ] {
+        for s in [
+            "",
+            "(supported-horizon 5 s)",
+            "(supported-horizon 60 s)",
+            "supported-horizon",
+            "!supported-horizon",
+        ] {
+            for b in [
+                "",
+                "(delivery-bound 1 us)",
+                "(delivery-bound 1 ms)",
+                "delivery-bound",
+                "!delivery-bound",
+            ] {
+                let parts = [h, s, b];
+                let offered: Vec<&str> = parts
+                    .iter()
+                    .copied()
+                    .filter(|p| !p.is_empty() && !p.starts_with('!'))
+                    .collect();
+                let absent: Vec<&str> = parts.iter().filter_map(|p| p.strip_prefix('!')).collect();
+                let mut body = String::new();
+                if !offered.is_empty() {
+                    body.push_str(&format!("(offers {})", offered.join(" ")));
+                }
+                if !absent.is_empty() {
+                    body.push_str(&format!(" (absent {})", absent.join(" ")));
+                }
+                out.push(body);
+            }
+        }
+    }
     // Names the vocabulary does not declare, beside declared ones: presence's, never refused here (R1 A6).
     out.push("(offers (region a) (region b) (p 1 bit) uart)".to_string());
     out
@@ -445,6 +486,18 @@ pub fn constraint_texts() -> Vec<String> {
         "(absolute-deadline (delivery-bound (exactly)))",
     ] {
         out.push(group.to_string());
+    }
+    // One amount in three units and one past the arithmetic in another unit, in every direction a time fact takes:
+    // the probes `a_provider_reads_the_same_in_every_order_of_its_offers` judges a value's spellings by (R25 1).
+    for e in VOCABULARY
+        .iter()
+        .filter(|e| e.domain == Domain::Quantity(Dimension::Time))
+    {
+        for v in ["1 ms", "1000000 ns", "0.001 s", TINY] {
+            for written in ["exactly", "at-least", "at-most"] {
+                out.push(format!("({} ({written} {v}))", e.name));
+            }
+        }
     }
     // An interval whose endpoints cannot be ordered within the arithmetic (R18 7).
     out.push("(frequency (range 0.0000000000000000000000000000001 Hz 1 MHz))".to_string());
@@ -632,4 +685,36 @@ pub fn side_texts() -> Vec<String> {
         out.push(side.to_string());
     }
     out
+}
+
+/// The largest number of ticks two reads `delta` apart can be separated by, over every phase — computed at the
+/// phase breakpoints, where a read's floor changes, never from the rule's formula.
+pub fn widest_advance(delta: Rational, rate_hz: Rational) -> i128 {
+    let x = delta.checked_mul(rate_hz).expect("small");
+    // A phase φ ∈ [0, 1) of the counter's tick: the advance is ⌊φ + x⌋. It is piecewise constant, changing where
+    // φ + x crosses an integer, so trying φ = 0 and the one breakpoint inside [0, 1) covers every phase.
+    let floor = |r: Rational| r.floor().expect("small");
+    let frac = x
+        .checked_sub(Rational::new(floor(x), 1).expect("whole"))
+        .expect("small");
+    let mut widest = floor(x);
+    if !frac.is_zero() {
+        let phase = Rational::new(1, 1)
+            .expect("one")
+            .checked_sub(frac)
+            .expect("small");
+        widest = widest.max(floor(phase.checked_add(x).expect("small")));
+    }
+    widest
+}
+
+/// The rates the horizon is simulated at, as written and in hertz (record §4, R14 9).
+pub fn horizon_rates() -> [(&'static str, Rational); 5] {
+    [
+        ("1 Hz", Rational::integer(1)),
+        ("2 Hz", Rational::integer(2)),
+        ("3 Hz", Rational::integer(3)),
+        ("18 Hz", Rational::integer(18)),
+        ("1.5 Hz", Rational::new(3, 2).expect("3/2")),
+    ]
 }

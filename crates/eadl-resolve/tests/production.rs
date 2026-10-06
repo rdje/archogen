@@ -12,12 +12,20 @@
 
 mod common;
 
-use common::universe::{clause_texts, constraint_texts, provider_bodies, side_texts};
+use common::universe::{
+    clause_texts, constraint_texts, horizon_rates, provider_bodies, samples, side_texts,
+    widest_advance,
+};
+use std::collections::{BTreeMap, BTreeSet};
+
 use eadl_front::{read, Form, SourceMap};
 use eadl_model::check::shipped_registry;
+use eadl_model::quantity::{unit, Quantity};
+use eadl_model::Rational;
 use eadl_resolve::model;
 use eadl_resolve::offer::{self, State};
 use eadl_resolve::refusal::Code;
+use eadl_resolve::relation::{self, Verdict};
 use eadl_resolve::requirement::{self, Requirement};
 use eadl_resolve::value::Value;
 use eadl_resolve::vocabulary::{Direction, Vocabulary};
@@ -330,4 +338,233 @@ fn every_side_in_the_universe_is_read_as_the_model_reads_it() {
             .collect::<Vec<_>>()
             .join("\n")
     );
+}
+
+fn verdict_agrees(m: model::Verdict, p: Verdict) -> bool {
+    matches!(
+        (m, p),
+        (model::Verdict::Satisfied, Verdict::Satisfied)
+            | (model::Verdict::Refused, Verdict::Refused)
+            | (model::Verdict::Absent, Verdict::Absent)
+            | (model::Verdict::Unknown, Verdict::Unknown)
+            | (model::Verdict::Undescribed, Verdict::Undescribed)
+            | (model::Verdict::Statement, Verdict::Statement)
+            | (model::Verdict::Unsupported, Verdict::Unsupported)
+    )
+}
+
+/// Every requirement of the universe both readers read, by the fact it is on: constraints, groups, statements and
+/// presence.
+fn requirements_by_fact(
+    v: &Vocabulary,
+) -> BTreeMap<String, Vec<(model::Requirement, Requirement)>> {
+    let mut by_fact: BTreeMap<String, Vec<(model::Requirement, Requirement)>> = BTreeMap::new();
+    for text in constraint_texts() {
+        let clause = forms(&format!("(requires {text})"));
+        let item = &clause[0].items()[1];
+        if let (Ok(m), Ok(p)) = (
+            model::read_constraint(item),
+            requirement::read_constraint(item, v),
+        ) {
+            by_fact
+                .entry(p.fact().to_string())
+                .or_default()
+                .push((m, p));
+        }
+    }
+    for fact in v.facts() {
+        let named = &forms(&fact.name)[0];
+        if let (Ok(m), Ok(Some(p))) = (model::read_needs(named), requirement::read_needs(named, v))
+        {
+            by_fact.entry(fact.name.clone()).or_default().push((m, p));
+        }
+    }
+    by_fact
+}
+
+/// The facts a provider bears on: those it states, a derived fact any input of which it states, and a group whose
+/// head or sub-fact it states.
+fn relevant(p: &offer::Provider, v: &Vocabulary) -> BTreeSet<String> {
+    let mut out: BTreeSet<String> = p.facts.keys().cloned().collect();
+    for fact in v.facts() {
+        let reads: Vec<&String> = fact.derived_from.iter().chain(&fact.reads).collect();
+        let subs: Vec<&String> = match &fact.domain {
+            eadl_resolve::vocabulary::Domain::Group(subs) => subs.iter().collect(),
+            _ => Vec::new(),
+        };
+        if reads.iter().chain(&subs).any(|i| out.contains(*i)) {
+            out.insert(fact.name.clone());
+        }
+    }
+    out
+}
+
+#[test]
+fn every_pair_in_the_universe_is_judged_as_the_model_judges_it() {
+    let v = vocabulary();
+    let by_fact = requirements_by_fact(&v);
+    let (mut pairs, mut wrong) = (0usize, Vec::new());
+    for body in provider_bodies()
+        .iter()
+        .chain(std::iter::once(&String::new()))
+    {
+        let decl = forms(&format!("(defblock p {body})"));
+        let (Ok(m), Ok(p)) = (model::read_provider(&decl[0]), offer::read(&decl[0], &v)) else {
+            continue;
+        };
+        let facts = if body.is_empty() {
+            by_fact.keys().cloned().collect()
+        } else {
+            relevant(&p, &v)
+        };
+        for fact in &facts {
+            for (mr, pr) in by_fact.get(fact).into_iter().flatten() {
+                let (mv, pv) = (model::judge(&m, mr), relation::judge(&p, pr, &v));
+                if !verdict_agrees(mv, pv) {
+                    wrong.push(format!(
+                        "{body} against {mr:?}: the model {mv:?}, production {pv:?}"
+                    ));
+                }
+                pairs += 1;
+            }
+        }
+    }
+    println!("judged {pairs} (provider, requirement) pairs as the model judges them");
+    assert!(pairs > 100_000, "the universe shrank to {pairs}");
+    assert!(
+        wrong.is_empty(),
+        "{} of {pairs}:\n{}",
+        wrong.len(),
+        wrong
+            .iter()
+            .take(15)
+            .cloned()
+            .collect::<Vec<_>>()
+            .join("\n")
+    );
+}
+
+#[test]
+fn every_clause_is_satisfied_by_the_providers_the_model_says_satisfy_it() {
+    // Rule 5 over the universe's clauses, each against providers offering each sampled value of each fact it names.
+    let v = vocabulary();
+    let (mut judged, mut wrong) = (0usize, Vec::new());
+    for text in clause_texts() {
+        let clause = &forms(&text)[0];
+        let (Ok(m), Ok(p)) = (
+            model::read_clause(clause),
+            requirement::read_clause(clause, &v),
+        ) else {
+            continue;
+        };
+        let facts: BTreeSet<&str> = p.iter().map(Requirement::fact).collect();
+        for fact in facts {
+            let Some(entry) = model::VOCABULARY.iter().find(|e| e.name == fact) else {
+                continue;
+            };
+            for value in samples(entry.domain) {
+                let decl = forms(&format!("(defblock p (offers ({fact} {value})))"));
+                let (Ok(mp), Ok(pp)) = (model::read_provider(&decl[0]), offer::read(&decl[0], &v))
+                else {
+                    continue;
+                };
+                let (ms, ps) = (
+                    model::clause_satisfied(&mp, &m),
+                    relation::clause_satisfied(&pp, &p, &v),
+                );
+                if ms != ps {
+                    wrong.push(format!(
+                        "{text} at ({fact} {value}): the model {ms}, production {ps}"
+                    ));
+                }
+                judged += 1;
+            }
+        }
+    }
+    println!("judged {judged} (clause, provider) pairs as the model judges them");
+    assert!(
+        wrong.is_empty(),
+        "{} of {judged}:\n{}",
+        wrong.len(),
+        wrong
+            .iter()
+            .take(15)
+            .cloned()
+            .collect::<Vec<_>>()
+            .join("\n")
+    );
+}
+
+#[test]
+fn the_horizon_agrees_with_a_simulation_of_the_counter_s_reads() {
+    // The checker's grid and simulation (`tests/common/universe.rs`), judged by production: a horizon of `T` is met
+    // exactly when two reads `T` apart are unambiguous at every phase (record §4, R14 9).
+    let v = vocabulary();
+    let mut cases = 0usize;
+    for modulus in 1i128..=40 {
+        for (rate, hz) in horizon_rates() {
+            let decl = forms(&format!(
+                "(defblock p (offers (counter-modulus {modulus}) (tick-rate {rate})))"
+            ));
+            let p = offer::read(&decl[0], &v).expect("a counter reads");
+            for k in 0i128..=(8 * modulus) {
+                let t = Rational::new(k, 4)
+                    .expect("k/4")
+                    .checked_div(hz)
+                    .expect("small");
+                let required = Requirement::Constraint {
+                    fact: "unambiguous-horizon".into(),
+                    direction: Direction::AtLeast,
+                    value: Value::Quantity(Quantity::new(t, unit("s").expect("s")).expect("valid")),
+                    span: decl[0].span(),
+                };
+                let unambiguous = widest_advance(t, hz) < modulus;
+                let got = relation::judge(&p, &required, &v);
+                assert_eq!(
+                    got == Verdict::Satisfied,
+                    unambiguous,
+                    "modulus {modulus} at {rate}, {k}/4 ticks: {got:?}"
+                );
+                cases += 1;
+            }
+        }
+    }
+    println!("checked {cases} horizon requirements against the simulation");
+}
+
+#[test]
+fn no_stronger_precondition_passes_as_a_capability() {
+    // §5.2, record §3 rule 4: a set judged by inclusion is satisfied only when every required member, and `run` for a
+    // power state, is offered — no order is read among levels.
+    let v = vocabulary();
+    let mut judged = 0usize;
+    for fact in v.facts().filter(|f| f.direction == Direction::Includes) {
+        let entry = model::VOCABULARY
+            .iter()
+            .find(|e| e.name == fact.name)
+            .expect("in /1");
+        for offered in samples(entry.domain) {
+            let decl = forms(&format!("(defblock p (offers ({} {offered})))", fact.name));
+            let p = offer::read(&decl[0], &v).expect("a set offer reads");
+            for required in samples(entry.domain) {
+                let item = forms(&format!("({} {required})", fact.name));
+                let r =
+                    requirement::read_constraint(&item[0], &v).expect("a set requirement reads");
+                if relation::judge(&p, &r, &v) == Verdict::Satisfied {
+                    for member in required
+                        .split(' ')
+                        .chain(fact.implies.iter().map(String::as_str))
+                    {
+                        assert!(
+                            offered.split(' ').any(|m| m == member),
+                            "{}: `{offered}` met `{required}` without `{member}`",
+                            fact.name
+                        );
+                    }
+                }
+                judged += 1;
+            }
+        }
+    }
+    assert!(judged > 50);
 }

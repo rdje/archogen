@@ -164,5 +164,9 @@ model's checker can generate exactly as the model does (`crates/eadl-resolve/tes
 what a declaration requires (`crates/eadl-resolve/src/requirement.rs`): every `requires`, `needs` and `uses` at the
 positions presence reads them, the declaration read as one side, so two clauses that contradict each other are
 refused as one would be, and a declaration named like a fact is refused even inside an imported module, where its
-qualified name would hide it. `archogen check` does not call the relation yet; the chapter on the relation itself
-comes with it (leaf `M3.1.3`).
+qualified name would hide it. On those three stands the relation itself (`crates/eadl-resolve/src/relation.rs`): each
+fact's outcome at one provider — its value, or derived, absent, unknown or undescribed, a counter's horizon computed
+from its modulus and rate — and whether a requirement holds there, with the list of every provider's answer the
+resolver will choose from. It judges every pairing of the model's providers and requirements exactly as the model
+does, and the horizon agrees with a simulation of the counter's reads. `archogen check` does not call the relation
+yet; the chapter on the relation itself comes with it (leaf `M3.1.3`).

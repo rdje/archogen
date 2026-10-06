@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the engine decides whether an offer satisfies a requirement
+
+`ARCHOGEN-M3-0468` (leaf `M3.1.2.5`).
+
+- The engine now answers the design's central question: does what this block offers satisfy what that service
+  requires? It works out each fact's standing — offered, absent, unknown, or computed, such as a counter's
+  unambiguous time span from its wrap count and rate — and judges each requirement against it, with a stronger
+  precondition never counted as a better capability. It lists every provider's answer for the resolver to choose from
+  later. More than 150 000 pairings agree with the design's model, and the time-span rule agrees with a simulation
+  of the counter's actual readings. `archogen check` does not use it yet.
+
 ## archogen — the engine reads what a declaration requires
 
 `ARCHOGEN-M3-0467` (leaf `M3.1.2.4`).

@@ -2234,3 +2234,107 @@ to
                 .take(1)
                 .flat_map(|instance| instance.declarations.iter()),
 end
+
+mutation relation-overflow-read-as-unknown
+file crates/eadl-resolve/src/relation.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.5: a fact whose spellings cannot be compared has no outcome at the provider: unsupported-profile, never unknown (record §3 rule 1, R13 M10).
+from
+            Some(State::Overflow) => return Err(Overflow),
+to
+            Some(State::Overflow) => return Ok(Outcome::Unknown),
+end
+
+mutation relation-required-input-absent-ignored
+file crates/eadl-resolve/src/relation.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.5: where a fact is not offered, a required input of its derivation declared absent makes it absent (record §3 rule 1, R12 L3).
+from
+            .any(|i| state(i) == Some(&State::Absent))
+        {
+to
+            .any(|i| state(i) == Some(&State::Absent) && false)
+        {
+end
+
+mutation relation-unvalued-input-ignored
+file crates/eadl-resolve/src/relation.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.5: an input the rule reads, offered without a value, makes the derived fact unknown (record §3 rule 1, §4, R3 C5).
+from
+            .any(|i| state(i) == Some(&State::Unvalued))
+to
+            .any(|i| state(i) == Some(&State::Unvalued) && false)
+end
+
+mutation relation-optional-absent-derives
+file crates/eadl-resolve/src/relation.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.5: an optional input declared absent derives nothing, the conservative branch (record §4, R7 G3).
+from
+        if entry.reads.iter().any(|i| state(i) == Some(&State::Absent)) {
+to
+        if entry.reads.iter().any(|i| state(i) == Some(&State::Absent) && false) {
+end
+
+mutation relation-false-meets-presence
+file crates/eadl-resolve/src/relation.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.5: a boolean named in needs is (f true), so false meets no presence (record §3 rule 3, R7 G2).
+from
+                        if spellings.first() == Some(&Value::Bool(true)) {
+to
+                        if spellings.first().is_some() {
+end
+
+mutation relation-bare-offer-not-present
+file crates/eadl-resolve/src/relation.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.5: any offer of a fact meets presence, a bare one or an abstract bound included (record §3 rule 3, R8 H5).
+from
+                    Ok(Outcome::Unknown) if provider.state(fact).is_some() => Verdict::Satisfied,
+to
+                    Ok(Outcome::Unknown) if provider.state(fact).is_none() => Verdict::Satisfied,
+end
+
+mutation relation-first-spelling-decides
+file crates/eadl-resolve/src/relation.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.5: a value in several spellings is decided by any comparison that does not overflow, so the spelling written first decides nothing (record §5, R25 1).
+from
+            .find_map(|v| value::satisfies(v, required, direction, order, implied).ok())
+to
+            .next()
+            .and_then(|v| value::satisfies(v, required, direction, order, implied).ok())
+end
+
+mutation relation-group-rank-turned
+file crates/eadl-resolve/src/relation.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.5: a group's verdict is the first of refused, absent, unsupported, unknown, undescribed among its head and parts (record §3 rule 5, R17 4).
+from
+            Self::Refused,
+            Self::Absent,
+to
+            Self::Absent,
+            Self::Refused,
+end
+
+mutation relation-statement-judged-in-a-clause
+file crates/eadl-resolve/src/relation.rs
+test -p eadl-resolve --test timer_cases
+expect killed
+why M3.1.2.5: a clause is satisfied when each constraint is, a statement apart: a statement is answered by no provider (record §3 rules 5, 6).
+from
+            .filter(|r| !matches!(r, Requirement::Statement { .. }))
+to
+            .filter(|_| true)
+end

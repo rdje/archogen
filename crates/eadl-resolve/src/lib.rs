@@ -5,7 +5,8 @@
 //! [`vocabulary`] is its typed table: `/1`, read from `docs/semantics/vocabulary/vocabulary.eadl` against the kind
 //! `deffact` (`M3.1.2.2`). [`value`] reads and compares the domains' values, and [`offer`] reads a provider's offers
 //! and absences, each refusal one of [`refusal`]'s causes (`M3.1.2.3`); [`requirement`] reads what a side requires,
-//! read whole at the positions presence reads, and refuses its contradictions (`M3.1.2.4`). [`model`] transcribes
+//! read whole at the positions presence reads, and refuses its contradictions (`M3.1.2.4`); [`relation`] judges one
+//! requirement at one provider and enumerates every provider's answer (`M3.1.2.5`). [`model`] transcribes
 //! `docs/decisions/decision_substitutability-relation.md` rule by rule, each rule citing its section, optimised for
 //! nothing (leaf `M3.1.1.1`, `docs/decisions/decision_executable-design-reviews.md`). A design review reads the
 //! record beside the model and runs the model's exhaustive checker and its falsification corpus
@@ -16,6 +17,7 @@
 pub mod model;
 pub mod offer;
 pub mod refusal;
+pub mod relation;
 pub mod requirement;
 pub mod value;
 pub mod vocabulary;
