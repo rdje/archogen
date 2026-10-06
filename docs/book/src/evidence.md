@@ -150,7 +150,9 @@ every shared item, root, classification and admission, none accepted until revie
 (`M3.6.5`). On the baseline's host the gate refuses a commit whose own `trust/` holds no form for something it shares
 or builds (`trust-form-missing`), or keeps one for something gone (`trust-baseline-stale`); off it, it compares
 nothing and says so. A form naming a package the commit no longer has is refused everywhere, since nothing can be
-built without it. Where the gate runs, and from which commit's build, is the next slice (`M3.6.3.4`).
+built without it. In CI the gate is built from the base commit and runs on every pull request and every push to
+`main` ([Verifying the toolchain](verification.md)); in the `assurance` tier its step fails on a refusal and is
+otherwise *not built*, never a pass, until forms can be accepted (`M3.6.5`).
 
 ⚠️ The honest limit, from §4.4 itself: *"This check enforces disclosure and change control; it
 does not prove semantic independence."* Two separately written implementations of the same

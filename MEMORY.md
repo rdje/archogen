@@ -16,8 +16,8 @@
 - **Active tree:** `M3` → frontier `M3.6`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M3.6.3.4`, where the trust gate runs — built from the base commit, the `assurance` tier's step,
-  CI on every pull request and on `main` (F30); `.2.1`, the runner's baseline, waits on the CI job it adds. `M2`'s open leaves all wait on the director:
+- **Next action:** `M3.6.3.5`, the package verifier, `cargo xtask trust-verify` (F30 case 4); `.2.1`, the runner's
+  baseline, waits on the `trust-gate` workflow's first run, the next push's. `M2`'s open leaves all wait on the director:
   `M2.7.4.5` and `M2.7.6`'s review and hosting half. This project uses no branches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `PROGRAM.65` —
   where the CI rehearsal's checkout may live; `M1.29.4` — §7 of

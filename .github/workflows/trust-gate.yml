@@ -1,0 +1,76 @@
+name: trust-gate
+# The trust gate (leaf M3.6.3.4; docs/specs/trust/decision_trust-inventory.md §6, §7; ledger TI-H6, TI-H10). It
+# builds the inventory of the judged commit — what each root is built from, and what two roots share — compares it
+# with the base commit's baseline, and writes its report in two parts: the change, and the standing list of every
+# item not accepted. What this file does toward §7:
+#   - the gate's program is built from the base commit, as the catalog's checker is (TI-H6): base/ is checked out
+#     beside judged/ from a local clone, and scripts/catalog_check.sh (M2.7.6.2) writes the base's tree from its
+#     blobs, builds xtask there with the base's pin under an allowlisted environment, and runs it; the gate reads the
+#     judged commit from base/'s object store (`--repo`), so a pull request that changes the gate is judged by the
+#     gate it changes nothing of;
+#   - unfiltered (TI-H10): every pull request, the merge queue and every push to main, with no path filter, since
+#     case 5 makes the gate silent on an unrelated change and a path-filtered required check is left pending;
+#   - on a push the base is the commit main pointed at before it, so every commit the push brings is judged, and
+#     otherwise, or when that commit is not here, the judged commit's first parent;
+#   - the report and the baseline proposed for the judged commit go to the job's summary and its log: on this runner,
+#     the baseline's host, that proposal is the one leaf M3.6.3.2.1 commits (TI-H3).
+# What only the hosting can do is the catalog check's too (findings §11): require this workflow by a ruleset pinned
+# outside the pull request's tree; ephemeral runners and no cache; a read-only default token.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  merge_group:
+
+# Read-only, and no checkout keeps the token (WORKFLOW-TOKENS, leaf M2.7.6.1).
+permissions:
+  contents: read
+
+jobs:
+  trust-gate:
+    runs-on: ubuntu-24.04
+    steps:
+      # The commit the hosting made for this run, by SHA: a push's tip, a pull request's merge, a merge group's.
+      # The whole history, so a push's earlier tip is here to be the base.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0, what v4 resolved to on 2026-09-30
+        with:
+          ref: ${{ github.sha }}
+          path: judged
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check out the base beside the judged commit
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          base="$(git -C judged rev-parse HEAD^1)"
+          if [ "$GITHUB_EVENT_NAME" = push ] && [ -n "$BEFORE" ] \
+             && git -C judged cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            base="$BEFORE"
+          fi
+          git clone --quiet --no-checkout judged base
+          git -C base checkout --quiet --detach "$base"
+      # From base/, so rustup reads the base's rust-toolchain.toml and no judged file.
+      - name: The base's pinned Rust toolchain
+        working-directory: base
+        run: rustup toolchain install --no-self-update
+      # The inventory builds the judged commit with the judged commit's own pin; a release number, or nothing runs.
+      - name: The judged commit's pin, which the inventory builds with
+        run: |
+          pin="$(sed -n 's/^channel = "\([0-9][0-9.]*\)"$/\1/p' judged/rust-toolchain.toml)"
+          case "$pin" in ''|*[!0-9.]*) echo "the judged commit's pin is not a release number" >&2; exit 1 ;; esac
+          rustup toolchain install --no-self-update --profile minimal "$pin"
+      - name: The trust gate, built from the base
+        working-directory: base
+        run: >-
+          bash scripts/catalog_check.sh --base HEAD --judged "$(git -C ../judged rev-parse HEAD)"
+          --checker xtask:xtask -- trust-gate --repo "$PWD" --commit '{judged-commit}' --base '{base-commit}'
+          --out target/trust-gate
+      - name: The report and the proposal, in the job's summary
+        if: always()
+        working-directory: base
+        run: |
+          for f in report.txt baseline-proposal.eadl; do
+            [ -f "target/trust-gate/$f" ] || continue
+            echo "== $f"; cat "target/trust-gate/$f"
+            { echo "### $f"; echo '```text'; cat "target/trust-gate/$f"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          done

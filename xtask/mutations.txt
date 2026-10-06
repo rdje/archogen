@@ -2538,3 +2538,20 @@ from
 to
         if false {
 end
+
+mutation trust-inventory-a-refused-configuration-is-an-error
+file xtask/src/trust.rs
+test -p xtask trust::tests::a_cargo_configuration_on_the_build
+expect killed
+why M3.6.3.4: a cargo configuration §3 refuses on a build's path was an error, exit 2, so the gate built from a base said it could not judge a commit it should have refused.
+from
+            Ok(()) => {}
+            Err(crate::catalog_check::Failure::Refused(r)) => {
+                return Ok(Outcome::Refused(vec![format!(
+                    "trust-undeclared-input: {r}"
+                )]))
+            }
+to
+            Ok(()) => {}
+            Err(crate::catalog_check::Failure::Refused(r)) => return Err(format!("{r:?}")),
+end

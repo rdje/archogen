@@ -132,6 +132,23 @@ enum Action {
         owner: &'static str,
         note: &'static str,
     },
+    /// A gate whose pass is not yet the step's: run from the repository root, any non-zero exit **fails** the step —
+    /// a refusal, or a gate that could not judge — and exit 0 leaves it **not built**, for what `owner` still has to
+    /// supply. So the step is never Passed before that leaf lands (`M3.6.3.4`, ledger `TI-H7`).
+    Gate {
+        program: &'static str,
+        args: &'static [&'static str],
+        owner: &'static str,
+        note: &'static str,
+    },
+}
+
+/// What a [`Action::Gate`] step concluded from its gate's exit code: never Passed.
+fn gate_outcome(code: Option<i32>) -> Outcome {
+    match code {
+        Some(0) => Outcome::NotBuilt,
+        _ => Outcome::Failed,
+    }
 }
 
 /// One §14.3 tier.
@@ -461,10 +478,12 @@ const TIERS: &[Tier] = &[
             Step {
                 name: "trust-inventory",
                 proves: "no undeclared dependency is shared between generator and checker (F30, §4.4)",
-                action: Action::NotBuilt {
-                    owner: "M3.6",
-                    note: "the trust-dependency inventory and its reviewed baseline do not exist \
-                           yet; §14.4 requires the pipeline, not the generator, to produce them",
+                action: Action::Gate {
+                    program: "cargo",
+                    args: &["xtask", "trust-gate"],
+                    owner: "M3.6.5",
+                    note: "the trust gate refused nothing; what two roots share is established only once \
+                           every form is accepted, which M3.6.5 reads where reviews are protected",
                 },
             },
             Step {
@@ -560,6 +579,42 @@ fn run_step(step: &Step, root: &Path, provisioned: bool) -> Outcome {
             println!("  ⚠  {:<18} NOT BUILT — tracked by leaf {owner}", step.name);
             println!("     {note}");
             Outcome::NotBuilt
+        }
+        Action::Gate {
+            program,
+            args,
+            owner,
+            note,
+        } => {
+            let started = Instant::now();
+            let output = Command::new(program)
+                .args(*args)
+                .current_dir(root)
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .output();
+            let elapsed = started.elapsed().as_secs_f64();
+            match output {
+                Ok(output) => {
+                    let outcome = gate_outcome(output.status.code());
+                    if outcome == Outcome::NotBuilt {
+                        println!(
+                            "  ⚠  {:<18} {elapsed:>6.2}s  NOT BUILT — its gate passed; tracked by leaf {owner}",
+                            step.name
+                        );
+                        println!("     {note}");
+                    } else {
+                        println!("  ❌ {:<18} {elapsed:>6.2}s  FAILED", step.name);
+                        print_tail(&output);
+                        println!("     re-run it directly: {program} {}", args.join(" "));
+                    }
+                    outcome
+                }
+                Err(error) => {
+                    println!("  ❌ {:<18} could not run `{program}`: {error}", step.name);
+                    Outcome::Failed
+                }
+            }
         }
         Action::Run {
             program,
@@ -863,6 +918,7 @@ fn list() {
         for step in tier.steps {
             let shape = match &step.action {
                 Action::NotBuilt { owner, .. } => format!("not built (leaf {owner})"),
+                Action::Gate { owner, .. } => format!("a gate; not built (leaf {owner})"),
                 Action::Run {
                     requires: Some(tool),
                     ..
@@ -893,7 +949,9 @@ fn help() {
     println!("    cargo xtask catalog-check --index [--bless] | --commit <sha> | --base <dir> --judged <dir> --base-commit <sha> --judged-commit <sha>");
     println!("    cargo xtask trust-inventory [--commit <rev>] [--out <dir>]");
     println!("    cargo xtask trust-baseline --propose [--commit <rev>] [--out <file>]");
-    println!("    cargo xtask trust-gate [--commit <rev>] [--base <rev>] [--out <dir>]");
+    println!(
+        "    cargo xtask trust-gate [--repo <dir>] [--commit <rev>] [--base <rev>] [--out <dir>]"
+    );
     println!();
     println!("TIERS:");
     for tier in TIERS {
@@ -952,9 +1010,19 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::{
-        judge, missing_tool, tail_lines, tier, Action, Judgement, Outcome, Verdict, QUARANTINES,
-        TAIL_LINES, TIERS,
+        gate_outcome, judge, missing_tool, tail_lines, tier, Action, Judgement, Outcome, Verdict,
+        QUARANTINES, TAIL_LINES, TIERS,
     };
+
+    /// The leaf a step routes its gap to, and why: a step not built, or a gate whose pass is not yet the step's.
+    fn routed(action: &Action) -> Option<(&'static str, &'static str)> {
+        match action {
+            Action::NotBuilt { owner, note } | Action::Gate { owner, note, .. } => {
+                Some((owner, note))
+            }
+            Action::Run { .. } => None,
+        }
+    }
 
     #[test]
     fn the_five_tiers_of_the_roadmap_are_the_five_tiers_here() {
@@ -1145,7 +1213,7 @@ mod tests {
         // a reader that the project forgot rather than that the work is scheduled.
         for tier in TIERS {
             for step in tier.steps {
-                if let super::Action::NotBuilt { owner, note } = &step.action {
+                if let Some((owner, note)) = routed(&step.action) {
                     assert!(
                         owner.contains('.') && owner.chars().next().is_some_and(char::is_uppercase),
                         "`{}`'s owner `{owner}` is not a leaf id",
@@ -1159,6 +1227,35 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn a_gate_step_fails_on_any_refusal_and_is_never_passed() {
+        // Ledger `TI-H7`: exit 0 leaves the step not built, for the acceptance `M3.6.5` owns; any other exit — a
+        // refusal, a gate that could not judge, a signal — fails it.
+        assert_eq!(gate_outcome(Some(0)), Outcome::NotBuilt);
+        for code in [Some(1), Some(2), Some(20), None] {
+            assert_eq!(gate_outcome(code), Outcome::Failed, "{code:?}");
+        }
+        let step = tier("assurance")
+            .expect("the assurance tier")
+            .steps
+            .iter()
+            .find(|s| s.name == "trust-inventory")
+            .expect("its trust-inventory step");
+        let Action::Gate {
+            program,
+            args,
+            owner,
+            ..
+        } = &step.action
+        else {
+            panic!("the trust-inventory step runs the gate");
+        };
+        assert_eq!(
+            (*program, *args, *owner),
+            ("cargo", &["xtask", "trust-gate"][..], "M3.6.5")
+        );
     }
 
     #[test]
@@ -1179,7 +1276,7 @@ mod tests {
             .collect();
         for tier in TIERS {
             for step in tier.steps {
-                if let super::Action::NotBuilt { owner, .. } = &step.action {
+                if let Some((owner, _)) = routed(&step.action) {
                     assert!(
                         declared.contains(&format!("- ID: `{owner}`")),
                         "step `{}` names leaf `{owner}`, which no tree under docs/tasks/ declares",

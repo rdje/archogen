@@ -1128,7 +1128,15 @@ pub fn inventory_with(
         .filter(|e| e.mode == "120000")
         .map(|e| e.path.clone())
         .collect();
-    let tree: Tree = tree_of(&git, &entries).map_err(|f| format!("{f:?}"))?;
+    let tree: Tree = match tree_of(&git, &entries) {
+        Ok(t) => t,
+        Err(crate::catalog_check::Failure::Refused(r)) => {
+            return Ok(Outcome::Refused(vec![format!(
+                "trust-undeclared-input: {r}"
+            )]))
+        }
+        Err(crate::catalog_check::Failure::Unjudged(e)) => return Err(e),
+    };
     let roots_text = tree
         .get(ROOTS)
         .ok_or_else(|| format!("the commit holds no `{ROOTS}`"))?;
@@ -1151,8 +1159,17 @@ pub fn inventory_with(
     let cargo_home = out.join("cargo-home");
     let _ = fs::remove_dir_all(&cargo_home); // made anew on every run (§3, R2 B12)
     let pin = toolchain_file(&tree)?;
-    configurations_on_path(&tree_dir, &tree_dir, config_root, &tree)
-        .map_err(|f| format!("{f:?}"))?;
+    // A cargo configuration on the build's path that §3 refuses is a refusal of the commit, never a run that could
+    // not judge (`M3.6.3.4`, found running the gate built from a base).
+    match configurations_on_path(&tree_dir, &tree_dir, config_root, &tree) {
+        Ok(()) => {}
+        Err(crate::catalog_check::Failure::Refused(r)) => {
+            return Ok(Outcome::Refused(vec![format!(
+                "trust-undeclared-input: {r}"
+            )]))
+        }
+        Err(crate::catalog_check::Failure::Unjudged(e)) => return Err(e),
+    }
 
     // The workspace's packages, from `cargo metadata`, which runs no package's code.
     let meta_env = environment(&pin, &cargo_home, &out.join("target-metadata"))?;
@@ -2327,6 +2344,23 @@ pub(crate) mod tests {
         .expect("reads");
         assert_eq!(roots.classified[0].kind, "cdylib");
         assert!(roots.classified[0].role_packages.contains("q"));
+    }
+
+    #[test]
+    fn a_cargo_configuration_on_the_build_s_path_is_a_refusal_and_not_an_error() {
+        // The catalog's §3, adopted (R8 remark 16): the commit is refused, so the gate reports it, exit 1, rather than
+        // saying it could not judge (`M3.6.3.4`).
+        let f = two_roots("config-on-path", "fn main() {}\n", "pub fn f() {}\n", &[]);
+        write(
+            &f.base,
+            &[(
+                ".cargo/config.toml",
+                "[build]\nrustflags = [\"--cfg\", \"x\"]\n".to_owned(),
+            )],
+        );
+        let r = refused(f.run());
+        says(&r, "trust-undeclared-input: ");
+        says(&r, "a cargo configuration under `target/`");
     }
 
     #[test]

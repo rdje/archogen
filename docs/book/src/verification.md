@@ -290,6 +290,13 @@ and so are a quoted key and a key written twice, or twice but for case, in one m
 by the agent harness's own safety screening before they reported, so the next round is a reviewer the director
 names.
 
+`.github/workflows/trust-gate.yml` (`M3.6.3.4`) runs the trust gate through the same harness, so the gate that
+judges a commit is the one its base holds, and a pull request that changes the gate is judged by the gate it
+changes nothing of. It runs on every pull request, the merge queue and every push to `main`, with no path filter.
+On a push it compares the new tip with the commit `main` held before, so every commit a push brings is judged. The
+job prints the report and the baseline proposed for the judged commit into its summary; on the runner, the host the
+baseline is measured on, that proposal is the one to commit (`M3.6.3.2.1`).
+
 ### The engine compiles for the browser
 
 The programmatic-interface decision promises a wasm binding, so the `integration` tier measures whether

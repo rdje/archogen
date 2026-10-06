@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate runs in CI, built from the commit before
+
+`ARCHOGEN-M3-0484` (leaf `M3.6.3.4`).
+
+- The trust check now has its own CI job, run on every pull request and every push to `main`. The check is built from
+  the commit being compared against, never from the change itself, so a change cannot weaken the check that judges
+  it; the job also prints the reviewed-list entries proposed on GitHub's machine, which is what the list must be
+  measured on. The release checks run it too, and never count it as passed until entries can be approved.
+
 ## archogen — the trust gate judges a commit
 
 `ARCHOGEN-M3-0483` (leaf `M3.6.3.3`).

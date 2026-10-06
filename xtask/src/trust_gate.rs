@@ -453,6 +453,10 @@ pub fn run(repo: &Path, args: &[&str]) -> i32 {
 /// The report's file, under the gate's output directory (§6).
 pub const REPORT: &str = "report.txt";
 
+/// The baseline proposed for the judged commit's inventory, written beside the report, so the forms a refusal asks
+/// for — and the CI runner's, which only a run there can measure (`TI-H3`) — are at hand (`M3.6.3.4`).
+pub const PROPOSAL: &str = "baseline-proposal.eadl";
+
 /// The base commit, as the gate compares against it: the commit, or none for a root commit, and its baseline's forms
 /// with the sha256 of the file they were read from, or none when it holds no baseline.
 pub struct Base<'a> {
@@ -646,9 +650,15 @@ pub fn judge(
 /// The report (§6): the build identity, the inventory's and the baseline's sha256, the verdict, the refusals, then its
 /// two parts.
 #[must_use]
-pub fn report(inventory: Option<(&Json, &str)>, base: &Base, j: &Judgement) -> String {
+pub fn report(
+    commit: &str,
+    inventory: Option<(&Json, &str)>,
+    base: &Base,
+    j: &Judgement,
+) -> String {
     let mut out =
         String::from("trust-gate report — docs/specs/trust/decision_trust-inventory.md §6\n");
+    out.push_str(&format!("commit: {commit}\n"));
     if let Some((inv, sha)) = inventory {
         let id = |k: &str| {
             inv.get("identity")
@@ -660,7 +670,7 @@ pub fn report(inventory: Option<(&Json, &str)>, base: &Base, j: &Judgement) -> S
                 .unwrap_or("")
                 .to_owned()
         };
-        out.push_str(&format!("commit: {}\ntree: {}\n", id("commit"), id("tree")));
+        out.push_str(&format!("tree: {}\n", id("tree")));
         out.push_str(&format!(
             "host: {}\nrustc: {}\ncargo: {}\n",
             id("host"),
@@ -793,8 +803,9 @@ pub fn gate(
                 change: vec!["not compared — the inventory was refused".to_owned()],
                 standing: Vec::new(),
             };
-            let mut text = format!("commit: {commit}\n");
-            text.push_str(&report(None, &base_view, &j));
+            // No inventory, so no proposal: one left from an earlier run would read as this commit's.
+            let _ = fs::remove_file(out.join(PROPOSAL));
+            let text = report(&commit, None, &base_view, &j);
             (j, text)
         }
         crate::trust::Outcome::Written(inv) => {
@@ -803,8 +814,16 @@ pub fn gate(
             let roots_text = blob_at(&git, &commit, crate::trust::ROOTS)?
                 .ok_or_else(|| format!("the commit holds no {}", crate::trust::ROOTS))?;
             let roots = crate::trust::read_roots(&String::from_utf8_lossy(&roots_text))?;
-            let j = judge(&inv, &roots, own.as_ref().map(|(b, _)| b), &base_view)?;
-            let text = report(Some((&inv, &Digest::of(&bytes).hex())), &base_view, &j);
+            let own_forms = own.as_ref().map(|(b, _)| b);
+            let j = judge(&inv, &roots, own_forms, &base_view)?;
+            fs::write(out.join(PROPOSAL), propose(&inv, own_forms)?)
+                .map_err(|e| format!("{}: {e}", out.join(PROPOSAL).display()))?;
+            let text = report(
+                &commit,
+                Some((&inv, &Digest::of(&bytes).hex())),
+                &base_view,
+                &j,
+            );
             (j, text)
         }
     };
@@ -813,23 +832,28 @@ pub fn gate(
     Ok((judgement, text))
 }
 
-/// `cargo xtask trust-gate [--commit REV] [--base REV] [--out DIR]`: exit 0 passed, 1 refused, 2 not judged.
+/// `cargo xtask trust-gate [--repo DIR] [--commit REV] [--base REV] [--out DIR]`: exit 0 passed, 1 refused, 2 not
+/// judged. `--repo` names the repository, for a gate built from a base commit's written tree, which has none of its
+/// own (§7, `M3.6.3.4`); `--out` is relative to it.
 pub fn run_gate(repo: &Path, args: &[&str]) -> i32 {
-    let (mut commit, mut base, mut out) =
-        ("HEAD".to_owned(), None, repo.join("target").join("trust"));
+    let (mut repo, mut commit, mut base, mut out) =
+        (repo.to_path_buf(), "HEAD".to_owned(), None, None);
     let mut i = 0;
     while i < args.len() {
         match (args[i], args.get(i + 1)) {
+            ("--repo", Some(v)) => repo = Path::new(v).to_path_buf(),
             ("--commit", Some(v)) => commit = (*v).to_owned(),
             ("--base", Some(v)) => base = Some((*v).to_owned()),
-            ("--out", Some(v)) => out = repo.join(v),
+            ("--out", Some(v)) => out = Some((*v).to_owned()),
             (other, _) => {
-                eprintln!("trust-gate: unknown argument `{other}`; write `[--commit REV] [--base REV] [--out DIR]`");
+                eprintln!("trust-gate: unknown argument `{other}`; write `[--repo DIR] [--commit REV] [--base REV] [--out DIR]`");
                 return 2;
             }
         }
         i += 2;
     }
+    let out = out.map_or_else(|| repo.join("target").join("trust"), |o| repo.join(o));
+    let repo = repo.as_path();
     match gate(repo, &commit, base.as_deref(), &out, repo) {
         Ok((j, _)) => {
             for r in &j.refused {
