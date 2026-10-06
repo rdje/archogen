@@ -14,18 +14,37 @@
 #   files, no ref moved — so a change to the job can be rehearsed before it is committed; HEAD when clean.
 #
 # The pinned tools are taken from this checkout's `target/ci/tools/` (what the job's cache restores), linked into
-# the rehearsal; the rehearsal builds everything else from scratch in `target/ci/rehearsal/`.
+# the rehearsal; the rehearsal builds everything else from scratch in `../.archogen-ci-rehearsal/`.
+#
+# ⭐ WHERE, and why not under `target/`. A checkout inside this repository has this repository's
+# `.cargo/config.toml` on every build's directory path: cargo reads it, the trust instrument refuses it ("a cargo
+# configuration above the repository"), and the runner's checkout has none above it (`PROGRAM.65`). So the rehearsal
+# checks out beside this repository, on its volume — the one exception to scratch under `target/`, ruled by the
+# director `2026-10-06` (`docs/decisions/decision_ci-rehearsal-beside-the-repository.md`) — and removes the directory
+# when it ends; `CI_REHEARSE_KEEP=1` keeps it. Before anything runs it checks that no cargo configuration lies above
+# the checkout, and says "could not run", exit 2, if one does.
 #
 # ⚠️ HONEST LIMIT: this machine's userland (BSD `sed`/`awk`, Homebrew `bash`), not the runner's GNU one; the apt
 # step and the actions themselves are not run. `PROGRAM.10.5` reads the first real run for what only it can show.
 #
-# CONTRACT: exit = the job's: 0 passes, anything else is the code of the step that failed.
+# CONTRACT: exit = the job's: 0 passes, anything else is the code of the step that failed; 2 when it could not run.
 set -uo pipefail
 ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
 
-WORK="$ROOT/target/ci/rehearsal"
+WORK="$(dirname "$ROOT")/.archogen-ci-rehearsal"
 REPO="$WORK/repo"
 note() { printf 'ci-rehearse: %s\n' "$1" >&2; }
+case "$WORK" in /*/.archogen-ci-rehearsal) ;; *) note "no directory beside the repository: $WORK"; exit 2 ;; esac
+
+# The checkout's directory path holds no cargo configuration, as the runner's does not.
+dir="$WORK"
+while :; do
+  for c in "$dir/.cargo/config" "$dir/.cargo/config.toml"; do
+    if [ -e "$c" ]; then note "could not run: a cargo configuration lies above the checkout, $c"; exit 2; fi
+  done
+  [ "$dir" = / ] && break
+  dir="$(dirname "$dir")"
+done
 
 sha="${1:-}"
 if [ -z "$sha" ]; then
@@ -37,6 +56,7 @@ sha="$(git rev-parse --verify "$sha^{commit}")" || { note "no such commit: ${1:-
 
 # The checkout, as actions/checkout makes it. An unreferenced commit (a stash) is fetched by its id.
 rm -rf "$WORK"; mkdir -p "$REPO"
+[ "${CI_REHEARSE_KEEP:-}" = 1 ] || trap 'rm -rf "$WORK"' EXIT
 git -C "$REPO" init -q
 git -C "$REPO" fetch -q --upload-pack='git -c uploadpack.allowAnySHA1InWant=true upload-pack' \
   "$ROOT" "+$sha:refs/remotes/origin/main" || { note "could not fetch $sha"; exit 2; }

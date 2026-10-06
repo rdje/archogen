@@ -18,10 +18,9 @@
   `docs/TASK_TREE.md`.
 - **Next action:** `PROGRAM.66`, a gate refusing a commit while an untracked file sits in a code path (`0485`
   committed without its new module); then `M3.6.4`, the trust gate's chapter in layers. `M3.6.3.2.1`, the runner's
-  baseline, waits on the `trust-gate` workflow's first run, the next push's. `M2`'s open leaves all wait on the director:
+  baseline, waits on the `trust-gate` workflow's first run, at the next cadence push. `M2`'s open leaves all wait on the director:
   `M2.7.4.5` and `M2.7.6`'s review and hosting half. This project uses no branches.
-- **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `PROGRAM.65` —
-  where the CI rehearsal's checkout may live; `M1.29.4` — §7 of
+- **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4` and `M2.7.6.4` — findings §11, `main`'s protection and a reviewer;
   `TEMPLATE-REFS` — postponed. **The 17 template files archogen has not changed are never edited** (findings §10,
   ruled `2026-09-30`); every other script is archogen's.

@@ -992,7 +992,7 @@ mdBook that is the director's window into the project.
     leaf is the leaf — and the file stands at its ceiling.
 
 - ID: `PROGRAM.64`
-  Status: `done` — filed and closed `2026-10-06`; a whole rehearsal passing waits on `PROGRAM.65`
+  Status: `done` — filed and closed `2026-10-06`; a whole rehearsal passes since `PROGRAM.65`
   Goal: the CI rehearsal (`scripts/ci_rehearse.sh`, `PROGRAM.10.4`) gives every process it runs the runner's want of
   a git identity and of a global configuration — those that clear their environment and keep `HOME` included.
   Acceptance: in the rehearsal's job environment, `a3c0cbd`, the commit the first CI run failed on, fails the same six
@@ -1045,7 +1045,8 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0482 (leaf PROGRAM.64)`
 
 - ID: `PROGRAM.65`
-  Status: `blocked` — on the director: where the rehearsal's checkout may live
+  Status: `done` — closed `2026-10-06`, by the director's ruling of the same day: option **A**, a sibling directory on
+  the same volume
   Goal: the CI rehearsal's checkout has no cargo configuration above it, as the runner's has none, so a whole
   rehearsal can pass.
   Reproduce / issue: found `2026-10-06` by `PROGRAM.64`. The rehearsal checks out its commit at
@@ -1065,8 +1066,39 @@ mdBook that is the director's window into the project.
   state the rehearsal unable to run the `trust` tests, which leaves it red on every commit.
   Acceptance: `bash scripts/ci_rehearse.sh` on `HEAD` passes, and on `a3c0cbd` fails at the six `catalog_check` tests
   alone.
-  Verification: `pending`
-  Commit: `pending`
+  **Ruled `2026-10-06`.** The director first offered a git-ignored `.archogen-data/` at the repository's root as a
+  store (*"At the root of the ARCHOGEN repo you can create a git ignored .archogen-data/ where you can store and manage
+  stuff there"*); told that a directory inside the repository still has the root's `.cargo/config.toml` above it, chose
+  **A**, a sibling directory on the same SSD, made and removed by the script, the one exception to scratch under
+  `target/`. Both are `docs/decisions/decision_ci-rehearsal-beside-the-repository.md`.
+  Plan: the checkout at `../.archogen-ci-rehearsal/`, beside this repository; the script checks, before anything runs,
+  that no cargo configuration lies above it and says "could not run" if one does; removes it on exit unless
+  `CI_REHEARSE_KEEP=1`; `.archogen-data/` ignored by git.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — `PROGRAM.64`'s whole rehearsal of `a3c0cbd` under `target/ci/rehearsal/`: `test result:
+    FAILED. 57 passed; 49 failed`, 43 of them — 38 `trust`, 5 `catalog_build` — refusing the outer configuration.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: `scripts/ci_rehearse.sh`'s `WORK="$ROOT/target/ci/rehearsal"`, inside this
+    checkout, whose tracked `.cargo/config.toml` (`git ls-files .cargo` → `.cargo/config.toml`) lies on every build's
+    path there; `configurations_on_path` refuses a configuration above the repository it judges, rightly, and cargo
+    reads it. WHY nothing inside the tree can do: `.archogen-data/` included, every directory under the root has the
+    root above it.
+  - [x] **FIX** — `WORK="$(dirname "$ROOT")/.archogen-ci-rehearsal"`, a guard that the path is exactly that, the walk
+    up its directory path refusing to run beside a cargo configuration, exit 2, and the directory removed on exit;
+    `docs/decisions/decision_ci-rehearsal-beside-the-repository.md` and its index row; the scratch decision names the
+    exception; `.gitignore` ignores `/.archogen-data`.
+  - [x] **ADDRESSED (verified)** — `bash scripts/ci_rehearse.sh HEAD` (`139c85e`) → *"rehearsing 139c85e in
+    …/github/.archogen-ci-rehearsal/repo — 869 tracked files, nothing else"*, `tier integration: passed — 12 passed, 0
+    failed, 0 unavailable, 0 not built, 0 quarantined`, *"the job would pass"*, `rc=0` — the first whole rehearsal to
+    pass since `2026-09-30`. `bash scripts/ci_rehearse.sh a3c0cbd` → `test result: FAILED. 100 passed; 6 failed`, the
+    six `catalog_check` tests the runner failed and no other, `rc=1`. `ls -d ../.archogen-ci-rehearsal` afterwards →
+    *"No such file or directory"*.
+  - [x] **NO REGRESSION** — `bash -n scripts/ci_rehearse.sh` → clean; `bash scripts/check_scratch_locality.sh` →
+    `scratch-locality: OK (270 file(s) scanned …)`; the doctrine gate at commit.
+  - [x] **LOCKSTEP** — the script's header; the decision record, its index row, the scratch decision's exception; the
+    book's `verification.md`; `TOOLBOX.md`'s row; `PROGRAM.64`'s status; this leaf and both logs; `CHANGELOG.md`.
+  Verification: `2026-10-06` — the Verification Log's row
+  Commit: `ARCHOGEN-PROGRAM-0488 (leaf PROGRAM.65)`
 
 ## Roadmap coverage map
 
@@ -1133,9 +1165,8 @@ roadmap item X live?".
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
 | 1 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
-| 2 | `PROGRAM.65` | `blocked` | **awaiting the director** — the CI rehearsal's checkout sits under this checkout's cargo configuration, which the trust instrument refuses, so no whole rehearsal passes; the fix moves it outside the tree, against the data-locality rule unless the director rules an exception (options A–C in the leaf) |
 
-Both rows wait on the director. The pending leaves beside them —
+The row waits on the director's yes. The pending leaves beside it —
 `PROGRAM.53`, `.54`, `.60` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and its full record is sealed under `docs/task-history/PROGRAM/`.
 
@@ -1185,8 +1216,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
   `PROGRAM.10.1`**: the emulator step is quarantined under `M2.8`, so `make integration` reads `incomplete`,
   which step 2 permits a push past after reading what it names. `M2.8.3.4` removed the cause the same day: the
   step passes, and so does the tier (`make integration` → `12 passed, 0 quarantined` on `2026-10-06`).
-- `PROGRAM.31` and `PROGRAM.32` wait on the director's ruling on the findings record's §8; `PROGRAM.65` on where
-  the CI rehearsal's checkout may live.
+- `PROGRAM.31` and `PROGRAM.32` wait on the director's ruling on the findings record's §8.
 
 ## Verification Log
 
@@ -1278,6 +1308,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `2026-10-06` | `PROGRAM.10.5.2` | the test's two sources on an ELF target, before and after, and on the host; the blob in what they build; the test; the whole suite; the focused tier | `Size expression must be absolute.`, then `rc=0` on both formats; 1 in each `.rlib`; ok; 1274 passed, 0 failed; passed |
 | `2026-10-06` | `PROGRAM.10.5` | the first and second CI runs, each job's log fetched by the API; the two assumptions | `focused` and `integration` failed at `tests`, 7 of 106, `enforce` passed; then every job `success`, `tier integration: passed — 12 passed`; both held |
 | `2026-10-06` | `PROGRAM.64` | the catalog tests in the rehearsal's checkout of `a3c0cbd`, the old job environment and the new; the same on `e2baf65`; the job home afterwards; a whole rehearsal of `a3c0cbd` | 8 passed, then 2 passed, 6 failed; 9 passed; `.gitconfig` alone; 57 passed, 49 failed: the six, and 43 (38 `trust`, 5 `catalog_build`) `PROGRAM.65`'s |
+| `2026-10-06` | `PROGRAM.65` | a whole rehearsal of `HEAD` and of `a3c0cbd` beside the repository; the directory afterwards; the scratch gate | passed, 12 of 12; the runner's six and no other; gone; OK |
 
 ## Commit Log
 
@@ -1410,6 +1441,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.10.5.1` | `ARCHOGEN-PROGRAM-0480 (leaf PROGRAM.10.5.1)` | **a reproduction's description corrected**: the leaf said the identity-less runs used the machine's `CARGO_HOME` and `RUSTUP_HOME`; bash had expanded them inside the empty home, where rustup installed the same pin |
 | `PROGRAM.10.5` | `ARCHOGEN-PROGRAM-0481 (leaf PROGRAM.10.5)` | **CI green on the runner**: the first run's two test defects fixed, the second run `success` on every job; `PROGRAM.10` closed with it |
 | `PROGRAM.64` | `ARCHOGEN-PROGRAM-0482 (leaf PROGRAM.64)` | **the rehearsal's job has a home of its own**, naming no git identity, so a tool that clears its environment and keeps `HOME` sees what the runner gives; `PROGRAM.65` filed for its checkout's place |
+| `PROGRAM.65` | `ARCHOGEN-PROGRAM-0488 (leaf PROGRAM.65)` | **a whole CI rehearsal passes again**: its checkout beside the repository, by the director's ruling, no cargo configuration above it; `.archogen-data/` ignored, a store |
 
 ## Changelog
 

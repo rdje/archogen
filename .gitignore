@@ -16,6 +16,10 @@ git_message_brief.txt
 # example must not thereby dirty the tree. Owned by leaf `PROGRAM.22`.
 /build
 
+# The repository's own data store, ignored like `target/` (the director's ruling of 2026-10-06,
+# docs/decisions/decision_ci-rehearsal-beside-the-repository.md).
+/.archogen-data
+
 # Logs & OS cruft
 *.log
 .DS_Store

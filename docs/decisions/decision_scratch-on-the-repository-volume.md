@@ -80,6 +80,8 @@ Two cautions for the scaffold, which serves more than Rust projects:
 
 ## How to apply
 
+- **The one exception**, ruled `2026-10-06`: the CI rehearsal's checkout, beside the repository
+  ([[decision_ci-rehearsal-beside-the-repository]]); and a git-ignored `.archogen-data/` is a store besides `target/`.
 - **A new script** makes scratch with `mktemp [-d] "$ROOT/target/…XXXXXX"`. The gate refuses any other form,
   including `-t`, `--tmpdir`, a relative template and a template on another path.
 - **A fixture that models "outside a repository" or "outside a workspace"** checks that precondition before its
