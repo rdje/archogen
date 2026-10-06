@@ -53,3 +53,39 @@ R1-16). Every finding is answered in the record; R1-21 is declined there, with i
 | R1-23 | remark | a crate-root generator is hashed by its root alone | §7 says so; a regenerated output still moves the item |
 | R1-24 | remark | "commit with a marker" was required by nothing | §3: advised, so a later undeclared copy is recognised; not required |
 | R1-25 | remark | a two-path identity's spelling; the history did not exist | §4: two paths joined by a space, as a copy's; this file |
+
+**Round 2**, `2026-10-06`: the reviewer confirmed the census, measured that only four tracked files are marked in the
+whole repository and that no program reads any, and found every hand-off quoted. There were 23 findings, 12 of them
+defects. The largest: round 1's answer to R1-7, an item reached through role packages, was ill-defined in each of its
+readings — it moved items in pairs that read nothing new and leaned on directory prefixes the parent rejects (R2-2 to
+R2-4); a file one side reads directly that the other's generated source came from made no item (R2-1); a generator or
+input outside the commit, such as cargo writing `Cargo.lock`, had no outcome but refusal (R2-7); and the header rule
+still left cases open (R2-11), which the review method answers with a model and a corpus, not more prose (R2-23). Its
+R2-19 found that the gate itself, built by `M3.6.3.3`, left out of its change part two of the three kinds of change the
+parent's opening lists: `M3.6.3.7` fixed it before this round's answers.
+
+| Finding | Class | What it found | The answer |
+| --- | --- | --- | --- |
+| R2-1 | defect | a file one side reads and the other reaches only through a generator made no item | §5: matched against the other side's provenance *or reads*, role `read`; `GS-H5` fixture |
+| R2-2 | defect | through role packages, a third program's reader moved an item in a pair that read nothing new | the role-package route withdrawn; §5: a third program moves none of the others' items |
+| R2-3 | defect | "a classified generator whose role packages include R's" had two readings and no outcome for some targets | withdrawn; §5's refusal uses what the target's build compiles, by normal edges and, for a test, bench or example, development edges |
+| R2-4 | defect | "lies in a role package" could only mean a directory prefix | §5: the innermost package directory containing the file, as the parent attributes a unit |
+| R2-5 | defect | the harness's provenance could be read whole | §4: only through the units it compiles beside its pair's two builds |
+| R2-6 | defect | `GS-H3` promised other sets than §4 | `GS-H3` rewritten in §4's and §5's terms |
+| R2-7 | defect | a generator or input outside the commit had no outcome but refusal | §2: a `tool` with its pin; a gitlink input; `Cargo.lock` declared with a tool when a live form reads it |
+| R2-8 | defect | a script driving a program target had two answers | §2: one or more generator files |
+| R2-9 | defect | "stale wherever the gate runs" misstated the parent | a deleted declared file's form is not live, so stale on the baseline's host alone (§2, §6) |
+| R2-10 | defect | the parent's opening, §2's form list and `TI-H9` were not amended | §7 and `GS-H8` list every passage |
+| R2-11 | defect | the header rule left binary files, comments before code, nesting, a `/*` in a line comment and spaced attributes open | §3 stated as code, `xtask/src/generated_header.rs`, its corpus holding each case |
+| R2-12 | defect | round 1's answers had no fixtures | `GS-H5` names a fixture for each: the harness, no input, a copy, a third program, another role's generator, a tool, a gitlink |
+| R2-13 | remark | the rule ignored the file's language | §3: comment syntax by extension or name |
+| R2-14 | remark | a template emitted verbatim | §3: a template is hand-written and its copies are not committed |
+| R2-15 | remark | a provenance file's role was single | §4: a set of roles |
+| R2-16 | remark | a copy joins all its paths; empty files | §5: sorted paths joined; a non-empty file only |
+| R2-17 | remark | `(inputs)` when none; clauses once | §2: may be omitted; `command` and `reason` exactly once |
+| R2-18 | remark | a section reference; "names" again | §3 cites §4 for liveness; §7 says "declares as a generator or an input" |
+| R2-19 | remark | whether a `defgenerated` form is in the change part — and the gate's change part itself | §2: added, changed or removed, it is, as a root form is; the gate fixed to the parent's opening by `M3.6.3.7` |
+| R2-20 | remark | "reaches" undefined | §4 defines it; `GS-H10` cites it |
+| R2-21 | remark | an edit to a provenance file moves an item only when two programs hold it | §7 says so |
+| R2-22 | remark | the report states no exclusion list today | §8 and `GS-H7`: the report carries the parent's list too |
+| R2-23 | remark | no model or corpus for the recogniser | `xtask/src/generated_header.rs` and its corpus, and the inventory's `generated-marked` list as the census |

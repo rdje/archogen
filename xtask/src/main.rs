@@ -44,6 +44,7 @@ mod catalog_build;
 mod catalog_check;
 mod dtb;
 mod elf;
+mod generated_header;
 mod json;
 mod mutation;
 mod premises;

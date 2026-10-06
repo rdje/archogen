@@ -16,8 +16,8 @@
 - **Active tree:** `M3` → frontier `M3.6`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M3.6.6.1`, round 2 of `docs/specs/trust/decision_trust-generated-sources.md`'s review — a new,
-  read-only context; round 1's 19 defects are answered (`docs/reviews/decision_trust-generated-sources-reviews.md`). `M3.6.3.2.1`, the runner's
+- **Next action:** `M3.6.6.1`, round 3 of `docs/specs/trust/decision_trust-generated-sources.md`'s review — a new,
+  read-only context; rounds 1 and 2 (19 and 12 defects) are answered (`docs/reviews/decision_trust-generated-sources-reviews.md`). `M3.6.3.2.1`, the runner's
   baseline, waits on the `trust-gate` workflow's first run, at the next cadence push. `M2`'s open leaves all wait on the director:
   `M2.7.4.5` and `M2.7.6`'s review and hosting half. This project uses no branches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of

@@ -2,14 +2,14 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-06`
-- **Status:** `active` — written `2026-10-06` by leaf `M3.6.6.1`; round 1 answered the same day; under review, by a
-  context that did not write it, until a round finds no defect (`decision_executable-design-reviews.md`)
+- **Status:** `active` — written `2026-10-06` by leaf `M3.6.6.1`; rounds 1 and 2 answered the same day; under review,
+  by a context that did not write it, until a round finds no defect (`decision_executable-design-reviews.md`)
 - **External sources:** [the pinned Rust toolchain](../../book/src/ledger.md#rust-toolchain) — rustc's dependency
   information, which, with a root's declared run-time data, is what the inventory knows of the files a program reads
 - **Owner / source:** leaf `M3.6.6` (`docs/tasks/M3.md`), filed by `M3.6.1`'s fourth review; the gap is
   `decision_trust-inventory.md` §3's last paragraph, and `ROADMAP.md` §14.4's case 3, which names "a shared
-  generated-source input". The trust inventory's terms — root, the comparison harness, shared item, form, the
-  baseline's host — are that record's, cited below as "the parent".
+  generated-source input". The trust inventory's terms — root, the comparison harness, role package, shared item, form,
+  the baseline's host — are that record's, cited below as "the parent".
 
 ## The fact / decision
 
@@ -20,12 +20,13 @@ a generator's output is such a file, and two sources one generator wrote for two
 only in a name — share nothing the inventory sees, though a fault in the generator, or in an input it read, is in both.
 The generator and its inputs are a provenance no build reads.
 
-In what follows a **program** is a root or the comparison harness, and a program **reads** a file when its compilation
-reads it (rustc's dependency information) or its form hands it at run time (the parent's `(data …)` clause, §2, §3).
+A **program** is a root or the comparison harness. A program **reads** a file when its compilation reads it (rustc's
+dependency information) or its form hands it at run time (the parent's `(data …)` clause, §2, §3).
 
-**Measured `2026-10-06`**, on the real tree's inventory: its roots read 56 workspace files and the harness 5, 57
-together, and none is marked by §3's rule below. So no *marked* generated source reaches a program today; an unmarked
-one is invisible to this census as to the rule (§7).
+**Measured `2026-10-06`**, as the instrument's own output: the inventory now lists, as `generated-marked`, every file a
+program reads that §3 marks, and on the real tree that list is empty — its roots read 56 workspace files and the
+harness 5, 57 together. So no *marked* generated source reaches a program today; an unmarked one is invisible to this
+census as to the rule (§8).
 
 ### 2. The declaration
 
@@ -40,91 +41,115 @@ A committed generated source is declared in `trust/roots.eadl`, read by the same
 ```
 
 - The form's name is the generated file's repository path, and the form **declares** that file. One form per path.
-- `generator` is the one tracked file that is the program that wrote it — a script, a program target's crate root,
-  any file. When it is the crate root of a workspace program target, that target is a root or classified like every
-  program target, and nothing else is asked of it (the parent's §2); the inventory hashes the file alone (§7).
-- `inputs` are the tracked files the generator read: none or more, so a table computed from a formula in the
-  generator is declared with `(inputs)` and its generator carries it.
-- `command` records how it was run, and `reason` why; nothing executes either.
+- `generator`: the tracked files that are the program that wrote it, one or more — a script, a program target's crate
+  root, both when a script drives a program target (`scripts/language_baseline.sh` running `eadl-front`'s
+  `language_freeze` example, which writes `docs/semantics/BASELINE.txt`). A crate root of a workspace program target is
+  a root or classified like every program target (the parent's §2); nothing else is asked of a generator file.
+- `tool`, in place of or beside `generator`: a program outside the commit, as `(tool "cargo" "rust-toolchain.toml")` —
+  its name, and the tracked file whose bytes fix its version. A form has a `generator`, a `tool`, or both.
+- `inputs`: the files the generator read, none or more, each a tracked file or a vendored checkout's gitlink, whose
+  content is the commit it pins. `(inputs)` may be omitted when there are none, so a table computed from a formula in
+  the generator is declared without one.
+- `command`, how it was run, and `reason`, why, each exactly once; nothing executes either.
 
-The reader refuses, `trust-undeclared-input`: a path twice; an input listed twice; a generator among its own inputs; a
-form whose file is its own generator or input; a cycle among forms, each form's generator and inputs leading to the
-forms that declare them; a generator or input that is not a blob of the commit, or is a symbolic link; a declared file
-that is a symbolic link. A declared file that is not a blob of the commit — deleted while its form stayed — is
-`trust-baseline-stale`, wherever the gate runs, as every form naming what the commit no longer has is (the parent's
-dated clarification of §6).
+The reader refuses, `trust-undeclared-input`, wherever the gate runs: a declared path twice; an entry twice in one
+clause; a form with neither `generator` nor `tool`; a file that is its own form's generator or input; a cycle among
+forms, each leading to the forms that declare its generators and inputs; a generator, an input or a tool's pin that is
+not a blob or a gitlink of the commit, or is a symbolic link; a declared file that is a symbolic link. A declared file
+that is not in the commit at all — deleted while its form stayed — reads no further: its form is not live (§4), and so
+`trust-baseline-stale` on the baseline's host (§6).
 
-A form is a proposal like every form in `trust/`: the standing list names it, and it is accepted only where reviews
-are protected (`M3.6.5`), a change to it needing a new acceptance; until then it is unreviewed, as a root form is.
+A `defgenerated` form is a form of `trust/roots.eadl` like a root's: added, changed or removed against the base
+commit's, it is in the change part (the parent's opening); the standing list names it; and it is accepted only where
+reviews are protected (`M3.6.5`), a change to it needing a new acceptance.
 
 ### 3. Recognition: a generated source that does not declare itself
 
-A file's **header** is its leading run of comment lines and blank lines, after a UTF-8 byte-order mark is dropped and
-line endings are read as `\n`. A comment line is one whose first non-blank characters are `//`, `/*`, `*`, `--`, `;`,
-`<!--`, or `#` not followed by `[` or `![` — a Rust attribute is code — and every line of a block comment opened in the
-header (`/*` … `*/`, `<!--` … `-->`) is a comment line until it closes, whatever it begins with. The first line that is
-neither ends the header: a line of code, a string, an attribute.
+A file is **marked as generated** when its **header** — the comments that come before its first character that is
+neither whitespace nor inside a comment — holds, in any case, `@generated`, `do not edit`, `automatically generated`,
+`auto-generated`, `autogenerated` or `generated by`. Comment syntax is the file's language's, by its extension or name:
+`//` and `/* */` (nesting in Rust alone) for Rust, C, C++, Go, Java and their kin; `#` for shell, Python, TOML, YAML,
+Make and their kin; `;` for eADL, Lisp and assembly; `--` for SQL and Lua; `<!-- -->` for Markdown, HTML and XML. A
+file with none of these — a CSV, a JSON, a binary — or that is not UTF-8 once a byte-order mark is dropped, has no
+header and is never marked. A `#!` first line is a comment where `#` is, and in Rust unless it opens an attribute.
 
-A file is **marked as generated** when its header holds, in any case, `@generated`, `do not edit`, `automatically
-generated`, `auto-generated`, `autogenerated` or `generated by`. A marked file that a program reads, or that is the
-generator or an input of a live form (§5), and that no `defgenerated` form declares, is refused,
-`trust-undeclared-input`: *"a generated source with no declaration"*, wherever the gate runs, since a header does not
-depend on the host.
+**This rule is stated as code:** `xtask/src/generated_header.rs` — `syntax`, `header`, `marked` — with its corpus in
+its tests, which holds every case the review raised: a byte-order mark, CRLF, a block comment's inner line, a marker
+below a long licence comment, a trailing comment on a code line, a string, a body marker, a binary file, a non-UTF-8
+file, an attribute, a spaced attribute, a shebang, nested and non-nesting blocks, code after a block on its line, a
+`/*` inside a line comment, a Markdown heading, a C preprocessor line, a CSV, an empty file. Where this text and the
+code differ, both are reviewed together; a case the corpus does not hold is added to it before it is decided.
 
-The rule reads the header only, so a marker in a file's body — an emitter writing such headers into what it emits, a
-string, a comment after the first line of code — does not mark it, and a file with no comment syntax cannot be marked
-(§7). A hand-written file whose header says it was generated is repaired by correcting the header. A marker is
-advised in every generated source, so a later undeclared copy of it is recognised; it is not required of a declared
-one.
+A marked file that a program reads, or that is the generator or an input of a live form (§4), and that no
+`defgenerated` form declares, is refused, `trust-undeclared-input`: *"a generated source with no declaration"*,
+wherever the gate runs, since a header does not depend on the host. A file generated outside the commit — `Cargo.lock`,
+whose header says cargo generated it — is declared with a `tool`, if a live form reads it.
 
-### 4. Provenance, and what two programs share
+A marker is advised in every committed generated source, so a later undeclared copy of it is recognised; it is not
+required of a declared one. A template an emitter copies verbatim into what it emits is hand-written, carries no
+marker, and its copies are build outputs, never committed; it is not a generated source.
 
-A form is **live** when its declared file is read by a program, or is the generator or an input of a live form. A
-program's **provenance** is the transitive closure, over live forms, of the generators and inputs of the declared files
-it reads: each a **provenance file**, recorded with its path, its sha256, its role — `generator` or `input` — and the
-generated files through which the program reached it, each with its sha256. The inventory records each program's
-provenance beside its files.
+### 4. Provenance
 
-A provenance file also reaches a root through its **role packages**: one that lies in a role package of root R, or is
-the crate root of a program target whose classification's role packages include one of R's, is in R's provenance as
-well, with the generated files through which any other program reached it — so a checker that compiles a table the
-generator's own code wrote shares that code with the generator, visibly (`ROADMAP.md` §4.4: "a checker acquiring a
-dependency on the generator's constraint-evaluation implementation must be visible").
+A form is **live** when its declared file is read by a program, or is a generator or an input of a live form. A
+program's **provenance** is the transitive closure, over live forms, of the generator files, tool pins and inputs of
+the declared files it reads: each a **provenance file**, recorded with its path, its digest — a blob's sha256, a
+gitlink's pinned commit — its **roles**, the set of `generator`, `tool` and `input` it plays, and the generated files
+through which the program reached it, each with its sha256. The inventory records each program's provenance beside its
+files; a form a program **reaches** is a live form in that closure.
 
-For each pair of programs the parent pairs (§4: every two roots, and the harness with every root but its pair's two),
-a new kind of shared item, the **generated provenance**: one per provenance file both sides' provenance holds, matched
-by path, and, like the parent's copy, by sha256 under two paths (§4, R1 A11). Its identity is the path, or the two
-paths joined by a space for a copy, as the parent writes a copy's (`trust_gate.rs`'s item identity). Its aspects are
-the file's sha256, its role on each side, and each side's generated files through which it is reached, with theirs.
-So a shared input through two generators, a shared generator over two inputs, and a generator with no input each make
-an item. It is compared, proposed, reported and accepted as every shared item is: `trust-new-shared` when new,
-`trust-shared-changed` when an aspect moves, `trust-form-missing` on the baseline's host when the commit's own baseline
-holds no form proposing its digests; its §4.4 classification is the review's. For the harness's own pair, the
-harness's provenance is an aspect of the pair's comparison-harness item, as its files are.
+For the comparison harness, only what it reaches through the units it compiles beside its pair's two builds counts —
+the units that make its files part of the pair's comparison-harness item (parent §4) — so a table only the
+implementation reads is not the harness's provenance.
 
-A new generated file of a provenance in either side, a changed provenance file, or a regenerated output is a change to
-the pair's item; a third program reaching the same provenance makes new items in its own pairs.
+### 5. What two programs share, and another role's generator
 
-A generated file both sides read at one path with the same bytes is also a shared **file** item, as today; the
-provenance item is beside it.
+For each pair of programs the parent pairs (§4: every two roots, and the harness with every root but its pair's two), a
+new kind of shared item, the **generated provenance**: one per file that one side's provenance holds and the other
+side's provenance holds or the other side reads — matched by path, and by sha256 under different paths, a non-empty
+file only, as the parent matches a copy (§4, R1 A11). Its identity is the path, or the sorted paths joined by a space,
+as the parent writes a copy's. Its aspects are the file's digest, its roles on each side — `read` for a side that reads
+it — and each side's generated files through which it is reached, with their sha256. So a shared input through two
+generators, a shared generator over two inputs, a generator with no input, and a data file one side reads that the
+other's generated source was made from each make an item. It is compared, proposed, reported and accepted as every
+shared item is: `trust-new-shared` when new, `trust-shared-changed` when an aspect moves, `trust-form-missing` on the
+baseline's host when the commit's own baseline holds no form proposing its digests; its §4.4 classification is the
+review's. For the harness's own pair, the harness's provenance is an aspect of the pair's comparison-harness item, as
+its files are. A third program reaching the same provenance makes new items in its own pairs and moves none of the
+others'.
 
-### 5. A declaration no program reads
+**Another role's generator is refused**, `trust-shared-program`, wherever the gate runs: a program that reads a
+generated file one of whose generator files lies in a role package of a role other than the program's own — for the
+harness, other than its pair's two — or is the crate root of a workspace target whose build compiles such a role
+package. A file lies in the package whose directory is the innermost one containing it, as the parent attributes a
+unit (§3, R8 2); a target's build compiles what `cargo metadata`'s resolved graph reaches from its package by normal
+edges, and by development edges for a test, bench or example target, as the parent reads an example (§2, R5 remark 13).
+The reason is the parent's two-roles rule (§2): a checker that takes its table from the generator's own code runs the
+generator's logic, whatever it calls of it, and one that needs such a table takes it from a generator outside both
+roles, whose provenance the gate then reports as shared. A `tool` is outside every role package.
+
+### 6. A declaration no program reads
 
 A `defgenerated` form that is not live (§4) is stale, `trust-baseline-stale`, on the baseline's host, as an admission
 no site uses is (the parent's §6): removed, so a generated source that stops being read and comes back is reviewed
 again.
 
-### 6. Case 5, and the parent's closed lists
+### 7. Case 5, and the parent's text
 
 A change outside every root, program target and provenance file reports "unchanged", as §14.4's case 5 asks
-("outside the recorded roots and provenance"). So an edit to a declared generator or input moves a provenance item,
-reported, while an edit to a script no live form names changes nothing. The parent's case 5, its §4 list of shared
-items, its §6 table and its §3 paragraph on generated sources are amended to say so, by a dated clarification when the
-instrument lands (`GS-H8`).
+("outside the recorded roots and provenance"). An edit to a provenance file moves an item when two paired programs both
+hold or read it, and is otherwise "unchanged" like any file one side alone reads; an edit to a script no live form
+declares as a generator or an input changes nothing. The parent says otherwise in places, each amended by a dated
+clarification when the instrument lands (`GS-H8`): its opening's "a change outside every root and every program
+target"; §2's list of the forms `trust/roots.eadl` holds; §3's paragraph on generated sources; §4's list of shared
+items; §6's table — `trust-undeclared-input`'s, `trust-shared-program`'s and `trust-baseline-stale`'s new triggers —
+and its case 5; and `TI-H9`'s "a change outside every root's units", which then reads "outside every root's units and
+every provenance file".
 
-### 7. What stays outside, stated in the report
+### 8. What stays outside, stated in the report
 
-The gate's report states what the inventory does not see, the parent's list (§3) with these:
+The gate's report states what the inventory does not see — the parent's list (§3), which no report states today, and
+these:
 
 - **The declaration is believed, not verified.** The instrument runs no package's code, so it does not run the
   generator to check that the committed file is its output, nor that it read only the declared inputs. A wrong
@@ -132,11 +157,11 @@ The gate's report states what the inventory does not see, the parent's list (§3
   `M3.6.5` requires accepted; regenerating in CI is a check of its own, not this design's.
 - **An unmarked generated file with no declaration** — one whose generator writes no marker, or a file with no comment
   syntax — is judged as a plain file, as today.
-- **A generator's own dependencies** — a script's interpreter, the modules a crate root's program compiles beside it,
-  that program's dependency graph — are not provenance files: a crate-root generator is hashed by its crate root alone,
-  so an edit elsewhere in its program changes no item until its output is regenerated, which then does.
+- **A generator's own dependencies** — a script's interpreter, a tool beyond its pin, the modules a crate root's
+  program compiles beside it — are not provenance files: a crate-root generator is hashed by its crate root alone, so
+  an edit elsewhere in its program changes no item until its output is regenerated, which then does.
 
-### 8. Hand-offs
+### 9. Hand-offs
 
 Each obligation is one sentence, quoted word for word beside its identifier by the leaf that takes it, which
 `HANDOFF-LEDGER` checks.
@@ -144,16 +169,17 @@ Each obligation is one sentence, quoted word for word beside its identifier by t
 <!-- machine-read: handoffs -->
 | Id | Leaf | Obligation |
 | --- | --- | --- |
-| `GS-H1` | `M3.6.6.2` | `trust/roots.eadl` takes `defgenerated` forms read strictly as §2 states — one per declared path, a generator, zero or more inputs, a command and a reason — refusing as `trust-undeclared-input` each construction §2 lists, and as `trust-baseline-stale` wherever the gate runs a declared file that is not a blob of the commit. |
-| `GS-H2` | `M3.6.6.2` | A file whose header, as §3 defines it, holds one of §3's markers, that a program reads or that is the generator or an input of a live form, and that no `defgenerated` form declares, is refused as `trust-undeclared-input` wherever the gate runs, and a marker outside the header marks nothing. |
-| `GS-H3` | `M3.6.6.2` | Each program's record carries its provenance as §4 defines it, a role package's files and a classified generator's role packages included, and each pair the parent pairs shares a generated-provenance item per provenance file both sides hold, matched by path or by sha256, its aspects the file's sha256, its role on each side and each side's generated files with theirs, the harness's own pair taking it as an aspect of the comparison-harness item, compared and proposed as every shared item is. |
+| `GS-H1` | `M3.6.6.2` | `trust/roots.eadl` takes `defgenerated` forms read strictly as §2 states — one per declared path, one or more generator files or a tool with its pin or both, zero or more inputs that are blobs or gitlinks, a command and a reason exactly once — refusing as `trust-undeclared-input` wherever the gate runs each construction §2 lists. |
+| `GS-H2` | `M3.6.6.2` | A file that `xtask/src/generated_header.rs`'s `marked` marks, that a program reads or that is a generator or an input of a live form, and that no `defgenerated` form declares, is refused as `trust-undeclared-input` wherever the gate runs, the recogniser and its corpus being the rule §3 states. |
+| `GS-H3` | `M3.6.6.2` | Each program's record carries its provenance as §4 defines it, the harness's through the units it compiles beside its pair's two builds, and each pair the parent pairs shares a generated-provenance item per file one side's provenance holds and the other side's provenance holds or the other side reads, matched by path or by a non-empty file's sha256, its aspects the file's digest, its roles on each side and each side's generated files with theirs, the harness's own pair taking the harness's provenance as an aspect of its comparison-harness item, compared and proposed as every shared item is. |
+| `GS-H11` | `M3.6.6.2` | A program that reads a generated file one of whose generator files lies, by the innermost package directory containing it, in a role package of a role other than its own — for the harness, other than its pair's two — or is the crate root of a workspace target whose build compiles such a role package, is refused as `trust-shared-program` wherever the gate runs. |
 | `GS-H4` | `M3.6.6.2` | A `defgenerated` form that is not live as §4 defines it is `trust-baseline-stale` on the baseline's host. |
-| `GS-H5` | `M3.6.6.2` | The instrument's tests hold a case-3 fixture of two roots whose differently-named generated sources share an input through two generators, another sharing a generator over two inputs, a header corpus — a byte-order mark, CRLF, a block comment's inner line, a marker after a long licence comment, a trailing comment on a code line, a string line, a binary file, a body marker — a chain of two forms, a generator in another role's package, an edit to a declared generator reported and to an undeclared script "unchanged", and a fixture for each refusal, each removed in turn by a catalogued mutation. |
-| `GS-H7` | `M3.6.6.2` | The gate's standing list names every `defgenerated` form, and its report states §7's three exclusions beside the parent's list of what the inventory does not see. |
-| `GS-H8` | `M3.6.6.2` | `decision_trust-inventory.md` gains a dated clarification making its case 5, its §4 list of shared items, its §6 table and its §3 paragraph on generated sources say what this record decides. |
+| `GS-H5` | `M3.6.6.2` | The instrument's tests hold a case-3 fixture of two roots whose differently-named generated sources share an input through two generators, and others for a generator shared over two inputs, a generator with no input, a data file one side reads that the other's generated source was made from, a copy matched by sha256, a chain of two forms, a tool generator, a gitlink input, the harness, a third program, another role's generator refused, an edit to a declared generator reported and to an undeclared script "unchanged", and each refusal, each removed in turn by a catalogued mutation. |
+| `GS-H7` | `M3.6.6.2` | The gate's standing list names every `defgenerated` form, and its report states the parent's §3 list of what the inventory does not see and §8's three exclusions. |
+| `GS-H8` | `M3.6.6.2` | `decision_trust-inventory.md` gains a dated clarification amending each passage §7 names — its opening, §2's list of forms, §3's paragraph on generated sources, §4's list of shared items, §6's table and case 5, and `TI-H9` — to say what this record decides. |
 | `GS-H9` | `M3.6.5` | A `defgenerated` form is accepted per form as every form in `trust/` is, a change to it needs a new acceptance, and the assurance step's Passed requires every live form accepted. |
-| `GS-H10` | `M4.8` | A property resting on a role's independence is established only when every live `defgenerated` form a role it rests on reaches is accepted, beside `TI-H16`'s conditions. |
-| `GS-H6` | `M3.6.6.3` | The trust chapter states what a generated source must declare, how an undeclared one is recognised, the new shared item and its codes in the chapter's codes table, and §7's three exclusions. |
+| `GS-H10` | `M4.8` | A property resting on a role's independence is established only when every live `defgenerated` form a program of a role it rests on reaches, as §4 defines reaching, is accepted, beside `TI-H16`'s conditions. |
+| `GS-H6` | `M3.6.6.3` | The trust chapter states what a generated source must declare, how an undeclared one is recognised, the new shared item and the new triggers in the chapter's codes table, and §8's three exclusions. |
 
 ## Why
 
@@ -161,24 +187,29 @@ Each obligation is one sentence, quoted word for word beside its identifier by t
   But a header is written by the generator, which is the thing under suspicion, and a form in `trust/` is reviewed and
   accepted where reviews are protected, as every root, classification and admission is. The header's job is narrower:
   to make an undeclared generated file recognisable.
-- **The header only, whatever its length.** A marker anywhere in a file would refuse the emitters that write markers
-  into what they emit; a header of any length keeps a marker below a long licence comment, which a fixed window of
-  lines would miss.
-- **Provenance per file, not per generator-and-input pair.** §14.4's case is a shared *input*, and §4.4's is a shared
-  formula: either alone is a common source of error, so the item is keyed by each provenance file, and two generated
-  files that share either share an item.
-- **Refused, not reported.** An undeclared generated source hides a provenance the review cannot see at all, which is
-  `trust-undeclared-input`'s class — an input the commit's record does not account for — not a sharing to review.
+- **The header as code.** Two rounds of prose left cases two readers would decide differently — a byte-order mark, a
+  block comment's inner line, nesting, a spaced attribute; a recogniser with a corpus decides each once
+  (`decision_executable-design-reviews.md`: a decision procedure ships as an executable model).
+- **Provenance per file, matched against what the other side reads too.** §14.4's case is a shared *input*, and §4.4's
+  is a shared formula: either alone is a common source of error, and so is a data file one side reads directly that the
+  other's generated source came from.
+- **Another role's generator refused, not reported.** Round 1 answered it with an item reached through role packages;
+  round 2 found that item ill-defined — it moved items in pairs that read nothing new, and leaned on directory prefixes
+  the parent rejects. The parent already decides the case's kind: a program running another role's logic is refused,
+  and what it needs from that role comes through a third, shared package. A generated table is the same, through a
+  generator outside both roles.
+- **Refused, not reported, when undeclared.** An undeclared generated source hides a provenance the review cannot see
+  at all, which is `trust-undeclared-input`'s class.
 - **Declined, round 1's R1-21:** `.gitattributes`' `linguist-generated` as a second recognition signal. It is a
-  hosting's display hint, read by no build, and honouring it would add a second, weaker way to say "generated" beside
-  the form that is reviewed; a file with no comment syntax is declared, or stays outside as §7 states.
+  hosting's display hint, read by no build, a second, weaker way to say what the reviewed form says; a file with no
+  comment syntax is declared, or stays outside as §8 states.
 
 ## How to apply
 
 - Generating a source a program reads: commit it with a marker in its header and its `defgenerated` form in the same
   commit; the gate on the baseline's host then asks for the proposed forms of any provenance two programs share.
-- `M3.6.6.2` implements §2–§7 against the hand-offs; `M3.6.6.3` puts it in the trust chapter; `M3.6.5` and `M4.8`
-  take theirs.
+- `M3.6.6.2` implements §2–§8 against the hand-offs, extending `generated_header.rs` and its corpus; `M3.6.6.3` puts it
+  in the trust chapter; `M3.6.5` and `M4.8` take theirs.
 - Related: `decision_trust-inventory.md`, `decision_executable-design-reviews.md`.
 
 ## Review
@@ -189,3 +220,4 @@ answered here. The history is [`decision_trust-generated-sources-reviews.md`](..
 | Round | Date | Defects | Outcome |
 | --- | --- | --- | --- |
 | 1 | `2026-10-06` | 19, and 6 remarks | every finding answered: the census by the rule itself, harness and handed data included; provenance per file, transitive, through role packages, matched by sha256 too; the header any length, its markers widened; the parent's lists amended by hand-off; forms reviewed and required accepted; R1-21 declined |
+| 2 | `2026-10-06` | 12, and 11 remarks | every finding answered: the header stated as code with its corpus; another role's generator refused, the role-package route withdrawn; a file one side reads matched against the other's provenance; tool and gitlink provenance; several generator files; stale on the host only; the parent's amendments listed whole; the gate's change part fixed to the parent's opening (`M3.6.3.7`) |
