@@ -51,13 +51,15 @@ a change that leaves it stale, so it is never edited by hand.
 ## C
 
 - Canonical form — [Reading a description](reading.md#canonical-form)
+- **capability vocabulary** — [definition](glossary.md), [Modules and composition](modules.md), [Checking a
+  description](checking.md), [Matching an offer to a requirement](matching.md), [The engine API](engine-api.md)
 - **catalog** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
-  board](tour.md), [What a report may claim](evidence.md), [What the scheduling checker establishes](analysis.md),
-  [Where the engine's knowledge comes from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md),
-  [The S0 early generation path](s0.md), [Where generated systems run](targets.md), [Verifying the
-  toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
-  changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that
-  keep the repository honest](annex-repository.md)
+  board](tour.md), [What a report may claim](evidence.md), [Matching an offer to a requirement](matching.md), [What the
+  scheduling checker establishes](analysis.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [The
+  runtime: decisions, not actions](runtime.md), [The S0 early generation path](s0.md), [Where generated systems
+  run](targets.md), [Verifying the toolchain](verification.md), [What this project relies on from outside](ledger.md),
+  [What is versioned, and what changing it costs](versions.md), [Annex A: The runtime's rules in
+  detail](annex-runtime.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
 - catalog-rules — [What is versioned, and what changing it costs](versions.md#catalog-rules)
 - catalog-s0 — [What is versioned, and what changing it costs](versions.md#catalog-s0)
 - **check-passing convention** — [definition](glossary.md), [Where the engine's knowledge comes from: the
@@ -71,6 +73,7 @@ a change that leaves it stale, so it is never edited by hand.
 - **CLI** — [definition](glossary.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying
   the toolchain](verification.md), [What is versioned, and what changing it costs](versions.md)
 - **CLINT** — [definition](glossary.md), [Where generated systems run](targets.md)
+- Codes — [Matching an offer to a requirement](matching.md#codes)
 - Comments survive — [Reading a description](reading.md#comments-survive)
 - **composite input** — [definition](glossary.md), [What the scheduling checker establishes](analysis.md)
 - Content hashes — [What a report may claim](evidence.md#content-hashes)
@@ -93,11 +96,11 @@ a change that leaves it stale, so it is never edited by hand.
   profile](profile.md), [The use cases](usecases.md), [Reading a description](reading.md), [Kinds and
   schemas](kinds.md), [Quantities and units](quantities.md), [Modules and composition](modules.md), [Presence, absence,
   and relevance](presence.md), [Refinement](refinement.md), [Describing a workload](workload.md), [Checking a
-  description](checking.md), [What a report may claim](evidence.md), [Where the engine's knowledge comes from: the
-  catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [The S0 early generation path](s0.md), [Where
-  generated systems run](targets.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying
-  the toolchain](verification.md), [What is versioned, and what changing it costs](versions.md), [Annex B: The checks
-  that keep the repository honest](annex-repository.md)
+  description](checking.md), [What a report may claim](evidence.md), [Matching an offer to a requirement](matching.md),
+  [Where the engine's knowledge comes from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md),
+  [The S0 early generation path](s0.md), [Where generated systems run](targets.md), [The archogen command line](cli.md),
+  [The engine API](engine-api.md), [Verifying the toolchain](verification.md), [What is versioned, and what changing it
+  costs](versions.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
 - Diagnostics — [The archogen command line](cli.md#diagnostics)
 - Diagnostics point at the problem — [Reading a description](reading.md#diagnostics-point-at-the-problem)
 - **DMA** — [definition](glossary.md), [The supported profile](profile.md), [Refinement](refinement.md)
@@ -244,7 +247,10 @@ a change that leaves it stale, so it is never edited by hand.
 ## O
 
 - Offered is a claim, not evidence — [Presence, absence, and relevance](presence.md#offered-is-a-claim-not-evidence)
+- Offers — [Matching an offer to a requirement](matching.md#offers)
 - One operation: check — [The engine API](engine-api.md#one-operation-check)
+- One outcome per fact, then a verdict — [Matching an offer to a
+  requirement](matching.md#one-outcome-per-fact-then-a-verdict)
 - One outcome vocabulary — [The engine API](engine-api.md#one-outcome-vocabulary)
 - **OS** — [definition](glossary.md), [The boundary: functionality versus implementation](boundary.md), [What this
   project relies on from outside](ledger.md)
@@ -253,6 +259,7 @@ a change that leaves it stale, so it is never edited by hand.
 - osek-os — [What this project relies on from outside](ledger.md#osek-os)
 - Other repositories are read-only — [Annex B: The checks that keep the repository
   honest](annex-repository.md#other-repositories-are-read-only)
+- Outcomes and verdicts — [Matching an offer to a requirement](matching.md#outcomes-and-verdicts)
 - **overrun** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Describing a
   workload](workload.md), [The runtime: decisions, not actions](runtime.md), [Annex A: The runtime's rules in
   detail](annex-runtime.md)
@@ -294,6 +301,9 @@ a change that leaves it stale, so it is never edited by hand.
   The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that keep the repository
   honest](annex-repository.md)
 - provenance-format — [What is versioned, and what changing it costs](versions.md#provenance-format)
+- **provider** — [definition](glossary.md), [Introduction](introduction.md), [The boundary: functionality versus
+  implementation](boundary.md), [Presence, absence, and relevance](presence.md), [Matching an offer to a
+  requirement](matching.md), [The S0 early generation path](s0.md)
 
 ## Q
 
@@ -322,6 +332,7 @@ a change that leaves it stale, so it is never edited by hand.
   keep the repository honest](annex-repository.md)
 - Relevance decides whether an unknown matters — [Presence, absence, and
   relevance](presence.md#relevance-decides-whether-an-unknown-matters)
+- Requirements and sides — [Matching an offer to a requirement](matching.md#requirements-and-sides)
 - **RGX** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - rgx — [What this project relies on from outside](ledger.md#rgx)
 - **RISC-V** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Where generated systems
@@ -348,6 +359,7 @@ a change that leaves it stale, so it is never edited by hand.
   honest](annex-repository.md#scratch-stays-on-this-volume)
 - **SEI** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - semulith — [What this project relies on from outside](ledger.md#semulith)
+- Sets: what a part accepts — [Matching an offer to a requirement](matching.md#sets-what-a-part-accepts)
 - **SHA-256** — [definition](glossary.md), [What a report may claim](evidence.md)
 - **SI** — [definition](glossary.md), [Quantities and units](quantities.md)
 - Silence is not admission — [The supported profile](profile.md#silence-is-not-admission)
@@ -389,6 +401,7 @@ a change that leaves it stale, so it is never edited by hand.
   honest](annex-repository.md#the-histories-are-sealed-as-they-grow)
 - The language definition travels with the binary — [Checking a
   description](checking.md#the-language-definition-travels-with-the-binary)
+- The list a resolver chooses from — [Matching an offer to a requirement](matching.md#the-list-a-resolver-chooses-from)
 - The list you read is the list the engine uses — [The supported
   profile](profile.md#the-list-you-read-is-the-list-the-engine-uses)
 - The observation contract — [The S0 early generation path](s0.md#the-observation-contract)
@@ -409,6 +422,8 @@ a change that leaves it stale, so it is never edited by hand.
 - The unused device — [Refinement](refinement.md#the-unused-device)
 - The verdict is what to fix first — [Checking a description](checking.md#the-verdict-is-what-to-fix-first)
 - The version and what it promises — [The engine API](engine-api.md#the-version-and-what-it-promises)
+- The vocabulary — [Matching an offer to a requirement](matching.md#the-vocabulary)
+- The vocabulary is a typed table — [Matching an offer to a requirement](matching.md#the-vocabulary-is-a-typed-table)
 - The witness — [What the scheduling checker establishes](analysis.md#the-witness)
 - Three kinds of success — [The use cases](usecases.md#three-kinds-of-success)
 - Three obligations, and a violation names which —
@@ -432,6 +447,7 @@ a change that leaves it stale, so it is never edited by hand.
 
 ## V
 
+- Values and arithmetic — [Matching an offer to a requirement](matching.md#values-and-arithmetic)
 - **VDX** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - Versions — [Modules and composition](modules.md#versions)
 
@@ -440,12 +456,14 @@ a change that leaves it stale, so it is never edited by hand.
 - wasm-request-format — [What is versioned, and what changing it costs](versions.md#wasm-request-format)
 - wasm-response-format — [What is versioned, and what changing it costs](versions.md#wasm-response-format)
 - **WCET** — [definition](glossary.md), [Describing a workload](workload.md)
+- What a provider offers — [Matching an offer to a requirement](matching.md#what-a-provider-offers)
+- What a side requires — [Matching an offer to a requirement](matching.md#what-a-side-requires)
 - What a task carries — [Describing a workload](workload.md#what-a-task-carries)
 - What a task does not carry — [Describing a workload](workload.md#what-a-task-does-not-carry)
 - What an instance is — [The engine API](engine-api.md#what-an-instance-is)
 - What CI does with an incomplete tier — [Verifying the toolchain](verification.md#what-ci-does-with-an-incomplete-tier)
-- What comes after presence: substitutability, in design — [Presence, absence, and
-  relevance](presence.md#what-comes-after-presence-substitutability-in-design)
+- What comes after presence: matching — [Presence, absence, and
+  relevance](presence.md#what-comes-after-presence-matching)
 - What comes from outside is written down — [Annex B: The checks that keep the repository
   honest](annex-repository.md#what-comes-from-outside-is-written-down)
 - What each consumer can do, and what it receives — [The engine
@@ -454,6 +472,7 @@ a change that leaves it stale, so it is never edited by hand.
 - What is deliberately absent — [The runtime: decisions, not actions](runtime.md#what-is-deliberately-absent)
 - What is frozen, and what a digest can prove — [Verifying the
   toolchain](verification.md#what-is-frozen-and-what-a-digest-can-prove)
+- What is not claimed — [Matching an offer to a requirement](matching.md#what-is-not-claimed)
 - What is outside it — [The engine API](engine-api.md#what-is-outside-it)
 - What is still owed — [What the scheduling checker establishes](analysis.md#what-is-still-owed)
 - What is versioned is written down — [Annex B: The checks that keep the repository

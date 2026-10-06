@@ -143,30 +143,12 @@ stays admissible) and **F06** (offered and absent together → `invalid-descript
 halves of §5.3's single decision, in `crates/eadl-model/tests/f04_f06_presence.rs`, with worked
 cases in `docs/semantics/cases/`.
 
-### What comes after presence: substitutability, in design
+### What comes after presence: matching
 
-Presence asks whether a fact is known. The next question is whether what a provider offers is *good enough* for
-what a requirement asks — whether a 64-bit counter satisfies a service that needs 32 bits, or an idle-only timer
-one that must keep running. That relation is a design whose review, by readers who had not written it, closed on
-`2026-10-05` (`docs/decisions/decision_substitutability-relation.md`), and its rules are held to an executable model
-rather than to prose alone: `crates/eadl-resolve/src/model/` transcribes the design rule by rule, an exhaustive checker
-(`crates/eadl-resolve/tests/checker.rs`) asserts on thousands of inputs that no value is read the wrong way and that
-no stronger precondition passes as a capability, and every probe its reviewers ran is a permanent fixture
-(`crates/eadl-resolve/tests/corpus.rs`). The production relation is being built beside that model, slice by slice
-(leaf `M3.1.2`). Its first piece is the vocabulary as a typed table (`crates/eadl-resolve/src/vocabulary.rs`): every
-entry of `docs/semantics/vocabulary/vocabulary.eadl` is held to the kind `deffact`, then checked for what a kind
-cannot say — a direction its domain does not admit, a derivation without its rule, a cycle among derivations, a fact
-named like a clause — and the table is held, entry by entry, to the model's own copy. The second is the reader of
-what a block or a platform offers (`crates/eadl-resolve/src/offer.rs`, over the values of
-`crates/eadl-resolve/src/value.rs`): it refuses what the design refuses of an offer, such as two values of one fact,
-an offer beside its absence, a derived fact beside the facts it is derived from, and it reads every provider the
-model's checker can generate exactly as the model does (`crates/eadl-resolve/tests/production.rs`). The third reads
-what a declaration requires (`crates/eadl-resolve/src/requirement.rs`): every `requires`, `needs` and `uses` at the
-positions presence reads them, the declaration read as one side, so two clauses that contradict each other are
-refused as one would be, and a declaration named like a fact is refused even inside an imported module, where its
-qualified name would hide it. On those three stands the relation itself (`crates/eadl-resolve/src/relation.rs`): each
-fact's outcome at one provider — its value, or derived, absent, unknown or undescribed, a counter's horizon computed
-from its modulus and rate — and whether a requirement holds there, with the list of every provider's answer the
-resolver will choose from. It judges every pairing of the model's providers and requirements exactly as the model
-does, and the horizon agrees with a simulation of the counter's reads. `archogen check` does not call the relation
-yet; the chapter on the relation itself comes with it (leaf `M3.1.3`).
+Presence asks whether a fact is known. The next question is whether what a provider offers is *good enough* for what a
+requirement asks — whether a 64-bit counter satisfies a service that needs 32 bits, or an idle-only timer one that must
+keep running. That is matching, and [Matching an offer to a requirement](matching.md) treats it. Its design, reviewed
+until a round found no defect, is `docs/decisions/decision_substitutability-relation.md`, and its code is
+`crates/eadl-resolve`, held to the design's executable model (`crates/eadl-resolve/src/model/`, with its checker in
+`crates/eadl-resolve/tests/checker.rs` and its corpus in `crates/eadl-resolve/tests/corpus.rs`). `archogen check` does
+not call it yet.

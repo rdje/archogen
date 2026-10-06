@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the book explains matching
+
+`ARCHOGEN-M3-0470` (leaf `M3.1.3`).
+
+- A new chapter, *Matching an offer to a requirement*, explains in plain words and then in full how the engine decides
+  whether what one part offers satisfies what another requires: why more is not always better, why a faster counter
+  can be worse, and why a function reachable only from a privileged mode does not serve a less privileged caller. With
+  it, the work on matching closes: design, implementation held to the design's model, and the book. The trust gate is
+  next.
+
 ## archogen — the matching rules become normative, and their implementation is complete
 
 `ARCHOGEN-M3-0469` (leaf `M3.1.2.6`).

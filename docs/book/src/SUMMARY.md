@@ -23,6 +23,7 @@
 # What the engine may claim
 
 - [What a report may claim](evidence.md)
+- [Matching an offer to a requirement](matching.md)
 - [What the scheduling checker establishes](analysis.md)
 - [Where the engine's knowledge comes from: the catalog](catalog.md)
 

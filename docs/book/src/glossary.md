@@ -122,6 +122,8 @@ as `F26`, task-tree leaves — are names, not words, and are not listed.
 
 - **assembly** — code written in the processor's own language, one instruction a line; the port needs a little, and
   the catalog admits it narrowly. See [Where the engine's knowledge comes from: the catalog](catalog.md).
+- **capability vocabulary** — the list of facts a requirement may constrain, each with its kind of value and the
+  direction in which an offered value satisfies a required one. See [Matching an offer to a requirement](matching.md).
 - **catalog** — the reviewed building blocks a generated system is assembled from, each pinned by a hash of its
   content. See [Where the engine's knowledge comes from: the catalog](catalog.md).
 - **check-passing convention** — the one rule, shared by the port and every record whose code makes a check, by
@@ -147,6 +149,8 @@ as `F26`, task-tree leaves — are names, not words, and are not listed.
 - **priority** — how urgent a task is; `1` is the most urgent. See [Describing a workload](workload.md).
 - **profile** — the set of features and limits a description is checked against, such as `rt-static-up-v1`. See [The
   supported profile](profile.md).
+- **provider** — a block or a platform of a description, whose offers a requirement may be met by. See [Matching an
+  offer to a requirement](matching.md).
 - **release** — the moment a task's next round of work becomes due. See [Describing a workload](workload.md).
 - **runtime** — the code inside every generated system that decides which task runs next and what to do when
   something goes wrong. See [The runtime](runtime.md).
