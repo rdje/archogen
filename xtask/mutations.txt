@@ -2643,3 +2643,14 @@ from
 to
                         None => {}
 end
+
+mutation trust-gate-a-changed-root-form-reads-unchanged
+file xtask/src/trust_gate.rs
+test -p xtask trust_gate::tests
+expect killed
+why M3.6.3.7, the record's opening: a root form changed against the base commit's roots file is in the change part — a root that drops a role package to escape `trust-shared-program` must be seen.
+from
+                    Some(then) if then != now => {
+to
+                    Some(then) if false => {
+end

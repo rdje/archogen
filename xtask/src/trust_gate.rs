@@ -464,6 +464,64 @@ pub struct Base<'a> {
     pub commit: Option<&'a str>,
     /// Its `trust/baseline.eadl`, read, and the file's sha256.
     pub baseline: Option<(&'a Baseline, String)>,
+    /// Its `trust/roots.eadl`'s forms, as [`root_forms`] keys and writes them; none when it holds no roots file.
+    pub root_forms: Option<BTreeMap<String, String>>,
+}
+
+/// A form written from its parts alone — no span, no comment, one space between items — so two forms compare by what
+/// they say, and a comment edit in the roots file is no change (`M3.6.3.7`).
+fn render(form: &Form) -> String {
+    match form {
+        Form::List { items, .. } => format!(
+            "({})",
+            items.iter().map(render).collect::<Vec<_>>().join(" ")
+        ),
+        Form::Symbol { name, .. } => name.clone(),
+        Form::Str { value, .. } => quoted(value),
+        Form::Integer { value, .. } => value.to_string(),
+        Form::Decimal { value, scale, .. } => format!("{value}e-{scale}"),
+    }
+}
+
+/// Every form of a roots file, keyed by what names it — its head and name, or, for an admission, which has none, its
+/// file, rule and sha256, numbered when one text is admitted more than once — each written by [`render`].
+///
+/// # Errors
+///
+/// A roots file the reader cannot read.
+pub fn root_forms(text: &str) -> Result<BTreeMap<String, String>, String> {
+    let mut sources = SourceMap::new();
+    let id = sources
+        .add(crate::trust::ROOTS, text)
+        .map_err(|e| format!("{}: {e:?}", crate::trust::ROOTS))?;
+    let (doc, diags) = read(&sources, id);
+    if diags.has_errors() {
+        return Err(diags.render(&sources));
+    }
+    let mut out = BTreeMap::new();
+    for form in &doc.forms {
+        let head = form.head().unwrap_or("?");
+        let mut key = if head == "defadmit" {
+            format!(
+                "defadmit {} {} {}",
+                clause_values(form, "file").join(" "),
+                clause_values(form, "rule").join(" "),
+                clause_values(form, "sha256").join(" ")
+            )
+        } else {
+            format!(
+                "{head} {}",
+                form.items().get(1).and_then(text_of).unwrap_or_default()
+            )
+        };
+        let mut n = 1;
+        while out.contains_key(&key) {
+            n += 1;
+            key = format!("{} #{n}", key.split(" #").next().unwrap_or(&key));
+        }
+        out.insert(key, render(form));
+    }
+    Ok(out)
 }
 
 /// What the gate concluded: the refusals that fail it, and the two parts of its report.
@@ -499,6 +557,7 @@ fn differing(was: &BTreeMap<String, String>, now: &BTreeMap<String, String>) -> 
 pub fn judge(
     inventory: &Json,
     roots: &crate::trust::Roots,
+    own_forms: &BTreeMap<String, String>,
     own: Option<&Baseline>,
     base: &Base,
 ) -> Result<Judgement, String> {
@@ -587,7 +646,7 @@ pub fn judge(
         }
     }
 
-    let change = match (base.commit, &base.baseline) {
+    let mut change = match (base.commit, &base.baseline) {
         (None, _) => vec!["not compared — the commit has no parent to compare against".to_owned()],
         (Some(commit), None) => vec![format!(
             "not compared — the base commit `{commit}` holds no {BASELINE}"
@@ -622,6 +681,31 @@ pub fn judge(
             lines
         }
     };
+    // The record's opening: the change also holds a root form added, changed or removed against the base commit's,
+    // and every program target not classified or whose role packages grew — read from text and the build, so on any
+    // host (`M3.6.3.7`).
+    let mut forms_moved = Vec::new();
+    if let Some(was) = &base.root_forms {
+        for (key, now) in own_forms {
+            match was.get(key) {
+                None => forms_moved.push(format!("root form added: `{key}`")),
+                Some(then) if then != now => {
+                    forms_moved.push(format!("root form changed: `{key}`"))
+                }
+                Some(_) => {}
+            }
+        }
+        for key in was.keys().filter(|k| !own_forms.contains_key(*k)) {
+            forms_moved.push(format!("root form removed: `{key}`"));
+        }
+    }
+    forms_moved.extend(unclassified);
+    if !forms_moved.is_empty() {
+        if change == ["unchanged"] {
+            change.clear();
+        }
+        change.extend(forms_moved);
+    }
 
     // Nothing is accepted before `M3.6.5` reads acceptance, so every entry is unreviewed (§5).
     let mut standing = Vec::new();
@@ -649,7 +733,6 @@ pub fn judge(
             standing.push(format!("admission `{}`: {} {}", a.file, a.rule, a.sha256));
         }
     }
-    standing.extend(unclassified);
     Ok(Judgement {
         refused,
         change,
@@ -801,9 +884,16 @@ pub fn gate(
         Some(b) => read_at(b)?,
         None => None,
     };
+    let base_root_forms = match &base {
+        Some(b) => blob_at(&git, b, crate::trust::ROOTS)?
+            .map(|bytes| root_forms(&String::from_utf8_lossy(&bytes)))
+            .transpose()?,
+        None => None,
+    };
     let base_view = Base {
         commit: base.as_deref(),
         baseline: base_baseline.as_ref().map(|(b, sha)| (b, sha.clone())),
+        root_forms: base_root_forms,
     };
     fs::create_dir_all(out).map_err(|e| format!("{}: {e}", out.display()))?;
     let (judgement, text) = match crate::trust::inventory_with(repo, &commit, out, config_root)? {
@@ -825,7 +915,8 @@ pub fn gate(
                 .ok_or_else(|| format!("the commit holds no {}", crate::trust::ROOTS))?;
             let roots = crate::trust::read_roots(&String::from_utf8_lossy(&roots_text))?;
             let own_forms = own.as_ref().map(|(b, _)| b);
-            let j = judge(&inv, &roots, own_forms, &base_view)?;
+            let forms = root_forms(&String::from_utf8_lossy(&roots_text))?;
+            let j = judge(&inv, &roots, &forms, own_forms, &base_view)?;
             fs::write(out.join(PROPOSAL), propose(&inv, own_forms)?)
                 .map_err(|e| format!("{}: {e}", out.join(PROPOSAL).display()))?;
             let text = report(
@@ -897,7 +988,7 @@ pub fn run_gate(repo: &Path, args: &[&str]) -> i32 {
 
 #[cfg(test)]
 mod tests {
-    use super::{gate, items, judge, propose, read_baseline, Base, ItemId, UNSTATED};
+    use super::{gate, items, judge, propose, read_baseline, root_forms, Base, ItemId, UNSTATED};
     use crate::json::{self, Json};
     use crate::trust::read_roots;
     use archogen_evidence::sha256::Digest;
@@ -1014,6 +1105,11 @@ mod tests {
         .expect("an inventory")
     }
 
+    /// `ROOTS_TEXT`'s forms, keyed and written as the gate compares them.
+    fn forms() -> std::collections::BTreeMap<String, String> {
+        root_forms(ROOTS_TEXT).expect("forms")
+    }
+
     fn baseline_of(j: &Json) -> super::Baseline {
         read_baseline(&propose(j, None).expect("a proposal")).expect("it reads")
     }
@@ -1042,8 +1138,9 @@ mod tests {
         let base = Base {
             commit: Some("b"),
             baseline: Some((&own, "s".to_owned())),
+            root_forms: None,
         };
-        let j = judge(&now, &roots, Some(&own), &base).expect("judged");
+        let j = judge(&now, &roots, &forms(), Some(&own), &base).expect("judged");
         for want in [
             "trust-form-missing: `gen+chk package crates/lib` is shared",
             "trust-form-missing: the bin `x` of `crates/x` has no form",
@@ -1058,7 +1155,8 @@ mod tests {
             j.change,
             [
                 "trust-new-shared: `gen+chk package crates/lib`",
-                "no longer shared: `gen+chk file docs/data.txt`"
+                "no longer shared: `gen+chk file docs/data.txt`",
+                "trust-unclassified-program: the bin `x` of `crates/x` is neither a root nor classified in trust/roots.eadl"
             ]
         );
     }
@@ -1077,28 +1175,30 @@ mod tests {
         let base = Base {
             commit: Some("b"),
             baseline: Some((&elsewhere, "s".to_owned())),
+            root_forms: None,
         };
         for own in [Some(&elsewhere), None] {
-            let j = judge(&now, &roots, own, &base).expect("judged");
+            let j = judge(&now, &roots, &forms(), own, &base).expect("judged");
             assert!(j.refused.is_empty(), "{:#?}", j.refused);
-            assert_eq!(j.change.len(), 1);
+            assert_eq!(j.change.len(), 2, "{:?}", j.change);
             assert!(j.change[0].starts_with(
                 "not compared — the base commit's baseline names the host `other-host`"
             ));
+            assert_eq!(j.change[1], "trust-unclassified-program: the bin `x` of `crates/x` is neither a root nor classified in trust/roots.eadl", "a program target is read from the build, on any host");
             assert!(has(
                 &j.standing,
                 "shared item `gen+chk package crates/lib`: no form"
             ));
-            assert!(has(&j.standing, "trust-unclassified-program: the bin `x`"));
         }
         let none = Base {
             commit: Some("b"),
             baseline: None,
+            root_forms: None,
         };
-        let j = judge(&now, &roots, None, &none).expect("judged");
+        let j = judge(&now, &roots, &forms(), None, &none).expect("judged");
         assert_eq!(
             j.change,
-            ["not compared — the base commit `b` holds no trust/baseline.eadl"]
+            ["not compared — the base commit `b` holds no trust/baseline.eadl", "trust-unclassified-program: the bin `x` of `crates/x` is neither a root nor classified in trust/roots.eadl"]
         );
     }
 
@@ -1109,9 +1209,10 @@ mod tests {
         let base = Base {
             commit: Some("b"),
             baseline: Some((&before, "s".to_owned())),
+            root_forms: None,
         };
         let same = inv("h", &[CONFIG, LIB], &[], (&[], &[]));
-        let j = judge(&same, &roots, Some(&before), &base).expect("judged");
+        let j = judge(&same, &roots, &forms(), Some(&before), &base).expect("judged");
         assert_eq!(j.change, ["unchanged"]);
         assert!(j.refused.is_empty(), "{:#?}", j.refused);
         let edited = LIB
@@ -1119,7 +1220,7 @@ mod tests {
             .replace("normal\"]", "normal\",\"chk crates/b normal\"]");
         let moved = inv("h", &[CONFIG, &edited], &[], (&[], &[]));
         // With the commit's own form re-proposed, the change is reported against the base's and passes.
-        let j = judge(&moved, &roots, Some(&baseline_of(&moved)), &base).expect("judged");
+        let j = judge(&moved, &roots, &forms(), Some(&baseline_of(&moved)), &base).expect("judged");
         assert_eq!(
             j.change,
             ["trust-shared-changed: `gen+chk package crates/lib` — content, edges"]
@@ -1130,7 +1231,7 @@ mod tests {
             j.refused
         );
         // With the old form kept, the commit's own baseline no longer covers the item as it is (case 5, R7 4).
-        let j = judge(&moved, &roots, Some(&before), &base).expect("judged");
+        let j = judge(&moved, &roots, &forms(), Some(&before), &base).expect("judged");
         assert_eq!(
             j.refused,
             ["trust-form-missing: `gen+chk package crates/lib`'s form in trust/baseline.eadl proposes other digests than this commit measures — content, edges — commit the tool's proposal, `cargo xtask trust-baseline --propose`"]
@@ -1138,26 +1239,85 @@ mod tests {
     }
 
     #[test]
-    fn a_classification_that_grew_is_reported_in_the_standing_list_and_not_refused() {
+    fn a_root_form_added_changed_or_removed_is_in_the_change_part_and_a_comment_is_not() {
+        // The record's opening: the change holds a root form added, changed or removed against the base commit's
+        // roots file, on any host (`M3.6.3.7`).
+        let roots = read_roots(ROOTS_TEXT).expect("roots");
+        let now = inv("h", &[CONFIG], &[], (&[], &[]));
+        let own = baseline_of(&now);
+        let edited = ROOTS_TEXT
+            .replace("(role-packages \"crates/a\"))\n(defroot chk", "(role-packages \"crates/a\" \"crates/s\"))\n(defroot chk")
+            .replace("(defprogram tool (package \"crates/t\") (target bin t) (reason \"a tool\") (role-packages \"crates/a\"))\n", "")
+            + "(defrole configuration-checker (leaf M3.5))\n";
+        assert_ne!(edited, ROOTS_TEXT, "the fixture edits the roots file");
+        for (host, base_baseline) in [("h", Some((&own, "s".to_owned()))), ("other", None)] {
+            let base = Base {
+                commit: Some("b"),
+                baseline: base_baseline.clone(),
+                root_forms: Some(root_forms(ROOTS_TEXT).expect("forms")),
+            };
+            let j = judge(
+                &now,
+                &roots,
+                &root_forms(&edited).expect("forms"),
+                Some(&own),
+                &base,
+            )
+            .expect("judged");
+            for want in [
+                "root form changed: `defroot gen`",
+                "root form removed: `defprogram tool`",
+                "root form added: `defrole configuration-checker`",
+            ] {
+                assert!(has(&j.change, want), "{host}: {want}: {:?}", j.change);
+            }
+            assert!(!has(&j.change, "unchanged"), "{host}: {:?}", j.change);
+        }
+        // A comment and a line break are no change: forms compare by what they say.
+        let commented = format!(
+            "; a comment\n{}",
+            ROOTS_TEXT.replace(") (target", ")\n  (target")
+        );
+        let base = Base {
+            commit: Some("b"),
+            baseline: Some((&own, "s".to_owned())),
+            root_forms: Some(root_forms(ROOTS_TEXT).expect("forms")),
+        };
+        let j = judge(
+            &now,
+            &roots,
+            &root_forms(&commented).expect("forms"),
+            Some(&own),
+            &base,
+        )
+        .expect("judged");
+        assert_eq!(j.change, ["unchanged"]);
+    }
+
+    #[test]
+    fn a_classification_that_grew_is_reported_in_the_change_part_and_not_refused() {
+        // The record's opening: the change holds a program target whose role packages grew (`M3.6.3.7`).
         let roots = read_roots(ROOTS_TEXT).expect("roots");
         let own = baseline_of(&inv("h", &[CONFIG], &[], (&[], &[])));
         let base = Base {
             commit: Some("b"),
             baseline: Some((&own, "s".to_owned())),
+            root_forms: None,
         };
         let j = judge(
             &inv("h", &[CONFIG], &[GROWN], (&[], &[])),
             &roots,
+            &forms(),
             Some(&own),
             &base,
         )
         .expect("judged");
         assert!(j.refused.is_empty(), "{:#?}", j.refused);
-        assert_eq!(j.change, ["unchanged"], "a standing entry is no change");
-        assert!(has(
-            &j.standing,
-            "trust-unclassified-program: `tool` compiles `crates/b`"
-        ));
+        assert_eq!(
+            j.change,
+            ["trust-unclassified-program: `tool` compiles `crates/b` beside the role packages its classification reviewed"]
+        );
+        assert!(!has(&j.standing, "trust-unclassified-program"));
         for want in [
             "shared item `gen+chk build-configuration`: proposed, classification unstated",
             "root form `gen`: generator, `crates/a`",

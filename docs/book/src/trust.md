@@ -98,7 +98,9 @@ shared item `generator+scheduling-checker build-configuration`: proposed, classi
 …
 ```
 
-The **change** says what this commit shares that its base did not, or shares differently — or *unchanged*. The
+The **change** says what this commit shares that its base did not, or shares differently, which root forms it
+added, changed or removed against its base's — a comment is no change — and which program targets are not classified
+or have outgrown their classification; or *unchanged*. The
 **standing list** names everything still awaiting review. A commit that shares something new must carry the form the
 tool proposes for it, so the sharing is reported once, by the commit that makes it, and the next unrelated commit
 reads *unchanged*.

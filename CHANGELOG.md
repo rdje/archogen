@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust report shows every change its design lists
+
+`ARCHOGEN-M3-0493` (leaf `M3.6.3.7`).
+
+- The trust check's report of what a change does now also says when the list of checked programs is edited — a
+  program added, removed or redefined — and when a program is unaccounted for, as its design always said. Before, a
+  change that edited that list showed nothing, which a design review found.
+
 ## archogen — the book explains the trust gate
 
 `ARCHOGEN-M3-0491` (leaf `M3.6.4`).

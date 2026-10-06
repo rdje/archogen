@@ -336,8 +336,10 @@ leaves' (R2 B1, B10, B17; R3 C3).
 **Clarified `2026-10-06`, by the gate's leaf (`M3.6.3.3`).** A root form or classification naming a package the commit
 no longer has, or a root naming a target its package no longer has, is `trust-baseline-stale` wherever the gate runs,
 not on the baseline's host alone: no inventory can be built without what the form names, so off that host there would
-be nothing else to report. A `trust-unclassified-program` is reported in the standing list, beside what it reports on,
-so a classification whose role packages grew does not make every later commit's change part non-empty (case 5). And,
+be nothing else to report. *Corrected the same day, by `M3.6.3.7`:* this paragraph first said a `trust-unclassified-program` was reported in the
+standing list, against the opening, which puts it in the change part; the change part holds, as the opening says,
+every root form added, changed or removed against the base commit's `trust/roots.eadl` — compared by what each form
+says, so a comment is no change — and every program target not classified or whose role packages grew, on any host. And,
 by F30's second case (`M3.6.3.6`): a form proposes its item's digests, so on the baseline's host a commit whose own form
 for a shared item proposes other digests than the commit measures holds no form for the item as it is, and is
 `trust-form-missing` until the tool's proposal is committed; otherwise a change to a shared item, merged once, would be
