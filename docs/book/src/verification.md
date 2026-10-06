@@ -258,8 +258,10 @@ Nothing on this machine can watch that workflow run, so `scripts/ci_rehearse.sh`
 the repository as the runner receives it: one commit, checked out as [`actions/checkout`](ledger.md#github-actions) checks it out, nothing
 untracked or built, no submodule, no global git configuration. Its first rehearsal, `2026-09-30`, passed:
 every step green but the quarantined emulator, the gap annotated, the summary written. What it cannot
-reproduce is the runner's own userland, GNU `sed` and `awk` where this machine has BSD ones. Leaf
-`PROGRAM.10.5` reads the first real run for that, after the next push.
+reproduce is the runner's own userland, GNU `sed` and `awk` where this machine has BSD ones, and its object format,
+ELF where this machine's is Mach-O. The first real run, `2026-10-06`, found no fault in the userland and two in
+`xtask`'s tests: one test relied on the developer's git identity, and one test's assembly only Mach-O accepted. Both
+fixed, the second run passed every job (leaf `PROGRAM.10.5`).
 
 Every workflow runs on `push`, which a pull request's branch here triggers, so every workflow runs code a pull
 request controls. `WORKFLOW-TOKENS` (`scripts/check_workflow_tokens.sh`, leaf `M2.7.6.1`) holds each to a read-only

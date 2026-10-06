@@ -35,8 +35,8 @@ a change that leaves it stale, so it is never edited by hand.
   line](cli.md), [The engine API](engine-api.md), [Verifying the toolchain](verification.md), [What is versioned, and
   what changing it costs](versions.md)
 - **assembly** — [definition](glossary.md), [Modules and composition](modules.md), [Where the engine's knowledge comes
-  from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [What this project relies on from
-  outside](ledger.md)
+  from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [Verifying the
+  toolchain](verification.md), [What this project relies on from outside](ledger.md)
 - **AUTOSAR** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [What this project relies
   on from outside](ledger.md)
 - autosar-os — [What this project relies on from outside](ledger.md#autosar-os)
@@ -120,6 +120,7 @@ a change that leaves it stale, so it is never edited by hand.
 - **EIP** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - Elaboration produces instances, not modules — [Modules and
   composition](modules.md#elaboration-produces-instances-not-modules)
+- **ELF** — [definition](glossary.md), [Verifying the toolchain](verification.md)
 - engine — [What is versioned, and what changing it costs](versions.md#engine)
 - engine-api — [What is versioned, and what changing it costs](versions.md#engine-api)
 - Every crate is in this book — [Annex B: The checks that keep the repository
@@ -138,8 +139,9 @@ a change that leaves it stale, so it is never edited by hand.
 - F29: the fixture built so an omission cannot hide — [What the scheduling checker
   establishes](analysis.md#f29-the-fixture-built-so-an-omission-cannot-hide)
 - **fault** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Where the engine's knowledge
-  comes from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [What this project relies on
-  from outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
+  comes from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [Verifying the
+  toolchain](verification.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
+  detail](annex-runtime.md)
 - Faults in detail — [Annex A: The runtime's rules in detail](annex-runtime.md#faults-in-detail)
 - Finished work leaves the task trees — [Annex B: The checks that keep the repository
   honest](annex-repository.md#finished-work-leaves-the-task-trees)

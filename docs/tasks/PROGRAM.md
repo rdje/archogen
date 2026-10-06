@@ -134,8 +134,8 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.23.md`](../task-history/PROGRAM/PROGRAM.23.md); commit `ARCHOGEN-PROGRAM-0149`
 
 - ID: `PROGRAM.10`
-  Status: `in-progress` — `.10.1`–`.10.4` done; `.10.5` read the first real run, `2026-10-06`, and its two defects
-  are fixed; the run after their push closes it
+  Status: `done` — closed `2026-10-06`: the `integration` job green on the runner, `7ac8b8b`, after `.10.5` fixed what
+  the first run found
   Goal: run the **integration** tier in CI — provision `mdbook` and `qemu-system-riscv64` on the
   runner — and decide the blocking policy for an `incomplete` verdict.
   Acceptance: CI runs `cargo xtask verify --tier integration`; the repository has a recorded,
@@ -169,8 +169,8 @@ mdBook that is the director's window into the project.
   `target-verification`, bounded to that one step. This leaf's deliverable is therefore not only the
   CI provisioning and the blocking policy — it is also making the step report the verdict §14.3's own
   vocabulary already has a word for.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: `2026-10-06` — `.10.5`'s second run: `rust` and `doctrines` both `success` on `7ac8b8b`
+  Commit: `ARCHOGEN-PROGRAM-0481 (leaf PROGRAM.10.5)`, with `.10.5`
   Children: `PROGRAM.10.1` … `PROGRAM.10.5` — decomposed `2026-09-30`, in the order the warning above requires: the
   verdict made the right shape first, the policy decided second, the workflow wired last — and a fifth leaf for the
   one leg no machine here can supply, because this repository's CI has not run since `origin/main`'s `32e6b14`.
@@ -400,8 +400,7 @@ mdBook that is the director's window into the project.
     `DOCTRINE_ENFORCEMENT.md`, `TOOLBOX.md`. ⚠️ Not verified: a run on the runner itself — `.10.5`.
 
 - ID: `PROGRAM.10.5`
-  Status: `in-progress` — the first run read `2026-10-06`; its two defects are `.5.1` and `.5.2`, and the leaf closes
-  on the run after their push
+  Status: `done` — closed `2026-10-06`: the second run, after `.5.1` and `.5.2`, green on every job
   Goal: read the first real run of the `integration` job, and fix what the runner's userland finds.
   The first run, `2026-10-06`: the push of `32e6b14..a3c0cbd`, `gh run view 37427933725` (`rust`) and `37427933648`
   (`doctrines`). `enforce` passed; `focused` and `integration` failed at one step each, the same one:
@@ -422,8 +421,21 @@ mdBook that is the director's window into the project.
   resolve. ⚠️ It cannot happen before the next push, which the ruled
   cadence (`decision_push-cadence.md`; `bash scripts/push_cadence.sh` for the distance) decides; until then the job's evidence is a rehearsal
   on macOS, not a run on the runner's GNU userland, and the parent says so rather than closing on it.
-  Verification: `pending`
-  Commit: `pending`
+  The second run, `2026-10-06`: the push of `a3c0cbd..7ac8b8b`, `.5.1`'s and `.5.2`'s fixes, `gh run view
+  37431167419` (`rust`) and `37431167424` (`doctrines`):
+  ```text
+  doctrines 7ac8b8b success: enforce=success
+  rust 7ac8b8b success: integration=success, focused=success
+  $ gh api --allow-escape-sequences repos/{owner}/{repo}/actions/jobs/112162118736/logs
+    ✅ tests               51.14s  every contract test passes, F28 and the semantic corpus included
+  tier integration: passed — 12 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined
+  ```
+  The runner's GNU userland met every script of the spine and found nothing: `enforce` ran the doctrine gate, and the
+  `integration` job's `self-tests` step every gate's arms, on GNU `sed`, `awk` and `find`, both runs. What the first
+  run found was in two tests, and a third defect behind them, in the rehearsal that should have found one of them, is
+  `PROGRAM.64`.
+  Verification: `2026-10-06` — both runs read from their logs; the Verification Log's row
+  Commit: `ARCHOGEN-PROGRAM-0481 (leaf PROGRAM.10.5)`
 
 - ID: `PROGRAM.10.5.1`
   Status: `done` — closed `2026-10-06`; the runner's verdict is `.5`'s
@@ -1044,10 +1056,9 @@ roadmap item X live?".
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
 | 1 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
-| 2 | `PROGRAM.10` | `in-progress` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` read the first real run, `2026-10-06`: two `xtask` test defects, fixed by `.5.1` and `.5.2`; the run after their push closes it |
 
-Both rows wait on something outside this repository's commits: `PROGRAM.34` on the director's yes, `PROGRAM.10` on
-a green CI run. The pending leaves beside them — `PROGRAM.53`, `.54`, `.60` — are filed and owned. Every closed
+The row waits on something outside this repository's commits, the director's yes. The pending leaves beside it —
+`PROGRAM.53`, `.54`, `.60` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and its full record is sealed under `docs/task-history/PROGRAM/`.
 
 ## Decisions
@@ -1096,8 +1107,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
   `PROGRAM.10.1`**: the emulator step is quarantined under `M2.8`, so `make integration` reads `incomplete`,
   which step 2 permits a push past after reading what it names. `M2.8.3.4` removed the cause the same day: the
   step passes, and so does the tier (`make integration` → `12 passed, 0 quarantined` on `2026-10-06`).
-- `PROGRAM.10.5` waits on a green CI run after its fixes' push; `PROGRAM.31` and `PROGRAM.32` wait
-  on the director's ruling on the findings record's §8.
+- `PROGRAM.31` and `PROGRAM.32` wait on the director's ruling on the findings record's §8.
 
 ## Verification Log
 
@@ -1187,6 +1197,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `2026-10-06` | `PROGRAM.63` | the ledger's self-test before and after; a trial seal of `M3.1`; the routes and their self-test; the decision index; the focused tier | 12 / 2 then 14 / 0; OK; OK, 20 / 0; OK; passed |
 | `2026-10-06` | `PROGRAM.10.5.1` | the catalog tests with no identity outside the scratch repository, before and after; the same in the ordinary environment; the new entry alone; the whole suite with no identity; the focused tier | 2 passed, 6 failed, then 9 passed; 9 passed; killed by the new test; 1274 passed, 0 failed; passed |
 | `2026-10-06` | `PROGRAM.10.5.2` | the test's two sources on an ELF target, before and after, and on the host; the blob in what they build; the test; the whole suite; the focused tier | `Size expression must be absolute.`, then `rc=0` on both formats; 1 in each `.rlib`; ok; 1274 passed, 0 failed; passed |
+| `2026-10-06` | `PROGRAM.10.5` | the first and second CI runs, each job's log fetched by the API; the two assumptions | `focused` and `integration` failed at `tests`, 7 of 106, `enforce` passed; then every job `success`, `tier integration: passed — 12 passed`; both held |
 
 ## Commit Log
 
@@ -1317,6 +1328,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.10.5.1` | `ARCHOGEN-PROGRAM-0478 (leaf PROGRAM.10.5.1)` | **the catalog gate reads its pending date where §4 says**: `git var` in the hook's own environment, not the history readers' allowlist; the scratch repositories carry their own identity, which the first CI run found missing |
 | `PROGRAM.10.5.2` | `ARCHOGEN-PROGRAM-0479 (leaf PROGRAM.10.5.2)` | **the `.incbin` fixture assembles on ELF**: `.previous`, not `.text`, so a naked function's `.size` is measured in its own section |
 | `PROGRAM.10.5.1` | `ARCHOGEN-PROGRAM-0480 (leaf PROGRAM.10.5.1)` | **a reproduction's description corrected**: the leaf said the identity-less runs used the machine's `CARGO_HOME` and `RUSTUP_HOME`; bash had expanded them inside the empty home, where rustup installed the same pin |
+| `PROGRAM.10.5` | `ARCHOGEN-PROGRAM-0481 (leaf PROGRAM.10.5)` | **CI green on the runner**: the first run's two test defects fixed, the second run `success` on every job; `PROGRAM.10` closed with it |
 
 ## Changelog
 

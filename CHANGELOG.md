@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the checks pass on GitHub's machines
+
+`ARCHOGEN-PROGRAM-0481` (leaf `PROGRAM.10.5`).
+
+- The project's checks ran on GitHub's machines for the first time since September and failed on two faults in
+  tests, both now fixed; the second run passed everything, the full integration checks included. The emulator, the
+  book and every documentation gate behave there as they do here, so the CI work begun in September is closed.
+
 ## archogen — a test's assembly builds on Linux too
 
 `ARCHOGEN-PROGRAM-0479` (leaf `PROGRAM.10.5.2`).

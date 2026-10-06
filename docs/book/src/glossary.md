@@ -44,6 +44,8 @@ as `F26`, task-tree leaves — are names, not words, and are not listed.
   toolchain](verification.md).
 - **EIP** — External Interrupt Pending: the [PLIC specification](ledger.md#riscv-plic)'s name for the pending bit it
   raises at a hart.
+- **ELF** — Executable and Linkable Format: the object-file format Linux and bare-metal toolchains use, where each
+  function may sit in a section of its own; macOS uses Mach-O instead. See [Verifying the toolchain](verification.md).
 - **GB**, **KB**, **MB** — gigabyte, kilobyte, megabyte, in this book's prose; the language's own units are the
   binary `KiB` and `MiB`. See [Quantities and units](quantities.md).
 - **GNU** — the GNU project ("GNU's Not Unix"): here, the flavour of the standard command-line tools a Linux runner
