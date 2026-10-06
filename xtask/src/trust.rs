@@ -3193,14 +3193,16 @@ mod tests {
     #[test]
     fn an_incbin_under_asm_and_under_naked_asm_is_refused() {
         // R8 remark 21: the channel itself, not `nop` or `ret`.
+        // `.previous`, not `.text`: on ELF a function has a section of its own, and a naked one's `.size` must
+        // be measured in it (`PROGRAM.10.5.2`).
         for (name, src) in [
             (
                 "r8-21-asm",
-                "pub fn f() { unsafe { core::arch::asm!(\".data\\n.incbin \\\"crates/b/blob.bin\\\"\\n.text\") } }\n",
+                "pub fn f() { unsafe { core::arch::asm!(\".data\\n.incbin \\\"crates/b/blob.bin\\\"\\n.previous\") } }\n",
             ),
             (
                 "r8-21-naked-asm",
-                "#[unsafe(naked)]\npub extern \"C\" fn f() { core::arch::naked_asm!(\".data\\n.incbin \\\"crates/b/blob.bin\\\"\\n.text\\nret\") }\n",
+                "#[unsafe(naked)]\npub extern \"C\" fn f() { core::arch::naked_asm!(\".data\\n.incbin \\\"crates/b/blob.bin\\\"\\n.previous\\nret\") }\n",
             ),
         ] {
             let f = two_roots(

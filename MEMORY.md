@@ -16,14 +16,11 @@
 - **Active tree:** `M3` → frontier `M3.6`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `PROGRAM.10.5` — the first CI run (`2026-10-06`) failed on two `xtask` test defects: `.5.1`
-  closed, `.5.2` (an `.incbin` fixture that ELF cannot assemble) next; then push and read the run until green (the
-  director's instruction). After it, `M3.6.3.3`, `cargo xtask trust-gate` and its two-part report (F30); `.2.1`, the
-  runner's baseline, waits on the CI job `.4` adds. `M3.6.1` closed `2026-10-05`; `M3.6.3`, the trust gate and F30,
-  is next in `M3.6`.
-  `M2`'s open leaves all wait on the director: `M2.7.4.5`, the records and the
-  lock (findings §11), and `M2.7.6`'s review and hosting half.
-  `M2.15` closed `2026-10-03` (the fault paths' observation events, seven reviews); `M2.12` closed `2026-10-02`. This project uses no branches.
+- **Next action:** `PROGRAM.10.5` — the first CI run (`2026-10-06`) failed on `xtask` test defects, each
+  fixed (`.5.1`, `.5.2`): push, read the run until it is green (the director's instruction), then close `.5`.
+  After it, `M3.6.3.3`, `cargo xtask trust-gate` and its two-part report (F30); `.2.1`, the runner's baseline,
+  waits on the CI job `.4` adds. `M2`'s open leaves all wait on the director: `M2.7.4.5`, the records and the
+  lock (findings §11), and `M2.7.6`'s review and hosting half. This project uses no branches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4` and `M2.7.6.4` — findings §11, `main`'s protection and a reviewer;
   `TEMPLATE-REFS` — postponed. **The 17 template files archogen has not changed are never edited** (findings §10,

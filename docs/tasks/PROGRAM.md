@@ -134,7 +134,8 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.23.md`](../task-history/PROGRAM/PROGRAM.23.md); commit `ARCHOGEN-PROGRAM-0149`
 
 - ID: `PROGRAM.10`
-  Status: `blocked` — `.10.1`–`.10.4` done; `.10.5`, reading the first real run, waits on the next push
+  Status: `in-progress` — `.10.1`–`.10.4` done; `.10.5` read the first real run, `2026-10-06`, and its two defects
+  are fixed; the run after their push closes it
   Goal: run the **integration** tier in CI — provision `mdbook` and `qemu-system-riscv64` on the
   runner — and decide the blocking policy for an `incomplete` verdict.
   Acceptance: CI runs `cargo xtask verify --tier integration`; the repository has a recorded,
@@ -483,7 +484,7 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0478 (leaf PROGRAM.10.5.1)`
 
 - ID: `PROGRAM.10.5.2`
-  Status: `in-progress`
+  Status: `done` — closed `2026-10-06`; the runner's verdict is `.5`'s
   Goal: the `.incbin` fixture of `trust`'s test `an_incbin_under_asm_and_under_naked_asm_is_refused` assembles on an
   ELF host as it does on Mach-O.
   Acceptance: both of the test's packages build for an ELF target; the blob's bytes are in what they build.
@@ -495,13 +496,34 @@ mdBook that is the director's window into the project.
     called `Result::unwrap()` on an `Err` value: "`cargo build --lib --release --locked --offline
     --no-default-features --message-format=json -v -p b` failed: error: could not compile `b` (lib)"
     ```
-  - [ ] **ROOT CAUSE (WHY + WHERE)** — pending
-  - [ ] **FIX** — pending
-  - [ ] **ADDRESSED (verified)** — pending
-  - [ ] **NO REGRESSION** — pending
-  - [ ] **LOCKSTEP** — pending
-  Verification: `pending`
-  Commit: `pending`
+    Reproduced here on the one ELF target installed, `riscv64imac-unknown-none-elf`, with the test's two sources in
+    a `#![no_std]` package under `target/m3121/elf-repro/` (no `x86_64-unknown-linux-gnu` standard library is
+    installed): the `naked_asm!` package → `rustc-LLVM ERROR: Size expression must be absolute.` and `could not
+    compile`; the `asm!` package builds; both build for the host, `aarch64-apple-darwin`, a Mach-O target.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: the fixture's assembly, `xtask/src/trust.rs`, ended `.data`, `.incbin`,
+    then `.text`, naming the section to return to. WHY ELF refuses it: there a function is emitted in a section of its
+    own, `.text.<symbol>`, and a naked function's assembly is followed by `.size f, . - f`. After `.text` the location
+    counter is in another section, so the size is a difference across sections, which the assembler cannot make
+    absolute. Mach-O keeps every function in `__TEXT,__text` and writes no `.size`, so the same text assembled here
+    and every earlier run was on Mach-O. `.previous` returns to whatever section was current, on both formats.
+    ```text
+    $ git grep -n -e 'incbin \\\"crates/b/blob.bin\\\"\\n.text' HEAD -- xtask/src/trust.rs
+    HEAD:xtask/src/trust.rs:3199:   … core::arch::asm!(\".data\\n.incbin \\\"crates/b/blob.bin\\\"\\n.text\") …
+    HEAD:xtask/src/trust.rs:3203:   … core::arch::naked_asm!(\".data\\n.incbin \\\"crates/b/blob.bin\\\"\\n.text\\nret\") …
+    ```
+  - [x] **FIX** — both packages end their `.incbin` with `.previous`, and a comment says why. No other fixture
+    returns from a section switch: `git grep -n '\\\\n\.text' -- xtask crates` finds these two lines alone; the
+    `global_asm!` fixtures leave `.data` current at the end of their module, which no `.size` measures.
+  - [x] **ADDRESSED (verified)** — the two sources with `.previous` in the ELF reproduction: `asm
+    riscv64imac-unknown-none-elf rc=0`, `naked riscv64imac-unknown-none-elf rc=0`, and for the host `rc=0` twice;
+    the blob's bytes in each `.rlib` built (`grep -a -o SECRET-BYTES` → 1 in each). `cargo test -p xtask
+    an_incbin_under_asm_and_under_naked_asm_is_refused` → `test result: ok. 1 passed`. ⚠️ Not verified here: an
+    x86-64 ELF build, which is the runner's — `.5` reads it after the push.
+  - [x] **NO REGRESSION** — `cargo test --all -q` with no identity outside the scratch repositories → 97 suites, 1274
+    passed, 0 failed; `make focused` → `tier focused: passed — 3 passed, 0 failed`; the doctrine gate at commit.
+  - [x] **LOCKSTEP** — a test fixture alone, so no chapter or record moves; this leaf and both logs; `CHANGELOG.md`.
+  Verification: `2026-10-06` — the Verification Log's row
+  Commit: `ARCHOGEN-PROGRAM-0479 (leaf PROGRAM.10.5.2)`
 
 - ID: `PROGRAM.34`
   Status: `pending`
@@ -1020,10 +1042,10 @@ roadmap item X live?".
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
 | 1 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
-| 2 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
+| 2 | `PROGRAM.10` | `in-progress` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` read the first real run, `2026-10-06`: two `xtask` test defects, fixed by `.5.1` and `.5.2`; the run after their push closes it |
 
 Both rows wait on something outside this repository's commits: `PROGRAM.34` on the director's yes, `PROGRAM.10` on
-the next push. The pending leaves beside them — `PROGRAM.53`, `.54`, `.60` — are filed and owned. Every closed
+a green CI run. The pending leaves beside them — `PROGRAM.53`, `.54`, `.60` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and its full record is sealed under `docs/task-history/PROGRAM/`.
 
 ## Decisions
@@ -1072,7 +1094,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
   `PROGRAM.10.1`**: the emulator step is quarantined under `M2.8`, so `make integration` reads `incomplete`,
   which step 2 permits a push past after reading what it names. `M2.8.3.4` removed the cause the same day: the
   step passes, and so does the tier (`make integration` → `12 passed, 0 quarantined` on `2026-10-06`).
-- `PROGRAM.10.5` waits on the next push, which the ruled cadence decides; `PROGRAM.31` and `PROGRAM.32` wait
+- `PROGRAM.10.5` waits on a green CI run after its fixes' push; `PROGRAM.31` and `PROGRAM.32` wait
   on the director's ruling on the findings record's §8.
 
 ## Verification Log
@@ -1162,6 +1184,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `2026-10-06` | `PROGRAM.62` | every closure a removed paragraph narrates looked up in its tree's Commit Log; the folder measured before and after; the stated order; the gate | 31 of 31 with a row; 819 056 → 786 004 bytes; OK; all green |
 | `2026-10-06` | `PROGRAM.63` | the ledger's self-test before and after; a trial seal of `M3.1`; the routes and their self-test; the decision index; the focused tier | 12 / 2 then 14 / 0; OK; OK, 20 / 0; OK; passed |
 | `2026-10-06` | `PROGRAM.10.5.1` | the catalog tests with no identity outside the scratch repository, before and after; the same in the ordinary environment; the new entry alone; the whole suite with no identity; the focused tier | 2 passed, 6 failed, then 9 passed; 9 passed; killed by the new test; 1274 passed, 0 failed; passed |
+| `2026-10-06` | `PROGRAM.10.5.2` | the test's two sources on an ELF target, before and after, and on the host; the blob in what they build; the test; the whole suite; the focused tier | `Size expression must be absolute.`, then `rc=0` on both formats; 1 in each `.rlib`; ok; 1274 passed, 0 failed; passed |
 
 ## Commit Log
 
@@ -1290,6 +1313,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.61` | `ARCHOGEN-PROGRAM-0465 (leaf PROGRAM.61)` | **the mutation catalog runs whole again**: one entry repointed after `API.4.2` moved its line, and `cargo test` now refuses an entry whose text its file no longer holds once |
 | `PROGRAM.63` | `ARCHOGEN-PROGRAM-0472 (leaf PROGRAM.63)` | **a subtree carrying hand-offs can be sealed**: `HANDOFF-LEDGER` reads a sealed leaf's quotes past its stub; `docs/task-history/`' line ceiling raised to the trees' 3 072 by a decision record |
 | `PROGRAM.10.5.1` | `ARCHOGEN-PROGRAM-0478 (leaf PROGRAM.10.5.1)` | **the catalog gate reads its pending date where §4 says**: `git var` in the hook's own environment, not the history readers' allowlist; the scratch repositories carry their own identity, which the first CI run found missing |
+| `PROGRAM.10.5.2` | `ARCHOGEN-PROGRAM-0479 (leaf PROGRAM.10.5.2)` | **the `.incbin` fixture assembles on ELF**: `.previous`, not `.text`, so a naked function's `.size` is measured in its own section |
 
 ## Changelog
 

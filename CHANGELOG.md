@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a test's assembly builds on Linux too
+
+`ARCHOGEN-PROGRAM-0479` (leaf `PROGRAM.10.5.2`).
+
+- The seventh failure of the first run on GitHub's machines: a test that hides a file's bytes inside assembly code, to
+  check that the trust instrument refuses it, wrote that assembly in a way only Apple's object format accepts. It now
+  returns to the code section the way both formats accept, so the test builds and runs on Linux as it does here.
+
 ## archogen — the catalog gate reads a commit's date as its design says
 
 `ARCHOGEN-PROGRAM-0478` (leaf `PROGRAM.10.5.1`).
