@@ -2,7 +2,7 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-06`
-- **Status:** `active` — written `2026-10-06` by leaf `M3.6.6.1`; rounds 1 to 12 answered the same day; under review,
+- **Status:** `active` — written `2026-10-06` by leaf `M3.6.6.1`; rounds 1 to 13 answered the same day; under review,
   by a context that did not write it, until a round finds no defect (`decision_executable-design-reviews.md`)
 - **External sources:** [the pinned Rust toolchain](../../book/src/ledger.md#rust-toolchain) — rustc's dependency
   information, which, with a root's declared run-time data, is what the inventory knows of the files a program reads;
@@ -59,34 +59,41 @@ A committed generated source is declared in `trust/roots.eadl`, by a form this s
 
 A file the eADL reader cannot read — an unclosed list or string, wherever it lies — is the parent's failure, the gate
 unable to judge: only a form that was read can depart from this shape. Every path a form names is a repository path as
-the commit's tree spells it, compared literally: `./scripts/gen.sh`
-names no blob, and two spellings of one file are two entries. A form is **live** when a program reads the file it
-declares. The reader refuses, `trust-undeclared-input`, wherever the gate runs, each a coded refusal and never an
-uncoded failure: every departure from this shape — a clause it does not take, a clause twice, a `generator` clause missing or holding no entry, a `command` or `reason` clause that is missing or holds other than exactly one non-empty string, an
-entry that is not a string — and these constructions, read from the forms' text alone, no build consulted: a path two forms declare, each of them
-refused; an entry
-twice in one clause; a file in both `generator` and `inputs`; a declared file that is its own form's generator or input.
-For a live form it refuses too a generator or input that is not a blob of the commit or is a symbolic link. A form that is not live is held to its shape and those text-only constructions alone and, in a run that refuses
-nothing, is stale (§6), so a deleted file, or a malformed form no program reads, has one code, not two; a declared file that is a symbolic link is refused as every
-symbolic link a program reads is (the parent's §3); a declared file that is its own form's generator or input is refused by the self-reference rule alone, not as a chain
-too; and a live form's input or generator that is not a blob or is a symbolic
-link is refused by the blob rule alone, whatever form declares it. A live form that draws none of the refusals decidable before any generator's build — the shape, the text-only
-constructions, the blob rule and the chain's first clause — is **eligible**, and §5 judges and builds the generator files
-of eligible forms alone. The order is: the forms' text — the shape and the text-only constructions, decided with nothing built; the programs'
-builds, the parent's, with every refusal the parent makes before or in them, which decide what is live; the blob rule
-and the chain's first clause, over live forms; §5's judgments and generator builds, over eligible forms; and §3's
-refusal and the chain's second clause, over what the programs' and the generator builds read. Each step runs only when
-the steps before it refused nothing, and a step that refuses ends the run as a refusal ends the parent's — *"on any
-refusal the tool writes no inventory, only the report naming it"* (the parent's §3) — the report naming every refusal
-that step found: nothing is then live or stale, no admission is stale, and the gate compares nothing. Only a run that
-refuses nothing decides §6's staleness and the parent's stale admissions. A generator build that does not run reads
-nothing, and a generator target that is itself a root is built as that root (§5). The other forms of `trust/roots.eadl` keep the parent's reader, which reads the file in order and stops at the first
-of them that departs, the gate unable to judge; the `defgenerated` forms before that one are read and their shape and text-only refusals — all that can be decided
-with nothing built — reported beside it, and those after it once it is repaired.
+the commit's tree spells it, compared literally: `./scripts/gen.sh` names no blob, and two spellings of one file are two
+entries. A form is **live** when a program reads the file it declares, by its build or as data its form hands it at run
+time (§1). The reader refuses, `trust-undeclared-input`, wherever the gate runs, each a coded refusal and never an
+uncoded failure: every departure from this shape — a name that is not a string, a clause it does not take, a clause
+twice, a `generator` clause missing or holding no entry, a `command` or `reason` clause that is missing or holds other
+than exactly one non-empty string, an entry that is not a string — and these constructions, read from the forms' text
+alone, no build consulted: a path two forms declare, each of them refused; an entry twice in one clause; a file in both
+`generator` and `inputs`; a declared file that is its own form's generator or input, refused by this self-reference rule
+alone, not as a chain too. For a live form it refuses too a generator or input that is not a blob of the commit or is a
+symbolic link, by this blob rule alone, whatever form declares it; a declared file that is a symbolic link is refused as
+every symbolic link a program reads is (the parent's §3).
+
+**The order.** The instrument decides in five steps: (1) the forms' text — the shape and the text-only constructions,
+with nothing built; (2) the programs' builds and the data their forms hand, with every refusal the parent makes before
+or in them, which decide what is live; (3) the blob rule and the chain's first clause, over live forms; (4) §5's
+judgments and generator builds, over live forms; (5) §3's refusal and the chain's second clause, over what the programs
+read and the generator builds read. Each step runs only when those before it refused nothing. A step that refuses ends
+the run as a refusal ends the parent's — *"on any refusal the tool writes no inventory, only the report naming it"* (the
+parent's §3) — the report naming every refusal that step found; a step in which a build fails ends the run with the gate
+unable to judge, the refusals that step found reported beside it. When the five steps refuse nothing, the inventory is
+written, and (6) the gate compares it as the parent's does, deciding `trust-form-missing`, the parent's
+`trust-baseline-stale` and §6's together on the baseline's host and reporting them together. So a form that departs from
+the shape names nothing to a later step, a malformed or a deleted form has one code, and no form is stale in a run the
+instrument refuses. A generator build that does not run reads nothing, and a generator target that is itself a root is
+built as that root (§5).
+
+The other forms of `trust/roots.eadl` keep the parent's reader, which reads the file in order and stops at the first of
+them that departs, the gate unable to judge: the `defgenerated` forms before that one are read and their shape and
+text-only refusals reported beside it, and those after it once it is repaired; a departure the parent's reader finds
+only once the whole file is read — a harness's pair naming no root, or a root twice — has every `defgenerated` form's
+shape and text-only refusals reported beside it.
 
 **Refused until `M3.6.6.4` decides them**, `trust-undeclared-input`, wherever the gate runs:
 - **a chain**: a generator or input of a live form that a `defgenerated` form declares, or that §3 marks; and a file
-  that an eligible form's crate-root generator's build reads (§5) and that a form declares or §3 marks;
+  that a live form's crate-root generator's build reads (§5) and that a form declares or §3 marks;
 - **a generator or input at or under a gitlink**: neither is a blob of the commit, so the blob rule refuses it.
 
 **A tool a script runs** — protoc, bindgen, an interpreter — is no generator file: it is the script's own dependency,
@@ -131,9 +138,9 @@ reach:
 **The recogniser's rules are the rows below and the comment syntax the table above names; no sentence of this section
 states another of them.** Whitespace, in a row, is Unicode's
 `White_Space`, as Rust's `char::is_whitespace` reads it, but in the look-ahead, which skips rustc's
-`Pattern_White_Space`. Each row is removed by a catalogued mutation, expected killed by the corpus or the fixture, and a
-test holds the rows equal to the catalogue's entries for `xtask/src/generated_header.rs`, so no row can be deleted with
-every test green:
+`Pattern_White_Space`. Each row is broken by a catalogued mutation — the whole rule, or the clause that sets it apart, its other clauses held
+by the corpus and the sweep — expected killed by the corpus or the fixture, and a test holds the rows equal to the
+catalogue's entries for `xtask/src/generated_header.rs`:
 
 <!-- machine-read: recogniser-mutations -->
 | Rule | Mutation |
@@ -141,7 +148,7 @@ every test green:
 | a file whose exact name the table holds is read by that name | `gh-names-ignored` |
 | a name is matched exactly, in its case | `gh-name-matched-without-case` |
 | a file the table does not name is read by its extension, what follows the name's last `.` | `gh-extension-after-first-dot` |
-| a `.` that is a name's first character opens no extension, so a dotfile has none | `gh-dotfile-extension` |
+| a `.` that is a name's first character opens no extension: `.env` has none, `.gitlab-ci.yml`'s is `yml` | `gh-dotfile-extension` |
 | that first character is passed by its width, not by one byte | `gh-extension-by-first-byte` |
 | a trailing `.` opens no extension | `gh-empty-extension-kept` |
 | an extension is matched in any case | `gh-extension-case-sensitive` |
@@ -152,7 +159,7 @@ every test green:
 | that `#!` is sought after a byte-order mark | `gh-extensionless-rule-before-bom` |
 | a file's bytes are read as UTF-8, an invalid sequence as U+FFFD | `gh-strict-utf8` |
 | a leading byte-order mark is dropped | `gh-byte-order-mark-kept` |
-| the header ends at the first character that is neither whitespace nor inside a comment | `gh-header-reads-past-code` |
+| the header ends at the first character that is neither whitespace nor inside a comment, but for the XML declaration below | `gh-header-reads-past-code` |
 | between its comments the header skips whitespace | `gh-header-whitespace-ascii` |
 | a header's line comment ends at a line feed or a carriage return | `gh-header-line-ignores-cr` |
 | an unclosed `/*` where `//` is runs to the end of the file | `gh-unclosed-slash-block-dropped` |
@@ -216,7 +223,7 @@ differ, both are reviewed together; a case the corpus does not hold is added to 
 
 A marked file that a program reads and that no `defgenerated` form declares is refused, `trust-undeclared-input`: *"a
 generated source with no declaration"*, wherever the gate runs. A marked file that a live form names as a generator or
-an input, or that an eligible form's crate-root generator's build reads, is §2's chain, refused by that rule alone, one
+an input, or that a live form's crate-root generator's build reads, is §2's chain, refused by that rule alone, one
 message for one input.
 
 A marker belongs in a generated source's first comment, at the very top of the file, so a later undeclared copy of it
@@ -253,13 +260,12 @@ too if a side's provenance holds it. For the harness's own pair, the harness's p
 comparison-harness item, as its files are. A third program reaching the same provenance makes new items in its own
 pairs and moves none of the others'.
 
-**A generator file must lie outside the reading program's other roles.** Each generator file of each eligible form
+**A generator file must lie outside the reading program's other roles.** Each generator file of each live form
 (§2) is judged; for the harness, "other roles" means roles other than its pair's two:
 
 - the crate root of a program target, whatever its extension, is judged by that target's role packages, as the parent
   computes them for every program target (§2: `cargo metadata`'s graph by normal edges, and an example's development
-  edges too), the union of them when one file is the crate root of two targets — holding one of another role, it is
-  refused, `trust-shared-program`. The target is also built, as the parent builds and checks a root (§3): the parent's
+  edges too), the union of them when one file is the crate root of two targets — holding one of another role, it is refused, `trust-shared-program`, and not built; otherwise the target is built, as the parent builds and checks a root (§3): the parent's
   manifest and workspace rules over its closure by the same edges, before its own build; `cargo build --release
   --locked --offline --no-default-features -p <package>` with `--bin <name>`, `--example <name>` or, for a `cdylib`,
   `staticlib` or `dylib`, `--lib`, under the parent's environment; the catalog's token rules and admissions over every
@@ -295,7 +301,7 @@ is carried by its leaf rather than left to the recogniser.
 
 ### 6. A declaration no program reads
 
-In a run that refuses nothing (§2), a `defgenerated` form that is not live is stale, `trust-baseline-stale`, on the baseline's host, as an admission no
+When the instrument's five steps refuse nothing (§2), a `defgenerated` form that is not live is stale, `trust-baseline-stale`, on the baseline's host, as an admission no
 site uses is (the parent's §6): removed, so a generated source that stops being read and comes back is reviewed again.
 A form whose declared file a live form names as a generator or an input, or a generator build reads, is part of §2's
 chain — or, its file being no blob, of the blob rule's refusal — so its run refuses and nothing in it is stale: that
@@ -303,7 +309,7 @@ refusal is its one code until `M3.6.6.4`.
 
 ### 7. Case 5, and the parent's text
 
-A change outside every root, program target, provenance file, unit an eligible form's generator build compiles and form
+A change outside every root, program target, provenance file, unit a live form's generator build compiles and form
 of `trust/` reports "unchanged", as §14.4's case 5 asks
 ("outside the recorded roots and provenance"). An edit to a provenance file moves or removes an item when two paired programs both
 hold or read it, a copy's other path included, and is otherwise "unchanged" like any file one side alone reads; an edit to a script no live form
@@ -329,7 +335,7 @@ clarification when the instrument lands (`GS-H8`):
 - §6's table: `trust-new-shared`'s list of what is new, `trust-shared-changed`'s list of what moves,
   `trust-undeclared-input`'s, `trust-shared-program`'s and `trust-baseline-stale`'s new triggers; and its case 5;
 - `TI-H9`'s "a change outside every root's units", which then reads "outside every root's units, every provenance
-file and every unit an eligible form's generator build compiles".
+file and every unit a live form's generator build compiles".
 
 Its sentence that `Cargo.lock` is recorded and is not part of the build configuration stands, unamended.
 
@@ -366,13 +372,14 @@ Each obligation is one sentence, quoted word for word beside its identifier by t
 <!-- machine-read: handoffs -->
 | Id | Leaf | Obligation |
 | --- | --- | --- |
-| `GS-H1` | `M3.6.6.2` | `trust/roots.eadl` takes `defgenerated` forms read strictly as §2 states — one per declared path, one or more generator files, zero or more inputs, a `command` and a `reason` each one clause holding exactly one non-empty string — refusing as `trust-undeclared-input` wherever the gate runs, each a coded refusal — a file the eADL reader cannot read being the parent's failure, the gate unable to judge, and the parent's reader stopping at the first other form that departs, with the shape and text-only refusals of the `defgenerated` forms before it reported beside it — every departure from that shape, every text-only construction §2 lists, and for a live form a non-blob or a symbolic link among its generators and inputs and its chain as §2's first clause defines it, and the chain's second clause over what an eligible form's crate-root generator's build reads, and holding a form that is not live to its shape and the text-only constructions alone. |
+| `GS-H1` | `M3.6.6.2` | `trust/roots.eadl` takes `defgenerated` forms read strictly as §2 states — one per declared path, one or more generator files, zero or more inputs, a `command` and a `reason` each one clause holding exactly one non-empty string — refusing as `trust-undeclared-input` wherever the gate runs, each a coded refusal — a file the eADL reader cannot read being the parent's failure, the gate unable to judge, and the parent's reader stopping at the first other form that departs, with the shape and text-only refusals of the `defgenerated` forms before it reported beside it, and of every one beside a departure it finds only once the file is read — every departure from that shape, every text-only construction §2 lists, and for a live form a non-blob or a symbolic link among its generators and inputs and its chain as §2's first clause defines it, and the chain's second clause over what a live form's crate-root generator's build reads, and holding a form that is not live to its shape and the text-only constructions alone. |
 | `GS-H2` | `M3.6.6.2` | A file that `xtask/src/generated_header.rs`'s `marked` marks, that a program reads, that no `defgenerated` form declares and that no chain of §2 holds, is refused as `trust-undeclared-input` wherever the gate runs, the recogniser being §3's rule — its corpus, its `TABLE` held equal to §3's machine-read table, its `rust_shebang` held to the pinned rustc by `the_shebang_rule_is_rustc_s`, each of §3's rows removed by a catalogued mutation the corpus or the fixture kills, and `scripts/mutation_sweep.sh` exiting 0 over its functions, every mutation its operators make killed, timed out or not compiling, or listed, with its reason, in `xtask/generated_header.equivalents`. |
 | `GS-H3` | `M3.6.6.2` | Each program's record carries its provenance as §4 defines it, the harness's reads and provenance counted through the units it compiles beside its pair's two builds, and each pair the parent pairs shares a generated-provenance item per file one side's provenance holds and the other side's provenance holds or the other side reads, matched by path, and one per non-empty content of which each side has a path its provenance holds or it reads, the two sides' sets of such paths differing and one of those paths a provenance file of its side, as the parent matches a copy, its identity the path or the sorted union of those paths joined by a space, its aspects the content's sha256, its roles on each side over that side's paths — `read` among them for a side that reads one — and each side's declared files with theirs, the harness's own pair taking the harness's provenance as an aspect of its comparison-harness item, compared and proposed as every shared item is. |
-| `GS-H11` | `M3.6.6.2` | For each generator file of each form §2 makes eligible, each program target whose crate root it is, is built as §5 states, every file that build reads subject to §3 and to §2's chain rule, and is refused as `trust-shared-program` when its role packages, by the parent's §2 computation and their union for a crate root of two targets, hold one of a role other than the reading program's own — for the harness, other than its pair's two; a `.rs` file that is no program target's crate root is refused as `trust-undeclared-input`; and a file neither `.rs` nor a program target's crate root, lying by the innermost workspace member whose directory contains it in a role package of such a role, is refused as `trust-shared-program`. |
-| `GS-H4` | `M3.6.6.2` | In a run that refuses nothing, a `defgenerated` form whose declared file no program reads is `trust-baseline-stale` on the baseline's host. |
-| `GS-H14` | `M3.6.6.2` | The gate decides in §2's order — the forms' text, the programs' builds with the parent's refusals, the blob rule and the chain's first clause, §5's judgments and generator builds, then §3's refusal and the chain's second clause — each step running only when those before it refused nothing, a step that refuses ending the run with every refusal it found reported and no inventory written, and only a run that refuses nothing deciding §6's staleness and the parent's stale admissions. |
-| `GS-H5` | `M3.6.6.2` | The instrument's tests hold a case-3 fixture of two roots whose differently-named generated sources share an input through two generators, and others for a generator shared over two inputs, a generator with no input, a data file one side reads that the other's generated source was made from, a copy matched by sha256, the harness, a third program, a script running a tool declared and decided, a chain refused, a chain's upstream form not stale, a marked module of a crate-root generator's build refused, a live form §2 refuses whose generator is not built, a refusal at each step of §2's order ending the run with nothing then live or stale — a malformed form, a parent's refusal before the programs' builds, a chain found in a generator build reported beside §5's refusals of its step, a generator target refused before its build —, a `defgenerated` form's shape refusal reported beside another form's departure and one after it not, a generator target that is itself a root, a non-`.rs` crate root refused as a generator, a crate root of two targets judged by the union of their role packages, a gitlink input refused, a marked file no form can declare refused, another role's program target and script refused as generator files, a library's crate root refused as one, a `defgenerated` form added, changed and removed in the change part, an edit to a declared generator reported and to an undeclared script "unchanged", and each refusal, each removed in turn by a catalogued mutation. |
+| `GS-H11` | `M3.6.6.2` | For each generator file of each live form, each program target whose crate root it is is refused as `trust-shared-program`, and not built, when its role packages, by the parent's §2 computation and their union for a crate root of two targets, hold one of a role other than the reading program's own — for the harness, other than its pair's two — and is otherwise built as §5 states, every file that build reads subject to §3 and to §2's chain rule; a `.rs` file that is no program target's crate root is refused as `trust-undeclared-input`; and a file neither `.rs` nor a program target's crate root, lying by the innermost workspace member whose directory contains it in a role package of such a role, is refused as `trust-shared-program`. |
+| `GS-H4` | `M3.6.6.2` | When the instrument's five steps refuse nothing, a `defgenerated` form whose declared file no program reads is `trust-baseline-stale` on the baseline's host, decided with the gate's other comparisons. |
+| `GS-H14` | `M3.6.6.2` | The instrument decides in §2's five steps — the forms' text, the programs' builds and handed data with every refusal the parent makes before or in them, the blob rule and the chain's first clause, §5's judgments and generator builds, then §3's refusal and the chain's second clause — each step running only when those before it refused nothing, a step that refuses ending the run with every refusal it found reported and no inventory written, a step in which a build fails ending it with the gate unable to judge and that step's refusals reported beside it, and, when the five refuse nothing, the gate deciding `trust-form-missing`, the parent's `trust-baseline-stale` and §6's together over the inventory on the baseline's host. |
+| `GS-H15` | `M3.6.6.2` | The instrument's tests hold, for §2's order, a refusal at each of its five steps ending the run with no form stale — a malformed form, a parent's refusal in the programs' builds, a live form's input that is no blob, a generator target refused by its role packages and not built, a marked file a generator build compiles reported beside a §3 refusal of the same step — a build failing in §5's step beside a refusal of that step with the gate unable to judge, a `defgenerated` form's shape refusal reported beside another form's departure and one after it not, and every one beside a harness's pair naming no root, each removed in turn by a catalogued mutation. |
+| `GS-H5` | `M3.6.6.2` | The instrument's tests hold a case-3 fixture of two roots whose differently-named generated sources share an input through two generators, and others for a generator shared over two inputs, a generator with no input, a data file one side reads that the other's generated source was made from, a copy matched by sha256, the harness, a third program, a script running a tool declared and decided, a chain refused, a chain's upstream form not stale, a marked module of a crate-root generator's build refused, a live form §2 refuses whose generator is not built, a generator target that is itself a root, a non-`.rs` crate root refused as a generator, a crate root of two targets judged by the union of their role packages, a gitlink input refused, a marked file no form can declare refused, another role's program target and script refused as generator files, a library's crate root refused as one, a `defgenerated` form added, changed and removed in the change part, an edit to a declared generator reported and to an undeclared script "unchanged", and each refusal, each removed in turn by a catalogued mutation. |
 | `GS-H7` | `M3.6.6.2` | The gate's standing list names every `defgenerated` form not accepted, its change part every one added, changed or removed against the base commit's, and its report states the parent's §3 list of what the inventory does not see and every exclusion §8 lists. |
 | `GS-H8` | `M3.6.6.2` | `decision_trust-inventory.md` gains a dated clarification amending each passage §7 lists to say what this record decides. |
 | `GS-H9` | `M3.6.5` | A `defgenerated` form is accepted per form as every form in `trust/` is, a change to it needs a new acceptance, and the assurance step's Passed requires every live form accepted. |
@@ -429,3 +436,4 @@ answered here. The history is [`decision_trust-generated-sources-reviews.md`](..
 | 10 | `2026-10-06` | 4, and 9 remarks | every finding answered: §3's rules made the rows of its table, forty-seven, each with a mutation killed, and a sweep over the code, every mutation killed or listed equivalent; a path two forms declare refused in both; a copy matched by content as the parent matches one; the form's state renamed eligible |
 | 11 | `2026-10-06` | 5, and 8 remarks | every finding answered: the sweep shortens each syntax's delimiters and swaps compared line ends, seven survivors answered by cases; the extensionless rule a row of its own; the order's last step after the builds; an unreadable file the parent's failure; `GS-H2` as the sweep's exit |
 | 12 | `2026-10-06` | 3, and 5 remarks | every finding answered: a refusal ends the run as the parent's does, staleness decided only in a run that refuses nothing, the order a hand-off (`GS-H14`); the reader's stop carried by `GS-H1` with a fixture; a nested block's `*/` leaving the header's text as its `/*` does |
+| 13 | `2026-10-06` | 5, and 7 remarks | every finding answered: the order five instrument steps, the gate's comparison a sixth over the written inventory; a build failing in a step, unable to judge; a departure the parent's reader finds at the end; one fixture per step, `GS-H15`; row 4 as the code reads a dotfile; "eligible" retired for "live" |

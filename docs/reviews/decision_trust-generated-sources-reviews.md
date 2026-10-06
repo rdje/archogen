@@ -361,3 +361,28 @@ stale, since its run refuses. The order is a hand-off of its own, `GS-H14`.
 | R12-r3 | remark | "each syntax's delimiters" while `lit` takes two characters or more | "each delimiter of two or more characters" |
 | R12-r4 | remark | the method's item 5 said one table | item 5: with any table of the code's data the rule reads, held by its own test |
 | R12-r5 | remark | §5's case read the classification's role packages, its rule the computed ones | "its role packages, as the parent computes them" |
+
+**Round 13**, `2026-10-06`: the reviewer confirmed the 135 cases, the fixture's thirty case by case against §3's rustc
+paragraph, the 50 rows equal to the catalogue, the 279 mutations by `--list`, both equivalents by the sweep and by hand,
+two sweep ids and one catalogued mutation run, the census re-derived, every hand-off and quotation. There were 12
+findings, 5 of them defects, four in §2's order: "a run that refuses nothing" could not hold of a run whose comparison
+refuses stale forms, and the comparison had no step (R13-1); a fixture GS-H5 asked for could not exist under GS-H14
+(R13-2); a departure the parent's reader finds only at the end had no "before it" (R13-4); and a build failing beside a
+refusal in one step had two outcomes (R13-5). The order is now five instrument steps — the forms' text, the programs'
+builds and handed data, the blob rule and the chain's first clause, §5's judgments and generator builds, §3's refusal
+and the chain's second clause — and, over the inventory they write when none refuses, the gate's comparison as a sixth.
+
+| Finding | Class | What it found | The answer |
+| --- | --- | --- | --- |
+| R13-1 | defect | "a run that refuses nothing" decided staleness, itself a refusal; the gate's comparison had no step | §2: five instrument steps, then (6) the gate's comparison over the written inventory, `trust-form-missing`, the parent's `trust-baseline-stale` and §6's decided and reported together; §6, `GS-H4`, `GS-H14`: "when the instrument's five steps refuse nothing" |
+| R13-2 | defect | GS-H5's fixtures: four for five steps, and a chain reported beside §5's refusals, which the order forbids | one refusal per step, a live form's non-blob input at step three, a marked file of a generator build beside a §3 refusal of the last step — the order's fixtures a hand-off of their own, `GS-H15`, `GS-H5`'s line past the ceiling |
+| R13-3 | defect | row 4 said a dotfile has no extension; the code reads `.gitlab-ci.yml` as `yml`, and no case held either | row 4: `.env` has none, `.gitlab-ci.yml`'s is `yml`; that case, marked; the `.md` case's words corrected |
+| R13-4 | defect | a departure the parent's reader finds only once the file is read had no "before it" | §2 and `GS-H1`: every `defgenerated` form's shape and text-only refusals beside it; a `GS-H5` fixture |
+| R13-5 | defect | a build failing in a step beside a refusal of it; whether a target the role judgment refuses is built | §2 and `GS-H14`: the run ends unable to judge, that step's refusals beside it; §5 and `GS-H11`: such a target is not built |
+| R13-r1 | remark | a compound row's mutation breaks one clause | §3: the whole rule, or the clause that sets it apart, the other clauses held by the corpus and the sweep |
+| R13-r2 | remark | four changes no operator makes and no case held | cases: a byte-order mark before Rust's shebang, whitespace before a `#!` for both rules, a marker in the declaration, `foo.bar.`, `X.RS` with a shebang |
+| R13-r3 | remark | rows 15 and 24 pulled apart | row 15: "but for the XML declaration below" |
+| R13-r4 | remark | data handed at run time left out of the order | named at steps two and five, and in "live" |
+| R13-r5 | remark | "eligible" added nothing since round 12 | retired: §5 judges and builds the generators of live forms |
+| R13-r6 | remark | a symbol as the form's name | "a name that is not a string" departs from the shape |
+| R13-r7 | remark | the cited census run was old | rerun on the tree that commits this answer |
