@@ -237,3 +237,30 @@ names each case's, and checks it runs the pinned rustc.
 | R7-r5 | remark | the fixture did not check its rustc | it checks `rustc -V` against the pin |
 | R7-r6 | remark | `Syntax::Slash`'s comment named Rust alone | corrected |
 | R7-r7 | remark | §8 described one set twice | one clause |
+
+**Round 8**, `2026-10-06`: the reviewer confirmed all thirteen hand-offs quoted, the census, the gitlink, `root_forms`,
+every quotation, the counts, that each of the thirteen `gh-` mutations removes or weakens the rule it names (running
+one), that every fixture case tells the two readings apart and that §3's rustc sentence follows from the outcomes.
+There were 14 findings, 4 of them defects — half round 7's. The largest: §3 claimed every rule had a mutation, and at
+least three rules it states — a marker, the extensionless rule's extension test, the declaration's `?` — could be deleted
+with every test green (R8-1). So the claim is now a table: each rule §3 states, mapped to the mutation that removes it,
+machine-read and held equal to the catalogue by a test; sixteen mutations were added, twenty-nine in all, each killed.
+The markers are machine-read and held to the code the same way, and every member of `Pattern_White_Space` is a fixture
+case.
+
+| Finding | Class | What it found | The answer |
+| --- | --- | --- | --- |
+| R8-1 | defect | markers, case folding, the block doc rules, the `[` test, the look-ahead's nesting, the extensionless rule and the declaration's `?` had no mutation; three could be deleted with every test green | §3's rule-to-mutation table, machine-read, held equal to the catalogue's entries for the file by `every_rule_the_record_states_has_a_catalogued_mutation_and_every_mutation_a_rule`; sixteen mutations added, twenty-nine killed; corpus cases for each marker, an unlisted extension with `#!`, `<?xml?>`; §3's markers held to `MARKERS` |
+| R8-2 | defect | most of `Pattern_White_Space` was a sentence | a fixture case per member, silent on rustc 1.95.0, and a corpus case each |
+| R8-3 | defect | "a generator file §2 admits" was undefined | §2: a live form drawing none of §2's refusals is admitted; §5 judges and builds the generators of admitted forms alone, after §2's checks; `GS-H11`; a `GS-H5` fixture |
+| R8-4 | defect | "four files that say a tool wrote them" was not the criterion measured | §1: "the four tracked files whose first lines hold a marker phrase" |
+| R8-r1 | remark | §8's "later line" fit Lua alone | split: SQL's and the assembler's syntaxes on any line; Lua's later lines |
+| R8-r2 | remark | §7's `Cargo.lock` pairing was idle | dropped |
+| R8-r3 | remark | the parent's review ids read as this record's | "the parent's R8 1", "the parent's §4 and its R1 A11" |
+| R8-r4 | remark | how paths are spelled and compared | §2: repository paths as the tree spells them, compared literally |
+| R8-r5 | remark | a declared file its own input drew two messages | §2: the self-reference rule alone |
+| R8-r6 | remark | a sha256 match against a path the other side reads; a copy's edit | §5: no path the other side holds or reads; §7: moves or removes an item, a copy's other path included |
+| R8-r7 | remark | `GS-H5` lacked fixtures for §6's exemption and §5's cases | added: a chain's upstream form, a refused form's generator not built, a generator that is a root, a non-`.rs` crate root, two targets' union |
+| R8-r8 | remark | the ledger's scope did not name the shebang rule | the `rust-toolchain` entry's scope names it, within the book's 1 024-byte line, re-measured by the fixture |
+| R8-r9 | remark | the leaves kept round 7's and round 1's stale text | corrected |
+| R8-r10 | remark | the other forms' reader stops uncoded | §2: the other forms keep the parent's reader; a `defgenerated` departure behind one is reported once it is repaired |
