@@ -37,7 +37,7 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM`
   Status: `active`
   Goal: own the program spine
-  Children: `PROGRAM.1` … `PROGRAM.58`, and the sub-leaves each of them names
+  Children: `PROGRAM.1` … `PROGRAM.59`, and the sub-leaves each of them names
 
 - ID: `PROGRAM.1`
   Status: `done` — sealed in [`PROGRAM/PROGRAM.1.md`](../task-history/PROGRAM/PROGRAM.1.md); commit `ARCHOGEN-PROGRAM-0002`
@@ -882,6 +882,34 @@ mdBook that is the director's window into the project.
   - **Hand-off.** rustc refuses `off` on Windows MSVC, and `ROADMAP.md` §3.1 schedules Windows hosts after the primary
     pipeline. No leaf owns that yet; the comment in `Cargo.toml` is the note that leaf will meet.
 
+- ID: `PROGRAM.59`
+  Status: `done` — filed and closed `2026-10-06`
+  Goal: no live document still says, in the present tense, that the emulator step is quarantined or that
+  `integration` is incomplete everywhere.
+  Reproduce / issue: found by `PROGRAM.58`'s run, `make integration` → `tier integration: passed — 12 passed, 0
+  failed, 0 unavailable, 0 not built, 0 quarantined`. Yet `COMMIT.md` step 2 read *"Today `integration` is
+  incomplete everywhere — … the step is **quarantined** under `M2.8`"*. The book, `verification.md:128`, read
+  *"`integration` is too — the emulator quarantined, as above"*, fifteen lines under a transcript showing it passing.
+  `decision_incomplete-blocking-policy.md` read *"Today the one gap is the emulator step, quarantined under
+  `M2.8`"*, and this tree's Blockers read *"`M2.8` still owns removing the cause"*.
+  Root cause: `git show --stat 6096906` (`ARCHOGEN-M2-0193`, `M2.8.3.4`, which lifted the quarantine) touches
+  `verification.md`'s transcript and its "Until then" paragraph, and none of the four passages. `git log -L128,129`
+  names `8a9e98a` (`PROGRAM.10.1`) as their author. The commit that changed the state took no census of the
+  sentences restating it: the class `docs/knowledge/a-moved-measurement-needs-a-census-of-its-copies.md` describes.
+  Census: `git grep -n -i 'quarantin\|incomplete everywhere'` and `git grep -n -i
+  'integration.\{0,40\}incomplete'` over every tracked `*.md` outside sealed history and the changelog, plus
+  `*.rs` and `*.sh`. Each hit was read in context. Four were stale and are corrected. The rest stay: they are
+  dated history (the rehearsal of `2026-09-30` in `verification.md:254`, `decision_push-cadence.md`'s amendment
+  of the same day, `docs/targets/first-target.md:48`), the definition of a quarantine, the CI script's arms, or
+  rows of closed leaves.
+  Fix: `COMMIT.md` step 2 now says what holds today: `integration` passes where its tools are installed and is
+  incomplete where one is missing, and the quarantine is past tense with its dates. The book's sentence is
+  corrected; the decision record gains a dated amendment rather than a rewrite; so does this tree's Blockers entry.
+  Verification: both census commands re-run afterwards, every present-tense hit now true; the book builds;
+  `make focused`; the doctrine gate.
+  Lockstep: the decision's amendment and the book move in the same commit, as a normative edit must. No snapshot
+  moves.
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1020,7 +1048,8 @@ a clean `git status` means what the handoff rule says it means.
 
 - ~~The branch cannot be pushed under `COMMIT.md`'s own precondition~~ — **cleared `2026-09-30` by
   `PROGRAM.10.1`**: the emulator step is quarantined under `M2.8`, so `make integration` reads `incomplete`,
-  which step 2 permits a push past after reading what it names. `M2.8` still owns removing the cause.
+  which step 2 permits a push past after reading what it names. `M2.8.3.4` removed the cause the same day: the
+  step passes, and so does the tier (`make integration` → `12 passed, 0 quarantined` on `2026-10-06`).
 - `PROGRAM.10.5` waits on the next push, which the ruled cadence decides; `PROGRAM.31` and `PROGRAM.32` wait
   on the director's ruling on the findings record's §8.
 
@@ -1106,6 +1135,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-10-05` | `PROGRAM.56` | both folders measured before and after; every reference to the old path searched; the routes; the focused tier; the enforcer | decisions 393 061 → 349 217, specs 253 792 → 300 288; 0 stale references; all green |
 | `2026-10-06` | `PROGRAM.57` | the trigger off the record's commit; a full inventory; each name looked up for an owner, a citation and its leaf's status; a residue census; the adopted policies' sources re-hashed; the provisioner, the focused tier, the whole suite and the gate, cold | 11 GB → 1.6 GB; twelve of twelve paths `gone`; 1 454 953 object files in `deps` → `PROGRAM.58`; sources unchanged; `already in place`; `passed — 3 passed`; 1 218 passed / 0 failed over 91 suites; all green |
 | `2026-10-06` | `PROGRAM.58` | the leak reproduced in a scratch crate under each mode; the `OSO` entries read with `nm -ap`; Cargo's and rustc's pages quoted; before and after on the real `target/debug`; the way back; the integration tier, Miri's arm, then the focused tier and the gate on the committed tree | +6 098 objects per relink → 0; `at ./src/main.rs:1:52` restored by the override; `passed — 12 passed, 0 quarantined`; the arm fired; all green |
+| `2026-10-06` | `PROGRAM.59` | two `git grep` censuses over the live documents, each hit read in context; the lifting commit's stat; `git log -L` on the book's lines; the censuses re-run; the book, the focused tier and the gate | four stale present-tense claims corrected, the dated history left; every remaining hit true; all green |
 
 ## Commit Log
 
@@ -1228,6 +1258,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0450 (leaf PROGRAM)` | **`PROGRAM.55` and `PROGRAM.56` sealed**, their 3 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` had grown 1 324 bytes over its 819 200-byte ceiling with `M3.1.1`'s step 27 |
 | `PROGRAM.57` | `ARCHOGEN-PROGRAM-0457 (leaf PROGRAM.57)` | **the fifth artifact cleanup, ≈9.4 GB released**: `target/debug` deleted whole because its `deps` held 1 454 953 leaked object files, which is filed as `PROGRAM.58`; closed reviews' scratch removed; cited mutation scripts kept |
 | `PROGRAM.58` | `ARCHOGEN-PROGRAM-0458 (leaf PROGRAM.58)` | **a macOS build stops leaving its object files behind**: `[profile.dev] split-debuginfo = "off"`, measured +6 098 objects per relink → 0; the way back to backtrace lines in `TOOLBOX.md`; Cargo's default recorded in the ledger |
+| `PROGRAM.59` | `ARCHOGEN-PROGRAM-0459 (leaf PROGRAM.59)` | **no live document says the emulator is still quarantined**: `COMMIT.md` step 2, the book, a decision's "Today" and this tree's Blockers corrected six days after `M2.8.3.4` lifted the quarantine |
 
 ## Changelog
 
@@ -1240,3 +1271,4 @@ a clean `git status` means what the handoff rule says it means.
 - `2026-10-05`: `PROGRAM.52` closed — both design records hold their hand-offs in ledgers `HANDOFF-LEDGER` checks.
 - `2026-10-06`: `PROGRAM.57` filed and closed — the fifth artifact cleanup, the first since `PROGRAM.19`'s seal; `PROGRAM.58` filed for the object files a macOS build leaves in `target/debug/deps`.
 - `2026-10-06`: `PROGRAM.58` closed — the dev profile keeps no object files for their debug information, so `target/debug/deps` no longer grows with every build on macOS.
+- `2026-10-06`: `PROGRAM.59` filed and closed — four present-tense claims that the emulator step is quarantined, stale since `2026-09-30`, corrected.

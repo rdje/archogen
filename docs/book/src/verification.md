@@ -125,8 +125,8 @@ it did not set itself, so an arm that leans on the developer's `~/.gitconfig` fa
 for the wrong reason, stayed invisible until someone happened to invoke it. It takes about forty seconds,
 which is why it lives here and not on every commit.
 
-⭐ **Of the five tiers, `hardware` and `assurance` are incomplete, and `integration` is too — the emulator
-quarantined, as above. Saying so is the runner's most useful output.** Before
+⭐ **Of the five tiers, `hardware` and `assurance` are incomplete everywhere, and `integration` is incomplete
+on a machine missing one of its tools. Saying so is the runner's most useful output.** Before
 the runner existed, the fuzz corpus, the mutation harness, the Miri wiring, the board and the whole
 assurance story were not *reported as missing*. They were simply not mentioned, which reads exactly
 like being covered. Each gap was given an owner. The `extended` tier's three steps were built under

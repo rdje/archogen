@@ -31,6 +31,9 @@ read before a push, and a `failed` tier still stops one.
   `M2.8.3` write the fixture and the platform description. No change to the commit under test can close that
   gap. A red build that no fix to the commit can turn green is the build people learn to ignore, and a real
   failure hidden inside a permanent red is not seen. `PROGRAM.10`'s own text named this risk before it was built.
+  *Amended `2026-10-06` (`PROGRAM.59`):* that gap closed on `2026-09-30`, when `M2.8.3.4` built the agreement and
+  lifted the quarantine, so the tier passes where its tools are installed. The reasoning stands for the next gap a
+  leaf owns.
 - **Passing silently would hide the gap, which §14.3 forbids.** So the job passes *loudly*: every run carries a
   warning annotation per gap and a summary section headed "incomplete — not a pass". The runner's own report
   names the issue, the owner, and the claim left unproven.

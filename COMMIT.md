@@ -61,9 +61,10 @@ apply to code changes.
    ⚠️ A tier can exit **20 = incomplete**, which is *not* a pass and *not* a failure: nothing
    broke, and something could not be run. `ROADMAP.md` §14.3 requires that outcome to be visible
    rather than silently dropped, so read what it names before deciding to proceed. Today
-   `integration` is incomplete everywhere — without QEMU its emulator step is unavailable, and with it
-   the step is **quarantined** under `M2.8` (§14.3: a named issue, owner, claim and scope; leaf
-   `PROGRAM.10.1`), because the §3.2 agreement it checks is not built; `extended` passes where the `nightly`
+   `integration` passes where its tools are installed, and is incomplete where one is missing — QEMU, mdBook
+   or Node — the step that needs it reported unavailable. Its emulator step was **quarantined** under `M2.8`
+   (§14.3: a named issue, owner, claim and scope; leaf `PROGRAM.10.1`) until `M2.8.3.4` built the §3.2 agreement
+   it checks and lifted the quarantine on `2026-09-30`; `extended` passes where the `nightly`
    toolchain's `miri` component is installed (it first passed `2026-09-30`, leaf `PROGRAM.9`);
    `hardware` and `assurance` are incomplete everywhere — each naming the leaf that closes it.
 3. Update every relevant tracked doc (`MEMORY.md`, `CHANGELOG.md`, `DEV_NOTES.md`,

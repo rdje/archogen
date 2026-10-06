@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the integration tier is no longer described as incomplete
+
+`ARCHOGEN-PROGRAM-0459` (leaf `PROGRAM.59`).
+
+- Six days after the emulator check was verified and the integration tier began to pass, four documents still said
+  the tier was incomplete everywhere: the commit workflow, the book's chapter on verification, the policy on
+  incomplete tiers, and the program tree. They now say what holds today: the tier passes where its tools are
+  installed, and reports itself incomplete where one is missing. The dated history is left as it was.
+
 ## archogen — macOS builds stop piling up object files
 
 `ARCHOGEN-PROGRAM-0458` (leaf `PROGRAM.58`).
