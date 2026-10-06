@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the fifth artifact cleanup
+
+`ARCHOGEN-PROGRAM-0457` (leaf `PROGRAM.57`).
+
+- About 9.4 GB of regenerable build output and closed reviews' scratch removed; `target` went from 11 GB to 1.6 GB.
+  The inventory found a defect rather than ordinary build caching: on macOS, every build leaves all of its compiled
+  object files behind, and nothing ever deletes them — 1.45 million of them had piled up in six days. That defect is
+  filed and owned as `PROGRAM.58`. Everything was rebuilt and re-checked from cold: 1 218 tests passed, 0 failed, and
+  every doctrine is green.
+
 ## archogen — the substitutability design passes its review
 
 `ARCHOGEN-M3-0456` (leaf `M3.1.1`).
