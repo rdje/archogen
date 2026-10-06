@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the task trees' frontiers show the frontier again
+
+`ARCHOGEN-PROGRAM-0464` (leaf `PROGRAM.62`).
+
+- Two task trees' "current frontier" sections had grown into 33 KB of stories about work finished weeks ago, which
+  filled the folder's size limit and left no room for new work. Each story was checked to have its line in the tree's
+  commit log, where finished work belongs, and the sections now say only what is open and why.
+
 ## archogen — the engine reads the capability vocabulary
 
 `ARCHOGEN-M3-0463` (leaf `M3.1.2.2`).

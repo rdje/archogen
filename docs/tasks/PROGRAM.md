@@ -37,7 +37,7 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM`
   Status: `active`
   Goal: own the program spine
-  Children: `PROGRAM.1` … `PROGRAM.61`, and the sub-leaves each of them names
+  Children: `PROGRAM.1` … `PROGRAM.62`, and the sub-leaves each of them names
 
 - ID: `PROGRAM.1`
   Status: `done` — sealed in [`PROGRAM/PROGRAM.1.md`](../task-history/PROGRAM/PROGRAM.1.md); commit `ARCHOGEN-PROGRAM-0002`
@@ -795,6 +795,26 @@ mdBook that is the director's window into the project.
   Direction: the entry repointed at the line as it now reads; then a check cheap enough for the commit path, every
   entry's `from` text occurring exactly once in its file, with no build, as a doctrine or a focused-tier step.
 
+- ID: `PROGRAM.62`
+  Status: `done` — filed and closed `2026-10-06`
+  Goal: a tree's Current Frontier holds its frontier, not the closure narratives of leaves it sealed long ago, so
+  `docs/tasks/` keeps room for live work.
+  Reproduce / issue: after `ARCHOGEN-M3-0463`, `cat $(git ls-files docs/tasks) | wc -c` → 819 056 of the 819 200-byte
+  ceiling, and `bash scripts/check_task_history.sh --seal <TREE>` → *"nothing to seal"* for every tree: each closed
+  leaf left sits under a subtree with an open one. `M1.md`'s Current Frontier was 31 877 bytes, of which its table
+  400: the rest, 28 paragraphs headed *"`M1.x` is closed"* and four more of the same kind, each a closed leaf's story.
+  `PROGRAM.md`'s held three such paragraphs, one stale: *"`M1` is open with its frontier at `M1.13`"*.
+  Root cause: `LIVE_DOCUMENT_SIZE_CONTAINMENT.md` says a snapshot takes current state and a closure narrative belongs
+  in the tree's Commit Log and `CHANGELOG.md`, but `LIVE-SNAPSHOTS` bounds four snapshot files and no tree's frontier
+  section, so closures accumulated there as each leaf closed.
+  Fix: both frontiers cut to their table and one paragraph of current state. Census first: every leaf a removed
+  paragraph narrates as closed, 28 in `M1` and 3 in `PROGRAM`, has its row in its tree's Commit Log (a script over
+  both sections → `missing rows []`), and each leaf's full record is sealed under `docs/task-history/`; the four other
+  paragraphs narrate `M1.28`, `M1.26`, `M1.12` and `M1.1`–`M1.9`, all closed and sealed.
+  Verification: `docs/tasks/` 819 056 → 786 004 bytes (`M1` −31 087, `PROGRAM` −1 965); `stated-order: OK`; the
+  doctrine gate at commit. A gate that bounds a tree's frontier section is not built here: a size cap would be
+  arbitrary, and the narrative shape has no clean signature. Left to review.
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -862,32 +882,9 @@ roadmap item X live?".
 | 1 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 | 2 | `PROGRAM.10` | `blocked` | `.10.1`–`.10.4` done — the emulator quarantined, the policy recorded, the `integration` job written and rehearsed from a fresh checkout. `.10.5` reads the first real run on the runner's GNU userland, which only the next push can produce |
 
-**`PROGRAM.21` is closed: `TASK-ACCEPTANCE` verifies the leaf that owns the change, and refuses when it
-cannot tell which one that is.** The hole was cross-**leaf** leakage — one awk over the whole tree file,
-stopping at the first box, so a file of N leaves verified whichever came first and then printed that it
-had checked the staged change. Measured active on two real commits, and replayed here as fixtures rather
-than recalled: `cd355ef` and `3a6bbb9` each return a **byte-identical** verdict from `HEAD`'s check
-pristine and with the committing leaf's own ROOT CAUSE box unticked, while the new check moves and names
-the right leaf. The owner is taken from the author's declaration — `TASK_ACCEPTANCE_LEAF`, else the
-`(leaf <ID>)` token in the pending message's subject — and **never inferred from the staged paths**,
-because that signal was priced against seven real code commits and agrees on **1 of 7**. Nine `--self-test`
-RED arms, each in a throwaway repository. ⛔ The arms' own first oracle was unsound in the same way the
-check was: `rc -ne 0` scored **four passes on `exit 127`**, a check that was never found, and the tally
-still read like partial success — reproduced deliberately as mutation B2 and promoted into
-`docs/knowledge/verify-the-mutation-applied.md`, which now names all three parts of an arm that can be
-weaker than the property.
-
-`PROGRAM.16` is closed: the claim-verification policy is adopted as `docs/CLAIM_VERIFICATION.md`,
-copied verbatim and diff-verified against its read-only source, restated in this project's terms as
-its own §7.6 requires, and registered in all three entrypoints — `CLAUDE.md`, `AGENTS.md` and
-`DOCTRINE_ENFORCEMENT.md`'s E1 list. The spine is five portable architectures, not four.
-
-`M0` is closed; `S0` is open again for `S0.8` (a book figure `M1.24`'s census found — F28's evidence
-is unchanged, so the seven original leaves stay closed); `M1` is open with its frontier at `M1.13`,
-the language freeze — `M1.12` closed `2026-09-28` when its fifth child delivered the reference's
-lockstep; and `M2` is in progress, so `PROGRAM` carries the substrate work those trees lean on.
-`PROGRAM.8` remains open and unblocking. `PROGRAM.12` is closed: harness-local scratch is ignored, so
-a clean `git status` means what the handoff rule says it means.
+Both rows wait on something outside this repository's commits: `PROGRAM.34` on the director's yes, `PROGRAM.10` on
+the next push. The pending leaves beside them — `PROGRAM.53`, `.54`, `.60`, `.61` — are filed and owned. Every closed
+leaf's outcome is its row in the Commit Log below, and its full record is sealed under `docs/task-history/PROGRAM/`.
 
 ## Decisions
 
@@ -1021,6 +1018,7 @@ a clean `git status` means what the handoff rule says it means.
 | `2026-10-06` | `PROGRAM.57` | the trigger off the record's commit; a full inventory; each name looked up for an owner, a citation and its leaf's status; a residue census; the adopted policies' sources re-hashed; the provisioner, the focused tier, the whole suite and the gate, cold | 11 GB → 1.6 GB; twelve of twelve paths `gone`; 1 454 953 object files in `deps` → `PROGRAM.58`; sources unchanged; `already in place`; `passed — 3 passed`; 1 218 passed / 0 failed over 91 suites; all green |
 | `2026-10-06` | `PROGRAM.58` | the leak reproduced in a scratch crate under each mode; the `OSO` entries read with `nm -ap`; Cargo's and rustc's pages quoted; before and after on the real `target/debug`; the way back; the integration tier, Miri's arm, then the focused tier and the gate on the committed tree | +6 098 objects per relink → 0; `at ./src/main.rs:1:52` restored by the override; `passed — 12 passed, 0 quarantined`; the arm fired; all green |
 | `2026-10-06` | `PROGRAM.59` | two `git grep` censuses over the live documents, each hit read in context; the lifting commit's stat; `git log -L` on the book's lines; the censuses re-run; the book, the focused tier and the gate | four stale present-tense claims corrected, the dated history left; every remaining hit true; all green |
+| `2026-10-06` | `PROGRAM.62` | every closure a removed paragraph narrates looked up in its tree's Commit Log; the folder measured before and after; the stated order; the gate | 31 of 31 with a row; 819 056 → 786 004 bytes; OK; all green |
 
 ## Commit Log
 
@@ -1145,6 +1143,7 @@ a clean `git status` means what the handoff rule says it means.
 | `PROGRAM.58` | `ARCHOGEN-PROGRAM-0458 (leaf PROGRAM.58)` | **a macOS build stops leaving its object files behind**: `[profile.dev] split-debuginfo = "off"`, measured +6 098 objects per relink → 0; the way back to backtrace lines in `TOOLBOX.md`; Cargo's default recorded in the ledger |
 | `PROGRAM.59` | `ARCHOGEN-PROGRAM-0459 (leaf PROGRAM.59)` | **no live document says the emulator is still quarantined**: `COMMIT.md` step 2, the book, a decision's "Today" and this tree's Blockers corrected six days after `M2.8.3.4` lifted the quarantine |
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0460 (leaf PROGRAM)` | **`PROGRAM.57`, `PROGRAM.58` and `PROGRAM.59` sealed**, their 3 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` would have grown 1 331 bytes over its 819 200-byte ceiling with `M3.1.2`'s decomposition |
+| `PROGRAM.62` | `ARCHOGEN-PROGRAM-0464 (leaf PROGRAM.62)` | **the frontiers hold the frontier**: `M1`'s and `PROGRAM`'s closure narratives removed, each closure's row checked present in its Commit Log; `docs/tasks/` 819 056 → 786 004 bytes |
 
 ## Changelog
 
@@ -1160,3 +1159,4 @@ a clean `git status` means what the handoff rule says it means.
 - `2026-10-06`: `PROGRAM.59` filed and closed — four present-tense claims that the emulator step is quarantined, stale since `2026-09-30`, corrected.
 - `2026-10-06`: `PROGRAM.60` filed by `M3.1.2.1`: the third reader's record fell four files behind; it runs only by hand.
 - `2026-10-06`: `PROGRAM.61` filed by `M3.1.2.2`: one mutation entry broken since `API.4.2`, so the catalog cannot run whole.
+- `2026-10-06`: `PROGRAM.62` filed and closed — `M1`'s and `PROGRAM`'s Current Frontier sections cut to the frontier; 33 KB of closure narratives, each already a Commit Log row.
