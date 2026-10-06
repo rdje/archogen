@@ -3176,3 +3176,14 @@ from
 to
                 i = j * 0;
 end
+
+mutation gh-extensionless-rule-removed
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests::the_corpus
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its eleventh review): a file with no extension whose first line is a `#!` is read with `#`; removed, `scripts/foo` would go unread.
+from
+            Syntax::None if extension(name).is_none() && text.starts_with("#!") => Syntax::Hash,
+to
+            Syntax::None if false && extension(name).is_none() && text.starts_with("#!") => Syntax::Hash,
+end

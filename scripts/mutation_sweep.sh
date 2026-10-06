@@ -19,6 +19,8 @@
 #   stmt     a statement line ending in `;` deleted      ws       `is_whitespace()` → `is_ascii_whitespace()`
 #   case     `.to_lowercase()` and `.to_ascii_lowercase()` dropped     alt      each alternative of a `matches!` dropped
 #   dir      `rsplit` ⇄ `split`, `rsplit_once` ⇄ `split_once`, `starts_with` → `contains`
+#   lit      a string literal of two or more characters passed to `at`, `starts_with`, `strip_prefix` or `contains`,
+#            its last character dropped and its first   chr      `'\n'` ⇄ `'\r'` in a comparison
 #
 # HOW IT RUNS, so the working tree is never touched: the tracked files as they stand in the working tree are copied to
 # `target/mutation-sweep/tree/` (no gitlink), built there with `target/mutation-sweep/target/` as the target directory,
@@ -53,6 +55,7 @@ ap.add_argument("--equivalents")
 ap.add_argument("--timeout", type=int, default=180)
 ap.add_argument("--only", action="append", default=[])
 ap.add_argument("--list", action="store_true")
+ap.add_argument("--op", action="append", default=[])  # only these operators: a run to explore, never the claim
 a = ap.parse_args()
 
 ROOT = os.getcwd()
@@ -83,8 +86,10 @@ def operands(cond):
 
 def mutants():
     out = []
+    seen = set()
     def add(n, op, new):
-        if new != lines[n]:
+        if new != lines[n] and (n, new) not in seen:
+            seen.add((n, new))
             out.append((n, op, new))
     for n in range(first, last):
         l = lines[n]
@@ -132,6 +137,13 @@ def mutants():
             to = {"rsplit_once": "split_once", "split_once": "rsplit_once", "rsplit": "split", "split": "rsplit",
                   "starts_with": "contains"}[m.group(1)]
             add(n, "dir", l[:m.start(1)] + to + l[m.end(1):])
+        for m in re.finditer(r'\b(?:at|starts_with|strip_prefix|contains)\((?:[^,()"]*,\s*)?"((?:[^"\\]|\\.)*)"\)', code):
+            lit = m.group(1)
+            if len(lit) >= 2 and "\\" not in lit:
+                add(n, "lit", l[:m.start(1)] + lit[:-1] + l[m.end(1):])
+                add(n, "lit", l[:m.start(1)] + lit[1:] + l[m.end(1):])
+        for m in re.finditer(r"[!=]= '\\([nr])'", code):  # in a comparison; a pushed separator is either
+            add(n, "chr", l[:m.start(1)] + ("r" if m.group(1) == "n" else "n") + l[m.end(1):])
         if " | " in code and "=>" not in code:
             parts = [p for p in re.split(r"( \| )", code)]
             alts = parts[0::2]
@@ -145,7 +157,7 @@ def mutants():
                     add(n, "alt", new + l[len(code):])
     return out
 
-ms = mutants()
+ms = [m for m in mutants() if not a.op or m[1] in a.op]
 ids = ["L%d.%s.%d" % (n + 1, op, k) for k, (n, op, _) in enumerate(ms)]
 if a.list:
     for i, (n, op, new) in zip(ids, ms):

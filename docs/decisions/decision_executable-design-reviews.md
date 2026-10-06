@@ -51,8 +51,9 @@ The method moves each of them out of the reader's judgement and into something t
    10). Where a design's rule is code with a corpus, the record states its rules as the rows of one machine-read table,
    and no sentence states another; each row names a catalogued mutation that removes it, which the corpus or an
    instrument's fixture kills, and a test holds the rows equal to the catalogue. What the code does beyond the rows is
-   held by `scripts/mutation_sweep.sh`: every mutation its operators make of the code is killed, or listed as
-   equivalent with its reason in a file the sweep reads, and refuses when stale.
+   held by `scripts/mutation_sweep.sh`, run to exit 0: every mutation its operators make of the code is killed, times
+   out or does not compile, or is listed as equivalent with its reason in a file the sweep reads, and refuses when
+   stale.
 
 **What a round reviews.** The record, the model or instrument, and the corpus. The reader runs the checker and the
 corpus, and spends its judgement on what no machine can settle: whether the rules are the right rules, whether the

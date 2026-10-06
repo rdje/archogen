@@ -316,3 +316,28 @@ equivalents, listed with their reasons, and no survivor.
 | R10-r7 | remark | an edit to an undeclared script "changes nothing" was false for the parent's items | "changes no generated-provenance item, and moves the parent's items only as any file's edit does" |
 | R10-r8 | remark | CMake's bracket comment is Lua's case | named in §8 |
 | R10-r9 | remark | a `defgenerated` departure "behind" the parent's stop; "the same strict reader" | §2: the parent's reader stops at the first other form that departs; the `defgenerated` forms before it are read and reported beside it, those after once it is repaired; "a form this section's reader reads strictly" |
+
+**Round 11**, `2026-10-06`: the reviewer confirmed the corpus's 124 cases, the fixture's twenty-nine and its control
+against §3's rustc sentence, the 47 rows equal to the catalogue, the sweep's 233 mutations by `--list`, both equivalents
+by hand, three sweep ids and two catalogued mutations run, the census, every hand-off and every quotation. There were 13
+findings, 5 of them defects. The largest was round 10's method at its edge: the comment-syntax table states each
+syntax's delimiters, and no row, case or operator held them — four shortened delimiters passed the whole corpus
+(R11-1). The sweep gained an operator that shortens each delimiter at either end and one that swaps a compared line
+feed and carriage return; their first run found seven survivors, each now a case, and the whole sweep's last run, of
+280, leaves the two equivalents and no survivor.
+
+| Finding | Class | What it found | The answer |
+| --- | --- | --- | --- |
+| R11-1 | defect | the delimiters the syntax table names were held by no row, case or operator: `*/` → `*`, `<!--` → `<!`, `-->` → `--`, `--` → `-` passed the corpus | the sweep's `lit` and `chr` operators; ten corpus cases and a fixture case answer them, the reviewer's three among them; §3: the recogniser's rules are the rows and the comment syntax the table names |
+| R11-2 | defect | rows 8 and 9 contradicted each other, and row 9's mutation removed row 8 | row 8 names the extensionless exception; row 9 gains `gh-extensionless-rule-removed`, killed; the old mutation's row reads "that rule takes a file with no extension alone" |
+| R11-3 | defect | §2's order left out, or put before the builds, what depends on them | its last step: over what the programs' and the generator builds read, §3's refusal, the chain's second clause, §6's staleness and the parent's stale admissions |
+| R11-4 | defect | `GS-H2`, the module's comment and the method's item 5 said "killed or listed", which a timeout and an unviable mutation are not | each: killed, timed out or not compiling, or listed — the sweep exiting 0 |
+| R11-5 | defect | a file the eADL reader cannot read was coded or uncoded, by reading | §2 and `GS-H1`: the parent's failure, the gate unable to judge; only a form that was read can depart from the shape |
+| R11-r1 | remark | case 5 and `TI-H9`'s amendment left out a generator build's units | both name every unit an eligible form's generator build compiles |
+| R11-r2 | remark | the sweep's scope was "the code" | "its functions"; `TABLE` and `MARKERS` held by their tables' tests |
+| R11-r3 | remark | "an executable's crate root" against the `--lib` targets | "a program target's crate root" |
+| R11-r4 | remark | a form names files, not targets | §5 and `GS-H12`: "the crate root of each program target a script drives" |
+| R11-r5 | remark | `GS-H3`'s "one of them" | "one of those paths" |
+| R11-r6 | remark | which refusals stand beside "unable to judge" | the shape and text-only ones, all that can be decided with nothing built |
+| R11-r7 | remark | §7 listed an unamended sentence among the amended | moved out: it stands, unamended |
+| R11-r8 | remark | "no sentence of this section states another" was false for the gate's rules | "the recogniser's rules are the rows below and the comment syntax the table above names; no sentence of this section states another of them" |
