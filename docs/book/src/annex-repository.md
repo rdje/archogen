@@ -151,7 +151,10 @@ A task tree records every leaf of its work, with its checklist and evidence. Mos
 - **What stays.** Each leaf leaves two lines in the tree, its name and a link to where its text now is. The live
   work, the list of what is next and the logs stay where they were.
 - **The proof.** Before anything is written, the tool checks that putting every leaf back would give the tree as it
-  was, byte for byte (`docs/decisions/decision_task-tree-sealing.md`).
+  was, byte for byte (`docs/decisions/decision_task-tree-sealing.md`). So the history admits every line a tree may hold:
+  its line ceiling is the trees' own (`docs/decisions/decision_task-history-line-ceiling.md`).
+- **What it still carries.** A sealed leaf keeps the hand-offs it quoted; the check that each design's hand-off is
+  quoted word for word by its leaf reads the sealed text, never the two-line placeholder (`PROGRAM.63`).
 - **The first seal**, on `2026-09-30`: 112 leaves left `M1` and `PROGRAM`. At the sealing commit, `M1.md` went
   from 7 633 lines to 2 278, and `PROGRAM.md` from 4 280 to 978.
 

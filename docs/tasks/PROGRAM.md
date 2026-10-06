@@ -37,7 +37,7 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM`
   Status: `active`
   Goal: own the program spine
-  Children: `PROGRAM.1` … `PROGRAM.62`, and the sub-leaves each of them names
+  Children: `PROGRAM.1` … `PROGRAM.63`, and the sub-leaves each of them names
 
 - ID: `PROGRAM.1`
   Status: `done` — sealed in [`PROGRAM/PROGRAM.1.md`](../task-history/PROGRAM/PROGRAM.1.md); commit `ARCHOGEN-PROGRAM-0002`
@@ -828,6 +828,39 @@ mdBook that is the director's window into the project.
   doctrine gate at commit. A gate that bounds a tree's frontier section is not built here: a size cap would be
   arbitrary, and the narrative shape has no clean signature. Left to review.
 
+- ID: `PROGRAM.63`
+  Status: `done` — filed and closed `2026-10-06`
+  Goal: a closed subtree that carries ledger hand-offs, or lines a tree may hold, can be sealed: `HANDOFF-LEDGER` reads a
+  sealed leaf's quotes in its sealed file, and `docs/task-history/` admits every line `docs/tasks/` does.
+  Acceptance: `M3.1`, the first such subtree, seals with every gate green; each fix proven by an arm that failed first.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — after `ARCHOGEN-M3-0470` closed `M3.1`, `bash scripts/check_task_history.sh --seal M3`
+    sealed it byte for byte, and the commit was refused twice: `HANDOFF-LEDGER: 7 breach(es)`, *"`SR-H1`'s obligation is
+    not quoted word for word in `M3.1.2` (docs/tasks/M3.md)"*, one per `SR-H1` … `SR-H7`; and *"docs/task-history/:
+    2871 bytes on its longest line, over its ceiling of 2048"*. The seal was undone, the tree left clean.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE, the ledger: `scripts/check_handoff_ledger.sh` collects leaf blocks "open
+    trees first, then sealed history" and keeps the first block per leaf (`if cur is not None and cur not in blocks`),
+    so a sealed leaf's two-line stub in its tree shadowed the sealed body holding its quotes; its arm *"a hand-off quoted
+    by a sealed leaf passes"* wrote the sealed file and no stub, so it never met the real shape. WHY it surfaced now:
+    `M3.1` is the first sealed subtree whose leaves quote hand-offs. WHERE, the ceiling: `README_POLICY.md`'s
+    `docs/task-history/` row, 2048, beside `docs/tasks/`' 3072 — a seal copies bytes, so the archive must admit every
+    line the tree may hold; `M3.1.1`'s two lines, 2 771 and 2 871 bytes, were within the tree's ceiling.
+  - [x] **FIX** — the ledger: a stub (`Status: \`done\` — sealed in [`) never shadows a sealed body; two arms, a stub
+    beside the body that quotes it, and a sealed body that drops the quote, refused naming its sealed file. The
+    ceiling: `docs/task-history/`' longest line 3 072, by `docs/decisions/decision_task-history-line-ceiling.md`, named
+    in "Ceilings a decision fixes".
+  - [x] **ADDRESSED (verified)** — `bash scripts/check_handoff_ledger.sh --self-test` → `12 pass / 2 fail (14 arms)`
+    before the fix, both new arms failing, and `14 pass / 0 fail (14 arms)` after; a trial seal of `M3.1` on the fixed
+    gate → `handoff-ledger: OK (46 hand-off(s) in 2 ledger(s) …)`, undone after; `readme-routes: OK (24
+    destination(s) governed)` with the new ceiling, its self-test `20 pass / 0 fail`.
+  - [x] **NO REGRESSION** — `bash scripts/check_handoff_ledger.sh` on the real tree → `OK`; `decision-index: OK (32
+    record(s) …)`; `make focused` → `tier focused: passed — 3 passed, 0 failed`; the doctrine gate at commit. The seal
+    itself is the next commit, under leaf `M3`.
+  - [x] **LOCKSTEP** — the script's own header; the book's annex, *Finished work leaves the task trees*; the decision
+    record and its index row; `CHANGELOG.md`. `DOCTRINE_ENFORCEMENT.md`'s row is unchanged and still true — a sealed
+    leaf is the leaf — and the file stands at its ceiling.
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1033,6 +1066,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `2026-10-06` | `PROGRAM.59` | two `git grep` censuses over the live documents, each hit read in context; the lifting commit's stat; `git log -L` on the book's lines; the censuses re-run; the book, the focused tier and the gate | four stale present-tense claims corrected, the dated history left; every remaining hit true; all green |
 | `2026-10-06` | `PROGRAM.61` | the new catalog test before and after the fix; the entry alone; the whole catalog; the focused tier and the suite | FAILED naming the one entry, then ok; killed; 152 as expected in 177 s; 1237 passed, 0 failed |
 | `2026-10-06` | `PROGRAM.62` | every closure a removed paragraph narrates looked up in its tree's Commit Log; the folder measured before and after; the stated order; the gate | 31 of 31 with a row; 819 056 → 786 004 bytes; OK; all green |
+| `2026-10-06` | `PROGRAM.63` | the ledger's self-test before and after; a trial seal of `M3.1`; the routes and their self-test; the decision index; the focused tier | 12 / 2 then 14 / 0; OK; OK, 20 / 0; OK; passed |
 
 ## Commit Log
 
@@ -1159,6 +1193,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0460 (leaf PROGRAM)` | **`PROGRAM.57`, `PROGRAM.58` and `PROGRAM.59` sealed**, their 3 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` would have grown 1 331 bytes over its 819 200-byte ceiling with `M3.1.2`'s decomposition |
 | `PROGRAM.62` | `ARCHOGEN-PROGRAM-0464 (leaf PROGRAM.62)` | **the frontiers hold the frontier**: `M1`'s and `PROGRAM`'s closure narratives removed, each closure's row checked present in its Commit Log; `docs/tasks/` 819 056 → 786 004 bytes |
 | `PROGRAM.61` | `ARCHOGEN-PROGRAM-0465 (leaf PROGRAM.61)` | **the mutation catalog runs whole again**: one entry repointed after `API.4.2` moved its line, and `cargo test` now refuses an entry whose text its file no longer holds once |
+| `PROGRAM.63` | `ARCHOGEN-PROGRAM-0472 (leaf PROGRAM.63)` | **a subtree carrying hand-offs can be sealed**: `HANDOFF-LEDGER` reads a sealed leaf's quotes past its stub; `docs/task-history/`' line ceiling raised to the trees' 3 072 by a decision record |
 
 ## Changelog
 
@@ -1176,3 +1211,4 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 - `2026-10-06`: `PROGRAM.61` filed by `M3.1.2.2`: one mutation entry broken since `API.4.2`, so the catalog cannot run whole.
 - `2026-10-06`: `PROGRAM.62` filed and closed — `M1`'s and `PROGRAM`'s Current Frontier sections cut to the frontier; 33 KB of closure narratives, each already a Commit Log row.
 - `2026-10-06`: `PROGRAM.61` closed — the catalog's broken entry repointed; every entry checked by `cargo test`.
+- `2026-10-06`: `PROGRAM.63` filed and closed — sealing `M3.1` met two gate gaps, the ledger's stub shadowing and the history's line ceiling; both fixed.

@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — finished work that carried promises can be archived
+
+`ARCHOGEN-PROGRAM-0472` (leaf `PROGRAM.63`).
+
+- Archiving the finished matching work out of the task tree was refused twice, by two checks that had never met
+  archived work of this kind. The check that each design's promises are carried word for word read the two-line
+  placeholder left behind instead of the archived text; and the archive allowed shorter lines than the tree it copies
+  byte for byte. Both are fixed, each proven by a test that failed before the fix.
+
 ## archogen — the book explains matching
 
 `ARCHOGEN-M3-0470` (leaf `M3.1.3`).

@@ -57,7 +57,7 @@ leaf. "Overflows to" is where that destination's own guard sends what does not f
 | `docs/decision-history/` | overflow | `PROGRAM.41` | archive_terminal | DECISION-HISTORY | 1200 | 98304 | 1536 | DECISION-HISTORY | — |
 | `docs/review-history/` | overflow | `PROGRAM.55` | archive_terminal | REVIEW-HISTORY | 1200 | 131072 | 1024 | REVIEW-HISTORY | — |
 | `docs/tasks/` | overflow | `PROGRAM.32` | partitioned_canonical | 20 | 3000 | 327680 | 3072 | 819200 | `docs/task-history/` |
-| `docs/task-history/` | overflow | `PROGRAM.32` | archive_terminal | TASK-HISTORY | 1800 | 163840 | 2048 | TASK-HISTORY | — |
+| `docs/task-history/` | overflow | `PROGRAM.32` | archive_terminal | TASK-HISTORY | 1800 | 163840 | 3072 | TASK-HISTORY | — |
 
 ### Ceilings a decision fixes
 
@@ -72,6 +72,7 @@ needs a new ruling, recorded as a new decision, and this table changed with it.
 | `docs/book/` | Total bytes | 458752 | `docs/decisions/decision_book-in-layers.md` |
 | `docs/reviews/` | Total bytes | 393216 | `docs/decisions/decision_reviews-folder-ceiling.md` |
 | `docs/specs/` | Total bytes | 393216 | `docs/decisions/decision_specs-folder-ceiling.md` |
+| `docs/task-history/` | Longest line | 3072 | `docs/decisions/decision_task-history-line-ceiling.md` |
 <!-- README-POLICY-LOCAL-ADOPTION:END -->
 
 ---

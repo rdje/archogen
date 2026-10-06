@@ -197,6 +197,7 @@ justifies the split — the rows below appear as that happens.
 - [`decision_specs-folder-ceiling.md`](docs/decisions/decision_specs-folder-ceiling.md)
 - [`decision_substitutability-relation.md`](docs/decisions/decision_substitutability-relation.md)
 - [`decision_target-platform-description.md`](docs/decisions/decision_target-platform-description.md)
+- [`decision_task-history-line-ceiling.md`](docs/decisions/decision_task-history-line-ceiling.md)
 - [`decision_task-tree-sealing.md`](docs/decisions/decision_task-tree-sealing.md)
 - [`decision_wasm-binding.md`](docs/decisions/decision_wasm-binding.md)
 - [`decision_zero-dependency-engine-core.md`](docs/decisions/decision_zero-dependency-engine-core.md)

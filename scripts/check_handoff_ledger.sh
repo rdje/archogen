@@ -12,7 +12,7 @@
 # one sentence, with no `|` in it.
 #
 # THE QUOTE. The receiving leaf — its block in `docs/tasks/*.md` from its `- ID:` line to the next, or, once sealed,
-# in `docs/task-history/` — holds `[<Id>] <obligation>`, the same characters, whitespace and line wraps apart.
+# in `docs/task-history/`, its tree's stub never standing for it — holds `[<Id>] <obligation>`, the same characters, whitespace and line wraps apart.
 #
 # REFUSED: a row whose sentence its leaf does not quote; a row naming a leaf found nowhere; an identifier malformed or
 # held by two rows; a quote `[<PREFIX>-H<n>]` in a leaf whose identifier no ledger holds, or whose ledger names
@@ -76,8 +76,10 @@ for path in tracked:
             if not sentence:
                 fails.append("%s:%d — `%s` has no obligation" % (path, k + 1, hid)); continue
             rows[hid] = (leaf, sentence, "%s:%d" % (path, k + 1))
-# Leaf blocks, open trees first, then sealed history.
+# Leaf blocks, open trees first, then sealed history. A sealed leaf leaves a two-line stub in its tree, which is read
+# first: it must not shadow the sealed body its link names, which holds the leaf's quotes (PROGRAM.63).
 blocks = {}
+STUB = re.compile(r"^Status: `done` — sealed in \[")
 for path in [p for p in tracked if p.startswith("docs/tasks/")] + [p for p in tracked if p.startswith("docs/task-history/")]:
     try:
         text = open(path, encoding="utf-8").read().split("\n")
@@ -85,8 +87,11 @@ for path in [p for p in tracked if p.startswith("docs/tasks/")] + [p for p in tr
         continue
     cur = None; buf = []
     def close():
-        if cur is not None and cur not in blocks:
-            blocks[cur] = (path, norm("\n".join(buf)))
+        if cur is None:
+            return
+        body = norm("\n".join(buf))
+        if cur not in blocks or (STUB.match(blocks[cur][1]) and not STUB.match(body)):
+            blocks[cur] = (path, body)
     for n, line in enumerate(text, 1):
         m = re.match(r"^- ID: `([^`]+)`", line)
         if m or line.startswith("## "):
@@ -170,6 +175,15 @@ self_test() {
   fresh; printf '| `RX-H4` | `T.3` | sealed and still carried |\n' >> "$work/docs/decisions/decision_r.md"
   printf '# T.3\n\n- ID: `T.3`\n  Status: `done`\n  Acceptance: [RX-H4] sealed and still\n  carried.\n' > "$work/docs/task-history/T/T.3.md"
   arm "a hand-off quoted by a sealed leaf passes" 0 ""
+  # The real shape after a seal (PROGRAM.63): the tree keeps a two-line stub, which must not shadow the sealed body.
+  fresh; printf '| `RX-H4` | `T.3` | sealed and still carried |\n' >> "$work/docs/decisions/decision_r.md"
+  printf '# T.3\n\n- ID: `T.3`\n  Status: `done`\n  Acceptance: [RX-H4] sealed and still\n  carried.\n' > "$work/docs/task-history/T/T.3.md"
+  awk 'NR==4{print; print ""; print "- ID: `T.3`"; print "  Status: `done` — sealed in [`T/T.3.md`](../task-history/T/T.3.md); commit `RX-0001`"; next} {print}' "$work/docs/tasks/T.md" > "$work/t" && mv "$work/t" "$work/docs/tasks/T.md"
+  arm "a sealed leaf's stub in its tree does not shadow the sealed body that quotes it" 0 ""
+  fresh; printf '| `RX-H4` | `T.3` | sealed and still carried |\n' >> "$work/docs/decisions/decision_r.md"
+  printf '# T.3\n\n- ID: `T.3`\n  Status: `done`\n  Acceptance: sealed, and the quote dropped.\n' > "$work/docs/task-history/T/T.3.md"
+  awk 'NR==4{print; print ""; print "- ID: `T.3`"; print "  Status: `done` — sealed in [`T/T.3.md`](../task-history/T/T.3.md); commit `RX-0001`"; next} {print}' "$work/docs/tasks/T.md" > "$work/t" && mv "$work/t" "$work/docs/tasks/T.md"
+  arm "a sealed body that drops the quote is refused, its stub beside it" 1 "is not quoted word for word in \`T.3\` (docs/task-history/T/T.3.md)"
   fresh; rm -f "$work/docs/decisions/decision_r.md"; sed -i.bak 's/\[RX-H1\] //' "$work/docs/tasks/T.md"; rm -f "$work/docs/tasks/T.md.bak"
   arm "no ledger and no quote is a clean tree" 0 ""
   rm -rf "$work"
