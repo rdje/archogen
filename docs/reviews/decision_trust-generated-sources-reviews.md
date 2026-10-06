@@ -89,3 +89,37 @@ parent's opening lists: `M3.6.3.7` fixed it before this round's answers.
 | R2-21 | remark | an edit to a provenance file moves an item only when two programs hold it | §7 says so |
 | R2-22 | remark | the report states no exclusion list today | §8 and `GS-H7`: the report carries the parent's list too |
 | R2-23 | remark | no model or corpus for the recogniser | `xtask/src/generated_header.rs` and its corpus, and the inventory's `generated-marked` list as the census |
+
+**Round 3**, `2026-10-06`: the reviewer confirmed the census, the language-baseline example, that `root_forms` keys a
+`defgenerated` form so its edit reaches the change part, every hand-off quoted, and the corpus holding each case §3
+listed; it probed `marked` through a transcription of the code. There were 20 findings, 12 of them defects — as many
+as round 2's. The pattern was the record's own: tool pins half-integrated (R3-4, R3-16, R3-17), a chain escaping the
+role refusal (R3-5, R3-7), the refusal's package attribution resting on a rule the parent rejects (R3-6, R3-11), a
+foreseeable tree refused (R3-8) — each in a feature added to answer an earlier round, for a design with no instance in
+the tree. So the answer is a narrowing, not a patch per finding: one generator step decided; chains, tools and vendored
+inputs refused until `M3.6.6.4`; a generator judged by the parent's own computation of a program target's role
+packages. The recogniser's disagreements with its text were fixed in code with a corpus case each, the shebang rule
+measured against rustc 1.95.0.
+
+| Finding | Class | What it found | The answer |
+| --- | --- | --- | --- |
+| R3-1 | defect | the recogniser marks none of the repository's four marked files, and its reach was stated as "no comment syntax" alone | §1 states the recall, 0 of 4, none read by a program; §8 lists what it does not reach; §3 advises the marker in the first comment |
+| R3-2 | defect | a spaced `#! [attr]` was read as a shebang | the code skips comments and whitespace before testing for `[`; measured on rustc 1.95.0; two corpus cases |
+| R3-3 | defect | Kotlin, Swift and Scala blocks nest | they nest in the code; a corpus case; §3 says so |
+| R3-4 | defect | tool pins were in the closure and nowhere else | tools withdrawn: a generator outside the commit is refused until `M3.6.6.4` (§2) |
+| R3-5 | defect | a chain's "generated files through which" had two readings | chains refused (§2); §4's provenance is one step, its declared files unambiguous |
+| R3-6 | defect | the package attribution cited a rule the parent rejects | a crate root judged by the parent's own computation for its program target; a script by the longest workspace-member prefix, stated as this record's rule (§5) |
+| R3-7 | defect | another role's generator escaped through a chain | chains refused (§2) |
+| R3-8 | defect | an honest declaration of the catalog lock would be refused, an undeclared one unseen | §5 states the case; `GS-H12` hands `M2.7.5` the obligation |
+| R3-9 | defect | the amendment list missed `trust-new-shared`'s and `trust-shared-changed`'s rows, §4's aspects, §5's form description, §3's `Cargo.lock` sentence | §7 lists each; `GS-H8` cites §7 |
+| R3-10 | defect | `GS-H10` read two ways for the harness | `GS-H10` names a root of the role or the comparison harness of a pair holding it |
+| R3-11 | defect | `GS-H11` dropped the reading of a target's build | `GS-H11` names the parent's §2 computation; a non-program `.rs` generator refused |
+| R3-12 | defect | a generator among its own inputs passed | §2 refuses a file in both `generator` and `inputs` |
+| R3-13 | remark | a deleted declared file named as another form's input | chains refused; a form not live is stale alone |
+| R3-14 | remark | a non-live form with a deleted input had two codes | §2: a form that is not live is held to its syntax alone |
+| R3-15 | remark | markers in ordinary prose; CR-only endings; an unclosed block | §3 states the repair; a CR ends a line; an unclosed block runs to the end, each a corpus case |
+| R3-16 | remark | a tool's pin was believed | tools withdrawn |
+| R3-17 | remark | one tool per form; a pin's comment moved an item | tools withdrawn |
+| R3-18 | remark | the harness's reads were unrestricted; a file read by both made two items | §1: the harness's reads count through its beside-the-pair units too; §5 states both items |
+| R3-19 | remark | refusing is stricter than `ROADMAP.md` asks | §5 says it is a deliberate tightening and cites §4.4 and §14.4 |
+| R3-20 | remark | a form's place in the change part was carried by no hand-off | `GS-H7` and `GS-H5` carry it |

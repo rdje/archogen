@@ -4,9 +4,12 @@
 //!
 //! **The header** is the text of the comments that come before the file's first character that is neither whitespace
 //! nor inside a comment. Comment syntax is the file's language's, by its extension or name ([`syntax`]); a file with
-//! none, or that is not UTF-8 once a byte-order mark is dropped, has no header and is never marked. A `#!` first line
-//! is a comment where `#` is, and in Rust unless it opens an attribute (`#![`). Block comments nest in Rust and in no
-//! other language here. **Marked** means the header holds one of [`MARKERS`], in any case.
+//! none, or that is not UTF-8 once a byte-order mark is dropped, has no header and is never marked; a file with no
+//! extension whose first line is a `#!` is read with `#` comments. A `#!` first line is a comment where `#` is, and in
+//! Rust unless what follows it, comments and whitespace aside, is `[` — an inner attribute, as rustc 1.95.0 reads
+//! it (measured `2026-10-06`, the generated-sources record §3). Block comments nest in Rust, Kotlin, Swift and Scala, and in no other language here; an unclosed block
+//! runs to the end of the file. A line ends at `\n` or `\r`. An XML declaration (`<?xml … ?>`) may come before the
+//! comments of an `<!-- -->` file. **Marked** means the header holds one of [`MARKERS`], in any case.
 
 /// The phrases that mark a header, compared without regard to case.
 pub const MARKERS: &[&str] = &[
@@ -47,9 +50,9 @@ pub fn syntax(path: &str) -> Syntax {
         .map_or("", |(_, e)| e)
         .to_ascii_lowercase();
     match ext.as_str() {
-        "rs" => Syntax::Slash { nests: true },
-        "c" | "h" | "cc" | "cpp" | "cxx" | "hpp" | "js" | "ts" | "go" | "java" | "kt" | "swift"
-        | "scala" | "proto" | "css" => Syntax::Slash { nests: false },
+        "rs" | "kt" | "swift" | "scala" => Syntax::Slash { nests: true },
+        "c" | "h" | "cc" | "cpp" | "cxx" | "hpp" | "js" | "ts" | "go" | "java" | "proto"
+        | "css" => Syntax::Slash { nests: false },
         "sh" | "bash" | "zsh" | "py" | "rb" | "pl" | "toml" | "yml" | "yaml" | "cmake" | "mk"
         | "r" | "env" | "conf" => Syntax::Hash,
         "eadl" | "el" | "lisp" | "clj" | "s" | "asm" | "ini" => Syntax::Semicolon,
@@ -65,7 +68,11 @@ pub fn syntax(path: &str) -> Syntax {
 /// The header's comment text, or `None` when the file has no comment syntax or is not UTF-8.
 #[must_use]
 pub fn header(path: &str, bytes: &[u8]) -> Option<String> {
-    let syn = syntax(path);
+    let name = path.rsplit('/').next().unwrap_or(path);
+    let syn = match syntax(path) {
+        Syntax::None if !name.contains('.') && bytes.starts_with(b"#!") => Syntax::Hash,
+        other => other,
+    };
     if syn == Syntax::None {
         return None;
     }
@@ -79,17 +86,50 @@ pub fn header(path: &str, bytes: &[u8]) -> Option<String> {
             .all(|(k, c)| s.get(i + k) == Some(&c))
     };
     let line = |i: &mut usize, out: &mut String| {
-        while *i < s.len() && s[*i] != '\n' {
+        while *i < s.len() && s[*i] != '\n' && s[*i] != '\r' {
             out.push(s[*i]);
             *i += 1;
         }
         out.push('\n');
     };
-    // A `#!` first line.
-    if at(0, "#!")
-        && (syn == Syntax::Hash || (matches!(syn, Syntax::Slash { nests: true }) && !at(0, "#![")))
-    {
+    // A `#!` first line: a comment where `#` is; in Rust a shebang unless `[` follows, comments and whitespace aside.
+    let rust_attribute = || {
+        let mut j = 2;
+        loop {
+            while j < s.len() && s[j].is_whitespace() {
+                j += 1;
+            }
+            if at(j, "//") {
+                while j < s.len() && s[j] != '\n' {
+                    j += 1;
+                }
+            } else if at(j, "/*") {
+                j += 2;
+                while j < s.len() && !at(j, "*/") {
+                    j += 1;
+                }
+                j += 2;
+            } else {
+                return s.get(j) == Some(&'[');
+            }
+        }
+    };
+    let is_rust = path.to_ascii_lowercase().ends_with(".rs");
+    if at(0, "#!") && (syn == Syntax::Hash || (is_rust && !rust_attribute())) {
         line(&mut i, &mut out);
+    }
+    // An XML declaration before an `<!-- -->` file's comments.
+    if syn == Syntax::Angle {
+        let mut j = 0;
+        while j < s.len() && s[j].is_whitespace() {
+            j += 1;
+        }
+        if at(j, "<?") {
+            while j < s.len() && !at(j, "?>") {
+                j += 1;
+            }
+            i = j + 2;
+        }
     }
     loop {
         while i < s.len() && s[i].is_whitespace() {
@@ -321,6 +361,61 @@ mod tests {
                 true,
                 "blank lines before the header",
             ),
+            (
+                "x.rs",
+                b"#! [allow(dead_code)]\n// @generated\n",
+                false,
+                "a spaced inner attribute is no shebang",
+            ),
+            (
+                "x.rs",
+                b"#! /* c */ [allow(x)]\n// @generated\n",
+                false,
+                "nor one after a comment",
+            ),
+            (
+                "x.kt",
+                b"/* a /* b */ @generated */\nclass X\n",
+                true,
+                "Kotlin's blocks nest",
+            ),
+            (
+                "x.py",
+                b"# h\rimport x\r# @generated\r",
+                false,
+                "a CR ends a line, so a body marker stays in the body",
+            ),
+            (
+                "x.xml",
+                b"<?xml version=\"1.0\"?>\n<!-- Generated by x -->\n<a/>\n",
+                true,
+                "an XML declaration first",
+            ),
+            (
+                "scripts/foo",
+                b"#!/bin/sh\n# generated by gen.py\necho\n",
+                true,
+                "an extensionless script by its shebang",
+            ),
+            (
+                "scripts/foo",
+                b"generated by nothing\n",
+                false,
+                "an extensionless file with no shebang",
+            ),
+            (
+                "x.rs",
+                b"/* licence\nfn f() {} // @generated\n",
+                true,
+                "an unclosed block runs to the end",
+            ),
+            (
+                "x.rs",
+                b"//! The S0 table, generated by gen.sh.\npub const T: u8 = 1;\n",
+                true,
+                "an inner doc comment is a comment",
+            ),
+            ("X.RS", b"// @generated\n", true, "an extension in capitals"),
         ];
         for (path, bytes, want, why) in cases {
             assert_eq!(marked(path, bytes), *want, "{why}: {path}");
