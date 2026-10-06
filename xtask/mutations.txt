@@ -3221,3 +3221,20 @@ to
                                 }
                                 i += 2;
 end
+
+mutation gh-slash-header-reads-past-code
+file xtask/src/generated_header.rs
+test -p xtask generated_header::tests::the_corpus
+expect killed
+why M3.6.6.1, the generated-sources record §3 (its fourteenth review): where `//` is a comment, the header ends at the first character neither whitespace nor inside a comment; read past it, a body marker would mark.
+from
+                    } else {
+                        break;
+                    }
+to
+                    } else if i < s.len() {
+                        i += 1;
+                    } else {
+                        break;
+                    }
+end

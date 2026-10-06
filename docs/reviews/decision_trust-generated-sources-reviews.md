@@ -386,3 +386,23 @@ and the chain's second clause — and, over the inventory they write when none r
 | R13-r5 | remark | "eligible" added nothing since round 12 | retired: §5 judges and builds the generators of live forms |
 | R13-r6 | remark | a symbol as the form's name | "a name that is not a string" departs from the shape |
 | R13-r7 | remark | the cited census run was old | rerun on the tree that commits this answer |
+
+**Round 14**, `2026-10-06`: the reviewer confirmed the 142 cases, the fixture's thirty case by case, the 50 rows each
+traced by hand and one run, the 279 mutations, both equivalents by the sweep and by hand, two more sweep ids run, the
+census, every hand-off and quotation. There were 9 findings, 2 of them defects — the fewest yet. Step 6 claimed the
+parent's every `trust-baseline-stale`, where the parent decides a gone package or target before any build, so the
+record called stale a form in a run it said refuses nothing stale (R14-1); and `GS-H2` still bound each row to a
+mutation that removes it, after round 13 had said "the whole rule, or the clause that sets it apart", while row 15's
+mutation missed every `//` language (R14-2).
+
+| Finding | Class | What it found | The answer |
+| --- | --- | --- | --- |
+| R14-1 | defect | step 6 decided the parent's every `trust-baseline-stale`, which for a gone package or target the parent decides at step 2, wherever the gate runs | step 6 and `GS-H14`: the `trust-baseline-stale` the parent decides over an inventory — a baseline form no longer shared, an admission no current site uses; the rest its refusal at step 2; "no `defgenerated` form is stale in a run the instrument refuses" |
+| R14-2 | defect | `GS-H2`, the code and the method said "removed"; row 15's mutation changed nothing where `//` is a comment | "broken — the whole rule, or the clause that sets it apart" in each; row 15 split, `gh-slash-header-reads-past-code` breaking it where `//` is, killed |
+| R14-r1 | remark | "a root twice" read as two forms of one name | "a harness's pair naming no root, or naming one root twice" |
+| R14-r2 | remark | §6 sent a non-blob a generator build reads to the blob rule | to the parent's `trust-undeclared-input` row |
+| R14-r3 | remark | the whole path as the name, and an extension matched by suffix, passed every case | cases `crates/x/Makefile`, `a.b/run`, `d/.md`, `x.mjs` |
+| R14-r4 | remark | "a deleted form" undefined | "a form whose declared file is gone has at most one" code |
+| R14-r5 | remark | whether a step with a failed build runs to its end | it does, every judgment and build in it made |
+| R14-r6 | remark | one target built of a crate root of two; the Why read a script's role from §2's set | "each such target is built"; the Why: a script's role by this record's innermost-member rule |
+| R14-r7 | remark | row 5 pointed back at row 4's `.` | "a name's first character, whatever it is" |

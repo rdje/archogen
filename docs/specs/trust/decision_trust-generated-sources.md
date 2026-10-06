@@ -2,7 +2,7 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-06`
-- **Status:** `active` — written `2026-10-06` by leaf `M3.6.6.1`; rounds 1 to 13 answered the same day; under review,
+- **Status:** `active` — written `2026-10-06` by leaf `M3.6.6.1`; rounds 1 to 14 answered the same day; under review,
   by a context that did not write it, until a round finds no defect (`decision_executable-design-reviews.md`)
 - **External sources:** [the pinned Rust toolchain](../../book/src/ledger.md#rust-toolchain) — rustc's dependency
   information, which, with a root's declared run-time data, is what the inventory knows of the files a program reads;
@@ -77,18 +77,19 @@ or in them, which decide what is live; (3) the blob rule and the chain's first c
 judgments and generator builds, over live forms; (5) §3's refusal and the chain's second clause, over what the programs
 read and the generator builds read. Each step runs only when those before it refused nothing. A step that refuses ends
 the run as a refusal ends the parent's — *"on any refusal the tool writes no inventory, only the report naming it"* (the
-parent's §3) — the report naming every refusal that step found; a step in which a build fails ends the run with the gate
-unable to judge, the refusals that step found reported beside it. When the five steps refuse nothing, the inventory is
-written, and (6) the gate compares it as the parent's does, deciding `trust-form-missing`, the parent's
-`trust-baseline-stale` and §6's together on the baseline's host and reporting them together. So a form that departs from
-the shape names nothing to a later step, a malformed or a deleted form has one code, and no form is stale in a run the
-instrument refuses. A generator build that does not run reads nothing, and a generator target that is itself a root is
+parent's §3) — the report naming every refusal that step found; a step runs to its end, every judgment and build in it made, and one in which a build failed ends the run with the gate
+unable to judge, the refusals that step found reported beside it. When the five steps refuse nothing, the inventory is written, and (6) the gate compares it as the parent's does,
+deciding together on the baseline's host, and reporting together, `trust-form-missing`, the `trust-baseline-stale` the
+parent decides there over an inventory — a baseline form whose item is no longer shared, an admission no current site
+uses — and §6's; the parent's other `trust-baseline-stale`, a root form or classification whose package or target is
+gone, is its refusal at step (2), wherever the gate runs. So a form that departs from the shape names nothing to a later step, a malformed form has one code and a form whose
+declared file is gone at most one, and no `defgenerated` form is stale in a run the instrument refuses. A generator build that does not run reads nothing, and a generator target that is itself a root is
 built as that root (§5).
 
 The other forms of `trust/roots.eadl` keep the parent's reader, which reads the file in order and stops at the first of
 them that departs, the gate unable to judge: the `defgenerated` forms before that one are read and their shape and
 text-only refusals reported beside it, and those after it once it is repaired; a departure the parent's reader finds
-only once the whole file is read — a harness's pair naming no root, or a root twice — has every `defgenerated` form's
+only once the whole file is read — a harness's pair naming no root, or naming one root twice — has every `defgenerated` form's
 shape and text-only refusals reported beside it.
 
 **Refused until `M3.6.6.4` decides them**, `trust-undeclared-input`, wherever the gate runs:
@@ -149,7 +150,7 @@ catalogue's entries for `xtask/src/generated_header.rs`:
 | a name is matched exactly, in its case | `gh-name-matched-without-case` |
 | a file the table does not name is read by its extension, what follows the name's last `.` | `gh-extension-after-first-dot` |
 | a `.` that is a name's first character opens no extension: `.env` has none, `.gitlab-ci.yml`'s is `yml` | `gh-dotfile-extension` |
-| that first character is passed by its width, not by one byte | `gh-extension-by-first-byte` |
+| a name's first character, whatever it is, is passed by its width, not by one byte | `gh-extension-by-first-byte` |
 | a trailing `.` opens no extension | `gh-empty-extension-kept` |
 | an extension is matched in any case | `gh-extension-case-sensitive` |
 | a file neither named, nor with an extension the table holds, nor extensionless with a `#!` first line, has no syntax and is never marked | `gh-unknown-file-read-as-hash` |
@@ -159,7 +160,8 @@ catalogue's entries for `xtask/src/generated_header.rs`:
 | that `#!` is sought after a byte-order mark | `gh-extensionless-rule-before-bom` |
 | a file's bytes are read as UTF-8, an invalid sequence as U+FFFD | `gh-strict-utf8` |
 | a leading byte-order mark is dropped | `gh-byte-order-mark-kept` |
-| the header ends at the first character that is neither whitespace nor inside a comment, but for the XML declaration below | `gh-header-reads-past-code` |
+| the header ends at the first character that is neither whitespace nor inside a comment, but for the XML declaration below — in a `#`, `;`, `--`, CSS or `<!-- -->` file | `gh-header-reads-past-code` |
+| and where `//` is a comment | `gh-slash-header-reads-past-code` |
 | between its comments the header skips whitespace | `gh-header-whitespace-ascii` |
 | a header's line comment ends at a line feed or a carriage return | `gh-header-line-ignores-cr` |
 | an unclosed `/*` where `//` is runs to the end of the file | `gh-unclosed-slash-block-dropped` |
@@ -265,7 +267,7 @@ pairs and moves none of the others'.
 
 - the crate root of a program target, whatever its extension, is judged by that target's role packages, as the parent
   computes them for every program target (§2: `cargo metadata`'s graph by normal edges, and an example's development
-  edges too), the union of them when one file is the crate root of two targets — holding one of another role, it is refused, `trust-shared-program`, and not built; otherwise the target is built, as the parent builds and checks a root (§3): the parent's
+  edges too), the union of them when one file is the crate root of two targets — holding one of another role, it is refused, `trust-shared-program`, and not built; otherwise each such target is built, as the parent builds and checks a root (§3): the parent's
   manifest and workspace rules over its closure by the same edges, before its own build; `cargo build --release
   --locked --offline --no-default-features -p <package>` with `--bin <name>`, `--example <name>` or, for a `cdylib`,
   `staticlib` or `dylib`, `--lib`, under the parent's environment; the catalog's token rules and admissions over every
@@ -304,7 +306,8 @@ is carried by its leaf rather than left to the recogniser.
 When the instrument's five steps refuse nothing (§2), a `defgenerated` form that is not live is stale, `trust-baseline-stale`, on the baseline's host, as an admission no
 site uses is (the parent's §6): removed, so a generated source that stops being read and comes back is reviewed again.
 A form whose declared file a live form names as a generator or an input, or a generator build reads, is part of §2's
-chain — or, its file being no blob, of the blob rule's refusal — so its run refuses and nothing in it is stale: that
+chain — or, its file being no blob, of the blob rule's refusal, or, read by a generator build, of the parent's
+`trust-undeclared-input` row — so its run refuses and nothing in it is stale: that
 refusal is its one code until `M3.6.6.4`.
 
 ### 7. Case 5, and the parent's text
@@ -373,11 +376,11 @@ Each obligation is one sentence, quoted word for word beside its identifier by t
 | Id | Leaf | Obligation |
 | --- | --- | --- |
 | `GS-H1` | `M3.6.6.2` | `trust/roots.eadl` takes `defgenerated` forms read strictly as §2 states — one per declared path, one or more generator files, zero or more inputs, a `command` and a `reason` each one clause holding exactly one non-empty string — refusing as `trust-undeclared-input` wherever the gate runs, each a coded refusal — a file the eADL reader cannot read being the parent's failure, the gate unable to judge, and the parent's reader stopping at the first other form that departs, with the shape and text-only refusals of the `defgenerated` forms before it reported beside it, and of every one beside a departure it finds only once the file is read — every departure from that shape, every text-only construction §2 lists, and for a live form a non-blob or a symbolic link among its generators and inputs and its chain as §2's first clause defines it, and the chain's second clause over what a live form's crate-root generator's build reads, and holding a form that is not live to its shape and the text-only constructions alone. |
-| `GS-H2` | `M3.6.6.2` | A file that `xtask/src/generated_header.rs`'s `marked` marks, that a program reads, that no `defgenerated` form declares and that no chain of §2 holds, is refused as `trust-undeclared-input` wherever the gate runs, the recogniser being §3's rule — its corpus, its `TABLE` held equal to §3's machine-read table, its `rust_shebang` held to the pinned rustc by `the_shebang_rule_is_rustc_s`, each of §3's rows removed by a catalogued mutation the corpus or the fixture kills, and `scripts/mutation_sweep.sh` exiting 0 over its functions, every mutation its operators make killed, timed out or not compiling, or listed, with its reason, in `xtask/generated_header.equivalents`. |
+| `GS-H2` | `M3.6.6.2` | A file that `xtask/src/generated_header.rs`'s `marked` marks, that a program reads, that no `defgenerated` form declares and that no chain of §2 holds, is refused as `trust-undeclared-input` wherever the gate runs, the recogniser being §3's rule — its corpus, its `TABLE` held equal to §3's machine-read table, its `rust_shebang` held to the pinned rustc by `the_shebang_rule_is_rustc_s`, each of §3's rows broken by a catalogued mutation — the whole rule, or the clause that sets it apart — that the corpus or the fixture kills, and `scripts/mutation_sweep.sh` exiting 0 over its functions, every mutation its operators make killed, timed out or not compiling, or listed, with its reason, in `xtask/generated_header.equivalents`. |
 | `GS-H3` | `M3.6.6.2` | Each program's record carries its provenance as §4 defines it, the harness's reads and provenance counted through the units it compiles beside its pair's two builds, and each pair the parent pairs shares a generated-provenance item per file one side's provenance holds and the other side's provenance holds or the other side reads, matched by path, and one per non-empty content of which each side has a path its provenance holds or it reads, the two sides' sets of such paths differing and one of those paths a provenance file of its side, as the parent matches a copy, its identity the path or the sorted union of those paths joined by a space, its aspects the content's sha256, its roles on each side over that side's paths — `read` among them for a side that reads one — and each side's declared files with theirs, the harness's own pair taking the harness's provenance as an aspect of its comparison-harness item, compared and proposed as every shared item is. |
 | `GS-H11` | `M3.6.6.2` | For each generator file of each live form, each program target whose crate root it is is refused as `trust-shared-program`, and not built, when its role packages, by the parent's §2 computation and their union for a crate root of two targets, hold one of a role other than the reading program's own — for the harness, other than its pair's two — and is otherwise built as §5 states, every file that build reads subject to §3 and to §2's chain rule; a `.rs` file that is no program target's crate root is refused as `trust-undeclared-input`; and a file neither `.rs` nor a program target's crate root, lying by the innermost workspace member whose directory contains it in a role package of such a role, is refused as `trust-shared-program`. |
 | `GS-H4` | `M3.6.6.2` | When the instrument's five steps refuse nothing, a `defgenerated` form whose declared file no program reads is `trust-baseline-stale` on the baseline's host, decided with the gate's other comparisons. |
-| `GS-H14` | `M3.6.6.2` | The instrument decides in §2's five steps — the forms' text, the programs' builds and handed data with every refusal the parent makes before or in them, the blob rule and the chain's first clause, §5's judgments and generator builds, then §3's refusal and the chain's second clause — each step running only when those before it refused nothing, a step that refuses ending the run with every refusal it found reported and no inventory written, a step in which a build fails ending it with the gate unable to judge and that step's refusals reported beside it, and, when the five refuse nothing, the gate deciding `trust-form-missing`, the parent's `trust-baseline-stale` and §6's together over the inventory on the baseline's host. |
+| `GS-H14` | `M3.6.6.2` | The instrument decides in §2's five steps — the forms' text, the programs' builds and handed data with every refusal the parent makes before or in them, the blob rule and the chain's first clause, §5's judgments and generator builds, then §3's refusal and the chain's second clause — each step running only when those before it refused nothing, a step that refuses ending the run with every refusal it found reported and no inventory written, a step in which a build fails ending it with the gate unable to judge and that step's refusals reported beside it, and, when the five refuse nothing, the gate deciding together over the inventory on the baseline's host `trust-form-missing`, the `trust-baseline-stale` the parent decides there — a baseline form no longer shared, an admission no current site uses — and §6's. |
 | `GS-H15` | `M3.6.6.2` | The instrument's tests hold, for §2's order, a refusal at each of its five steps ending the run with no form stale — a malformed form, a parent's refusal in the programs' builds, a live form's input that is no blob, a generator target refused by its role packages and not built, a marked file a generator build compiles reported beside a §3 refusal of the same step — a build failing in §5's step beside a refusal of that step with the gate unable to judge, a `defgenerated` form's shape refusal reported beside another form's departure and one after it not, and every one beside a harness's pair naming no root, each removed in turn by a catalogued mutation. |
 | `GS-H5` | `M3.6.6.2` | The instrument's tests hold a case-3 fixture of two roots whose differently-named generated sources share an input through two generators, and others for a generator shared over two inputs, a generator with no input, a data file one side reads that the other's generated source was made from, a copy matched by sha256, the harness, a third program, a script running a tool declared and decided, a chain refused, a chain's upstream form not stale, a marked module of a crate-root generator's build refused, a live form §2 refuses whose generator is not built, a generator target that is itself a root, a non-`.rs` crate root refused as a generator, a crate root of two targets judged by the union of their role packages, a gitlink input refused, a marked file no form can declare refused, another role's program target and script refused as generator files, a library's crate root refused as one, a `defgenerated` form added, changed and removed in the change part, an edit to a declared generator reported and to an undeclared script "unchanged", and each refusal, each removed in turn by a catalogued mutation. |
 | `GS-H7` | `M3.6.6.2` | The gate's standing list names every `defgenerated` form not accepted, its change part every one added, changed or removed against the base commit's, and its report states the parent's §3 list of what the inventory does not see and every exclusion §8 lists. |
@@ -402,8 +405,9 @@ Each obligation is one sentence, quoted word for word beside its identifier by t
 - **Provenance per file, matched against what the other side reads too.** §14.4's case is a shared *input*, and §4.4's
   is a shared formula: either alone is a common source of error, and so is a data file one side reads directly that the
   other's generated source came from.
-- **A generator judged by the set the parent already computes.** Whether a generator file is another role's code is
-  read from §2's set, reviewed with the target's classification; the generator's build is read for §3, the chain
+- **A generator judged by the set the parent already computes.** Whether a crate-root generator is another role's code
+  is read from §2's set, reviewed with the target's classification, and a script's from the innermost workspace member
+  that holds it, this record's own rule (§5); the generator's build is read for §3, the chain
   rule and the parent's rules and admissions over what it compiles, and is no provenance.
 - **Declined, round 1's R1-21:** `.gitattributes`' `linguist-generated` as a second recognition signal. It is a
   hosting's display hint, read by no build, a second, weaker way to say what the reviewed form says.
@@ -437,3 +441,4 @@ answered here. The history is [`decision_trust-generated-sources-reviews.md`](..
 | 11 | `2026-10-06` | 5, and 8 remarks | every finding answered: the sweep shortens each syntax's delimiters and swaps compared line ends, seven survivors answered by cases; the extensionless rule a row of its own; the order's last step after the builds; an unreadable file the parent's failure; `GS-H2` as the sweep's exit |
 | 12 | `2026-10-06` | 3, and 5 remarks | every finding answered: a refusal ends the run as the parent's does, staleness decided only in a run that refuses nothing, the order a hand-off (`GS-H14`); the reader's stop carried by `GS-H1` with a fixture; a nested block's `*/` leaving the header's text as its `/*` does |
 | 13 | `2026-10-06` | 5, and 7 remarks | every finding answered: the order five instrument steps, the gate's comparison a sixth over the written inventory; a build failing in a step, unable to judge; a departure the parent's reader finds at the end; one fixture per step, `GS-H15`; row 4 as the code reads a dotfile; "eligible" retired for "live" |
+| 14 | `2026-10-06` | 2, and 7 remarks | every finding answered: step 6 decides only the `trust-baseline-stale` the parent decides over an inventory, the rest the parent's refusal at step 2; "broken" for "removed" in `GS-H2`, the code and the method, and row 15 broken where `//` is too |

@@ -49,8 +49,8 @@ The method moves each of them out of the reader's judgement and into something t
    other.
 5. **A rule stated as code is held by rows and a sweep** (added `2026-10-06` by leaf `M3.6.6.1`, after its rounds 7 to
    10). Where a design's rule is code with a corpus, the record states its rules as the rows of one machine-read table —
-   with any table of the code's data the rule reads, held to the code by its own test — and no sentence states another; each row names a catalogued mutation that removes it, which the corpus or an
-   instrument's fixture kills, and a test holds the rows equal to the catalogue. What the code does beyond the rows is
+   with any table of the code's data the rule reads, held to the code by its own test — and no sentence states another; each row names a catalogued mutation that breaks it — the whole rule, or the clause that sets it apart — which the
+   corpus or an instrument's fixture kills, and a test holds the rows equal to the catalogue. What the code does beyond the rows is
    held by `scripts/mutation_sweep.sh`, run to exit 0: every mutation its operators make of the code is killed, times
    out or does not compile, or is listed as equivalent with its reason in a file the sweep reads, and refuses when
    stale.
