@@ -16,8 +16,8 @@
 - **Active tree:** `M3` → frontier `M3.1`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M3.1.2`, `crates/eadl-resolve`'s production relation, held to `M3.1.1.1`'s model by `SR-H7`:
-  `M3.1.1` closed `2026-10-05` (round 31, no defect). `M3.6.1` closed `2026-10-05`; `M3.6.3`, the trust gate and F30,
+- **Next action:** `M3.1.2.1`, the vocabulary as the language's own files — first of `M3.1.2`'s six slices, the
+  production relation held to `M3.1.1.1`'s model by `SR-H7`; `M3.1.1` closed `2026-10-05` (round 31, no defect). `M3.6.1` closed `2026-10-05`; `M3.6.3`, the trust gate and F30,
   is next in `M3.6`.
   `M2`'s open leaves all wait on the director: `M2.7.4.5`, the records and the
   lock (findings §11), and `M2.7.6`'s review and hosting half.
