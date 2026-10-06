@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the book explains the trust gate
+
+`ARCHOGEN-M3-0491` (leaf `M3.6.4`).
+
+- The book has a chapter on why archogen's checking programs must not share a mistake with the generator they check:
+  plain words and an everyday comparison first, then how the record of what each program is built from is made and
+  compared, the reports and refusals, and where the check runs — and what it cannot prove.
+
 ## archogen — a commit can no longer leave a new source file behind
 
 `ARCHOGEN-PROGRAM-0490` (leaf `PROGRAM.66`).

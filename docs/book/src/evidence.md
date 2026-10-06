@@ -112,60 +112,13 @@ description is byte-identical.
 
 ### Trust dependencies
 
-The generator and the independent checker are meant to reach their verdicts separately. §4.4's
-position is not that sharing is forbidden — it is that sharing must be **visible**.
-
-Each inventoried item records its identity, version, **content hash**, role, and which roots
-reach it. The hash is what catches a change behind an unchanged name and version. The role is
-what keeps the gate meaningful:
-
-| Role | Shared with the generator costs independence? |
-| --- | --- |
-| infrastructure | no — a shared allocator cannot make two implementations agree on a wrong answer |
-| interpretation / normalization | yes — it shapes what both sides *see* |
-| semantic analysis | yes — it shapes what both sides *conclude* |
-| authoritative data | yes |
-| reference derivation | yes |
-
-An unrelated change produces **no** warning. §14.4 requires that too, and a gate that cries
-wolf is a gate that gets disabled.
-
-The design is `docs/specs/trust/decision_trust-inventory.md`, and its measuring instrument is built:
-`cargo xtask trust-inventory` (`xtask/src/trust.rs`) builds each **root** — the program that runs a role, such as
-the `archogen` executable for the generator — clean from the commit's own files, reads what the compiler read for
-it, and writes `target/trust/trust-dependencies.json` with every item two roots share. The roots are declared in
-`trust/roots.eadl`, and so is every other **program target** of the workspace — an executable, an example, the
-browser module — as not a root, with a reason and the role packages its build compiles. A program target the file
-does not classify, or one that has started compiling another role's package, is reported for review
-(`trust-unclassified-program`), so no one can add a checker beside the generator unseen (leaf `M3.6.3.1`).
-`cargo xtask trust-baseline --propose` writes the **baseline** a review starts from, `trust/baseline.eadl`: one form
-per shared item with the digests the inventory measured, and the review's part — the item's classification, the
-property it can affect, its residual risk, the controls that remain — left `unstated`; nothing in the file can say a
-form is accepted (leaf `M3.6.3.2`). Its digests hold only on the host they were taken on, and the baseline the gate
-compares against is the CI runner's, so it is proposed there.
-`cargo xtask trust-gate` judges a commit against its base (leaf `M3.6.3.3`): it builds the inventory and writes
-`target/trust/report.txt` in two parts. The **change** names each shared item new since the base commit's baseline
-(`trust-new-shared`) or measured otherwise (`trust-shared-changed`), or says *unchanged*; the **standing list** names
-every shared item, root, classification and admission, none accepted until reviews are read where they are protected
-(`M3.6.5`). On the baseline's host the gate refuses a commit whose own `trust/` holds no form for something it shares
-or builds, or a form proposing other digests than the commit measures (`trust-form-missing`), or keeps one for
-something gone (`trust-baseline-stale`); off it, it compares nothing and says so. So a change to what two roots share
-comes with its re-proposed form, is reported once, by the commit that makes it, and the next unrelated commit reads
-*unchanged*. A form naming a package the commit no longer has is refused everywhere, since nothing can be
-built without it. In CI the gate is built from the base commit and runs on every pull request and every push to
-`main` ([Verifying the toolchain](verification.md)); in the `assurance` tier its step fails on a refusal and is
-otherwise *not built*, never a pass, until forms can be accepted (`M3.6.5`).
-`cargo xtask trust-verify <package>` checks a package that carries an inventory, where a claim is consumed (leaf
-`M3.6.3.5`): it refuses one whose inventory is missing or of another commit or toolchain, whose report names another
-inventory, whose artifacts are not the inventory's, in which a result was produced by anything but its role's
-inventoried program — or, for the reference model, its pair's comparison harness — or which hands a root a
-dependency its form does not declare (`trust-inventory-stale`). The package's layout is fixed there provisionally,
-since the package is `M4.7`'s to write. Each of §14.4's cases is a test of the gate, each in a scratch workspace judged commit by commit
-(`M3.6.3.6`): a package both roots come to compile, a shared package edited or given a feature behind an unchanged name,
-a data file both roots are handed and an input declared but absent, a package carrying an earlier commit's inventory,
-and — reading *unchanged* — a README, a development profile, an override for a package no root compiles and a comment
-in the toolchain pin. Every code of the gate is removed in turn by a catalogued mutation, and a test holds the
-catalogue to the record's table.
+The generator and the independent checkers are meant to reach their verdicts separately. §4.4's position is not that
+sharing is forbidden — it is that sharing must be **visible**: everything two checked programs share is inventoried by
+its content hash, so a change behind an unchanged name and version is caught, and classified, so a shared allocator is
+not treated like a shared constraint evaluator. A conclusion resting on two programs' independence is established only
+once every item they share has been reviewed, and an unrelated change produces **no** warning — §14.4 requires that
+too, and a gate that cries wolf is a gate that gets disabled. How the inventory is built, how the gate judges a commit
+and how a package is verified is a chapter of its own: [Checks that must not share a mistake](trust.md).
 
 ⚠️ The honest limit, from §4.4 itself: *"This check enforces disclosure and change control; it
 does not prove semantic independence."* Two separately written implementations of the same
