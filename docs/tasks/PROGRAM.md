@@ -991,6 +991,83 @@ mdBook that is the director's window into the project.
     record and its index row; `CHANGELOG.md`. `DOCTRINE_ENFORCEMENT.md`'s row is unchanged and still true — a sealed
     leaf is the leaf — and the file stands at its ceiling.
 
+- ID: `PROGRAM.64`
+  Status: `done` — filed and closed `2026-10-06`; a whole rehearsal passing waits on `PROGRAM.65`
+  Goal: the CI rehearsal (`scripts/ci_rehearse.sh`, `PROGRAM.10.4`) gives every process it runs the runner's want of
+  a git identity and of a global configuration — those that clear their environment and keep `HOME` included.
+  Acceptance: in the rehearsal's job environment, `a3c0cbd`, the commit the first CI run failed on, fails the same six
+  `catalog_check` tests the runner failed, and the commit after `.10.5.1` passes them. Narrowed `2026-10-06` from a
+  whole rehearsal of each commit: a whole rehearsal fails on any commit since `M2.7.4.3`, for the reason `PROGRAM.65`
+  owns.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — `PROGRAM.10.5.1`'s six failures reached the runner although `PROGRAM.10.4`'s
+    rehearsal promises *"no global or system git configuration and no identity the job did not set"* and passed on
+    `2026-09-30`. Its job environment says so with variables alone:
+    ```text
+    $ git grep -n -e 'GIT_CONFIG_GLOBAL=/dev/null' -e 'GIT_CONFIG_KEY_0=user.useConfigOnly' HEAD -- scripts/ci_rehearse.sh
+    HEAD:scripts/ci_rehearse.sh:53:    GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null \
+    HEAD:scripts/ci_rehearse.sh:54:    GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=user.useConfigOnly GIT_CONFIG_VALUE_0=true \
+    ```
+  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: the rehearsal's `job` says "no global configuration, no identity" with
+    `GIT_CONFIG_GLOBAL`, `GIT_CONFIG_COUNT` and `GIT_CONFIG_NOSYSTEM`, and keeps this machine's `HOME`. WHY that is not
+    the runner's: a process that clears its environment and passes back an allowlist keeps `HOME` and drops every
+    `GIT_CONFIG_*`, so its git reads `~/.gitconfig` — here, an identity; on the runner, none.
+    ```text
+    $ git grep -n -e '"HOME"' HEAD -- xtask/src
+    HEAD:xtask/src/catalog_build.rs:187:    for key in ["PATH", "HOME"] {
+    HEAD:xtask/src/catalog_check.rs:152:        for key in ["PATH", "HOME", "GIT_DIR", "GIT_INDEX_FILE", "GIT_WORK_TREE"] {
+    HEAD:xtask/src/catalog_check.rs:499:    for key in ["PATH", "HOME", "RUSTUP_HOME"] {
+    ```
+    `catalog_check.rs:152` is the history readers' `Git`, which `pending_date` used until `.10.5.1`; the builds of
+    `catalog_build.rs`, which the trust instrument shares (`environment`), pass `RUSTUP_HOME` back as well, or derive it
+    from `HOME`.
+  - [x] **FIX** — `scripts/ci_rehearse.sh`: the job runs with `HOME` a directory of its own under
+    `target/ci/rehearsal/`, whose `.gitconfig` holds `user.useConfigOnly = true` and nothing else, `XDG_CONFIG_HOME`
+    unset, and the toolchain named by `RUSTUP_HOME` and `CARGO_HOME`, the machine's, so nothing is installed again.
+    The two `GIT_CONFIG_*` settings the file now carries go; `GIT_CONFIG_NOSYSTEM` stays.
+  - [x] **ADDRESSED (verified)** — in the rehearsal's checkout of `a3c0cbd`, `cargo test -p xtask catalog_check` in the
+    old job environment (the `GIT_CONFIG_*` variables, the machine's `HOME`) → `test result: ok. 8 passed; 0 failed`,
+    the miss; in the new one → `test result: FAILED. 2 passed; 6 failed`, each `git var GIT_COMMITTER_IDENT` failed:
+    Committer identity unknown, the runner's six. On `e2baf65`, the new one → `test result: ok. 9 passed`. The job's
+    home holds its `.gitconfig` and nothing else afterwards: `ls -a target/ci/rehearsal/home` → `.gitconfig`, so the
+    toolchain was the machine's and nothing was installed. A whole rehearsal of `a3c0cbd` with the fix, `bash
+    scripts/ci_rehearse.sh a3c0cbd`, failed its `tests` step with `test result: FAILED. 57 passed; 49 failed`. Run
+    alone in the same environment, `cargo test -p xtask --bin xtask` → the same 49, `grep -E '^test .* FAILED$'` by
+    module: 6 `catalog_check`, the six; 5 `catalog_build` and 38 `trust`, each refusing *"a cargo configuration above
+    the repository, on a build's path (§3)"*, which the machine's own `HOME` gives too: `PROGRAM.65`.
+  - [x] **NO REGRESSION** — `bash -n scripts/ci_rehearse.sh` → clean; the job's other variables unchanged; the
+    doctrine gate at commit. ⚠️ Not verified: a whole rehearsal passing, which no commit since `M2.7.4.3` can until
+    `PROGRAM.65`.
+  - [x] **LOCKSTEP** — the script's header and comment; the book's verification chapter; `TOOLBOX.md`'s row; this leaf,
+    `PROGRAM.65` and both logs; `CHANGELOG.md`.
+  Verification: `2026-10-06` — the Verification Log's row
+  Commit: `ARCHOGEN-PROGRAM-0482 (leaf PROGRAM.64)`
+
+- ID: `PROGRAM.65`
+  Status: `blocked` — on the director: where the rehearsal's checkout may live
+  Goal: the CI rehearsal's checkout has no cargo configuration above it, as the runner's has none, so a whole
+  rehearsal can pass.
+  Reproduce / issue: found `2026-10-06` by `PROGRAM.64`. The rehearsal checks out its commit at
+  `target/ci/rehearsal/repo`, inside this checkout, whose tracked `.cargo/config.toml` (since `ARCHOGEN-PROGRAM-0029`,
+  `2026-09-13`) is then on every build's directory path. Cargo reads it, and the trust instrument's
+  `configurations_on_path` (`xtask/src/catalog_build.rs`, §3 of the catalog record) refuses it, rightly: *"a cargo
+  configuration above the repository, on a build's path (§3)"*, failing 43 tests in the rehearsal — 38 `trust`, 5
+  `catalog_build` — with the machine's `HOME` as with the job's. So no whole rehearsal has passed since those tests
+  landed — `catalog_build`'s with `M2.7.4.3` (`f6381c9`, `2026-10-03`), `trust`'s with `M3.6.2` (`1d6415d`,
+  `2026-10-05`) — both after the last rehearsal, `2026-09-30`. The runner's checkout has none above it: the same 43
+  tests pass there (`.10.5`'s second run).
+  Why blocked: the fix moves the rehearsal's checkout outside this repository's tree, and the data-locality rule keeps
+  every scratch file under `target/` here. Options for the director: **A** — a sibling directory on the same volume,
+  made and removed by the script, recorded in a decision as the rule's one exception (recommended: the simplest, and
+  the bytes stay on this volume); **B** — a disk image under `target/`, mounted at a path outside the tree for the run
+  (the bytes stay under `target/`, but it is macOS-only and needs a mount); **C** — keep the checkout where it is and
+  state the rehearsal unable to run the `trust` tests, which leaves it red on every commit.
+  Acceptance: `bash scripts/ci_rehearse.sh` on `HEAD` passes, and on `a3c0cbd` fails at the six `catalog_check` tests
+  alone.
+  Verification: `pending`
+  Commit: `pending`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1056,8 +1133,9 @@ roadmap item X live?".
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
 | 1 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 2 | `PROGRAM.65` | `blocked` | **awaiting the director** — the CI rehearsal's checkout sits under this checkout's cargo configuration, which the trust instrument refuses, so no whole rehearsal passes; the fix moves it outside the tree, against the data-locality rule unless the director rules an exception (options A–C in the leaf) |
 
-The row waits on something outside this repository's commits, the director's yes. The pending leaves beside it —
+Both rows wait on the director. The pending leaves beside them —
 `PROGRAM.53`, `.54`, `.60` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and its full record is sealed under `docs/task-history/PROGRAM/`.
 
@@ -1107,7 +1185,8 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
   `PROGRAM.10.1`**: the emulator step is quarantined under `M2.8`, so `make integration` reads `incomplete`,
   which step 2 permits a push past after reading what it names. `M2.8.3.4` removed the cause the same day: the
   step passes, and so does the tier (`make integration` → `12 passed, 0 quarantined` on `2026-10-06`).
-- `PROGRAM.31` and `PROGRAM.32` wait on the director's ruling on the findings record's §8.
+- `PROGRAM.31` and `PROGRAM.32` wait on the director's ruling on the findings record's §8; `PROGRAM.65` on where
+  the CI rehearsal's checkout may live.
 
 ## Verification Log
 
@@ -1198,6 +1277,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `2026-10-06` | `PROGRAM.10.5.1` | the catalog tests with no identity outside the scratch repository, before and after; the same in the ordinary environment; the new entry alone; the whole suite with no identity; the focused tier | 2 passed, 6 failed, then 9 passed; 9 passed; killed by the new test; 1274 passed, 0 failed; passed |
 | `2026-10-06` | `PROGRAM.10.5.2` | the test's two sources on an ELF target, before and after, and on the host; the blob in what they build; the test; the whole suite; the focused tier | `Size expression must be absolute.`, then `rc=0` on both formats; 1 in each `.rlib`; ok; 1274 passed, 0 failed; passed |
 | `2026-10-06` | `PROGRAM.10.5` | the first and second CI runs, each job's log fetched by the API; the two assumptions | `focused` and `integration` failed at `tests`, 7 of 106, `enforce` passed; then every job `success`, `tier integration: passed — 12 passed`; both held |
+| `2026-10-06` | `PROGRAM.64` | the catalog tests in the rehearsal's checkout of `a3c0cbd`, the old job environment and the new; the same on `e2baf65`; the job home afterwards; a whole rehearsal of `a3c0cbd` | 8 passed, then 2 passed, 6 failed; 9 passed; `.gitconfig` alone; 57 passed, 49 failed: the six, and 43 (38 `trust`, 5 `catalog_build`) `PROGRAM.65`'s |
 
 ## Commit Log
 
@@ -1329,6 +1409,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.10.5.2` | `ARCHOGEN-PROGRAM-0479 (leaf PROGRAM.10.5.2)` | **the `.incbin` fixture assembles on ELF**: `.previous`, not `.text`, so a naked function's `.size` is measured in its own section |
 | `PROGRAM.10.5.1` | `ARCHOGEN-PROGRAM-0480 (leaf PROGRAM.10.5.1)` | **a reproduction's description corrected**: the leaf said the identity-less runs used the machine's `CARGO_HOME` and `RUSTUP_HOME`; bash had expanded them inside the empty home, where rustup installed the same pin |
 | `PROGRAM.10.5` | `ARCHOGEN-PROGRAM-0481 (leaf PROGRAM.10.5)` | **CI green on the runner**: the first run's two test defects fixed, the second run `success` on every job; `PROGRAM.10` closed with it |
+| `PROGRAM.64` | `ARCHOGEN-PROGRAM-0482 (leaf PROGRAM.64)` | **the rehearsal's job has a home of its own**, naming no git identity, so a tool that clears its environment and keeps `HOME` sees what the runner gives; `PROGRAM.65` filed for its checkout's place |
 
 ## Changelog
 

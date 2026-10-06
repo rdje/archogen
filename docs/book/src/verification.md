@@ -257,7 +257,11 @@ runs, keyed on the files that pin them.
 Nothing on this machine can watch that workflow run, so `scripts/ci_rehearse.sh` runs the job's steps against
 the repository as the runner receives it: one commit, checked out as [`actions/checkout`](ledger.md#github-actions) checks it out, nothing
 untracked or built, no submodule, no global git configuration. Its first rehearsal, `2026-09-30`, passed:
-every step green but the quarantined emulator, the gap annotated, the summary written. What it cannot
+every step green but the quarantined emulator, the gap annotated, the summary written. The job runs in a home of
+its own that names no git identity, since a variable alone does not reach a tool that clears its environment and
+keeps `HOME`; the first real run found a fault the rehearsal had missed that way (leaf `PROGRAM.64`). A whole
+rehearsal does not pass today: its checkout sits inside this one, under its cargo configuration, which the trust
+instrument refuses, and moving it out waits on the director (leaf `PROGRAM.65`). What it cannot
 reproduce is the runner's own userland, GNU `sed` and `awk` where this machine has BSD ones, and its object format,
 ELF where this machine's is Mach-O. The first real run, `2026-10-06`, found no fault in the userland and two in
 `xtask`'s tests: one test relied on the developer's git identity, and one test's assembly only Mach-O accepted. Both

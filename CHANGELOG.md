@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the local stand-in for CI no longer borrows the developer's identity
+
+`ARCHOGEN-PROGRAM-0482` (leaf `PROGRAM.64`).
+
+- The script that imitates a CI run on this machine now gives the run a home directory of its own, so tools that
+  discard most of their environment no longer pick up the developer's git identity; on the commit CI first failed on,
+  it now finds the same six failures GitHub did. A second gap surfaced: the imitation runs inside this repository, under
+  a configuration the trust checks rightly refuse, so it cannot pass as a whole until the director decides where it may
+  run instead.
+
 ## archogen — the checks pass on GitHub's machines
 
 `ARCHOGEN-PROGRAM-0481` (leaf `PROGRAM.10.5`).

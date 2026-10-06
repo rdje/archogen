@@ -6,7 +6,8 @@
 # can be reproduced is everything that is not the runner's operating system: a checkout of one commit, made the
 # way `actions/checkout` makes it (`git init`, fetch the commit with its history, `checkout -B main`), so nothing
 # untracked, ignored or built is there; no submodule initialised; no global or system git configuration and no
-# identity the job did not set; `GITHUB_PATH` and `GITHUB_STEP_SUMMARY` honoured as Actions honours them.
+# identity the job did not set, in a home of the job's own; `GITHUB_PATH` and `GITHUB_STEP_SUMMARY` honoured as
+# Actions honours them.
 #
 # USAGE: scripts/ci_rehearse.sh [<commit>]
 #   Default: the index and working tree as `git stash create` records them â€” tracked changes and staged new
@@ -46,12 +47,18 @@ note "rehearsing $(git -C "$REPO" rev-parse --short HEAD) in ${REPO#"$ROOT"/} â€
 mkdir -p "$REPO/target/ci"
 ln -s "$ROOT/target/ci/tools" "$REPO/target/ci/tools"
 
-# The job's environment: no git configuration it did not bring, Actions' two files.
+# The job's environment: no git configuration it did not bring, Actions' two files. The runner's home holds no git
+# identity, and a variable cannot say so to every process: the catalog checker's git, and the catalog's and the
+# trust instrument's builds, clear their environment and pass back `HOME`, so no `GIT_CONFIG_*` variable reached
+# them, and the checker's git read this machine's `~/.gitconfig` (`PROGRAM.64`). So the job gets a home of its own,
+# whose one file guesses no identity, and the toolchain by `RUSTUP_HOME`, which those processes pass back too.
 : > "$WORK/github_path"; : > "$WORK/step_summary"
+JOB_HOME="$WORK/home"; mkdir -p "$JOB_HOME"
+printf '[user]\n\tuseConfigOnly = true\n' > "$JOB_HOME/.gitconfig"
+TOOLCHAIN_HOME="${RUSTUP_HOME:-$HOME/.rustup}"; CRATES_HOME="${CARGO_HOME:-$HOME/.cargo}"
 job() {
-  env -u GIT_AUTHOR_NAME -u GIT_AUTHOR_EMAIL -u GIT_COMMITTER_NAME -u GIT_COMMITTER_EMAIL \
-    GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null \
-    GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=user.useConfigOnly GIT_CONFIG_VALUE_0=true \
+  env -u GIT_AUTHOR_NAME -u GIT_AUTHOR_EMAIL -u GIT_COMMITTER_NAME -u GIT_COMMITTER_EMAIL -u XDG_CONFIG_HOME \
+    GIT_CONFIG_NOSYSTEM=1 HOME="$JOB_HOME" RUSTUP_HOME="$TOOLCHAIN_HOME" CARGO_HOME="$CRATES_HOME" \
     GITHUB_ACTIONS=true GITHUB_PATH="$WORK/github_path" GITHUB_STEP_SUMMARY="$WORK/step_summary" \
     PATH="$(paste -sd: "$WORK/github_path" | sed 's/$/:/')$PATH" \
     bash -c "cd '$REPO' && $1"

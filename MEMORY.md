@@ -16,12 +16,11 @@
 - **Active tree:** `M3` → frontier `M3.6`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `PROGRAM.64` — the CI rehearsal gives its job a home of its own, so a tool that clears its
-  environment and keeps `HOME` sees the runner's want of a git identity; in progress, stashed as `PROGRAM.64 in
-  progress` until `PROGRAM.10.5`'s close is committed. Then `M3.6.3.3`, `cargo xtask trust-gate` and its two-part
-  report (F30); `.2.1`, the runner's baseline, waits on the CI job `.4` adds. `M2`'s open leaves all wait on the
-  director: `M2.7.4.5` and `M2.7.6`'s review and hosting half. This project uses no branches.
-- **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
+- **Next action:** `M3.6.3.3`, `cargo xtask trust-gate` and its two-part report — third of the trust gate's slices
+  (F30); `.2.1`, the runner's baseline, waits on the CI job `.4` adds. `M2`'s open leaves all wait on the director:
+  `M2.7.4.5` and `M2.7.6`'s review and hosting half. This project uses no branches.
+- **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `PROGRAM.65` —
+  where the CI rehearsal's checkout may live; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4` and `M2.7.6.4` — findings §11, `main`'s protection and a reviewer;
   `TEMPLATE-REFS` — postponed. **The 17 template files archogen has not changed are never edited** (findings §10,
   ruled `2026-09-30`); every other script is archogen's.
