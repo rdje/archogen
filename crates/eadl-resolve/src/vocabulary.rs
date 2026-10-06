@@ -314,6 +314,7 @@ impl Refusal {
 pub struct Vocabulary {
     facts: Vec<Fact>,
     index: BTreeMap<String, usize>,
+    clause_words: BTreeSet<String>,
 }
 
 impl Vocabulary {
@@ -404,14 +405,19 @@ impl Vocabulary {
                 .into_iter()
                 .map(|d| Refusal::new(Cause::Duplicate, None, Some(d.primary.span), d.message)),
         );
-        refusals.extend(across(&facts, kinds));
+        let words = clause_words(kinds);
+        refusals.extend(across(&facts, &words));
         if refusals.is_empty() {
             let index = facts
                 .iter()
                 .enumerate()
                 .map(|(i, fact)| (fact.name.clone(), i))
                 .collect();
-            Ok(Self { facts, index })
+            Ok(Self {
+                facts,
+                index,
+                clause_words: words,
+            })
         } else {
             Err(refusals)
         }
@@ -421,6 +427,13 @@ impl Vocabulary {
     #[must_use]
     pub fn fact(&self, name: &str) -> Option<&Fact> {
         self.index.get(name).map(|&i| &self.facts[i])
+    }
+
+    /// Whether `name` is a clause word of the description kinds the vocabulary was read against: a list headed by
+    /// one is a clause, never an offer or a constraint (record §1, R30 1).
+    #[must_use]
+    pub fn is_clause_word(&self, name: &str) -> bool {
+        self.clause_words.contains(name)
     }
 
     /// Every entry, in the order written.
@@ -676,9 +689,8 @@ fn entry(form: &Form) -> Result<Fact, Vec<Refusal>> {
 }
 
 /// What each entry must agree with of the others, and of the description kinds.
-fn across(facts: &[Fact], kinds: &Registry) -> Vec<Refusal> {
+fn across(facts: &[Fact], words: &BTreeSet<String>) -> Vec<Refusal> {
     let by_name: BTreeMap<&str, &Fact> = facts.iter().map(|f| (f.name.as_str(), f)).collect();
-    let words = clause_words(kinds);
     let mut refusals = Vec::new();
     let mut refuse = |cause: Cause, fact: &Fact, detail: String| {
         refusals.push(Refusal::new(

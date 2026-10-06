@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the engine reads what a provider offers
+
+`ARCHOGEN-M3-0466` (leaf `M3.1.2.3`).
+
+- The engine now reads what a block or a platform offers: each fact's value in exact arithmetic, and the refusals the
+  design makes — two values for one fact, an offer beside its own absence, a derived fact beside what it is derived
+  from, a modulus too large for its counter. Checked against the design's executable model on more than seventy
+  thousand generated declarations, which read identically. Writing the defects that check must catch found two kinds
+  of input the model's own checker had never generated; both are now generated, for the model too.
+
 ## archogen — the deliberate-defect catalog runs again, and cannot rot unseen
 
 `ARCHOGEN-PROGRAM-0465` (leaf `PROGRAM.61`).

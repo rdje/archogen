@@ -33,8 +33,11 @@
 //! Each property also has a catalogued mutation in `xtask/mutations.txt` that breaks the rule it guards, and this
 //! file must kill it.
 
+mod common;
+
 use std::collections::BTreeSet;
 
+use common::universe::{outside, samples, written_offers, TINY};
 use eadl_front::{read, Form, SourceMap};
 use eadl_model::quantity::{unit, Quantity};
 use eadl_model::{Dimension, Rational};
@@ -58,78 +61,6 @@ fn provider(offers: &str) -> Result<eadl_resolve::model::Provider, eadl_resolve:
 
 fn constraint(text: &str) -> Result<Requirement, eadl_resolve::model::NotJudged> {
     read_constraint(&forms(text)[0])
-}
-
-/// Values a fact's domain is sampled at, each written as an offer or a requirement would write it.
-fn samples(domain: Domain) -> Vec<String> {
-    let s = |v: &[&str]| v.iter().map(|x| (*x).to_string()).collect::<Vec<_>>();
-    match domain {
-        Domain::Boolean | Domain::Group(_) => s(&["true", "false"]),
-        Domain::Count => s(&[
-            "0",
-            "1",
-            "2",
-            "7",
-            "8",
-            "9",
-            "65535",
-            "65536",
-            "65537",
-            "4294967296",
-            "(pow2 64)",
-            "(pow2 126)",
-            // The corpus's own spelling, a count with its dimensionless unit (R18 9).
-            "8 tick",
-            "65536 tick",
-        ]),
-        Domain::Quantity(Dimension::Time) => s(&[
-            "0 s",
-            "1 us",
-            "50 us",
-            "80 us",
-            "1 ms",
-            "59.9999999 s",
-            "60 s",
-            "3600 s",
-        ]),
-        Domain::Quantity(Dimension::Frequency) => s(&[
-            "1 Hz",
-            "18 Hz",
-            "1 MHz",
-            "10 MHz",
-            "10000 kHz",
-            "20 MHz",
-            "1 GHz",
-        ]),
-        Domain::Quantity(Dimension::Information) => s(&[
-            "8 bit", "16 bit", "32 bit", "4 byte", "64 bit", "0.5 byte", "1 KiB",
-        ]),
-        Domain::Quantity(Dimension::Dimensionless) => s(&["1 tick", "8 tick"]),
-        Domain::Interval(_) => s(&[
-            "(range 1 MHz 200 MHz)",
-            "(range 10 MHz 10 MHz)",
-            "(range 50 MHz 300 MHz)",
-            "10 MHz",
-            "250 MHz",
-            // R26 remark 4: endpoints in two units, compared in the base unit (§2, §5).
-            "(range 1000 kHz 0.2 GHz)",
-            "(range 1 MHz 200000 kHz)",
-        ]),
-        Domain::Enumeration { alternatives, .. } => s(alternatives),
-        Domain::Set(alternatives) => {
-            let mut out = Vec::new();
-            for mask in 1u32..(1 << alternatives.len()) {
-                let members: Vec<&str> = alternatives
-                    .iter()
-                    .enumerate()
-                    .filter(|(i, _)| mask & (1 << i) != 0)
-                    .map(|(_, a)| *a)
-                    .collect();
-                out.push(members.join(" "));
-            }
-            out
-        }
-    }
 }
 
 fn base(text: &str) -> Rational {
@@ -332,22 +263,9 @@ fn every_written_form_of_one_offer_has_exactly_one_reading() {
     // requirement judged to exactly one verdict — the model is total over the universe.
     let (mut readings, mut spelt) = (0usize, 0usize);
     for e in VOCABULARY.iter() {
-        let mut offers = vec![
-            format!("(offers {})", e.name),
-            format!("(offers ({}))", e.name),
-            format!("(absent {})", e.name),
-            String::new(),
-        ];
-        for v in samples(e.domain) {
-            offers.push(format!("(offers ({} {v}))", e.name));
-            offers.push(format!("(offers ({} (exactly {v})))", e.name));
-            offers.push(format!("(offers ({} (at-least {v})))", e.name));
-            offers.push(format!("(offers ({} (at-most {v})))", e.name));
-            offers.push(format!("(offers {} ({} {v}))", e.name, e.name));
-            offers.push(format!("(offers ({} {v}) ({} {v}))", e.name, e.name));
-            offers.push(format!("(offers ({} {v})) (absent {})", e.name, e.name));
-        }
-        for offer in offers {
+        // The shared universe's written forms (`tests/common/universe.rs`), the wrappers and foreign bounds the loop
+        // below asserts refused among them, so the production relation is compared over the same forms (`SR-H7`).
+        for offer in written_offers(e) {
             let p = provider(&offer);
             readings += 1;
             if e.role == Role::Statement && offer.contains("offers") {
@@ -663,7 +581,6 @@ fn a_provider_reads_the_same_in_every_order_of_its_offers() {
     // R18 1: an overflowing comparison first made every later one overflow, so two plain values beside it went
     // uncompared. R25 1: one amount in three units, judged against probes in every direction and against one past the
     // arithmetic in another unit, so the spelling written first decides nothing.
-    const TINY: &str = "0.0000000000000000000000000000001 ns";
     let mut providers = 0usize;
     for e in VOCABULARY.iter().filter(|e| e.role == Role::Guarantee) {
         let mut pool: Vec<String> = samples(e.domain).into_iter().take(4).collect();
@@ -797,7 +714,6 @@ fn a_modulus_above_its_width_is_refused_at_every_width() {
 #[test]
 fn writing_an_offer_twice_changes_nothing() {
     // R19 1: an overflowing value written twice failed a presence requirement it met written once.
-    const TINY: &str = "0.0000000000000000000000000000001 ns";
     let mut providers = 0usize;
     for e in VOCABULARY.iter().filter(|e| e.role == Role::Guarantee) {
         let mut pool = samples(e.domain);
@@ -899,7 +815,6 @@ fn an_offer_under_exactly_reads_as_its_value() {
 #[test]
 fn a_clause_is_decided_in_one_unit_and_unsupported_past_the_arithmetic() {
     // R20 2: a contradiction past the arithmetic was read without a word.
-    const TINY: &str = "0.0000000000000000000000000000001 ns";
     const TINY2: &str = "0.0000000000000000000000000000002 ns";
     let pool = [TINY, TINY2, "1 s", "1 ms"];
     let mut clauses = 0usize;
@@ -1467,36 +1382,7 @@ fn a_value_outside_its_domain_is_refused_wherever_written() {
     // refused as an offer, under `exactly`, and as a requirement (§2, §8).
     let mut refused = 0usize;
     for e in VOCABULARY.iter().filter(|e| e.role == Role::Guarantee) {
-        let outside: Vec<String> = match e.domain {
-            Domain::Boolean | Domain::Group(_) => {
-                vec!["maybe".into(), "1".into(), "true false".into()]
-            }
-            Domain::Count => vec![
-                "-1".into(),
-                "1.5".into(),
-                "8 bit".into(),
-                "(pow2 -1)".into(),
-                "(pow2 127)".into(),
-            ],
-            Domain::Quantity(d) => {
-                let other = if d == Dimension::Time { "8 bit" } else { "8 s" };
-                vec![other.into(), "5".into(), "zzz".into()]
-            }
-            Domain::Interval(_) => vec![
-                "(range 10 s 20 s)".into(),
-                "(range 200 MHz 1 MHz)".into(),
-                "8 s".into(),
-            ],
-            Domain::Enumeration { alternatives, .. } => vec![
-                "zzz".into(),
-                format!("{} {}", alternatives[0], alternatives[1]),
-            ],
-            Domain::Set(members) => vec![
-                "zzz".into(),
-                format!("{} zzz", members[0]),
-                format!("{} {}", members[0], members[0]),
-            ],
-        };
+        let outside: Vec<String> = outside(e.domain);
         for v in outside {
             for offer in [
                 format!("(offers ({} {v}))", e.name),

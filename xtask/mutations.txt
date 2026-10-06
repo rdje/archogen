@@ -1779,3 +1779,227 @@ from
 to
         refusals.extend(cycles(facts).into_iter().filter(|_| false));
 end
+
+mutation offer-two-values-read-as-one
+file crates/eadl-resolve/src/offer.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.3: one provider offering one fact with two values is refused (record §5); read as one, production keeps a provider the model refuses.
+from
+                    Ok(true) => {}
+to
+                    Ok(true) | Ok(false) => {}
+end
+
+mutation offer-bare-boolean-not-true
+file crates/eadl-resolve/src/offer.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.3: a bare offer of a boolean or a group's head is the value true (record §1).
+from
+                Written::Bare if boolean => spellings.push((Value::Bool(true), *span)),
+to
+                Written::Bare if boolean => spellings.push((Value::Bool(false), *span)),
+end
+
+mutation offer-exactly-read-as-a-bound
+file crates/eadl-resolve/src/offer.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.3: in an offer, (f (exactly v)) is the value v for the relation (record §1.1, R10 J8), not an abstract bound.
+from
+                Some("exactly") => return valued(fact, inner, item),
+to
+                Some("exactly") => return Ok(Written::Bound),
+end
+
+mutation offer-bound-beside-value-unchecked
+file crates/eadl-resolve/src/offer.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.3: a bound beside a value of the same fact is refused (record §2, §5, R10 J8).
+from
+        if let (Some(at), false) = (bound, spellings.is_empty()) {
+to
+        if let (Some(at), true) = (bound, spellings.is_empty() && false) {
+end
+
+mutation offer-offered-and-absent-unchecked
+file crates/eadl-resolve/src/offer.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.3: one provider offering and declaring absent one fact is refused (model §2 rule 1, record §8).
+from
+            if let Some(at) = absent.get(name) {
+to
+            if let Some(at) = absent.get(name).filter(|_| false) {
+end
+
+mutation offer-derived-beside-input-unchecked
+file crates/eadl-resolve/src/offer.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.3: a derived fact offered or declared absent beside a fact its rule reads is refused (record §4, R16 8).
+from
+        refusals.extend(derived_beside_inputs(&facts, vocabulary, decl.span()));
+to
+        let _ = derived_beside_inputs(&facts, vocabulary, decl.span());
+end
+
+mutation offer-modulus-at-its-width-refused
+file crates/eadl-resolve/src/offer.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.3: a modulus is refused only above 2^width (record §4, R3 C12); refusing it at 2^width refuses a 32-bit register's full modulus.
+from
+                    if *modulus > 1i128 << bits {
+to
+                    if *modulus >= 1i128 << bits {
+end
+
+mutation offer-saturating-modulus-unchecked
+file crates/eadl-resolve/src/offer.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.3: a modulus beside (wrap-behavior saturating) is refused (record §4, R1 A14).
+from
+        if saturating && offers_it(state(value::COUNTER_MODULUS)) {
+to
+        if saturating && offers_it(state(value::COUNTER_MODULUS)) && false {
+end
+
+mutation offer-clause-in-offer-unchecked
+file crates/eadl-resolve/src/offer.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.3: an item of offers that is or holds a clause is refused, its contents read by nothing (record §1, R27 2, R28 3).
+from
+        if holds_clause(item, vocabulary) {
+to
+        if holds_clause(item, vocabulary) && false {
+end
+
+mutation offer-list-in-absent-unchecked
+file crates/eadl-resolve/src/offer.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.3: absent names a fact by its name alone; a list would read the whole fact absent and drop the rest (record §8, R18 2).
+from
+        if matches!(item, Form::List { .. }) {
+to
+        if matches!(item, Form::List { .. }) && false {
+end
+
+mutation offer-statement-offered
+file crates/eadl-resolve/src/offer.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.3: no provider offers a statement fact, the requiring side's word about itself (record §3 rule 6).
+from
+        if fact.role == Role::Statement {
+            return Err(refusal(
+                Cause::StatementOffered,
+to
+        if fact.role == Role::Statement && false {
+            return Err(refusal(
+                Cause::StatementOffered,
+end
+
+mutation value-one-unit-converted
+file crates/eadl-resolve/src/value.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.3: two amounts in one unit are compared as written, needing no conversion (record §2, §5, R19 1); converting overflows where the record finds one value.
+from
+        if a.unit == b.unit {
+to
+        if a.unit == b.unit && false {
+end
+
+mutation value-pow2-past-126
+file crates/eadl-resolve/src/value.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.3: (pow2 N) writes N from 0 to 126 (record §2, R8 H2); (pow2 127) is outside the domain.
+from
+                [_, Form::Integer { value, .. }] if (0..=POW2_LIMIT).contains(value) => {
+to
+                [_, Form::Integer { value, .. }] if (0..=POW2_LIMIT + 1).contains(value) => {
+end
+
+mutation value-information-not-whole
+file crates/eadl-resolve/src/value.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.3: a value of information is a positive whole number of bits (record §4, §8, R17 6).
+from
+                .is_ok_and(|bits| bits.is_integer() && bits.is_positive())
+to
+                .is_ok_and(|bits| bits.is_positive())
+end
+
+mutation value-zero-modulus-read
+file crates/eadl-resolve/src/value.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.3: a counter-modulus of 0 is refused wherever written (record §4, §8, R17 6).
+from
+        if fact.name == COUNTER_MODULUS && value == Value::Count(0) {
+to
+        if fact.name == COUNTER_MODULUS && value == Value::Count(0) && false {
+end
+
+mutation value-reversed-interval-read
+file crates/eadl-resolve/src/value.rs
+test -p eadl-resolve --test production
+expect killed
+why M3.1.2.3: an interval with lo > hi is refused (record §2, R12 L12).
+from
+                        if order(lo, hi) == Ok(Ordering::Greater) {
+to
+                        if order(lo, hi) == Ok(Ordering::Greater) && false {
+end
+
+mutation value-implied-members-ignored
+file crates/eadl-resolve/src/value.rs
+test -p eadl-resolve --test values
+expect killed
+why M3.1.2.3: a set requirement holds the members its entry implies beside what it writes (record §1.1, R16 2); ignored, an offer of idle alone satisfies a power-state requirement that also needs run.
+from
+                    wanted.is_subset(o)
+to
+                    r.is_subset(o)
+end
+
+mutation value-at-least-read-strictly
+file crates/eadl-resolve/src/value.rs
+test -p eadl-resolve --test values
+expect killed
+why M3.1.2.3: at-least admits the equal value (record §2); read strictly, eight entries no longer satisfy a capacity of eight.
+from
+                Direction::AtLeast => o >= r,
+to
+                Direction::AtLeast => o > r,
+end
+
+mutation value-within-turned-round
+file crates/eadl-resolve/src/value.rs
+test -p eadl-resolve --test values
+expect killed
+why M3.1.2.3: within holds when the required interval lies inside the offered one, o.lo <= r.lo (record §2); turned round, a narrower offer satisfies a wider requirement.
+from
+                        quantities(*olo, *rlo, Direction::AtMost),
+to
+                        quantities(*olo, *rlo, Direction::AtLeast),
+end
+
+mutation value-horizon-whole-modulus
+file crates/eadl-resolve/src/value.rs
+test -p eadl-resolve --test values
+expect killed
+why M3.1.2.3: the horizon is (modulus − 1) / rate, inclusive (record §4, R14 9); modulus / rate gives 60 s for a counter whose reads are ambiguous at 60 s.
+from
+        let ticks = Rational::new(modulus.checked_sub(1).ok_or(Overflow)?, 1).ok_or(Overflow)?;
+to
+        let ticks = Rational::new(modulus, 1).ok_or(Overflow)?;
+end

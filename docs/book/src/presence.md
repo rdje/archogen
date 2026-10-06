@@ -156,5 +156,9 @@ no stronger precondition passes as a capability, and every probe its reviewers r
 (leaf `M3.1.2`). Its first piece is the vocabulary as a typed table (`crates/eadl-resolve/src/vocabulary.rs`): every
 entry of `docs/semantics/vocabulary/vocabulary.eadl` is held to the kind `deffact`, then checked for what a kind
 cannot say — a direction its domain does not admit, a derivation without its rule, a cycle among derivations, a fact
-named like a clause — and the table is held, entry by entry, to the model's own copy. `archogen check` does not call
-the relation yet; the chapter on the relation itself comes with it (leaf `M3.1.3`).
+named like a clause — and the table is held, entry by entry, to the model's own copy. The second is the reader of
+what a block or a platform offers (`crates/eadl-resolve/src/offer.rs`, over the values of
+`crates/eadl-resolve/src/value.rs`): it refuses what the design refuses of an offer, such as two values of one fact,
+an offer beside its absence, a derived fact beside the facts it is derived from, and it reads every provider the
+model's checker can generate exactly as the model does (`crates/eadl-resolve/tests/production.rs`). `archogen check`
+does not call the relation yet; the chapter on the relation itself comes with it (leaf `M3.1.3`).
