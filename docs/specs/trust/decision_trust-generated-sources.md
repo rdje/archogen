@@ -2,8 +2,8 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-06`
-- **Status:** `active` — written `2026-10-06` by leaf `M3.6.6.1`; rounds 1 to 14 answered the same day; under review,
-  by a context that did not write it, until a round finds no defect (`decision_executable-design-reviews.md`)
+- **Status:** `active` — written `2026-10-06` by leaf `M3.6.6.1`; rounds 1 to 14 answered the same day; review closed
+  `2026-10-08`: round 15, by a context that did not write it, found no defect (`decision_executable-design-reviews.md`)
 - **External sources:** [the pinned Rust toolchain](../../book/src/ledger.md#rust-toolchain) — rustc's dependency
   information, which, with a root's declared run-time data, is what the inventory knows of the files a program reads;
   and how the pinned rustc reads a `#!` line, which §3's recogniser follows (measured below)
@@ -442,3 +442,4 @@ answered here. The history is [`decision_trust-generated-sources-reviews.md`](..
 | 12 | `2026-10-06` | 3, and 5 remarks | every finding answered: a refusal ends the run as the parent's does, staleness decided only in a run that refuses nothing, the order a hand-off (`GS-H14`); the reader's stop carried by `GS-H1` with a fixture; a nested block's `*/` leaving the header's text as its `/*` does |
 | 13 | `2026-10-06` | 5, and 7 remarks | every finding answered: the order five instrument steps, the gate's comparison a sixth over the written inventory; a build failing in a step, unable to judge; a departure the parent's reader finds at the end; one fixture per step, `GS-H15`; row 4 as the code reads a dotfile; "eligible" retired for "live" |
 | 14 | `2026-10-06` | 2, and 7 remarks | every finding answered: step 6 decides only the `trust-baseline-stale` the parent decides over an inventory, the rest the parent's refusal at step 2; "broken" for "removed" in `GS-H2`, the code and the method, and row 15 broken where `//` is too |
+| 15 | `2026-10-08` | 0 | closed: a fresh context completed the interrupted review of `6503f04`; the order, provenance, exclusions and prior answers checked; the corpus and pinned-rustc fixture passed, every recogniser catalogue entry killed, both sweep equivalents and two delimiter mutations re-run |

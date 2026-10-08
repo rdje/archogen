@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the interrupted generated-sources review recovered and closed
+
+`ARCHOGEN-M3-0507` (leaf `M3.6.6.1`), `2026-10-08`.
+
+- Recovered the clean round-14 checkpoint and completed the interrupted round-15 review in a fresh context that
+  did not write the design. It found no defect, closing the design review. The saved next action is `M3.6.6.2`,
+  the generated-sources instrument; the session stops before starting it, as the director requested.
+- Validation: the recogniser's 51 catalogued mutations killed; 136 xtask tests passed; both listed sweep
+  equivalents and two delimiter mutations re-run; the real-tree inventory's generated-marker list empty;
+  the hand-off ledger and doctrine enforcer green. The complete sweep and complete workspace mutation
+  catalogue retain round 14's evidence on unchanged code; this round's selected checks are named in its history.
+
 ## archogen — the trust report shows every change its design lists
 
 `ARCHOGEN-M3-0493` (leaf `M3.6.3.7`).

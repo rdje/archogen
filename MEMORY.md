@@ -16,10 +16,9 @@
 - **Active tree:** `M3` → frontier `M3.6`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s frontier is `PROGRAM.34`, the director's; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M3.6.6.1`, round 15 of `docs/specs/trust/decision_trust-generated-sources.md`'s review — a new,
-  read-only context; rounds 1 to 14 (19, 12, 12, 9, 9, 7, 8, 4, 5, 4, 5, 3, 5, 2 defects) answered, round 3's by narrowing
-  (`docs/reviews/decision_trust-generated-sources-reviews.md`). `M3.6.3.2.1`, the runner's
-  baseline, waits on the `trust-gate` workflow's first run, at the next cadence push. `M2`'s open leaves all wait on the director:
+- **Next action:** `M3.6.6.2`, implement the generated-sources instrument and gate against the hand-offs in
+  `docs/specs/trust/decision_trust-generated-sources.md` and its task leaf. `M3.6.3.2.1`, the runner's baseline,
+  waits on the `trust-gate` workflow's first run, at the next cadence push. `M2`'s open leaves all wait on the director:
   `M2.7.4.5` and `M2.7.6`'s review and hosting half. This project uses no branches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4` and `M2.7.6.4` — findings §11, `main`'s protection and a reviewer;

@@ -2,7 +2,7 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-06`
-- **Status:** `active`
+- **Status:** `closed` — round 15 found no defect, `2026-10-08`
 - **Owner / source:** leaf `M3.6.6.1` (`docs/tasks/M3.md`). This is the review history of
   [[decision_trust-generated-sources]], kept apart from it as `docs/reviews/INDEX.md` describes.
 
@@ -406,3 +406,33 @@ mutation missed every `//` language (R14-2).
 | R14-r5 | remark | whether a step with a failed build runs to its end | it does, every judgment and build in it made |
 | R14-r6 | remark | one target built of a crate root of two; the Why read a script's role from §2's set | "each such target is built"; the Why: a script's role by this record's innermost-member rule |
 | R14-r7 | remark | row 5 pointed back at row 4's `.` | "a name's first character, whatever it is" |
+
+**Round 15**, `2026-10-08`, against `6503f04`: a fresh context that did not write the design completed the review
+interrupted by the machine crash. The retained reviewer transcript ended during its initial reads, with no findings
+or final report; this round's result comes from the new review, not from an assumed result of that partial run.
+It found no defect and no new remark. The design meets `M3.6.6.1`'s closure rule; implementation is `M3.6.6.2`'s.
+
+The review checked the shape and text-only refusals before liveness, the parent's reader stop and final harness-pair
+validation, the blob and chain precedence, the generator role judgments and builds, and the distinction between the
+five instrument steps and the gate's comparison. Step 2's missing package or target remains the parent's refusal;
+step 6's staleness is decided over a written inventory. A failed build takes the unable-to-judge outcome with that
+step's refusals beside it. The path and content sharing rules agree with the parent's copy computation, including
+overlapping path sets, each side's roles, the harness's units beside its pair, and a third program's own pairs.
+The believed declaration and generator dependencies, host-dependent reads and recogniser exclusions remain explicit
+in §8; the narrowing to one generator step and the obligations for later leaves stand. Round 14's answers hold.
+
+| Verification on `6503f04` | Result |
+| --- | --- |
+| `cargo test -p xtask generated_header` | 5 passed; the corpus, pinned-rustc fixture, marker and syntax lockstep, and rule-to-catalogue equality |
+| `cargo xtask mutate --only` every `gh-…` entry enumerated from `xtask/mutations.txt` | 51 killed, each by the corpus or pinned-rustc fixture; source restored byte for byte |
+| `bash scripts/mutation_sweep.sh xtask/src/generated_header.rs --package xtask --filter generated_header --list` | 279 mutations; both listed equivalents still generated |
+| the same sweep with `--equivalents xtask/generated_header.equivalents --timeout 60 --only L161.cmp.72 --only L221.cmp.166 --only L243.lit.221 --only L258.lit.246` | exit 0: 2 equivalent, 2 killed; both equivalents checked by reading their control flow too |
+| `cargo test -p xtask` | 136 passed, 0 failed |
+| `cargo xtask trust-inventory --commit 6503f04 --out target/recovery-round15/trust` | 5 programs, 8 pairs, 9 shared items, 14 refused sites each admitted; `generated-marked` empty |
+| `bash scripts/check_handoff_ledger.sh` | 61 hand-offs in 3 ledgers, every quotation held |
+| `bash scripts/check_doctrines.sh` | all doctrines green |
+
+The complete sweep and complete workspace mutation catalogue were not re-run in this round. Their last successful
+runs remain round 14's evidence on unchanged code; the recovered logs agree with its recorded results. This round
+re-ran every recogniser catalogue entry and the four selected sweep mutations above. Closing this design review
+does not claim that the pending declaration/provenance implementation or the runner's baseline has been built.
