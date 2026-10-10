@@ -19,8 +19,8 @@ The parent decides one generator step, from committed files to a committed file;
 until this leaf, and it believed the tool a script runs (its §1, §2, §8). Each is decided here: the two shapes stay
 refused, each for a reason that holds without an instance, and a need they would serve has a route within one step
 where one exists; where none does it is said, and a later need is §5's — a file a route names whose header marks it
-generated (a chain, the parent's §3 reading its marker), a later step that is a program and must compile the
-intermediate, and a vendored program that cannot be copied; the tool stays believed, with a route for when its
+generated (a chain, the parent's §3 reading its marker), a program-target step that must compile another
+generator's output, and a vendored executable that cannot be copied; the tool stays believed, with a route for when its
 identity must be compared. No behaviour moves: every refusal
 and belief stays as the parent and its instrument (`M3.6.6.2`) have it, and the chain's refusals name this record.
 
@@ -58,8 +58,9 @@ runs and another reads is named once, as a generator — named in both clauses i
 Neither is a blob of the commit, so the parent's blob rule refuses it, `trust-undeclared-input`, wherever the gate
 runs.
 
-**Why.** The inventory is the commit's blobs (the inventory record, `decision_trust-inventory.md` §3): every file it
-hashes is a blob of the commit. A gitlink is a commit id the commit holds in place of a checkout's files: the files
+**Why.** The inventory is the commit's blobs (the inventory record, `decision_trust-inventory.md` §3): every file a
+program reads, and every generator and input a form names, is a blob of the commit — the build's own artifacts aside,
+which it makes and hashes. A gitlink is a commit id the commit holds in place of a checkout's files: the files
 under it are another repository's blobs, which the gate, reading this commit's alone, never reads, so no form could
 propose a digest of them the gate recomputes. The parent's round 2 took the gitlink's pinned commit as the digest
 (`359eee3`); its round 3 withdrew it with the chains and the tools' pins it found half-integrated, narrowing to one
@@ -71,26 +72,29 @@ files a generator read would go unseen. This repository keeps every vendored che
 and pin named in the form's `reason` — and named as an input, a file of the commit, hashed, shared and compared as any
 input is; a copy whose header marks it generated is a chain, refused, with no route (§5). For a generator that is a
 file: a committed, unmarked copy named as the form's generator, judged by the parent's §5 and hashed as any generator
-file. A vendored program that cannot be copied has no route (§5): run by a committed script, it is that script's
-dependency, believed — for this section's reason, the gate reading no file under a gitlink, not §4's — outside every
-provenance, so its sharing goes unseen.
+file — a Rust one copied as a program target of the workspace, whose build then meets the parent's rules, since a
+`.rs` file that is no program target's crate root is refused as a generator (the parent's §5). A vendored executable
+that cannot be copied, or whose copy those rules refuse, has no route (§5): run by a committed script, it is that
+script's dependency, believed — for this section's reason, the gate reading no file under a gitlink, not §4's —
+outside every provenance, so its bytes and their sharing go unseen; its identity alone can be compared, through a
+committed version file the script checks it against (§4's route).
 
 ### 4. A tool a script runs: believed
 
 protoc, bindgen, an interpreter: no generator file but the script's own dependency, believed (the parent's §8) and
-named in the last section of every report, *what the inventory does not see*.
+named in the last section of every report, *what the inventory does not see*. A tool from a vendored checkout is §3's
+vendored executable, believed for §3's reason; this section's reason and route are a host's tool's.
 
 **Why.** Its bytes are no file of the commit, and which one runs is the host's: like the linker and the host's C
 toolchain, which the inventory records by version alone (`decision_trust-inventory.md` §3), a tool is a fact of the
 machine the generation ran on, not of the commit. As provenance it would make a form's digests facts of that machine
-that no commit could reproduce. The tool is named in the script the form names as its generator, itself a
-provenance file every program reading the form reaches (the parent's §4).
+that no commit could reproduce. The tool is named in the script the form names as its generator, or in the
+`command` that runs it, the script itself a provenance file every program reading the form reaches (the parent's §4).
 
 **The route, when a tool's identity must be compared.** Its pin is committed — a file the script reads to choose or
 to check the tool, a lock or a version file — and named as an input: a change made through the pin is then a change of
-a provenance file, reported as any is, while the tool that actually ran stays believed to match it. A tool from a
-vendored checkout has its gitlink for a pin, which is no blob: its route is a committed version file the script checks
-the tool against. A pin whose header marks it generated is a chain, refused, with no route (§5).
+a provenance file, reported as any is, while the tool that actually ran stays believed to match it. A pin whose
+header marks it generated is a chain, refused, with no route (§5).
 
 ### 5. A later need
 
@@ -104,14 +108,16 @@ reviewed by a context that did not write it; until then the refusal or the belie
   without an instance closes the question, and the routes, where they exist, keep the needs open to one step.
 - **The routes keep the parent's guarantees.** Each route ends in files of the commit named on a form, so the parent's
   §4 and §5 apply to them whole: every generator file judged against every reader, every input hashed and shared. What
-  has no route is refused, or, for a tool and a vendored program a script runs, believed and named in every report.
+  has no route is refused, or, for a tool and a vendored executable a script runs, believed and named in every
+  report.
 
 ## How to apply
 
 - A generated file a chain would make: one form, every step's generator files, every committed file any step reads,
   the intermediate never committed. A vendored input: a committed, unmarked copy named as an input; a vendored
-  generator: a committed script that runs it. A tool's identity to compare: its unmarked pin committed and named as an
-  input.
+  generator that is a file: a committed, unmarked copy named as the generator, a Rust one as a program target; a
+  vendored executable that cannot be copied: no route, believed when a script runs it, its identity compared through a
+  committed version file. A tool's identity to compare: its unmarked pin committed and named as an input.
 - `M3.6.6.4` closes when this record's review finds no defect; the parent's dated notes and the trust chapter say
   what is decided here.
 - Related: [`decision_trust-generated-sources.md`](decision_trust-generated-sources.md),
@@ -127,3 +133,4 @@ finding answered here. The history is
 | --- | --- | --- | --- |
 | 1 | `2026-10-10` | 8, and 8 remarks | every finding answered: the chain route's later step reads its input at run time, and names every committed file any step reads; a marked copy or pin has no route; a vendored generator's route; the messages, R1-6, the tool's naming and the leaf's figure made true |
 | 2 | `2026-10-10` | 5, and 6 remarks | every finding answered: "a route" narrowed everywhere to a route where one exists, the cases with none named; a vendored generator copied as a file, a vendored program believed for §3's reason; the tool's naming as the parent's §4 has it |
+| 3 | `2026-10-10` | 3, and 5 remarks | every finding answered: a vendored executable decided once, in §3, §4's version-file route its only comparison; "every file it hashes" narrowed to what a program reads and a form names; How to apply as §3 reads |

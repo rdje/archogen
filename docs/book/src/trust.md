@@ -256,21 +256,23 @@ refused, `trust-undeclared-input`, wherever the gate runs:
   is one step, each generator file judged against each program that reads its output; over a chain, which roles a
   file plays and which program each upstream generator answers to have a reading per step, and the design's review
   found another role's generator escaping through one. The need is met in one step: one form names every step's
-  generator files and every committed file any step reads, the intermediate file never committed — a later step that
-  is a program reads it at run time rather than compiling it;
+  generator files and every committed file any step reads, the intermediate file never committed — a program-target
+  step reads it at run time rather than compiling it, and one that must compile another generator's output has no
+  route;
 - a generator or input **at or under a gitlink**, the pointer by which the commit holds a vendored checkout: it is no
-  file of the commit's tree, so the rule above refuses it — the inventory hashes only what the commit holds. The need
-  is met by committing a copy of the file, named as an input — or, for a generator, as the generator; a vendored
-  program that cannot be copied is believed when a script runs it, its sharing unseen. A copy, or a pin below, whose
-  header marks it generated is a chain, with no route; so is a later step that must compile what an earlier one made.
+  file of the commit's tree, so the rule above refuses it — the inventory reads a program's files, generators and
+  inputs from the commit's blobs alone. The need is met by committing a copy of the file, named as an input — or, for a
+  generator, as the generator, a Rust one as a program target; a vendored executable that cannot be copied is believed
+  when a script runs it, its bytes and their sharing unseen. A copy, or a pin below, whose header marks it generated is
+  a chain, with no route.
 
 A tool a script runs — protoc, bindgen, an interpreter — is no generator file but the script's own dependency, and is
 believed: a file a tool wrote is declared with the script that ran the tool as its generator. A file a tool writes
 outside any committed script, as cargo writes `Cargo.lock`, has nothing a declaration could truthfully name;
 undeclared, it is refused if a program reads it marked, and is a plain file otherwise. A tool stays believed: which
 one runs is the host's, as the linker is, and as provenance it would make a form's digests facts no commit reproduces.
-When a tool's identity must be compared, its pin — a file the script reads to choose or check it, for a vendored tool
-a committed version file — is committed and named as an input.
+When a tool's identity must be compared, its pin — a file the script reads to choose or check it — is committed and
+named as an input; a tool from a vendored checkout is a vendored executable, as above.
 
 **Provenance, and the generated-provenance item** (§4, §5). A program's **provenance** is, for each live form whose
 declared file it reads, the form's generator files and inputs, each recorded with its path, its sha256, its roles —

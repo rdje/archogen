@@ -52,6 +52,23 @@ a marked pin refused. Verdict: 5 defects and 6 remarks.
 | R2-R5 | remark | "escaped … through one" | "through a chain" |
 | R2-R6 | remark | `MEMORY.md` still named round 1 | updated with `PROGRAM.69`'s round 12 answers |
 
+**Round 3**, `2026-10-10`, of `4ed677b`, by a read-only context that had not written the record. It reproduced the
+measurement and the leaf's figures, ran the crate's tests (165 passed) and the doctrine gate, and probed the routes —
+untracked, so the outcomes are not durable: a copied vendored script accepted and shared, a lone copied `.rs` refused, the
+chain route's remade intermediate accepted, a version file shared and a marked pin refused. Verdict: 3 defects and 5
+remarks.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R3-D1 | defect | How to apply still routed a vendored generator through a committed script, round 1's answer | as §3 reads: a file copied as the generator; an executable that cannot be copied, no route, believed |
+| R3-D2 | defect | §3 and §4 decided a vendored executable a script runs twice, under two reasons, §4's false for it | decided in §3 alone, for its reason; §4's version-file route its only comparison; §4 and the chapter defer to it |
+| R3-D3 | defect | "every file it hashes is a blob of the commit" and "the inventory hashes only what the commit holds": a root's artifact is hashed too | what a program reads and what a form names is a blob of the commit, the build's artifacts aside |
+| R3-R1 | remark | "program" is a root or the harness in the parent | "a program-target step", "a vendored executable" |
+| R3-R2 | remark | §1's no-route case named the intermediate alone | "another generator's output" |
+| R3-R3 | remark | a lone copied `.rs` is refused as a generator | a Rust one copied as a program target; a copy the parent's rules refuse counts as one that cannot be copied |
+| R3-R4 | remark | a script can reach its tool through the `command` | "in the script or the `command`" |
+| R3-R5 | remark | the chapter's chain bullet left its no-route case to the gitlink bullet | moved into the chain bullet |
+
 ## Why
 
 The record closes on a round that finds no defect, as every design here does; each round, its findings and their
