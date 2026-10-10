@@ -24,7 +24,8 @@
 #   2. CUSTODY      — while sealed, no case is at its path, in the index, or — its whole text —
 #                     anywhere in the index or the working tree outside ignored files; no file,
 #                     the manifest included, staged or on disk, quotes a long line of one; no
-#                     repository nested outside ignored folders, no unreadable untracked file;
+#                     unregistered repository nested outside ignored folders, nothing git cannot
+#                     read or list;
 #                     its path is marked `-diff`, staged and on disk.
 #   3. COMPLETENESS — nothing is in the sealed directory but the manifest and, once unsealed, the
 #                     listed cases, at any depth, hidden or linked; once unsealed, none is missing.
@@ -33,15 +34,20 @@
 #                     longer unseen.
 #   5. EXPOSURE     — each `# exposed:` line names a listed case. Recording an exposure is the
 #                     project's rule (docs/evaluation/README.md); the check cannot see a read.
-#   It never prints a case's text: a blob is hashed through a pipe, a quote is found by name of
-#   the file that holds it, and every arm checks that no output carries a case's text.
+#   It prints paths and listed names, never a line of a case: no value read from the manifest is
+#   echoed, a bad line is named by its number, a blob is hashed through a pipe, a quote is found by
+#   the name of the file that holds it; every arm checks that no output carries a case's text, one
+#   with tracing forced on.
 #
 # ⚠️ HONEST LIMIT, stated rather than hidden: the text stays in the published history, which is
-# not rewritten. A blob shown or blamed by its path, a diff forced to text or handed to an
-# external driver, git run on the repository without this working tree, a checkout, clone or
-# worktree at a commit older than `6d61f65`, or another clone not yet past it, puts a case in
-# front of a reader; `git grep <commit>` and `git log -S` tell which file or commit holds a term.
-# Ignored files — build output under `target/` — are not scanned. A quote shorter than a long
+# not rewritten. A blob shown or blamed by its path, a diff or a grep forced to text (`-a`) or
+# handed to an external driver, a viewer that diffs blobs itself, git run on the repository
+# without this working tree, a checkout, clone or worktree at a commit older than `6d61f65`, or
+# another clone not yet past it, puts a case in front of a reader; `git grep <commit>` and
+# `git log -S` tell which file or commit holds a term. Ignored files — build output under
+# `target/`, a folder an untracked `.gitignore` ignores — are not scanned, nor a folder outside
+# the repository a link points to, nor a registered submodule, another repository
+# (REPOSITORY-BOUNDARY refuses what is created at a vendored checkout's first level). A quote shorter than a long
 # line, or reworded, is not found. It sees what is staged and on disk. The check cannot prove
 # nobody read a case; a human who reads one and says nothing defeats it.
 #
@@ -145,8 +151,35 @@ self_test() {
   TRACE=1 arm "a run traced with bash -x prints no case's line" 1 "'docs/notes/plan.md' quotes a line of a sealed case"
   # Each of the two guards against a trace on its own, read from this file (review R2 D3): xtrace off at the top, and no
   # case's line ever a command's argument — the quote patterns never in a command substitution.
-  holds "the check turns tracing off before it reads a case" grep -q '^set +x' "$SELF"
-  holds "no case's line is a command's argument" test -z "$(grep -F '$('"quotes" "$SELF")"
+  holds "the check turns tracing off before any of its code runs" test \
+    "$(grep -n '^set +x' "$SELF" | head -1 | cut -d: -f1)" -lt "$(grep -n '^self_test() {' "$SELF" | cut -d: -f1)"
+  # No case's line is ever a command's argument, whatever its spelling: a copy with tracing forced on prints none
+  # (review R3 AG2).
+  fresh sealed; printf '%s\n' "$LONG" >> "$work/docs/notes/plan.md"; g add -A
+  sed '/^set +x/d' "$SELF" > "$work/../traced.sh"
+  arms=$((arms + 1)); out="$(cd "$work" && bash -x "$work/../traced.sh" 2>&1)"
+  if printf '%s' "$out" | grep -q 'ARM-CASE-TEXT'; then echo "SELF-TEST: a traced run printed a case's line" >&2
+  elif ! printf '%s' "$out" | grep -qF "quotes a line of a sealed case"; then echo "SELF-TEST: a traced run did not refuse the quote" >&2
+  else ok=$((ok + 1)); echo "  ✅ a run with tracing forced on prints no case's line"; fi
+  rm -f "$work/../traced.sh"
+  # A case's line in any field of the manifest, or as its name, is never printed: a value read there is never echoed
+  # (review R3 D1).
+  arms=$((arms + 1)); leaked=""
+  for place in seal sealed-in exposed custody bare comment first name; do
+    fresh sealed
+    case "$place" in
+      seal|sealed-in) edit "s/^# $place: .*/# $place: $LONG/" ;;
+      exposed|custody) manifest "# $place: $LONG" ;;
+      bare) manifest "$LONG" ;;
+      comment) manifest "# $LONG" ;;
+      first) { printf '%s\n' "$LONG"; cat "$d/MANIFEST.txt"; } > "$d/MANIFEST.new"; mv "$d/MANIFEST.new" "$d/MANIFEST.txt" ;;
+      name) manifest "0000000000000000000000000000000000000000000000000000000000000000  $LONG" ;;
+    esac
+    out="$(cd "$work" && bash "$SELF" 2>&1; cd "$work" && bash "$SELF" --restore 2>&1)"
+    printf '%s' "$out" | grep -q 'ARM-CASE-TEXT' && leaked="$leaked $place"
+  done
+  if [ -z "$leaked" ]; then ok=$((ok + 1)); echo "  ✅ a case's line in any field of the manifest is never printed (8 places)"
+  else echo "SELF-TEST: a case's line in the manifest was printed, from:$leaked" >&2; fi
   fresh sealed; printf '%s\n' "$LONG" >> "$work/docs/notes/plan.md"; g add -A; printf 'nothing about the set here\n' > "$work/docs/notes/plan.md"
   arm "a quote staged and gone from disk is refused (custody)" 1 "'docs/notes/plan.md' quotes a line of a sealed case"
   fresh sealed; g show "$sealed_in:docs/evaluation/frozen/zz-02-arm-beta.md" > "$work/docs/notes/plan.md"
@@ -156,6 +189,17 @@ self_test() {
   fresh sealed; printf 'locked\n' > "$work/docs/notes/locked.md"; chmod 000 "$work/docs/notes/locked.md"
   arm "an untracked file that cannot be read is refused, the leg failing closed" 1 "'docs/notes/locked.md' cannot be read"
   chmod 600 "$work/docs/notes/locked.md"
+  # What git cannot list fails closed (review R3 D2): an untracked folder it cannot open, a tracked file under a folder
+  # that cannot be searched.
+  fresh sealed; mkdir "$work/docs/notes/shut"; g show "$sealed_in:docs/evaluation/frozen/zz-02-arm-beta.md" > "$work/docs/notes/shut/copy.md"
+  chmod 000 "$work/docs/notes/shut"
+  arm "an untracked folder git cannot open is refused, a copy there unseen" 1 "git could not list every file"
+  chmod 755 "$work/docs/notes/shut"
+  fresh sealed; mkdir "$work/docs/notes/held"; printf 'tracked\n' > "$work/docs/notes/held/t.md"; g add -A
+  g -c core.hooksPath=/dev/null commit -q -m held
+  g show "$sealed_in:docs/evaluation/frozen/zz-02-arm-beta.md" > "$work/docs/notes/held/t.md"; chmod 000 "$work/docs/notes/held"
+  arm "a tracked file under a folder that cannot be searched is refused" 1 "'docs/notes/held' cannot be searched"
+  chmod 755 "$work/docs/notes/held"
   fresh sealed; git -C "$work/docs/notes" init -q nested; printf 'x\n' > "$work/docs/notes/nested/x.md"
   arm "a repository nested outside ignored folders is refused (custody)" 1 "'docs/notes/nested/' is a repository nested outside ignored folders"
   fresh sealed; ln -s nowhere "$d/zz-01-arm-alpha.md"
@@ -199,7 +243,7 @@ self_test() {
   fresh sealed; manifest "# exposed: zz-02-arm-beta.md — read early, recorded"
   arm "an exposure naming a listed case passes" 0 ""
   fresh sealed; manifest "# exposed: zz-09-arm-iota.md — read early, recorded"
-  arm "an exposure naming no listed case is refused (exposure)" 1 "names 'zz-09-arm-iota.md', which the manifest does not list"
+  arm "an exposure naming no listed case is refused (exposure)" 1 "'# exposed:' line 5 names no case the manifest lists"
   fresh sealed; edit '/^# seal:/d'
   arm "a manifest that declares no seal state is refused" 1 "has no '# seal: sealed|unsealed' line"
   # The reveal.
@@ -271,7 +315,7 @@ field() { grep -E "^# $1:" "$MANIFEST" | head -1 | sed "s/^# $1:[[:space:]]*//";
 seal="$(field seal)"
 case "$seal" in
   sealed|unsealed) ;;
-  *) note "$MANIFEST has no '# seal: sealed|unsealed' line (found: '${seal:-<none>}')" ;;
+  *) note "$MANIFEST has no '# seal: sealed|unsealed' line" ;;  # what it holds instead is never echoed (R3 D1)
 esac
 
 # Scratch on this repository's own volume, never `$TMPDIR` (leaf `PROGRAM.29`, `SCRATCH-LOCALITY`). It holds
@@ -288,7 +332,7 @@ awk '{ print $2 }' "$tmp/entries.txt" > "$tmp/listed.txt"
 
 sealed_in="$(field sealed-in)"
 if ! printf '%s' "$sealed_in" | grep -qE '^[0-9a-f]{40}([0-9a-f]{24})?$'; then
-  note "$MANIFEST has no '# sealed-in: <commit>' line naming the commit that holds the cases' text (found: '${sealed_in:-<none>}')"
+  note "$MANIFEST has no '# sealed-in: <commit>' line naming the commit that holds the cases' text"
   sealed_in=""
 elif ! git cat-file -e "${sealed_in}^{commit}" 2>/dev/null; then
   note "the sealing commit $sealed_in is not in this clone, so no digest can be verified — fetch the full history (a shallow clone does not hold it)"
@@ -387,17 +431,33 @@ if [ "$seal" = "sealed" ]; then
         grep -qxF "$id" "$tmp/blobs.txt" && note "a sealed case's text is tracked at '${rec#*"$tab"}'"
       done < <(git ls-files -s -z)
     fi
+    # Fail closed on what git cannot list: a folder it cannot open is named by git's own warning, a tracked file under a
+    # folder that cannot be searched by the nearest such folder (review R3 D2).
+    { git ls-files -z --others --exclude-standard; git ls-files -z -m; } > "$tmp/loose" 2> "$tmp/loose.err"
+    while IFS= read -r warning; do
+      note "git could not list every file: ${warning#warning: } — a case's copy there cannot be ruled out"
+    done < "$tmp/loose.err"
     while IFS= read -r -d '' at; do
       case "$at" in
         */) note "'$at' is a repository nested outside ignored folders — its files cannot be checked for a case; ignore it or move it" ;;
-        *) [ -f "$at" ] || continue
+        *) if [ ! -e "$at" ] && [ ! -L "$at" ]; then
+             d="$(dirname -- "$at")"
+             while [ "$d" != "." ] && [ "$d" != "/" ]; do
+               if [ -e "$d" ] && [ ! -x "$d" ]; then
+                 note "'$d' cannot be searched, so a case's copy there cannot be ruled out"; break
+               fi
+               d="$(dirname -- "$d")"
+             done
+             continue
+           fi
+           [ -f "$at" ] || continue
            if ! id="$(git hash-object -- "$at" 2>/dev/null)"; then
              note "'$at' cannot be read, so a case's copy there cannot be ruled out"
            elif grep -qxF "$id" "$tmp/blobs.txt"; then
              note "a sealed case's text is in the working tree at '$at'"
            fi ;;
       esac
-    done < <({ git ls-files -z --others --exclude-standard; git ls-files -z -m; })
+    done < "$tmp/loose"
     # A long line of a case quoted anywhere, the manifest included, staged or on disk, tracked or untracked: found by
     # the name of the file that holds it, the patterns read from the blobs through a pipe, never written down, never in
     # a command's arguments (review R2 D2, D3).
@@ -422,10 +482,12 @@ while IFS= read -r entry; do
 done < <(find "$DIR" -mindepth 1 2>/dev/null | sort)
 
 # ── 5. EXPOSURE ──────────────────────────────────────────────────────────────────────────────
-while IFS= read -r exposed; do
-  grep -qxF "$exposed" "$tmp/listed.txt" \
-    || note "an '# exposed:' line names '$exposed', which the manifest does not list"
-done < <(grep -E '^# exposed:' "$MANIFEST" | sed 's/^# exposed:[[:space:]]*//' | cut -d' ' -f1)
+# An exposure names a listed case; one that does not is named by its line's number, never by its text (R3 D1).
+while IFS=: read -r n exposed; do
+  exposed="$(printf '%s' "$exposed" | sed 's/^# exposed:[[:space:]]*//' | cut -d' ' -f1)"
+  grep -qxF -- "$exposed" "$tmp/listed.txt" \
+    || note "$MANIFEST's '# exposed:' line $n names no case the manifest lists"
+done < <(grep -nE '^# exposed:' "$MANIFEST")
 
 # ── 4. NON-CONTAMINATION (only while sealed) ─────────────────────────────────────────────────
 if [ "$seal" = "sealed" ] && [ -s "$tmp/listed.txt" ]; then

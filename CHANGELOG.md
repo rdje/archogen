@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the sealed cases' guard prints no manifest value and fails closed on what git cannot list
+
+`ARCHOGEN-PROGRAM-0550` (leaf `PROGRAM.76`), `2026-10-10`.
+
+- The seal's check still echoed two manifest values it could not read, so a case's line written there would print;
+  and a copy in a folder git could not open, or under a folder that could not be searched, passed. It now echoes no
+  manifest value, names an exposure it cannot match by its line's number, and refuses whatever git cannot list. The
+  texts name what it does not look into: a registered submodule, a folder a link points outside to, a folder an
+  untracked ignore file hides.
+- Validation: 56 arms, among them a case's line seeded into eight places of the manifest and a run with tracing forced
+  on; four failing on the previous check and seven deliberate breaks each caught, both by untracked runners, so not
+  durable.
+
 ## archogen — every route the generated-sources record offers is a test
 
 `ARCHOGEN-M3-0549` (leaf `M3.6.6.4`), `2026-10-10`.
@@ -24,14 +37,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 - Validation: arms for the mask's breadth both ways and for the start recorded before the first write; five
   deliberate breaks, each caught by an untracked runner, so not durable (111 arms).
 
-## archogen — the sealed cases' guard fails closed, and never prints a line
+## archogen — the sealed cases' guard echoes no bad entry, traces nothing, and seeks more copies
 
 `ARCHOGEN-PROGRAM-0547` (leaf `PROGRAM.76`), `2026-10-10`.
 
 - The seal's check could print a sealed case's line in two ways — echoing a manifest line it could not read, and
   under a shell trace — and missed a copy under a name git quotes, in an unreadable file, in a nested repository,
   staged and gone from disk, or in the manifest itself. It now names a bad line by its number, never traces, reads
-  paths whole, fails closed on what it cannot read, and looks at the staged tree as well as the disk. The texts give
+  paths whole, refuses a file it cannot read, and looks at the staged tree as well as the disk. The texts give
   the revision the diff guard starts at, and the acts that still reach a case. Local clones whose index still held
   the set were removed.
 - Validation: 53 arms, nine failing on the previous check and ten deliberate breaks each caught, both by untracked
