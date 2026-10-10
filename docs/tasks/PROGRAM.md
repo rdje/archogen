@@ -648,7 +648,7 @@ mdBook that is the director's window into the project.
   `ARCHOGEN-PROGRAM-0521 (leaf PROGRAM.69)`, round 9
 
 - ID: `PROGRAM.70`
-  Status: `active` — started `2026-10-10`, decomposed the same day into `.1`, the bytes, and `.2`, the count
+  Status: `done` — started `2026-10-10`, decomposed into `.1`, the bytes, and `.2`, the count, closed the same day with `.2`
   Goal: a new design's review history always has room in `docs/reviews/`.
   Reproduce / issue: `PROGRAM.69` opened `docs/reviews/decision_task-tree-sealing-amendment-reviews.md`, and
   `bash scripts/check_readme_routes.sh` → *"docs/reviews/: 17 tracked files, over its ceiling of 16"*. The folder holds
@@ -685,11 +685,36 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0523 (leaf PROGRAM.70.1)`, with step 1's `ARCHOGEN-PROGRAM-0522`
 
 - ID: `PROGRAM.70.2`
-  Status: `pending` — next, `.1` closed `2026-10-10`
+  Status: `done` — started and closed `2026-10-10`; `PROGRAM.70` closes with it
   Goal: `README-ROUTES` counts the histories in `docs/reviews/`, not the stubs `REVIEW-HISTORY` proves.
   Acceptance: an exact archive stub is left out of a directory's file count and of nothing else, and a file that only
   looks like one is counted; an arm for each, failing first; the decision record's dated paragraph, `README_POLICY.md`'s
   row and the book's account changed with it.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — `git ls-files docs/reviews | wc -l` at `2493bf8` → `16`, of a ceiling of 16, 12 of them
+    stubs: a new design's history is refused, *"docs/reviews/: 17 tracked files, over its ceiling of 16"*, as
+    `PROGRAM.69` met it. The first new arm, an exact stub beside four files, run on `2493bf8`'s script → *"expected
+    exit 0, got 1 … docs/tasks/: 5 tracked files, over its ceiling of 4"*, `22 pass / 1 fail`.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: `git show 2493bf8:scripts/check_readme_routes.sh | grep -nF 'n=$((n +
+    1))'` → `247`, the directory branch counting every tracked file beneath. WHY: the 16-file ceiling (`PROGRAM.36`) bounded the histories a reader faces, before
+    an archive left stubs that can never leave — sealed task-history files cite them — so every history ever reviewed
+    would count against it for good.
+  - [x] **FIX** — `scripts/check_readme_routes.sh`: `is_archive_stub`, `REVIEW-HISTORY`'s stub exactly — three lines and
+    a final newline, the second blank, the third the archive line naming the file itself, its archive tracked — left
+    out of a directory's file count alone. `README_POLICY.md`'s adoption note; the ceiling record's dated paragraph and
+    How to apply; `LIVE_DOCUMENT_SIZE_CONTAINMENT.md`'s two rows, re-measured; the book's annex.
+  - [x] **ADDRESSED (verified)** — `bash scripts/check_readme_routes.sh --self-test` → *"28 pass / 0 fail (28 arms)"*:
+    an exact stub left out; a look-alike counted — no archive, a fourth line, text after the last newline, a second
+    line not blank, another file named, another archive linked; a stub's bytes in the total. `python3
+    target/p70/mutate.py` → seven mutations of the rule, each `killed` — its runner untracked, so not durable. `bash
+    scripts/check_readme_routes.sh` → *"OK (24 destination(s) governed)"*, the folder 4 files against 16.
+  - [x] **NO REGRESSION** — `bash scripts/run_self_tests.sh` → *"OK — 47 self-test(s) passed"*; `make focused` →
+    `passed — 3 passed, 0 failed`; the doctrine gate at commit.
+  - [x] **LOCKSTEP** — the policy's note, the ceiling record, the size inventory, the book's annex; this leaf,
+    `PROGRAM.70`'s and both logs; the frontier, `docs/TASK_TREE.md`, `MEMORY.md` and `LIVE_STATUS.md`; `CHANGELOG.md`.
+  Verification: `2026-10-10` — the Verification Log's row
+  Commit: `ARCHOGEN-PROGRAM-0524 (leaf PROGRAM.70.2)`
 
 - ID: `PROGRAM.71`
   Status: `pending` — filed `2026-10-10` by `PROGRAM.69`'s review round 7, its P1
@@ -721,6 +746,16 @@ mdBook that is the director's window into the project.
   the path, its own untracked runner and so not durable; the self-test's arm for a seal stopped that way (R9-2) expects
   the traceback today. Present at `fea69ad`.
   Direction: the top level names any exception as a breach, and that arm expects the named breach; an arm for the gate.
+
+- ID: `PROGRAM.74`
+  Status: `pending` — filed `2026-10-10` by `PROGRAM.70.2`
+  Goal: the book has room to grow with the code it describes.
+  Reproduce / issue: `PROGRAM.70.2`'s first commit attempt, the doctrine gate → *"README-ROUTES: docs/book/: 458863 bytes
+  in total, over its ceiling of 458752"*, a two-sentence addition to the annex; replacing a sentence instead, and the
+  index regenerated, left `git ls-files docs/book | xargs cat | wc -c` → `458517`, 235 bytes of room. `M3.6.6.3`'s chapter took most of the rest
+  the same day, and `M3.6.6.4`, `M3.3` and `M3.5` each owe the book their account.
+  Direction: the measurement, and the book's layering (`docs/decisions/decision_book-in-layers.md`) — chapters and
+  annexes — weighed against a dated raise of its total in that record, as the reviews folder's was.
 
 ## Roadmap coverage map
 
@@ -787,11 +822,10 @@ roadmap item X live?".
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
 | 1 | `PROGRAM.69` | `active` | its review open: round 10 next, on the committed tool, its seal already in place |
-| 2 | `PROGRAM.70` | `active` | room in `docs/reviews/` for a new design's review history — `M3.6.6.4`'s, `M3.7`'s: `.1` archives every closed one, `.2` stops counting the stubs |
-| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
-The third row waits on the director's yes. The pending leaves beside them —
-`PROGRAM.53`, `.54`, `.60`, `.67`, `.71`, `.72` and `.73` — are filed and owned. Every closed
+The second row waits on the director's yes. The pending leaves beside them —
+`PROGRAM.53`, `.54`, `.60`, `.67`, `.71`, `.72`, `.73` and `.74` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and its full record is sealed under `docs/task-history/PROGRAM/`.
 
 ## Decisions
@@ -938,6 +972,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `2026-10-10` | `PROGRAM.69` | the census at `fea69ad`; the self-test; twenty named mutations and round 3's twenty, and a sweep of the core in three runs, runners untracked; the seal of `M1`, `M2`, `M3`, `PROGRAM`; the gate over all 170 files; every gate's self-test; review rounds 2–6 | 274 483 bytes, 261 610 in 28 subtrees; 66 arms; 20 killed, 16 and 4 equivalent; 182 of 196 on round 5's tool, the 14 reasoned; 46 leaves, 255 871 bytes out of `docs/tasks/`; OK, the 142 older seals included; 47 passed; 5, 2, 3, 2, 5 defects, each answered, the review open |
 | `2026-10-10` | `PROGRAM.69` (rounds 7, 8) | the self-test, each new arm's rule mutated; the gate over 170 files; the doctrines | 69, then 71 arms, every new rule's mutation killed; OK; all green |
 | `2026-10-10` | `PROGRAM.69` (round 9) | the self-test, the new arms failing first on `7ad8e6b`'s tool; nine mutations of round 9's rules; the gate over 172 files; the doctrines | 74 pass / 2 fail, then 77 / 0; each killed; OK; all green |
+| `2026-10-10` | `PROGRAM.70.2` | the routes self-test, its stub arm failing first; seven mutations of the rule; the real routes; every self-test; focused | 22 / 1, then 28 / 0; each killed; OK, 4 files of 16; 47 passed; `passed — 3 passed, 0 failed` |
 
 ## Commit Log
 
@@ -1081,6 +1116,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0521 (leaf PROGRAM.69)` | **review round 9 answered**: the tree and the index written whole or not at all; the rollback undoing what was written alone, each step on its own, naming what it could not undo; a taken path refused before any write; arms for a full disk, an interrupt, undecodable git output, a first seal's folder and a table's blank line; `PROGRAM.73` filed; 77 arms |
 | `PROGRAM.70.1` | `ARCHOGEN-PROGRAM-0522 (leaf PROGRAM.70.1)` | **seven closed review histories archived** behind their stubs; three closed rows put in the archive's form; the runtime variant's history kept live, edited by a pushed commit while its row read closed; `docs/reviews/` 391 513 → 262 852 bytes |
 | `PROGRAM.70.1` | `ARCHOGEN-PROGRAM-0523 (leaf PROGRAM.70.1)` | **the three closed rows' histories archived**, `.1` closed: every closed review history archived but the one a pushed commit edited while closed; `docs/reviews/` 262 852 → 78 575 bytes, 16 files |
+| `PROGRAM.70.2` | `ARCHOGEN-PROGRAM-0524 (leaf PROGRAM.70.2)` | **an archive stub is no file of its folder's count**, `PROGRAM.70` closed: `README-ROUTES` counts the histories in `docs/reviews/`, 4 of 16, its 12 stubs aside; seven look-alike and stub arms |
 
 ## Changelog
 
@@ -1105,3 +1141,5 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 - `2026-10-10`: `PROGRAM.71` filed by `PROGRAM.69`'s review round 7 — the index's order; `PROGRAM.72` by round 8 — tree files in sub-folders. Both pre-existing, owned.
 - `2026-10-10`: `PROGRAM.73` filed by `PROGRAM.69`'s review round 9 — the history gate's traceback on an unforeseen exception. Pre-existing, owned.
 - `2026-10-10`: `PROGRAM.70.1` done — ten closed review histories archived; `docs/reviews/` 391 513 → 78 575 bytes.
+- `2026-10-10`: `PROGRAM.70` done — every closed review history archived and the stubs out of the count; `M3.6.6.4`'s review has room.
+- `2026-10-10`: `PROGRAM.74` filed by `PROGRAM.70.2` — the book at its total ceiling, 235 bytes left.

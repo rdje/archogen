@@ -33,10 +33,22 @@ theirs — not another raise.
 
 **`2026-10-05`.** The rate held (393 216 reached in two days), so the archive came, not a raise: `PROGRAM.55`.
 
+**`2026-10-10`.** The archive left the count bound instead: each archived history leaves its stub, and a stub cannot
+leave, since sealed task-history files cite two of them and a sealed file never changes. Measured at `0a7ec7f`, `git
+ls-files docs/reviews | wc -l` → 16 and `… | xargs cat | wc -c` → 391 513: both ceilings met, the bytes about 1.7 KB
+from refusing a single new round. So, by `PROGRAM.70`: every closed history whose row the archive accepts was archived
+(`PROGRAM.70.1`, ten of them; the runtime variant's stays, a pushed commit having appended a round while its row read
+closed), which brought the folder to 78 575 bytes; and the 16-file ceiling counts histories, not signposts —
+`README-ROUTES` leaves out of a directory's file count a file that is exactly `REVIEW-HISTORY`'s stub, its archive
+tracked, and counts its bytes as any file's (`PROGRAM.70.2`). The folder then holds 3 histories and an index against
+16, the 12 stubs aside. No ceiling moves.
+
 ## How to apply
 
 - `README_POLICY.md`: the `docs/reviews/` row's total is 393 216, and "Ceilings a decision fixes" names this record
   for it; `LIVE_DOCUMENT_SIZE_CONTAINMENT.md`'s inventory row is re-measured.
 - A later raise is a dated paragraph here with the measurement that asks for it; a closed history that must leave the
   folder is a new mechanism, filed as a `PROGRAM` leaf.
+- A history whose review closes is archived by `bash scripts/check_review_history.sh --seal <FILE>` once its row reads
+  `closed: …` at `HEAD`; its stub is no file of the folder's count (`PROGRAM.70`).
 - Related: [[decision_decisions-folder-ceiling]], [[decision_book-in-layers]], [[decision_specifications-home]].

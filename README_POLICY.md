@@ -28,7 +28,8 @@ population is derived, not listed here: every link in `README.md` (`navigation`)
 print when the page is over its caps (`overflow`), every path this policy's body names in a code span, and every onward route below,
 followed until nothing new is reached. A path is governed by its own row, or by the row of the deepest registered
 directory above it. Ceilings are inclusive. For a file they bound its lines, bytes and longest line. For a directory
-they bound its tracked files, its largest file's lines and bytes, its longest line and its total bytes. A doctrine's
+they bound its tracked files — an archive stub, the three-line signpost `REVIEW-HISTORY` leaves at a closed history's
+path and proves on every commit, aside — its largest file's lines and bytes, its longest line and its total bytes. A doctrine's
 name defers that dimension to that doctrine. `debt: <leaf>` records a terminal nothing bounds yet, owned by an open
 leaf. "Overflows to" is where that destination's own guard sends what does not fit.
 

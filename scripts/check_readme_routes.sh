@@ -20,8 +20,8 @@
 #   1. every derived path is governed; every row is reached by something (a row nothing routes to is stale);
 #   2. each row's Route cell is exactly the set of route classes derived for it;
 #   3. each dimension a row must control carries a control: an inclusive ceiling that the destination is within
-#      (a file's lines, bytes and longest line; a directory's tracked files, largest file's lines and bytes, longest
-#      line and total bytes), a registered doctrine that owns that dimension, or `debt: <leaf>` naming an open leaf.
+#      (a file's lines, bytes and longest line; a directory's tracked files, an archive stub aside (below), largest
+#      file's lines and bytes, longest line and total bytes), a registered doctrine that owns that dimension, or `debt: <leaf>` naming an open leaf.
 #      A PARTITION is a directory row under another: its files meet their own row's per-file ceilings and not the
 #      parent's, while the parent's tracked files and total count everything beneath it, sub-folders included, so a
 #      partition adds no capacity (`docs/decisions/decision_decisions-folder-ceiling.md`, leaf `PROGRAM.39`);
@@ -124,6 +124,19 @@ leaf_status() {
 }
 
 longest() { LC_ALL=C awk '{ if (length($0) > m) m = length($0) } END { print m + 0 }' "$@"; }
+
+# An ARCHIVE STUB is REVIEW-HISTORY's form, exactly: three lines and a final newline, the second blank, the third
+# "Archived, byte for byte, in [`<NAME>`](../review-history/<NAME>) — its review closed, and never edited again." for
+# the file's own <NAME>, with that archive tracked. It is a signpost to a closed history, which REVIEW-HISTORY proves on
+# every commit, not a history a reader opens, so a directory's file count leaves it out — its bytes, lines and width
+# are counted as any file's (PROGRAM.70.2, docs/decisions/decision_reviews-folder-ceiling.md).
+is_archive_stub() { # $1 = a tracked file
+  local f="$1" name="${1##*/}" dir
+  case "$f" in */*) dir="${f%/*}" ;; *) dir="." ;; esac
+  [ "$(wc -l < "$f" | tr -d ' ')" -eq 3 ] && [ -z "$(tail -c 1 "$f")" ] && [ -z "$(sed -n 2p "$f")" ] || return 1
+  [ "$(sed -n 3p "$f")" = "Archived, byte for byte, in [\`$name\`](../review-history/$name) — its review closed, and never edited again." ] || return 1
+  git ls-files --error-unmatch -- "$dir/../review-history/$name" >/dev/null 2>&1
+}
 
 # The registered row governing $1: its own, or the deepest registered directory above it.
 governing_row() {
@@ -241,16 +254,18 @@ scan() {
       local listed; listed="$(git ls-files -- "$dest")"
       if [ -z "$listed" ]; then note "\`$dest\` is registered, and nothing under it is tracked"; continue; fi
       # Per-file figures over the files this row governs; the file count and total over everything beneath it, a
-      # partition's files included, so a partition adds no capacity to its parent.
+      # partition's files included, so a partition adds no capacity to its parent; an archive stub, no history, left
+      # out of the count alone.
       local n=0 ml=0 mb=0 tb=0 l b f own=""
       while IFS= read -r f; do
-        n=$((n + 1)); b=$(wc -c < "$f" | tr -d ' '); tb=$((tb + b))
+        is_archive_stub "$f" || n=$((n + 1))
+        b=$(wc -c < "$f" | tr -d ' '); tb=$((tb + b))
         [ "$(governing_row "$f")" = "$dest" ] || continue
         own="$own$f"$'\n'
         l=$(wc -l < "$f" | tr -d ' ')
         [ "$l" -gt "$ml" ] && ml=$l; [ "$b" -gt "$mb" ] && mb=$b
       done <<< "$listed"
-      control "$dest" "tracked files" "$files" "$n"
+      control "$dest" "tracked files, archive stubs aside" "$files" "$n"
       control "$dest" "lines in its largest file" "$lines" "$ml"
       control "$dest" "bytes in its largest file" "$bytes" "$mb"
       # shellcheck disable=SC2086
@@ -396,6 +411,32 @@ SH
   arm "a partition's file meets its own row's per-file ceilings, not its parent's" 0 ""
   fresh; partition; for f in S R; do for i in $(seq 45); do printf '%049d\n' 0; done > "$work/docs/tasks/sub/$f.md"; done; git -C "$work" add -A
   arm "a partition adds no capacity: its files count toward the parent's total" 1 "docs/tasks/: 4562 bytes in total, over its ceiling of 4000"
+  # Archive stubs (PROGRAM.70.2): docs/tasks/ at its four files, then a fifth that is REVIEW-HISTORY's exact stub,
+  # its archive tracked, which the count leaves out; a look-alike — no archive behind it, or a fourth line — counts.
+  stubbed() { # $1 = the stub's extra fourth line, or "" for none; $2 = 1 to track its archive
+    for f in U V W; do printf 'u\n' > "$work/docs/tasks/$f.md"; done
+    printf '# X\n\nArchived, byte for byte, in [`X.md`](../review-history/X.md) — its review closed, and never edited again.\n%s' "$1" > "$work/docs/tasks/X.md"
+    if [ "$2" = 1 ]; then mkdir -p "$work/docs/review-history"; printf '# X, the history\n' > "$work/docs/review-history/X.md"; fi
+    git -C "$work" add -A
+  }
+  fresh; stubbed "" 1
+  arm "an archive stub is no file of its directory's count" 0 ""
+  fresh; stubbed "" 0
+  arm "a stub-shaped file with no archive behind it is counted" 1 "docs/tasks/: 5 tracked files"
+  fresh; stubbed $'a fourth line\n' 1
+  arm "a stub-shaped file of four lines is counted" 1 "docs/tasks/: 5 tracked files"
+  fresh; stubbed 'text after its last newline' 1
+  arm "a stub-shaped file with text after its last newline is counted" 1 "docs/tasks/: 5 tracked files"
+  fresh; stubbed "" 1; sed -i.bak '2s/^$/not blank/' "$work/docs/tasks/X.md"; rm -f "$work/docs/tasks/X.md.bak"; git -C "$work" add -A
+  arm "a stub-shaped file whose second line is not blank is counted" 1 "docs/tasks/: 5 tracked files"
+  fresh; stubbed "" 1; git -C "$work" mv docs/tasks/X.md docs/tasks/Y.md
+  arm "a stub that names another file than itself is counted" 1 "docs/tasks/: 5 tracked files"
+  fresh; stubbed "" 1; printf '# Z, another history\n' > "$work/docs/review-history/Z.md"
+  sed -i.bak '3s|(../review-history/X.md)|(../review-history/Z.md)|' "$work/docs/tasks/X.md"; rm -f "$work/docs/tasks/X.md.bak"; git -C "$work" add -A
+  arm "a stub that links another archive than its own is counted" 1 "docs/tasks/: 5 tracked files"
+  fresh; stubbed "" 1; for f in U V W; do for i in $(seq 26); do printf '%049d\n' 0; done > "$work/docs/tasks/$f.md"; done   # 3 × 1 300 bytes
+  git -C "$work" add -A
+  arm "an archive stub's bytes count toward its directory's total" 1 "bytes in total, over its ceiling of 4000"
   fresh; printf 'a decision\n' > "$work/D.md"; printf '\n### Ceilings a decision fixes\n\n| Destination | Column | Maximum | Decision |\n| --- | --- | --- | --- |\n| `docs/tasks/` | Total bytes | 3000 | `D.md` |\n' >> "$work/README_POLICY.md"; git -C "$work" add -A
   arm "a ceiling above the maximum a decision fixes is refused" 1 "above the 3000 that \`D.md\` fixes"
   fresh; printf '\n### Ceilings a decision fixes\n\n| Destination | Column | Maximum | Decision |\n| --- | --- | --- | --- |\n| `docs/tasks/` | Total bytes | 9000 | `NO-SUCH.md` |\n' >> "$work/README_POLICY.md"; git -C "$work" add -A

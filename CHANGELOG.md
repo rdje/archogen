@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — room for new design reviews
+
+`ARCHOGEN-PROGRAM-0524` (leaf `PROGRAM.70.2`, closing `PROGRAM.70`), `2026-10-10`.
+
+- Every closed design review's history now lives in the review archive, each read back byte for byte behind a short
+  signpost at its old path, so the reviews folder fell from 391 513 to 78 575 bytes. One closed history stays, edited
+  by an older commit while it read closed, which the archive refuses to take.
+- The folder's file limit now counts the histories a reader opens, not those signposts, which can never leave since
+  sealed records cite them: 4 files against 16, room for new designs' reviews.
+- Validation: arms for a signpost left out of the count and six look-alikes counted, the first failing on the old
+  rule; seven deliberate breaks of the rule, each caught; every self-test; the focused tier (`passed — 3 passed, 0 failed`).
+
 ## archogen — a seal stopped half-way leaves nothing torn
 
 `ARCHOGEN-PROGRAM-0521` (leaf `PROGRAM.69`), `2026-10-10`.

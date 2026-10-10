@@ -218,13 +218,13 @@ $ bash scripts/check_decision_history.sh --seal <RECORD> <N>...            # sea
 $ bash scripts/check_decision_history.sh --self-test                       # its RED arms, on scratch repositories
 ```
 
-A design's review history only grows while its review is open. Once the review closes, the whole file can move,
-byte for byte, into `docs/review-history/`, leaving a short stub at its old path that links to it, so every
-citation of it still resolves. `REVIEW-HISTORY` checks every archived file against its row and the history it came from, and
-holds the review's row in `docs/reviews/INDEX.md` to `closed`, the history to what it was when it closed, and every
-later commit at that path to the stub, so a round merged in afterwards cannot be lost. It reads the staged
-copies, so a file left out of the commit is refused before it lands. The first archiving, on `2026-10-05`, took the
-catalog's 75 KB history out of `docs/reviews/` (`PROGRAM.55`, hardened by `PROGRAM.55.1`).
+A design's review history only grows while its review is open. Once the review closes, the whole file can move, byte for
+byte, into `docs/review-history/`, leaving a short stub at its old path that links to it, so every citation of it still
+resolves. `REVIEW-HISTORY` checks every archived file against its row and the history it came from, and holds the
+review's row in `docs/reviews/INDEX.md` to `closed`, the history to what it was when it closed, and every later commit
+at that path to the stub, so a round merged in afterwards cannot be lost. It reads the staged copies, so a file left out
+of the commit is refused before it lands. Every closed history it accepts is archived (`PROGRAM.55`, `PROGRAM.70.1`); a
+stub is no history, so the folder's file ceiling skips it, not its bytes (`PROGRAM.70.2`).
 
 ```console
 $ bash scripts/check_review_history.sh                     # the gate
