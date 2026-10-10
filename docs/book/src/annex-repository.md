@@ -240,8 +240,9 @@ $ bash scripts/check_review_history.sh --self-test         # its RED arms, on sc
 ```
 
 What a review round found is counted by hand in its design record's summary row, and the reviews index counts the
-rounds; the history's own table lists each finding. `REVIEW-COUNTS` holds the counts to the table, as its header says
-which rows and which counts, and names every index row it judges nothing of, with the reason (`PROGRAM.69`).
+rounds; the history's own table lists each finding. For each review its script lists — the open reviews whose records
+keep such a table — `REVIEW-COUNTS` holds the counts to the table, and refuses a listed review it cannot judge; a review
+leaves the list when it closes (`PROGRAM.69`).
 
 ```console
 $ bash scripts/check_review_counts.sh                      # the gate

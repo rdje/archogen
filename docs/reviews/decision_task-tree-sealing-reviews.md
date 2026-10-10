@@ -548,6 +548,30 @@ can hold exactly: the index row's status, prose, is no longer read; every scope 
 | R25-R5 | remark | a comment said a skipped record "would otherwise" be read | the code rewritten; no such comment |
 | R25-R6 | remark | the changelog's "by their own headings" — a round's line is no heading | "by their own lines" |
 
+**Round 26**, `2026-10-10`, a twenty-fourth confirmation, in clones of `e7fedd7`, by a read-only context new to the
+change, fenced from the sealed evaluation set. It ran the gate, every self-test, the census and the rollover's proof,
+mutated the new check 30 ways and silenced 50 refusals of the tool one at a time — runners untracked, so not durable.
+Verdict: 4 defects, 4 arm gaps and 4 remarks, all but one of the new check. Round 25's paragraph and its answers to
+R25-D1 and R25-R2 stand as written; this round corrects them: rows the check judged nothing of were not all named, and
+rounds with no findings table not all counted. Three rounds in a row (24 to 26) found the check's derived scope leaving
+a review unread or unnamed. The answer changes method: nothing is derived and nothing skipped — the script lists the
+reviews it judges, and refuses a listed review it cannot judge; a review leaves the list when it closes.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R26-D1 | defect | an index row whose first cell is no backticked link, or whose history is missing, was dropped unnamed | no row is derived: the reviews the script lists are judged, a missing file refused |
+| R26-D2 | defect | a record with its header and no parsable row was skipped as "no summary table" | the header seen is judged; a row under it whose round is no number refused |
+| R26-D3 | defect | rounds with no findings table were counted only inside a record's loop | counted for every listed review; the arm expects two |
+| R26-D4 | defect | "every text points to the header" false: four texts still overclaimed | each marked as narrowed by this round |
+| R26-AG1 | arm gap | arm gaps and pre-existing arm gaps never told apart | the world's counts unequal; an arm each way |
+| R26-AG2 | arm gap | two skip reasons held by no arm | no skips: a listed review with no round line, or no summary table, refused, an arm each |
+| R26-AG3 | arm gap | the first table after a round's line, and its end, held by no arm | a second table and rows past a blank line in the world, neither read |
+| R26-AG4 | arm gap | the defects cell's leading number held by no arm | an arm whose cell holds its number later |
+| R26-R1 | remark | a review named as not judged while its count of rounds was checked | no review is skipped |
+| R26-R2 | remark | the note above `M3.6.6.4`'s Commit Log a 129-column line | refilled |
+| R26-R3 | remark | not this change's: the sealing self-test's interrupt arm is timing-dependent under a parallel sweep | filed as `PROGRAM.78` |
+| R26-R4 | remark | `isdigit` accepts a digit that is not 0 to 9, then a traceback | a cell is a number only of 0 to 9; an arm |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.
