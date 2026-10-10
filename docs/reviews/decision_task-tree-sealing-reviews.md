@@ -158,6 +158,27 @@ leaf open, and the review stays open until a round finds no defect.
 | R6-10 | remark | the reviews index row said one round | six, open |
 | R6-11 | nit | round 4's row: "890 hand seals as the tool makes them" | "of 890 hand seals the gate accepted exactly those the tool makes" |
 
+**Round 7**, `2026-10-10`, a fifth confirmation, in a clone of `e624001`, by a read-only context new to the change. It
+re-derived the seal with its own code and re-sealed `fea69ad` with the committed tool, every tree and file identical;
+fuzzed the tool over three seeds; and judged each finding this change's or pre-existing. Verdict: 4 defects of this
+change, and two pre-existing remarks. Every count in rounds 2 to 7 that a runner under `target/` produced — the
+mutation counts, round 4's and this round's fuzzing, the sweep's runs — is from a runner not tracked, and so not
+durable (`docs/CLAIM_VERIFICATION.md`, its third leg); this round's paragraph says so for all of them, since an earlier
+round is not edited.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R7-1 | defect | a sealed file holding no leaf passed the gate (a gap since `fea69ad`), against the text R6-4 wrote, that a hand seal differing from the tool's in its files is refused | leg 1 refuses a sealed file with no leaf; an arm |
+| R7-2 | defect | `PROGRAM.69`'s checklist still described the stub-commit check R6-3 withdrew, and named `M1`'s changelog | the three phrases removed |
+| R7-3 | defect | R6-5 said every count from an untracked runner was marked, and round 4's fuzzing counts were not, in the record, the leaf and this history | marked in the record and the leaf; for this history, by this paragraph |
+| R7-4 | defect | the rollback was whole for a file not UTF-8 alone: a file the gate cannot open left the seal's writes behind and a traceback | every write and the gate's proof in one guard, whatever stops the run rolling the seal back first, the run's handler naming a file it cannot read; an arm with a tree file it cannot open; the narrower inner catch, shown equivalent by a mutation, removed |
+| R7-5 | remark | the changelog's "182 of 196" did not say on which tool | "on round 5's tool" |
+| R7-6 | remark | no arm held the column-0 refusal below the top level, and a mutation confining it there passed | an arm: a column-0 line in the second leaf of a closed subtree below an open one, refused with nothing written — which also answers P2 below |
+| R7-7 | remark | the record's legs, the script's, the doctrine row and the book omitted two refusals: a leaf named twice, and the index's layout | each names both |
+| R7-8 | nit | `PROGRAM.70` was filed "by the fourth review" | "by the answer to the review's round 4" |
+| R7-P1 | remark, pre-existing | the index's "append-only" holds presence, not order: a row inserted above committed rows passes | filed as `PROGRAM.71`, owned, not built into this change |
+| R7-P2 | remark, pre-existing | the column-0 refusal was held for a unit's first leaf alone | R7-6's arm puts the line in a second leaf |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.

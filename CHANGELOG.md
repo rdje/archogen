@@ -43,7 +43,7 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
   keeps one table per tree and one row per sealed file; a tree names each leaf once. A census mode measures the
   finished leaves under parts still open.
 - Validation: independent review rounds 2 to 6, each finding answered, the review still open; a mutation sweep of the
-  tool's core (its runner untracked), 182 of 196 mutants killed and the 14 others reasoned; 66 self-test arms; every
+  tool's core on round 5's tool (its runner untracked), 182 of 196 mutants killed and the 14 others reasoned; 66 self-test arms; every
   gate's self-test and every doctrine green.
 
 ## archogen — the trust inventory reads generated-source declarations

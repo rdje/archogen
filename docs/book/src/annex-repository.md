@@ -184,7 +184,8 @@ A task tree records every leaf of its work, with its checklist and evidence. Mos
   edited is refused when its files, its placeholders' links or its parts differ from what the tool makes — each file
   the largest finished part, whole. A placeholder's commit, a row's date and the rule against a line at column 0 are
   the tool's alone, which the check does not read;
-- that no live leaf sits inside a part that is sealed, in any tree, and that each tree holds only its own leaves.
+- that no live leaf sits inside a part that is sealed, in any tree, and that each tree holds only its own leaves, each
+  named once; that every sealed file holds a leaf; and that the index keeps one table per tree, its rows under it.
 
 ```console
 $ bash scripts/check_task_history.sh                  # the gate

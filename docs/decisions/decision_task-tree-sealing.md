@@ -56,7 +56,7 @@ not, it writes nothing. Then it runs the gate on what it wrote, and rolls everyt
 leaves under open top-level subtrees and of those a seal would take (`PROGRAM.69`).
 
 **The gate**, `TASK-HISTORY`, runs on every commit, in CI as in the pre-commit hook. It checks:
-1. every sealed file's leaves, lines, bytes and sha256 against its row;
+1. every sealed file's leaves, lines, bytes and sha256 against its row — *amended `2026-10-10`: and that it holds a leaf*;
 2. that sealed files and rows correspond one to one, and that nothing else is under `docs/task-history/`;
 3. **across history**: that every row any committed version of the index held is still there, unchanged, and that
    every sealed file is byte for byte what the commit that added it wrote. So CI, where `HEAD` is the commit under
@@ -76,7 +76,8 @@ leaves under open top-level subtrees and of those a seal would take (`PROGRAM.69
    file is exactly the bytes
    those leaves' spans made, in that tree's order, so a file reordered or padded is refused too;
 6. that no live leaf sits in a subtree that is sealed — *amended `2026-10-10`: at any depth, and in any tree file;
-   and a tree file holds only leaves under its own name, which a seal checks before it writes.*
+   and a tree file holds only leaves under its own name, each named once, which a seal checks before it writes; and the
+   index keeps one table per tree, its header first, its rows under it, one row a sealed file.*
 
 **What else changes:**
 - **`TASK-ACCEPTANCE`**, archogen's since `PROGRAM.21`: when a commit names a sealed leaf as its owner, the
@@ -158,6 +159,7 @@ another tree is sealed. The amendment of `2026-10-10` and its seal were reviewed
 | 1 | 10 | 3 (the record's fallback text unlike the build's; a sealing commit that was not seal-only; figures that did not reproduce), with the seal not fail-closed and the gate not re-proving a seal as the gaps to fix first | the seal "correct and lossless"; the tool to be hardened before another tree is sealed |
 | 2 | 9 | 5 (no arm held the unit's rules; leg 5 refusing only a seal too narrow; figures not reproducible as bytes; sentences the amendment contradicted; the doctrine row) | the seal byte for byte and exactly the outermost closed set; every finding answered |
 | 3 | 6 | 2 (the leaf's own figures left uncorrected; two corners of the unit's rule with no arm) | the seal, every figure and every round-2 answer but those two re-derived; every finding answered, two that predate the change among them |
-| 4 | 8 | 3 (rounds appended to the history while its row read closed; two survivors called equivalent that were not; the census's producer untracked) | the seal reproduced by a clean clone; 840 fuzzed seals matched its oracle, and of 890 hand seals the gate accepted exactly those the tool makes; every finding answered |
+| 4 | 8 | 3 (rounds appended to the history while its row read closed; two survivors called equivalent that were not; the census's producer untracked) | the seal reproduced by a clean clone; 840 fuzzed seals matched its oracle, and of 890 hand seals the gate accepted exactly those the tool makes (runners untracked, not durable); every finding answered |
 | 5 | 5 | 2 (the census's byte figures held by no arm; a refused first seal leaving its folder behind) | the seal, the figures and R4-1's route re-derived; every finding answered, then a mutation sweep of the tool's core — 182 of 196 mutants killed, the 14 others each reasoned in the history (runner untracked, not durable) |
 | 6 | 11 | 5 (a repeated row passing once its one note was silenced; a rollback that a file the gate cannot read escaped; two first-seal stubs "corrected" wrongly; the text claiming more than the gate checks; figures naming no state) | the seal re-derived and re-sealed from `72bd446`; every finding answered, the stub-commit check withdrawn; the review open |
+| 7 | 10 | 4 (a sealed file holding no leaf passing; the leaf describing the withdrawn check; counts from untracked runners unmarked; a rollback whole for a file not UTF-8 alone) | the seal re-derived and re-sealed in a clone, 795 fuzzed seals and 1 551 hand seals as the tool makes them (runner untracked, not durable); every finding answered, two pre-existing remarks filed or armed |

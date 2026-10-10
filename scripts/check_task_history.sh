@@ -28,7 +28,7 @@
 # column 0 would make the line slicing tear it (the review of `PROGRAM.32.4`, P2).
 #
 # THE GATE'S LEGS:
-#   1. every sealed file's leaf count, lines, bytes and sha256 are its index row's;
+#   1. every sealed file's leaf count, lines, bytes and sha256 are its index row's, and it holds a leaf;
 #   2. sealed files and rows correspond one to one, and nothing else is under docs/task-history/;
 #   3. HISTORY-WIDE, every row any committed version of the index held is still there, unchanged, and every sealed file
 #      is byte for byte what the commit that added it wrote — so CI, where HEAD is the commit under test, catches a
@@ -45,7 +45,8 @@
 #      `PROGRAM.18` → `PROGRAM.18.1`, a child's row closing its parent), a row's date, and the column-0 rule, which
 #      stays the seal's;
 #   6. no live leaf sits in a subtree that is sealed, at any depth and in any tree file: new work opens a new subtree
-#      outside it (P6); and a tree file holds only leaves under its own name, so no leaf is judged in a tree not its own.
+#      outside it (P6); and a tree file holds only leaves under its own name, each named once, so no leaf is judged in a
+#      tree not its own; the index keeps one table per tree, its header first and its rows under it, one row a file.
 #
 # THE SEAL writes nothing unless the tree it would leave, with every new stub replaced by its body from its new sealed
 # file, is the tree as it stood, byte for byte; and it rolls everything back if the gate then refuses the result.
@@ -295,6 +296,7 @@ def gate():
             if str(len(data.encode("utf-8"))) != nbytes: note("%s has %d bytes, and its row says %s — a sealed file changed" % (fpath, len(data.encode("utf-8")), nbytes))
             if sha(data) != digest: note("%s's sha256 is not its row's — a sealed file changed" % fpath)
             flines, fls = leaves(data)
+            if not fls: note("%s holds no leaf — a seal moves at least one" % fpath)
             if str(len(fls)) != nleaves: note("%s holds %d leaves, and its row says %s" % (fpath, len(fls), nleaves))
             for lid, f, e in fls:
                 if status(flines, f) != "done": note("%s holds %s, whose status is not `done`" % (fpath, lid))
@@ -521,31 +523,41 @@ def seal(tree_name):
     today = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
     order = sorted(sealable, key=lambda k: min(m[1] for m in groups[k]))
     written = []
-    for key in order:
-        fpath = os.path.join(HIST, tree_name, key + ".md")
-        with open(fpath, "w", encoding="utf-8") as f:
-            f.write(files[key])
-        written.append(fpath)
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(after)
-    add_rows(tree_name, ["| `%s` | %d | %d | %d | `%s` | `%s` |" % (key, len(groups[key]), files[key].count("\n"),
-                         len(files[key].encode("utf-8")), sha(files[key]), today) for key in order])
-    try:
-        gate()
-    except Unreadable as e:
-        note(str(e))
-    if fails:
+
+    def rollback():
         for fpath in written:
-            os.remove(fpath)
+            if os.path.exists(fpath):
+                os.remove(fpath)
         with open(path, "w", encoding="utf-8") as f:
             f.write(before)
         if index_before is None:
-            os.remove(INDEX)
+            if os.path.exists(INDEX):
+                os.remove(INDEX)
         else:
             with open(INDEX, "w", encoding="utf-8") as f:
                 f.write(index_before)
         for d in reversed(made_dirs):
-            os.rmdir(d)
+            if os.path.isdir(d) and not os.listdir(d):
+                os.rmdir(d)
+
+    # Every write and the gate's proof in one guard: whatever stops the run — a file the gate cannot read, which the
+    # run's own handler then names as a breach, or anything else — rolls the seal back first (reviews R5-2, R6-2, R7-4).
+    try:
+        for key in order:
+            fpath = os.path.join(HIST, tree_name, key + ".md")
+            written.append(fpath)
+            with open(fpath, "w", encoding="utf-8") as f:
+                f.write(files[key])
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(after)
+        add_rows(tree_name, ["| `%s` | %d | %d | %d | `%s` | `%s` |" % (key, len(groups[key]), files[key].count("\n"),
+                             len(files[key].encode("utf-8")), sha(files[key]), today) for key in order])
+        gate()
+    except BaseException:
+        rollback()
+        raise
+    if fails:
+        rollback()
         sys.exit("task-history: the gate refused the seal of %s, so it was rolled back:\n  " % path + "\n  ".join(fails))
     print("task-history: %s — sealed %d subtree(s), %d leaves: %s; the reconstruction is byte for byte"
           % (path, len(sealable), len(seal_of), " ".join(order)))
@@ -553,7 +565,7 @@ def seal(tree_name):
 if mode == "census":
     try:
         census(tree)
-    except Unreadable as e:
+    except (Unreadable, OSError) as e:
         sys.exit("task-history: %s" % e)
     sys.exit(0)
 try:
@@ -561,7 +573,7 @@ try:
         seal(tree)
         fails.clear()
     checked, nstubs = gate()
-except Unreadable as e:
+except (Unreadable, OSError) as e:
     note(str(e))
     checked, nstubs = 0, 0
 for msg in fails:
@@ -802,6 +814,17 @@ PY
   sub docs/task-history/INDEX.md '^(\| `T\.1` \|.*\n)' '\1\1'
   arm "a row twice for one sealed file is refused" 1 "lists T.1 twice in T's table"
   restore
+  printf '\n' > "$work/docs/task-history/T/T.9.md"
+  sub docs/task-history/INDEX.md '^(\| `T\.1` \|.*\n)' '\1| `T.9` | 0 | 1 | 1 | `01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b` | `2026-10-10` |\n'
+  arm "a sealed file that holds no leaf is refused" 1 "T.9.md holds no leaf — a seal moves at least one"
+  restore
+  # A column-0 line in a closed subtree below an open one, in its second leaf: the seal refuses, nothing written.
+  printf '\n- ID: `T.2.9`\n  Status: `done`\n  Goal: a closed subtree below an open one\n\n- ID: `T.2.9.1`\n  Status: `done`\n  Goal: its child, holding a line at column 0\n```text\ntorn\n```\n' >> "$work/docs/tasks/T.md"
+  commit
+  arm "a column-0 line in a later leaf of a unit below an open one is refused, nothing written" 1 "T.2.9.1, line" --seal T
+  [ -z "$(git -C "$work" status --porcelain --untracked-files=all)" ] ||
+    { arms=$((arms + 1)); echo "SELF-TEST: a seal refused for a torn leaf wrote something" >&2; }
+  git -C "$work" reset -q --hard HEAD~1
   printf '\n- ID: `T.2.10`\n  Status: `active`\n  Goal: a second leaf of one name\n' >> "$work/docs/tasks/T.md"
   arm "a leaf named twice in a tree is refused" 1 "holds T.2.10 2 times"
   arm "and the seal of that tree writes nothing" 1 "holds T.2.10 more than once — a leaf is named once; nothing was written" --seal T
@@ -1065,6 +1088,14 @@ PY
   arm "a seal the gate cannot judge after it wrote is rolled back" 1 "is not UTF-8" --seal Q
   [ -z "$(git -C "$work" status --porcelain --untracked-files=all -- docs/task-history docs/tasks)" ] ||
     { arms=$((arms + 1)); echo "SELF-TEST: a seal refused on an unreadable file left its writes behind" >&2; }
+  git -C "$work" rm -q docs/tasks/Z.md
+  printf -- '# R\n\n## Task Tree\n\n- ID: `R.1`\n  Status: `pending`\n  Goal: a tree the gate cannot open\n' > "$work/docs/tasks/R.md"
+  commit
+  chmod 000 "$work/docs/tasks/R.md"
+  arm "a seal the gate cannot open a file after it wrote is rolled back, the failure named" 1 "Permission denied" --seal Q
+  chmod 644 "$work/docs/tasks/R.md"
+  [ -z "$(git -C "$work" status --porcelain --untracked-files=all -- docs/task-history docs/tasks)" ] ||
+    { arms=$((arms + 1)); echo "SELF-TEST: a seal stopped by a file it cannot open left its writes behind" >&2; }
   rm -rf "$work"
   arms=$((arms + 1))
   if bash "$SELF" >/dev/null 2>&1; then ok=$((ok + 1)); echo "  ✅ the real task history passes"
