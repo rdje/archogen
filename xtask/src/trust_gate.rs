@@ -646,6 +646,15 @@ pub fn judge(
                 crate::trust::ROOTS
             ));
         }
+        // A declaration no program reads (the generated-sources record §6): removed, so a generated source read again
+        // is reviewed again.
+        for g in strings("generated-unread") {
+            refused.push(format!(
+                "trust-baseline-stale: {}: `(defgenerated \"{g}\" …)` declares a file no program reads — remove it, so a \
+                 generated source read again is reviewed again",
+                crate::trust::ROOTS
+            ));
+        }
     }
 
     let mut change = match (base.commit, &base.baseline) {

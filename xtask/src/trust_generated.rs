@@ -1383,20 +1383,23 @@ mod generator_tests {
     #[test]
     fn a_generator_that_is_a_root_is_its_own_build_and_one_a_live_form_s_refusal_names_is_never_built(
     ) {
-        // `gen` reads a table its own executable wrote: the same role, and the root's build is the generator's.
-        let gen_table = "(defgenerated \"crates/a/src/gen_a.rs\" (generator \"crates/a/src/main.rs\") (command \"run it\") \
-                         (reason \"a's table\"))\n";
+        // `gen2`, a second root of the generator's role, reads a table `gen`'s executable wrote: the same role, and the
+        // root's build is the generator's, not built again.
+        let table = "(defgenerated \"crates/c/src/table.rs\" (generator \"crates/a/src/main.rs\") (command \"run it\") \
+                     (reason \"c's table\"))\n";
+        let gen2 = "(defroot gen2 (role generator) (package \"crates/c\") (target bin c) (role-packages \"crates/c\"))\n";
         let f = pair(
             "gs-gen-root",
             &[
-                roots(gen_table),
+                roots(&(gen2.to_owned() + table)),
+                ("crates/c/Cargo.toml", manifest("c", "")),
                 (
-                    "crates/a/src/gen_a.rs",
+                    "crates/c/src/table.rs",
                     "pub const T: u32 = 1;\n".to_owned(),
                 ),
                 (
-                    "crates/a/src/main.rs",
-                    "mod gen_a;\nfn main() { let _ = gen_a::T; }\n".to_owned(),
+                    "crates/c/src/main.rs",
+                    "mod table;\nfn main() { let _ = table::T; }\n".to_owned(),
                 ),
             ],
         );
@@ -1404,6 +1407,21 @@ mod generator_tests {
         assert!(
             !f.base.join("out/target-generators").exists(),
             "a root was built again as a generator"
+        );
+        // `gen` reading a table its own executable wrote, its build compiling the table: the generator's build reads a
+        // declared file, the chain's second clause (step 5).
+        f.commit(&[
+            roots(
+                "(defgenerated \"crates/a/src/gen_a.rs\" (generator \"crates/a/src/main.rs\") (command \"run it\") \
+                 (reason \"a's table\"))\n",
+            ),
+            ("crates/a/src/gen_a.rs", "pub const T: u32 = 1;\n".to_owned()),
+            ("crates/a/src/main.rs", "mod gen_a;\nfn main() { let _ = gen_a::T; }\n".to_owned()),
+        ]);
+        says(
+            &refused(f.run()),
+            "`crates/a/src/gen_a.rs`, which the build of the generator `crates/a/src/main.rs` reads, is a generated source \
+             — a `defgenerated` form declares it — a chain of generators",
         );
         // `chk`'s table from a tool of no role, with an input step 3 refuses: the run ends there, the tool not built.
         f.commit(&[
@@ -1515,6 +1533,229 @@ mod generator_tests {
             err.contains("and beside it, 1 refusal(s):")
                 && err.contains("generator `crates/b/src/lib.rs` is a `.rs` file"),
             "{err}"
+        );
+    }
+}
+
+#[cfg(test)]
+mod order_tests {
+    //! Step 5 and staleness (§2, §3, §6; `GS-H2`, `GS-H4`, `GS-H14`, `GS-H15`, `GS-H5`): the chain's second clause over
+    //! what a generator build reads, the recogniser's refusal over what a program reads, one message a file; a refusal
+    //! at each of the five steps ending the run with no form stale; and a form no program reads stale on the baseline's
+    //! host alone.
+
+    use crate::trust::tests::{
+        manifest, real_root, refused, says, two_roots, written, Fixture, ROOTS as TWO_ROOTS,
+    };
+    use crate::trust::{inventory_with, Outcome};
+
+    const NEVER: &str = "(defgenerated \"crates/a/src/never.rs\" (generator \"scripts/gen.sh\") (command \"run it\") \
+                         (reason \"a table no program reads\"))\n";
+
+    fn roots(forms: &str) -> (&'static str, String) {
+        ("trust/roots.eadl", format!("{TWO_ROOTS}{forms}"))
+    }
+
+    /// Two roots, `gen` (`crates/a`, an executable) and `chk` (`crates/b`, a library reading `src/gen_b.rs`), a script
+    /// in no member, and `files` beside them.
+    fn pair(name: &str, a_src: &str, b_src: &str, files: &[(&str, String)]) -> Fixture {
+        let mut all: Vec<(&str, String)> = vec![
+            (
+                "crates/b/src/gen_b.rs",
+                "pub const T: u32 = 2;\n".to_owned(),
+            ),
+            ("scripts/gen.sh", "echo a table\n".to_owned()),
+        ];
+        all.extend(files.iter().cloned());
+        two_roots(name, a_src, b_src, &all)
+    }
+
+    fn outcome(f: &Fixture) -> Result<Outcome, String> {
+        inventory_with(&f.repo, "HEAD", &f.base.join("out"), &real_root())
+    }
+
+    #[test]
+    fn step_5_refuses_a_chain_through_a_generator_build_and_an_undeclared_marked_file_one_message_a_file(
+    ) {
+        // `crates/g`, a tool of no role, writes `chk`'s table; its build compiles `helper.rs`, marked, and `crates/s`,
+        // marked, which `chk` compiles too; `gen` compiles `table.rs`, marked and declared by no form.
+        let f = pair(
+            "gs-step-5",
+            "mod table;\nfn main() { let _ = table::T; }\n",
+            "mod gen_b;\npub fn f() -> u32 { s::s(); gen_b::T }\n",
+            &[
+                roots("(defgenerated \"crates/b/src/gen_b.rs\" (generator \"crates/g/src/main.rs\") (command \"run it\") (reason \"b's table\"))\n"),
+                ("crates/a/src/table.rs", "// @generated by a tool\npub const T: u32 = 1;\n".to_owned()),
+                ("crates/s/Cargo.toml", manifest("s", "")),
+                ("crates/s/src/lib.rs", "// @generated by another tool\npub fn s() {}\n".to_owned()),
+                ("crates/b/Cargo.toml", manifest("b", "[dependencies]\ns = { path = \"../s\" }\n")),
+                ("crates/g/Cargo.toml", manifest("g", "[dependencies]\ns = { path = \"../s\" }\n")),
+                ("crates/g/src/main.rs", "mod helper;\nfn main() { helper::h(); s::s(); }\n".to_owned()),
+                ("crates/g/src/helper.rs", "// @generated by a tool\npub fn h() {}\n".to_owned()),
+            ],
+        );
+        let r = refused(f.run());
+        says(&r, "`crates/g/src/helper.rs`, which the build of the generator `crates/g/src/main.rs` reads, is a generated source — its header marks it generated");
+        says(&r, "`crates/s/src/lib.rs`, which the build of the generator `crates/g/src/main.rs` reads, is a generated source");
+        says(&r, "`gen` reads `crates/a/src/table.rs`, whose header marks it generated and which no `defgenerated` form declares");
+        assert_eq!(
+            r.iter()
+                .filter(|x| x.contains("crates/s/src/lib.rs"))
+                .count(),
+            1,
+            "a chain is refused by that rule alone, one message for one file: {r:#?}"
+        );
+        // A declared file a generator build reads is a chain too.
+        f.commit(&[roots(
+            "(defgenerated \"crates/b/src/gen_b.rs\" (generator \"crates/g/src/main.rs\") (command \"run it\") (reason \"b's table\"))\n\
+             (defgenerated \"crates/g/src/helper.rs\" (generator \"scripts/gen.sh\") (command \"run it\") (reason \"a helper\"))\n\
+             (defgenerated \"crates/a/src/table.rs\" (generator \"scripts/gen.sh\") (command \"run it\") (reason \"a's table\"))\n\
+             (defgenerated \"crates/s/src/lib.rs\" (generator \"scripts/gen.sh\") (command \"run it\") (reason \"s\"))\n",
+        )]);
+        says(&refused(f.run()), "`crates/g/src/helper.rs`, which the build of the generator `crates/g/src/main.rs` reads, is a generated source — a `defgenerated` form declares it");
+    }
+
+    #[test]
+    fn a_marked_file_no_form_can_declare_is_refused_when_a_program_reads_it() {
+        // A file a tool writes outside any committed script — as cargo writes its lock — handed to `chk`, marked.
+        let f = pair(
+            "gs-no-form-can-declare",
+            "fn main() {}\n",
+            "mod gen_b;\npub fn f() -> u32 { gen_b::T }\n",
+            &[
+                (
+                    "trust/roots.eadl",
+                    TWO_ROOTS.replace(
+                        "(role-packages \"crates/b\"))",
+                        "(role-packages \"crates/b\") (data \"data/deps.toml\"))",
+                    ),
+                ),
+                (
+                    "data/deps.toml",
+                    "# @generated by a dependency tool\n[x]\ny = 1\n".to_owned(),
+                ),
+            ],
+        );
+        says(&refused(f.run()), "`chk` reads `data/deps.toml`, whose header marks it generated and which no `defgenerated` form declares");
+    }
+
+    #[test]
+    fn a_refusal_at_each_of_the_five_steps_ends_the_run_and_no_form_is_stale() {
+        // Each run holds a form no program reads, stale only over an inventory; each refuses, so none is written.
+        let f = pair(
+            "gs-order",
+            "fn main() {}\n",
+            "mod gen_b;\npub fn f() -> u32 { gen_b::T }\n",
+            &[roots(NEVER)],
+        );
+        let mut checked = Vec::new();
+        let mut step = |name: &str, files: Vec<(&'static str, String)>, why: &str| {
+            f.commit(&files);
+            let r = match outcome(&f) {
+                Ok(Outcome::Refused(r)) => r,
+                Ok(Outcome::Written(_)) => panic!("{name}: written"),
+                Err(e) => panic!("{name}: not judged: {e}"),
+            };
+            says(&r, why);
+            assert!(
+                !r.iter().any(|x| x.contains("trust-baseline-stale")),
+                "{name}: a form stale in a refused run: {r:#?}"
+            );
+            assert!(
+                !f.base.join("out/trust-dependencies.json").exists(),
+                "{name}: an inventory written"
+            );
+            checked.push(name.to_owned());
+        };
+        step(
+            "step 1, a malformed form",
+            vec![roots(
+                &(NEVER.to_owned()
+                    + "(defgenerated \"x.rs\" (generator \"scripts/gen.sh\") (command \"c\"))\n"),
+            )],
+            "has no `(reason …)`",
+        );
+        step(
+            "step 2, the parent's refusal in a build",
+            vec![
+                roots(NEVER),
+                (
+                    "crates/b/src/lib.rs",
+                    "mod gen_b;\n#[no_mangle]\npub extern \"C\" fn f() -> u32 { gen_b::T }\n"
+                        .to_owned(),
+                ),
+            ],
+            "`no_mangle`, refused by the catalog's rules",
+        );
+        step(
+            "step 3, a live form's input no blob, its upstream form unread",
+            vec![
+                roots(&(NEVER.to_owned()
+                    + "(defgenerated \"crates/b/src/gen_b.rs\" (generator \"scripts/gen.sh\") (inputs \"data/mid.csv\") (command \"c\") (reason \"r\"))\n\
+                       (defgenerated \"data/mid.csv\" (generator \"scripts/gen.sh\") (command \"c\") (reason \"r\"))\n")),
+                ("crates/b/src/lib.rs", "mod gen_b;\npub fn f() -> u32 { gen_b::T }\n".to_owned()),
+            ],
+            "input `data/mid.csv` is no blob of the commit",
+        );
+        step(
+            "step 4, a generator target refused by its role packages",
+            vec![roots(&(NEVER.to_owned()
+                + "(defgenerated \"crates/b/src/gen_b.rs\" (generator \"crates/a/src/main.rs\") (command \"c\") (reason \"r\"))\n"))],
+            "a role package of the generator — not built",
+        );
+        step(
+            "step 5, a marked file no form declares",
+            vec![
+                roots(NEVER),
+                (
+                    "crates/b/src/gen_b.rs",
+                    "// @generated by a tool\npub const T: u32 = 2;\n".to_owned(),
+                ),
+            ],
+            "whose header marks it generated and which no `defgenerated` form declares",
+        );
+        assert_eq!(checked.len(), 5);
+    }
+
+    #[test]
+    fn a_form_no_program_reads_is_stale_on_the_baseline_s_host_alone() {
+        // `chk`'s table declared and read; `never.rs` declared and read by none.
+        let live = "(defgenerated \"crates/b/src/gen_b.rs\" (generator \"scripts/gen.sh\") (command \"c\") (reason \"r\"))\n";
+        let f = pair(
+            "gs-stale",
+            "fn main() {}\n",
+            "mod gen_b;\npub fn f() -> u32 { gen_b::T }\n",
+            &[
+                roots(&(live.to_owned() + NEVER)),
+                (
+                    "crates/a/src/never.rs",
+                    "pub const N: u32 = 0;\n".to_owned(),
+                ),
+            ],
+        );
+        let inv = written(f.run());
+        let unread: Vec<&str> = inv
+            .get("generated-unread")
+            .map(crate::json::Json::elements)
+            .unwrap_or_default()
+            .iter()
+            .filter_map(crate::json::Json::as_str)
+            .collect();
+        assert_eq!(unread, ["crates/a/src/never.rs"]);
+        // Off the baseline's host — no baseline yet — nothing is stale.
+        let out = f.base.join("gate");
+        let (j, _) =
+            crate::trust_gate::gate(&f.repo, "HEAD", None, &out, &real_root()).expect("judged");
+        assert!(j.refused.is_empty(), "{:#?}", j.refused);
+        // The proposed baseline committed, the gate is on its host: the unread form is stale, and it alone.
+        let proposal =
+            std::fs::read_to_string(out.join(crate::trust_gate::PROPOSAL)).expect("a proposal");
+        f.commit(&[("trust/baseline.eadl", proposal)]);
+        let (j, _) =
+            crate::trust_gate::gate(&f.repo, "HEAD", None, &out, &real_root()).expect("judged");
+        assert_eq!(
+            j.refused,
+            ["trust-baseline-stale: trust/roots.eadl: `(defgenerated \"crates/a/src/never.rs\" …)` declares a file no program reads — remove it, so a generated source read again is reviewed again"]
         );
     }
 }

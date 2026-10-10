@@ -3730,3 +3730,98 @@ from
 to
         if step4.is_empty() {}
 end
+
+mutation gs-a-declared-file-in-a-generator-build-passes
+file xtask/src/trust.rs
+test -p xtask trust_generated::order_tests
+expect killed
+why M3.6.6.2.4, the generated-sources record §2 (`GS-H1`, the chain's second clause): a file a generator build reads that a form declares is a chain, refused.
+from
+            let why = if declared.contains(f.as_str()) {
+to
+            let why = if false {
+end
+
+mutation gs-a-marked-file-in-a-generator-build-passes
+file xtask/src/trust.rs
+test -p xtask trust_generated::order_tests
+expect killed
+why M3.6.6.2.4, the generated-sources record §2 (`GS-H1`, the chain's second clause): a file a generator build reads whose header marks it generated is a chain, refused.
+from
+            } else if marked(f) {
+to
+            } else if false {
+end
+
+mutation gs-an-undeclared-marked-file-passes
+file xtask/src/trust.rs
+test -p xtask trust_generated::order_tests
+expect killed
+why M3.6.6.2.4, the generated-sources record §3 (`GS-H2`): a file a program reads whose header marks it generated, that no form declares, is refused.
+from
+                if marked(f) && !declared.contains(f.as_str()) && !generator_reads.contains_key(f) {
+to
+                if false && marked(f) {
+end
+
+mutation gs-a-chain-reported-twice
+file xtask/src/trust.rs
+test -p xtask trust_generated::order_tests
+expect killed
+why M3.6.6.2.4, the generated-sources record §3: a marked file a generator build reads is the chain's, refused by that rule alone — one message for one file.
+from
+                if marked(f) && !declared.contains(f.as_str()) && !generator_reads.contains_key(f) {
+to
+                if marked(f) && !declared.contains(f.as_str()) {
+end
+
+mutation gs-a-step-5-refusal-is-ignored
+file xtask/src/trust.rs
+test -p xtask trust_generated::order_tests
+expect killed
+why M3.6.6.2.4, the generated-sources record §2 (`GS-H14`): a refusal at step 5 ends the run, no inventory written.
+from
+        if !step5.is_empty() {
+            return Ok(refuse(step5));
+        }
+to
+        if step5.is_empty() {}
+end
+
+mutation gs-every-form-unread
+file xtask/src/trust.rs
+test -p xtask trust_generated::order_tests
+expect killed
+why M3.6.6.2.4, the generated-sources record §6 (`GS-H4`): a form is stale only when no program reads its declared file.
+from
+                        .filter(|g| !live.iter().any(|l| l.path == g.path))
+to
+                        .filter(|_| true)
+end
+
+mutation gs-a-form-no-program-reads-is-not-stale
+file xtask/src/trust_gate.rs
+test -p xtask trust_generated::order_tests
+expect killed
+why M3.6.6.2.4, the generated-sources record §6 (`GS-H4`): on the baseline's host, a `defgenerated` form whose declared file no program reads is `trust-baseline-stale`.
+from
+            for g in strings("generated-unread") {
+to
+            for g in Vec::<String>::new() {
+end
+
+mutation gs-a-step-2-refusal-is-ignored
+file xtask/src/trust.rs
+test -p xtask trust_generated::order_tests
+expect killed
+why M3.6.6.2.4, the generated-sources record §2 (`GS-H14`, `GS-H15`): a refusal in the programs' builds, step 2, ends the run, no inventory written and no form stale.
+from
+            return Err(crate::trust_generated::beside(failed.join("\n"), &refused));
+        }
+        if !refused.is_empty() {
+            return Ok(refuse(refused));
+        }
+to
+            return Err(crate::trust_generated::beside(failed.join("\n"), &refused));
+        }
+end

@@ -1992,6 +1992,46 @@ pub fn inventory_with(
         return Ok(refuse(step4));
     }
 
+    // Step 5 (the generated-sources record §2, §3): over what a generator build reads, the chain's second clause — a
+    // file a form declares or whose header marks it generated; then over what each program reads, the recogniser's
+    // refusal — a file whose header marks it generated that no form declares and no chain holds, one message for one
+    // file. A refusal here ends the run.
+    let declared: BTreeSet<&str> = roots.generated.iter().map(|g| g.path.as_str()).collect();
+    let marked = |f: &str| {
+        tree.get(f)
+            .is_some_and(|b| crate::generated_header::marked(f, b))
+    };
+    let mut step5: Vec<String> = Vec::new();
+    for (f, generators) in &generator_reads {
+        let why = if declared.contains(f.as_str()) {
+            "a `defgenerated` form declares it"
+        } else if marked(f) {
+            "its header marks it generated"
+        } else {
+            continue;
+        };
+        for g in generators {
+            step5.push(format!(
+                "trust-undeclared-input: `{f}`, which the build of the generator `{g}` reads, is a generated source — \
+                 {why} — a chain of generators, refused until `M3.6.6.4` decides one"
+            ));
+        }
+    }
+    for p in &roots.programs {
+        for f in &reads[&p.name] {
+            if marked(f) && !declared.contains(f.as_str()) && !generator_reads.contains_key(f) {
+                step5.push(format!(
+                    "trust-undeclared-input: `{}` reads `{f}`, whose header marks it generated and which no \
+                     `defgenerated` form declares — a generated source with no declaration",
+                    p.name
+                ));
+            }
+        }
+    }
+    if !step5.is_empty() {
+        return Ok(refuse(step5));
+    }
+
     // The build as a whole (§3).
     let hash = |p: &str| {
         tree.get(p)
@@ -2325,7 +2365,7 @@ pub fn inventory_with(
     }
 
     // Every file a program reads whose header marks it as generated (`generated_header`; the generated-sources record
-    // §3): listed, so that record's census is this instrument's own output; refused only once `M3.6.6.2` lands.
+    // §3): listed, so that record's census is this instrument's own output — each declared, or step 5 refused it.
     let mut generated_marked: BTreeSet<String> = BTreeSet::new();
     let read_by_programs = builds
         .values()
@@ -2380,6 +2420,18 @@ pub fn inventory_with(
         ("refused-sites", s(rules.sites.to_string())),
         ("admissions-unused", strings(unused)),
         ("generated-marked", strings(generated_marked)),
+        // Every declared file no program reads: stale on the baseline's host, decided by the gate (the record §6).
+        (
+            "generated-unread",
+            strings(
+                roots
+                    .generated
+                    .iter()
+                    .filter(|g| !live.iter().any(|l| l.path == g.path))
+                    .map(|g| g.path.clone())
+                    .collect::<BTreeSet<_>>(),
+            ),
+        ),
         ("program-targets", Json::Array(program_targets)),
         ("classifications-unused", strings(classifications_unused)),
     ]);
@@ -2765,8 +2817,9 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn a_file_a_root_compiles_whose_header_marks_it_generated_is_listed() {
-        // The generated-sources record §3, measured by the instrument (`M3.6.6.1`): listed, not yet refused.
+    fn a_file_a_root_compiles_whose_header_marks_it_generated_is_refused_until_declared() {
+        // The generated-sources record §3: a marked file a program reads, no form declaring it, is refused (`GS-H2`,
+        // `M3.6.6.2.4`); declared, it passes and is listed, so the record's census is the instrument's own output.
         let f = two_roots(
             "generated-marked",
             "mod table;\nfn main() { let _ = table::T; }\n",
@@ -2777,6 +2830,21 @@ pub(crate) mod tests {
                     .to_owned(),
             )],
         );
+        says(
+            &refused(f.run()),
+            "trust-undeclared-input: `gen` reads `crates/a/src/table.rs`, whose header marks it generated and which no \
+             `defgenerated` form declares — a generated source with no declaration",
+        );
+        f.commit(&[
+            (
+                "trust/roots.eadl",
+                format!(
+                    "{ROOTS}(defgenerated \"crates/a/src/table.rs\" (generator \"scripts/gen_table.sh\") (command \"bash \
+                     scripts/gen_table.sh\") (reason \"the table\"))\n"
+                ),
+            ),
+            ("scripts/gen_table.sh", "echo table\n".to_owned()),
+        ]);
         let inv = written(f.run());
         let marked: Vec<&str> = inv
             .get("generated-marked")
