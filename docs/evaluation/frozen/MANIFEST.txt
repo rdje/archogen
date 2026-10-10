@@ -2,9 +2,15 @@
 # seal: sealed
 # sealed-on: 2026-09-13
 # sealed-by: leaf M0.6
+# sealed-in: b05fadb97825003fb8352d220d08a3a03e3fc0ce
+# custody: since 2026-10-10 (leaf PROGRAM.76) each case's text is only the blob the sealing commit holds at
+#   docs/evaluation/frozen/<file>; `bash scripts/check_frozen_evaluation.sh --restore` writes it back once unsealed
+# exposed: ev-02-dual-rate-sampler.md — 2026-10-10, read in part by a delegated search before its custody moved;
+#   reported apart from the unseen cases at unsealing (docs/evaluation/README.md, Exposures)
 # unseals-at: leaf M6.5 (reuse measurement, ROADMAP.md §16)
 # contract: docs/evaluation/README.md
-# Lines below are `<sha256>  <file>`; the checker verifies each and refuses extra or missing files.
+# Lines below are `<sha256>  <file>`; the checker verifies each against its blob in the sealing commit and, once
+# unsealed, against the restored file, and refuses extra files — and, while sealed, any case in the tree.
 4f83d77d3c382b1868dc3bdc4ea90402c5fc78c264cefb776f9d8966d7a18b14  ev-01-watchdog-kick.md
 9a1c452cab9844f213b58f381b22039a102209bb57ef3f497bfb32c7ad17976f  ev-02-dual-rate-sampler.md
 dd69c14702139bcd92d62e2038551293f393a237c1996775c0b175d08d465b33  ev-03-burst-tolerant-logger.md

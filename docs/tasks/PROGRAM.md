@@ -910,6 +910,45 @@ mdBook that is the director's window into the project.
   Verification: `2026-10-10` — the Verification Log's row
   Commit: `ARCHOGEN-PROGRAM-0537 (leaf PROGRAM.75)`
 
+- ID: `PROGRAM.76`
+  Status: `done` — filed, started and closed `2026-10-10`, on the director's word: *"Digests stay, text leaves"*,
+  end to end, without them
+  Goal: the sealed evaluation set guarded against being read, not only against being edited or named, so no search
+  made for other work can reach a case before `M6.5`.
+  Reproduce / issue: `M3.3`'s survey, a delegated read-only search told to sweep the whole tree, searched a public
+  identifier that one sealed case's text also holds, and opened the case; a search in the working session printed one
+  of its lines. The seal's check let it be: `git ls-files docs/evaluation/frozen` at `4caef04` → the manifest and five
+  cases, the doctrine gate green.
+  Direction: the director chose, of three, that the digests stay and the text leaves: custody by the sealing commit,
+  `b05fadb`, which holds each case as a blob; the manifest its commitment; `--restore` the reveal, refused while
+  sealed; the exposure recorded in the manifest, the one place a case may be named, and counted apart at `M6.5`.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — `git ls-files docs/evaluation/frozen` at `4caef04` → six files, five of them the
+    cases' text, readable by any search of the tree; the old check passed on it, exit 0.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: `scripts/check_frozen_evaluation.sh` guarded writes (integrity,
+    completeness) and naming (non-contamination), never reads; the only read barrier was a prose line in
+    `docs/evaluation/README.md`, which no bootstrap file reaches — `git grep -n -i 'evaluation/frozen\|sealed set\|evaluation set' -- README.md CLAUDE.md MEMORY.md MEMORY_ARCHITECTURE.md` → nothing.
+    WHY: the cases are written in the vocabulary the engine work searches, so a search under any term can land in
+    one; excluding terms cannot work, and excluding the folder holds only for tools that honour an exclusion.
+  - [x] **FIX** — the five cases' text out of the tree (`git rm`), the manifest's `# sealed-in:`, `# custody:` and
+    `# exposed:` lines; the check's custody leg, its integrity against the sealing commit's blobs, hidden files seen,
+    the exposure leg, and `--restore`, refused while sealed, verifying each digest and overwriting nothing; no run
+    ever printing a case's text. The contract, `docs/evaluation/README.md`: why the text left, the five legs, the
+    honest limit, *Exposures*, unsealing. The book's *The sealed set*; `docs/usecases/README.md`; `TOOLBOX.md`;
+    `DOCTRINE_ENFORCEMENT.md`; `M6.5`'s unsealing steps.
+  - [x] **ADDRESSED (verified)** — `bash scripts/check_frozen_evaluation.sh` → exit 0, every digest matching its
+    blob in `b05fadb`; `--self-test` → *"26 pass / 0 fail (26 arms)"*; the arms beside the old check's core,
+    `target/p76/hybrid.sh` → *"9 pass / 17 fail (26 arms)"*; `python3 target/p76/mutate.py` → *"9 of 9 killed"*, a
+    break of each rule — both runners untracked, so not durable. `git ls-files docs/evaluation/frozen` → the
+    manifest alone.
+  - [x] **NO REGRESSION** — `bash scripts/run_self_tests.sh` → *"OK — 48 self-test(s) passed"*; `make focused` →
+    `passed — 3 passed, 0 failed`, on the staged tree; the doctrine gate at commit.
+  - [x] **LOCKSTEP** — the check, the manifest, the contract; the book, `docs/usecases/README.md`, `TOOLBOX.md`,
+    `DOCTRINE_ENFORCEMENT.md`; `M6.5`; this leaf and both logs; `CHANGELOG.md`.
+  Verification: `2026-10-10` — the Verification Log's row
+  Commit: `ARCHOGEN-PROGRAM-0542 (leaf PROGRAM.76)`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1135,6 +1174,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `2026-10-10` | `PROGRAM.69` (round 12) | the new arms beside `76d8775`'s core; the self-test; seven mutations of round 12's rules; the gate over 172 files; every self-test | 88 pass / 11 fail, the working tree's and not durable; 98 / 0; each killed by an untracked runner, not durable; OK; 48 passed |
 | `2026-10-10` | `PROGRAM.75` | the reproducer against bedrock `835547e`; the feedback gates; the source ledger; focused on the staged tree | exit 0, reproduced; OK, exit 0; OK; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.69` (round 13) | the arms as committed beside `1ad87e4`'s core; the self-test; five mutations of round 13's rules; the gate over 172 files; every self-test; focused on the staged tree | 88 pass / 10 fail, the working tree's and not durable; 98 / 0; each killed by an untracked runner, not durable; OK; 48 passed; `passed — 3 passed, 0 failed` |
+| `2026-10-10` | `PROGRAM.76` | the check on the moved set; its self-test; the arms beside the old core; nine mutations; every self-test; focused on the staged tree | exit 0; 26 / 0; 9 pass / 17 fail, not durable; 9 killed, not durable; 48 passed; `passed — 3 passed, 0 failed` |
 
 ## Commit Log
 
@@ -1289,6 +1329,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0535 (leaf PROGRAM.69)` | **review round 12 answered, the claims narrowed**: a recorded stop answered once the handlers are given back; a link on any written path refused; "rolled back" of a whole rollback alone; 98 arms |
 | `PROGRAM.75` | `ARCHOGEN-PROGRAM-0537 (leaf PROGRAM.75)` | **the second sample proposed to bedrock**: an outbound tracker, `BR-001`, its reproducer measured on bedrock `835547e` |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0539 (leaf PROGRAM.69)` | **review round 13 answered by method**: a stop held by the signal mask until the seal is done; the temporary file created new; each stop's exit code armed; 98 arms |
+| `PROGRAM.76` | `ARCHOGEN-PROGRAM-0542 (leaf PROGRAM.76)` | **the sealed set guarded against reading**: its text out of the tree, the sealing commit its custody, `--restore` the reveal; an exposure recorded and counted apart |
 
 ## Changelog
 
@@ -1321,3 +1362,4 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 - `2026-10-10`: `PROGRAM.54` done — the handoff census sampled twice; `PROGRAM.75` filed, the proposal to the scaffold's owner.
 - `2026-10-10`: `PROGRAM.53` done — a cited focused run backs the tree committed, by a stamp the gate reads.
 - `2026-10-10`: `PROGRAM.75` done — the handoff census's second sample proposed to bedrock, `BR-001`.
+- `2026-10-10`: `PROGRAM.76` done — the sealed evaluation set's text out of the tree, the sealing commit its custody.

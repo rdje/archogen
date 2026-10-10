@@ -45,6 +45,7 @@ as often as the success path.
 ## The frozen evaluation set
 
 Separately from these four, a set of previously unused evaluation cases is **sealed** at M0
-and may not be consulted until M6 measures reuse (§12 M0, §16). Its contract — including the
-mechanical check that nothing outside the sealed directory names one of its cases — is
+and may not be consulted until M6 measures reuse (§12 M0, §16); while sealed, their text is in
+no file of the working tree. Its contract — including the mechanical check that no case is in
+the tree and nothing outside the sealed directory names one — is
 [`docs/evaluation/README.md`](../evaluation/README.md).

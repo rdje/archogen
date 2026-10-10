@@ -84,6 +84,11 @@ Separately, five evaluation cases are **sealed** and may not be opened until reu
 at M6. Not because they are secret — this repository is public — but because the measurement is
 worthless once the engine has been shaped, even unconsciously, by what those cases need.
 
-The seal is mechanical: a check refuses any edit to a sealed case, any unlisted file in the
-sealed directory, and any tracked file outside it that names a sealed case. Its honest limit is
-stated too — it cannot prove nobody read them. See `docs/evaluation/README.md`.
+The seal is mechanical, and it guards reading as well as writing. While sealed, the cases' text
+is in no file of the working tree: only the commit that sealed them holds it, and the manifest
+keeps each one's digest, so no search for other work can land in a case, whatever it looks for.
+A check refuses a digest that no longer matches its sealed text, a case back in the tree, an
+unlisted file in the sealed directory, and any tracked file outside it that names a sealed
+case; at unsealing a restore writes each case back and verifies it. Its honest limit is stated
+too: the text stays in the published history, so it cannot prove nobody read one — and a case
+read early is recorded and counted apart. See `docs/evaluation/README.md`.

@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the sealed evaluation cases can no longer be read by accident
+
+`ARCHOGEN-PROGRAM-0542` (leaf `PROGRAM.76`), `2026-10-10`.
+
+- The five sealed evaluation cases were guarded against edits and against being named elsewhere, but not against
+  being read, and a search made for other work opened one. Their text is now out of the working tree: the commit
+  that sealed them holds it, the manifest keeps each digest, and no search of the tree can reach a case. At the
+  reuse measurement a restore writes each back and verifies it. The case read early is recorded, without being
+  named outside the sealed folder, and will be reported apart from the four unseen ones.
+- Validation: the check's arms, seventeen failing on the old check; nine deliberate breaks, each caught by an
+  untracked runner, so not durable (26 arms); no run prints a case's text.
+
 ## archogen — a seal finishes before a request to stop takes effect
 
 `ARCHOGEN-PROGRAM-0539` (leaf `PROGRAM.69`), `2026-10-10`.
