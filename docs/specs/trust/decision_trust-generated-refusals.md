@@ -33,7 +33,8 @@ every program's provenance empty. No instance of either shape exists, and no too
 
 What the parent's §2 calls a chain — a live form's generator or input that a `defgenerated` form declares or that the
 parent's §3 marks, and a file that a live form's crate-root generator's build reads and that a form declares or §3
-marks — is refused, `trust-undeclared-input`, wherever the gate runs.
+marks — is refused, `trust-undeclared-input`, wherever the gate runs: the parent's rule, in every live form, which this
+record keeps; the instances its routes rest on are §6's.
 
 **Why.** Provenance is one step (the parent's §4): what a program reaches through a form is that form's generator files
 and inputs, its generator files judged by the parent's §5 against that program, its inputs hashed and matched. A chain
@@ -46,11 +47,12 @@ the parent's rules can see — through a declared or a marked file — hides not
 one through a file no form declares and no header marks is the parent's §8 limit, a plain file.
 
 **The route.** A file made from another generator's output is declared as the last step of one generation: its form
-names every committed generator file of every step — each judged by the parent's §5 against every program that reads the
-result — and every committed file any step reads, and the intermediate file is the generation's own product, never
-committed. A marked input, or a marked script a form would name as a generator — a vendored copy among them (§3) — is
-such an intermediate: the generation remakes it from committed files, its own generator and inputs, or copies of them
-for a vendored one, never committing it; one it cannot remake so has no route (§5). A marked crate root has none: a
+names every committed generator file of every step — each judged as the parent's §5 judges a generator file against
+the programs that read the result, its rule and its instrument's tests — and every committed file any step reads, and
+the intermediate file is the generation's own product, never committed. A marked input, or a marked script a form
+would name as a generator — a vendored copy among them (§3) — is such an intermediate: the generation remakes it from
+committed files, its own generator and inputs, or copies of them for a vendored one, never committing it; one it cannot
+remake so has no route (§5). A marked crate root has none: a
 program built from it compiles a generated file, a build the gate does not compute. A script that remakes and builds it
 is a generator the gate takes, but the program it builds is the script's own dependency, believed with whatever its
 build compiles, another role's package among them — the parent's §8 limit, not a route. A program-target generator whose
@@ -121,10 +123,13 @@ reviewed by a context that did not write it; until then the refusal or the belie
 
 ### 6. Each route held by a test
 
-The routes above, and the cases with none, are claimed as far as these tests build them and the gate writes or refuses
-the inventory — `route_tests` in `xtask/src/trust_generated.rs`, written when review rounds had probed the routes in
-untracked tests and found some the record named fail, and three no-route cases the parent's own tests hold, named with
-their module:
+What this record decides — the routes above, and the cases with none — is claimed as far as these tests build it and
+the gate writes or refuses the inventory. The gate's rules the routes rest on — the chain, the blob rule, the role
+judgment of each generator against each reader, in every live form, at every position and for every reader — are the
+parent's, decided by its record and held by its instrument's tests; their breadth across every form, entry and reader is
+`M3.6.9`'s, filed by this record's round 14. The tests are `route_tests` in `xtask/src/trust_generated.rs`, written when
+review rounds had probed the routes in untracked tests and found some the record named fail, and four of the parent's
+tests, named with their module — three no-route cases, and the harness as a reader:
 
 | Test | Holds |
 | --- | --- |
@@ -133,7 +138,7 @@ their module:
 | `route_a_chain_judges_every_step_s_generator` | §2: every step's generator judged by the parent's §5 — another role's script step named last and named first, refused both ways; a program-target step at every position, in the sweep below |
 | `route_a_generator_is_judged_against_every_reader` | §2, §3: a script judged against each of three readers in all six orders — refused for every reader of another role, `chk` and `imp` from `gen`'s package, `gen` and `imp` from `chk`'s |
 | `route_a_program_target_generator_is_judged_against_every_reader` | §2, §3: a program-target generator judged against each of three readers in all six orders — refused for every reader of another role, from `gen`'s second role package and from `chk`'s |
-| `route_tests_refusals_hold_at_every_position_of_a_form_s_entries` | §2, §3: fifteen entry refusals — a declared, a marked, a gitlinked generator or input, a file named in both clauses, another role's script and program target, a program target whose build reads a declared file, a root's own, one whose build reads a marked undeclared file, a lone `.rs` — each refused alone and first, in the middle and last of three |
+| `route_tests_refusals_hold_at_every_position_of_a_form_s_entries` | §2, §3: fifteen entry refusals — a declared, a marked, a generator or input at or under a gitlink, a file named in both clauses, another role's script and program target, a program target whose build reads a declared file, a root's own, one whose build reads a marked undeclared file, a lone `.rs` — each refused alone and first, in the middle and last of three |
 | `generator_tests::the_harness_may_use_its_pair_s_roles_and_no_other` | §2: the comparison harness as a reader — a script of its pair's role written; a third root's script refused |
 | `no_route_for_a_marked_crate_root_but_the_parent_s_belief_in_a_script` | §2: a marked crate root refused; a script remaking it written — the parent's §8 limit |
 | `route_a_program_target_step_reads_the_intermediate_at_run_time` | §2: a program-target step reading the intermediate at run time, written |
@@ -155,9 +160,9 @@ their module:
   of the parent's review rounds showed that deciding these shapes without one only opens cases. A reason that holds
   without an instance closes the question, and the routes, where they exist, keep the needs open to one step.
 - **The routes keep the parent's guarantees.** Each route ends in files of the commit named on a form, so the parent's
-  §4 and §5 apply to them whole: every generator file judged against every reader, every input hashed and shared. What
-  has no route is refused, or, for a tool and a vendored generator a script runs, believed and named in every
-  report.
+  §4 and §5 apply to them whole, as its record decides them and its instrument's tests hold them: its generator files
+  judged against their readers, its inputs hashed and shared. What has no route is refused, or, for a tool and a
+  vendored generator a script runs, believed and named in every report.
 
 ## How to apply
 
@@ -197,3 +202,4 @@ finding answered here. The history is
 | 11 | `2026-10-10` | 3, and 1 remark | answered: the sweep widened to every entry refusal §6 names — another role's program target, a program target whose build reads a declared file, a lone `.rs`, the gitlink itself as a generator; `M3.6.8`'s text; a changelog entry |
 | 12 | `2026-10-10` | 5, and 3 remarks | answered: §6's rows say exactly what each test holds — three readers each first, in the middle and last, three inputs, fourteen entry refusals each at every position, another role's script and a root's own crate root among them; round 11's text corrected; "directly or not" |
 | 13 | `2026-10-10` | 6, and 3 remarks | answered: every refused reader asserted in all six orders; the harness's test named; a program target compiling a marked module in the sweep; the vendored row's three generators; the completeness claims of rounds 10 and 11 narrowed in the changelog; `M3.6.8` |
+| 14 | `2026-10-10` | 5, and 3 remarks | answered by method: the gate's rules the routes rest on said to be the parent's, held by its tests, their breadth across forms, entries and readers filed as `M3.6.9`; §6's opening exact; the round-11 changelog entry and the round-12 leaf text narrowed to what they held |

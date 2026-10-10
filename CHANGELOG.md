@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the generated-sources record says which of its rules are the parent's
+
+`ARCHOGEN-M3-0568` (leaf `M3.6.6.4`), `2026-10-10`.
+
+- Review rounds 9 to 14 each found one more axis — where an entry stands, the order of readers, a third reader, the
+  order of forms, the comparison harness as a reader — on which a rule the record restated from its parent was tested
+  one way only. The record now says those rules are the parent's, decided by its record and held by its tests, and
+  states as its own only the routes its tests build; how broadly the parent's tests hold its rules across every axis is
+  a leaf of its own, `M3.6.9`. Two earlier texts that claimed more than their tests held are narrowed.
+- Validation: sixteen route tests; the crate's 181 tests; the book's gates; the focused tier on the staged tree.
+
 ## archogen — the generated-sources routes' tests read every reader in every order
 
 `ARCHOGEN-M3-0566` (leaf `M3.6.6.4`), `2026-10-10`.
@@ -39,14 +50,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 - Validation: 65 arms; two failing on the previous check and four deliberate breaks each caught, both by untracked
   runners, so not durable.
 
-## archogen — the refusals the generated-sources record then named hold wherever their entry stands
+## archogen — seven of the refusals the generated-sources record names hold wherever their entry stands
 
 `ARCHOGEN-M3-0560` (leaf `M3.6.6.4`), `2026-10-10`.
 
-- Two more rounds found refusals tested only where the refused file stood alone in its form, or at one position. One sweep now places each
-  kind of refused entry the record then named — declared, marked, under a vendored checkout, named twice, another role's
-  program, a program built from a generated file, a lone Rust file — alone, first, in the middle and last, and the gate
-  refuses it every time.
+- Two more rounds found refusals tested only where the refused file stood alone in its form, or at one position. One
+  sweep now places seven kinds of refused entry — declared, marked, at or under a vendored checkout, named twice,
+  another role's program, a program whose build reads a declared file, a lone Rust file — alone, first, in the middle
+  and last, and the gate refuses it every time. Three others — another role's script, a root's own program, a marked
+  file a program compiles — stood at fewer positions until rounds 12 and 13 (round 14's correction).
 - Validation: sixteen route tests; the crate's 181 tests; the mutations each fails under, by an untracked runner, so
   not durable.
 

@@ -217,6 +217,25 @@ written; R12-R1's answer, "step 1 and step 3's", is its correction.
 | R13-R2 | remark | two sentences held only by equivalence, what a script runs being unread | kept: the parent's §8, as R9-R3 |
 | R13-R3 | remark | "a form no program reads is held to the parent's §6" has no row | the parent's behaviour, cited, not a route |
 
+**Round 14**, `2026-10-10`, of `0797cf5`, by a read-only context that had not written the record, fenced from the
+sealed evaluation set. It ran the doctrine gate and the crate's tests (181 passed), and mutated the gate — untracked,
+so not durable: the rules held in the last live form only, and the harness unjudged against a program target. Verdict:
+5 defects and 3 remarks. Rounds 9 to 14 each found one more axis — entry position, reader order, the third reader,
+form order, the harness — on which a rule the record restated from the parent was held one way; the answer changes
+method: the record says those rules are the parent's, held by its instrument's tests, and their breadth across every
+axis is a leaf of its own, `M3.6.9`, where one generated sweep can hold every axis at once.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R14-D1 | defect | R13-D6's answer: the round-11 changelog entry still claimed every kind then named | the entry names the kinds its sweep held, the three others at fewer positions |
+| R14-D2 | defect | the leaf's round-12 text said every order | "the refused one first, in the middle and last"; the log row so |
+| R14-D3 | defect | every entry refusal and role judgment held in the last live form only | the rules attributed to the parent, held by its tests; their breadth across forms filed as `M3.6.9` |
+| R14-D4 | defect | a program-target generator judged against the harness held by no test | the parent's rule; `M3.6.9` holds the harness among every reader |
+| R14-D5 | defect | §6's opening said three parent tests, all no-route cases | four, three no-route cases and the harness as a reader |
+| R14-R1 | remark | stale test comments | rounds 5 to 14; the sweep's comment names the marked build-read |
+| R14-R2 | remark | the sweep's row read as thirteen kinds | "a generator or input at or under a gitlink" |
+| R14-R3 | remark | sharing held by equivalence with the parent's tests | the parent's §4, now said so |
+
 ## Why
 
 The record closes on a round that finds no defect, as every design here does; each round, its findings and their

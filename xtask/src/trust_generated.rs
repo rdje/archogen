@@ -1899,7 +1899,7 @@ mod gate_tests {
 #[cfg(test)]
 mod route_tests {
     //! The refusals record's routes and no-route cases, each held here (`decision_trust-generated-refusals.md`, the
-    //! section each test names; leaf `M3.6.6.4`, review rounds 5 to 12): the record claims a route only where a test
+    //! section each test names; leaf `M3.6.6.4`, review rounds 5 to 14): the record claims a route only where a test
     //! here builds it and the gate writes the inventory, and a case with no route only where a test here, or one its §6
     //! names in another module, sees the gate refuse it — or, for what the record says is believed, sees the gate write
     //! it unseen. Review rounds probed routes the record claimed in untracked tests; these make the claims the code's.
@@ -2758,7 +2758,8 @@ mod route_tests {
         // §2, §3. Each refusal §6 names for an entry holds wherever the entry stands among plain ones — alone, first,
         // in the middle, last — in its clause: a declared generator or input, a marked one, a generator or input at or
         // under a gitlink, a file named in both clauses, another role's script and program target, a program target
-        // whose build reads a declared file, a root's own among them, and a lone `.rs` file (review rounds 10 to 12).
+        // whose build reads a declared file, a root's own among them, one whose build reads a marked file, and a lone
+        // `.rs` file (review rounds 10 to 13).
         let declaring = form("scripts/made.sh", &["scripts/p1.sh"], &[])
             + &form("data/mid.csv", &["scripts/p1.sh"], &["data/p1.csv"])
             + &form("crates/c/src/gen_c.rs", &["scripts/p1.sh"], &[]);
