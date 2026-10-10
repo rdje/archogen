@@ -52,9 +52,10 @@
 #      tree not its own; the index keeps one table per tree, its header first and its rows under it, one row a file.
 #
 # THE SEAL writes nothing unless the tree it would leave, with every new stub replaced by its body from its new sealed
-# file, is the tree as it stood, byte for byte, no entry already takes a sealed file's path, and neither the tree nor the
-# index is a link; and it rolls everything back if the gate then refuses the result. Each file it rewrites is written
-# whole or not at all (R9-1), each write noted before it is made (R10 D1).
+# file, is the tree as it stood, byte for byte, no entry already takes a sealed file's path, and neither the tree, the
+# index nor a history folder is a link; and it rolls everything back if the gate then refuses the result, or a stop —
+# SIGINT, SIGTERM, SIGHUP — comes. Each file it rewrites is written whole or not at all (R9-1), each write noted before
+# it is made (R10 D1), a stop answered between writes (R11 D1).
 #
 # ⚠️ HONEST LIMIT: history rewritten under the gate (a force-push, a replaced object) is premise 2 and 3's, as for the
 # catalog (decision_catalog-records.md §0). Within history, legs 3 and 5 hold whatever HEAD is.
@@ -67,7 +68,7 @@ mkdir -p "$SCRATCH"
 
 core() { # $1 = gate | seal, $2 = tree (seal only)
   GIT_NO_REPLACE_OBJECTS=1 python3 - "$@" <<'PY'
-import hashlib, os, re, shutil, subprocess, sys, datetime
+import hashlib, os, re, shutil, signal, subprocess, sys, datetime
 
 mode, tree = sys.argv[1], sys.argv[2]
 TASKS, HIST = "docs/tasks", "docs/task-history"
@@ -275,12 +276,17 @@ def put(target, text):
             os.remove(tmp)
 
 def current(target):
-    """A file's text now, or None when there is none."""
+    """A file's text now, read as `read` reads it — its bytes, no line end translated — or None when there is none."""
     try:
-        with open(target, encoding="utf-8") as f:
-            return f.read()
+        return read(target)
     except FileNotFoundError:
         return None
+
+class Stopped(BaseException):
+    """A seal asked to stop — by SIGINT, SIGTERM or SIGHUP — answered between its writes (review R11 D1)."""
+    def __init__(self, signum):
+        super().__init__(signum)
+        self.signum = signum
 
 def add_rows(tree_name, new_rows):
     text = read(INDEX) if os.path.exists(INDEX) else HEADER
@@ -506,9 +512,10 @@ def seal(tree_name):
              if os.path.lexists(os.path.join(HIST, tree_name, key + ".md"))]
     if taken:
         sys.exit("task-history: %s already taken — an entry at a sealed file's path; nothing was written" % ", ".join(taken))
-    links = [x for x in (path, INDEX) if os.path.islink(x)]
+    links = [x for x in (path, INDEX, HIST, os.path.join(HIST, tree_name)) if os.path.islink(x)]
     if links:
-        sys.exit("task-history: %s is a link; nothing was written — a seal rewrites a tree and its index in place" % ", ".join(links))
+        sys.exit("task-history: %s is a link; nothing was written — a seal writes the tree, its index and its history in "
+                 "place, never through a link (reviews R10 AG3, R11 P2)" % ", ".join(links))
     # Fail closed: a sealed body is its ID line and indented or blank lines only.
     torn = []
     for key in sealable:
@@ -598,34 +605,54 @@ def seal(tree_name):
     # Every write and the gate's proof in one guard: any exception that stops the run — a file the gate cannot read,
     # which the run's own handler then names as a breach, or any other — rolls the seal back first (reviews R5-2, R6-2,
     # R7-4, R9-2). The tree and the index are written whole or not at all, and the rollback undoes what was written alone,
-    # each step on its own, naming what it could not undo (R9-1). ⚠️ A signal that kills the process, SIGTERM among them,
-    # is no exception: it leaves the writes, and the next gate run proves them as it proves any seal not yet committed
-    # (review R8-2), as does a second interrupt during the rollback; and a failure that defeats the rollback's own
-    # writes too, a full disk, leaves what it names.
+    # each step on its own, naming what it could not undo (R9-1). A stop — SIGINT, SIGTERM, SIGHUP — is recorded, never
+    # raised in the middle of a write, and answered after each write and after the proof by a rollback, which runs to
+    # its end whatever stop comes during it (review R11 D1). ⚠️ What no handler sees — SIGKILL, the machine stopping —
+    # leaves the writes, which the next gate run proves as any seal not yet committed (review R8-2); and a failure that
+    # defeats the rollback's own writes too, a full disk, leaves what it names.
+    stops = []
+
+    def on_stop(signum, frame):
+        stops.append(signum)
+
+    def answer():
+        if stops:
+            raise Stopped(stops[0])
+
+    handled = {s: signal.signal(s, on_stop) for s in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP)}
     try:
-        os.makedirs(tree_dir, exist_ok=True)
-        for key in order:
-            fpath = os.path.join(HIST, tree_name, key + ".md")
-            written.append(fpath)
-            try:
-                f = open(fpath, "x", encoding="utf-8")  # created, never written through an entry already there
-            except FileExistsError:
-                written.pop()  # not this run's to remove
-                raise
-            with f:
-                f.write(files[key])
-        replaced.append((path, before))
-        put(path, after)
-        replaced.append((INDEX, index_before))
-        add_rows(tree_name, ["| `%s` | %d | %d | %d | `%s` | `%s` |" % (key, len(groups[key]), files[key].count("\n"),
-                             len(files[key].encode("utf-8")), sha(files[key]), today) for key in order])
-        gate()
-    except BaseException:
-        rollback()
-        raise
-    if fails:
-        rollback()
-        sys.exit("task-history: the gate refused the seal of %s, so it was rolled back:\n  " % path + "\n  ".join(fails))
+        try:
+            os.makedirs(tree_dir, exist_ok=True)
+            answer()
+            for key in order:
+                fpath = os.path.join(HIST, tree_name, key + ".md")
+                written.append(fpath)
+                try:
+                    f = open(fpath, "x", encoding="utf-8")  # created, never written through an entry already there
+                except FileExistsError:
+                    written.pop()  # not this run's to remove
+                    raise
+                with f:
+                    f.write(files[key])
+                answer()
+            replaced.append((path, before))
+            put(path, after)
+            answer()
+            replaced.append((INDEX, index_before))
+            add_rows(tree_name, ["| `%s` | %d | %d | %d | `%s` | `%s` |" % (key, len(groups[key]), files[key].count("\n"),
+                                 len(files[key].encode("utf-8")), sha(files[key]), today) for key in order])
+            answer()
+            gate()
+            answer()
+        except BaseException:
+            rollback()
+            raise
+        if fails:
+            rollback()
+            sys.exit("task-history: the gate refused the seal of %s, so it was rolled back:\n  " % path + "\n  ".join(fails))
+    finally:
+        for s, previous in handled.items():
+            signal.signal(s, previous)
     print("task-history: %s — sealed %d subtree(s), %d leaves: %s; the reconstruction is byte for byte"
           % (path, len(sealable), len(seal_of), " ".join(order)))
 
@@ -637,7 +664,10 @@ if mode == "census":
     sys.exit(0)
 try:
     if mode == "seal":
-        seal(tree)
+        try:
+            seal(tree)
+        except Stopped as e:
+            sys.exit("task-history: stopped by %s; the seal was rolled back" % signal.Signals(e.signum).name)
         fails.clear()
     checked, nstubs = gate()
 except (Unreadable, OSError) as e:
@@ -1205,20 +1235,20 @@ PY
   rm "$work/docs/task-history/Q/Q.1.md"; rmdir "$work/docs/task-history/Q"
   clean || { arms=$((arms + 1)); echo "SELF-TEST: a seal refused for a taken path wrote something" >&2; }
   restore
-  # An exception that is no OSError, mid-proof — an interrupt, git output that is not UTF-8 — rolls the seal back too;
-  # each ends in a traceback, which these arms expect (review R9-2).
+  # Mid-proof, an interrupt is answered as a stop — the seal rolled back, the signal named — and git output that is not
+  # UTF-8 as an exception, rolled back too and ending in its traceback (reviews R9-2, R11 D1).
   fake="$SCRATCH/fakebin"; rm -rf "$fake"; mkdir -p "$fake"
   for how in interrupt undecodable; do
-    if [ "$how" = interrupt ]; then act='kill -INT $PPID'; want=KeyboardInterrupt; else act='printf "\\377\\n"; exit 0'; want=UnicodeDecodeError; fi
+    if [ "$how" = interrupt ]; then act='kill -INT $PPID'; want="stopped by SIGINT"; else act='printf "\\377\\n"; exit 0'; want=UnicodeDecodeError; fi
     printf '#!/bin/sh\nfor a in "$@"; do [ "$a" = "--is-shallow-repository" ] && { %s; }; done\nexec "%s" "$@"\n' "$act" "$(command -v git)" > "$fake/git"
     chmod +x "$fake/git"
     arms=$((arms + 1))
     out="$(cd "$work" && PATH="$fake:$PATH" bash "$SELF" --seal Q 2>&1)"; rc=$?
     if [ "$rc" -ne 0 ] && printf '%s' "$out" | grep -qF "$want" && ! printf '%s' "$out" | grep -qF -- "— sealed " && clean &&
        [ ! -d "$work/docs/task-history/Q" ]; then
-      ok=$((ok + 1)); echo "  ✅ a seal stopped mid-proof by $want is rolled back"
+      ok=$((ok + 1)); echo "  ✅ a seal stopped mid-proof — $how — is rolled back"
     else
-      echo "SELF-TEST: a seal stopped mid-proof by $want — rc $rc, or its writes left behind:" >&2
+      echo "SELF-TEST: a seal stopped mid-proof — $how — rc $rc, not \`$want\`, or its writes left behind:" >&2
       printf '%s\n' "$out" | tail -2 | sed 's/^/    /' >&2
     fi
     restore
@@ -1229,10 +1259,10 @@ PY
   hook="$SCRATCH/hook"; rm -rf "$hook"; mkdir -p "$hook"
   cat > "$hook/sitecustomize.py" <<'HOOK'
 import builtins, os, signal
-WHEN, FIRED = os.environ.get("SEAL_HOOK", ""), []
-def fire():
+WHEN, FIRED, TREES = os.environ.get("SEAL_HOOK", ""), [], []
+def fire(sig=signal.SIGINT):
     if not FIRED:
-        FIRED.append(1); os.kill(os.getpid(), signal.SIGINT)
+        FIRED.append(1); os.kill(os.getpid(), sig)
 if WHEN:
     real_replace, real_open = os.replace, builtins.open
     def replace(src, dst, *a, **k):
@@ -1240,28 +1270,82 @@ if WHEN:
         dst = os.path.abspath(str(dst))
         if (WHEN == "tree" and dst.endswith("/docs/tasks/Q.md")) or (WHEN == "index" and dst.endswith("/INDEX.md")):
             fire()
+        if WHEN == "term" and dst.endswith("/docs/tasks/Q.md"):
+            fire(signal.SIGTERM)
+        if WHEN == "restore" and dst.endswith("/docs/tasks/K.md"):
+            TREES.append(1)
+            if len(TREES) == 2:  # the second rename of the tree is the rollback's restore
+                fire()
     def opener(file, mode="r", *a, **k):
         if WHEN == "precreate" and mode == "x":
             fire()
+        if WHEN == "plant" and mode == "x":
+            with real_open(file, "w") as other:
+                other.write("another writer's\n")
         f = real_open(file, mode, *a, **k)
         if WHEN == "create" and mode == "x":
             fire()
         return f
     os.replace, builtins.open = replace, opener
 HOOK
-  for when in tree index create precreate; do
+  for when in tree index create precreate term; do
+    case "$when" in
+      tree) what="an interrupt just after the tree's rename"; want="stopped by SIGINT" ;;
+      index) what="an interrupt just after the index's rename"; want="stopped by SIGINT" ;;
+      create) what="an interrupt just after a sealed file's creation"; want="stopped by SIGINT" ;;
+      precreate) what="an interrupt just before a sealed file's creation"; want="stopped by SIGINT" ;;
+      term) what="a request to terminate just after the tree's rename"; want="stopped by SIGTERM" ;;
+    esac
     arms=$((arms + 1))
     out="$(cd "$work" && SEAL_HOOK="$when" PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?
-    if [ "$rc" -ne 0 ] && printf '%s' "$out" | grep -qF KeyboardInterrupt && ! printf '%s' "$out" | grep -qF -- "— sealed " && clean &&
+    if [ "$rc" -ne 0 ] && printf '%s' "$out" | grep -qF "$want" && ! printf '%s' "$out" | grep -qF -- "— sealed " && clean &&
        [ ! -d "$work/docs/task-history/Q" ] && ! printf '%s' "$out" | grep -qF "could not undo"; then
-      ok=$((ok + 1)); echo "  ✅ an interrupt just after the $when write is rolled back whole"
+      ok=$((ok + 1)); echo "  ✅ $what is answered by a rollback, whole"
     else
-      echo "SELF-TEST: an interrupt just after the $when write — rc $rc, or a write left behind:" >&2
+      echo "SELF-TEST: $what — rc $rc, not \`$want\`, or a write left behind:" >&2
+      printf '%s\n' "$out" | tail -2 | sed 's/^/    /' >&2
       git -C "$work" status --porcelain --untracked-files=all | sed 's/^/    /' >&2
     fi
     restore
   done
+  # An interrupt during the rollback of a seal the gate refused: the rollback runs on to its end (review R11 D1).
+  printf -- '# K\n\n## Task Tree\n\n- ID: `K.1`\n  Status: `done`\n  Goal: a closed subtree\n  Commit: `ARCHOGEN-K-0001`\n\n- ID: `K.1.1`\n  Status: `done`\n  Goal: its closed child\n  Commit: `ARCHOGEN-K-0002`\n' > "$work/docs/tasks/K.md"
+  commit
+  printf '\n- ID: `K.1.2`\n  Status: `pending`\n  Goal: an open child, not yet committed\n' >> "$work/docs/tasks/K.md"
+  cp "$work/docs/tasks/K.md" "$SCRATCH/K.keep"
+  arms=$((arms + 1))
+  out="$(cd "$work" && SEAL_HOOK=restore PYTHONPATH="$hook" bash "$SELF" --seal K 2>&1)"; rc=$?
+  if [ "$rc" -eq 1 ] && printf '%s' "$out" | grep -qF "so it was rolled back" && cmp -s "$SCRATCH/K.keep" "$work/docs/tasks/K.md" &&
+     [ ! -e "$work/docs/task-history/K" ] && git -C "$work" diff --quiet -- docs/task-history; then
+    ok=$((ok + 1)); echo "  ✅ an interrupt during a rollback lets it run to its end"
+  else
+    echo "SELF-TEST: an interrupt during a rollback — rc $rc, or a write left behind:" >&2
+    printf '%s\n' "$out" | tail -2 | sed 's/^/    /' >&2
+  fi
+  rm -rf "$work/docs/task-history/K"; restore
+  git -C "$work" rm -q docs/tasks/K.md; commit
+  # Another writer's file appearing at a sealed file's path just before the seal creates it: the seal stops, and the
+  # rollback leaves that file as the other writer left it (review R11 AG2).
+  arms=$((arms + 1))
+  out="$(cd "$work" && SEAL_HOOK=plant PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?
+  if [ "$rc" -ne 0 ] && printf '%s' "$out" | grep -qF "File exists" &&
+     [ "$(cat "$work/docs/task-history/Q/Q.1.md" 2>/dev/null)" = "another writer's" ] && git -C "$work" diff --quiet -- docs/tasks docs/task-history; then
+    ok=$((ok + 1)); echo "  ✅ another writer's file at a sealed path is left as it was"
+  else
+    echo "SELF-TEST: another writer's file at a sealed path — rc $rc, or the rollback removed it:" >&2
+    printf '%s\n' "$out" | tail -2 | sed 's/^/    /' >&2
+  fi
+  rm -rf "$work/docs/task-history/Q"; restore
   rm -rf "$hook"
+  # A linked index, and a linked history folder, are refused before a write (review R11 AG1, P2).
+  mv "$work/docs/task-history/INDEX.md" "$work/docs/task-history/INDEX.real"; ln -s INDEX.real "$work/docs/task-history/INDEX.md"
+  arm "a linked index is refused before anything is written" 1 "is a link; nothing was written" --seal Q
+  [ -L "$work/docs/task-history/INDEX.md" ] || { arms=$((arms + 1)); echo "SELF-TEST: a linked index was replaced" >&2; }
+  rm "$work/docs/task-history/INDEX.md"; mv "$work/docs/task-history/INDEX.real" "$work/docs/task-history/INDEX.md"
+  mkdir -p "$SCRATCH/outside"; ln -s "$SCRATCH/outside" "$work/docs/task-history/Q"
+  arm "a linked history folder is refused before anything is written" 1 "is a link; nothing was written" --seal Q
+  [ -z "$(ls -A "$SCRATCH/outside")" ] || { arms=$((arms + 1)); echo "SELF-TEST: a seal wrote through a linked history folder" >&2; }
+  rm "$work/docs/task-history/Q"; rm -rf "$SCRATCH/outside"; restore
   # Any entry at a sealed file's path, not only a link to nothing, is refused before a write (review R10 D2).
   mkdir "$work/docs/task-history/Q"; printf 'not a seal\n' > "$work/docs/task-history/Q/Q.1.md"
   arm "a file already at a sealed file's path is refused before anything is written" 1 "nothing was written" --seal Q

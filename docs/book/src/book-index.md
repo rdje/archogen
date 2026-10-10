@@ -193,7 +193,7 @@ a change that leaves it stale, so it is never edited by hand.
   board](tour.md), [The supported profile](profile.md), [What the scheduling checker establishes](analysis.md), [Where
   the engine's knowledge comes from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [Where
   generated systems run](targets.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's
-  rules in detail](annex-runtime.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
+  rules in detail](annex-runtime.md)
 - **IPC** — [definition](glossary.md), [The supported profile](profile.md)
 - **ISA** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **ISR** — [definition](glossary.md), [The use cases](usecases.md), [What the scheduling checker

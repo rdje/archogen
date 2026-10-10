@@ -609,7 +609,7 @@ mdBook that is the director's window into the project.
 
 - ID: `PROGRAM.69`
   Status: `active` — the tool, its gate and the seal committed `2026-10-10` (`ARCHOGEN-PROGRAM-0511`); its review open,
-  round 10's defects and arm gaps answered (`ARCHOGEN-PROGRAM-0525`), round 11 next
+  round 11's defects and arm gaps answered (`ARCHOGEN-PROGRAM-0531`), round 12 next
   Goal: a closed subtree below an open top-level subtree is sealed too, so a tree whose top-level subtree stays open
   for long — on a blocked leaf, or a long feature — does not keep its finished leaves live.
   Reproduce / issue: `M3.6.6.2.1`'s commit was refused by `README-ROUTES`, *"docs/tasks/: 823457 bytes in total, over
@@ -678,10 +678,15 @@ mdBook that is the director's window into the project.
     before any write — the file-size and taken-path arms failing first on `7ad8e6b`'s tool, then `--self-test` →
     *"77 pass / 0 fail (77 arms)"*; `python3 target/p69r9/mutate.py` → nine mutations of round 9's rules, each `killed`,
     its runner untracked, so not durable. After round 10: each write noted before it is made; any entry at a sealed
-    file's path refused, a unit the index rows skipped; a linked tree or index refused — the interrupt, taken-file and
-    linked-tree arms failing first beside `0a7ec7f`'s core, on the working tree and so not durable, then `--self-test` →
-    *"85 pass / 0 fail (85 arms)"*; `python3 target/p69r10/mutate.py` → eleven mutations of round 10's rules, each
-    `killed`, its runner untracked, so not durable.
+    file's path refused, a unit the index rows skipped; a linked tree or index refused — the tree, index and create
+    interrupt arms, the taken-file and the linked-tree arms failing first beside `0a7ec7f`'s core, the
+    just-before-creation arm holding the existence guard (corrected by R11-D2), on the working tree and so not
+    durable, then `--self-test` → *"85 pass / 0 fail (85 arms)"*; `python3 target/p69r10/mutate.py` → eleven mutations
+    of round 10's rules, each `killed`, its runner untracked, so not durable. After round 11: a stop recorded and
+    answered by a rollback that runs to its end; a linked history folder refused — `target/p69r11/hybrid.sh`, these
+    arms beside `b87adbc`'s core → *"82 pass / 9 fail (91 arms)"*, the seven stop arms and the linked folder failing,
+    then `--self-test` → *"90 pass / 0 fail (90 arms)"*; `python3 target/p69r11/mutate.py` → six mutations of round
+    11's rules, each `killed`; both runners untracked, so not durable.
   - [x] **NO REGRESSION** — `bash scripts/check_task_history.sh` at `e624001` → *"OK (170 sealed file(s) … every sealed
     leaf proven against its tree before its seal)"*: the 142 seals before this change judged by every generalised leg, the byte
     rebuild included. `bash scripts/run_self_tests.sh` → *"OK — 47 self-test(s) passed"*; the
@@ -695,7 +700,8 @@ mdBook that is the director's window into the project.
   Verification: `2026-10-10` — the Verification Log's row
   Commit: `ARCHOGEN-PROGRAM-0510 (leaf PROGRAM.69)`, the review reopened; `ARCHOGEN-PROGRAM-0511 (leaf PROGRAM.69)`;
   `ARCHOGEN-PROGRAM-0514 (leaf PROGRAM.69)`, round 7 answered; `ARCHOGEN-PROGRAM-0517 (leaf PROGRAM.69)`, round 8;
-  `ARCHOGEN-PROGRAM-0521 (leaf PROGRAM.69)`, round 9; `ARCHOGEN-PROGRAM-0525 (leaf PROGRAM.69)`, round 10
+  `ARCHOGEN-PROGRAM-0521 (leaf PROGRAM.69)`, round 9; `ARCHOGEN-PROGRAM-0525 (leaf PROGRAM.69)`, round 10;
+  `ARCHOGEN-PROGRAM-0531 (leaf PROGRAM.69)`, round 11
 
 - ID: `PROGRAM.70`
   Status: `done` — started `2026-10-10`, decomposed into `.1`, the bytes, and `.2`, the count, closed the same day with `.2`
@@ -879,7 +885,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.69` | `active` | its review open: round 11 next, on the committed tool, its seal already in place |
+| 1 | `PROGRAM.69` | `active` | its review open: round 12 next, on the committed tool, its seal already in place |
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The second row waits on the director's yes. The pending leaves beside them —
@@ -1034,6 +1040,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `2026-10-10` | `PROGRAM.69` (round 10) | the self-test, the new arms failing first beside `0a7ec7f`'s core; eleven mutations of round 10's rules; the gate over 172 files; every self-test; the doctrines | 79 pass / 5 fail, the working tree's and not durable, then 85 / 0; each killed by an untracked runner, not durable; OK; 47 passed; all green |
 | `2026-10-10` | `PROGRAM.60` | the census test on the tree, on `947cdc2`'s record, on a record naming a path that is gone; focused | 1 passed; 1 failed, six named; 1 failed, it named; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.67` | the module's tests; two catalogued mutations; a temporary hanging entry under a 30 s limit; the crate's tests, clippy, fmt; focused | 8 passed; each killed; reported as a hang in 30.1 s, the file restored, untracked and not durable; 165 passed, clean, clean; `passed — 3 passed, 0 failed` |
+| `2026-10-10` | `PROGRAM.69` (round 11) | the new arms beside `b87adbc`'s core; the self-test; six mutations of round 11's rules; the gate over 172 files; every self-test; the doctrines | 82 pass / 9 fail, the working tree's and not durable; 90 / 0; each killed by an untracked runner, not durable; OK; 47 passed; all green |
 
 ## Commit Log
 
@@ -1182,6 +1189,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.74` | `ARCHOGEN-PROGRAM-0526 (leaf PROGRAM.74)` | **the book's total raised to 589 824 bytes**, by `decision_book-in-layers.md`'s dated paragraph: 458 750 of 458 752 measured, 63 361 bytes in a week over 38 commits |
 | `PROGRAM.60` | `ARCHOGEN-PROGRAM-0529 (leaf PROGRAM.60)` | **the third reader's record cannot fall behind unseen**: a test holds it to every description, needing no vendor build |
 | `PROGRAM.67` | `ARCHOGEN-PROGRAM-0530 (leaf PROGRAM.67)` | **a mutation that makes a test hang is reported, not waited on**: each entry's tests under a limit in a process group of their own, killed whole past it |
+| `PROGRAM.69` | `ARCHOGEN-PROGRAM-0531 (leaf PROGRAM.69)` | **review round 11 answered**: a stop — SIGINT, SIGTERM, SIGHUP — recorded and answered by a rollback that runs to its end, only what no handler sees leaving writes; a linked history folder refused; arms for a linked index and another writer's file; 90 arms |
 
 ## Changelog
 

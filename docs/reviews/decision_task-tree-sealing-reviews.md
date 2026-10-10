@@ -240,6 +240,25 @@ and one pre-existing finding.
 | R10-R3 | remark | "a failure that stops one stops no other" overstated: a failed restore keeps the sealed files | the comment says what each step stops and what it keeps |
 | R10-P1 | remark, pre-existing | the gate accepts a seal of only some closed units, each the tool's, and prose in the index outside its tables | both among the stated limits — the rest seal later as units of their own |
 
+**Round 11**, `2026-10-10`, a ninth confirmation, in a clone of `bfabefa`, by a read-only context new to the change.
+It reproduced the gate, every self-test, the census and the seal's figures; re-sealed `72bd446` with `bfabefa`'s tool,
+byte for byte `e624001`'s; fuzzed 753 cases against an oracle of its own, every one agreeing; and killed eleven
+mutations of round 10's rules, one more surviving as equivalent — its runners untracked, so not durable. Verdict: 2
+defects of this change, 2 arm gaps, 4 remarks and 2 pre-existing findings.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R11-D1 | defect | a first interrupt during the rollback of a seal the gate refused escaped it, leaving the writes unnamed — the rollback ran outside the guard, its steps catching `Exception` alone — so "a seal interrupted at any instant is undone" and the book's account were false | a stop — SIGINT, SIGTERM, SIGHUP — is recorded by a handler, never raised mid-write, and answered after each write and after the proof by a rollback that runs to its end; what leaves writes is now what no handler sees, SIGKILL or the machine stopping; arms for SIGINT at each write and mid-proof, for SIGTERM, and for an interrupt during the rollback |
+| R11-D2 | defect | the arms said to fail first were misnamed: the just-before-creation and failed-restore arms pass on `0a7ec7f`'s core | the five that fail named — the tree, index and create interrupts, the taken file, the linked tree — and the just-before-creation arm said to hold the existence guard |
+| R11-AG1 | arm gap | no arm held the refusal of a linked index | an arm |
+| R11-AG2 | arm gap | no arm held that a file another writer puts at a sealed path is left alone | a hook plants it just before the creation; an arm |
+| R11-R1 | remark | an arm's name said "just after" for a stop before a creation | each arm's name says what it does |
+| R11-R2 | remark | the sealed files are kept whenever a restore fails, not only while a file still names them | the record says so |
+| R11-R3 | remark | the rollback read a file with its line ends translated, `before` raw | `current` reads as `read` does |
+| R11-R4 | remark | the book's "an interrupt" indexed under the glossary's hardware term | "asked to stop" |
+| R11-P1 | remark, pre-existing | the record's "every stub replaced" meant every new stub | amended |
+| R11-P2 | remark, pre-existing | a linked history folder let the seal write outside the repository | refused before any write, with an arm |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.

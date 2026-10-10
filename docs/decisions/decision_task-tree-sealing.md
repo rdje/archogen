@@ -50,13 +50,17 @@ A task tree keeps its live work readable by sealing out what is finished.
 - **Reading a closed leaf** is following its stub's link, a file read that depends on no tool.
 
 **Sealing is done by a tool**, `bash scripts/check_task_history.sh --seal <TREE>`. It proves that the tree, with every
-stub replaced by its body from its sealed file, reconstructs the tree as it stood, byte for byte. If it does not, it
+stub replaced by its body from its sealed file — *amended `2026-10-10`: every new stub, those of earlier seals proven by
+their own (review R11 P1)* — reconstructs the tree as it stood, byte for byte. If it does not, it
 writes nothing. Then it runs the gate on what it wrote, and rolls everything back if the gate refuses — *amended
 `2026-10-10`: or if any exception stops it, the folders a first seal made included; the tree and the index are written
 whole or not at all, a sealed file's path already taken is refused before any write, and the rollback undoes what was
-written alone, each step on its own, keeping the sealed files while the tree or the index still names them and naming
-what it could not undo (review R9-1); each write is noted before it is made, so an interrupt just after one is undone
-too, any entry at a sealed file's path is refused, and so is a tree or an index that is a link (review R10).*
+written alone, each step on its own, keeping the sealed files whenever a restore fails, since the tree or the index
+may still name them, and naming what it could not undo (review R9-1, worded by R11 R2); each write is noted before it
+is made, so an interrupt just after one is undone too, any entry at a sealed file's path is refused, and so is a tree
+or an index that is a link (review R10), or a history folder (R11 P2); and a stop — SIGINT, SIGTERM, SIGHUP — is
+recorded, never raised in the middle of a write, answered after each write and after the proof by a rollback that runs
+to its end whatever stop comes during it (review R11 D1).*
 `--census <COMMIT>` measures, at a commit, the bytes of `done` leaves under open top-level subtrees and of those a seal
 would take (`PROGRAM.69`).
 
@@ -138,7 +142,7 @@ would take (`PROGRAM.69`).
   - after a subtree closes, run `bash scripts/check_task_history.sh --seal <TREE>` and commit its result;
   - the sealing commit may also close the leaf that ran it, as the first one did. Every sealed leaf is proven
     against its tree as it stood just before that commit (leg 5), so other edits in the same commit do not weaken
-    the proof. *Amended `2026-10-10`:* any exception that stops a seal rolls it back first; a signal that kills the process, SIGTERM among them, leaves its writes, which the next gate run proves as any uncommitted seal (review R8-2), and so does a second interrupt during the rollback (R10); a failure that defeats the rollback's own writes too, a full disk, leaves what the rollback names (R9-1). The seal reads the working tree and leg 5 the tree as committed, so an
+    the proof. *Amended `2026-10-10`:* any exception that stops a seal rolls it back first; a signal that kills the process, SIGTERM among them, leaves its writes, which the next gate run proves as any uncommitted seal (review R8-2) — *amended by R11: a stop is now answered by a rollback, so what leaves the writes is what no handler sees, SIGKILL or the machine stopping* —; a failure that defeats the rollback's own writes too, a full disk, leaves what the rollback names (R9-1). The seal reads the working tree and leg 5 the tree as committed, so an
     uncommitted edit that changes which subtrees are closed — a new open leaf under a closed one — makes the seal
     refuse itself and roll back; commit such an edit first;
   - a leaf in a sealed file is never edited. A correction is a new entry in the tree's changelog.
@@ -175,3 +179,4 @@ another tree is sealed. The amendment of `2026-10-10` and its seal were reviewed
 | 8 | 10 | 2 (the doctrine row's "a leaf a file"; the rollback claimed for whatever stops a seal, a kill signal leaving its writes) | the seal, the census and every figure reproduced; 960 fuzzed seals matched its oracle and of 1 368 hand seals the gate accepted exactly those the tool makes (runner untracked, not durable); every finding answered |
 | 9 | 10 | 1, and 2 arm gaps (a rollback not whole when the failure defeats its own writes; "any exception" and a refused first seal's folder held by no arm) | the seal, the census and every figure reproduced; 480 fuzzed seals matched its oracle, and of 1 903 hand seals the gate accepted exactly the oracle's 555 (runner untracked, not durable); every finding answered |
 | 10 | 11 | 4, and 3 arm gaps (an interrupt just after a write, before it was noted; a taken path refused only as a link to nothing; the book's rollback claim; round 9's counts unmarked) | the gate, every self-test, the census and the seal's figures reproduced, `72bd446` re-sealed byte for byte by two tools; every finding answered |
+| 11 | 10 | 2, and 2 arm gaps (a first interrupt during the rollback after a refusal escaping it; the arms said to fail first misnamed) | the gate, every self-test, the census and the seal reproduced, `72bd446` re-sealed byte for byte; 753 fuzzed cases matched its oracle (runner untracked, not durable); every finding answered |

@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a seal asked to stop is always undone
+
+`ARCHOGEN-PROGRAM-0531` (leaf `PROGRAM.69`), `2026-10-10`.
+
+- Sealing finished work now records a request to stop — Ctrl-C, a terminate or a hang-up — and answers it between its
+  writes by undoing them all, the undoing itself never cut short. The previous entry's "at any instant" was too wide:
+  a stop arriving while it undid a refused seal could escape. Now only a process killed outright leaves writes, which
+  the next check names. A sealing folder that is a link is refused too.
+- Validation: arms for a stop at each write, mid-proof and during the undoing, for a terminate, a linked index and
+  folder, and another writer's file, the stop and folder arms failing on the old tool; six deliberate breaks, each
+  caught by an untracked runner, so not durable (90 arms).
+
 ## archogen — a mutation that hangs is reported, not waited on
 
 `ARCHOGEN-PROGRAM-0530` (leaf `PROGRAM.67`), `2026-10-10`.
@@ -66,7 +78,8 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 - The book no longer says every write is undone whatever stops the tool: a process killed outright leaves its writes,
   which the next check names.
 - Validation: arms raising an interrupt just after each write and just before one, for a file at a sealed file's
-  path, a linked tree, a failed restore and two failed removals, the first five failing on the old tool; eleven
+  path, a linked tree, a failed restore and two failed removals — of them the three just after a write, the file
+  at the path and the linked tree failing on the old tool; eleven
   deliberate breaks of the rules, each caught by an untracked runner, so not durable (85 arms).
 
 ## archogen — room for new design reviews
