@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate has its baseline, measured on the CI runner
+
+`ARCHOGEN-M3-0574` (leaf `M3.6.3.2.1`), `2026-10-10`.
+
+- The gate compares what two programs share against a baseline measured on one machine, the CI runner, since its
+  digests hold only there. The runner's first judging run printed its proposal — a form for each of the nine things
+  two programs share, none of them accepted — and it is now committed. On this machine the gate passes and says it did
+  not compare, as it should off the runner; that the runner reads "unchanged" for the next commit is the next push's
+  run to show.
+- Validation: the gate on the staged tree, against its parent and against itself; every test, with the baseline
+  recorded in the verdict table and the third reader's record; the focused tier on the staged tree.
+
 ## archogen — CI is green on the runner again
 
 `ARCHOGEN-PROGRAM-0573` (leaf `PROGRAM.77`), `2026-10-10`.

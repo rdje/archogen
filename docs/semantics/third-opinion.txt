@@ -126,4 +126,5 @@ agree examples/s0-heartbeat/system-non-harmonic.eadl
 agree examples/s0-heartbeat/system-unsupported.eadl
 agree examples/s0-heartbeat/system.eadl
 agree targets/riscv-virt-up.eadl
+agree trust/baseline.eadl
 agree trust/roots.eadl

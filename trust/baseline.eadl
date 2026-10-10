@@ -1,0 +1,88 @@
+; trust/baseline.eadl — one form per item two roots share, as `cargo xtask trust-baseline --propose` measured it
+; (docs/specs/trust/decision_trust-inventory.md §5, leaf M3.6.3.2). A proposal, never an acceptance: each
+; form's classification, property, risk and controls are the review's to write, and which forms are accepted
+; is read where reviews are protected (M3.6.5). The digests compare only on the host named below.
+
+(defbaseline (host "x86_64-unknown-linux-gnu"))
+
+(defshared "generator+differential build-configuration"
+  (pair "generator" "differential")
+  (kind build-configuration)
+  (digest "content=ea753dea2cfd216c3a3f44e2f6be9a3889ec767adf7f7e1d9fccd83caa5ed67d")
+  (classification unstated)
+  (property "unstated")
+  (risk "unstated")
+  (controls "unstated"))
+
+(defshared "generator+implementation build-configuration"
+  (pair "generator" "implementation")
+  (kind build-configuration)
+  (digest "content=ea753dea2cfd216c3a3f44e2f6be9a3889ec767adf7f7e1d9fccd83caa5ed67d")
+  (classification unstated)
+  (property "unstated")
+  (risk "unstated")
+  (controls "unstated"))
+
+(defshared "generator+reference-model build-configuration"
+  (pair "generator" "reference-model")
+  (kind build-configuration)
+  (digest "content=ea753dea2cfd216c3a3f44e2f6be9a3889ec767adf7f7e1d9fccd83caa5ed67d")
+  (classification unstated)
+  (property "unstated")
+  (risk "unstated")
+  (controls "unstated"))
+
+(defshared "generator+scheduling-checker build-configuration"
+  (pair "generator" "scheduling-checker")
+  (kind build-configuration)
+  (digest "content=ea753dea2cfd216c3a3f44e2f6be9a3889ec767adf7f7e1d9fccd83caa5ed67d")
+  (classification unstated)
+  (property "unstated")
+  (risk "unstated")
+  (controls "unstated"))
+
+(defshared "reference-model+implementation build-configuration"
+  (pair "reference-model" "implementation")
+  (kind build-configuration)
+  (digest "content=ea753dea2cfd216c3a3f44e2f6be9a3889ec767adf7f7e1d9fccd83caa5ed67d")
+  (classification unstated)
+  (property "unstated")
+  (risk "unstated")
+  (controls "unstated"))
+
+(defshared "reference-model+implementation comparison-harness differential"
+  (pair "reference-model" "implementation")
+  (kind comparison-harness)
+  (item "differential")
+  (digest "configuration=07f16b74d8115a1101419c5ddcb3a30fbed4ac0317ca8962e15d3ddee274c5ed" "content=b615871baff9f7fc1144302ae704201c20ef9f99b17de3073d9167678afe0294" "provenance=44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a")
+  (classification unstated)
+  (property "unstated")
+  (risk "unstated")
+  (controls "unstated"))
+
+(defshared "scheduling-checker+differential build-configuration"
+  (pair "scheduling-checker" "differential")
+  (kind build-configuration)
+  (digest "content=ea753dea2cfd216c3a3f44e2f6be9a3889ec767adf7f7e1d9fccd83caa5ed67d")
+  (classification unstated)
+  (property "unstated")
+  (risk "unstated")
+  (controls "unstated"))
+
+(defshared "scheduling-checker+implementation build-configuration"
+  (pair "scheduling-checker" "implementation")
+  (kind build-configuration)
+  (digest "content=ea753dea2cfd216c3a3f44e2f6be9a3889ec767adf7f7e1d9fccd83caa5ed67d")
+  (classification unstated)
+  (property "unstated")
+  (risk "unstated")
+  (controls "unstated"))
+
+(defshared "scheduling-checker+reference-model build-configuration"
+  (pair "scheduling-checker" "reference-model")
+  (kind build-configuration)
+  (digest "content=ea753dea2cfd216c3a3f44e2f6be9a3889ec767adf7f7e1d9fccd83caa5ed67d")
+  (classification unstated)
+  (property "unstated")
+  (risk "unstated")
+  (controls "unstated"))
