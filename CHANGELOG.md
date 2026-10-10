@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the review-count check judges every round of the reviews it lists, and every open one is listed
+
+`ARCHOGEN-PROGRAM-0598` (leaf `PROGRAM.69`), `2026-10-11`.
+
+- A review found the count check still passing a review it could not judge: a round whose findings table had another
+  header was counted as having none, and its counts went unread. The check is now strict: every round of a listed
+  review must keep a findings table in the one form, or the commit stops; a malformed table — no separator, a row with
+  no id, a row of dashes — stops it too; and an open review whose record keeps a count per round must be on the list
+  from its first round. The five texts the review found still claiming what earlier reviews refuted, and three more
+  like them found while answering, now say so.
+- Validation: 35 arms; twelve deliberate breaks, each caught by its own arm, by an untracked runner, so not durable;
+  the sealing tool's 121 arms; every self-test; the focused tier on the staged tree.
+
 ## archogen — a design for holding the generated-sources rules to their tests, by mutation
 
 `ARCHOGEN-M3-0597` (leaf `M3.6.9`), `2026-10-10`.
@@ -50,14 +63,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 - Validation: sixteen route tests; the crate's 183 tests; the review-count check; the book's gates; the focused tier
   on the staged tree.
 
-## archogen — the review-count check judges a list of reviews, and refuses any it cannot judge
+## archogen — the review-count check judges a list of reviews, and refuses any it cannot judge (not so: round 27)
 
 `ARCHOGEN-PROGRAM-0590` (leaf `PROGRAM.69`), `2026-10-10`.
 
 - Three reviews in a row found the count check deriving which reviews to read and leaving one unread or unnamed. It
   no longer derives anything: its script lists the reviews it judges — the open ones whose records keep a count per
-  round — and any listed review it cannot judge, a file missing or a table empty, stops the commit. A review leaves
-  the list when it closes. The texts that said more are marked as narrowed.
+  round — and any listed review it cannot judge, a file missing or a table empty, stops the commit (not so, review
+  round 27 found: a round whose table had another header was passed unjudged). A review leaves the list when it
+  closes. The texts that said more are marked as narrowed (not so, review round 27 found: five were not).
 - Validation: 25 arms; eight deliberate breaks, each caught by its own arm, by an untracked runner, so not durable;
   the sealing tool's 121 arms; every self-test; the focused tier on the staged tree.
 
@@ -83,14 +97,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
   uses: the parent's tests hold its rules at the instances they build.
 - Validation: sixteen route tests; the crate's 183 tests; the book's gates; the focused tier on the staged tree.
 
-## archogen — the review-count check holds exactly what it says, and names what it skips
+## archogen — the review-count check holds exactly what it says, and names what it skips (withdrawn: round 26)
 
 `ARCHOGEN-PROGRAM-0586` (leaf `PROGRAM.69`), `2026-10-10`.
 
 - A review found the new count check still claiming more than it held: some reviews it never read, an index status in
   free prose it read loosely, a duplicated row it let pass. It no longer reads the prose status; it refuses a
-  duplicated row or round; and its output names every review it judges nothing of, with the reason (narrowed by review round 26: the reviews its script lists, each refused if it cannot be judged). Every document
-  that describes it now points to the script's own header for its scope.
+  duplicated row or round; and its output names every review it judges nothing of, with the reason (narrowed by
+  review round 26: the reviews its script lists, each refused if it cannot be judged). Every document that describes
+  it now points to the script's own header for its scope (not so, review round 26 found: four kept their own claim).
 - Validation: 20 arms; six deliberate breaks, each caught by its own arm, by an untracked runner, so not durable; the
   sealing tool's 121 arms; every self-test; the focused tier on the staged tree.
 
@@ -123,14 +138,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
   criterion to meet them.
 - Validation: sixteen route tests; the crate's 183 tests; the book's gates; the focused tier on the staged tree.
 
-## archogen — the review-count check reads the reviews index too, and says what it does not read
+## archogen — the review-count check reads the reviews index too, and says what it does not read (not so: round 25)
 
 `ARCHOGEN-PROGRAM-0582` (leaf `PROGRAM.69`), `2026-10-10`.
 
-- The new count check now also holds the reviews index's row for each open review (narrowed by review round 26: the reviews its script lists, each refused if it cannot be judged) — how many rounds it says, and
-  what it says the last round found — to the review history's tables. It finds rounds by their own lines, so a
-  summary row for a round the history never had is refused. Records whose reviews closed and whose histories are
-  archived are not read, and the check now names them rather than passing them silently.
+- The new count check now also holds the reviews index's row for each open review (narrowed by review round 26: the
+  reviews its script lists, each refused if it cannot be judged) — how many rounds it says, and what it says the last
+  round found — to the review history's tables. It finds rounds by their own lines, so a summary row for a round the
+  history never had is refused. Records whose reviews closed and whose histories are archived are not read, and the
+  check now names them rather than passing them silently (not so, review round 25 found: eight passed unnamed).
 - Validation: 18 arms; eight deliberate breaks, each caught by its own arm, by an untracked runner, so not durable;
   the sealing tool's 121 arms; every self-test; the focused tier on the staged tree.
 
@@ -184,8 +200,9 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 
 - A design record states how many findings each review round made, and the task-tree sealing record had that count
   wrong for the fourth time. A new check, `REVIEW-COUNTS`, now counts each round's findings in a review history still
-  open under `docs/reviews/` (narrowed by review round 26: the reviews its script lists, each refused if it cannot be judged) and refuses a record whose count, defects, arm gaps or remarks disagree; on its first run
-  it named exactly the wrong row.
+  open under `docs/reviews/` (narrowed by review round 26: the reviews its script lists, each refused if it cannot be
+  judged) and refuses a record whose count, defects, arm gaps or remarks disagree; on its first run it named exactly
+  the wrong row.
 - When a seal stops because another writer put a file where the seal was writing, the folder it made for that file
   stays, and the tool now names it and no longer says the seal was rolled back. A test now holds that every leaf with
   a line that would tear is named, in every part of the tree, not only the first.

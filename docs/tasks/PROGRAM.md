@@ -774,16 +774,23 @@ mdBook that is the director's window into the project.
     unit; `REVIEW-COUNTS` — `--self-test` → *"121 pass / 0 fail (121 arms)"*; `bash scripts/check_review_counts.sh
     --self-test` → *"9 pass / 0 fail (9 arms)"*, and before row 22's fix it refused exactly it; `python3
     target/p69r17/mutate23.py` → *"2 of 2 killed"*, each arm failing alone — untracked, so not durable. After round 24:
-    `REVIEW-COUNTS` reads the reviews index's row and keys rounds on their lines, an archived record named, not read —
+    `REVIEW-COUNTS` reads the reviews index's row and keys rounds on their lines, an archived record named, not read
+    (not so, review round 25 found: eight unnamed) —
     `bash scripts/check_review_counts.sh --self-test` → *"18 pass / 0 fail (18 arms)"*; `python3
     target/p69r17/mutate24.py` → *"8 of 8 killed"*, each arm failing alone — untracked, so not durable; the
     `TASK-HISTORY` row's review narrative was cut in round 23 for the doctrine file's 36 864-byte ceiling. After round
     25: `REVIEW-COUNTS` narrowed to what it holds exactly — the index status, prose, unread; duplicates refused; every
-    row it judges nothing of named — `bash scripts/check_review_counts.sh --self-test` → *"20 pass / 0 fail (20 arms)"*;
+    row it judges nothing of named (not so, review round 26 found) —
+    `bash scripts/check_review_counts.sh --self-test` → *"20 pass / 0 fail (20 arms)"*;
     `python3 target/p69r17/mutate25.py` → *"6 of 6 killed"* — untracked, so not durable. After round 26, by method:
-    `REVIEW-COUNTS` judges the reviews its script lists and refuses any it cannot judge, nothing derived or skipped —
+    `REVIEW-COUNTS` judges the reviews its script lists and refuses any it cannot judge, nothing derived or skipped (not
+    so, review round 27 found: a round with another table header passed unjudged) —
     `bash scripts/check_review_counts.sh --self-test` → *"25 pass / 0 fail (25 arms)"*; `python3
-    target/p69r17/mutate26.py` → *"8 of 8 killed"* — untracked, so not durable.
+    target/p69r17/mutate26.py` → *"8 of 8 killed"* — untracked, so not durable. After round 27, strict: every round of
+    a listed review keeps a findings table headed exactly, its separator row and an id in each row; the summary table
+    its separator; an open review whose record keeps a summary table listed from its first round —
+    `bash scripts/check_review_counts.sh --self-test` → *"35 pass / 0 fail (35 arms)"*; `python3
+    target/p69r17/mutate27.py` → *"12 of 12 killed"* — untracked, so not durable.
   - [x] **NO REGRESSION** — `bash scripts/check_task_history.sh` at `e624001` → *"OK (170 sealed file(s) … every sealed
     leaf proven against its tree before its seal)"*: the 142 seals before this change judged by every generalised leg, the byte
     rebuild included. `bash scripts/run_self_tests.sh` → *"OK — 47 self-test(s) passed"*; the
@@ -807,7 +814,8 @@ mdBook that is the director's window into the project.
   `ARCHOGEN-PROGRAM-0559 (leaf PROGRAM.69)`, round 19;
   `ARCHOGEN-PROGRAM-0563 (leaf PROGRAM.69)`, round 20;
   `ARCHOGEN-PROGRAM-0564 (leaf PROGRAM.69)`, round 21;
-  `ARCHOGEN-PROGRAM-0567 (leaf PROGRAM.69)`, round 22; `ARCHOGEN-PROGRAM-0576 (leaf PROGRAM.69)`, round 23; `ARCHOGEN-PROGRAM-0582 (leaf PROGRAM.69)`, round 24; `ARCHOGEN-PROGRAM-0586 (leaf PROGRAM.69)`, round 25; `ARCHOGEN-PROGRAM-0590 (leaf PROGRAM.69)`, round 26
+  `ARCHOGEN-PROGRAM-0567 (leaf PROGRAM.69)`, round 22; `ARCHOGEN-PROGRAM-0576 (leaf PROGRAM.69)`, round 23; `ARCHOGEN-PROGRAM-0582 (leaf PROGRAM.69)`, round 24; `ARCHOGEN-PROGRAM-0586 (leaf PROGRAM.69)`, round 25; `ARCHOGEN-PROGRAM-0590 (leaf PROGRAM.69)`, round 26;
+  `ARCHOGEN-PROGRAM-0598 (leaf PROGRAM.69)`, round 27
 
 - ID: `PROGRAM.70`
   Status: `done` — started `2026-10-10`, decomposed into `.1`, the bytes, and `.2`, the count, closed the same day with `.2`
@@ -1269,12 +1277,12 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.69` | `active` | its review open: round 27 next, on the committed tool, its seal already in place |
+| 1 | `PROGRAM.69` | `active` | its review open: round 28 next, on the committed tool, its seal already in place |
 | 2 | `PROGRAM.76` | `active` | its review open: round 13 next, of the sealed set's custody |
 | 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The third row waits on the director's yes. The pending leaves beside them —
-`PROGRAM.71`, `.72` and `.73` — are filed and owned. Every closed
+`PROGRAM.71`, `.72`, `.73` and `.78` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and a sealed leaf's full record is under `docs/task-history/PROGRAM/`.
 
 ## Decisions
@@ -1459,6 +1467,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-10` | `PROGRAM.76` (round 11) | the self-test; the check on the tree; nine mutants, `target/p76/mutate_r11.py`, untracked; every self-test; focused on the staged tree | 105 pass / 0 fail; exit 0; 9 of 9 killed, not durable; 49 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.69` (round 26) | `REVIEW-COUNTS` and its self-test; eight mutants, `target/p69r17/mutate26.py`, untracked; the sealing self-test; every self-test; focused on the staged tree | OK, 2 reviews listed; 25 pass / 0 fail; 8 of 8 killed, not durable; 121 pass / 0 fail; 49 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.76` (round 12) | the self-test; the check on the tree; five mutants, `target/p76/mutate_r12.py`, untracked; every self-test; focused on the staged tree | 113 pass / 0 fail; exit 0; 5 of 5 killed, not durable; 49 passed; `passed — 3 passed, 0 failed` |
+| `2026-10-11` | `PROGRAM.69` (round 27) | `REVIEW-COUNTS` and its self-test; twelve mutants, `target/p69r17/mutate27.py`, untracked; the sealing self-test; every self-test; focused on the staged tree | OK, 1 review listed, 27 rounds judged, every one; 35 pass / 0 fail; 12 of 12 killed, not durable; 121 pass / 0 fail; 49 passed; `passed — 3 passed, 0 failed` |
 
 ## Commit Log
 
@@ -1639,8 +1648,9 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.76` | `ARCHOGEN-PROGRAM-0584 (leaf PROGRAM.76)` | **review round 10 answered by method**: git's settings forced; the working tree read raw by one walk; what the check holds against stated |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0586 (leaf PROGRAM.69)` | **review round 25 answered**: `REVIEW-COUNTS` narrowed to what it holds exactly; every row it skips named (narrowed by review round 26: the reviews its script lists, each refused if it cannot be judged); the record and book refilled |
 | `PROGRAM.76` | `ARCHOGEN-PROGRAM-0588 (leaf PROGRAM.76)` | **review round 11 answered by method**: the walk finds long lines too; only the tree's `.gitignore` files decide what is ignored; every text bounded to what the check finds |
-| `PROGRAM.69` | `ARCHOGEN-PROGRAM-0590 (leaf PROGRAM.69)` | **review round 26 answered by method**: `REVIEW-COUNTS` judges the reviews its script lists, refusing any it cannot judge; `PROGRAM.78` filed |
+| `PROGRAM.69` | `ARCHOGEN-PROGRAM-0590 (leaf PROGRAM.69)` | **review round 26 answered by method**: `REVIEW-COUNTS` judges the reviews its script lists, refusing any it cannot judge (not so, review round 27 found: a round with another table header passed unjudged); `PROGRAM.78` filed |
 | `PROGRAM.76` | `ARCHOGEN-PROGRAM-0596 (leaf PROGRAM.76)` | **review round 12 answered by method**: one reader for the disk and the index, reading as prose; a case's whole text and a wrapped long line found |
+| `PROGRAM.69` | `ARCHOGEN-PROGRAM-0598 (leaf PROGRAM.69)` | **review round 27 answered**: `REVIEW-COUNTS` strict — every round of a listed review a well-formed findings table, every open review past its first round listed; the overclaims marked; `PROGRAM.78` in the changelog and the frontier |
 
 ## Changelog
 
@@ -1677,3 +1687,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-10-10`: `PROGRAM.76` reopened by its review round 1; its review open since.
 - `2026-10-10`: `PROGRAM.77` filed and fixed — the mutation runner's group kill through kill(2), after CI lost its runner; it closes on the runner's green.
 - `2026-10-10`: `PROGRAM.77` done — CI green on the runner again, the restoring push's `rust` run in 2 and 4 minutes.
+- `2026-10-10`: `PROGRAM.78` filed by `PROGRAM.69`'s review round 26 — the sealing self-test's interrupt arm timing-dependent under a parallel sweep. Pre-existing, owned; this line added by round 27's answer.

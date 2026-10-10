@@ -572,6 +572,32 @@ reviews it judges, and refuses a listed review it cannot judge; a review leaves 
 | R26-R3 | remark | not this change's: the sealing self-test's interrupt arm is timing-dependent under a parallel sweep | filed as `PROGRAM.78` |
 | R26-R4 | remark | `isdigit` accepts a digit that is not 0 to 9, then a traceback | a cell is a number only of 0 to 9; an arm |
 
+**Round 27**, `2026-10-11`, a twenty-fifth confirmation, in clones of `3f8564f`, by a read-only context new to the
+change, fenced from the sealed evaluation set. It ran the gate, every self-test and the census, re-ran round 26's eight
+mutants, and silenced each of the tool's 52 refusals one at a time — runners untracked, so not durable: 46 failed
+their own arm and six are shadowed by another refusal or unreachable, so no rule of the tool fails open. Verdict: 3
+defects, 3 arm gaps and 4 remarks. Round 26's paragraph said "all but one of the new check"; R26-R2 and R26-R3 were
+not, so ten of twelve were (R27-D3). Round 26's answer, a listed review refused if it cannot be judged, failed open on
+a round whose findings table had another header (R27-D1). The answer closes the classes, not the instances: every
+round of a listed review keeps a findings table headed exactly, with its separator row and an id in each row, or the
+review is refused; the summary table keeps its separator; and an open review whose record keeps a summary table is
+listed from its first round, or refused.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R27-D1 | defect | "refuses any listed review it cannot judge" failed open: rounds whose tables had another header were passed unjudged, their counts unread | every round of a listed review keeps a well-formed findings table or the review is refused; an arm |
+| R27-D2 | defect | row 26's "every overclaiming text marked" and the changelog's "the texts that said more are marked" false: five claims unmarked | each marked, with round 27's own refutation of round 26's claim |
+| R27-D3 | defect | round 26's paragraph: "all but one of the new check" — R26-R2 and R26-R3 were not | ten of twelve; corrected here |
+| R27-AG1 | arm gap | every kind beginning `pre-existing` counted as a pre-existing arm gap passed every arm | a finding of kind `pre-existing` in the world's round 2; the arm's two counts apart |
+| R27-AG2 | arm gap | rounds with no table counted for the first listed review only passed every arm | a round with no table in review b, its arm |
+| R27-AG3 | arm gap | the list being every open review whose record keeps a summary table held by nothing | an open review past its first round whose record keeps one refused unless listed; an arm each way |
+| R27-R1 | remark | malformed tables passed wrong counts: a row of dashes under the summary header, a findings table with no separator, a row with no id | each refused, and a summary table with no separator; an arm each |
+| R27-R2 | remark | a missing record, and two index rows, held by no arm | an arm each |
+| R27-R3 | remark | three changelog lines the marks lengthened past the wrap | refilled |
+| R27-R4 | remark | `PROGRAM.78` filed with no line in `PROGRAM`'s changelog, and not among the frontier's pending leaves | both added |
+| — | found while answering | three more texts kept claims rounds 25 and 26 refuted, unmarked: the changelog's `ARCHOGEN-PROGRAM-0582` heading and text, and the record's row 25; and seven texts made the claims R27-D1 and R27-D2 refute, five the one and two the other | each marked |
+| — | found while answering | not this change's: four lines of `PROGRAM.76`'s changelog entries run past the wrap, lengthened by its own marks | left to `PROGRAM.76`'s next answer |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.
