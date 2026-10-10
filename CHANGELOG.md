@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a seal stopped half-way leaves nothing torn
+
+`ARCHOGEN-PROGRAM-0521` (leaf `PROGRAM.69`), `2026-10-10`.
+
+- When sealing finished work out of a task tree is stopped — by a full disk, an interrupt or any error — every file it
+  rewrites is now either written whole or left as it was, and the rollback undoes exactly what was written, each step
+  on its own, naming anything it could not undo instead of leaving a half-written tree.
+- A sealed file's place already taken, even by a dangling link, is refused before anything is written.
+- Validation: arms for a full disk, a rollback the full disk stops, an interrupt, unreadable git output, a first seal's
+  folder and a table's layout, the full-disk and taken-path arms failing first; nine catalogued breaks of the new
+  rules, each caught (77 arms).
+
 ## archogen — generated sources in the trust chapter
 
 `ARCHOGEN-M3-0518` (leaf `M3.6.6.3`), `2026-10-10`.

@@ -43,13 +43,15 @@
 #      closed subtree sealed apart from it, or, below the top level, parts sealed together that no one leaf holds (P3).
 #      ⚠️ Not checked: a stub's commit text, which only the seal derives (whether a Commit Log row is a leaf's is prose:
 #      `PROGRAM.18` → `PROGRAM.18.1`, a child's row closing its parent), a row's date, and the column-0 rule, which
-#      stays the seal's;
-#   6. no live leaf sits in a subtree that is sealed, at any depth and in any tree file: new work opens a new subtree
+#      stays the seal's; nor where a stub stands among its tree's lines, nor text after the name on its ID line (R9-5);
+#   6. no live leaf sits in a subtree that is sealed, at any depth and in any tree file of docs/tasks/ (one in a sub-
+#      folder is PROGRAM.72's): new work opens a new subtree
 #      outside it (P6); and a tree file holds only leaves under its own name, each named once, so no leaf is judged in a
 #      tree not its own; the index keeps one table per tree, its header first and its rows under it, one row a file.
 #
 # THE SEAL writes nothing unless the tree it would leave, with every new stub replaced by its body from its new sealed
-# file, is the tree as it stood, byte for byte; and it rolls everything back if the gate then refuses the result.
+# file, is the tree as it stood, byte for byte, and no entry already takes a sealed file's path; and it rolls everything
+# back if the gate then refuses the result. Each file it rewrites is written whole or not at all (R9-1).
 #
 # ⚠️ HONEST LIMIT: history rewritten under the gate (a force-push, a replaced object) is premise 2 and 3's, as for the
 # catalog (decision_catalog-records.md §0). Within history, legs 3 and 5 hold whatever HEAD is.
@@ -62,7 +64,7 @@ mkdir -p "$SCRATCH"
 
 core() { # $1 = gate | seal, $2 = tree (seal only)
   GIT_NO_REPLACE_OBJECTS=1 python3 - "$@" <<'PY'
-import hashlib, os, re, subprocess, sys, datetime
+import hashlib, os, re, shutil, subprocess, sys, datetime
 
 mode, tree = sys.argv[1], sys.argv[2]
 TASKS, HIST = "docs/tasks", "docs/task-history"
@@ -255,6 +257,21 @@ def layout(index_text):
         if line.startswith("| `") and n not in in_tables:
             note("%s:%d: a row outside its tree's table, under its header" % (INDEX, n + 1))
 
+def put(target, text):
+    """Write `text` to `target` whole or not at all: a temporary file beside it, then a rename, so a write a full disk
+    stops leaves the target as it was (review R9-1). A link is followed, so the file it names is the one replaced."""
+    real = os.path.realpath(target)
+    tmp = os.path.join(os.path.dirname(real), ".%s.seal-%d" % (os.path.basename(real), os.getpid()))
+    try:
+        with open(tmp, "w", encoding="utf-8") as f:
+            f.write(text)
+        if os.path.exists(real):
+            shutil.copymode(real, tmp)
+        os.replace(tmp, real)
+    finally:
+        if os.path.lexists(tmp):
+            os.remove(tmp)
+
 def add_rows(tree_name, new_rows):
     text = read(INDEX) if os.path.exists(INDEX) else HEADER
     lines = text.rstrip("\n").split("\n")
@@ -269,8 +286,7 @@ def add_rows(tree_name, new_rows):
         if lines[k].startswith("| "):
             last = k
     lines[last + 1:last + 1] = new_rows
-    with open(INDEX, "w", encoding="utf-8") as f:
-        f.write("\n".join(lines) + "\n")
+    put(INDEX, "\n".join(lines) + "\n")
 
 def gate():
     """The six legs; returns the number of sealed files checked and of stubs."""
@@ -472,6 +488,11 @@ def seal(tree_name):
     if not sealable:
         print("task-history: %s — nothing to seal" % path)
         return
+    taken = [os.path.join(HIST, tree_name, key + ".md") for key in sealable
+             if os.path.lexists(os.path.join(HIST, tree_name, key + ".md"))]
+    if taken:
+        sys.exit("task-history: %s already taken — a link or other entry at a sealed file's path; nothing was written"
+                 % ", ".join(taken))
     # Fail closed: a sealed body is its ID line and indented or blank lines only.
     torn = []
     for key in sealable:
@@ -523,39 +544,55 @@ def seal(tree_name):
     made_dirs = [d for d in (HIST, tree_dir) if not os.path.isdir(d)]  # what a rollback removes again (review R5-2)
     today = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
     order = sorted(sealable, key=lambda k: min(m[1] for m in groups[k]))
-    written = []
+    written = []   # the sealed files this run created
+    replaced = []  # (file, its text before, None if it did not exist) for each file this run rewrote
 
     def rollback():
-        for fpath in written:
-            if os.path.exists(fpath):
-                os.remove(fpath)
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(before)
-        if index_before is None:
-            if os.path.exists(INDEX):
-                os.remove(INDEX)
-        else:
-            with open(INDEX, "w", encoding="utf-8") as f:
-                f.write(index_before)
-        for d in reversed(made_dirs):
-            if os.path.isdir(d) and not os.listdir(d):
-                os.rmdir(d)
+        # Only what was written is undone, each step on its own, so a failure that stops one stops no other (review
+        # R9-1). The index and the tree go back first: while either still names the sealed files, they stay.
+        undone = []
+        for target, text in reversed(replaced):
+            try:
+                if text is None:
+                    os.remove(target)
+                else:
+                    put(target, text)
+            except Exception as e:
+                undone.append("%s, not restored: %s" % (target, e))
+        if not undone:
+            for fpath in written:
+                try:
+                    os.remove(fpath)
+                except Exception as e:
+                    undone.append("%s, not removed: %s" % (fpath, e))
+            for d in reversed(made_dirs):
+                try:
+                    if os.path.isdir(d) and not os.listdir(d):
+                        os.rmdir(d)
+                except Exception as e:
+                    undone.append("%s, not removed: %s" % (d, e))
+        for u in undone:
+            print("task-history: the rollback could not undo %s — the next gate run names what is left" % u, file=sys.stderr)
 
     # Every write and the gate's proof in one guard: any exception that stops the run — a file the gate cannot read,
     # which the run's own handler then names as a breach, or any other — rolls the seal back first (reviews R5-2, R6-2,
-    # R7-4). ⚠️ A signal that kills the process, SIGTERM among them, is no exception: it leaves the writes, and the next
-    # gate run proves them as it proves any seal not yet committed (review R8-2).
+    # R7-4, R9-2). The tree and the index are written whole or not at all, and the rollback undoes what was written alone,
+    # each step on its own, naming what it could not undo (R9-1). ⚠️ A signal that kills the process, SIGTERM among them,
+    # is no exception: it leaves the writes, and the next gate run proves them as it proves any seal not yet committed
+    # (review R8-2); and a failure that defeats the rollback's own writes too, a full disk, leaves what it names.
     try:
         os.makedirs(tree_dir, exist_ok=True)
         for key in order:
             fpath = os.path.join(HIST, tree_name, key + ".md")
+            f = open(fpath, "x", encoding="utf-8")  # created, never written through an entry already there
             written.append(fpath)
-            with open(fpath, "w", encoding="utf-8") as f:
+            with f:
                 f.write(files[key])
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(after)
+        put(path, after)
+        replaced.append((path, before))
         add_rows(tree_name, ["| `%s` | %d | %d | %d | `%s` | `%s` |" % (key, len(groups[key]), files[key].count("\n"),
                              len(files[key].encode("utf-8")), sha(files[key]), today) for key in order])
+        replaced.append((INDEX, index_before))
         gate()
     except BaseException:
         rollback()
@@ -714,10 +751,11 @@ MD
 MD
     git -C "$work" add -A; git -C "$work" -c user.name=t -c user.email=t@t commit -qm base
   }
-  arm() { # $1 = name, $2 = expected rc, $3 = text the output must carry, then the arguments
+  arm() { # $1 = name, $2 = expected rc, $3 = text the output must carry, then the arguments; `limit=N arm …` runs it
+    #          under a file-size limit of N KiB, as a full disk would stop a write (review R9-1)
     local name="$1" want="$2" must="$3" out rc; shift 3
     arms=$((arms + 1))
-    out="$(cd "$work" && bash "$SELF" "$@" 2>&1)"; rc=$?
+    out="$(cd "$work" && { [ -z "${limit:-}" ] || ulimit -f "$limit"; } && bash "$SELF" "$@" 2>&1)"; rc=$?
     if [ "$rc" -ne "$want" ]; then
       echo "SELF-TEST: $name — expected exit $want, got $rc" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
@@ -754,8 +792,8 @@ PY
   commit
   printf '\n- ID: `V.1.2`\n  Status: `pending`\n  Goal: an open child, not yet committed, which the seal reads and leg 5 does not\n' >> "$work/docs/tasks/V.md"
   arm "a first seal the gate refuses is rolled back" 1 "so it was rolled back" --seal V
-  [ -z "$(git -C "$work" status --porcelain --untracked-files=all -- docs/task-history)" ] ||
-    { arms=$((arms + 1)); echo "SELF-TEST: a first seal rolled back left something under docs/task-history/" >&2; }
+  [ -z "$(git -C "$work" status --porcelain --untracked-files=all -- docs/task-history)" ] && [ ! -d "$work/docs/task-history" ] ||
+    { arms=$((arms + 1)); echo "SELF-TEST: a first seal rolled back left something under docs/task-history/, or the folder" >&2; }
   arm "and the gate passes after it" 0 "0 sealed file(s)"
   git -C "$work" checkout -q -- . && git -C "$work" reset -q --hard HEAD~1
   arm "the census counts bytes of closed subtrees below an open one" 0 "census: HEAD — 1181 byte(s) of \`done\` leaves under open top-level subtrees, 1062 of them in 7 closed subtree(s) below the top level" --census HEAD
@@ -787,6 +825,9 @@ PY
   cp "$work/docs/index.keep" "$work/docs/task-history/INDEX.md"
   sub docs/task-history/INDEX.md '^\| --- \| --- \| --- \| --- \| --- \| --- \|$' '| -- | --- | --- | --- | --- | --- |'
   arm "a table whose separator is not the header's is refused" 1 "does not open with its header"
+  cp "$work/docs/index.keep" "$work/docs/task-history/INDEX.md"
+  sub docs/task-history/INDEX.md '^(## `T`)\n\n' '\1\nprose between a heading and its table\n'
+  arm "a table not a blank line below its heading is refused" 1 "does not open with its header"
   cp "$work/docs/index.keep" "$work/docs/task-history/INDEX.md"
   printf '\n## `V`\n\n| Subtree | Leaves | Lines | Bytes | sha256 | Sealed |\n| --- | --- | --- | --- | --- | --- |\n' >> "$work/docs/task-history/INDEX.md"
   mkdir -p "$work/docs/task-history/V"
@@ -1110,6 +1151,53 @@ PY
   rmdir "$work/docs/tasks/R.md"
   [ -z "$(git -C "$work" status --porcelain --untracked-files=all -- docs/task-history docs/tasks)" ] ||
     { arms=$((arms + 1)); echo "SELF-TEST: a seal stopped by a file it cannot open left its writes behind" >&2; }
+  clean() { [ -z "$(git -C "$work" status --porcelain --untracked-files=all -- docs/task-history docs/tasks)" ]; }
+  # A file-size limit the tree's rewrite exceeds and the sealed file does not, as a full disk: the tree is written
+  # whole or not at all, and the rollback undoes only what was written (review R9-1).
+  printf -- '# P\n\n## Task Tree\n\n- ID: `P`\n  Status: `active`\n  Goal: %s\n\n- ID: `P.1`\n  Status: `done`\n  Goal: a closed subtree in a tree too large to rewrite\n  Commit: `ARCHOGEN-P-0001`\n' "$(python3 -c 'print("x" * 20000)')" > "$work/docs/tasks/P.md"
+  commit
+  limit=16 arm "a seal a full disk stops is rolled back, the tree as it was" 1 "File too large" --seal P
+  clean && [ ! -d "$work/docs/task-history/P" ] ||
+    { arms=$((arms + 1)); echo "SELF-TEST: a seal stopped by a file-size limit left the tree torn or its writes behind" >&2; }
+  restore
+  # A rollback the same limit stops: the seal's smaller tree fits, the gate then cannot read a tree, and restoring the
+  # larger one fails. The rollback names what it could not undo and keeps the sealed file the tree names (review R9-1).
+  printf '# Z\n\n## Task Tree\n\n- ID: `Z.1`\n  Status: `pending`\n  Goal: not UTF-8 \377\n' > "$work/docs/tasks/Z.md"
+  printf -- '# P\n\n## Task Tree\n\n- ID: `P`\n  Status: `active`\n  Goal: %s\n\n- ID: `P.1`\n  Status: `done`\n  Goal: %s\n  Commit: `ARCHOGEN-P-0001`\n' "$(python3 -c 'print("x" * 10000)')" "$(python3 -c 'print("y" * 8000)')" > "$work/docs/tasks/P.md"
+  commit
+  limit=16 arm "a rollback a full disk stops names what it could not undo" 1 "could not undo docs/tasks/P.md, not restored" --seal P
+  grep -q '^  Status: `done` — sealed in' "$work/docs/tasks/P.md" && [ -f "$work/docs/task-history/P/P.1.md" ] &&
+    [ -z "$(git -C "$work" status --porcelain -- docs/task-history/INDEX.md)" ] ||
+    { arms=$((arms + 1)); echo "SELF-TEST: a rollback that could not restore the tree removed the sealed file it names, or tore it" >&2; }
+  restore
+  git -C "$work" rm -q docs/tasks/Z.md docs/tasks/P.md
+  commit
+  # A sealed file's path already taken — here by a dangling link, which `os.path.exists` calls absent: refused before
+  # anything is written (review R9-2).
+  mkdir "$work/docs/task-history/Q"; ln -s "$work/no-such-dir/Q.1.md" "$work/docs/task-history/Q/Q.1.md"
+  arm "a sealed file's path already taken, a dangling link, is refused before anything is written" 1 "nothing was written" --seal Q
+  rm "$work/docs/task-history/Q/Q.1.md"; rmdir "$work/docs/task-history/Q"
+  clean || { arms=$((arms + 1)); echo "SELF-TEST: a seal refused for a taken path wrote something" >&2; }
+  restore
+  # An exception that is no OSError, mid-proof — an interrupt, git output that is not UTF-8 — rolls the seal back too;
+  # each ends in a traceback, which these arms expect (review R9-2).
+  fake="$SCRATCH/fakebin"; rm -rf "$fake"; mkdir -p "$fake"
+  for how in interrupt undecodable; do
+    if [ "$how" = interrupt ]; then act='kill -INT $PPID'; want=KeyboardInterrupt; else act='printf "\\377\\n"; exit 0'; want=UnicodeDecodeError; fi
+    printf '#!/bin/sh\nfor a in "$@"; do [ "$a" = "--is-shallow-repository" ] && { %s; }; done\nexec "%s" "$@"\n' "$act" "$(command -v git)" > "$fake/git"
+    chmod +x "$fake/git"
+    arms=$((arms + 1))
+    out="$(cd "$work" && PATH="$fake:$PATH" bash "$SELF" --seal Q 2>&1)"; rc=$?
+    if [ "$rc" -ne 0 ] && printf '%s' "$out" | grep -qF "$want" && ! printf '%s' "$out" | grep -qF -- "— sealed " && clean &&
+       [ ! -d "$work/docs/task-history/Q" ]; then
+      ok=$((ok + 1)); echo "  ✅ a seal stopped mid-proof by $want is rolled back"
+    else
+      echo "SELF-TEST: a seal stopped mid-proof by $want — rc $rc, or its writes left behind:" >&2
+      printf '%s\n' "$out" | tail -2 | sed 's/^/    /' >&2
+    fi
+    restore
+  done
+  rm -rf "$fake"
   rm -rf "$work"
   arms=$((arms + 1))
   if bash "$SELF" >/dev/null 2>&1; then ok=$((ok + 1)); echo "  ✅ the real task history passes"

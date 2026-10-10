@@ -51,8 +51,11 @@ A task tree keeps its live work readable by sealing out what is finished.
 
 **Sealing is done by a tool**, `bash scripts/check_task_history.sh --seal <TREE>`. It proves that the tree, with
 every stub replaced by its body from its sealed file, reconstructs the tree as it stood, byte for byte. If it does
-not, it writes nothing. Then it runs the gate on what it wrote, and rolls everything back if the gate refuses, or if any exception stops it — *amended
-`2026-10-10`: the folders a first seal made included.* `--census <COMMIT>` measures, at a commit, the bytes of `done`
+not, it writes nothing. Then it runs the gate on what it wrote, and rolls everything back if the gate refuses — *amended
+`2026-10-10`: or if any exception stops it, the folders a first seal made included; the tree and the index are written
+whole or not at all, a sealed file's path already taken is refused before any write, and the rollback undoes what was
+written alone, each step on its own, keeping the sealed files while the tree or the index still names them and naming
+what it could not undo (review R9-1).* `--census <COMMIT>` measures, at a commit, the bytes of `done`
 leaves under open top-level subtrees and of those a seal would take (`PROGRAM.69`).
 
 **The gate**, `TASK-HISTORY`, runs on every commit, in CI as in the pre-commit hook. It checks:
@@ -69,13 +72,15 @@ leaves under open top-level subtrees and of those a seal would take (`PROGRAM.69
    sealed it (`HEAD`, for a seal not yet committed), `done` there, and sealed with the rest of its subtree. So a
    seal made by hand, or a body edited on its way in, is refused — *amended `2026-10-10`: when it differs from the
    tool's in its files, its stubs' links or its units; one byte for byte the tool's passes, however made, and a stub's
-   commit text, a row's date and the column-0 rule stay the seal's alone, which the gate does not check.* *Amended
+   commit text, a row's date and the column-0 rule stay the seal's alone, which the gate does not check, and so do where
+   a stub stands among its tree's lines and text after the name on its ID line (review R9-5).* *Amended
    `2026-10-10`:* and that, in that tree, the
    outermost closed subtree holding each of its leaves was its file's subtree, so a part of a closed subtree sealed
    apart from it, or, below the top level, parts sealed together that no one leaf holds, is refused; and that the
    file is exactly the bytes
    those leaves' spans made, in that tree's order, so a file reordered or padded is refused too;
-6. that no live leaf sits in a subtree that is sealed — *amended `2026-10-10`: at any depth, and in any tree file;
+6. that no live leaf sits in a subtree that is sealed — *amended `2026-10-10`: at any depth, and in any tree file of
+   `docs/tasks/`, one in a sub-folder being `PROGRAM.72`'s;
    and a tree file holds only leaves under its own name, each named once, which a seal checks before it writes; and the
    index keeps one table per tree, its header first, its rows under it, one row a sealed file.*
 
@@ -129,7 +134,7 @@ leaves under open top-level subtrees and of those a seal would take (`PROGRAM.69
   - after a subtree closes, run `bash scripts/check_task_history.sh --seal <TREE>` and commit its result;
   - the sealing commit may also close the leaf that ran it, as the first one did. Every sealed leaf is proven
     against its tree as it stood just before that commit (leg 5), so other edits in the same commit do not weaken
-    the proof. *Amended `2026-10-10`:* any exception that stops a seal rolls it back first; a signal that kills the process, SIGTERM among them, leaves its writes, which the next gate run proves as any uncommitted seal (review R8-2). The seal reads the working tree and leg 5 the tree as committed, so an
+    the proof. *Amended `2026-10-10`:* any exception that stops a seal rolls it back first; a signal that kills the process, SIGTERM among them, leaves its writes, which the next gate run proves as any uncommitted seal (review R8-2); a failure that defeats the rollback's own writes too, a full disk, leaves what the rollback names (R9-1). The seal reads the working tree and leg 5 the tree as committed, so an
     uncommitted edit that changes which subtrees are closed — a new open leaf under a closed one — makes the seal
     refuse itself and roll back; commit such an edit first;
   - a leaf in a sealed file is never edited. A correction is a new entry in the tree's changelog.
@@ -164,3 +169,4 @@ another tree is sealed. The amendment of `2026-10-10` and its seal were reviewed
 | 6 | 11 | 5 (a repeated row passing once its one note was silenced; a rollback that a file the gate cannot read escaped; two first-seal stubs "corrected" wrongly; the text claiming more than the gate checks; figures naming no state) | the seal re-derived and re-sealed from `72bd446`; every finding answered, the stub-commit check withdrawn; the review open |
 | 7 | 10 | 4 (a sealed file holding no leaf passing; the leaf describing the withdrawn check; counts from untracked runners unmarked; a rollback whole for a file not UTF-8 alone) | the seal re-derived and re-sealed in a clone, 795 fuzzed seals and of 1 551 hand seals the gate accepted exactly those the tool makes (runner untracked, not durable); every finding answered, two pre-existing remarks filed or armed |
 | 8 | 10 | 2 (the doctrine row's "a leaf a file"; the rollback claimed for whatever stops a seal, a kill signal leaving its writes) | the seal, the census and every figure reproduced; 960 fuzzed seals matched its oracle and of 1 368 hand seals the gate accepted exactly those the tool makes (runner untracked, not durable); every finding answered |
+| 9 | 10 | 1, and 2 arm gaps (a rollback not whole when the failure defeats its own writes; "any exception" and a refused first seal's folder held by no arm) | the seal, the census and every figure reproduced; 480 fuzzed seals matched its oracle, and of 1 903 hand seals the gate accepted exactly the oracle's 555 (runner untracked, not durable); every finding answered |

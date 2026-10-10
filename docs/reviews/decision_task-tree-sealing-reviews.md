@@ -199,6 +199,27 @@ pre-existing finding.
 | R8-9 | nit | an empty table passed; the folders were made outside the guard | a table with no row refused, with an arm; the folders made inside it |
 | R8-P1 | remark, pre-existing | a tree file in a sub-folder escapes leg 6 and its name checks, while `TASK-ACCEPTANCE` reads owners there | filed as `PROGRAM.72`, owned |
 
+**Round 9**, `2026-10-10`, a seventh confirmation, in a clone of `7ad8e6b`, by a read-only context new to the change. It
+re-derived the seal from `fea69ad` with its own code, byte for byte `e624001`'s; re-ran the `7ad8e6b` tool on
+`72bd446`, identical but for the index's header prose, which `e624001` set to the tool's `HEADER`; reproduced the census
+and every figure; and fuzzed: 480 seals matched its oracle, and of 1 903 hand seals the gate accepted exactly the
+oracle's 555 — its runner untracked, so not durable. Verdict: 1 defect of this change, and 2 arm gaps it counts as
+defects by its own definition and as remarks by rounds 7 and 8's; 4 remarks; one pre-existing finding; two findings of
+other leaves.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R9-1 | defect | the rollback was not whole when the failure defeated its own writes too: a read-only tree's rewrite raised again and the folders stayed; a file-size limit left the tree truncated | the tree and the index written whole or not at all, a temporary file renamed into place; the rollback undoes what was written alone, each step on its own, keeps the sealed files while the tree or the index names them, and names what it could not undo; two arms under a file-size limit — the seal stopped, the tree as it was; the rollback stopped, what it could not undo named, the sealed file kept |
+| R9-2 | arm gap | "any exception" was held for the gate raising `Unreadable` or `OSError` alone | arms for an interrupt and for git output that is not UTF-8, mid-proof, each rolled back; a sealed file's path already taken, a dangling link among them, refused before any write, with an arm |
+| R9-3 | arm gap | a refused first seal leaving an empty `docs/task-history/` passed every arm | the first-seal arm requires the folder gone |
+| R9-4 | remark | ", or if any exception stops it" was inserted into a `2026-09-30` sentence unmarked | moved into that sentence's amendment |
+| R9-5 | remark | the gate's unchecked parts were listed as if whole; it also accepts a stub moved within its tree and text after the name on a stub's ID line | both named among the stated limits, in the record, the script and the book |
+| R9-6 | remark | no arm held the blank line between a tree's heading and its table | an arm; the mutation killed |
+| R9-7 | remark | "in any tree file" did not point to `PROGRAM.72` | it does, in the record, the script and the book |
+| R9-P1 | remark, pre-existing | the gate's own run ends in a traceback on an exception other than `Unreadable` or `OSError` | filed as `PROGRAM.73`, owned |
+| R9-N1 | another leaf's | `MEMORY.md`'s next action still said `.2.5` follows | rewritten by `ARCHOGEN-M3-0518` |
+| R9-N2 | another leaf's | `M3.6.6.2` closed and was not sealed | sealed by `ARCHOGEN-M3-0520`, its Commit field first (`ARCHOGEN-M3-0519`) |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.
