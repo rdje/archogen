@@ -15,9 +15,10 @@ of them.
 > repository is public — but because the measurement is worthless once the engine has been
 > shaped, even unconsciously, by what those cases need. Never `git show` or `git blame` a case,
 > never diff or grep over `frozen/` with `-a`/`--text` or an external diff driver, never run git on this
-> repository without its working tree (a bare clone, `--git-dir` from elsewhere), and never check
-> out, clone or add a worktree at a commit older than `6d61f65`, the first that hides the set's
-> diffs.
+> repository without its working tree (a bare clone, `--git-dir` from elsewhere), never view a
+> commit that holds the set in a viewer that diffs blobs itself (an editor's or a web history view),
+> and never check out, clone, archive or add a worktree at a commit older than `6d61f65`, the first
+> that hides the set's diffs, nor revert `2f6f331`.
 
 ## What is actually at stake
 
@@ -48,15 +49,16 @@ project doctrine slot. It enforces five properties:
 | Property | What it refuses |
 | --- | --- |
 | **Integrity** | manifest entries that are not the sealing commit's own, a sealing commit that is no ancestor of `HEAD`, a digest the case's blob there does not hash to, or, once unsealed, a restored case that differs from it — the set cannot be rewritten, grown or shrunk to match what the engine turned out to do |
-| **Custody** | while sealed, a case at its path, a link there included, or in the index; a case's whole text anywhere in the index or the working tree, ignored files aside; a file, the manifest included, staged or on disk, tracked or not, that quotes a long line of one; an unregistered repository nested outside ignored folders, or a file or folder git cannot read or list, since none can be ruled out; a sealed path not marked `-diff`, staged and on disk |
+| **Custody** | while sealed, a case at its path, a link there included, or in the index; a case's whole text anywhere in the index or the working tree, ignored files aside; a file, the manifest included, staged or on disk, tracked or not, that quotes a long line of one; an unregistered repository nested outside ignored folders, staged as a gitlink or not, or a file or folder git cannot read or list, since none can be ruled out; a sealed path not marked `-diff`, staged and on disk |
 | **Completeness** | anything in `frozen/` but the manifest and, once unsealed, the listed cases — at any depth, hidden or linked; once unsealed, a listed case missing |
 | **Non-contamination** | any tracked file **outside** `frozen/` that names a sealed case — a case written about in a task tree, decision record or design note is no longer unseen |
 | **Exposure** | an `# exposed:` line naming no listed case — recording an exposure is this project's rule; no check can see a read |
 
-It prints paths and listed names, never a line of a case — no value read from the manifest is echoed, a bad line
-is named by its number, a blob is hashed through a pipe, a quote is found by the name of
-the file that holds it — and its `--self-test` arms, on synthetic cases in a scratch repository,
-check that of every run. The RED arms are recorded in leaves `M0.6`, `PROGRAM.18.1` and
+It prints paths, line numbers, entry names and a commit id of the right form — tokens with no space — and git's own
+warnings, which name paths; never a manifest line's text nor a case's line — a field's value is checked inside its
+pipeline before any variable holds it, a bad line is named by its number, a blob is hashed through a pipe, a quote is
+found by the name of the file that holds it — and its `--self-test` arms, on synthetic cases in a scratch repository,
+require that of every run of the check, one in nine places with tracing forced on. The RED arms are recorded in leaves `M0.6`, `PROGRAM.18.1` and
 `PROGRAM.76`.
 
 ⚠️ **The honest limit**, stated rather than hidden: the text stays in the published history,
@@ -65,7 +67,7 @@ shown or blamed by its path, a diff or grep forced to text or handed to an exter
 viewer that diffs blobs itself, git run on the repository without this working tree, a checkout, clone or worktree at a commit older than
 `6d61f65`, or another clone not yet past it. `git grep <commit>` and `git log -S` over history
 tell which file or commit holds a term, not its line. Ignored files, the build output under
-`target/`, or a folder an untracked `.gitignore` ignores, are not scanned, nor a folder outside the repository a link
+`target/`, or a folder an untracked `.gitignore` ignores, are not scanned, nor anything outside the repository a link
 points to, nor a registered submodule, another repository (`REPOSITORY-BOUNDARY` refuses what is created at a vendored
 checkout's first level); a quote shorter than a long line, or reworded, is not found; the
 check sees what is staged and on disk, and CI what is pushed. The check cannot prove nobody read a

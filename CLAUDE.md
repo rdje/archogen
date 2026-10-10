@@ -56,8 +56,9 @@ human is working. Follow it exactly.
   (`docs/decisions/decision_repository-boundary-read-only.md`).
 - **The sealed evaluation set is never read before leaf `M6.5`.** Its text is out of the tree; never `git show` or
   `git blame` a case, diff or grep `docs/evaluation/frozen/` with `-a`/`--text` or an external driver, run git on a
-  bare clone or with `--git-dir` from elsewhere, or check out, clone or add a worktree at a commit older than
-  `6d61f65`; fence every delegated search away from it
+  bare clone or with `--git-dir` from elsewhere, view such a commit in a viewer that diffs blobs itself, or check
+  out, clone, archive or add a worktree at a commit older than `6d61f65`, or revert `2f6f331`; fence every delegated
+  search away from it
   (`docs/evaluation/README.md`). A case read is recorded.
 
 > One rule above all: **information that exists only in the live conversation is not yet

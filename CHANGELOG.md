@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the sealed cases' guard holds no wrong-form value in the shell, and refuses a stray gitlink
+
+`ARCHOGEN-PROGRAM-0554` (leaf `PROGRAM.76`), `2026-10-10`.
+
+- The seal's check held the manifest's values in shell variables before checking them, so a forced trace could print
+  a case's line written there, and a stray clone staged as a gitlink passed unseen. Each value is now checked inside
+  its pipeline before anything holds it, and a gitlink no `.gitmodules` entry registers is refused. The texts say
+  exactly what it prints — paths, line numbers, names and commit ids — and name the viewers, archives and reverts that
+  still reach a case.
+- Validation: 58 arms, a forced trace over nine places among them; two failing on the previous check and four
+  deliberate breaks each caught, both by untracked runners, so not durable.
+
 ## archogen — an interrupted seal says no more than reached its outputs
 
 `ARCHOGEN-PROGRAM-0552` (leaf `PROGRAM.69`), `2026-10-10`.
@@ -22,7 +34,7 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 
 - The seal's check still echoed two manifest values it could not read, so a case's line written there would print;
   and a copy in a folder git could not open, or under a folder that could not be searched, passed. It now echoes no
-  manifest value, names an exposure it cannot match by its line's number, and refuses whatever git cannot list. The
+  manifest value of the wrong form, names an exposure it cannot match by its line's number, and refuses whatever git cannot list. The
   texts name what it does not look into: a registered submodule, a folder a link points outside to, a folder an
   untracked ignore file hides.
 - Validation: 56 arms, among them a case's line seeded into eight places of the manifest and a run with tracing forced

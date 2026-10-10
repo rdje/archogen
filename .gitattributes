@@ -5,6 +5,7 @@ docs/history/** -text
 # Review histories, and the archive they leave for, are compared byte for byte too (PROGRAM.55.1).
 docs/reviews/** -text
 docs/review-history/** -text
-# The sealed evaluation set: no diff, log patch or grep of a commit that holds it prints a line of it (PROGRAM.76).
+# The sealed evaluation set: in this working tree no diff, log patch or grep of a commit that holds it prints a line
+# of it, unless forced to text or handed to an external driver (PROGRAM.76, docs/evaluation/README.md).
 docs/evaluation/frozen/** -diff
 docs/evaluation/frozen/MANIFEST.txt diff

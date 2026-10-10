@@ -936,7 +936,7 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM.76`
   Status: `active` — filed and started `2026-10-10`, on the director's word: *"Digests stay, text leaves"*, end to
   end, without them, *"sota, signoff and production-grade"*; the change committed (`ARCHOGEN-PROGRAM-0542`), its
-  review open, round 3's findings answered (`ARCHOGEN-PROGRAM-0550`), round 4 next
+  review open, round 4's findings answered (`ARCHOGEN-PROGRAM-0554`), round 5 next
   Goal: the sealed evaluation set guarded against being read, not only against being edited or named, so no search
   of the working tree made for other work can reach a case before `M6.5`, nor, in a working tree that carries the
   mark, a diff of a commit that holds one show it.
@@ -1010,7 +1010,18 @@ mdBook that is the director's window into the project.
   arms)"*; beside `00e08cc`'s core → *"52 pass / 4 fail (56 arms)"*; `python3 target/p76/mutate4.py` → *"7 of 7
   killed"* — both runners untracked, so not durable.
   Commit: `ARCHOGEN-PROGRAM-0542 (leaf PROGRAM.76)`; `ARCHOGEN-PROGRAM-0544 (leaf PROGRAM.76)`, review round 1;
-  `ARCHOGEN-PROGRAM-0547 (leaf PROGRAM.76)`, review round 2; `ARCHOGEN-PROGRAM-0550 (leaf PROGRAM.76)`, round 3
+  Review round 4, `2026-10-10`, of `a9ec254`: 4 defects. "No manifest value is echoed" was false of names and a commit
+  id; the seal's, the sealing commit's and an exposure's values sat in shell variables a forced trace printed; a
+  nested repository staged as a gitlink passed; the README said the box named a viewer it did not. Answered: each
+  field's value checked inside its pipeline before any variable holds it, an exposure's name matched in awk; the
+  forced-trace arm run over nine places; a gitlink `.gitmodules` does not register refused, a registered one passing;
+  the texts say what is printed — paths, line numbers, names, a commit id, git's warnings — and the box and
+  `CLAUDE.md` name the viewer, an archive and a revert; the remarks' wordings. Evidence: `--self-test` → *"58 pass / 0
+  fail (58 arms)"*; beside `a9ec254`'s core → *"56 pass / 2 fail (58 arms)"*; `python3 target/p76/mutate5.py` → *"4
+  of 4 killed"* — both runners untracked, so not durable.
+  Commit: `ARCHOGEN-PROGRAM-0542 (leaf PROGRAM.76)`; `ARCHOGEN-PROGRAM-0544 (leaf PROGRAM.76)`, review round 1;
+  `ARCHOGEN-PROGRAM-0547 (leaf PROGRAM.76)`, review round 2; `ARCHOGEN-PROGRAM-0550 (leaf PROGRAM.76)`, round 3;
+  `ARCHOGEN-PROGRAM-0554 (leaf PROGRAM.76)`, round 4
 
 ## Roadmap coverage map
 
@@ -1077,7 +1088,7 @@ roadmap item X live?".
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
 | 1 | `PROGRAM.69` | `active` | its review open: round 18 next, on the committed tool, its seal already in place |
-| 2 | `PROGRAM.76` | `active` | its review open: round 4 next, of the sealed set's custody |
+| 2 | `PROGRAM.76` | `active` | its review open: round 5 next, of the sealed set's custody |
 | 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The third row waits on the director's yes. The pending leaves beside them —
@@ -1246,6 +1257,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `2026-10-10` | `PROGRAM.69` (round 16) | the arms as committed beside `755c151`'s core; the self-test; five mutations of round 16's rules; the gate over 172 files; every self-test; focused on the staged tree | 109 pass / 2 fail, the working tree's and not durable; 111 / 0; each killed by an untracked runner, not durable; OK; 48 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.76` (round 3) | the check on the real set; its self-test; the arms beside `00e08cc`'s core; seven mutations; the clones older than `6d61f65`; every self-test; focused on the staged tree | exit 0; 56 / 0; 52 pass / 4 fail, not durable; 7 killed, not durable; none left; 48 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.69` (round 17) | the arms as committed beside `4105124`'s core; the self-test; four mutations of round 17's rules; the gate over 172 files; every self-test; focused on the staged tree | 112 pass / 4 fail, the working tree's and not durable; 116 / 0; each killed by an untracked runner, not durable; OK; 48 passed; `passed — 3 passed, 0 failed` |
+| `2026-10-10` | `PROGRAM.76` (round 4) | the check on the real set; its self-test; the arms beside `a9ec254`'s core; four mutations; every self-test; focused on the staged tree | exit 0; 58 / 0; 56 pass / 2 fail, not durable; 4 killed, not durable; 48 passed; `passed — 3 passed, 0 failed` |
 
 ## Commit Log
 
@@ -1408,6 +1420,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0548 (leaf PROGRAM.69)` | **review round 16 answered**: the interrupt alone says which outcome, exiting 130 with its output closed; SIGABRT held; 111 arms |
 | `PROGRAM.76` | `ARCHOGEN-PROGRAM-0550 (leaf PROGRAM.76)` | **review round 3 answered by method**: no manifest value echoed, a case's line seeded into eight places; what git cannot list refused; the trace guard held by a forced trace |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0552 (leaf PROGRAM.69)` | **review round 17 answered**: an outcome said only to a stream that exists; one exit whatever became of the outputs; an abort named; 116 arms |
+| `PROGRAM.76` | `ARCHOGEN-PROGRAM-0554 (leaf PROGRAM.76)` | **review round 4 answered**: no manifest value of the wrong form ever held in the shell; a stray gitlink refused; the texts say what is printed |
 
 ## Changelog
 
