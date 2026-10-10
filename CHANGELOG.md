@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the generated-sources record's log says what each round's answer held
+
+`ARCHOGEN-M3-0571` (leaf `M3.6.6.4`), `2026-10-10`.
+
+- The leaf's Commit Log kept the claims each round's commit made when it was written — every refusal at every
+  position, every reader — though later rounds found each narrower. Every row a later round narrowed now says so
+  beside it. The leaf filed for the parent's own tests now names each clause, generators and inputs, and two more
+  of the parent's rules: a file named in both clauses, and a lone Rust file.
+- Validation: sixteen route tests; the crate's 183 tests; the book's gates; the focused tier on the staged tree.
+
 ## archogen — the trust gate's first run in CI had no gate to judge with
 
 `ARCHOGEN-M3-0570` (leaf `M3.6.3.2.1`), `2026-10-10`.
@@ -33,7 +43,7 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 
 `ARCHOGEN-M3-0568` (leaf `M3.6.6.4`), `2026-10-10`.
 
-- Review rounds 9 to 14 each found one more axis — where an entry stands, the order of readers, a third reader, the
+- Review rounds 9 to 14 found, round after round, another axis or kind — where an entry stands, the order of readers, a third reader, the
   order of forms, the comparison harness as a reader — on which a rule the record restated from its parent was tested
   one way only. The record now says those rules are the parent's, decided by its record and held by its tests, and
   states as its own only the routes its tests build; how broadly the parent's tests hold its rules across every axis is

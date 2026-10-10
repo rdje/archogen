@@ -220,7 +220,7 @@ written; R12-R1's answer, "step 1 and step 3's", is its correction.
 **Round 14**, `2026-10-10`, of `0797cf5`, by a read-only context that had not written the record, fenced from the
 sealed evaluation set. It ran the doctrine gate and the crate's tests (181 passed), and mutated the gate — untracked,
 so not durable: the rules held in the last live form only, and the harness unjudged against a program target. Verdict:
-5 defects and 3 remarks. Rounds 9 to 14 each found one more axis — entry position, reader order, the third reader,
+5 defects and 3 remarks. Rounds 9 to 14 found, round after round, another axis or kind — entry position, reader order, the third reader,
 form order, the harness — on which a rule the record restated from the parent was held one way; the answer changes
 method: the record says those rules are the parent's, held by its instrument's tests, and their breadth across every
 axis is a leaf of its own, `M3.6.9`, where one generated sweep can hold every axis at once.
@@ -235,6 +235,21 @@ axis is a leaf of its own, `M3.6.9`, where one generated sweep can hold every ax
 | R14-R1 | remark | stale test comments | rounds 5 to 14; the sweep's comment names the marked build-read |
 | R14-R2 | remark | the sweep's row read as thirteen kinds | "a generator or input at or under a gitlink" |
 | R14-R3 | remark | sharing held by equivalence with the parent's tests | the parent's §4, now said so |
+
+**Round 15**, `2026-10-10`, of `0369126`, by a read-only context that had not written the record, fenced from the
+sealed evaluation set — one search in its clone was unfenced in form, scanning the manifest, all the sealed directory
+holds, for this record's name; it matched and printed nothing, and no case text was seen. It ran the doctrine gate and
+the crate's tests (181 passed), found every attribution round 14 made true against the parent's record and tests, and
+every route and no-route case built by a §6 test, and mutated the gate — untracked, so not durable. Verdict: 1 defect
+and 4 remarks.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R15-D1 | defect | R13-D6's answer: the Commit Log's rows of rounds 10 and 11 still claimed every refusal at every position, and round 8's every reader | every row a later round narrowed — rounds 5, 6, 8, 10, 11 and 13 — annotated with its narrowing, as round 12's was |
+| R15-R1 | remark | `M3.6.9` named no clause axis: the chain and the blob rule held for inputs alone outside `route_tests` | "each clause — generators and inputs" in its axes and its sweep |
+| R15-R2 | remark | a file named in both clauses and a lone `.rs`, the parent's rules, named neither in §6's opening nor in `M3.6.9` | named in both |
+| R15-R3 | remark | "rounds 9 to 14 each found one more axis" overstated | "round after round, another axis or kind", in the changelog, round 14's paragraph and `M3.6.9` |
+| R15-R4 | remark | §6's opening readable as the parent's tests holding every form, position and reader; an appositive without its antecedent | "held, at the instances they build"; "(its rule, held by its instrument's tests)" |
 
 ## Why
 

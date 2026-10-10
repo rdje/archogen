@@ -47,10 +47,10 @@ the parent's rules can see — through a declared or a marked file — hides not
 one through a file no form declares and no header marks is the parent's §8 limit, a plain file.
 
 **The route.** A file made from another generator's output is declared as the last step of one generation: its form
-names every committed generator file of every step — each judged as the parent's §5 judges a generator file against
-the programs that read the result, its rule and its instrument's tests — and every committed file any step reads, and
-the intermediate file is the generation's own product, never committed. A marked input, or a marked script a form
-would name as a generator — a vendored copy among them (§3) — is such an intermediate: the generation remakes it from
+names every committed generator file of every step — each judged as the parent's §5 judges a generator file against the
+programs that read the result (its rule, held by its instrument's tests) — and every committed file any step reads, and
+the intermediate file is the generation's own product, never committed. A marked input, or a marked script a form would
+name as a generator — a vendored copy among them (§3) — is such an intermediate: the generation remakes it from
 committed files, its own generator and inputs, or copies of them for a vendored one, never committing it; one it cannot
 remake so has no route (§5). A marked crate root has none: a
 program built from it compiles a generated file, a build the gate does not compute. A script that remakes and builds it
@@ -123,13 +123,14 @@ reviewed by a context that did not write it; until then the refusal or the belie
 
 ### 6. Each route held by a test
 
-What this record decides — the routes above, and the cases with none — is claimed as far as these tests build it and
-the gate writes or refuses the inventory. The gate's rules the routes rest on — the chain, the blob rule, the role
-judgment of each generator against each reader, in every live form, at every position and for every reader — are the
-parent's, decided by its record and held by its instrument's tests; their breadth across every form, entry and reader is
-`M3.6.9`'s, filed by this record's round 14. The tests are `route_tests` in `xtask/src/trust_generated.rs`, written when
-review rounds had probed the routes in untracked tests and found some the record named fail, and four of the parent's
-tests, named with their module — three no-route cases, and the harness as a reader:
+What this record decides — the routes above, and the cases with none — is claimed as far as these tests build it and the
+gate writes or refuses the inventory. The gate's rules the routes rest on — the chain, the blob rule, a file named in
+both clauses, a lone `.rs` file, and the role judgment of each generator against each reader — are the parent's, decided
+by its record and held, at the instances they build, by its instrument's tests; holding each in every live form, each
+clause, every position and for every reader is `M3.6.9`'s, filed by this record's round 14 and widened by its round 15.
+The tests are `route_tests` in `xtask/src/trust_generated.rs`, written when review rounds had probed the routes in
+untracked tests and found some the record named fail, and four of the parent's tests, named with their module — three
+no-route cases, and the harness as a reader:
 
 | Test | Holds |
 | --- | --- |
@@ -203,3 +204,4 @@ finding answered here. The history is
 | 12 | `2026-10-10` | 5, and 3 remarks | answered: §6's rows say exactly what each test holds — three readers each first, in the middle and last, three inputs, fourteen entry refusals each at every position, another role's script and a root's own crate root among them; round 11's text corrected; "directly or not" |
 | 13 | `2026-10-10` | 6, and 3 remarks | answered: every refused reader asserted in all six orders; the harness's test named; a program target compiling a marked module in the sweep; the vendored row's three generators; the completeness claims of rounds 10 and 11 narrowed in the changelog; `M3.6.8` |
 | 14 | `2026-10-10` | 5, and 3 remarks | answered by method: the gate's rules the routes rest on said to be the parent's, held by its tests, their breadth across forms, entries and readers filed as `M3.6.9`; §6's opening exact; the round-11 changelog entry and the round-12 leaf text narrowed to what they held |
+| 15 | `2026-10-10` | 1, and 4 remarks | answered: every Commit Log row a later round narrowed annotated with its narrowing; `M3.6.9` and §6's opening name each clause, a file named in both clauses and a lone `.rs`; two phrasings |
