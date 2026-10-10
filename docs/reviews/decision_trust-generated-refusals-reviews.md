@@ -311,6 +311,23 @@ its criterion is the project's mutation sweep over the judgment code, every surv
 | R18-R4 | remark | step 5 naming only the first generator per file survives | likewise |
 | R18-R5 | remark | `MEMORY.md` named round 9's holes no committed layer recorded | `PROGRAM.76`'s round 9, answered by `c4523f5`, records them |
 
+**Round 19**, `2026-10-10`, of `56cef5f`, by a read-only context that had not written the record, fenced from the
+sealed evaluation set. Every copy refused by the harness, it read the record, the parent and the code path by path and
+ran the crate's tests in round 18's export, its code identical to `56cef5f`'s (183 passed); it listed the sweep's
+mutants and probed its baseline. Verdict: 2 defects and 3 remarks. Round 18's criterion is incomplete — the sweep's
+operators never narrow an iteration nor drop an operand inside a closure, so round 18's survivors sit on lines it does
+not mutate — uncheckable as written, and unreachable today, its copy unable to run the trust tests. The answer changes
+method: the record and its review stop prescribing `M3.6.9`'s criterion; that leaf states the problem and what its
+design must meet, and designs and reviews its criterion itself.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R19-D1 | defect | the sweep's operators make none of the mutants rounds 9 to 18 found; "an axis a test misses is a mutant that survives" false; R18-R1 to R4's "the sweep's to kill" false | `M3.6.9` names the sweep's gap as a fact its design must meet; R18-R1 to R4 are `M3.6.9`'s to hold, by the criterion it designs |
+| R19-D2 | defect | the criterion uncheckable: one file whole, "the steps" undefined, no filter or equivalents named, route-test kills counted, exit 0 glossed wrong | no criterion stated outside `M3.6.9`; its design names the command whole, under its own review |
+| R19-R1 | remark | the sweep cannot reach exit 0: its copy cannot run the trust tests | in `M3.6.9`'s goal, measured |
+| R19-R2 | remark | "a list of axes … rounds 15 to 18" misdescribed round 18 | a list (15, 16), a census (17), the sweep (18, 19) |
+| R19-R3 | remark | `MEMORY.md`'s frontier line on `PROGRAM.76` stale | rewritten |
+
 ## Why
 
 The record closes on a round that finds no defect, as every design here does; each round, its findings and their

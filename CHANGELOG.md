@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the leaf for the parent's tests designs its own criterion
+
+`ARCHOGEN-M3-0581` (leaf `M3.6.6.4`), `2026-10-10`.
+
+- Round 18 made the project's mutation sweep the measure of where the parent's rules are tested. Round 19 found the
+  sweep cannot see the defects the earlier rounds found — it never narrows a loop to one element — and cannot yet run
+  the trust tests at all. The generated-sources record now prescribes no criterion: the leaf for the parent's tests
+  states the problem and what any criterion must meet, and designs and reviews its own.
+- Validation: sixteen route tests; the crate's 183 tests; the book's gates; the focused tier on the staged tree.
+
 ## archogen — the leaf for the parent's tests is judged by a mutation sweep, not a list
 
 `ARCHOGEN-M3-0580` (leaf `M3.6.6.4`), `2026-10-10`.
