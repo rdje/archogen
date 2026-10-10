@@ -460,6 +460,25 @@ durable. Verdict: 2 defects of this change and 1 arm gap.
 | R21-R6 | remark | "the entry as round 15 had it" is loose: round 15's entry lacked SIGSTOP | the list as round 15's texts had it, SIGSTOP added by round 16 |
 | R21-R7 | pre-existing | the frontier's "its full record is sealed under …" false for closed, unsealed leaves | "a sealed leaf's full record" |
 
+**Round 22**, `2026-10-10`, a twentieth confirmation, in a clone of `d9fcc13`, by a read-only context new to the
+change and fenced from the sealed evaluation set. It reproduced the gate, every self-test, the census and the first
+seal's figures; checked every review row's count against its table and every listed commit's work unit; and mutated
+the rollback's restore guard and the history read, both killed — its runners untracked, so not durable. Verdict: 1
+defect of this change, 2 arm gaps, and 2 pre-existing findings.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R22-D1 | defect | the record's row 21 counted 11 findings; the history's round 21 has 10 | 10 |
+| R22-AG1 | arm gap | "each write is noted before it is made, so an error just after one is undone too" held by no arm since stops were masked | an arm: a sealed file larger than a file-size limit, stopped halfway, removed by the rollback, which says it rolled back |
+| R22-AG2 | arm gap | the warning's two clauses held by no arm | the log-named commit's arm requires no warning; an arm with a `pending` field and a log row requires one |
+| R22-R1 | remark | the changelog's rewrap left a 13-column line | rewrapped |
+| R22-R2 | remark | "sealed past" does not hold of a reopened sealed subtree, which leg 6 refuses | "a subtree no seal holds" |
+| R22-R3 | remark | `put`'s docstring credited the link refusal at the target to R14 D3 | R10 AG3 and R12 D2 |
+| R22-R4 | remark | no evidence recorded that round 21's arm fails first | the leaf records each new arm's mutation |
+| R22-R5 | remark | the book's "a request to stop waits" is untrue of one before the mask | "one that comes once the tool has begun writing" |
+| R22-P1 | pre-existing | the warning's `pending` test is a substring test | kept, the warning errs toward warning |
+| R22-P2 | pre-existing arm gap | "names each such line" held by no arm | the column-0 arm requires each of `T.3`'s three lines named |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.

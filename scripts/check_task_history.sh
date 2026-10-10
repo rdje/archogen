@@ -298,8 +298,8 @@ def temporary(target):
 
 def put(target, text):
     """Write `text` to `target` whole or not at all: a temporary file beside it, then a rename, so a write a full disk
-    stops leaves the target as it was (review R9-1). The seal refuses a link at the target, and any entry at its
-    temporary path, before it writes (review R14 D3); one that appears after that check makes this open fail, so
+    stops leaves the target as it was (review R9-1). The seal refuses a link at the target (reviews R10 AG3, R12 D2)
+    and any entry at its temporary path (R14 D3) before it writes; one that appears after that check makes this open fail, so
     nothing is written through it and it is left as it was (R20 AG1)."""
     tmp = temporary(target)
     created = False
@@ -895,6 +895,8 @@ PY
   arm "a tree with nothing sealed passes" 0 "0 sealed file(s)"
   arm "a closed subtree with a column-0 line is refused and nothing is written" 1 "nothing was written" --seal T
   [ ! -d "$work/docs/task-history" ] && git -C "$work" diff --quiet || { arms=$((arms + 1)); echo "SELF-TEST: the refused seal wrote something" >&2; }
+  [ "$(printf '%s' "$LAST" | grep -c 'T.3, line')" -eq 3 ] ||
+    { arms=$((arms + 1)); echo "SELF-TEST: the column-0 refusal did not name each of T.3's three lines (review R22 P2)" >&2; }
   sub docs/tasks/T.md '^```text\na fence the slicing would tear\n```\n' '  a line indented as a field\n'
   commit
   printf -- '# V\n\n## Task Tree\n\n- ID: `V.1`\n  Status: `done`\n  Goal: a closed subtree, committed\n  Commit: `ARCHOGEN-V-0001`\n\n- ID: `V.1.1`\n  Status: `done`\n  Goal: its closed child\n  Commit: `ARCHOGEN-V-0002`\n' > "$work/docs/tasks/V.md"
@@ -1041,6 +1043,8 @@ PY
   commit
   printf '\n## Commit Log\n\n| Leaf | Commit | Notes |\n| --- | --- | --- |\n| `T.6` | `ARCHOGEN-T-0023 (leaf T.6)` | closed |\n' >> "$work/docs/tasks/T.md"
   arm "a commit the sealing commit's Commit Log names is the stub's" 0 "sealed 1 subtree(s), 1 leaves: T.6;" --seal T
+  ! printf '%s' "$LAST" | grep -qF "warning — T.6" ||
+    { arms=$((arms + 1)); echo "SELF-TEST: a leaf whose commit the log names was warned of (review R22 AG2)" >&2; }
   grep -q '^  Status: `done` — sealed in \[`T/T.6.md`\](../task-history/T/T.6.md); commit in the tree'\''s Commit Log$' "$work/docs/tasks/T.md" ||
     { arms=$((arms + 1)); echo "SELF-TEST: a commit the Commit Log names did not reach the stub" >&2; }
   restore
@@ -1519,6 +1523,23 @@ HOOK
     printf '%s\n' "$out" | tail -2 | sed 's/^/    /' >&2
   fi
   rm -f "$work/docs/task-history/.INDEX.md.seal-4242"; restore
+  # A `done` leaf whose Commit field reads `pending` is warned of, though the tree's Commit Log has a row for it
+  # (reviews R21 R1, R22 AG2).
+  printf -- '# H\n\n## Task Tree\n\n- ID: `H.1`\n  Status: `done`\n  Goal: a closed subtree, its field pending\n  Commit: `pending`\n\n## Commit Log\n\n| Leaf | Commit | Notes |\n| --- | --- | --- |\n| `H.1` | `ARCHOGEN-H-0001 (leaf H.1)` | closed |\n' > "$work/docs/tasks/H.md"
+  commit
+  arm "a done leaf whose field reads pending is sealed, and warned of whatever the log holds" 0 "sealed 1 subtree(s), 1 leaves: H.1;" --seal H
+  printf '%s' "$LAST" | grep -qF "warning — H.1 is \`done\` and its Commit field names no commit" ||
+    { arms=$((arms + 1)); echo "SELF-TEST: a done leaf whose field reads pending was not warned of (review R22 AG2)" >&2; }
+  rm -rf "$work/docs/task-history/H"; restore; git -C "$work" rm -q docs/tasks/H.md; commit
+  # A sealed file a file-size limit stops as it is written: noted before the write, so the rollback removes what the
+  # write left, and says it rolled back (reviews R10 D1, R22 AG1).
+  printf -- '# L\n\n## Task Tree\n\n- ID: `L`\n  Status: `active`\n  Goal: open\n\n- ID: `L.1`\n  Status: `done`\n  Goal: %s\n  Commit: `ARCHOGEN-L-0001`\n' "$(python3 -c 'print("y" * 20000)')" > "$work/docs/tasks/L.md"
+  commit
+  limit=16 arm "a sealed file a full disk stops halfway is removed again" 1 "File too large" --seal L
+  printf '%s' "$LAST" | grep -qF "so it was rolled back" && [ ! -e "$work/docs/task-history/L" ] &&
+    git -C "$work" diff --quiet -- docs/tasks ||
+    { arms=$((arms + 1)); echo "SELF-TEST: a sealed file stopped halfway was left behind (review R22 AG1)" >&2; }
+  restore; git -C "$work" rm -q docs/tasks/L.md; commit
   # A link planted at the temporary path just as `put` opens it: the file is created new, so the seal stops on it,
   # writes nothing through it and leaves it as it was (reviews R13 D3, R20 AG1).
   arms=$((arms + 1))
