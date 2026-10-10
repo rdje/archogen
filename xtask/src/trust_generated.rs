@@ -10,8 +10,14 @@
 //! chain's first clause over live forms; (4) the generator judgments and builds; (5) the recogniser's refusal and the
 //! chain's second clause — each running only when those before it refused nothing. A step that refuses ends the run,
 //! no inventory written, every refusal it found reported; a step in which a build fails runs to its end and ends the
-//! run unable to judge, its refusals reported beside the failure. Step 1 is here; steps 2 to 5 run in
-//! [`crate::trust::inventory_with`].
+//! run unable to judge, its refusals reported beside the failure. Steps 1 and 3 are here, and the record of what a
+//! program reaches through a live form (§4, §5); [`crate::trust::inventory_with`] runs them in order.
+//!
+//! ⭐ **Provenance is matched by path and by content** (§4, §5). A program's provenance is the generator files and
+//! inputs of every live form whose declared file it reads; two paired programs share a generated-provenance item for
+//! each file one's provenance holds and the other's holds or reads, and for each content both sides hold under paths
+//! that differ, one of them provenance — so a shared input through two generators, a generator shared over two
+//! inputs, and a data file one side reads that the other's generated source was made from are all seen.
 //!
 //! ⛔ **Coded, never uncoded** (§2). Every departure of a `defgenerated` form from its shape, and every construction the
 //! forms' text alone shows wrong, is a `trust-undeclared-input` refusal of the commit. Only what the eADL reader cannot
@@ -20,8 +26,10 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use archogen_catalog::tree::Tree;
 use eadl_front::Form;
 
+use crate::json::Json;
 use crate::trust::ROOTS;
 
 /// The form that declares a committed generated source (§2).
@@ -227,6 +235,240 @@ pub fn beside(why: String, refused: &[String]) -> String {
     for r in sorted {
         out.push_str("\n  ");
         out.push_str(&r);
+    }
+    out
+}
+
+// ── Step 3, and what a program reaches (§2, §4, §5) ────────────────────────────────────────────────────────────
+
+/// The live forms (§2): those whose declared file a program reads, by its build or as data its form hands it — the
+/// harness through the units it compiles beside its pair's two builds (§1). `reads` maps each program to what it reads.
+#[must_use]
+pub fn live<'a>(
+    generated: &'a [Generated],
+    reads: &BTreeMap<String, BTreeSet<String>>,
+) -> Vec<&'a Generated> {
+    generated
+        .iter()
+        .filter(|g| reads.values().any(|r| r.contains(&g.path)))
+        .collect()
+}
+
+/// Step 3 (§2), over live forms: the blob rule — a generator or input that is a symbolic link, or is no blob of the
+/// commit (a gitlink, a directory, a path the commit does not hold), refused by that rule alone — then the chain's
+/// first clause — a generator or input a `defgenerated` form declares, or whose header marks it generated (§3), refused
+/// until `M3.6.6.4` decides a chain. A form no program reads is held to its text alone (step 1).
+#[must_use]
+pub fn blobs_and_chains(
+    generated: &[Generated],
+    live: &[&Generated],
+    tree: &Tree,
+    symlinks: &BTreeSet<String>,
+) -> Vec<String> {
+    let declared: BTreeSet<&str> = generated.iter().map(|g| g.path.as_str()).collect();
+    let mut out = Vec::new();
+    for g in live {
+        for (role, files) in [("generator", &g.generators), ("input", &g.inputs)] {
+            for f in files {
+                let name = format!(
+                    "trust-undeclared-input: {ROOTS}: `({GENERATED} \"{}\" …)`'s {role} `{f}`",
+                    g.path
+                );
+                if symlinks.contains(f) {
+                    out.push(format!(
+                        "{name} is a symbolic link in the commit — a generator or an input is a blob"
+                    ));
+                    continue;
+                }
+                let Some(bytes) = tree.get(f) else {
+                    out.push(format!(
+                        "{name} is no blob of the commit — a gitlink, a directory, or a path it does not hold"
+                    ));
+                    continue;
+                };
+                if declared.contains(f.as_str()) {
+                    out.push(format!("{name} is declared by a `{GENERATED}` form — a chain of generators, refused until `M3.6.6.4` decides one"));
+                } else if crate::generated_header::marked(f, bytes) {
+                    out.push(format!("{name} has a header that marks it generated — a chain of generators, refused until `M3.6.6.4` decides one"));
+                }
+            }
+        }
+    }
+    out
+}
+
+/// A provenance file of a program (§4).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Provenance {
+    /// Its sha256.
+    pub sha256: String,
+    /// The roles it plays across the forms the program reaches: `generator`, `input`.
+    pub roles: BTreeSet<&'static str>,
+    /// The declared files through which the program reaches it, each with its sha256.
+    pub declared: BTreeMap<String, String>,
+}
+
+/// A program's provenance, by path.
+pub type Provenances = BTreeMap<String, Provenance>;
+
+/// A file's sha256 in the commit, empty for one it does not hold.
+fn sha_of(tree: &Tree, f: &str) -> String {
+    tree.get(f).map_or_else(String::new, |b| {
+        archogen_evidence::sha256::Digest::of(b).hex()
+    })
+}
+
+/// A program's provenance (§4): for each live form whose declared file it reads, the form's generator files and inputs.
+#[must_use]
+pub fn provenance(live: &[&Generated], reads: &BTreeSet<String>, tree: &Tree) -> Provenances {
+    let mut out = Provenances::new();
+    for g in live.iter().filter(|g| reads.contains(&g.path)) {
+        for (role, files) in [("generator", &g.generators), ("input", &g.inputs)] {
+            for f in files {
+                let p = out.entry(f.clone()).or_default();
+                p.sha256 = sha_of(tree, f);
+                p.roles.insert(role);
+                p.declared.insert(g.path.clone(), sha_of(tree, &g.path));
+            }
+        }
+    }
+    out
+}
+
+/// A program's provenance as its record holds it: each file's sha256, roles and declared files.
+#[must_use]
+pub fn provenance_json(p: &Provenances) -> Json {
+    Json::Object(
+        p.iter()
+            .map(|(path, f)| {
+                let fields = [
+                    ("sha256".to_owned(), Json::Str(f.sha256.clone())),
+                    (
+                        "roles".to_owned(),
+                        Json::Array(f.roles.iter().map(|r| Json::Str((*r).to_owned())).collect()),
+                    ),
+                    (
+                        "declared".to_owned(),
+                        Json::Object(
+                            f.declared
+                                .iter()
+                                .map(|(d, s)| (d.clone(), Json::Str(s.clone())))
+                                .collect(),
+                        ),
+                    ),
+                ];
+                (path.clone(), Json::Object(fields.into_iter().collect()))
+            })
+            .collect(),
+    )
+}
+
+/// One side of a pair, as its generated-provenance items see it: what its provenance holds, and what it reads.
+pub struct Side<'a> {
+    /// Its provenance.
+    pub provenance: &'a Provenances,
+    /// What it reads (§1).
+    pub reads: &'a BTreeSet<String>,
+}
+
+impl Side<'_> {
+    /// Whether the side holds `f` in its provenance or reads it.
+    fn has(&self, f: &str) -> bool {
+        self.provenance.contains_key(f) || self.reads.contains(f)
+    }
+
+    /// The roles the side plays over `paths` — `read` for a path it reads, beside those its provenance gives each.
+    fn roles(&self, paths: &BTreeSet<&str>) -> Json {
+        let mut roles: BTreeSet<&str> = BTreeSet::new();
+        for p in paths {
+            if self.reads.contains(*p) {
+                roles.insert("read");
+            }
+            if let Some(f) = self.provenance.get(*p) {
+                roles.extend(f.roles.iter().copied());
+            }
+        }
+        Json::Array(roles.into_iter().map(|r| Json::Str(r.to_owned())).collect())
+    }
+
+    /// The declared files through which the side reaches `paths`, each with its sha256.
+    fn declared(&self, paths: &BTreeSet<&str>) -> Json {
+        let decl: BTreeSet<String> = paths
+            .iter()
+            .filter_map(|p| self.provenance.get(*p))
+            .flat_map(|f| f.declared.iter().map(|(d, s)| format!("{d}={s}")))
+            .collect();
+        Json::Array(decl.into_iter().map(Json::Str).collect())
+    }
+}
+
+/// The generated-provenance items a pair shares (§5): one per file one side's provenance holds and the other's holds or
+/// reads, its identity the path; and, as the parent matches a copy, one per non-empty content each side holds or reads
+/// under paths that differ, one of them a provenance file of its side, its identity those paths sorted. Each item's
+/// aspects: the content's sha256, each side's roles over its paths, and each side's declared files with theirs.
+#[must_use]
+pub fn shared_items(a: &Side, b: &Side, tree: &Tree) -> Vec<Json> {
+    let item = |identity: Json, sha256: String, pa: &BTreeSet<&str>, pb: &BTreeSet<&str>| {
+        Json::Object(
+            [
+                (
+                    "kind".to_owned(),
+                    Json::Str("generated-provenance".to_owned()),
+                ),
+                ("item".to_owned(), identity),
+                ("sha256".to_owned(), Json::Str(sha256)),
+                (
+                    "roles".to_owned(),
+                    Json::Array(vec![a.roles(pa), b.roles(pb)]),
+                ),
+                (
+                    "declared".to_owned(),
+                    Json::Array(vec![a.declared(pa), b.declared(pb)]),
+                ),
+            ]
+            .into_iter()
+            .collect(),
+        )
+    };
+    let mut out = Vec::new();
+    // By path: a file one side's provenance holds that the other's holds or reads.
+    let candidates: BTreeSet<&str> = a
+        .provenance
+        .keys()
+        .chain(b.provenance.keys())
+        .map(String::as_str)
+        .collect();
+    for f in candidates {
+        let shared = (a.provenance.contains_key(f) && b.has(f))
+            || (b.provenance.contains_key(f) && a.has(f));
+        if shared {
+            let one: BTreeSet<&str> = [f].into();
+            out.push(item(Json::Str(f.to_owned()), sha_of(tree, f), &one, &one));
+        }
+    }
+    // By content: each side's paths of one non-empty content, the two sets differing, one path a provenance file.
+    let mut by_hash: BTreeMap<String, (BTreeSet<&str>, BTreeSet<&str>)> = BTreeMap::new();
+    for (side, slot) in [(a, 0), (b, 1)] {
+        let paths = side
+            .provenance
+            .keys()
+            .map(String::as_str)
+            .chain(side.reads.iter().map(String::as_str));
+        for p in paths {
+            if tree.get(p).is_some_and(|x| !x.is_empty()) {
+                let e = by_hash.entry(sha_of(tree, p)).or_default();
+                if slot == 0 { &mut e.0 } else { &mut e.1 }.insert(p);
+            }
+        }
+    }
+    for (hash, (pa, pb)) in by_hash {
+        let provenance_among = pa.iter().any(|p| a.provenance.contains_key(*p))
+            || pb.iter().any(|p| b.provenance.contains_key(*p));
+        if !pa.is_empty() && !pb.is_empty() && pa != pb && provenance_among {
+            let union: BTreeSet<&str> = pa.union(&pb).copied().collect();
+            let identity = Json::Array(union.iter().map(|p| Json::Str((*p).to_owned())).collect());
+            out.push(item(identity, hash, &pa, &pb));
+        }
     }
     out
 }
@@ -511,5 +753,441 @@ mod tests {
             "{err}"
         );
         assert!(!f.base.join("out/trust-dependencies.json").exists());
+    }
+}
+
+#[cfg(test)]
+mod provenance_tests {
+    //! Steps 2 and 3 of the record's order and what a program reaches (§2, §4, §5; `GS-H3`, `GS-H5`): each program's
+    //! provenance, each pair's generated-provenance items by path and by content, the harness through the units it
+    //! compiles beside its pair, and the blob rule and the chain's first clause over live forms.
+
+    use crate::json::Json;
+    use crate::trust::tests::{
+        git, harness, items, kind, manifest, refused, says, two_roots, written, Fixture,
+    };
+
+    const GEN: &str = "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\")";
+    const CHK: &str =
+        "(defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\")";
+
+    /// A `defgenerated` form.
+    fn form(path: &str, generators: &[&str], inputs: &[&str]) -> String {
+        let list = |xs: &[&str]| {
+            xs.iter()
+                .map(|x| format!("\"{x}\""))
+                .collect::<Vec<_>>()
+                .join(" ")
+        };
+        let inputs = if inputs.is_empty() {
+            String::new()
+        } else {
+            format!(" (inputs {})", list(inputs))
+        };
+        format!(
+            "(defgenerated \"{path}\" (generator {}){inputs} (command \"bash gen\") (reason \"a table\"))\n",
+            list(generators)
+        )
+    }
+
+    /// The roots file: `gen` and `chk`, each with its handed data, and `forms`.
+    fn roots(gen_data: &str, chk_data: &str, forms: &str) -> String {
+        format!("{GEN}{gen_data})\n{CHK}{chk_data})\n{forms}")
+    }
+
+    /// Two roots, `gen` reading `crates/a/src/gen_a.rs` and `chk` reading `crates/b/src/gen_b.rs`, two generated
+    /// modules differing in bytes; `files` beside them, the roots file among them.
+    fn generated_pair(name: &str, files: &[(&str, String)]) -> Fixture {
+        let mut all: Vec<(&str, String)> = vec![
+            (
+                "crates/a/src/gen_a.rs",
+                "pub const T: u32 = 1;\n".to_owned(),
+            ),
+            (
+                "crates/b/src/gen_b.rs",
+                "pub const T: u32 = 2;\n".to_owned(),
+            ),
+            ("scripts/gen.sh", "echo a table\n".to_owned()),
+            ("scripts/gen_a.sh", "echo a's table\n".to_owned()),
+            ("scripts/gen_b.sh", "echo b's table\n".to_owned()),
+        ];
+        all.extend(files.iter().cloned());
+        two_roots(
+            name,
+            "mod gen_a;\nfn main() { let _ = gen_a::T; }\n",
+            "mod gen_b;\npub fn f() -> u32 { gen_b::T }\n",
+            &all,
+        )
+    }
+
+    fn text(j: &Json) -> String {
+        match j {
+            Json::Str(s) => s.clone(),
+            Json::Array(xs) => xs.iter().map(text).collect::<Vec<_>>().join(" "),
+            _ => String::new(),
+        }
+    }
+
+    /// The generated-provenance items of one pair, each as `identity roles-of-one/roles-of-other`.
+    fn provenance_items(inv: &Json, pair: &str) -> Vec<String> {
+        items(inv)
+            .into_iter()
+            .filter(|(p, i)| p == pair && kind(i) == "generated-provenance")
+            .map(|(_, i)| {
+                let roles = i.get("roles").map(Json::elements).unwrap_or_default();
+                let side = |n: usize| {
+                    roles
+                        .get(n)
+                        .map(|r| text(r).replace(' ', ","))
+                        .unwrap_or_default()
+                };
+                format!(
+                    "{} {}/{}",
+                    text(i.get("item").unwrap_or(&Json::Null)),
+                    side(0),
+                    side(1)
+                )
+            })
+            .collect()
+    }
+
+    /// One program's provenance, as `path roles`.
+    fn provenance_of(inv: &Json, program: &str) -> Vec<String> {
+        let p = inv
+            .get("programs")
+            .map(Json::elements)
+            .unwrap_or_default()
+            .iter()
+            .find(|p| p.get("name").and_then(Json::as_str) == Some(program))
+            .expect("the program's record");
+        match p.get("provenance") {
+            Some(Json::Object(m)) => m
+                .iter()
+                .map(|(k, v)| {
+                    format!(
+                        "{k} {}",
+                        text(v.get("roles").unwrap_or(&Json::Null)).replace(' ', ",")
+                    )
+                })
+                .collect(),
+            other => panic!("no provenance in {program}'s record: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn case_3_two_generated_sources_sharing_an_input_through_two_generators_share_it() {
+        // §14.4's case 3 (`TI-H22`, `GS-H5`): differently named generated sources, differing in bytes, made by two
+        // generators from one input. The parent saw nothing shared but the build configuration; the input is shared.
+        let forms = form(
+            "crates/a/src/gen_a.rs",
+            &["scripts/gen_a.sh"],
+            &["data/shared.csv"],
+        ) + &form(
+            "crates/b/src/gen_b.rs",
+            &["scripts/gen_b.sh"],
+            &["data/shared.csv"],
+        );
+        let f = generated_pair(
+            "gs-case-3",
+            &[
+                ("trust/roots.eadl", roots("", "", &forms)),
+                ("data/shared.csv", "1,2\n".to_owned()),
+            ],
+        );
+        let inv = written(f.run());
+        assert_eq!(
+            provenance_items(&inv, "gen+chk"),
+            ["data/shared.csv input/input"]
+        );
+        assert_eq!(
+            provenance_of(&inv, "gen"),
+            ["data/shared.csv input", "scripts/gen_a.sh generator"]
+        );
+        let item = items(&inv)
+            .into_iter()
+            .find(|(_, i)| kind(i) == "generated-provenance")
+            .expect("the item")
+            .1;
+        let declared = text(item.get("declared").unwrap_or(&Json::Null));
+        assert!(
+            declared.contains("crates/a/src/gen_a.rs=")
+                && declared.contains("crates/b/src/gen_b.rs="),
+            "{declared}"
+        );
+        let kinds: Vec<String> = items(&inv)
+            .iter()
+            .map(|(_, i)| kind(i).to_owned())
+            .collect();
+        assert_eq!(
+            kinds,
+            ["build-configuration", "generated-provenance"],
+            "{kinds:?}"
+        );
+    }
+
+    #[test]
+    fn a_generator_shared_over_two_inputs_or_with_none_is_shared() {
+        let forms = form(
+            "crates/a/src/gen_a.rs",
+            &["scripts/gen.sh"],
+            &["data/x.csv"],
+        ) + &form(
+            "crates/b/src/gen_b.rs",
+            &["scripts/gen.sh"],
+            &["data/y.csv"],
+        );
+        let f = generated_pair(
+            "gs-one-generator",
+            &[
+                ("trust/roots.eadl", roots("", "", &forms)),
+                ("data/x.csv", "x\n".to_owned()),
+                ("data/y.csv", "y\n".to_owned()),
+            ],
+        );
+        assert_eq!(
+            provenance_items(&written(f.run()), "gen+chk"),
+            ["scripts/gen.sh generator/generator"]
+        );
+        // A table computed from a formula in the generator has no input, and still shares its generator.
+        let forms = form("crates/a/src/gen_a.rs", &["scripts/gen.sh"], &[])
+            + &form("crates/b/src/gen_b.rs", &["scripts/gen.sh"], &[]);
+        f.commit(&[("trust/roots.eadl", roots("", "", &forms))]);
+        assert_eq!(
+            provenance_items(&written(f.run()), "gen+chk"),
+            ["scripts/gen.sh generator/generator"]
+        );
+    }
+
+    #[test]
+    fn a_data_file_one_side_reads_and_a_copy_of_an_input_are_shared_and_a_plain_copy_is_not() {
+        // `chk` is handed `data/t.csv`, from which `gen`'s generated source was made; and `data/copy.csv`, a byte copy of
+        // `gen`'s other input. Both handed `data/p1.txt` and `data/p2.txt`, copies of each other and no provenance.
+        let forms = form(
+            "crates/a/src/gen_a.rs",
+            &["scripts/gen_a.sh"],
+            &["data/t.csv", "data/x.csv"],
+        );
+        let f = generated_pair(
+            "gs-read-and-copy",
+            &[
+                (
+                    "trust/roots.eadl",
+                    roots(
+                        " (data \"data/p1.txt\")",
+                        " (data \"data/t.csv\" \"data/copy.csv\" \"data/p2.txt\")",
+                        &forms,
+                    ),
+                ),
+                ("data/t.csv", "t\n".to_owned()),
+                ("data/x.csv", "same\n".to_owned()),
+                ("data/copy.csv", "same\n".to_owned()),
+                ("data/p1.txt", "plain\n".to_owned()),
+                ("data/p2.txt", "plain\n".to_owned()),
+            ],
+        );
+        let inv = written(f.run());
+        assert_eq!(
+            provenance_items(&inv, "gen+chk"),
+            [
+                "data/t.csv input/read",
+                "data/copy.csv data/x.csv input/read"
+            ]
+        );
+        // The plain copy is the parent's copy item, and no generated provenance.
+        assert!(items(&inv).iter().any(|(_, i)| kind(i) == "copy"
+            && text(i.get("paths").unwrap_or(&Json::Null)) == "data/p1.txt data/p2.txt"));
+    }
+
+    #[test]
+    fn the_harness_reaches_provenance_through_the_units_beside_its_pair_alone() {
+        // `diff`'s test target compiles `tests/table.rs`, generated by `scripts/gen.sh`; the reference model compiles
+        // `src/gen_r.rs`, generated by `scripts/other.sh`, in its own build: the harness's item holds the first alone.
+        let f = harness("gs-harness", "", "pub fn d() {}\n", "");
+        let roots = "(defroot refm (role reference-model) (package \"crates/r\") (target lib) (role-packages \"crates/r\"))\n\
+                     (defroot imp (role implementation) (package \"crates/i\") (target lib) (role-packages \"crates/i\"))\n\
+                     (defharness diff (pair refm imp) (package \"crates/i\") (test diff))\n"
+            .to_owned()
+            + &form("crates/i/tests/table.rs", &["scripts/gen.sh"], &[])
+            + &form("crates/r/src/gen_r.rs", &["scripts/other.sh"], &[]);
+        f.commit(&[
+            ("trust/roots.eadl", roots),
+            ("scripts/gen.sh", "echo table\n".to_owned()),
+            ("scripts/other.sh", "echo other\n".to_owned()),
+            ("crates/i/tests/table.rs", "pub const T: u32 = 3;\n".to_owned()),
+            (
+                "crates/i/tests/diff.rs",
+                "mod table;\n#[test]\nfn same() { assert_eq!(i::imp(table::T), r::refm(table::T)); }\n".to_owned(),
+            ),
+            ("crates/r/src/gen_r.rs", "pub const R: u32 = 0;\n".to_owned()),
+            ("crates/r/src/lib.rs", "mod gen_r;\npub fn refm(x: u32) -> u32 { x + gen_r::R }\n".to_owned()),
+        ]);
+        let inv = written(f.run());
+        assert_eq!(provenance_of(&inv, "diff"), ["scripts/gen.sh generator"]);
+        assert_eq!(provenance_of(&inv, "refm"), ["scripts/other.sh generator"]);
+        let harness_item = items(&inv)
+            .into_iter()
+            .find(|(_, i)| kind(i) == "comparison-harness")
+            .expect("the pair's comparison harness")
+            .1;
+        let prov = match harness_item.get("provenance") {
+            Some(Json::Object(m)) => m.keys().cloned().collect::<Vec<_>>(),
+            other => panic!("no provenance aspect: {other:?}"),
+        };
+        assert_eq!(prov, ["scripts/gen.sh"]);
+    }
+
+    #[test]
+    fn a_third_program_reaching_the_same_provenance_makes_items_of_its_own_and_moves_none() {
+        let forms = form("crates/a/src/gen_a.rs", &["scripts/gen.sh"], &[])
+            + &form("crates/b/src/gen_b.rs", &["scripts/gen.sh"], &[]);
+        let f = generated_pair("gs-third", &[("trust/roots.eadl", roots("", "", &forms))]);
+        let before = written(f.run());
+        let item = |inv: &Json| {
+            items(inv)
+                .into_iter()
+                .find(|(p, i)| p == "gen+chk" && kind(i) == "generated-provenance")
+                .map(|(_, i)| crate::json::write(&i))
+        };
+        let third = forms
+            + &form("crates/c/src/gen_c.rs", &["scripts/gen.sh"], &[])
+            + "(defroot third (role reference-model) (package \"crates/c\") (target lib) (role-packages \"crates/c\"))\n";
+        f.commit(&[
+            ("trust/roots.eadl", roots("", "", &third)),
+            ("crates/c/Cargo.toml", manifest("c", "")),
+            (
+                "crates/c/src/lib.rs",
+                "mod gen_c;\npub fn c() -> u32 { gen_c::T }\n".to_owned(),
+            ),
+            (
+                "crates/c/src/gen_c.rs",
+                "pub const T: u32 = 9;\n".to_owned(),
+            ),
+        ]);
+        let after = written(f.run());
+        assert_eq!(
+            item(&before),
+            item(&after),
+            "the third program moved the first pair's item"
+        );
+        for pair in ["gen+third", "chk+third"] {
+            assert_eq!(
+                provenance_items(&after, pair),
+                ["scripts/gen.sh generator/generator"],
+                "{pair}"
+            );
+        }
+    }
+
+    #[test]
+    fn step_3_refuses_a_live_form_s_non_blob_and_its_chain_and_holds_a_form_no_program_reads_to_its_text(
+    ) {
+        let base = form("crates/b/src/gen_b.rs", &["scripts/gen_b.sh"], &[]);
+        // A form no program reads, naming a generator the commit does not hold: its text alone is judged (step 1).
+        let idle = form("crates/a/src/unused.rs", &["scripts/missing.sh"], &[]);
+        let f = generated_pair(
+            "gs-step-3",
+            &[("trust/roots.eadl", roots("", "", &(base.clone() + &idle)))],
+        );
+        written(f.run());
+        let with = |forms: String| [("trust/roots.eadl", roots("", "", &(base.clone() + &forms)))];
+        // A chain: an input a form declares.
+        f.commit(&[
+            (
+                "trust/roots.eadl",
+                roots(
+                    "",
+                    "",
+                    &(base.clone()
+                        + &form(
+                            "crates/a/src/gen_a.rs",
+                            &["scripts/gen_a.sh"],
+                            &["data/mid.csv"],
+                        )
+                        + &form("data/mid.csv", &["scripts/gen.sh"], &[])),
+                ),
+            ),
+            ("data/mid.csv", "mid\n".to_owned()),
+        ]);
+        let r = refused(f.run());
+        says(&r, "`(defgenerated \"crates/a/src/gen_a.rs\" …)`'s input `data/mid.csv` is declared by a `defgenerated` form");
+        assert_eq!(r.len(), 1, "{r:#?}");
+        // A chain: an input whose header marks it generated.
+        f.commit(&[
+            (
+                "trust/roots.eadl",
+                roots(
+                    "",
+                    "",
+                    &(base.clone()
+                        + &form(
+                            "crates/a/src/gen_a.rs",
+                            &["scripts/gen_a.sh"],
+                            &["data/table.toml"],
+                        )),
+                ),
+            ),
+            (
+                "data/table.toml",
+                "# @generated by a tool\nx = 1\n".to_owned(),
+            ),
+        ]);
+        says(
+            &refused(f.run()),
+            "input `data/table.toml` has a header that marks it generated",
+        );
+        // The blob rule alone: an input the commit does not hold, though a form declares it.
+        f.commit(&with(
+            form(
+                "crates/a/src/gen_a.rs",
+                &["scripts/gen_a.sh"],
+                &["data/gone.csv"],
+            ) + &form("data/gone.csv", &["scripts/gen.sh"], &[]),
+        ));
+        let r = refused(f.run());
+        says(&r, "input `data/gone.csv` is no blob of the commit");
+        assert!(
+            !r.iter().any(|x| x.contains("declared by")),
+            "a non-blob is the blob rule's alone: {r:#?}"
+        );
+        // A generator that is a symbolic link.
+        std::os::unix::fs::symlink("gen_a.sh", f.repo.join("scripts/link.sh")).unwrap();
+        f.commit(&with(form(
+            "crates/a/src/gen_a.rs",
+            &["scripts/link.sh"],
+            &[],
+        )));
+        says(
+            &refused(f.run()),
+            "generator `scripts/link.sh` is a symbolic link in the commit",
+        );
+        // An input at a gitlink: no blob of the commit.
+        f.commit(&with(form(
+            "crates/a/src/gen_a.rs",
+            &["scripts/gen_a.sh"],
+            &["vendor/sub"],
+        )));
+        let head = String::from_utf8(
+            std::process::Command::new("git")
+                .args(["rev-parse", "HEAD"])
+                .current_dir(&f.repo)
+                .output()
+                .unwrap()
+                .stdout,
+        )
+        .unwrap();
+        git(
+            &f.repo,
+            &[
+                "update-index",
+                "--add",
+                "--cacheinfo",
+                &format!("160000,{},vendor/sub", head.trim()),
+            ],
+        );
+        git(&f.repo, &["commit", "-q", "-m", "a gitlink"]);
+        says(
+            &refused(f.run()),
+            "input `vendor/sub` is no blob of the commit",
+        );
     }
 }

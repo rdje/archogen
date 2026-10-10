@@ -512,6 +512,24 @@ struct Build {
     artifact: (String, String),
 }
 
+/// The units the harness `h` compiles beside its pair's two builds `x` and `y` — its test target, the adapters its
+/// development dependencies add, and any unit compiled otherwise than in either build — recognised by package, crate and
+/// configuration (§4, R8 7).
+fn beside<'a>(h: &'a Build, x: &Build, y: &Build) -> Vec<&'a Unit> {
+    let key = |u: &Unit| {
+        (
+            u.package.clone(),
+            u.crate_name.clone(),
+            unit_configuration(u),
+        )
+    };
+    let in_pair: BTreeSet<_> = x.units.iter().chain(y.units.iter()).map(key).collect();
+    h.units
+        .iter()
+        .filter(|u| !in_pair.contains(&key(u)))
+        .collect()
+}
+
 /// What cargo printed: its standard output (the JSON messages) and its standard error (`-v`'s command lines).
 fn run_cargo(
     args: &[&str],
@@ -1661,6 +1679,43 @@ pub fn inventory_with(
         return Ok(refuse(refused));
     }
 
+    // What each program reads (the generated-sources record §1): its compilation's files and the data its form hands
+    // it — the harness's through the units it compiles beside its pair's two builds alone.
+    let reads: BTreeMap<String, BTreeSet<String>> = roots
+        .programs
+        .iter()
+        .map(|p| {
+            let b = &builds[&p.name];
+            let units: Vec<&Unit> = match &p.pair {
+                Some((x, y)) => beside(b, &builds[x], &builds[y]),
+                None => b.units.iter().collect(),
+            };
+            let files = units
+                .iter()
+                .flat_map(|u| u.files.iter().cloned())
+                .chain(p.data.iter().cloned())
+                .collect();
+            (p.name.clone(), files)
+        })
+        .collect();
+    let live = crate::trust_generated::live(&roots.generated, &reads);
+    // Step 3 (§2): over live forms, the blob rule and the chain's first clause. A refusal here ends the run.
+    let step3 = crate::trust_generated::blobs_and_chains(&roots.generated, &live, &tree, &symlinks);
+    if !step3.is_empty() {
+        return Ok(refuse(step3));
+    }
+    // Each program's provenance (§4): the generator files and inputs of every live form whose declared file it reads.
+    let provenance: BTreeMap<String, crate::trust_generated::Provenances> = roots
+        .programs
+        .iter()
+        .map(|p| {
+            (
+                p.name.clone(),
+                crate::trust_generated::provenance(&live, &reads[&p.name], &tree),
+            )
+        })
+        .collect();
+
     // The build as a whole (§3).
     let hash = |p: &str| {
         tree.get(p)
@@ -1762,6 +1817,10 @@ pub fn inventory_with(
                 ]),
             ),
             ("packages", Json::Array(package_records)),
+            (
+                "provenance",
+                crate::trust_generated::provenance_json(&provenance[&p.name]),
+            ),
             (
                 "data",
                 Json::Object(
@@ -1948,24 +2007,22 @@ pub fn inventory_with(
                     ]));
                 }
             }
+            // What the two share through committed generated sources (the generated-sources record §5).
+            items.extend(crate::trust_generated::shared_items(
+                &crate::trust_generated::Side {
+                    provenance: &provenance[&a.name],
+                    reads: &reads[&a.name],
+                },
+                &crate::trust_generated::Side {
+                    provenance: &provenance[&b.name],
+                    reads: &reads[&b.name],
+                },
+                &tree,
+            ));
             if let Some(h) = harness {
-                // Every unit it compiles beside the pair's two roots' builds: its test target, the adapters its
-                // development dependencies add, and any unit compiled otherwise than in either root's build (§4,
-                // R8 7).
-                let key = |u: &Unit| {
-                    (
-                        u.package.clone(),
-                        u.crate_name.clone(),
-                        unit_configuration(u),
-                    )
-                };
-                let in_pair: BTreeSet<_> =
-                    ba.units.iter().chain(bb.units.iter()).map(key).collect();
-                let beside: Vec<&Unit> = builds[&h.name]
-                    .units
-                    .iter()
-                    .filter(|u| !in_pair.contains(&key(u)))
-                    .collect();
+                // Every unit it compiles beside the pair's two roots' builds (§4, R8 7), and the provenance it reaches
+                // through them, an aspect of the item as its files are (the generated-sources record §5).
+                let beside = beside(&builds[&h.name], ba, bb);
                 let content: BTreeSet<String> = beside
                     .iter()
                     .flat_map(|u| u.files.iter().map(|f| format!("{f}={}", file_hash(f))))
@@ -1977,6 +2034,10 @@ pub fn inventory_with(
                     (
                         "configuration",
                         strings(beside.iter().map(|u| unit_configuration(u))),
+                    ),
+                    (
+                        "provenance",
+                        crate::trust_generated::provenance_json(&provenance[&h.name]),
                     ),
                 ]));
             }
@@ -2118,7 +2179,7 @@ pub(crate) mod tests {
             .to_path_buf()
     }
 
-    fn git(dir: &Path, args: &[&str]) {
+    pub(crate) fn git(dir: &Path, args: &[&str]) {
         let out = Command::new("git")
             .args([
                 "-c",
@@ -2606,7 +2667,12 @@ pub(crate) mod tests {
         says(&r, "`no_mangle`, refused");
     }
 
-    fn harness(name: &str, dev_dep: &str, dev_src: &str, dev_manifest_extra: &str) -> Fixture {
+    pub(crate) fn harness(
+        name: &str,
+        dev_dep: &str,
+        dev_src: &str,
+        dev_manifest_extra: &str,
+    ) -> Fixture {
         let roots = "(defroot refm (role reference-model) (package \"crates/r\") (target lib) (role-packages \"crates/r\"))\n\
                      (defroot imp (role implementation) (package \"crates/i\") (target lib) (role-packages \"crates/i\"))\n\
                      (defharness diff (pair refm imp) (package \"crates/i\") (test diff))\n";

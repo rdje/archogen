@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust inventory sees what generated sources share
+
+`ARCHOGEN-M3-0512` (leaf `M3.6.6.2.2`), `2026-10-10`.
+
+- A program that reads a declared generated source now records the generator files and inputs it reaches through it,
+  and two programs whose reach meets share a new kind of item the trust gate reports: one data file under two
+  generators, a generator both use, a data file one reads that the other's source was made from, or a byte copy of an
+  input under another name. Two generated tables differing in every byte, written by one script from one data file,
+  were invisible to the gate before; now they are one shared item.
+- A declared source whose generator or input is itself generated, or is not a plain file of the commit, is refused.
+- Validation: six fixtures and eleven catalogued mutations, each killed; the real tree's inventory unchanged but for
+  six empty provenance fields; the focused tier and the whole suite (1 318 tests, 0 failed) pass.
+
 ## archogen — finished work leaves the task trees even while its parent stays open
 
 `ARCHOGEN-PROGRAM-0510` and `ARCHOGEN-PROGRAM-0511` (leaf `PROGRAM.69`, its review still open), `2026-10-10`.

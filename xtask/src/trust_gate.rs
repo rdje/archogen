@@ -42,7 +42,7 @@ pub const CLASSIFICATIONS: &[&str] = &[
 pub struct ItemId {
     /// The two roots, in the inventory's order.
     pub pair: (String, String),
-    /// `build-configuration`, `package`, `file`, `copy` or `comparison-harness`.
+    /// `build-configuration`, `package`, `file`, `copy`, `comparison-harness` or `generated-provenance`.
     pub kind: String,
     /// What it is, by kind.
     pub item: String,
@@ -68,6 +68,8 @@ fn identity_key(kind: &str) -> Option<&'static str> {
         "file" => Some("file"),
         "copy" => Some("paths"),
         "comparison-harness" => Some("harness"),
+        // A path, or a content's paths, through committed generated sources (the generated-sources record §5).
+        "generated-provenance" => Some("item"),
         _ => None,
     }
 }

@@ -3472,3 +3472,133 @@ from
 to
                 Err(why) => return Err(why),
 end
+
+mutation gs-a-symlink-generator-passes
+file xtask/src/trust_generated.rs
+test -p xtask trust_generated::provenance_tests
+expect killed
+why M3.6.6.2.2, the generated-sources record §2 (`GS-H1`, step 3): a live form's generator or input that is a symbolic link is refused by the blob rule, named as one.
+from
+                    if symlinks.contains(f) {
+to
+                    if false {
+end
+
+mutation gs-a-non-blob-input-passes
+file xtask/src/trust_generated.rs
+test -p xtask trust_generated::provenance_tests
+expect killed
+why M3.6.6.2.2, the generated-sources record §2 (`GS-H1`, step 3): a live form's generator or input that is no blob of the commit — a gitlink among them — is refused by the blob rule.
+from
+                        out.push(format!(
+                            "{name} is no blob of the commit — a gitlink, a directory, or a path it does not hold"
+                        ));
+                        continue;
+to
+                        continue;
+end
+
+mutation gs-a-declared-chain-passes
+file xtask/src/trust_generated.rs
+test -p xtask trust_generated::provenance_tests
+expect killed
+why M3.6.6.2.2, the generated-sources record §2 (`GS-H1`, step 3): a live form's input a `defgenerated` form declares is a chain, refused until `M3.6.6.4`.
+from
+                    if declared.contains(f.as_str()) {
+to
+                    if false {
+end
+
+mutation gs-a-marked-chain-passes
+file xtask/src/trust_generated.rs
+test -p xtask trust_generated::provenance_tests
+expect killed
+why M3.6.6.2.2, the generated-sources record §2 (`GS-H1`, step 3): a live form's input whose header marks it generated is a chain, refused until `M3.6.6.4`.
+from
+                    } else if crate::generated_header::marked(f, bytes) {
+to
+                    } else if false {
+end
+
+mutation gs-every-form-live
+file xtask/src/trust_generated.rs
+test -p xtask trust_generated::provenance_tests
+expect killed
+why M3.6.6.2.2, the generated-sources record §2 (`GS-H1`, step 3): a form no program reads is held to its text alone: judged live, its missing generator would be refused.
+from
+            .filter(|g| reads.values().any(|r| r.contains(&g.path)))
+to
+            .filter(|_| true)
+end
+
+mutation gs-a-step-3-refusal-is-ignored
+file xtask/src/trust.rs
+test -p xtask trust_generated::provenance_tests
+expect killed
+why M3.6.6.2.2, the generated-sources record §2 (`GS-H14`): a refusal at step 3 ends the run, no inventory written.
+from
+        if !step3.is_empty() {
+            return Ok(refuse(step3));
+        }
+to
+        if step3.is_empty() {}
+end
+
+mutation gs-the-harness-reads-all-its-units
+file xtask/src/trust.rs
+test -p xtask trust_generated::provenance_tests
+expect killed
+why M3.6.6.2.2, the generated-sources record §1 (`GS-H3`): the harness reads and reaches provenance through the units it compiles beside its pair's two builds alone.
+from
+                    Some((x, y)) => beside(b, &builds[x], &builds[y]),
+to
+                    Some(_) => b.units.iter().collect(),
+end
+
+mutation gs-the-harness-item-loses-its-provenance
+file xtask/src/trust.rs
+test -p xtask trust_generated::provenance_tests
+expect killed
+why M3.6.6.2.2, the generated-sources record §5 (`GS-H3`): the harness's own pair takes the harness's provenance as an aspect of its comparison-harness item.
+from
+                        (
+                            "provenance",
+                            crate::trust_generated::provenance_json(&provenance[&h.name]),
+                        ),
+                    ]));
+to
+                    ]));
+end
+
+mutation gs-what-the-other-side-reads-is-not-matched
+file xtask/src/trust_generated.rs
+test -p xtask trust_generated::provenance_tests
+expect killed
+why M3.6.6.2.2, the generated-sources record §5 (`GS-H3`, `GS-H5`): a file one side's provenance holds and the other side reads is shared — a data file one side reads that the other's generated source was made from.
+from
+        let shared = (a.provenance.contains_key(f) && b.has(f))
+to
+        let shared = (a.provenance.contains_key(f) && b.provenance.contains_key(f))
+end
+
+mutation gs-a-plain-copy-is-generated-provenance
+file xtask/src/trust_generated.rs
+test -p xtask trust_generated::provenance_tests
+expect killed
+why M3.6.6.2.2, the generated-sources record §5 (`GS-H3`, `GS-H5`): a content shared under two paths is generated provenance only when one of them is a provenance file; a plain copy is the parent's alone.
+from
+        if !pa.is_empty() && !pb.is_empty() && pa != pb && provenance_among {
+to
+        if !pa.is_empty() && !pb.is_empty() && pa != pb {
+end
+
+mutation gs-a-content-at-one-path-is-a-copy
+file xtask/src/trust_generated.rs
+test -p xtask trust_generated::provenance_tests
+expect killed
+why M3.6.6.2.2, the generated-sources record §5 (`GS-H3`, `GS-H5`): a content's item needs the two sides' sets of paths to differ; at one path it is the path's item alone.
+from
+        if !pa.is_empty() && !pb.is_empty() && pa != pb && provenance_among {
+to
+        if !pa.is_empty() && !pb.is_empty() && provenance_among {
+end

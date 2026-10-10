@@ -68,8 +68,14 @@ that ran and why:
 ```
 
 The inventory reads these forms before it writes or builds anything, and refuses one that departs from that shape — a
-clause the form does not take, no generator, a command that is not one string — or two forms declaring one file. What a
-declaration then makes visible, and how an undeclared generated file is recognised, is being built (`M3.6.6.2`).
+clause the form does not take, no generator, a command that is not one string — or two forms declaring one file.
+
+Once a program reads a declared file, the form's generator files and inputs become that program's **provenance**, and
+two programs whose provenance meets share a **generated-provenance** item the gate reports like any other: one input
+under two generators, a generator both use, a data file one reads that the other's source was made from, or a copy of
+an input under another name. Two generated tables that differ in every byte, written by one script from one data file,
+are seen to share both. A generator or input that is itself generated — a chain — or that is no blob of the commit
+is refused. How an undeclared generated file is recognised, and what a generator may be, are being built (`M3.6.6.2`).
 
 For each pair of roots it then lists what they share, each item with the sha256 of its **content**, its
 **configuration** (features, `cfg`, edition, as each root's own build sets them), its **edges** (who depends on it)
@@ -143,18 +149,20 @@ refusal the rules below make before or in those builds. A step that refuses ends
 even one an earlier run wrote, which would read as this commit's. A step in which a build fails still runs to its end,
 every build in it made, and then ends unable to judge (exit 2), the refusals it found printed beside the failure. A
 form of `trust/roots.eadl` other than a `defgenerated` one that departs from its shape also leaves the gate unable to
-judge, the `defgenerated` refusals read before it printed beside it. Three more steps — what a declaration's generator
-and inputs share, the generators themselves, and an undeclared generated file — are `M3.6.6.2`'s, under way.
+judge, the `defgenerated` refusals read before it printed beside it. The third step judges every form a program
+reads: a generator or input that is a symbolic link or no blob of the commit is refused, and so is one a form declares
+or whose header marks it generated, a chain refused until `M3.6.6.4` decides one; a form no program reads is held to its
+text alone. Two more steps — the generators themselves, and an undeclared generated file — are `M3.6.6.2`'s, under way.
 
 ### The codes
 
 | Code | Outcome | When |
 | --- | --- | --- |
-| `trust-new-shared` | reported | an item the base commit's baseline does not hold |
-| `trust-shared-changed` | reported | an item whose content, configuration, edges or readers differ from the base commit's form |
+| `trust-new-shared` | reported | an item the base commit's baseline does not hold, a generated provenance among them |
+| `trust-shared-changed` | reported | an item whose content, configuration, edges or readers differ from the base commit's form, or a generated provenance whose content, roles or declared files do |
 | `trust-unclassified-program` | reported | a program target neither a root nor classified, or whose classification's role packages grew |
 | `trust-baseline-stale` | refused, on the baseline's host | a form whose item is no longer shared, a classification whose target is gone, an admission no site uses; and, wherever the gate runs, a form naming a package or target the commit no longer has |
-| `trust-undeclared-input` | refused | an input the commit does not hold, or a construct the catalog's rules refuse, with no admission; a `defgenerated` form departing from its shape, or two forms declaring one file |
+| `trust-undeclared-input` | refused | an input the commit does not hold, or a construct the catalog's rules refuse, with no admission; a `defgenerated` form departing from its shape, or two forms declaring one file; a generator or input of a form a program reads that is no blob, a symbolic link, or itself generated |
 | `trust-form-missing` | refused, on the baseline's host | a shared item with no form in the commit's own baseline, or with one proposing other digests than the commit measures; a program target with no classification |
 | `trust-shared-program` | refused | a root compiling another role's role package |
 | `trust-inventory-stale` | refused, by `trust-verify` | a package's inventory missing or of another build, its report of another inventory, an artifact or a result's producer not the inventory's, a handed dependency undeclared |
@@ -208,5 +216,6 @@ gate passes with *not compared*, since no baseline is committed yet. The runner'
 workflow's first run, and committed then (`M3.6.3.2.1`). Acceptance — who may accept a form, read on the protected
 main line — waits on the director's protection of `main` and a second reviewer (`M3.6.5`). A committed generated
 source, which shares its generator's mistakes with whatever reads it, is `M3.6.6`'s: its form is read today
-(`M3.6.6.2.1`), what it shares is next (`M3.6.6.2.2`), and this chapter's whole account of it is `M3.6.6.3`'s. The package the verifier reads is
+(`M3.6.6.2.1`), what it shares is recorded (`M3.6.6.2.2`), what a generator may be is next (`M3.6.6.2.3`), and this
+chapter's whole account of it is `M3.6.6.3`'s. The package the verifier reads is
 fixed provisionally until `M4.7` writes real ones.
