@@ -980,7 +980,14 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM.76`
   Status: `active` — filed and started `2026-10-10`, on the director's word: *"Digests stay, text leaves"*, end to
   end, without them, *"sota, signoff and production-grade"*; the change committed (`ARCHOGEN-PROGRAM-0542`), its
-  review open, round 12's findings answered by method (`ARCHOGEN-PROGRAM-0596`), round 13 next
+  review open, round 12's findings answered by method (`ARCHOGEN-PROGRAM-0596`); round 13, `2026-10-11`, found 2
+  defects, 4 arm gaps and 8 remarks (`target/p76/r13report.txt`, untracked) — wraps the prose reader misses (`//!`,
+  a string's continuation, adjacent literals) and a quote across two of a case's lines. Its answer, by method, is in
+  progress: the reader matching words, every run of 8 words and 60 characters or more of a case, however wrapped or
+  marked (draft `target/p76/check_frozen_evaluation.r13-draft.sh`, untracked). The draft's first run on the tree
+  refused three tracked files as holding such a run of a case — `ROADMAP.md`,
+  `docs/decisions/decision_eadl-engine-boundary.md`, `docs/book/src/boundary.md` — no case read: whether a case
+  quotes them or they quote a case, and what window holds, is the answer's to settle without reading one
   Goal: the sealed evaluation set guarded against being read, not only against being edited or named, so no search
   of the working tree made for other work can reach a case before `M6.5`, nor, in a working tree that carries the
   mark, a diff of a commit that holds one show it.
@@ -1300,7 +1307,7 @@ roadmap item X live?".
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
 | 1 | `PROGRAM.69` | `active` | its review open: round 29 next, on the committed tool, its seal already in place |
-| 2 | `PROGRAM.76` | `active` | its review open: round 13 next, of the sealed set's custody |
+| 2 | `PROGRAM.76` | `active` | its review open: round 13 to answer, its draft refusing three tracked files, of the sealed set's custody |
 | 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The third row waits on the director's yes. The pending leaves beside them —
@@ -1493,6 +1500,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-11` | `PROGRAM.69` (the counted list) | `REVIEW-COUNTS` and its self-test; four mutants of the list's rules, `target/p69r17/mutate_list.py`, and round 27's twelve, untracked; `REVIEW-HISTORY`; every self-test; focused on the staged tree | OK, 1 review listed, 27 rounds judged, every one; 38 pass / 0 fail; 4 of 4 and 12 of 12 killed, not durable; OK; 49 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-11` | `PROGRAM.79` | `README-ROUTES` and its self-test; the folder measured; focused on the staged tree | OK (24 destination(s) governed); 28 pass / 0 fail; `389283` at `2b66082`, `300288` at `b91358a`; `passed — 3 passed, 0 failed` |
 | `2026-10-11` | `PROGRAM.69` (round 28) | `REVIEW-COUNTS` and its self-test; thirteen mutants, `target/p69r17/mutate28.py`, and round 27's eleven re-anchored, `mutate27b.py`, untracked; the sealing self-test; every self-test; focused on the staged tree | OK, 2 reviews listed, 28 rounds judged, every one; 51 pass / 0 fail; 13 of 13 and 11 of 11 killed, not durable; 121 pass / 0 fail; 49 passed; `passed — 3 passed, 0 failed` |
+| `2026-10-11` | `PROGRAM.76` (round 13, hand-off) | the draft reader on the tree; the committed check restored; the no-background check; focused on the staged tree | three tracked files refused, exit 1, the draft untracked; exit 0; `handoff: OK`; `passed — 3 passed, 0 failed` |
 
 ## Commit Log
 
@@ -1679,6 +1687,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0599 (leaf PROGRAM.69)` | **the counted list in the reviews index**, found while answering `M3.6.9`'s round 1: a review in another tree joins `REVIEW-COUNTS`' list with no change to its script |
 | `PROGRAM.79` | `ARCHOGEN-PROGRAM-0600 (leaf PROGRAM.79)` | **`docs/specs/` raised to 524 288 bytes**, measured: three trust designs moved in since the last raise, and the adequacy design's review is open |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0602 (leaf PROGRAM.69)` | **review round 28 answered**: `REVIEW-COUNTS` reads every index row by its cells and links; the list's rule a record keeping a table of its rounds; a listed review's row open; the findings table first and whole; every stated count judged in either shape |
+| `PROGRAM.76` | `ARCHOGEN-PROGRAM-0603 (leaf PROGRAM.76)` | **review round 13 recorded at a hand-off**: its findings, the answer's method and its draft's first run on the tree, three tracked files refused; the code unchanged |
 
 ## Changelog
 

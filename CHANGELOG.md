@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the sealed cases' guard: a review's findings and the answer's direction, recorded at a hand-off
+
+`ARCHOGEN-PROGRAM-0603` (leaf `PROGRAM.76`), `2026-10-11`.
+
+- A review found the guard missing a quote wrapped in some comment and string styles, and a quote running across two
+  of a case's lines. The answer under way compares words, not lines; its first run found three tracked documents
+  sharing a run of eight words or more with a case, which the next session settles before the guard changes. The
+  guard itself is unchanged.
+- Validation: the guard on the tree as committed; the no-background check; the focused tier on the staged tree.
+
 ## archogen — the review-count check reads every row of the reviews index, and says which reviews must be listed
 
 `ARCHOGEN-PROGRAM-0602` (leaf `PROGRAM.69`), `2026-10-11`.
