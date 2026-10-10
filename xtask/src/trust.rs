@@ -2013,7 +2013,7 @@ pub fn inventory_with(
         for g in generators {
             step5.push(format!(
                 "trust-undeclared-input: `{f}`, which the build of the generator `{g}` reads, is a generated source — \
-                 {why} — a chain of generators, refused until `M3.6.6.4` decides one"
+                 {why} — a chain of generators, refused (decision_trust-generated-refusals.md §2)"
             ));
         }
     }

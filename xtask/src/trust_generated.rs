@@ -257,7 +257,7 @@ pub fn live<'a>(
 /// Step 3 (§2), over live forms: the blob rule — a generator or input that is a symbolic link, or is no blob of the
 /// commit (a gitlink, a directory, a path the commit does not hold), refused by that rule alone — then the chain's
 /// first clause — a generator or input a `defgenerated` form declares, or whose header marks it generated (§3), refused
-/// until `M3.6.6.4` decides a chain. A form no program reads is held to its text alone (step 1).
+/// a chain refused for good (decision_trust-generated-refusals.md §2). A form no program reads is held to its text alone (step 1).
 #[must_use]
 pub fn blobs_and_chains(
     generated: &[Generated],
@@ -287,9 +287,9 @@ pub fn blobs_and_chains(
                     continue;
                 };
                 if declared.contains(f.as_str()) {
-                    out.push(format!("{name} is declared by a `{GENERATED}` form — a chain of generators, refused until `M3.6.6.4` decides one"));
+                    out.push(format!("{name} is declared by a `{GENERATED}` form — a chain of generators, refused (decision_trust-generated-refusals.md §2)"));
                 } else if crate::generated_header::marked(f, bytes) {
-                    out.push(format!("{name} has a header that marks it generated — a chain of generators, refused until `M3.6.6.4` decides one"));
+                    out.push(format!("{name} has a header that marks it generated — a chain of generators, refused (decision_trust-generated-refusals.md §2)"));
                 }
             }
         }

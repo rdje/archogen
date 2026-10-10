@@ -36,7 +36,8 @@ program reads any of the four. So no *recognised* generated source reaches a pro
 not reach is stated in §8.
 
 This design is deliberately narrow: it decides one generator step, from committed files to a committed file. What it
-does not decide it refuses (§2), and leaf `M3.6.6.4` owns deciding it.
+does not decide it refuses (§2), and leaf `M3.6.6.4` owns deciding it. *Decided `2026-10-10` by `M3.6.6.4`: refused for
+good, each with its reason and a route within one step, the tool a script runs believed — [`decision_trust-generated-refusals.md`](decision_trust-generated-refusals.md).*
 
 ### 2. The declaration
 
@@ -103,6 +104,9 @@ shape and text-only refusals reported beside it.
 - **a chain**: a generator or input of a live form that a `defgenerated` form declares, or that §3 marks; and a file
   that a live form's crate-root generator's build reads (§5) and that a form declares or §3 marks;
 - **a generator or input at or under a gitlink**: neither is a blob of the commit, so the blob rule refuses it.
+
+*Decided `2026-10-10` by `M3.6.6.4`:* both stay refused, each for a reason that holds without an instance, and each need
+they would serve has a route within one step; the tool a script runs, below, stays believed — [`decision_trust-generated-refusals.md`](decision_trust-generated-refusals.md).
 
 **A tool a script runs** — protoc, bindgen, an interpreter — is no generator file: it is the script's own dependency,
 believed (§8). So a file a tool wrote is declared with the script that ran the tool as its generator, and is then
@@ -315,7 +319,7 @@ site uses is (the parent's §6): removed, so a generated source that stops being
 A form whose declared file a live form names as a generator or an input, or a generator build reads, is part of §2's
 chain — or, its file being no blob, of the blob rule's refusal, or, read by a generator build, of the parent's
 `trust-undeclared-input` row — so its run refuses and nothing in it is stale: that
-refusal is its one code until `M3.6.6.4`.
+refusal is its one code — *for good, decided `2026-10-10`: [`decision_trust-generated-refusals.md`](decision_trust-generated-refusals.md)*.
 
 ### 7. Case 5, and the parent's text
 
@@ -420,7 +424,8 @@ Each obligation is one sentence, quoted word for word beside its identifier by t
 - **One step, the rest refused.** Three rounds found that each feature added to answer the last — a tool outside the
   commit, a gitlink input, a chain of generators, an item reached through role packages — brought its own open cases,
   for a design with no instance in the tree. What a single committed generator step needs is decided here; the rest is
-  refused, so it cannot pass unseen, and decided by `M3.6.6.4` when a generated source needs it.
+  refused, so it cannot pass unseen, and decided by `M3.6.6.4` when a generated source needs it — *decided
+  `2026-10-10`, for good, each with a route within one step: [`decision_trust-generated-refusals.md`](decision_trust-generated-refusals.md)*.
 - **Provenance per file, matched against what the other side reads too.** §14.4's case is a shared *input*, and §4.4's
   is a shared formula: either alone is a common source of error, and so is a data file one side reads directly that the
   other's generated source came from.
@@ -437,7 +442,7 @@ Each obligation is one sentence, quoted word for word beside its identifier by t
   same commit; the gate on the baseline's host then asks for the proposed forms of any provenance two programs share.
 - `M3.6.6.2` implements §2–§8 against the hand-offs; `M3.6.6.3` puts it in the trust chapter; `M3.6.5`, `M4.8` and
   `M2.7.5` take theirs; `M3.6.6.4` decides chains, generators and inputs at or under a gitlink, and whether a tool a script runs becomes
-  provenance.
+  provenance — *decided `2026-10-10`: [`decision_trust-generated-refusals.md`](decision_trust-generated-refusals.md)*.
 - Related: `decision_trust-inventory.md`, `decision_executable-design-reviews.md`.
 
 ## Review
