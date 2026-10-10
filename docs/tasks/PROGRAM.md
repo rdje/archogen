@@ -1068,6 +1068,51 @@ mdBook that is the director's window into the project.
   `ARCHOGEN-PROGRAM-0554 (leaf PROGRAM.76)`, round 4; `ARCHOGEN-PROGRAM-0558 (leaf PROGRAM.76)`, round 5;
   `ARCHOGEN-PROGRAM-0562 (leaf PROGRAM.76)`, round 6; `ARCHOGEN-PROGRAM-0565 (leaf PROGRAM.76)`, round 7
 
+- ID: `PROGRAM.77`
+  Status: `active` — filed and started `2026-10-10`, on CI's red: the push `a543d10` failed the `rust` workflow; the
+  fix committed (`ARCHOGEN-PROGRAM-0569`), the push that restores CI its verification
+  Goal: the mutation runner's group kill reaches its own process group and nothing else, on every host, so the test
+  suite cannot end the CI runner it runs on.
+  Reproduce / issue: run `38064491086` of `a543d10`, both jobs — `focused` and `integration` — failed in the tier's
+  step after about 45 minutes, the step left `in_progress`, each job's annotation *"The hosted runner lost
+  communication with the server. Anything in your workflow that terminates the runner process, starves it for
+  CPU/Memory, or blocks its network access can cause this error."*, and no log kept (`gh api …/jobs/114249268009/logs`
+  → *"BlobNotFound"*). The run before, `37431167419` of `7ac8b8b`, passed in 7 minutes; the same tests here, `cargo
+  test --all` on `aarch64-apple-darwin`, pass in 37 s, at most 732 processes, every test process together under 800 MB
+  (`target/ci-a543d10/measure.sh`, untracked).
+  Direction: the one test new since `7ac8b8b` that signals a process group — `PROGRAM.67`'s
+  `a_run_past_its_limit_is_stopped_with_everything_it_started`, through `run_bounded` — and how the `kill` program
+  of the runner's image reads its arguments.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — the run above; `git grep -c 'Command::new("kill")' HEAD -- xtask/src crates` →
+    `HEAD:xtask/src/mutation.rs:2`, none at `7ac8b8b`, both from `b87adbc` (`git log -S`); `run_bounded` ran `kill
+    -KILL -<child's pid>`. Not reproduced on Linux: no host here is one (`M3.6.3.2.1`'s Why blocked), so the leg that
+    falsifies the cause is the next CI run, stated rather than hidden.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: `xtask/src/mutation.rs`'s `run_bounded`, the external `kill` with a
+    negative operand and no `--`. WHY: `/usr/bin/kill` on Ubuntu 24.04 is procps-ng's (`packages.ubuntu.com/noble/
+    amd64/procps/filelist` → *"/usr/bin/kill"*), whose `src/kill.c` at `v4.0.4` parses with *"getopt_long(argc, argv,
+    "l::Ls:hVq:", longopts, &optindex)"* and, for an unknown digit, *"/* Special case for signal digit negative PIDs
+    */ pid = (long)('0' - optopt);"* — `-1234` is signalled as pid `-1`, every process the user may signal, the
+    runner's agent among them; a group starting 2 to 9 as that group. POSIX's own text (Issue 8, `utilities/kill`):
+    *"If the first pid operand is negative, it should be preceded by "--" to keep it from being interpreted as an
+    option."* macOS's `kill` reads it as a pid, so the test passed here.
+  - [x] **FIX** — `signal`, kill(2) called directly, `0` and `-1` refused before the call; `run_bounded` signals the
+    negated group through it, and the test's liveness check waits for the reaping through it, up to 10 s; two tests —
+    the refusals and a failed call for a group nobody has, and no Rust source under `xtask/src` or `crates` running
+    the `kill` program; the catalogue's `PROGRAM.67` entry moved to the call, two entries for the refusals; a
+    knowledge card, `a-negative-pid-is-an-option-to-the-kill-program.md`; the verification chapter's sentence.
+  - [x] **ADDRESSED (verified)** — `cargo test -p xtask mutation` → `test result: ok. 12 passed`; `cargo xtask mutate
+    --only mutate-a-hang-kills-the-command-alone mutate-a-signal-to-every-process-is-sent
+    mutate-a-signal-to-the-own-group-is-sent mutate-a-hang-is-waited-on` → *"mutate: OK — 4 mutation(s), each killed
+    or surviving exactly as the catalog expects"*; the scan test fails on `HEAD`'s source, the grep above its count.
+  - [x] **NO REGRESSION** — `cargo test -p xtask` → `test result: ok. 183 passed`; clippy at deny-warnings, clean;
+    `make focused` → `passed — 3 passed, 0 failed`, on the staged tree; the doctrine gate at commit.
+  - [x] **LOCKSTEP** — the verification chapter; the knowledge card and its index row; this leaf, the frontier and
+    both logs; `docs/TASK_TREE.md`, `LIVE_STATUS.md`, `MEMORY.md`; `CHANGELOG.md`.
+  Verification: `2026-10-10` — the Verification Log's row; on the runner, the next push's `rust` run
+  Commit: `ARCHOGEN-PROGRAM-0569 (leaf PROGRAM.77)`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1132,11 +1177,12 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.69` | `active` | its review open: round 23 next, on the committed tool, its seal already in place |
-| 2 | `PROGRAM.76` | `active` | its review open: round 8 next, of the sealed set's custody |
-| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 1 | `PROGRAM.77` | `active` | CI red since `a543d10`: the test suite ended the runner it ran on; fixed, the push that restores CI its verification |
+| 2 | `PROGRAM.69` | `active` | its review open: round 23 next, on the committed tool, its seal already in place |
+| 3 | `PROGRAM.76` | `active` | its review open: round 8 next, of the sealed set's custody |
+| 4 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
-The third row waits on the director's yes. The pending leaves beside them —
+The fourth row waits on the director's yes. The pending leaves beside them —
 `PROGRAM.71`, `.72` and `.73` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and a sealed leaf's full record is under `docs/task-history/PROGRAM/`.
 
@@ -1311,6 +1357,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-10` | `PROGRAM.69` (round 21) | the self-test; the gate over 172 files; every self-test; focused on the staged tree | 118 / 0; OK; 48 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.76` (round 7) | the push; the check on the real set; its self-test; four mutations; every self-test; focused on the staged tree | `origin/main` at `a543d10`, its `frozen/` the manifest alone; exit 0; 69 / 0; 4 killed, not durable; 48 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.69` (round 22) | the self-test; four mutations of the rules round 22 arms; the gate over 172 files; every self-test; focused on the staged tree | 120 / 0; each killed by an untracked runner, not durable; OK; 48 passed; `passed — 3 passed, 0 failed` |
+| `2026-10-10` | `PROGRAM.77` | the module's tests; four catalogued mutations; the crate's tests, clippy, fmt; the book's gates; focused on the staged tree | 12 passed; each killed; 183 passed, clean, clean; OK; `passed — 3 passed, 0 failed` |
 
 ## Commit Log
 
@@ -1482,6 +1529,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0564 (leaf PROGRAM.69)` | **review round 21 answered**: row 20's count; two rewraps; an arm sealing past a reopened subtree; 118 arms |
 | `PROGRAM.76` | `ARCHOGEN-PROGRAM-0565 (leaf PROGRAM.76)` | **review round 7 answered; the published branch past the set**: the first kind of act exact; four non-ASCII arms |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0567 (leaf PROGRAM.69)` | **review round 22 answered**: row 21's count; arms for the noting order under an error, the warning's clauses, each column-0 line; 120 arms |
+| `PROGRAM.77` | `ARCHOGEN-PROGRAM-0569 (leaf PROGRAM.77)` | **the mutation runner's group kill through kill(2)**: Ubuntu's `kill` read `-<group>` as an option and signalled every process — the CI runner lost |
 
 ## Changelog
 
@@ -1516,3 +1564,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-10-10`: `PROGRAM.75` done — the handoff census's second sample proposed to bedrock, `BR-001`.
 - `2026-10-10`: `PROGRAM.76` done — the sealed evaluation set's text out of the tree, the sealing commit its custody.
 - `2026-10-10`: `PROGRAM.76` reopened by its review round 1; its review open since.
+- `2026-10-10`: `PROGRAM.77` filed and fixed — the mutation runner's group kill through kill(2), after CI lost its runner; it closes on the runner's green.

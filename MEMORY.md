@@ -13,10 +13,11 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M3` → frontier `M3.6`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s is `PROGRAM.69`'s review, round 23; `API` is
+- **Active tree:** `M3` → frontier `M3.6`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s is `PROGRAM.77`, CI's restoration; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M3.6.6.4`'s review round 15, of `docs/specs/trust/decision_trust-generated-refusals.md`, with
+- **Next action:** push to restore CI (`PROGRAM.77`, the one exception to the cadence) and watch every job green; then
+  `M3.6.6.4`'s review round 15, of `docs/specs/trust/decision_trust-generated-refusals.md`, with
   `PROGRAM.69`'s round 23 beside it; then `M3.3`.
   `M3.6.3.2.1`, the runner's baseline, waits on the `trust-gate` workflow's first run, at the next cadence push. `M2`'s open leaves all wait on the director:
   `M2.7.4.5` and `M2.7.6`'s review and hosting half. This project uses no branches.

@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the test suite no longer ends the CI runner it runs on
+
+`ARCHOGEN-PROGRAM-0569` (leaf `PROGRAM.77`), `2026-10-10`.
+
+- The push `a543d10` lost both jobs of its `rust` run: after about 45 minutes the hosted runner "lost communication",
+  and no log was kept. The mutation runner's test killed a hung command's process group with the `kill` program,
+  `kill -KILL -<group>`. Ubuntu's `kill`, procps-ng's, reads that negative number as an option and, by a special case
+  in its source, signals pid `-1` — every process the user may signal, the runner's own agent among them. macOS's
+  reads it as a pid, so the test passed here. The group is now signalled through the system call itself, `0` and
+  `-1` refused before it, and a test refuses any Rust source that runs the `kill` program.
+- Validation: the module's 12 tests; four catalogued mutations, each killed; the crate's 183 tests; the focused tier
+  on the staged tree. Not reproduced on Linux, which no host here is: the push that restores CI is the run that
+  checks it.
+
 ## archogen — the generated-sources record says which of its rules are the parent's
 
 `ARCHOGEN-M3-0568` (leaf `M3.6.6.4`), `2026-10-10`.

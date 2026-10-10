@@ -3867,9 +3867,31 @@ test -p xtask mutation::tests::a_run_past_its_limit_is_stopped_with_everything_i
 expect killed
 why PROGRAM.67: past its limit the whole process group is killed — cargo, rustc and the test binaries — not the command alone.
 from
-                    .args(["-KILL", &format!("-{}", child.id())])
+                signal(-group, SIGKILL);
 to
-                    .args(["-0", &format!("{}", child.id())])
+                signal(group, SIGKILL);
+end
+
+mutation mutate-a-signal-to-every-process-is-sent
+file xtask/src/mutation.rs
+test -p xtask mutation::tests::the_group_kill_reaches_its_group_and_never_everything
+expect killed
+why PROGRAM.77: -1, every process the user may signal, is refused before kill(2) — the external kill's misreading ended the CI runner.
+from
+    if pid == 0 || pid == -1 {
+to
+    if pid == 0 {
+end
+
+mutation mutate-a-signal-to-the-own-group-is-sent
+file xtask/src/mutation.rs
+test -p xtask mutation::tests::the_group_kill_reaches_its_group_and_never_everything
+expect killed
+why PROGRAM.77: 0, the caller's own group, is refused before kill(2).
+from
+    if pid == 0 || pid == -1 {
+to
+    if pid == -1 {
 end
 
 mutation mutate-a-hang-is-waited-on

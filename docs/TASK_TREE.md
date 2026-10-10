@@ -54,7 +54,7 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 | Tree | Status | Frontier (next leaf) | Owner |
 | --- | --- | --- | --- |
 | [`S0`](tasks/S0.md) | `done` | — every leaf closed; F28 green, and the chapter's counts are measured (`S0.8`) | repo-local |
-| [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.69`'s review open, round 23 next; `PROGRAM.76`'s, round 8 next; `.71`–`.73` pending; `PROGRAM.34` awaits the director's yes; CI green on the runner | repo-local |
+| [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.77`: CI red since `a543d10`, its runner ended by a test's group kill — fixed, the restoring push its verification; `PROGRAM.69`'s review, round 23 to answer; `PROGRAM.76`'s, round 8; `PROGRAM.34` awaits the director | repo-local |
 | [`M1`](tasks/M1.md) | `active` | `M1.29.4` — blocked: module parameters wait on the director's call (findings §7) | repo-local |
 | [`API`](tasks/API.md) | `done` | closed `2026-10-02`: one engine API, the wasm binding and its page, `archogen mcp`, and the book's chapter; findings §9 with the director | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |

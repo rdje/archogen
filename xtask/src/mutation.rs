@@ -237,6 +237,26 @@ fn limit() -> Duration {
     )
 }
 
+/// `SIGKILL`: 9 on every system with POSIX's XSI option, Linux and macOS among them.
+#[cfg(unix)]
+const SIGKILL: i32 = 9;
+
+/// `kill(2)`, called directly, and whether it succeeded. Never the `kill` program: its own parser decides what a
+/// negative pid is, and procps-ng's — Ubuntu's `/usr/bin/kill`, the CI runner's — reads `kill -KILL -1234` as an
+/// option `-1…` and signals pid `'0' - '1'`, `-1`: every process the user may signal, the runner's agent among them
+/// (leaf `PROGRAM.77`). ⛔ `0` and `-1` reach the caller's own group and every process: refused, never passed on.
+#[cfg(unix)]
+fn signal(pid: i32, sig: i32) -> bool {
+    extern "C" {
+        fn kill(pid: i32, sig: i32) -> i32;
+    }
+    if pid == 0 || pid == -1 {
+        return false;
+    }
+    // SAFETY: kill(2) takes two integers and reads or writes no memory of this process.
+    unsafe { kill(pid, sig) == 0 }
+}
+
 /// Run `cmd` in a process group of its own, its output read as it comes; past `limit`, kill the whole group — the
 /// command and everything it started — and return no status. ⚠️ A process the command starts in a session of its own
 /// (`setsid`) leaves the group, and while it holds the output open the run waits on it; cargo, rustc and test
@@ -263,10 +283,11 @@ fn run_bounded(cmd: &mut Command, limit: Duration) -> std::io::Result<Bounded> {
             break Some(status);
         }
         if started.elapsed() >= limit {
-            // The group's id is the child's: `kill -KILL -<pgid>` reaches every process in it.
-            let _ = Command::new("kill")
-                .args(["-KILL", &format!("-{}", child.id())])
-                .status();
+            // The group's id is the child's: a signal to its negation reaches every process in it.
+            #[cfg(unix)]
+            if let Ok(group) = i32::try_from(child.id()) {
+                signal(-group, SIGKILL);
+            }
             let _ = child.kill();
             let _ = child.wait();
             break None;
@@ -479,6 +500,8 @@ pub fn run(root: &Path, only: &[String]) -> i32 {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(unix)]
+    use super::signal;
     use super::{apply, parse, run_bounded, Expect};
     use std::process::Command;
     use std::time::{Duration, Instant};
@@ -509,19 +532,63 @@ mod tests {
         );
         assert!(run.status.is_none(), "a hang reports no status");
         assert_eq!(String::from_utf8_lossy(&run.stdout).trim(), "started");
-        let pid = std::fs::read_to_string(&pid_file).expect("the grandchild's pid");
-        std::thread::sleep(Duration::from_millis(200));
-        let alive = Command::new("kill")
-            .args(["-0", pid.trim()])
-            .status()
-            .expect("kill -0 runs")
-            .success();
+        let pid: i32 = std::fs::read_to_string(&pid_file)
+            .expect("the grandchild's pid")
+            .trim()
+            .parse()
+            .expect("a pid");
+        // Killed, it is a zombie until whoever inherits it reaps it, and signal 0 finds a zombie: wait for the reaping.
+        let waited = Instant::now();
+        while signal(pid, 0) && waited.elapsed() < Duration::from_secs(10) {
+            std::thread::sleep(Duration::from_millis(50));
+        }
         let _ = std::fs::remove_dir_all(&dir);
         assert!(
-            !alive,
-            "the grandchild {} outlived the group's kill",
-            pid.trim()
+            !signal(pid, 0),
+            "the grandchild {pid} outlived the group's kill"
         );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn the_group_kill_reaches_its_group_and_never_everything() {
+        // Leaf `PROGRAM.77`: the external `kill -KILL -<group>` became `kill -1` on the CI runner. `0` and `-1` are
+        // refused before any call; a group no process has is a failed call, not a signal sent elsewhere.
+        assert!(!signal(0, 0), "0 is the caller's own group");
+        assert!(!signal(-1, 0), "-1 is every process the user may signal");
+        assert!(
+            signal(i32::try_from(std::process::id()).unwrap(), 0),
+            "this process exists"
+        );
+        assert!(!signal(-i32::MAX, 0), "no such group");
+    }
+
+    #[test]
+    fn no_rust_source_runs_the_kill_program() {
+        // Leaf `PROGRAM.77`: a group kill goes through `signal`, kill(2) itself, never a program whose parser reads a
+        // negative pid its own way — in the runner and in every crate's tests. The needle is built, so this test's
+        // own text does not match it.
+        fn walk(dir: &std::path::Path, needle: &str, found: &mut Vec<String>) {
+            for entry in std::fs::read_dir(dir).expect("a source directory") {
+                let path = entry.expect("an entry").path();
+                if path.is_dir() {
+                    walk(&path, needle, found);
+                } else if path.extension().is_some_and(|e| e == "rs")
+                    && std::fs::read_to_string(&path)
+                        .expect("a source")
+                        .contains(needle)
+                {
+                    found.push(path.display().to_string());
+                }
+            }
+        }
+        let needle = format!("Command::new(\"{}\")", "kill");
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("..");
+        let mut found = Vec::new();
+        for dir in ["xtask/src", "crates"] {
+            walk(&root.join(dir), &needle, &mut found);
+        }
+        assert!(found.is_empty(), "the kill program run from {found:?}");
     }
 
     #[test]
