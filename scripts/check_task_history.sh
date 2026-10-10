@@ -34,6 +34,7 @@
 #      is byte for byte what the commit that added it wrote — so CI, where HEAD is the commit under test, catches a
 #      forgery as the pre-commit hook does (P4). Both reads take `--full-history`, so a merge that keeps only a side
 #      that never sealed cannot hide the seal, and a shallow repository, or a failed read, is a breach (`PROGRAM.42`);
+#      a historical index blob that cannot be read is absent only when `git ls-tree` proves its path absent;
 #   4. every leaf in a sealed file has exactly one stub, in its own tree, `done`, linking that file, and every stub links
 #      a sealed file that holds its leaf; a stub is exactly its two lines; a leaf sits in its own subtree's file;
 #   5. PROVENANCE: every sealed leaf is, byte for byte, the leaf its tree held just before the commit that sealed it
@@ -389,6 +390,11 @@ def gate():
     for commit in (index_log or b"").decode().split():
         old = at(commit, INDEX)
         if old is None:
+            present = git("ls-tree", "-z", commit, "--", INDEX)
+            if present is None:
+                note("%s:%s: historical index absence could not be proved — leg 3 cannot hold" % (commit[:12], INDEX))
+            elif present:
+                note("%s:%s: historical index blob failed to read — leg 3 cannot hold" % (commit[:12], INDEX))
             continue
         for tname, trows in rows(old, "%s:%s" % (commit[:12], INDEX)).items():
             for r in trows:
@@ -1070,6 +1076,32 @@ PY
     else echo "SELF-TEST: a failed history read was refused for another reason" >&2; fi
   done
   restore
+  # Round 29: a failed historical blob read is not a proven path deletion. Hide every historical index blob
+  # while the current row is forged; the old reader passed because it skipped each failed read.
+  sub docs/task-history/INDEX.md '^(\| `T\.1` \|.*\| `)[0-9-]+(` \|)$' '\g<1>1999-01-01\2'
+  commit
+  mkdir -p "$work/fakebin"
+  cat > "$work/fakebin/git" <<SHIM
+#!/usr/bin/env bash
+if [ "\${1:-}" = show ] && [[ "\${2:-}" == *:docs/task-history/INDEX.md ]]; then exit 128; fi
+exec $(command -v git) "\$@"
+SHIM
+  chmod +x "$work/fakebin/git"
+  PATH="$work/fakebin:$PATH" arm "a failed historical index blob read refuses, never hides a forged row (R29 D3)" 1 "historical index blob failed"
+  cat > "$work/fakebin/git" <<SHIM
+#!/usr/bin/env bash
+if [ "\${1:-}" = show ] && [[ "\${2:-}" == *:docs/task-history/INDEX.md ]]; then exit 128; fi
+if [ "\${1:-}" = ls-tree ]; then exit 128; fi
+exec $(command -v git) "\$@"
+SHIM
+  PATH="$work/fakebin:$PATH" arm "a failed historical absence proof refuses (R29 D3)" 1 "historical index absence could not be proved"
+  restore
+  git -C "$work" reset -q --hard HEAD~1
+  # A committed deletion really has no index at that revision; restoring it unchanged must still pass.
+  git -C "$work" rm -q docs/task-history/INDEX.md; commit
+  git -C "$work" checkout -q HEAD~1 -- docs/task-history/INDEX.md; commit
+  arm "a proven historical index deletion is not a failed blob read (R29 D3)" 0 "task-history: OK"
+  git -C "$work" reset -q --hard HEAD~2
   sub docs/task-history/INDEX.md '^(\| `T\.1` \|.*\| `)[0-9-]+(` \|)$' '\g<1>1999-01-01\2'
   commit
   arm "a committed row that changed is refused across history" 1 "the index is append-only"

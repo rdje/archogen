@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — review counts judge repeated statements, and history reads must prove absence
+
+`ARCHOGEN-PROGRAM-0605` (leaf `PROGRAM.69`), `2026-10-11`.
+
+- The reviews index's four-column table accepts indentation and optional edge pipes, keeps escaped pipes inside
+  their cell, and refuses malformed rows, missing or duplicate headers and missing separators. Every stated count
+  in either summary shape is judged, so a correct first count cannot hide a false second one.
+- A historical task-history index blob that cannot be read is refused unless a separate successful Git tree read
+  proves that path absent at the commit. A real historical deletion remains valid. The leaf's stale Status is current.
+- Validation: new regressions first failed (13 count-check arms, two history-check arms), then all 69 and 124 arms
+  passed; syntax, real gates, census, book gates and doctrines green. The broader self-test runner is pending at
+  commit. The earlier claims are marked, and the book describes the exact table scope.
+
 ## archogen — the sealed-set guard recognizes comment and string wraps, with an explicit quote boundary
 
 `ARCHOGEN-PROGRAM-0604` (leaf `PROGRAM.76`), `2026-10-11`.
@@ -31,7 +44,7 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
   guard itself is unchanged.
 - Validation: the guard on the tree as committed; the no-background check; the focused tier on the staged tree.
 
-## archogen — the review-count check reads every row of the reviews index, and says which reviews must be listed
+## archogen — the review-count check reads index rows and says which reviews must be listed (narrowed by round 29)
 
 `ARCHOGEN-PROGRAM-0602` (leaf `PROGRAM.69`), `2026-10-11`.
 
@@ -44,6 +57,9 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 - Validation: 51 arms; thirteen deliberate breaks of the new rules and round 27's eleven, each caught by its own arm,
   by untracked runners, so not durable; the sealing tool's 121 arms; every self-test; the focused tier on the staged
   tree.
+
+- Correction by review round 29: indented and malformed index rows were skipped, and only the first stated count
+  of a kind was judged. `ARCHOGEN-PROGRAM-0605` repairs both.
 
 ## archogen — the design for the generated-sources rules' tests holds every recorded defect exactly
 

@@ -626,6 +626,23 @@ record that keeps a table of its rounds, of any shape.
 | — | found while answering | round 24's Verification Log row, "4 archived named", refuted by round 25, unmarked | marked |
 | — | found while answering | an open row linking a record that is missing passed | refused; an arm |
 
+**Round 29**, `2026-10-11`, an independent read-only review of `d167137`, in a context new to the change and fenced
+from the sealed evaluation set. Synthetic probes reproduced four defects; the existing count check's 51 arms passed.
+The report and probes in `target/review-p69-r29/` are untracked, so their measurements are not durable. The answer
+first added regression arms: the count check passed 53 and failed 13 of 66; the history check passed 122 and failed
+two of 124. After repair and three table-grammar arms, they passed 69 of 69 and 124 of 124 respectively.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R29-D1 | defect | indented index rows were skipped; rows with too few cells escaped the open-review rule | the four-column table is read from its header through its first blank line, with indentation and optional edge pipes; escaped pipes stay in their cell; malformed rows, missing or duplicate headers and missing separators refused; arms for each |
+| R29-D2 | defect | only the first stated count of a kind was judged, so a false second count passed | every occurrence judged in either summary shape, including explicit defect counts; eight false-second-count arms and a repeated-correct control |
+| R29-D3 | defect | any failed historical index blob read was treated as absence, hiding an append-only breach | absence requires a successful `git ls-tree` proof that the path is absent; a failed proof or an unreadable present blob refuses; arms for both errors and a real historical deletion |
+| R29-D4 | defect | the leaf's Status still directed the next session to round 27 | overwritten with the current round and next action |
+| R29-R1 | remark | the round-28 verification row quotes 28 judged rounds; the reviewed tree has 29 | the earlier reported figure retained without claiming a final-tree measurement; the reviewed baseline's 29 and final round-29 tree's 30 recorded separately |
+| R29-R2 | remark | the counted pair can name a different record from the index's record cell | outside the stated contract: the counted pair is the authority; no equality rule added |
+| — | found while answering | the existing duplicate-row arm appended its row outside the table | the fixture now duplicates the row inside the table; its refusal remains required |
+| — | found while answering | round 28's claims that every index row was read and every stated count judged were false | the record, this leaf's evidence and Commit Log, and the changelog marked with this round's correction |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.

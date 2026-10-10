@@ -188,6 +188,7 @@ A task tree records every leaf of its work, with its checklist and evidence. Mos
 `TASK-HISTORY` checks on every commit, in CI as well as before a commit:
 - that no sealed file has changed since the commit that sealed it;
 - that `docs/task-history/INDEX.md` lists every sealed file and has lost or changed no row it ever held;
+- that a failed read of a historical index is refused unless Git independently proves the path absent at that commit;
 - that every sealed leaf has exactly one two-line placeholder in its tree, linking the file that holds it;
 - that every sealed leaf is, byte for byte, what its tree held just before it was sealed, so a seal made by hand or
   edited is refused when its files, its placeholders' links or its parts differ from what the tool makes — each file
@@ -244,6 +245,10 @@ rounds; the history's own table lists each finding. For each review the reviews 
 `REVIEW-COUNTS`* — every open review whose record keeps a table of its rounds, from its first round, which the check
 itself demands — `REVIEW-COUNTS` holds the counts to the table, round by round, and refuses a listed review a round of
 which it cannot judge; a review leaves the list when it closes, which the check demands too (`PROGRAM.69`).
+The four-column index table runs from its header through its first blank line. Its rows may be indented and omit
+edge pipes; an escaped pipe stays inside its cell. A malformed row, a missing separator or a missing or duplicate
+header is refused. Every stated count is judged, including repeated statements of the same kind: a correct first
+count cannot hide an incorrect second one. The counted history/record pair names the record whose counts are held.
 
 ```console
 $ bash scripts/check_review_counts.sh                      # the gate
