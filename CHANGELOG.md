@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the sixth artifact cleanup
+
+`ARCHOGEN-PROGRAM-0508` (leaf `PROGRAM.68`), `2026-10-10`.
+
+- About 4 GB of regenerable build output and closed work's scratch removed (`target` 5.6 GB → 1.6 GB): the
+  compiler's incremental caches, the finished design review's loose logs and sweep scratch, uncited probe output and
+  test scratch. Everything a record cites as evidence was kept. One record said a directory had been removed when it
+  had not; removing it made the record true. The three adopted policies' sources have not changed.
+- Validation: twelve of twelve sampled paths gone; from cold, the focused tier passed, the whole suite passed
+  (1 304 tests, 0 failed, 97 suites) and every doctrine is green.
+
 ## archogen — the interrupted generated-sources review recovered and closed
 
 `ARCHOGEN-M3-0507` (leaf `M3.6.6.1`), `2026-10-08`.

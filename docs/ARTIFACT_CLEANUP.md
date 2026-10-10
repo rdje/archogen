@@ -9,12 +9,12 @@ command — and investigate anything unexpected instead of removing it. Each run
 since `PROGRAM.19`, the owner of the first four, was sealed; the leaf named below carries the full
 inventory, the retained items and their reasons, in `docs/tasks/PROGRAM.md` or, once sealed, `docs/task-history/`.
 
-- **2026-10-06** (`PROGRAM.57`, fifth run) — released **≈9.4 GB** (`target` 11 GB → 1.6 GB): all of `target/debug`,
-  whose `deps` held 1 454 953 object files that a macOS build leaves behind and never deletes (a defect, owned by
-  `PROGRAM.58`); the output of the trust design's review rounds 8–11; `API`'s closing-review scratch; and the test
-  scratch and uncited probe output of closed leaves in `target/tmp`. Retained on evidence: six `target/tmp` entries
-  whose mutation scripts or scratch a `done` leaf cites, `m129` (an open leaf), the CI tools, Miri's cache, the tiers'
-  live products, `target/s0-demo`, `build/` and `.app-data`. Residue census: twelve of twelve sampled paths `gone`.
-  Verified **cold**: the provisioner → both tools `already in place`, `make focused` → `passed — 3 passed, 0 failed`,
-  `cargo test --all` → **1 218 passed, 0 failed over 91 suites**, `scripts/check_doctrines.sh` → `=== all doctrines
-  green ===`.
+- **2026-10-10** (`PROGRAM.68`, sixth run) — released **≈4.0 GB** (`target` 5.6 GB → 1.6 GB, `.bin` 2 648 → 29): the
+  compiler's incremental caches (`debug`, `wasm32`, `riscv64`, Miri's); the closed generated-sources review's loose
+  logs and briefs, and the mutation sweep's scratch; uncited probe output of closed leaves, `m3634` among them, which
+  its leaf already called removed; and test scratch its owners recreate. `PROGRAM.58`'s leak has not come back (`deps`:
+  789 files). Retained on evidence: seven `target/tmp` entries a leaf cites or owns, `m3121` and `m3635`, the trust
+  tools' output, the CI tools, Miri's sysroot, the tiers' live products, `target/s0-demo`, `build/` and `.app-data`.
+  Residue census: twelve of twelve sampled paths `gone`. Verified **cold**: the provisioner → both tools `already in
+  place`, `make focused` → `passed — 3 passed, 0 failed`, `cargo test --all` → **1 304 passed, 0 failed over 97
+  suites**, `scripts/check_doctrines.sh` → `=== all doctrines green ===`.
