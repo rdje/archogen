@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the sealed cases' guard reads the disk itself, and says what it holds against
+
+`ARCHOGEN-PROGRAM-0584` (leaf `PROGRAM.76`), `2026-10-10`.
+
+- A review found the guard still trusting git's view of what changed on disk, which local settings can blind — a
+  file-system monitor, the laxest stat check, a clean filter, a template. The guard now forces the settings it relies
+  on, reads the working tree's bytes itself in one walk, and refuses if that walk cannot finish. Its documentation
+  now says what it holds against: accident, not someone setting out to hide a case.
+- Validation: 92 arms; eight deliberate breaks, one per hole, each caught by its own arms, by an untracked runner, so
+  not durable; the check on the tree in about a second; every self-test; the focused tier on the staged tree.
+
 ## archogen — the leaf for the parent's tests points to its evidence instead of restating it
 
 `ARCHOGEN-M3-0583` (leaf `M3.6.6.4`), `2026-10-10`.
@@ -49,10 +60,10 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 
 `ARCHOGEN-PROGRAM-0579` (leaf `PROGRAM.76`), `2026-10-10`.
 
-- A review found five places a sealed case's text could sit unseen by the check that guards it: in a folder or a
-  file named `.git`, which git never lists; in a tracked file git was told not to look at; behind a diff-hiding mark
-  set where no commit carries it; in a staged file whose copy on disk was clean; and in the check's own script, which
-  the name search skipped. Each is now refused, with a test that fails if the hole is put back. The evaluation
+- A review found five ways past the check that guards the sealed cases: a case's text in a folder or a file named
+  `.git`, which git never lists, or in a tracked file git was told not to look at; the diff-hiding mark set where no
+  commit carries it; and a case's name in a staged file whose copy on disk was clean, or in the check's own script,
+  which the name search skipped (corrected by review round 10). Each is now refused, with a test that fails if the hole is put back. The evaluation
   README now lists every copy that can still show a case, and GitHub's own record of pushes bounds the four days the
   published branch held them.
 - Validation: 81 arms; six deliberate breaks, one per hole, each caught by its own arm, by an untracked runner, so not
