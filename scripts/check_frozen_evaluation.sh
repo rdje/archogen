@@ -34,25 +34,27 @@
 #                     longer unseen.
 #   5. EXPOSURE     — each `# exposed:` line names a listed case. Recording an exposure is the
 #                     project's rule (docs/evaluation/README.md); the check cannot see a read.
-#   It prints paths, line numbers, entry names and a commit id of the right form — each a token
-#   with no space — and git's own warnings, which name paths; never a manifest line's text nor a
-#   case's line: a field's value is checked inside its pipeline before any variable holds it, a bad
-#   line is named by its number, a blob is hashed through a pipe, a quote is found by the name of
-#   the file that holds it; every arm that runs the check requires no case's text in its output,
-#   one in nine places with tracing forced on.
+#   It prints paths, as their files are named, and line numbers, entry names and a commit id of the
+#   right form — tokens with no space — and git's warnings while listing untracked files, which name
+#   paths; never a manifest line's text nor a case's line: a field's value is checked inside its
+#   pipeline before any variable holds it, a bad line is named by its number, a blob is hashed
+#   through a pipe, a quote is found by the name of the file that holds it, and the scratch holds
+#   no manifest line of another form; every arm that runs the check on synthetic cases requires no
+#   case's text in its output, one in nine places with tracing forced on.
 #
-# ⚠️ HONEST LIMIT, stated rather than hidden: the text stays in the published history, which is
-# not rewritten. A blob shown or blamed by its path, a diff or a grep forced to text (`-a`) or
-# handed to an external driver, a viewer that diffs blobs itself (an editor's or a web history
-# view), git run on the repository without this working tree, a checkout, clone, worktree or
-# archive of a commit older than `6d61f65`, a revert of `2f6f331`, or another clone not yet past
-# it, puts a case in front of a reader; `git grep <commit>` and
-# `git log -S` tell which file or commit holds a term. Ignored files — build output under
-# `target/`, a folder an untracked `.gitignore` ignores — are not scanned, nor anything outside the
-# repository a link points to, nor a registered submodule, another repository
-# (REPOSITORY-BOUNDARY refuses what is created at a vendored checkout's first level). A quote shorter than a long
-# line, or reworded, is not found. It sees what is staged and on disk. The check cannot prove
-# nobody read a case; a human who reads one and says nothing defeats it.
+# ⚠️ HONEST LIMIT, stated rather than hidden: the text stays in the published history, which is not
+# rewritten. Two kinds of act put a case in front of a reader: one that writes a commit older than
+# `6d61f65` to disk — a checkout, a restore or a reset to it, an archive of it, a clone or a
+# worktree at it, a revert of `2f6f331` — or finds it there, in another clone not yet past it; and
+# one that hands a sealed blob to a reader or a tool — `git show` or `git blame` of it, a diff or a
+# grep forced to text (`-a`), an external diff driver or `git difftool`, a viewer that diffs blobs
+# itself (an editor's or a web history view), git run on the repository without this working tree;
+# `git grep <commit>` and `git log -S` tell which file or commit holds a term. Ignored files — build
+# output under `target/`, a folder an untracked `.gitignore` ignores — are not scanned, nor anything
+# outside the repository a link points to, nor a registered submodule, another repository
+# (REPOSITORY-BOUNDARY refuses what is created at a vendored checkout's first level). A quote
+# shorter than a long line, or reworded, is not found. It sees what is staged and on disk. The check
+# cannot prove nobody read a case; a human who reads one and says nothing defeats it.
 #
 # UNSEALING. At the leaf named in the manifest's `unseals-at:` line, set `seal: unsealed`,
 # add `unsealed-on:` / `unsealed-by:`, then run `--restore`, which writes each case back from
@@ -172,6 +174,7 @@ self_test() {
     sed '/^set +x/d' "$SELF" > "$work/../traced.sh"
     out="$(cd "$work" && bash -x "$work/../traced.sh" 2>&1; cd "$work" && bash -x "$work/../traced.sh" --restore 2>&1)"
     printf '%s' "$out" | grep -q 'ARM-CASE-TEXT' && leaked="$leaked $place"
+    printf '%s' "$out" | grep -q 'FROZEN-EVALUATION: ' || leaked="$leaked $place(ran-nothing)"
     rm -f "$work/../traced.sh"
   done
   if [ -z "$leaked" ]; then ok=$((ok + 1)); echo "  ✅ a run with tracing forced on prints no case's line (9 places)"
@@ -220,8 +223,32 @@ self_test() {
   git -C "$work/docs/notes/nested" add -A; git -C "$work/docs/notes/nested" -c user.name=arm -c user.email=arm@example.invalid -c commit.gpgsign=false commit -q -m n
   g add -A 2>/dev/null
   arm "a repository staged as an unregistered gitlink is refused (custody)" 1 "'docs/notes/nested' is a repository staged as a gitlink that .gitmodules does not register"
-  printf '[submodule "nested"]\n\tpath = docs/notes/nested\n\turl = ./nested\n' > "$work/.gitmodules"; g add -A
+  printf '[submodule "nested"]\n\tpath = docs/notes/nested\n\turl = ./nested\n' > "$work/.gitmodules"
+  arm "a gitlink registered by a .gitmodules on disk alone is refused — a commit records the staged one" 1 "'docs/notes/nested' is a repository staged as a gitlink"
+  g add -A
   arm "a gitlink .gitmodules registers passes — another repository, named in the honest limit" 0 ""
+  # A registered path with a space is read whole (review R5 R2).
+  fresh sealed; git -C "$work/docs/notes" init -q "my nested"; printf 'x\n' > "$work/docs/notes/my nested/x.md"
+  git -C "$work/docs/notes/my nested" add -A
+  git -C "$work/docs/notes/my nested" -c user.name=arm -c user.email=arm@example.invalid -c commit.gpgsign=false commit -q -m n
+  printf '[submodule "my nested"]\n\tpath = docs/notes/my nested\n\turl = ./my-nested\n' > "$work/.gitmodules"; g add -A 2>/dev/null
+  arm "a registered gitlink whose path has a space passes" 0 ""
+  # Git's warnings are taken from listing untracked files alone: a malformed attribute line warned of while a racy file
+  # is re-read is no unlisted file, and the verdict does not hang on the race (review R5 D2).
+  fresh sealed; printf '*.md comparator@deadline\n' >> "$work/.gitattributes"; printf 'touched\n' >> "$work/docs/notes/plan.md"; g add -A
+  arm "a malformed attribute line warned of while listing modified files is no refusal" 0 ""
+  arm "and the verdict is the same on a second run" 0 ""
+  # The scratch never holds a manifest line of another form: a copy that keeps its scratch finds no case's line in it
+  # (review R5 D3).
+  fresh sealed; manifest "$LONG"
+  sed "s/trap 'rm -rf \"\$tmp\"' EXIT/trap : EXIT/" "$SELF" > "$work/../kept.sh"
+  (cd "$work" && bash "$work/../kept.sh" >/dev/null 2>&1)
+  arms=$((arms + 1))
+  if [ -n "$(find "$work/target/doctrine_scratch" -name 'frozen_evaluation.*' -type d 2>/dev/null)" ] &&
+     ! grep -rq 'ARM-CASE-TEXT' "$work/target/doctrine_scratch" 2>/dev/null; then
+    ok=$((ok + 1)); echo "  ✅ the check's scratch holds no manifest line of another form"
+  else echo "SELF-TEST: the check's scratch was not kept, or held a case's line" >&2; fi
+  rm -f "$work/../kept.sh"
   fresh sealed; git -C "$work/docs/notes" init -q nested; printf 'x\n' > "$work/docs/notes/nested/x.md"
   arm "a repository nested outside ignored folders is refused (custody)" 1 "'docs/notes/nested/' is a repository nested outside ignored folders"
   fresh sealed; ln -s nowhere "$d/zz-01-arm-alpha.md"
@@ -339,16 +366,15 @@ field() { grep -E "^# $1:" "$MANIFEST" | head -1 | sed "s/^# $1:[[:space:]]*//";
 seal="$(field seal | grep -xE 'sealed|unsealed')"
 [ -n "$seal" ] || note "$MANIFEST has no '# seal: sealed|unsealed' line"
 
-# Scratch on this repository's own volume, never `$TMPDIR` (leaf `PROGRAM.29`, `SCRATCH-LOCALITY`). It holds
-# names and digests only, never a case's text.
+# Scratch on this repository's own volume, never `$TMPDIR` (leaf `PROGRAM.29`, `SCRATCH-LOCALITY`). It holds well-
+# formed entries, names, blob ids and paths only, never a manifest line of another form nor a case's text (R5 D3).
 mkdir -p "$ROOT/target/doctrine_scratch"
 tmp="$(mktemp -d "$ROOT/target/doctrine_scratch/frozen_evaluation.XXXXXX")"; trap 'rm -rf "$tmp"' EXIT
-grep -vE '^[[:space:]]*(#|$)' "$MANIFEST" > "$tmp/lines.txt" || true
 # A line that is no entry is named by its number alone: its text could be anything, a case's line among it (R2 D2).
 while IFS= read -r n; do
   note "$MANIFEST's line $n is not '<sha256>  <file>' — every line but a comment or a blank is an entry"
 done < <(grep -nvE "$ENTRY|^[[:space:]]*(#|\$)" "$MANIFEST" | cut -d: -f1)
-grep -E "$ENTRY" "$tmp/lines.txt" > "$tmp/entries.txt" || true
+grep -E "$ENTRY" "$MANIFEST" > "$tmp/entries.txt" || true
 awk '{ print $2 }' "$tmp/entries.txt" > "$tmp/listed.txt"
 
 sealed_in="$(field sealed-in | grep -xE '[0-9a-f]{40}([0-9a-f]{24})?')"
@@ -447,11 +473,13 @@ if [ "$seal" = "sealed" ]; then
     tab="$(printf '\t')"
     # A repository staged as a gitlink that `.gitmodules` does not register: its files are none the check can list, so
     # it is refused (review R4 D3). A registered submodule is another repository, named in the honest limit.
-    registered="$(git config -f .gitmodules --get-regexp '^submodule\..*\.path$' 2>/dev/null | awk '{ print $2 }')"
+    # Registration is read from the staged `.gitmodules`, the one a commit records, each path whole (review R5 R1, R2).
+    git config -z --blob :.gitmodules --get-regexp '^submodule\..*\.path$' 2>/dev/null |
+      while IFS= read -r -d '' kv; do printf '%s\n' "${kv#*$'\n'}"; done > "$tmp/registered"
     while IFS= read -r -d '' rec; do
       case "$rec" in
         "160000 "*) at="${rec#*"$tab"}"
-                    printf '%s\n' "$registered" | grep -qxF -- "$at" ||
+                    grep -qxF -- "$at" "$tmp/registered" ||
                       note "'$at' is a repository staged as a gitlink that .gitmodules does not register — its files cannot be checked for a case" ;;
       esac
     done < <(git ls-files -s -z)
@@ -464,7 +492,7 @@ if [ "$seal" = "sealed" ]; then
     fi
     # Fail closed on what git cannot list: a folder it cannot open is named by git's own warning, a tracked file under a
     # folder that cannot be searched by the nearest such folder (review R3 D2).
-    { git ls-files -z --others --exclude-standard; git ls-files -z -m; } > "$tmp/loose" 2> "$tmp/loose.err"
+    { git ls-files -z --others --exclude-standard 2> "$tmp/loose.err"; git ls-files -z -m 2>/dev/null; } > "$tmp/loose"
     while IFS= read -r warning; do
       note "git could not list every file: ${warning#warning: } — a case's copy there cannot be ruled out"
     done < "$tmp/loose.err"

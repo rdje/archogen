@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the sealed cases' guard keeps no manifest line, and its verdict no race
+
+`ARCHOGEN-PROGRAM-0558` (leaf `PROGRAM.76`), `2026-10-10`.
+
+- The seal's check copied every manifest line into its scratch, and took a warning git gives while re-reading a
+  freshly written file for a refusal, so its verdict could hang on timing. It now reads only well-formed entries,
+  takes git's warnings from listing untracked files alone, and reads a submodule's registration from what is staged.
+  The texts put the acts that still reach a case as two kinds: writing an older commit to disk, and handing a sealed
+  file to a reader or a tool.
+- Validation: 63 arms, five failing on the previous check and four deliberate breaks each caught, both by untracked
+  runners, so not durable.
+
 ## archogen — the generated-sources routes' tests hold each judgment both ways
 
 `ARCHOGEN-M3-0555` (leaf `M3.6.6.4`), `2026-10-10`.

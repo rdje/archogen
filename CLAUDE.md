@@ -54,12 +54,11 @@ human is working. Follow it exactly.
   the part visible from here — each vendored checkout at its pin, nothing committed, modified or
   created in it; the rest is this rule
   (`docs/decisions/decision_repository-boundary-read-only.md`).
-- **The sealed evaluation set is never read before leaf `M6.5`.** Its text is out of the tree; never `git show` or
-  `git blame` a case, diff or grep `docs/evaluation/frozen/` with `-a`/`--text` or an external driver, run git on a
-  bare clone or with `--git-dir` from elsewhere, view such a commit in a viewer that diffs blobs itself, or check
-  out, clone, archive or add a worktree at a commit older than `6d61f65`, or revert `2f6f331`; fence every delegated
-  search away from it
-  (`docs/evaluation/README.md`). A case read is recorded.
+- **The sealed evaluation set is never read before leaf `M6.5`.** Its text is out of the tree. Never write a commit
+  older than `6d61f65` to disk (a checkout, restore, reset, archive, clone or worktree at it, a revert of `2f6f331`),
+  and never hand a sealed blob to a reader or a tool (`git show`/`blame` of a case, a diff or grep forced to text, an
+  external diff driver or `difftool`, a viewer that diffs blobs itself, git on a bare clone or with `--git-dir`);
+  fence every delegated search away from it (`docs/evaluation/README.md`). A case read is recorded.
 
 > One rule above all: **information that exists only in the live conversation is not yet
 > saved — route it to a layer and commit it before the turn ends.**
