@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the generated-sources routes' tests hold each judgment both ways
+
+`ARCHOGEN-M3-0555` (leaf `M3.6.6.4`), `2026-10-10`.
+
+- Three more review rounds found rules the gate kept but no route test held: a declared script taken for a chain,
+  every step's generator and every reader judged, in either order, and a later step's own input. Each now has a test
+  that fails when the rule is broken; the record claims a copy refused only by the role rules, which an admission
+  cannot lift.
+- Validation: fifteen route tests, three of the parent's named beside them; the crate's 180 tests; the mutations each
+  rule's test fails under, by an untracked runner, so not durable.
+
 ## archogen — the sealed cases' guard holds no wrong-form value in the shell, and refuses a stray gitlink
 
 `ARCHOGEN-PROGRAM-0554` (leaf `PROGRAM.76`), `2026-10-10`.

@@ -146,6 +146,19 @@ defect and 4 remarks.
 | R8-R3 | remark | a Rust copy's route needs its build, offline from the commit | said, citing the inventory record's §3 |
 | R8-R4 | remark | the mutation catalogue holds neither judgment | filed: `M3.6.8` |
 
+**Round 9**, `2026-10-10`, of `ffd2708`, by a read-only context that had not written the record, fenced from the
+sealed evaluation set. It ran the doctrine gate, the crate's tests (179 passed) and the route tests (14), reproduced
+the leaf's test counts at rounds 5 to 8, and mutated the gate and the provenance — untracked, so not durable: the
+judgments held in one direction only. Verdict: 2 defects and 3 remarks.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R9-D1 | defect | the §5 judgment held one way: a form's last generator alone, the last reader alone, a program-target generator for one reader alone, each passed every test | each held both ways: another role's step named first and last; a script from either role's package; a program-target generator in either role's second package, a test of its own |
+| R9-D2 | defect | "every committed file any step reads" held for one input only | a later step's own committed input named and reached in the chain's route |
+| R9-R1 | remark | `M3.6.8` said the two tests fail "under each" mutation | each test under its own; the leaf widened to round 9's mutations |
+| R9-R2 | remark | no changelog entry for rounds 7 and 8 | one entry for rounds 7 to 9 |
+| R9-R3 | remark | the marked pin held by equivalence | as written |
+
 ## Why
 
 The record closes on a round that finds no defect, as every design here does; each round, its findings and their
