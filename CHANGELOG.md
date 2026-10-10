@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the generated-sources rules' one-way defects are in the mutation catalogue
+
+`ARCHOGEN-M3-0594` (leaf `M3.6.8`), `2026-10-10`.
+
+- A review of the generated-sources record found, round after round, rules held only one way — the first generator
+  judged and not the last, one reader and not another — each shown by a throwaway script. The 23 such mutations are
+  now entries of the project's mutation catalogue, each run by the harness and each caught by the route tests, so the
+  record of them outlives the scripts.
+- Validation: the 23 entries through the harness, each killed; the catalogue's own tests; the focused tier on the
+  staged tree.
+
 ## archogen — the generated-sources record's review closes, and generated sources are done
 
 `ARCHOGEN-M3-0591` (leaf `M3.6.6.4`), `2026-10-10`.
