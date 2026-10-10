@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the design for the generated-sources rules' tests holds every recorded defect exactly
+
+`ARCHOGEN-M3-0601` (leaf `M3.6.9`), `2026-10-11`.
+
+- The design's first review found its new kinds of mutation reaching 7 of the 23 one-way defects on record, and its
+  sweep's copy placed outside the repository by an exception only the director grants. Now each defect on record is
+  itself a catalogue entry the rules' own tests must catch, and the sweep, with more kinds of mutation, carries the
+  check past the record — how far, measured defect by defect when it is built. The copy stays inside the repository:
+  the tests admit, in the tests alone, the configuration of the repository the copy was made from. The tests, the
+  code swept and the commands are named in full.
+- Validation: the parent's tests timed, 88 in 12.5 s; the record's, the reviews' and the book's gates; the focused
+  tier on the staged tree.
+
 ## archogen — the accepted designs' folder has room again
 
 `ARCHOGEN-PROGRAM-0600` (leaf `PROGRAM.79`), `2026-10-11`.
@@ -47,8 +60,9 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 - The generated-sources rules are held by the tests of their instrument only at the instances those tests build, and
   every attempt to name where else they must be held left a place out. The design decided here names none: every
   mutant the project's mutation sweep makes of the judgment code must be caught by those tests or shown harmless. It
-  adds the three kinds of mutation the defects found so far were, and runs the sweep's copy beside the repository,
-  where the trust gate's own rules let its tests run. Its review is open.
+  adds the three kinds of mutation the defects found so far were (not so, review round 1 found: they made 7 of the
+  23), and runs the sweep's copy beside the repository, where the trust gate's own rules let its tests run (withdrawn
+  by review round 1: the copy stays under `target/`). Its review is open.
 - Validation: the record's and the book's gates; the focused tier on the staged tree.
 
 ## archogen — the sealed cases' guard reads every file as prose, staged or on disk

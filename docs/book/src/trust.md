@@ -428,7 +428,8 @@ shares its generator's mistakes with whatever reads it, is declared, recognised,
 states (`M3.6.6.2`). Measured `2026-10-10`: `trust/roots.eadl` declares none, no program reads a file the recogniser
 marks, and every program's provenance is empty. A chain of generators and a generator or input in a vendored checkout
 stay refused, and a tool a script runs believed and named in every report, each for a reason and, where one exists, with
-a route within one step (`M3.6.6.4`, reviewed by a context that did not write it, its review closed `2026-10-10`). Whether the instrument's tests hold each of those rules wherever the code judges it — not only at the instances
-they build — is to be shown by mutation: every mutant of the judgment code caught by a test or shown harmless, under a
-design in review (`M3.6.9`). The package the verifier
+a route within one step (`M3.6.6.4`, reviewed by a context that did not write it, its review closed `2026-10-10`). Whether the instrument's tests hold the generated-sources rules — what a program reads, the chain, the blob rule,
+each generator's role against each reader — wherever the code judges them, not only at the instances they build, is to
+be shown under a design in review (`M3.6.9`): each one-way defect a review recorded caught by those tests, and every
+mutant the project's sweep makes of the judgment code caught or shown harmless. The package the verifier
 reads is fixed provisionally until `M4.7` writes real ones.
