@@ -654,7 +654,7 @@ mdBook that is the director's window into the project.
 
 - ID: `PROGRAM.69`
   Status: `active` — the tool, its gate and the seal committed `2026-10-10` (`ARCHOGEN-PROGRAM-0511`); its review open,
-  round 12's defects and arm gaps answered (`ARCHOGEN-PROGRAM-0535`), the claims narrowed, round 13 next
+  round 13's defects and arm gaps answered (`ARCHOGEN-PROGRAM-0539`), a stop held by the signal mask, round 14 next
   Goal: a closed subtree below an open top-level subtree is sealed too, so a tree whose top-level subtree stays open
   for long — on a blocked leaf, or a long feature — does not keep its finished leaves live.
   Reproduce / issue: `M3.6.6.2.1`'s commit was refused by `README-ROUTES`, *"docs/tasks/: 823457 bytes in total, over
@@ -737,7 +737,11 @@ mdBook that is the director's window into the project.
     ignored on entry left ignored — `target/p69r12/hybrid.sh`, these arms beside `76d8775`'s core → *"88 pass / 11 fail
     (99 arms)"*, the given-back interrupt, the two linked folders and the two not-whole rollbacks among them, then
     `--self-test` → *"98 pass / 0 fail (98 arms)"*; `python3 target/p69r12/mutate.py` → seven mutations, each
-    `killed`; both runners untracked, so not durable.
+    `killed`; both runners untracked, so not durable. After round 13: a stop held by the signal mask until the seal is
+    done, the recorded-stop route removed; the temporary file created new — `target/p69r13/hybrid.sh`, the arms as
+    committed beside `1ad87e4`'s core → *"88 pass / 10 fail (98 arms)"*, the held-stop arms, the refused seal's rollback
+    and the temporary path failing, then `--self-test` → *"98 pass / 0 fail (98 arms)"*; `python3
+    target/p69r13/mutate.py` → five mutations, each `killed`; both runners untracked, so not durable.
   - [x] **NO REGRESSION** — `bash scripts/check_task_history.sh` at `e624001` → *"OK (170 sealed file(s) … every sealed
     leaf proven against its tree before its seal)"*: the 142 seals before this change judged by every generalised leg, the byte
     rebuild included. `bash scripts/run_self_tests.sh` → *"OK — 47 self-test(s) passed"*; the
@@ -752,7 +756,8 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0510 (leaf PROGRAM.69)`, the review reopened; `ARCHOGEN-PROGRAM-0511 (leaf PROGRAM.69)`;
   `ARCHOGEN-PROGRAM-0514 (leaf PROGRAM.69)`, round 7 answered; `ARCHOGEN-PROGRAM-0517 (leaf PROGRAM.69)`, round 8;
   `ARCHOGEN-PROGRAM-0521 (leaf PROGRAM.69)`, round 9; `ARCHOGEN-PROGRAM-0525 (leaf PROGRAM.69)`, round 10;
-  `ARCHOGEN-PROGRAM-0531 (leaf PROGRAM.69)`, round 11; `ARCHOGEN-PROGRAM-0535 (leaf PROGRAM.69)`, round 12
+  `ARCHOGEN-PROGRAM-0531 (leaf PROGRAM.69)`, round 11; `ARCHOGEN-PROGRAM-0535 (leaf PROGRAM.69)`, round 12;
+  `ARCHOGEN-PROGRAM-0539 (leaf PROGRAM.69)`, round 13
 
 - ID: `PROGRAM.70`
   Status: `done` — started `2026-10-10`, decomposed into `.1`, the bytes, and `.2`, the count, closed the same day with `.2`
@@ -969,7 +974,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.69` | `active` | its review open: round 13 next, on the committed tool, its seal already in place |
+| 1 | `PROGRAM.69` | `active` | its review open: round 14 next, on the committed tool, its seal already in place |
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The second row waits on the director's yes. The pending leaves beside them —
@@ -1129,6 +1134,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `2026-10-10` | `PROGRAM.53` | the gate's arms on the old gate and the new; the crate's tests, clippy; every self-test; focused on the staged tree | 9 / 2, then 11 / 0; 165 passed, clean; 48 passed; `passed — 3 passed, 0 failed`, stamped |
 | `2026-10-10` | `PROGRAM.69` (round 12) | the new arms beside `76d8775`'s core; the self-test; seven mutations of round 12's rules; the gate over 172 files; every self-test | 88 pass / 11 fail, the working tree's and not durable; 98 / 0; each killed by an untracked runner, not durable; OK; 48 passed |
 | `2026-10-10` | `PROGRAM.75` | the reproducer against bedrock `835547e`; the feedback gates; the source ledger; focused on the staged tree | exit 0, reproduced; OK, exit 0; OK; `passed — 3 passed, 0 failed` |
+| `2026-10-10` | `PROGRAM.69` (round 13) | the arms as committed beside `1ad87e4`'s core; the self-test; five mutations of round 13's rules; the gate over 172 files; every self-test; focused on the staged tree | 88 pass / 10 fail, the working tree's and not durable; 98 / 0; each killed by an untracked runner, not durable; OK; 48 passed; `passed — 3 passed, 0 failed` |
 
 ## Commit Log
 
@@ -1282,6 +1288,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.53` | `ARCHOGEN-PROGRAM-0534 (leaf PROGRAM.53)` | **a cited focused run backs the tree committed**: the tier stamps the tree it passed on; `UNTRACKED-CODE` refuses a staged leaf citing it without that stamp |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0535 (leaf PROGRAM.69)` | **review round 12 answered, the claims narrowed**: a recorded stop answered once the handlers are given back; a link on any written path refused; "rolled back" of a whole rollback alone; 98 arms |
 | `PROGRAM.75` | `ARCHOGEN-PROGRAM-0537 (leaf PROGRAM.75)` | **the second sample proposed to bedrock**: an outbound tracker, `BR-001`, its reproducer measured on bedrock `835547e` |
+| `PROGRAM.69` | `ARCHOGEN-PROGRAM-0539 (leaf PROGRAM.69)` | **review round 13 answered by method**: a stop held by the signal mask until the seal is done; the temporary file created new; each stop's exit code armed; 98 arms |
 
 ## Changelog
 

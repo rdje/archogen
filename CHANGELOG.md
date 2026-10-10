@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a seal finishes before a request to stop takes effect
+
+`ARCHOGEN-PROGRAM-0539` (leaf `PROGRAM.69`), `2026-10-10`.
+
+- Three reviews in a row found moments in which a request to stop could slip between sealing's writes and its
+  record of them. Instead of answering a stop after the fact, sealing now holds Ctrl-C, a terminate and a hang-up
+  until it is done — proven and kept, or refused and undone — so the history is whole either way, with no such moment
+  left. Its temporary file is created new, never written through something already there.
+- Validation: arms for a stop at each write, mid-proof, twice, and during a refused seal's undoing, each with its own
+  exit code, ten failing on the old tool; five deliberate breaks, each caught by an untracked runner, so not durable
+  (98 arms). One arm had been passing for the wrong reason — the shell's own report of a killed job quotes the source
+  — and now reads the tool's output line alone.
+
 ## archogen — a report to the template this project came from
 
 `ARCHOGEN-PROGRAM-0537` (leaf `PROGRAM.75`), `2026-10-10`.
@@ -22,7 +35,7 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
   finds the seal kept, and the texts say so; a stop recorded until then is answered by undoing everything. A link
   anywhere on a path the seal writes — not only the files themselves — is refused, and "rolled back" is printed only
   when everything was undone. A hang-up ignored on entry, as under `nohup`, stays ignored.
-- Validation: arms for each, five failing on the old tool; seven deliberate breaks of the rules, each caught by an
+- Validation: arms for each, six failing on the old tool; seven deliberate breaks of the rules, each caught by an
   untracked runner, so not durable (98 arms).
 
 ## archogen — a cited test run backs the very tree committed

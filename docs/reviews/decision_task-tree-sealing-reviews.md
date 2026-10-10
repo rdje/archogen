@@ -280,6 +280,26 @@ narrows the claims to what the code does and the arms hold, as round 3 of the ge
 | R12-R4 | remark | restoring the handlers is held by no arm | not claimed |
 | R12-R5 | remark | the rest of the text checked and true | — |
 
+**Round 13**, `2026-10-10`, an eleventh confirmation, in a clone of `1ad87e4`, by a read-only context new to the change.
+It reproduced the gate, every self-test, the census and the seal; fuzzed 535 seals and 1 503 hand seals, every one as
+its oracle predicts, and 502 late live leaves, every one refused; and ran nineteen mutations of round 12's rules — its
+runners untracked, so not durable. Verdict: 4 defects of this change and 2 arm gaps. Rounds 11 to 13 each found a
+moment between a write and the record of a stop; the answer changes method: a stop is held by the signal mask, not
+recorded and answered, so no such moment exists.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R13-D1 | defect | a second stop during the rollback that answered a given-back stop cut it short | a stop is held by the signal mask through the writes, the proof and any rollback, taking effect once the seal is done; the given-back route is gone; arms for two stops mid-seal and for an interrupt during a refused seal's rollback |
+| R13-D2 | defect | three texts put the "seal kept" boundary at the check, the code at the hand-back | one boundary, the seal done: the record, the book and the changelog say so |
+| R13-D3 | defect | a link at `put`'s temporary path was written through, and the tree replaced by it | the temporary file created new (`open` exclusive), removed only by the call that created it; an arm plants the link |
+| R13-D4 | defect | the changelog's "five failing on the old tool" | six |
+| R13-AG1 | arm gap | only SIGINT's exit code was checked | each stop's arm expects its own: 130, 143, 129 |
+| R13-AG2 | arm gap | "rolled back" on the given-back route unheld | the route is gone; the refusal's message keeps its arm |
+| R13-R1 | remark | the leaf's hybrid tally was taken before the hang-up arm | said; this round's tally is of the arms as committed |
+| R13-R2 | remark | a SIGKILL between a temporary write and its rename leaves the temporary file | within the stated limit |
+| R13-R3 | remark | `MEMORY.md`'s line on `M3.6.6.4` | that leaf's matter |
+| — | found while answering | an arm passed with the "sealed" line lost: bash's report of a job killed by a signal quotes the command's source, which holds the format string | every check of that line matches the tool's output line, anchored; the mutation dropping its flush killed |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.

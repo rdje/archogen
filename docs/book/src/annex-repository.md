@@ -173,9 +173,9 @@ A task tree records every leaf of its work, with its checklist and evidence. Mos
   work, the list of what is next and the logs stay where they were.
 - **The proof.** Before anything is written, the tool checks that putting every leaf back would give the tree as it
   was, byte for byte (`docs/decisions/decision_task-tree-sealing.md`). After writing, it runs the check below on the
-  result, and undoes every write if the check refuses, an error stops it or it is asked to stop — each file written
-  whole or not at all, and whatever it could not undo, as on a full disk, named; a stop once the check is done finds
-  the seal kept, and a process killed outright leaves its writes, for the next check to name. So the history admits every line a tree may hold:
+  result, and undoes every write if the check refuses or an error stops it — each file written whole or not at all,
+  and whatever it could not undo, as on a full disk, named. A request to stop waits until the tool is done, so the
+  history is whole either way; only a process killed outright leaves its writes, for the next check to name. So the history admits every line a tree may hold:
   its line ceiling is the trees' own (`docs/decisions/decision_task-history-line-ceiling.md`).
 - **What it still carries.** A sealed leaf keeps the hand-offs it quoted; the check that each design's hand-off is
   quoted word for word by its leaf reads the sealed text, never the two-line placeholder (`PROGRAM.63`).
