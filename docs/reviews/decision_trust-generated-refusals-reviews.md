@@ -199,6 +199,24 @@ adopts: §6 now says, of each test, exactly the positions and counts it holds.
 | R12-R2 | remark | the tests' doc comment said rounds 5 to 10 | 5 to 12 |
 | R12-R3 | remark | the self-generating route's "any package it depends on" without "directly or not" | said, in the record and the chapter |
 
+**Round 13**, `2026-10-10`, of `ff0a180`, by a read-only context that had not written the record, fenced from the
+sealed evaluation set. It ran the doctrine gate, the crate's tests (181 passed) and the inventory at HEAD, and
+mutated and probed the gate — untracked, so not durable: the gate refused what the record says in every case it
+probed. Verdict: 6 defects and 3 remarks. Round 11's paragraph above, "the sweep held the step-3 refusals", stands as
+written; R12-R1's answer, "step 1 and step 3's", is its correction.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R13-D1 | defect | the third reader never asserted, three of six orders run | both reader tests run all six orders and assert every reader of another role |
+| R13-D2 | defect | the harness as a reader held only by a test §6 did not name | `generator_tests::the_harness_may_use_its_pair_s_roles_and_no_other` named, with what it holds |
+| R13-D3 | defect | the chain's second clause through a marked file held only alone | in the sweep: a program target compiling a marked, undeclared module, every position — fifteen kinds |
+| R13-D4 | defect | no row stated a middle generator's provenance | the vendored test's row: three generators, the executable in the middle, each reached; the chain's row: two steps |
+| R13-D5 | defect | `M3.6.8` lagged round 12 | rounds 8 to 13, each mutation's test named |
+| R13-D6 | defect | rounds 10 and 11's completeness claims stood | the changelog entry narrowed to the kinds it held; review rows 10 and 11 stand as written, this row their correction |
+| R13-R1 | remark | R12-R1's answer was not applied to round 11's paragraph | said above |
+| R13-R2 | remark | two sentences held only by equivalence, what a script runs being unread | kept: the parent's §8, as R9-R3 |
+| R13-R3 | remark | "a form no program reads is held to the parent's §6" has no row | the parent's behaviour, cited, not a route |
+
 ## Why
 
 The record closes on a round that finds no defect, as every design here does; each round, its findings and their

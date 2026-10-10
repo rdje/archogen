@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the generated-sources routes' tests read every reader in every order
+
+`ARCHOGEN-M3-0566` (leaf `M3.6.6.4`), `2026-10-10`.
+
+- Rounds 12 and 13 found more rules held at some positions only: a middle reader, a middle input, a root's own
+  program, a marked file a built generator compiles, and the third reader never asserted. The reader tests now run all
+  six orders of three readers, asserting every one the rule refuses; the sweep holds fifteen kinds of refused entry;
+  the record's §6 says exactly the positions and counts each test holds.
+- Validation: sixteen route tests; the crate's 181 tests; each mutation failing a test, by an untracked runner, so not
+  durable.
+
 ## archogen — the published branch no longer holds the sealed cases
 
 `ARCHOGEN-PROGRAM-0565` (leaf `PROGRAM.76`), `2026-10-10`.
@@ -28,12 +39,12 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 - Validation: 65 arms; two failing on the previous check and four deliberate breaks each caught, both by untracked
   runners, so not durable.
 
-## archogen — every refusal the generated-sources record names holds wherever its entry stands
+## archogen — the refusals the generated-sources record then named hold wherever their entry stands
 
 `ARCHOGEN-M3-0560` (leaf `M3.6.6.4`), `2026-10-10`.
 
 - Two more rounds found refusals tested only where the refused file stood alone in its form, or at one position. One sweep now places each
-  kind of refused entry the record names — declared, marked, under a vendored checkout, named twice, another role's
+  kind of refused entry the record then named — declared, marked, under a vendored checkout, named twice, another role's
   program, a program built from a generated file, a lone Rust file — alone, first, in the middle and last, and the gate
   refuses it every time.
 - Validation: sixteen route tests; the crate's 181 tests; the mutations each fails under, by an untracked runner, so
