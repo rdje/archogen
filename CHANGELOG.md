@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — an interrupted seal exits 130 even with its report lost
+
+`ARCHOGEN-PROGRAM-0548` (leaf `PROGRAM.69`), `2026-10-10`.
+
+- With its output closed, an interrupted seal exited 120 rather than 130; it now exits 130. SIGABRT is held as well,
+  since an abort ends the process whatever is held, leaving SIGKILL, SIGSTOP and six fault signals unheld. The texts
+  say that only an interrupt reports which outcome it found, and only where its output can be written.
+- Validation: arms for the mask's breadth both ways and for the start recorded before the first write; five
+  deliberate breaks, each caught by an untracked runner, so not durable (111 arms).
+
 ## archogen — the sealed cases' guard fails closed, and never prints a line
 
 `ARCHOGEN-PROGRAM-0547` (leaf `PROGRAM.76`), `2026-10-10`.
@@ -22,9 +32,9 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 
 `ARCHOGEN-PROGRAM-0546` (leaf `PROGRAM.69`), `2026-10-10`.
 
-- A stop that came while sealing's own report could not be written said nothing had been written, though the seal
-  was made and kept; it now says the outcome could not be said. The texts name the signals sealing leaves unheld —
-  SIGKILL and seven fault signals — rather than claiming every signal.
+- An interrupt that came while sealing's own report could not be written said nothing had been written, though the
+  seal was made and kept; it now says the outcome could not be said. The texts name the signals sealing leaves
+  unheld — SIGKILL, SIGSTOP and seven fault signals — rather than claiming every signal.
 - Validation: arms for the mask in force at the first write, a lost report, a plain file at the index's temporary
   path and the error path's own breach line; six deliberate breaks, each caught by an untracked runner, so not
   durable (109 arms).
@@ -46,8 +56,8 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `ARCHOGEN-PROGRAM-0543` (leaf `PROGRAM.69`), `2026-10-10`.
 
 - Sealing now holds every signal but SIGKILL, SIGSTOP and seven fault signals — not only Ctrl-C, a terminate and a
-  hang-up — until it is done, and a stop then reports what actually happened: before anything was written, after the
-  seal said its outcome, or after a seal whose report could not be written. An error that stops a seal is reported before the stop takes effect. A stray file
+  hang-up — until it is done, and an interrupt then reports what happened: before anything was written, or after the
+  seal said its outcome. An error that stops a seal is reported before the stop takes effect. A stray file
   at a temporary path is refused before anything is written.
 - Validation: arms for a stop at the first write, for four more signals, for an error under a held stop and for a
   stop before any write; nine failing on the previous tool; seven deliberate breaks, each caught by an untracked

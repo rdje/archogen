@@ -338,6 +338,29 @@ rules, nine killed — its runners untracked, so not durable. Verdict: 2 defects
 | R15-R2 | remark | the flush on the error path is equivalent, stderr line-buffered | kept |
 | R15-R3 | remark | the changelog's "from before its first write" was not new in round 14 | reworded |
 
+**Round 16**, `2026-10-10`, a fourteenth confirmation, in a clone of `755c151`, by a read-only context new to the
+change and fenced from the sealed evaluation set. It reproduced the gate, every self-test, the census, round 15's
+figures and the seal; rebuilt the first seal's 28 files from `72bd446` by an oracle of its own, byte for byte; fuzzed
+160 trees, 532 units sealed as the oracle predicts, 532 late live leaves refused and 632 hand seals judged as the
+oracle predicts; and ran eleven mutations of round 15's rules, seven killed — its runners untracked, so not durable.
+Verdict: 6 defects of this change and 2 arm gaps.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R16-D1 | defect | "the stop saying so" of every stop, where only the interrupt reports; a terminate with the output closed says nothing | narrowed: the outcome said where the output can be written, and the interrupt alone says which; the changelog's entries so |
+| R16-D2 | defect | the script's comment kept "and its outcome said" | "said where the output can be written" |
+| R16-D3 | defect | the round-14 changelog entry credited round 15's behaviour | the clause dropped from it |
+| R16-D4 | defect | the round-15 changelog entry left SIGSTOP out | named |
+| R16-D5 | defect | "would hang it" is false for SIGABRT: `abort()` ends a process whatever the mask | SIGABRT held; six fault signals left out, "may hang it", SIGSEGV measured |
+| R16-D6 | defect | an interrupt with the output closed exited 120, the exit's own flush failing | the output pointed at nothing before the exit; the lost report's arm checks 130 |
+| R16-AG1 | arm gap | the fault signals' absence from the mask held by no arm | the mask arm requires none of the eight held, SIGABRT among those held |
+| R16-AG2 | arm gap | the start recorded before the first write held by no arm | two arms: an interrupt at the folder's creation then another writer's file, and the folder's creation failing under a held interrupt |
+| R16-R1 | remark | the record's row 14 and the leaf's round-14 log rows keep "every signal a mask can hold" | they stand as written; rows 15 and 16 are their correction |
+| R16-R2 | remark | R15-AG2's arm excluded "so it was rolled back", not "rolled back" | it now excludes "rolled back" |
+| R16-R3 | remark | "the three arm gaps passing there": four | four |
+| R16-R4 | remark | the lost report's arm races only toward a false failure | kept |
+| R16-R5 | remark | a changelog line of about 165 columns | rewrapped |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.

@@ -54,8 +54,8 @@
 # THE SEAL writes nothing unless the tree it would leave, with every new stub replaced by its body from its new sealed
 # file, is the tree as it stood, byte for byte, no entry already takes a sealed file's path, and no link lies on a path
 # it writes, nor any entry at a rewritten file's temporary path (R14 D3); and it rolls everything back if the gate then
-# refuses the result, or an error stops it. A stop — any signal but SIGKILL, SIGSTOP and the seven fault signals — is
-# held from before the first write until the seal is done (R13, R14, R15). Each file it rewrites is written whole or
+# refuses the result, or an error stops it. A stop — any signal but SIGKILL, SIGSTOP and the six fault signals — is
+# held from before the first write until the seal is done (R13 to R16). Each file it rewrites is written whole or
 # not at all (R9-1), each write noted before it is made (R10 D1); it says "rolled back" only of a rollback that undid
 # everything (R12 D3).
 #
@@ -263,10 +263,12 @@ def layout(index_text):
         if line.startswith("| `") and n not in in_tables:
             note("%s:%d: a row outside its tree's table, under its header" % (INDEX, n + 1))
 
-# Every signal held through a seal (reviews R14 D2, R15 D2) but SIGKILL and SIGSTOP, which no mask holds, and the seven
-# fault signals, left out whoever sends them: one the interpreter raises on itself while it is blocked would hang it.
-HELD = signal.valid_signals() - {getattr(signal, s) for s in ("SIGKILL", "SIGSTOP", "SIGSEGV", "SIGBUS", "SIGFPE",
-                                                              "SIGILL", "SIGTRAP", "SIGSYS", "SIGABRT") if hasattr(signal, s)}
+# Every signal held through a seal (reviews R14 D2, R15 D2, R16 D5) but SIGKILL and SIGSTOP, which no mask holds, and the
+# six signals a fault raises — SIGSEGV, SIGBUS, SIGFPE, SIGILL, SIGTRAP, SIGSYS — left out whoever sends them: blocked, a
+# fault the interpreter raises on itself may hang it (SIGSEGV does on macOS, measured). SIGABRT is held: `abort()` ends
+# the process whatever the mask.
+UNHELD = ("SIGKILL", "SIGSTOP", "SIGSEGV", "SIGBUS", "SIGFPE", "SIGILL", "SIGTRAP", "SIGSYS")
+HELD = signal.valid_signals() - {getattr(signal, s) for s in UNHELD if hasattr(signal, s)}
 STARTED = []  # one entry once a seal holds its stops and is about to write (review R15 D1)
 SAID = []  # one entry once a seal under way has said its outcome — kept, refused, or stopped by an error
 
@@ -624,13 +626,14 @@ def seal(tree_name):
     # which the run's own handler then names as a breach, or any other — rolls the seal back first and is said before it
     # goes on (reviews R5-2, R6-2, R7-4, R9-2, R14 D1). The tree and the index are written whole or not at all, and the
     # rollback undoes what was written alone, each step on its own, naming what it could not undo (R9-1). Every signal
-    # but nine (`HELD`) is held for the whole of it, from before the first write: a stop that comes takes effect
-    # once the seal is done — proven and kept, refused and rolled back, or stopped by an error and rolled back — and its
-    # outcome said, so the seal is whole either way, with no moment between a write and its record for a stop to fall in
-    # (reviews R13, R14 D2). A signal ignored on entry stays ignored. The git the proof runs inherits the mask: a stop
-    # does not end a git that hangs. ⚠️ What the mask leaves out — SIGKILL, and the seven fault signals whoever sends
-    # them — and the machine stopping leave the writes, which the next gate run proves as any seal not yet committed (review R8-2); and a failure that defeats the
-    # rollback's own writes too, a full disk, leaves what it names.
+    # but eight (`HELD`) is held for the whole of it, from before the first write: a stop that comes takes effect once
+    # the seal is done — proven and kept, refused and rolled back, or stopped by an error and rolled back — its outcome
+    # said where the output can be written, so the seal is whole either way, with no moment between a write and its
+    # record for a stop to fall in (reviews R13, R14 D2, R16 D2). A signal ignored on entry stays ignored. The git the
+    # proof runs inherits the mask: a stop does not end a git that hangs. ⚠️ What the mask leaves out — SIGKILL and the
+    # six fault signals whoever sends them — and the machine stopping leave the writes, which the next gate run proves
+    # as any seal not yet committed (review R8-2); and a failure that defeats the rollback's own writes too, a full disk,
+    # leaves what it names.
     previous = signal.pthread_sigmask(signal.SIG_BLOCK, HELD)
     try:
         STARTED.append(path)
@@ -691,6 +694,10 @@ try:
                 "once the seal was done; its outcome is said above" if SAID else
                 "once the seal was done; its outcome could not be said — the next gate run proves what is there"),
                 file=sys.stderr)
+            try:
+                sys.stdout.flush()
+            except OSError:  # a closed output: the exit's own flush would turn 130 into 120 (review R16 D6)
+                os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
             sys.exit(128 + signal.SIGINT)
         fails.clear()
     checked, nstubs = gate()
@@ -1246,7 +1253,7 @@ PY
   printf -- '# P\n\n## Task Tree\n\n- ID: `P`\n  Status: `active`\n  Goal: %s\n\n- ID: `P.1`\n  Status: `done`\n  Goal: %s\n  Commit: `ARCHOGEN-P-0001`\n' "$(python3 -c 'print("x" * 10000)')" "$(python3 -c 'print("y" * 8000)')" > "$work/docs/tasks/P.md"
   commit
   limit=16 arm "a rollback a full disk stops names what it could not undo" 1 "could not undo docs/tasks/P.md, not restored" --seal P
-  printf '%s' "$LAST" | grep -qF "and its rollback left what it named above" && ! printf '%s' "$LAST" | grep -qF "so it was rolled back" ||
+  printf '%s' "$LAST" | grep -qF "and its rollback left what it named above" && ! printf '%s' "$LAST" | grep -qF "rolled back" ||
     { arms=$((arms + 1)); echo "SELF-TEST: an error's rollback that was not whole says it was rolled back (review R15 AG2)" >&2; }
   grep -q '^  Status: `done` — sealed in' "$work/docs/tasks/P.md" && [ -f "$work/docs/task-history/P/P.1.md" ] &&
     [ -z "$(git -C "$work" status --porcelain -- docs/task-history/INDEX.md)" ] ||
@@ -1303,16 +1310,20 @@ if WHEN:
     if WHEN == "tmplink":
         os.getpid = lambda: 4242  # so the temporary file's name is known before the run
     def makedirs(name, *a, **k):
+        if WHEN == "mkdirfail" and os.path.abspath(str(name)).endswith("/task-history/Q"):
+            fire()
+            raise OSError("the folder is held")  # the first write fails, under a held interrupt
         real_makedirs(name, *a, **k)
-        if WHEN == "mkdir" and os.path.abspath(str(name)).endswith("/task-history/Q"):
+        if WHEN in ("mkdir", "mkdirplant") and os.path.abspath(str(name)).endswith("/task-history/Q"):
             fire()
         if WHEN == "maskcheck" and os.path.abspath(str(name)).endswith("/task-history/Q"):
             left = {getattr(signal, s) for s in ("SIGKILL", "SIGSTOP", "SIGSEGV", "SIGBUS", "SIGFPE", "SIGILL", "SIGTRAP",
-                                                 "SIGSYS", "SIGABRT") if hasattr(signal, s)}
+                                                 "SIGSYS") if hasattr(signal, s)}
             libc = set(range(32, signal.SIGRTMIN)) if hasattr(signal, "SIGRTMIN") else set()  # glibc's own, never maskable
-            missing = signal.valid_signals() - left - libc - set(real_mask(signal.SIG_BLOCK, []))
+            mask = set(real_mask(signal.SIG_BLOCK, []))
+            missing, held = signal.valid_signals() - left - libc - mask, left & mask
             with real_open(os.environ["SEAL_MASKCHECK"], "w") as out:
-                out.write("ok\n" if not missing else "missing %s\n" % sorted(missing))
+                out.write("ok\n" if not missing and not held else "missing %s, held %s\n" % (sorted(missing), sorted(held)))
     def mask(how, sigs):
         if WHEN == "early":  # a stop before the mask is set: before the first write
             fire()
@@ -1351,7 +1362,7 @@ if WHEN:
             fire()
         if WHEN == "vanish" and mode == "x" and "/task-history/" in os.path.abspath(str(file)):
             os.rmdir(os.path.dirname(os.path.abspath(str(file))))
-        if WHEN == "plant" and mode == "x" and "/task-history/" in os.path.abspath(str(file)):
+        if WHEN in ("plant", "mkdirplant") and mode == "x" and "/task-history/" in os.path.abspath(str(file)):
             with real_open(file, "w") as other:
                 other.write("another writer's\n")
         f = real_open(file, mode, *a, **k)
@@ -1483,11 +1494,12 @@ HOOK
     printf '%s\n' "$out" | tail -2 | sed 's/^/    /' >&2
   fi
   rm -f "$work/docs/task-history/.INDEX.md.seal-4242"; restore
-  # The mask in force at the first write holds every signal but SIGKILL, SIGSTOP and the seven faults (review R15 AG1).
+  # The mask in force at the first write holds every signal but SIGKILL, SIGSTOP and the six fault signals, and none of
+  # those (reviews R15 AG1, R16 AG1).
   arms=$((arms + 1))
   out="$(cd "$work" && SEAL_HOOK=maskcheck SEAL_MASKCHECK="$SCRATCH/maskcheck" PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?
   if [ "$rc" -eq 0 ] && [ "$(cat "$SCRATCH/maskcheck" 2>/dev/null)" = "ok" ] && proven; then
-    ok=$((ok + 1)); echo "  ✅ the mask at the first write holds every signal but the nine"
+    ok=$((ok + 1)); echo "  ✅ the mask at the first write holds every signal but the eight, and none of them"
   else
     echo "SELF-TEST: the mask at the first write — rc $rc, $(cat "$SCRATCH/maskcheck" 2>/dev/null)" >&2
   fi
@@ -1495,14 +1507,39 @@ HOOK
   # A stop held while the seal's own report cannot be written, its output a pipe nobody reads: the seal kept, and the
   # stop says the outcome could not be said, never that nothing was written (review R15 D1).
   arms=$((arms + 1))
-  (cd "$work" && SEAL_HOOK=tree PYTHONPATH="$hook" bash "$SELF" --seal Q 2>"$SCRATCH/err" | true)
-  if grep -qF "interrupted once the seal was done; its outcome could not be said" "$SCRATCH/err" &&
+  (cd "$work" && SEAL_HOOK=tree PYTHONPATH="$hook" bash "$SELF" --seal Q 2>"$SCRATCH/err" | true; echo "${PIPESTATUS[0]}" > "$SCRATCH/rc")
+  if [ "$(cat "$SCRATCH/rc")" = 130 ] && grep -qF "interrupted once the seal was done; its outcome could not be said" "$SCRATCH/err" &&
      ! grep -qF "before the seal wrote anything" "$SCRATCH/err" && proven; then
     ok=$((ok + 1)); echo "  ✅ a stop after a seal whose report could not be written says so"
   else
     echo "SELF-TEST: a stop after an unwritten report:" >&2; tail -3 "$SCRATCH/err" | sed 's/^/    /' >&2
   fi
-  rm -f "$SCRATCH/err"; restore
+  rm -f "$SCRATCH/err" "$SCRATCH/rc"; restore
+  # The start recorded before the first write: an interrupt held at the folder's creation, then another writer's file at
+  # the sealed path — the seal stops on it, is rolled back, says so, and the interrupt names an outcome said, never a
+  # seal that wrote nothing (review R16 AG2).
+  arms=$((arms + 1))
+  out="$(cd "$work" && SEAL_HOOK=mkdirplant PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?
+  if [ "$rc" -eq 130 ] && printf '%s' "$out" | grep -qF "stopped on FileExistsError" &&
+     printf '%s' "$out" | grep -qF "interrupted once the seal was done; its outcome is said above" &&
+     ! printf '%s' "$out" | grep -qF "before the seal wrote anything"; then
+    ok=$((ok + 1)); echo "  ✅ a stop held from the folder's creation names the outcome said, the start recorded first"
+  else
+    echo "SELF-TEST: a stop held from the folder's creation — rc $rc, or the wrong message:" >&2
+    printf '%s\n' "$out" | tail -3 | sed 's/^/    /' >&2
+  fi
+  rm -rf "$work/docs/task-history/Q"; restore
+  # The first write itself failing under a held interrupt: the start was recorded before it (review R16 AG2).
+  arms=$((arms + 1))
+  out="$(cd "$work" && SEAL_HOOK=mkdirfail PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?
+  if [ "$rc" -eq 130 ] && printf '%s' "$out" | grep -qF "stopped on OSError: the folder is held" &&
+     printf '%s' "$out" | grep -qF "interrupted once the seal was done; its outcome is said above" && clean; then
+    ok=$((ok + 1)); echo "  ✅ a first write that fails under a held stop finds the start recorded before it"
+  else
+    echo "SELF-TEST: a first write that fails under a held stop — rc $rc, or the wrong message:" >&2
+    printf '%s\n' "$out" | tail -3 | sed 's/^/    /' >&2
+  fi
+  restore
   # A hang-up ignored on entry, as under nohup, stays ignored: the seal runs to its end and the run passes (review R12).
   arms=$((arms + 1))
   out="$(cd "$work" && trap '' HUP && SEAL_HOOK=hup PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?
