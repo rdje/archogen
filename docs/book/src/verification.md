@@ -206,7 +206,9 @@ the tests that must catch it. The harness checks each step:
 - the file was restored byte for byte.
 
 A defect that does not even compile is a broken entry, never a "kill". A run that is interrupted
-leaves a marker, and the next run refuses to start until the file is restored.
+leaves a marker, and the next run refuses to start until the file is restored. Each entry's tests run under a time
+limit (`ARCHOGEN_MUTATE_TIMEOUT`): a defect that makes a test hang is reported as a hang the tests reach, their whole
+process group stopped, not waited on as a run once was (`PROGRAM.67`).
 
 An entry can also break without anyone running it: the code it names moves, and its text is no longer there.
 One entry went that way when an import line gained a name, and the whole catalog then refused to run, unseen,

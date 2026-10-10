@@ -3860,3 +3860,25 @@ to
                 out.insert(key, render(form));
             }
 end
+
+mutation mutate-a-hang-kills-the-command-alone
+file xtask/src/mutation.rs
+test -p xtask mutation::tests::a_run_past_its_limit_is_stopped_with_everything_it_started
+expect killed
+why PROGRAM.67: past its limit the whole process group is killed — cargo, rustc and the test binaries — not the command alone.
+from
+                    .args(["-KILL", &format!("-{}", child.id())])
+to
+                    .args(["-0", &format!("{}", child.id())])
+end
+
+mutation mutate-a-hang-is-waited-on
+file xtask/src/mutation.rs
+test -p xtask mutation::tests::a_run_past_its_limit_is_stopped_with_everything_it_started
+expect killed
+why PROGRAM.67: a run past its limit is stopped, never waited on.
+from
+            if started.elapsed() >= limit {
+to
+            if started.elapsed() >= limit && false {
+end

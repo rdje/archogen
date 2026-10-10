@@ -12,16 +12,20 @@
 //! - a mutation that does not **compile** is a broken catalog entry, never counted as "killed";
 //! - the original is restored and read back **byte for byte**, whatever happened — a `Drop` guard covers a
 //!   panic, and a sentinel file under `target/` makes an interrupted run refuse to start until the file it
-//!   left mutated is restored.
+//!   left mutated is restored;
+//! - the tests run under a limit, `ARCHOGEN_MUTATE_TIMEOUT` seconds (600 unless set), in a process group of their
+//!   own: past it the whole group is killed — cargo, rustc and the test binaries — and the entry is reported as a
+//!   hang the tests reach, never waited on (leaf `PROGRAM.67`; a catalogue run once waited 1 507.5 s on one).
 //!
 //! Exit 0: every entry did what the catalog expects. 1: a mutation survived that should have been killed, or
 //! the reverse. 2: the catalog itself is broken (unparsable, a text not found once, a mutation that does not
 //! compile) or an interrupted run is pending.
 
 use std::fs;
+use std::io::Read;
 use std::path::{Path, PathBuf};
-use std::process::Command;
-use std::time::Instant;
+use std::process::{Command, ExitStatus, Stdio};
+use std::time::{Duration, Instant};
 
 /// One catalog entry.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -210,8 +214,70 @@ impl Drop for Restore {
 enum Seen {
     /// The names of the tests that failed, as cargo lists them.
     Killed(Vec<String>),
+    /// The tests ran past the limit, in seconds, and their process group was killed: a hang they reach.
+    Hung(u64),
     Survived,
     DoesNotCompile(String),
+}
+
+/// A command's run under a limit: its exit status, or none when it ran past the limit and its group was killed.
+struct Bounded {
+    status: Option<ExitStatus>,
+    stdout: Vec<u8>,
+    stderr: Vec<u8>,
+}
+
+/// The limit on one entry's tests: `ARCHOGEN_MUTATE_TIMEOUT` seconds, 600 unless set.
+fn limit() -> Duration {
+    Duration::from_secs(
+        std::env::var("ARCHOGEN_MUTATE_TIMEOUT")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(600),
+    )
+}
+
+/// Run `cmd` in a process group of its own, its output read as it comes; past `limit`, kill the whole group — the
+/// command and everything it started — and return no status. ⚠️ A process the command starts in a session of its own
+/// (`setsid`) leaves the group, and while it holds the output open the run waits on it; cargo, rustc and test
+/// binaries do not.
+fn run_bounded(cmd: &mut Command, limit: Duration) -> std::io::Result<Bounded> {
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::CommandExt;
+        cmd.process_group(0);
+    }
+    let mut child = cmd.stdout(Stdio::piped()).stderr(Stdio::piped()).spawn()?;
+    let reader = |mut pipe: Box<dyn Read + Send>| {
+        std::thread::spawn(move || {
+            let mut buf = Vec::new();
+            let _ = pipe.read_to_end(&mut buf);
+            buf
+        })
+    };
+    let out = reader(Box::new(child.stdout.take().expect("piped")));
+    let err = reader(Box::new(child.stderr.take().expect("piped")));
+    let started = Instant::now();
+    let status = loop {
+        if let Some(status) = child.try_wait()? {
+            break Some(status);
+        }
+        if started.elapsed() >= limit {
+            // The group's id is the child's: `kill -KILL -<pgid>` reaches every process in it.
+            let _ = Command::new("kill")
+                .args(["-KILL", &format!("-{}", child.id())])
+                .status();
+            let _ = child.kill();
+            let _ = child.wait();
+            break None;
+        }
+        std::thread::sleep(Duration::from_millis(100));
+    };
+    Ok(Bounded {
+        status,
+        stdout: out.join().unwrap_or_default(),
+        stderr: err.join().unwrap_or_default(),
+    })
 }
 
 fn run_one(root: &Path, m: &Mutation, scratch: &Path) -> Result<(Seen, f64), String> {
@@ -242,13 +308,16 @@ fn run_one(root: &Path, m: &Mutation, scratch: &Path) -> Result<(Seen, f64), Str
         ));
     }
     let started = Instant::now();
-    let output = Command::new("cargo")
-        .arg("test")
-        .arg("-q")
-        .args(&m.test)
-        .current_dir(root)
-        .output()
-        .map_err(|e| format!("`{}`: cannot run cargo: {e}", m.id))?;
+    let limit = limit();
+    let output = run_bounded(
+        Command::new("cargo")
+            .arg("test")
+            .arg("-q")
+            .args(&m.test)
+            .current_dir(root),
+        limit,
+    )
+    .map_err(|e| format!("`{}`: cannot run cargo: {e}", m.id))?;
     let elapsed = started.elapsed().as_secs_f64();
     drop(guard);
     let restored =
@@ -263,7 +332,9 @@ fn run_one(root: &Path, m: &Mutation, scratch: &Path) -> Result<(Seen, f64), Str
     }
     let stderr = String::from_utf8_lossy(&output.stderr);
     let stdout = String::from_utf8_lossy(&output.stdout);
-    let outcome = if output.status.success() {
+    let outcome = if output.status.is_none() {
+        Seen::Hung(limit.as_secs())
+    } else if output.status.is_some_and(|s| s.success()) {
         Seen::Survived
     } else if stderr.contains("could not compile") && !stdout.contains("test result") {
         let first = stderr
@@ -352,6 +423,10 @@ pub fn run(root: &Path, only: &[String]) -> i32 {
                 let (got, by) = match &outcome {
                     Seen::Killed(names) if names.is_empty() => (Expect::Killed, String::new()),
                     Seen::Killed(names) => (Expect::Killed, format!(" by {}", names.join(", "))),
+                    Seen::Hung(limit) => (
+                        Expect::Killed,
+                        format!(" by a hang: the tests ran past the {limit} s limit, their process group killed"),
+                    ),
                     _ => (Expect::Survives, String::new()),
                 };
                 let verb = if got == Expect::Killed {
@@ -404,7 +479,62 @@ pub fn run(root: &Path, only: &[String]) -> i32 {
 
 #[cfg(test)]
 mod tests {
-    use super::{apply, parse, Expect};
+    use super::{apply, parse, run_bounded, Expect};
+    use std::process::Command;
+    use std::time::{Duration, Instant};
+
+    #[cfg(unix)]
+    #[test]
+    fn a_run_past_its_limit_is_stopped_with_everything_it_started() {
+        // A command that starts a grandchild and then hangs, as cargo starts a test binary: the run must come back
+        // within its limit, report no status, and leave the grandchild dead too.
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../target/doctrine_scratch/mutation-limit")
+            .join(std::process::id().to_string());
+        let _ = std::fs::create_dir_all(&dir);
+        let pid_file = dir.join("grandchild.pid");
+        let started = Instant::now();
+        let run = run_bounded(
+            Command::new("sh").arg("-c").arg(format!(
+                "sleep 30 & echo $! > '{}'; echo started; sleep 30",
+                pid_file.display()
+            )),
+            Duration::from_secs(1),
+        )
+        .expect("the command runs");
+        assert!(
+            started.elapsed() < Duration::from_secs(20),
+            "it was waited on: {:?}",
+            started.elapsed()
+        );
+        assert!(run.status.is_none(), "a hang reports no status");
+        assert_eq!(String::from_utf8_lossy(&run.stdout).trim(), "started");
+        let pid = std::fs::read_to_string(&pid_file).expect("the grandchild's pid");
+        std::thread::sleep(Duration::from_millis(200));
+        let alive = Command::new("kill")
+            .args(["-0", pid.trim()])
+            .status()
+            .expect("kill -0 runs")
+            .success();
+        let _ = std::fs::remove_dir_all(&dir);
+        assert!(
+            !alive,
+            "the grandchild {} outlived the group's kill",
+            pid.trim()
+        );
+    }
+
+    #[test]
+    fn a_run_within_its_limit_reports_its_status_and_output() {
+        let run = run_bounded(
+            Command::new("sh").args(["-c", "echo out; echo err >&2; exit 3"]),
+            Duration::from_secs(60),
+        )
+        .expect("the command runs");
+        assert_eq!(run.status.and_then(|s| s.code()), Some(3));
+        assert_eq!(String::from_utf8_lossy(&run.stdout), "out\n");
+        assert_eq!(String::from_utf8_lossy(&run.stderr), "err\n");
+    }
 
     const ONE: &str = "\
 # a comment

@@ -568,7 +568,7 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.66.md`](../task-history/PROGRAM/PROGRAM.66.md); commit `ARCHOGEN-PROGRAM-0490`
 
 - ID: `PROGRAM.67`
-  Status: `pending` — filed `2026-10-06` by `M3.6.6.1`'s round 10
+  Status: `done` — filed `2026-10-06` by `M3.6.6.1`'s round 10; started and closed `2026-10-10`
   Goal: `cargo xtask mutate` runs each entry under a timeout that kills the test's whole process group and says
   which entry hung, so a mutation that makes a loop never end is reported, not waited on.
   Acceptance: an entry that hangs is reported within its timeout as a hang the tests reach, and the file is restored;
@@ -578,6 +578,31 @@ mdBook that is the director's window into the project.
   until the test was killed by hand, and only then counted it killed. `scripts/mutation_sweep.sh` has such a timeout;
   the harness has none (`grep -n timeout xtask/src/mutation.rs` → nothing). The entry was rewritten to end, so nothing
   hangs today.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — `git show b3c14de:xtask/src/mutation.rs | grep -n '.output()'` → `248`: the tests ran by
+    `Command::output`, which waits without limit; `git show b3c14de:xtask/src/mutation.rs | grep -c timeout` → `0`.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: `git show b3c14de:xtask/src/mutation.rs | grep -n 'Command::new("cargo")'`
+    → `245`, `run_one`'s call, ending in `.output()` at `250`. WHY: the harness
+    assumed a mutation fails or passes; one that makes a loop endless does neither, and cargo's test binary runs in
+    cargo's process group, so killing cargo alone would leave it running.
+  - [x] **FIX** — `xtask/src/mutation.rs`: `run_bounded`, the command in a process group of its own, its output read
+    by two threads, polled against `limit()` — `ARCHOGEN_MUTATE_TIMEOUT` seconds, 600 unless set — and past it the
+    group killed with `kill -KILL -<pgid>`; `Seen::Hung`, reported as a kill *"by a hang"*; the file restored by the
+    same guard as ever. Two unit tests; two catalogue entries breaking the limit and the group kill. ⚠️ A process the
+    tests start with `setsid` leaves the group, and while it holds the output the run waits: stated beside the code.
+  - [x] **ADDRESSED (verified)** — `cargo test -p xtask mutation::tests` → `8 passed`; `cargo xtask mutate --only
+    mutate-a-hang-kills-the-command-alone mutate-a-hang-is-waited-on` → *"2 mutation(s), each killed"*, each by
+    `a_run_past_its_limit_is_stopped_with_everything_it_started`. End to end, a temporary entry making a test spin
+    forever, `ARCHOGEN_MUTATE_TIMEOUT=30 cargo xtask mutate --only demo-a-hang` → *"killed by a hang: the tests ran
+    past the 30 s limit, their process group killed (30.1s)"*, the file restored byte for byte (`shasum` equal), no
+    test process left (`pgrep` → none) — the entry removed after, its run untracked and so not durable.
+  - [x] **NO REGRESSION** — `cargo test -p xtask` → `165 passed; 0 failed`; `cargo clippy -p xtask --all-targets -- -D
+    warnings` → clean; `cargo fmt -p xtask -- --check` → clean; `make focused` → `passed — 3 passed, 0 failed`; the doctrine gate at commit.
+  - [x] **LOCKSTEP** — the module's header; the book's harness section; `TOOLBOX.md`'s row; this leaf and both logs;
+    `docs/TASK_TREE.md`; `CHANGELOG.md`.
+  Verification: `2026-10-10` — the Verification Log's row
+  Commit: `ARCHOGEN-PROGRAM-0530 (leaf PROGRAM.67)`
 
 - ID: `PROGRAM.68`
   Status: `done` — sealed in [`PROGRAM/PROGRAM.68.md`](../task-history/PROGRAM/PROGRAM.68.md); commit `ARCHOGEN-PROGRAM-0508`
@@ -858,7 +883,7 @@ roadmap item X live?".
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The second row waits on the director's yes. The pending leaves beside them —
-`PROGRAM.53`, `.54`, `.67`, `.71`, `.72` and `.73` — are filed and owned. Every closed
+`PROGRAM.53`, `.54`, `.71`, `.72` and `.73` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and its full record is sealed under `docs/task-history/PROGRAM/`.
 
 ## Decisions
@@ -1008,6 +1033,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `2026-10-10` | `PROGRAM.70.2` | the routes self-test, its stub arm failing first; seven mutations of the rule; the real routes; every self-test; focused | 22 / 1, then 28 / 0; each killed; OK, 4 files of 16; 47 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.69` (round 10) | the self-test, the new arms failing first beside `0a7ec7f`'s core; eleven mutations of round 10's rules; the gate over 172 files; every self-test; the doctrines | 79 pass / 5 fail, the working tree's and not durable, then 85 / 0; each killed by an untracked runner, not durable; OK; 47 passed; all green |
 | `2026-10-10` | `PROGRAM.60` | the census test on the tree, on `947cdc2`'s record, on a record naming a path that is gone; focused | 1 passed; 1 failed, six named; 1 failed, it named; `passed — 3 passed, 0 failed` |
+| `2026-10-10` | `PROGRAM.67` | the module's tests; two catalogued mutations; a temporary hanging entry under a 30 s limit; the crate's tests, clippy, fmt; focused | 8 passed; each killed; reported as a hang in 30.1 s, the file restored, untracked and not durable; 165 passed, clean, clean; `passed — 3 passed, 0 failed` |
 
 ## Commit Log
 
@@ -1155,6 +1181,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0525 (leaf PROGRAM.69)` | **review round 10 answered**: each write noted before it is made, so an interrupt just after one is undone; any entry at a sealed file's path refused; a linked tree or index refused; every rollback step armed; the book's claim and round 9's counts corrected; 85 arms |
 | `PROGRAM.74` | `ARCHOGEN-PROGRAM-0526 (leaf PROGRAM.74)` | **the book's total raised to 589 824 bytes**, by `decision_book-in-layers.md`'s dated paragraph: 458 750 of 458 752 measured, 63 361 bytes in a week over 38 commits |
 | `PROGRAM.60` | `ARCHOGEN-PROGRAM-0529 (leaf PROGRAM.60)` | **the third reader's record cannot fall behind unseen**: a test holds it to every description, needing no vendor build |
+| `PROGRAM.67` | `ARCHOGEN-PROGRAM-0530 (leaf PROGRAM.67)` | **a mutation that makes a test hang is reported, not waited on**: each entry's tests under a limit in a process group of their own, killed whole past it |
 
 ## Changelog
 
@@ -1183,3 +1210,4 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 - `2026-10-10`: `PROGRAM.74` filed by `PROGRAM.70.2` — the book at its total ceiling, 235 bytes left.
 - `2026-10-10`: `PROGRAM.74` done — the book's total raised to 589 824 bytes, measured.
 - `2026-10-10`: `PROGRAM.60` done — the third reader's record held to every description by the tests.
+- `2026-10-10`: `PROGRAM.67` done — the mutation harness bounds each entry's tests and kills a hang's whole process group.
