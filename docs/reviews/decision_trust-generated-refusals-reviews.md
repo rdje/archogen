@@ -118,6 +118,20 @@ Round 5's account, "five rounds had each found a route fail", is too strong: rou
 | R6-R4 | remark | the chapter's "those rules" had no antecedent | "the role rules" |
 | R6-R5 | remark | no changelog entry for round 5's tests | one entry for rounds 5 and 6 |
 
+**Round 7**, `2026-10-10`, of `22247c4`, by a read-only context that had not written the record, fenced from the
+sealed evaluation set. It ran the doctrine gate, the crate's tests (177 passed) and the route tests (12), and nine
+mutations of the gate — untracked, so not durable: eight caught by the tests §6 names, one, a declared generator not
+taken for a chain, caught by none. Verdict: 2 defects and 3 remarks. Round 6's correction of round 5's "each" holds
+for round 4 too, whose probes found a no-route claim false and a route missing, not a named route failing.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R7-D1 | defect | a declared script named as a generator, refused by the gate, held by no test | a control in `route_a_chain_made_in_one_generation`: refused, "a chain" |
+| R7-D2 | defect | "a generator whose copy the parent's rules refuse: no route", where an admission lifts some of those rules | "the role rules", as §6 and the chapter have it |
+| R7-R1 | remark | the leaf and the changelog kept "five rounds" and "review after review" | "review rounds found routes … fail" |
+| R7-R2 | remark | the chapter's "does not depend on it" ambiguous | "on the package holding the file" |
+| R7-R3 | remark | the self-generating route is judged by §5 too | said |
+
 ## Why
 
 The record closes on a round that finds no defect, as every design here does; each round, its findings and their

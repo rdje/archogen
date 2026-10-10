@@ -1995,6 +1995,19 @@ mod route_tests {
             &refused(f.run()),
             "is declared by a `defgenerated` form — a chain of generators",
         );
+        // Control, the generator half: a script a form declares, named as the later step's generator — a chain too.
+        f.commit(&[
+            ("scripts/made.sh", "echo made\n".to_owned()),
+            roots(
+                &(form("scripts/made.sh", &["scripts/step1.sh"], &["data/in.csv"])
+                    + &form("crates/b/src/gen_b.rs", &["scripts/made.sh"], &[])),
+            ),
+        ]);
+        says(
+            &refused(f.run()),
+            "generator `scripts/made.sh` is declared by a `defgenerated` form — a chain of generators",
+        );
+        std::fs::remove_file(f.repo.join("scripts/made.sh")).unwrap();
         // The route: one form names every step's generator files and every committed file any step reads; the
         // intermediate is the generation's own, never committed.
         std::fs::remove_file(f.repo.join("data/mid.csv")).unwrap();

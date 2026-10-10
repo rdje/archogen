@@ -15,15 +15,15 @@
 
 ### 1. What is decided
 
-The parent decides one generator step, from committed files to a committed file; what it did not decide it refused
-until this leaf, and it believed the tool a script runs (its §1, §2, §8). Each is decided here: the two shapes stay
-refused, each for a reason that holds without an instance, and a need they would serve has a route within one step
-where one exists; where none does it is said, and a later need is §5's — a marked file (a chain, the parent's §3
-reading its marker) that the generation cannot remake from committed files, and a marked crate root; a program-target
-generator that must compile a generated file; a vendored file that cannot be copied, and a vendored generator whose
-copy the parent's rules refuse; the tool stays believed, with a route for when its identity must be compared. Each
-route and each case with none is claimed as far as a test of §6 holds it. No behaviour moves: every refusal and belief stays as the parent and its instrument (`M3.6.6.2`) have it, and the
-chain's refusals name this record.
+The parent decides one generator step, from committed files to a committed file; what it did not decide it refused until
+this leaf, and it believed the tool a script runs (its §1, §2, §8). Each is decided here: the two shapes stay refused,
+each for a reason that holds without an instance, and a need they would serve has a route within one step where one
+exists; where none does it is said, and a later need is §5's — a marked file (a chain, the parent's §3 reading its
+marker) that the generation cannot remake from committed files, and a marked crate root; a program-target generator that
+must compile a generated file; a vendored file that cannot be copied, and a vendored generator whose copy the role rules
+refuse; the tool stays believed, with a route for when its identity must be compared. Each route and each case with none
+is claimed as far as a test of §6 holds it. No behaviour moves: every refusal and belief stays as the parent and its
+instrument (`M3.6.6.2`) have it, and the chain's refusals name this record.
 
 **Measured `2026-10-10`** at `614d5c7`: `grep -c defgenerated trust/roots.eadl` → `0`; and `cargo xtask trust-inventory
 --commit HEAD` → *"5 program(s), 8 pair(s), 9 shared item(s)"*, its `generated-marked` and `generated-unread` empty and
@@ -46,23 +46,23 @@ the parent's rules can see — through a declared or a marked file — hides not
 one through a file no form declares and no header marks is the parent's §8 limit, a plain file.
 
 **The route.** A file made from another generator's output is declared as the last step of one generation: its form
-names every committed generator file of every step — each judged by the parent's §5 against every program that reads
-the result — and every committed file any step reads, and the intermediate file is the generation's own product, never
+names every committed generator file of every step — each judged by the parent's §5 against every program that reads the
+result — and every committed file any step reads, and the intermediate file is the generation's own product, never
 committed. A marked input, or a marked script a form would name as a generator — a vendored copy among them (§3) — is
 such an intermediate: the generation remakes it from committed files, its own generator and inputs, or copies of them
 for a vendored one, never committing it; one it cannot remake so has no route (§5). A marked crate root has none: a
 program built from it compiles a generated file, a build the gate does not compute. A script that remakes and builds it
 is a generator the gate takes, but the program it builds is the script's own dependency, believed with whatever its
-build compiles, another role's package among them — the parent's §8 limit, not a route. A program-target generator
-whose build would compile a generated file is served so that its build compiles none: one compiling another
-generator's output reads it at run time instead, the script that runs both handing it over; one compiling the file its
-own form declares — a program that generates its own source — gives way to another program target whose build does not
-compile that file: a second executable of its package when neither a library of the package nor any package it
-depends on holds it, or else one of a package that does not depend, directly or through another, on the package
-holding it. One that must compile a generated file has no route (§5). If a
-program also reads the intermediate, that file is committed and declared, and a later step reading it is a chain: that
-step remakes it from the first step's inputs instead. A file one step runs and another reads is named once, as a
-generator — named in both clauses it is refused (the parent's §2).
+build compiles, another role's package among them — the parent's §8 limit, not a route. A program-target generator whose
+build would compile a generated file is served so that its build compiles none: one compiling another generator's output
+reads it at run time instead, the script that runs both handing it over; one compiling the file its own form declares —
+a program that generates its own source — gives way to another program target whose build does not compile that file,
+judged by the parent's §5 as every generator is: a second executable of its package when neither a library of the
+package nor any package it depends on holds it, or else one of a package that does not depend, directly or through
+another, on the package holding it. One that must compile a generated file has no route (§5). If a program also reads
+the intermediate, that file is committed and declared, and a later step reading it is a chain: that step remakes it from
+the first step's inputs instead. A file one step runs and another reads is named once, as a generator — named in both
+clauses it is refused (the parent's §2).
 
 ### 3. A generator or an input at or under a gitlink: refused
 
@@ -87,7 +87,7 @@ the script that runs it, judged by the parent's §5 and hashed as any generator 
 target of the workspace, whose build then meets the parent's rules, since a `.rs` file that is no program target's
 crate root is refused as a generator (the parent's §5). A vendored file that cannot be copied — its licence or its size
 keeping it out of the commit, or no file of the checkout, as a build product — has no route (§5), and nor has a
-generator whose copy those rules refuse: an input among them stays refused; a generator among them, run by a committed
+generator whose copy the role rules refuse: an input among them stays refused; a generator among them, run by a committed
 script, is that script's dependency, believed — for this section's reason, the gate reading no file under a gitlink,
 and, for a build product, §4's too, its bytes the host's build — outside every provenance, so its bytes, their sharing and, for one the role rules refuse, that role
 judgment go unseen, as the parent's §8 says of whatever a script runs; its identity alone can be compared, through a
@@ -127,7 +127,7 @@ their module:
 
 | Test | Holds |
 | --- | --- |
-| `route_a_chain_made_in_one_generation` | §2: a chain refused; one form naming every step, the intermediate never committed, written |
+| `route_a_chain_made_in_one_generation` | §2: a chain refused, through a declared input and through a declared script named as a generator; one form naming every step, the intermediate never committed, written |
 | `route_a_marked_input_or_script_remade_in_the_generation` | §2, §3: a marked copy or script refused; remade from its own generator and inputs, written |
 | `no_route_for_a_marked_crate_root_but_the_parent_s_belief_in_a_script` | §2: a marked crate root refused; a script remaking it written — the parent's §8 limit |
 | `route_a_program_target_step_reads_the_intermediate_at_run_time` | §2: a program-target step reading the intermediate at run time, written |
@@ -161,7 +161,7 @@ their module:
   generator's output at run time, or, generating its own source, gives way to a program target whose build does not
   compile it. A vendored input: a committed, unmarked copy named as an input; a vendored generator that is a file — a
   script, an executable, a Rust source: a committed, unmarked copy named as the generator, a Rust one as a program
-  target; a vendored file that cannot be copied, or a generator whose copy the parent's rules refuse: no route, an
+  target; a vendored file that cannot be copied, or a generator whose copy the role rules refuse: no route, an
   input refused, a generator believed when a script runs it, its identity compared through a committed version file.
   A tool's identity to compare: its unmarked pin committed and named as an input; a marked one remade so, or replaced
   by an unmarked version file the script checks. Each is a test of §6.
@@ -184,3 +184,4 @@ finding answered here. The history is
 | 4 | `2026-10-10` | 3, and 4 remarks | every finding answered: the blob rule's claim narrowed to a live form; a marked file a form would name remade within the generation, §2's route, a marked pin so or replaced by a version file; a program that generates its own source served by a second program target; a vendored file that cannot be copied decided, an input refused, a generator believed |
 | 5 | `2026-10-10` | 3, and 3 remarks | answered by method: every route and no-route case held by a committed test (§6); a self-generating program's route narrowed to a target whose build does not compile the file; an executable a file a copy serves; a marked crate root with no route, a script remaking it the parent's §8 limit |
 | 6 | `2026-10-10` | 3, and 5 remarks | every finding answered: the self-generating program's route narrowed to the packages it depends on; §6 grown to every route and no-route case, three held by the parent's tests; a build product believed for §4's reason too |
+| 7 | `2026-10-10` | 2, and 3 remarks | every finding answered: a declared script named as a generator, refused, held by a test; "the role rules" wherever a copy is refused; the self-generating route judged by §5 as every generator is |
