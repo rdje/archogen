@@ -481,7 +481,8 @@ mdBook that is the director's window into the project.
   handled, and a stamp's relation to a tier other than `focused`.
 
 - ID: `PROGRAM.54`
-  Status: `pending`
+  Status: `done` — started and closed `2026-10-10`: the project's second sample; the scaffold's census itself is
+  `PROGRAM.75`'s proposal
   Goal: the handoff census (`scripts/check_no_background_jobs.sh`) tells a background job from a transient helper
   without an allowlist.
   Reproduce / issue: found `2026-10-05` by three review readers (`M3.1.1` rounds 18 and 19, `M3.6.1` round 9), each
@@ -493,6 +494,25 @@ mdBook that is the director's window into the project.
   own header asks, not a list of names. The script is the scaffold's (`scripts/update_scaffold.sh`'s `NEUTRAL` list),
   so an edit here would be overwritten by the next update: the fix is proposed to the scaffold's owner, never written
   into another repository (`decision_repository-boundary-read-only.md`), with a project-side second sample meanwhile.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — a helper whose command line names the checkout, `bash -c 'sleep "$1"; :'
+    "$PWD/handoff-census-arm" 4`, alive: `bash scripts/check_no_background_jobs.sh` → exit `1`, naming it; once it
+    ended, the same run names it no more (`grep -c handoff-census-arm` → `0`) — the verdict depends on the instant.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: the scaffold census's one `ps -Ao` snapshot, `git grep -n 'SNAP=' --
+    scripts/check_no_background_jobs.sh` → `scripts/check_no_background_jobs.sh:80`. WHY: one instant cannot tell a process that lives seconds from
+    one that lives on, and the script is the scaffold's, so it is not this project's to change.
+  - [x] **FIX** — `scripts/handoff_census.sh`: the scaffold's census, then, when it names anything, a second after
+    `HANDOFF_RESAMPLE_SECONDS` (8 unless set); a process counts only when both name it by PID and command line, the
+    rest reported as transient. `TOOLBOX.md`'s row. `PROGRAM.75` filed for the scaffold's owner.
+  - [x] **ADDRESSED (verified)** — `bash scripts/handoff_census.sh --self-test` → *"2 pass / 0 fail (2 arms)"*: a
+    process the first sample names and the second does not, reported transient and not counted; one both hold, named
+    and refused. A copy without the second sample (`target/p54/mut/`, untracked, so not durable) → *"1 pass / 1 fail"*.
+  - [x] **NO REGRESSION** — `bash scripts/run_self_tests.sh` → *"OK — 48 self-test(s) passed"*, the new one among
+    them; `make focused` → `passed — 3 passed, 0 failed`; the doctrine gate at commit.
+  - [x] **LOCKSTEP** — `TOOLBOX.md`; this leaf, `PROGRAM.75` and both logs; `docs/TASK_TREE.md`; `CHANGELOG.md`.
+  Verification: `2026-10-10` — the Verification Log's row
+  Commit: `ARCHOGEN-PROGRAM-0533 (leaf PROGRAM.54)`
 
 - ID: `PROGRAM.55`
   Status: `done` — sealed in [`PROGRAM/PROGRAM.55.md`](../task-history/PROGRAM/PROGRAM.55.md); commit `ARCHOGEN-PROGRAM-0438`
@@ -821,6 +841,17 @@ mdBook that is the director's window into the project.
   self-test → *"28 pass / 0 fail"*, the policy's cell and its decision's maximum agreeing; the doctrine gate at commit.
   Commit: `ARCHOGEN-PROGRAM-0526 (leaf PROGRAM.74)`
 
+- ID: `PROGRAM.75`
+  Status: `pending` — filed `2026-10-10` by `PROGRAM.54`
+  Goal: the scaffold's handoff census judges by a property that tells a background job from a respawned helper.
+  Reproduce / issue: `PROGRAM.54`'s reproduction — `scripts/check_no_background_jobs.sh`, the scaffold's, names a
+  helper alive for seconds, and its verdict depends on the instant it runs; archogen samples twice in a wrapper of its
+  own, which the census's next update cannot undo, but every other project the scaffold serves meets the same.
+  Direction: an outbound report to the scaffold's owner, `bedrock`, as a tracker under `docs/feedback/bedrock/`
+  shaped as the LinkedSpec one is — a self-contained issue whose `repro.sh` exits 0 while the census names a helper of
+  a few seconds' life — proposing the second sample; nothing written into `bedrock` itself
+  (`decision_repository-boundary-read-only.md`).
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -889,7 +920,7 @@ roadmap item X live?".
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The second row waits on the director's yes. The pending leaves beside them —
-`PROGRAM.53`, `.54`, `.71`, `.72` and `.73` — are filed and owned. Every closed
+`PROGRAM.53`, `.71`, `.72`, `.73` and `.75` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and its full record is sealed under `docs/task-history/PROGRAM/`.
 
 ## Decisions
@@ -1041,6 +1072,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `2026-10-10` | `PROGRAM.60` | the census test on the tree, on `947cdc2`'s record, on a record naming a path that is gone; focused | 1 passed; 1 failed, six named; 1 failed, it named; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.67` | the module's tests; two catalogued mutations; a temporary hanging entry under a 30 s limit; the crate's tests, clippy, fmt; focused | 8 passed; each killed; reported as a hang in 30.1 s, the file restored, untracked and not durable; 165 passed, clean, clean; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.69` (round 11) | the new arms beside `b87adbc`'s core; the self-test; six mutations of round 11's rules; the gate over 172 files; every self-test; the doctrines | 82 pass / 9 fail, the working tree's and not durable; 90 / 0; each killed by an untracked runner, not durable; OK; 47 passed; all green |
+| `2026-10-10` | `PROGRAM.54` | the scaffold's census with a helper alive and gone; the wrapper's self-test; a copy without the second sample; every self-test; focused | exit 1 then not named; 2 / 0; 1 / 1, untracked; 48 passed; `passed — 3 passed, 0 failed` |
 
 ## Commit Log
 
@@ -1190,6 +1222,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.60` | `ARCHOGEN-PROGRAM-0529 (leaf PROGRAM.60)` | **the third reader's record cannot fall behind unseen**: a test holds it to every description, needing no vendor build |
 | `PROGRAM.67` | `ARCHOGEN-PROGRAM-0530 (leaf PROGRAM.67)` | **a mutation that makes a test hang is reported, not waited on**: each entry's tests under a limit in a process group of their own, killed whole past it |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0531 (leaf PROGRAM.69)` | **review round 11 answered**: a stop — SIGINT, SIGTERM, SIGHUP — recorded and answered by a rollback that runs to its end, only what no handler sees leaving writes; a linked history folder refused; arms for a linked index and another writer's file; 90 arms |
+| `PROGRAM.54` | `ARCHOGEN-PROGRAM-0533 (leaf PROGRAM.54)` | **the handoff census sampled twice**: a process counts only when a second sample still holds it; `PROGRAM.75` filed to propose it upstream |
 
 ## Changelog
 
@@ -1219,3 +1252,4 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 - `2026-10-10`: `PROGRAM.74` done — the book's total raised to 589 824 bytes, measured.
 - `2026-10-10`: `PROGRAM.60` done — the third reader's record held to every description by the tests.
 - `2026-10-10`: `PROGRAM.67` done — the mutation harness bounds each entry's tests and kills a hang's whole process group.
+- `2026-10-10`: `PROGRAM.54` done — the handoff census sampled twice; `PROGRAM.75` filed, the proposal to the scaffold's owner.

@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the handoff check no longer depends on the instant
+
+`ARCHOGEN-PROGRAM-0533` (leaf `PROGRAM.54`), `2026-10-10`.
+
+- Before a session hands over, a check lists any background job still running in the repository. A terminal helper
+  that lives a few seconds could make it fail at one moment and pass the next. A new wrapper samples twice, a few
+  seconds apart, and counts only what both samples hold, so a real job is still caught and a passing helper is not.
+  The same idea is filed to be proposed to the template the check comes from.
+- Validation: the wrapper's two arms, the second sample's removal caught; every self-test; the focused tier
+  (`passed — 3 passed, 0 failed`).
+
 ## archogen — a seal asked to stop is always undone
 
 `ARCHOGEN-PROGRAM-0531` (leaf `PROGRAM.69`), `2026-10-10`.
