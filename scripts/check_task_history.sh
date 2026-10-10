@@ -611,7 +611,7 @@ def seal(tree_name):
     replaced = []  # (file, its text before, None if it had none), each noted before it is rewritten
 
     def rollback():
-        # Each write was noted before it was made, so an interrupt just after one leaves it noted (review R10 D1); a
+        # Each write was noted before it was made, so an error just after one leaves it noted (review R10 D1); a
         # noted write is undone only where it happened — a rewritten file that no longer holds its text before, a sealed
         # file that exists. Each step is on its own: a restore that fails stops no other restore, and a removal that
         # fails no other removal (R9-1). The index and the tree go back first; while either still names the sealed
@@ -652,7 +652,7 @@ def seal(tree_name):
     # and rolled back, or stopped by an error and rolled back — its outcome
     # said where the output can be written, so the seal is whole either way, with no moment between a write and its
     # record for a stop to fall in (reviews R13, R14 D2, R16 D2). A signal ignored on entry stays ignored. The git the
-    # proof runs inherits the mask: a stop does not end a git that hangs. ⚠️ What the mask leaves out — SIGKILL,
+    # proof runs inherits the mask: a stop does not end a git that hangs. ⚠️ What the mask cannot stop — SIGKILL,
     # SIGSTOP's pause aside, the six fault signals whoever sends them, an abort the process raises on itself, and on Linux
     # the C library's own signals, which may — and the machine stopping leave the writes, which the next gate run proves
     # as any seal not yet committed (review R8-2); and a failure that defeats the rollback's own writes too, a full disk,
@@ -1383,6 +1383,9 @@ if WHEN:
             fire()
         if WHEN == "vanish" and mode == "x" and "/task-history/" in os.path.abspath(str(file)):
             os.rmdir(os.path.dirname(os.path.abspath(str(file))))
+        if WHEN == "tmprace" and mode == "x" and ".seal-" in os.path.basename(str(file)) and not TREES:
+            TREES.append(1)  # another writer's link at the temporary path, just as `put` opens it (review R20 AG1)
+            os.symlink(os.environ["SEAL_ELSEWHERE"], str(file))
         if WHEN in ("plant", "mkdirplant") and mode == "x" and "/task-history/" in os.path.abspath(str(file)):
             with real_open(file, "w") as other:
                 other.write("another writer's\n")
@@ -1515,6 +1518,20 @@ HOOK
     printf '%s\n' "$out" | tail -2 | sed 's/^/    /' >&2
   fi
   rm -f "$work/docs/task-history/.INDEX.md.seal-4242"; restore
+  # A link planted at the temporary path just as `put` opens it: the file is created new, so the seal stops on it,
+  # writes nothing through it and leaves it as it was (reviews R13 D3, R20 AG1).
+  arms=$((arms + 1))
+  out="$(cd "$work" && SEAL_HOOK=tmprace SEAL_ELSEWHERE="$SCRATCH/elsewhere.md" PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?
+  planted="$(find "$work/docs/tasks" -maxdepth 1 -name '.Q.md.seal-*' -type l 2>/dev/null | head -1)"
+  if [ "$rc" -eq 1 ] && printf '%s' "$out" | grep -qF "stopped on FileExistsError" && [ -n "$planted" ] &&
+     [ ! -e "$SCRATCH/elsewhere.md" ] && [ ! -L "$work/docs/tasks/Q.md" ] && [ ! -e "$work/docs/task-history/Q" ] &&
+     git -C "$work" diff --quiet -- docs/tasks docs/task-history; then
+    ok=$((ok + 1)); echo "  ✅ a link raced in at the temporary path is never written through, and is left as it was"
+  else
+    echo "SELF-TEST: a link raced in at the temporary path — rc $rc, or written through or removed:" >&2
+    printf '%s\n' "$out" | tail -2 | sed 's/^/    /' >&2
+  fi
+  [ -n "$planted" ] && rm -f "$planted"; rm -f "$SCRATCH/elsewhere.md"; rm -rf "$work/docs/task-history/Q"; restore
   # The mask in force at the first write holds every signal but SIGKILL, SIGSTOP, the six fault signals and the C
   # library's own, and none of the eight others (reviews R15 AG1, R16 AG1).
   arms=$((arms + 1))

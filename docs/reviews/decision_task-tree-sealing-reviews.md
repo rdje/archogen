@@ -420,6 +420,26 @@ change, no arm gap.
 | R19-R6 | remark | no "After round 18" sentence in the leaf | the log rows hold it; round 19's sentence added |
 | R19-R7 | remark | closed units unsealed elsewhere | not this change's |
 
+**Round 20**, `2026-10-10`, an eighteenth confirmation, in a clone of `899805f`, by a read-only context new to the
+change and fenced from the sealed evaluation set. It reproduced the gate, every self-test, the census and the first
+seal's figures; found every review row's count equal to its table; fuzzed 240 trees, 828 hand seals and 240 late
+leaves, every one as an oracle of its own predicts, and checked all 172 sealed files against the real history — its
+runners untracked, so not durable. Verdict: 5 defects of this change and 1 arm gap.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R20-D1 | defect | "each write is noted before it is made, so an interrupt just after one is undone too": since round 13 a held interrupt finds the seal done and kept | "an error just after one is undone too"; the script's comment so |
+| R20-D2 | defect | How to apply: "an uncommitted edit that changes which subtrees are closed … makes the seal refuse itself", false where the edit only opens a subtree the seal leaves live | narrowed to an edit that changes the unit of a leaf the seal takes |
+| R20-D3 | defect | round 19 credited round 17's naming of the C library's signals to round 15's changelog entry | the entry as round 15 had it, "the C library's own named from round 17" |
+| R20-D4 | defect | R19-R6's answer said round 19's sentence was added to the leaf; it was not | the leaf's sentence for rounds 18 to 20 added |
+| R20-D5 | defect | the stop sentence cited R19 D2 for R19-R3's change; How to apply's "R13 to R18" carried round 19's "which may" | R19 R3; R13 to R19 |
+| R20-AG1 | arm gap | the temporary file created new and removed only by its creator held by no arm since the entry check came first | a race arm plants a link as `put` opens the path: refused, nothing written through, the link left |
+| R20-R1 | remark | a comment kept "an interrupt just after one" | "an error" |
+| R20-R2 | remark | ragged wraps | the record's paragraphs rewrapped where touched |
+| R20-R3 | remark | "an abort" listed under what the mask "leaves out", though SIGABRT is held | "what the mask cannot stop" |
+| R20-R4 | remark | the book left the machine stopping out | named |
+| R20-P1 | pre-existing | "the seal warns about a `done` leaf whose field names no commit", not when the tree's Commit Log names it | said |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.
