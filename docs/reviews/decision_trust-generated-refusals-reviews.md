@@ -69,6 +69,23 @@ remarks.
 | R3-R4 | remark | a script can reach its tool through the `command` | "in the script or the `command`" |
 | R3-R5 | remark | the chapter's chain bullet left its no-route case to the gitlink bullet | moved into the chain bullet |
 
+**Round 4**, `2026-10-10`, of `dbb897e`, by a read-only context that had not written the record. It ran the doctrine
+gate and the crate's tests (165 passed), re-measured at `614d5c7` and wrote five probes — untracked, so the outcomes
+are not durable: a gitlink input in a form no program reads not refused; a marked vendored copy refused, and the same
+need met by one form remaking it from copies of its own generator and input; a program compiling the file its own form
+declares refused, and the same need met by a second executable of its package named as the generator. Verdict: 3
+defects and 4 remarks. Round 3's answers hold; round 3's row and history above describe round 3's answer as made.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R4-D1 | defect | "every generator and input a form names is a blob of the commit": the blob rule runs over live forms alone | "a live form names"; §3's opening says the rule refuses in a live form, a form no program reads held to the parent's §6; the chapter's bullet a live form's |
+| R4-D2 | defect | a marked vendored copy "with no route", where §2's chain route serves it | §2: a marked file a form would name is an intermediate the generation remakes from copies of its own generator and inputs; §3, §1, How to apply and the chapter so; a marked pin remade so too, or replaced by an unmarked version file the script checks |
+| R4-D3 | defect | a program that compiles the file its own form declares had neither a route nor a no-route statement | §2: it gives way to another program target compiling no generated file, a second executable of its package, named as the generator; one that must compile a generated file has no route; §1, How to apply and the chapter's plain words so |
+| R4-R4 | remark | §4 called its route a host tool's while §3 used it | "this section's reason is a host tool's, and its route serves both" |
+| R4-R5 | remark | "or whose copy those rules refuse" missing outside §3 | in §1, How to apply and the chapter |
+| R4-R6 | remark | the chapter implied a vendored tool's identity cannot be compared | "its identity compared the same way" |
+| R4-R7 | remark | a vendored input or file that cannot be copied had no decision | §3: a vendored file that cannot be copied has no route — an input stays refused, a generator believed when a script runs it; §1 and How to apply |
+
 ## Why
 
 The record closes on a round that finds no defect, as every design here does; each round, its findings and their
