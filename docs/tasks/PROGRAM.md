@@ -932,6 +932,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0489 (leaf PROGRAM)` | **`PROGRAM.10` and `.61`–`.65` sealed**, 13 closed leaves into `docs/task-history/PROGRAM/`, when `README-ROUTES` refused `docs/tasks/` at 820 957 bytes over its 819 200; `docs/tasks/` 817 470 → 752 861 bytes, measured from `HEAD` and the tree |
 | `PROGRAM.66` | `ARCHOGEN-PROGRAM-0490 (leaf PROGRAM.66)` | **a commit holds what was run**: `UNTRACKED-CODE` refuses a commit while a file in a code path is untracked, after `0485` recorded a tree that did not build |
 | `PROGRAM.68` | `ARCHOGEN-PROGRAM-0508 (leaf PROGRAM.68)` | **the sixth artifact cleanup, ≈4.0 GB released**: the incremental caches, the closed generated-sources review's loose logs and sweep scratch, uncited probe output and test scratch; cited evidence kept; `PROGRAM.58`'s leak not back |
+| `PROGRAM.69` | `ARCHOGEN-PROGRAM-0510 (leaf PROGRAM.69)` | **the sealing record's review reopened** for its amendment, so the amendment's rounds append to its history: a new history would be `docs/reviews/`' seventeenth file, past its ceiling of sixteen, and a closed one is frozen |
 
 ## Changelog
 
