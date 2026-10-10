@@ -479,6 +479,23 @@ defect of this change, 2 arm gaps, and 2 pre-existing findings.
 | R22-P1 | pre-existing | the warning's `pending` test is a substring test | kept, the warning errs toward warning |
 | R22-P2 | pre-existing arm gap | "names each such line" held by no arm | the column-0 arm requires each of `T.3`'s three lines named |
 
+**Round 23**, `2026-10-10`, a twenty-first confirmation, in a clone of `5aa3e31`, by a read-only context new to the
+change, fenced from the sealed evaluation set. It reproduced the gate (172 sealed files, 331 stubs), the self-test
+(120 arms), the census and the first seal, and every record row's count against its round's table — row 22 the one
+that disagreed. It planted another writer's file as a first seal opened its sealed file, and mutated the column-0
+refusal; runners untracked, so not durable. Verdict: 2 defects in this change, 1 pre-existing arm gap, 1 remark and 1
+pre-existing finding. The count's fourth slip (R19-D1, R21-D1, R22-D1, R23-D1) changes method: no count is copied by
+hand from now on unchecked — `REVIEW-COUNTS` (`scripts/check_review_counts.sh`) holds every record's per-round counts
+against its history's findings tables.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R23-D1 | defect | the record's row 22 counted 9 findings; round 22's table holds 10 | 10; `REVIEW-COUNTS`, registered, refusing it before the fix — its first run named exactly this row |
+| R23-D2 | defect | a rollback said "rolled back" while a folder the seal made, holding another writer's entry, stayed unnamed — the next gate run refused "has no table" | the rollback names such a folder, "not removed: it is not empty", and says its rollback left what it named; the plant arm requires both |
+| R23-P1 | pre-existing arm gap | "names each such line" held for one leaf: a mutant naming only the first torn leaf's lines passed | an arm with a second torn leaf in another unit, both required named |
+| R23-R1 | remark | ragged wraps: `put`'s docstring, the leaf's evidence lines, a changelog bullet broken at 32 columns | rewrapped, no word changed |
+| R23-P2 | pre-existing | one closed `M3` unit, 2 441 bytes, still unsealed | sealed by `M3`'s next commit, as R9-N2's was |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.

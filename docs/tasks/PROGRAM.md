@@ -654,7 +654,7 @@ mdBook that is the director's window into the project.
 
 - ID: `PROGRAM.69`
   Status: `active` — the tool, its gate and the seal committed `2026-10-10` (`ARCHOGEN-PROGRAM-0511`); its review open,
-  round 22's defect and arm gaps answered (`ARCHOGEN-PROGRAM-0567`), round 23 next
+  round 23's defects and arm gap answered (`ARCHOGEN-PROGRAM-0576`), round 24 next
   Goal: a closed subtree below an open top-level subtree is sealed too, so a tree whose top-level subtree stays open
   for long — on a blocked leaf, or a long feature — does not keep its finished leaves live.
   Reproduce / issue: `M3.6.6.2.1`'s commit was refused by `README-ROUTES`, *"docs/tasks/: 823457 bytes in total, over
@@ -766,10 +766,14 @@ mdBook that is the director's window into the project.
     *"117 pass / 0 fail (117 arms)"*; with `put`'s exclusive creation or its creator-only removal broken, the arm fails,
     by an untracked runner, so not durable. After round 21: an arm sealing past an uncommitted edit that only reopens a
     subtree the seal leaves live — `--self-test` → *"118 pass / 0 fail (118 arms)"*; it fails a seal that refuses any
-    uncommitted tree, by the round-22 reviewer's untracked runner. After round 22: arms for a sealed file a file-size limit
-    stops halfway, for a `pending` field with a log row and for no warning where the log names the commit, and the
+    uncommitted tree, by the round-22 reviewer's untracked runner. After round 22: arms for a sealed file a file-size
+    limit stops halfway, for a `pending` field with a log row and for no warning where the log names the commit, and the
     column-0 arm requiring each line named — `--self-test` → *"120 pass / 0 fail (120 arms)"*; `python3
-    target/p69r17/mutate22.py` → *"4 of 4 killed"*, one each — untracked, so not durable.
+    target/p69r17/mutate22.py` → *"4 of 4 killed"*, one each — untracked, so not durable. After round 23: a folder
+    the seal made that holds another writer's entry named, the rollback not called whole; a second torn leaf in another
+    unit; `REVIEW-COUNTS` — `--self-test` → *"121 pass / 0 fail (121 arms)"*; `bash scripts/check_review_counts.sh
+    --self-test` → *"9 pass / 0 fail (9 arms)"*, and before row 22's fix it refused exactly it; `python3
+    target/p69r17/mutate23.py` → *"2 of 2 killed"*, each arm failing alone — untracked, so not durable.
   - [x] **NO REGRESSION** — `bash scripts/check_task_history.sh` at `e624001` → *"OK (170 sealed file(s) … every sealed
     leaf proven against its tree before its seal)"*: the 142 seals before this change judged by every generalised leg, the byte
     rebuild included. `bash scripts/run_self_tests.sh` → *"OK — 47 self-test(s) passed"*; the
@@ -793,7 +797,7 @@ mdBook that is the director's window into the project.
   `ARCHOGEN-PROGRAM-0559 (leaf PROGRAM.69)`, round 19;
   `ARCHOGEN-PROGRAM-0563 (leaf PROGRAM.69)`, round 20;
   `ARCHOGEN-PROGRAM-0564 (leaf PROGRAM.69)`, round 21;
-  `ARCHOGEN-PROGRAM-0567 (leaf PROGRAM.69)`, round 22
+  `ARCHOGEN-PROGRAM-0567 (leaf PROGRAM.69)`, round 22; `ARCHOGEN-PROGRAM-0576 (leaf PROGRAM.69)`, round 23
 
 - ID: `PROGRAM.70`
   Status: `done` — started `2026-10-10`, decomposed into `.1`, the bytes, and `.2`, the count, closed the same day with `.2`
@@ -1193,7 +1197,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.69` | `active` | its review open: round 23 next, on the committed tool, its seal already in place |
+| 1 | `PROGRAM.69` | `active` | its review open: round 24 next, on the committed tool, its seal already in place |
 | 2 | `PROGRAM.76` | `active` | its review open: round 9 next, of the sealed set's custody |
 | 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
@@ -1375,6 +1379,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-10` | `PROGRAM.77` | the module's tests; four catalogued mutations; the crate's tests, clippy, fmt; the book's gates; focused on the staged tree | 12 passed; each killed; 183 passed, clean, clean; OK; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.76` (round 8) | the self-test; the check on the tree; every self-test; the case blobs' commits; focused on the staged tree | 71 pass / 0 fail; OK; passed; `b05fadb` and `2f6f331` each; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.77` (closed) | the restoring push's runs on the runner, `gh run view 38069871798`, `38069871797`, `38069871851` | `focused` success in 1 min 55 s, `integration` in 3 min 45 s; `doctrines`, `trust-gate` success |
+| `2026-10-10` | `PROGRAM.69` (round 23) | the self-test; `REVIEW-COUNTS`, its self-test, on the tree before and after row 22's fix; two mutants of round 23's rules; the gate over the history; every self-test; focused on the staged tree | 121 pass / 0 fail; 9 pass / 0 fail, exit 1 naming row 22 then exit 0; 2 of 2 killed, untracked; OK; 49 passed; `passed — 3 passed, 0 failed` |
 
 ## Commit Log
 
@@ -1549,6 +1554,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.77` | `ARCHOGEN-PROGRAM-0569 (leaf PROGRAM.77)` | **the mutation runner's group kill through kill(2)**: Ubuntu's `kill` read `-<group>` as an option and signalled every process — the CI runner lost |
 | `PROGRAM.76` | `ARCHOGEN-PROGRAM-0572 (leaf PROGRAM.76)` | **review round 8 answered**: the honest limit's copies named where reading a case is said; a harness's memory, a model or an index made in the window; two arms; a caller's `git -c` undone in the self-test |
 | `PROGRAM.77` | `ARCHOGEN-PROGRAM-0573 (leaf PROGRAM.77)` | **closed on the runner**: the restoring push's `rust` run green in 2 and 4 minutes, where both jobs had been lost at 45 |
+| `PROGRAM.69` | `ARCHOGEN-PROGRAM-0576 (leaf PROGRAM.69)` | **review round 23 answered**: row 22's count, and `REVIEW-COUNTS` deriving every record's counts; a folder the seal made that holds another writer's entry named; each torn leaf named in a second unit |
 
 ## Changelog
 

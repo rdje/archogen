@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a review round's count is checked against its findings, and a seal's rollback names what it leaves
+
+`ARCHOGEN-PROGRAM-0576` (leaf `PROGRAM.69`), `2026-10-10`.
+
+- A design record states how many findings each review round made, and the task-tree sealing record had that count
+  wrong for the fourth time. A new check, `REVIEW-COUNTS`, now counts each round's findings in its review history and
+  refuses a record whose count, defects, arm gaps or remarks disagree; on its first run it named exactly the wrong row.
+- When a seal stops because another writer put a file where the seal was writing, the folder it made for that file
+  stays, and the tool now names it and no longer says the seal was rolled back. Every leaf with a line that would
+  tear is named, in every part of the tree, not only the first.
+- Validation: 121 arms of the sealing tool and 9 of the new check; two deliberate breaks each caught by its own arm,
+  by an untracked runner, so not durable; the focused tier on the staged tree.
+
 ## archogen — the generated-sources record's ledgers say what each commit claimed, and the record what holds
 
 `ARCHOGEN-M3-0575` (leaf `M3.6.6.4`), `2026-10-10`.
@@ -263,8 +276,7 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `ARCHOGEN-PROGRAM-0543` (leaf `PROGRAM.69`), `2026-10-10`.
 
 - Sealing now holds every signal but SIGKILL, SIGSTOP, seven fault signals and, on Linux, the C library's own — not
-  only Ctrl-C, a terminate and a
-  hang-up — until it is done, and an interrupt then reports what happened: before anything was written, or after the
+  only Ctrl-C, a terminate and a hang-up — until it is done, and an interrupt then reports what happened: before anything was written, or after the
   seal said its outcome. An error that stops a seal is reported before the stop takes effect. A stray file at a
   temporary path is refused before anything is written.
 - Validation: arms for a stop at the first write, for four more signals, for an error under a held stop and for a stop

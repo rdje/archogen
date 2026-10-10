@@ -299,8 +299,8 @@ def temporary(target):
 def put(target, text):
     """Write `text` to `target` whole or not at all: a temporary file beside it, then a rename, so a write a full disk
     stops leaves the target as it was (review R9-1). The seal refuses a link at the target (reviews R10 AG3, R12 D2)
-    and any entry at its temporary path (R14 D3) before it writes; one that appears after that check makes this open fail, so
-    nothing is written through it and it is left as it was (R20 AG1)."""
+    and any entry at its temporary path (R14 D3) before it writes; one that appears after that check makes this open
+    fail, so nothing is written through it and it is left as it was (R20 AG1)."""
     tmp = temporary(target)
     created = False
     try:
@@ -636,8 +636,12 @@ def seal(tree_name):
                     undone.append("%s, not removed: %s" % (fpath, e))
             for d in reversed(made_dirs):
                 try:
-                    if os.path.isdir(d) and not os.listdir(d):
-                        os.rmdir(d)
+                    if os.path.isdir(d):
+                        if os.listdir(d):
+                            # Another writer's entry, or a folder below it left: the rollback is not whole (R23 D2).
+                            undone.append("%s, a folder the seal made, not removed: it is not empty" % d)
+                        else:
+                            os.rmdir(d)
                 except Exception as e:
                     undone.append("%s, not removed: %s" % (d, e))
         for u in undone:
@@ -897,6 +901,12 @@ PY
   [ ! -d "$work/docs/task-history" ] && git -C "$work" diff --quiet || { arms=$((arms + 1)); echo "SELF-TEST: the refused seal wrote something" >&2; }
   [ "$(printf '%s' "$LAST" | grep -c 'T.3, line')" -eq 3 ] ||
     { arms=$((arms + 1)); echo "SELF-TEST: the column-0 refusal did not name each of T.3's three lines (review R22 P2)" >&2; }
+  # Each torn leaf named, in every unit: a column-0 line in T.1.2 too, a leaf of another unit (review R23 AG1).
+  sub docs/tasks/T.md '^  Goal: a leaf of T\.1 that sits apart from its siblings\n' '  Goal: a leaf of T.1 that sits apart from its siblings\nat column 0, in another unit\n'
+  arm "column-0 lines in two units' leaves are refused, each leaf's named" 1 "T.1.2, line" --seal T
+  [ "$(printf '%s' "$LAST" | grep -c 'T.3, line')" -eq 3 ] && [ ! -d "$work/docs/task-history" ] ||
+    { arms=$((arms + 1)); echo "SELF-TEST: with two torn leaves, T.3's lines went unnamed or something was written (review R23 AG1)" >&2; }
+  git -C "$work" checkout -q -- docs/tasks/T.md
   sub docs/tasks/T.md '^```text\na fence the slicing would tear\n```\n' '  a line indented as a field\n'
   commit
   printf -- '# V\n\n## Task Tree\n\n- ID: `V.1`\n  Status: `done`\n  Goal: a closed subtree, committed\n  Commit: `ARCHOGEN-V-0001`\n\n- ID: `V.1.1`\n  Status: `done`\n  Goal: its closed child\n  Commit: `ARCHOGEN-V-0002`\n' > "$work/docs/tasks/V.md"
@@ -1486,12 +1496,15 @@ HOOK
   rm -rf "$work/docs/task-history/K"; restore
   git -C "$work" rm -q docs/tasks/K.md; commit
   # Another writer's file appearing at a sealed file's path just before the seal creates it: the seal stops, and the
-  # rollback leaves that file as the other writer left it (review R11 AG2).
+  # rollback leaves that file as the other writer left it (review R11 AG2) — and the folder the seal made for it, which
+  # it names, never saying the seal was rolled back (review R23 D2).
   arms=$((arms + 1))
   out="$(cd "$work" && SEAL_HOOK=plant PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?
   if [ "$rc" -ne 0 ] && printf '%s' "$out" | grep -qF "File exists" &&
-     [ "$(cat "$work/docs/task-history/Q/Q.1.md" 2>/dev/null)" = "another writer's" ] && git -C "$work" diff --quiet -- docs/tasks docs/task-history; then
-    ok=$((ok + 1)); echo "  ✅ another writer's file at a sealed path is left as it was"
+     [ "$(cat "$work/docs/task-history/Q/Q.1.md" 2>/dev/null)" = "another writer's" ] && git -C "$work" diff --quiet -- docs/tasks docs/task-history &&
+     printf '%s' "$out" | grep -qF "docs/task-history/Q, a folder the seal made, not removed: it is not empty" &&
+     printf '%s' "$out" | grep -qF "and its rollback left what it named above" && ! printf '%s' "$out" | grep -qF "so it was rolled back"; then
+    ok=$((ok + 1)); echo "  ✅ another writer's file at a sealed path is left as it was, its folder named, the rollback not called whole"
   else
     echo "SELF-TEST: another writer's file at a sealed path — rc $rc, or the rollback removed it:" >&2
     printf '%s\n' "$out" | tail -2 | sed 's/^/    /' >&2
