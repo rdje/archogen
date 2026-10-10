@@ -383,6 +383,19 @@ entry says it too.
 | R22-R2 | remark | "round 19's row … alone" ambiguous, and passing over the changelog | corrected here: the leaf's Verification Log row of round 19, and the changelog's round-19 entry |
 | R22-R3 | remark | the changelog's rollover, due at the next entry, would move three of this leaf's entries out of the note's reach | the note names segment `0021`, updated in the rollover's own commit, `e7fedd7` |
 
+**Round 23**, `2026-10-10`, of `cbebaa4`, by a read-only context that had not written the record, fenced from the
+sealed evaluation set. It ran the doctrine gate whole in its clone and the crate's tests in round 18's export, its 217
+code files identical to `cbebaa4`'s (183 passed); found round 22's answers true, the note's sealed segments as it says —
+`0021.md` the oldest 20 entries byte for byte, `0020.md` holding `0527`'s entry as round 2 left it — and every ledger
+entry the note covers identical to its commit's text; every rule §6 calls the parent's decided there and tested
+outside `route_tests`; every §6 row holding what it says, every route and no-route case built, every chain refusal
+naming the record, `GS-H13`'s four parts present. Verdict: no defect, 2 remarks. The review closes.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R23-R1 | remark | §6 named only `CHANGELOG.md`'s entries for the ledgers, lagging the note | §6 points to the note |
+| R23-R2 | remark | the blob rule's symbolic-link branch tested for a generator only, no test building a symbolic-link input | `M3.6.9`'s, whose Reproduce cites this history; the record claims nothing of links |
+
 ## Why
 
 The record closes on a round that finds no defect, as every design here does; each round, its findings and their

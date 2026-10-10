@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the generated-sources record's review closes, and generated sources are done
+
+`ARCHOGEN-M3-0591` (leaf `M3.6.6.4`), `2026-10-10`.
+
+- The record deciding which generated-source shapes stay refused, and the routes around them, passed its twenty-third
+  review round with no defect. With it, the work on committed generated sources — the design, the instrument, the
+  chapter and these decisions — is done. The leaf for the parent's own tests stays open, with its evidence in the
+  review history.
+- Validation: sixteen route tests; the crate's 183 tests; the review-count check; the book's gates; the focused tier
+  on the staged tree.
+
 ## archogen — the review-count check judges a list of reviews, and refuses any it cannot judge
 
 `ARCHOGEN-PROGRAM-0590` (leaf `PROGRAM.69`), `2026-10-10`.

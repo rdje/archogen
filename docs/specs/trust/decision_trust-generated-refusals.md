@@ -2,7 +2,8 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-10`
-- **Status:** `active` — written `2026-10-10` by leaf `M3.6.6.4`; its review open
+- **Status:** `active` — written `2026-10-10` by leaf `M3.6.6.4`; rounds 1 to 22 answered the same day; review closed
+  `2026-10-10`: round 23, by a context that did not write it, found no defect
   ([`decision_trust-generated-refusals-reviews.md`](../../reviews/decision_trust-generated-refusals-reviews.md))
 - **Owner / source:** leaf `M3.6.6.4` (`docs/tasks/M3.md`), filed by `M3.6.6.1`'s third review. It discharges `GS-H13`
   of [`decision_trust-generated-sources.md`](decision_trust-generated-sources.md), cited below as "the parent": *"Each
@@ -128,10 +129,10 @@ gate writes or refuses the inventory. The gate's rules the routes rest on — th
 both clauses, a lone `.rs` file, and the role judgment of each generator against each reader — are the parent's, decided
 by its record and held, at the instances they build, by its instrument's tests; holding each wherever its code judges it
 is `M3.6.9`'s — a leaf filed by this record's round 14 — which designs the criterion that shows it. This section is the
-claim that holds now: the leaf's Commit Log rows and `CHANGELOG.md`'s entries state each commit's claim as it was
-written, and the review history narrows them. The tests are `route_tests` in `xtask/src/trust_generated.rs`, written
-when review rounds had probed the routes in untracked tests and found some the record named fail, and four of the
-parent's tests, named with their module — three no-route cases, and the harness as a reader:
+claim that holds now: the leaf's ledger entries, as the note above its Commit Log names them, state each commit's claim
+as it was written, and the review history narrows them. The tests are `route_tests` in `xtask/src/trust_generated.rs`,
+written when review rounds had probed the routes in untracked tests and found some the record named fail, and four of
+the parent's tests, named with their module — three no-route cases, and the harness as a reader:
 
 | Test | Holds |
 | --- | --- |
@@ -213,3 +214,4 @@ finding answered here. The history is
 | 20 | `2026-10-10` | 4, and 3 remarks | answered by method: `M3.6.9`'s goal points to the evidence in this history and restates none; round 19's "the survivors sit on lines the sweep does not mutate" and "never narrow an iteration" corrected — it makes none of the survivors' mutations; round 18's answers to its remarks, as row 19 says, are `M3.6.9`'s to hold by the criterion it designs; §6's antecedent |
 | 21 | `2026-10-10` | 2, and 5 remarks | answered: `M3.6.9`'s Reproduce restates nothing — the history records each finding as its round states it; row 20's "as row 19 says" is R19-D1's answer in the history; round 20's "all but two" was the four defects; two antecedents |
 | 22 | `2026-10-10` | 1, and 3 remarks | answered: round 21's answer to R21-R5 corrected in the history — rounds 15 to 17, 19 and 20 found `M3.6.9`'s restatement wrong, the sweep found short by round 19 alone; "The route"'s generator judgment qualified "at the instances they build"; the note above the Commit Log names the changelog segment `0021`, in the rollover's own commit |
+| 23 | `2026-10-10` | 0, and 2 remarks | closed: no defect; §6 points to the note above the leaf's Commit Log for the ledgers; a symbolic-link input, untested in the parent, is `M3.6.9`'s, the record claiming nothing of it |

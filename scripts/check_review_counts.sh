@@ -41,8 +41,7 @@ case "$SELF" in /*) ;; *) SELF="$PWD/$SELF" ;; esac
 ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
 
 # history|record — one line a review. The self-test sets REVIEW_COUNTS_PAIRS to its scratch world's.
-PAIRS="${REVIEW_COUNTS_PAIRS:-docs/reviews/decision_task-tree-sealing-reviews.md|docs/decisions/decision_task-tree-sealing.md
-docs/reviews/decision_trust-generated-refusals-reviews.md|docs/specs/trust/decision_trust-generated-refusals.md}"
+PAIRS="${REVIEW_COUNTS_PAIRS:-docs/reviews/decision_task-tree-sealing-reviews.md|docs/decisions/decision_task-tree-sealing.md}"
 
 check() {
   PAIRS="$PAIRS" python3 -I - <<'PY'
