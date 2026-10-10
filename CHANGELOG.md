@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — CI is green on the runner again
+
+`ARCHOGEN-PROGRAM-0573` (leaf `PROGRAM.77`), `2026-10-10`.
+
+- The push carrying the fix ran every workflow green: the test suite on the runner in about two minutes, the
+  integration tier in four, where both jobs had been lost after 45. That run is the check this machine could not
+  make, and it confirms the cause found in the `kill` program's source.
+- Validation: the runs of `8cdac11` — `rust`, `doctrines`, `trust-gate` — each a success.
+
 ## archogen — the sealed cases' limits name every copy that can still show one
 
 `ARCHOGEN-PROGRAM-0572` (leaf `PROGRAM.76`), `2026-10-10`.

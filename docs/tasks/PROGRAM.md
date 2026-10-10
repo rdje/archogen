@@ -1082,8 +1082,8 @@ mdBook that is the director's window into the project.
   `ARCHOGEN-PROGRAM-0572 (leaf PROGRAM.76)`, round 8
 
 - ID: `PROGRAM.77`
-  Status: `active` — filed and started `2026-10-10`, on CI's red: the push `a543d10` failed the `rust` workflow; the
-  fix committed (`ARCHOGEN-PROGRAM-0569`), the push that restores CI its verification
+  Status: `done` — filed, started and closed `2026-10-10`, on CI's red: the push `a543d10` failed the `rust` workflow;
+  the fix committed (`ARCHOGEN-PROGRAM-0569`) and pushed, CI green on the runner
   Goal: the mutation runner's group kill reaches its own process group and nothing else, on every host, so the test
   suite cannot end the CI runner it runs on.
   Reproduce / issue: run `38064491086` of `a543d10`, both jobs — `focused` and `integration` — failed in the tier's
@@ -1123,8 +1123,11 @@ mdBook that is the director's window into the project.
     `make focused` → `passed — 3 passed, 0 failed`, on the staged tree; the doctrine gate at commit.
   - [x] **LOCKSTEP** — the verification chapter; the knowledge card and its index row; this leaf, the frontier and
     both logs; `docs/TASK_TREE.md`, `LIVE_STATUS.md`, `MEMORY.md`; `CHANGELOG.md`.
-  Verification: `2026-10-10` — the Verification Log's row; on the runner, the next push's `rust` run
-  Commit: `ARCHOGEN-PROGRAM-0569 (leaf PROGRAM.77)`
+  Verification: `2026-10-10` — the Verification Log's rows; on the runner, the leg this machine could not run: run
+  `38069871798` of `8cdac11`, the push that restored CI — `focused` passed in 1 min 55 s, *"tier focused: passed — 3
+  passed, 0 failed"*, `integration` in 3 min 45 s, where both had been lost at about 45 minutes; `doctrines` and
+  `trust-gate` passed beside it
+  Commit: `ARCHOGEN-PROGRAM-0569 (leaf PROGRAM.77)`; `ARCHOGEN-PROGRAM-0573 (leaf PROGRAM.77)`, closed on the runner
 
 ## Roadmap coverage map
 
@@ -1190,12 +1193,11 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.77` | `active` | CI red since `a543d10`: the test suite ended the runner it ran on; fixed, the push that restores CI its verification |
-| 2 | `PROGRAM.69` | `active` | its review open: round 23 next, on the committed tool, its seal already in place |
-| 3 | `PROGRAM.76` | `active` | its review open: round 9 next, of the sealed set's custody |
-| 4 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 1 | `PROGRAM.69` | `active` | its review open: round 23 next, on the committed tool, its seal already in place |
+| 2 | `PROGRAM.76` | `active` | its review open: round 9 next, of the sealed set's custody |
+| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
-The fourth row waits on the director's yes. The pending leaves beside them —
+The third row waits on the director's yes. The pending leaves beside them —
 `PROGRAM.71`, `.72` and `.73` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and a sealed leaf's full record is under `docs/task-history/PROGRAM/`.
 
@@ -1372,6 +1374,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-10` | `PROGRAM.69` (round 22) | the self-test; four mutations of the rules round 22 arms; the gate over 172 files; every self-test; focused on the staged tree | 120 / 0; each killed by an untracked runner, not durable; OK; 48 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.77` | the module's tests; four catalogued mutations; the crate's tests, clippy, fmt; the book's gates; focused on the staged tree | 12 passed; each killed; 183 passed, clean, clean; OK; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.76` (round 8) | the self-test; the check on the tree; every self-test; the case blobs' commits; focused on the staged tree | 71 pass / 0 fail; OK; passed; `b05fadb` and `2f6f331` each; `passed — 3 passed, 0 failed` |
+| `2026-10-10` | `PROGRAM.77` (closed) | the restoring push's runs on the runner, `gh run view 38069871798`, `38069871797`, `38069871851` | `focused` success in 1 min 55 s, `integration` in 3 min 45 s; `doctrines`, `trust-gate` success |
 
 ## Commit Log
 
@@ -1545,6 +1548,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0567 (leaf PROGRAM.69)` | **review round 22 answered**: row 21's count; arms for the noting order under an error, the warning's clauses, each column-0 line; 120 arms |
 | `PROGRAM.77` | `ARCHOGEN-PROGRAM-0569 (leaf PROGRAM.77)` | **the mutation runner's group kill through kill(2)**: Ubuntu's `kill` read `-<group>` as an option and signalled every process — the CI runner lost |
 | `PROGRAM.76` | `ARCHOGEN-PROGRAM-0572 (leaf PROGRAM.76)` | **review round 8 answered**: the honest limit's copies named where reading a case is said; a harness's memory, a model or an index made in the window; two arms; a caller's `git -c` undone in the self-test |
+| `PROGRAM.77` | `ARCHOGEN-PROGRAM-0573 (leaf PROGRAM.77)` | **closed on the runner**: the restoring push's `rust` run green in 2 and 4 minutes, where both jobs had been lost at 45 |
 
 ## Changelog
 
@@ -1580,3 +1584,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-10-10`: `PROGRAM.76` done — the sealed evaluation set's text out of the tree, the sealing commit its custody.
 - `2026-10-10`: `PROGRAM.76` reopened by its review round 1; its review open since.
 - `2026-10-10`: `PROGRAM.77` filed and fixed — the mutation runner's group kill through kill(2), after CI lost its runner; it closes on the runner's green.
+- `2026-10-10`: `PROGRAM.77` done — CI green on the runner again, the restoring push's `rust` run in 2 and 4 minutes.
