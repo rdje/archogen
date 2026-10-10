@@ -170,8 +170,9 @@ A task tree records every leaf of its work, with its checklist and evidence. Mos
   work, the list of what is next and the logs stay where they were.
 - **The proof.** Before anything is written, the tool checks that putting every leaf back would give the tree as it
   was, byte for byte (`docs/decisions/decision_task-tree-sealing.md`). After writing, it runs the check below on the
-  result, and undoes every write if the check refuses or anything stops it — each file written whole or not at all,
-  and whatever it could not undo, as on a full disk, named. So the history admits every line a tree may hold:
+  result, and undoes every write if the check refuses or an error or an interrupt stops it — each file written whole
+  or not at all, and whatever it could not undo, as on a full disk, named; a killed process leaves its writes for the
+  next check to name. So the history admits every line a tree may hold:
   its line ceiling is the trees' own (`docs/decisions/decision_task-history-line-ceiling.md`).
 - **What it still carries.** A sealed leaf keeps the hand-offs it quoted; the check that each design's hand-off is
   quoted word for word by its leaf reads the sealed text, never the two-line placeholder (`PROGRAM.63`).
@@ -185,8 +186,8 @@ A task tree records every leaf of its work, with its checklist and evidence. Mos
 - that every sealed leaf is, byte for byte, what its tree held just before it was sealed, so a seal made by hand or
   edited is refused when its files, its placeholders' links or its parts differ from what the tool makes — each file
   the largest finished part, whole. A placeholder's commit, a row's date and the rule against a line at column 0 are
-  the tool's alone, which the check does not read, and so are where a placeholder stands in its tree and any text after
-  the name on its first line;
+  the tool's alone, which the check does not read, and so are where a placeholder stands in its tree, any text after
+  the name on its first line, a seal of only some finished parts, and prose in the index outside its tables;
 - that no live leaf sits inside a part that is sealed, in any tree directly under `docs/tasks/` (one in a sub-folder
   is `PROGRAM.72`'s), and that each tree holds only its own leaves, each
   named once; that every sealed file holds a leaf; and that the index keeps one table per tree, its rows under it.

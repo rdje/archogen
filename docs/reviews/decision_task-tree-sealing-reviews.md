@@ -220,6 +220,26 @@ other leaves.
 | R9-N1 | another leaf's | `MEMORY.md`'s next action still said `.2.5` follows | rewritten by `ARCHOGEN-M3-0518` |
 | R9-N2 | another leaf's | `M3.6.6.2` closed and was not sealed | sealed by `ARCHOGEN-M3-0520`, its Commit field first (`ARCHOGEN-M3-0519`) |
 
+**Round 10**, `2026-10-10`, an eighth confirmation, in a clone of `0a7ec7f`, by a read-only context new to the change.
+It reproduced the gate, every self-test, the census and the seal's figures; re-sealed `72bd446` with `7ad8e6b`'s and
+`0a7ec7f`'s tools, byte for byte `e624001`'s; ran round 9's new arms on `7ad8e6b`'s core, failing; and killed nine
+mutations of its own — its runners untracked, so not durable. Verdict: 4 defects of this change, 3 arm gaps, 3 remarks
+and one pre-existing finding.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R10-D1 | defect | an interrupt just after the tree's rename, the index's or a sealed file's creation — before the write was noted — left the rollback blind: the tree kept its stubs while the sealed files were removed | each write noted before it is made; a noted write undone only where it happened, a file that no longer holds its text before, a sealed file that exists; four arms, a hook raising the interrupt just after each of the three writes and just before a creation |
+| R10-D2 | defect | "a sealed file's path already taken is refused before any write" held for a link to nothing alone: a file, a folder or a link to a file there was taken for a seal made, and skipped; R9-2's answer above said more | a unit the index rows is skipped, as sealed, for the gate to judge; any other unit's path must be free, any entry there refused; an arm with a file at the path |
+| R10-D3 | defect | the book's "undoes every write if … anything stops it" repeated what R8-2 withdrew | "an error or an interrupt"; a process killed outright leaves its writes for the next check |
+| R10-D4 | defect | round 9's counts: "nine … each caught" unmarked in the changelog; the Verification Log's "74 pass / 2 fail" from no committed state | marked untracked and not durable; the tally named as the working tree's first arms beside `7ad8e6b`'s core |
+| R10-AG1 | arm gap | "each step on its own" held by no arm | the index made a folder mid-proof: its restore fails, named, and the tree's still runs |
+| R10-AG2 | arm gap | a removal the rollback could not make went unnamed under a mutation | two sealed files made folders mid-proof: both removals fail, both named |
+| R10-AG3 | arm gap | `put`'s "a link is followed" held by no arm | a tree or an index that is a link refused before any write, with an arm; `put` writes the path itself |
+| R10-R1 | remark | the leaf's "OK (170 sealed file(s)" named no state | "at `e624001`" |
+| R10-R2 | remark | `open(…, "x")` for `"w"` survives | equivalent outside a race, the taken check running first; kept as a defence |
+| R10-R3 | remark | "a failure that stops one stops no other" overstated: a failed restore keeps the sealed files | the comment says what each step stops and what it keeps |
+| R10-P1 | remark, pre-existing | the gate accepts a seal of only some closed units, each the tool's, and prose in the index outside its tables | both among the stated limits — the rest seal later as units of their own |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.

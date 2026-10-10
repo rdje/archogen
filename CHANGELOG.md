@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a seal interrupted at any instant is undone
+
+`ARCHOGEN-PROGRAM-0525` (leaf `PROGRAM.69`), `2026-10-10`.
+
+- Sealing finished work notes each write before making it, so an interrupt arriving just after one is undone like any
+  other; anything already standing where a sealed file goes — a file, a folder or a link — is refused before a write;
+  and a task tree or index that is a link is refused rather than replaced.
+- The book no longer says every write is undone whatever stops the tool: a process killed outright leaves its writes,
+  which the next check names.
+- Validation: arms raising an interrupt just after each write and just before one, for a file at a sealed file's
+  path, a linked tree, a failed restore and two failed removals, the first five failing on the old tool; eleven
+  deliberate breaks of the rules, each caught by an untracked runner, so not durable (85 arms).
+
 ## archogen — room for new design reviews
 
 `ARCHOGEN-PROGRAM-0524` (leaf `PROGRAM.70.2`, closing `PROGRAM.70`), `2026-10-10`.
@@ -26,8 +39,8 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
   on its own, naming anything it could not undo instead of leaving a half-written tree.
 - A sealed file's place already taken, even by a dangling link, is refused before anything is written.
 - Validation: arms for a full disk, a rollback the full disk stops, an interrupt, unreadable git output, a first seal's
-  folder and a table's layout, the full-disk and taken-path arms failing first; nine catalogued breaks of the new
-  rules, each caught (77 arms).
+  folder and a table's layout, the full-disk and taken-path arms failing first; nine deliberate breaks of the new
+  rules, each caught by an untracked runner, so not durable (77 arms).
 
 ## archogen — generated sources in the trust chapter
 
