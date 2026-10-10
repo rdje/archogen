@@ -52,12 +52,12 @@
 #      tree not its own; the index keeps one table per tree, its header first and its rows under it, one row a file.
 #
 # THE SEAL writes nothing unless the tree it would leave, with every new stub replaced by its body from its new sealed
-# file, is the tree as it stood, byte for byte, no entry already takes a sealed file's path, and no link lies on a path
-# it writes, nor any entry at a rewritten file's temporary path (R14 D3); and it rolls everything back if the gate then
-# refuses the result, or an error stops it. A stop — any signal but SIGKILL, SIGSTOP and the six fault signals — is
-# held from before the first write until the seal is done (R13 to R17); an abort ends it whatever the mask. Each file it rewrites is written whole or
-# not at all (R9-1), each write noted before it is made (R10 D1); it says "rolled back" only of a rollback that undid
-# everything (R12 D3).
+# file, is the tree as it stood, byte for byte, no entry already takes a sealed file's path, and no link lies on a
+# path it writes, nor any entry at a rewritten file's temporary path (R14 D3); and it rolls everything back if the
+# gate then refuses the result, or an error stops it. A stop — any signal but SIGKILL, SIGSTOP, the six fault signals
+# and, on Linux, the C library's own — is held from before the first write until the seal is done (R13 to R18); an
+# abort ends it whatever the mask. Each file it rewrites is written whole or not at all (R9-1), each write noted
+# before it is made (R10 D1); it says "rolled back" only of a rollback that undid everything (R12 D3).
 #
 # ⚠️ HONEST LIMIT: history rewritten under the gate (a force-push, a replaced object) is premise 2 and 3's, as for the
 # catalog (decision_catalog-records.md §0). Within history, legs 3 and 5 hold whatever HEAD is.
@@ -266,7 +266,7 @@ def layout(index_text):
 # Every signal held through a seal (reviews R14 D2, R15 D2, R16 D5) but SIGKILL and SIGSTOP, which no mask holds, and the
 # six signals a fault raises — SIGSEGV, SIGBUS, SIGFPE, SIGILL, SIGTRAP, SIGSYS — left out whoever sends them: blocked, a
 # fault the interpreter raises on itself may hang it (SIGSEGV does on macOS, measured). SIGABRT is held: `abort()` ends
-# the process whatever the mask.
+# the process whatever the mask. On Linux the C library keeps its own signals out of any mask (review R18 D1).
 UNHELD = ("SIGKILL", "SIGSTOP", "SIGSEGV", "SIGBUS", "SIGFPE", "SIGILL", "SIGTRAP", "SIGSYS")
 HELD = signal.valid_signals() - {getattr(signal, s) for s in UNHELD if hasattr(signal, s)}
 STARTED = []  # one entry once a seal holds its stops and is about to write (review R15 D1)
@@ -647,13 +647,13 @@ def seal(tree_name):
     # which the run's own handler then names as a breach, or any other — rolls the seal back first and is said before it
     # goes on (reviews R5-2, R6-2, R7-4, R9-2, R14 D1). The tree and the index are written whole or not at all, and the
     # rollback undoes what was written alone, each step on its own, naming what it could not undo (R9-1). Every signal
-    # but eight (`HELD`) is held for the whole of it, from before the first write: a stop that comes takes effect once
+    # but SIGKILL, SIGSTOP, the six fault signals and, on Linux, the C library's own (`HELD`) is held for the whole of it, from before the first write: a stop that comes takes effect once
     # the seal is done — proven and kept, refused and rolled back, or stopped by an error and rolled back — its outcome
     # said where the output can be written, so the seal is whole either way, with no moment between a write and its
     # record for a stop to fall in (reviews R13, R14 D2, R16 D2). A signal ignored on entry stays ignored. The git the
     # proof runs inherits the mask: a stop does not end a git that hangs. ⚠️ What the mask leaves out — SIGKILL,
     # SIGSTOP's pause aside, the six fault signals whoever sends them, an abort the process raises on itself, and on Linux
-    # the C library's two own signals — and the machine stopping leave the writes, which the next gate run proves
+    # the C library's own signals, which may — and the machine stopping leave the writes, which the next gate run proves
     # as any seal not yet committed (review R8-2); and a failure that defeats the rollback's own writes too, a full disk,
     # leaves what it names.
     previous = signal.pthread_sigmask(signal.SIG_BLOCK, HELD)
@@ -1514,7 +1514,8 @@ HOOK
     printf '%s\n' "$out" | tail -2 | sed 's/^/    /' >&2
   fi
   rm -f "$work/docs/task-history/.INDEX.md.seal-4242"; restore
-  # The mask in force at the first write holds every signal but SIGKILL, SIGSTOP and the six fault signals, and none of
+  # The mask in force at the first write holds every signal but SIGKILL, SIGSTOP, the six fault signals and the C
+  # library's own, and none of
   # those (reviews R15 AG1, R16 AG1).
   arms=$((arms + 1))
   out="$(cd "$work" && SEAL_HOOK=maskcheck SEAL_MASKCHECK="$SCRATCH/maskcheck" PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?

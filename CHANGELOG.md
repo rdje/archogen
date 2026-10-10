@@ -20,11 +20,11 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 
 `ARCHOGEN-PROGRAM-0554` (leaf `PROGRAM.76`), `2026-10-10`.
 
-- The seal's check held the manifest's values in shell variables before checking them, so a forced trace could print
-  a case's line written there, and a stray clone staged as a gitlink passed unseen. Each value is now checked inside
-  its pipeline before anything holds it, and a gitlink no `.gitmodules` entry registers is refused. The texts say
-  exactly what it prints — paths, line numbers, names and commit ids — and name the viewers, archives and reverts that
-  still reach a case.
+- The seal's check held the manifest's values in shell variables before checking them, so a forced trace could print a
+  case's line written there, and a stray clone staged as a gitlink passed unseen. Each value is now checked inside its
+  pipeline before anything holds it, and a gitlink no `.gitmodules` entry registers is refused. The texts say exactly
+  what it prints — paths, line numbers, names and commit ids — and name the viewers, archives and reverts that still
+  reach a case.
 - Validation: 58 arms, a forced trace over nine places among them; two failing on the previous check and four
   deliberate breaks each caught, both by untracked runners, so not durable.
 
@@ -43,11 +43,11 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 
 `ARCHOGEN-PROGRAM-0550` (leaf `PROGRAM.76`), `2026-10-10`.
 
-- The seal's check still echoed two manifest values it could not read, so a case's line written there would print;
-  and a copy in a folder git could not open, or under a folder that could not be searched, passed. It now echoes no
-  manifest value of the wrong form, names an exposure it cannot match by its line's number, and refuses whatever git cannot list. The
-  texts name what it does not look into: a registered submodule, a folder a link points outside to, a folder an
-  untracked ignore file hides.
+- The seal's check still echoed two manifest values it could not read, so a case's line written there would print; and
+  a copy in a folder git could not open, or under a folder that could not be searched, passed. It now echoes no
+  manifest value of the wrong form, names an exposure it cannot match by its line's number, and refuses whatever git
+  cannot list. The texts name what it does not look into: a registered submodule, a folder a link points outside to, a
+  folder an untracked ignore file hides.
 - Validation: 56 arms, among them a case's line seeded into eight places of the manifest and a run with tracing forced
   on; four failing on the previous check and seven deliberate breaks each caught, both by untracked runners, so not
   durable.
@@ -56,31 +56,32 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 
 `ARCHOGEN-M3-0549` (leaf `M3.6.6.4`), `2026-10-10`.
 
-- Review rounds found routes the record offered fail when a reviewer built them. Each route, and each case the
-  record says has none, is now a test that builds it and checks the gate's verdict, and the record claims no more than
-  they hold; one route, a program that writes its own source, was narrowed to what they show.
+- Review rounds found routes the record offered fail when a reviewer built them. Each route, and each case the record
+  says has none, is now a test that builds it and checks the gate's verdict, and the record claims no more than they
+  hold; one route, a program that writes its own source, was narrowed to what they show.
 - Validation: twelve route tests, three of the parent's named beside them; the crate's 177 tests.
 
 ## archogen — an interrupted seal exits 130 even with its report lost
 
 `ARCHOGEN-PROGRAM-0548` (leaf `PROGRAM.69`), `2026-10-10`.
 
-- With its output a pipe whose reader had left, an interrupted seal exited 120 rather than 130; it now exits 130. SIGABRT is held as well,
-  since an abort ends the process whatever is held, leaving SIGKILL, SIGSTOP and six fault signals unheld. The texts
-  say that only an interrupt reports which outcome it found, and only where its output can be written.
-- Validation: arms for the mask's breadth both ways and for the start recorded before the first write; five
-  deliberate breaks, each caught by an untracked runner, so not durable (111 arms).
+- With its output a pipe whose reader had left, an interrupted seal exited 120 rather than 130; it now exits 130.
+  SIGABRT is held as well, since an abort ends the process whatever is held, leaving SIGKILL, SIGSTOP, six fault
+  signals and, on Linux, the C library's own unheld. The texts say that only an interrupt reports which outcome it
+  found, and only where its output can be written.
+- Validation: arms for the mask's breadth both ways and for the start recorded before the first write; five deliberate
+  breaks, each caught by an untracked runner, so not durable (111 arms).
 
 ## archogen — the sealed cases' guard echoes no bad entry, traces nothing, and seeks more copies
 
 `ARCHOGEN-PROGRAM-0547` (leaf `PROGRAM.76`), `2026-10-10`.
 
-- The seal's check could print a sealed case's line in two ways — echoing a manifest line it could not read, and
-  under a shell trace — and missed a copy under a name git quotes, in an unreadable file, in a nested repository,
-  staged and gone from disk, or in the manifest itself. It now names a bad line by its number, never traces, reads
-  paths whole, refuses a file it cannot read, and looks at the staged tree as well as the disk. The texts give
-  the revision the diff guard starts at, and the acts that still reach a case. Local clones whose index still held
-  the set were removed.
+- The seal's check could print a sealed case's line in two ways — echoing a manifest line it could not read, and under
+  a shell trace — and missed a copy under a name git quotes, in an unreadable file, in a nested repository, staged and
+  gone from disk, or in the manifest itself. It now names a bad line by its number, never traces, reads paths whole,
+  refuses a file it cannot read, and looks at the staged tree as well as the disk. The texts give the revision the
+  diff guard starts at, and the acts that still reach a case. Local clones whose index still held the set were
+  removed.
 - Validation: 53 arms, nine failing on the previous check and ten deliberate breaks each caught, both by untracked
   runners, so not durable; no run prints a case's text.
 
@@ -89,11 +90,11 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `ARCHOGEN-PROGRAM-0546` (leaf `PROGRAM.69`), `2026-10-10`.
 
 - An interrupt that came while sealing's own report could not be written said nothing had been written, though the
-  seal was made and kept; with the report's pipe broken it now says the outcome could not be said. The texts name the signals sealing leaves
-  unheld — SIGKILL, SIGSTOP and seven fault signals — rather than claiming every signal.
-- Validation: arms for the mask in force at the first write, a lost report, a plain file at the index's temporary
-  path and the error path's own breach line; six deliberate breaks, each caught by an untracked runner, so not
-  durable (109 arms).
+  seal was made and kept; with the report's pipe broken it now says the outcome could not be said. The texts name the
+  signals sealing leaves unheld — SIGKILL, SIGSTOP and seven fault signals — rather than claiming every signal.
+- Validation: arms for the mask in force at the first write, a lost report, a plain file at the index's temporary path
+  and the error path's own breach line; six deliberate breaks, each caught by an untracked runner, so not durable (109
+  arms).
 
 ## archogen — the sealed cases hidden from diffs too, and their copies sought
 
@@ -113,11 +114,11 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 
 - Sealing now holds every signal but SIGKILL, SIGSTOP and seven fault signals — not only Ctrl-C, a terminate and a
   hang-up — until it is done, and an interrupt then reports what happened: before anything was written, or after the
-  seal said its outcome. An error that stops a seal is reported before the stop takes effect. A stray file
-  at a temporary path is refused before anything is written.
-- Validation: arms for a stop at the first write, for four more signals, for an error under a held stop and for a
-  stop before any write; nine failing on the previous tool; seven deliberate breaks, each caught by an untracked
-  runner, so not durable (106 arms).
+  seal said its outcome. An error that stops a seal is reported before the stop takes effect. A stray file at a
+  temporary path is refused before anything is written.
+- Validation: arms for a stop at the first write, for four more signals, for an error under a held stop and for a stop
+  before any write; nine failing on the previous tool; seven deliberate breaks, each caught by an untracked runner, so
+  not durable (106 arms).
 
 ## archogen — the sealed evaluation cases out of the working tree
 

@@ -382,6 +382,25 @@ durable. Verdict: 5 defects of this change and 1 arm gap.
 | R17-R4 | remark | the script's comment left SIGSTOP out of what the mask leaves | named |
 | R17-R5 | remark | `M3` holds one closed subtree below an open one, not yet sealed | `M3`'s to seal, not this change's |
 
+**Round 18**, `2026-10-10`, a sixteenth confirmation, in a clone of `4c9952b`, by a read-only context new to the
+change and fenced from the sealed evaluation set. It reproduced the gate, every self-test, the census, round 17's
+figures and the seal; checked, by an oracle of its own over the real history, that all 172 sealed files are the
+outermost closed unit, whole, at their sealing commit's parent, with no live leaf under a sealed key; fuzzed 72 trees,
+432 hand seals and 66 late leaves, every one as its oracle predicts; probed 16 states of the outputs, every interrupted
+run exiting 130; and ran sixteen mutations of round 17's rules, eleven killed, the five others against no claimed rule —
+its runners untracked, so not durable. Verdict: 1 defect of this change, no arm gap.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R18-D1 | defect | the record's stop sentence and a script comment named the C library's own signals; How to apply, the script's header, the book and the changelog left them out | one wording in every list: every signal but SIGKILL, SIGSTOP, the six fault signals and, on Linux, the C library's own; one sent from outside "may" leave the writes, Linux not measured here |
+| R18-R1 | remark | under bash 5.3 `2>&-` leaves a read-only descriptor, not a None stderr, so the None guard is reached only under bash 3.2 | no claimed rule breaks; kept |
+| R18-R2 | remark | five surviving mutants, none against a claimed rule | kept |
+| R18-R3 | remark | a held interrupt never says "before any write" | the record says that of one before the mask |
+| R18-R4 | remark | "two own signals" is glibc's count | "its own" |
+| R18-R5 | remark | round 16's leaf text, log row and record row say "exiting 130 with its output closed", false of `4105124` for an output closed at the start | they stand as written; round 17's rows are their correction |
+| R18-R6 | remark | long lines in the changelog, the book and the script | rewrapped |
+| R18-R7 | remark | closed units still unsealed elsewhere | not this change's; the trees' next seal |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.

@@ -654,7 +654,7 @@ mdBook that is the director's window into the project.
 
 - ID: `PROGRAM.69`
   Status: `active` — the tool, its gate and the seal committed `2026-10-10` (`ARCHOGEN-PROGRAM-0511`); its review open,
-  round 17's defects and arm gap answered (`ARCHOGEN-PROGRAM-0552`), the outputs' every state held, round 18 next
+  round 18's defect answered (`ARCHOGEN-PROGRAM-0556`), one wording for what the mask leaves out, round 19 next
   Goal: a closed subtree below an open top-level subtree is sealed too, so a tree whose top-level subtree stays open
   for long — on a blocked leaf, or a long feature — does not keep its finished leaves live.
   Reproduce / issue: `M3.6.6.2.1`'s commit was refused by `README-ROUTES`, *"docs/tasks/: 823457 bytes in total, over
@@ -780,7 +780,8 @@ mdBook that is the director's window into the project.
   `ARCHOGEN-PROGRAM-0539 (leaf PROGRAM.69)`, round 13; `ARCHOGEN-PROGRAM-0543 (leaf PROGRAM.69)`, round 14;
   `ARCHOGEN-PROGRAM-0546 (leaf PROGRAM.69)`, round 15;
   `ARCHOGEN-PROGRAM-0548 (leaf PROGRAM.69)`, round 16;
-  `ARCHOGEN-PROGRAM-0552 (leaf PROGRAM.69)`, round 17
+  `ARCHOGEN-PROGRAM-0552 (leaf PROGRAM.69)`, round 17;
+  `ARCHOGEN-PROGRAM-0556 (leaf PROGRAM.69)`, round 18
 
 - ID: `PROGRAM.70`
   Status: `done` — started `2026-10-10`, decomposed into `.1`, the bytes, and `.2`, the count, closed the same day with `.2`
@@ -1087,7 +1088,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.69` | `active` | its review open: round 18 next, on the committed tool, its seal already in place |
+| 1 | `PROGRAM.69` | `active` | its review open: round 19 next, on the committed tool, its seal already in place |
 | 2 | `PROGRAM.76` | `active` | its review open: round 5 next, of the sealed set's custody |
 | 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
@@ -1258,6 +1259,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `2026-10-10` | `PROGRAM.76` (round 3) | the check on the real set; its self-test; the arms beside `00e08cc`'s core; seven mutations; the clones older than `6d61f65`; every self-test; focused on the staged tree | exit 0; 56 / 0; 52 pass / 4 fail, not durable; 7 killed, not durable; none left; 48 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.69` (round 17) | the arms as committed beside `4105124`'s core; the self-test; four mutations of round 17's rules; the gate over 172 files; every self-test; focused on the staged tree | 112 pass / 4 fail, the working tree's and not durable; 116 / 0; each killed by an untracked runner, not durable; OK; 48 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.76` (round 4) | the check on the real set; its self-test; the arms beside `a9ec254`'s core; four mutations; every self-test; focused on the staged tree | exit 0; 58 / 0; 56 pass / 2 fail, not durable; 4 killed, not durable; 48 passed; `passed — 3 passed, 0 failed` |
+| `2026-10-10` | `PROGRAM.69` (round 18) | texts and comments alone; the self-test; the gate over 172 files; every self-test; focused on the staged tree | 116 / 0; OK; 48 passed; `passed — 3 passed, 0 failed` |
 
 ## Commit Log
 
@@ -1421,6 +1423,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.76` | `ARCHOGEN-PROGRAM-0550 (leaf PROGRAM.76)` | **review round 3 answered by method**: no manifest value echoed, a case's line seeded into eight places; what git cannot list refused; the trace guard held by a forced trace |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0552 (leaf PROGRAM.69)` | **review round 17 answered**: an outcome said only to a stream that exists; one exit whatever became of the outputs; an abort named; 116 arms |
 | `PROGRAM.76` | `ARCHOGEN-PROGRAM-0554 (leaf PROGRAM.76)` | **review round 4 answered**: no manifest value of the wrong form ever held in the shell; a stray gitlink refused; the texts say what is printed |
+| `PROGRAM.69` | `ARCHOGEN-PROGRAM-0556 (leaf PROGRAM.69)` | **review round 18 answered**: one wording for what the mask leaves out, the C library's own signals in every list |
 
 ## Changelog
 
