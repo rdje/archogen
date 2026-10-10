@@ -33,16 +33,16 @@ in front of someone choosing what the engine should support.
 
 ## Why the text is out of the tree
 
-Until `2026-10-10` the cases sat in `frozen/` as files, guarded against edits and against being
-named elsewhere, but not against being **read**: the only barrier was the line above, which no
-agent's bootstrap reaches. The cases are written in the vocabulary the engine work searches
-every day, so an ordinary search for other work can land in one — and one did (*Exposures*,
-below). Excluding search terms cannot work, and excluding the folder holds only for tools that
-honour an exclusion. So the text left the tree (leaf `PROGRAM.76`): no search of the working
-tree, under any term, by any tool, reaches a case, and, in a working tree carrying the mark, no
-diff of a commit that holds one shows it; reading one takes an act the box above names, or one of the copies the
-honest limit names — the published branch's made before it moved, a transcript, scrollback, editor history or a
-harness's memory made before `6d61f65`, a model or an index made from the branch while it held the set.
+Until `2026-10-10` the cases sat in `frozen/` as files, guarded against edits and against being named elsewhere, but not
+against being **read**: the only barrier was the line above, which no agent's bootstrap reaches. The cases are written
+in the vocabulary the engine work searches every day, so an ordinary search for other work can land in one — and one did
+(*Exposures*, below). Excluding search terms cannot work, and excluding the folder holds only for tools that honour an
+exclusion. So the text left the tree (leaf `PROGRAM.76`): no search of the working tree, under any term, by any tool,
+reaches a case, and, in a working tree carrying the mark, no diff of a commit that holds one shows it; reading one takes
+an act the box above names, or one of the copies the honest limit names — another clone not yet past `6d61f65`; the
+published branch's made before it moved; a transcript, scrollback, editor history or a harness's memory made before
+`6d61f65` or in a working tree without the mark; a model or an index made from the branch while it held the set; an old
+commit's diff holding a short quote.
 
 ## The seal is mechanical
 
@@ -52,9 +52,9 @@ project doctrine slot. It enforces five properties:
 | Property | What it refuses |
 | --- | --- |
 | **Integrity** | manifest entries that are not the sealing commit's own, a sealing commit that is no ancestor of `HEAD`, a digest the case's blob there does not hash to, or, once unsealed, a restored case that differs from it — the set cannot be rewritten, grown or shrunk to match what the engine turned out to do |
-| **Custody** | while sealed, a case at its path, a link there included, or in the index; a case's whole text anywhere in the index or the working tree, ignored files aside; a file, the manifest included, staged or on disk, tracked or not, that quotes a long line of one; an unregistered repository nested outside ignored folders, staged as a gitlink or not, or a file or folder git cannot read or list, since none can be ruled out; a sealed path not marked `-diff`, staged and on disk |
+| **Custody** | while sealed, a case at its path, a link there included, or in the index; a file whose content is a case's text, byte for byte, anywhere in the index or the working tree — a tracked file git is told not to look at, assume-unchanged or skip-worktree, included — ignored files aside; a file, the manifest included, staged or on disk, tracked or not, that quotes a long line of one; an unregistered repository nested outside ignored folders, staged as a gitlink or not, an entry named `.git` in any case outside the top level, or a file or folder git cannot read or list, since none can be ruled out; a sealed path not marked `-diff` — as this working tree's diffs obey, staged and on disk, and by the staged and the on-disk `.gitattributes` itself, a mark from `.git/info/attributes` or `core.attributesFile` being no commit's |
 | **Completeness** | anything in `frozen/` but the manifest and, once unsealed, the listed cases — at any depth, hidden or linked; once unsealed, a listed case missing |
-| **Non-contamination** | any tracked file **outside** `frozen/` that names a sealed case — a case written about in a task tree, decision record or design note is no longer unseen |
+| **Non-contamination** | any tracked file **outside** `frozen/`, staged or on disk, the check's own script included, that names a sealed case — a case written about in a task tree, decision record or design note is no longer unseen |
 | **Exposure** | an `# exposed:` line naming no listed case — recording an exposure is this project's rule; no check can see a read |
 
 It prints paths, as their files are named, and line numbers, entry names and a commit id of the right form — tokens
@@ -74,15 +74,17 @@ history made before `6d61f65`, or in a working tree without the mark, holds what
 harness's persistent memory written then, which every later session loads with no act; what to do with them is the
 director's. The branch held the set from `a3c0cbd`, pushed `2026-10-06`, to `a543d10`, pushed `2026-10-10`: a model
 trained, or an index built, on it in those days may put a case in front of an agent using it with no act at all, so
-`M6.5` records the models used and their training cut-offs. No case's whole text is anywhere else in history — `git
-log --all --find-object` for each case's blob → the sealing commit and the commit that took it out, nothing else —
-but a shorter quote committed outside the sealed folder before the custody check existed would show in that commit's
-diff, and the fence leaves it unsearched. `git grep <commit>` and `git log -S` over history tell which file or commit holds a term, not
-its line. Ignored files, the build output under `target/`, or a folder an untracked `.gitignore` ignores, are not
-scanned, nor anything outside the repository a link points to, nor a registered submodule, another repository
-(`REPOSITORY-BOUNDARY` refuses what is created at a vendored checkout's first level); a quote shorter than a long line,
-or reworded, is not found; the check sees what is staged and on disk, and CI what is pushed. The check cannot prove
-nobody read a case; a human who reads one and stays quiet defeats it, so an exposure is recorded, never kept quiet.
+`M6.5` records the models and indexes used and their training cut-offs; GitHub's record of the repository's pushes
+bounds those days — the branch created at `32e6b14`, before the set, on `2026-09-13`, and pushed next at `a3c0cbd`. No
+other path in history ever held a case's whole text — `git log --all --find-object` for each case's blob → only the
+sealing commit, which added it, and `2f6f331`, which removed it — but a shorter quote committed outside the sealed
+folder before the quote search existed (`6d61f65`) would show in that commit's diff, and the fence leaves it unsearched.
+`git grep <commit>` and `git log -S` over history tell which file or commit holds a term, not its line. Ignored files,
+the build output under `target/`, or a folder an untracked `.gitignore` ignores, are not scanned, nor anything outside
+the repository a link points to, nor a registered submodule, another repository (`REPOSITORY-BOUNDARY` refuses what is
+created at a vendored checkout's first level); a quote shorter than a long line, or reworded, is not found; the check
+sees what is staged and on disk, and CI what is pushed. The check cannot prove nobody read a case; a human who reads one
+and stays quiet defeats it, so an exposure is recorded, never kept quiet.
 
 ## Exposures
 

@@ -21,17 +21,20 @@
 #   1. INTEGRITY    — the manifest's entries are the sealing commit's own, that commit an ancestor
 #                     of HEAD; every case's blob there hashes to its digest, and once unsealed the
 #                     restored file does too: the set cannot be rewritten, grown or shrunk.
-#   2. CUSTODY      — while sealed, no case is at its path, in the index, or — its whole text —
-#                     anywhere in the index or the working tree outside ignored files; no file,
-#                     the manifest included, staged or on disk, quotes a long line of one; no
-#                     unregistered repository nested outside ignored folders, staged or not, nothing
-#                     git cannot read or list;
-#                     its path is marked `-diff`, staged and on disk.
+#   2. CUSTODY      — while sealed, no case is at its path, in the index, or — a file whose content is
+#                     its text, byte for byte — anywhere in the index or the working tree outside
+#                     ignored files, a tracked file marked assume-unchanged or skip-worktree among
+#                     them; no file, the manifest included, staged or on disk, quotes a long line of
+#                     one; no unregistered repository nested outside ignored folders, staged or not,
+#                     no entry named `.git` in any case but the top level's, nothing git cannot read
+#                     or list; its path is marked `-diff` — as this working tree's diffs obey, staged
+#                     and on disk, and by the staged and the on-disk `.gitattributes` itself.
+#                     (review R9 D2–D4)
 #   3. COMPLETENESS — nothing is in the sealed directory but the manifest and, once unsealed, the
 #                     listed cases, at any depth, hidden or linked; once unsealed, none is missing.
-#   4. NON-CONTAMINATION — no tracked file outside the sealed directory names a sealed case: a
-#                     case discussed in a task tree, a decision record or a design note is no
-#                     longer unseen.
+#   4. NON-CONTAMINATION — no tracked file outside the sealed directory, staged or on disk, this
+#                     script included, names a sealed case: a case discussed in a task tree, a
+#                     decision record or a design note is no longer unseen (review R9 D5, D6).
 #   5. EXPOSURE     — each `# exposed:` line names a listed case. Recording an exposure is the
 #                     project's rule (docs/evaluation/README.md); the check cannot see a read.
 #   It prints paths, as their files are named, and line numbers, entry names and a commit id of the
@@ -60,8 +63,11 @@
 # copy made of it before then — a fork, a mirror, a search engine's cache, an archive — may still
 # show a case with no act at all, so a web search or fetch of this repository stays fenced. A
 # harness transcript, a saved terminal scrollback or an editor's history made before `6d61f65`, or
-# in a working tree without the mark, holds whatever was shown then; what to do with them is the
-# director's.
+# in a working tree without the mark, holds whatever was shown then, and so may a harness's memory
+# written then; a model trained or an index built on the branch while it held the set — from
+# `a3c0cbd`, `2026-10-06`, to `a543d10` — may show a case with no act, so `M6.5` records those
+# used; a short quote committed outside the folder before `6d61f65` shows in that commit's diff.
+# What to do with them is the director's.
 #
 # UNSEALING. At the leaf named in the manifest's `unseals-at:` line, set `seal: unsealed`,
 # add `unsealed-on:` / `unsealed-by:`, then run `--restore`, which writes each case back from
@@ -144,6 +150,9 @@ self_test() {
   }
   absent() { [ ! -e "$d/zz-01-arm-alpha.md" ] && [ ! -e "$d/zz-02-arm-beta.md" ] && [ -z "$(find "$d" -name '.*.restore.*')" ]; }
 
+  holds "the self-test's quoting holds over a caller's git -c core.quotePath=false (R9 R9)" \
+    test "$(GIT_CONFIG_PARAMETERS="'core.quotepath'='false'" bash -c "$(sed -n '/^  unset GIT_CONFIG_PARAMETERS$/,/GIT_CONFIG_VALUE_0=true$/p' "$SELF")
+git config --get core.quotePath")" = true
   fresh sealed; arm "an intact sealed set passes, its cases out of the tree" 0 ""
   # Custody.
   fresh sealed; printf 'ARM-CASE-TEXT alpha\n' > "$d/zz-01-arm-alpha.md"
@@ -164,6 +173,24 @@ self_test() {
   arm "a -diff mark dropped from the index alone is refused (custody)" 1 "'zz-01-arm-alpha.md' is not marked -diff"
   fresh sealed; : > "$work/.gitattributes"
   arm "a -diff mark dropped on disk alone is refused (custody, R8 AG2)" 1 "'zz-01-arm-alpha.md' is not marked -diff"
+  # The mark from a source no commit carries counts for nothing (review R9 D4).
+  fresh sealed; : > "$work/.gitattributes"; g add -A; printf 'docs/evaluation/frozen/** -diff\n' > "$work/.git/info/attributes"
+  arm "a -diff mark from .git/info/attributes alone is refused (custody, R9 D4)" 1 "'zz-01-arm-alpha.md' is not marked -diff by the staged .gitattributes itself"
+  fresh sealed; : > "$work/.gitattributes"; g add -A; printf 'docs/evaluation/frozen/** -diff\n' > "$work/../attributes"
+  g config core.attributesFile "$work/../attributes"
+  arm "a -diff mark from core.attributesFile alone is refused (custody, R9 D4)" 1 "'zz-01-arm-alpha.md' is not marked -diff by the on-disk .gitattributes itself"
+  rm -f "$work/../attributes"
+  # A file git is told not to look at, and an entry named .git, hide nothing (review R9 D3, D2).
+  fresh sealed; g update-index --assume-unchanged docs/notes/plan.md; g show "$sealed_in:docs/evaluation/frozen/zz-02-arm-beta.md" > "$work/docs/notes/plan.md"
+  arm "a case's text in a tracked file marked assume-unchanged is refused (custody, R9 D3)" 1 "a sealed case's text is in the working tree at 'docs/notes/plan.md'"
+  fresh sealed; g update-index --skip-worktree docs/notes/plan.md; g show "$sealed_in:docs/evaluation/frozen/zz-02-arm-beta.md" > "$work/docs/notes/plan.md"
+  arm "a case's text in a tracked file marked skip-worktree is refused (custody, R9 D3)" 1 "a sealed case's text is in the working tree at 'docs/notes/plan.md'"
+  fresh sealed; mkdir "$work/docs/notes/.git"; g show "$sealed_in:docs/evaluation/frozen/zz-02-arm-beta.md" > "$work/docs/notes/.git/copy.md"
+  arm "a case's copy in a folder named .git is refused (custody, R9 D2)" 1 "'docs/notes/.git' is an entry named .git"
+  fresh sealed; mkdir -p "$work/docs/loose/.GIT"; printf 'see: %s\n' "$LONG" > "$work/docs/loose/.GIT/q.md"
+  arm "a quote in an untracked folder named .GIT is refused (custody, R9 D2)" 1 "'docs/loose/.GIT' is an entry named .git"
+  fresh sealed; g show "$sealed_in:docs/evaluation/frozen/zz-02-arm-beta.md" > "$work/docs/notes/.git"
+  arm "a case's text in a file named .git is refused (custody, R9 D2)" 1 "'docs/notes/.git' is an entry named .git"
   fresh sealed; printf '# note: %s\n' "$LONG" >> "$d/MANIFEST.txt"
   arm "a case's line quoted in a comment of the manifest is refused (custody)" 1 "MANIFEST.txt' quotes a line of a sealed case"
   fresh sealed; printf '%s\n' "$LONG" >> "$work/docs/notes/plan.md"
@@ -256,6 +283,10 @@ self_test() {
   # Paths printed as their files are named, in every leg (review R6 D1).
   fresh sealed; printf 'we discussed zz-01-arm-alpha today\n' > "$work/docs/notes/café.md"; g add -A
   arm "a non-ASCII path naming a case is printed as named" 1 "    docs/notes/café.md"
+  fresh sealed; printf 'see zz-01-arm-alpha\n' >> "$work/docs/notes/plan.md"; g add -A; g show HEAD:docs/notes/plan.md > "$work/docs/notes/plan.md"
+  arm "a case named in a staged file, gone from disk, is refused (non-contamination, R9 D5)" 1 "sealed case 'zz-01-arm-alpha' is named outside"
+  fresh sealed; mkdir -p "$work/scripts"; printf '# zz-01-arm-alpha\n' > "$work/scripts/check_frozen_evaluation.sh"; g add -A
+  arm "a case named in the check's own script is refused (non-contamination, R9 D6)" 1 "sealed case 'zz-01-arm-alpha' is named outside"
   fresh sealed; printf 'x\n' > "$d/naïve.md"; g add -A
   arm "a non-ASCII file tracked in the set is printed as named" 1 "'docs/evaluation/frozen/naïve.md' is tracked"
   # Paths as named in the other legs too: the tracked copy, the quote search of the index and of the disk, the gitlink
@@ -415,6 +446,7 @@ seal="$(field seal | grep -xE 'sealed|unsealed')"
 # formed entries, names, blob ids and paths only, never a manifest line of another form nor a case's text (R5 D3).
 mkdir -p "$ROOT/target/doctrine_scratch"
 tmp="$(mktemp -d "$ROOT/target/doctrine_scratch/frozen_evaluation.XXXXXX")"; trap 'rm -rf "$tmp"' EXIT
+scratch="${tmp#"$ROOT"/}"  # as git names paths, relative to the top level
 # A line that is no entry is named by its number alone: its text could be anything, a case's line among it (R2 D2).
 while IFS= read -r n; do
   note "$MANIFEST's line $n is not '<sha256>  <file>' — every line but a comment or a blank is an entry"
@@ -507,6 +539,22 @@ if [ "$seal" = "sealed" ]; then
       [ "$(git check-attr --cached diff -- "$path" 2>/dev/null | sed 's/.*: diff: //')" = "unset" ] \
       || note "'$name' is not marked -diff in .gitattributes, staged and on disk — a diff or a log patch of a commit that holds the set would print its text"
   done < "$tmp/entries.txt"
+  # The mark as the tree records it: the staged and the on-disk `.gitattributes`, each read alone in an empty repository,
+  # so a mark from `.git/info/attributes` or `core.attributesFile`, which no commit carries, does not count (review R9
+  # D4); the checks above are what this working tree's own diffs obey.
+  # That repository is made in the check's own scratch, which the listings below skip: made fresh under a name of its
+  # own on every run and removed on exit, nothing but the check's own files is ever in it.
+  iso=(env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE GIT_ATTR_NOSYSTEM=1 GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null)
+  attrs="$tmp/attributes"
+  "${iso[@]}" git init -q "$attrs" 2>/dev/null
+  for where in staged on-disk; do
+    if [ "$where" = staged ]; then git show :.gitattributes > "$attrs/.gitattributes" 2>/dev/null || : > "$attrs/.gitattributes"
+    else cat .gitattributes > "$attrs/.gitattributes" 2>/dev/null || : > "$attrs/.gitattributes"; fi
+    while read -r want name; do
+      [ "$("${iso[@]}" git -C "$attrs" -c core.attributesFile=/dev/null check-attr diff -- "$DIR/$name" 2>/dev/null | sed 's/.*: diff: //')" = "unset" ] ||
+        note "'$name' is not marked -diff by the $where .gitattributes itself — a mark from .git/info/attributes or core.attributesFile is no commit's"
+    done < "$tmp/entries.txt"
+  done
   while IFS= read -r -d '' tracked; do
     [ "$tracked" = "$MANIFEST" ] || note "'$tracked' is tracked while the set is sealed — a case's text stays in the sealing commit"
   done < <(git ls-files -z -- "$DIR")
@@ -537,12 +585,18 @@ if [ "$seal" = "sealed" ]; then
     fi
     # Fail closed on what git cannot list: a folder it cannot open is named by git's own warning, a tracked file under a
     # folder that cannot be searched by the nearest such folder (review R3 D2).
-    { git ls-files -z --others --exclude-standard 2> "$tmp/loose.err"; git ls-files -z -m 2>/dev/null; } > "$tmp/loose"
+    # A tracked file git is told not to look at — assume-unchanged, a lowercase tag, or skip-worktree, `S` — is hashed
+    # too: `-m` never lists it (review R9 D3).
+    { git ls-files -z --others --exclude-standard 2> "$tmp/loose.err"; git ls-files -z -m 2>/dev/null
+      git ls-files -z -v 2>/dev/null | while IFS= read -r -d '' rec; do
+        case "${rec%% *}" in [a-z]|S) printf '%s\0' "${rec#* }" ;; esac
+      done; } > "$tmp/loose"
     while IFS= read -r warning; do
       note "git could not list every file: ${warning#warning: } — a case's copy there cannot be ruled out"
     done < "$tmp/loose.err"
     while IFS= read -r -d '' at; do
       case "$at" in
+        "$scratch"/*) continue ;;  # the check's own scratch
         */) note "'$at' is a repository nested outside ignored folders — its files cannot be checked for a case; ignore it or move it" ;;
         *) if [ ! -e "$at" ] && [ ! -L "$at" ]; then
              d="$(dirname -- "$at")"
@@ -562,6 +616,40 @@ if [ "$seal" = "sealed" ]; then
            fi ;;
       esac
     done < "$tmp/loose"
+    # An entry named `.git`, in any case, but the top level's own, outside ignored folders and registered submodules:
+    # git lists and searches nothing in it, so a copy or a quote there would pass unseen — refused (review R9 D2). The
+    # walk prunes what git ignores, asking it one level at a time.
+    while IFS= read -r -d '' at; do
+      note "'$at' is an entry named .git — git lists and searches nothing in it, so a case's copy there cannot be ruled out; rename or remove it"
+    done < <(env -u GIT_DIR -u GIT_WORK_TREE python3 - "$tmp/registered" "$scratch" <<'PY'
+import os, subprocess, sys
+reg = {os.fsencode(l.rstrip("\n")) for l in open(sys.argv[1], encoding="utf-8", errors="surrogateescape") if l.strip()}
+reg.add(os.fsencode(sys.argv[2]))  # the check's own scratch, pruned as a submodule is
+def ignored(paths):
+    if not paths:
+        return set()
+    r = subprocess.run(["git", "check-ignore", "-z", "--stdin"], input=b"\0".join(paths) + b"\0", capture_output=True)
+    return {x for x in r.stdout.split(b"\0") if x}
+level = [b""]
+while level:
+    nxt = []
+    for d in level:
+        try:
+            names = os.listdir(d or b".")
+        except OSError:
+            continue
+        for n in names:
+            p = d + b"/" + n if d else n
+            if n.lower() == b".git":
+                if d:
+                    sys.stdout.buffer.write(p + b"\0")
+                continue
+            if os.path.isdir(p) and not os.path.islink(p) and p not in reg:
+                nxt.append(p)
+    gone = ignored([p + b"/" for p in nxt])
+    level = [p for p in nxt if p + b"/" not in gone]
+PY
+)
     # A long line of a case quoted anywhere, the manifest included, staged or on disk, tracked or untracked: found by
     # the name of the file that holds it, the patterns read from the blobs through a pipe, never written down, never in
     # a command's arguments (review R2 D2, D3).
@@ -606,14 +694,15 @@ if [ "$seal" = "sealed" ] && [ -s "$tmp/listed.txt" ]; then
   # whole file list on one command line, which is an E2BIG waiting for the repository to grow.
   # git grep takes pathspecs, searches tracked files itself, and has neither failure mode.
   #
-  # Paths are not searched, only content: the manifest legitimately holds every name. This
-  # script is excluded explicitly rather than by construction, so that a future edit quoting
-  # a slug as an example cannot silently switch the check off.
+  # Paths are not searched, only content: the manifest legitimately holds every name. The index is
+  # searched as well as the disk, since a commit records what is staged (review R9 D5), and this
+  # script with every other file: it names only its synthetic arm cases, so a case's name written
+  # here is refused as anywhere (review R9 D6).
   while IFS= read -r slug; do
     [ -n "$slug" ] || continue
-    hits="$(git grep -z -l --fixed-strings -- "$slug" \
-              -- . ":(exclude)$DIR" ":(exclude)scripts/check_frozen_evaluation.sh" \
-            2>/dev/null | tr '\0' '\n' || true)"  # paths as their files are named (review R6 D1)
+    hits="$({ git grep -z -l --fixed-strings -- "$slug" -- . ":(exclude)$DIR"
+              git grep -z -l --cached --fixed-strings -- "$slug" -- . ":(exclude)$DIR"; } \
+            2>/dev/null | sort -zu | tr '\0' '\n' || true)"  # paths as their files are named (review R6 D1)
     if [ -n "$hits" ]; then
       note "sealed case '$slug' is named outside $DIR — the set is no longer unseen"
       printf '%s\n' "$hits" | sed 's/^/    /' >&2

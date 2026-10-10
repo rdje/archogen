@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — five ways past the sealed cases' guard closed
+
+`ARCHOGEN-PROGRAM-0579` (leaf `PROGRAM.76`), `2026-10-10`.
+
+- A review found five places a sealed case's text could sit unseen by the check that guards it: in a folder or a
+  file named `.git`, which git never lists; in a tracked file git was told not to look at; behind a diff-hiding mark
+  set where no commit carries it; in a staged file whose copy on disk was clean; and in the check's own script, which
+  the name search skipped. Each is now refused, with a test that fails if the hole is put back. The evaluation
+  README now lists every copy that can still show a case, and GitHub's own record of pushes bounds the four days the
+  published branch held them.
+- Validation: 81 arms; six deliberate breaks, one per hole, each caught by its own arm, by an untracked runner, so not
+  durable; the check on the tree in about a second; every self-test; the focused tier on the staged tree.
+
 ## archogen — the leaf for the parent's tests derives its axes instead of listing them
 
 `ARCHOGEN-M3-0578` (leaf `M3.6.6.4`), `2026-10-10`.
@@ -70,8 +83,8 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
   more, and two of the check's rules with no test. The README now points at every copy the limit names, and the limit
   names three more: a harness's memory written before the cases left the tree, a model trained or an index built on
   the published branch in the four days it held them, and a short quote committed elsewhere before the check
-  existed — while each case's whole text is held by two commits only, the one that sealed it and the one that took
-  it out. Two new tests hold a case's text in a modified file whose name git would quote, and the diff-hiding mark
+  existed — while no other path in history ever held a case's whole text: only the commit that sealed each added it,
+  and only the one that took it out removed it (corrected by review round 9). Two new tests hold a case's text in a modified file whose name git would quote, and the diff-hiding mark
   dropped on disk alone.
 - Validation: 71 arms; each new arm the one failing when its leg is read the old way, by an untracked runner, so
   not durable.
