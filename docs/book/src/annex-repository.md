@@ -171,14 +171,15 @@ A task tree records every leaf of its work, with its checklist and evidence. Mos
   when the open part closes, the rest of it follows into its own file (`PROGRAM.69`).
 - **What stays.** Each leaf leaves two lines in the tree, its name and a link to where its text now is. The live
   work, the list of what is next and the logs stay where they were.
-- **The proof.** Before anything is written, the tool checks that putting every leaf back would give the tree as it
-  was, byte for byte (`docs/decisions/decision_task-tree-sealing.md`). After writing, it runs the check below on the
-  result, and undoes every write if the check refuses or an error stops it — each file written whole or not at all,
-  and whatever it could not undo named, as on a full disk, or a folder it made that another writer has put a file in. A request to stop that comes once the tool has begun
-  writing waits until it is done, so the history is whole either way; only a process killed outright — by `SIGKILL`,
-  one of the few fault signals left unheld or, on Linux, a signal the C library keeps for itself — aborting, crashing
-  or the machine stopping leaves its writes, for the next check to name. So the history admits every line a tree may
-  hold: its line ceiling is the trees' own (`docs/decisions/decision_task-history-line-ceiling.md`).
+- **The proof.** Before anything is written, the tool checks that putting every leaf back would give the tree as it was,
+  byte for byte (`docs/decisions/decision_task-tree-sealing.md`). After writing, it runs the check below on the result,
+  and undoes every write if the check refuses or an error stops it — each file written whole or not at all, and whatever
+  it could not undo named, as on a full disk, or a folder it made that another writer has put a file in. A request to
+  stop that comes once the tool has begun writing waits until it is done, so the history is whole either way; only a
+  process killed outright — by `SIGKILL`, one of the few fault signals left unheld or, on Linux, a signal the C library
+  keeps for itself — aborting, crashing or the machine stopping leaves its writes, for the next check to name. So the
+  history admits every line a tree may hold: its line ceiling is the trees' own
+  (`docs/decisions/decision_task-history-line-ceiling.md`).
 - **What it still carries.** A sealed leaf keeps the hand-offs it quoted; the check that each design's hand-off is
   quoted word for word by its leaf reads the sealed text, never the two-line placeholder (`PROGRAM.63`).
 - **The first seal**, on `2026-09-30`: 112 leaves left `M1` and `PROGRAM`. At the sealing commit, `M1.md` went
@@ -236,6 +237,17 @@ stub is no history, so the folder's file ceiling skips it, not its bytes (`PROGR
 $ bash scripts/check_review_history.sh                     # the gate
 $ bash scripts/check_review_history.sh --seal <FILE>       # archive a closed review's history, with the proof
 $ bash scripts/check_review_history.sh --self-test         # its RED arms, on scratch repositories
+```
+
+What a review round found is counted twice by hand — in its design record's summary row and in the reviews index — and
+once in its history's own table, one row a finding. `REVIEW-COUNTS` holds the first two to the third for every review
+whose history is still under `docs/reviews/`: the round's findings, defects, arm gaps and remarks, as each record's
+table states them, and the index's count of rounds and what it says the last round found. An archived history is not
+read, and its record is named (`PROGRAM.69`).
+
+```console
+$ bash scripts/check_review_counts.sh                      # the gate
+$ bash scripts/check_review_counts.sh --self-test          # its RED arms, on a scratch repository
 ```
 
 ## Where the landing page sends things

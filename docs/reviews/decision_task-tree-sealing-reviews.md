@@ -496,6 +496,33 @@ against its history's findings tables.
 | R23-R1 | remark | ragged wraps: `put`'s docstring, the leaf's evidence lines, a changelog bullet broken at 32 columns | rewrapped, no word changed |
 | R23-P2 | pre-existing | one closed `M3` unit, 2 441 bytes, still unsealed | sealed by `M3`'s next commit, as R9-N2's was |
 
+**Round 24**, `2026-10-10`, a twenty-second confirmation, in clones of `ef54060`, by a read-only context new to the
+change, fenced from the sealed evaluation set. It reproduced the gate (173 sealed files, 332 stubs), the self-test
+(121 arms), the census, `REVIEW-COUNTS` and every self-test, and round 23's answers, each by mutants; it silenced each
+of 53 refusals of the tool one at a time (43 killed, the rest reasoned shadowed or unreachable) and mutated the new
+check 20 ways — runners untracked, so not durable. Verdict: 5 defects, 2 arm gaps and 9 remarks, all but one of the
+new check. Round 23's "no count is copied by hand from now on unchecked" stands corrected here: the check now reads
+the reviews index's row too, but a round's own paragraph, prose, it does not read.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R24-D1 | defect | `REVIEW-COUNTS` said to hold every record's counts; an archived history's record is skipped silently — four of them | every text says a history still under `docs/reviews/`; the OK line names each archived record it does not read |
+| R24-D2 | defect | "no count copied by hand unchecked" false: the index row's rounds and found-counts, and a round's paragraph, unread | the index row read: its count of rounds and its status's "round N found …"; a round's paragraph, prose, said unread |
+| R24-D3 | defect | a summary row for a round the history does not hold passed below its first table; a round with a line and no table above it refused | rounds keyed on their `**Round n**` lines: a row with no line refused, a line with no table not judged; arms |
+| R24-D4 | defect | the self-test cited "R23 AG1"; round 23 had none | "R23-P1" |
+| R24-D5 | defect | "rewrapped, no word changed" left a 149-column changelog line | the bullet refilled to width |
+| R24-AG1 | arm gap | a remark counted by its kind's equality survived | an arm whose remark's kind is "remark, not this change's" |
+| R24-AG2 | arm gap | an arm-gap count after the pre-existing clause went unread | read wherever it stands; an arm with it last |
+| R24-R1 | remark | the header read as every count in every round | the rule stated per shape |
+| R24-R2 | remark | no arm for a findings or defects cell with no number, nor for the table's end | an arm each |
+| R24-R3 | remark | a record linked mid-cell was skipped | the link read anywhere in its cell; an arm |
+| R24-R4 | remark | ragged lines in the book and the record | refilled |
+| R24-R5 | remark | row 23's "a planted folder" — a file was planted | "a planted file" |
+| R24-R6 | remark | the changelog's round-23 entry read an arm as a change of behaviour | "a test now holds" |
+| R24-R7 | remark | `REVIEW-COUNTS` absent from the book and `TOOLBOX.md` | a passage beside `REVIEW-HISTORY`'s; a toolbox row |
+| R24-R8 | remark | the doctrine table's order and the registry's disagreed | the registry's entry after `REVIEW-HISTORY`'s |
+| R24-R9 | remark | not `PROGRAM.69`'s: the snapshots' lines on `PROGRAM.76` | rewritten since by `be9b6ee` |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.

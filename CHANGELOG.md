@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the review-count check reads the reviews index too, and says what it does not read
+
+`ARCHOGEN-PROGRAM-0582` (leaf `PROGRAM.69`), `2026-10-10`.
+
+- The new count check now also holds the reviews index's row for each open review — how many rounds it says, and
+  what it says the last round found — to the review history's tables. It finds rounds by their own headings, so a
+  summary row for a round the history never had is refused. Records whose reviews closed and whose histories are
+  archived are not read, and the check now names them rather than passing them silently.
+- Validation: 18 arms; eight deliberate breaks, each caught by its own arm, by an untracked runner, so not durable;
+  the sealing tool's 121 arms; every self-test; the focused tier on the staged tree.
+
 ## archogen — the leaf for the parent's tests designs its own criterion
 
 `ARCHOGEN-M3-0581` (leaf `M3.6.6.4`), `2026-10-10`.
@@ -54,11 +65,12 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `ARCHOGEN-PROGRAM-0576` (leaf `PROGRAM.69`), `2026-10-10`.
 
 - A design record states how many findings each review round made, and the task-tree sealing record had that count
-  wrong for the fourth time. A new check, `REVIEW-COUNTS`, now counts each round's findings in its review history and
-  refuses a record whose count, defects, arm gaps or remarks disagree; on its first run it named exactly the wrong row.
+  wrong for the fourth time. A new check, `REVIEW-COUNTS`, now counts each round's findings in a review history still
+  open under `docs/reviews/` and refuses a record whose count, defects, arm gaps or remarks disagree; on its first run
+  it named exactly the wrong row.
 - When a seal stops because another writer put a file where the seal was writing, the folder it made for that file
-  stays, and the tool now names it and no longer says the seal was rolled back. Every leaf with a line that would
-  tear is named, in every part of the tree, not only the first.
+  stays, and the tool now names it and no longer says the seal was rolled back. A test now holds that every leaf with
+  a line that would tear is named, in every part of the tree, not only the first.
 - Validation: 121 arms of the sealing tool and 9 of the new check; two deliberate breaks each caught by its own arm,
   by an untracked runner, so not durable; the focused tier on the staged tree.
 
@@ -319,10 +331,10 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 
 `ARCHOGEN-PROGRAM-0543` (leaf `PROGRAM.69`), `2026-10-10`.
 
-- Sealing now holds every signal but SIGKILL, SIGSTOP, seven fault signals and, on Linux, the C library's own — not
-  only Ctrl-C, a terminate and a hang-up — until it is done, and an interrupt then reports what happened: before anything was written, or after the
-  seal said its outcome. An error that stops a seal is reported before the stop takes effect. A stray file at a
-  temporary path is refused before anything is written.
+- Sealing now holds every signal but SIGKILL, SIGSTOP, seven fault signals and, on Linux, the C library's own — not only
+  Ctrl-C, a terminate and a hang-up — until it is done, and an interrupt then reports what happened: before anything was
+  written, or after the seal said its outcome. An error that stops a seal is reported before the stop takes effect. A
+  stray file at a temporary path is refused before anything is written.
 - Validation: arms for a stop at the first write, for four more signals, for an error under a held stop and for a stop
   before any write; nine failing on the previous tool; seven deliberate breaks, each caught by an untracked runner, so
   not durable (106 arms).

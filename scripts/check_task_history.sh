@@ -901,11 +901,11 @@ PY
   [ ! -d "$work/docs/task-history" ] && git -C "$work" diff --quiet || { arms=$((arms + 1)); echo "SELF-TEST: the refused seal wrote something" >&2; }
   [ "$(printf '%s' "$LAST" | grep -c 'T.3, line')" -eq 3 ] ||
     { arms=$((arms + 1)); echo "SELF-TEST: the column-0 refusal did not name each of T.3's three lines (review R22 P2)" >&2; }
-  # Each torn leaf named, in every unit: a column-0 line in T.1.2 too, a leaf of another unit (review R23 AG1).
+  # Each torn leaf named, in every unit: a column-0 line in T.1.2 too, a leaf of another unit (review R23-P1).
   sub docs/tasks/T.md '^  Goal: a leaf of T\.1 that sits apart from its siblings\n' '  Goal: a leaf of T.1 that sits apart from its siblings\nat column 0, in another unit\n'
   arm "column-0 lines in two units' leaves are refused, each leaf's named" 1 "T.1.2, line" --seal T
   [ "$(printf '%s' "$LAST" | grep -c 'T.3, line')" -eq 3 ] && [ ! -d "$work/docs/task-history" ] ||
-    { arms=$((arms + 1)); echo "SELF-TEST: with two torn leaves, T.3's lines went unnamed or something was written (review R23 AG1)" >&2; }
+    { arms=$((arms + 1)); echo "SELF-TEST: with two torn leaves, T.3's lines went unnamed or something was written (review R23-P1)" >&2; }
   git -C "$work" checkout -q -- docs/tasks/T.md
   sub docs/tasks/T.md '^```text\na fence the slicing would tear\n```\n' '  a line indented as a field\n'
   commit
