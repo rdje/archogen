@@ -300,6 +300,26 @@ recorded and answered, so no such moment exists.
 | R13-R3 | remark | `MEMORY.md`'s line on `M3.6.6.4` | that leaf's matter |
 | — | found while answering | an arm passed with the "sealed" line lost: bash's report of a job killed by a signal quotes the command's source, which holds the format string | every check of that line matches the tool's output line, anchored; the mutation dropping its flush killed |
 
+**Round 14**, `2026-10-10`, a twelfth confirmation, in a clone of `6c79b36`, by a read-only context new to the change.
+It reproduced the gate, every self-test, the census and the seal; fuzzed 300 trees, 2 293 units sealed as its oracle
+predicts, and 1 662 hand seals, the gate taking exactly the tool's and their subsets; refused 445 late live leaves; and
+ran thirteen mutations of round 13's rules, nine killed — its runners untracked, so not durable. Verdict: 4 defects of
+this change and 2 arm gaps; `make focused` could not run in its clone, under the original's cargo configuration.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R14-D1 | defect | the interrupt's message said a seal was finished whatever happened: under a rollback that was not whole, after an error the held stop swallowed, and before any write | the seal records that it has said its outcome; the message is "once the seal was done; its outcome is said above" or "before the seal wrote anything"; an error is said, flushed, before it goes on; arms for each case |
+| R14-D2 | defect | "what no mask holds, SIGKILL or the machine stopping": SIGQUIT and the other maskable signals left the writes | every signal a mask can hold is held, but the faults the interpreter raises on itself; arms for SIGQUIT, SIGUSR1, SIGUSR2, SIGALRM, each with its own exit code |
+| R14-D3 | defect | "no link lies on a path it writes": a link at the temporary path was found after the first write | any entry at a rewritten file's temporary path refused before the first write; the arm expects nothing written |
+| R14-D4 | defect | the record credited the temporary file created new to R12 | R13 D3 |
+| R14-AG1 | arm gap | the rollback after an error, under a held stop, held by no arm | an arm: an error after a held interrupt, rolled back whole and said, then exit 130 |
+| R14-AG2 | arm gap | "from before the first write": the folder's creation held by no arm | an arm: an interrupt just after the history folder's creation |
+| R14-R1 | remark | dropping the refusal's flush survives: stderr is line-buffered | equivalent; kept |
+| R14-R2 | remark | "every check of that line … anchored" was too broad: three exit-0 arms match a part of it | narrowed: the checks of a run a stop ends are anchored, where the shell's report can quote the source |
+| R14-R3 | remark | the git the proof runs inherits the mask, so a stop does not end a hung git | said in the record and the script |
+| R14-R4 | remark | round 13's account fitted rounds 11 and 12 loosely; the changelog's "three reviews in a row" | the changelog's entry reworded; round 13's paragraph stands as written, this row its correction |
+| R14-R5 | remark | unblocking all three signals instead of restoring the mask survives | no text claims it; the mask is restored |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.

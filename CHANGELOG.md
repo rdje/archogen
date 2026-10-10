@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a seal stopped says what happened
+
+`ARCHOGEN-PROGRAM-0543` (leaf `PROGRAM.69`), `2026-10-10`.
+
+- Sealing now holds every signal a process can hold — not only Ctrl-C, a terminate and a hang-up — from before its
+  first write until it is done, and a stop then reports what actually happened: before anything was written, or
+  after the seal said its outcome. An error that stops a seal is reported before the stop takes effect. A stray file
+  at a temporary path is refused before anything is written.
+- Validation: arms for a stop at the first write, for four more signals, for an error under a held stop and for a
+  stop before any write; nine failing on the previous tool; seven deliberate breaks, each caught by an untracked
+  runner, so not durable (106 arms).
+
 ## archogen — the sealed evaluation cases can no longer be read by accident
 
 `ARCHOGEN-PROGRAM-0542` (leaf `PROGRAM.76`), `2026-10-10`.
@@ -21,8 +33,8 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 
 `ARCHOGEN-PROGRAM-0539` (leaf `PROGRAM.69`), `2026-10-10`.
 
-- Three reviews in a row found moments in which a request to stop could slip between sealing's writes and its
-  record of them. Instead of answering a stop after the fact, sealing now holds Ctrl-C, a terminate and a hang-up
+- Reviews kept finding moments in which a request to stop could slip between sealing's writes and its record of
+  them. Instead of answering a stop after the fact, sealing now holds Ctrl-C, a terminate and a hang-up
   until it is done — proven and kept, or refused and undone — so the history is whole either way, with no such moment
   left. Its temporary file is created new, never written through something already there.
 - Validation: arms for a stop at each write, mid-proof, twice, and during a refused seal's undoing, each with its own
