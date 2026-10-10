@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the sealed cases' limits name every copy that can still show one
+
+`ARCHOGEN-PROGRAM-0572` (leaf `PROGRAM.76`), `2026-10-10`.
+
+- A review found the evaluation README still naming two ways to read a sealed case where its honest limit names
+  more, and two of the check's rules with no test. The README now points at every copy the limit names, and the limit
+  names three more: a harness's memory written before the cases left the tree, a model trained or an index built on
+  the published branch in the four days it held them, and a short quote committed elsewhere before the check
+  existed — while each case's whole text is held by two commits only, the one that sealed it and the one that took
+  it out. Two new tests hold a case's text in a modified file whose name git would quote, and the diff-hiding mark
+  dropped on disk alone.
+- Validation: 71 arms; each new arm the one failing when its leg is read the old way, by an untracked runner, so
+  not durable.
+
 ## archogen — the generated-sources record's log says what each round's answer held
 
 `ARCHOGEN-M3-0571` (leaf `M3.6.6.4`), `2026-10-10`.
@@ -61,7 +75,7 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 - Validation: sixteen route tests; the crate's 181 tests; each mutation failing a test, by an untracked runner, so not
   durable.
 
-## archogen — the published branch no longer holds the sealed cases
+## archogen — the published branch no longer shows the sealed cases
 
 `ARCHOGEN-PROGRAM-0565` (leaf `PROGRAM.76`), `2026-10-10`.
 
@@ -79,8 +93,8 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 - Two places in the seal's check printed a non-ASCII path in git's quoted form, and two of its own tests checked less
   than they claimed. Both are fixed. The texts now also say what a review found: the repository's published branch is
   still at a revision that holds the sealed cases, so a fresh clone, its web view and its code search reach them until
-  the branch is pushed past `6d61f65`, as it was the same day, `a543d10`; web searches of the repository are fenced
-  until then.
+  the branch is pushed past `6d61f65` — as it was the same day, `a543d10`. Web searches of the repository stay fenced,
+  since copies made before then may still show a case.
 - Validation: 65 arms; two failing on the previous check and four deliberate breaks each caught, both by untracked
   runners, so not durable.
 

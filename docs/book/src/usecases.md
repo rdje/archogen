@@ -94,5 +94,7 @@ a long line of it quoted — anything else in the sealed directory, and any trac
 that names a sealed case; at unsealing a restore writes each case back and verifies it. Its honest
 limit is stated too: the text stays in the published history, and in copies made of the published
 branch before it moved, so a deliberate read, or a look at such a copy, still reaches it and the
-check cannot prove nobody read one — and by the project's rule a case read early is recorded and
-counted apart. See `docs/evaluation/README.md`.
+check cannot prove nobody read one. A model trained on the branch in the four days it held the set
+may know a case with no act at all, so the measurement records the models used and when their
+training ended. By the project's rule a case read early is recorded and counted apart. See
+`docs/evaluation/README.md`.

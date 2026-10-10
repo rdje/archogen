@@ -84,7 +84,10 @@ ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
 # this check exists to catch, and a self-test that did it would fail the gate it belongs to.
 self_test() {
   local arms=0 ok=0 work="$ROOT/target/doctrine_scratch/frozen_evaluation/selftest" sealed_in=""
-  # git quotes a non-ASCII path unless told not to: forced on here, so the path arms hold on any machine (R7 R3).
+  # git quotes a non-ASCII path unless told not to: forced on here, so the path arms hold on any machine (R7 R3) — over
+  # the configuration files, and over a caller's `git -c`, which reaches this shell as GIT_CONFIG_PARAMETERS and would
+  # win; the caller's own GIT_CONFIG_COUNT entries are dropped with it, the self-test's git being its own (R8 R5).
+  unset GIT_CONFIG_PARAMETERS
   export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.quotePath GIT_CONFIG_VALUE_0=true
   local LONG="ARM-CASE-TEXT alpha asks one comparator to keep two requesters each on its own deadline"
   sha() { if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | cut -d' ' -f1; else shasum -a 256 "$1" | cut -d' ' -f1; fi; }
@@ -159,6 +162,8 @@ self_test() {
   arm "a sealed path not marked -diff is refused (custody)" 1 "'zz-01-arm-alpha.md' is not marked -diff"
   fresh sealed; : > "$work/.gitattributes"; g add -A; printf 'docs/evaluation/frozen/** -diff\n' > "$work/.gitattributes"
   arm "a -diff mark dropped from the index alone is refused (custody)" 1 "'zz-01-arm-alpha.md' is not marked -diff"
+  fresh sealed; : > "$work/.gitattributes"
+  arm "a -diff mark dropped on disk alone is refused (custody, R8 AG2)" 1 "'zz-01-arm-alpha.md' is not marked -diff"
   fresh sealed; printf '# note: %s\n' "$LONG" >> "$d/MANIFEST.txt"
   arm "a case's line quoted in a comment of the manifest is refused (custody)" 1 "MANIFEST.txt' quotes a line of a sealed case"
   fresh sealed; printf '%s\n' "$LONG" >> "$work/docs/notes/plan.md"
@@ -221,6 +226,9 @@ self_test() {
   arm "a case's whole text in a modified tracked file is refused (custody)" 1 "a sealed case's text is in the working tree at 'docs/notes/plan.md'"
   fresh sealed; g show "$sealed_in:docs/evaluation/frozen/zz-02-arm-beta.md" > "$work/docs/notes/café copy.md"
   arm "a copy under a name git would quote is refused (custody)" 1 "a sealed case's text is in the working tree at 'docs/notes/café copy.md'"
+  fresh sealed; printf 'x\n' > "$work/docs/notes/café.md"; g add -A
+  g show "$sealed_in:docs/evaluation/frozen/zz-02-arm-beta.md" > "$work/docs/notes/café.md"
+  arm "a case's text in a modified tracked file git would quote is refused (custody, R8 AG1)" 1 "a sealed case's text is in the working tree at 'docs/notes/café.md'"
   fresh sealed; printf 'locked\n' > "$work/docs/notes/locked.md"; chmod 000 "$work/docs/notes/locked.md"
   arm "an untracked file that cannot be read is refused, the leg failing closed" 1 "'docs/notes/locked.md' cannot be read"
   chmod 600 "$work/docs/notes/locked.md"

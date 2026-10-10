@@ -40,8 +40,9 @@ every day, so an ordinary search for other work can land in one — and one did 
 below). Excluding search terms cannot work, and excluding the folder holds only for tools that
 honour an exclusion. So the text left the tree (leaf `PROGRAM.76`): no search of the working
 tree, under any term, by any tool, reaches a case, and, in a working tree carrying the mark, no
-diff of a commit that holds one shows it; reading one takes an act the box above names, or a look at a copy
-of the published branch made before it moved (the honest limit).
+diff of a commit that holds one shows it; reading one takes an act the box above names, or one of the copies the
+honest limit names — the published branch's made before it moved, a transcript, scrollback, editor history or a
+harness's memory made before `6d61f65`, a model or an index made from the branch while it held the set.
 
 ## The seal is mechanical
 
@@ -69,8 +70,14 @@ Either kind of act the box above names puts a case in front of a reader, and so 
 `6d61f65`. The published default branch has been past `6d61f65` since `a543d10`, pushed `2026-10-10`; a copy made of it
 before then — a fork, a mirror, a search engine's cache, an archive — may still show a case with no act at all, so a web
 search or fetch of this repository stays fenced. A harness transcript, a saved terminal scrollback or an editor's
-history made before `6d61f65`, or in a working tree without the mark, holds whatever was shown then; what to do with
-them is the director's. `git grep <commit>` and `git log -S` over history tell which file or commit holds a term, not
+history made before `6d61f65`, or in a working tree without the mark, holds whatever was shown then, and so may a
+harness's persistent memory written then, which every later session loads with no act; what to do with them is the
+director's. The branch held the set from `a3c0cbd`, pushed `2026-10-06`, to `a543d10`, pushed `2026-10-10`: a model
+trained, or an index built, on it in those days may put a case in front of an agent using it with no act at all, so
+`M6.5` records the models used and their training cut-offs. No case's whole text is anywhere else in history — `git
+log --all --find-object` for each case's blob → the sealing commit and the commit that took it out, nothing else —
+but a shorter quote committed outside the sealed folder before the custody check existed would show in that commit's
+diff, and the fence leaves it unsearched. `git grep <commit>` and `git log -S` over history tell which file or commit holds a term, not
 its line. Ignored files, the build output under `target/`, or a folder an untracked `.gitignore` ignores, are not
 scanned, nor anything outside the repository a link points to, nor a registered submodule, another repository
 (`REPOSITORY-BOUNDARY` refuses what is created at a vendored checkout's first level); a quote shorter than a long line,

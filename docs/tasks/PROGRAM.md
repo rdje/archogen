@@ -949,7 +949,7 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM.76`
   Status: `active` — filed and started `2026-10-10`, on the director's word: *"Digests stay, text leaves"*, end to
   end, without them, *"sota, signoff and production-grade"*; the change committed (`ARCHOGEN-PROGRAM-0542`), its
-  review open, round 7's findings answered (`ARCHOGEN-PROGRAM-0565`), round 8 next
+  review open, round 8's findings answered (`ARCHOGEN-PROGRAM-0572`), round 9 next
   Goal: the sealed evaluation set guarded against being read, not only against being edited or named, so no search
   of the working tree made for other work can reach a case before `M6.5`, nor, in a working tree that carries the
   mark, a diff of a commit that holds one show it.
@@ -1055,7 +1055,8 @@ mdBook that is the director's window into the project.
   need to return honoring the define push cadence"*), `main` was pushed to `a543d10`, past `6d61f65` — `git ls-tree
   --name-only origin/main docs/evaluation/frozen/` → the manifest alone.
   Review round 7, `2026-10-10`, of `ff0a180`: 2 defects, 1 arm gap. Round 6's first kind, "a commit that holds the
-  set", let out `2f6f331` and `421ce47`, whose diffs show the cases; three texts still said reading one takes an act or
+  set", let out `2f6f331`, whose diff shows the cases, and `421ce47`, at which a diff of `2f6f331` shows them (R8 R1);
+  three texts still said reading one takes an act or
   a deliberate read; four legs' "as named" had no arm. Answered: the first kind "a commit older than `6d61f65` whose
   history holds the set", in the box, the script and `CLAUDE.md`; the published branch said moved past `6d61f65`
   since `a543d10`, older copies — forks, mirrors, caches, archives — named and web searches kept fenced; transcripts
@@ -1063,10 +1064,22 @@ mdBook that is the director's window into the project.
   forced on in the self-test. Evidence: `--self-test` → *"69 pass / 0 fail (69 arms)"*; beside `ff0a180`'s core →
   *"69 pass / 0 fail"*, the four arms holding rules already kept; `python3 target/p76/mutate8.py` → *"4 of 4 killed"*
   — both runners untracked, so not durable.
+  Review round 8, `2026-10-10`, of `8f4afe2`: 1 defect, 2 arm gaps, 5 remarks, and residual paths. The README still
+  named two routes to a case where the honest limit names more; the modified-file listing and the on-disk half of the
+  `-diff` mark had no arm, a mutant reading each plain passing every arm; a caller's `git -c` could undo the
+  self-test's forced quoting. Answered: the README names the honest limit's copies; the limit names a harness's
+  persistent memory, a model or an index made from the branch while it held the set — from `a3c0cbd`, pushed
+  `2026-10-06`, to `a543d10` — `M6.5` recording the models used, and a short quote committed outside the folder before
+  the custody check, no whole copy elsewhere (`git log --all --find-object` per case blob → `b05fadb` and `2f6f331`);
+  two arms; `GIT_CONFIG_PARAMETERS` unset in the self-test; the changelog's heading and round-6 entry exact; the
+  use cases chapter's limit and `M6.5`'s unsealing step name the models. Evidence:
+  `--self-test` → *"71 pass / 0 fail (71 arms)"*; `python3 target/p76/mutate_r8.py` → each mutant *"70 pass / 1
+  fail (71 arms)"*, its own arm the one failing, *"2 of 2 killed"* — the runner untracked, so not durable.
   Commit: `ARCHOGEN-PROGRAM-0542 (leaf PROGRAM.76)`; `ARCHOGEN-PROGRAM-0544 (leaf PROGRAM.76)`, review round 1;
   `ARCHOGEN-PROGRAM-0547 (leaf PROGRAM.76)`, review round 2; `ARCHOGEN-PROGRAM-0550 (leaf PROGRAM.76)`, round 3;
   `ARCHOGEN-PROGRAM-0554 (leaf PROGRAM.76)`, round 4; `ARCHOGEN-PROGRAM-0558 (leaf PROGRAM.76)`, round 5;
-  `ARCHOGEN-PROGRAM-0562 (leaf PROGRAM.76)`, round 6; `ARCHOGEN-PROGRAM-0565 (leaf PROGRAM.76)`, round 7
+  `ARCHOGEN-PROGRAM-0562 (leaf PROGRAM.76)`, round 6; `ARCHOGEN-PROGRAM-0565 (leaf PROGRAM.76)`, round 7;
+  `ARCHOGEN-PROGRAM-0572 (leaf PROGRAM.76)`, round 8
 
 - ID: `PROGRAM.77`
   Status: `active` — filed and started `2026-10-10`, on CI's red: the push `a543d10` failed the `rust` workflow; the
@@ -1179,7 +1192,7 @@ roadmap item X live?".
 | --- | --- | --- | --- |
 | 1 | `PROGRAM.77` | `active` | CI red since `a543d10`: the test suite ended the runner it ran on; fixed, the push that restores CI its verification |
 | 2 | `PROGRAM.69` | `active` | its review open: round 23 next, on the committed tool, its seal already in place |
-| 3 | `PROGRAM.76` | `active` | its review open: round 8 next, of the sealed set's custody |
+| 3 | `PROGRAM.76` | `active` | its review open: round 9 next, of the sealed set's custody |
 | 4 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The fourth row waits on the director's yes. The pending leaves beside them —
@@ -1358,6 +1371,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-10` | `PROGRAM.76` (round 7) | the push; the check on the real set; its self-test; four mutations; every self-test; focused on the staged tree | `origin/main` at `a543d10`, its `frozen/` the manifest alone; exit 0; 69 / 0; 4 killed, not durable; 48 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.69` (round 22) | the self-test; four mutations of the rules round 22 arms; the gate over 172 files; every self-test; focused on the staged tree | 120 / 0; each killed by an untracked runner, not durable; OK; 48 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.77` | the module's tests; four catalogued mutations; the crate's tests, clippy, fmt; the book's gates; focused on the staged tree | 12 passed; each killed; 183 passed, clean, clean; OK; `passed — 3 passed, 0 failed` |
+| `2026-10-10` | `PROGRAM.76` (round 8) | the self-test; the check on the tree; every self-test; the case blobs' commits; focused on the staged tree | 71 pass / 0 fail; OK; passed; `b05fadb` and `2f6f331` each; `passed — 3 passed, 0 failed` |
 
 ## Commit Log
 
@@ -1530,6 +1544,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.76` | `ARCHOGEN-PROGRAM-0565 (leaf PROGRAM.76)` | **review round 7 answered; the published branch past the set**: the first kind of act exact; four non-ASCII arms |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0567 (leaf PROGRAM.69)` | **review round 22 answered**: row 21's count; arms for the noting order under an error, the warning's clauses, each column-0 line; 120 arms |
 | `PROGRAM.77` | `ARCHOGEN-PROGRAM-0569 (leaf PROGRAM.77)` | **the mutation runner's group kill through kill(2)**: Ubuntu's `kill` read `-<group>` as an option and signalled every process — the CI runner lost |
+| `PROGRAM.76` | `ARCHOGEN-PROGRAM-0572 (leaf PROGRAM.76)` | **review round 8 answered**: the honest limit's copies named where reading a case is said; a harness's memory, a model or an index made in the window; two arms; a caller's `git -c` undone in the self-test |
 
 ## Changelog
 
