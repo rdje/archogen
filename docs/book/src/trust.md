@@ -260,8 +260,9 @@ refused, `trust-undeclared-input`, wherever the gate runs:
   or script a form would name is remade so too, while a marked crate root has no route. A program-target generator
   whose build would compile a generated file reads another generator's output at run time instead, and a program that
   generates its own source gives way to another program target whose build does not compile it — a second executable
-  of its package when neither a library there nor a package it depends on holds the file, else one of a package
-  that does not depend on the package holding the file, directly or through another; one that must compile a generated file has no route;
+  of its package when neither a library there nor a package it depends on, directly or not, holds the file, else one
+  of a package that does not depend on the package holding the file, directly or through another; one that must
+  compile a generated file has no route;
 - a live form's generator or input **at or under a gitlink**, the pointer by which the commit holds a vendored
   checkout: it is no file of the commit's tree, so the rule above refuses it — the inventory reads a program's files,
   and a live form's generators and inputs, from the commit's blobs alone. The need is met by committing a copy of the

@@ -58,7 +58,7 @@ build would compile a generated file is served so that its build compiles none: 
 reads it at run time instead, the script that runs both handing it over; one compiling the file its own form declares —
 a program that generates its own source — gives way to another program target whose build does not compile that file,
 judged by the parent's §5 as every generator is: a second executable of its package when neither a library of the
-package nor any package it depends on holds it, or else one of a package that does not depend, directly or through
+package nor any package it depends on, directly or not, holds it, or else one of a package that does not depend, directly or through
 another, on the package holding it. One that must compile a generated file has no route (§5). If a program also reads
 the intermediate, that file is committed and declared, and a later step reading it is a chain: that step remakes it from
 the first step's inputs instead. A file one step runs and another reads is named once, as a generator — named in both
@@ -128,12 +128,12 @@ their module:
 
 | Test | Holds |
 | --- | --- |
-| `route_a_chain_made_in_one_generation` | §2: a chain refused, through a declared input and through a declared script named as a generator; one form naming every step and every committed file any step reads — the later step's own input among them — the intermediate never committed, written, each reached |
+| `route_a_chain_made_in_one_generation` | §2: a chain refused, through a declared input and through a declared script named as a generator; one form naming every step and three committed files the steps read — the later step's own among them — the intermediate never committed, written, each reached |
 | `route_a_marked_input_or_script_remade_in_the_generation` | §2, §3, §4: a marked copy, script or pin — an input as a pin is — refused; remade from its own generator and inputs, written |
 | `route_a_chain_judges_every_step_s_generator` | §2: every step's generator judged by the parent's §5 — another role's script step named last and named first, refused both ways; a program-target step at every position, in the sweep below |
-| `route_a_generator_is_judged_against_every_reader` | §2, §3: a script judged against every program that reads the result — refused for `chk` from `gen`'s package, for `gen` from `chk`'s |
-| `route_a_program_target_generator_is_judged_against_every_reader` | §2, §3: a program-target generator judged against every reader — refused for `chk` from `gen`'s second role package, for `gen` from `chk`'s |
-| `route_tests_refusals_hold_at_every_position_of_a_form_s_entries` | §2, §3: each entry refusal — a declared, a marked, a gitlinked generator or input, a file named in both clauses, another role's program target, a program target whose build reads a declared file, a lone `.rs` — refused alone, first, in the middle and last among plain entries |
+| `route_a_generator_is_judged_against_every_reader` | §2, §3: a script judged against each of three readers — refused for `chk` standing first, in the middle and last, from `gen`'s package, and for `gen` from `chk`'s |
+| `route_a_program_target_generator_is_judged_against_every_reader` | §2, §3: a program-target generator judged against each of three readers — refused for `chk` first, in the middle and last, from `gen`'s second role package, and for `gen` from `chk`'s |
+| `route_tests_refusals_hold_at_every_position_of_a_form_s_entries` | §2, §3: fourteen entry refusals — a declared, a marked, a gitlinked generator or input, a file named in both clauses, another role's script and program target, a program target whose build reads a declared file and a root's own, a lone `.rs` — each refused alone and first, in the middle and last of three |
 | `no_route_for_a_marked_crate_root_but_the_parent_s_belief_in_a_script` | §2: a marked crate root refused; a script remaking it written — the parent's §8 limit |
 | `route_a_program_target_step_reads_the_intermediate_at_run_time` | §2: a program-target step reading the intermediate at run time, written |
 | `route_a_program_that_generates_its_own_source` | §2: refused; a second executable of its package, no library holding the file, written |
@@ -194,3 +194,4 @@ finding answered here. The history is
 | 9 | `2026-10-10` | 2, and 3 remarks | answered: each judgment held both ways — every step's generator named first and last, every reader of a script and of a program-target generator from either role; a later step's own committed input reached; `M3.6.8` widened |
 | 10 | `2026-10-10` | 2, and 2 remarks | answered: every refusal of an entry held at every position of its clause, the class closed by one sweep; a package depending on the table's through another refused; `M3.6.8` widened |
 | 11 | `2026-10-10` | 3, and 1 remark | answered: the sweep widened to every entry refusal §6 names — another role's program target, a program target whose build reads a declared file, a lone `.rs`, the gitlink itself as a generator; `M3.6.8`'s text; a changelog entry |
+| 12 | `2026-10-10` | 5, and 3 remarks | answered: §6's rows say exactly what each test holds — three readers each first, in the middle and last, three inputs, fourteen entry refusals each at every position, another role's script and a root's own crate root among them; round 11's text corrected; "directly or not" |

@@ -182,6 +182,23 @@ class closed" was too wide: the sweep held the step-3 refusals, not every entry 
 | R11-D3 | defect | `M3.6.8`'s text lagged round 10's widening | rounds 8 to 11, each mutation's test named |
 | R11-R1 | remark | no changelog entry for round 10 | one entry for rounds 10 and 11 |
 
+**Round 12**, `2026-10-10`, of `c216de9`, by a read-only context that had not written the record, fenced from the
+sealed evaluation set. It ran the doctrine gate and the crate's tests (181 passed), rebuilt round 11's mutations, each
+failing the sweep, and mutated further — untracked, so not durable. Verdict: 5 defects and 3 remarks. It proposed a
+method — generate the cases from every refusal-producing branch, three readers and three inputs — which this round
+adopts: §6 now says, of each test, exactly the positions and counts it holds.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R12-D1 | defect | another role's script in the middle of a form's generators, held by no test | in the sweep, every position |
+| R12-D2 | defect | a root's own crate root, whose build reads the declared file, held only alone | in the sweep, `gen`'s own table its declared file, every position |
+| R12-D3 | defect | a middle reader judged by no test | both reader tests have three readers, the refused one first, in the middle and last |
+| R12-D4 | defect | a middle input's provenance held by no test | the chain's route names three inputs, each reached |
+| R12-D5 | defect | round 11's texts: "only where the refused file stood alone"; the gitlink as a generator "at one position" | "alone or at one position"; the gitlink as a generator at none |
+| R12-R1 | remark | round 11's account named "the step-3 refusals" and "step 1 and step 3's" | step 1 and step 3's |
+| R12-R2 | remark | the tests' doc comment said rounds 5 to 10 | 5 to 12 |
+| R12-R3 | remark | the self-generating route's "any package it depends on" without "directly or not" | said, in the record and the chapter |
+
 ## Why
 
 The record closes on a round that finds no defect, as every design here does; each round, its findings and their
