@@ -44,23 +44,24 @@
 #   case's text in its output, one in nine places with tracing forced on.
 #
 # ⚠️ HONEST LIMIT, stated rather than hidden: the text stays in the published history, which is not
-# rewritten. Two kinds of act put a case in front of a reader: one that writes to disk a commit that
-# holds the set and is older than `6d61f65` — a checkout, a restore or a reset to it, an archive of
-# it, a clone or a worktree at it, a revert of `2f6f331` — or finds it there, in another clone not
-# yet past it; and one that hands a sealed blob to a reader or a tool — `git show` or `git blame` of
-# it, a diff or a grep forced to text (`-a`), an external diff driver or `git difftool`, a viewer
-# that diffs blobs itself (an editor's or a web history view), git run on the repository without
-# this working tree; `git grep <commit>` and `git log -S` tell which file or commit holds a term.
-# Ignored files — build output under `target/`, a folder an untracked `.gitignore` ignores — are not
-# scanned, nor anything outside the repository a link points to, nor a registered submodule, another
-# repository (REPOSITORY-BOUNDARY refuses what is created at a vendored checkout's first level). A
-# quote shorter than a long line, or reworded, is not found. It sees what is staged and on disk. The
-# check cannot prove nobody read a case; a human who reads one and says nothing defeats it. Until
-# the published default branch is past `6d61f65` — `origin/main` stood at `7ac8b8b` when this was
-# written — a clone of it, its web view, its code search and a web search that indexes it reach a
-# case too, with no act at all; a web search or fetch of this repository is fenced until then. A
-# harness transcript or an editor's history made before custody moved holds whatever was shown then;
-# what to do with them is the director's.
+# rewritten. Two kinds of act put a case in front of a reader: one that writes to disk a commit
+# older than `6d61f65` whose history holds the set — a checkout, a restore or a reset to it, an
+# archive of it, a clone or a worktree at it, a revert of `2f6f331` — or finds it there, in another
+# clone not yet past it; and one that hands a sealed blob to a reader or a tool — `git show` or `git
+# blame` of it, a diff or a grep forced to text (`-a`), an external diff driver or `git difftool`, a
+# viewer that diffs blobs itself (an editor's or a web history view), git run on the repository
+# without this working tree; `git grep <commit>` and `git log -S` tell which file or commit holds a
+# term. Ignored files — build output under `target/`, a folder an untracked `.gitignore` ignores —
+# are not scanned, nor anything outside the repository a link points to, nor a registered submodule,
+# another repository (REPOSITORY-BOUNDARY refuses what is created at a vendored checkout's first
+# level). A quote shorter than a long line, or reworded, is not found. It sees what is staged and on
+# disk. The check cannot prove nobody read a case; a human who reads one and says nothing defeats
+# it. The published default branch has been past `6d61f65` since `a543d10`, pushed `2026-10-10`; a
+# copy made of it before then — a fork, a mirror, a search engine's cache, an archive — may still
+# show a case with no act at all, so a web search or fetch of this repository stays fenced. A
+# harness transcript, a saved terminal scrollback or an editor's history made before `6d61f65`, or
+# in a working tree without the mark, holds whatever was shown then; what to do with them is the
+# director's.
 #
 # UNSEALING. At the leaf named in the manifest's `unseals-at:` line, set `seal: unsealed`,
 # add `unsealed-on:` / `unsealed-by:`, then run `--restore`, which writes each case back from
@@ -83,6 +84,8 @@ ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
 # this check exists to catch, and a self-test that did it would fail the gate it belongs to.
 self_test() {
   local arms=0 ok=0 work="$ROOT/target/doctrine_scratch/frozen_evaluation/selftest" sealed_in=""
+  # git quotes a non-ASCII path unless told not to: forced on here, so the path arms hold on any machine (R7 R3).
+  export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.quotePath GIT_CONFIG_VALUE_0=true
   local LONG="ARM-CASE-TEXT alpha asks one comparator to keep two requesters each on its own deadline"
   sha() { if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | cut -d' ' -f1; else shasum -a 256 "$1" | cut -d' ' -f1; fi; }
   g() { git -C "$work" -c core.hooksPath=/dev/null -c commit.gpgsign=false -c user.name=arm -c user.email=arm@example.invalid "$@"; }
@@ -247,6 +250,19 @@ self_test() {
   arm "a non-ASCII path naming a case is printed as named" 1 "    docs/notes/café.md"
   fresh sealed; printf 'x\n' > "$d/naïve.md"; g add -A
   arm "a non-ASCII file tracked in the set is printed as named" 1 "'docs/evaluation/frozen/naïve.md' is tracked"
+  # Paths as named in the other legs too: the tracked copy, the quote search of the index and of the disk, the gitlink
+  # leg (review R7 AG1).
+  fresh sealed; g show "$sealed_in:docs/evaluation/frozen/zz-02-arm-beta.md" > "$work/docs/notes/café copy.md"; g add -A
+  arm "a tracked copy under a non-ASCII name is named as it is" 1 "a sealed case's text is tracked at 'docs/notes/café copy.md'"
+  fresh sealed; printf '%s\n' "$LONG" > "$work/docs/notes/naïve.md"; g add -A; rm "$work/docs/notes/naïve.md"
+  arm "a staged quote under a non-ASCII name is named as it is" 1 "'docs/notes/naïve.md' quotes a line of a sealed case"
+  fresh sealed; printf '%s\n' "$LONG" > "$work/docs/notes/naïve.md"
+  arm "an untracked quote under a non-ASCII name is named as it is" 1 "'docs/notes/naïve.md' quotes a line of a sealed case"
+  fresh sealed; git -C "$work/docs/notes" init -q "né"; printf 'x\n' > "$work/docs/notes/né/x.md"
+  git -C "$work/docs/notes/né" add -A
+  git -C "$work/docs/notes/né" -c user.name=arm -c user.email=arm@example.invalid -c commit.gpgsign=false commit -q -m n
+  printf '[submodule "ne"]\n\tpath = docs/notes/né\n\turl = ./ne\n' > "$work/.gitmodules"; g add -A 2>/dev/null
+  arm "a registered gitlink under a non-ASCII name passes" 0 ""
   # A registered path with a space is read whole (review R5 R2).
   fresh sealed; git -C "$work/docs/notes" init -q "my nested"; printf 'x\n' > "$work/docs/notes/my nested/x.md"
   git -C "$work/docs/notes/my nested" add -A

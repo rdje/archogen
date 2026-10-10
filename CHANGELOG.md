@@ -5,15 +5,26 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the published branch no longer holds the sealed cases
+
+`ARCHOGEN-PROGRAM-0565` (leaf `PROGRAM.76`), `2026-10-10`.
+
+- The repository's published branch was pushed past the change that took the sealed evaluation cases out of the tree,
+  on the director's word, as the one exception to the push cadence: a fresh clone, the branch's web view and its code
+  search no longer show a case. Copies made of the branch before then — forks, mirrors, search caches, archives — may
+  still, and web searches of the repository stay fenced. The texts now bound the risky revisions exactly, and the seal's
+  check names a non-ASCII path as it is in every leg, held by arms that force git to quote such names.
+- Validation: 69 arms; four deliberate breaks each caught, by an untracked runner, so not durable.
+
 ## archogen — the sealed cases' guard names files as they are named, and says the published branch still holds them
 
 `ARCHOGEN-PROGRAM-0562` (leaf `PROGRAM.76`), `2026-10-10`.
 
 - Two places in the seal's check printed a non-ASCII path in git's quoted form, and two of its own tests checked less
-  than they claimed. Both are fixed. The texts now also say what a review found: the repository's published branch
-  is still at a revision that holds the sealed cases, so a fresh clone, its web view and its code search reach them
-  until the branch is pushed past the change that took them out; web searches of the repository are fenced until
-  then.
+  than they claimed. Both are fixed. The texts now also say what a review found: the repository's published branch is
+  still at a revision that holds the sealed cases, so a fresh clone, its web view and its code search reach them until
+  the branch is pushed past `6d61f65`, as it was the same day, `a543d10`; web searches of the repository are fenced
+  until then.
 - Validation: 65 arms; two failing on the previous check and four deliberate breaks each caught, both by untracked
   runners, so not durable.
 

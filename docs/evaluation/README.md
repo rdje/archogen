@@ -14,7 +14,7 @@ of them.
 > **Do not read a case before leaf `M6.5`.** Not because the content is secret — this
 > repository is public — but because the measurement is worthless once the engine has been
 > shaped, even unconsciously, by what those cases need. Two kinds of act are never done: writing to
-> disk a commit that holds the set and is older than `6d61f65` — the first that hides the set's diffs — (a checkout, a
+> disk a commit older than `6d61f65` — the first that hides the set's diffs — whose history holds the set (a checkout, a
 > restore or a reset to it, an archive of it, a clone or a worktree at it, a revert of `2f6f331`),
 > and handing a sealed blob to a reader or a tool (`git show` or `git blame` of a case, a diff or a
 > grep over `frozen/` forced to text with `-a`, an external diff driver or `git difftool`, a viewer
@@ -40,7 +40,8 @@ every day, so an ordinary search for other work can land in one — and one did 
 below). Excluding search terms cannot work, and excluding the folder holds only for tools that
 honour an exclusion. So the text left the tree (leaf `PROGRAM.76`): no search of the working
 tree, under any term, by any tool, reaches a case, and, in a working tree carrying the mark, no
-diff of a commit that holds one shows it; reading one takes an act the box above names.
+diff of a commit that holds one shows it; reading one takes an act the box above names, or a look at a copy
+of the published branch made before it moved (the honest limit).
 
 ## The seal is mechanical
 
@@ -63,16 +64,18 @@ holds no manifest line of another form — and its `--self-test` arms, on synthe
 require that of every run of the check there, one in nine places with tracing forced on. The RED arms are recorded in leaves `M0.6`, `PROGRAM.18.1` and
 `PROGRAM.76`.
 
-⚠️ **The honest limit**, stated rather than hidden: the text stays in the published history,
-which is not rewritten. Either kind of act the box above names puts a case in front of a reader,
-and so does another clone not yet past `6d61f65`. Until the published default branch is past `6d61f65` — `origin/main` stood at `7ac8b8b` when this was written — a clone of it, its web view, its code search and a web search that indexes it reach a case too, with no act at all; a web search or fetch of this repository is fenced until then. A harness transcript or an editor's history made before custody moved holds whatever was shown then; what to do with them is the director's. `git grep <commit>` and `git log -S` over history
-tell which file or commit holds a term, not its line. Ignored files, the build output under
-`target/`, or a folder an untracked `.gitignore` ignores, are not scanned, nor anything outside the repository a link
-points to, nor a registered submodule, another repository (`REPOSITORY-BOUNDARY` refuses what is created at a vendored
-checkout's first level); a quote shorter than a long line, or reworded, is not found; the
-check sees what is staged and on disk, and CI what is pushed. The check cannot prove nobody read a
-case; a human who reads one and stays quiet defeats it, so an exposure is recorded, never kept
-quiet.
+⚠️ **The honest limit**, stated rather than hidden: the text stays in the published history, which is not rewritten.
+Either kind of act the box above names puts a case in front of a reader, and so does another clone not yet past
+`6d61f65`. The published default branch has been past `6d61f65` since `a543d10`, pushed `2026-10-10`; a copy made of it
+before then — a fork, a mirror, a search engine's cache, an archive — may still show a case with no act at all, so a web
+search or fetch of this repository stays fenced. A harness transcript, a saved terminal scrollback or an editor's
+history made before `6d61f65`, or in a working tree without the mark, holds whatever was shown then; what to do with
+them is the director's. `git grep <commit>` and `git log -S` over history tell which file or commit holds a term, not
+its line. Ignored files, the build output under `target/`, or a folder an untracked `.gitignore` ignores, are not
+scanned, nor anything outside the repository a link points to, nor a registered submodule, another repository
+(`REPOSITORY-BOUNDARY` refuses what is created at a vendored checkout's first level); a quote shorter than a long line,
+or reworded, is not found; the check sees what is staged and on disk, and CI what is pushed. The check cannot prove
+nobody read a case; a human who reads one and stays quiet defeats it, so an exposure is recorded, never kept quiet.
 
 ## Exposures
 

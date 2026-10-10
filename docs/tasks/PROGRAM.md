@@ -944,7 +944,7 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM.76`
   Status: `active` — filed and started `2026-10-10`, on the director's word: *"Digests stay, text leaves"*, end to
   end, without them, *"sota, signoff and production-grade"*; the change committed (`ARCHOGEN-PROGRAM-0542`), its
-  review open, round 6's findings answered (`ARCHOGEN-PROGRAM-0562`), round 7 next
+  review open, round 7's findings answered (`ARCHOGEN-PROGRAM-0565`), round 8 next
   Goal: the sealed evaluation set guarded against being read, not only against being edited or named, so no search
   of the working tree made for other work can reach a case before `M6.5`, nor, in a working tree that carries the
   mark, a diff of a commit that holds one show it.
@@ -1046,10 +1046,22 @@ mdBook that is the director's window into the project.
   this repository fenced until then; transcripts and editor histories made before custody moved named, theirs the
   director's. Evidence: `--self-test` → *"65 pass / 0 fail (65 arms)"*; beside `fa0ec3f`'s core → *"63 pass / 2 fail
   (65 arms)"*; `python3 target/p76/mutate7.py` → *"4 of 4 killed"* — both runners untracked, so not durable.
+  The published branch: on `2026-10-10`, on the director's word (*"Push now"*, the one early push, *"once done you
+  need to return honoring the define push cadence"*), `main` was pushed to `a543d10`, past `6d61f65` — `git ls-tree
+  --name-only origin/main docs/evaluation/frozen/` → the manifest alone.
+  Review round 7, `2026-10-10`, of `ff0a180`: 2 defects, 1 arm gap. Round 6's first kind, "a commit that holds the
+  set", let out `2f6f331` and `421ce47`, whose diffs show the cases; three texts still said reading one takes an act or
+  a deliberate read; four legs' "as named" had no arm. Answered: the first kind "a commit older than `6d61f65` whose
+  history holds the set", in the box, the script and `CLAUDE.md`; the published branch said moved past `6d61f65`
+  since `a543d10`, older copies — forks, mirrors, caches, archives — named and web searches kept fenced; transcripts
+  and saved scrollback bounded at `6d61f65`; four arms naming a non-ASCII path in each leg, with git's path quoting
+  forced on in the self-test. Evidence: `--self-test` → *"69 pass / 0 fail (69 arms)"*; beside `ff0a180`'s core →
+  *"69 pass / 0 fail"*, the four arms holding rules already kept; `python3 target/p76/mutate8.py` → *"4 of 4 killed"*
+  — both runners untracked, so not durable.
   Commit: `ARCHOGEN-PROGRAM-0542 (leaf PROGRAM.76)`; `ARCHOGEN-PROGRAM-0544 (leaf PROGRAM.76)`, review round 1;
   `ARCHOGEN-PROGRAM-0547 (leaf PROGRAM.76)`, review round 2; `ARCHOGEN-PROGRAM-0550 (leaf PROGRAM.76)`, round 3;
   `ARCHOGEN-PROGRAM-0554 (leaf PROGRAM.76)`, round 4; `ARCHOGEN-PROGRAM-0558 (leaf PROGRAM.76)`, round 5;
-  `ARCHOGEN-PROGRAM-0562 (leaf PROGRAM.76)`, round 6
+  `ARCHOGEN-PROGRAM-0562 (leaf PROGRAM.76)`, round 6; `ARCHOGEN-PROGRAM-0565 (leaf PROGRAM.76)`, round 7
 
 ## Roadmap coverage map
 
@@ -1116,7 +1128,7 @@ roadmap item X live?".
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
 | 1 | `PROGRAM.69` | `active` | its review open: round 22 next, on the committed tool, its seal already in place |
-| 2 | `PROGRAM.76` | `active` | its review open: round 7 next, of the sealed set's custody |
+| 2 | `PROGRAM.76` | `active` | its review open: round 8 next, of the sealed set's custody |
 | 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The third row waits on the director's yes. The pending leaves beside them —
@@ -1292,6 +1304,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-10` | `PROGRAM.76` (round 6) | the check on the real set; its self-test; the arms beside `fa0ec3f`'s core; four mutations; every self-test; focused on the staged tree | exit 0; 65 / 0; 63 pass / 2 fail, not durable; 4 killed, not durable; 48 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.69` (round 20) | the self-test; two mutations of `put`; the gate over 172 files; every self-test; focused on the staged tree | 117 / 0; each failing the race arm, not durable; OK; 48 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.69` (round 21) | the self-test; the gate over 172 files; every self-test; focused on the staged tree | 118 / 0; OK; 48 passed; `passed — 3 passed, 0 failed` |
+| `2026-10-10` | `PROGRAM.76` (round 7) | the push; the check on the real set; its self-test; four mutations; every self-test; focused on the staged tree | `origin/main` at `a543d10`, its `frozen/` the manifest alone; exit 0; 69 / 0; 4 killed, not durable; 48 passed; `passed — 3 passed, 0 failed` |
 
 ## Commit Log
 
@@ -1461,6 +1474,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.76` | `ARCHOGEN-PROGRAM-0562 (leaf PROGRAM.76)` | **review round 6 answered**: paths as named in every leg; each traced place's own refusal; the published branch named in the limit |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0563 (leaf PROGRAM.69)` | **review round 20 answered**: texts narrowed; a race arm for the temporary path; 117 arms |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0564 (leaf PROGRAM.69)` | **review round 21 answered**: row 20's count; two rewraps; an arm sealing past a reopened subtree; 118 arms |
+| `PROGRAM.76` | `ARCHOGEN-PROGRAM-0565 (leaf PROGRAM.76)` | **review round 7 answered; the published branch past the set**: the first kind of act exact; four non-ASCII arms |
 
 ## Changelog
 
