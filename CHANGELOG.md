@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the sealed cases hidden from diffs too, and their copies sought
+
+`ARCHOGEN-PROGRAM-0544` (leaf `PROGRAM.76`), `2026-10-10`.
+
+- The change that took the sealed cases out of the tree showed their text in its own diff, and the check looked for
+  a case only at its own path. Diffs, log patches and history searches of the sealed paths now show no line of them;
+  the check looks for a case's whole text anywhere in the working tree and for a long line of it quoted in any
+  file, refuses anything else in the sealed folder at any depth, and pins the set to the one sealed. The texts now
+  claim no more than that: a deliberate read of history still reaches a case.
+- Validation: 40 arms, thirteen failing on the previous check and eleven deliberate breaks each caught, both by
+  untracked runners, so not durable; no run prints a case's text.
+
 ## archogen — a seal stopped says what happened
 
 `ARCHOGEN-PROGRAM-0543` (leaf `PROGRAM.69`), `2026-10-10`.
@@ -26,8 +38,8 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
   that sealed them holds it, the manifest keeps each digest, and no search of the tree can reach a case. At the
   reuse measurement a restore writes each back and verifies it. The case read early is recorded, without being
   named outside the sealed folder, and will be reported apart from the four unseen ones.
-- Validation: the check's arms, seventeen failing on the old check; nine deliberate breaks, each caught by an
-  untracked runner, so not durable (26 arms); no run prints a case's text.
+- Validation: 26 arms, seventeen failing on the old check and nine deliberate breaks each caught, both by untracked
+  runners, so not durable; no run prints a case's text.
 
 ## archogen — a seal finishes before a request to stop takes effect
 

@@ -915,13 +915,14 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0537 (leaf PROGRAM.75)`
 
 - ID: `PROGRAM.76`
-  Status: `done` — filed, started and closed `2026-10-10`, on the director's word: *"Digests stay, text leaves"*,
-  end to end, without them
+  Status: `active` — filed and started `2026-10-10`, on the director's word: *"Digests stay, text leaves"*, end to
+  end, without them, *"sota, signoff and production-grade"*; the change committed (`ARCHOGEN-PROGRAM-0542`), its
+  review open, round 1's findings answered (`ARCHOGEN-PROGRAM-0544`), round 2 next
   Goal: the sealed evaluation set guarded against being read, not only against being edited or named, so no search
-  made for other work can reach a case before `M6.5`.
-  Reproduce / issue: `M3.3`'s survey, a delegated read-only search told to sweep the whole tree, searched a public
-  identifier that one sealed case's text also holds, and opened the case; a search in the working session printed one
-  of its lines. The seal's check let it be: `git ls-files docs/evaluation/frozen` at `4caef04` → the manifest and five
+  of the working tree made for other work can reach a case before `M6.5`, nor a diff of a commit that holds one show
+  it.
+  Reproduce / issue: `M3.3`'s survey, a delegated read-only search told to sweep the whole tree, opened one sealed
+  case; a search in the working session printed one of its lines. The seal's check let it be: `git ls-files docs/evaluation/frozen` at `4caef04` → the manifest and five
   cases, the doctrine gate green.
   Direction: the director chose, of three, that the digests stay and the text leaves: custody by the sealing commit,
   `b05fadb`, which holds each case as a blob; the manifest its commitment; `--restore` the reveal, refused while
@@ -932,7 +933,7 @@ mdBook that is the director's window into the project.
     cases' text, readable by any search of the tree; the old check passed on it, exit 0.
   - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: `scripts/check_frozen_evaluation.sh` guarded writes (integrity,
     completeness) and naming (non-contamination), never reads; the only read barrier was a prose line in
-    `docs/evaluation/README.md`, which no bootstrap file reaches — `git grep -n -i 'evaluation/frozen\|sealed set\|evaluation set' -- README.md CLAUDE.md MEMORY.md MEMORY_ARCHITECTURE.md` → nothing.
+    `docs/evaluation/README.md`, which no bootstrap file reached — `git grep -n -i 'evaluation/frozen\|sealed set\|evaluation set' 4caef04 -- README.md CLAUDE.md MEMORY.md MEMORY_ARCHITECTURE.md` → nothing.
     WHY: the cases are written in the vocabulary the engine work searches, so a search under any term can land in
     one; excluding terms cannot work, and excluding the folder holds only for tools that honour an exclusion.
   - [x] **FIX** — the five cases' text out of the tree (`git rm`), the manifest's `# sealed-in:`, `# custody:` and
@@ -950,8 +951,22 @@ mdBook that is the director's window into the project.
     `passed — 3 passed, 0 failed`, on the staged tree; the doctrine gate at commit.
   - [x] **LOCKSTEP** — the check, the manifest, the contract; the book, `docs/usecases/README.md`, `TOOLBOX.md`,
     `DOCTRINE_ENFORCEMENT.md`; `M6.5`; this leaf and both logs; `CHANGELOG.md`.
-  Verification: `2026-10-10` — the Verification Log's row
-  Commit: `ARCHOGEN-PROGRAM-0542 (leaf PROGRAM.76)`
+  Review round 1, `2026-10-10`, of `2f6f331`, by a read-only context fenced from the cases' text: 5 defects, 2 arm
+  gaps. The change's own diff showed the cases' text as deleted lines, and the check sought a case at its own path
+  alone; answered by mechanism — the sealed paths marked `-diff`, so no diff, log patch or `git grep` of a commit that
+  holds them prints a line (measured on `2f6f331`: *"case text lines shown … 0"*); custody by content, a case's whole
+  text anywhere in the index or the unignored working tree and a long line of it quoted in any file; completeness at
+  any depth; the manifest pinned to the sealing commit's own, that commit an ancestor of `HEAD`; a malformed entry
+  refused; arms for the blob check once unsealed and for a restore with no sealing commit while the index holds a
+  case — and the texts narrowed to it: "no search of the working tree", the honest limit naming a blob shown by path,
+  a diff forced to text, checkouts before `2f6f331` and other clones; the exposure a rule, not a proof; the hint at the
+  case's content dropped from the exposure record, the script and `M3.3`'s survey line; `CLAUDE.md`'s bootstrap rule;
+  the doctrine registry's line. The 365 copies of the set that local clones and tool-made trees under `target/` held,
+  untracked, were deleted, `find target <scratchpad> -path '*/docs/evaluation/frozen/ev-0*' -not -path '*/.git/*'` →
+  none left. Evidence: `--self-test` → *"40 pass / 0 fail (40 arms)"*; beside `2f6f331`'s core → *"27 pass / 13 fail
+  (40 arms)"*; `python3 target/p76/mutate2.py` → *"11 of 11 killed"* — both runners untracked, so not durable.
+  Verification: `2026-10-10` — the Verification Log's rows
+  Commit: `ARCHOGEN-PROGRAM-0542 (leaf PROGRAM.76)`; `ARCHOGEN-PROGRAM-0544 (leaf PROGRAM.76)`, review round 1
 
 ## Roadmap coverage map
 
@@ -1018,9 +1033,10 @@ roadmap item X live?".
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
 | 1 | `PROGRAM.69` | `active` | its review open: round 15 next, on the committed tool, its seal already in place |
-| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 2 | `PROGRAM.76` | `active` | its review open: round 2 next, of the sealed set's custody |
+| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
-The second row waits on the director's yes. The pending leaves beside them —
+The third row waits on the director's yes. The pending leaves beside them —
 `PROGRAM.71`, `.72` and `.73` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and its full record is sealed under `docs/task-history/PROGRAM/`.
 
@@ -1180,6 +1196,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `2026-10-10` | `PROGRAM.69` (round 13) | the arms as committed beside `1ad87e4`'s core; the self-test; five mutations of round 13's rules; the gate over 172 files; every self-test; focused on the staged tree | 88 pass / 10 fail, the working tree's and not durable; 98 / 0; each killed by an untracked runner, not durable; OK; 48 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.76` | the check on the moved set; its self-test; the arms beside the old core; nine mutations; every self-test; focused on the staged tree | exit 0; 26 / 0; 9 pass / 17 fail, not durable; 9 killed, not durable; 48 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.69` (round 14) | the arms as committed beside `6c79b36`'s core; the self-test; seven mutations of round 14's rules; the gate over 172 files; every self-test; focused on the staged tree | 97 pass / 9 fail, the working tree's and not durable; 106 / 0; each killed by an untracked runner, not durable; OK; 48 passed; `passed — 3 passed, 0 failed` |
+| `2026-10-10` | `PROGRAM.76` (round 1) | the check on the real set; its self-test; the arms beside `2f6f331`'s core; eleven mutations; the case lines a diff of `2f6f331` shows; every self-test; focused on the staged tree | exit 0; 40 / 0; 27 pass / 13 fail, not durable; 11 killed, not durable; 0; 48 passed; `passed — 3 passed, 0 failed` |
 
 ## Commit Log
 
@@ -1336,6 +1353,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0539 (leaf PROGRAM.69)` | **review round 13 answered by method**: a stop held by the signal mask until the seal is done; the temporary file created new; each stop's exit code armed; 98 arms |
 | `PROGRAM.76` | `ARCHOGEN-PROGRAM-0542 (leaf PROGRAM.76)` | **the sealed set guarded against reading**: its text out of the tree, the sealing commit its custody, `--restore` the reveal; an exposure recorded and counted apart |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0543 (leaf PROGRAM.69)` | **review round 14 answered**: every maskable signal held from before the first write; the outcome said, the interrupt's message by it; the temporary paths refused first; 106 arms |
+| `PROGRAM.76` | `ARCHOGEN-PROGRAM-0544 (leaf PROGRAM.76)` | **review round 1 answered by mechanism**: the sealed paths `-diff`; custody by content, whole or quoted; completeness at any depth; the set pinned to the one sealed; the texts narrowed |
 
 ## Changelog
 

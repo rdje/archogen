@@ -6,12 +6,15 @@ to be evaluated after a catalog freeze. This directory holds them, sealed.
 
 Five cases are sealed, listed with their SHA-256 digests in `frozen/MANIFEST.txt`. While the set
 is sealed, their text is in **no file of the working tree**: each case is the blob the
-manifest's `# sealed-in:` commit holds, and the manifest's digest is the commitment to it.
+manifest's `# sealed-in:` commit holds, and the manifest's digest is the commitment to it. Their
+paths are marked `-diff` in `.gitattributes`, so a diff, a log patch or a `git grep` of a commit
+that holds them shows no line of them.
 
 > **Do not read a case before leaf `M6.5`.** Not because the content is secret — this
 > repository is public — but because the measurement is worthless once the engine has been
-> shaped, even unconsciously, by what those cases need. Never search the sealing commit's
-> history (`git show`, `git log -p`, a pickaxe search) for them.
+> shaped, even unconsciously, by what those cases need. Never `git show` a case's blob, never
+> diff with `--text` over `frozen/`, and never check out a commit older than `2f6f331`, the one
+> that took the text out of the tree.
 
 ## What is actually at stake
 
@@ -30,9 +33,10 @@ named elsewhere, but not against being **read**: the only barrier was the line a
 agent's bootstrap reaches. The cases are written in the vocabulary the engine work searches
 every day, so an ordinary search for other work can land in one — and one did (*Exposures*,
 below). Excluding search terms cannot work, and excluding the folder holds only for tools that
-honour an exclusion. So the text left the tree (leaf `PROGRAM.76`): no search of it, under any
-term, by any tool, reaches a case; reading one takes a deliberate `git show` of the sealing
-commit.
+honour an exclusion. So the text left the tree (leaf `PROGRAM.76`): no search of the working
+tree, under any term, by any tool, reaches a case, and no diff of a commit that holds one shows
+it; reading one takes a deliberate act — a blob shown by its path, a diff forced to text, or a
+checkout of an older commit.
 
 ## The seal is mechanical
 
@@ -41,21 +45,24 @@ project doctrine slot. It enforces five properties:
 
 | Property | What it refuses |
 | --- | --- |
-| **Integrity** | a digest that the case's blob in the sealing commit does not hash to, or, once unsealed, a restored case that differs from it — the set cannot be quietly rewritten to match what the engine turned out to do |
-| **Custody** | while sealed, a case in the working tree or in the index |
-| **Completeness** | a file in `frozen/` the manifest does not list, hidden ones included; once unsealed, a listed case missing |
+| **Integrity** | manifest entries that are not the sealing commit's own, a sealing commit that is no ancestor of `HEAD`, a digest the case's blob there does not hash to, or, once unsealed, a restored case that differs from it — the set cannot be rewritten, grown or shrunk to match what the engine turned out to do |
+| **Custody** | while sealed, a case at its path or in the index; a case's whole text anywhere in the index or the working tree, ignored files aside; a file, tracked or not, that quotes a long line of one; a sealed path not marked `-diff` |
+| **Completeness** | anything in `frozen/` but the manifest and, once unsealed, the listed cases — at any depth, hidden or linked; once unsealed, a listed case missing |
 | **Non-contamination** | any tracked file **outside** `frozen/` that names a sealed case — a case written about in a task tree, decision record or design note is no longer unseen |
-| **Exposure** | an `# exposed:` line naming no listed case |
+| **Exposure** | an `# exposed:` line naming no listed case — recording an exposure is this project's rule; no check can see a read |
 
-It never prints a case's text — a blob is hashed through a pipe — and its `--self-test` arms,
-on synthetic cases in a scratch repository, check that of every run. The RED arms are recorded
-in leaves `M0.6`, `PROGRAM.18.1` and `PROGRAM.76`.
+It never prints a case's text — a blob is hashed through a pipe, a quote is found by the name of
+the file that holds it — and its `--self-test` arms, on synthetic cases in a scratch repository,
+check that of every run. The RED arms are recorded in leaves `M0.6`, `PROGRAM.18.1` and
+`PROGRAM.76`.
 
-⚠️ **The honest limit**, stated rather than hidden: the text stays in the repository's history,
-which is published and not rewritten — `git show`, `git log -p` or a pickaxe search over it
-reaches a case. The check proves the tree holds none, that each commitment still resolves, and
-that no case is named where the repository can see; it cannot prove nobody read one. A human
-who reads one and stays quiet defeats it, so an exposure is recorded, never kept quiet.
+⚠️ **The honest limit**, stated rather than hidden: the text stays in the published history,
+which is not rewritten. A blob shown by its path, a diff forced to text, a checkout of any commit
+from the sealing one up to `2f6f331`'s parent, or the working tree of another clone not yet past
+`2f6f331` puts a case in front of a reader. Ignored files, the build output under `target/`, are
+not scanned, and a quote shorter than a long line, or reworded, is not found. The check cannot
+prove nobody read a case; a human who reads one and stays quiet defeats it, so an exposure is
+recorded, never kept quiet.
 
 ## Exposures
 
@@ -65,7 +72,7 @@ this table says how it happened, without naming or describing it.
 
 | Date | How | Extent | Answer |
 | --- | --- | --- | --- |
-| `2026-10-10` | a delegated read-only survey for leaf `M3.3`, told to sweep the whole tree, searched a public identifier that one case's text also holds, and opened the case; a search in the working session printed one of its lines | one case: a few of its lines read by the survey and summed up to the session in one sentence; nothing of it written anywhere | the text taken out of the tree (`PROGRAM.76`); the case reported apart at `M6.5`, four unseen cases remaining against §16's three |
+| `2026-10-10` | a delegated read-only survey for leaf `M3.3`, told to sweep the whole tree, opened one case; a search in the working session printed one of its lines | one case: a few of its lines read by the survey and summed up to the session in one sentence | the text taken out of the tree and its diffs hidden (`PROGRAM.76`); 365 copies of the set that local clones and tool-made trees under `target/` held deleted; the case reported apart at `M6.5`, four unseen cases remaining against §16's three |
 
 ## Unsealing
 

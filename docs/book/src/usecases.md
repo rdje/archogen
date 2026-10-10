@@ -86,9 +86,12 @@ worthless once the engine has been shaped, even unconsciously, by what those cas
 
 The seal is mechanical, and it guards reading as well as writing. While sealed, the cases' text
 is in no file of the working tree: only the commit that sealed them holds it, and the manifest
-keeps each one's digest, so no search for other work can land in a case, whatever it looks for.
-A check refuses a digest that no longer matches its sealed text, a case back in the tree, an
-unlisted file in the sealed directory, and any tracked file outside it that names a sealed
-case; at unsealing a restore writes each case back and verifies it. Its honest limit is stated
-too: the text stays in the published history, so it cannot prove nobody read one — and a case
-read early is recorded and counted apart. See `docs/evaluation/README.md`.
+keeps each one's digest, so no search of the working tree can land in a case, whatever it looks
+for, and no diff of a commit that holds one shows its text. A check refuses a set that is not the
+one sealed, a digest that no longer matches its sealed text, a case back in the tree — at its
+path, copied elsewhere, or a long line of it quoted — anything else in the sealed directory, and
+any tracked file outside it that names a sealed case; at unsealing a restore writes each case
+back and verifies it. Its honest limit is stated too: the text stays in the published history, so
+a deliberate read still reaches it and the check cannot prove nobody read one — and by the
+project's rule a case read early is recorded and counted apart. See
+`docs/evaluation/README.md`.

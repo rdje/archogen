@@ -20,7 +20,7 @@ fail=0
 # Each entry: "ID|what it proves|script". Keep each cheap and deterministic; anything heavier
 # than a few seconds belongs in a CI tier (ROADMAP.md §14.3), not in the pre-commit path.
 PROJECT_DOCTRINES=(
-  "FROZEN-EVALUATION|the sealed evaluation set is unmodified, complete, and unnamed outside its directory|scripts/check_frozen_evaluation.sh"
+  "FROZEN-EVALUATION|the sealed evaluation set is unmodified, complete, out of the tree while sealed, and unnamed outside its directory|scripts/check_frozen_evaluation.sh"
   "S0-RETIREMENT|every hard-coded S0 assumption is marked in the source, listed with an owning leaf, and the prototype has acquired no new consumers|scripts/check_s0_retirement.sh"
   "BOOK-ANCHORS|every book chapter, and every normative document under docs/semantics/, that describes behavior cites a repository path — and every path either of them cites exists|scripts/check_book_anchors.sh"
   "FEEDBACK-SELF-CONTAINED|every reported bug's directory stands alone — complete, closed, portable, and in its vendor register|scripts/check_feedback_self_contained.sh"
