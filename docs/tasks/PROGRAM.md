@@ -654,7 +654,7 @@ mdBook that is the director's window into the project.
 
 - ID: `PROGRAM.69`
   Status: `active` — the tool, its gate and the seal committed `2026-10-10` (`ARCHOGEN-PROGRAM-0511`); its review open,
-  round 14's defects and arm gaps answered (`ARCHOGEN-PROGRAM-0543`), every maskable signal held, round 15 next
+  round 15's defects and arm gaps answered (`ARCHOGEN-PROGRAM-0546`), the nine unheld signals named, round 16 next
   Goal: a closed subtree below an open top-level subtree is sealed too, so a tree whose top-level subtree stays open
   for long — on a blocked leaf, or a long feature — does not keep its finished leaves live.
   Reproduce / issue: `M3.6.6.2.1`'s commit was refused by `README-ROUTES`, *"docs/tasks/: 823457 bytes in total, over
@@ -742,10 +742,16 @@ mdBook that is the director's window into the project.
     committed beside `1ad87e4`'s core → *"88 pass / 10 fail (98 arms)"*, the held-stop arms, the refused seal's rollback
     and the temporary path failing, then `--self-test` → *"98 pass / 0 fail (98 arms)"*; `python3
     target/p69r13/mutate.py` → five mutations, each `killed`; both runners untracked, so not durable. After round 14:
-    every signal a mask can hold held from before the first write, the outcome recorded and the interrupt's message by
+    every signal but nine held from before the first write, the outcome recorded and the interrupt's message by
     it, an error said before it goes on, the temporary paths refused first — `python3 target/p69r14/hybrid.py`, the
     arms as committed beside `6c79b36`'s core → *"97 pass / 9 fail (106 arms)"*, then `--self-test` → *"106 pass / 0
     fail (106 arms)"*; `python3 target/p69r14/mutate.py` → *"7 of 7 killed"*; both runners untracked, so not durable.
+    After round 15: the seal records that it started, and the stop's message is by that and by its said outcome; the
+    texts name the nine signals left unheld; arms for the mask at the first write, a lost report, the index's
+    temporary path, the error path's breach and its rollback's wording — `python3 target/p69r15/hybrid.py`, the arms
+    as committed beside `421ce47`'s core → *"108 pass / 1 fail (109 arms)"*, the lost report's, the three arm gaps
+    passing there as rules already kept; then `--self-test` → *"109 pass / 0 fail (109 arms)"*; `python3
+    target/p69r15/mutate.py` → *"6 of 6 killed"*; both runners untracked, so not durable.
   - [x] **NO REGRESSION** — `bash scripts/check_task_history.sh` at `e624001` → *"OK (170 sealed file(s) … every sealed
     leaf proven against its tree before its seal)"*: the 142 seals before this change judged by every generalised leg, the byte
     rebuild included. `bash scripts/run_self_tests.sh` → *"OK — 47 self-test(s) passed"*; the
@@ -761,7 +767,8 @@ mdBook that is the director's window into the project.
   `ARCHOGEN-PROGRAM-0514 (leaf PROGRAM.69)`, round 7 answered; `ARCHOGEN-PROGRAM-0517 (leaf PROGRAM.69)`, round 8;
   `ARCHOGEN-PROGRAM-0521 (leaf PROGRAM.69)`, round 9; `ARCHOGEN-PROGRAM-0525 (leaf PROGRAM.69)`, round 10;
   `ARCHOGEN-PROGRAM-0531 (leaf PROGRAM.69)`, round 11; `ARCHOGEN-PROGRAM-0535 (leaf PROGRAM.69)`, round 12;
-  `ARCHOGEN-PROGRAM-0539 (leaf PROGRAM.69)`, round 13; `ARCHOGEN-PROGRAM-0543 (leaf PROGRAM.69)`, round 14
+  `ARCHOGEN-PROGRAM-0539 (leaf PROGRAM.69)`, round 13; `ARCHOGEN-PROGRAM-0543 (leaf PROGRAM.69)`, round 14;
+  `ARCHOGEN-PROGRAM-0546 (leaf PROGRAM.69)`, round 15
 
 - ID: `PROGRAM.70`
   Status: `done` — started `2026-10-10`, decomposed into `.1`, the bytes, and `.2`, the count, closed the same day with `.2`
@@ -1032,7 +1039,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.69` | `active` | its review open: round 15 next, on the committed tool, its seal already in place |
+| 1 | `PROGRAM.69` | `active` | its review open: round 16 next, on the committed tool, its seal already in place |
 | 2 | `PROGRAM.76` | `active` | its review open: round 2 next, of the sealed set's custody |
 | 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
@@ -1197,6 +1204,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `2026-10-10` | `PROGRAM.76` | the check on the moved set; its self-test; the arms beside the old core; nine mutations; every self-test; focused on the staged tree | exit 0; 26 / 0; 9 pass / 17 fail, not durable; 9 killed, not durable; 48 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.69` (round 14) | the arms as committed beside `6c79b36`'s core; the self-test; seven mutations of round 14's rules; the gate over 172 files; every self-test; focused on the staged tree | 97 pass / 9 fail, the working tree's and not durable; 106 / 0; each killed by an untracked runner, not durable; OK; 48 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.76` (round 1) | the check on the real set; its self-test; the arms beside `2f6f331`'s core; eleven mutations; the case lines a diff of `2f6f331` shows; every self-test; focused on the staged tree | exit 0; 40 / 0; 27 pass / 13 fail, not durable; 11 killed, not durable; 0; 48 passed; `passed — 3 passed, 0 failed` |
+| `2026-10-10` | `PROGRAM.69` (round 15) | the arms as committed beside `421ce47`'s core; the self-test; six mutations of round 15's rules; the gate over 172 files; every self-test; focused on the staged tree | 108 pass / 1 fail, the working tree's and not durable; 109 / 0; each killed by an untracked runner, not durable; OK; 48 passed; `passed — 3 passed, 0 failed` |
 
 ## Commit Log
 
@@ -1354,6 +1362,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.76` | `ARCHOGEN-PROGRAM-0542 (leaf PROGRAM.76)` | **the sealed set guarded against reading**: its text out of the tree, the sealing commit its custody, `--restore` the reveal; an exposure recorded and counted apart |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0543 (leaf PROGRAM.69)` | **review round 14 answered**: every maskable signal held from before the first write; the outcome said, the interrupt's message by it; the temporary paths refused first; 106 arms |
 | `PROGRAM.76` | `ARCHOGEN-PROGRAM-0544 (leaf PROGRAM.76)` | **review round 1 answered by mechanism**: the sealed paths `-diff`; custody by content, whole or quoted; completeness at any depth; the set pinned to the one sealed; the texts narrowed |
+| `PROGRAM.69` | `ARCHOGEN-PROGRAM-0546 (leaf PROGRAM.69)` | **review round 15 answered**: the stop's message by whether the seal started and said its outcome; the nine unheld signals named; four arm gaps armed; 109 arms |
 
 ## Changelog
 

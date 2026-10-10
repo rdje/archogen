@@ -320,6 +320,24 @@ this change and 2 arm gaps; `make focused` could not run in its clone, under the
 | R14-R4 | remark | round 13's account fitted rounds 11 and 12 loosely; the changelog's "three reviews in a row" | the changelog's entry reworded; round 13's paragraph stands as written, this row its correction |
 | R14-R5 | remark | unblocking all three signals instead of restoring the mask survives | no text claims it; the mask is restored |
 
+**Round 15**, `2026-10-10`, a thirteenth confirmation, in a clone of `421ce47`, by a read-only context new to the
+change and fenced from the sealed evaluation set. It reproduced the gate, every self-test, the census, round 14's
+figures and the seal; fuzzed 330 trees and 982 units, every seal as its oracle predicts, 1 354 hand seals, the gate
+taking exactly the oracle's, and 235 late live leaves, every one refused; and ran fifteen mutations of round 14's
+rules, nine killed — its runners untracked, so not durable. Verdict: 2 defects of this change and 4 arm gaps.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R15-D1 | defect | a stop after a seal whose report could not be written, its output a closed pipe, said "before the seal wrote anything" | the seal records that it started, under the mask, before the first write; the message is by both: before any write, the outcome said above, or the outcome could not be said; an arm with the output a pipe nobody reads |
+| R15-D2 | defect | "every signal a mask can hold": the seven fault signals are left out whoever sends them, and a mask holds one another process sends | named: every signal but SIGKILL, SIGSTOP and the seven fault signals, whoever sends them — a fault the interpreter raises on itself while blocked would hang it, so the mask stays as it is |
+| R15-AG1 | arm gap | the breadth of the mask held by seven named signals alone | an arm reads the mask in force at the first write and finds every signal but the nine |
+| R15-AG2 | arm gap | "rolled back" of a whole rollback alone, on the error path | the full-disk rollback's arm requires "and its rollback left what it named above" and no "rolled back" |
+| R15-AG3 | arm gap | "any entry at a temporary path": a link at the tree's alone | an arm puts a plain file at the index's temporary path |
+| R15-AG4 | arm gap | the error named by the run's own handler, not only by the seal's line | the two error arms anchored on the gate's `TASK-HISTORY:` breach line |
+| R15-R1 | remark | pre-existing: with the output closed and no stop, a kept seal ends in a broken-pipe breach | the report is outside the guard, as it was; nothing claims otherwise |
+| R15-R2 | remark | the flush on the error path is equivalent, stderr line-buffered | kept |
+| R15-R3 | remark | the changelog's "from before its first write" was not new in round 14 | reworded |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.

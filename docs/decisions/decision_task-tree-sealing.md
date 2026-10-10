@@ -60,13 +60,14 @@ may still name them, and naming what it could not undo (review R9-1, worded by R
 is made, so an interrupt just after one is undone too, any entry at a sealed file's path is refused, and so is a tree
 or an index that is a link (review R10), or a history folder (R11 P2) — *by review R12: any path the seal writes that
 a link lies on, the file or a folder above it, below the root; by R13 D3, its temporary file created new; by R14 D3,
-any entry at a rewritten file's temporary path refused before the first write* —; and a stop — every signal a mask
-can hold, but the faults the interpreter raises on itself — is held by the signal mask from before the first write
-through the proof and any rollback, taking effect once the seal is done and its outcome said: proven and kept,
-refused and rolled back, or stopped by an error, said, and rolled back; so the seal is whole either way, a signal
+any entry at a rewritten file's temporary path refused before the first write* —; and a stop — any signal but
+SIGKILL, SIGSTOP and the seven fault signals (SIGSEGV, SIGBUS, SIGFPE, SIGILL, SIGTRAP, SIGSYS, SIGABRT), whoever
+sends them — is held by the signal mask from before the first write through the proof and any rollback, taking effect
+once the seal is done: proven and kept, refused and rolled back, or stopped by an error, said, and rolled back, its
+outcome said — or, when its output cannot be written, the stop saying so; so the seal is whole either way, a signal
 ignored on entry staying ignored, and a git the proof runs, which inherits the mask, not ended by a stop; and only a
 rollback that undid everything is said to have rolled the seal back (reviews R11 D1, R12 D3, R13: a stop recorded and
-answered later left moments between a write and its record, which holding closes; R14 D1, D2).*
+answered later left moments between a write and its record, which holding closes; R14 D1, D2; R15 D1, D2).*
 `--census <COMMIT>` measures, at a commit, the bytes of `done` leaves under open top-level subtrees and of those a seal
 would take (`PROGRAM.69`).
 
@@ -148,7 +149,7 @@ would take (`PROGRAM.69`).
   - after a subtree closes, run `bash scripts/check_task_history.sh --seal <TREE>` and commit its result;
   - the sealing commit may also close the leaf that ran it, as the first one did. Every sealed leaf is proven
     against its tree as it stood just before that commit (leg 5), so other edits in the same commit do not weaken
-    the proof. *Amended `2026-10-10`:* any exception that stops a seal rolls it back first; a signal that kills the process, SIGTERM among them, leaves its writes, which the next gate run proves as any uncommitted seal (review R8-2) — *amended by R13 and R14: every signal a mask can hold is held until the seal is done, so what leaves the writes is SIGKILL, a fault signal, or the machine stopping* —; a failure that defeats the rollback's own writes too, a full disk, leaves what the rollback names (R9-1). The seal reads the working tree and leg 5 the tree as committed, so an
+    the proof. *Amended `2026-10-10`:* any exception that stops a seal rolls it back first; a signal that kills the process, SIGTERM among them, leaves its writes, which the next gate run proves as any uncommitted seal (review R8-2) — *amended by R13 to R15: every signal but SIGKILL, SIGSTOP and the seven fault signals is held until the seal is done, so what leaves the writes is SIGKILL, a fault signal whoever sends it, or the machine stopping* —; a failure that defeats the rollback's own writes too, a full disk, leaves what the rollback names (R9-1). The seal reads the working tree and leg 5 the tree as committed, so an
     uncommitted edit that changes which subtrees are closed — a new open leaf under a closed one — makes the seal
     refuse itself and roll back; commit such an edit first;
   - a leaf in a sealed file is never edited. A correction is a new entry in the tree's changelog.
@@ -189,3 +190,4 @@ another tree is sealed. The amendment of `2026-10-10` and its seal were reviewed
 | 12 | 12 | 3, and 4 arm gaps (a stop after the last answer dropped; a link above the written folders passing; "rolled back" said of a rollback that was not whole) | the gate, every self-test, the census and the seal reproduced, `72bd446` re-sealed byte for byte (runner untracked, not durable); every finding answered, the claims narrowed to what the arms hold |
 | 13 | 9 | 4, and 2 arm gaps (a second stop cutting short the rollback a given-back stop began; the boundary texts; a link at the temporary path written through; the changelog's count) | the gate, every self-test, the census and the seal reproduced, 535 fuzzed seals and 1 503 hand seals matching its oracle (runner untracked, not durable); answered by holding a stop with the signal mask, closing every moment rounds 11 to 13 found |
 | 14 | 11 | 4, and 2 arm gaps (the interrupt's message said whatever happened; SIGQUIT and the other maskable signals not held; a link at the temporary path found after the first write; R13's change credited to R12) | the gate, every self-test, the census and the seal reproduced, 300 fuzzed trees and 1 662 hand seals matching its oracle, 445 late live leaves refused (runner untracked, not durable); answered: every signal a mask can hold held from before the first write, the outcome recorded and the message by it, an error said before it goes on, the temporary paths refused first |
+| 15 | 9 | 2, and 4 arm gaps (the stop's message when the seal's report could not be written; "every signal a mask can hold" where seven fault signals are left out whoever sends them) | the gate, every self-test, the census and the seal reproduced, 330 fuzzed trees and 1 354 hand seals matching its oracle, 235 late live leaves refused (runner untracked, not durable); answered: the message by whether the seal started and said its outcome; the nine signals left unheld named; arms for the mask at the first write, the index's temporary path, the error path's breach and its rollback's wording |

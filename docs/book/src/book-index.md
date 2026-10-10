@@ -145,7 +145,8 @@ a change that leaves it stale, so it is never edited by hand.
 - **fault** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Where the engine's knowledge
   comes from: the catalog](catalog.md), [Checks that must not share a mistake: the trust gate](trust.md), [The runtime:
   decisions, not actions](runtime.md), [Verifying the toolchain](verification.md), [What this project relies on from
-  outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
+  outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that keep the
+  repository honest](annex-repository.md)
 - Faults in detail — [Annex A: The runtime's rules in detail](annex-runtime.md#faults-in-detail)
 - Finished work leaves the task trees — [Annex B: The checks that keep the repository
   honest](annex-repository.md#finished-work-leaves-the-task-trees)
