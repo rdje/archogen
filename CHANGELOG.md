@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a generator may not be another role's code
+
+`ARCHOGEN-M3-0513` (leaf `M3.6.6.2.3`), `2026-10-10`.
+
+- The trust inventory now judges the generator of every declared source a program reads. A table the generator's own
+  executable wrote, read by a checker, is refused: the checker would trust the logic it checks. A generator that is a
+  program is built and held to the same rules as the roots, its admitted sites counted with theirs; a script is judged
+  by the package holding it; a Rust file that is no program's entry point is refused.
+- The instrument's build, manifest and source rules became shared pieces, used by the roots and the generators alike;
+  the real tree's inventory is byte for byte what it was.
+- Validation: seven fixtures and eleven catalogued mutations, each killed, and the 32 earlier ones on the instrument as
+  expected; the focused tier and the whole suite (1 325 tests, 0 failed) pass.
+
 ## archogen — the trust inventory sees what generated sources share
 
 `ARCHOGEN-M3-0512` (leaf `M3.6.6.2.2`), `2026-10-10`.

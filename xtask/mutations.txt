@@ -2367,10 +2367,10 @@ test -p xtask trust::tests::every_program_target_is_a_root_or_classified_and_the
 expect killed
 why M3.6.3.1: an example compiles its package's development dependencies, so its role packages follow them (record §2, R5 remark 13).
 from
-                    let followed =
-                        edge == "normal" || (kind == "example" && edge == "dev" && *from == *package);
+                let followed =
+                    edge == "normal" || (kind == "example" && edge == "dev" && from == package);
 to
-                    let followed = edge == "normal";
+                let followed = edge == "normal";
 end
 
 mutation trust-grown-classification-unreported
@@ -3601,4 +3601,132 @@ from
         if !pa.is_empty() && !pb.is_empty() && pa != pb && provenance_among {
 to
         if !pa.is_empty() && !pb.is_empty() && provenance_among {
+end
+
+mutation gs-another-role-s-generator-passes
+file xtask/src/trust.rs
+test -p xtask trust_generated::generator_tests
+expect killed
+why M3.6.6.2.3, the generated-sources record §5 (`GS-H11`, `GS-H5`): a generator file holding a role package of another role than the reading program's is refused as `trust-shared-program`.
+from
+                            if !mine.contains(*role) {
+to
+                            if false {
+end
+
+mutation gs-the-harness-holds-no-role
+file xtask/src/trust.rs
+test -p xtask trust_generated::generator_tests
+expect killed
+why M3.6.6.2.3, the generated-sources record §5 (`GS-H11`, `GS-H5`): for the harness, another role is one other than its pair's two: the reference model's package may write its table.
+from
+                .filter(|r| r.name == *x || r.name == *y)
+to
+                .filter(|_| false)
+end
+
+mutation gs-a-refused-generator-target-is-built
+file xtask/src/trust.rs
+test -p xtask trust_generated::generator_tests
+expect killed
+why M3.6.6.2.3, the generated-sources record §5 (`GS-H11`, `GS-H5`): a generator target its role packages refuse is not built.
+from
+                    if !refused_here.is_empty() {
+                        continue;
+                    }
+to
+                    if refused_here.is_empty() {}
+end
+
+mutation gs-a-crate-root-of-two-targets-judged-by-one
+file xtask/src/trust.rs
+test -p xtask trust_generated::generator_tests
+expect killed
+why M3.6.6.2.3, the generated-sources record §5 (`GS-H11`, `GS-H5`): one file the crate root of two targets is judged by the union of their role packages, an example's development edges among them.
+from
+                    .flat_map(|(pkg, kind, _)| target_closure(pkg, kind, &graph))
+to
+                    .flat_map(|(pkg, _, _)| target_closure(pkg, "bin", &graph))
+end
+
+mutation gs-a-rs-non-crate-root-passes
+file xtask/src/trust.rs
+test -p xtask trust_generated::generator_tests
+expect killed
+why M3.6.6.2.3, the generated-sources record §5 (`GS-H11`, `GS-H5`): a `.rs` generator file that is no program target's crate root is refused as `trust-undeclared-input`.
+from
+                .is_some_and(|e| e == "rs")
+to
+                .is_some_and(|e| e == "never")
+end
+
+mutation gs-another-role-s-script-passes
+file xtask/src/trust.rs
+test -p xtask trust_generated::generator_tests
+expect killed
+why M3.6.6.2.3, the generated-sources record §5 (`GS-H11`, `GS-H5`): a script lying in a role package of another role, by the innermost workspace member holding it, is refused.
+from
+                for (reader, pkg, role) in foreign(&[member.clone()].into()) {
+to
+                for (reader, pkg, role) in foreign(&BTreeSet::new()) {
+end
+
+mutation gs-a-generator-root-built-again
+file xtask/src/trust.rs
+test -p xtask trust_generated::generator_tests
+expect killed
+why M3.6.6.2.3, the generated-sources record §5 (`GS-H11`, `GS-H5`): a generator target that is itself a root is that root's own build, not built again.
+from
+                    if let Some(r) = root {
+to
+                    if let Some(r) = root.filter(|_| false) {
+end
+
+mutation gs-a-generator-s-manifests-unread
+file xtask/src/trust.rs
+test -p xtask trust_generated::generator_tests
+expect killed
+why M3.6.6.2.3, the generated-sources record §5 (`GS-H11`, `GS-H5`): a generator target's closure meets the manifest rules before its build: a crate root that is not `.rs` is refused there.
+from
+                    rules.manifests(&who, &target_closure(pkg, kind, &graph), &mut step4);
+to
+                    let _ = (&who, &rules);
+end
+
+mutation gs-a-generator-s-sites-unjudged
+file xtask/src/trust.rs
+test -p xtask trust_generated::generator_tests
+expect killed
+why M3.6.6.2.3, the generated-sources record §5 (`GS-H11`, `GS-H5`): the catalog's token rules and admissions judge every file a generator build compiles that no program's did.
+from
+    rules.files(&generator_compiled, &mut step4);
+to
+    let _ = &generator_compiled;
+end
+
+mutation gs-a-failed-generator-build-drops-the-step-s-refusals
+file xtask/src/trust.rs
+test -p xtask trust_generated::generator_tests
+expect killed
+why M3.6.6.2.3, the generated-sources record §5 (`GS-H11`, `GS-H5`): a generator build failing leaves step 4 unable to judge, its refusals beside the failure (`GS-H14`).
+from
+            return Err(crate::trust_generated::beside(
+                generator_failed.join("\n"),
+                &step4,
+            ));
+to
+            return Err(generator_failed.join("\n"));
+end
+
+mutation gs-a-step-4-refusal-is-ignored
+file xtask/src/trust.rs
+test -p xtask trust_generated::generator_tests
+expect killed
+why M3.6.6.2.3, the generated-sources record §5 (`GS-H11`, `GS-H5`): a refusal at step 4 ends the run, no inventory written (`GS-H14`).
+from
+        if !step4.is_empty() {
+            return Ok(refuse(step4));
+        }
+to
+        if step4.is_empty() {}
 end

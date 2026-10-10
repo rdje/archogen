@@ -559,27 +559,24 @@ fn run_cargo(
 /// target's name, `-` written `_`, as rustc's `--crate-name` takes it), to its package's directory (R8 2).
 pub type Targets = BTreeMap<(String, String), String>;
 
-/// Build `p` clean in `tree_dir`, into `target_dir`, and read every unit's dependency information.
+/// Compile one target of the package at `package` clean in `tree_dir` — `target_args` such as `["build", "--bin",
+/// NAME]` — and read every unit's dependency information, each refusal naming `who` (§3). Returns the units, in a fixed
+/// order, and cargo's JSON messages.
 #[allow(clippy::too_many_arguments)]
-fn build(
-    p: &Program,
+fn compile(
+    who: &str,
+    package: &str,
+    target_args: &[String],
     package_names: &BTreeMap<String, String>,
     targets: &Targets,
-    id_dir: &BTreeMap<String, String>,
     env: &[(String, String)],
     tree_dir: &Path,
-    target_dir: &Path,
     refused: &mut Vec<String>,
-) -> Result<Build, String> {
+) -> Result<(Vec<Unit>, String), String> {
     let name = package_names
-        .get(&p.package)
-        .ok_or_else(|| format!("`{}`: no package at `{}`", p.name, p.package))?;
-    let mut args: Vec<String> = Vec::new();
-    match &p.target {
-        Target::Test(t) => args.extend(["test", "--no-run", "--test", t].map(str::to_owned)),
-        Target::Bin(b) => args.extend(["build", "--bin", b].map(str::to_owned)),
-        Target::Lib => args.extend(["build", "--lib"].map(str::to_owned)),
-    }
+        .get(package)
+        .ok_or_else(|| format!("`{who}`: no package at `{package}`"))?;
+    let mut args: Vec<String> = target_args.to_vec();
     args.extend(
         [
             "--release",
@@ -645,7 +642,7 @@ fn build(
                 refused.push(format!(
                     "trust-undeclared-input: `{}` compiles `{crate_name}`, a unit whose crate root no one target of \
                      the commit's packages names",
-                    p.name
+                    who
                 ));
                 continue;
             }
@@ -663,7 +660,7 @@ fn build(
                     refused.push(format!(
                         "trust-undeclared-input: `{crate_name}` in `{}` depends on the environment variable `{var}`, \
                          which the commit does not hold",
-                        p.name
+                        who
                     ));
                 }
                 env_deps.push(dep.replace(&scratch, "").replace(&canonical_scratch, ""));
@@ -686,7 +683,7 @@ fn build(
                 } else if raw.starts_with('/') {
                     refused.push(format!(
                         "trust-undeclared-input: `{}` reads `{raw}`, outside the written tree",
-                        p.name
+                        who
                     ));
                     continue;
                 } else {
@@ -696,7 +693,7 @@ fn build(
                     Some(path) => {
                         files.insert(path);
                     }
-                    None => refused.push(format!("trust-undeclared-input: `{}` reads `{rel}`, which climbs out of the written tree", p.name)),
+                    None => refused.push(format!("trust-undeclared-input: `{}` reads `{rel}`, which climbs out of the written tree", who)),
                 }
             }
         }
@@ -708,7 +705,7 @@ fn build(
                 refused.push(format!(
                     "trust-undeclared-input: `{crate_name}` in `{}` is configured with `{t}`, a path outside the \
                      written tree",
-                    p.name
+                    who
                 ));
             }
         }
@@ -729,12 +726,43 @@ fn build(
             &b.configuration,
         ))
     });
-    if !units.iter().any(|u| u.package == p.package) {
+    if !units.iter().any(|u| u.package == package) {
         return Err(format!(
-            "`{}`'s build compiled nothing of its own package `{}`",
-            p.name, p.package
+            "`{who}`'s build compiled nothing of its own package `{package}`"
         ));
     }
+    Ok((units, stdout))
+}
+
+/// Build `p` clean in `tree_dir`, into `target_dir`, and read every unit's dependency information and its artifact.
+#[allow(clippy::too_many_arguments)]
+fn build(
+    p: &Program,
+    package_names: &BTreeMap<String, String>,
+    targets: &Targets,
+    id_dir: &BTreeMap<String, String>,
+    env: &[(String, String)],
+    tree_dir: &Path,
+    target_dir: &Path,
+    refused: &mut Vec<String>,
+) -> Result<Build, String> {
+    let target_args: Vec<String> = match &p.target {
+        Target::Test(t) => ["test", "--no-run", "--test", t]
+            .map(str::to_owned)
+            .to_vec(),
+        Target::Bin(b) => ["build", "--bin", b].map(str::to_owned).to_vec(),
+        Target::Lib => ["build", "--lib"].map(str::to_owned).to_vec(),
+    };
+    let (units, stdout) = compile(
+        &p.name,
+        &p.package,
+        &target_args,
+        package_names,
+        targets,
+        env,
+        tree_dir,
+        refused,
+    )?;
     // The root's artifact, from cargo's own report of what it wrote (R8 9).
     let mut artifact = None;
     for line in stdout.lines() {
@@ -1056,6 +1084,30 @@ fn tool_line(program: &str, args: &[&str], env: &[(String, String)], cwd: &Path)
 /// `trust-baseline-stale` on the baseline's host (§6, R7 remark e). A target's role packages are those its build
 /// compiles — its package's closure by normal edges, an example's by its package's development edges too, since an
 /// example compiles them (R5 remark 13) — among every root's role packages.
+/// A program target's closure, as its build compiles it: its package's by normal edges, an example's by its package's
+/// development edges too, since an example compiles them (§2, R5 remark 13).
+fn target_closure(
+    package: &str,
+    kind: &str,
+    graph: &[(String, String, String)],
+) -> BTreeSet<String> {
+    let mut closure: BTreeSet<String> = BTreeSet::new();
+    let mut todo = vec![package.to_owned()];
+    while let Some(pkg) = todo.pop() {
+        if !closure.insert(pkg.clone()) {
+            continue;
+        }
+        for (from, to, edge) in graph {
+            let followed =
+                edge == "normal" || (kind == "example" && edge == "dev" && from == package);
+            if *from == pkg && followed && !closure.contains(to) {
+                todo.push(to.clone());
+            }
+        }
+    }
+    closure
+}
+
 fn classify_programs(
     roots: &Roots,
     program_targets: &[(String, String, String)],
@@ -1076,20 +1128,7 @@ fn classify_programs(
                 && kind == "bin"
                 && p.target == Target::Bin(name.clone())
         });
-        let mut closure: BTreeSet<String> = BTreeSet::new();
-        let mut todo = vec![package.clone()];
-        while let Some(pkg) = todo.pop() {
-            if !closure.insert(pkg.clone()) {
-                continue;
-            }
-            for (from, to, edge) in graph {
-                let followed =
-                    edge == "normal" || (kind == "example" && edge == "dev" && *from == *package);
-                if *from == pkg && followed && !closure.contains(to) {
-                    todo.push(to.clone());
-                }
-            }
-        }
+        let closure = target_closure(package, kind, graph);
         let compiled: BTreeSet<String> = closure
             .into_iter()
             .filter(|p| role_packages.contains(p))
@@ -1153,6 +1192,204 @@ fn refuse(mut refused: Vec<String>) -> Outcome {
     refused.sort();
     refused.dedup();
     Outcome::Refused(refused)
+}
+
+/// The catalog's rules across one run (§3): every site they refuse, counted once however many programs compile it; the
+/// admissions the sites use; the manifests and the files already judged. A generator's build (the generated-sources
+/// record §5) is judged through the same `Rules` after the programs', so a site a root and a generator both compile is
+/// one site, admitted once, and an admission a generator's site uses is a use.
+struct Rules<'a> {
+    tree: &'a Tree,
+    tree_dir: &'a Path,
+    symlinks: &'a BTreeSet<String>,
+    admissions: &'a BTreeMap<Admission, usize>,
+    package_targets: &'a BTreeMap<String, Vec<String>>,
+    /// Every site the rules refused, admitted or not.
+    sites: usize,
+    /// How many sites each admission admits.
+    used: BTreeMap<Admission, usize>,
+    manifests_checked: BTreeSet<String>,
+    judged: BTreeSet<String>,
+}
+
+impl Rules<'_> {
+    /// The catalog's rules on a workspace manifest — no `[patch]` or `[replace]` swapping a dependency's source, no
+    /// `cargo-features`, no `rustflags` — over the root manifest every build reads (R8 remark 16), admitted, like a
+    /// package's manifest rule, only by the manifest's sha256.
+    fn workspace(&mut self, refused: &mut Vec<String>) {
+        if let Some(bytes) = self.tree.get("Cargo.toml") {
+            match manifest::parse(&String::from_utf8_lossy(bytes)) {
+                Ok(m) => {
+                    if let Err(why) = package::check_workspace("Cargo.toml", &m) {
+                        self.sites += 1;
+                        let admission = Admission {
+                            file: "Cargo.toml".to_owned(),
+                            rule: why.clone(),
+                            sha256: Digest::of(bytes).hex(),
+                        };
+                        if self.admissions.contains_key(&admission) {
+                            *self.used.entry(admission).or_default() += 1;
+                        } else {
+                            refused.push(format!("trust-undeclared-input: {why}, and no admission names it (manifest sha256 {})", admission.sha256));
+                        }
+                    }
+                }
+                Err(o) => refused.push(format!(
+                    "trust-undeclared-input: `Cargo.toml` line {}: {}",
+                    o.line, o.why
+                )),
+            }
+        }
+    }
+
+    /// The manifest rules over every package of `closure`, from the metadata graph, before any build of `who`: a build
+    /// script or a procedural macro is refused here, so none runs (§3, R2 B12), and a crate root that is not a `.rs`
+    /// file (R8 1); each manifest once across the run.
+    fn manifests(&mut self, who: &str, closure: &BTreeSet<String>, refused: &mut Vec<String>) {
+        for pkg in closure {
+            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not `.rs`; `mod`
+            // finds only `.rs` files, and `#[path]` and `include!` are refused, so with this every Rust source a root
+            // compiles is a `.rs` file (R8 1).
+            for src in self.package_targets.get(pkg).into_iter().flatten() {
+                if std::path::Path::new(src)
+                    .extension()
+                    .is_none_or(|e| e != "rs")
+                {
+                    refused.push(format!("trust-undeclared-input: `{}` reaches `{src}`, a crate root that is not a `.rs` file, which rustc compiles and no rule reads", who));
+                }
+            }
+            if !self.manifests_checked.insert(pkg.clone()) {
+                continue;
+            }
+            let path = if pkg.is_empty() {
+                "Cargo.toml".to_owned()
+            } else {
+                format!("{pkg}/Cargo.toml")
+            };
+            match self
+                .tree
+                .get(&path)
+                .map(|m| manifest::parse(&String::from_utf8_lossy(m)))
+            {
+                Some(Ok(m)) => {
+                    if let Err(why) = package::check_manifest(self.tree, pkg, &path, &m) {
+                        // A manifest rule has no line: its admission names the manifest, the catalog's reason, and
+                        // the manifest's own sha256, so any edit to the manifest is reviewed again.
+                        self.sites += 1;
+                        let bytes = self.tree.get(&path).unwrap_or_default();
+                        let admission = Admission {
+                            file: path.clone(),
+                            rule: why.clone(),
+                            sha256: Digest::of(bytes).hex(),
+                        };
+                        if self.admissions.contains_key(&admission) {
+                            *self.used.entry(admission).or_default() += 1;
+                        } else {
+                            refused.push(format!("trust-undeclared-input: `{}` reaches `{pkg}`: {why}, and no admission names it (manifest sha256 {})", who, admission.sha256));
+                        }
+                    }
+                }
+                Some(Err(o)) => refused.push(format!(
+                    "trust-undeclared-input: `{path}` line {}: {}",
+                    o.line, o.why
+                )),
+                None => refused.push(format!(
+                    "trust-undeclared-input: `{}` reaches a package with no tracked `{path}`",
+                    who
+                )),
+            }
+        }
+    }
+
+    /// The token rules over every `.rs` file `compiled` names — each file with the programs that read it — and no earlier
+    /// call judged, however it was read (§3; R8 10), and one admission per site.
+    fn files(&mut self, compiled: &BTreeMap<String, BTreeSet<String>>, refused: &mut Vec<String>) {
+        let mut found_sites: BTreeMap<Admission, (Vec<String>, Vec<u8>)> = BTreeMap::new();
+        for (f, readers) in compiled {
+            if !self.judged.insert(f.clone()) {
+                continue; // judged already: a site two programs compile is one site
+            }
+            let name = readers.iter().next().map_or("", |n| n.as_str());
+            if self.symlinks.contains(f) {
+                refused.push(format!(
+                    "trust-undeclared-input: `{name}` reads `{f}`, a symbolic link in the commit"
+                ));
+                continue;
+            }
+            let Some(blob) = self.tree.get(f) else {
+                refused.push(format!(
+                    "trust-undeclared-input: `{name}` reads `{f}`, which is not a blob of the commit"
+                ));
+                continue;
+            };
+            if fs::read(self.tree_dir.join(f)).ok().as_deref() != Some(blob) {
+                refused.push(format!(
+                    "trust-undeclared-input: `{f}`'s bytes after the build are not its blob's"
+                ));
+            }
+            if !std::path::Path::new(f.as_str())
+                .extension()
+                .is_some_and(|e| e.eq_ignore_ascii_case("rs"))
+            {
+                continue; // data other than Rust is hashed and never tokenised (R6 7)
+            }
+            match refused_sites(blob) {
+                Ok(found) => {
+                    for (line, column, rule) in found {
+                        self.sites += 1;
+                        match site_extent(blob, line, column) {
+                            Ok(extent) => found_sites
+                                .entry(Admission {
+                                    file: f.clone(),
+                                    rule,
+                                    sha256: Digest::of(extent).hex(),
+                                })
+                                .or_insert_with(|| (Vec::new(), extent.to_vec()))
+                                .0
+                                .push(format!("{f}:{line}")),
+                            Err(why) => refused.push(format!(
+                                "trust-undeclared-input: `{f}:{line}`: `{rule}`, a site whose extent cannot be read: {why}"
+                            )),
+                        }
+                    }
+                }
+                Err(why) => refused.push(format!(
+                    "trust-undeclared-input: `{f}` does not tokenize: {why}"
+                )),
+            }
+        }
+        // One admission per site: sites sharing a file, a rule and an extent's text pass only as many as the admissions
+        // naming them (R8 3).
+        for (key, (at, extent)) in &found_sites {
+            // An alias or a wrapper of a refused construct is inadmissible: its invocations name nothing a rule refuses,
+            // so no extent would pin them (R10 1).
+            if let Some(how) = inadmissible(&key.rule, extent) {
+                for site in at {
+                    refused.push(format!("trust-undeclared-input: `{site}`: `{}` {how}, so every invocation of it would go unpinned — inadmissible, whatever admits it", key.rule));
+                }
+            }
+            // An `include!` or a `path = "…"` compiles the file it names as Rust, and the rules read only `.rs` files:
+            // admitted, it must name one in a single string literal, or what it compiles would go unread (R9 remark 7).
+            if key.rule == "include" || key.rule == "path" {
+                for named in compiled_names(&key.rule, extent) {
+                    for site in at {
+                        refused.push(format!("trust-undeclared-input: `{site}`: `{}` names `{named}`, which is not a `.rs` file, so no rule would read what it compiles", key.rule));
+                    }
+                }
+            }
+            let admitted = self.admissions.get(key).copied().unwrap_or(0);
+            if at.len() > admitted {
+                for site in at {
+                    if admitted == 0 {
+                        refused.push(format!("trust-undeclared-input: `{site}`: `{}`, refused by the catalog's rules, and no admission names it (site sha256 {})", key.rule, key.sha256));
+                    } else {
+                        refused.push(format!("trust-undeclared-input: `{site}`: `{}`, refused by the catalog's rules: {} sites share this text and {admitted} admission(s) name it (site sha256 {})", key.rule, at.len(), key.sha256));
+                    }
+                }
+            }
+            *self.used.entry(key.clone()).or_default() += at.len().min(admitted);
+        }
+    }
 }
 
 /// Build the inventory of `commit` in the repository at `repo`, scratch under `out`.
@@ -1272,6 +1509,8 @@ pub fn inventory_with(
     let mut package_targets: BTreeMap<String, Vec<String>> = BTreeMap::new();
     // Every program target (§2): (package, kind, name).
     let mut program_targets: Vec<(String, String, String)> = Vec::new();
+    // Each program target by its crate root, as a generator file names it (the generated-sources record §5).
+    let mut program_roots: BTreeMap<String, Vec<(String, String, String)>> = BTreeMap::new();
     // Every target, by package: its kinds and its name, so a root's target is known to exist.
     let mut every_target: BTreeMap<String, Vec<(Vec<String>, String)>> = BTreeMap::new();
     for p in meta.get("packages").map(Json::elements).unwrap_or_default() {
@@ -1316,6 +1555,11 @@ pub fn inventory_with(
             let target_name = t.get("name").and_then(Json::as_str).unwrap_or_default();
             if let Some(kind) = PROGRAM_KINDS.iter().find(|k| kinds.contains(k)) {
                 program_targets.push((dir.clone(), (*kind).to_owned(), target_name.to_owned()));
+                program_roots.entry(src.clone()).or_default().push((
+                    dir.clone(),
+                    (*kind).to_owned(),
+                    target_name.to_owned(),
+                ));
             }
             every_target.entry(dir.clone()).or_default().push((
                 kinds.iter().map(|k| (*k).to_owned()).collect(),
@@ -1418,35 +1662,18 @@ pub fn inventory_with(
     let (program_targets, classifications_unused) =
         classify_programs(&roots, &program_targets, &graph);
 
-    let mut sites = 0usize;
-    let mut used: BTreeMap<Admission, usize> = BTreeMap::new();
-    let mut manifests_checked = BTreeSet::new();
-    // The catalog's rules on a workspace manifest — no `[patch]` or `[replace]` swapping a dependency's source, no
-    // `cargo-features`, no `rustflags` — over the root manifest every build reads (R8 remark 16), admitted, like a
-    // package's manifest rule, only by the manifest's sha256.
-    if let Some(bytes) = tree.get("Cargo.toml") {
-        match manifest::parse(&String::from_utf8_lossy(bytes)) {
-            Ok(m) => {
-                if let Err(why) = package::check_workspace("Cargo.toml", &m) {
-                    sites += 1;
-                    let admission = Admission {
-                        file: "Cargo.toml".to_owned(),
-                        rule: why.clone(),
-                        sha256: Digest::of(bytes).hex(),
-                    };
-                    if roots.admissions.contains_key(&admission) {
-                        *used.entry(admission).or_default() += 1;
-                    } else {
-                        refused.push(format!("trust-undeclared-input: {why}, and no admission names it (manifest sha256 {})", admission.sha256));
-                    }
-                }
-            }
-            Err(o) => refused.push(format!(
-                "trust-undeclared-input: `Cargo.toml` line {}: {}",
-                o.line, o.why
-            )),
-        }
-    }
+    let mut rules = Rules {
+        tree: &tree,
+        tree_dir: &tree_dir,
+        symlinks: &symlinks,
+        admissions: &roots.admissions,
+        package_targets: &package_targets,
+        sites: 0,
+        used: BTreeMap::new(),
+        manifests_checked: BTreeSet::new(),
+        judged: BTreeSet::new(),
+    };
+    rules.workspace(&mut refused);
 
     // The manifest rules over every package in a program's closure, from the metadata graph, before any build:
     // a build script or a procedural macro is refused here, so none runs (§3, R2 B12); the harness's development
@@ -1465,58 +1692,7 @@ pub fn inventory_with(
                 }
             }
         }
-        for pkg in closure {
-            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not `.rs`; `mod`
-            // finds only `.rs` files, and `#[path]` and `include!` are refused, so with this every Rust source a root
-            // compiles is a `.rs` file (R8 1).
-            for src in package_targets.get(&pkg).into_iter().flatten() {
-                if std::path::Path::new(src)
-                    .extension()
-                    .is_none_or(|e| e != "rs")
-                {
-                    refused.push(format!("trust-undeclared-input: `{}` reaches `{src}`, a crate root that is not a `.rs` file, which rustc compiles and no rule reads", p.name));
-                }
-            }
-            if !manifests_checked.insert(pkg.clone()) {
-                continue;
-            }
-            let path = if pkg.is_empty() {
-                "Cargo.toml".to_owned()
-            } else {
-                format!("{pkg}/Cargo.toml")
-            };
-            match tree
-                .get(&path)
-                .map(|m| manifest::parse(&String::from_utf8_lossy(m)))
-            {
-                Some(Ok(m)) => {
-                    if let Err(why) = package::check_manifest(&tree, &pkg, &path, &m) {
-                        // A manifest rule has no line: its admission names the manifest, the catalog's reason, and
-                        // the manifest's own sha256, so any edit to the manifest is reviewed again.
-                        sites += 1;
-                        let bytes = tree.get(&path).unwrap_or_default();
-                        let admission = Admission {
-                            file: path.clone(),
-                            rule: why.clone(),
-                            sha256: Digest::of(bytes).hex(),
-                        };
-                        if roots.admissions.contains_key(&admission) {
-                            *used.entry(admission).or_default() += 1;
-                        } else {
-                            refused.push(format!("trust-undeclared-input: `{}` reaches `{pkg}`: {why}, and no admission names it (manifest sha256 {})", p.name, admission.sha256));
-                        }
-                    }
-                }
-                Some(Err(o)) => refused.push(format!(
-                    "trust-undeclared-input: `{path}` line {}: {}",
-                    o.line, o.why
-                )),
-                None => refused.push(format!(
-                    "trust-undeclared-input: `{}` reaches a package with no tracked `{path}`",
-                    p.name
-                )),
-            }
-        }
+        rules.manifests(&p.name, &closure, &mut refused);
     }
     if !refused.is_empty() {
         return Ok(refuse(refused));
@@ -1548,98 +1724,16 @@ pub fn inventory_with(
         }
     }
 
-    // The token rules over every `.rs` file a compilation read, however it read it (§3; R8 10), each file once, so a
-    // site two programs compile is one site (R8 remark 20).
-    let mut compiled: BTreeMap<&String, BTreeSet<&String>> = BTreeMap::new();
+    // The token rules over every `.rs` file a compilation read, however it read it (§3; R8 10), each file once.
+    let mut compiled: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
     for (name, b) in &builds {
         for u in &b.units {
             for f in &u.files {
-                compiled.entry(f).or_default().insert(name);
+                compiled.entry(f.clone()).or_default().insert(name.clone());
             }
         }
     }
-    let mut found_sites: BTreeMap<Admission, (Vec<String>, Vec<u8>)> = BTreeMap::new();
-    for (f, readers) in &compiled {
-        let name = readers.iter().next().map_or("", |n| n.as_str());
-        if symlinks.contains(*f) {
-            refused.push(format!(
-                "trust-undeclared-input: `{name}` reads `{f}`, a symbolic link in the commit"
-            ));
-            continue;
-        }
-        let Some(blob) = tree.get(f) else {
-            refused.push(format!(
-                "trust-undeclared-input: `{name}` reads `{f}`, which is not a blob of the commit"
-            ));
-            continue;
-        };
-        if fs::read(tree_dir.join(f)).ok().as_deref() != Some(blob) {
-            refused.push(format!(
-                "trust-undeclared-input: `{f}`'s bytes after the build are not its blob's"
-            ));
-        }
-        if !std::path::Path::new(f.as_str())
-            .extension()
-            .is_some_and(|e| e.eq_ignore_ascii_case("rs"))
-        {
-            continue; // data other than Rust is hashed and never tokenised (R6 7)
-        }
-        match refused_sites(blob) {
-            Ok(found) => {
-                for (line, column, rule) in found {
-                    sites += 1;
-                    match site_extent(blob, line, column) {
-                        Ok(extent) => found_sites
-                            .entry(Admission {
-                                file: (*f).clone(),
-                                rule,
-                                sha256: Digest::of(extent).hex(),
-                            })
-                            .or_insert_with(|| (Vec::new(), extent.to_vec()))
-                            .0
-                            .push(format!("{f}:{line}")),
-                        Err(why) => refused.push(format!(
-                            "trust-undeclared-input: `{f}:{line}`: `{rule}`, a site whose extent cannot be read: {why}"
-                        )),
-                    }
-                }
-            }
-            Err(why) => refused.push(format!(
-                "trust-undeclared-input: `{f}` does not tokenize: {why}"
-            )),
-        }
-    }
-    // One admission per site: sites sharing a file, a rule and an extent's text pass only as many as the admissions
-    // naming them (R8 3).
-    for (key, (at, extent)) in &found_sites {
-        // An alias or a wrapper of a refused construct is inadmissible: its invocations name nothing a rule refuses,
-        // so no extent would pin them (R10 1).
-        if let Some(how) = inadmissible(&key.rule, extent) {
-            for site in at {
-                refused.push(format!("trust-undeclared-input: `{site}`: `{}` {how}, so every invocation of it would go unpinned — inadmissible, whatever admits it", key.rule));
-            }
-        }
-        // An `include!` or a `path = "…"` compiles the file it names as Rust, and the rules read only `.rs` files:
-        // admitted, it must name one in a single string literal, or what it compiles would go unread (R9 remark 7).
-        if key.rule == "include" || key.rule == "path" {
-            for named in compiled_names(&key.rule, extent) {
-                for site in at {
-                    refused.push(format!("trust-undeclared-input: `{site}`: `{}` names `{named}`, which is not a `.rs` file, so no rule would read what it compiles", key.rule));
-                }
-            }
-        }
-        let admitted = roots.admissions.get(key).copied().unwrap_or(0);
-        if at.len() > admitted {
-            for site in at {
-                if admitted == 0 {
-                    refused.push(format!("trust-undeclared-input: `{site}`: `{}`, refused by the catalog's rules, and no admission names it (site sha256 {})", key.rule, key.sha256));
-                } else {
-                    refused.push(format!("trust-undeclared-input: `{site}`: `{}`, refused by the catalog's rules: {} sites share this text and {admitted} admission(s) name it (site sha256 {})", key.rule, at.len(), key.sha256));
-                }
-            }
-        }
-        *used.entry(key.clone()).or_default() += at.len().min(admitted);
-    }
+    rules.files(&compiled, &mut refused);
 
     // A program that runs two roles (§2): any root whose build compiles a role package of another role — a library
     // root too, which runs its role until an executable does (R8 remark 13) — and the harness, whose exemption is its
@@ -1715,6 +1809,188 @@ pub fn inventory_with(
             )
         })
         .collect();
+
+    // Step 4 (the generated-sources record §2, §5): each live form's generator files, judged against each program that
+    // reads its declared file. A program target's crate root is refused when its role packages hold another role's,
+    // and is otherwise built as a root is — manifest rules first, its sites judged with the programs' — unless it is a
+    // root, whose build it is; a `.rs` file that is no program target's crate root is refused; a script is judged by
+    // the innermost workspace member holding it. The step runs to its end; a build that fails leaves it unable to judge.
+    let mut step4: Vec<String> = Vec::new();
+    let mut generator_failed: Vec<String> = Vec::new();
+    // What each generator build compiled, by file, with the generator files whose builds read it: step 5's.
+    let mut generator_reads: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    let mut generator_built: BTreeSet<(String, String, String)> = BTreeSet::new();
+    let role_of_package: BTreeMap<&String, BTreeSet<&str>> = {
+        let mut m: BTreeMap<&String, BTreeSet<&str>> = BTreeMap::new();
+        for r in roots.programs.iter().filter(|r| r.pair.is_none()) {
+            for rp in &r.role_packages {
+                m.entry(rp).or_default().insert(r.role.as_str());
+            }
+        }
+        m
+    };
+    let own_roles = |p: &Program| -> BTreeSet<String> {
+        match &p.pair {
+            Some((x, y)) => roots
+                .programs
+                .iter()
+                .filter(|r| r.name == *x || r.name == *y)
+                .map(|r| r.role.clone())
+                .collect(),
+            None => [p.role.clone()].into(),
+        }
+    };
+    let all_role_packages: BTreeSet<&String> = role_of_package.keys().copied().collect();
+    for g in &live {
+        let readers: Vec<&Program> = roots
+            .programs
+            .iter()
+            .filter(|p| reads[&p.name].contains(&g.path))
+            .collect();
+        for file in &g.generators {
+            // What another role holds of `held`, for each reader: (reader, package, role).
+            let foreign = |held: &BTreeSet<String>| -> Vec<(String, String, String)> {
+                let mut out = Vec::new();
+                for p in &readers {
+                    let mine = own_roles(p);
+                    for pkg in held {
+                        for role in role_of_package.get(pkg).into_iter().flatten() {
+                            if !mine.contains(*role) {
+                                out.push((p.name.clone(), pkg.clone(), (*role).to_owned()));
+                            }
+                        }
+                    }
+                }
+                out
+            };
+            if let Some(owned) = program_roots.get(file) {
+                let what = owned
+                    .iter()
+                    .map(|(pkg, kind, name)| format!("the {kind} `{name}` of `{pkg}`"))
+                    .collect::<Vec<_>>()
+                    .join(" and ");
+                // The union of its targets' role packages, as the parent computes them for every program target.
+                let held: BTreeSet<String> = owned
+                    .iter()
+                    .flat_map(|(pkg, kind, _)| target_closure(pkg, kind, &graph))
+                    .filter(|pkg| all_role_packages.contains(pkg))
+                    .collect();
+                let refused_here = foreign(&held);
+                for (reader, pkg, role) in &refused_here {
+                    step4.push(format!(
+                        "trust-shared-program: `{reader}` reads `{}`, generated by `{file}`, the crate root of {what}, whose \
+                         build compiles `{pkg}`, a role package of the {role} — not built",
+                        g.path
+                    ));
+                }
+                if !refused_here.is_empty() {
+                    continue;
+                }
+                for (pkg, kind, name) in owned {
+                    let target = (pkg.clone(), kind.clone(), name.clone());
+                    // A generator target that is itself a root is that root's own build.
+                    let root = roots.programs.iter().find(|r| {
+                        r.pair.is_none()
+                            && r.package == *pkg
+                            && (r.target == Target::Bin(name.clone())
+                                || (r.target == Target::Lib && kind != "bin" && kind != "example"))
+                    });
+                    if let Some(r) = root {
+                        for u in &builds[&r.name].units {
+                            for f in &u.files {
+                                generator_reads
+                                    .entry(f.clone())
+                                    .or_default()
+                                    .insert(file.clone());
+                            }
+                        }
+                        continue;
+                    }
+                    if !generator_built.insert(target.clone()) {
+                        continue;
+                    }
+                    let who = format!("generator {file}");
+                    let before = step4.len();
+                    rules.manifests(&who, &target_closure(pkg, kind, &graph), &mut step4);
+                    if step4.len() > before {
+                        continue; // refused before its build, so nothing of it runs
+                    }
+                    let target_args: Vec<String> = match kind.as_str() {
+                        "bin" => vec!["build".into(), "--bin".into(), name.clone()],
+                        "example" => vec!["build".into(), "--example".into(), name.clone()],
+                        _ => vec!["build".into(), "--lib".into()],
+                    };
+                    let _ = fs::remove_dir_all(&cargo_home);
+                    let target_dir = out
+                        .join("target-generators")
+                        .join(format!("{}-{kind}-{name}", pkg.replace('/', "-")));
+                    let env = environment(&pin, &cargo_home, &target_dir)?;
+                    match compile(
+                        &who,
+                        pkg,
+                        &target_args,
+                        &package_names,
+                        &targets,
+                        &env,
+                        &tree_dir,
+                        &mut step4,
+                    ) {
+                        Ok((units, _)) => {
+                            for u in &units {
+                                for f in &u.files {
+                                    generator_reads
+                                        .entry(f.clone())
+                                        .or_default()
+                                        .insert(file.clone());
+                                }
+                            }
+                        }
+                        Err(why) => generator_failed.push(why),
+                    }
+                }
+            } else if std::path::Path::new(file)
+                .extension()
+                .is_some_and(|e| e == "rs")
+            {
+                step4.push(format!(
+                    "trust-undeclared-input: {ROOTS}: `(defgenerated \"{}\" …)`'s generator `{file}` is a `.rs` file \
+                     that is no program target's crate root — a generator file is a script or a program target's crate \
+                     root, whose build the instrument computes",
+                    g.path
+                ));
+            } else if let Some(member) =
+                crate::trust_generated::innermost_member(file, package_names.keys())
+            {
+                for (reader, pkg, role) in foreign(&[member.clone()].into()) {
+                    step4.push(format!(
+                        "trust-shared-program: `{reader}` reads `{}`, generated by `{file}`, which lies in `{pkg}`, a \
+                         role package of the {role}",
+                        g.path
+                    ));
+                }
+            }
+        }
+    }
+    // The catalog's token rules and admissions over every file a generator build read that no program's did.
+    let generator_compiled: BTreeMap<String, BTreeSet<String>> = generator_reads
+        .iter()
+        .map(|(f, gens)| {
+            (
+                f.clone(),
+                gens.iter().map(|g| format!("generator {g}")).collect(),
+            )
+        })
+        .collect();
+    rules.files(&generator_compiled, &mut step4);
+    if !generator_failed.is_empty() {
+        return Err(crate::trust_generated::beside(
+            generator_failed.join("\n"),
+            &step4,
+        ));
+    }
+    if !step4.is_empty() {
+        return Ok(refuse(step4));
+    }
 
     // The build as a whole (§3).
     let hash = |p: &str| {
@@ -2070,7 +2346,7 @@ pub fn inventory_with(
         .admissions
         .iter()
         .flat_map(|(a, n)| {
-            let left = n.saturating_sub(used.get(a).copied().unwrap_or(0));
+            let left = n.saturating_sub(rules.used.get(a).copied().unwrap_or(0));
             std::iter::repeat_n(format!("{}:{}:{}", a.file, a.rule, a.sha256), left)
         })
         .collect();
@@ -2101,7 +2377,7 @@ pub fn inventory_with(
         ("build-configuration", build_configuration),
         ("programs", Json::Array(programs)),
         ("shared", Json::Array(shared)),
-        ("refused-sites", s(sites.to_string())),
+        ("refused-sites", s(rules.sites.to_string())),
         ("admissions-unused", strings(unused)),
         ("generated-marked", strings(generated_marked)),
         ("program-targets", Json::Array(program_targets)),
@@ -3049,7 +3325,7 @@ pub(crate) mod tests {
     const ADMIT: &str = "sha256";
 
     /// An admission of the site whose extent — the text §3 hashes — is `extent`.
-    fn admit(file: &str, rule: &str, extent: &str) -> String {
+    pub(crate) fn admit(file: &str, rule: &str, extent: &str) -> String {
         format!(
             "(defadmit (file \"{file}\") (rule \"{rule}\") ({ADMIT} \"{}\") (reason \"a fixture\"))\n",
             Digest::of(extent.as_bytes()).hex()
