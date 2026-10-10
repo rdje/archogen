@@ -5,6 +5,7 @@
 - **Status:** `active`
 - **Owner / source:** leaf `PROGRAM.32.4` (`docs/tasks/PROGRAM.md`). This is the review history of
   [[decision_task-tree-sealing]], kept apart from it as `docs/reviews/INDEX.md` describes.
+  Reopened `2026-10-10` by leaf `PROGRAM.69` for the record's amendment, from round 2.
 
 ## The fact / decision
 
@@ -33,6 +34,129 @@ against the trees `940baf1`'s parent held.
 | P8 | defect | figures that did not reproduce at their commit | corrected at the commit: `PROGRAM.md` 384 721 bytes before, 978 lines and 113 467 bytes after; the inventory's aggregate re-measured; the correction noted in `PROGRAM.32.3` and the tree's changelog |
 | P9 | nit | the book overstated what the index check covers | "has lost or changed no row it ever held", and "since the commit that sealed it" |
 | P10 | nit | a traceback in place of a named breach; the work-unit pattern's missing boundary; a stray file at the folder's root; the folder's size; a silent seal of a `done` leaf with a `pending` commit | named breaches; a boundary; stray files refused; the size stated as unbounded by design; a warning (the tool, the record) |
+
+**Round 2**, `2026-10-10`, of `PROGRAM.69`'s amendment — the outermost closed subtree as the unit, the tool and its
+gate, the record's text and the seal of `M1`, `M2` and `M3`, staged on `fea69ad` — by a read-only context that had not
+written them. With its own parser it re-derived the seal: the 28 new files byte for byte `fea69ad`'s leaf spans and
+exactly the outermost closed set there, every stub two lines linking its file, the stubs expanded giving back each
+tree, every index row matching its file. It ran nine fixtures and ten mutations of its own. Verdict: 5 defects. The
+answering context made leg 5's outermost rule an equality, added five arms (34 in all), and ran ten mutations of the
+tool, each killed — the three that had survived among them.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R2-1 | defect | no arm held the unit's main rule: a mutation choosing the deepest closed leaf survived every arm, as did one deleting the missing-intermediate rule and one confining the outermost check to a top-level outermost | arms for a closed subtree below an open one sealed whole in one file, two leaves with no leaf between them and an open subtree sealed apart, and a part sealed by hand apart from its closed subtree below an open one; the three mutations killed |
+| R2-2 | defect | leg 5 refused only a seal too narrow, so a hand-made `X/X.1.2.md` over `X.1.2.1` and `X.1.2.2`, with no leaf `X.1.2`, passed while the tool seals them apart | leg 5 requires each sealed leaf's outermost closed subtree, in the tree before the seal, to be its file's; an arm for parts sealed together that no one leaf holds; the record states the missing-intermediate rule |
+| R2-3 | defect | the census figures did not reproduce from `fea69ad` as bytes: `M1` and `M2` matched as characters, `M3` matched neither | re-measured in bytes at `fea69ad` by `target/m369/census.py`: 274 483 bytes, `M1` 85 113, `M2` 105 946, `M3` 83 424, 261 610 in 28 subtrees, and the seal's 261 582, one trailing blank line per subtree apart; corrected in the record, the script and the leaf |
+| R2-4 | defect | the record's unamended sentences contradicted the amendment: a subtree with an open leaf staying whole, what stays live, reopening's "new top-level subtree", legs 5 and 6 | each sentence kept with a dated amendment beside it |
+| R2-5 | defect | `DOCTRINE_ENFORCEMENT.md`'s `TASK-HISTORY` row still named top-level subtrees alone, and its legs lacked the outermost clause and "at any depth" | the row updated |
+| R2-6 | remark | the book said "the largest part" moves, in the singular, and listed no new check | "each finished part … the largest it can"; the outermost clause and leg 6 listed |
+| R2-7 | remark | the seal judges the working tree and leg 5 the commit, so an uncommitted new open leaf makes a seal refuse itself | stated in "How to apply": commit such an edit first |
+| R2-8 | remark | the whole-subtree arm passed for leg 6's sake as well; a mutation checking one sealed leaf's outermost survived | the arm drops the open child, so leg 5 alone refuses it; the one-leaf mutation is equivalent while leg 4 holds — every leaf of a file lies under its key, and below an outermost closed key every leaf's outermost is that key |
+| R2-9 | remark, not this change's | leg 6 compared a live leaf with its own tree file's seals alone | leg 6 now reads every tree's seals; an arm for a live leaf under a sealed subtree filed in another tree |
+
+**Round 3**, `2026-10-10`, a confirmation of round 2's answers and of the whole change again, by a read-only context
+that had seen neither the change's writing nor round 2's reasoning. It re-derived the seal with its own code — the 28
+files exactly the outermost closed set at `fea69ad`, byte for byte, the stubs expanded giving back each tree — and every
+figure, in bytes, by a census over every tree file; ran seven edge fixtures, all as the record says; and ran twenty
+mutations of its own, ten killed. Verdict: 2 defects. The answering context added six arms (38 in all) and two rules,
+and ran seventeen mutations of its own, each killed; of the reviewer's twenty, fourteen are killed now and six survive,
+each shown below to be equivalent or held by another leg.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R3-1 | defect | R2-3 said the figures were corrected in the leaf, and `PROGRAM.69` and its frontier row still held the first ones | a dated correction beside the leaf's figures; the frontier row rewritten at the close |
+| R3-2 | defect | two corners of the unit's rule had no arm: a missing intermediate below depth 3 (`k == 3` survived, sealing `X.1.2.1.1` and `.2` together) and a top-level subtree with no leaf of its own (split, and the gate passed) | fixture leaves `T.2.2.5.1` and `.2` under an open leaf, sealed apart, and `T.4.1` and `.2` with no `T.4`, sealed together as `T.4`; both mutations killed |
+| R3-3 | remark | survivors that are gaps: `blocked` in no fixture; the seal's filter of a subtree already sealed in no arm; `under`'s dot boundary held only by the real history | `T.2.2.1` `blocked`; an arm sealing over a late leaf under a sealed subtree, the file left as sealed; `T.2.10` beside `T.2.1`; each mutation killed. The six survivors: one leaf's outermost checked alone (equivalent while leg 4 holds), leg 4's placement removed (held by leg 5's outermost equality), `units` without its `seen` test (every candidate is the leaf's top-level key or a leaf of the tree, both seen), leg 5 passing a leaf with no closed subtree (held by its `done` and whole-subtree checks), leg 6 strictly below a key (the key's own leaf is held by the sealed-and-live check), `present` without stubs (a stub's key holds no live leaf but by leg 6's breach) |
+| R3-4 | remark | a leaf filed under another tree's name made a seal misreport, `units` judging one file and leg 6 every file | refused by name: the gate notes a leaf not under its tree's name, and a seal writes nothing for such a tree; two arms |
+| R3-5 | remark, not this change's | leg 5 compared leaf bodies, so a sealed file reordered or padded with blank lines, its row recomputed before its first commit, passed | leg 5 rebuilds the file from its leaves' spans in the base tree's order and compares bytes; the 170 sealed files pass it; an arm for a reordered file |
+| R3-6 | remark | the record's "a feature's history in one file" unamended; "whose parent's is not" wrong for a parent that is no leaf; the script's header figure about top-level subtrees | an inline amendment; "nearest ancestor leaf's"; "open top-level subtrees" |
+
+**Round 4**, `2026-10-10`, a second confirmation, by a read-only context that had seen neither the change's writing
+nor any earlier round's reasoning. Its own parser and unit rule gave exactly the 28 staged units, every file, tree,
+stub and row matching, and a clean clone's seal at `fea69ad` reproduced them; all 170 sealed files rebuilt byte for byte
+from their trees before their seals, the outermost subtree equal to each key. It fuzzed the tool: 840 seals of random
+trees over up to three rounds matched its oracle, every gate after each commit passing, no sealed file changing; and
+of 890 seals made by hand the gate accepted exactly those the tool makes. Verdict: 3 defects. The answering context
+reopened this history before appending the amendment's rounds; added three arms (41 in all)
+and a census mode to the tool; ran twenty mutations of its own, each killed.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R4-1 | defect | rounds 2 and 3 were appended to this history while its row read closed, and `REVIEW-HISTORY` then refuses ever to archive it — a closed history is frozen | the row reopened by a commit of its own, `ARCHOGEN-PROGRAM-0510`, before the rounds were appended; a new history file was the other route, and would be `docs/reviews/`' seventeenth, past its ceiling of sixteen — a ceiling every archived history's stub keeps counting, filed as `PROGRAM.70` |
+| R4-2 | defect | two of R3-3's six survivors are neither equivalent nor held: leg 6 strictly below a key passes a live leaf named as a sealed subtree that had no leaf of its own (`T.4`), and leg 5 passing a leaf with no closed subtree passes the tree's root leaf sealed by hand | an arm for each; both mutations killed; R3-3's claim for these two was wrong. The other four — one leaf's outermost checked alone, leg 4's placement, `units` without `seen`, `present` without stubs — re-argued equivalent by this round |
+| R4-3 | defect | the census figures had an untracked producer, `target/m369/census.py`, against `docs/CLAIM_VERIFICATION.md`'s third leg | `bash scripts/check_task_history.sh --census <COMMIT>`, the tool's own mode on its own `units`, with an arm and a mutation; `--census fea69ad` reproduces every figure; the record, the script and the leaf cite it |
+| R4-4 | remark | the leaf's 823 457 and 815 443 are a working tree's, and say not | marked so in the leaf's dated correction |
+| R4-5 | remark | the record's example "`M3.6.1` with its children": `M3.6.1` had none | "`M3.6.2` with `M3.6.2.1`" |
+| R4-6 | remark | "parts sealed together that no one leaf holds" is refused below the top level alone: a top-level subtree with no leaf of its own seals whole | "below the top level" in the record and the script |
+| R4-7 | remark, not this change's | the gate accepts a hand seal of a leaf with a column-0 line, which the seal refuses, so the book's "as the tool would have sealed it" says more than the gate checks | the book's sentence narrowed; the column-0 rule stays the seal's, since `PROGRAM/PROGRAM.3.md` already holds such a line |
+| R4-8 | remark | the "sealed and also live" note is equivalent to leg 6; the tree-name check's dot boundary is held only through the shared `under` | recorded; no change |
+
+**Round 5**, `2026-10-10`, a third confirmation, by a read-only context new to the change. It re-derived the seal and
+every figure with its own code, the census mode against its own parser; confirmed R4-1's route by archiving the history
+in a clone once its row closed; and judged the four survivors H, L, M and R equivalent, each with its argument. Verdict:
+2 defects. Since rounds 2 to 5 had each found one more rule of the tool no arm held, the answering context changed
+method as well as answering: a mutation sweep of the tool's whole core, below.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R5-1 | defect | no arm held the census's byte figures: span bytes without the final newline, every live leaf counted closed, and characters for bytes — R2-3's own error — each passed, the arm checking the subtree count alone | the arm asserts both totals of the fixture, measured by an implementation apart from the tool, a closed leaf holding multi-byte characters so bytes and characters differ; the census runs inside the unreadable-file handling |
+| R5-2 | defect | a first seal the gate refuses left its tree's new folder behind, and the gate then refused the repository; no arm wrote a seal and saw it refused | the seal notes the folders it makes and removes them on rollback; an arm for a first seal refused, the history left as it was and the gate passing after it, and one for a refused seal into an existing history, its index put back |
+| R5-3 | remark | `--census` was named nowhere a reader looks for a tool | `TOOLBOX.md`, `DOCTRINE_ENFORCEMENT.md`'s row, the book's console block and the record |
+| R5-4 | remark, not this change's | a stub's commit was free text to the gate | leg 5 compares each stub's commit with the one the seal derives — the leaf's `Commit:` field before the seal, else the Commit Log of the tree it ran on; two stubs of the first seal, `M1.26.2` and `PROGRAM.18`, said "in the tree's Commit Log" with no row there, round 1's P1 having fixed the fallback for later seals only, and each is corrected in its tree with a changelog line. A row's date stays unchecked: it is the day the seal ran, in UTC, which no commit records |
+| R5-5 | remark | "a seal made by hand … is refused" says more than the gate checks, which accepts a hand seal byte for byte the tool's | the record and the book: a seal the tool would not make |
+
+**The sweep**, `2026-10-10`, by the answering context after round 5: every refusal of the tool's Python core silenced,
+every `if` made never and always true, every refusing `sys.exit` made a `print`, one at a time, each mutant's
+self-test run in a scratch of its own. The runner, `target/m369/sweep.py`, is untracked scratch, so the counts below are
+not durable and say so (`docs/CLAIM_VERIFICATION.md`, the third leg); its mutants are the operators just named, on the
+lines the core holds. The first run, of 183 mutants, killed 136. Of the 47 others, 33 were rules no arm held, and each
+gained one: a `Commit:` field naming its work unit on its second line; the Commit Log fallback, with the row the
+sealing commit adds; a malformed row; a row's lines, bytes or sha256 alone wrong before the seal's first commit, when
+leg 3 has no commit to compare; a stub linking another sealed file; a sealed leaf its tree never held; a sealed file
+of a tree its base did not hold; a refused seal into an existing history, its index put back; the census of a commit
+git does not know, and a template it passes over; the seal of a tree that does not exist; the seal's warning of a
+leaf naming no commit; a failed `git log` of the index and of the history, git made to fail; a tree file that is not
+UTF-8, to the gate and to the census. And the index's layout — one table per tree, opening with its header, its rows
+under it — became a check of its own, since a row written into another tree's table passed. The second run, of 196,
+killed 175; of the 21 others, seven were gaps — the layout's two other rules; two refusals whose mutants printed their
+message and then a traceback, so every arm now also refuses a traceback; and the seal's own refusal of a foreign leaf,
+which the gate and the rollback masked — each armed. The third run killed 182 of 196, the self-test at 63 arms; the 14
+others are below, each with its reason.
+
+| Line of the core | Mutant | Why it survives |
+| --- | --- | --- |
+| `if args not in _git:` | always true | the git cache bypassed: performance alone |
+| `if subtree(lid, tree_name) is None:`, in `units` | never true | the tree's root leaf has no prefix of two components, so nothing is added: equivalent |
+| leg 4's "not in subtree" | silenced | held by leg 5: a leaf's outermost closed subtree is an ancestor of it, so equality places it |
+| "sealed twice" | silenced | the second file's key is not the leaf's outermost (leg 5), and the stub links one file only (leg 4) |
+| `elif line.strip():`, reading the history's log | always true | a blank line of the log taken for a path no file has: equivalent |
+| "sealed … and also live here" | silenced | leg 6 refuses the same live leaf |
+| `if all(lid in was for lid in sealed_ids):` | always true | the byte rebuild run without a missing leaf adds a note only beside "did not hold": equivalent |
+| `if status(blines, bf) != "done":` | never true, or its note silenced | a leaf not `done` has no closed subtree, so leg 5's equality refuses it |
+| the census's `if not live:` | never true | a tree with nothing to count prints a line of zeros; the totals are the same: cosmetic |
+| the seal's "would lose" | never true, or `exit` made `print` | defensive: it fires only if the seal's own slicing is wrong, which no input reaches |
+| the seal's "would not reconstruct" | never true, or `exit` made `print` | defensive, likewise |
+
+**Round 6**, `2026-10-10`, a fourth confirmation, by a read-only context new to the change, on the sweep's state. It
+re-derived the seal with its own code and re-sealed `72bd446` with the tool in a work tree of its own, every file,
+`M2` and `M3` byte for byte; re-ran the sweep in a clone, the same 182 of 196; and ran its own experiments on the
+survivors. Verdict: 5 defects. Rounds 2 to 6 found 5, 2, 3, 2 and 5: the answers are committed as they stand, the
+leaf open, and the review stays open until a round finds no defect.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R6-1 | defect | the sweep's reason for "sealed twice" held only for two files: a row repeated for one file, any date, was caught by that note alone, and passed with it silenced | a row twice in its tree's table refused by name; an arm. The sweep's reason for that survivor is corrected here: it is held by this refusal, and by legs 4 and 5 for two files |
+| R6-2 | defect | a file the gate cannot read, met after the seal wrote, escaped the rollback: the seal's writes stayed | the seal's gate run inside the unreadable-file handling, so it rolls back as any refusal does; an arm sealing beside a tree that is not UTF-8, the trees and the history left as they were |
+| R6-3 | defect | the two first-seal stubs R5-4 "corrected" were right: `PROGRAM.18`'s Commit Log row reads `` `PROGRAM.18` → `PROGRAM.18.1` ``, and `M1.26.2.2`'s row closes `M1.26.2`; the gate's matcher reads one row shape alone | the stub-commit check R5-4 added is withdrawn — whether a row is a leaf's is prose the gate cannot judge — the two stubs restored as the first seal wrote them, their changelog lines removed, and the limit stated in the record, the script and the book |
+| R6-4 | defect | the record and the book said the gate refuses any seal the tool would not make, and it accepts a hand seal of a leaf with a column-0 line, and any row date | "when it differs from the tool's in its files, its stubs' links or its units", the commit text, the date and the column-0 rule named as the seal's alone |
+| R6-5 | defect | figures naming no state: `docs/tasks/` "818 704 → 562 833" matched no commit, "256 KB below" its ceiling was false at the commit, and counts from untracked runners said so in the history alone | the seal's 255 871 bytes, a difference that holds in every state, and 818 985 at `72bd446`; the changelog's claim rewritten; every count from an untracked runner marked so where it appears |
+| R6-6 | remark | the stub check's reading of the working tree raised a traceback on a tree removed | gone with the check (R6-3) |
+| R6-7 | remark | the sweep called "would lose" unreachable, and a tree holding one id twice reaches it | a leaf named twice in a tree refused by name, by the gate and by the seal before it writes; an arm each. The survivor's reason is corrected here: reached only through that refusal's input, which no longer reaches the seal's proof |
+| R6-8 | remark | "five review rounds" counted round 1, `PROGRAM.32.4`'s | "rounds 2 to 6" |
+| R6-9 | remark | the census described as measuring "the finished leaves a seal would take" | the record's own words in `TOOLBOX.md` and the book: `done` leaves under open top-level subtrees, and those in closed subtrees below them |
+| R6-10 | remark | the reviews index row said one round | six, open |
+| R6-11 | nit | round 4's row: "890 hand seals as the tool makes them" | "of 890 hand seals the gate accepted exactly those the tool makes" |
 
 ## Why
 

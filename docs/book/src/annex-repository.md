@@ -163,7 +163,9 @@ $ bash scripts/check_history_ledgers.sh --self-test  # its RED arms, on scratch 
 A task tree records every leaf of its work, with its checklist and evidence. Most of it is finished work: on
 `2026-09-30`, 77% of `docs/tasks/M1.md` and 79% of `docs/tasks/PROGRAM.md`.
 - **What moves.** Once every leaf of one of a tree's top-level parts is done, those leaves move, byte for byte, into
-  one file under `docs/task-history/`.
+  one file under `docs/task-history/`. A top-level part can stay open for long — one of its leaves waiting on a
+  decision — so, below an open one, each finished part moves the same way, the largest it can, into a file of its own;
+  when the open part closes, the rest of it follows into its own file (`PROGRAM.69`).
 - **What stays.** Each leaf leaves two lines in the tree, its name and a link to where its text now is. The live
   work, the list of what is next and the logs stay where they were.
 - **The proof.** Before anything is written, the tool checks that putting every leaf back would give the tree as it
@@ -178,12 +180,16 @@ A task tree records every leaf of its work, with its checklist and evidence. Mos
 - that no sealed file has changed since the commit that sealed it;
 - that `docs/task-history/INDEX.md` lists every sealed file and has lost or changed no row it ever held;
 - that every sealed leaf has exactly one two-line placeholder in its tree, linking the file that holds it;
-- that every sealed leaf is, byte for byte, what its tree held just before it was sealed, so a hand-made or edited
-  seal is refused.
+- that every sealed leaf is, byte for byte, what its tree held just before it was sealed, so a seal made by hand or
+  edited is refused when its files, its placeholders' links or its parts differ from what the tool makes — each file
+  the largest finished part, whole. A placeholder's commit, a row's date and the rule against a line at column 0 are
+  the tool's alone, which the check does not read;
+- that no live leaf sits inside a part that is sealed, in any tree, and that each tree holds only its own leaves.
 
 ```console
 $ bash scripts/check_task_history.sh                  # the gate
 $ bash scripts/check_task_history.sh --seal M1        # seal what has closed in a tree, with its proof
+$ bash scripts/check_task_history.sh --census HEAD    # done leaves under open top-level parts, in bytes
 $ bash scripts/check_task_history.sh --self-test      # its RED arms, on scratch repositories
 ```
 

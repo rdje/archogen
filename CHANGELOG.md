@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — finished work leaves the task trees even while its parent stays open
+
+`ARCHOGEN-PROGRAM-0510` and `ARCHOGEN-PROGRAM-0511` (leaf `PROGRAM.69`, its review still open), `2026-10-10`.
+
+- A finished part of a task tree is now sealed out to `docs/task-history/` even when the larger part holding it stays
+  open — as `M3.6` does while one of its leaves waits on the director. 46 finished leaves of `M1`, `M2` and `M3` moved,
+  byte for byte, taking 255 871 bytes out of `docs/tasks/`, which had reached its 819 200-byte ceiling.
+- The gate that guards the sealed history grew stricter: each sealed file is rebuilt byte for byte from the tree before
+  its seal and must be the largest finished part; no live leaf may sit inside a sealed part in any tree; the index
+  keeps one table per tree and one row per sealed file; a tree names each leaf once. A census mode measures the
+  finished leaves under parts still open.
+- Validation: independent review rounds 2 to 6, each finding answered, the review still open; a mutation sweep of the
+  tool's core (its runner untracked), 182 of 196 mutants killed and the 14 others reasoned; 66 self-test arms; every
+  gate's self-test and every doctrine green.
+
 ## archogen — the trust inventory reads generated-source declarations
 
 `ARCHOGEN-M3-0509` (leaf `M3.6.6.2.1`), `2026-10-10`.

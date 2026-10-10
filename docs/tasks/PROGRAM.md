@@ -562,7 +562,8 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.68.md`](../task-history/PROGRAM/PROGRAM.68.md); commit `ARCHOGEN-PROGRAM-0508`
 
 - ID: `PROGRAM.69`
-  Status: `pending` — filed `2026-10-10` by `M3.6.6.2.1`; next, before `M3.6.6.2.2`
+  Status: `active` — the tool, its gate and the seal committed `2026-10-10` (`ARCHOGEN-PROGRAM-0511`); its review open,
+  round 6's five defects answered, round 7 next
   Goal: a closed subtree below an open top-level subtree is sealed too, so a tree whose top-level subtree stays open
   for long — on a blocked leaf, or a long feature — does not keep its finished leaves live.
   Reproduce / issue: `M3.6.6.2.1`'s commit was refused by `README-ROUTES`, *"docs/tasks/: 823457 bytes in total, over
@@ -571,7 +572,10 @@ mdBook that is the director's window into the project.
   `PROGRAM.66` and `.68`, sealed by that commit to bring the folder to 815 443 bytes before this leaf was written. Measured the same day by a census
   of every leaf's span: 271 393 bytes of `done` leaves sit under top-level subtrees with an open leaf — `M1` 84 363,
   `M2` 104 992, `M3` 82 038 — and 258 649 of them in 28 subtrees below the top level whose every leaf is `done`, which
-  a finer unit would seal: `M3.6.1`, `M3.6.2`, `M3.6.4`, `M3.6.6.1` among them, under `M3.6`, which stays open while
+  a finer unit would seal — *corrected the same day by the review's R2-3 and R3-1: those were character counts of a
+  working tree; in bytes at `fea69ad`, by `bash scripts/check_task_history.sh --census fea69ad`, 274 483, `M1` 85 113,
+  `M2` 105 946, `M3` 83 424, and 261 610 in the 28; and, by R4-4, the 823 457 and 815 443 above were measured on the
+  working tree, `M3.6.6.2.1`'s edits staged, and reproduce at no commit* — `M3.6.1`, `M3.6.2`, `M3.6.4`, `M3.6.6.1` among them, under `M3.6`, which stays open while
   `M3.6.5` waits on the director. Each sub-leaf of `M3.6.6.2` adds kilobytes to `M3.md`, so the next commit crosses
   the ceiling again.
   Direction, to be designed here: the unit becomes the outermost closed subtree — a subtree at any depth whose every
@@ -583,6 +587,65 @@ mdBook that is the director's window into the project.
   Acceptance: a seal of the real trees releases what the census measures, each reconstruction byte for byte; the gate
   refuses a live leaf inside a sealed subtree at any depth, a sealed file that changes, and a nested seal whose parent
   is closed; every arm fails first; the record amended and reviewed.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — `M3.6.6.2.1`'s first commit attempt, the doctrine gate → *"README-ROUTES: docs/tasks/:
+    823457 bytes in total, over its ceiling of 819200"*. `bash scripts/check_task_history.sh --census fea69ad` →
+    *"census: fea69ad — 274483 byte(s) of `done` leaves under open top-level subtrees, 261610 of them in 28 closed
+    subtree(s) below the top level"*: `M1` 85 113, `M2` 105 946, `M3` 83 424, which no seal could take.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: `git show fea69ad:scripts/check_task_history.sh | grep -n 'return
+    ".".join(parts\[:2\])\|key = subtree(lid, tree_name)'` → `122`, `subtree` fixing a unit at two components, and
+    `324`, the seal grouping every leaf by it; leg 6 at `277` and leg 5's whole-subtree rule at `312` judged by the same
+    key. WHY it bites now: the unit assumed a top-level subtree closes soon after its parts, and `M3.6` stays open while
+    `M3.6.5` waits on the director, as `M2.7` does on `M2.7.4.5` and `M1.29` on `M1.29.4`.
+  - [x] **FIX** — `scripts/check_task_history.sh`: `under` and `units`, each live leaf's outermost closed subtree, a
+    top-level key always a candidate and a deeper one only as a leaf of the tree; the seal groups by `units`, refuses a
+    tree holding a leaf not under its name before it writes, and on a rollback removes the folders it made; leg 4 by
+    `under`; leg 5 rebuilds each file's bytes from its leaves' spans in the tree before the seal, requires each sealed
+    leaf's outermost closed subtree there to be its file's, and each stub's commit the one its leaf gives; leg 6 refuses
+    a live leaf under any sealed key, at any depth, in any tree file; the index's layout, one table per tree with its
+    rows under its header, checked; `--census <COMMIT>`. The record amended sentence by sentence; its review reopened
+    (`ARCHOGEN-PROGRAM-0510`) and rounds 2–5 and the sweep appended; `DOCTRINE_ENFORCEMENT.md`'s row, `TOOLBOX.md`, the
+    book's annex, the index's header. After round 6: a row twice in its tree's table and a leaf named twice in a tree
+    refused by name, the seal refusing the second before it writes; a file the gate cannot read, met after the seal
+    wrote, rolled back as any refusal is; the check of a stub's commit, added after round 5, withdrawn, and the two
+    first-seal stubs it had "corrected" restored. `PROGRAM.70` filed for `docs/reviews/`' file ceiling.
+  - [x] **ADDRESSED (verified)** — `bash scripts/check_task_history.sh --self-test` → *"66 pass / 0 fail (66 arms)"*.
+    `python3 target/m369/mutate.py` → twenty named mutations of the tool, each `killed` by the arm for its rule;
+    `target/review-p69-r3/mutate2.py`, round 3's twenty → 16 killed, the four left equivalent as rounds 4 and 5
+    argued — both runners untracked, so these counts are not durable. The sweep of the core, `target/m369/sweep.py`,
+    untracked and not durable → its third run, on round 5's tool, *"196 mutant(s) … 182 killed, 14
+    not"*, each of the 14 reasoned in the review history. The real seal: `--seal M1` → *"sealed 7 subtree(s), 7
+    leaves"*, `M2` → *"10 subtree(s), 27 leaves"*, `M3` → *"11 subtree(s), 12 leaves"*, `PROGRAM` → *"nothing to
+    seal"*, each *"the reconstruction is byte for byte"*; the seal takes 255 871 bytes out of `docs/tasks/`, which held
+    818 985 at `72bd446`; the 28 files hold
+    261 582 bytes, the census's 261 610 less the blank line each subtree leaves in its tree. Rounds 2 to 5 re-derived the
+    seal with code of their own, byte for byte `fea69ad`'s leaves and exactly the outermost closed set there; round 4
+    fuzzed 840 seals against an oracle and 890 hand seals, the gate accepting exactly the tool's.
+  - [x] **NO REGRESSION** — `bash scripts/check_task_history.sh` → *"OK (170 sealed file(s) … every sealed leaf proven
+    against its tree before its seal)"*: the 142 seals before this change judged by every generalised leg, the byte
+    rebuild and the stub's commit included. `bash scripts/run_self_tests.sh` → *"OK — 47 self-test(s) passed"*; the
+    gates that read what this change touched, each re-run → `stated-order` *"10 pass / 0 fail"*, `review-history` *"65
+    pass / 0 fail"*, `readme-routes` *"20 pass / 0 fail"*, `handoff-ledger` *"14 pass / 0 fail"*.
+    `handoff-ledger` reads the sealed quotes; `review-history` holds the reopened history; the doctrine gate at commit.
+  - [x] **LOCKSTEP** — `docs/decisions/decision_task-tree-sealing.md`, its review history and `docs/reviews/INDEX.md`'s
+    row, `DOCTRINE_ENFORCEMENT.md`, `TOOLBOX.md`, `docs/book/src/annex-repository.md`, `docs/task-history/INDEX.md`;
+    this leaf and both logs, `M1`'s and `PROGRAM`'s changelogs; the frontier, `docs/TASK_TREE.md`, `LIVE_STATUS.md`
+    and `MEMORY.md`; `CHANGELOG.md`.
+  Verification: `2026-10-10` — the Verification Log's row
+  Commit: `ARCHOGEN-PROGRAM-0510 (leaf PROGRAM.69)`, the review reopened; `ARCHOGEN-PROGRAM-0511 (leaf PROGRAM.69)`
+
+- ID: `PROGRAM.70`
+  Status: `pending` — filed `2026-10-10` by `PROGRAM.69`'s fourth review
+  Goal: a new design's review history always has room in `docs/reviews/`.
+  Reproduce / issue: `PROGRAM.69` opened `docs/reviews/decision_task-tree-sealing-amendment-reviews.md`, and
+  `bash scripts/check_readme_routes.sh` → *"docs/reviews/: 17 tracked files, over its ceiling of 16"*. The folder holds
+  `INDEX.md` and fifteen histories, two of them stubs of archived histories (`bash scripts/check_review_history.sh
+  --seal` leaves one at each history's path, so a citation still resolves), and an archive never lowers the count.
+  So the next design whose review needs a history of its own — `M3.6.6.4`'s, `M3.7`'s — is refused, and `PROGRAM.69`
+  reopened a closed history instead (`ARCHOGEN-PROGRAM-0510`).
+  Direction, to be decided here with a measurement: stubs that leave the folder, their citations repointed; the count
+  ceiling raised by a decision record, with the rate measured; or one index line standing for each archived history.
 
 ## Roadmap coverage map
 
@@ -648,10 +711,11 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.69` | `pending` | **next** — a closed subtree below an open one sealed too: `docs/tasks/` is at its ceiling, and 258 649 bytes of finished leaves wait on open top-level subtrees |
-| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 1 | `PROGRAM.69` | `active` | its review open: round 7 next, on the committed tool, its seal already in place |
+| 2 | `PROGRAM.70` | `pending` | room in `docs/reviews/` for a new design's review history, before the next design needs one — `M3.6.6.4`'s, `M3.7`'s |
+| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
-The second row waits on the director's yes. The pending leaves beside them —
+The third row waits on the director's yes. The pending leaves beside them —
 `PROGRAM.53`, `.54`, `.60` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and its full record is sealed under `docs/task-history/PROGRAM/`.
 
@@ -796,6 +860,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `2026-10-06` | `PROGRAM.65` | a whole rehearsal of `HEAD` and of `a3c0cbd` beside the repository; the directory afterwards; the scratch gate | passed, 12 of 12; the runner's six and no other; gone; OK |
 | `2026-10-06` | `PROGRAM.66` | the gate's self-test, and with each protection removed; the real tree before and after the script was staged; the doctrine gate | 7 / 0, then 5 / 2 and 6 / 1; refused on itself, then OK; all green |
 | `2026-10-10` | `PROGRAM.68` | the trigger off the record's commit; a `git grep -F` census of every `target` and `target/tmp` entry; a residue census; the provisioner, `make focused`, `cargo test --all -q` and the doctrine driver, cold; the three adopted policies' sources | ≈4.0 GB released, `target` 5.6 GB → 1.6 GB, `.bin` 2 648 → 29; twelve of twelve sampled paths `gone`; `m3634` present though its leaf said removed, now true; focused passed 3/0; **1 304 passed, 0 failed** over 97 suites; all doctrines green; no policy source changed |
+| `2026-10-10` | `PROGRAM.69` | the census at `fea69ad`; the self-test; twenty named mutations and round 3's twenty, and a sweep of the core in three runs, runners untracked; the seal of `M1`, `M2`, `M3`, `PROGRAM`; the gate over all 170 files; every gate's self-test; review rounds 2–6 | 274 483 bytes, 261 610 in 28 subtrees; 66 arms; 20 killed, 16 and 4 equivalent; 182 of 196 on round 5's tool, the 14 reasoned; 46 leaves, 255 871 bytes out of `docs/tasks/`; OK, the 142 older seals included; 47 passed; 5, 2, 3, 2, 5 defects, each answered, the review open |
 
 ## Commit Log
 
@@ -933,6 +998,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.66` | `ARCHOGEN-PROGRAM-0490 (leaf PROGRAM.66)` | **a commit holds what was run**: `UNTRACKED-CODE` refuses a commit while a file in a code path is untracked, after `0485` recorded a tree that did not build |
 | `PROGRAM.68` | `ARCHOGEN-PROGRAM-0508 (leaf PROGRAM.68)` | **the sixth artifact cleanup, ≈4.0 GB released**: the incremental caches, the closed generated-sources review's loose logs and sweep scratch, uncited probe output and test scratch; cited evidence kept; `PROGRAM.58`'s leak not back |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0510 (leaf PROGRAM.69)` | **the sealing record's review reopened** for its amendment, so the amendment's rounds append to its history: a new history would be `docs/reviews/`' seventeenth file, past its ceiling of sixteen, and a closed one is frozen |
+| `PROGRAM.69` | `ARCHOGEN-PROGRAM-0511 (leaf PROGRAM.69)` | **a closed subtree below an open one sealed too**, its review open: the outermost closed subtree the unit; leg 5 byte for byte and outermost; leg 6 at any depth and in any tree; one row a file, one leaf a name; the index's layout; `--census`; 46 leaves of `M1`, `M2`, `M3` sealed, 255 871 bytes out of `docs/tasks/`; round 6 answered |
 
 ## Changelog
 
@@ -953,3 +1019,4 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 - `2026-10-06`: `PROGRAM.63` filed and closed — sealing `M3.1` met two gate gaps, the ledger's stub shadowing and the history's line ceiling; both fixed.
 - `2026-10-10`: `PROGRAM.68` filed and closed — the sixth artifact cleanup; nothing unexpected but a record that called a present directory removed.
 - `2026-10-10`: `PROGRAM.66` and `PROGRAM.68` sealed by `M3.6.6.2.1`, whose commit took `docs/tasks/` past its ceiling; `PROGRAM.69` filed for the finished leaves under open top-level subtrees.
+- `2026-10-10`: `PROGRAM.69`'s tool and seal committed — a closed subtree below an open one sealed too — its review open after rounds 2 to 6 and a mutation sweep; `PROGRAM.70` filed for `docs/reviews/`' file ceiling.

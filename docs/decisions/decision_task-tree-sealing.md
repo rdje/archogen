@@ -14,8 +14,18 @@ A task tree keeps its live work readable by sealing out what is finished.
 
 - **The unit is a closed subtree.** A subtree is one of the tree's top-level children with every leaf under it, for
   example `M1.13` with `M1.13.1`, `M1.13.2` and the rest. It is closed when every one of its leaves has status
-  `done`. A subtree with an open leaf stays whole in the tree, its closed leaves included, until it closes. So a
-  sealed file never has to change again.
+  `done`. A subtree with an open leaf stays whole in the tree, its closed leaves included, until it closes — *amended
+  `2026-10-10`: but for its closed parts, which seal on their own (next).* So a sealed file never has to change again.
+- **Amended `2026-10-10` (`PROGRAM.69`): the unit is the outermost closed subtree.** A top-level subtree whose every
+  leaf is `done` seals as before. Below a top-level subtree that is still open, a leaf whose own subtree — itself and
+  every leaf below it — is `done`, and whose nearest ancestor leaf's is not, seals too, whole, into
+  `docs/task-history/<TREE>/<LEAF>.md`: `M3.6.2` with `M3.6.2.1` while `M3.6` waits on `M3.6.5`. Below the top level
+  a subtree is a leaf of the tree, so two closed leaves with no leaf between them and an open subtree — `X.1.2.1` and
+  `X.1.2.2` under an open `X.1`, with no leaf `X.1.2` — seal apart. A sealed file still never changes, since its subtree
+  is closed. When the parent closes later, the parent's remaining leaves seal into the parent's own file, beside it. A
+  seal takes the outermost closed subtree, whole: the gate refuses a part sealed apart from a subtree that was closed,
+  and, below the top level, parts sealed together that no one leaf holds (leg 5), and a live leaf under a sealed subtree at any depth and in
+  any tree file (leg 6).
 - **Its leaves move byte for byte**, in the order the tree holds them, into
   `docs/task-history/<TREE>/<SUBTREE>.md`. The file holds exactly those bytes, with no header. A leaf is its
   `- ID:` line and every line up to the next `- ID:` line or `## ` heading.
@@ -32,15 +42,18 @@ A task tree keeps its live work readable by sealing out what is finished.
 - **A sealed body is its `ID` line and indented or blank lines only.** The seal refuses a leaf with a line at
   column 0 after its `ID`, a fence, a heading or prose, because the line slicing every check shares would tear it.
   It writes nothing, and names each such line.
-- **What stays live:** the tree's root leaf, every open leaf, every subtree with an open leaf, and the sections
-  around the leaves: the goal, the Current Frontier, the decisions, the logs and the changelog.
+- **What stays live:** the tree's root leaf, every open leaf, every subtree with an open leaf — *amended `2026-10-10`:
+  every leaf with an open leaf below it; a subtree with an open leaf no longer stays whole* — and the sections around
+  the leaves: the goal, the Current Frontier, the decisions, the logs and the changelog.
 - **`docs/task-history/INDEX.md`** has one table per tree, with one row per sealed file: the subtree, its leaf
   count, lines, bytes, sha256, and the day it was sealed. Rows are only ever appended.
 - **Reading a closed leaf** is following its stub's link, a file read that depends on no tool.
 
 **Sealing is done by a tool**, `bash scripts/check_task_history.sh --seal <TREE>`. It proves that the tree, with
 every stub replaced by its body from its sealed file, reconstructs the tree as it stood, byte for byte. If it does
-not, it writes nothing. Then it runs the gate on what it wrote, and rolls everything back if the gate refuses.
+not, it writes nothing. Then it runs the gate on what it wrote, and rolls everything back if the gate refuses — *amended
+`2026-10-10`: the folders a first seal made included.* `--census <COMMIT>` measures, at a commit, the bytes of `done`
+leaves under open top-level subtrees and of those a seal would take (`PROGRAM.69`).
 
 **The gate**, `TASK-HISTORY`, runs on every commit, in CI as in the pre-commit hook. It checks:
 1. every sealed file's leaves, lines, bytes and sha256 against its row;
@@ -54,8 +67,16 @@ not, it writes nothing. Then it runs the gate on what it wrote, and rolls everyt
    file; that every stub links a file that holds its leaf; and that a leaf sits in its own subtree's file;
 5. **provenance**: that every sealed leaf is, byte for byte, the leaf its tree held just before the commit that
    sealed it (`HEAD`, for a seal not yet committed), `done` there, and sealed with the rest of its subtree. So a
-   seal made by hand, or a body edited on its way in, is refused;
-6. that no live leaf sits in a subtree that is sealed.
+   seal made by hand, or a body edited on its way in, is refused — *amended `2026-10-10`: when it differs from the
+   tool's in its files, its stubs' links or its units; one byte for byte the tool's passes, however made, and a stub's
+   commit text, a row's date and the column-0 rule stay the seal's alone, which the gate does not check.* *Amended
+   `2026-10-10`:* and that, in that tree, the
+   outermost closed subtree holding each of its leaves was its file's subtree, so a part of a closed subtree sealed
+   apart from it, or, below the top level, parts sealed together that no one leaf holds, is refused; and that the
+   file is exactly the bytes
+   those leaves' spans made, in that tree's order, so a file reordered or padded is refused too;
+6. that no live leaf sits in a subtree that is sealed — *amended `2026-10-10`: at any depth, and in any tree file;
+   and a tree file holds only leaves under its own name, which a seal checks before it writes.*
 
 **What else changes:**
 - **`TASK-ACCEPTANCE`**, archogen's since `PROGRAM.21`: when a commit names a sealed leaf as its owner, the
@@ -73,7 +94,17 @@ not, it writes nothing. Then it runs the gate on what it wrote, and rolls everyt
   - Of `M1`'s 39 subtrees, 37 are closed, 465 944 bytes; of `PROGRAM`'s 39, 32 are closed, 281 453 bytes.
 - **A closed subtree, not a closed leaf.** Sealing leaf by leaf would either make a sealed file change as its
   siblings close, or scatter one subtree over many files. A subtree seals once, whole, and a reader finds a
-  feature's history in one file.
+  feature's history in one file — *amended `2026-10-10`: in one file per closed part, below a subtree that stays
+  open (next).*
+- **Amended `2026-10-10`: why the outermost closed subtree.** The top-level unit assumed a top-level subtree closes
+  soon after its parts. It does not when one of its leaves waits on a decision: `M3.6` stays open while `M3.6.5` waits
+  on the director, and every finished leaf below it stays live. Measured by `bash scripts/check_task_history.sh
+  --census fea69ad`, every leaf's span in bytes: 274 483 bytes of `done` leaves under open top-level subtrees — `M1` 85 113, `M2` 105 946,
+  `M3` 83 424 — 261 610 of them in 28 subtrees closed below the top level, with `docs/tasks/` at its 819 200-byte
+  ceiling (`README-ROUTES` refused `M3.6.6.2.1`'s commit until two closed `PROGRAM` subtrees were sealed). The seal
+  moved 261 582 bytes into those 28 files: one blank line after each subtree's last leaf stays in the tree. The cost is the one weighed above: a
+  feature's history can span several files — the parent's own, and one per part that closed before it. Each file is
+  still one closed subtree, whole and never changed, and the stubs, in the tree's order, say where each leaf is.
 - **Byte-exact files and a reconstruction proof**, as for the changelog (`decision_history-ledgers.md`), because
   evidence that is edited on the way into an archive is no longer evidence.
 - **`docs/task-history/`, not `docs/tasks/sealed/` or `docs/history/`.**
@@ -97,16 +128,20 @@ not, it writes nothing. Then it runs the gate on what it wrote, and rolls everyt
   - after a subtree closes, run `bash scripts/check_task_history.sh --seal <TREE>` and commit its result;
   - the sealing commit may also close the leaf that ran it, as the first one did. Every sealed leaf is proven
     against its tree as it stood just before that commit (leg 5), so other edits in the same commit do not weaken
-    the proof;
+    the proof. *Amended `2026-10-10`:* the seal reads the working tree and leg 5 the tree as committed, so an
+    uncommitted edit that changes which subtrees are closed — a new open leaf under a closed one — makes the seal
+    refuse itself and roll back; commit such an edit first;
   - a leaf in a sealed file is never edited. A correction is a new entry in the tree's changelog.
-- **Reopening:** a sealed subtree is never reopened. New work under its heading opens a new top-level subtree, and
-  a live leaf inside a sealed subtree is refused (leg 6).
+- **Reopening:** a sealed subtree is never reopened. New work under its heading opens a new top-level subtree — *amended
+  `2026-10-10`: a new subtree outside it, a sibling for a part sealed below an open subtree* — and a live leaf inside a
+  sealed subtree is refused (leg 6).
 - **Size:** each sealed file is bounded by `README-ROUTES`. The folder's file count and total are not, by design:
   an `archive_terminal` grows with what is finished, and no mandatory read includes it.
 - **Reading:** follow the stub, or open `docs/task-history/INDEX.md`.
 - **A change needs an open leaf.** A sealed leaf cannot own one.
 - **Trees:** `M1` and `PROGRAM` first, as ruled. Then any tree whose closed subtrees are the larger part of it, by
-  the same tool.
+  the same tool — and, amended `2026-10-10`, any tree once `docs/tasks/` reaches its ceiling, since finished leaves
+  are what that folder overflows (`README_POLICY.md`).
 - Related: [[decision_history-ledgers]], [[decision_findings-for-director-review]] §8 and §10,
   `LIVE_DOCUMENT_SIZE_CONTAINMENT.md`.
 
@@ -114,9 +149,15 @@ not, it writes nothing. Then it runs the gate on what it wrote, and rolls everyt
 
 An independent read-only context reviewed the tool, its gate and the first seal (`PROGRAM.32.4`). It accepted the
 seal: lossless, exactly the closed subtrees, every digest matching. It found that the tool needed hardening before
-another tree is sealed. The findings, and the answer to each, are in
+another tree is sealed. The amendment of `2026-10-10` and its seal were reviewed the same way, from round 2
+(`PROGRAM.69`). The findings, and the answer to each, are in
 [`decision_task-tree-sealing-reviews.md`](../reviews/decision_task-tree-sealing-reviews.md).
 
 | Round | Findings | Defects | Verdict |
 | --- | --- | --- | --- |
 | 1 | 10 | 3 (the record's fallback text unlike the build's; a sealing commit that was not seal-only; figures that did not reproduce), with the seal not fail-closed and the gate not re-proving a seal as the gaps to fix first | the seal "correct and lossless"; the tool to be hardened before another tree is sealed |
+| 2 | 9 | 5 (no arm held the unit's rules; leg 5 refusing only a seal too narrow; figures not reproducible as bytes; sentences the amendment contradicted; the doctrine row) | the seal byte for byte and exactly the outermost closed set; every finding answered |
+| 3 | 6 | 2 (the leaf's own figures left uncorrected; two corners of the unit's rule with no arm) | the seal, every figure and every round-2 answer but those two re-derived; every finding answered, two that predate the change among them |
+| 4 | 8 | 3 (rounds appended to the history while its row read closed; two survivors called equivalent that were not; the census's producer untracked) | the seal reproduced by a clean clone; 840 fuzzed seals matched its oracle, and of 890 hand seals the gate accepted exactly those the tool makes; every finding answered |
+| 5 | 5 | 2 (the census's byte figures held by no arm; a refused first seal leaving its folder behind) | the seal, the figures and R4-1's route re-derived; every finding answered, then a mutation sweep of the tool's core — 182 of 196 mutants killed, the 14 others each reasoned in the history (runner untracked, not durable) |
+| 6 | 11 | 5 (a repeated row passing once its one note was silenced; a rollback that a file the gate cannot read escaped; two first-seal stubs "corrected" wrongly; the text claiming more than the gate checks; figures naming no state) | the seal re-derived and re-sealed from `72bd446`; every finding answered, the stub-commit check withdrawn; the review open |

@@ -1,6 +1,7 @@
 # docs/task-history/INDEX.md — closed subtrees sealed out of the task trees
 
-Each file below holds the leaves of one of a task tree's top-level subtrees, moved here byte for byte by
+Each file below holds the leaves of one closed subtree of a task tree — a top-level one, or the outermost closed one
+below a top-level subtree still open — moved here byte for byte by
 `bash scripts/check_task_history.sh --seal <TREE>` once every leaf under it was `done`, and never edited again
 (`docs/decisions/decision_task-tree-sealing.md`). Each leaf left a two-line stub in its tree that links here. A row
 records the file's leaf count, lines, bytes and sha256, and the day it was sealed. The rows are append-only, and
@@ -52,6 +53,13 @@ with its row.
 | `M1.36` | 1 | 60 | 4278 | `898292c31082ece82232b2f3e2138e52fad71714a9a806967c886daa503dc6f5` | `2026-09-30` |
 | `M1.41` | 1 | 29 | 2623 | `fd031f154a0f2b94c62f27b5220e190dc10763eeeed2967f3bae183ecba3a504` | `2026-10-05` |
 | `M1.40` | 1 | 46 | 4431 | `15e29ee9907d21a8038def1dbb2a3d8bdb30ddcec77851dc4012987a23a26c72` | `2026-10-05` |
+| `M1.12.1` | 1 | 105 | 9202 | `4c5b9fd4a2096127a306d9c5bfae9bdd8751bebaca4c8eafdad2bbd1b5cef1d3` | `2026-10-10` |
+| `M1.12.2` | 1 | 149 | 12798 | `d7fa3ebaf785e2c281c6f85ff247b355df5ae896513670c87addd0296199dc66` | `2026-10-10` |
+| `M1.12.4` | 1 | 97 | 8672 | `df1889f92a063bbce9c6175a5082c4c73d6bb5fb528a843cfcb8f3868f0694d0` | `2026-10-10` |
+| `M1.12.5` | 1 | 168 | 16564 | `dad2d10660e2ddd386cc2b968086aeb10e9dc2254d4f3d4d11a644abb87fc7d2` | `2026-10-10` |
+| `M1.29.1` | 1 | 94 | 8071 | `210bac807e5a0a1ed4075ba2f3d37f7facc45cdb54923f5c69687d4e4ab4c703` | `2026-10-10` |
+| `M1.29.2` | 1 | 128 | 11483 | `f71997701417a20f0d029daa1aebcfd16db0ed4f70768b5446bcd4a0f7f618ba` | `2026-10-10` |
+| `M1.29.3` | 1 | 107 | 8990 | `dfd04eb8fdf53b9c89ddfda761294c132ab2798da26141340b452d8c1e6a744b` | `2026-10-10` |
 
 ## `PROGRAM`
 
@@ -142,6 +150,16 @@ with its row.
 | `M2.15` | 1 | 73 | 7819 | `063ece8e2d3fdf5277d8236baf68ac8ddcfb7ed5b7f0cc6a00f3257007bc2b9d` | `2026-10-03` |
 | `M2.20` | 1 | 43 | 4013 | `cbe0f81cf6e4dac9f44e31072172b3db02de61852d9846bb79b2de56f4ccc627` | `2026-10-03` |
 | `M2.22` | 1 | 20 | 1601 | `05756f9c7ea957d3b0482b371ccde01ef94c884c56ea16540ba4706fe0b11eff` | `2026-10-05` |
+| `M2.7.1` | 1 | 231 | 17958 | `a5739120ca167b387dd48605d56b039ccd87024e9551f27c20a971fb894f6abb` | `2026-10-10` |
+| `M2.7.2` | 1 | 56 | 4904 | `d080864f62f06d7a6116337b2beed9d1623003b3ff0fd7283c03d04d9672d563` | `2026-10-10` |
+| `M2.7.3` | 18 | 584 | 49602 | `d51575b1f75157985de6631cf8bdb43179de21f1965c42baea840e55afa7e154` | `2026-10-10` |
+| `M2.7.4.1` | 1 | 50 | 4939 | `5befafa8f8979b7f5ad40c7db4523ada48d0431d63410194c40a7d4f9961b401` | `2026-10-10` |
+| `M2.7.4.2` | 1 | 61 | 5964 | `e4d03e8322e6bfaf9cbccb6e1c08c605c0a496b8be678d1945317e967f5ac916` | `2026-10-10` |
+| `M2.7.4.3` | 1 | 64 | 6608 | `7cca9a87d4ad834be2e2be4a63e620a53739ca9886815acb4805943a78d33887` | `2026-10-10` |
+| `M2.7.4.4` | 1 | 49 | 4938 | `00ae976a5ebc68e6d0225b7be72fb4991d563e288312b31f4f15e1a284f533b8` | `2026-10-10` |
+| `M2.7.6.1` | 1 | 40 | 3528 | `f1d9b46ca04541d7ccb0c1f45c419a6eafabefcc29b90379e4e0ef07523c4734` | `2026-10-10` |
+| `M2.7.6.2` | 1 | 49 | 4490 | `0b2551ae34f7bacc1e3188a02636eda2b584781a1d79b198e620f1800cab94cf` | `2026-10-10` |
+| `M2.7.6.3` | 1 | 35 | 3005 | `3bb3e3e6951a29bdbf5af44b2a7ace3f5cae760ffe2d93121a63cddcad6e53d5` | `2026-10-10` |
 
 ## `API`
 
@@ -185,3 +203,14 @@ with its row.
 | Subtree | Leaves | Lines | Bytes | sha256 | Sealed |
 | --- | --- | --- | --- | --- | --- |
 | `M3.1` | 11 | 494 | 56231 | `4984a8cbde1ec3c8cb095258c808fffafd2cfbb7a907f408888a4fe2da8a4e4e` | `2026-10-06` |
+| `M3.6.1` | 1 | 185 | 19650 | `9fc01c3eaeac018f827afc86def76c1e67a041d5ab8852b1ecf03ddf4a44d873` | `2026-10-10` |
+| `M3.6.2` | 2 | 104 | 11746 | `d990cb7c824857437716fce88133cffce4c4819e3a8b9ff687e46d48358463d8` | `2026-10-10` |
+| `M3.6.3.1` | 1 | 37 | 3454 | `3ab6ccd8551aa3ff205bc410f6bb31f9ca4210df4cca86974040125b95026ad1` | `2026-10-10` |
+| `M3.6.3.7` | 1 | 38 | 3642 | `c091f95bde7b7729d76f929ce1f717c61c6dceaf36bf6ef60b6641b03fcbcab5` | `2026-10-10` |
+| `M3.6.3.3` | 1 | 62 | 5975 | `67a371a2c06c6fbedfe689e111884dfc9b84d1a90cbd17b75a84279df2461c50` | `2026-10-10` |
+| `M3.6.3.4` | 1 | 59 | 5919 | `83102ff2d2f2305fb1bb9d2800d95418ba8239c018cc44eecc2c020bdc7482bb` | `2026-10-10` |
+| `M3.6.3.5` | 1 | 53 | 5176 | `1f29930ea1737acced115bada0e37d4977f8c3764ad202b870b018d2c17ac843` | `2026-10-10` |
+| `M3.6.3.6` | 1 | 60 | 5997 | `e42e598823d6e4d044ba5a33a76e2b27727c143a5e40ce88da14c07f967ab1ce` | `2026-10-10` |
+| `M3.6.6.1` | 1 | 93 | 10410 | `aba616b0e4c21535709504ee6a9a9bad88b32f10eb2e20ff137ae0acdf185f2c` | `2026-10-10` |
+| `M3.6.6.2.1` | 1 | 64 | 6737 | `371a9e400c662daf6d04bd58784e657fc5d2a10d6bd54c9b0f5ab5169c858295` | `2026-10-10` |
+| `M3.6.4` | 1 | 13 | 1160 | `d57d7e61e85670ccac4489976e3ef063d442a770b39f2b172218fbdcb0434e2e` | `2026-10-10` |

@@ -3,15 +3,24 @@
 # docs/decisions/decision_task-tree-sealing.md, LIVE_DOCUMENT_SIZE_CONTAINMENT.md's `archive_terminal`).
 #
 # ⭐ WHY. On 2026-09-30, 77% of `docs/tasks/M1.md` and 79% of `docs/tasks/PROGRAM.md` were the bodies of leaves marked
-# `done`. The director's §8 ruling (option C) seals them out: when every leaf of one of a tree's top-level subtrees is
-# `done`, those leaves move, byte for byte and in the tree's order, into `docs/task-history/<TREE>/<SUBTREE>.md`, and
-# each leaves a two-line stub where it stood — its `- ID:` line and a `Status: `done`` line that links the sealed file
-# and names the leaf's commit. `docs/task-history/INDEX.md` records each file's leaves, lines, bytes and sha256.
+# `done`. The director's §8 ruling (option C) seals them out: when every leaf of a subtree is `done`, those leaves move,
+# byte for byte and in the tree's order, into `docs/task-history/<TREE>/<SUBTREE>.md`, and each leaves a two-line stub
+# where it stood — its `- ID:` line and a `Status: `done`` line that links the sealed file and names the leaf's commit.
+# `docs/task-history/INDEX.md` records each file's leaves, lines, bytes and sha256.
+#
+# THE UNIT is the OUTERMOST CLOSED SUBTREE (`PROGRAM.69`): one of the tree's top-level subtrees when every leaf under it
+# is `done`, and, below a top-level subtree that is still open, the shortest leaf, ancestor or self, whose every leaf is
+# `done`. Below the top level a subtree is a leaf of the tree: two leaves with no common leaf between them and an open
+# subtree seal apart. Measured by `--census fea69ad`, the top-level unit alone left 274 483 bytes of finished leaves live under
+# open top-level subtrees — `M3.6`, open while `M3.6.5` waits on the director, held `M3.6.1`, `.2`, `.4` and `.6.1` whole — with
+# `docs/tasks/` at its ceiling.
 #
 # MODES:
 #   bash scripts/check_task_history.sh                  # the gate: exit 0 clean · 1 a breach, named
 #   bash scripts/check_task_history.sh --seal <TREE>    # seal every closed subtree of docs/tasks/<TREE>.md, prove, check
 #   bash scripts/check_task_history.sh --self-test
+#   bash scripts/check_task_history.sh --census <COMMIT>  # bytes of `done` leaves under open top-level subtrees, and
+#                                                         # in the closed subtrees below them a seal would take (PROGRAM.69)
 #
 # A LEAF is its `- ID: `…`` line and every line up to the next `- ID:` line or `## ` heading, TASK-ACCEPTANCE's own
 # slicing. Its BODY is that span without its trailing blank lines, which stay in the tree after the stub. Every line of
@@ -28,9 +37,15 @@
 #   4. every leaf in a sealed file has exactly one stub, in its own tree, `done`, linking that file, and every stub links
 #      a sealed file that holds its leaf; a stub is exactly its two lines; a leaf sits in its own subtree's file;
 #   5. PROVENANCE: every sealed leaf is, byte for byte, the leaf its tree held just before the commit that sealed it
-#      (HEAD, for a seal not yet committed), `done` there, and its whole subtree was sealed with it — so a seal made by
-#      hand, or a body edited on the way in, is refused (P3);
-#   6. no live leaf sits in a subtree that is sealed: new work opens a new top-level subtree (P6).
+#      (HEAD, for a seal not yet committed), `done` there, its whole subtree was sealed with it, and that subtree was the
+#      outermost closed one holding each of its leaves — so a seal made by hand or edited is refused when it differs from
+#      what the tool would make in its files, its stubs' links or its units: a body edited on the way in, a part of a
+#      closed subtree sealed apart from it, or, below the top level, parts sealed together that no one leaf holds (P3).
+#      ⚠️ Not checked: a stub's commit text, which only the seal derives (whether a Commit Log row is a leaf's is prose:
+#      `PROGRAM.18` → `PROGRAM.18.1`, a child's row closing its parent), a row's date, and the column-0 rule, which
+#      stays the seal's;
+#   6. no live leaf sits in a subtree that is sealed, at any depth and in any tree file: new work opens a new subtree
+#      outside it (P6); and a tree file holds only leaves under its own name, so no leaf is judged in a tree not its own.
 #
 # THE SEAL writes nothing unless the tree it would leave, with every new stub replaced by its body from its new sealed
 # file, is the tree as it stood, byte for byte; and it rolls everything back if the gate then refuses the result.
@@ -118,8 +133,43 @@ def is_stub(lines, first):
     return first + 1 < len(lines) and STUB_RE.match(lines[first + 1]) is not None
 
 def subtree(leaf_id, tree_name):
+    """The top-level subtree holding a leaf, or None for the tree's root."""
     parts = leaf_id.split(".")
     return ".".join(parts[:2]) if leaf_id != tree_name and len(parts) >= 2 else None
+
+def under(leaf_id, key):
+    """Whether a leaf lies in the subtree `key`: is it, or is one of its descendants."""
+    return leaf_id == key or leaf_id.startswith(key + ".")
+
+def units(lines, ls, tree_name):
+    """{leaf: its unit} for every live leaf a seal would take now: the outermost closed subtree holding it — its
+    top-level subtree when every leaf under that is `done`, else the shortest leaf of the tree, ancestor or self, whose
+    every leaf is `done` (PROGRAM.69). A stub is sealed already and counts as `done`; a leaf no closed subtree holds
+    stays live."""
+    present = {lid for lid, _, _ in ls}
+    seen, open_ = set(), set()
+    for lid, first, _ in ls:
+        if subtree(lid, tree_name) is None:
+            continue
+        parts = lid.split(".")
+        for k in range(2, len(parts) + 1):
+            key = ".".join(parts[:k])
+            seen.add(key)
+            if status(lines, first) != "done":
+                open_.add(key)
+    out = {}
+    for lid, first, _ in ls:
+        if subtree(lid, tree_name) is None or is_stub(lines, first):
+            continue
+        parts = lid.split(".")
+        for k in range(2, len(parts) + 1):
+            key = ".".join(parts[:k])
+            if k > 2 and key not in present:
+                continue  # below the top level, a subtree is a leaf of the tree
+            if key in seen and key not in open_:
+                out[lid] = key
+                break
+    return out
 
 def commit_log_names(lines, leaf_id):
     on = False
@@ -166,7 +216,8 @@ def rows(index_text, where):
 
 HEADER = """# docs/task-history/INDEX.md — closed subtrees sealed out of the task trees
 
-Each file below holds the leaves of one of a task tree's top-level subtrees, moved here byte for byte by
+Each file below holds the leaves of one closed subtree of a task tree — a top-level one, or the outermost closed one
+below a top-level subtree still open — moved here byte for byte by
 `bash scripts/check_task_history.sh --seal <TREE>` once every leaf under it was `done`, and never edited again
 (`docs/decisions/decision_task-tree-sealing.md`). Each leaf left a two-line stub in its tree that links here. A row
 records the file's leaf count, lines, bytes and sha256, and the day it was sealed. The rows are append-only, and
@@ -176,12 +227,37 @@ To read a closed leaf, follow its stub. To prove a file, compare `sha256sum docs
 with its row.
 """
 
+TABLE_HEAD = "| Subtree | Leaves | Lines | Bytes | sha256 | Sealed |"
+TABLE_SEP = "| --- | --- | --- | --- | --- | --- |"
+
+def layout(index_text):
+    """The index as `add_rows` writes it: one table per tree, each opening with its header, its rows contiguous under
+    it — so a row placed in another tree's table, or outside any, is a breach (PROGRAM.69, the mutation sweep)."""
+    lines = index_text.split("\n")
+    seen, in_tables = set(), set()
+    for n, line in enumerate(lines):
+        m = re.match(r"^## `([^`]+)`$", line)
+        if not m:
+            continue
+        if m.group(1) in seen:
+            note("%s:%d: a second table for %s — a tree has one" % (INDEX, n + 1, m.group(1)))
+        seen.add(m.group(1))
+        if lines[n + 1:n + 4] != ["", TABLE_HEAD, TABLE_SEP]:
+            note("%s:%d: the table of %s does not open with its header" % (INDEX, n + 1, m.group(1)))
+        k = n + 4
+        while k < len(lines) and lines[k].startswith("| `"):
+            in_tables.add(k)
+            k += 1
+    for n, line in enumerate(lines):
+        if line.startswith("| `") and n not in in_tables:
+            note("%s:%d: a row outside its tree's table, under its header" % (INDEX, n + 1))
+
 def add_rows(tree_name, new_rows):
     text = read(INDEX) if os.path.exists(INDEX) else HEADER
     lines = text.rstrip("\n").split("\n")
     head = "## `%s`" % tree_name
     if head not in lines:
-        lines += ["", head, "", "| Subtree | Leaves | Lines | Bytes | sha256 | Sealed |", "| --- | --- | --- | --- | --- | --- |"]
+        lines += ["", head, "", TABLE_HEAD, TABLE_SEP]
     start = lines.index(head)
     last = start
     for k in range(start + 1, len(lines)):
@@ -199,12 +275,16 @@ def gate():
     if shallow is None or shallow.decode().strip() != "false":
         note("the repository is shallow, or git cannot say, so the commits legs 3 and 5 read may be missing — fetch the full history")
     index = rows(read(INDEX), INDEX) if os.path.exists(INDEX) else {}
+    if os.path.exists(INDEX):
+        layout(read(INDEX))
     checked, held = 0, {}  # held: leaf id -> sealed file path
     files = {}             # sealed file path -> (tree, subtree)
     for tname, trows in index.items():
         listed = set()
         for key, nleaves, nlines, nbytes, digest, _ in trows:
             fpath = os.path.join(HIST, tname, key + ".md")
+            if key + ".md" in listed:
+                note("%s lists %s twice in %s's table — one row a sealed file" % (INDEX, key, tname)); continue
             listed.add(key + ".md")
             if not os.path.exists(fpath):
                 note("%s lists %s, and %s does not exist" % (INDEX, key, fpath)); continue
@@ -218,7 +298,7 @@ def gate():
             if str(len(fls)) != nleaves: note("%s holds %d leaves, and its row says %s" % (fpath, len(fls), nleaves))
             for lid, f, e in fls:
                 if status(flines, f) != "done": note("%s holds %s, whose status is not `done`" % (fpath, lid))
-                if subtree(lid, tname) != key: note("%s holds %s, which is not in subtree %s" % (fpath, lid, key))
+                if not under(lid, key): note("%s holds %s, which is not in subtree %s" % (fpath, lid, key))
                 if lid in held: note("%s is sealed twice, in %s and %s" % (lid, held[lid], fpath))
                 held[lid] = fpath
         tdir = os.path.join(HIST, tname)
@@ -267,15 +347,21 @@ def gate():
         tpath = os.path.join(TASKS, name)
         tname = name[:-3]
         tlines, tls = leaves(read(tpath))
+        named = [lid for lid, _, _ in tls]
+        for lid in sorted({x for x in named if named.count(x) > 1}):
+            note("%s holds %s %d times — a leaf is named once" % (tpath, lid, named.count(lid)))
         for lid, first, end in tls:
+            if not under(lid, tname):
+                note("%s holds %s, which is not under its tree's name %s — a leaf is filed in its own tree" % (tpath, lid, tname))
             line = tlines[first + 1] if first + 1 < len(tlines) else ""
             m = STUB_RE.match(line)
             if " — sealed in [" in line and not m:
                 note("%s: the stub of %s is not in the stub's form" % (tpath, lid)); continue
             if not m:
                 if lid in held: note("%s: %s is sealed in %s and also live here" % (tpath, lid, held[lid]))
-                if (tname, subtree(lid, tname)) in sealed_keys:
-                    note("%s: %s is live in subtree %s, which is sealed — new work opens a new top-level subtree" % (tpath, lid, subtree(lid, tname)))
+                for t2, key in sorted(sealed_keys):
+                    if under(lid, key):
+                        note("%s: %s is live in subtree %s, which is sealed in %s — new work opens a new subtree outside it" % (tpath, lid, key, t2))
                 continue
             if body_end(tlines, first, end) != first + 2:
                 note("%s: the stub of %s holds more than its two lines" % (tpath, lid))
@@ -300,6 +386,14 @@ def gate():
         was = {lid: (f, e) for lid, f, e in bls}
         flines, fls = leaves(read(fpath))
         sealed_ids = {lid for lid, _, _ in fls}
+        # The file is exactly the bytes the seal writes from those leaves' spans, in the base tree's order: no leaf
+        # reordered, no line added between them (review R3-5).
+        if all(lid in was for lid in sealed_ids):
+            spans = ["\n".join(blines[was[lid][0]:was[lid][1]]) for lid, _, _ in bls if lid in sealed_ids]
+            made = "\n".join(spans)
+            made += "" if made.endswith("\n") else "\n"
+            if made != read(fpath):
+                note("%s is not the bytes its leaves' spans in %s's tree make, in that tree's order — a seal writes them as they stood" % (fpath, base))
         for lid, f, e in fls:
             if lid not in was:
                 note("%s holds %s, which %s's tree did not hold — a seal must move a leaf that existed" % (fpath, lid, base)); continue
@@ -309,9 +403,47 @@ def gate():
             if status(blines, bf) != "done":
                 note("%s holds %s, which was not `done` in %s's tree — a seal takes only closed leaves" % (fpath, lid, base))
         for lid, bf, be in bls:
-            if subtree(lid, tname) == key and not is_stub(blines, bf) and lid not in sealed_ids:
+            if under(lid, key) and not is_stub(blines, bf) and lid not in sealed_ids:
                 note("%s seals subtree %s without %s, which %s's tree held — a subtree is sealed whole" % (fpath, key, lid, base))
+        # The outermost closed subtree, whole: in the tree before the seal, each sealed leaf's unit is this file's key —
+        # neither a part of a closed subtree sealed apart, nor, below the top level, parts sealed together that no one leaf
+        # holds (review R1-2).
+        outermost = units(blines, bls, tname)
+        wrong = sorted("%s in %s" % (lid, outermost.get(lid) or "no closed subtree") for lid in sealed_ids
+                       if lid in was and outermost.get(lid) != key)
+        if wrong:
+            note("%s seals subtree %s, and in %s's tree its leaves' outermost closed subtree was not %s (%s) — a seal takes the outermost closed subtree, whole"
+                 % (fpath, key, base, key, ", ".join(wrong[:4]) + (" …" if len(wrong) > 4 else "")))
     return checked, len(stubs)
+
+def census(commit):
+    """Per tree file at `commit`: the bytes of live `done` leaves under top-level subtrees still open, and of those in
+    the closed subtrees below them that a seal would take — each leaf's span sliced as `leaves` slices it (PROGRAM.69)."""
+    names = git("ls-tree", "--name-only", commit, TASKS + "/")
+    if names is None:
+        sys.exit("task-history: `git ls-tree %s %s/` failed" % (commit, TASKS))
+    total, in_closed, count = 0, 0, 0
+    for path in sorted(names.decode().split("\n")):
+        name = os.path.basename(path)
+        if not name.endswith(".md") or name == "TEMPLATE.md":
+            continue
+        tname = name[:-3]
+        lines, ls = leaves(at(commit, path) or "")
+        unit = units(lines, ls, tname)
+        open_tops = {subtree(lid, tname) for lid, f, _ in ls if subtree(lid, tname) and status(lines, f) != "done"}
+        live = [(lid, f, e) for lid, f, e in ls
+                if subtree(lid, tname) in open_tops and status(lines, f) == "done" and not is_stub(lines, f)]
+        if not live:
+            continue
+        size = lambda f, e: len(("\n".join(lines[f:e]) + "\n").encode("utf-8"))
+        tree_total = sum(size(f, e) for _, f, e in live)
+        tree_closed = sum(size(f, e) for lid, f, e in live if lid in unit)
+        keys = {unit[lid] for lid, _, _ in live if lid in unit}
+        print("census: %s — %d byte(s) of `done` leaves under open top-level subtrees, %d of them in %d closed subtree(s) below the top level"
+              % (tname, tree_total, tree_closed, len(keys)))
+        total, in_closed, count = total + tree_total, in_closed + tree_closed, count + len(keys)
+    print("census: %s — %d byte(s) of `done` leaves under open top-level subtrees, %d of them in %d closed subtree(s) below the top level"
+          % (commit, total, in_closed, count))
 
 def seal(tree_name):
     path = os.path.join(TASKS, tree_name + ".md")
@@ -319,17 +451,20 @@ def seal(tree_name):
         sys.exit("task-history: %s does not exist" % path)
     before = read(path)
     lines, ls = leaves(before)
+    named = [lid for lid, _, _ in ls]
+    twice = sorted({x for x in named if named.count(x) > 1})
+    if twice:
+        sys.exit("task-history: %s holds %s more than once — a leaf is named once; nothing was written" % (path, ", ".join(twice)))
+    foreign = [lid for lid, _, _ in ls if not under(lid, tree_name)]
+    if foreign:
+        sys.exit("task-history: %s holds %s, not under its tree's name %s — a leaf is filed in its own tree; nothing was written"
+                 % (path, ", ".join(foreign), tree_name))
+    unit = units(lines, ls, tree_name)
     groups = {}
     for lid, first, end in ls:
-        key = subtree(lid, tree_name)
-        if key:
-            groups.setdefault(key, []).append((lid, first, end))
-    sealable = []
-    for key, members in groups.items():
-        if any(is_stub(lines, m[1]) for m in members):
-            continue
-        if all(status(lines, m[1]) == "done" for m in members) and not os.path.exists(os.path.join(HIST, tree_name, key + ".md")):
-            sealable.append(key)
+        if lid in unit:
+            groups.setdefault(unit[lid], []).append((lid, first, end))
+    sealable = [key for key in groups if not os.path.exists(os.path.join(HIST, tree_name, key + ".md"))]
     if not sealable:
         print("task-history: %s — nothing to seal" % path)
         return
@@ -380,7 +515,9 @@ def seal(tree_name):
         sys.exit("task-history: the seal of %s would not reconstruct it byte for byte; nothing was written" % path)
     # Write, then prove the result with the gate; roll back if it refuses.
     index_before = read(INDEX) if os.path.exists(INDEX) else None
-    os.makedirs(os.path.join(HIST, tree_name), exist_ok=True)
+    tree_dir = os.path.join(HIST, tree_name)
+    made_dirs = [d for d in (HIST, tree_dir) if not os.path.isdir(d)]  # what a rollback removes again (review R5-2)
+    os.makedirs(tree_dir, exist_ok=True)
     today = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
     order = sorted(sealable, key=lambda k: min(m[1] for m in groups[k]))
     written = []
@@ -393,7 +530,10 @@ def seal(tree_name):
         f.write(after)
     add_rows(tree_name, ["| `%s` | %d | %d | %d | `%s` | `%s` |" % (key, len(groups[key]), files[key].count("\n"),
                          len(files[key].encode("utf-8")), sha(files[key]), today) for key in order])
-    gate()
+    try:
+        gate()
+    except Unreadable as e:
+        note(str(e))
     if fails:
         for fpath in written:
             os.remove(fpath)
@@ -404,10 +544,18 @@ def seal(tree_name):
         else:
             with open(INDEX, "w", encoding="utf-8") as f:
                 f.write(index_before)
+        for d in reversed(made_dirs):
+            os.rmdir(d)
         sys.exit("task-history: the gate refused the seal of %s, so it was rolled back:\n  " % path + "\n  ".join(fails))
     print("task-history: %s — sealed %d subtree(s), %d leaves: %s; the reconstruction is byte for byte"
           % (path, len(sealable), len(seal_of), " ".join(order)))
 
+if mode == "census":
+    try:
+        census(tree)
+    except Unreadable as e:
+        sys.exit("task-history: %s" % e)
+    sys.exit(0)
 try:
     if mode == "seal":
         seal(tree)
@@ -454,8 +602,67 @@ self_test() {
 
 - ID: `T.2.1`
   Status: `done`
-  Goal: a closed leaf of an open subtree, which stays live
+  Goal: a closed leaf of an open subtree, sealed in a file of its own
   Commit: `pending`
+
+- ID: `T.2.2`
+  Status: `done`
+  Goal: a closed leaf with an open child, which stays live
+  Commit: `ARCHOGEN-T-0004`
+
+- ID: `T.2.2.1`
+  Status: `blocked`
+  Goal: the open child, blocked, which is open as any status but `done` is
+
+- ID: `T.2.2.5.1`
+  Status: `done`
+  Goal: a closed leaf four levels down with no leaf `T.2.2.5` above it, sealed apart
+  Commit: `ARCHOGEN-T-0016`
+
+- ID: `T.2.2.5.2`
+  Status: `done`
+  Goal: its cousin, sealed apart too
+  Commit: `ARCHOGEN-T-0017`
+
+- ID: `T.2.3`
+  Status: `done`
+  Goal: a closed subtree below an open one, sealed whole in one file
+  Commit: `ARCHOGEN-T-0007`
+
+- ID: `T.2.3.1`
+  Status: `done`
+  Goal: its closed child, sealed with it — the café's census counts bytes, not characters
+  Commit: `ARCHOGEN-T-0008`
+
+- ID: `T.2.4.1`
+  Status: `done`
+  Goal: a closed leaf with no leaf `T.2.4` above it, sealed apart
+  Commit: `ARCHOGEN-T-0010`
+
+- ID: `T.2.4.2`
+  Status: `done`
+  Goal: its cousin, sealed apart too
+  Commit: `ARCHOGEN-T-0011`
+
+- ID: `T.2.5`
+  Status: `done`
+  Goal: a closed leaf whose Commit field names its work unit on its second line
+  Commit: closed with the slice after it, in
+    `ARCHOGEN-T-0022`
+
+- ID: `T.2.10`
+  Status: `active`
+  Goal: an open leaf whose name begins as `T.2.1`'s does, which is not under it
+
+- ID: `T.4.1`
+  Status: `done`
+  Goal: a closed leaf of a top-level subtree with no leaf `T.4`, sealed with its cousin
+  Commit: `ARCHOGEN-T-0018`
+
+- ID: `T.4.2`
+  Status: `done`
+  Goal: its cousin
+  Commit: `ARCHOGEN-T-0019`
 
 - ID: `T.1.2`
   Status: `done`
@@ -476,6 +683,19 @@ a fence the slicing would tear
 | --- | --- | --- | --- |
 | 1 | `T.2` | `active` | open |
 MD
+    cat > "$work/docs/tasks/TEMPLATE.md" <<'MD'
+# TEMPLATE: no tree, which the gate and the census pass over
+
+## Task Tree
+
+- ID: `X.1`
+  Status: `active`
+  Goal: an open subtree
+
+- ID: `X.1.1`
+  Status: `done`
+  Goal: a closed leaf below it
+MD
     git -C "$work" add -A; git -C "$work" -c user.name=t -c user.email=t@t commit -qm base
   }
   arm() { # $1 = name, $2 = expected rc, $3 = text the output must carry, then the arguments
@@ -487,6 +707,9 @@ MD
     fi
     if [ -n "$must" ] && ! printf '%s' "$out" | grep -qF -- "$must"; then
       echo "SELF-TEST: $name — not about \`$must\`:" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
+    fi
+    if printf '%s' "$out" | grep -q '^Traceback'; then
+      echo "SELF-TEST: $name — a traceback, where a refusal is named:" >&2; printf '%s\n' "$out" | tail -2 | sed 's/^/    /' >&2; return
     fi
     ok=$((ok + 1)); echo "  ✅ $name"
   }
@@ -508,9 +731,55 @@ PY
   [ ! -d "$work/docs/task-history" ] && git -C "$work" diff --quiet || { arms=$((arms + 1)); echo "SELF-TEST: the refused seal wrote something" >&2; }
   sub docs/tasks/T.md '^```text\na fence the slicing would tear\n```\n' '  a line indented as a field\n'
   commit
+  printf -- '# V\n\n## Task Tree\n\n- ID: `V.1`\n  Status: `done`\n  Goal: a closed subtree, committed\n  Commit: `ARCHOGEN-V-0001`\n\n- ID: `V.1.1`\n  Status: `done`\n  Goal: its closed child\n  Commit: `ARCHOGEN-V-0002`\n' > "$work/docs/tasks/V.md"
+  commit
+  printf '\n- ID: `V.1.2`\n  Status: `pending`\n  Goal: an open child, not yet committed, which the seal reads and leg 5 does not\n' >> "$work/docs/tasks/V.md"
+  arm "a first seal the gate refuses is rolled back" 1 "so it was rolled back" --seal V
+  [ -z "$(git -C "$work" status --porcelain --untracked-files=all -- docs/task-history)" ] ||
+    { arms=$((arms + 1)); echo "SELF-TEST: a first seal rolled back left something under docs/task-history/" >&2; }
+  arm "and the gate passes after it" 0 "0 sealed file(s)"
+  git -C "$work" checkout -q -- . && git -C "$work" reset -q --hard HEAD~1
+  arm "the census counts bytes of closed subtrees below an open one" 0 "census: HEAD — 1181 byte(s) of \`done\` leaves under open top-level subtrees, 1062 of them in 7 closed subtree(s) below the top level" --census HEAD
+  arm "the census of a commit git does not know is refused" 1 "failed" --census no-such-commit
+  arm "the seal of a tree that does not exist is refused" 1 "does not exist" --seal NOPE
   arm "the seal proves its reconstruction" 0 "the reconstruction is byte for byte" --seal T
-  arm "the sealed tree passes the gate" 0 "2 sealed file(s)"
-  grep -q '^  Goal: a closed leaf of an open subtree' "$work/docs/tasks/T.md" || { arms=$((arms + 1)); echo "SELF-TEST: the open subtree's closed leaf was sealed" >&2; }
+  arm "the sealed tree passes the gate" 0 "10 sealed file(s)"
+  grep -q '^  Status: `done` — sealed in \[`T/T.2.5.md`\](../task-history/T/T.2.5.md); commit `ARCHOGEN-T-0022`$' "$work/docs/tasks/T.md" ||
+    { arms=$((arms + 1)); echo "SELF-TEST: a Commit field naming its work unit on its second line did not give the stub its commit" >&2; }
+  # Before the seal's first commit, a row's every field is its file's — leg 3 has no commit to compare yet.
+  cp "$work/docs/task-history/INDEX.md" "$work/docs/index.keep"
+  sub docs/task-history/INDEX.md '^(\| `T\.1` \| \d+ \| )\d+( \|)' '\g<1>999\2'
+  arm "before its first commit, a row's line count unlike its file's is refused" 1 "lines, and its row says 999"
+  cp "$work/docs/index.keep" "$work/docs/task-history/INDEX.md"
+  sub docs/task-history/INDEX.md '^(\| `T\.1` \| \d+ \| \d+ \| )\d+( \|)' '\g<1>99999\2'
+  arm "before its first commit, a row's byte count unlike its file's is refused" 1 "bytes, and its row says 99999"
+  cp "$work/docs/index.keep" "$work/docs/task-history/INDEX.md"
+  sub docs/task-history/INDEX.md '^(\| `T\.1` \| \d+ \| \d+ \| \d+ \| `)[0-9a-f]{64}' '\g<1>0000000000000000000000000000000000000000000000000000000000000000'
+  arm "before its first commit, a row's sha256 unlike its file's is refused" 1 "sha256 is not its row's"
+  cp "$work/docs/index.keep" "$work/docs/task-history/INDEX.md"
+  sub docs/task-history/INDEX.md '^(\| `T\.1` \|.*\n)' '\1\n'
+  arm "a row parted from its table by a blank line is refused" 1 "a row outside its tree's table, under its header"
+  cp "$work/docs/index.keep" "$work/docs/task-history/INDEX.md"
+  printf '\n## `T`\n\n| Subtree | Leaves | Lines | Bytes | sha256 | Sealed |\n| --- | --- | --- | --- | --- | --- |\n' >> "$work/docs/task-history/INDEX.md"
+  arm "a second table for one tree is refused" 1 "a second table for T"
+  cp "$work/docs/index.keep" "$work/docs/task-history/INDEX.md"
+  sub docs/task-history/INDEX.md '^(\| Subtree \| Leaves \| Lines \| Bytes \| sha256 \| )Sealed( \|)' '\1Date\2'
+  arm "a table that does not open with its header is refused" 1 "does not open with its header"
+  mv "$work/docs/index.keep" "$work/docs/task-history/INDEX.md"
+  grep -q '^  Status: `done` — sealed in \[`T/T.2.2.5.2.md`\](../task-history/T/T.2.2.5.2.md); commit `ARCHOGEN-T-0017`$' "$work/docs/tasks/T.md" ||
+    { arms=$((arms + 1)); echo "SELF-TEST: two leaves four levels down with no leaf between them and an open subtree were not sealed apart" >&2; }
+  grep -q '^  Status: `done` — sealed in \[`T/T.4.md`\](../task-history/T/T.4.md); commit `ARCHOGEN-T-0019`$' "$work/docs/tasks/T.md" &&
+    grep -q '^| `T.4` | 2 |' "$work/docs/task-history/INDEX.md" ||
+    { arms=$((arms + 1)); echo "SELF-TEST: a top-level subtree with no leaf of its own was not sealed whole, as before" >&2; }
+  grep -q '^  Status: `done` — sealed in \[`T/T.2.3.md`\](../task-history/T/T.2.3.md); commit `ARCHOGEN-T-0008`$' "$work/docs/tasks/T.md" &&
+    grep -q '^| `T.2.3` | 2 |' "$work/docs/task-history/INDEX.md" ||
+    { arms=$((arms + 1)); echo "SELF-TEST: a closed subtree below an open one was not sealed whole, in one file" >&2; }
+  grep -q '^  Status: `done` — sealed in \[`T/T.2.4.2.md`\](../task-history/T/T.2.4.2.md); commit `ARCHOGEN-T-0011`$' "$work/docs/tasks/T.md" ||
+    { arms=$((arms + 1)); echo "SELF-TEST: two closed leaves with no leaf between them and an open subtree were not sealed apart" >&2; }
+  grep -q '^  Goal: a closed leaf with an open child, which stays live' "$work/docs/tasks/T.md" || { arms=$((arms + 1)); echo "SELF-TEST: a closed leaf with an open child was sealed" >&2; }
+  grep -q '^  Goal: an open subtree' "$work/docs/tasks/T.md" || { arms=$((arms + 1)); echo "SELF-TEST: the open subtree's own leaf was sealed" >&2; }
+  grep -q '^  Status: `done` — sealed in \[`T/T.2.1.md`\](../task-history/T/T.2.1.md); commit not recorded$' "$work/docs/tasks/T.md" ||
+    { arms=$((arms + 1)); echo "SELF-TEST: the open subtree's closed leaf was not sealed in a file of its own" >&2; }
   grep -q '^  Status: `done` — sealed in \[`T/T.1.md`\](../task-history/T/T.1.md); commit `ARCHOGEN-T-0002`$' "$work/docs/tasks/T.md" ||
     { arms=$((arms + 1)); echo "SELF-TEST: T.1.1's stub does not name its commit" >&2; }
   grep -q '^  Status: `done` — sealed in \[`T/T.1.md`\](../task-history/T/T.1.md); commit not recorded$' "$work/docs/tasks/T.md" ||
@@ -529,6 +798,75 @@ PY
   restore
   sub docs/task-history/INDEX.md '^(\| `T\.1` \|.*\n)' '\1| `T.8` | 1 | 1 | 1 | `0000000000000000000000000000000000000000000000000000000000000000` | `2026-09-30` |\n'
   arm "a row listing a file that does not exist is refused" 1 "does not exist"
+  restore
+  sub docs/task-history/INDEX.md '^(\| `T\.1` \|.*\n)' '\1\1'
+  arm "a row twice for one sealed file is refused" 1 "lists T.1 twice in T's table"
+  restore
+  printf '\n- ID: `T.2.10`\n  Status: `active`\n  Goal: a second leaf of one name\n' >> "$work/docs/tasks/T.md"
+  arm "a leaf named twice in a tree is refused" 1 "holds T.2.10 2 times"
+  arm "and the seal of that tree writes nothing" 1 "holds T.2.10 more than once — a leaf is named once; nothing was written" --seal T
+  restore
+  sub docs/task-history/INDEX.md '^(\| `T\.1` \| \d+ \| \d+ \| \d+ \| `)[0-9a-f]{64}' '\g<1>not-a-digest'
+  arm "a row not in the row's form is refused" 1 "is not a row of the form"
+  restore
+  sub docs/tasks/T.md '\[`T/T\.1\.md`\]\(\.\./task-history/T/T\.1\.md\); commit `ARCHOGEN-T-0002`' '[`T/T.3.md`](../task-history/T/T.3.md); commit `ARCHOGEN-T-0002`'
+  arm "a stub linking another sealed file is refused" 1 "links docs/task-history/T/T.3.md, which does not hold it"
+  restore
+  printf '\n- ID: `T.8`\n  Status: `done` — sealed in [`T/T.8.md`](../task-history/T/T.8.md); commit not recorded\n' >> "$work/docs/tasks/T.md"
+  python3 - "$work" <<'PY'
+import hashlib, sys
+w = sys.argv[1]
+leaf = "- ID: `T.8`\n  Status: `done`\n  Goal: a leaf the tree never held\n"
+open(w + "/docs/task-history/T/T.8.md", "w").write(leaf)
+i = w + "/docs/task-history/INDEX.md"
+t = open(i).read().split("\n")
+k = max(n for n, l in enumerate(t) if l.startswith("| `T."))
+t.insert(k + 1, "| `T.8` | 1 | %d | %d | `%s` | `2026-10-10` |" % (leaf.count("\n"), len(leaf.encode()), hashlib.sha256(leaf.encode()).hexdigest()))
+open(i, "w").write("\n".join(t))
+PY
+  arm "a sealed leaf its tree never held is refused" 1 "which HEAD's tree did not hold"
+  restore
+  printf -- '# Y\n\n## Task Tree\n\n- ID: `Y.1`\n  Status: `done` — sealed in [`Y/Y.1.md`](../task-history/Y/Y.1.md); commit not recorded\n' > "$work/docs/tasks/Y.md"
+  python3 - "$work" <<'PY'
+import hashlib, os, sys
+w = sys.argv[1]
+leaf = "- ID: `Y.1`\n  Status: `done`\n  Goal: a leaf of a tree no commit held\n"
+os.makedirs(w + "/docs/task-history/Y")
+open(w + "/docs/task-history/Y/Y.1.md", "w").write(leaf)
+i = w + "/docs/task-history/INDEX.md"
+t = open(i).read().rstrip("\n") + "\n\n## `Y`\n\n| Subtree | Leaves | Lines | Bytes | sha256 | Sealed |\n| --- | --- | --- | --- | --- | --- |\n"
+t += "| `Y.1` | 1 | %d | %d | `%s` | `2026-10-10` |\n" % (leaf.count("\n"), len(leaf.encode()), hashlib.sha256(leaf.encode()).hexdigest())
+open(i, "w").write(t)
+PY
+  arm "a sealed file of a tree its base did not hold is refused" 1 "had no docs/tasks/Y.md to be sealed from"
+  restore
+  # A refused seal into a history that exists puts the index back as it was.
+  printf '\n- ID: `T.7`\n  Status: `done`\n  Goal: a closed subtree, committed unsealed\n  Commit: `ARCHOGEN-T-0020`\n\n- ID: `T.7.1`\n  Status: `done`\n  Goal: its closed child\n  Commit: `ARCHOGEN-T-0021`\n' >> "$work/docs/tasks/T.md"
+  commit
+  printf '\n- ID: `T.7.2`\n  Status: `pending`\n  Goal: an open child, not yet committed\n' >> "$work/docs/tasks/T.md"
+  arm "a seal the gate refuses puts the index back" 1 "so it was rolled back" --seal T
+  [ -z "$(git -C "$work" status --porcelain --untracked-files=all -- docs/task-history)" ] ||
+    { arms=$((arms + 1)); echo "SELF-TEST: a refused seal into an existing history left the history changed" >&2; }
+  git -C "$work" checkout -q -- . && git -C "$work" reset -q --hard HEAD~1
+  # A leaf's commit named only in the Commit Log the sealing commit adds: the stub says so, and the gate agrees.
+  printf '\n- ID: `T.6`\n  Status: `done`\n  Goal: a closed subtree whose commit the tree'\''s Commit Log names\n  Commit: see the log\n' >> "$work/docs/tasks/T.md"
+  commit
+  printf '\n## Commit Log\n\n| Leaf | Commit | Notes |\n| --- | --- | --- |\n| `T.6` | `ARCHOGEN-T-0023 (leaf T.6)` | closed |\n' >> "$work/docs/tasks/T.md"
+  arm "a commit the sealing commit's Commit Log names is the stub's" 0 "sealed 1 subtree(s), 1 leaves: T.6;" --seal T
+  grep -q '^  Status: `done` — sealed in \[`T/T.6.md`\](../task-history/T/T.6.md); commit in the tree'\''s Commit Log$' "$work/docs/tasks/T.md" ||
+    { arms=$((arms + 1)); echo "SELF-TEST: a commit the Commit Log names did not reach the stub" >&2; }
+  restore
+  git -C "$work" reset -q --hard HEAD~1
+  # A failed history read is a breach, never an empty history: git made to fail on `--full-history`.
+  mkdir -p "$work/fakebin"
+  printf '#!/bin/sh\nfor a in "$@"; do [ "$a" = "--full-history" ] && exit 128; done\nexec %s "$@"\n' "$(command -v git)" > "$work/fakebin/git"
+  chmod +x "$work/fakebin/git"
+  for which in "docs/task-history/INDEX.md failed, so leg 3" "docs/task-history failed, so legs 3 and 5"; do
+    arms=$((arms + 1))
+    if out="$(cd "$work" && PATH="$work/fakebin:$PATH" bash "$SELF" 2>&1)"; then echo "SELF-TEST: a failed history read passed" >&2
+    elif printf '%s' "$out" | grep -qF -- "\`git log\` of $which"; then ok=$((ok + 1)); echo "  ✅ a failed read of \`git log\` of ${which%%,*} is a breach"
+    else echo "SELF-TEST: a failed history read was refused for another reason" >&2; fi
+  done
   restore
   sub docs/task-history/INDEX.md '^(\| `T\.1` \|.*\| `)[0-9-]+(` \|)$' '\g<1>1999-01-01\2'
   commit
@@ -575,7 +913,27 @@ PY
   arm "two stubs for one leaf are refused" 1 "has two stubs"
   restore
   printf '\n- ID: `T.1.9`\n  Status: `pending`\n  Goal: new work under a sealed subtree\n' >> "$work/docs/tasks/T.md"
-  arm "a live leaf in a sealed subtree is refused" 1 "new work opens a new top-level subtree"
+  arm "a live leaf in a sealed subtree is refused" 1 "new work opens a new subtree outside it"
+  restore
+  printf '\n- ID: `T.2.1.1`\n  Status: `pending`\n  Goal: new work under a subtree sealed below an open one\n' >> "$work/docs/tasks/T.md"
+  arm "a live leaf in a subtree sealed below an open one is refused" 1 "is live in subtree T.2.1, which is sealed"
+  restore
+  printf '\n- ID: `T.4`\n  Status: `pending`\n  Goal: a leaf named as a sealed subtree that had no leaf of its own\n' >> "$work/docs/tasks/T.md"
+  arm "a live leaf named as a sealed subtree is refused" 1 "is live in subtree T.4, which is sealed in T"
+  restore
+  mkdir -p "$work/docs/tasks" && printf -- '# V\n\n## Task Tree\n\n- ID: `T.2.3.9`\n  Status: `pending`\n  Goal: new work under a sealed subtree, filed in another tree\n' > "$work/docs/tasks/V.md"
+  arm "a live leaf under a sealed subtree in another tree file is refused" 1 "is live in subtree T.2.3, which is sealed in T"
+  restore
+  printf -- '# V\n\n## Task Tree\n\n- ID: `V.1`\n  Status: `done`\n  Goal: a closed subtree the seal would take\n  Commit: `ARCHOGEN-V-0003`\n\n- ID: `T.9`\n  Status: `pending`\n  Goal: a leaf filed under another tree\x27s name\n' > "$work/docs/tasks/V.md"
+  arm "a leaf filed under another tree's name is refused" 1 "is not under its tree's name V"
+  arms=$((arms + 1)); out="$(cd "$work" && bash "$SELF" --seal V 2>&1)"
+  if printf '%s' "$out" | grep -qF "not under its tree's name V — a leaf is filed in its own tree; nothing was written" &&
+     ! printf '%s' "$out" | grep -qF "rolled back"; then ok=$((ok + 1)); echo "  ✅ and the seal of that tree refuses before it writes anything"
+  else echo "SELF-TEST: the seal of a tree holding a foreign leaf wrote before refusing:" >&2; printf '%s\n' "$out" | sed -n '1,2p' | sed 's/^/    /' >&2; fi
+  restore
+  printf '\n- ID: `T.1.9`\n  Status: `done`\n  Goal: a closed leaf added late under a sealed subtree\n' >> "$work/docs/tasks/T.md"
+  arm "a late closed leaf under a sealed subtree is refused, its file left as sealed" 1 "new work opens a new subtree outside it" --seal T
+  git -C "$work" diff --quiet -- docs/task-history || { arms=$((arms + 1)); echo "SELF-TEST: a seal over a late leaf rewrote a sealed file" >&2; }
   restore
   sub docs/task-history/T/T.1.md '^  Status: `done`$' '  Status: `active`'
   arm "a sealed leaf whose status is not done is refused" 1 "whose status is not \`done\`"
@@ -586,21 +944,69 @@ PY
   mkdir -p "$work/docs/task-history/U" && printf 'x\n' > "$work/docs/task-history/U/U.1.md"
   arm "a tree folder with no table is refused" 1 "has no table in"
   restore
-  # A seal made by hand of a done leaf from an open subtree, with its file, row and stub: provenance refuses it.
+  # A seal made by hand of a done leaf whose child is open, with its file, row and stub: provenance refuses it.
   python3 - "$work" <<'PY'
 import hashlib, re, sys
 w = sys.argv[1]
 t = open(w + "/docs/tasks/T.md").read()
-m = re.search(r"^- ID: `T\.2\.1`\n(?:  .*\n)*", t, re.M)
+m = re.search(r"^- ID: `T\.2\.2`\n(?:  .*\n)*", t, re.M)
 leaf = m.group(0)
-t = t.replace(leaf, "- ID: `T.2.1`\n  Status: `done` — sealed in [`T/T.2.md`](../task-history/T/T.2.md); commit not recorded\n")
+t = t.replace(leaf, "- ID: `T.2.2`\n  Status: `done` — sealed in [`T/T.2.2.md`](../task-history/T/T.2.2.md); commit `ARCHOGEN-T-0004`\n")
+t = re.sub(r"^- ID: `T\.2\.2\.1`\n(?:  .*\n)*\n?", "", t, flags=re.M)  # leg 6 then has no live leaf to see
 open(w + "/docs/tasks/T.md", "w").write(t)
-open(w + "/docs/task-history/T/T.2.md", "w").write(leaf)
-i = open(w + "/docs/task-history/INDEX.md").read().rstrip("\n") + "\n| `T.2` | 1 | %d | %d | `%s` | `2026-09-30` |\n" % (leaf.count("\n"), len(leaf.encode()), hashlib.sha256(leaf.encode()).hexdigest())
+open(w + "/docs/task-history/T/T.2.2.md", "w").write(leaf)
+i = open(w + "/docs/task-history/INDEX.md").read().rstrip("\n") + "\n| `T.2.2` | 1 | %d | %d | `%s` | `2026-09-30` |\n" % (leaf.count("\n"), len(leaf.encode()), hashlib.sha256(leaf.encode()).hexdigest())
 open(w + "/docs/task-history/INDEX.md", "w").write(i)
 PY
-  arm "a seal made by hand from an open subtree is refused" 1 "a subtree is sealed whole"
+  arm "a seal made by hand of a subtree with an open leaf is refused" 1 "a subtree is sealed whole"
   restore
+  # Below an open subtree, a part sealed by hand apart from its closed subtree; and parts no one leaf holds sealed together.
+  printf '\n- ID: `T.2.6`\n  Status: `done`\n  Goal: a closed subtree below an open one\n  Commit: `ARCHOGEN-T-0012`\n\n- ID: `T.2.6.1`\n  Status: `done`\n  Goal: its closed child\n  Commit: `ARCHOGEN-T-0013`\n\n- ID: `T.2.7.1`\n  Status: `done`\n  Goal: a closed leaf with no leaf `T.2.7` above it\n  Commit: `ARCHOGEN-T-0014`\n\n- ID: `T.2.7.2`\n  Status: `done`\n  Goal: its cousin\n  Commit: `ARCHOGEN-T-0015`\n' >> "$work/docs/tasks/T.md"
+  commit
+  hand_seal() { # $1 = the file's key, then the leaves it takes
+    python3 - "$work" "$@" <<'PY'
+import hashlib, re, sys
+w, key, ids = sys.argv[1], sys.argv[2], sys.argv[3:]
+t = open(w + "/docs/tasks/T.md").read()
+leaves = []
+for lid in ids:
+    m = re.search(r"^- ID: `%s`\n(?:  .*\n)*" % re.escape(lid), t, re.M)
+    leaves.append(m.group(0))
+    t = t.replace(m.group(0), "- ID: `%s`\n  Status: `done` — sealed in [`T/%s.md`](../task-history/T/%s.md); commit not recorded\n" % (lid, key, key))
+open(w + "/docs/tasks/T.md", "w").write(t)
+body = "\n".join(leaves)
+open(w + "/docs/task-history/T/%s.md" % key, "w").write(body)
+i = open(w + "/docs/task-history/INDEX.md").read().split("\n")
+k = max(n for n, l in enumerate(i) if l.startswith("| `T"))  # after T's last row, in T's own table
+i.insert(k + 1, "| `%s` | %d | %d | %d | `%s` | `2026-10-10` |" % (key, len(ids), body.count("\n"), len(body.encode()), hashlib.sha256(body.encode()).hexdigest()))
+open(w + "/docs/task-history/INDEX.md", "w").write("\n".join(i))
+PY
+  }
+  hand_seal T.2.6.1 T.2.6.1
+  arm "below an open subtree, a part sealed apart from its closed subtree is refused" 1 "a seal takes the outermost closed subtree"
+  restore
+  hand_seal T.2.7 T.2.7.1 T.2.7.2
+  arm "parts sealed together that no one leaf holds are refused" 1 "T.2.7.1 in T.2.7.1"
+  restore
+  git -C "$work" reset -q --hard HEAD~1
+  # A part of a closed subtree sealed by hand apart from it: the seal takes the outermost closed subtree.
+  printf '\n- ID: `T.5`\n  Status: `done`\n  Goal: a closed subtree\n  Commit: `ARCHOGEN-T-0005`\n\n- ID: `T.5.1`\n  Status: `done`\n  Goal: its closed child\n  Commit: `ARCHOGEN-T-0006`\n' >> "$work/docs/tasks/T.md"
+  commit
+  python3 - "$work" <<'PY'
+import hashlib, re, sys
+w = sys.argv[1]
+t = open(w + "/docs/tasks/T.md").read()
+m = re.search(r"^- ID: `T\.5\.1`\n(?:  .*\n)*", t, re.M)
+leaf = m.group(0)
+t = t.replace(leaf, "- ID: `T.5.1`\n  Status: `done` — sealed in [`T/T.5.1.md`](../task-history/T/T.5.1.md); commit `ARCHOGEN-T-0006`\n")
+open(w + "/docs/tasks/T.md", "w").write(t)
+open(w + "/docs/task-history/T/T.5.1.md", "w").write(leaf)
+i = open(w + "/docs/task-history/INDEX.md").read().rstrip("\n") + "\n| `T.5.1` | 1 | %d | %d | `%s` | `2026-09-30` |\n" % (leaf.count("\n"), len(leaf.encode()), hashlib.sha256(leaf.encode()).hexdigest())
+open(w + "/docs/task-history/INDEX.md", "w").write(i)
+PY
+  arm "a part sealed apart from its closed subtree is refused" 1 "a seal takes the outermost closed subtree"
+  restore
+  git -C "$work" reset -q --hard HEAD~1
   python3 - "$work" <<'PY'
 import hashlib, re, sys
 w = sys.argv[1]
@@ -612,10 +1018,53 @@ open(i, "w").write(t)
 PY
   arm "a sealed body edited with its row, before any commit, is refused as not the tree's" 1 "a leaf was edited on its way in"
   restore
+  python3 - "$work" <<'PY'
+import hashlib, re, sys
+w = sys.argv[1]
+f = w + "/docs/task-history/T/T.1.md"
+parts = re.split(r"(?m)^(?=- ID: )", open(f).read())
+s = "".join([parts[0]] + parts[1:][::-1])
+s = s if s.endswith("\n") else s + "\n"
+open(f, "w").write(s)
+i = w + "/docs/task-history/INDEX.md"
+t = re.sub(r"^\| `T\.1` \| (\d+) \| (\d+) \| (\d+) \| `[0-9a-f]+` \|", lambda m: "| `T.1` | %s | %d | %d | `%s` |" % (m.group(1), s.count("\n"), len(s.encode()), hashlib.sha256(s.encode()).hexdigest()), open(i).read(), flags=re.M)
+open(i, "w").write(t)
+PY
+  arm "a sealed file's leaves reordered with its row, before any commit, is refused" 1 "a seal writes them as they stood"
+  restore
   mkdir -p "$work/docs/tasks" && printf -- '# V\n\n## Task Tree\n\n- ID: `V.1`\n  Status: `done` — sealed in [`T/T.1.md`](../task-history/T/T.1.md); commit `ARCHOGEN-T-0001`\n' > "$work/docs/tasks/V.md"
   arm "a stub in another tree is refused" 1 "links another tree's file"
   restore
   arm "and the sealed tree passes again" 0 ""
+  printf -- '# W\n\n## Task Tree\n\n- ID: `W.1`\n  Status: `done`\n  Goal: a second tree'\''s closed subtree\n  Commit: `ARCHOGEN-W-0001`\n' > "$work/docs/tasks/W.md"
+  commit
+  arm "a second tree is sealed into a table of its own" 0 "sealed 1 subtree(s), 1 leaves: W.1;" --seal W
+  commit
+  sub docs/tasks/T.md '^(- ID: `T\.2`\n  Status: )`active`' '\1`done`'
+  sub docs/tasks/T.md '^(- ID: `T\.2\.2\.1`\n  Status: )`blocked`' '\1`done`'
+  sub docs/tasks/T.md '^(- ID: `T\.2\.10`\n  Status: )`active`' '\1`done`'
+  commit
+  arms=$((arms + 1)); out="$(cd "$work" && bash "$SELF" --seal T 2>&1)"
+  if printf '%s' "$out" | grep -qF "sealed 1 subtree(s), 4 leaves: T.2;" &&
+     printf '%s' "$out" | grep -qF "warning — T.2 is \`done\` and its Commit field names no commit" &&
+     ! printf '%s' "$out" | grep -qF "warning — T.2.2 is"; then
+    ok=$((ok + 1)); echo "  ✅ a parent closing later is sealed beside its sealed parts, warning of a leaf that names no commit alone"
+  else echo "SELF-TEST: a parent closing later was not sealed beside its parts, with its one warning:" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; fi
+  arm "and all its files pass, each tree's rows in its own table" 0 "12 sealed file(s)"
+  sub docs/tasks/T.md '^(- ID: `T`\n  Status: )`active`' '\1`done`'
+  commit
+  hand_seal T T
+  arm "the tree's root leaf sealed by hand is refused" 1 "T in no closed subtree"
+  restore
+  printf '# Z\n\n## Task Tree\n\n- ID: `Z.1`\n  Status: `pending`\n  Goal: not UTF-8 \377\n' > "$work/docs/tasks/Z.md"
+  commit
+  arm "a tree that is not UTF-8 is a breach the gate names" 1 "is not UTF-8"
+  arm "and one the census names" 1 "is not UTF-8" --census HEAD
+  printf -- '# Q\n\n## Task Tree\n\n- ID: `Q.1`\n  Status: `done`\n  Goal: a closed subtree sealed beside a tree the gate cannot read\n  Commit: `ARCHOGEN-Q-0001`\n' > "$work/docs/tasks/Q.md"
+  commit
+  arm "a seal the gate cannot judge after it wrote is rolled back" 1 "is not UTF-8" --seal Q
+  [ -z "$(git -C "$work" status --porcelain --untracked-files=all -- docs/task-history docs/tasks)" ] ||
+    { arms=$((arms + 1)); echo "SELF-TEST: a seal refused on an unreadable file left its writes behind" >&2; }
   rm -rf "$work"
   arms=$((arms + 1))
   if bash "$SELF" >/dev/null 2>&1; then ok=$((ok + 1)); echo "  ✅ the real task history passes"
@@ -629,6 +1078,9 @@ case "${1:-}" in
   --seal)
     [ -n "${2:-}" ] || { echo "usage: bash scripts/check_task_history.sh --seal <TREE>" >&2; exit 2; }
     core seal "$2"; exit $? ;;
+  --census)
+    [ -n "${2:-}" ] || { echo "usage: bash scripts/check_task_history.sh --census <COMMIT>" >&2; exit 2; }
+    core census "$2"; exit $? ;;
   "") core gate ""; exit $? ;;
-  *) echo "usage: bash scripts/check_task_history.sh [--seal <TREE> | --self-test]" >&2; exit 2 ;;
+  *) echo "usage: bash scripts/check_task_history.sh [--seal <TREE> | --census <COMMIT> | --self-test]" >&2; exit 2 ;;
 esac
