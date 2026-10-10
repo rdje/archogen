@@ -75,12 +75,12 @@ checked by generating the file again.
 
 Once a program reads a declared file, the form's generator files and inputs become that program's **provenance**, and
 two programs whose provenance meets share a **generated-provenance** item the gate reports like any other: one input
-under two generators, a generator both use, a data file one reads that the other's source was made from, or a copy of
-an input under another name. Two generated tables that differ in every byte, written by one script from one data file,
-are seen to share both. A generator or input the commit does not hold as a file is refused. So are a **chain**, a
-generator or input that a form declares or a header marks as generated, and a generator or input inside a vendored
-checkout, which the commit holds as a pointer to another repository rather than as files: each is refused for a reason,
-and the need it would serve is met in one step instead where a route exists (below).
+under two generators, a generator both use, a data file one reads that the other's source was made from, or a copy of an
+input under another name. Two generated tables that differ in every byte, written by one script from one data file, are
+seen to share both. A generator or input of such a form that the commit does not hold as a file is refused. So are a
+**chain**, a generator or input that a form declares or a header marks as generated, and a generator or input inside a
+vendored checkout, which the commit holds as a pointer to another repository rather than as files: each is refused for a
+reason, and the need it would serve is met in one step instead where a route exists (below).
 
 A generator must lie outside the reading program's other roles: a table the generator's own executable wrote, read by
 a checker, is refused, since the checker would then trust the very logic it checks. A generator that is a program —
@@ -256,17 +256,20 @@ refused, `trust-undeclared-input`, wherever the gate runs:
   is one step, each generator file judged against each program that reads its output; over a chain, which roles a
   file plays and which program each upstream generator answers to have a reading per step, and the design's review
   found another role's generator escaping through one. The need is met in one step: one form names every step's
-  generator files and every committed file any step reads, the intermediate file never committed, and a marked file a
-  form would name is remade so too. A program-target generator whose build would compile a generated file reads another
-  generator's output at run time instead, and a program that generates its own source gives way to a second program
-  target that compiles none, named as the generator; one that must compile a generated file has no route;
+  generator files and every committed file any step reads, the intermediate file never committed, and a marked input
+  or script a form would name is remade so too, while a marked crate root has no route. A program-target generator
+  whose build would compile a generated file reads another generator's output at run time instead, and a program that
+  generates its own source gives way to another program target whose build does not compile it — a second executable
+  of its package when no library there holds the file, else one of a package that does not depend on it; one that
+  must compile a generated file has no route;
 - a live form's generator or input **at or under a gitlink**, the pointer by which the commit holds a vendored
   checkout: it is no file of the commit's tree, so the rule above refuses it — the inventory reads a program's files,
   and a live form's generators and inputs, from the commit's blobs alone. The need is met by committing a copy of the
-  file, named as an input — or, for a generator, as the generator, a Rust one as a program target; a copy whose header
-  marks it generated is a chain, remade within the generation as above. A vendored file that cannot be copied, or a
-  generator whose copy those rules refuse, has no route: an input stays refused, and a generator is believed when a
-  script runs it, its bytes and their sharing unseen.
+  file, named as an input — or, for a generator, a script, an executable or a Rust source, as the generator, a Rust
+  one as a program target; a copy whose header marks it generated is a chain, remade within the generation as above. A
+  vendored file that cannot be copied, or a generator whose copy those rules refuse, has no route: an input stays
+  refused, and a generator is believed when a script runs it, its bytes, their sharing and its role unseen. Each route
+  is held by a test the record names.
 
 A tool a script runs — protoc, bindgen, an interpreter — is no generator file but the script's own dependency, and is
 believed: a file a tool wrote is declared with the script that ran the tool as its generator. A file a tool writes
@@ -275,8 +278,8 @@ undeclared, it is refused if a program reads it marked, and is a plain file othe
 one runs is the host's, as the linker is, and as provenance it would make a form's digests facts no commit reproduces.
 When a tool's identity must be compared, its pin — a file the script reads to choose or check it — is committed and
 named as an input, and a marked pin is remade within the generation or gives way to an unmarked version file the
-script checks; a tool from a vendored checkout is a vendored generator that cannot be copied, as above, its identity
-compared the same way.
+script checks; a tool from a vendored checkout is a vendored file, as above — copied, a generator file; uncopied,
+believed, its identity compared the same way.
 
 **Provenance, and the generated-provenance item** (§4, §5). A program's **provenance** is, for each live form whose
 declared file it reads, the form's generator files and inputs, each recorded with its path, its sha256, its roles —

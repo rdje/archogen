@@ -86,6 +86,22 @@ defects and 4 remarks. Round 3's answers hold; round 3's row and history above d
 | R4-R6 | remark | the chapter implied a vendored tool's identity cannot be compared | "its identity compared the same way" |
 | R4-R7 | remark | a vendored input or file that cannot be copied had no decision | §3: a vendored file that cannot be copied has no route — an input stays refused, a generator believed when a script runs it; §1 and How to apply |
 
+**Round 5**, `2026-10-10`, of `847ce6d`, by a read-only context that had not written the record. It ran the doctrine
+gate and the crate's tests (165 passed) and three probes — untracked, so not durable: a second executable of a package
+whose library holds the declared file refused; a copied executable named as a generator file written; a marked crate
+root remade by a script written, its role judgment lost. Verdict: 3 defects and 3 remarks. Five rounds had each found
+a route the record named fail in an untracked probe; the answer changes method: every route and no-route case is a
+committed test (§6), and the record claims no more than they hold.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R5-D1 | defect | "a second executable of its package" fails when the package's library holds the file | a target whose build does not compile it: a second executable when no library holds the file, else one of a package not depending on it; two tests |
+| R5-D2 | defect | "an executable" listed among files that cannot be copied, though a copy is a generator file | an executable is a file a copy serves; "cannot be copied" is a licence, a size or a build product; a test |
+| R5-D3 | defect | the remake route escaped the role judgment for a marked crate root | the remake serves a marked input or script; a marked crate root has no route; a script remaking it is the parent's §8 limit, stated; a test |
+| R5-R1 | remark | the chapter's "the commit does not hold as a file" unqualified | "of such a form", the form a program reads |
+| R5-R2 | remark | "copies of its own generator and inputs" for every marked file | "its own generator and inputs, or copies of them for a vendored one" |
+| R5-R3 | remark | a generator whose copy the role rules refuse, believed, escapes that judgment | said: its role judgment goes unseen, as the parent's §8 says |
+
 ## Why
 
 The record closes on a round that finds no defect, as every design here does; each round, its findings and their
