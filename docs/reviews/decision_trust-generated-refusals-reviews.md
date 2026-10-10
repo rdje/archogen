@@ -292,6 +292,25 @@ method for `M3.6.9`: its goal derives the axes from a census of the code's loops
 | R17-R4 | remark | how a reader reads also decides which forms are live, an axis of the chain, the blob rule and a lone `.rs` too | in the census `M3.6.9` derives |
 | R17-R5 | remark | round 16's Verification Log row cited its runners without saying they are untracked | round 17's row says so; the note covers the leaf's Verification Log rows as written |
 
+**Round 18**, `2026-10-10`, of `21e1c0b`, by a read-only context that had not written the record, fenced from the
+sealed evaluation set. Its clones refused by the harness, it exported the commit without the sealed directory and
+read history path by path outside it, so the doctrine gate's history legs went unchecked. It found every ledger entry
+the note covers identical to its commit's text and the sealed one as sealed, every rule §6 calls the parent's decided
+there and tested outside `route_tests`, every route built by its row, and the crate's tests passing (183); and it
+mutated the gate — untracked, so not durable. Verdict: 2 defects and 5 remarks. Round 17's census described in words
+still left axes out, and §6 still listed them. The answer changes method a last time for `M3.6.9`: no axis is named;
+its criterion is the project's mutation sweep over the judgment code, every survivor killed or listed as equivalent.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R18-D1 | defect | `M3.6.9`'s census, "every loop a refusal or judgment sits in", misses what is no loop — `live()`, `reads`, `own_roles` — and its parenthesis omits the packages a generator's build holds | the criterion a mutation sweep of the judgment code, every survivor killed or listed as equivalent; no axis named |
+| R18-D2 | defect | §6 still listed axes — form, clause, position, reader, how a reader reads — and omitted round 17 | §6 names none: "wherever its code judges it", the criterion since round 18 |
+| R18-R1 | remark | the packages a program-target generator's build holds, first only, survives | in `M3.6.9`'s list of what rounds found; the sweep's to kill |
+| R18-R2 | remark | the harness pair's second role, first only, survives | likewise |
+| R18-R3 | remark | readers handed the file as data excluded survives | likewise, as R16-R3 |
+| R18-R4 | remark | step 5 naming only the first generator per file survives | likewise |
+| R18-R5 | remark | `MEMORY.md` named round 9's holes no committed layer recorded | `PROGRAM.76`'s round 9, answered by `c4523f5`, records them |
+
 ## Why
 
 The record closes on a round that finds no defect, as every design here does; each round, its findings and their

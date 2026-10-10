@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the leaf for the parent's tests is judged by a mutation sweep, not a list
+
+`ARCHOGEN-M3-0580` (leaf `M3.6.6.4`), `2026-10-10`.
+
+- Each description of where the parent's rules must be tested — a list of axes, then a census of the code's loops —
+  was found leaving one out. The leaf now names no axis: it is done when the project's mutation sweep over the code
+  that judges generated sources finds every mutant killed by a test, or listed as equivalent with its reason. The
+  record's tested section names none either.
+- Validation: sixteen route tests; the crate's 183 tests; the book's gates; the focused tier on the staged tree.
+
 ## archogen — five ways past the sealed cases' guard closed
 
 `ARCHOGEN-PROGRAM-0579` (leaf `PROGRAM.76`), `2026-10-10`.

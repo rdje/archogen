@@ -126,13 +126,13 @@ reviewed by a context that did not write it; until then the refusal or the belie
 What this record decides — the routes above, and the cases with none — is claimed as far as these tests build it and the
 gate writes or refuses the inventory. The gate's rules the routes rest on — the chain, the blob rule, a file named in
 both clauses, a lone `.rs` file, and the role judgment of each generator against each reader — are the parent's, decided
-by its record and held, at the instances they build, by its instrument's tests; holding each across the axes it has —
-form, clause, position, reader, how a reader reads — is `M3.6.9`'s, filed by this record's round 14 and widened by its
-rounds 15 and 16. This section is the claim that holds now: the leaf's Commit Log rows and `CHANGELOG.md`'s entries
-state each commit's claim as it was written, and the review history narrows them. The tests are `route_tests` in
-`xtask/src/trust_generated.rs`, written when review rounds had probed the routes in untracked tests and found some the
-record named fail, and four of the parent's tests, named with their module — three no-route cases, and the harness as a
-reader:
+by its record and held, at the instances they build, by its instrument's tests; holding each wherever its code judges it
+is `M3.6.9`'s — filed by this record's round 14, its criterion since round 18 a mutation sweep of that code, every
+survivor killed by a test or listed as equivalent, no axis named. This section is the claim that holds now: the leaf's
+Commit Log rows and `CHANGELOG.md`'s entries state each commit's claim as it was written, and the review history narrows
+them. The tests are `route_tests` in `xtask/src/trust_generated.rs`, written when review rounds had probed the routes in
+untracked tests and found some the record named fail, and four of the parent's tests, named with their module — three
+no-route cases, and the harness as a reader:
 
 | Test | Holds |
 | --- | --- |
@@ -209,3 +209,4 @@ finding answered here. The history is
 | 15 | `2026-10-10` | 1, and 4 remarks | answered: every Commit Log row a later round narrowed annotated with its narrowing; `M3.6.9` and §6's opening name each clause, a file named in both clauses and a lone `.rs`; two phrasings |
 | 16 | `2026-10-10` | 5, and 3 remarks | answered by method: the leaf's ledger entries each as its own commit wrote it, one note saying so, §6 the claim that holds now; round 14's paragraph restored; `M3.6.9`'s axes per rule, with how a reader reads |
 | 17 | `2026-10-10` | 3, and 5 remarks | answered by method: `M3.6.9`'s axes derived by a census of the code's loops, no longer listed; the note above the leaf's Commit Log names its sealed first entry; the ledger narrowings rows 13 to 15 state were undone by round 16, the history carrying them; Why qualified as §6 is |
+| 18 | `2026-10-10` | 2, and 5 remarks | answered by method: `M3.6.9`'s criterion a mutation sweep of the judgment code, every survivor killed or listed as equivalent, no axis named — the census of round 17 itself left axes out; §6 names none either |
