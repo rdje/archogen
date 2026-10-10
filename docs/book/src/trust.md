@@ -420,7 +420,9 @@ Measured `2026-10-10`: the roots are the generator, the scheduling checker, the 
 with the comparison harness beside them, and what they share is every pair's build configuration and the harness the
 reference model and the implementation share. The configuration checker has no root yet (`M3.5`). The gate passes with
 *not compared*, since no baseline is committed yet. The runner's baseline is proposed by the `trust-gate` workflow's
-first run, and committed then (`M3.6.3.2.1`). Acceptance — who may accept a form, read on the protected main line —
+first run that judges, and committed then (`M3.6.3.2.1`). Its first run could not: the gate is built from the base,
+and that run's base was older than the gate's command, a case no later push meets, since every base from then on
+holds it. Acceptance — who may accept a form, read on the protected main line —
 waits on the director's protection of `main` and a second reviewer (`M3.6.5`). A committed generated source, which
 shares its generator's mistakes with whatever reads it, is declared, recognised, judged and shared as this chapter
 states (`M3.6.6.2`). Measured `2026-10-10`: `trust/roots.eadl` declares none, no program reads a file the recogniser

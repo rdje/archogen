@@ -19,7 +19,7 @@
 - **Next action:** push to restore CI (`PROGRAM.77`, the one exception to the cadence) and watch every job green; then
   `M3.6.6.4`'s review round 15, of `docs/specs/trust/decision_trust-generated-refusals.md`, with
   `PROGRAM.69`'s round 23 beside it; then `M3.3`.
-  `M3.6.3.2.1`, the runner's baseline, waits on the `trust-gate` workflow's first run, at the next cadence push. `M2`'s open leaves all wait on the director:
+  `M3.6.3.2.1`, the runner's baseline, waits on the `trust-gate` workflow's first run that judges, the restoring push's. `M2`'s open leaves all wait on the director:
   `M2.7.4.5` and `M2.7.6`'s review and hosting half. This project uses no branches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4` and `M2.7.6.4` — findings §11, `main`'s protection and a reviewer;

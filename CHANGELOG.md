@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate's first run in CI had no gate to judge with
+
+`ARCHOGEN-M3-0570` (leaf `M3.6.3.2.1`), `2026-10-10`.
+
+- The gate in CI is built from the commit before the push, so a change cannot weaken the gate that judges it. The
+  first push carrying the workflow had a base older than the gate itself, and the run stopped at "unrecognized
+  arguments". Every later push has a base that holds the gate, so this happens once; the next push's run judges,
+  and its proposal is the runner's baseline the leaf waits on. Run here on the next push's range, the gate passes.
+- Validation: the run's log; the gate on the next push's range; the book's gates.
+
 ## archogen — the test suite no longer ends the CI runner it runs on
 
 `ARCHOGEN-PROGRAM-0569` (leaf `PROGRAM.77`), `2026-10-10`.
