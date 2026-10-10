@@ -347,6 +347,25 @@ method: `M3.6.9`'s goal points to this history and restates none of it.
 | R20-R2 | remark | row 19 claimed a correction it did not state | row 20 states it |
 | R20-R3 | remark | `MEMORY.md` and the trees disagreed on two rounds reported and not yet answered | `MEMORY.md` says each reported round's answer is under way |
 
+**Round 21**, `2026-10-10`, of `a9d6fd8`, by a read-only context that had not written the record, fenced from the
+sealed evaluation set, in a clone and a clone of it. It ran the doctrine gate whole and the crate's tests (183 passed),
+found every ledger entry the note covers identical to its commit's text and the sealed one as sealed, read every route
+test against its row, and confirmed round 20's corrections of round 19 from the sweep's list. Verdict: 2 defects and
+5 remarks. Round 20's paragraph above stands as written; this round corrects it: four of its findings, its defects,
+were in `M3.6.9`, not five. R19-R1's answer, "in `M3.6.9`'s goal, measured", no longer holds since round 20: the
+measurement stands in round 19's row and this history alone. Only rounds 19 and 20 found `M3.6.9`'s summary wrong; the
+earlier rounds found the list, the census and the sweep themselves short.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R21-D1 | defect | `M3.6.9`'s Reproduce said the history names a mutation for each finding; most rounds name none | "as the round that found it states it" |
+| R21-D2 | defect | round 20's paragraph: "all but two in `M3.6.9`'s restatement" — four were | corrected here, round 20's paragraph standing as written |
+| R21-R1 | remark | row 20's "as row 19 says" — R19-D1's answer says it | row 21 says so |
+| R21-R2 | remark | R19-R1's answer no longer holds after round 20 | corrected here |
+| R21-R3 | remark | the leaf's "that evidence" had no antecedent | "the review history's evidence" |
+| R21-R4 | remark | `M3.6.9`'s status named round 20 without its findings | "round 20 (D1–D4)" |
+| R21-R5 | remark | the round-20 changelog entry's "each round found a detail wrong" — rounds 19 and 20 did | corrected here; the entry stands as written, under the note |
+
 ## Why
 
 The record closes on a round that finds no defect, as every design here does; each round, its findings and their

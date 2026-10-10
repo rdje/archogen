@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the leaf for the parent's tests restates nothing of its evidence
+
+`ARCHOGEN-M3-0585` (leaf `M3.6.6.4`), `2026-10-10`.
+
+- One sentence of the leaf still said more of the review history than it holds: that each finding there comes with
+  the mutation that showed it. It now says only that the history records each as the round that found it states it.
+- Validation: sixteen route tests; the crate's 183 tests; the book's gates; the focused tier on the staged tree.
+
 ## archogen — the sealed cases' guard reads the disk itself, and says what it holds against
 
 `ARCHOGEN-PROGRAM-0584` (leaf `PROGRAM.76`), `2026-10-10`.
