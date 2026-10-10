@@ -13,16 +13,19 @@
 # made for other work landed in a sealed case. So while the set is sealed its text is in no
 # file of the working tree: each case lives only as the blob the manifest's `# sealed-in:`
 # commit holds, the manifest keeps its digest — a commitment, revealed at unsealing by
-# `--restore` — and `.gitattributes` marks the sealed paths `-diff`, so a diff, a log patch or
-# a `git grep` of a commit that holds them prints no line of them.
+# `--restore` — and `.gitattributes` marks the sealed paths `-diff`, so in a working tree that
+# carries the mark (`6d61f65` on) a diff, a log patch or a `git grep` of a commit that holds them
+# prints no line of them.
 #
 # ⚠️ A seal that is only a promise is not a seal. This check makes these mechanical:
 #   1. INTEGRITY    — the manifest's entries are the sealing commit's own, that commit an ancestor
 #                     of HEAD; every case's blob there hashes to its digest, and once unsealed the
 #                     restored file does too: the set cannot be rewritten, grown or shrunk.
 #   2. CUSTODY      — while sealed, no case is at its path, in the index, or — its whole text —
-#                     anywhere in the index or the working tree outside ignored files; no tracked
-#                     or untracked file quotes a long line of one; its path is marked `-diff`.
+#                     anywhere in the index or the working tree outside ignored files; no file,
+#                     the manifest included, staged or on disk, quotes a long line of one; no
+#                     repository nested outside ignored folders, no unreadable untracked file;
+#                     its path is marked `-diff`, staged and on disk.
 #   3. COMPLETENESS — nothing is in the sealed directory but the manifest and, once unsealed, the
 #                     listed cases, at any depth, hidden or linked; once unsealed, none is missing.
 #   4. NON-CONTAMINATION — no tracked file outside the sealed directory names a sealed case: a
@@ -34,12 +37,13 @@
 #   the file that holds it, and every arm checks that no output carries a case's text.
 #
 # ⚠️ HONEST LIMIT, stated rather than hidden: the text stays in the published history, which is
-# not rewritten. `git show <commit>:<path>`, a diff asked for with `--text`, and a checkout of any
-# commit from the sealing one up to the one that took the cases out (`2f6f331`'s parent) put it
-# in front of a reader; so does a working tree of another clone not yet past `2f6f331`. Ignored
-# files — build output under `target/` — are not scanned. A quote shorter than a long line, or
-# reworded, is not found. The check cannot prove nobody read a case; a human who reads one and
-# says nothing defeats it.
+# not rewritten. A blob shown or blamed by its path, a diff forced to text or handed to an
+# external driver, git run on the repository without this working tree, a checkout, clone or
+# worktree at a commit older than `6d61f65`, or another clone not yet past it, puts a case in
+# front of a reader; `git grep <commit>` and `git log -S` tell which file or commit holds a term.
+# Ignored files — build output under `target/` — are not scanned. A quote shorter than a long
+# line, or reworded, is not found. It sees what is staged and on disk. The check cannot prove
+# nobody read a case; a human who reads one and says nothing defeats it.
 #
 # UNSEALING. At the leaf named in the manifest's `unseals-at:` line, set `seal: unsealed`,
 # add `unsealed-on:` / `unsealed-by:`, then run `--restore`, which writes each case back from
@@ -52,6 +56,7 @@
 # scratch repository under `target/doctrine_scratch/`, runs this check there, and requires the
 # refusal to name the case it is about.
 set -uo pipefail
+set +x  # never traced: a traced command could carry a case's line (review R2 D3)
 SELF="$0"
 case "$SELF" in /*) ;; *) SELF="$PWD/$SELF" ;; esac
 ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
@@ -93,7 +98,7 @@ self_test() {
     local name="$1" want="$2" must="$3" out rc
     shift 3
     arms=$((arms + 1))
-    out="$(cd "$work" && bash "$SELF" "$@" 2>&1)"; rc=$?
+    out="$(cd "$work" && bash ${TRACE:+-x} "$SELF" "$@" 2>&1)"; rc=$?
     if printf '%s' "$out" | grep -q 'ARM-CASE-TEXT'; then
       echo "SELF-TEST: $name — the check printed a sealed case's text" >&2; return
     fi
@@ -132,6 +137,29 @@ self_test() {
   arm "a long line of a case quoted in an untracked file is refused (custody)" 1 "'docs/notes/draft.md' quotes a line of a sealed case"
   fresh sealed; rm "$work/.gitattributes"; g add -A
   arm "a sealed path not marked -diff is refused (custody)" 1 "'zz-01-arm-alpha.md' is not marked -diff"
+  fresh sealed; : > "$work/.gitattributes"; g add -A; printf 'docs/evaluation/frozen/** -diff\n' > "$work/.gitattributes"
+  arm "a -diff mark dropped from the index alone is refused (custody)" 1 "'zz-01-arm-alpha.md' is not marked -diff"
+  fresh sealed; printf '# note: %s\n' "$LONG" >> "$d/MANIFEST.txt"
+  arm "a case's line quoted in a comment of the manifest is refused (custody)" 1 "MANIFEST.txt' quotes a line of a sealed case"
+  fresh sealed; printf '%s\n' "$LONG" >> "$work/docs/notes/plan.md"
+  TRACE=1 arm "a run traced with bash -x prints no case's line" 1 "'docs/notes/plan.md' quotes a line of a sealed case"
+  # Each of the two guards against a trace on its own, read from this file (review R2 D3): xtrace off at the top, and no
+  # case's line ever a command's argument — the quote patterns never in a command substitution.
+  holds "the check turns tracing off before it reads a case" grep -q '^set +x' "$SELF"
+  holds "no case's line is a command's argument" test -z "$(grep -F '$('"quotes" "$SELF")"
+  fresh sealed; printf '%s\n' "$LONG" >> "$work/docs/notes/plan.md"; g add -A; printf 'nothing about the set here\n' > "$work/docs/notes/plan.md"
+  arm "a quote staged and gone from disk is refused (custody)" 1 "'docs/notes/plan.md' quotes a line of a sealed case"
+  fresh sealed; g show "$sealed_in:docs/evaluation/frozen/zz-02-arm-beta.md" > "$work/docs/notes/plan.md"
+  arm "a case's whole text in a modified tracked file is refused (custody)" 1 "a sealed case's text is in the working tree at 'docs/notes/plan.md'"
+  fresh sealed; g show "$sealed_in:docs/evaluation/frozen/zz-02-arm-beta.md" > "$work/docs/notes/café copy.md"
+  arm "a copy under a name git would quote is refused (custody)" 1 "a sealed case's text is in the working tree at 'docs/notes/café copy.md'"
+  fresh sealed; printf 'locked\n' > "$work/docs/notes/locked.md"; chmod 000 "$work/docs/notes/locked.md"
+  arm "an untracked file that cannot be read is refused, the leg failing closed" 1 "'docs/notes/locked.md' cannot be read"
+  chmod 600 "$work/docs/notes/locked.md"
+  fresh sealed; git -C "$work/docs/notes" init -q nested; printf 'x\n' > "$work/docs/notes/nested/x.md"
+  arm "a repository nested outside ignored folders is refused (custody)" 1 "'docs/notes/nested/' is a repository nested outside ignored folders"
+  fresh sealed; ln -s nowhere "$d/zz-01-arm-alpha.md"
+  arm "a dangling link at a case's path is refused (custody)" 1 "sealed case 'zz-01-arm-alpha.md' is in the working tree"
   # Integrity.
   fresh sealed; edit 's/^[0-9a-f]\{64\}  zz-02/0000000000000000000000000000000000000000000000000000000000000000  zz-02/'
   arm "a digest its sealing commit's blob does not match is refused (integrity)" 1 "'zz-02-arm-beta.md' does not match its blob in the sealing commit"
@@ -149,7 +177,9 @@ self_test() {
   fresh sealed; edit '/^# sealed-in:/d'
   arm "a manifest that names no sealing commit is refused" 1 "has no '# sealed-in: <commit>' line"
   fresh sealed; manifest "not a digest line"
-  arm "a manifest line that is no entry is refused" 1 "a manifest line that is not '<sha256>  <file>'"
+  arm "a manifest line that is no entry is refused, by its number" 1 "MANIFEST.txt's line 5 is not '<sha256>  <file>'"
+  fresh sealed; manifest "$LONG"
+  arm "a case's line pasted bare into the manifest is refused, never echoed" 1 "MANIFEST.txt' quotes a line of a sealed case"
   # Completeness.
   fresh sealed; printf 'extra\n' > "$d/zz-03-arm-gamma.md"
   arm "a file added to the set unlisted is refused (completeness)" 1 "unlisted entry 'zz-03-arm-gamma.md'"
@@ -191,6 +221,8 @@ self_test() {
   holds "nothing unverified is written, no part file left" test ! -e "$d/zz-02-arm-beta.md" -a -z "$(find "$d" -name '.*.restore.*')"
   fresh unsealed; printf 'ARM-CASE-TEXT rewritten\n' > "$d/zz-02-arm-beta.md"
   arm "a restored case edited is refused (integrity)" 1 "sealed case 'zz-02-arm-beta.md' was modified"
+  fresh unsealed; rm "$d/zz-01-arm-alpha.md"; ln -s zz-02-arm-beta.md "$d/zz-01-arm-alpha.md"
+  arm "once unsealed, a case that is a link is refused (integrity)" 1 "listed case 'zz-01-arm-alpha.md' in docs/evaluation/frozen is a link"
   fresh unsealed; printf 'ARM-CASE-TEXT rewritten\n' > "$d/zz-02-arm-beta.md"
   edit "s/^[0-9a-f]\{64\}  zz-02/$(sha "$d/zz-02-arm-beta.md")  zz-02/"
   arm "once unsealed, a case and its digest rewritten together are refused (integrity)" 1 "'zz-02-arm-beta.md' does not match its blob in the sealing commit"
@@ -247,9 +279,10 @@ esac
 mkdir -p "$ROOT/target/doctrine_scratch"
 tmp="$(mktemp -d "$ROOT/target/doctrine_scratch/frozen_evaluation.XXXXXX")"; trap 'rm -rf "$tmp"' EXIT
 grep -vE '^[[:space:]]*(#|$)' "$MANIFEST" > "$tmp/lines.txt" || true
-while IFS= read -r line; do
-  printf '%s\n' "$line" | grep -qE "$ENTRY" || note "a manifest line that is not '<sha256>  <file>': '${line:0:72}'"
-done < "$tmp/lines.txt"
+# A line that is no entry is named by its number alone: its text could be anything, a case's line among it (R2 D2).
+while IFS= read -r n; do
+  note "$MANIFEST's line $n is not '<sha256>  <file>' — every line but a comment or a blank is an entry"
+done < <(grep -nvE "$ENTRY|^[[:space:]]*(#|\$)" "$MANIFEST" | cut -d: -f1)
 grep -E "$ENTRY" "$tmp/lines.txt" > "$tmp/entries.txt" || true
 awk '{ print $2 }' "$tmp/entries.txt" > "$tmp/listed.txt"
 
@@ -264,7 +297,7 @@ elif ! git merge-base --is-ancestor "$sealed_in" HEAD 2>/dev/null; then
   note "the sealing commit $sealed_in is not an ancestor of HEAD — a set is sealed in this history or not at all"
   sealed_in=""
 elif ! git cat-file -e "$sealed_in:$MANIFEST" 2>/dev/null; then
-  note "the sealing commit $sealed_in holds no $MANIFEST to pin the set's entries"
+  note "the sealing commit $sealed_in holds no $MANIFEST to pin the set's entries, or this clone cannot fetch it"
   sealed_in=""
 else
   # The set is the one sealed: the same entries, no case added, dropped or re-digested.
@@ -333,34 +366,48 @@ if [ "$seal" = "sealed" ]; then
   while read -r want name; do
     path="$DIR/$name"
     { [ -e "$path" ] || [ -L "$path" ]; } && note "sealed case '$name' is in the working tree while the set is sealed — its text stays in the sealing commit until unsealing"
-    [ "$(git check-attr diff -- "$path" | sed 's/.*: diff: //')" = "unset" ] \
-      || note "'$name' is not marked -diff in .gitattributes — a diff or a log patch of a commit that holds the set would print its text"
+    # In the working tree and in the index, the one a commit records (review R2).
+    [ "$(git check-attr diff -- "$path" | sed 's/.*: diff: //')" = "unset" ] &&
+      [ "$(git check-attr --cached diff -- "$path" | sed 's/.*: diff: //')" = "unset" ] \
+      || note "'$name' is not marked -diff in .gitattributes, staged and on disk — a diff or a log patch of a commit that holds the set would print its text"
   done < "$tmp/entries.txt"
   while IFS= read -r tracked; do
     [ "$tracked" = "$MANIFEST" ] || note "'$tracked' is tracked while the set is sealed — a case's text stays in the sealing commit"
   done < <(git ls-files -- "$DIR")
   if [ -s "$tmp/blobs.txt" ]; then
     # A case's whole text at any other path: in the index, by its blob id; in the working tree, untracked or
-    # modified, by the blob id of what is there. Ignored files are not scanned.
-    git ls-files -s | awk 'NR == FNR { b[$1]; next } ($2 in b) { sub(/^[^\t]*\t/, ""); print }' "$tmp/blobs.txt" - \
-      | while IFS= read -r at; do printf "FROZEN-EVALUATION: a sealed case's text is tracked at '%s'\n" "$at" >&2; done
-    git ls-files -s | awk 'NR == FNR { b[$1]; next } ($2 in b) { found = 1 } END { exit !found }' "$tmp/blobs.txt" - && fail=1
-    { git ls-files --others --exclude-standard -- . ":(exclude)$DIR"; git ls-files -m -- . ":(exclude)$DIR"; } | sort -u |
-      while IFS= read -r at; do [ -f "$at" ] && printf '%s\n' "$at"; done > "$tmp/loose.txt"
-    if [ -s "$tmp/loose.txt" ]; then
-      git hash-object --stdin-paths < "$tmp/loose.txt" > "$tmp/loose-ids.txt" 2>/dev/null || : > "$tmp/loose-ids.txt"
-      while IFS= read -r at && IFS= read -r id <&3; do
-        grep -qxF "$id" "$tmp/blobs.txt" && note "a sealed case's text is in the working tree at '$at'"
-      done < "$tmp/loose.txt" 3< "$tmp/loose-ids.txt"
+    # modified, by the blob id of what is there, each file hashed on its own and one that cannot be read named, so the
+    # leg fails closed. Paths are read NUL-separated, never quoted. Ignored files are not scanned; a repository nested
+    # outside ignored folders is refused, since its files are none the index or `--others` lists (review R2 D4).
+    tab="$(printf '\t')"
+    # One pass finds whether any entry holds a case's blob; only then is each path named, read NUL-separated.
+    if git ls-files -s | awk 'NR == FNR { b[$1]; next } ($2 in b) { f = 1 } END { exit !f }' "$tmp/blobs.txt" -; then
+      while IFS= read -r -d '' rec; do
+        id="${rec#* }"; id="${id%% *}"
+        grep -qxF "$id" "$tmp/blobs.txt" && note "a sealed case's text is tracked at '${rec#*"$tab"}'"
+      done < <(git ls-files -s -z)
     fi
-    # A long line of a case quoted anywhere outside the set, tracked or untracked: found by the name of the file
-    # that holds it, the patterns read from the blobs through a pipe, never written down.
+    while IFS= read -r -d '' at; do
+      case "$at" in
+        */) note "'$at' is a repository nested outside ignored folders — its files cannot be checked for a case; ignore it or move it" ;;
+        *) [ -f "$at" ] || continue
+           if ! id="$(git hash-object -- "$at" 2>/dev/null)"; then
+             note "'$at' cannot be read, so a case's copy there cannot be ruled out"
+           elif grep -qxF "$id" "$tmp/blobs.txt"; then
+             note "a sealed case's text is in the working tree at '$at'"
+           fi ;;
+      esac
+    done < <({ git ls-files -z --others --exclude-standard; git ls-files -z -m; })
+    # A long line of a case quoted anywhere, the manifest included, staged or on disk, tracked or untracked: found by
+    # the name of the file that holds it, the patterns read from the blobs through a pipe, never written down, never in
+    # a command's arguments (review R2 D2, D3).
     quotes() { while IFS= read -r id; do git cat-file blob "$id"; done < "$tmp/blobs.txt" |
                  awk '{ gsub(/^[[:space:]]+|[[:space:]]+$/, "") } length($0) >= 60 && NF >= 8'; }
-    if [ -n "$(quotes | head -1)" ]; then
-      while IFS= read -r at; do
+    if quotes | grep -q .; then
+      while IFS= read -r -d '' at; do
         note "'$at' quotes a line of a sealed case — the set is no longer unseen"
-      done < <(git grep -l --untracked -F -f <(quotes) -- . ":(exclude)$DIR" ":(exclude)scripts/check_frozen_evaluation.sh" 2>/dev/null)
+      done < <({ git grep -z -l --cached -F -f <(quotes) 2>/dev/null; git grep -z -l --untracked -F -f <(quotes) 2>/dev/null; } |
+               sort -zu)
     fi
   fi
 fi

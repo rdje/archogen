@@ -924,10 +924,10 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM.76`
   Status: `active` — filed and started `2026-10-10`, on the director's word: *"Digests stay, text leaves"*, end to
   end, without them, *"sota, signoff and production-grade"*; the change committed (`ARCHOGEN-PROGRAM-0542`), its
-  review open, round 1's findings answered (`ARCHOGEN-PROGRAM-0544`), round 2 next
+  review open, round 2's findings answered (`ARCHOGEN-PROGRAM-0547`), round 3 next
   Goal: the sealed evaluation set guarded against being read, not only against being edited or named, so no search
-  of the working tree made for other work can reach a case before `M6.5`, nor a diff of a commit that holds one show
-  it.
+  of the working tree made for other work can reach a case before `M6.5`, nor, in a working tree that carries the
+  mark, a diff of a commit that holds one show it.
   Reproduce / issue: `M3.3`'s survey, a delegated read-only search told to sweep the whole tree, opened one sealed
   case; a search in the working session printed one of its lines. The seal's check let it be: `git ls-files docs/evaluation/frozen` at `4caef04` → the manifest and five
   cases, the doctrine gate green.
@@ -973,7 +973,20 @@ mdBook that is the director's window into the project.
   none left. Evidence: `--self-test` → *"40 pass / 0 fail (40 arms)"*; beside `2f6f331`'s core → *"27 pass / 13 fail
   (40 arms)"*; `python3 target/p76/mutate2.py` → *"11 of 11 killed"* — both runners untracked, so not durable.
   Verification: `2026-10-10` — the Verification Log's rows
-  Commit: `ARCHOGEN-PROGRAM-0542 (leaf PROGRAM.76)`; `ARCHOGEN-PROGRAM-0544 (leaf PROGRAM.76)`, review round 1
+  Review round 2, `2026-10-10`, of `6d61f65`: 5 defects, 1 arm gap. The check could print a case's line — echoing a
+  manifest line that is no entry, and under a shell trace — and missed a copy staged and gone from disk, in the
+  manifest, under a quoted name, in an unreadable file or a nested repository; the diff guard holds only in a working
+  tree carrying the mark. Answered: a bad line named by its number; `set +x`, no case's line ever a command's argument,
+  each held by an arm reading the script; the quote search over the index and the disk, the manifest included; paths
+  read NUL-separated, each untracked or modified file hashed on its own, one that cannot be read refused, a nested
+  repository refused; the attribute checked staged and on disk; arms for a dangling link at a case's path and a case
+  that is a link once unsealed; the texts given `6d61f65` as the boundary and every act that still reaches a case
+  (`git blame`, an external diff driver, git without this working tree). The 47 local clones whose index still held the
+  set, every one under `target/` or the session scratchpad, were deleted — none left, by `git ls-files` in each. Evidence:
+  `--self-test` → *"53 pass / 0 fail (53 arms)"*; beside `6d61f65`'s core → *"44 pass / 9 fail (53 arms)"*; `python3
+  target/p76/mutate3.py` → *"10 of 10 killed"* — both runners untracked, so not durable; the real check in 0.9 s.
+  Commit: `ARCHOGEN-PROGRAM-0542 (leaf PROGRAM.76)`; `ARCHOGEN-PROGRAM-0544 (leaf PROGRAM.76)`, review round 1;
+  `ARCHOGEN-PROGRAM-0547 (leaf PROGRAM.76)`, review round 2
 
 ## Roadmap coverage map
 
@@ -1040,7 +1053,7 @@ roadmap item X live?".
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
 | 1 | `PROGRAM.69` | `active` | its review open: round 16 next, on the committed tool, its seal already in place |
-| 2 | `PROGRAM.76` | `active` | its review open: round 2 next, of the sealed set's custody |
+| 2 | `PROGRAM.76` | `active` | its review open: round 3 next, of the sealed set's custody |
 | 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The third row waits on the director's yes. The pending leaves beside them —
@@ -1205,6 +1218,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `2026-10-10` | `PROGRAM.69` (round 14) | the arms as committed beside `6c79b36`'s core; the self-test; seven mutations of round 14's rules; the gate over 172 files; every self-test; focused on the staged tree | 97 pass / 9 fail, the working tree's and not durable; 106 / 0; each killed by an untracked runner, not durable; OK; 48 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.76` (round 1) | the check on the real set; its self-test; the arms beside `2f6f331`'s core; eleven mutations; the case lines a diff of `2f6f331` shows; every self-test; focused on the staged tree | exit 0; 40 / 0; 27 pass / 13 fail, not durable; 11 killed, not durable; 0; 48 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.69` (round 15) | the arms as committed beside `421ce47`'s core; the self-test; six mutations of round 15's rules; the gate over 172 files; every self-test; focused on the staged tree | 108 pass / 1 fail, the working tree's and not durable; 109 / 0; each killed by an untracked runner, not durable; OK; 48 passed; `passed — 3 passed, 0 failed` |
+| `2026-10-10` | `PROGRAM.76` (round 2) | the check on the real set; its self-test; the arms beside `6d61f65`'s core; ten mutations; the stale clones' indexes; every self-test; focused on the staged tree | exit 0, 0.9 s; 53 / 0; 44 pass / 9 fail, not durable; 10 killed, not durable; none holds a case; 48 passed; `passed — 3 passed, 0 failed` |
 
 ## Commit Log
 
@@ -1363,6 +1377,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0543 (leaf PROGRAM.69)` | **review round 14 answered**: every maskable signal held from before the first write; the outcome said, the interrupt's message by it; the temporary paths refused first; 106 arms |
 | `PROGRAM.76` | `ARCHOGEN-PROGRAM-0544 (leaf PROGRAM.76)` | **review round 1 answered by mechanism**: the sealed paths `-diff`; custody by content, whole or quoted; completeness at any depth; the set pinned to the one sealed; the texts narrowed |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0546 (leaf PROGRAM.69)` | **review round 15 answered**: the stop's message by whether the seal started and said its outcome; the nine unheld signals named; four arm gaps armed; 109 arms |
+| `PROGRAM.76` | `ARCHOGEN-PROGRAM-0547 (leaf PROGRAM.76)` | **review round 2 answered**: no case's line ever printed, traced or echoed; the quote search staged and on disk, the manifest included; the copy search fail-closed; `6d61f65` the diff guard's boundary |
 
 ## Changelog
 

@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the sealed cases' guard fails closed, and never prints a line
+
+`ARCHOGEN-PROGRAM-0547` (leaf `PROGRAM.76`), `2026-10-10`.
+
+- The seal's check could print a sealed case's line in two ways — echoing a manifest line it could not read, and
+  under a shell trace — and missed a copy under a name git quotes, in an unreadable file, in a nested repository,
+  staged and gone from disk, or in the manifest itself. It now names a bad line by its number, never traces, reads
+  paths whole, fails closed on what it cannot read, and looks at the staged tree as well as the disk. The texts give
+  the revision the diff guard starts at, and the acts that still reach a case. Local clones whose index still held
+  the set were removed.
+- Validation: 53 arms, nine failing on the previous check and ten deliberate breaks each caught, both by untracked
+  runners, so not durable; no run prints a case's text.
+
 ## archogen — a seal's stop says the truth even when its report is lost
 
 `ARCHOGEN-PROGRAM-0546` (leaf `PROGRAM.69`), `2026-10-10`.
@@ -20,11 +33,11 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 
 `ARCHOGEN-PROGRAM-0544` (leaf `PROGRAM.76`), `2026-10-10`.
 
-- The change that took the sealed cases out of the tree showed their text in its own diff, and the check looked for
-  a case only at its own path. Diffs, log patches and history searches of the sealed paths now show no line of them;
-  the check looks for a case's whole text anywhere in the working tree and for a long line of it quoted in any
-  file, refuses anything else in the sealed folder at any depth, and pins the set to the one sealed. The texts now
-  claim no more than that: a deliberate read of history still reaches a case.
+- The change that took the sealed cases out of the tree showed their text in its own diff, and the check looked for a
+  case only at its own path. Diffs, log patches and history searches of the sealed paths now show no line of them in a
+  working tree that carries the change; the check looks for a case's whole text anywhere in the working tree and for a
+  long line of it quoted in any file, refuses anything else in the sealed folder at any depth, and pins the set to the
+  one sealed. The texts now claim no more than that: a deliberate read of history still reaches a case.
 - Validation: 40 arms, thirteen failing on the previous check and eleven deliberate breaks each caught, both by
   untracked runners, so not durable; no run prints a case's text.
 
@@ -40,7 +53,7 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
   stop before any write; nine failing on the previous tool; seven deliberate breaks, each caught by an untracked
   runner, so not durable (106 arms).
 
-## archogen — the sealed evaluation cases can no longer be read by accident
+## archogen — the sealed evaluation cases out of the working tree
 
 `ARCHOGEN-PROGRAM-0542` (leaf `PROGRAM.76`), `2026-10-10`.
 

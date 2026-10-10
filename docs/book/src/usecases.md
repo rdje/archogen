@@ -85,9 +85,9 @@ at M6. Not because they are secret — this repository is public — but because
 worthless once the engine has been shaped, even unconsciously, by what those cases need.
 
 The seal is mechanical, and it guards reading as well as writing. While sealed, the cases' text
-is in no file of the working tree: only the commit that sealed them holds it, and the manifest
-keeps each one's digest, so no search of the working tree can land in a case, whatever it looks
-for, and no diff of a commit that holds one shows its text. A check refuses a set that is not the
+is in no file of the working tree: only the history holds it, and the manifest keeps each one's
+digest, so no search of the working tree can land in a case, whatever it looks for, and, from
+this revision on, no diff of a commit that holds one shows its text. A check refuses a set that is not the
 one sealed, a digest that no longer matches its sealed text, a case back in the tree — at its
 path, copied elsewhere, or a long line of it quoted — anything else in the sealed directory, and
 any tracked file outside it that names a sealed case; at unsealing a restore writes each case
