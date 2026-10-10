@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust inventory reads generated-source declarations
+
+`ARCHOGEN-M3-0509` (leaf `M3.6.6.2.1`), `2026-10-10`.
+
+- `trust/roots.eadl` takes a `defgenerated` form, declaring a committed generated source with its generator files,
+  inputs, command and reason. The inventory reads these forms first, before it writes or builds anything, and refuses
+  a malformed one — or two forms declaring one file — as `trust-undeclared-input`; before, any such form left the gate
+  unable to judge. Another form of the file departing still leaves the gate unable to judge, now with the declarations'
+  refusals printed beside it.
+- Two defects of the run fixed on the way: a refusal before any build left an earlier run's inventory in place, to be
+  read as this commit's; and a program whose build failed hid the refusals of the programs after it. Now a refused run
+  leaves no inventory, and a failed build's step runs to its end, its refusals printed beside the failure.
+- Validation: eight new tests, twenty new catalogued mutations each killed; the real tree's inventory byte-identical
+  to the previous instrument's; the focused tier and the whole suite (1 312 tests, 0 failed) pass.
+
 ## archogen — the sixth artifact cleanup
 
 `ARCHOGEN-PROGRAM-0508` (leaf `PROGRAM.68`), `2026-10-10`.

@@ -51,6 +51,7 @@ mod premises;
 mod target;
 mod trust;
 mod trust_gate;
+mod trust_generated;
 mod trust_verify;
 
 use std::path::{Path, PathBuf};

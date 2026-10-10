@@ -55,6 +55,22 @@ clean, and reads the compiler's own record of every file it read. Every source a
 catalog's rules: a construct that could read something the commit does not track — an `include!` of an untracked
 file, an environment variable, assembly pulling in bytes — is refused unless a reviewed **admission** names it.
 
+A file committed as a generator's output — a table a script wrote from a data file — is declared in the same roots
+file, by a `defgenerated` form naming the file, the generator files that wrote it, the inputs they read, the command
+that ran and why:
+
+```text
+(defgenerated "crates/x/src/table.rs"
+  (generator "scripts/gen_table.sh")
+  (inputs "docs/data/table.csv")
+  (command "bash scripts/gen_table.sh docs/data/table.csv")
+  (reason "the instruction table, generated from the vendor's CSV"))
+```
+
+The inventory reads these forms before it writes or builds anything, and refuses one that departs from that shape — a
+clause the form does not take, no generator, a command that is not one string — or two forms declaring one file. What a
+declaration then makes visible, and how an undeclared generated file is recognised, is being built (`M3.6.6.2`).
+
 For each pair of roots it then lists what they share, each item with the sha256 of its **content**, its
 **configuration** (features, `cfg`, edition, as each root's own build sets them), its **edges** (who depends on it)
 and, for a package's files, its **readers**. A new consumer of a package already shared is a change, though nothing in
@@ -116,7 +132,19 @@ run time was declared.
 
 The design is `docs/specs/trust/decision_trust-inventory.md`, reviewed round by round until a round found no defect;
 its section numbers are used below. The code is `xtask/src/trust.rs` (the inventory), `xtask/src/trust_gate.rs` (the baseline and the
-gate) and `xtask/src/trust_verify.rs` (the verifier).
+gate) and `xtask/src/trust_verify.rs` (the verifier); committed generated sources are
+`docs/specs/trust/decision_trust-generated-sources.md` and `xtask/src/trust_generated.rs`.
+
+### The run's order
+
+The inventory decides in steps, each running only when those before it refused nothing (the generated-sources record
+§2): first the forms' text, nothing built; then the programs' builds and the data their forms hand them, with every
+refusal the rules below make before or in those builds. A step that refuses ends the run and leaves no inventory — not
+even one an earlier run wrote, which would read as this commit's. A step in which a build fails still runs to its end,
+every build in it made, and then ends unable to judge (exit 2), the refusals it found printed beside the failure. A
+form of `trust/roots.eadl` other than a `defgenerated` one that departs from its shape also leaves the gate unable to
+judge, the `defgenerated` refusals read before it printed beside it. Three more steps — what a declaration's generator
+and inputs share, the generators themselves, and an undeclared generated file — are `M3.6.6.2`'s, under way.
 
 ### The codes
 
@@ -126,7 +154,7 @@ gate) and `xtask/src/trust_verify.rs` (the verifier).
 | `trust-shared-changed` | reported | an item whose content, configuration, edges or readers differ from the base commit's form |
 | `trust-unclassified-program` | reported | a program target neither a root nor classified, or whose classification's role packages grew |
 | `trust-baseline-stale` | refused, on the baseline's host | a form whose item is no longer shared, a classification whose target is gone, an admission no site uses; and, wherever the gate runs, a form naming a package or target the commit no longer has |
-| `trust-undeclared-input` | refused | an input the commit does not hold, or a construct the catalog's rules refuse, with no admission |
+| `trust-undeclared-input` | refused | an input the commit does not hold, or a construct the catalog's rules refuse, with no admission; a `defgenerated` form departing from its shape, or two forms declaring one file |
 | `trust-form-missing` | refused, on the baseline's host | a shared item with no form in the commit's own baseline, or with one proposing other digests than the commit measures; a program target with no classification |
 | `trust-shared-program` | refused | a root compiling another role's role package |
 | `trust-inventory-stale` | refused, by `trust-verify` | a package's inventory missing or of another build, its report of another inventory, an artifact or a result's producer not the inventory's, a handed dependency undeclared |
@@ -179,5 +207,6 @@ the harness the reference model and the implementation share. The configuration 
 gate passes with *not compared*, since no baseline is committed yet. The runner's baseline is proposed by the `trust-gate`
 workflow's first run, and committed then (`M3.6.3.2.1`). Acceptance — who may accept a form, read on the protected
 main line — waits on the director's protection of `main` and a second reviewer (`M3.6.5`). A committed generated
-source, which shares its generator's mistakes with whatever reads it, is `M3.6.6`'s. The package the verifier reads is
+source, which shares its generator's mistakes with whatever reads it, is `M3.6.6`'s: its form is read today
+(`M3.6.6.2.1`), what it shares is next (`M3.6.6.2.2`), and this chapter's whole account of it is `M3.6.6.3`'s. The package the verifier reads is
 fixed provisionally until `M4.7` writes real ones.

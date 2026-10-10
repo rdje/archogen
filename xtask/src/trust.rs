@@ -117,9 +117,14 @@ pub struct Roots {
     pub admissions: BTreeMap<Admission, usize>,
     /// Every program target classified as not a root (§2).
     pub classified: Vec<Classification>,
+    /// Every committed generated source declared, its form's shape holding (the generated-sources record §2).
+    pub generated: Vec<crate::trust_generated::Generated>,
+    /// Every refusal of the `defgenerated` forms' text, step 1 of that record's order: none, or the run ends.
+    pub generated_refused: Vec<String>,
 }
 
-/// Each form the instrument reads, and the clauses it takes; any other form or clause is refused (R8 11).
+/// Each form the instrument reads, and the clauses it takes; any other form or clause is refused (R8 11). A
+/// `defgenerated` form is read apart, each departure a coded refusal (`trust_generated`).
 const FORMS: &[(&str, &[&str])] = &[
     (
         "defroot",
@@ -164,11 +169,13 @@ fn one(form: &Form, head: &str, what: &str) -> Result<String, String> {
 }
 
 /// Read the roots file, strictly: a form or a clause the instrument does not know, a clause twice, a name twice, and
-/// a harness whose pair names no root are refused (R8 11).
+/// a harness whose pair names no root are refused (R8 11). A `defgenerated` form is read apart, every departure from
+/// its shape a coded refusal held in [`Roots::generated_refused`] (the generated-sources record §2, step 1).
 ///
 /// # Errors
 ///
-/// A form the instrument cannot read.
+/// A form the instrument cannot read, the gate unable to judge: the `defgenerated` refusals the reader met before it
+/// are reported beside it, and every one beside a departure found only once the whole file is read.
 pub fn read_roots(text: &str) -> Result<Roots, String> {
     let mut sources = SourceMap::new();
     let id = sources
@@ -178,122 +185,152 @@ pub fn read_roots(text: &str) -> Result<Roots, String> {
     if diags.has_errors() {
         return Err(diags.render(&sources));
     }
+    let line = |form: &Form| {
+        sources
+            .get(id)
+            .map_or(0, |s| s.position(form.span().start).line)
+    };
     let mut roots = Roots::default();
     let mut names: BTreeSet<String> = BTreeSet::new();
+    let mut generated = Vec::new();
     for form in &doc.forms {
-        let head = form.head().unwrap_or("?");
-        let Some((_, allowed)) = FORMS.iter().find(|(h, _)| *h == head) else {
+        if form.head() == Some(crate::trust_generated::GENERATED) {
+            generated.push(crate::trust_generated::read_form(form, line(form)));
+            continue;
+        }
+        // The parent's reader stops at the first other form that departs: the `defgenerated` forms before it are
+        // reported beside it, and those after it once it is repaired.
+        read_form(form, &mut roots, &mut names).map_err(|why| {
+            crate::trust_generated::beside(why, &crate::trust_generated::refusals(&generated))
+        })?;
+    }
+    // A departure found only once the whole file is read has every `defgenerated` form's refusals beside it.
+    check_pairs(&roots).map_err(|why| {
+        crate::trust_generated::beside(why, &crate::trust_generated::refusals(&generated))
+    })?;
+    roots.generated_refused = crate::trust_generated::refusals(&generated);
+    roots.generated = crate::trust_generated::declarations(generated);
+    Ok(roots)
+}
+
+/// One form of the roots file other than a `defgenerated` one, read into `roots`.
+fn read_form(form: &Form, roots: &mut Roots, names: &mut BTreeSet<String>) -> Result<(), String> {
+    let head = form.head().unwrap_or("?");
+    let Some((_, allowed)) = FORMS.iter().find(|(h, _)| *h == head) else {
+        return Err(format!(
+            "{ROOTS}: a form `{head}` the instrument does not know"
+        ));
+    };
+    // An admission has no name; every other form names itself first.
+    let named = head != "defadmit";
+    let name = if named {
+        form.items().get(1).and_then(word).unwrap_or_default()
+    } else {
+        "an admission".to_owned()
+    };
+    if named && !names.insert(name.clone()) {
+        return Err(format!("{ROOTS}: `{name}` is named twice"));
+    }
+    let mut seen = BTreeSet::new();
+    for c in form.items().iter().skip(if named { 2 } else { 1 }) {
+        let Some(h) = c.head() else {
             return Err(format!(
-                "{ROOTS}: a form `{head}` the instrument does not know"
+                "{ROOTS}: `{name}` holds something that is not a clause"
             ));
         };
-        // An admission has no name; every other form names itself first.
-        let named = head != "defadmit";
-        let name = if named {
-            form.items().get(1).and_then(word).unwrap_or_default()
-        } else {
-            "an admission".to_owned()
-        };
-        if named && !names.insert(name.clone()) {
-            return Err(format!("{ROOTS}: `{name}` is named twice"));
+        if !allowed.contains(&h) {
+            return Err(format!(
+                "{ROOTS}: `{name}` holds a clause `{h}` its form does not take"
+            ));
         }
-        let mut seen = BTreeSet::new();
-        for c in form.items().iter().skip(if named { 2 } else { 1 }) {
-            let Some(h) = c.head() else {
-                return Err(format!(
-                    "{ROOTS}: `{name}` holds something that is not a clause"
-                ));
-            };
-            if !allowed.contains(&h) {
-                return Err(format!(
-                    "{ROOTS}: `{name}` holds a clause `{h}` its form does not take"
-                ));
-            }
-            if !seen.insert(h) {
-                return Err(format!("{ROOTS}: `{name}` holds `{h}` twice"));
-            }
-        }
-        match head {
-            "defroot" => {
-                let target = match values(form, "target").as_slice() {
-                    [k] if k == "lib" => Target::Lib,
-                    [k, n] if k == "bin" => Target::Bin(n.clone()),
-                    _ => {
-                        return Err(format!(
-                            "{ROOTS}: `{name}`'s target is `(target lib)` or `(target bin NAME)`"
-                        ))
-                    }
-                };
-                let package = one(form, "package", &name)?;
-                let mut role_packages: BTreeSet<String> =
-                    values(form, "role-packages").into_iter().collect();
-                role_packages.insert(package.clone());
-                let role = one(form, "role", &name)?;
-                if !ROLES.contains(&role.as_str()) {
-                    return Err(format!(
-                        "{ROOTS}: `{name}`'s role `{role}` is none of the record's: {}",
-                        ROLES.join(", ")
-                    ));
-                }
-                roots.programs.push(Program {
-                    role,
-                    package,
-                    target,
-                    role_packages,
-                    pair: None,
-                    data: values(form, "data"),
-                    name,
-                });
-            }
-            "defharness" => {
-                let pair = values(form, "pair");
-                let [a, b] = pair.as_slice() else {
-                    return Err(format!("{ROOTS}: `{name}` names `(pair ROOT ROOT)`"));
-                };
-                roots.programs.push(Program {
-                    role: "harness".to_owned(),
-                    package: one(form, "package", &name)?,
-                    target: Target::Test(one(form, "test", &name)?),
-                    role_packages: BTreeSet::new(),
-                    pair: Some((a.clone(), b.clone())),
-                    data: Vec::new(),
-                    name,
-                });
-            }
-            "defprogram" => {
-                one(form, "reason", &name)?;
-                let (kind, target) = match values(form, "target").as_slice() {
-                    [k, n] if PROGRAM_KINDS.contains(&k.as_str()) => (k.clone(), n.clone()),
-                    _ => {
-                        return Err(format!(
-                            "{ROOTS}: `{name}`'s target is `(target KIND NAME)`, KIND one of {}",
-                            PROGRAM_KINDS.join(", ")
-                        ))
-                    }
-                };
-                roots.classified.push(Classification {
-                    package: one(form, "package", &name)?,
-                    kind,
-                    target,
-                    role_packages: values(form, "role-packages").into_iter().collect(),
-                    name,
-                });
-            }
-            "defadmit" => {
-                one(form, "reason", "an admission")?;
-                *roots
-                    .admissions
-                    .entry(Admission {
-                        file: one(form, "file", "an admission")?,
-                        rule: one(form, "rule", "an admission")?,
-                        sha256: one(form, "sha256", "an admission")?,
-                    })
-                    .or_default() += 1;
-            }
-            _ => {}
+        if !seen.insert(h) {
+            return Err(format!("{ROOTS}: `{name}` holds `{h}` twice"));
         }
     }
-    // A harness compares two distinct roots the file declares.
+    match head {
+        "defroot" => {
+            let target = match values(form, "target").as_slice() {
+                [k] if k == "lib" => Target::Lib,
+                [k, n] if k == "bin" => Target::Bin(n.clone()),
+                _ => {
+                    return Err(format!(
+                        "{ROOTS}: `{name}`'s target is `(target lib)` or `(target bin NAME)`"
+                    ))
+                }
+            };
+            let package = one(form, "package", &name)?;
+            let mut role_packages: BTreeSet<String> =
+                values(form, "role-packages").into_iter().collect();
+            role_packages.insert(package.clone());
+            let role = one(form, "role", &name)?;
+            if !ROLES.contains(&role.as_str()) {
+                return Err(format!(
+                    "{ROOTS}: `{name}`'s role `{role}` is none of the record's: {}",
+                    ROLES.join(", ")
+                ));
+            }
+            roots.programs.push(Program {
+                role,
+                package,
+                target,
+                role_packages,
+                pair: None,
+                data: values(form, "data"),
+                name,
+            });
+        }
+        "defharness" => {
+            let pair = values(form, "pair");
+            let [a, b] = pair.as_slice() else {
+                return Err(format!("{ROOTS}: `{name}` names `(pair ROOT ROOT)`"));
+            };
+            roots.programs.push(Program {
+                role: "harness".to_owned(),
+                package: one(form, "package", &name)?,
+                target: Target::Test(one(form, "test", &name)?),
+                role_packages: BTreeSet::new(),
+                pair: Some((a.clone(), b.clone())),
+                data: Vec::new(),
+                name,
+            });
+        }
+        "defprogram" => {
+            one(form, "reason", &name)?;
+            let (kind, target) = match values(form, "target").as_slice() {
+                [k, n] if PROGRAM_KINDS.contains(&k.as_str()) => (k.clone(), n.clone()),
+                _ => {
+                    return Err(format!(
+                        "{ROOTS}: `{name}`'s target is `(target KIND NAME)`, KIND one of {}",
+                        PROGRAM_KINDS.join(", ")
+                    ))
+                }
+            };
+            roots.classified.push(Classification {
+                package: one(form, "package", &name)?,
+                kind,
+                target,
+                role_packages: values(form, "role-packages").into_iter().collect(),
+                name,
+            });
+        }
+        "defadmit" => {
+            one(form, "reason", "an admission")?;
+            *roots
+                .admissions
+                .entry(Admission {
+                    file: one(form, "file", "an admission")?,
+                    rule: one(form, "rule", "an admission")?,
+                    sha256: one(form, "sha256", "an admission")?,
+                })
+                .or_default() += 1;
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
+/// A harness compares two distinct roots the file declares.
+fn check_pairs(roots: &Roots) -> Result<(), String> {
     for h in &roots.programs {
         let Some((a, b)) = &h.pair else { continue };
         for x in [a, b] {
@@ -312,7 +349,7 @@ pub fn read_roots(text: &str) -> Result<Roots, String> {
             return Err(format!("{ROOTS}: `{}`'s pair names `{a}` twice", h.name));
         }
     }
-    Ok(roots)
+    Ok(())
 }
 
 // ── Building, and what the compiler reports ─────────────────────────────────────────────────────────────────────
@@ -1092,6 +1129,14 @@ pub enum Outcome {
     Refused(Vec<String>),
 }
 
+/// A step that refuses ends the run: its refusals, sorted, and no inventory (§3, R5 9; the generated-sources record
+/// §2).
+fn refuse(mut refused: Vec<String>) -> Outcome {
+    refused.sort();
+    refused.dedup();
+    Outcome::Refused(refused)
+}
+
 /// Build the inventory of `commit` in the repository at `repo`, scratch under `out`.
 ///
 /// # Errors
@@ -1122,7 +1167,25 @@ pub fn inventory_with(
         .text(&["rev-parse", &format!("{commit}^{{tree}}")])?
         .trim()
         .to_owned();
+    // Only a run that writes leaves an inventory: one an earlier run wrote would read as this commit's (§3, R5 9).
+    let target_json = out.join("trust-dependencies.json");
+    let _ = fs::remove_file(&target_json);
     let entries = tree_entries(&git, &commit)?;
+
+    // Step 1 of the generated-sources record's order (§2): the forms' text, read from the commit's own blob before
+    // anything is written or built. A refusal here ends the run.
+    let roots_entry = entries
+        .iter()
+        .find(|e| e.path == ROOTS && (e.mode == "100644" || e.mode == "100755"))
+        .ok_or_else(|| format!("the commit holds no `{ROOTS}`"))?;
+    let roots_blob = git.bytes(&["cat-file", "blob", &roots_entry.sha])?;
+    let roots = read_roots(&String::from_utf8_lossy(&roots_blob))?;
+    if !roots.generated_refused.is_empty() {
+        return Ok(refuse(roots.generated_refused.clone()));
+    }
+
+    // Step 2: the programs' builds and the data their forms hand, with every refusal this record makes before or in
+    // them.
     let symlinks: BTreeSet<String> = entries
         .iter()
         .filter(|e| e.mode == "120000")
@@ -1131,16 +1194,10 @@ pub fn inventory_with(
     let tree: Tree = match tree_of(&git, &entries) {
         Ok(t) => t,
         Err(crate::catalog_check::Failure::Refused(r)) => {
-            return Ok(Outcome::Refused(vec![format!(
-                "trust-undeclared-input: {r}"
-            )]))
+            return Ok(refuse(vec![format!("trust-undeclared-input: {r}")]))
         }
         Err(crate::catalog_check::Failure::Unjudged(e)) => return Err(e),
     };
-    let roots_text = tree
-        .get(ROOTS)
-        .ok_or_else(|| format!("the commit holds no `{ROOTS}`"))?;
-    let roots = read_roots(&String::from_utf8_lossy(roots_text))?;
     let mut refused: Vec<String> = Vec::new();
     // The fixed data a root is handed, by path: a blob of the commit, never a symbolic link (§2, §3; R9 remark 6).
     for p in &roots.programs {
@@ -1164,9 +1221,7 @@ pub fn inventory_with(
     match configurations_on_path(&tree_dir, &tree_dir, config_root, &tree) {
         Ok(()) => {}
         Err(crate::catalog_check::Failure::Refused(r)) => {
-            return Ok(Outcome::Refused(vec![format!(
-                "trust-undeclared-input: {r}"
-            )]))
+            return Ok(refuse(vec![format!("trust-undeclared-input: {r}")]))
         }
         Err(crate::catalog_check::Failure::Unjudged(e)) => return Err(e),
     }
@@ -1311,7 +1366,7 @@ pub fn inventory_with(
         }
     }
     if !stale.is_empty() {
-        return Ok(Outcome::Refused(stale));
+        return Ok(refuse(stale));
     }
 
     // The resolved graph: (dependent, dependency, kind).
@@ -1446,31 +1501,33 @@ pub fn inventory_with(
         }
     }
     if !refused.is_empty() {
-        refused.sort();
-        refused.dedup();
-        let _ = fs::remove_file(out.join("trust-dependencies.json"));
-        return Ok(Outcome::Refused(refused));
+        return Ok(refuse(refused));
     }
 
-    // Build each program clean, its own target directory, a fresh `CARGO_HOME` each.
+    // Build each program clean, its own target directory, a fresh `CARGO_HOME` each. A build that fails leaves the
+    // gate unable to judge, but the step runs to its end, every build and judgment in it made, so the refusals it
+    // finds are reported beside the failure (the generated-sources record §2).
     let mut builds: BTreeMap<String, Build> = BTreeMap::new();
+    let mut failed: Vec<String> = Vec::new();
     for p in &roots.programs {
         let _ = fs::remove_dir_all(&cargo_home);
         let target_dir = out.join("target").join(&p.name);
         let env = environment(&pin, &cargo_home, &target_dir)?;
-        builds.insert(
-            p.name.clone(),
-            build(
-                p,
-                &package_names,
-                &targets,
-                &id_dir,
-                &env,
-                &tree_dir,
-                &target_dir,
-                &mut refused,
-            )?,
-        );
+        match build(
+            p,
+            &package_names,
+            &targets,
+            &id_dir,
+            &env,
+            &tree_dir,
+            &target_dir,
+            &mut refused,
+        ) {
+            Ok(b) => {
+                builds.insert(p.name.clone(), b);
+            }
+            Err(why) => failed.push(why),
+        }
     }
 
     // The token rules over every `.rs` file a compilation read, however it read it (§3; R8 10), each file once, so a
@@ -1570,8 +1627,10 @@ pub fn inventory_with(
     // root too, which runs its role until an executable does (R8 remark 13) — and the harness, whose exemption is its
     // pair's two (R8 remark 12).
     for p in &roots.programs {
-        let compiled: BTreeSet<&String> =
-            builds[&p.name].units.iter().map(|u| &u.package).collect();
+        let Some(b) = builds.get(&p.name) else {
+            continue; // its build failed: the step ends unable to judge
+        };
+        let compiled: BTreeSet<&String> = b.units.iter().map(|u| &u.package).collect();
         for other in roots
             .programs
             .iter()
@@ -1595,12 +1654,11 @@ pub fn inventory_with(
         }
     }
 
-    refused.sort();
-    refused.dedup();
-    let target_json = out.join("trust-dependencies.json");
+    if !failed.is_empty() {
+        return Err(crate::trust_generated::beside(failed.join("\n"), &refused));
+    }
     if !refused.is_empty() {
-        let _ = fs::remove_file(&target_json);
-        return Ok(Outcome::Refused(refused));
+        return Ok(refuse(refused));
     }
 
     // The build as a whole (§3).
@@ -2086,14 +2144,14 @@ pub(crate) mod tests {
         pub(crate) base: PathBuf,
     }
 
-    const WS: &str = "[workspace]\nresolver = \"2\"\nmembers = [\"crates/*\"]\n";
+    pub(crate) const WS: &str = "[workspace]\nresolver = \"2\"\nmembers = [\"crates/*\"]\n";
 
     pub(crate) fn manifest(name: &str, extra: &str) -> String {
         format!("[package]\nname = \"{name}\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n{extra}")
     }
 
     /// Two roots, a binary `a` and a library `b`, as every fixture starts.
-    const ROOTS: &str = "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\"))\n\
+    pub(crate) const ROOTS: &str = "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\"))\n\
                          (defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\"))\n";
 
     fn write(dir: &Path, files: &[(&str, String)]) {
@@ -2105,7 +2163,7 @@ pub(crate) mod tests {
     }
 
     /// A committed scratch repository holding `files`, the real pin and configuration, and a lock cargo writes.
-    fn fixture(name: &str, toolchain: &str, files: &[(&str, String)]) -> Fixture {
+    pub(crate) fn fixture(name: &str, toolchain: &str, files: &[(&str, String)]) -> Fixture {
         let base = real_root().join("target/trust-tests").join(name);
         let _ = std::fs::remove_dir_all(&base);
         let repo = base.join("repo");
@@ -2160,36 +2218,36 @@ pub(crate) mod tests {
             git(&self.repo, &["add", "-A"]);
             git(&self.repo, &["commit", "-q", "-m", "change"]);
         }
-        fn run_into(&self, out: &str) -> Outcome {
+        pub(crate) fn run_into(&self, out: &str) -> Outcome {
             inventory_with(&self.repo, "HEAD", &self.base.join(out), &real_root()).unwrap()
         }
-        fn run(&self) -> Outcome {
+        pub(crate) fn run(&self) -> Outcome {
             self.run_into("out")
         }
     }
 
-    fn written(o: Outcome) -> Json {
+    pub(crate) fn written(o: Outcome) -> Json {
         match o {
             Outcome::Written(j) => j,
             Outcome::Refused(r) => panic!("refused: {r:#?}"),
         }
     }
 
-    fn refused(o: Outcome) -> Vec<String> {
+    pub(crate) fn refused(o: Outcome) -> Vec<String> {
         match o {
             Outcome::Written(_) => panic!("written where a refusal was due"),
             Outcome::Refused(r) => r,
         }
     }
 
-    fn says(refusals: &[String], text: &str) {
+    pub(crate) fn says(refusals: &[String], text: &str) {
         assert!(
             refusals.iter().any(|r| r.contains(text)),
             "no refusal says `{text}`: {refusals:#?}"
         );
     }
 
-    fn items(inv: &Json) -> Vec<(String, Json)> {
+    pub(crate) fn items(inv: &Json) -> Vec<(String, Json)> {
         let mut out = Vec::new();
         for pair in inv.get("shared").map(Json::elements).unwrap_or_default() {
             let names: Vec<&str> = pair
@@ -2206,7 +2264,7 @@ pub(crate) mod tests {
         out
     }
 
-    fn kind(item: &Json) -> &str {
+    pub(crate) fn kind(item: &Json) -> &str {
         item.get("kind").and_then(Json::as_str).unwrap_or_default()
     }
 

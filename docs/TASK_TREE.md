@@ -54,12 +54,12 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 | Tree | Status | Frontier (next leaf) | Owner |
 | --- | --- | --- | --- |
 | [`S0`](tasks/S0.md) | `done` | — every leaf closed; F28 green, and the chapter's counts are measured (`S0.8`) | repo-local |
-| [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.34` awaits the director's yes; CI green on the runner, `PROGRAM.10` closed; the CI rehearsal passes whole, beside the repository; `.67` pending, a timeout for the mutation harness | repo-local |
+| [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.69` next — a closed subtree below an open one sealed too; `PROGRAM.34` awaits the director's yes; CI green on the runner, `PROGRAM.10` closed; the CI rehearsal passes whole, beside the repository; `.67` pending, a timeout for the mutation harness | repo-local |
 | [`M1`](tasks/M1.md) | `active` | `M1.29.4` — blocked: module parameters wait on the director's call (findings §7) | repo-local |
 | [`API`](tasks/API.md) | `done` | closed `2026-10-02`: one engine API, the wasm binding and its page, `archogen mcp`, and the book's chapter; findings §9 with the director | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |
 | [`M2`](tasks/M2.md) | `active` | `M2.7.4` — the catalog's gate, `.1`–`.4` done; `.5`, the records and the lock, and `M2.7.6`'s review and hosting half, wait on the director; `M2.21`, `archogen analyze`'s owner, open | repo-local |
-| [`M3`](tasks/M3.md) | `active` | `M3.6` — the trust inventory and gate, F30: the gate and its chapter done; `M3.6.6.2`, generated sources' instrument, next; then `M3.3` | repo-local |
+| [`M3`](tasks/M3.md) | `active` | `M3.6` — the trust inventory and gate, F30: the gate and its chapter done; `M3.6.6.2`, generated sources' instrument, under way — `.2.1` done, `.2.2` next; then `M3.3` | repo-local |
 | [`M4`](tasks/M4.md) | `pending` | `M4.1` — the typed runtime/build plan | repo-local |
 | [`M5`](tasks/M5.md) | `blocked` | — **no board procured** (`M0.5`, 2026-09-13) | repo-local |
 | [`M6`](tasks/M6.md) | `pending` | `M6.1` — three materially different systems | repo-local |

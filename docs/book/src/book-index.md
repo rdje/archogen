@@ -425,6 +425,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The product runs nothing — [Verifying the toolchain](verification.md#the-product-runs-nothing)
 - The records that hold it — [Where the engine's knowledge comes from: the catalog](catalog.md#the-records-that-hold-it)
 - The roots — [Checks that must not share a mistake: the trust gate](trust.md#the-roots)
+- The run's order — [Checks that must not share a mistake: the trust gate](trust.md#the-runs-order)
 - The sealed set — [The use cases](usecases.md#the-sealed-set)
 - The semantic corpus — [Checking a description](checking.md#the-semantic-corpus)
 - The server an agent spawns — [The engine API](engine-api.md#the-server-an-agent-spawns)

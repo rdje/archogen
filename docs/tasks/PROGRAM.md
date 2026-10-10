@@ -544,38 +544,7 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.65.md`](../task-history/PROGRAM/PROGRAM.65.md); commit `ARCHOGEN-PROGRAM-0488`
 
 - ID: `PROGRAM.66`
-  Status: `done` — filed and closed `2026-10-06`, after `M3.6.3.5`'s correction
-  Goal: no commit is made while a file in a code path is untracked, so a commit cannot record a tree nobody ran.
-  Acceptance: `UNTRACKED-CODE` refuses a commit beside an untracked file `.doctrine/code_paths.txt` matches, names it,
-  and passes an ignored or a non-code one; its self-test's arms each fail first; on the real tree it passes.
-
-  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
-  - [x] **REPRODUCE / ISSUE** — `ARCHOGEN-M3-0485` (`948b1b6`) was made with `git commit -a` beside an untracked
-    `xtask/src/trust_verify.rs` that its own `main.rs:53` declared: `git ls-tree --name-only 948b1b6 -- xtask/src/`
-    lists no `trust_verify.rs`, and that tree fails, `error[E0583]: file not found for module \`trust_verify\``.
-    Every check before it — `make focused`, the doctrine gate — read the working tree, where the file was, and passed.
-    `M3.6.3.5`'s correction, `0486`, committed it.
-  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: the commit path. `git commit -a` stages modified tracked files and no
-    new one, and `COMMIT.md` step 8's `git status --short` after the commit is a reading nothing enforces; every gate
-    the pre-commit hook runs judges the working tree or the staged changes, so none sees a file that is in neither the
-    index nor the commit. `git grep -n -e 'ls-files --others' HEAD -- scripts/check_doctrines.sh
-    scripts/check_doctrines.project.sh` → nothing: no gate asked git for untracked files.
-  - [x] **FIX** — `scripts/check_untracked_code.sh`, `UNTRACKED-CODE`: `git ls-files --others --exclude-standard`
-    filtered by `.doctrine/code_paths.txt`'s patterns, each such path a breach named with what to do; no statement of
-    what is code is a breach. Registered in `scripts/check_doctrines.project.sh`; its self-test found by
-    `scripts/run_self_tests.sh`'s glob.
-  - [x] **ADDRESSED (verified)** — `bash scripts/check_untracked_code.sh --self-test` → `untracked-code self-test: 7
-    pass / 0 fail (7 arms)`; with the code-path match removed → `5 pass / 2 fail`, the two refusal arms; with the
-    missing-statement check removed → `6 pass / 1 fail`. On the real tree before the script was staged → *"`scripts/
-    check_untracked_code.sh` is in a code path and untracked"*, exit 1 — the case it exists for, on itself; staged,
-    `untracked-code: OK`.
-  - [x] **NO REGRESSION** — `bash scripts/check_doctrines.sh` → `=== all doctrines green ===` with the script staged;
-    `DOCTRINE_ENFORCEMENT.md` within its 36 864-byte ceiling after two closure narratives became pointers to their
-    leaves (`PROGRAM.27`, `PROGRAM.35`) and a third shortened.
-  - [x] **LOCKSTEP** — `DOCTRINE_ENFORCEMENT.md`'s row; the book's Annex B, *A commit holds what was run*, and its
-    index regenerated; this leaf and both logs; `CHANGELOG.md`.
-  Verification: `2026-10-06` — the Verification Log's row
-  Commit: `ARCHOGEN-PROGRAM-0490 (leaf PROGRAM.66)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.66.md`](../task-history/PROGRAM/PROGRAM.66.md); commit `ARCHOGEN-PROGRAM-0490`
 
 - ID: `PROGRAM.67`
   Status: `pending` — filed `2026-10-06` by `M3.6.6.1`'s round 10
@@ -590,64 +559,30 @@ mdBook that is the director's window into the project.
   hangs today.
 
 - ID: `PROGRAM.68`
-  Status: `done` — filed and closed `2026-10-10`
-  Goal: the sixth artifact cleanup the standing instruction asks for about every 24 hours, a leaf of its own as
-  `PROGRAM.57` was; `docs/ARTIFACT_CLEANUP.md` names it.
-  Acceptance: the trigger read off the record's commit; an inventory before any deletion; each deletion either has a
-  tracked regeneration path or is a closed leaf's output that nothing tracked cites; a residue census; the tiers re-run
-  cold; anything unexpected investigated rather than removed and, if it is a defect, logged and owned.
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.68.md`](../task-history/PROGRAM/PROGRAM.68.md); commit `ARCHOGEN-PROGRAM-0508`
 
-  - **Trigger.** `git log -1 --format=%ci -- docs/ARTIFACT_CLEANUP.md` → `2026-10-06 02:01:12 +0200`; the session
-    clock read `2026-10-10 02:26 +0200`, four days later.
-  - **Inventory before any deletion.** `target` **5 886 556 KB** (5.6 GB): `debug` 3.4 GB, of it `incremental` 2.8 GB
-    and `deps` 636 MB in **789** files — so `PROGRAM.58`'s leak has not come back; `wasm32-unknown-unknown` 582 MB, its
-    `incremental` 386 MB; `ci` 515 MB; `miri` 475 MB, its `incremental` 473 MB; `mutation-sweep` 293 MB; `trust-tests`
-    99 MB; `target/tmp` 42 MB in 25 entries. **2 648** `.bin` and **58** `.log` files. Every top-level entry and every
-    entry of `target/tmp` was checked with `git grep -F` for an owner that regenerates it (`scripts`, `crates`, `xtask`,
-    `Makefile`, `.githooks`, `.github`) and for a citation anywhere tracked outside `vendor/`.
-  - **Unexpected, investigated.** `M3.6.3.4` says of `target/m3634/` *"since removed"*, yet it was present, its four
-    files dated `2026-10-06 10:27`: the record was false about the tree. The leaf quotes the lines it rests on, so
-    deleting the directory makes the record true, and nothing else names it.
-  - **Deleted.**
-    1. The compiler's incremental caches — `debug`, `wasm32-unknown-unknown`, `riscv64imac-unknown-none-elf` and
-       Miri's `aarch64-apple-darwin/debug` — which `cargo` rebuilds; the `deps` and Miri's sysroot are kept.
-    2. The closed design review's loose output under `target/`: `mutate-full*.log` (5), `mutation-sweep-run*.log` (7),
-       `round{9,11..15}_brief.txt` (6) and `trust-inventory-run.log`. Nothing tracked names any of them; `M3.6.6.1`
-       is `done` and quotes what it needed.
-    3. `target/mutation-sweep`, 293 MB, the scratch `scripts/mutation_sweep.sh` writes and recreates; and
-       `target/recovery-round15`, the `--out` of the command the review history cites, which that command rebuilds.
-    4. Uncited probe output of closed leaves: `trust-staged` (an inventory of `2026-10-06`), `m366` (two probe
-       scripts), `cleanup-probe` (the fifth run's own scratch), and `m3634` above.
-    5. Test scratch its owners recreate: `trust-tests`, `trust-verify-tests`, `catalog-build-tests`,
-       `catalog-check-tests`, `pin-premises`, `generated-header-rustc`, `doctrine_scratch`, and every entry of
-       `target/tmp` but the seven below.
-
-    `target` 5 886 556 KB → **1 634 204 KB** (≈4.0 GB released); `.bin` 2 648 → **29**; `.log` 58 → **43**, all in
-    retained entries. **Residue census: twelve of twelve sampled paths `gone`**, and `git status --porcelain` showed
-    only this tree file.
-  - **Retained, each on evidence.**
-    1. `target/tmp/m29`, `p411`, `p42`, `p7331`, `p7332`, `p7333` — cited by `done` leaves as their evidence, as the
-       fifth run found — and `m129`, `M1.29`'s, still open.
-    2. `target/m3121` (37 logs) and `target/m3635`: `PROGRAM.10`'s and `M3.6.3.5`'s evidence, cited by path
-       (`PROGRAM.10.md:321,379`; `M3.md`'s `trust-verify target/m3635/package`), with no tracked command that
-       rebuilds them.
-    3. `target/trust`, the trust tools' output and their `cargo-home`; `ci`, `miri`, `miri-sysroot`, `release`,
-       `spike`, `doc`, `s0-demo`, the `wasm32` and `riscv64` products; `build/`, `.app-data` and `.qwen/`, for the
-       reasons the earlier runs recorded, which still hold.
-  - **Verified cold.** `bash scripts/ci_provision.sh` → both tools `already in place`, exit `0`. `make focused` →
-    `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, exit `0`, in 38 s.
-    `cargo test --all -q` → **1 304 passed, 0 failed over 97 suites**. `bash scripts/check_doctrines.sh` →
-    `=== all doctrines green ===`; `target/doctrine_scratch`, `target/tmp/f28` and `target/trust-tests` exist again
-    afterwards.
-  - **Adopted policies re-checked (§14, §17, §18 of the standing instructions).** pgen's `docs/CLAIM_VERIFICATION.md`
-    is unchanged since `178251cce`, and its 285 lines are `diff`-identical to the end of ours. fsmgen's
-    `LIVE_DOCUMENT_SIZE_CONTAINMENT.md` lines 190–529 still hash `af130de4…`, the adopted body; its adoption guide is
-    unchanged since `727e0d086`, `8f77fa39…`; `README_POLICY.md` is unchanged since `1f0443b3a`, its lines 29–187
-    hashing `77a1e934…`, the adopted body. So there is nothing to apply.
-  - **Lockstep.** `docs/ARTIFACT_CLEANUP.md` overwritten with this run only; this section and both logs;
-    `CHANGELOG.md`. No snapshot changes: no status, frontier head or blocker moved.
-  Verification: `2026-10-10` — the Verification Log's row
-  Commit: `ARCHOGEN-PROGRAM-0508 (leaf PROGRAM.68)`
+- ID: `PROGRAM.69`
+  Status: `pending` — filed `2026-10-10` by `M3.6.6.2.1`; next, before `M3.6.6.2.2`
+  Goal: a closed subtree below an open top-level subtree is sealed too, so a tree whose top-level subtree stays open
+  for long — on a blocked leaf, or a long feature — does not keep its finished leaves live.
+  Reproduce / issue: `M3.6.6.2.1`'s commit was refused by `README-ROUTES`, *"docs/tasks/: 823457 bytes in total, over
+  its ceiling of 819200"*. The seal releases only a top-level subtree whose every leaf is `done`
+  (`decision_task-tree-sealing.md`, "The unit is a closed subtree"), and on `2026-10-10` the only ones left were
+  `PROGRAM.66` and `.68`, sealed by that commit to bring the folder to 815 443 bytes before this leaf was written. Measured the same day by a census
+  of every leaf's span: 271 393 bytes of `done` leaves sit under top-level subtrees with an open leaf — `M1` 84 363,
+  `M2` 104 992, `M3` 82 038 — and 258 649 of them in 28 subtrees below the top level whose every leaf is `done`, which
+  a finer unit would seal: `M3.6.1`, `M3.6.2`, `M3.6.4`, `M3.6.6.1` among them, under `M3.6`, which stays open while
+  `M3.6.5` waits on the director. Each sub-leaf of `M3.6.6.2` adds kilobytes to `M3.md`, so the next commit crosses
+  the ceiling again.
+  Direction, to be designed here: the unit becomes the outermost closed subtree — a subtree at any depth whose every
+  leaf is `done` and whose parent is open or the tree itself — sealed to `docs/task-history/<TREE>/<SUBTREE>.md`; a
+  sealed file still never changes, since its subtree is closed, and when its parent later closes, the parent's
+  remaining leaves seal to the parent's own file beside it. The record, the tool, the gate's legs 4–6 and its
+  self-test change together, under a review by a context that did not write them, as the record's own was; the option
+  the director ruled, (C), is "closed leaves sealed out of the task trees", which this keeps.
+  Acceptance: a seal of the real trees releases what the census measures, each reconstruction byte for byte; the gate
+  refuses a live leaf inside a sealed subtree at any depth, a sealed file that changes, and a nested seal whose parent
+  is closed; every arm fails first; the record amended and reviewed.
 
 ## Roadmap coverage map
 
@@ -713,9 +648,10 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 1 | `PROGRAM.69` | `pending` | **next** — a closed subtree below an open one sealed too: `docs/tasks/` is at its ceiling, and 258 649 bytes of finished leaves wait on open top-level subtrees |
+| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
-The row waits on the director's yes. The pending leaves beside it —
+The second row waits on the director's yes. The pending leaves beside them —
 `PROGRAM.53`, `.54`, `.60` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and its full record is sealed under `docs/task-history/PROGRAM/`.
 
@@ -1015,3 +951,4 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 - `2026-10-06`: `PROGRAM.61` closed — the catalog's broken entry repointed; every entry checked by `cargo test`.
 - `2026-10-06`: `PROGRAM.63` filed and closed — sealing `M3.1` met two gate gaps, the ledger's stub shadowing and the history's line ceiling; both fixed.
 - `2026-10-10`: `PROGRAM.68` filed and closed — the sixth artifact cleanup; nothing unexpected but a record that called a present directory removed.
+- `2026-10-10`: `PROGRAM.66` and `PROGRAM.68` sealed by `M3.6.6.2.1`, whose commit took `docs/tasks/` past its ceiling; `PROGRAM.69` filed for the finished leaves under open top-level subtrees.

@@ -990,9 +990,9 @@ test -p xtask trust::tests
 expect killed
 why M3.6.1 R9 2: a root's role is one the record names; `(role harness)` on a root escaped the two-roles rule.
 from
-                    if !ROLES.contains(&role.as_str()) {
+                if !ROLES.contains(&role.as_str()) {
 to
-                    if false {
+                if false {
 end
 
 mutation trust-const-generic-ends-the-extent
@@ -2558,9 +2558,7 @@ why M3.6.3.4: a cargo configuration §3 refuses on a build's path was an error, 
 from
             Ok(()) => {}
             Err(crate::catalog_check::Failure::Refused(r)) => {
-                return Ok(Outcome::Refused(vec![format!(
-                    "trust-undeclared-input: {r}"
-                )]))
+                return Ok(refuse(vec![format!("trust-undeclared-input: {r}")]))
             }
 to
             Ok(()) => {}
@@ -3237,4 +3235,240 @@ to
                     } else {
                         break;
                     }
+end
+
+mutation gs-a-name-not-a-string-passes
+file xtask/src/trust_generated.rs
+test -p xtask trust_generated::tests
+expect killed
+why M3.6.6.2.1, the generated-sources record §2 (`GS-H1`, step 1): a `defgenerated` form whose name is not a string — the declared file's path — is a coded refusal.
+from
+        if read.path.is_none() {
+to
+        if false {
+end
+
+mutation gs-a-stray-item-passes
+file xtask/src/trust_generated.rs
+test -p xtask trust_generated::tests
+expect killed
+why M3.6.6.2.1, the generated-sources record §2 (`GS-H1`, step 1): an item of a `defgenerated` form that is not a clause is a coded refusal.
+from
+                why.push("holds something that is not a clause".to_owned());
+to
+                let _ = 0;
+end
+
+mutation gs-an-unknown-clause-passes
+file xtask/src/trust_generated.rs
+test -p xtask trust_generated::tests
+expect killed
+why M3.6.6.2.1, the generated-sources record §2 (`GS-H1`, step 1): a clause a `defgenerated` form does not take is a coded refusal.
+from
+                why.push(format!("holds a clause `{head}` its form does not take"));
+to
+                let _ = 0;
+end
+
+mutation gs-a-clause-twice-passes
+file xtask/src/trust_generated.rs
+test -p xtask trust_generated::tests
+expect killed
+why M3.6.6.2.1, the generated-sources record §2 (`GS-H1`, step 1): a clause twice in a `defgenerated` form is a coded refusal.
+from
+                why.push(format!("holds `({head} …)` twice"));
+to
+                let _ = 0;
+end
+
+mutation gs-no-generator-passes
+file xtask/src/trust_generated.rs
+test -p xtask trust_generated::tests
+expect killed
+why M3.6.6.2.1, the generated-sources record §2 (`GS-H1`, step 1): a `(generator …)` clause missing or holding no entry is a coded refusal.
+from
+        if generator_entries == 0 {
+to
+        if false {
+end
+
+mutation gs-a-malformed-command-passes
+file xtask/src/trust_generated.rs
+test -p xtask trust_generated::tests
+expect killed
+why M3.6.6.2.1, the generated-sources record §2 (`GS-H1`, step 1): a `command` or `reason` clause holding other than exactly one non-empty string is a coded refusal.
+from
+                    if !one_string {
+to
+                    if false {
+end
+
+mutation gs-a-missing-command-passes
+file xtask/src/trust_generated.rs
+test -p xtask trust_generated::tests
+expect killed
+why M3.6.6.2.1, the generated-sources record §2 (`GS-H1`, step 1): a `command` or `reason` clause missing is a coded refusal.
+from
+            if !seen.contains(clause) {
+to
+            if false {
+end
+
+mutation gs-a-non-string-entry-passes
+file xtask/src/trust_generated.rs
+test -p xtask trust_generated::tests
+expect killed
+why M3.6.6.2.1, the generated-sources record §2 (`GS-H1`, step 1): an entry of `(generator …)` or `(inputs …)` that is not a string is a coded refusal.
+from
+                            _ => why.push(format!("`({head} …)` holds an entry that is not a string")),
+to
+                            _ => {}
+end
+
+mutation gs-one-path-two-forms-passes
+file xtask/src/trust_generated.rs
+test -p xtask trust_generated::tests
+expect killed
+why M3.6.6.2.1, the generated-sources record §2 (`GS-H1`, step 1): a path two forms declare is refused, each of them — a text-only construction.
+from
+                if n > 1 {
+to
+                if false {
+end
+
+mutation gs-an-entry-twice-passes
+file xtask/src/trust_generated.rs
+test -p xtask trust_generated::tests
+expect killed
+why M3.6.6.2.1, the generated-sources record §2 (`GS-H1`, step 1): an entry twice in one clause is refused — a text-only construction.
+from
+                    out.push(f.refusal(&format!("names `{e}` twice in `({clause} …)`")));
+to
+                    let _ = (e, clause);
+end
+
+mutation gs-a-generator-and-input-passes
+file xtask/src/trust_generated.rs
+test -p xtask trust_generated::tests
+expect killed
+why M3.6.6.2.1, the generated-sources record §2 (`GS-H1`, step 1): a file in both `generator` and `inputs` is refused — a text-only construction.
+from
+                .filter(|g| f.inputs.contains(g))
+to
+                .filter(|g| false && f.inputs.contains(g))
+end
+
+mutation gs-a-self-reference-passes
+file xtask/src/trust_generated.rs
+test -p xtask trust_generated::tests
+expect killed
+why M3.6.6.2.1, the generated-sources record §2 (`GS-H1`, step 1): a declared file that is its own form's generator or input is refused by the self-reference rule — a text-only construction.
+from
+                if f.generators.contains(p) || f.inputs.contains(p) {
+to
+                if false {
+end
+
+mutation gs-a-self-reference-by-input-passes
+file xtask/src/trust_generated.rs
+test -p xtask trust_generated::tests
+expect killed
+why M3.6.6.2.1, the generated-sources record §2 (`GS-H1`, step 1): the self-reference rule's clause that sets an input apart: a declared file that is its own form's input is refused too.
+from
+                if f.generators.contains(p) || f.inputs.contains(p) {
+to
+                if f.generators.contains(p) {
+end
+
+mutation gs-the-reader-s-stop-drops-the-refusals-before
+file xtask/src/trust.rs
+test -p xtask trust_generated::tests
+expect killed
+why M3.6.6.2.1, the generated-sources record §2 (`GS-H1`, step 1): the parent's reader stopping at another form that departs reports the `defgenerated` refusals before it beside it.
+from
+            read_form(form, &mut roots, &mut names).map_err(|why| {
+                crate::trust_generated::beside(why, &crate::trust_generated::refusals(&generated))
+            })?;
+to
+            read_form(form, &mut roots, &mut names)?;
+end
+
+mutation gs-the-reader-s-stop-reads-past-the-departure
+file xtask/src/trust.rs
+test -p xtask trust_generated::tests
+expect killed
+why M3.6.6.2.1, the generated-sources record §2 (`GS-H1`, step 1): those after the departing form are reported once it is repaired, not beside it: the parent's reader stops there.
+from
+            read_form(form, &mut roots, &mut names).map_err(|why| {
+                crate::trust_generated::beside(why, &crate::trust_generated::refusals(&generated))
+            })?;
+to
+            read_form(form, &mut roots, &mut names).map_err(|why| {
+                let all: Vec<_> = doc
+                    .forms
+                    .iter()
+                    .filter(|f| f.head() == Some(crate::trust_generated::GENERATED))
+                    .map(|f| crate::trust_generated::read_form(f, line(f)))
+                    .collect();
+                crate::trust_generated::beside(why, &crate::trust_generated::refusals(&all))
+            })?;
+end
+
+mutation gs-an-end-departure-drops-the-refusals
+file xtask/src/trust.rs
+test -p xtask trust_generated::tests
+expect killed
+why M3.6.6.2.1, the generated-sources record §2 (`GS-H1`, step 1): a departure the parent's reader finds only once the file is read — a harness's pair naming no root — has every `defgenerated` refusal beside it.
+from
+        check_pairs(&roots).map_err(|why| {
+            crate::trust_generated::beside(why, &crate::trust_generated::refusals(&generated))
+        })?;
+to
+        check_pairs(&roots)?;
+end
+
+mutation gs-a-step-1-refusal-is-ignored
+file xtask/src/trust.rs
+test -p xtask trust_generated::tests
+expect killed
+why M3.6.6.2.1, the generated-sources record §2 (`GS-H14`): a refusal of the forms' text, step 1, ends the run with no inventory written and nothing built.
+from
+        if !roots.generated_refused.is_empty() {
+            return Ok(refuse(roots.generated_refused.clone()));
+        }
+to
+        if roots.generated_refused.is_empty() {}
+end
+
+mutation trust-inventory-left-behind
+file xtask/src/trust.rs
+test -p xtask trust_generated::tests
+expect killed
+why M3.6.6.2.1, found writing the step frame: a refusal of the parent's before any build (`trust-baseline-stale`, a package gone), and the gate's tree and configuration refusals, returned without removing an earlier run's inventory, left to be read as this commit's; every run now removes it first (the parent's §3, R5 9: on any refusal no inventory).
+from
+        let _ = fs::remove_file(&target_json);
+to
+        let _ = &target_json;
+end
+
+mutation gs-a-failed-build-drops-the-step-s-refusals
+file xtask/src/trust.rs
+test -p xtask trust_generated::tests
+expect killed
+why M3.6.6.2.1, the generated-sources record §2 (`GS-H14`): a step in which a build fails ends the run unable to judge, the refusals that step found reported beside the failure.
+from
+            return Err(crate::trust_generated::beside(failed.join("\n"), &refused));
+to
+            return Err(failed.join("\n"));
+end
+
+mutation gs-a-failed-build-stops-the-step
+file xtask/src/trust.rs
+test -p xtask trust_generated::tests
+expect killed
+why M3.6.6.2.1, the generated-sources record §2 (`GS-H14`): a step runs to its end, every build and judgment in it made — a failed build stopping it would lose the refusals of the programs after it.
+from
+                Err(why) => failed.push(why),
+to
+                Err(why) => return Err(why),
 end
