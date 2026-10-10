@@ -57,6 +57,15 @@ room for sixty-odd leaves at that rate; the per-file ceilings stay, and a chapte
 into an annex. The next raise, if one is needed, is again a dated paragraph here with the measurement that asks for
 it.
 
+**Raised again `2026-10-10` (leaf `PROGRAM.74`), to 589 824 bytes (576 KiB).** Measured then, `git ls-files docs/book |
+xargs cat | wc -c`: 458 750 bytes, two below the ceiling, at `bfabefa`; 395 389 at `a274131`, the first commit after
+the last raise to touch the book, so 63 361 bytes in a week over the 38 commits after it that touched `docs/book/src` —
+about 1.7 KB a commit, the lockstep rule's cost as this record foresaw. `PROGRAM.70.2` and `PROGRAM.69`'s round 10 each
+had to replace a sentence rather than add one to fit, and `M3.6.6.4`, `M3.3` and `M3.5` each owe the book their
+account. The generated index is 44 785 bytes of the total and grows with the headings. The new total gives room for
+about eighty such commits; the files and per-file ceilings stay, and a chapter that outgrows them still sheds into an
+annex. The next raise is again a dated paragraph here, and should weigh a split of the book over another raise.
+
 ## Why
 
 A book read only by experts can open with the rule; this one is the director's only view of the project and the

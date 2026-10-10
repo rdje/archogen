@@ -752,7 +752,7 @@ mdBook that is the director's window into the project.
   Direction: the top level names any exception as a breach, and that arm expects the named breach; an arm for the gate.
 
 - ID: `PROGRAM.74`
-  Status: `pending` — filed `2026-10-10` by `PROGRAM.70.2`
+  Status: `done` — filed, started and closed `2026-10-10`
   Goal: the book has room to grow with the code it describes.
   Reproduce / issue: `PROGRAM.70.2`'s first commit attempt, the doctrine gate → *"README-ROUTES: docs/book/: 458863 bytes
   in total, over its ceiling of 458752"*, a two-sentence addition to the annex; replacing a sentence instead, and the
@@ -760,6 +760,14 @@ mdBook that is the director's window into the project.
   the same day, and `M3.6.6.4`, `M3.3` and `M3.5` each owe the book their account.
   Direction: the measurement, and the book's layering (`docs/decisions/decision_book-in-layers.md`) — chapters and
   annexes — weighed against a dated raise of its total in that record, as the reviews folder's was.
+  Decided `2026-10-10`: a raise, to 589 824 bytes, by the record's dated paragraph. Measured at `bfabefa`, `git
+  ls-files docs/book | xargs cat | wc -c` → `458750`, two below the ceiling; `git ls-tree -r -l a274131 docs/book`
+  summed → `395389`, the first book commit after the last raise; `git log a274131..bfabefa -- docs/book/src` → 38
+  commits: 63 361 bytes in a week, about 1.7 KB a commit, as the record foresaw. Annexes move text, not remove it, so
+  no layering frees room; the index, generated, is 44 785 bytes of it. The record asks the next raise to weigh a split.
+  Verification: `2026-10-10` — `bash scripts/check_readme_routes.sh` → *"OK (24 destination(s) governed)"*, and its
+  self-test → *"28 pass / 0 fail"*, the policy's cell and its decision's maximum agreeing; the doctrine gate at commit.
+  Commit: `ARCHOGEN-PROGRAM-0526 (leaf PROGRAM.74)`
 
 ## Roadmap coverage map
 
@@ -829,7 +837,7 @@ roadmap item X live?".
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The second row waits on the director's yes. The pending leaves beside them —
-`PROGRAM.53`, `.54`, `.60`, `.67`, `.71`, `.72`, `.73` and `.74` — are filed and owned. Every closed
+`PROGRAM.53`, `.54`, `.60`, `.67`, `.71`, `.72` and `.73` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and its full record is sealed under `docs/task-history/PROGRAM/`.
 
 ## Decisions
@@ -1123,6 +1131,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.70.1` | `ARCHOGEN-PROGRAM-0523 (leaf PROGRAM.70.1)` | **the three closed rows' histories archived**, `.1` closed: every closed review history archived but the one a pushed commit edited while closed; `docs/reviews/` 262 852 → 78 575 bytes, 16 files |
 | `PROGRAM.70.2` | `ARCHOGEN-PROGRAM-0524 (leaf PROGRAM.70.2)` | **an archive stub is no file of its folder's count**, `PROGRAM.70` closed: `README-ROUTES` counts the histories in `docs/reviews/`, 4 of 16, its 12 stubs aside; seven look-alike and stub arms |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0525 (leaf PROGRAM.69)` | **review round 10 answered**: each write noted before it is made, so an interrupt just after one is undone; any entry at a sealed file's path refused; a linked tree or index refused; every rollback step armed; the book's claim and round 9's counts corrected; 85 arms |
+| `PROGRAM.74` | `ARCHOGEN-PROGRAM-0526 (leaf PROGRAM.74)` | **the book's total raised to 589 824 bytes**, by `decision_book-in-layers.md`'s dated paragraph: 458 750 of 458 752 measured, 63 361 bytes in a week over 38 commits |
 
 ## Changelog
 
@@ -1149,3 +1158,4 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 - `2026-10-10`: `PROGRAM.70.1` done — ten closed review histories archived; `docs/reviews/` 391 513 → 78 575 bytes.
 - `2026-10-10`: `PROGRAM.70` done — every closed review history archived and the stubs out of the count; `M3.6.6.4`'s review has room.
 - `2026-10-10`: `PROGRAM.74` filed by `PROGRAM.70.2` — the book at its total ceiling, 235 bytes left.
+- `2026-10-10`: `PROGRAM.74` done — the book's total raised to 589 824 bytes, measured.

@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the book has room to grow again
+
+`ARCHOGEN-PROGRAM-0526` (leaf `PROGRAM.74`), `2026-10-10`.
+
+- The book's total size limit rises from 448 KiB to 576 KiB. It stood two bytes below the old limit after growing
+  63 KB in a week, about 1.7 KB for each change that moved it, as its record foresaw when keeping the book in step with
+  every rule; the limits on each chapter stay, and the next raise is to weigh splitting the book instead.
+- Validation: the route gate and its self-test pass with the new limit and the record that fixes it.
+
 ## archogen — a seal interrupted at any instant is undone
 
 `ARCHOGEN-PROGRAM-0525` (leaf `PROGRAM.69`), `2026-10-10`.
