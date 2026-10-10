@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — what "unchanged" means for the trust gate, exactly
+
+`ARCHOGEN-M3-0528` (leaf `M3.6.7`), `2026-10-10`.
+
+- The trust inventory's design said a change outside the checked programs always reads "unchanged". It now says
+  exactly when: on the baseline's own machine, and only for a change to nothing the gate reads besides the programs —
+  the toolchain pin, cargo's configuration on the build's path, each member's manifest, links under `catalog/` and the
+  comparison harness's own sources are read and judged too. The trust chapter says the same.
+
 ## archogen — generated sources: what stays refused, and why
 
 `ARCHOGEN-M3-0527` (leaf `M3.6.6.4`), `2026-10-10`.

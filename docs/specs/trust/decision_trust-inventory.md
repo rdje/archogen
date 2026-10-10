@@ -407,6 +407,17 @@ comment in the pin changes none (§3, §4; R4 7; R8 6). The
 gate's tests build the five cases in scratch workspaces, as the catalog's build checker's tests do, each asserting its
 code and nothing else.
 
+*Clarified `2026-10-10`, by `M3.6.7`, reading the code beside this text:* this record's sentences that a change outside
+the roots reports "unchanged" — the opening's "for a change outside every root and every program target", this
+paragraph's "a change outside every root's packages and files", and the case-5 bullet of the clarification of
+`2026-10-10` above — hold on the baseline's host alone, where any change off it reads "not compared" (§2), and for a
+change to nothing the gate reads beyond the roots. It reads more: the pin, whose channel is in the build
+configuration and which admits a few keys, any other leaving the gate unable to judge; every cargo configuration on
+the build's path, a key other than an alias refused; each member's manifest, a program target it adds unclassified;
+the commit's tree, a symbolic link or submodule entry under `catalog/` refused; and the comparison harness's units
+beside its pair's builds, the comparison-harness item's. A change to any of these is judged as §6 says, and reads
+"unchanged" only when the change part names nothing. Case 5's examples above stand.
+
 ### 7. Where it runs, and what it is not
 
 - **Where:** the `assurance` tier's `trust-inventory` step (`xtask/src/main.rs`, owned by `M3.6`), which every

@@ -355,6 +355,10 @@ to a generator both tables' forms name is `trust-shared-changed`, and one to a s
 reads is *unchanged* (`an_edit_to_a_declared_generator_is_reported_and_to_an_undeclared_script_is_unchanged`); and a
 `defgenerated` form added, changed or removed is in the change part, every one standing.
 
+Case 5 is a change to nothing the gate reads beyond the roots, on the baseline's host: the pin, the cargo
+configurations on the build's path, each member's manifest, the tree's entries under `catalog/` and the harness's
+units are read too, and judged (`M3.6.7`).
+
 Every code is removed in turn by a catalogued mutation the tests must kill, and a test holds the catalogue to the
 record's table, so a code the record gains with nothing removing it fails.
 
