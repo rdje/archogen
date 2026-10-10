@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — every refusal the generated-sources record names holds wherever its entry stands
+
+`ARCHOGEN-M3-0560` (leaf `M3.6.6.4`), `2026-10-10`.
+
+- Two more rounds found refusals tested only where the refused file stood alone in its form. One sweep now places each
+  kind of refused entry the record names — declared, marked, under a vendored checkout, named twice, another role's
+  program, a program built from a generated file, a lone Rust file — alone, first, in the middle and last, and the gate
+  refuses it every time.
+- Validation: sixteen route tests; the crate's 181 tests; the mutations each fails under, by an untracked runner, so
+  not durable.
+
 ## archogen — the sealed cases' guard keeps no manifest line, and its verdict no race
 
 `ARCHOGEN-PROGRAM-0558` (leaf `PROGRAM.76`), `2026-10-10`.

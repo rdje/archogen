@@ -170,6 +170,18 @@ each failing a test, and mutated the gate further — untracked, so not durable.
 | R10-R1 | remark | stale test comments | rounds 5 to 10; the judgment test's lead comment |
 | R10-R2 | remark | an input "under" a gitlink held only for a generator | in the sweep: an input under a gitlink at every position |
 
+**Round 11**, `2026-10-10`, of `98f3773`, by a read-only context that had not written the record, fenced from the
+sealed evaluation set. It ran the doctrine gate and the crate's tests (181 passed), rebuilt round 10's mutations, each
+failing a test, and mutated further — untracked, so not durable. Verdict: 3 defects and 1 remark. Round 10's "the
+class closed" was too wide: the sweep held the step-3 refusals, not every entry refusal §6 names.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R11-D1 | defect | a program-target step's §5 judgment held only where it stood alone | in the sweep: another role's program target at every position |
+| R11-D2 | defect | the sweep held step 1 and step 3's refusals only: a program target whose build reads a declared file, a lone `.rs` and the gitlink itself as a generator each held at one position | each added to the sweep, every position; six mutations each fail it |
+| R11-D3 | defect | `M3.6.8`'s text lagged round 10's widening | rounds 8 to 11, each mutation's test named |
+| R11-R1 | remark | no changelog entry for round 10 | one entry for rounds 10 and 11 |
+
 ## Why
 
 The record closes on a round that finds no defect, as every design here does; each round, its findings and their
