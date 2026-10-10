@@ -54,8 +54,8 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
   generator or input inside a vendored checkout stay refused for good, and a tool a script runs stays believed. Each
   comes with its reason and with a way to meet the need within one generation step: one declaration for the whole
   chain, a committed copy of the vendored file, the tool's pin committed as an input.
-- No behaviour changes; the gate's refusals now name the record, and the trust chapter says it all. Its independent
-  review is open.
+- No behaviour changes; the gate's refusal of a chain now names the record, and the trust chapter says it all. Its
+  independent review is open.
 - Validation: the gate's chain refusals re-checked by their catalogued mutations, the crate's tests, the book's
   checks and build, and the focused tier (`passed — 3 passed, 0 failed`).
 

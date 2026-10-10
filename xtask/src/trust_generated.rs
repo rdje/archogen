@@ -256,8 +256,9 @@ pub fn live<'a>(
 
 /// Step 3 (§2), over live forms: the blob rule — a generator or input that is a symbolic link, or is no blob of the
 /// commit (a gitlink, a directory, a path the commit does not hold), refused by that rule alone — then the chain's
-/// first clause — a generator or input a `defgenerated` form declares, or whose header marks it generated (§3), refused
-/// a chain refused for good (decision_trust-generated-refusals.md §2). A form no program reads is held to its text alone (step 1).
+/// first clause — a generator or input a `defgenerated` form declares, or whose header marks it generated (§3), a
+/// chain, refused for good (decision_trust-generated-refusals.md §2). A form no program reads is held to its text alone
+/// (step 1).
 #[must_use]
 pub fn blobs_and_chains(
     generated: &[Generated],

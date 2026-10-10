@@ -3502,7 +3502,7 @@ mutation gs-a-declared-chain-passes
 file xtask/src/trust_generated.rs
 test -p xtask trust_generated::provenance_tests
 expect killed
-why M3.6.6.2.2, the generated-sources record §2 (`GS-H1`, step 3): a live form's input a `defgenerated` form declares is a chain, refused until `M3.6.6.4`.
+why M3.6.6.2.2, the generated-sources record §2 (`GS-H1`, step 3): a live form's input a `defgenerated` form declares is a chain, refused for good (decision_trust-generated-refusals.md §2).
 from
                     if declared.contains(f.as_str()) {
 to
@@ -3513,7 +3513,7 @@ mutation gs-a-marked-chain-passes
 file xtask/src/trust_generated.rs
 test -p xtask trust_generated::provenance_tests
 expect killed
-why M3.6.6.2.2, the generated-sources record §2 (`GS-H1`, step 3): a live form's input whose header marks it generated is a chain, refused until `M3.6.6.4`.
+why M3.6.6.2.2, the generated-sources record §2 (`GS-H1`, step 3): a live form's input whose header marks it generated is a chain, refused for good (decision_trust-generated-refusals.md §2).
 from
                     } else if crate::generated_header::marked(f, bytes) {
 to

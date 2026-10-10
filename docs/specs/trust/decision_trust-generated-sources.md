@@ -319,7 +319,7 @@ site uses is (the parent's §6): removed, so a generated source that stops being
 A form whose declared file a live form names as a generator or an input, or a generator build reads, is part of §2's
 chain — or, its file being no blob, of the blob rule's refusal, or, read by a generator build, of the parent's
 `trust-undeclared-input` row — so its run refuses and nothing in it is stale: that
-refusal is its one code — *for good, decided `2026-10-10`: [`decision_trust-generated-refusals.md`](decision_trust-generated-refusals.md)*.
+refusal is its one code until `M3.6.6.4` — *for good, decided `2026-10-10`: [`decision_trust-generated-refusals.md`](decision_trust-generated-refusals.md)*.
 
 ### 7. Case 5, and the parent's text
 

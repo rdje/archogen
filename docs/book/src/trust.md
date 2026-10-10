@@ -80,7 +80,7 @@ an input under another name. Two generated tables that differ in every byte, wri
 are seen to share both. A generator or input the commit does not hold as a file is refused. So are a **chain**, a
 generator or input that a form declares or a header marks as generated, and a generator or input inside a vendored
 checkout, which the commit holds as a pointer to another repository rather than as files: each is refused for a reason,
-and the need it would serve is met in one step instead (below).
+and the need it would serve is met in one step instead when its files are unmarked (below).
 
 A generator must lie outside the reading program's other roles: a table the generator's own executable wrote, read by
 a checker, is refused, since the checker would then trust the very logic it checks. A generator that is a program —
@@ -256,10 +256,12 @@ refused, `trust-undeclared-input`, wherever the gate runs:
   is one step, each generator file judged against each program that reads its output; over a chain, which roles a
   file plays and which program each upstream generator answers to have a reading per step, and the design's review
   found another role's generator escaping through one. The need is met in one step: one form names every step's
-  generator files and the first step's inputs, the intermediate file never committed;
+  generator files and every committed file any step reads, the intermediate file never committed — a later step that
+  is a program reads it at run time rather than compiling it;
 - a generator or input **at or under a gitlink**, the pointer by which the commit holds a vendored checkout: it is no
   file of the commit's tree, so the rule above refuses it — the inventory hashes only what the commit holds. The need
-  is met by committing a copy of the file, named as an input.
+  is met by committing a copy of the file, named as an input, or for a generator by a committed script that runs it.
+  A copy, or a pin below, whose header marks it generated is a chain, with no route.
 
 A tool a script runs — protoc, bindgen, an interpreter — is no generator file but the script's own dependency, and is
 believed: a file a tool wrote is declared with the script that ran the tool as its generator. A file a tool writes
