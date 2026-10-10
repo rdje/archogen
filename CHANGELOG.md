@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the reviews the count check judges are listed in the reviews index
+
+`ARCHOGEN-PROGRAM-0599` (leaf `PROGRAM.69`), `2026-10-11`.
+
+- The count check's list of reviews was written in its script, so a design review in any other part of the project
+  could join it only by a change to that script, owned by another leaf. The list now sits in the reviews index, which
+  every review's answer already edits, under its own heading; a missing heading, a line there that is no entry, and a
+  review listed twice stop the commit.
+- Validation: 38 arms; four deliberate breaks of the list's rules, each caught by its own arm, and round 27's twelve,
+  by untracked runners, so not durable; every self-test; the focused tier on the staged tree.
+
 ## archogen — the review-count check judges every round of the reviews it lists, and every open one is listed
 
 `ARCHOGEN-PROGRAM-0598` (leaf `PROGRAM.69`), `2026-10-11`.

@@ -1,20 +1,23 @@
 #!/usr/bin/env bash
-# scripts/check_review_counts.sh — REVIEW-COUNTS: for each design review this script lists, the record's count of what
-# each round found, and the reviews index's count of rounds, are its review history's (leaf `PROGRAM.69`, review rounds
-# 23 to 27).
+# scripts/check_review_counts.sh — REVIEW-COUNTS: for each design review the reviews index lists as counted, the
+# record's count of what each round found, and the index's count of rounds, are its review history's (leaf `PROGRAM.69`,
+# review rounds 23 to 27).
 #
 # ⭐ WHY. A design record keeps one summary row per review round, with the count of what the round found, and the
 # round's own table in its review history lists each finding. The count was copied by hand, and the task-tree sealing
 # record's count disagreed with its history four times (reviews R19 D1, R21 D1, R22 D1, R23 D1); the index's count of
 # rounds slipped once (R17). Derived and checked, they cannot drift.
 #
-# ⭐ WHICH REVIEWS: the ones listed in PAIRS below, each a review history and its design record. Nothing is derived and
-# nothing skipped: a listed review the check cannot judge whole — a file missing, no round line, a round with no
-# well-formed findings table, no summary table, not one index row — is refused (rounds 24 to 27 found every derived or
-# partial scope leaving a review, or a round, unread). The list is every open review whose record keeps a summary
-# table, from its first round: an index row whose status begins `open`, whose linked record holds a summary header, and
-# whose history holds a round line or its record a summary row, is refused unless its history is listed. A review
-# leaves the list in the commit that closes it.
+# ⭐ WHICH REVIEWS: the ones docs/reviews/INDEX.md lists under its heading `## Counted by `REVIEW-COUNTS``, each a line
+# "- `<history>` with `<record>`", both paths from docs/reviews/ — kept with the index every review's answer edits, so a
+# review in any tree joins the list with no change to this script. An index with no such heading, a line under it
+# opening "- " that is no such entry, and a review listed twice are refused. Nothing is derived and nothing skipped: a
+# listed review the check cannot judge whole — a file missing, no round line, a round with no well-formed findings
+# table, no summary table, not one index row — is refused (rounds 24 to 27 found every derived or partial scope leaving
+# a review, or a round, unread). The list is every open review whose record keeps a summary table, from its first
+# round: an index row whose status begins `open`, whose linked record holds a summary header, and whose history holds a
+# round line or its record a summary row, is refused unless its history is listed. A review leaves the list in the
+# commit that closes it.
 #
 # WHAT IT READS, for each listed review — the staged copy of each file (`git show :<path>`), the working tree's for one
 # not in the index:
@@ -25,7 +28,8 @@
 #   - in the record, its summary table: the header `| Round | Findings | Defects | …` (THE FINDINGS SHAPE) or
 #     `| Round | Date | Defects | …` (THE DATE SHAPE), a separator row of dashes, and every row under it to the first
 #     line that is no table row;
-#   - in docs/reviews/INDEX.md, every row: the listed reviews' own, and each open one's linked record.
+#   - in docs/reviews/INDEX.md, the counted list, and every row: the listed reviews' own, and each open one's linked
+#     record.
 #
 # THE RULE: every round of a listed review has one line, one well-formed findings table and one summary row; every row
 # under a summary header names a round by a number of 0 to 9 digits; a summary row for a round with no line is refused.
@@ -42,11 +46,8 @@ SELF="$0"
 case "$SELF" in /*) ;; *) SELF="$PWD/$SELF" ;; esac
 ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
 
-# history|record — one line a review. The self-test sets REVIEW_COUNTS_PAIRS to its scratch world's.
-PAIRS="${REVIEW_COUNTS_PAIRS:-docs/reviews/decision_task-tree-sealing-reviews.md|docs/decisions/decision_task-tree-sealing.md}"
-
 check() {
-  PAIRS="$PAIRS" python3 -I - <<'PY'
+  python3 -I - <<'PY'
 import collections, os, re, subprocess, sys
 HEAD = "| # | Kind | Finding | Answer |"
 SEPARATOR = re.compile(r"^\|( *:?-+:? *\|)+$")
@@ -117,11 +118,23 @@ def tally(kinds):
         "arm gap" if k.startswith("arm gap") else
         "remark" if k.startswith("remark") else k for k in kinds)
 index = read("docs/reviews/INDEX.md") or ""
-listed, judged = set(), 0
-for pair in os.environ["PAIRS"].split("\n"):
-    if not pair.strip():
+LIST = "## Counted by `REVIEW-COUNTS`"
+pairs, inside = [], False
+for l in index.split("\n"):
+    if l.startswith("## "):
+        inside = l.rstrip() == LIST
         continue
-    hist, rec = pair.strip().split("|")
+    if inside and l.startswith("- "):
+        m = re.fullmatch(r"- `([^`/]+-reviews\.md)` with `([^`]+\.md)`", l.rstrip())
+        if not m:
+            bad.append("docs/reviews/INDEX.md: a line of the counted list that is no entry: %r" % l[:60]); continue
+        pairs.append(("docs/reviews/" + m.group(1), os.path.normpath(os.path.join("docs/reviews", m.group(2)))))
+if not any(l.rstrip() == LIST for l in index.split("\n")):
+    bad.append("docs/reviews/INDEX.md: no heading %s — the list of the reviews this check judges" % LIST)
+listed, judged = set(), 0
+for hist, rec in pairs:
+    if hist in listed:
+        bad.append("docs/reviews/INDEX.md: %s is listed twice" % hist); continue
     listed.add(hist)
     h, r = read(hist), read(rec)
     if h is None or r is None:
@@ -199,8 +212,6 @@ PY
 
 self_test() {
   local work="$ROOT/target/doctrine_scratch/review_counts" arms=0 ok=0
-  local LISTED="docs/reviews/a-reviews.md|docs/decisions/a.md
-docs/reviews/b-reviews.md|docs/decisions/b.md"
   rm -rf "${work:?}"; mkdir -p "$work/docs/reviews" "$work/docs/decisions"
   git -C "$work" init -q
   INDEX_A='| [`a-reviews.md`](a-reviews.md) | [`a.md`](../decisions/a.md) | 2 | open |'
@@ -208,6 +219,7 @@ docs/reviews/b-reviews.md|docs/decisions/b.md"
     printf '| Review history | Design record | Rounds | Status |\n| --- | --- | --- | --- |\n%s\n%s\n%s\n' "${3:-$INDEX_A}" \
       '| [`b-reviews.md`](b-reviews.md) | §1 of [`b.md`](../decisions/b.md) | 1 | open |' \
       '| [`c-reviews.md`](c-reviews.md) | [`c.md`](../decisions/c.md) | 3 | closed |' > "$work/docs/reviews/INDEX.md"
+    printf '\n## Counted by `REVIEW-COUNTS`\n\nThe reviews it judges.\n\n- `a-reviews.md` with `../decisions/a.md`\n- `b-reviews.md` with `../decisions/b.md`\n\n## After\n\n- `c-reviews.md` with `../decisions/c.md`\n' >> "$work/docs/reviews/INDEX.md"
     # a: round 1 one finding; round 2 one defect, two arm gaps, one pre-existing arm gap, one pre-existing finding, a
     # remark, an answer's own row — then rows past a blank line and a second table of the same header, neither read.
     printf '# A\n\n**Round 1**, a table.\n\n| # | Kind | Finding | Answer |\n| --- | --- | --- | --- |\n| R1-D1 | defect | x | y |\n\n**Round 2**, a table.\n\n| # | Kind | Finding | Answer |\n| --- | --- | --- | --- |\n| R2-D1 | defect | x | y |\n| R2-AG1 | arm gap | x | y |\n| R2-AG2 | arm gap | x | y |\n| R2-R1 | remark | x | y |\n| R2-P1 | pre-existing arm gap | x | y |\n| R2-P2 | pre-existing | x | y |\n| — | found while answering | x | y |\n\n| R2-D9 | defect | past the table | y |\n\n| # | Kind | Finding | Answer |\n| --- | --- | --- | --- |\n| R2-D8 | defect | a second table | y |\n' > "$work/docs/reviews/a-reviews.md"
@@ -221,7 +233,7 @@ docs/reviews/b-reviews.md|docs/decisions/b.md"
   }
   arm() { # $1 = name, $2 = expected rc, $3 = text the output must carry
     local out rc; arms=$((arms + 1))
-    out="$(cd "$work" && REVIEW_COUNTS_PAIRS="$LISTED" bash "$SELF" 2>&1)"; rc=$?
+    out="$(cd "$work" && bash "$SELF" 2>&1)"; rc=$?
     if [ "$rc" -eq "$2" ] && printf '%s' "$out" | grep -qF -- "$3"; then ok=$((ok + 1)); echo "  ✅ $1"
     else echo "SELF-TEST: $1 — rc $rc:" >&2; printf '%s\n' "$out" | head -3 | sed 's/^/    /' >&2; fi
   }
@@ -281,10 +293,16 @@ docs/reviews/b-reviews.md|docs/decisions/b.md"
   arm "a listed review whose history holds no round line is refused (R26 AG2)" 1 "listed, and it holds no round line"
   world "$GOOD_A" "$GOOD_B"; printf '# B\n\nNo table.\n' > "$work/docs/decisions/b.md"; git -C "$work" add -A
   arm "a listed review whose record holds no summary table is refused (R26 AG2)" 1 "listed, and it holds no summary table"
-  world "$GOOD_A" "$GOOD_B"; sed -i.bak '/b-reviews.md/d' "$work/docs/reviews/INDEX.md"; rm -f "$work/docs/reviews/INDEX.md.bak"; git -C "$work" add -A
+  world "$GOOD_A" "$GOOD_B"; sed -i.bak '/^| \[`b-reviews.md`\]/d' "$work/docs/reviews/INDEX.md"; rm -f "$work/docs/reviews/INDEX.md.bak"; git -C "$work" add -A
   arm "a listed review with no index row is refused (R26 D1)" 1 "b-reviews.md has 0 row(s), not one"
-  world "$GOOD_A" "$GOOD_B"; grep 'b-reviews.md' "$work/docs/reviews/INDEX.md" > "$work/b.row"; cat "$work/b.row" >> "$work/docs/reviews/INDEX.md"; rm "$work/b.row"; git -C "$work" add -A
+  world "$GOOD_A" "$GOOD_B"; grep '^| \[`b-reviews.md`\]' "$work/docs/reviews/INDEX.md" > "$work/b.row"; cat "$work/b.row" >> "$work/docs/reviews/INDEX.md"; rm "$work/b.row"; git -C "$work" add -A
   arm "a listed review with two index rows is refused (R27 R2)" 1 "b-reviews.md has 2 row(s), not one"
+  world "$GOOD_A" "$GOOD_B"; sed -i.bak '/^## Counted by/d' "$work/docs/reviews/INDEX.md"; rm -f "$work/docs/reviews/INDEX.md.bak"; git -C "$work" add -A
+  arm "an index with no counted list is refused, never read as listing nothing" 1 "no heading ## Counted by"
+  world "$GOOD_A" "$GOOD_B"; sed -i.bak 's/^- `b-reviews.md` with /- `b-reviews.md` and /' "$work/docs/reviews/INDEX.md"; rm -f "$work/docs/reviews/INDEX.md.bak"; git -C "$work" add -A
+  arm "a line of the counted list that is no entry is refused, never skipped" 1 "a line of the counted list that is no entry"
+  world "$GOOD_A" "$GOOD_B"; sed -i.bak 's/^- `b-reviews.md` with `..\/decisions\/b.md`$/&\n&/' "$work/docs/reviews/INDEX.md"; rm -f "$work/docs/reviews/INDEX.md.bak"; git -C "$work" add -A
+  arm "a review listed twice is refused" 1 "b-reviews.md is listed twice"
   world "$GOOD_A" "$GOOD_B" '| [`a-reviews.md`](a-reviews.md) | [`a.md`](../decisions/a.md) | 3 | open |'
   arm "an index row's count of rounds off is refused (R24 D2)" 1 "a-reviews.md's row says 3 round(s)"
   world "$GOOD_A" "$GOOD_B"; sed -i.bak 's/| 3 | closed |/| 3 | open |/' "$work/docs/reviews/INDEX.md"; rm -f "$work/docs/reviews/INDEX.md.bak"; git -C "$work" add -A

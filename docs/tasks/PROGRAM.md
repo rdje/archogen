@@ -790,7 +790,10 @@ mdBook that is the director's window into the project.
     a listed review keeps a findings table headed exactly, its separator row and an id in each row; the summary table
     its separator; an open review whose record keeps a summary table listed from its first round —
     `bash scripts/check_review_counts.sh --self-test` → *"35 pass / 0 fail (35 arms)"*; `python3
-    target/p69r17/mutate27.py` → *"12 of 12 killed"* — untracked, so not durable.
+    target/p69r17/mutate27.py` → *"12 of 12 killed"* — untracked, so not durable. Found while answering `M3.6.9`'s
+    round 1: the list kept in the reviews index, under *Counted by `REVIEW-COUNTS`*, so a review in another tree joins
+    it with no change to the script — `bash scripts/check_review_counts.sh --self-test` → *"38 pass / 0 fail (38
+    arms)"*; `python3 target/p69r17/mutate_list.py` → *"4 of 4 killed"* — untracked, so not durable.
   - [x] **NO REGRESSION** — `bash scripts/check_task_history.sh` at `e624001` → *"OK (170 sealed file(s) … every sealed
     leaf proven against its tree before its seal)"*: the 142 seals before this change judged by every generalised leg, the byte
     rebuild included. `bash scripts/run_self_tests.sh` → *"OK — 47 self-test(s) passed"*; the
@@ -815,7 +818,7 @@ mdBook that is the director's window into the project.
   `ARCHOGEN-PROGRAM-0563 (leaf PROGRAM.69)`, round 20;
   `ARCHOGEN-PROGRAM-0564 (leaf PROGRAM.69)`, round 21;
   `ARCHOGEN-PROGRAM-0567 (leaf PROGRAM.69)`, round 22; `ARCHOGEN-PROGRAM-0576 (leaf PROGRAM.69)`, round 23; `ARCHOGEN-PROGRAM-0582 (leaf PROGRAM.69)`, round 24; `ARCHOGEN-PROGRAM-0586 (leaf PROGRAM.69)`, round 25; `ARCHOGEN-PROGRAM-0590 (leaf PROGRAM.69)`, round 26;
-  `ARCHOGEN-PROGRAM-0598 (leaf PROGRAM.69)`, round 27
+  `ARCHOGEN-PROGRAM-0598 (leaf PROGRAM.69)`, round 27; `ARCHOGEN-PROGRAM-0599 (leaf PROGRAM.69)`, the list in the index
 
 - ID: `PROGRAM.70`
   Status: `done` — started `2026-10-10`, decomposed into `.1`, the bytes, and `.2`, the count, closed the same day with `.2`
@@ -1468,6 +1471,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-10` | `PROGRAM.69` (round 26) | `REVIEW-COUNTS` and its self-test; eight mutants, `target/p69r17/mutate26.py`, untracked; the sealing self-test; every self-test; focused on the staged tree | OK, 2 reviews listed; 25 pass / 0 fail; 8 of 8 killed, not durable; 121 pass / 0 fail; 49 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.76` (round 12) | the self-test; the check on the tree; five mutants, `target/p76/mutate_r12.py`, untracked; every self-test; focused on the staged tree | 113 pass / 0 fail; exit 0; 5 of 5 killed, not durable; 49 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-11` | `PROGRAM.69` (round 27) | `REVIEW-COUNTS` and its self-test; twelve mutants, `target/p69r17/mutate27.py`, untracked; the sealing self-test; every self-test; focused on the staged tree | OK, 1 review listed, 27 rounds judged, every one; 35 pass / 0 fail; 12 of 12 killed, not durable; 121 pass / 0 fail; 49 passed; `passed — 3 passed, 0 failed` |
+| `2026-10-11` | `PROGRAM.69` (the counted list) | `REVIEW-COUNTS` and its self-test; four mutants of the list's rules, `target/p69r17/mutate_list.py`, and round 27's twelve, untracked; `REVIEW-HISTORY`; every self-test; focused on the staged tree | OK, 1 review listed, 27 rounds judged, every one; 38 pass / 0 fail; 4 of 4 and 12 of 12 killed, not durable; OK; 49 passed; `passed — 3 passed, 0 failed` |
 
 ## Commit Log
 
@@ -1651,6 +1655,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0590 (leaf PROGRAM.69)` | **review round 26 answered by method**: `REVIEW-COUNTS` judges the reviews its script lists, refusing any it cannot judge (not so, review round 27 found: a round with another table header passed unjudged); `PROGRAM.78` filed |
 | `PROGRAM.76` | `ARCHOGEN-PROGRAM-0596 (leaf PROGRAM.76)` | **review round 12 answered by method**: one reader for the disk and the index, reading as prose; a case's whole text and a wrapped long line found |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0598 (leaf PROGRAM.69)` | **review round 27 answered**: `REVIEW-COUNTS` strict — every round of a listed review a well-formed findings table, every open review past its first round listed; the overclaims marked; `PROGRAM.78` in the changelog and the frontier |
+| `PROGRAM.69` | `ARCHOGEN-PROGRAM-0599 (leaf PROGRAM.69)` | **the counted list in the reviews index**, found while answering `M3.6.9`'s round 1: a review in another tree joins `REVIEW-COUNTS`' list with no change to its script |
 
 ## Changelog
 

@@ -7,7 +7,8 @@ No bootstrap read includes this directory.
 
 - **Adding a round:** append its paragraph and table to the design's file, and its summary row to the design
   record's `## Review`.
-- **A new design under review:** a file named as its design record with `-reviews` added, and its row below.
+- **A new design under review:** a file named as its design record with `-reviews` added, and its row below; once
+  its first round is answered, its line under *Counted by `REVIEW-COUNTS`* if its record keeps a summary table.
 - **When the review closes,** the file is frozen: its last round is the one that found no defect. It may then move
   to `docs/review-history/`, byte for byte, behind a stub (`bash scripts/check_review_history.sh --seal <FILE>`).
 
@@ -30,3 +31,11 @@ No bootstrap read includes this directory.
 | [`rt-static-up-v1-faults-observation-reviews.md`](rt-static-up-v1-faults-observation-reviews.md) | [`rt-static-up-v1-faults-observation.md`](../profiles/rt-static-up-v1-faults-observation.md), the fault paths' observation events | 7 | closed: round 7 found no defect (`M2.15`) |
 | [`decision_trust-generated-refusals-reviews.md`](decision_trust-generated-refusals-reviews.md) | [`decision_trust-generated-refusals.md`](../specs/trust/decision_trust-generated-refusals.md) | 23 | closed: `2026-10-10`, round 23 found no defect; rounds 1–22 answered, rounds 5, 14, 16 to 20 by method (`M3.6.6.4`) |
 | [`decision_trust-generated-adequacy-reviews.md`](decision_trust-generated-adequacy-reviews.md) | [`decision_trust-generated-adequacy.md`](../specs/trust/decision_trust-generated-adequacy.md) | 0 | open: written `2026-10-10` by `M3.6.9`; round 1 next |
+
+## Counted by `REVIEW-COUNTS`
+
+The reviews whose counts `scripts/check_review_counts.sh` judges against their histories: every open review whose
+record keeps a summary table, from the commit that answers its first round; a review leaves the list in the commit
+that closes it. Each line names the history, then the record, both from this folder.
+
+- `decision_task-tree-sealing-reviews.md` with `../decisions/decision_task-tree-sealing.md`
