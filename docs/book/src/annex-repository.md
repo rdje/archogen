@@ -241,9 +241,9 @@ $ bash scripts/check_review_history.sh --self-test         # its RED arms, on sc
 
 What a review round found is counted by hand in its design record's summary row, and the reviews index counts the
 rounds; the history's own table lists each finding. For each review the reviews index lists under *Counted by
-`REVIEW-COUNTS`* — every open review whose record keeps such a table, from its first round, which the check itself
-demands — `REVIEW-COUNTS` holds the counts to the table, round by round, and refuses a listed review a round of which it
-cannot judge; a review leaves the list when it closes (`PROGRAM.69`).
+`REVIEW-COUNTS`* — every open review whose record keeps a table of its rounds, from its first round, which the check
+itself demands — `REVIEW-COUNTS` holds the counts to the table, round by round, and refuses a listed review a round of
+which it cannot judge; a review leaves the list when it closes, which the check demands too (`PROGRAM.69`).
 
 ```console
 $ bash scripts/check_review_counts.sh                      # the gate

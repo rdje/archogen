@@ -598,6 +598,34 @@ listed from its first round, or refused.
 | — | found while answering | three more texts kept claims rounds 25 and 26 refuted, unmarked: the changelog's `ARCHOGEN-PROGRAM-0582` heading and text, and the record's row 25; and seven texts made the claims R27-D1 and R27-D2 refute, five the one and two the other | each marked |
 | — | found while answering | not this change's: four lines of `PROGRAM.76`'s changelog entries run past the wrap, lengthened by its own marks | left to `PROGRAM.76`'s next answer |
 
+**Round 28**, `2026-10-11`, a twenty-sixth confirmation, in clones of `05a0881`, by a read-only context new to the
+change, fenced from the sealed evaluation set. It ran the gate, every self-test and the census, mutated the new check
+33 ways and silenced each of the tool's 53 refusals one at a time — runners untracked, so not durable: 47 failed an
+arm and six are shadowed by another refusal or unreachable, so no rule of the tool fails open. It also ran the census
+at `fea69ad`, older than `6d61f65`, to re-derive the header's 274 483: the census reads `docs/tasks/` blobs into memory
+and prints counts, so nothing was written to disk and no blob of the sealed set was read; later prompts forbid any
+tool at such a commit. Verdict: 5 defects, 3 arm gaps and 4 remarks. Round 27's list rule failed open on an index row
+it could not parse — R26-D1's class, brought back by the rule round 27 derived. The answer reads every row of the
+index's table by its cells and links and refuses one it cannot read, and states the list's rule with its condition: a
+record that keeps a table of its rounds, of any shape.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R28-D1 | defect | the list's rule dropped an open index row whose history cell was not exactly a backticked link | every row of the table read by its cells, a file by its first link, backticks or none; a row whose history cell links no file refused; an arm each |
+| R28-D2 | defect | the list's rule stated without its condition on the record: an open review with no record file, or with a third shape of round table, unlisted | the rule is a record keeping a round table, of any shape, which each text now states; the record's row 27, the leaf's Commit Log row and the changelog marked |
+| R28-D3 | defect | "of kind exactly `pre-existing arm gap`" while the tally matched a prefix | compared exactly; an arm with a kind that only begins so |
+| R28-D4 | defect | round 25's Verification Log row, "every row judged or named", unmarked | marked |
+| R28-D5 | defect | a row of dashes in a findings table counted as a finding, while the changelog said it stops the commit | refused; an arm; the changelog marked |
+| R28-AGa | arm gap | an open review whose record keeps no round table, not required on the list, held by no arm | an arm |
+| R28-AGb | arm gap | an open review whose history is missing held by no arm | refused by name; an arm |
+| R28-AGc | arm gap | "a review leaves the list in the commit that closes it" held by nothing | a listed review whose row is not open refused; an arm |
+| R28-Ra | remark | the first exactly headed table anywhere in a round judged, an earlier table of another header passed over | the first table after the round's line must be the findings table; an arm |
+| R28-Rb | remark | a count of the other shape — remarks in a findings-shaped row, arm gaps in a date-shaped one — not judged | every stated count judged in either shape; an arm each |
+| R28-Rc | remark | a finding row with an empty kind counted | refused; an arm |
+| R28-Rd | remark | "a number of 0 to 9 digits" reads as a count of digits | "a number, of the digits 0 to 9" |
+| — | found while answering | round 24's Verification Log row, "4 archived named", refuted by round 25, unmarked | marked |
+| — | found while answering | an open row linking a record that is missing passed | refused; an arm |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.

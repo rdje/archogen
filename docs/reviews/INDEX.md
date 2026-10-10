@@ -8,7 +8,7 @@ No bootstrap read includes this directory.
 - **Adding a round:** append its paragraph and table to the design's file, and its summary row to the design
   record's `## Review`.
 - **A new design under review:** a file named as its design record with `-reviews` added, and its row below; once
-  its first round is answered, its line under *Counted by `REVIEW-COUNTS`* if its record keeps a summary table.
+  its first round is answered, its line under *Counted by `REVIEW-COUNTS`* if its record keeps a table of its rounds.
 - **When the review closes,** the file is frozen: its last round is the one that found no defect. It may then move
   to `docs/review-history/`, byte for byte, behind a stub (`bash scripts/check_review_history.sh --seal <FILE>`).
 
@@ -18,7 +18,7 @@ No bootstrap read includes this directory.
 | [`decision_decisions-folder-ceiling-reviews.md`](decision_decisions-folder-ceiling-reviews.md) | [`decision_decisions-folder-ceiling.md`](../decisions/decision_decisions-folder-ceiling.md) | 1 | closed: answered before the raise landed (`PROGRAM.38`) |
 | [`decision-history-reviews.md`](decision-history-reviews.md) | `DECISION-HISTORY`: the header of `scripts/check_decision_history.sh`, and [`decision_decisions-folder-ceiling.md`](../decisions/decision_decisions-folder-ceiling.md)'s sealing bullet | 1 | closed: answered with the gate's hardening (`PROGRAM.41.1`) |
 | [`review-history-reviews.md`](review-history-reviews.md) | `REVIEW-HISTORY`: the header of `scripts/check_review_history.sh`, and [`decision_reviews-folder-ceiling.md`](../decisions/decision_reviews-folder-ceiling.md)'s dated line | 1 | closed: answered with the gate's hardening (`PROGRAM.55.1`) |
-| [`decision_task-tree-sealing-reviews.md`](decision_task-tree-sealing-reviews.md) | [`decision_task-tree-sealing.md`](../decisions/decision_task-tree-sealing.md) | 27 | open: reopened `2026-10-10` for the record's amendment, the outermost closed subtree as the unit (`PROGRAM.69`); round 27 found 3 defects and 3 arm gaps, answered: `REVIEW-COUNTS` strict, every round of a listed review judged, every open review past its first round listed; round 28 next |
+| [`decision_task-tree-sealing-reviews.md`](decision_task-tree-sealing-reviews.md) | [`decision_task-tree-sealing.md`](../decisions/decision_task-tree-sealing.md) | 28 | open: reopened `2026-10-10` for the record's amendment, the outermost closed subtree as the unit (`PROGRAM.69`); round 28 found 5 defects and 3 arm gaps, answered: `REVIEW-COUNTS` reading every index row by its cells and links, an open review whose record keeps a table of its rounds listed from its first round; round 29 next |
 | [`decision_runtime-analysis-variant-reviews.md`](decision_runtime-analysis-variant-reviews.md) | [`decision_runtime-analysis-variant.md`](../decisions/decision_runtime-analysis-variant.md) | 9 | closed: `M2.11`'s change met its closure rule on its fifth review (`M2.11`) |
 | [`catalog-check-protection-reviews.md`](catalog-check-protection-reviews.md) | the repository half of `M2.7.6`: the headers of `scripts/check_workflow_tokens.sh`, `scripts/catalog_check.sh` and `.github/workflows/catalog-check.yml` | 1 | open: rounds 2 and 3 not completed; the next is the director's reviewer's (`M2.7.6.4`, findings §11) |
 | [`decision_catalog-records-port-reviews.md`](decision_catalog-records-port-reviews.md) | [`decision_catalog-records-port.md`](../specs/catalog/decision_catalog-records-port.md), §14 of the catalog record | 7 | closed: round 7 found no defect (`M2.12.2`) |

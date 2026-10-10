@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the review-count check reads every row of the reviews index, and says which reviews must be listed
+
+`ARCHOGEN-PROGRAM-0602` (leaf `PROGRAM.69`), `2026-10-11`.
+
+- A review found the count check's rule that open reviews be listed passing a review whose index row was written a
+  little differently, and the texts stating the rule wider than it was. The check now reads every row of the index by
+  its cells and links, and refuses one it cannot read; every open review whose record keeps a table of its rounds, of
+  any shape, must be listed from its first round, and a closed one must leave the list. A round's findings table must
+  be the first table after its line, with no row of dashes or row with no kind, and every count a summary row states
+  is judged, whichever shape the record keeps.
+- Validation: 51 arms; thirteen deliberate breaks of the new rules and round 27's eleven, each caught by its own arm,
+  by untracked runners, so not durable; the sealing tool's 121 arms; every self-test; the focused tier on the staged
+  tree.
+
 ## archogen — the design for the generated-sources rules' tests holds every recorded defect exactly
 
 `ARCHOGEN-M3-0601` (leaf `M3.6.9`), `2026-10-11`.
@@ -40,16 +54,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 - Validation: 38 arms; four deliberate breaks of the list's rules, each caught by its own arm, and round 27's twelve,
   by untracked runners, so not durable; every self-test; the focused tier on the staged tree.
 
-## archogen — the review-count check judges every round of the reviews it lists, and every open one is listed
+## archogen — the review-count check judges every round of the reviews it lists, and every open one is listed (not so: round 28)
 
 `ARCHOGEN-PROGRAM-0598` (leaf `PROGRAM.69`), `2026-10-11`.
 
 - A review found the count check still passing a review it could not judge: a round whose findings table had another
   header was counted as having none, and its counts went unread. The check is now strict: every round of a listed
   review must keep a findings table in the one form, or the commit stops; a malformed table — no separator, a row with
-  no id, a row of dashes — stops it too; and an open review whose record keeps a count per round must be on the list
-  from its first round. The five texts the review found still claiming what earlier reviews refuted, and three more
-  like them found while answering, now say so.
+  no id, a row of dashes — stops it too (not so, review round 28 found: a row of dashes in a findings table was
+  counted); and an open review whose record keeps a count per round must be on the list from its first round (not so,
+  review round 28 found: one whose index row's link had no backticks was passed). The five texts the review found
+  still claiming what earlier reviews refuted, and three more like them found while answering, now say so.
 - Validation: 35 arms; twelve deliberate breaks, each caught by its own arm, by an untracked runner, so not durable;
   the sealing tool's 121 arms; every self-test; the focused tier on the staged tree.
 

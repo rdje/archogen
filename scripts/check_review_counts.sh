@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # scripts/check_review_counts.sh — REVIEW-COUNTS: for each design review the reviews index lists as counted, the
 # record's count of what each round found, and the index's count of rounds, are its review history's (leaf `PROGRAM.69`,
-# review rounds 23 to 27).
+# review rounds 23 to 28).
 #
 # ⭐ WHY. A design record keeps one summary row per review round, with the count of what the round found, and the
 # round's own table in its review history lists each finding. The count was copied by hand, and the task-tree sealing
@@ -13,32 +13,35 @@
 # review in any tree joins the list with no change to this script. An index with no such heading, a line under it
 # opening "- " that is no such entry, and a review listed twice are refused. Nothing is derived and nothing skipped: a
 # listed review the check cannot judge whole — a file missing, no round line, a round with no well-formed findings
-# table, no summary table, not one index row — is refused (rounds 24 to 27 found every derived or partial scope leaving
-# a review, or a round, unread). The list is every open review whose record keeps a summary table, from its first
-# round: an index row whose status begins `open`, whose linked record holds a summary header, and whose history holds a
-# round line or its record a summary row, is refused unless its history is listed. A review leaves the list in the
-# commit that closes it.
+# table, no summary table of either shape, not one index row — is refused, and so is one whose index row's status does
+# not begin `open`: a review leaves the list in the commit that closes it (rounds 24 to 28 found every derived or
+# partial scope leaving a review, or a round, unread). THE LIST'S RULE: every open review whose record keeps a ROUND
+# TABLE — a line opening `| Round |`, of any shape — is listed from its first round. An index row whose status begins
+# `open` is refused unless its history is listed when its record cell links a record holding a round table and its
+# history holds a round line or that table a row; refused too: such a row whose history cell links no file, whose
+# record link resolves to nothing, or whose history is missing. A record cell that links no file names no record.
 #
-# WHAT IT READS, for each listed review — the staged copy of each file (`git show :<path>`), the working tree's for one
-# not in the index:
-#   - in the history, its ROUNDS — each line opening `**Round <n>**` — and each round's FINDINGS TABLE: the first table
-#     after its line and before the next round's, headed exactly `| # | Kind | Finding | Answer |`, its next line a
-#     separator row of dashes, and its finding rows to the first line that is no table row; each finding row's first
-#     cell an id — `—` marking a finding of the answer's own, which is not the review's;
-#   - in the record, its summary table: the header `| Round | Findings | Defects | …` (THE FINDINGS SHAPE) or
-#     `| Round | Date | Defects | …` (THE DATE SHAPE), a separator row of dashes, and every row under it to the first
-#     line that is no table row;
-#   - in docs/reviews/INDEX.md, the counted list, and every row: the listed reviews' own, and each open one's linked
-#     record.
+# WHAT IT READS — the staged copy of each file (`git show :<path>`), the working tree's for one not in the index:
+#   - in docs/reviews/INDEX.md, the counted list, and every row of its table, its cells split on `|` and trimmed, a
+#     cell's file named by its first link, `[…](<path>)`, backticks or none;
+#   - in a listed review's history, its ROUNDS — each line opening `**Round <n>**` — and each round's FINDINGS TABLE:
+#     the first table after its line and before the next round's, which must be headed exactly
+#     `| # | Kind | Finding | Answer |`, its next line a separator row of dashes, and its finding rows to the first line
+#     that is no table row; each finding row an id and a kind, and none a row of dashes — `—` as its id marking a
+#     finding of the answer's own, which is not the review's;
+#   - in a listed review's record, its summary table: the header `| Round | Findings | Defects | …` (THE FINDINGS SHAPE)
+#     or `| Round | Date | Defects | …` (THE DATE SHAPE), a separator row of dashes, and every row under it to the first
+#     line that is no table row.
 #
 # THE RULE: every round of a listed review has one line, one well-formed findings table and one summary row; every row
-# under a summary header names a round by a number of 0 to 9 digits; a summary row for a round with no line is refused.
-# For each round:
-#   - both shapes: the defects cell begins with its number of findings of kind `defect`;
-#   - THE FINDINGS SHAPE: the findings cell is its number of findings; "N arm gap(s)", wherever it stands in the defects
-#     cell, its findings of kind `arm gap`; "N pre-existing arm gap(s)", those of kind exactly `pre-existing arm gap`;
-#   - THE DATE SHAPE: "N remark(s)" is its findings whose kind begins `remark`;
-#   a count a cell does not state is not judged. The index row's Rounds cell is the history's last round.
+# under a summary header names a round by a number, of the digits 0 to 9; a summary row for a round with no line is
+# refused. For each round, in either shape:
+#   - the defects cell begins with its number of findings whose kind begins `defect`;
+#   - wherever they stand in the defects cell, "N arm gap(s)" is its findings whose kind begins `arm gap`, "N
+#     pre-existing arm gap(s)" those whose kind is exactly `pre-existing arm gap`, "N remark(s)" those whose kind begins
+#     `remark`; a count the cell does not state is not judged;
+#   - THE FINDINGS SHAPE: the findings cell is its number of findings.
+# The index row's Rounds cell is the history's last round.
 #
 # MODES: (none) the gate — exit 0 clean, 1 each disagreement named · --self-test.
 set -uo pipefail
@@ -58,6 +61,8 @@ def read(path):
         return r.stdout
     return open(path, encoding="utf-8").read() if os.path.isfile(path) else None
 bad = []
+def cells_of(line):
+    return [c.strip() for c in line.strip().strip("|").split("|")]
 def rounds(text, hist):
     """Each round with a line: its findings' kinds, or None where it has no well-formed findings table."""
     out = {}
@@ -66,16 +71,21 @@ def rounds(text, hist):
         n, lines, kinds = int(parts[i]), parts[i + 1].split("\n"), None
         if n in out:
             bad.append("%s: round %d has two lines" % (hist, n))
-        if HEAD in lines:
-            k = lines.index(HEAD) + 1
+        first = next((j for j, l in enumerate(lines) if l.startswith("|")), None)
+        if first is not None and lines[first].rstrip() == HEAD:
+            k = first + 1
             if k >= len(lines) or not SEPARATOR.match(lines[k].strip()):
                 bad.append("%s: round %d's findings table has no separator row under its header" % (hist, n))
             else:
                 kinds, k = [], k + 1
                 while k < len(lines) and lines[k].startswith("|"):
-                    cells = [c.strip() for c in lines[k].strip().strip("|").split("|")]
-                    if len(cells) < 2 or not cells[0]:
+                    cells = cells_of(lines[k])
+                    if SEPARATOR.match(lines[k].strip()):
+                        bad.append("%s: round %d's findings table holds a row of dashes" % (hist, n))
+                    elif not cells[0]:
                         bad.append("%s: round %d's findings table holds a row with no id" % (hist, n))
+                    elif len(cells) < 2 or not cells[1]:
+                        bad.append("%s: round %d's findings table holds a row with no kind" % (hist, n))
                     elif cells[0] != "—":
                         kinds.append(cells[1].lower())
                     k += 1
@@ -113,11 +123,17 @@ def stated(cell, word):
     return int(m.group(1)) if m else None
 def tally(kinds):
     return collections.Counter(
-        "pre-existing arm gap" if k.startswith("pre-existing arm gap") else
+        "pre-existing arm gap" if k == "pre-existing arm gap" else
         "defect" if k.startswith("defect") else
         "arm gap" if k.startswith("arm gap") else
         "remark" if k.startswith("remark") else k for k in kinds)
 index = read("docs/reviews/INDEX.md") or ""
+LINK = re.compile(r"\]\(([^)\s]+)\)")
+rows_of_index = [cells_of(l) for l in index.split("\n") if l.startswith("|") and not SEPARATOR.match(l.strip())
+                 and not l.startswith("| Review history |")]
+def linked(cell):
+    m = LINK.search(cell)
+    return os.path.normpath(os.path.join("docs/reviews", m.group(1))) if m else None
 LIST = "## Counted by `REVIEW-COUNTS`"
 pairs, inside = [], False
 for l in index.split("\n"):
@@ -144,14 +160,15 @@ for hist, rec in pairs:
     if not heads:
         bad.append("%s: listed, and it holds no round line" % hist); continue
     if not seen:
-        bad.append("%s: listed, and it holds no summary table" % rec); continue
-    name = os.path.relpath(hist, "docs/reviews")
-    row = [l for l in index.split("\n") if l.startswith("| [`%s`](%s) |" % (name, name))]
+        bad.append("%s: listed, and it holds no summary table of either shape" % rec); continue
+    row = [c for c in rows_of_index if linked(c[0]) == hist]
     if len(row) != 1:
         bad.append("docs/reviews/INDEX.md: %s has %d row(s), not one" % (hist, len(row)))
-    elif row[0].split(" | ")[2].strip() != str(max(heads)):
-        bad.append("docs/reviews/INDEX.md: %s's row says %s round(s); its last round is %d"
-                   % (hist, row[0].split(" | ")[2].strip(), max(heads)))
+    elif len(row[0]) < 4 or not row[0][3].startswith("open"):
+        bad.append("docs/reviews/INDEX.md: %s is listed, and its row's status is not open — a review leaves the list in"
+                   " the commit that closes it" % hist)
+    elif row[0][2] != str(max(heads)):
+        bad.append("docs/reviews/INDEX.md: %s's row says %s round(s); its last round is %d" % (hist, row[0][2], max(heads)))
     def say(n, what, said, real):
         bad.append("%s: round %d says %s %s; %s's round %d holds %d" % (rec, n, said, what, hist, n, real))
     for n in sorted(set(heads) | set(rows)):
@@ -174,34 +191,36 @@ for hist, rec in pairs:
                 bad.append("%s: round %d's findings cell is not a number" % (rec, n))
             elif int(a) != len(heads[n]):
                 say(n, "finding(s)", a, len(heads[n]))
-            g = stated(b, "arm gaps?")
-            if g is not None and g != count["arm gap"]:
-                say(n, "arm gap(s)", g, count["arm gap"])
-            pg = stated(b, "pre-existing arm gaps?")
-            if pg is not None and pg != count["pre-existing arm gap"]:
-                say(n, "pre-existing arm gap(s)", pg, count["pre-existing arm gap"])
-        else:
-            rm = stated(b, "remarks?")
-            if rm is not None and rm != count["remark"]:
-                say(n, "remark(s)", rm, count["remark"])
-# The list is every open review whose record keeps a summary table, from its first round.
-for l in index.split("\n"):
-    cells = l.split(" | ")
-    if len(cells) < 4 or not cells[3].strip().startswith("open"):
+        for word, kind in (("arm gaps?", "arm gap"), ("pre-existing arm gaps?", "pre-existing arm gap"),
+                           ("remarks?", "remark")):
+            c = stated(b, word)
+            if c is not None and c != count[kind]:
+                say(n, kind + "(s)", c, count[kind])
+# The list is every open review whose record keeps a round table — a header opening `| Round |` — from its first round.
+for c in rows_of_index:
+    if len(c) < 4 or not c[3].startswith("open"):
         continue
-    mh = re.match(r"^\| \[`[^`]+`\]\(([^)]+)\)$", cells[0])
-    mr = re.search(r"\[`[^`]+`\]\(([^)]+)\)", cells[1])
-    if not mh or not mr:
+    hist = linked(c[0])
+    if hist is None:
+        bad.append("docs/reviews/INDEX.md: an open row whose history cell links no file: %r" % c[0][:60]); continue
+    if hist in listed:
         continue
-    hist = os.path.normpath(os.path.join("docs/reviews", mh.group(1)))
-    rec = os.path.normpath(os.path.join("docs/reviews", mr.group(1)))
-    h, r = read(hist) or "", read(rec)
-    if hist in listed or r is None:
-        continue
-    rows, seen = summary(r, rec, quiet=True)
-    if seen and (rows or re.search(r"(?m)^\*\*Round [0-9]+\*\*", h)):
-        bad.append("%s: an open review whose record keeps a summary table, past its first round, and its history is not"
-                   " listed" % hist)
+    for target in LINK.findall(c[1]):
+        rec = os.path.normpath(os.path.join("docs/reviews", target))
+        r = read(rec)
+        if r is None:
+            bad.append("docs/reviews/INDEX.md: %s's row links a record that is missing: %s" % (hist, rec)); continue
+        rl = r.split("\n")
+        heads_at = [i for i, l in enumerate(rl) if l.startswith("| Round |")]
+        if not heads_at:
+            continue
+        h = read(hist)
+        if h is None:
+            bad.append("%s: an open review whose record keeps a round table, and its history is missing" % hist)
+        elif any(i + 2 < len(rl) and rl[i + 2].startswith("|") for i in heads_at) or \
+                re.search(r"(?m)^\*\*Round [0-9]+\*\*", h):
+            bad.append("%s: an open review whose record keeps a round table (`| Round |`), past its first round, and its"
+                       " history is not listed" % hist)
 for x in bad:
     print("REVIEW-COUNTS: " + x, file=sys.stderr)
 if bad:
@@ -224,7 +243,7 @@ self_test() {
     # remark, an answer's own row — then rows past a blank line and a second table of the same header, neither read.
     printf '# A\n\n**Round 1**, a table.\n\n| # | Kind | Finding | Answer |\n| --- | --- | --- | --- |\n| R1-D1 | defect | x | y |\n\n**Round 2**, a table.\n\n| # | Kind | Finding | Answer |\n| --- | --- | --- | --- |\n| R2-D1 | defect | x | y |\n| R2-AG1 | arm gap | x | y |\n| R2-AG2 | arm gap | x | y |\n| R2-R1 | remark | x | y |\n| R2-P1 | pre-existing arm gap | x | y |\n| R2-P2 | pre-existing | x | y |\n| — | found while answering | x | y |\n\n| R2-D9 | defect | past the table | y |\n\n| # | Kind | Finding | Answer |\n| --- | --- | --- | --- |\n| R2-D8 | defect | a second table | y |\n' > "$work/docs/reviews/a-reviews.md"
     printf '# A\n\n| Round | Findings | Defects | Verdict |\n| --- | --- | --- | --- |\n| 1 | 1 | 1 (x) | v |\n%s\n\n| 9 | 7 | 7 | after the table |\n' "$1" > "$work/docs/decisions/a.md"
-    printf '# B\n\n**Round 1**, a table.\n\n| # | Kind | Finding | Answer |\n| --- | --- | --- | --- |\n| R1-D1 | defect | x | y |\n| R1-D2 | defect | x | y |\n| R1-R1 | remark, not this change'"'"'s | x | y |\n' > "$work/docs/reviews/b-reviews.md"
+    printf '# B\n\n**Round 1**, a table.\n\n| # | Kind | Finding | Answer |\n| --- | --- | --- | --- |\n| R1-D1 | defect | x | y |\n| R1-D2 | defect | x | y |\n| R1-R1 | remark, not this change'"'"'s | x | y |\n| R1-P1 | pre-existing arm gaps, another leaf'"'"'s | x | y |\n' > "$work/docs/reviews/b-reviews.md"
     printf '# B\n\n| Round | Date | Defects | Outcome |\n| --- | --- | --- | --- |\n%s\n' "$2" > "$work/docs/decisions/b.md"
     # c: closed, its record keeping a table with wrong counts — no open review, so not the list's.
     printf '# C\n\n**Round 1**, a table.\n\n| # | Kind | Finding | Answer |\n| --- | --- | --- | --- |\n| R1-D1 | defect | x | y |\n' > "$work/docs/reviews/c-reviews.md"
@@ -238,7 +257,7 @@ self_test() {
     else echo "SELF-TEST: $1 — rc $rc:" >&2; printf '%s\n' "$out" | head -3 | sed 's/^/    /' >&2; fi
   }
   GOOD_A='| 2 | 6 | 1, and 2 arm gaps (x), and 1 pre-existing arm gap (y) | v |'
-  GOOD_B='| 1 | `2026-10-10` | 2, and 1 remark | o |'
+  GOOD_B='| 1 | `2026-10-10` | 2, and 1 remark, and 0 pre-existing arm gaps | o |'
   world "$GOOD_A" "$GOOD_B"
   arm "counts that are the histories' pass: the first table only, to its end; an answer's own row and a row past the summary table not judged; a remark of any kind beginning so; a closed review's table not the list's" 0 "2 review(s) listed; 3 round(s) judged, every one"
   world '| 2 | 7 | 1, and 2 arm gaps (x), and 1 pre-existing arm gap (y) | v |' "$GOOD_B"
@@ -306,11 +325,38 @@ self_test() {
   world "$GOOD_A" "$GOOD_B" '| [`a-reviews.md`](a-reviews.md) | [`a.md`](../decisions/a.md) | 3 | open |'
   arm "an index row's count of rounds off is refused (R24 D2)" 1 "a-reviews.md's row says 3 round(s)"
   world "$GOOD_A" "$GOOD_B"; sed -i.bak 's/| 3 | closed |/| 3 | open |/' "$work/docs/reviews/INDEX.md"; rm -f "$work/docs/reviews/INDEX.md.bak"; git -C "$work" add -A
-  arm "an open review whose record keeps a summary table, unlisted, is refused (R27 AG3)" 1 "c-reviews.md: an open review whose record keeps a summary table"
+  arm "an open review whose record keeps a summary table, unlisted, is refused (R27 AG3)" 1 "c-reviews.md: an open review whose record keeps a round table"
   world "$GOOD_A" "$GOOD_B"; sed -i.bak 's/| 3 | closed |/| 0 | open |/' "$work/docs/reviews/INDEX.md"; printf '# C\n\nNo round yet.\n' > "$work/docs/reviews/c-reviews.md"; printf '# C\n\n| Round | Findings | Defects | Verdict |\n| --- | --- | --- | --- |\n' > "$work/docs/decisions/c.md"; rm -f "$work/docs/reviews/INDEX.md.bak"; git -C "$work" add -A
   arm "an open review before its first round, its summary table empty, need not be listed" 0 "2 review(s) listed; 3 round(s) judged"
   world "$GOOD_A" "$GOOD_B"; sed -i.bak 's/| 3 | closed |/| 0 | open |/' "$work/docs/reviews/INDEX.md"; printf '# C\n\nNo round yet.\n' > "$work/docs/reviews/c-reviews.md"; rm -f "$work/docs/reviews/INDEX.md.bak"; git -C "$work" add -A
-  arm "an open review with no round line and a summary row, unlisted, is refused" 1 "c-reviews.md: an open review whose record keeps a summary table"
+  arm "an open review with no round line and a summary row, unlisted, is refused" 1 "c-reviews.md: an open review whose record keeps a round table"
+  open_c() { sed -i.bak 's/| 3 | closed |/| 3 | open |/' "$work/docs/reviews/INDEX.md"; rm -f "$work/docs/reviews/INDEX.md.bak"; }
+  world "$GOOD_A" "$GOOD_B"; open_c; sed -i.bak 's/^| \[`c-reviews.md`\](c-reviews.md) |/| [c-reviews.md](c-reviews.md)  |/' "$work/docs/reviews/INDEX.md"; rm -f "$work/docs/reviews/INDEX.md.bak"; git -C "$work" add -A
+  arm "an open row whose history link has no backticks, or more spaces, is read, never dropped (R28 D1)" 1 "c-reviews.md: an open review whose record keeps a round table"
+  world "$GOOD_A" "$GOOD_B"; open_c; sed -i.bak 's/^| \[`c-reviews.md`\](c-reviews.md) |/| c-reviews.md |/' "$work/docs/reviews/INDEX.md"; rm -f "$work/docs/reviews/INDEX.md.bak"; git -C "$work" add -A
+  arm "an open row whose history cell links no file is refused (R28 D1)" 1 "an open row whose history cell links no file"
+  world "$GOOD_A" "$GOOD_B"; open_c; printf '# C\n\n| Round | Findings | What it turned on | Outcome |\n| --- | --- | --- | --- |\n| 1 | 9 | x | y |\n' > "$work/docs/decisions/c.md"; git -C "$work" add -A
+  arm "an open review whose record keeps a round table of a third shape, unlisted, is refused (R28 D2)" 1 "c-reviews.md: an open review whose record keeps a round table"
+  world "$GOOD_A" "$GOOD_B"; open_c; printf '# C\n\nNo table.\n' > "$work/docs/decisions/c.md"; git -C "$work" add -A
+  arm "an open review past its first round whose record keeps no round table need not be listed (R28 AGa)" 0 "2 review(s) listed; 3 round(s) judged"
+  world "$GOOD_A" "$GOOD_B"; open_c; rm "$work/docs/reviews/c-reviews.md"; git -C "$work" add -A
+  arm "an open review whose record keeps a round table and whose history is missing is refused (R28 AGb)" 1 "c-reviews.md: an open review whose record keeps a round table, and its history is missing"
+  world "$GOOD_A" "$GOOD_B"; open_c; rm "$work/docs/decisions/c.md"; git -C "$work" add -A
+  arm "an open row linking a record that is missing is refused" 1 "links a record that is missing"
+  world "$GOOD_A" "$GOOD_B" '| [`a-reviews.md`](a-reviews.md) | [`a.md`](../decisions/a.md) | 2 | closed: done |'
+  arm "a listed review whose row is closed is refused: it leaves the list as it closes (R28 AGc)" 1 "a-reviews.md is listed, and its row's status is not open"
+  world "$GOOD_A" '| 1 | `2026-10-10` | 2, and 1 remark, and 1 pre-existing arm gap | o |'
+  arm "a pre-existing arm-gap count counts that kind exactly, never a kind that only begins so (R28 D3)" 1 "round 1 says 1 pre-existing arm gap(s)"
+  world '| 2 | 6 | 1, and 2 arm gaps (x), and 1 pre-existing arm gap (y), and 2 remarks | v |' "$GOOD_B"
+  arm "a remark count in a findings-shaped row is judged (R28 Rb)" 1 "round 2 says 2 remark(s)"
+  world "$GOOD_A" '| 1 | `2026-10-10` | 2, and 1 remark, and 5 arm gaps | o |'
+  arm "an arm-gap count in a date-shaped row is judged (R28 Rb)" 1 "round 1 says 5 arm gap(s)"
+  world "$GOOD_A" "$GOOD_B"; sed -i.bak 's/^| --- | --- | --- | --- |$/&\n&/' "$work/docs/reviews/b-reviews.md"; rm -f "$work/docs/reviews/b-reviews.md.bak"; git -C "$work" add -A
+  arm "a row of dashes in a findings table is refused, never counted (R28 D5)" 1 "round 1's findings table holds a row of dashes"
+  world "$GOOD_A" "$GOOD_B"; sed -i.bak 's/^| R1-D2 | defect |/| R1-D2 |  |/' "$work/docs/reviews/b-reviews.md"; rm -f "$work/docs/reviews/b-reviews.md.bak"; git -C "$work" add -A
+  arm "a finding row with no kind is refused, never counted (R28 Rc)" 1 "holds a row with no kind"
+  world "$GOOD_A" "$GOOD_B"; sed -i.bak 's/^\*\*Round 1\*\*, a table\.$/&\n\n| Id | Kind | Finding | Answer |\n| --- | --- | --- | --- |\n| R1-D7 | defect | x | y |/' "$work/docs/reviews/b-reviews.md"; rm -f "$work/docs/reviews/b-reviews.md.bak"; git -C "$work" add -A
+  arm "a round whose first table is not the findings table is refused, never judged on a later one (R28 Ra)" 1 "b-reviews.md: round 1 has no well-formed findings table"
   world "$GOOD_A" "$GOOD_B"; sed -i.bak 's/^| 2 | 6 |/| 2 | 7 |/' "$work/docs/decisions/a.md"; rm -f "$work/docs/decisions/a.md.bak"
   arm "the staged copy is judged, not the disk's" 0 "3 round(s) judged"
   world "$GOOD_A" "$GOOD_B"; git -C "$work" rm -q --cached docs/decisions/b.md; printf '# B\n\n| Round | Date | Defects | Outcome |\n| --- | --- | --- | --- |\n| 1 | `2026-10-10` | 5, and 1 remark | o |\n' > "$work/docs/decisions/b.md"
