@@ -4,12 +4,11 @@
 frozen before reuse is measured; §16 requires at least three previously unused configurations
 to be evaluated after a catalog freeze. This directory holds them, sealed.
 
-Five cases are sealed, listed with their SHA-256 digests in `frozen/MANIFEST.txt`. While the set
-is sealed, their text is in **no file of the working tree**: each case is the blob the
-manifest's `# sealed-in:` commit holds, and the manifest's digest is the commitment to it. Their
-paths are marked `-diff` in `.gitattributes`, so in a working tree that carries the mark — at
-`6d61f65` or later — a diff, a log patch or a `git grep` of a commit that holds them shows no line
-of them.
+Five cases are sealed, listed with their SHA-256 digests in `frozen/MANIFEST.txt`. While the set is sealed, **no case's
+file is in the working tree**: each case is the blob the manifest's `# sealed-in:` commit holds, and the manifest's
+digest is the commitment to it. Their paths are marked `-diff` in `.gitattributes`, so in a working tree that carries
+the mark — at `6d61f65` or later — a diff, a log patch or a `git grep` of a commit that holds them shows no line of
+them.
 
 > **Do not read a case before leaf `M6.5`.** Not because the content is secret — this
 > repository is public — but because the measurement is worthless once the engine has been
@@ -37,11 +36,12 @@ Until `2026-10-10` the cases sat in `frozen/` as files, guarded against edits an
 against being **read**: the only barrier was the line above, which no agent's bootstrap reaches. The cases are written
 in the vocabulary the engine work searches every day, so an ordinary search for other work can land in one — and one did
 (*Exposures*, below). Excluding search terms cannot work, and excluding the folder holds only for tools that honour an
-exclusion. So the text left the tree (leaf `PROGRAM.76`): while the check passes, no search of the files it walks —
-the working tree but for ignored folders, registered submodules, links out of it and its own `.git` — reaches a case,
-under any term, by any tool, and, in a working tree carrying the mark, no diff of a commit that holds one shows it.
-Reading one takes an act the box above names, or one of the copies the honest limit names — a copy in what the check
-does not walk; another clone not yet past `6d61f65`; the published branch's made before it moved; a transcript,
+exclusion. So the text left the tree (leaf `PROGRAM.76`): while the check passes, no file it walks — the working tree
+but for what its `.gitignore` files ignore, files and folders, registered submodules, links out of it and its own
+`.git` — holds a case's whole text or a long line of one, so no search of those files finds either, and, in a working
+tree carrying the mark, no diff of a commit that holds one shows it. Reading one takes an act the box above names, or
+one of the copies the honest limit names — a copy in what the check does not walk; a short or reworded quote in what it
+walks; another clone not yet past `6d61f65`; the published branch's made before it moved; a transcript,
 scrollback, editor history or a harness's memory made before `6d61f65` or in a working tree without the mark; a model
 or an index made from the branch while it held the set; an old commit's diff holding a short quote.
 
@@ -53,18 +53,18 @@ project doctrine slot. It enforces five properties:
 | Property | What it refuses |
 | --- | --- |
 | **Integrity** | manifest entries that are not the sealing commit's own, a sealing commit that is no ancestor of `HEAD`, a digest the case's blob there does not hash to, or, once unsealed, a restored case that differs from it — the set cannot be rewritten, grown or shrunk to match what the engine turned out to do |
-| **Custody** | while sealed, a case at its path, a link there included, or in the index; a file whose content is a case's text, byte for byte, in the index or anywhere the check walks — the working tree but for ignored folders, a registered submodule (a path the staged `.gitmodules` names and the index holds as a gitlink), links out of it and its own `.git` — each file read raw by the check itself, whatever git says of it, modified or not, flagged, filtered or watched; a file, the manifest included, staged or on disk, tracked or not, that quotes a long line of one; an unregistered repository nested outside ignored folders, staged as a gitlink or not, an entry named `.git` in any case but the top level's, a file the check cannot read or a folder it cannot search, or a walk that cannot finish, since none can be ruled out; a sealed path not marked `-diff` — as this working tree's diffs obey, staged and on disk, and by the staged and the on-disk `.gitattributes` itself, a mark from `.git/info/attributes`, a template or a per-user attributes file being no commit's |
+| **Custody** | while sealed, a case at its path, a link there included, or in the index; a file whose content is a case's text, byte for byte, in the index or anywhere the check walks — the working tree but for what its `.gitignore` files ignore, files and folders, a registered submodule (a path the staged `.gitmodules` names and the index holds as a gitlink), links out of it and its own `.git` — each file read raw by the check itself, whatever git says of it, modified or not, flagged, filtered or watched; a file, the manifest included, staged or in what the check walks, tracked or not, that quotes a long line of one, trimmed and stripped of a list, quote, heading or table marker; an unregistered repository nested outside ignored folders, staged as a gitlink or not, an entry named `.git` in any case but the top level's, a file the check cannot read or a folder it cannot search, or a walk that cannot finish, since none can be ruled out; a sealed path not marked `-diff` — as this working tree's diffs obey, staged and on disk, and by the staged and the on-disk `.gitattributes` itself, a mark from `.git/info/attributes`, a template or a per-user attributes file being no commit's |
 | **Completeness** | anything in `frozen/` but the manifest and, once unsealed, the listed cases — at any depth, hidden or linked; once unsealed, a listed case missing |
 | **Non-contamination** | any tracked file **outside** `frozen/`, staged or on disk — a file git is told not to look at read from the disk — the check's own script included, whose content or path names a sealed case — a case written about in a task tree, decision record or design note is no longer unseen |
 | **Exposure** | an `# exposed:` line naming no listed case — recording an exposure is this project's rule; no check can see a read |
 
-What it holds against, and what not: it runs git with the settings its legs rest on forced — no file-system monitor,
-no untracked cache, the full stat check, no template, git's default path quoting — so neither a caller's setting nor
-one in the repository's own configuration blinds it, and it reads the working tree's bytes itself for a whole copy. It
-holds against accident: a copy, a quote or a name that ordinary work leaves in the files it walks. It does not hold
-against concealment on purpose — a copy put in an ignored folder or behind a link, a folder `.git/info/exclude`
-ignores, a hook or a tool that rewrites what git reports; whoever sets out to hide a case can, and the project's rule,
-not the check, answers that: a case read is recorded.
+What it holds against, and what not: it reads the files it walks itself, takes as ignored only what the `.gitignore`
+files in the tree ignore — no per-user or local exclude file — and runs git with submodule recursion off and no
+template, a caller's `git -c` dropped, so no setting of a user's or of the repository's own narrows what it reads. It
+holds against accident: a whole copy, a long line quoted or a name that ordinary work leaves in the files it walks or
+stages. It does not hold against concealment on purpose — a copy put in an ignored file or folder or behind a link, a
+short or reworded quote, a hook or a tool that rewrites what is on disk; whoever sets out to hide a case can, and the
+project's rule, not the check, answers that: a case read is recorded.
 
 It prints paths, as their files are named, and line numbers, entry names and a commit id of the right form — tokens
 with no space — and git's warnings while listing untracked files, which name paths; never a manifest line's text nor

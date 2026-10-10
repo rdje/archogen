@@ -84,11 +84,11 @@ Separately, five evaluation cases are **sealed** and may not be opened until reu
 at M6. Not because they are secret — this repository is public — but because the measurement is
 worthless once the engine has been shaped, even unconsciously, by what those cases need.
 
-The seal is mechanical, and it guards reading as well as writing. While sealed, the cases' text is
-in no file of the working tree — only the history holds it, the published branch having moved past
-it on `2026-10-10` — and the manifest keeps each one's digest, so no search of the working tree can
-land in a case, whatever it looks for, and, in a working tree from this revision on, no diff of a
-commit that holds one shows its text. A check refuses a set that is not the one sealed, a digest
+The seal is mechanical, and it guards reading as well as writing. While sealed, no case's file is
+in the working tree — only the history holds the text, the published branch having moved past it on
+`2026-10-10` — and the manifest keeps each one's digest; while the check passes, no file it walks
+holds a case's whole text or a long line of one, so no search of those files finds either, and, in a
+working tree from this revision on, no diff of a commit that holds one shows its text. A check refuses a set that is not the one sealed, a digest
 that no longer matches its sealed text, a case back in the tree — at its path, copied elsewhere, or
 a long line of it quoted — anything else in the sealed directory, and any tracked file outside it
 that names a sealed case; at unsealing a restore writes each case back and verifies it. Its honest

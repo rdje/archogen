@@ -960,7 +960,7 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM.76`
   Status: `active` — filed and started `2026-10-10`, on the director's word: *"Digests stay, text leaves"*, end to
   end, without them, *"sota, signoff and production-grade"*; the change committed (`ARCHOGEN-PROGRAM-0542`), its
-  review open, round 10's findings answered by method (`ARCHOGEN-PROGRAM-0584`), round 11 next
+  review open, round 11's findings answered by method (`ARCHOGEN-PROGRAM-0588`), round 12 next
   Goal: the sealed evaluation set guarded against being read, not only against being edited or named, so no search
   of the working tree made for other work can reach a case before `M6.5`, nor, in a working tree that carries the
   mark, a diff of a commit that holds one show it.
@@ -1093,7 +1093,7 @@ mdBook that is the director's window into the project.
   two commits hold a case where 539 do. Answered: an entry named `.git` in any case, but the top level's, outside
   ignored folders and registered submodules, refused, found by a walk that asks git what it ignores; a flagged file
   hashed; the mark also judged by the staged and the on-disk `.gitattributes` alone, read in an empty repository made in
-  the check's own scratch, which its listings skip; the names searched staged and on disk, the script included; the README's list whole; "a file whose
+  the check's own scratch, which its listings skip; the names searched staged and on disk, the script included; the README's list whole (not so: rounds 10 and 11 found it short); "a file whose
   content is a case's text, byte for byte"; the quote's bound `6d61f65`; the window bounded by GitHub's own record of
   pushes, `gh api repos/{owner}/{repo}/activity` → the branch created at `32e6b14` on `2026-09-13`, pushed next at
   `a3c0cbd`; an arm holding the self-test's quoting over a caller's `git -c`. Evidence: `--self-test` → *"81 pass / 0
@@ -1105,7 +1105,7 @@ mdBook that is the director's window into the project.
   details: a path `.gitmodules` named was pruned with no gitlink there, the names leg read a flagged file's index copy,
   the walk's failure passed, a comment and two texts overclaimed. Answered by method: git runs with the settings every
   leg rests on forced; one walk reads the working tree's bytes itself — every file of a case's size hashed raw as git
-  hashes a blob, whatever git says of it — pruning only ignored folders, registered submodules held as gitlinks, links
+  hashes a blob, whatever git says of it — pruning only ignored folders (and ignored files, round 11 found), registered submodules held as gitlinks, links
   and the check's own scratch, and a walk that cannot finish refuses; the empty repository takes no template; the names
   leg reads flagged files from the disk and tracked paths; the README says what the check holds against — accident —
   and what not — concealment on purpose — and its list of copies names what the walk does not reach, the repository's
@@ -1114,12 +1114,24 @@ mdBook that is the director's window into the project.
   arms)"*; `python3 target/p76/mutate_r10.py` → eight mutants, each putting a hole back — the old copy leg with the
   settings unforced among them — each failing its own arms, *"8 of 8 killed"* — the runner untracked, so not durable;
   the check on the tree → exit 0 in 1.3 s.
+  Review round 11, `2026-10-10`, of `5bb19ec`: 7 defects, 1 arm gap, 4 remarks. Round 10's holes stayed shut, but two
+  settings still changed what the check read — submodule recursion stopped `git grep --untracked` silently, and a
+  per-user or local exclude file widened what was skipped — and texts overclaimed: "ignored folders" where ignored files
+  were skipped too, searches said to find a case "under any term", the book's and the doctrine row's claims unbounded,
+  two earlier claims unmarked, a comment. Answered by method: the walk now also finds a case's long line in every file
+  it reads, so no `git grep` of the disk remains; what is ignored is what the `.gitignore` files in the tree ignore,
+  listed once; git runs with submodule recursion off; any `git grep` that cannot run refuses; a long line is matched
+  stripped of a list, quote, heading or table marker; python runs isolated; every text bounded to what the check walks
+  and finds — a whole copy, a long line, a name. Evidence: `--self-test` → *"105 pass / 0 fail (105 arms)"*;
+  `python3 target/p76/mutate_r11.py` → nine mutants, one per hole, *"9 of 9 killed"* — the runner untracked, so not
+  durable; the check on the tree → exit 0 in 1.7 s.
   Commit: `ARCHOGEN-PROGRAM-0542 (leaf PROGRAM.76)`; `ARCHOGEN-PROGRAM-0544 (leaf PROGRAM.76)`, review round 1;
   `ARCHOGEN-PROGRAM-0547 (leaf PROGRAM.76)`, review round 2; `ARCHOGEN-PROGRAM-0550 (leaf PROGRAM.76)`, round 3;
   `ARCHOGEN-PROGRAM-0554 (leaf PROGRAM.76)`, round 4; `ARCHOGEN-PROGRAM-0558 (leaf PROGRAM.76)`, round 5;
   `ARCHOGEN-PROGRAM-0562 (leaf PROGRAM.76)`, round 6; `ARCHOGEN-PROGRAM-0565 (leaf PROGRAM.76)`, round 7;
   `ARCHOGEN-PROGRAM-0572 (leaf PROGRAM.76)`, round 8; `ARCHOGEN-PROGRAM-0579 (leaf PROGRAM.76)`, round 9;
-  `ARCHOGEN-PROGRAM-0584 (leaf PROGRAM.76)`, round 10
+  `ARCHOGEN-PROGRAM-0584 (leaf PROGRAM.76)`, round 10;
+  `ARCHOGEN-PROGRAM-0588 (leaf PROGRAM.76)`, round 11
 
 - ID: `PROGRAM.77`
   Status: `done` — filed, started and closed `2026-10-10`, on CI's red: the push `a543d10` failed the `rust` workflow;
@@ -1234,7 +1246,7 @@ roadmap item X live?".
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
 | 1 | `PROGRAM.69` | `active` | its review open: round 26 next, on the committed tool, its seal already in place |
-| 2 | `PROGRAM.76` | `active` | its review open: round 11 next, of the sealed set's custody |
+| 2 | `PROGRAM.76` | `active` | its review open: round 12 next, of the sealed set's custody |
 | 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The third row waits on the director's yes. The pending leaves beside them —
@@ -1420,6 +1432,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-10` | `PROGRAM.69` (round 24) | `REVIEW-COUNTS` and its self-test; eight mutants, `target/p69r17/mutate24.py`, untracked; the sealing self-test; every self-test; focused on the staged tree | OK, 43 rounds of 2 records, 4 archived named; 18 pass / 0 fail; 8 of 8 killed, not durable; 121 pass / 0 fail; 49 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.76` (round 10) | the self-test; the check on the tree; eight mutants, `target/p76/mutate_r10.py`, untracked; a monitor hook probed in a scratch repository; every self-test; focused on the staged tree | 92 pass / 0 fail; exit 0; 8 of 8 killed, not durable; `ls-files -m` empty under the hook, the file listed with it forced off; 49 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.69` (round 25) | `REVIEW-COUNTS` and its self-test; six mutants, `target/p69r17/mutate25.py`, untracked; the sealing self-test; every self-test; focused on the staged tree | OK, every row judged or named; 20 pass / 0 fail; 6 of 6 killed, not durable; 121 pass / 0 fail; 49 passed; `passed — 3 passed, 0 failed` |
+| `2026-10-10` | `PROGRAM.76` (round 11) | the self-test; the check on the tree; nine mutants, `target/p76/mutate_r11.py`, untracked; every self-test; focused on the staged tree | 105 pass / 0 fail; exit 0; 9 of 9 killed, not durable; 49 passed; `passed — 3 passed, 0 failed` |
 
 ## Commit Log
 
@@ -1599,6 +1612,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0582 (leaf PROGRAM.69)` | **review round 24 answered**: `REVIEW-COUNTS` reads the index row, keys rounds on their lines, names the archived records it does not read; the citation; the bullet refilled |
 | `PROGRAM.76` | `ARCHOGEN-PROGRAM-0584 (leaf PROGRAM.76)` | **review round 10 answered by method**: git's settings forced; the working tree read raw by one walk; what the check holds against stated |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0586 (leaf PROGRAM.69)` | **review round 25 answered**: `REVIEW-COUNTS` narrowed to what it holds exactly; every row it skips named; the record and book refilled |
+| `PROGRAM.76` | `ARCHOGEN-PROGRAM-0588 (leaf PROGRAM.76)` | **review round 11 answered by method**: the walk finds long lines too; only the tree's `.gitignore` files decide what is ignored; every text bounded to what the check finds |
 
 ## Changelog
 
