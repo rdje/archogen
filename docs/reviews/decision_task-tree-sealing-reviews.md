@@ -440,6 +440,26 @@ runners untracked, so not durable. Verdict: 5 defects of this change and 1 arm g
 | R20-R4 | remark | the book left the machine stopping out | named |
 | R20-P1 | pre-existing | "the seal warns about a `done` leaf whose field names no commit", not when the tree's Commit Log names it | said |
 
+**Round 21**, `2026-10-10`, a nineteenth confirmation, in a clone of `a543d10`, by a read-only context new to the
+change and fenced from the sealed evaluation set. It reproduced the gate, every self-test, the census and the first
+seal's figures; checked every review row's count against its table by script; ran an oracle written from the record's
+own words over the real history, all 172 sealed files matching; fuzzed 150 trees, 507 hand seals and 114 late leaves,
+every one as the oracle predicts; and broke `put` three ways, each failing the race arm — its runners untracked, so not
+durable. Verdict: 2 defects of this change and 1 arm gap.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R21-D1 | defect | the record's row 20 counted 12 findings; the history's round 20 has 11 | 11 |
+| R21-D2 | defect | R20-R2's "rewrapped where touched" was untrue of two lines, one 162 and one 746 columns | the stop paragraph and the How-to-apply bullet rewrapped |
+| R21-AG1 | arm gap | "one that only opens a subtree the seal then leaves live is sealed past" held by no arm | an arm: a committed tree, a subtree reopened uncommitted, the seal sealing the other, rc 0, the gate passing |
+| R21-R1 | remark | the warning is also given for a field reading `pending` whatever the log holds | said |
+| R21-R2 | remark | `put`'s docstring spoke of the entry check as an invariant | the check before the write, and the open failing on one that appears after |
+| R21-R3 | remark | the race hook fires on mode "x" alone | kept: the rule is held either way |
+| R21-R4 | remark | round 20's parenthetical carried no R20 citation | R20 D1 |
+| R21-R5 | remark | a 129-column changelog line; no entry for rounds 18 to 20 | rewrapped; rounds 18 to 20 add an arm but no behaviour, so no entry |
+| R21-R6 | remark | "the entry as round 15 had it" is loose: round 15's entry lacked SIGSTOP | the list as round 15's texts had it, SIGSTOP added by round 16 |
+| R21-R7 | pre-existing | the frontier's "its full record is sealed under …" false for closed, unsealed leaves | "a sealed leaf's full record" |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.

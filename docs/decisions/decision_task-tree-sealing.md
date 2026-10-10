@@ -39,7 +39,7 @@ A task tree keeps its live work readable by sealing out what is finished.
   The `ID` and `Status` lines are what every check that reads a leaf needs. The commit is the first work-unit id
   the leaf's `Commit:` field names. Failing that, it is `in the tree's Commit Log` when that log has a row for the
   leaf, and `not recorded` otherwise; the seal warns about a `done` leaf whose field names no commit and whose
-  tree's Commit Log has no row for it.
+  tree's Commit Log has no row for it, and about one whose field reads `pending`, whatever the log holds.
 - **A sealed body is its `ID` line and indented or blank lines only.** The seal refuses a leaf with a line at
   column 0 after its `ID`, a fence, a heading or prose, because the line slicing every check shares would tear it.
   It writes nothing, and names each such line.
@@ -51,29 +51,29 @@ A task tree keeps its live work readable by sealing out what is finished.
 - **Reading a closed leaf** is following its stub's link, a file read that depends on no tool.
 
 **Sealing is done by a tool**, `bash scripts/check_task_history.sh --seal <TREE>`. It proves that the tree, with every
-stub replaced by its body from its sealed file — *amended `2026-10-10`: every new stub, those of earlier seals proven
-by their own (review R11 P1)* — reconstructs the tree as it stood, byte for byte. If it does not, it writes nothing.
-Then it runs the gate on what it wrote, and rolls everything back if the gate refuses — *amended `2026-10-10`: or if
-any exception stops it, the folders a first seal made included; the tree and the index are written whole or not at
-all, a sealed file's path already taken is refused before any write, and the rollback undoes what was written alone,
-each step on its own, keeping the sealed files whenever a restore fails, since the tree or the index may still name
-them, and naming what it could not undo (review R9-1, worded by R11 R2); each write is noted before it is made, so an
-error just after one is undone too (an interrupt, held since R13, finds the seal done), any entry at a sealed file's path is refused, and so is a tree or an index
-that is a link (review R10), or a history folder (R11 P2) — *by review R12: any path the seal writes that a link lies
-on, the file or a folder above it, below the root; by R13 D3, its temporary file created new; by R14 D3, any entry at
-a rewritten file's temporary path refused before the first write* —; and a stop — any signal but SIGKILL, SIGSTOP, the
-six fault signals (SIGSEGV, SIGBUS, SIGFPE, SIGILL, SIGTRAP, SIGSYS), whoever sends them, and, on Linux, the C
-library's own signals, which no mask holds (Linux not measured here) — is held by the signal mask from before the
-first write through the proof and any rollback, taking effect once the seal is done: proven and kept, refused and
-rolled back, or stopped by an error, said, and rolled back, its outcome said where its output can be written; an
-interrupt held alone then says which — after an outcome said, or after one that could not be said, and one that came
-before the mask that nothing was written — where its error output can be written, and exits 130 whatever became of its
-outputs; so the seal is whole either way, a signal ignored on entry staying ignored, and a git the proof runs, which
-inherits the mask, not ended by a stop; an abort the process raises on itself ends it whatever the mask, and a C
-library signal sent from outside may; and only a rollback that undid everything is said to have rolled the seal back
+stub replaced by its body from its sealed file — *amended `2026-10-10`: every new stub, those of earlier seals proven by
+their own (review R11 P1)* — reconstructs the tree as it stood, byte for byte. If it does not, it writes nothing. Then
+it runs the gate on what it wrote, and rolls everything back if the gate refuses — *amended `2026-10-10`: or if any
+exception stops it, the folders a first seal made included; the tree and the index are written whole or not at all, a
+sealed file's path already taken is refused before any write, and the rollback undoes what was written alone, each step
+on its own, keeping the sealed files whenever a restore fails, since the tree or the index may still name them, and
+naming what it could not undo (review R9-1, worded by R11 R2); each write is noted before it is made, so an error just
+after one is undone too (an interrupt, held since R13, finds the seal done; R20 D1), any entry at a sealed file's path
+is refused, and so is a tree or an index that is a link (review R10), or a history folder (R11 P2) — *by review R12: any
+path the seal writes that a link lies on, the file or a folder above it, below the root; by R13 D3, its temporary file
+created new; by R14 D3, any entry at a rewritten file's temporary path refused before the first write* —; and a stop —
+any signal but SIGKILL, SIGSTOP, the six fault signals (SIGSEGV, SIGBUS, SIGFPE, SIGILL, SIGTRAP, SIGSYS), whoever sends
+them, and, on Linux, the C library's own signals, which no mask holds (Linux not measured here) — is held by the signal
+mask from before the first write through the proof and any rollback, taking effect once the seal is done: proven and
+kept, refused and rolled back, or stopped by an error, said, and rolled back, its outcome said where its output can be
+written; an interrupt held alone then says which — after an outcome said, or after one that could not be said, and one
+that came before the mask that nothing was written — where its error output can be written, and exits 130 whatever
+became of its outputs; so the seal is whole either way, a signal ignored on entry staying ignored, and a git the proof
+runs, which inherits the mask, not ended by a stop; an abort the process raises on itself ends it whatever the mask, and
+a C library signal sent from outside may; and only a rollback that undid everything is said to have rolled the seal back
 (reviews R11 D1, R12 D3, R13: a stop recorded and answered later left moments between a write and its record, which
-holding closes; R14 D1, D2; R15 D1, D2; R16 D1, D5, D6; R17 D1 to D4; R18 D1; R19 R3).* `--census <COMMIT>` measures,
-at a commit, the bytes of `done` leaves under open top-level subtrees and of those a seal would take (`PROGRAM.69`).
+holding closes; R14 D1, D2; R15 D1, D2; R16 D1, D5, D6; R17 D1 to D4; R18 D1; R19 R3).* `--census <COMMIT>` measures, at
+a commit, the bytes of `done` leaves under open top-level subtrees and of those a seal would take (`PROGRAM.69`).
 
 **The gate**, `TASK-HISTORY`, runs on every commit, in CI as in the pre-commit hook. It checks:
 1. every sealed file's leaves, lines, bytes and sha256 against its row — *amended `2026-10-10`: and that it holds a leaf*;
@@ -151,11 +151,17 @@ at a commit, the bytes of `done` leaves under open top-level subtrees and of tho
 
 - **Sealing:**
   - after a subtree closes, run `bash scripts/check_task_history.sh --seal <TREE>` and commit its result;
-  - the sealing commit may also close the leaf that ran it, as the first one did. Every sealed leaf is proven
-    against its tree as it stood just before that commit (leg 5), so other edits in the same commit do not weaken
-    the proof. *Amended `2026-10-10`:* any exception that stops a seal rolls it back first; a signal that kills the process, SIGTERM among them, leaves its writes, which the next gate run proves as any uncommitted seal (review R8-2) — *amended by R13 to R19: every signal but SIGKILL, SIGSTOP, the six fault signals and, on Linux, the C library's own is held until the seal is done, so what leaves the writes is SIGKILL, a fault signal whoever sends it, an abort the process raises on itself, a C library signal sent from outside, which may, or the machine stopping* —; a failure that defeats the rollback's own writes too, a full disk, leaves what the rollback names (R9-1). The seal reads the working tree and leg 5 the tree as committed, so an
-    uncommitted edit that changes the unit of a leaf the seal takes makes the seal refuse itself and roll back, while
-    one that only opens a subtree the seal then leaves live is sealed past (review R20 D2); commit such an edit first;
+  - the sealing commit may also close the leaf that ran it, as the first one did. Every sealed leaf is proven against
+    its tree as it stood just before that commit (leg 5), so other edits in the same commit do not weaken the proof.
+    *Amended `2026-10-10`:* any exception that stops a seal rolls it back first; a signal that kills the process,
+    SIGTERM among them, leaves its writes, which the next gate run proves as any uncommitted seal (review R8-2) —
+    *amended by R13 to R19: every signal but SIGKILL, SIGSTOP, the six fault signals and, on Linux, the C library's own
+    is held until the seal is done, so what leaves the writes is SIGKILL, a fault signal whoever sends it, an abort the
+    process raises on itself, a C library signal sent from outside, which may, or the machine stopping* —; a failure
+    that defeats the rollback's own writes too, a full disk, leaves what the rollback names (R9-1). The seal reads the
+    working tree and leg 5 the tree as committed, so an uncommitted edit that changes the unit of a leaf the seal takes
+    makes the seal refuse itself and roll back, while one that only opens a subtree the seal then leaves live is sealed
+    past (review R20 D2); commit such an edit first;
   - a leaf in a sealed file is never edited. A correction is a new entry in the tree's changelog.
 - **Reopening:** a sealed subtree is never reopened. New work under its heading opens a new top-level subtree — *amended
   `2026-10-10`: a new subtree outside it, a sibling for a part sealed below an open subtree* — and a live leaf inside a
@@ -199,4 +205,5 @@ another tree is sealed. The amendment of `2026-10-10` and its seal were reviewed
 | 17 | 11 | 5, and 1 arm gap (a crash with the output closed at the start, `sys.stdout` None; an outcome to a closed output recorded said; the interrupt's exit with its error output broken; an abort left out of what leaves the writes; the index's round count) | the gate, every self-test, the census and the seal reproduced, 200 fuzzed trees, 540 units, 192 late leaves and 99 partial hand seals as its oracle predicts (runner untracked, not durable); answered: an outcome said only to a stream that exists, one exit for every state of the outputs, an abort and the C library's own signals named; an arm for the git that inherits the mask |
 | 18 | 8 | 1, and 0 arm gaps (the lists of what the mask leaves out disagreed on the C library's own signals) | the gate, every self-test, the census and the seal reproduced; an independent oracle over the real history found all 172 sealed files the outermost closed unit at their sealing commit's parent; 72 fuzzed trees, 432 hand seals and 66 late leaves as it predicts; 16 output states probed (runners untracked, not durable); answered: one wording in every list; the interrupt's "before any write" said of one before the mask; row 16's "with its output closed" stands as written, row 17 its correction |
 | 19 | 9 | 2, and 0 arm gaps (row 18's count; two changelog lists left without the C library's own signals) | the gate, every self-test, the census and the seal reproduced; an oracle of its own over the real history, 172 sealed files matching; 48 fuzzed trees, 258 hand seals and 92 late leaves as it predicts; fourteen mutations of claimed rules, all killed (runners untracked, not durable); answered: the count, the lists, "may" and Linux unmeasured in the record, the wraps |
-| 20 | 12 | 5, and 1 arm gap (an interrupt said undone, a held stop keeps the seal; How to apply's uncommitted edit; round 15's changelog list credited round 17's naming; R19-R6's sentence; two citations; the temporary file's exclusive creation held by no arm) | the gate, every self-test, the census and the first seal reproduced; 240 fuzzed trees, 828 hand seals and 240 late leaves as an oracle predicts (runners untracked, not durable); answered: the texts narrowed; a race arm planting a link at the temporary path as `put` opens it |
+| 20 | 11 | 5, and 1 arm gap (an interrupt said undone, a held stop keeps the seal; How to apply's uncommitted edit; round 15's changelog list credited round 17's naming; R19-R6's sentence; two citations; the temporary file's exclusive creation held by no arm) | the gate, every self-test, the census and the first seal reproduced; 240 fuzzed trees, 828 hand seals and 240 late leaves as an oracle predicts (runners untracked, not durable); answered: the texts narrowed; a race arm planting a link at the temporary path as `put` opens it |
+| 21 | 11 | 2, and 1 arm gap (row 20's count; R20-R2's "rewrapped" untrue of two lines; "sealed past" held by no arm) | the gate, every self-test, the census and the first seal reproduced; an oracle over the real history, 172 files matching; 150 fuzzed trees and 507 hand seals as it predicts; three mutations of `put`, each failing the race arm (runners untracked, not durable); answered: 11; the paragraph and the bullet rewrapped; an arm sealing past a subtree an uncommitted edit reopens |

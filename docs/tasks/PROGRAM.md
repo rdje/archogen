@@ -654,7 +654,7 @@ mdBook that is the director's window into the project.
 
 - ID: `PROGRAM.69`
   Status: `active` — the tool, its gate and the seal committed `2026-10-10` (`ARCHOGEN-PROGRAM-0511`); its review open,
-  round 20's defects and arm gap answered (`ARCHOGEN-PROGRAM-0563`), round 21 next
+  round 21's defects and arm gap answered (`ARCHOGEN-PROGRAM-0564`), round 22 next
   Goal: a closed subtree below an open top-level subtree is sealed too, so a tree whose top-level subtree stays open
   for long — on a blocked leaf, or a long feature — does not keep its finished leaves live.
   Reproduce / issue: `M3.6.6.2.1`'s commit was refused by `README-ROUTES`, *"docs/tasks/: 823457 bytes in total, over
@@ -764,7 +764,8 @@ mdBook that is the director's window into the project.
     durable. After rounds 18 and 19: texts and comments alone, `--self-test` → *"116 pass / 0 fail (116 arms)"*. After
     round 20: texts narrowed, and a race arm planting a link at the temporary path as `put` opens it — `--self-test` →
     *"117 pass / 0 fail (117 arms)"*; with `put`'s exclusive creation or its creator-only removal broken, the arm fails,
-    by an untracked runner, so not durable.
+    by an untracked runner, so not durable. After round 21: an arm sealing past an uncommitted edit that only reopens a
+    subtree the seal leaves live — `--self-test` → *"118 pass / 0 fail (118 arms)"*.
   - [x] **NO REGRESSION** — `bash scripts/check_task_history.sh` at `e624001` → *"OK (170 sealed file(s) … every sealed
     leaf proven against its tree before its seal)"*: the 142 seals before this change judged by every generalised leg, the byte
     rebuild included. `bash scripts/run_self_tests.sh` → *"OK — 47 self-test(s) passed"*; the
@@ -786,7 +787,8 @@ mdBook that is the director's window into the project.
   `ARCHOGEN-PROGRAM-0552 (leaf PROGRAM.69)`, round 17;
   `ARCHOGEN-PROGRAM-0556 (leaf PROGRAM.69)`, round 18;
   `ARCHOGEN-PROGRAM-0559 (leaf PROGRAM.69)`, round 19;
-  `ARCHOGEN-PROGRAM-0563 (leaf PROGRAM.69)`, round 20
+  `ARCHOGEN-PROGRAM-0563 (leaf PROGRAM.69)`, round 20;
+  `ARCHOGEN-PROGRAM-0564 (leaf PROGRAM.69)`, round 21
 
 - ID: `PROGRAM.70`
   Status: `done` — started `2026-10-10`, decomposed into `.1`, the bytes, and `.2`, the count, closed the same day with `.2`
@@ -1113,13 +1115,13 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.69` | `active` | its review open: round 21 next, on the committed tool, its seal already in place |
+| 1 | `PROGRAM.69` | `active` | its review open: round 22 next, on the committed tool, its seal already in place |
 | 2 | `PROGRAM.76` | `active` | its review open: round 7 next, of the sealed set's custody |
 | 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The third row waits on the director's yes. The pending leaves beside them —
 `PROGRAM.71`, `.72` and `.73` — are filed and owned. Every closed
-leaf's outcome is its row in the Commit Log below, and its full record is sealed under `docs/task-history/PROGRAM/`.
+leaf's outcome is its row in the Commit Log below, and a sealed leaf's full record is under `docs/task-history/PROGRAM/`.
 
 ## Decisions
 
@@ -1289,6 +1291,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `2026-10-10` | `PROGRAM.69` (round 19) | texts and comments alone; the self-test; the gate over 172 files; every self-test; focused on the staged tree | 116 / 0; OK; 48 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.76` (round 6) | the check on the real set; its self-test; the arms beside `fa0ec3f`'s core; four mutations; every self-test; focused on the staged tree | exit 0; 65 / 0; 63 pass / 2 fail, not durable; 4 killed, not durable; 48 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.69` (round 20) | the self-test; two mutations of `put`; the gate over 172 files; every self-test; focused on the staged tree | 117 / 0; each failing the race arm, not durable; OK; 48 passed; `passed — 3 passed, 0 failed` |
+| `2026-10-10` | `PROGRAM.69` (round 21) | the self-test; the gate over 172 files; every self-test; focused on the staged tree | 118 / 0; OK; 48 passed; `passed — 3 passed, 0 failed` |
 
 ## Commit Log
 
@@ -1457,6 +1460,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0559 (leaf PROGRAM.69)` | **review round 19 answered**: row 18's count; the C library's own in the two changelog lists; "may"; wraps |
 | `PROGRAM.76` | `ARCHOGEN-PROGRAM-0562 (leaf PROGRAM.76)` | **review round 6 answered**: paths as named in every leg; each traced place's own refusal; the published branch named in the limit |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0563 (leaf PROGRAM.69)` | **review round 20 answered**: texts narrowed; a race arm for the temporary path; 117 arms |
+| `PROGRAM.69` | `ARCHOGEN-PROGRAM-0564 (leaf PROGRAM.69)` | **review round 21 answered**: row 20's count; two rewraps; an arm sealing past a reopened subtree; 118 arms |
 
 ## Changelog
 

@@ -298,8 +298,9 @@ def temporary(target):
 
 def put(target, text):
     """Write `text` to `target` whole or not at all: a temporary file beside it, then a rename, so a write a full disk
-    stops leaves the target as it was (review R9-1). The target is never a link, nor is anything at its temporary path:
-    the seal refuses either before it writes (review R14 D3)."""
+    stops leaves the target as it was (review R9-1). The seal refuses a link at the target, and any entry at its
+    temporary path, before it writes (review R14 D3); one that appears after that check makes this open fail, so
+    nothing is written through it and it is left as it was (R20 AG1)."""
     tmp = temporary(target)
     created = False
     try:
@@ -1532,6 +1533,21 @@ HOOK
     printf '%s\n' "$out" | tail -2 | sed 's/^/    /' >&2
   fi
   [ -n "$planted" ] && rm -f "$planted"; rm -f "$SCRATCH/elsewhere.md"; rm -rf "$work/docs/task-history/Q"; restore
+  # An uncommitted edit that only reopens a subtree the seal then leaves live: the seal goes past it, the other closed
+  # subtree sealed, the reopened one live, the gate passing (review R21 AG1).
+  printf -- '# U\n\n## Task Tree\n\n- ID: `U.1`\n  Status: `done`\n  Goal: a closed subtree\n  Commit: `ARCHOGEN-U-0001`\n\n- ID: `U.2`\n  Status: `done`\n  Goal: another, reopened below\n  Commit: `ARCHOGEN-U-0002`\n' > "$work/docs/tasks/U.md"
+  commit
+  printf '\n- ID: `U.2.1`\n  Status: `pending`\n  Goal: reopened, not committed\n' >> "$work/docs/tasks/U.md"
+  arms=$((arms + 1))
+  out="$(cd "$work" && bash "$SELF" --seal U 2>&1)"; rc=$?
+  if [ "$rc" -eq 0 ] && printf '%s' "$out" | grep -qE '^task-history: [^ ]+ — sealed 1 subtree\(s\), 1 leaves: U\.1;' &&
+     [ -f "$work/docs/task-history/U/U.1.md" ] && grep -q '^  Goal: another, reopened below' "$work/docs/tasks/U.md" &&
+     (cd "$work" && bash "$SELF" >/dev/null 2>&1); then
+    ok=$((ok + 1)); echo "  ✅ a seal goes past an uncommitted edit that only reopens a subtree it leaves live"
+  else
+    echo "SELF-TEST: a seal past an uncommitted reopening — rc $rc:" >&2; printf '%s\n' "$out" | tail -2 | sed 's/^/    /' >&2
+  fi
+  rm -rf "$work/docs/task-history/U"; restore; git -C "$work" rm -q docs/tasks/U.md; commit
   # The mask in force at the first write holds every signal but SIGKILL, SIGSTOP, the six fault signals and the C
   # library's own, and none of the eight others (reviews R15 AG1, R16 AG1).
   arms=$((arms + 1))
