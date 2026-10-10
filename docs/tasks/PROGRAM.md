@@ -1216,6 +1216,19 @@ mdBook that is the director's window into the project.
   Verification: `pending`
   Commit: `pending`
 
+- ID: `PROGRAM.79`
+  Status: `done` — filed, started and closed `2026-10-11`
+  Goal: the accepted designs' folder has room for the designs still in review and those the milestones owe.
+  Reproduce / issue: `M3.6.9`'s review round 1 answer, the doctrine gate → *"README-ROUTES: docs/specs/: 396402 bytes
+  in total, over its ceiling of 393216"*; at `2b66082`, `git ls-files docs/specs | xargs cat | wc -c` → `389283`.
+  Direction: the measurement, weighed in `docs/decisions/decision_specs-folder-ceiling.md` against compacting and a
+  total by subject, as the record's "a later raise is a dated paragraph here" asks.
+  Decided `2026-10-11`: a raise, to 524 288 bytes, by the record's dated paragraph; 300 288 at its last raise,
+  `b91358a`, and 88 995 bytes in the 46 commits since — three trust designs moved in.
+  Verification: `2026-10-11` — `bash scripts/check_readme_routes.sh` → *"OK (24 destination(s) governed)"*, and its
+  self-test → *"28 pass / 0 fail"*, the policy's cell and its decision's maximum agreeing; the doctrine gate at commit.
+  Commit: `ARCHOGEN-PROGRAM-0600 (leaf PROGRAM.79)`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1472,6 +1485,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-10` | `PROGRAM.76` (round 12) | the self-test; the check on the tree; five mutants, `target/p76/mutate_r12.py`, untracked; every self-test; focused on the staged tree | 113 pass / 0 fail; exit 0; 5 of 5 killed, not durable; 49 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-11` | `PROGRAM.69` (round 27) | `REVIEW-COUNTS` and its self-test; twelve mutants, `target/p69r17/mutate27.py`, untracked; the sealing self-test; every self-test; focused on the staged tree | OK, 1 review listed, 27 rounds judged, every one; 35 pass / 0 fail; 12 of 12 killed, not durable; 121 pass / 0 fail; 49 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-11` | `PROGRAM.69` (the counted list) | `REVIEW-COUNTS` and its self-test; four mutants of the list's rules, `target/p69r17/mutate_list.py`, and round 27's twelve, untracked; `REVIEW-HISTORY`; every self-test; focused on the staged tree | OK, 1 review listed, 27 rounds judged, every one; 38 pass / 0 fail; 4 of 4 and 12 of 12 killed, not durable; OK; 49 passed; `passed — 3 passed, 0 failed` |
+| `2026-10-11` | `PROGRAM.79` | `README-ROUTES` and its self-test; the folder measured; focused on the staged tree | OK (24 destination(s) governed); 28 pass / 0 fail; `389283` at `2b66082`, `300288` at `b91358a`; `passed — 3 passed, 0 failed` |
 
 ## Commit Log
 
@@ -1656,6 +1670,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.76` | `ARCHOGEN-PROGRAM-0596 (leaf PROGRAM.76)` | **review round 12 answered by method**: one reader for the disk and the index, reading as prose; a case's whole text and a wrapped long line found |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0598 (leaf PROGRAM.69)` | **review round 27 answered**: `REVIEW-COUNTS` strict — every round of a listed review a well-formed findings table, every open review past its first round listed; the overclaims marked; `PROGRAM.78` in the changelog and the frontier |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0599 (leaf PROGRAM.69)` | **the counted list in the reviews index**, found while answering `M3.6.9`'s round 1: a review in another tree joins `REVIEW-COUNTS`' list with no change to its script |
+| `PROGRAM.79` | `ARCHOGEN-PROGRAM-0600 (leaf PROGRAM.79)` | **`docs/specs/` raised to 524 288 bytes**, measured: three trust designs moved in since the last raise, and the adequacy design's review is open |
 
 ## Changelog
 
@@ -1693,3 +1708,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-10-10`: `PROGRAM.77` filed and fixed — the mutation runner's group kill through kill(2), after CI lost its runner; it closes on the runner's green.
 - `2026-10-10`: `PROGRAM.77` done — CI green on the runner again, the restoring push's `rust` run in 2 and 4 minutes.
 - `2026-10-10`: `PROGRAM.78` filed by `PROGRAM.69`'s review round 26 — the sealing self-test's interrupt arm timing-dependent under a parallel sweep. Pre-existing, owned; this line added by round 27's answer.
+- `2026-10-11`: `PROGRAM.79` filed and done — `docs/specs/` raised to 524 288 bytes, measured, as three trust designs moved in.

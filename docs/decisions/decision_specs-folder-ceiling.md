@@ -15,6 +15,16 @@ the trust gate's design, its review closed by `M3.6.1` on `2026-10-05`, moves to
 other ceilings stay: 16 files; 1 200 lines, 98 304 bytes and 1 536-byte lines a file. `docs/decisions/`' ceiling,
 the director's one-time raise, is untouched.
 
+**Raised `2026-10-11` to 524 288 (512 KiB)** (`PROGRAM.79`). Measured at `2b66082`,
+`git ls-files docs/specs | xargs cat | wc -c` → 389 283 of 393 216, 3 933 to spare; at `b91358a`, this record's
+raise, 300 288; 46 commits between them, 88 995 bytes, about 1.9 KB a commit. The role grew again: the trust subject's
+three generated-sources designs moved in — the instrument's (52 069 bytes), its refusals' (25 495) and the adequacy
+criterion's (5 695), kept here while its review is open — and the adequacy design's first round answered alone takes
+the folder to 396 402. At 512 KiB the folder holds that review's rounds and, at the measured rate, about 70 commits
+more. Weighed and refused: compacting — a record's review table is its own account of how it was decided, not a
+history kept beside it, and nothing here is terminal; a total by subject — the per-file caps already bound each
+record, and a total for each sub-folder would move the same decision without changing it.
+
 ## Why
 
 **Measured `2026-10-05`**, `git ls-files <folder> | xargs cat | wc -c`: `docs/decisions/` held 393 061 bytes of its

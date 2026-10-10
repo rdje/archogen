@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the accepted designs' folder has room again
+
+`ARCHOGEN-PROGRAM-0600` (leaf `PROGRAM.79`), `2026-10-11`.
+
+- The folder of accepted designs had under 4 KB left, and the answer to the open adequacy design's first review needs
+  7 KB. Three trust designs have moved in since its last raise five days ago. Its ceiling rises from 384 to 512 KiB,
+  measured and recorded in the decision that governs it; compacting it was weighed and refused, since nothing there is
+  history.
+- Validation: the routes check and its self-test; the folder measured at this commit's parent and at the last raise;
+  the focused tier on the staged tree.
+
 ## archogen — the reviews the count check judges are listed in the reviews index
 
 `ARCHOGEN-PROGRAM-0599` (leaf `PROGRAM.69`), `2026-10-11`.
