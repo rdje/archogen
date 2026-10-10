@@ -259,6 +259,27 @@ defects of this change, 2 arm gaps, 4 remarks and 2 pre-existing findings.
 | R11-P1 | remark, pre-existing | the record's "every stub replaced" meant every new stub | amended |
 | R11-P2 | remark, pre-existing | a linked history folder let the seal write outside the repository | refused before any write, with an arm |
 
+**Round 12**, `2026-10-10`, a tenth confirmation, in a clone of `3ee1160`, by a read-only context new to the change.
+It reproduced the gate, every self-test, the census and the seal's figures; re-sealed `72bd446`, byte for byte
+`e624001`'s; and ran eleven mutations of round 11's rules, six killed — its runners untracked, so not durable. Verdict:
+3 defects of this change, 4 arm gaps, 5 remarks. The defects were each in a claim wider than its code, so the answer
+narrows the claims to what the code does and the arms hold, as round 3 of the generated-sources design did.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R12-D1 | defect | a stop recorded after the last answer, before the handlers were given back, was dropped: the seal kept, exit 0 | the handlers given back first, then any recorded stop answered by a rollback; a stop after that finds the seal proven and kept, said in the record, the script and the book; an arm sends SIGINT as they are given back |
+| R12-D2 | defect | a link above the written folders — `docs/tasks`, `docs` — let the seal write outside the repository, though the texts said it never writes through one | any path the seal writes refused when its real path is not the root's own, a link on the file or on any folder above it; arms for a linked trees' folder and a linked history root |
+| R12-D3 | defect | "rolled back" printed after a rollback that left what it named | the rollback says whether it was whole, and the refusal and the stop say "rolled back" of a whole one alone; an arm for each |
+| R12-AG1 | arm gap | SIGHUP claimed, no arm | an arm |
+| R12-AG2 | arm gap | the history root's link refusal, no arm | the linked history root's arm |
+| R12-AG3 | arm gap | "answered after each write", no arm | the claim withdrawn: a stop is answered before the seal is declared, which the arms hold |
+| R12-AG4 | arm gap | the rollback's existence guard unheld once stops were no longer raised mid-`open` | a folder gone just before a creation; an arm |
+| R12-R1 | remark | a signal ignored on entry, as under `nohup`, was taken over | left ignored, with an arm |
+| R12-R2 | remark | a stopped seal exited 1, as a breach | it exits 128 and the signal's number |
+| R12-R3 | remark | round 11's hybrid tally holds with SIGINT at its default, in the foreground | said here |
+| R12-R4 | remark | restoring the handlers is held by no arm | not claimed |
+| R12-R5 | remark | the rest of the text checked and true | — |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.

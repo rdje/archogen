@@ -654,7 +654,7 @@ mdBook that is the director's window into the project.
 
 - ID: `PROGRAM.69`
   Status: `active` — the tool, its gate and the seal committed `2026-10-10` (`ARCHOGEN-PROGRAM-0511`); its review open,
-  round 11's defects and arm gaps answered (`ARCHOGEN-PROGRAM-0531`), round 12 next
+  round 12's defects and arm gaps answered (`ARCHOGEN-PROGRAM-0535`), the claims narrowed, round 13 next
   Goal: a closed subtree below an open top-level subtree is sealed too, so a tree whose top-level subtree stays open
   for long — on a blocked leaf, or a long feature — does not keep its finished leaves live.
   Reproduce / issue: `M3.6.6.2.1`'s commit was refused by `README-ROUTES`, *"docs/tasks/: 823457 bytes in total, over
@@ -731,7 +731,13 @@ mdBook that is the director's window into the project.
     answered by a rollback that runs to its end; a linked history folder refused — `target/p69r11/hybrid.sh`, these
     arms beside `b87adbc`'s core → *"82 pass / 9 fail (91 arms)"*, the seven stop arms and the linked folder failing,
     then `--self-test` → *"90 pass / 0 fail (90 arms)"*; `python3 target/p69r11/mutate.py` → six mutations of round
-    11's rules, each `killed`; both runners untracked, so not durable.
+    11's rules, each `killed`; both runners untracked, so not durable — the hybrid's tally with SIGINT at its default, in
+    the foreground (R12-R3). After round 12: a recorded stop answered once the handlers are given back, a later one
+    finding the seal kept; a link on any written path refused; "rolled back" said of a whole rollback alone; a signal
+    ignored on entry left ignored — `target/p69r12/hybrid.sh`, these arms beside `76d8775`'s core → *"88 pass / 11 fail
+    (99 arms)"*, the given-back interrupt, the two linked folders and the two not-whole rollbacks among them, then
+    `--self-test` → *"98 pass / 0 fail (98 arms)"*; `python3 target/p69r12/mutate.py` → seven mutations, each
+    `killed`; both runners untracked, so not durable.
   - [x] **NO REGRESSION** — `bash scripts/check_task_history.sh` at `e624001` → *"OK (170 sealed file(s) … every sealed
     leaf proven against its tree before its seal)"*: the 142 seals before this change judged by every generalised leg, the byte
     rebuild included. `bash scripts/run_self_tests.sh` → *"OK — 47 self-test(s) passed"*; the
@@ -746,7 +752,7 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0510 (leaf PROGRAM.69)`, the review reopened; `ARCHOGEN-PROGRAM-0511 (leaf PROGRAM.69)`;
   `ARCHOGEN-PROGRAM-0514 (leaf PROGRAM.69)`, round 7 answered; `ARCHOGEN-PROGRAM-0517 (leaf PROGRAM.69)`, round 8;
   `ARCHOGEN-PROGRAM-0521 (leaf PROGRAM.69)`, round 9; `ARCHOGEN-PROGRAM-0525 (leaf PROGRAM.69)`, round 10;
-  `ARCHOGEN-PROGRAM-0531 (leaf PROGRAM.69)`, round 11
+  `ARCHOGEN-PROGRAM-0531 (leaf PROGRAM.69)`, round 11; `ARCHOGEN-PROGRAM-0535 (leaf PROGRAM.69)`, round 12
 
 - ID: `PROGRAM.70`
   Status: `done` — started `2026-10-10`, decomposed into `.1`, the bytes, and `.2`, the count, closed the same day with `.2`
@@ -941,7 +947,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.69` | `active` | its review open: round 12 next, on the committed tool, its seal already in place |
+| 1 | `PROGRAM.69` | `active` | its review open: round 13 next, on the committed tool, its seal already in place |
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The second row waits on the director's yes. The pending leaves beside them —
@@ -1099,6 +1105,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `2026-10-10` | `PROGRAM.69` (round 11) | the new arms beside `b87adbc`'s core; the self-test; six mutations of round 11's rules; the gate over 172 files; every self-test; the doctrines | 82 pass / 9 fail, the working tree's and not durable; 90 / 0; each killed by an untracked runner, not durable; OK; 47 passed; all green |
 | `2026-10-10` | `PROGRAM.54` | the scaffold's census with a helper alive and gone; the wrapper's self-test; a copy without the second sample; every self-test; focused | exit 1 then not named; 2 / 0; 1 / 1, untracked; 48 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.53` | the gate's arms on the old gate and the new; the crate's tests, clippy; every self-test; focused on the staged tree | 9 / 2, then 11 / 0; 165 passed, clean; 48 passed; `passed — 3 passed, 0 failed`, stamped |
+| `2026-10-10` | `PROGRAM.69` (round 12) | the new arms beside `76d8775`'s core; the self-test; seven mutations of round 12's rules; the gate over 172 files; every self-test | 88 pass / 11 fail, the working tree's and not durable; 98 / 0; each killed by an untracked runner, not durable; OK; 48 passed |
 
 ## Commit Log
 
@@ -1250,6 +1257,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0531 (leaf PROGRAM.69)` | **review round 11 answered**: a stop — SIGINT, SIGTERM, SIGHUP — recorded and answered by a rollback that runs to its end, only what no handler sees leaving writes; a linked history folder refused; arms for a linked index and another writer's file; 90 arms |
 | `PROGRAM.54` | `ARCHOGEN-PROGRAM-0533 (leaf PROGRAM.54)` | **the handoff census sampled twice**: a process counts only when a second sample still holds it; `PROGRAM.75` filed to propose it upstream |
 | `PROGRAM.53` | `ARCHOGEN-PROGRAM-0534 (leaf PROGRAM.53)` | **a cited focused run backs the tree committed**: the tier stamps the tree it passed on; `UNTRACKED-CODE` refuses a staged leaf citing it without that stamp |
+| `PROGRAM.69` | `ARCHOGEN-PROGRAM-0535 (leaf PROGRAM.69)` | **review round 12 answered, the claims narrowed**: a recorded stop answered once the handlers are given back; a link on any written path refused; "rolled back" of a whole rollback alone; 98 arms |
 
 ## Changelog
 

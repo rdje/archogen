@@ -10,7 +10,7 @@ one of those changes, and only then. What each closed leaf did lives in its tree
 | Discipline spine (`bedrock`) | Done | memory architecture · task-trees · commit workflow · doctrine enforcement · **claim verification** (adopted `2026-09-27`) · mdBook skeleton |
 | Roadmap seeded into task-trees | Done | eleven trees: `PROGRAM`, `API`, `M0`, `S0`, `M1`–`M7`; F01–F30 each owned |
 | `API` — programmatic interface (§10.4) | Done | closed `2026-10-02`: the engine API, the wasm binding and its page (run in Chrome 154), `archogen mcp` in both MCP eras, and the book's chapter; findings §9 with the director |
-| `PROGRAM` — workspace, tiers, book, ledger | In Progress | frontier `PROGRAM.69`, its review open, round 12 next, its seal in place; `PROGRAM.70` done, room in `docs/reviews/`; `PROGRAM.34` awaits the director's yes; CI green on the runner |
+| `PROGRAM` — workspace, tiers, book, ledger | In Progress | frontier `PROGRAM.69`, its review open, round 13 next, its seal in place; `PROGRAM.70` done, room in `docs/reviews/`; `PROGRAM.34` awaits the director's yes; CI green on the runner |
 | `M0` — charter, boundary, profile, target | Done | all seven leaves closed; F27 green. The board remains a recorded blocker, not a passed gate |
 | `S0` — early executable generation (F28) | Done | **F28 green**; every leaf closed — `S0.8` made the book chapter's counts and corpus table measured |
 | `M1` — eADL description foundation | Mostly Done | §12 M1's exit gate met; `M1.29.4` waits on the director (findings §7) |

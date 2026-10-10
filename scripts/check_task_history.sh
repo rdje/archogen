@@ -52,10 +52,10 @@
 #      tree not its own; the index keeps one table per tree, its header first and its rows under it, one row a file.
 #
 # THE SEAL writes nothing unless the tree it would leave, with every new stub replaced by its body from its new sealed
-# file, is the tree as it stood, byte for byte, no entry already takes a sealed file's path, and neither the tree, the
-# index nor a history folder is a link; and it rolls everything back if the gate then refuses the result, or a stop —
-# SIGINT, SIGTERM, SIGHUP — comes. Each file it rewrites is written whole or not at all (R9-1), each write noted before
-# it is made (R10 D1), a stop answered between writes (R11 D1).
+# file, is the tree as it stood, byte for byte, no entry already takes a sealed file's path, and no link lies on a path
+# it writes; and it rolls everything back if the gate then refuses the result, or a stop — SIGINT, SIGTERM, SIGHUP —
+# comes before its proof is done. Each file it rewrites is written whole or not at all (R9-1), each write noted before
+# it is made (R10 D1); it says "rolled back" only of a rollback that undid everything (R12 D3).
 #
 # ⚠️ HONEST LIMIT: history rewritten under the gate (a force-push, a replaced object) is premise 2 and 3's, as for the
 # catalog (decision_catalog-records.md §0). Within history, legs 3 and 5 hold whatever HEAD is.
@@ -283,10 +283,12 @@ def current(target):
         return None
 
 class Stopped(BaseException):
-    """A seal asked to stop — by SIGINT, SIGTERM or SIGHUP — answered between its writes (review R11 D1)."""
-    def __init__(self, signum):
+    """A seal asked to stop — by SIGINT, SIGTERM or SIGHUP — answered by a rollback (reviews R11 D1, R12 D1); `whole` is
+    whether that rollback undid everything."""
+    def __init__(self, signum, whole=True):
         super().__init__(signum)
         self.signum = signum
+        self.whole = whole
 
 def add_rows(tree_name, new_rows):
     text = read(INDEX) if os.path.exists(INDEX) else HEADER
@@ -512,10 +514,13 @@ def seal(tree_name):
              if os.path.lexists(os.path.join(HIST, tree_name, key + ".md"))]
     if taken:
         sys.exit("task-history: %s already taken — an entry at a sealed file's path; nothing was written" % ", ".join(taken))
-    links = [x for x in (path, INDEX, HIST, os.path.join(HIST, tree_name)) if os.path.islink(x)]
+    # A seal writes the tree, its index and its history in place: no link anywhere on their paths below the root — the
+    # files, their history folder, or any folder above them (reviews R10 AG3, R11 P2, R12 D2).
+    real_root = os.path.realpath(".")
+    links = [x for x in (path, INDEX, os.path.join(HIST, tree_name)) if os.path.realpath(x) != os.path.join(real_root, x)]
     if links:
-        sys.exit("task-history: %s is a link; nothing was written — a seal writes the tree, its index and its history in "
-                 "place, never through a link (reviews R10 AG3, R11 P2)" % ", ".join(links))
+        sys.exit("task-history: %s is reached through a link; nothing was written — a seal writes the tree, its index "
+                 "and its history in place" % ", ".join(links))
     # Fail closed: a sealed body is its ID line and indented or blank lines only.
     torn = []
     for key in sealable:
@@ -601,14 +606,16 @@ def seal(tree_name):
                     undone.append("%s, not removed: %s" % (d, e))
         for u in undone:
             print("task-history: the rollback could not undo %s — the next gate run names what is left" % u, file=sys.stderr)
+        return not undone
 
     # Every write and the gate's proof in one guard: any exception that stops the run — a file the gate cannot read,
     # which the run's own handler then names as a breach, or any other — rolls the seal back first (reviews R5-2, R6-2,
     # R7-4, R9-2). The tree and the index are written whole or not at all, and the rollback undoes what was written alone,
-    # each step on its own, naming what it could not undo (R9-1). A stop — SIGINT, SIGTERM, SIGHUP — is recorded, never
-    # raised in the middle of a write, and answered after each write and after the proof by a rollback, which runs to
-    # its end whatever stop comes during it (review R11 D1). ⚠️ What no handler sees — SIGKILL, the machine stopping —
-    # leaves the writes, which the next gate run proves as any seal not yet committed (review R8-2); and a failure that
+    # each step on its own, naming what it could not undo (R9-1). A stop — SIGINT, SIGTERM, SIGHUP, each unless ignored on
+    # entry — is recorded, never raised in the middle of a write; one recorded before the handlers are given back, once
+    # the proof is done, is answered by a rollback that runs to its end whatever stop comes during it (reviews R11 D1, R12
+    # D1). ⚠️ A stop after that finds the seal proven, and it is kept; what no handler sees — SIGKILL, the machine stopping
+    # — leaves the writes, which the next gate run proves as any seal not yet committed (review R8-2); and a failure that
     # defeats the rollback's own writes too, a full disk, leaves what it names.
     stops = []
 
@@ -619,7 +626,8 @@ def seal(tree_name):
         if stops:
             raise Stopped(stops[0])
 
-    handled = {s: signal.signal(s, on_stop) for s in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP)}
+    handled = {s: signal.signal(s, on_stop) for s in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP)
+               if signal.getsignal(s) is not signal.SIG_IGN}  # one ignored on entry, as under nohup, stays ignored
     try:
         try:
             os.makedirs(tree_dir, exist_ok=True)
@@ -644,15 +652,21 @@ def seal(tree_name):
             answer()
             gate()
             answer()
-        except BaseException:
-            rollback()
+        except BaseException as e:
+            whole = rollback()
+            if isinstance(e, Stopped):
+                e.whole = whole
             raise
         if fails:
-            rollback()
-            sys.exit("task-history: the gate refused the seal of %s, so it was rolled back:\n  " % path + "\n  ".join(fails))
+            whole = rollback()
+            sys.exit("task-history: the gate refused the seal of %s, %s:\n  "
+                     % (path, "so it was rolled back" if whole else "and its rollback left what it named above")
+                     + "\n  ".join(fails))
     finally:
         for s, previous in handled.items():
             signal.signal(s, previous)
+    if stops:  # a stop recorded after the last answer, before the handlers were given back (review R12 D1)
+        raise Stopped(stops[0], rollback())
     print("task-history: %s — sealed %d subtree(s), %d leaves: %s; the reconstruction is byte for byte"
           % (path, len(sealable), len(seal_of), " ".join(order)))
 
@@ -667,7 +681,9 @@ try:
         try:
             seal(tree)
         except Stopped as e:
-            sys.exit("task-history: stopped by %s; the seal was rolled back" % signal.Signals(e.signum).name)
+            print("task-history: stopped by %s; %s" % (signal.Signals(e.signum).name, "the seal was rolled back" if e.whole
+                  else "the rollback left what it named above"), file=sys.stderr)
+            sys.exit(128 + e.signum)
         fails.clear()
     checked, nstubs = gate()
 except (Unreadable, OSError) as e:
@@ -1266,12 +1282,20 @@ def fire(sig=signal.SIGINT):
 if WHEN:
     real_replace, real_open = os.replace, builtins.open
     def replace(src, dst, *a, **k):
+        if WHEN in ("refusedhold", "stophold") and os.path.abspath(str(dst)).endswith(("/docs/tasks/K.md", "/docs/tasks/Q.md")):
+            TREES.append(1)
+            if len(TREES) == 2:  # the rollback's restore of the tree fails
+                raise OSError("the tree is held")
         real_replace(src, dst, *a, **k)
         dst = os.path.abspath(str(dst))
         if (WHEN == "tree" and dst.endswith("/docs/tasks/Q.md")) or (WHEN == "index" and dst.endswith("/INDEX.md")):
             fire()
+        if WHEN == "stophold" and dst.endswith("/docs/tasks/Q.md"):
+            fire()
         if WHEN == "term" and dst.endswith("/docs/tasks/Q.md"):
             fire(signal.SIGTERM)
+        if WHEN == "hup" and dst.endswith("/docs/tasks/Q.md"):
+            fire(signal.SIGHUP)
         if WHEN == "restore" and dst.endswith("/docs/tasks/K.md"):
             TREES.append(1)
             if len(TREES) == 2:  # the second rename of the tree is the rollback's restore
@@ -1279,6 +1303,8 @@ if WHEN:
     def opener(file, mode="r", *a, **k):
         if WHEN == "precreate" and mode == "x":
             fire()
+        if WHEN == "vanish" and mode == "x":
+            os.rmdir(os.path.dirname(os.path.abspath(str(file))))
         if WHEN == "plant" and mode == "x":
             with real_open(file, "w") as other:
                 other.write("another writer's\n")
@@ -1287,14 +1313,22 @@ if WHEN:
             fire()
         return f
     os.replace, builtins.open = replace, opener
+    real_signal = signal.signal
+    def giveback(sig, handler):
+        if WHEN == "giveback" and sig == signal.SIGINT and getattr(handler, "__name__", "") != "on_stop":
+            fire()  # the seal's handler still holds SIGINT: the stop is recorded, after the last answer
+        return real_signal(sig, handler)
+    signal.signal = giveback
 HOOK
-  for when in tree index create precreate term; do
+  for when in tree index create precreate term hup giveback; do
     case "$when" in
       tree) what="an interrupt just after the tree's rename"; want="stopped by SIGINT" ;;
       index) what="an interrupt just after the index's rename"; want="stopped by SIGINT" ;;
       create) what="an interrupt just after a sealed file's creation"; want="stopped by SIGINT" ;;
       precreate) what="an interrupt just before a sealed file's creation"; want="stopped by SIGINT" ;;
       term) what="a request to terminate just after the tree's rename"; want="stopped by SIGTERM" ;;
+      hup) what="a hang-up just after the tree's rename"; want="stopped by SIGHUP" ;;
+      giveback) what="an interrupt as the handlers are given back, after the proof"; want="stopped by SIGINT" ;;
     esac
     arms=$((arms + 1))
     out="$(cd "$work" && SEAL_HOOK="$when" PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?
@@ -1323,7 +1357,28 @@ HOOK
     printf '%s\n' "$out" | tail -2 | sed 's/^/    /' >&2
   fi
   rm -rf "$work/docs/task-history/K"; restore
+  # A rollback whose restore of the tree fails never says the seal was rolled back — a refused seal's, and a stopped
+  # one's (review R12 D3).
+  cp "$SCRATCH/K.keep" "$work/docs/tasks/K.md"
+  arms=$((arms + 1))
+  out="$(cd "$work" && SEAL_HOOK=refusedhold PYTHONPATH="$hook" bash "$SELF" --seal K 2>&1)"; rc=$?
+  if [ "$rc" -eq 1 ] && printf '%s' "$out" | grep -qF "and its rollback left what it named above" && ! printf '%s' "$out" | grep -qF "so it was rolled back"; then
+    ok=$((ok + 1)); echo "  ✅ a refused seal whose rollback is not whole does not say it was rolled back"
+  else
+    echo "SELF-TEST: a refused seal whose rollback is not whole — rc $rc, or it says rolled back:" >&2
+    printf '%s\n' "$out" | tail -3 | sed 's/^/    /' >&2
+  fi
+  rm -rf "$work/docs/task-history/K"; restore
   git -C "$work" rm -q docs/tasks/K.md; commit
+  arms=$((arms + 1))
+  out="$(cd "$work" && SEAL_HOOK=stophold PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?
+  if [ "$rc" -eq 130 ] && printf '%s' "$out" | grep -qF "stopped by SIGINT; the rollback left what it named above" && ! printf '%s' "$out" | grep -qF "the seal was rolled back"; then
+    ok=$((ok + 1)); echo "  ✅ a stopped seal whose rollback is not whole does not say it was rolled back"
+  else
+    echo "SELF-TEST: a stopped seal whose rollback is not whole — rc $rc, or it says rolled back:" >&2
+    printf '%s\n' "$out" | tail -3 | sed 's/^/    /' >&2
+  fi
+  rm -rf "$work/docs/task-history/Q"; restore
   # Another writer's file appearing at a sealed file's path just before the seal creates it: the seal stops, and the
   # rollback leaves that file as the other writer left it (review R11 AG2).
   arms=$((arms + 1))
@@ -1336,16 +1391,45 @@ HOOK
     printf '%s\n' "$out" | tail -2 | sed 's/^/    /' >&2
   fi
   rm -rf "$work/docs/task-history/Q"; restore
+  # A hang-up ignored on entry, as under nohup, stays ignored: the seal runs to its end (review R12, a remark).
+  arms=$((arms + 1))
+  out="$(cd "$work" && trap '' HUP && SEAL_HOOK=hup PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?
+  if [ "$rc" -eq 0 ] && printf '%s' "$out" | grep -qF -- "— sealed "; then
+    ok=$((ok + 1)); echo "  ✅ a hang-up ignored on entry stays ignored, and the seal runs to its end"
+  else
+    echo "SELF-TEST: a hang-up ignored on entry — rc $rc, the seal not made:" >&2
+    printf '%s\n' "$out" | tail -3 | sed 's/^/    /' >&2
+  fi
+  rm -rf "$work/docs/task-history/Q"; restore
+  # The history folder gone just before a sealed file's creation: the rollback finds no file to remove, and names
+  # nothing it could not undo (review R12 AG-d).
+  arms=$((arms + 1))
+  out="$(cd "$work" && SEAL_HOOK=vanish PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?
+  if [ "$rc" -eq 1 ] && ! printf '%s' "$out" | grep -qF "could not undo" && clean && [ ! -e "$work/docs/task-history/Q" ]; then
+    ok=$((ok + 1)); echo "  ✅ a noted file never created is no file the rollback fails to remove"
+  else
+    echo "SELF-TEST: a noted file never created — rc $rc, or the rollback named it:" >&2
+    printf '%s\n' "$out" | tail -3 | sed 's/^/    /' >&2
+  fi
+  restore
   rm -rf "$hook"
   # A linked index, and a linked history folder, are refused before a write (review R11 AG1, P2).
   mv "$work/docs/task-history/INDEX.md" "$work/docs/task-history/INDEX.real"; ln -s INDEX.real "$work/docs/task-history/INDEX.md"
-  arm "a linked index is refused before anything is written" 1 "is a link; nothing was written" --seal Q
+  arm "a linked index is refused before anything is written" 1 "through a link; nothing was written" --seal Q
   [ -L "$work/docs/task-history/INDEX.md" ] || { arms=$((arms + 1)); echo "SELF-TEST: a linked index was replaced" >&2; }
   rm "$work/docs/task-history/INDEX.md"; mv "$work/docs/task-history/INDEX.real" "$work/docs/task-history/INDEX.md"
   mkdir -p "$SCRATCH/outside"; ln -s "$SCRATCH/outside" "$work/docs/task-history/Q"
-  arm "a linked history folder is refused before anything is written" 1 "is a link; nothing was written" --seal Q
+  arm "a linked history folder is refused before anything is written" 1 "through a link; nothing was written" --seal Q
   [ -z "$(ls -A "$SCRATCH/outside")" ] || { arms=$((arms + 1)); echo "SELF-TEST: a seal wrote through a linked history folder" >&2; }
   rm "$work/docs/task-history/Q"; rm -rf "$SCRATCH/outside"; restore
+  # A link above them: the task trees' folder, and the history's own (review R12 D2, AG-b).
+  mv "$work/docs/tasks" "$SCRATCH/tasks.real"; ln -s "$SCRATCH/tasks.real" "$work/docs/tasks"
+  arm "a linked task-trees folder is refused before anything is written" 1 "through a link; nothing was written" --seal Q
+  rm "$work/docs/tasks"; mv "$SCRATCH/tasks.real" "$work/docs/tasks"
+  mv "$work/docs/task-history" "$SCRATCH/history.real"; ln -s "$SCRATCH/history.real" "$work/docs/task-history"
+  arm "a linked history root is refused before anything is written" 1 "through a link; nothing was written" --seal Q
+  rm "$work/docs/task-history"; mv "$SCRATCH/history.real" "$work/docs/task-history"
+  git -C "$work" diff --quiet || { arms=$((arms + 1)); echo "SELF-TEST: a linked folder's arm left the fixture changed" >&2; }
   # Any entry at a sealed file's path, not only a link to nothing, is refused before a write (review R10 D2).
   mkdir "$work/docs/task-history/Q"; printf 'not a seal\n' > "$work/docs/task-history/Q/Q.1.md"
   arm "a file already at a sealed file's path is refused before anything is written" 1 "nothing was written" --seal Q
@@ -1354,7 +1438,7 @@ HOOK
   restore
   # A tree file that is a link: refused before a write, never replaced by a file (review R10 AG3).
   mv "$work/docs/tasks/Q.md" "$work/docs/Q.real"; ln -s ../Q.real "$work/docs/tasks/Q.md"; commit
-  arm "a tree file that is a link is refused before anything is written" 1 "is a link; nothing was written" --seal Q
+  arm "a tree file that is a link is refused before anything is written" 1 "through a link; nothing was written" --seal Q
   [ -L "$work/docs/tasks/Q.md" ] && clean || { arms=$((arms + 1)); echo "SELF-TEST: a linked tree was written through or replaced" >&2; }
   git -C "$work" rm -q docs/tasks/Q.md; mv "$work/docs/Q.real" "$work/docs/tasks/Q.md"; commit
   # Each rollback step on its own (review R10 AG1, AG2): mid-proof, the index becomes a folder, so its restore fails,

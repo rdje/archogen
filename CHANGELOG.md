@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — sealing claims only what it does
+
+`ARCHOGEN-PROGRAM-0535` (leaf `PROGRAM.69`), `2026-10-10`.
+
+- The previous entry still said too much. A request to stop that arrives once sealing has finished its check now
+  finds the seal kept, and the texts say so; a stop recorded until then is answered by undoing everything. A link
+  anywhere on a path the seal writes — not only the files themselves — is refused, and "rolled back" is printed only
+  when everything was undone. A hang-up ignored on entry, as under `nohup`, stays ignored.
+- Validation: arms for each, five failing on the old tool; seven deliberate breaks of the rules, each caught by an
+  untracked runner, so not durable (98 arms).
+
 ## archogen — a cited test run backs the very tree committed
 
 `ARCHOGEN-PROGRAM-0534` (leaf `PROGRAM.53`), `2026-10-10`.
@@ -26,14 +37,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 - Validation: the wrapper's two arms, the second sample's removal caught; every self-test; the focused tier
   (`passed — 3 passed, 0 failed`).
 
-## archogen — a seal asked to stop is always undone
+## archogen — a seal asked to stop is undone
 
 `ARCHOGEN-PROGRAM-0531` (leaf `PROGRAM.69`), `2026-10-10`.
 
 - Sealing finished work now records a request to stop — Ctrl-C, a terminate or a hang-up — and answers it between its
   writes by undoing them all, the undoing itself never cut short. The previous entry's "at any instant" was too wide:
-  a stop arriving while it undid a refused seal could escape. Now only a process killed outright leaves writes, which
-  the next check names. A sealing folder that is a link is refused too.
+  a stop arriving while it undid a refused seal could escape. Now a stop before the seal's check is done undoes it; a
+  process killed outright leaves writes, which the next check names. A sealing folder that is a link is refused too.
 - Validation: arms for a stop at each write, mid-proof and during the undoing, for a terminate, a linked index and
   folder, and another writer's file, the stop and folder arms failing on the old tool; six deliberate breaks, each
   caught by an untracked runner, so not durable (90 arms).
