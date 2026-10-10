@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — every route the generated-sources record offers is a test
+
+`ARCHOGEN-M3-0549` (leaf `M3.6.6.4`), `2026-10-10`.
+
+- Review after review found a route the record offered fail when a reviewer built it. Each route, and each case the
+  record says has none, is now a test that builds it and checks the gate's verdict, and the record claims no more than
+  they hold; one route, a program that writes its own source, was narrowed to what they show.
+- Validation: twelve route tests, three of the parent's named beside them; the crate's 177 tests.
+
 ## archogen — an interrupted seal exits 130 even with its report lost
 
 `ARCHOGEN-PROGRAM-0548` (leaf `PROGRAM.69`), `2026-10-10`.

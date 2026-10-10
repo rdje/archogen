@@ -57,8 +57,9 @@ build compiles, another role's package among them — the parent's §8 limit, no
 whose build would compile a generated file is served so that its build compiles none: one compiling another
 generator's output reads it at run time instead, the script that runs both handing it over; one compiling the file its
 own form declares — a program that generates its own source — gives way to another program target whose build does not
-compile that file: a second executable of its package when no library of the package holds it, or else one of a
-package that does not depend on the package holding it. One that must compile a generated file has no route (§5). If a
+compile that file: a second executable of its package when neither a library of the package nor any package it
+depends on holds it, or else one of a package that does not depend, directly or through another, on the package
+holding it. One that must compile a generated file has no route (§5). If a
 program also reads the intermediate, that file is committed and declared, and a later step reading it is a chain: that
 step remakes it from the first step's inputs instead. A file one step runs and another reads is named once, as a
 generator — named in both clauses it is refused (the parent's §2).
@@ -88,7 +89,7 @@ crate root is refused as a generator (the parent's §5). A vendored file that ca
 keeping it out of the commit, or no file of the checkout, as a build product — has no route (§5), and nor has a
 generator whose copy those rules refuse: an input among them stays refused; a generator among them, run by a committed
 script, is that script's dependency, believed — for this section's reason, the gate reading no file under a gitlink,
-not §4's — outside every provenance, so its bytes, their sharing and, for one the role rules refuse, that role
+and, for a build product, §4's too, its bytes the host's build — outside every provenance, so its bytes, their sharing and, for one the role rules refuse, that role
 judgment go unseen, as the parent's §8 says of whatever a script runs; its identity alone can be compared, through a
 committed version file the script checks it against, by §4's route.
 
@@ -96,7 +97,8 @@ committed version file the script checks it against, by §4's route.
 
 protoc, bindgen, an interpreter: no generator file but the script's own dependency, believed (the parent's §8) and
 named in the last section of every report, *what the inventory does not see*. A tool from a vendored checkout is §3's
-vendored file: copied, a generator file named beside the script; uncopied, believed for §3's reason. This section's
+vendored file: copied, a generator file named beside the script; uncopied, believed for §3's reason, and a build
+product for this section's too. This section's
 reason is a host tool's, and its route serves both.
 
 **Why.** Its bytes are no file of the commit, and which one runs is the host's: like the linker and the host's C
@@ -119,8 +121,9 @@ reviewed by a context that did not write it; until then the refusal or the belie
 ### 6. Each route held by a test
 
 The routes above, and the cases with none, are claimed as far as these tests build them and the gate writes or refuses
-the inventory — `route_tests` in `xtask/src/trust_generated.rs`, written when five review rounds had probed the routes
-in untracked tests and found some the record named fail:
+the inventory — `route_tests` in `xtask/src/trust_generated.rs`, written when review rounds had probed the routes in
+untracked tests and found some the record named fail, and three no-route cases the parent's own tests hold, named with
+their module:
 
 | Test | Holds |
 | --- | --- |
@@ -131,8 +134,14 @@ in untracked tests and found some the record named fail:
 | `route_a_program_that_generates_its_own_source` | §2: refused; a second executable of its package, no library holding the file, written |
 | `route_a_table_its_package_s_library_holds_is_made_by_another_package` | §2: the package's own executables refused; one of a package not depending on it, written |
 | `route_a_vendored_file_copied` | §3: a copied input, script and executable written; a lone `.rs` refused; a program target written |
-| `a_vendored_executable_a_script_runs_uncopied_is_believed` | §3, §4: written, the gitlinked tool in no provenance |
+| `route_a_table_a_dependency_s_library_holds_is_made_by_a_package_not_depending_on_it` | §2: a dependency's library holding the file: the package's executables refused; one of a package not depending on it, written |
+| `route_an_intermediate_a_program_reads_is_remade_by_the_later_step` | §2: an intermediate a program reads, committed and declared: read by the later step, refused; remade by it, written |
+| `route_a_file_one_step_runs_and_another_reads_is_named_once` | §2: named in both clauses, refused; once, as a generator, written |
+| `a_vendored_executable_a_script_runs_uncopied_is_believed` | §3, §4: written, the gitlinked tool in no provenance; named on the form, refused |
 | `route_a_tool_pin` | §4: a version file written; a marked pin refused |
+| `order_tests::step_5_refuses_a_chain_through_a_generator_build_and_an_undeclared_marked_file_one_message_a_file` | §2: a generator whose build compiles another generator's output, refused |
+| `provenance_tests::step_3_refuses_a_live_form_s_non_blob_and_its_chain_and_holds_a_form_no_program_reads_to_its_text` | §3: an input at a gitlink, refused |
+| `generator_tests::another_role_s_program_target_script_or_library_is_refused_as_a_generator` | §3: a generator the role rules refuse, refused |
 
 ## Why
 
@@ -174,3 +183,4 @@ finding answered here. The history is
 | 3 | `2026-10-10` | 3, and 5 remarks | every finding answered: a vendored executable decided once, in §3, §4's version-file route its only comparison; "every file it hashes" narrowed to what a program reads and a form names; How to apply as §3 reads |
 | 4 | `2026-10-10` | 3, and 4 remarks | every finding answered: the blob rule's claim narrowed to a live form; a marked file a form would name remade within the generation, §2's route, a marked pin so or replaced by a version file; a program that generates its own source served by a second program target; a vendored file that cannot be copied decided, an input refused, a generator believed |
 | 5 | `2026-10-10` | 3, and 3 remarks | answered by method: every route and no-route case held by a committed test (§6); a self-generating program's route narrowed to a target whose build does not compile the file; an executable a file a copy serves; a marked crate root with no route, a script remaking it the parent's §8 limit |
+| 6 | `2026-10-10` | 3, and 5 remarks | every finding answered: the self-generating program's route narrowed to the packages it depends on; §6 grown to every route and no-route case, three held by the parent's tests; a build product believed for §4's reason too |

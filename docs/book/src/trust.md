@@ -260,14 +260,14 @@ refused, `trust-undeclared-input`, wherever the gate runs:
   or script a form would name is remade so too, while a marked crate root has no route. A program-target generator
   whose build would compile a generated file reads another generator's output at run time instead, and a program that
   generates its own source gives way to another program target whose build does not compile it — a second executable
-  of its package when no library there holds the file, else one of a package that does not depend on it; one that
-  must compile a generated file has no route;
+  of its package when neither a library there nor a package it depends on holds the file, else one of a package
+  that does not depend on it, directly or through another; one that must compile a generated file has no route;
 - a live form's generator or input **at or under a gitlink**, the pointer by which the commit holds a vendored
   checkout: it is no file of the commit's tree, so the rule above refuses it — the inventory reads a program's files,
   and a live form's generators and inputs, from the commit's blobs alone. The need is met by committing a copy of the
   file, named as an input — or, for a generator, a script, an executable or a Rust source, as the generator, a Rust
   one as a program target; a copy whose header marks it generated is a chain, remade within the generation as above. A
-  vendored file that cannot be copied, or a generator whose copy those rules refuse, has no route: an input stays
+  vendored file that cannot be copied, or a generator whose copy the role rules refuse, has no route: an input stays
   refused, and a generator is believed when a script runs it, its bytes, their sharing and its role unseen. Each route
   is held by a test the record names.
 

@@ -1899,10 +1899,10 @@ mod gate_tests {
 #[cfg(test)]
 mod route_tests {
     //! The refusals record's routes and no-route cases, each held here (`decision_trust-generated-refusals.md`, the
-    //! section each test names; leaf `M3.6.6.4`, review round 5): the record claims a route only where a test here
-    //! builds it and the gate writes the inventory, and a case with no route only where a test here sees the gate
-    //! refuse it. Five review rounds probed routes the record claimed in untracked tests; these make the claims the
-    //! code's.
+    //! section each test names; leaf `M3.6.6.4`, review rounds 5 and 6): the record claims a route only where a test
+    //! here builds it and the gate writes the inventory, and a case with no route only where a test here, or one its §6
+    //! names in another module, sees the gate refuse it. Review rounds probed routes the record claimed in untracked
+    //! tests; these make the claims the code's.
 
     use crate::json::Json;
     use crate::trust::tests::{
@@ -2360,6 +2360,17 @@ mod route_tests {
         let r = reached(&written(f.run()), "chk");
         holds(&r, &["scripts/gen.sh"]);
         assert!(r.iter().all(|p| !p.starts_with("vendor/")), "{r:?}");
+        // The control: the same tool named on the form is no blob of the commit, refused — the belief above is the
+        // script's, not the gate's reading of the tool.
+        f.commit(&[roots(&form(
+            "crates/b/src/gen_b.rs",
+            &["scripts/gen.sh", "vendor/x/tool"],
+            &[],
+        ))]);
+        says(
+            &refused(f.run()),
+            "generator `vendor/x/tool` is no blob of the commit",
+        );
     }
 
     #[test]
@@ -2397,6 +2408,142 @@ mod route_tests {
         says(
             &refused(f.run()),
             "input `tools/protoc.lock.toml` has a header that marks it generated",
+        );
+    }
+
+    #[test]
+    fn route_a_table_a_dependency_s_library_holds_is_made_by_a_package_not_depending_on_it() {
+        // §2. `gen`'s package depends on `crates/t`, whose library holds the declared table: every executable of the
+        // package compiles it, a second one too — refused; an executable of a package that does not depend on
+        // `crates/t` is the route.
+        let table = |generator: &str| roots(&form("crates/t/src/table.rs", &[generator], &[]));
+        let f = two_roots(
+            "route-dependency-table",
+            "fn main() { let _ = t::table::T; }\n",
+            "pub fn f() {}\n",
+            &[
+                (
+                    "crates/a/Cargo.toml",
+                    manifest("a", "[dependencies]\nt = { path = \"../t\" }\n"),
+                ),
+                ("crates/t/Cargo.toml", manifest("t", "")),
+                ("crates/t/src/lib.rs", "pub mod table;\n".to_owned()),
+                (
+                    "crates/t/src/table.rs",
+                    "pub const T: u32 = 1;\n".to_owned(),
+                ),
+                table("crates/a/src/main.rs"),
+            ],
+        );
+        says(
+            &refused(f.run()),
+            "`crates/t/src/table.rs`, which the build of the generator `crates/a/src/main.rs` reads, is a generated source",
+        );
+        f.commit(&[
+            (
+                "crates/a/src/bin/gen2.rs",
+                "fn main() { println!(\"pub const T: u32 = 1;\"); }\n".to_owned(),
+            ),
+            table("crates/a/src/bin/gen2.rs"),
+        ]);
+        says(
+            &refused(f.run()),
+            "`crates/t/src/table.rs`, which the build of the generator `crates/a/src/bin/gen2.rs` reads, is a generated source",
+        );
+        f.commit(&[
+            ("crates/w/Cargo.toml", manifest("w", "")),
+            (
+                "crates/w/src/main.rs",
+                "fn main() { println!(\"pub const T: u32 = 1;\"); }\n".to_owned(),
+            ),
+            table("crates/w/src/main.rs"),
+        ]);
+        holds(
+            &reached(&written(f.run()), "gen"),
+            &["crates/w/src/main.rs"],
+        );
+    }
+
+    #[test]
+    fn route_an_intermediate_a_program_reads_is_remade_by_the_later_step() {
+        // §2. `chk` reads the intermediate itself, a `data` file of its root, so it is committed and declared. Control:
+        // the later step reading it as an input — a chain, refused. The route: the later step remakes it from the first
+        // step's inputs.
+        let roots = |forms: String| {
+            (
+                "trust/roots.eadl",
+                format!(
+                    "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\"))\n\
+                     (defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\") \
+                     (data \"data/mid.csv\"))\n{forms}"
+                ),
+            )
+        };
+        let mid = form("data/mid.csv", &["scripts/step1.sh"], &["data/in.csv"]);
+        let f = chk(
+            "route-read-intermediate",
+            &[
+                ("scripts/step1.sh", "echo step one\n".to_owned()),
+                ("scripts/step2.sh", "echo step two\n".to_owned()),
+                ("data/in.csv", "1,2\n".to_owned()),
+                ("data/mid.csv", "3\n".to_owned()),
+                roots(
+                    mid.clone()
+                        + &form(
+                            "crates/b/src/gen_b.rs",
+                            &["scripts/step2.sh"],
+                            &["data/mid.csv"],
+                        ),
+                ),
+            ],
+        );
+        says(
+            &refused(f.run()),
+            "is declared by a `defgenerated` form — a chain of generators",
+        );
+        f.commit(&[roots(
+            mid + &form(
+                "crates/b/src/gen_b.rs",
+                &["scripts/step1.sh", "scripts/step2.sh"],
+                &["data/in.csv"],
+            ),
+        )]);
+        holds(
+            &reached(&written(f.run()), "chk"),
+            &["scripts/step1.sh", "scripts/step2.sh", "data/in.csv"],
+        );
+    }
+
+    #[test]
+    fn route_a_file_one_step_runs_and_another_reads_is_named_once() {
+        // §2. A file one step runs and another reads, named in both clauses: refused; named once, as a generator: written.
+        let f = chk(
+            "route-named-once",
+            &[
+                (
+                    "scripts/gen.sh",
+                    "bash scripts/lib.sh; cat scripts/lib.sh\n".to_owned(),
+                ),
+                ("scripts/lib.sh", "echo shared\n".to_owned()),
+                roots(&form(
+                    "crates/b/src/gen_b.rs",
+                    &["scripts/gen.sh", "scripts/lib.sh"],
+                    &["scripts/lib.sh"],
+                )),
+            ],
+        );
+        says(
+            &refused(f.run()),
+            "names `scripts/lib.sh` as both a generator and an input",
+        );
+        f.commit(&[roots(&form(
+            "crates/b/src/gen_b.rs",
+            &["scripts/gen.sh", "scripts/lib.sh"],
+            &[],
+        ))]);
+        holds(
+            &reached(&written(f.run()), "chk"),
+            &["scripts/gen.sh", "scripts/lib.sh"],
         );
     }
 }

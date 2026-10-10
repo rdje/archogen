@@ -102,6 +102,22 @@ committed test (§6), and the record claims no more than they hold.
 | R5-R2 | remark | "copies of its own generator and inputs" for every marked file | "its own generator and inputs, or copies of them for a vendored one" |
 | R5-R3 | remark | a generator whose copy the role rules refuse, believed, escapes that judgment | said: its role judgment goes unseen, as the parent's §8 says |
 
+**Round 6**, `2026-10-10`, of `682dab9`, by a read-only context that had not written the record, fenced from the
+sealed evaluation set. It ran the doctrine gate and the crate's tests (174 passed), six mutations of the gate, each
+caught by the route test it should be, and two probes — untracked, so not durable. Verdict: 3 defects and 5 remarks.
+Round 5's account, "five rounds had each found a route fail", is too strong: round 2's probes agreed with the record.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R6-D1 | defect | a second executable of its package fails when a package it depends on holds the file | narrowed to the packages it depends on, directly or not; a test |
+| R6-D2 | defect | "each route and each case with none" held by §6, where three were held by none and three by tests §6 did not name | two tests added; the parent's three named in §6 with their module |
+| R6-D3 | defect | a vendored build product believed "not for §4's reason", though its bytes are the host's build | believed for §3's reason and §4's too |
+| R6-R1 | remark | the believed test's "no `vendor/` path" could not fail | a control: the tool named on the form, refused |
+| R6-R2 | remark | the routes of tests 4 and 5 hold "written", not the generator built | kept; test 6 holds the build |
+| R6-R3 | remark | round 5's "each" overstated | said above |
+| R6-R4 | remark | the chapter's "those rules" had no antecedent | "the role rules" |
+| R6-R5 | remark | no changelog entry for round 5's tests | one entry for rounds 5 and 6 |
+
 ## Why
 
 The record closes on a round that finds no defect, as every design here does; each round, its findings and their
