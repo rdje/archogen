@@ -194,9 +194,9 @@ A task tree records every leaf of its work, with its checklist and evidence. Mos
   the largest finished part, whole. A placeholder's commit, a row's date and the rule against a line at column 0 are
   the tool's alone, which the check does not read, and so are where a placeholder stands in its tree, any text after
   the name on its first line, a seal of only some finished parts, and prose in the index outside its tables;
-- that no live leaf sits inside a part that is sealed, in any tree directly under `docs/tasks/` (one in a sub-folder
-  is `PROGRAM.72`'s), and that each tree holds only its own leaves, each
-  named once; that every sealed file holds a leaf; and that the index keeps one table per tree, its rows under it.
+- that no live leaf sits inside a part that is sealed, in any tree directly under `docs/tasks/` (one in a sub-folder is
+  `PROGRAM.72`'s), and that each tree holds only its own leaves, each named once; that every sealed file holds a leaf;
+  and that the index keeps one table per tree, its rows under it.
 
 ```console
 $ bash scripts/check_task_history.sh                  # the gate
@@ -239,11 +239,9 @@ $ bash scripts/check_review_history.sh --seal <FILE>       # archive a closed re
 $ bash scripts/check_review_history.sh --self-test         # its RED arms, on scratch repositories
 ```
 
-What a review round found is counted twice by hand — in its design record's summary row and in the reviews index — and
-once in its history's own table, one row a finding. `REVIEW-COUNTS` holds the first two to the third for every review
-whose history is still under `docs/reviews/`: the round's findings, defects, arm gaps and remarks, as each record's
-table states them, and the index's count of rounds and what it says the last round found. An archived history is not
-read, and its record is named (`PROGRAM.69`).
+What a review round found is counted by hand in its design record's summary row, and the reviews index counts the
+rounds; the history's own table lists each finding. `REVIEW-COUNTS` holds the counts to the table, as its header says
+which rows and which counts, and names every index row it judges nothing of, with the reason (`PROGRAM.69`).
 
 ```console
 $ bash scripts/check_review_counts.sh                      # the gate

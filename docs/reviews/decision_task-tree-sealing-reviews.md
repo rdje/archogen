@@ -523,6 +523,31 @@ the reviews index's row too, but a round's own paragraph, prose, it does not rea
 | R24-R8 | remark | the doctrine table's order and the registry's disagreed | the registry's entry after `REVIEW-HISTORY`'s |
 | R24-R9 | remark | not `PROGRAM.69`'s: the snapshots' lines on `PROGRAM.76` | rewritten since by `be9b6ee` |
 
+**Round 25**, `2026-10-10`, a twenty-third confirmation, of `8b4b73e`, by a read-only context new to the change, fenced
+from the sealed evaluation set. Its clone refused, it ran the tool's core pinned to `8b4b73e` and the self-tests in an
+export, and ran twelve data mutants of the new check, its code mutants refused by the harness — runners untracked, so
+not durable. Verdict: 7 defects, 2 arm gaps and 6 remarks. Round 24's paragraph above stands as written; this round
+corrects it: ten of round 24's findings, not fifteen, were the new check's. The answer narrows the new check to what it
+can hold exactly: the index row's status, prose, is no longer read; every scope statement points to the script's header.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R25-D1 | defect | the scope still overstated: an open history whose row links no record, one with no round lines, and eight archived ones, neither read nor named | the OK line names every index row it judges nothing of, with the reason; a row with no record has its count of rounds checked; every text points to the header |
+| R25-D2 | defect | the index status rule failed open: a round with no line, "no defect", a second clause | the status, prose, no longer read |
+| R25-D3 | defect | a duplicate summary row, or a duplicate round line, passed | both refused; an arm each |
+| R25-D4 | defect | row 24's "54-mutant sweep" against the history's 53 refusals | "53 refusals silenced one at a time" |
+| R25-D5 | defect | round 24's paragraph: "all but one of the new check" — ten were | corrected here |
+| R25-D6 | defect | the log cited 42 rounds; the check printed 43 at the commit | 43 |
+| R25-D7 | defect | R24-R4's "refilled" left ragged lines in the record and the book | each paragraph refilled, no word changed |
+| R25-AG1 | arm gap | the index status's pre-existing count held by no arm | the status no longer read |
+| R25-AG2 | arm gap | a file not in the index read from the disk held by no arm | an arm |
+| R25-R1 | remark | arm 3 repeated arm 1 | each arm a check of its own |
+| R25-R2 | remark | a round whose table header differs is treated as prose, unseen | counted in the OK line, as not judged |
+| R25-R3 | remark | counts in words or after "answered" unread | the status no longer read; the record's cells are numbers |
+| R25-R4 | remark | the mid-cell link pairs two index rows with another review's record | harmless while those histories stay archived; named |
+| R25-R5 | remark | a comment said a skipped record "would otherwise" be read | the code rewritten; no such comment |
+| R25-R6 | remark | the changelog's "by their own headings" — a round's line is no heading | "by their own lines" |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.

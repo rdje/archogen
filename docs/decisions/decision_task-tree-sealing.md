@@ -19,13 +19,13 @@ A task tree keeps its live work readable by sealing out what is finished.
 - **Amended `2026-10-10` (`PROGRAM.69`): the unit is the outermost closed subtree.** A top-level subtree whose every
   leaf is `done` seals as before. Below a top-level subtree that is still open, a leaf whose own subtree — itself and
   every leaf below it — is `done`, and whose nearest ancestor leaf's is not, seals too, whole, into
-  `docs/task-history/<TREE>/<LEAF>.md`: `M3.6.2` with `M3.6.2.1` while `M3.6` waits on `M3.6.5`. Below the top level
-  a subtree is a leaf of the tree, so two closed leaves with no leaf between them and an open subtree — `X.1.2.1` and
+  `docs/task-history/<TREE>/<LEAF>.md`: `M3.6.2` with `M3.6.2.1` while `M3.6` waits on `M3.6.5`. Below the top level a
+  subtree is a leaf of the tree, so two closed leaves with no leaf between them and an open subtree — `X.1.2.1` and
   `X.1.2.2` under an open `X.1`, with no leaf `X.1.2` — seal apart. A sealed file still never changes, since its subtree
   is closed. When the parent closes later, the parent's remaining leaves seal into the parent's own file, beside it. A
   seal takes the outermost closed subtree, whole: the gate refuses a part sealed apart from a subtree that was closed,
-  and, below the top level, parts sealed together that no one leaf holds (leg 5), and a live leaf under a sealed subtree at any depth and in
-  any tree file (leg 6).
+  and, below the top level, parts sealed together that no one leaf holds (leg 5), and a live leaf under a sealed subtree
+  at any depth and in any tree file (leg 6).
 - **Its leaves move byte for byte**, in the order the tree holds them, into
   `docs/task-history/<TREE>/<SUBTREE>.md`. The file holds exactly those bytes, with no header. A leaf is its
   `- ID:` line and every line up to the next `- ID:` line or `## ` heading.
@@ -60,24 +60,25 @@ before any write, and the rollback undoes what was written alone, each step on i
 whenever a restore fails, since the tree or the index may still name them, and naming what it could not undo (review
 R9-1, worded by R11 R2); each write is noted before it is made, so an error just after one is undone too (an interrupt,
 held since R13, finds the seal done; R20 D1), any entry at a sealed file's path is refused, and so is a tree or an index
-that is a link (review R10), or a history folder (R11 P2) — *by review R12: any
-path the seal writes that a link lies on, the file or a folder above it, below the root; by R13 D3, its temporary file
-created new; by R14 D3, any entry at a rewritten file's temporary path refused before the first write* —; and a stop —
-any signal but SIGKILL, SIGSTOP, the six fault signals (SIGSEGV, SIGBUS, SIGFPE, SIGILL, SIGTRAP, SIGSYS), whoever sends
-them, and, on Linux, the C library's own signals, which no mask holds (Linux not measured here) — is held by the signal
-mask from before the first write through the proof and any rollback, taking effect once the seal is done: proven and
-kept, refused and rolled back, or stopped by an error, said, and rolled back, its outcome said where its output can be
-written; an interrupt held alone then says which — after an outcome said, or after one that could not be said, and one
-that came before the mask that nothing was written — where its error output can be written, and exits 130 whatever
-became of its outputs; so the seal is whole either way, a signal ignored on entry staying ignored, and a git the proof
-runs, which inherits the mask, not ended by a stop; an abort the process raises on itself ends it whatever the mask, and
-a C library signal sent from outside may; and only a rollback that undid everything is said to have rolled the seal back
-(reviews R11 D1, R12 D3, R13: a stop recorded and answered later left moments between a write and its record, which
-holding closes; R14 D1, D2; R15 D1, D2; R16 D1, D5, D6; R17 D1 to D4; R18 D1; R19 R3).* `--census <COMMIT>` measures, at
-a commit, the bytes of `done` leaves under open top-level subtrees and of those a seal would take (`PROGRAM.69`).
+that is a link (review R10), or a history folder (R11 P2) — *by review R12: any path the seal writes that a link lies
+on, the file or a folder above it, below the root; by R13 D3, its temporary file created new; by R14 D3, any entry at a
+rewritten file's temporary path refused before the first write* —; and a stop — any signal but SIGKILL, SIGSTOP, the six
+fault signals (SIGSEGV, SIGBUS, SIGFPE, SIGILL, SIGTRAP, SIGSYS), whoever sends them, and, on Linux, the C library's own
+signals, which no mask holds (Linux not measured here) — is held by the signal mask from before the first write through
+the proof and any rollback, taking effect once the seal is done: proven and kept, refused and rolled back, or stopped by
+an error, said, and rolled back, its outcome said where its output can be written; an interrupt held alone then says
+which — after an outcome said, or after one that could not be said, and one that came before the mask that nothing was
+written — where its error output can be written, and exits 130 whatever became of its outputs; so the seal is whole
+either way, a signal ignored on entry staying ignored, and a git the proof runs, which inherits the mask, not ended by a
+stop; an abort the process raises on itself ends it whatever the mask, and a C library signal sent from outside may; and
+only a rollback that undid everything is said to have rolled the seal back (reviews R11 D1, R12 D3, R13: a stop recorded
+and answered later left moments between a write and its record, which holding closes; R14 D1, D2; R15 D1, D2; R16 D1,
+D5, D6; R17 D1 to D4; R18 D1; R19 R3).* `--census <COMMIT>` measures, at a commit, the bytes of `done` leaves under open
+top-level subtrees and of those a seal would take (`PROGRAM.69`).
 
 **The gate**, `TASK-HISTORY`, runs on every commit, in CI as in the pre-commit hook. It checks:
-1. every sealed file's leaves, lines, bytes and sha256 against its row — *amended `2026-10-10`: and that it holds a leaf*;
+1. every sealed file's leaves, lines, bytes and sha256 against its row — *amended `2026-10-10`: and that it holds a
+   leaf*;
 2. that sealed files and rows correspond one to one, and that nothing else is under `docs/task-history/`;
 3. **across history**: that every row any committed version of the index held is still there, unchanged, and that
    every sealed file is byte for byte what the commit that added it wrote. So CI, where `HEAD` is the commit under
@@ -86,23 +87,21 @@ a commit, the bytes of `done` leaves under open top-level subtrees and of those 
    (`PROGRAM.42`);
 4. that every leaf in a sealed file has exactly one stub, in its own tree, with status `done` and a link to that
    file; that every stub links a file that holds its leaf; and that a leaf sits in its own subtree's file;
-5. **provenance**: that every sealed leaf is, byte for byte, the leaf its tree held just before the commit that
-   sealed it (`HEAD`, for a seal not yet committed), `done` there, and sealed with the rest of its subtree. So a
-   seal made by hand, or a body edited on its way in, is refused — *amended `2026-10-10`: when it differs from the
-   tool's in its files, its stubs' links or its units; one byte for byte the tool's passes, however made, and a stub's
-   commit text, a row's date and the column-0 rule stay the seal's alone, which the gate does not check, and so do where
-   a stub stands among its tree's lines and text after the name on its ID line (review R9-5), a seal of only some of a
-   tree's closed units, each the tool's — the rest seal later as units of their own — and prose in the index outside
-   its tables (review R10).* *Amended
-   `2026-10-10`:* and that, in that tree, the
-   outermost closed subtree holding each of its leaves was its file's subtree, so a part of a closed subtree sealed
-   apart from it, or, below the top level, parts sealed together that no one leaf holds, is refused; and that the
-   file is exactly the bytes
-   those leaves' spans made, in that tree's order, so a file reordered or padded is refused too;
+5. **provenance**: that every sealed leaf is, byte for byte, the leaf its tree held just before the commit that sealed
+   it (`HEAD`, for a seal not yet committed), `done` there, and sealed with the rest of its subtree. So a seal made by
+   hand, or a body edited on its way in, is refused — *amended `2026-10-10`: when it differs from the tool's in its
+   files, its stubs' links or its units; one byte for byte the tool's passes, however made, and a stub's commit text, a
+   row's date and the column-0 rule stay the seal's alone, which the gate does not check, and so do where a stub stands
+   among its tree's lines and text after the name on its ID line (review R9-5), a seal of only some of a tree's closed
+   units, each the tool's — the rest seal later as units of their own — and prose in the index outside its tables
+   (review R10).* *Amended `2026-10-10`:* and that, in that tree, the outermost closed subtree holding each of its
+   leaves was its file's subtree, so a part of a closed subtree sealed apart from it, or, below the top level, parts
+   sealed together that no one leaf holds, is refused; and that the file is exactly the bytes those leaves' spans made,
+   in that tree's order, so a file reordered or padded is refused too;
 6. that no live leaf sits in a subtree that is sealed — *amended `2026-10-10`: at any depth, and in any tree file of
-   `docs/tasks/`, one in a sub-folder being `PROGRAM.72`'s;
-   and a tree file holds only leaves under its own name, each named once, which a seal checks before it writes; and the
-   index keeps one table per tree, its header first, its rows under it, one row a sealed file.*
+   `docs/tasks/`, one in a sub-folder being `PROGRAM.72`'s; and a tree file holds only leaves under its own name, each
+   named once, which a seal checks before it writes; and the index keeps one table per tree, its header first, its rows
+   under it, one row a sealed file.*
 
 **What else changes:**
 - **`TASK-ACCEPTANCE`**, archogen's since `PROGRAM.21`: when a commit names a sealed leaf as its owner, the
@@ -122,15 +121,16 @@ a commit, the bytes of `done` leaves under open top-level subtrees and of those 
   siblings close, or scatter one subtree over many files. A subtree seals once, whole, and a reader finds a
   feature's history in one file — *amended `2026-10-10`: in one file per closed part, below a subtree that stays
   open (next).*
-- **Amended `2026-10-10`: why the outermost closed subtree.** The top-level unit assumed a top-level subtree closes
-  soon after its parts. It does not when one of its leaves waits on a decision: `M3.6` stays open while `M3.6.5` waits
-  on the director, and every finished leaf below it stays live. Measured by `bash scripts/check_task_history.sh
-  --census fea69ad`, every leaf's span in bytes: 274 483 bytes of `done` leaves under open top-level subtrees — `M1` 85 113, `M2` 105 946,
-  `M3` 83 424 — 261 610 of them in 28 subtrees closed below the top level, with `docs/tasks/` at its 819 200-byte
-  ceiling (`README-ROUTES` refused `M3.6.6.2.1`'s commit until two closed `PROGRAM` subtrees were sealed). The seal
-  moved 261 582 bytes into those 28 files: one blank line after each subtree's last leaf stays in the tree. The cost is the one weighed above: a
-  feature's history can span several files — the parent's own, and one per part that closed before it. Each file is
-  still one closed subtree, whole and never changed, and the stubs, in the tree's order, say where each leaf is.
+- **Amended `2026-10-10`: why the outermost closed subtree.** The top-level unit assumed a top-level subtree closes soon
+  after its parts. It does not when one of its leaves waits on a decision: `M3.6` stays open while `M3.6.5` waits on the
+  director, and every finished leaf below it stays live. Measured by `bash scripts/check_task_history.sh --census
+  fea69ad`, every leaf's span in bytes: 274 483 bytes of `done` leaves under open top-level subtrees — `M1` 85 113, `M2`
+  105 946, `M3` 83 424 — 261 610 of them in 28 subtrees closed below the top level, with `docs/tasks/` at its 819
+  200-byte ceiling (`README-ROUTES` refused `M3.6.6.2.1`'s commit until two closed `PROGRAM` subtrees were sealed). The
+  seal moved 261 582 bytes into those 28 files: one blank line after each subtree's last leaf stays in the tree. The
+  cost is the one weighed above: a feature's history can span several files — the parent's own, and one per part that
+  closed before it. Each file is still one closed subtree, whole and never changed, and the stubs, in the tree's order,
+  say where each leaf is.
 - **Byte-exact files and a reconstruction proof**, as for the changelog (`decision_history-ledgers.md`), because
   evidence that is edited on the way into an archive is no longer evidence.
 - **`docs/task-history/`, not `docs/tasks/sealed/` or `docs/history/`.**
@@ -210,4 +210,5 @@ another tree is sealed. The amendment of `2026-10-10` and its seal were reviewed
 | 21 | 10 | 2, and 1 arm gap (row 20's count; R20-R2's "rewrapped" untrue of two lines; "sealed past" held by no arm) | the gate, every self-test, the census and the first seal reproduced; an oracle over the real history, 172 files matching; 150 fuzzed trees and 507 hand seals as it predicts; three mutations of `put`, each failing the race arm (runners untracked, not durable); answered: 11; the paragraph and the bullet rewrapped; an arm sealing past a subtree an uncommitted edit reopens |
 | 22 | 10 | 1, and 2 arm gaps (row 21's count; the noting order under an error and the warning's two clauses held by no arm), and 1 pre-existing arm gap (every column-0 line named) | the gate, every self-test, the census and the first seal reproduced, every row's count against its table; mutations of the rollback's guard and of the history read killed (runners untracked, not durable); answered: 10; arms for a sealed file a file-size limit stops halfway, for a `pending` field with a log row, for no warning where the log names the commit, and for each column-0 line named |
 | 23 | 5 | 2, and 0 arm gaps (row 22's count; a rollback leaving a folder the seal made, unnamed, said whole), and 1 pre-existing arm gap (every torn leaf named, held for one) | the gate, every self-test, the census and the first seal reproduced, every row's count against its table; a planted file probed (runners untracked, not durable); answered: a folder the seal made that holds another writer's entry named, the rollback not called whole; a second torn leaf in another unit; row 22's count, and `REVIEW-COUNTS` deriving every open review's counts from its history |
-| 24 | 16 | 5, and 2 arm gaps (`REVIEW-COUNTS` said to hold every record; "no count copied by hand unchecked"; a row for a round with no line passing; a citation; a rewrap claim — the arm gaps, a remark's kind and an arm-gap count's place) | the gate, every self-test, the census and round 23's answers reproduced; a 54-mutant refusal sweep and 20 mutants of the new check (runners untracked, not durable); answered: the check reads the reviews index's rows too, keys rounds on their lines, names the archived records it does not read, reads an arm-gap count wherever it stands; 18 arms; the citation `R23-P1`; the bullet refilled |
+| 24 | 16 | 5, and 2 arm gaps (`REVIEW-COUNTS` said to hold every record; "no count copied by hand unchecked"; a row for a round with no line passing; a citation; a rewrap claim — the arm gaps, a remark's kind and an arm-gap count's place) | the gate, every self-test, the census and round 23's answers reproduced; 53 refusals silenced one at a time and 20 mutants of the new check (runners untracked, not durable); answered: the check reads the reviews index's rows too, keys rounds on their lines, names the archived records it does not read, reads an arm-gap count wherever it stands; 18 arms; the citation `R23-P1`; the bullet refilled |
+| 25 | 15 | 7, and 2 arm gaps (`REVIEW-COUNTS`' scope still overstated; its index-status rule failing open; a duplicate summary row passing; row 24's figure; round 24's count of the new check's findings; a cited run made before the commit; ragged lines — the arm gaps, the index status's pre-existing count and the disk's copy) | the gate and census pinned to `8b4b73e`, the self-tests, the new check's arms and twelve data mutants (runners untracked, not durable); answered: the index status, prose, no longer read; duplicates refused; every row judged nothing of named with its reason; the index's rounds the last with a findings table; the scope pointed to the header in every text; 20 arms |
