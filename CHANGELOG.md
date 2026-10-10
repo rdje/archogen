@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a design for holding the generated-sources rules to their tests, by mutation
+
+`ARCHOGEN-M3-0597` (leaf `M3.6.9`), `2026-10-10`.
+
+- The generated-sources rules are held by the tests of their instrument only at the instances those tests build, and
+  every attempt to name where else they must be held left a place out. The design decided here names none: every
+  mutant the project's mutation sweep makes of the judgment code must be caught by those tests or shown harmless. It
+  adds the three kinds of mutation the defects found so far were, and runs the sweep's copy beside the repository,
+  where the trust gate's own rules let its tests run. Its review is open.
+- Validation: the record's and the book's gates; the focused tier on the staged tree.
+
 ## archogen — the sealed cases' guard reads every file as prose, staged or on disk
 
 `ARCHOGEN-PROGRAM-0596` (leaf `PROGRAM.76`), `2026-10-10`.
