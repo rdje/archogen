@@ -1,4 +1,4 @@
-# Generated sources: the shapes refused for good and the tool believed, each with its reason and a route
+# Generated sources: the shapes refused for good and the tool believed, each with its reason and, where one exists, a route
 
 - **Type:** `decision`
 - **Date:** `2026-10-10`
@@ -17,9 +17,11 @@
 
 The parent decides one generator step, from committed files to a committed file; what it did not decide it refused
 until this leaf, and it believed the tool a script runs (its §1, §2, §8). Each is decided here: the two shapes stay
-refused, each for a reason that holds without an instance, and each need they would serve has a route within one
-step when the files it names are unmarked — a marked one is a chain, the parent's §3 reading its marker, and has none
-(§5); the tool stays believed, with a route for when its identity must be compared. No behaviour moves: every refusal
+refused, each for a reason that holds without an instance, and a need they would serve has a route within one step
+where one exists; where none does it is said, and a later need is §5's — a file a route names whose header marks it
+generated (a chain, the parent's §3 reading its marker), a later step that is a program and must compile the
+intermediate, and a vendored program that cannot be copied; the tool stays believed, with a route for when its
+identity must be compared. No behaviour moves: every refusal
 and belief stays as the parent and its instrument (`M3.6.6.2`) have it, and the chain's refusals name this record.
 
 **Measured `2026-10-10`** at `614d5c7`: `grep -c defgenerated trust/roots.eadl` → `0`; and `cargo xtask trust-inventory
@@ -32,39 +34,46 @@ What the parent's §2 calls a chain — a live form's generator or input that a 
 parent's §3 marks, and a file that a live form's crate-root generator's build reads and that a form declares or §3
 marks — is refused, `trust-undeclared-input`, wherever the gate runs.
 
-**Why.** Provenance is one step (the parent's §4): what a program reaches through a form is that form's generator
-files and inputs, its generator files judged by the parent's §5 against that program, its inputs hashed and matched.
-A chain makes provenance a closure over steps, and then the roles a file plays, the declared files through which a
-program reaches it, and the program each upstream generator is judged against each have a reading per step. The
-parent's review met this: a chain lost its first link (its R1-6), answered by making provenance transitive; transitive,
-its declared files then had two readings (R3-5), and another role's generator escaped the role judgment through one
-(R3-7) — an escape of the very refusal the gate exists for — and round 3 closed them only by narrowing to one step.
-Refused, a chain the parent's rules can see — through a declared or a marked file — hides nothing: each of its files
-is seen and named; one through a file no form declares and no header marks is the parent's §8 limit, a plain file.
+**Why.** Provenance is one step (the parent's §4): what a program reaches through a form is that form's generator files
+and inputs, its generator files judged by the parent's §5 against that program, its inputs hashed and matched. A chain
+makes provenance a closure over steps, and then the roles a file plays, the declared files through which a program
+reaches it, and the program each upstream generator is judged against each have a reading per step. The parent's review
+met this: a chain lost its first link (its R1-6), answered by making provenance transitive; transitive, its declared
+files then had two readings (R3-5), and another role's generator escaped the role judgment through a chain (R3-7) — an
+escape of the very refusal the gate exists for — and round 3 closed them only by narrowing to one step. Refused, a chain
+the parent's rules can see — through a declared or a marked file — hides nothing: each of its files is seen and named;
+one through a file no form declares and no header marks is the parent's §8 limit, a plain file.
 
 **The route.** A file made from another generator's output is declared as the last step of one generation: its form
 names every generator file of every step — each judged by the parent's §5 against every program that reads the
 result — and every committed file any step reads, and the intermediate file is the generation's own product, never
 committed. A program-target generator that would compile another generator's output reads it at run time instead, the
 script that runs both handing it over, so its build, made from the commit's files, compiles no generated file; one
-that must compile it has no route (§5).
+that must compile it has no route (§5). If a program also reads the intermediate, that file is committed and declared,
+and a later step reading it is a chain: that step remakes it from the first step's inputs instead. A file one step
+runs and another reads is named once, as a generator — named in both clauses it is refused (the parent's §2).
 
 ### 3. A generator or an input at or under a gitlink: refused
 
 Neither is a blob of the commit, so the parent's blob rule refuses it, `trust-undeclared-input`, wherever the gate
 runs.
 
-**Why.** The inventory is the commit's blobs (the inventory record, `decision_trust-inventory.md` §3): what it
-hashes, shares and compares is a file the commit holds. A gitlink is a commit id the commit holds in place of a
-checkout's files: the files under it are another repository's blobs, which the gate, reading this commit's alone, never
-reads, so no form could propose a digest the gate recomputes. This repository keeps every vendored checkout read-only besides
+**Why.** The inventory is the commit's blobs (the inventory record, `decision_trust-inventory.md` §3): every file it
+hashes is a blob of the commit. A gitlink is a commit id the commit holds in place of a checkout's files: the files
+under it are another repository's blobs, which the gate, reading this commit's alone, never reads, so no form could
+propose a digest of them the gate recomputes. The parent's round 2 took the gitlink's pinned commit as the digest
+(`359eee3`); its round 3 withdrew it with the chains and the tools' pins it found half-integrated, narrowing to one
+step. Taken again, a commit id names the whole checkout: a change anywhere in it would move the item, and which of its
+files a generator read would go unseen. This repository keeps every vendored checkout read-only besides
 ([`decision_repository-boundary-read-only.md`](../../decisions/decision_repository-boundary-read-only.md)).
 
 **The route.** For an input: the file the generator reads is committed — a copy of the vendored file, its source
 and pin named in the form's `reason` — and named as an input, a file of the commit, hashed, shared and compared as any
-input is; a copy whose header marks it generated is a chain, refused, with no route (§5). For a generator: a committed
-script runs the vendored one and is named as the form's generator, the vendored one being that script's tool, believed
-(§4).
+input is; a copy whose header marks it generated is a chain, refused, with no route (§5). For a generator that is a
+file: a committed, unmarked copy named as the form's generator, judged by the parent's §5 and hashed as any generator
+file. A vendored program that cannot be copied has no route (§5): run by a committed script, it is that script's
+dependency, believed — for this section's reason, the gate reading no file under a gitlink, not §4's — outside every
+provenance, so its sharing goes unseen.
 
 ### 4. A tool a script runs: believed
 
@@ -74,13 +83,14 @@ named in the last section of every report, *what the inventory does not see*.
 **Why.** Its bytes are no file of the commit, and which one runs is the host's: like the linker and the host's C
 toolchain, which the inventory records by version alone (`decision_trust-inventory.md` §3), a tool is a fact of the
 machine the generation ran on, not of the commit. As provenance it would make a form's digests facts of that machine
-that no commit could reproduce. The tool is named in the script the form names as its generator, a file the review
-that accepts the form reads (`M3.6.5`).
+that no commit could reproduce. The tool is named in the script the form names as its generator, itself a
+provenance file every program reading the form reaches (the parent's §4).
 
 **The route, when a tool's identity must be compared.** Its pin is committed — a file the script reads to choose or
 to check the tool, a lock or a version file — and named as an input: a change made through the pin is then a change of
-a provenance file, reported as any is, while the tool that actually ran stays believed to match it. A pin whose header
-marks it generated is a chain, refused, with no route (§5).
+a provenance file, reported as any is, while the tool that actually ran stays believed to match it. A tool from a
+vendored checkout has its gitlink for a pin, which is no blob: its route is a committed version file the script checks
+the tool against. A pin whose header marks it generated is a chain, refused, with no route (§5).
 
 ### 5. A later need
 
@@ -91,10 +101,10 @@ reviewed by a context that did not write it; until then the refusal or the belie
 
 - **Refused for good, not until.** A refusal "until" a leaf leaves a decision owed with no case to decide it on; three
   of the parent's review rounds showed that deciding these shapes without one only opens cases. A reason that holds
-  without an instance closes the question, and the routes keep the needs they would serve open to one step.
-- **The routes keep the parent's guarantees.** Each route ends in a file of the commit named on a form, so the
-  parent's §4 and §5 apply to it whole: every generator file judged against every reader, every input hashed and
-  shared.
+  without an instance closes the question, and the routes, where they exist, keep the needs open to one step.
+- **The routes keep the parent's guarantees.** Each route ends in files of the commit named on a form, so the parent's
+  §4 and §5 apply to them whole: every generator file judged against every reader, every input hashed and shared. What
+  has no route is refused, or, for a tool and a vendored program a script runs, believed and named in every report.
 
 ## How to apply
 
@@ -116,3 +126,4 @@ finding answered here. The history is
 | Round | Date | Defects | Outcome |
 | --- | --- | --- | --- |
 | 1 | `2026-10-10` | 8, and 8 remarks | every finding answered: the chain route's later step reads its input at run time, and names every committed file any step reads; a marked copy or pin has no route; a vendored generator's route; the messages, R1-6, the tool's naming and the leaf's figure made true |
+| 2 | `2026-10-10` | 5, and 6 remarks | every finding answered: "a route" narrowed everywhere to a route where one exists, the cases with none named; a vendored generator copied as a file, a vendored program believed for §3's reason; the tool's naming as the parent's §4 has it |

@@ -80,7 +80,7 @@ an input under another name. Two generated tables that differ in every byte, wri
 are seen to share both. A generator or input the commit does not hold as a file is refused. So are a **chain**, a
 generator or input that a form declares or a header marks as generated, and a generator or input inside a vendored
 checkout, which the commit holds as a pointer to another repository rather than as files: each is refused for a reason,
-and the need it would serve is met in one step instead when its files are unmarked (below).
+and the need it would serve is met in one step instead where a route exists (below).
 
 A generator must lie outside the reading program's other roles: a table the generator's own executable wrote, read by
 a checker, is refused, since the checker would then trust the very logic it checks. A generator that is a program —
@@ -260,16 +260,17 @@ refused, `trust-undeclared-input`, wherever the gate runs:
   is a program reads it at run time rather than compiling it;
 - a generator or input **at or under a gitlink**, the pointer by which the commit holds a vendored checkout: it is no
   file of the commit's tree, so the rule above refuses it — the inventory hashes only what the commit holds. The need
-  is met by committing a copy of the file, named as an input, or for a generator by a committed script that runs it.
-  A copy, or a pin below, whose header marks it generated is a chain, with no route.
+  is met by committing a copy of the file, named as an input — or, for a generator, as the generator; a vendored
+  program that cannot be copied is believed when a script runs it, its sharing unseen. A copy, or a pin below, whose
+  header marks it generated is a chain, with no route; so is a later step that must compile what an earlier one made.
 
 A tool a script runs — protoc, bindgen, an interpreter — is no generator file but the script's own dependency, and is
 believed: a file a tool wrote is declared with the script that ran the tool as its generator. A file a tool writes
 outside any committed script, as cargo writes `Cargo.lock`, has nothing a declaration could truthfully name;
 undeclared, it is refused if a program reads it marked, and is a plain file otherwise. A tool stays believed: which
 one runs is the host's, as the linker is, and as provenance it would make a form's digests facts no commit reproduces.
-When a tool's identity must be compared, its pin — a file the script reads to choose or check it — is committed and
-named as an input.
+When a tool's identity must be compared, its pin — a file the script reads to choose or check it, for a vendored tool
+a committed version file — is committed and named as an input.
 
 **Provenance, and the generated-provenance item** (§4, §5). A program's **provenance** is, for each live form whose
 declared file it reads, the form's generator files and inputs, each recorded with its path, its sha256, its roles —
@@ -405,16 +406,15 @@ Every report ends with what the inventory does not see, the same list each time,
 
 ## Today and ahead
 
-Measured `2026-10-10`: the roots are the generator, the scheduling checker, the reference model and the
-implementation, with the comparison harness beside them, and what they share is every pair's build configuration and
-the harness the reference model and the implementation share. The configuration checker has no root yet (`M3.5`). The
-gate passes with *not compared*, since no baseline is committed yet. The runner's baseline is proposed by the `trust-gate`
-workflow's first run, and committed then (`M3.6.3.2.1`). Acceptance — who may accept a form, read on the protected
-main line — waits on the director's protection of `main` and a second reviewer (`M3.6.5`). A committed generated
-source, which shares its generator's mistakes with whatever reads it, is declared, recognised, judged and shared as
-this chapter states (`M3.6.6.2`). Measured `2026-10-10`: `trust/roots.eadl` declares none, no program reads a file the
-recogniser marks, and every program's provenance is empty. A chain of generators and a generator or input in a
-vendored checkout stay refused, and a tool a script runs believed and named in every report, each for a reason and
-with a route within one step (`M3.6.6.4`, its review by a context that did not write it under way). The
-package the verifier reads is
-fixed provisionally until `M4.7` writes real ones.
+Measured `2026-10-10`: the roots are the generator, the scheduling checker, the reference model and the implementation,
+with the comparison harness beside them, and what they share is every pair's build configuration and the harness the
+reference model and the implementation share. The configuration checker has no root yet (`M3.5`). The gate passes with
+*not compared*, since no baseline is committed yet. The runner's baseline is proposed by the `trust-gate` workflow's
+first run, and committed then (`M3.6.3.2.1`). Acceptance — who may accept a form, read on the protected main line —
+waits on the director's protection of `main` and a second reviewer (`M3.6.5`). A committed generated source, which
+shares its generator's mistakes with whatever reads it, is declared, recognised, judged and shared as this chapter
+states (`M3.6.6.2`). Measured `2026-10-10`: `trust/roots.eadl` declares none, no program reads a file the recogniser
+marks, and every program's provenance is empty. A chain of generators and a generator or input in a vendored checkout
+stay refused, and a tool a script runs believed and named in every report, each for a reason and, where one exists, with
+a route within one step (`M3.6.6.4`, its review by a context that did not write it under way). The package the verifier
+reads is fixed provisionally until `M4.7` writes real ones.

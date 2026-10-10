@@ -84,8 +84,9 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 
 - A new design record decides what the generated-sources design had refused until later. A chain of generators and a
   generator or input inside a vendored checkout stay refused for good, and a tool a script runs stays believed. Each
-  comes with its reason and with a way to meet the need within one generation step: one declaration for the whole
-  chain, a committed copy of the vendored file, the tool's pin committed as an input.
+  comes with its reason and, where one exists, with a way to meet the need within one generation step: one declaration
+  for the whole chain, a committed copy of a vendored file or generator, the tool's pin committed as an input; the
+  record names the cases with none.
 - No behaviour changes; the gate's refusal of a chain now names the record, and the trust chapter says it all. Its
   independent review is open.
 - Validation: the gate's chain refusals re-checked by their catalogued mutations, the crate's tests, the book's

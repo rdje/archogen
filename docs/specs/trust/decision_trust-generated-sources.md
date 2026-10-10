@@ -37,7 +37,7 @@ not reach is stated in §8.
 
 This design is deliberately narrow: it decides one generator step, from committed files to a committed file. What it
 does not decide it refuses (§2), and leaf `M3.6.6.4` owns deciding it. *Decided `2026-10-10` by `M3.6.6.4`: refused for
-good, each with its reason and a route within one step, the tool a script runs believed — [`decision_trust-generated-refusals.md`](decision_trust-generated-refusals.md).*
+good, each with its reason and, where one exists, a route within one step, the tool a script runs believed — [`decision_trust-generated-refusals.md`](decision_trust-generated-refusals.md).*
 
 ### 2. The declaration
 
@@ -106,7 +106,8 @@ shape and text-only refusals reported beside it.
 - **a generator or input at or under a gitlink**: neither is a blob of the commit, so the blob rule refuses it.
 
 *Decided `2026-10-10` by `M3.6.6.4`:* both stay refused, each for a reason that holds without an instance, and each need
-they would serve has a route within one step; the tool a script runs, below, stays believed — [`decision_trust-generated-refusals.md`](decision_trust-generated-refusals.md).
+they would serve has a route within one step where one exists, the cases with none named; the tool a script runs,
+below, stays believed — [`decision_trust-generated-refusals.md`](decision_trust-generated-refusals.md).
 
 **A tool a script runs** — protoc, bindgen, an interpreter — is no generator file: it is the script's own dependency,
 believed (§8). So a file a tool wrote is declared with the script that ran the tool as its generator, and is then
@@ -425,7 +426,7 @@ Each obligation is one sentence, quoted word for word beside its identifier by t
   commit, a gitlink input, a chain of generators, an item reached through role packages — brought its own open cases,
   for a design with no instance in the tree. What a single committed generator step needs is decided here; the rest is
   refused, so it cannot pass unseen, and decided by `M3.6.6.4` when a generated source needs it — *decided
-  `2026-10-10`, for good, each with a route within one step: [`decision_trust-generated-refusals.md`](decision_trust-generated-refusals.md)*.
+  `2026-10-10`, for good, each with a route within one step where one exists: [`decision_trust-generated-refusals.md`](decision_trust-generated-refusals.md)*.
 - **Provenance per file, matched against what the other side reads too.** §14.4's case is a shared *input*, and §4.4's
   is a shared formula: either alone is a common source of error, and so is a data file one side reads directly that the
   other's generated source came from.
