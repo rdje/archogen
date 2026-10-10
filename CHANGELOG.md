@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the generated-sources gate is whole
+
+`ARCHOGEN-M3-0516` (leaf `M3.6.6.2.5`, closing `M3.6.6.2`), `2026-10-10`.
+
+- The trust gate's report now names every declared generated source among what is not yet reviewed, and ends with
+  what the inventory cannot see — the linker, code gated to another target, data a program reads unhanded, and the
+  limits of generated-source declarations, which are believed rather than re-run. The trust record gained a dated
+  clarification saying how each of its passages reads now that generated sources are judged.
+- With this, the instrument and gate for committed generated sources are complete: declared, recognised, judged by
+  their generators, shared through their provenance, and stale when no longer read.
+- Validation: two gate fixtures and three catalogued mutations, each killed; the whole mutation catalogue and the
+  header recogniser's sweep re-run.
+
 ## archogen — an undeclared generated source is refused
 
 `ARCHOGEN-M3-0515` (leaf `M3.6.6.2.4`), `2026-10-10`.

@@ -744,6 +744,19 @@ pub fn judge(
             standing.push(format!("admission `{}`: {} {}", a.file, a.rule, a.sha256));
         }
     }
+    // Every `defgenerated` form, accepted where reviews are protected like every form (the generated-sources record §2).
+    for g in &roots.generated {
+        standing.push(format!(
+            "generated source `{}`: generator {}; inputs {}",
+            g.path,
+            g.generators.join(", "),
+            if g.inputs.is_empty() {
+                "none".to_owned()
+            } else {
+                g.inputs.join(", ")
+            }
+        ));
+    }
     Ok(Judgement {
         refused,
         change,
@@ -815,8 +828,31 @@ pub fn report(
     for l in &j.standing {
         out.push_str(&format!("{l}\n"));
     }
+    out.push_str("\n== what the inventory does not see ==\n");
+    for l in UNSEEN {
+        out.push_str(&format!("- {l}\n"));
+    }
     out
 }
+
+/// What the inventory does not see, stated in every report: the parent record's §3 list, and the generated-sources
+/// record's §8 exclusions.
+pub const UNSEEN: &[&str] = &[
+    "the linker and the host's C toolchain, recorded by version alone (decision_trust-inventory.md §3)",
+    "code a `cfg` gates to a target other than the host (§3)",
+    "what a root reads at run time that the pipeline does not hand it (§3)",
+    "a declaration is believed, not verified: no generator is run to check that a declared file is its output, that it \
+     read only its declared inputs, or that its generator files are all there are — a script driving another role's \
+     program target, declared with the script alone, and a tool a script runs, escape the generator judgments \
+     (decision_trust-generated-sources.md §8)",
+    "an undeclared generated file the recogniser does not mark, judged as a plain file: one whose generator writes no \
+     marker; one whose name or extension the comment-syntax table does not hold, unless extensionless with a `#!` first \
+     line; one whose marker comes after content; one marked in a comment syntax the table does not read (§8)",
+    "a generator's own dependencies — a script's interpreter, the modules its executable's build compiles beside its \
+     crate root — which are no provenance files: an edit to them changes no item until the output is regenerated (§8)",
+    "what a program reads on another host: a file read only under another target's `cfg` is stale on the baseline's \
+     host and, marked and undeclared, refused off it (§8)",
+];
 
 /// A file of a commit's tree, or none when the tree does not hold it.
 fn blob_at(

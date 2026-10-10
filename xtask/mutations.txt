@@ -3825,3 +3825,38 @@ to
             return Err(crate::trust_generated::beside(failed.join("\n"), &refused));
         }
 end
+
+mutation gs-a-generated-form-off-the-standing-list
+file xtask/src/trust_gate.rs
+test -p xtask trust_generated::gate_tests
+expect killed
+why M3.6.6.2.5, the generated-sources record §2 (`GS-H7`): the standing list names every `defgenerated` form not accepted.
+from
+        for g in &roots.generated {
+to
+        for g in roots.generated.iter().take(0) {
+end
+
+mutation gs-the-report-hides-what-it-does-not-see
+file xtask/src/trust_gate.rs
+test -p xtask trust_generated::gate_tests
+expect killed
+why M3.6.6.2.5, the generated-sources record §8 (`GS-H7`): the report states the parent's §3 list of what the inventory does not see and every exclusion §8 lists.
+from
+        for l in UNSEEN {
+to
+        for l in UNSEEN.iter().take(0) {
+end
+
+mutation gs-a-generated-form-out-of-the-change-part
+file xtask/src/trust_gate.rs
+test -p xtask trust_generated::gate_tests
+expect killed
+why M3.6.6.2.5, the generated-sources record §2 (`GS-H7`): a `defgenerated` form added, changed or removed against the base commit's is in the change part, as every form of the roots file is.
+from
+            out.insert(key, render(form));
+to
+            if !key.starts_with("defgenerated") {
+                out.insert(key, render(form));
+            }
+end

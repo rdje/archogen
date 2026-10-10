@@ -1759,3 +1759,138 @@ mod order_tests {
         );
     }
 }
+
+#[cfg(test)]
+mod gate_tests {
+    //! The gate's report and change part for committed generated sources (§2, §8; `GS-H7`, `GS-H5`): a `defgenerated`
+    //! form added, changed and removed in the change part and named in the standing list; an edit to a declared
+    //! generator reported and to an undeclared script "unchanged"; the report stating what the inventory does not see.
+
+    use crate::trust::tests::{real_root, two_roots, Fixture, ROOTS as TWO_ROOTS};
+    use crate::trust_gate::{gate, Judgement, PROPOSAL};
+
+    fn judge(f: &Fixture, out: &str) -> (Judgement, String) {
+        gate(&f.repo, "HEAD", None, &f.base.join(out), &real_root()).expect("judged")
+    }
+
+    fn pair(name: &str, forms: &str) -> Fixture {
+        two_roots(
+            name,
+            "mod gen_a;\nfn main() { let _ = gen_a::T; }\n",
+            "mod gen_b;\npub fn f() -> u32 { gen_b::T }\n",
+            &[
+                ("trust/roots.eadl", format!("{TWO_ROOTS}{forms}")),
+                (
+                    "crates/a/src/gen_a.rs",
+                    "pub const T: u32 = 1;\n".to_owned(),
+                ),
+                (
+                    "crates/b/src/gen_b.rs",
+                    "pub const T: u32 = 2;\n".to_owned(),
+                ),
+                ("scripts/gen.sh", "echo a table\n".to_owned()),
+                ("scripts/other.sh", "echo something else\n".to_owned()),
+            ],
+        )
+    }
+
+    fn form(path: &str, reason: &str) -> String {
+        format!("(defgenerated \"{path}\" (generator \"scripts/gen.sh\") (command \"bash scripts/gen.sh\") (reason \"{reason}\"))\n")
+    }
+
+    #[test]
+    fn a_defgenerated_form_added_changed_or_removed_is_in_the_change_part_and_every_one_is_standing(
+    ) {
+        let f = pair("gs-gate-forms", "");
+        judge(&f, "first");
+        f.commit(&[(
+            "trust/roots.eadl",
+            format!("{TWO_ROOTS}{}", form("crates/b/src/gen_b.rs", "b's table")),
+        )]);
+        let (j, text) = judge(&f, "added");
+        assert!(
+            j.change
+                .contains(&"root form added: `defgenerated crates/b/src/gen_b.rs`".to_owned()),
+            "{:#?}",
+            j.change
+        );
+        assert!(
+            j.standing.contains(
+                &"generated source `crates/b/src/gen_b.rs`: generator scripts/gen.sh; inputs none"
+                    .to_owned()
+            ),
+            "{:#?}",
+            j.standing
+        );
+        for line in [
+            "== what the inventory does not see ==",
+            "a declaration is believed, not verified",
+            "code a `cfg` gates",
+        ] {
+            assert!(text.contains(line), "{line}: {text}");
+        }
+        f.commit(&[(
+            "trust/roots.eadl",
+            format!(
+                "{TWO_ROOTS}{}",
+                form("crates/b/src/gen_b.rs", "b's table, regenerated")
+            ),
+        )]);
+        let (j, _) = judge(&f, "changed");
+        assert!(
+            j.change
+                .contains(&"root form changed: `defgenerated crates/b/src/gen_b.rs`".to_owned()),
+            "{:#?}",
+            j.change
+        );
+        f.commit(&[("trust/roots.eadl", TWO_ROOTS.to_owned())]);
+        let (j, _) = judge(&f, "removed");
+        assert!(
+            j.change
+                .contains(&"root form removed: `defgenerated crates/b/src/gen_b.rs`".to_owned()),
+            "{:#?}",
+            j.change
+        );
+    }
+
+    #[test]
+    fn an_edit_to_a_declared_generator_is_reported_and_to_an_undeclared_script_is_unchanged() {
+        // Both roots' tables written by `scripts/gen.sh`: a generated-provenance item, its form proposed and committed,
+        // so every later commit is judged on the baseline's host.
+        let forms = form("crates/a/src/gen_a.rs", "a's table")
+            + &form("crates/b/src/gen_b.rs", "b's table");
+        let f = pair("gs-gate-edits", &forms);
+        judge(&f, "first");
+        let proposal =
+            std::fs::read_to_string(f.base.join("first").join(PROPOSAL)).expect("a proposal");
+        f.commit(&[("trust/baseline.eadl", proposal)]);
+        let (j, _) = judge(&f, "proposed");
+        assert!(j.refused.is_empty(), "{:#?}", j.refused);
+        // A script no live form names: nothing shared moves.
+        f.commit(&[(
+            "scripts/other.sh",
+            "echo something else, edited\n".to_owned(),
+        )]);
+        let (j, _) = judge(&f, "other");
+        assert_eq!(j.change, ["unchanged"], "{:#?}", j.refused);
+        assert!(j.refused.is_empty(), "{:#?}", j.refused);
+        // The declared generator: its item's digest moves, reported, and on the baseline's host its form is missing.
+        f.commit(&[("scripts/gen.sh", "echo a table, edited\n".to_owned())]);
+        let (j, _) = judge(&f, "generator");
+        assert!(
+            j.change.contains(
+                &"trust-shared-changed: `gen+chk generated-provenance scripts/gen.sh` — sha256"
+                    .to_owned()
+            ),
+            "{:#?}",
+            j.change
+        );
+        assert!(
+            j.refused.iter().any(|r| r.starts_with(
+                "trust-form-missing: `gen+chk generated-provenance scripts/gen.sh`'s form"
+            )),
+            "{:#?}",
+            j.refused
+        );
+    }
+}

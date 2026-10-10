@@ -86,6 +86,13 @@ gone, is its refusal at step (2), wherever the gate runs. So a form that departs
 declared file is gone at most one, and no `defgenerated` form is stale in a run the instrument refuses. A generator build that does not run reads nothing, and a generator target that is itself a root is
 built as that root (§5).
 
+*Corrected `2026-10-10`, by `M3.6.6.2.1`, reading the parent's code beside this text:* a classification whose program
+target is gone is not the parent's refusal at step (2). The parent refuses there a form naming a package the commit no
+longer has, and a root naming a target its package no longer has; a classification whose target is gone it lists in the
+inventory's `classifications-unused`, and the gate refuses it on the baseline's host alone, at step (6), beside a baseline
+form no longer shared and an admission no current site uses (the parent's clarification of `2026-10-06`). The instrument
+follows the parent; no behaviour moves.
+
 The other forms of `trust/roots.eadl` keep the parent's reader, which reads the file in order and stops at the first of
 them that departs, the gate unable to judge: the `defgenerated` forms before that one are read and their shape and
 text-only refusals reported beside it, and those after it once it is repaired; a departure the parent's reader finds

@@ -345,6 +345,37 @@ for a shared item proposes other digests than the commit measures holds no form 
 `trust-form-missing` until the tool's proposal is committed; otherwise a change to a shared item, merged once, would be
 reported by every later commit, which R7 4 forbids for a new sharing alike.
 
+**Clarified `2026-10-10`, by `M3.6.6.2`, the instrument of
+[`decision_trust-generated-sources.md`](decision_trust-generated-sources.md)** (its `GS-H8`). That record decides what
+committed generated sources add to this one, and each passage its §7 lists reads with it:
+- the opening's "a change outside every root and every program target" reads "outside every root, program target,
+  provenance file, unit a live form's generator build compiles and form of `trust/`"; the change part, the standing list,
+  `TI-H2`'s standing list and the clarification of `2026-10-06` above take every `defgenerated` form — added, changed or
+  removed against the base commit's in the change part, named in the standing list until accepted;
+- §2's forms of `trust/roots.eadl` gain `defgenerated`; `trust-shared-program` gains a generator file of another role
+  than the reading program's — for the harness, than its pair's two — a program target's crate root judged by its role
+  packages, the union of them for a crate root of two targets, and a script by the innermost workspace member holding it;
+- §3's "Where it builds", its default-deny scope and "a manifest rule is applied over each program's closure" extend to
+  each program target a live form's generator file roots, built and checked as a root is, unless it is a root, whose
+  build it is; §3's sentences on admissions count such a build's sites and uses with the programs', one admission a
+  site, a site both compile one site;
+- §3's paragraph on generated sources is answered — a committed generated source declares its generator and inputs, and
+  one a program reads whose header marks it generated and that no form declares is refused — and what is recorded for
+  each program gains its provenance;
+- §4's shared items gain the **generated provenance**, by path and by content, whose aspects are the content's sha256,
+  each side's roles and each side's declared files with theirs; §5's form proposes those digests as it does any item's;
+- §6's table: `trust-new-shared` counts a new generated provenance, and `trust-shared-changed` one whose content, roles
+  or declared files move; `trust-undeclared-input` gains a `defgenerated` form departing from its shape or declaring a
+  path another declares, a live form's generator or input that is no blob or is itself generated, a `.rs` generator file
+  that is no program target's crate root, a marked file a program reads that no form declares, and a declared or marked
+  file a generator build reads; `trust-shared-program`, a generator file of another role; `trust-baseline-stale`, on the
+  baseline's host, a `defgenerated` form whose file no program reads; and case 5 is "unchanged" outside the provenance
+  files and the generator builds' units too;
+- `TI-H9`'s "a change outside every root's units" reads "outside every root's units, every provenance file and every
+  unit a live form's generator build compiles".
+
+Its sentence that `Cargo.lock` is recorded and is not part of the build configuration stands, unamended.
+
 **Case 4 is judged where an inventory is consumed** (R1 A8). The gate builds its own inventory and cannot find it
 stale. `cargo xtask trust-verify <package>` refuses a package whose inventory is missing, whose build identity is not
 the package's commit and toolchain, or whose artifact differs from the inventory's; one whose report names another
