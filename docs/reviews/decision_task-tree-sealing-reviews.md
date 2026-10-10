@@ -179,6 +179,26 @@ round is not edited.
 | R7-P1 | remark, pre-existing | the index's "append-only" holds presence, not order: a row inserted above committed rows passes | filed as `PROGRAM.71`, owned, not built into this change |
 | R7-P2 | remark, pre-existing | the column-0 refusal was held for a unit's first leaf alone | R7-6's arm puts the line in a second leaf |
 
+**Round 8**, `2026-10-10`, a sixth confirmation, in a clone of `235644e`, by a read-only context new to the change. It
+re-derived the seal from `72bd446` with its own code and re-ran the committed tool there, identical; reproduced the census
+and every figure; and fuzzed: 960 seals matched its oracle, and of 1 368 hand seals the gate accepted exactly those the
+tool makes — its runner untracked, so not durable. Round 7's own counts, 795 seals and 1 551 hand seals, stand in the
+record's row alone, from an untracked runner likewise. Verdict: 2 defects of this change, both in the text, and one
+pre-existing finding.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R8-1 | defect | the doctrine row's "a leaf a file" read as one leaf to a sealed file, which `M2/M2.7.3.md`'s 18 leaves belie | "one row a file" |
+| R8-2 | defect | "whatever stops the run rolls the seal back" was false for a kill signal: SIGTERM mid-gate left the writes | the claim narrowed, in the script, the record and the leaf, to any exception, a kill signal a stated limit whose writes the next gate run proves; the R7-4 answer above and `0514`'s Commit Log row say more, and are corrected here |
+| R8-3 | remark | no arm held the guard's `raise`: without it a refused seal printed "sealed" | every arm expecting a refusal refuses a run that says "— sealed "; the mutation killed |
+| R8-4 | remark | no arm held the table's separator line | an arm; the mutation killed |
+| R8-5 | remark | the unreadable-file arm needed a non-root user | a directory named as a tree file, unreadable to root as to anyone |
+| R8-6 | remark | the record's round 7 row used R6-11's corrected wording again | "of 1 551 hand seals the gate accepted exactly those the tool makes" |
+| R8-7 | remark | `PROGRAM.71` filed and routed nowhere; no Verification Log row for round 7 | in the frontier's note, the index, the tree's changelog; a Verification Log row for rounds 7 and 8 |
+| R8-8 | remark | `PROGRAM.71` cited a reviewer's runner unmarked | marked untracked, not durable |
+| R8-9 | nit | an empty table passed; the folders were made outside the guard | a table with no row refused, with an arm; the folders made inside it |
+| R8-P1 | remark, pre-existing | a tree file in a sub-folder escapes leg 6 and its name checks, while `TASK-ACCEPTANCE` reads owners there | filed as `PROGRAM.72`, owned |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.

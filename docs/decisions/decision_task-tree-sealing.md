@@ -51,7 +51,7 @@ A task tree keeps its live work readable by sealing out what is finished.
 
 **Sealing is done by a tool**, `bash scripts/check_task_history.sh --seal <TREE>`. It proves that the tree, with
 every stub replaced by its body from its sealed file, reconstructs the tree as it stood, byte for byte. If it does
-not, it writes nothing. Then it runs the gate on what it wrote, and rolls everything back if the gate refuses — *amended
+not, it writes nothing. Then it runs the gate on what it wrote, and rolls everything back if the gate refuses, or if any exception stops it — *amended
 `2026-10-10`: the folders a first seal made included.* `--census <COMMIT>` measures, at a commit, the bytes of `done`
 leaves under open top-level subtrees and of those a seal would take (`PROGRAM.69`).
 
@@ -129,7 +129,7 @@ leaves under open top-level subtrees and of those a seal would take (`PROGRAM.69
   - after a subtree closes, run `bash scripts/check_task_history.sh --seal <TREE>` and commit its result;
   - the sealing commit may also close the leaf that ran it, as the first one did. Every sealed leaf is proven
     against its tree as it stood just before that commit (leg 5), so other edits in the same commit do not weaken
-    the proof. *Amended `2026-10-10`:* the seal reads the working tree and leg 5 the tree as committed, so an
+    the proof. *Amended `2026-10-10`:* any exception that stops a seal rolls it back first; a signal that kills the process, SIGTERM among them, leaves its writes, which the next gate run proves as any uncommitted seal (review R8-2). The seal reads the working tree and leg 5 the tree as committed, so an
     uncommitted edit that changes which subtrees are closed — a new open leaf under a closed one — makes the seal
     refuse itself and roll back; commit such an edit first;
   - a leaf in a sealed file is never edited. A correction is a new entry in the tree's changelog.
@@ -162,4 +162,5 @@ another tree is sealed. The amendment of `2026-10-10` and its seal were reviewed
 | 4 | 8 | 3 (rounds appended to the history while its row read closed; two survivors called equivalent that were not; the census's producer untracked) | the seal reproduced by a clean clone; 840 fuzzed seals matched its oracle, and of 890 hand seals the gate accepted exactly those the tool makes (runners untracked, not durable); every finding answered |
 | 5 | 5 | 2 (the census's byte figures held by no arm; a refused first seal leaving its folder behind) | the seal, the figures and R4-1's route re-derived; every finding answered, then a mutation sweep of the tool's core — 182 of 196 mutants killed, the 14 others each reasoned in the history (runner untracked, not durable) |
 | 6 | 11 | 5 (a repeated row passing once its one note was silenced; a rollback that a file the gate cannot read escaped; two first-seal stubs "corrected" wrongly; the text claiming more than the gate checks; figures naming no state) | the seal re-derived and re-sealed from `72bd446`; every finding answered, the stub-commit check withdrawn; the review open |
-| 7 | 10 | 4 (a sealed file holding no leaf passing; the leaf describing the withdrawn check; counts from untracked runners unmarked; a rollback whole for a file not UTF-8 alone) | the seal re-derived and re-sealed in a clone, 795 fuzzed seals and 1 551 hand seals as the tool makes them (runner untracked, not durable); every finding answered, two pre-existing remarks filed or armed |
+| 7 | 10 | 4 (a sealed file holding no leaf passing; the leaf describing the withdrawn check; counts from untracked runners unmarked; a rollback whole for a file not UTF-8 alone) | the seal re-derived and re-sealed in a clone, 795 fuzzed seals and of 1 551 hand seals the gate accepted exactly those the tool makes (runner untracked, not durable); every finding answered, two pre-existing remarks filed or armed |
+| 8 | 10 | 2 (the doctrine row's "a leaf a file"; the rollback claimed for whatever stops a seal, a kill signal leaving its writes) | the seal, the census and every figure reproduced; 960 fuzzed seals matched its oracle and of 1 368 hand seals the gate accepted exactly those the tool makes (runner untracked, not durable); every finding answered |

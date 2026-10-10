@@ -249,6 +249,8 @@ def layout(index_text):
         while k < len(lines) and lines[k].startswith("| `"):
             in_tables.add(k)
             k += 1
+        if k == n + 4:
+            note("%s:%d: the table of %s holds no row — a seal writes a table with its first row" % (INDEX, n + 1, m.group(1)))
     for n, line in enumerate(lines):
         if line.startswith("| `") and n not in in_tables:
             note("%s:%d: a row outside its tree's table, under its header" % (INDEX, n + 1))
@@ -519,7 +521,6 @@ def seal(tree_name):
     index_before = read(INDEX) if os.path.exists(INDEX) else None
     tree_dir = os.path.join(HIST, tree_name)
     made_dirs = [d for d in (HIST, tree_dir) if not os.path.isdir(d)]  # what a rollback removes again (review R5-2)
-    os.makedirs(tree_dir, exist_ok=True)
     today = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
     order = sorted(sealable, key=lambda k: min(m[1] for m in groups[k]))
     written = []
@@ -540,9 +541,12 @@ def seal(tree_name):
             if os.path.isdir(d) and not os.listdir(d):
                 os.rmdir(d)
 
-    # Every write and the gate's proof in one guard: whatever stops the run — a file the gate cannot read, which the
-    # run's own handler then names as a breach, or anything else — rolls the seal back first (reviews R5-2, R6-2, R7-4).
+    # Every write and the gate's proof in one guard: any exception that stops the run — a file the gate cannot read,
+    # which the run's own handler then names as a breach, or any other — rolls the seal back first (reviews R5-2, R6-2,
+    # R7-4). ⚠️ A signal that kills the process, SIGTERM among them, is no exception: it leaves the writes, and the next
+    # gate run proves them as it proves any seal not yet committed (review R8-2).
     try:
+        os.makedirs(tree_dir, exist_ok=True)
         for key in order:
             fpath = os.path.join(HIST, tree_name, key + ".md")
             written.append(fpath)
@@ -723,6 +727,9 @@ MD
     if printf '%s' "$out" | grep -q '^Traceback'; then
       echo "SELF-TEST: $name — a traceback, where a refusal is named:" >&2; printf '%s\n' "$out" | tail -2 | sed 's/^/    /' >&2; return
     fi
+    if [ "$want" -ne 0 ] && printf '%s' "$out" | grep -qF -- "— sealed "; then
+      echo "SELF-TEST: $name — a refused run that says it sealed:" >&2; printf '%s\n' "$out" | grep -F -- "— sealed " | sed 's/^/    /' >&2; return
+    fi
     ok=$((ok + 1)); echo "  ✅ $name"
   }
   commit() { git -C "$work" add -A; git -C "$work" -c user.name=t -c user.email=t@t commit -qm step; }
@@ -777,6 +784,14 @@ PY
   cp "$work/docs/index.keep" "$work/docs/task-history/INDEX.md"
   sub docs/task-history/INDEX.md '^(\| Subtree \| Leaves \| Lines \| Bytes \| sha256 \| )Sealed( \|)' '\1Date\2'
   arm "a table that does not open with its header is refused" 1 "does not open with its header"
+  cp "$work/docs/index.keep" "$work/docs/task-history/INDEX.md"
+  sub docs/task-history/INDEX.md '^\| --- \| --- \| --- \| --- \| --- \| --- \|$' '| -- | --- | --- | --- | --- | --- |'
+  arm "a table whose separator is not the header's is refused" 1 "does not open with its header"
+  cp "$work/docs/index.keep" "$work/docs/task-history/INDEX.md"
+  printf '\n## `V`\n\n| Subtree | Leaves | Lines | Bytes | sha256 | Sealed |\n| --- | --- | --- | --- | --- | --- |\n' >> "$work/docs/task-history/INDEX.md"
+  mkdir -p "$work/docs/task-history/V"
+  arm "a table that holds no row is refused" 1 "the table of V holds no row"
+  rmdir "$work/docs/task-history/V"
   mv "$work/docs/index.keep" "$work/docs/task-history/INDEX.md"
   grep -q '^  Status: `done` — sealed in \[`T/T.2.2.5.2.md`\](../task-history/T/T.2.2.5.2.md); commit `ARCHOGEN-T-0017`$' "$work/docs/tasks/T.md" ||
     { arms=$((arms + 1)); echo "SELF-TEST: two leaves four levels down with no leaf between them and an open subtree were not sealed apart" >&2; }
@@ -1089,11 +1104,10 @@ PY
   [ -z "$(git -C "$work" status --porcelain --untracked-files=all -- docs/task-history docs/tasks)" ] ||
     { arms=$((arms + 1)); echo "SELF-TEST: a seal refused on an unreadable file left its writes behind" >&2; }
   git -C "$work" rm -q docs/tasks/Z.md
-  printf -- '# R\n\n## Task Tree\n\n- ID: `R.1`\n  Status: `pending`\n  Goal: a tree the gate cannot open\n' > "$work/docs/tasks/R.md"
   commit
-  chmod 000 "$work/docs/tasks/R.md"
-  arm "a seal the gate cannot open a file after it wrote is rolled back, the failure named" 1 "Permission denied" --seal Q
-  chmod 644 "$work/docs/tasks/R.md"
+  mkdir "$work/docs/tasks/R.md"
+  arm "a seal the gate cannot open a file after it wrote is rolled back, the failure named" 1 "Is a directory" --seal Q
+  rmdir "$work/docs/tasks/R.md"
   [ -z "$(git -C "$work" status --porcelain --untracked-files=all -- docs/task-history docs/tasks)" ] ||
     { arms=$((arms + 1)); echo "SELF-TEST: a seal stopped by a file it cannot open left its writes behind" >&2; }
   rm -rf "$work"
