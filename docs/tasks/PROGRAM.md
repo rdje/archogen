@@ -648,7 +648,7 @@ mdBook that is the director's window into the project.
   `ARCHOGEN-PROGRAM-0521 (leaf PROGRAM.69)`, round 9
 
 - ID: `PROGRAM.70`
-  Status: `pending` — filed `2026-10-10` by the answer to `PROGRAM.69`'s review round 4
+  Status: `active` — started `2026-10-10`, decomposed the same day into `.1`, the bytes, and `.2`, the count
   Goal: a new design's review history always has room in `docs/reviews/`.
   Reproduce / issue: `PROGRAM.69` opened `docs/reviews/decision_task-tree-sealing-amendment-reviews.md`, and
   `bash scripts/check_readme_routes.sh` → *"docs/reviews/: 17 tracked files, over its ceiling of 16"*. The folder holds
@@ -658,6 +658,33 @@ mdBook that is the director's window into the project.
   reopened a closed history instead (`ARCHOGEN-PROGRAM-0510`).
   Direction, to be decided here with a measurement: stubs that leave the folder, their citations repointed; the count
   ceiling raised by a decision record, with the rate measured; or one index line standing for each archived history.
+  Measured `2026-10-10` at `0a7ec7f`, `git ls-files docs/reviews | wc -l` → `16` and `… | xargs cat | wc -c` →
+  `391513`, of ceilings 16 and 393 216: the bytes block a new history first, about 1.7 KB left, less than one round. Of
+  the 15 histories, 2 are archived stubs and 11 more are closed — `docs/reviews/INDEX.md`'s rows — and only 2 open. A
+  stub cannot leave: sealed task-history files cite both archived stubs (`git grep -l` → `docs/task-history/M2/M2.7.1.md`,
+  `PROGRAM/PROGRAM.36.md`, `PROGRAM/PROGRAM.50.md`), and a sealed file never changes, so the first and third directions
+  would break citations nothing may repoint. Decided: the bytes come back by archiving every closed history, which
+  `PROGRAM.55`'s archive exists for (`.1`); the count stops counting what is no history — a stub, three lines
+  `REVIEW-HISTORY` proves exact on every commit — so `README-ROUTES` counts the histories a reader may open (`.2`).
+
+- ID: `PROGRAM.70.1`
+  Status: `active` — started `2026-10-10`
+  Goal: every closed review history archived out of `docs/reviews/`, byte for byte, behind its stub.
+  Acceptance: `bash scripts/check_review_history.sh --seal <FILE>` for each history whose row reads closed; the gate
+  and `README-ROUTES` pass; the folder's bytes measured before and after.
+  Step 1, `2026-10-10` (`ARCHOGEN-PROGRAM-0522`): seven archived, each *"read back byte for byte"*; the three rows
+  reading *"closed `<date>`: …"* put in the archive's form, *"closed: `<date>`, …"* — the tool archives a row whose
+  status begins `closed: `, read at `HEAD`, so their archiving is step 2's; `decision_runtime-analysis-variant-reviews.md`
+  refused and kept live — *"08a707bbbd3b changed … while its review's row already read closed"*: `ARCHOGEN-M2-0344`,
+  already on `origin/main`, reopened its review in the commit that appended the round, and pushed history is not
+  rewritten (the archive's own limit). No link anchors into an archived history (`git grep` → none).
+
+- ID: `PROGRAM.70.2`
+  Status: `pending` — after `.1`
+  Goal: `README-ROUTES` counts the histories in `docs/reviews/`, not the stubs `REVIEW-HISTORY` proves.
+  Acceptance: an exact archive stub is left out of a directory's file count and of nothing else, and a file that only
+  looks like one is counted; an arm for each, failing first; the decision record's dated paragraph, `README_POLICY.md`'s
+  row and the book's account changed with it.
 
 - ID: `PROGRAM.71`
   Status: `pending` — filed `2026-10-10` by `PROGRAM.69`'s review round 7, its P1
@@ -755,7 +782,7 @@ roadmap item X live?".
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
 | 1 | `PROGRAM.69` | `active` | its review open: round 10 next, on the committed tool, its seal already in place |
-| 2 | `PROGRAM.70` | `pending` | room in `docs/reviews/` for a new design's review history, before the next design needs one — `M3.6.6.4`'s, `M3.7`'s |
+| 2 | `PROGRAM.70` | `active` | room in `docs/reviews/` for a new design's review history — `M3.6.6.4`'s, `M3.7`'s: `.1` archives every closed one, `.2` stops counting the stubs |
 | 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The third row waits on the director's yes. The pending leaves beside them —
@@ -1047,6 +1074,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0514 (leaf PROGRAM.69)` | **review round 7 answered**: a sealed file holding no leaf refused; every write of a seal in one guard, rolled back whatever stops it; a column-0 line below the top level armed; the texts corrected; `PROGRAM.71` filed; 69 arms |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0517 (leaf PROGRAM.69)` | **review round 8 answered**: the rollback's claim narrowed to what it catches, a kill signal a stated limit; no seal refused yet reported sealed; the separator and an empty table checked; a directory for the unreadable-file arm; `PROGRAM.72` filed; 71 arms |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0521 (leaf PROGRAM.69)` | **review round 9 answered**: the tree and the index written whole or not at all; the rollback undoing what was written alone, each step on its own, naming what it could not undo; a taken path refused before any write; arms for a full disk, an interrupt, undecodable git output, a first seal's folder and a table's blank line; `PROGRAM.73` filed; 77 arms |
+| `PROGRAM.70.1` | `ARCHOGEN-PROGRAM-0522 (leaf PROGRAM.70.1)` | **seven closed review histories archived** behind their stubs; three closed rows put in the archive's form; the runtime variant's history kept live, edited by a pushed commit while its row read closed; `docs/reviews/` 391 513 → 262 852 bytes |
 
 ## Changelog
 

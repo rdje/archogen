@@ -13,3 +13,10 @@ To prove a file, compare `sha256sum docs/review-history/<FILE>` with its row.
 | --- | --- | --- | --- | --- |
 | `decision_catalog-records-reviews.md` | 541 | 75383 | `d4fbec48d178a9c74e3e47de1df287f9ac6092a98208449bc7f85a20fa3cd811` | `2026-10-05` |
 | `rt-static-up-v1-faults-reviews.md` | 384 | 44524 | `5df5e66854f18b152bdc544d3af856f88986804112404e17ce7e603aa1ced7b9` | `2026-10-06` |
+| `decision_decisions-folder-ceiling-reviews.md` | 49 | 4560 | `590b12df8d1d64461b13121481d9c960eddb61d4afb04dc0c359887f1a4d8802` | `2026-10-10` |
+| `decision-history-reviews.md` | 50 | 5379 | `6f85f76ee26efc72dcdaeeee8b8205268f0bfb522dfd3007a348138d37d592f9` | `2026-10-10` |
+| `review-history-reviews.md` | 47 | 5040 | `6480f641ef6c9e11d1bb0c420bb221daa6b84492fe5374d8125a659f7c8f944c` | `2026-10-10` |
+| `decision_catalog-records-port-reviews.md` | 220 | 28075 | `3ba9dd5d3d70a6b56cef1ca49621899835ec8e6d42c185ade7012c74e9beee99` | `2026-10-10` |
+| `decision_catalog-records-port-statement-reviews.md` | 255 | 31550 | `ab2d8a6ede55bc579d2516ffa528c74b2d19f29badc9c7989301b655396497cf` | `2026-10-10` |
+| `decision_runtime-composite-inputs-reviews.md` | 297 | 34860 | `81443a606b74fe913f7528c103b83ec680d4d5bac14bacc264c0d075e510f0a6` | `2026-10-10` |
+| `rt-static-up-v1-faults-observation-reviews.md` | 195 | 21087 | `16a11c4162bc141d65c97de6bfbb87fee66b6c9c53fa75e04761983ca579a53f` | `2026-10-10` |
