@@ -132,6 +132,20 @@ for round 4 too, whose probes found a no-route claim false and a route missing, 
 | R7-R2 | remark | the chapter's "does not depend on it" ambiguous | "on the package holding the file" |
 | R7-R3 | remark | the self-generating route is judged by §5 too | said |
 
+**Round 8**, `2026-10-10`, of `fd5425e`, by a read-only context that had not written the record, fenced from the
+sealed evaluation set. It ran the doctrine gate, the book's gates, the crate's tests (177 passed), the focused tier and
+the inventory at `fd5425e`, and seven mutations of the gate — untracked, so not durable: five caught by the tests §6
+names, two, a form's first generator judged alone and its first reader judged alone, caught by none. Verdict: 1
+defect and 4 remarks.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R8-D1 | defect | the parent's §5 judgment of every step's generator against every reader, which §2, §3 and Why claim, held by no test | two tests, each failing under its mutation; §6 rows |
+| R8-R1 | remark | the marked pin's route held only in shape | §6's row names §4 and the pin, an input as a pin is |
+| R8-R2 | remark | the tests' doc comment named rounds 5 and 6, and refusals alone | rounds 5 to 8; what is believed, written unseen |
+| R8-R3 | remark | a Rust copy's route needs its build, offline from the commit | said, citing the inventory record's §3 |
+| R8-R4 | remark | the mutation catalogue holds neither judgment | filed: `M3.6.8` |
+
 ## Why
 
 The record closes on a round that finds no defect, as every design here does; each round, its findings and their

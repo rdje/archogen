@@ -84,7 +84,8 @@ and pin named in the form's `reason` — and named as an input, a file of the co
 input is; a copy whose header marks it generated is a chain, refused, and served by §2's route. For a generator that
 is a file — a script, an executable, a Rust source: a committed, unmarked copy named as the form's generator, beside
 the script that runs it, judged by the parent's §5 and hashed as any generator file — a Rust one copied as a program
-target of the workspace, whose build then meets the parent's rules, since a `.rs` file that is no program target's
+target of the workspace, built as every program is, offline from the commit's files alone (the inventory record,
+§3), whose build then meets the parent's rules, since a `.rs` file that is no program target's
 crate root is refused as a generator (the parent's §5). A vendored file that cannot be copied — its licence or its size
 keeping it out of the commit, or no file of the checkout, as a build product — has no route (§5), and nor has a
 generator whose copy the role rules refuse: an input among them stays refused; a generator among them, run by a committed
@@ -128,7 +129,9 @@ their module:
 | Test | Holds |
 | --- | --- |
 | `route_a_chain_made_in_one_generation` | §2: a chain refused, through a declared input and through a declared script named as a generator; one form naming every step, the intermediate never committed, written |
-| `route_a_marked_input_or_script_remade_in_the_generation` | §2, §3: a marked copy or script refused; remade from its own generator and inputs, written |
+| `route_a_marked_input_or_script_remade_in_the_generation` | §2, §3, §4: a marked copy, script or pin — an input as a pin is — refused; remade from its own generator and inputs, written |
+| `route_a_chain_judges_every_step_s_generator` | §2: every step's generator judged by the parent's §5 — a later-named step's in another role's package, refused |
+| `route_a_generator_is_judged_against_every_reader` | §2, §3: a generator judged against every program that reads the result — refused for the reader it does not serve |
 | `no_route_for_a_marked_crate_root_but_the_parent_s_belief_in_a_script` | §2: a marked crate root refused; a script remaking it written — the parent's §8 limit |
 | `route_a_program_target_step_reads_the_intermediate_at_run_time` | §2: a program-target step reading the intermediate at run time, written |
 | `route_a_program_that_generates_its_own_source` | §2: refused; a second executable of its package, no library holding the file, written |
@@ -185,3 +188,4 @@ finding answered here. The history is
 | 5 | `2026-10-10` | 3, and 3 remarks | answered by method: every route and no-route case held by a committed test (§6); a self-generating program's route narrowed to a target whose build does not compile the file; an executable a file a copy serves; a marked crate root with no route, a script remaking it the parent's §8 limit |
 | 6 | `2026-10-10` | 3, and 5 remarks | every finding answered: the self-generating program's route narrowed to the packages it depends on; §6 grown to every route and no-route case, three held by the parent's tests; a build product believed for §4's reason too |
 | 7 | `2026-10-10` | 2, and 3 remarks | every finding answered: a declared script named as a generator, refused, held by a test; "the role rules" wherever a copy is refused; the self-generating route judged by §5 as every generator is |
+| 8 | `2026-10-10` | 1, and 4 remarks | answered: the parent's §5 judgment of every step's generator against every reader held by two tests; the marked pin's row; a Rust copy built offline, as every program; the catalogue's mutations filed as `M3.6.8` |
