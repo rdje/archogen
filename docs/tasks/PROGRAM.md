@@ -654,7 +654,7 @@ mdBook that is the director's window into the project.
 
 - ID: `PROGRAM.69`
   Status: `active` — the tool, its gate and the seal committed `2026-10-10` (`ARCHOGEN-PROGRAM-0511`); its review open,
-  round 16's defects and arm gaps answered (`ARCHOGEN-PROGRAM-0548`), the interrupt alone reporting, round 17 next
+  round 17's defects and arm gap answered (`ARCHOGEN-PROGRAM-0552`), the outputs' every state held, round 18 next
   Goal: a closed subtree below an open top-level subtree is sealed too, so a tree whose top-level subtree stays open
   for long — on a blocked leaf, or a long feature — does not keep its finished leaves live.
   Reproduce / issue: `M3.6.6.2.1`'s commit was refused by `README-ROUTES`, *"docs/tasks/: 823457 bytes in total, over
@@ -756,7 +756,12 @@ mdBook that is the director's window into the project.
     arms for the mask's eight and for the start before the first write — `python3 target/p69r16/hybrid.py`, the arms
     as committed beside `755c151`'s core → *"109 pass / 2 fail (111 arms)"*, the mask's and the lost report's exit;
     then `--self-test` → *"111 pass / 0 fail (111 arms)"*; `python3 target/p69r16/mutate.py` → *"5 of 5 killed"*; both
-    runners untracked, so not durable.
+    runners untracked, so not durable. After round 17: an outcome said only to a stream that exists; one exit,
+    `quiet_exit`, whatever became of the outputs; an abort and the C library's own signals named; arms with each output
+    closed or broken and for the git that inherits the mask — `python3 target/p69r17/hybrid.py`, the arms as committed
+    beside `4105124`'s core → *"112 pass / 4 fail (116 arms)"*, the four output arms; then `--self-test` → *"116 pass /
+    0 fail (116 arms)"*; `python3 target/p69r17/mutate.py` → *"4 of 4 killed"*; both runners untracked, so not
+    durable.
   - [x] **NO REGRESSION** — `bash scripts/check_task_history.sh` at `e624001` → *"OK (170 sealed file(s) … every sealed
     leaf proven against its tree before its seal)"*: the 142 seals before this change judged by every generalised leg, the byte
     rebuild included. `bash scripts/run_self_tests.sh` → *"OK — 47 self-test(s) passed"*; the
@@ -774,7 +779,8 @@ mdBook that is the director's window into the project.
   `ARCHOGEN-PROGRAM-0531 (leaf PROGRAM.69)`, round 11; `ARCHOGEN-PROGRAM-0535 (leaf PROGRAM.69)`, round 12;
   `ARCHOGEN-PROGRAM-0539 (leaf PROGRAM.69)`, round 13; `ARCHOGEN-PROGRAM-0543 (leaf PROGRAM.69)`, round 14;
   `ARCHOGEN-PROGRAM-0546 (leaf PROGRAM.69)`, round 15;
-  `ARCHOGEN-PROGRAM-0548 (leaf PROGRAM.69)`, round 16
+  `ARCHOGEN-PROGRAM-0548 (leaf PROGRAM.69)`, round 16;
+  `ARCHOGEN-PROGRAM-0552 (leaf PROGRAM.69)`, round 17
 
 - ID: `PROGRAM.70`
   Status: `done` — started `2026-10-10`, decomposed into `.1`, the bytes, and `.2`, the count, closed the same day with `.2`
@@ -1070,7 +1076,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.69` | `active` | its review open: round 17 next, on the committed tool, its seal already in place |
+| 1 | `PROGRAM.69` | `active` | its review open: round 18 next, on the committed tool, its seal already in place |
 | 2 | `PROGRAM.76` | `active` | its review open: round 4 next, of the sealed set's custody |
 | 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
@@ -1239,6 +1245,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `2026-10-10` | `PROGRAM.76` (round 2) | the check on the real set; its self-test; the arms beside `6d61f65`'s core; ten mutations; the stale clones' indexes; every self-test; focused on the staged tree | exit 0, 0.9 s; 53 / 0; 44 pass / 9 fail, not durable; 10 killed, not durable; none holds a case; 48 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.69` (round 16) | the arms as committed beside `755c151`'s core; the self-test; five mutations of round 16's rules; the gate over 172 files; every self-test; focused on the staged tree | 109 pass / 2 fail, the working tree's and not durable; 111 / 0; each killed by an untracked runner, not durable; OK; 48 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.76` (round 3) | the check on the real set; its self-test; the arms beside `00e08cc`'s core; seven mutations; the clones older than `6d61f65`; every self-test; focused on the staged tree | exit 0; 56 / 0; 52 pass / 4 fail, not durable; 7 killed, not durable; none left; 48 passed; `passed — 3 passed, 0 failed` |
+| `2026-10-10` | `PROGRAM.69` (round 17) | the arms as committed beside `4105124`'s core; the self-test; four mutations of round 17's rules; the gate over 172 files; every self-test; focused on the staged tree | 112 pass / 4 fail, the working tree's and not durable; 116 / 0; each killed by an untracked runner, not durable; OK; 48 passed; `passed — 3 passed, 0 failed` |
 
 ## Commit Log
 
@@ -1400,6 +1407,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.76` | `ARCHOGEN-PROGRAM-0547 (leaf PROGRAM.76)` | **review round 2 answered**: no case's line ever printed, traced or echoed; the quote search staged and on disk, the manifest included; the copy search fail-closed; `6d61f65` the diff guard's boundary |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0548 (leaf PROGRAM.69)` | **review round 16 answered**: the interrupt alone says which outcome, exiting 130 with its output closed; SIGABRT held; 111 arms |
 | `PROGRAM.76` | `ARCHOGEN-PROGRAM-0550 (leaf PROGRAM.76)` | **review round 3 answered by method**: no manifest value echoed, a case's line seeded into eight places; what git cannot list refused; the trace guard held by a forced trace |
+| `PROGRAM.69` | `ARCHOGEN-PROGRAM-0552 (leaf PROGRAM.69)` | **review round 17 answered**: an outcome said only to a stream that exists; one exit whatever became of the outputs; an abort named; 116 arms |
 
 ## Changelog
 

@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — an interrupted seal says no more than reached its outputs
+
+`ARCHOGEN-PROGRAM-0552` (leaf `PROGRAM.69`), `2026-10-10`.
+
+- With its output closed from the start an interrupted seal crashed, and an outcome written there counted as said;
+  with its error output broken it exited 120. Sealing now counts an outcome said only where it could be written, and
+  an interrupt exits 130 whatever became of its outputs. The texts add an abort to what can still leave a seal's
+  writes.
+- Validation: arms with each output closed or broken, and a git that reads its own mask; four deliberate breaks, each
+  caught by an untracked runner, so not durable (116 arms).
+
 ## archogen — the sealed cases' guard prints no manifest value and fails closed on what git cannot list
 
 `ARCHOGEN-PROGRAM-0550` (leaf `PROGRAM.76`), `2026-10-10`.
@@ -31,7 +42,7 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 
 `ARCHOGEN-PROGRAM-0548` (leaf `PROGRAM.69`), `2026-10-10`.
 
-- With its output closed, an interrupted seal exited 120 rather than 130; it now exits 130. SIGABRT is held as well,
+- With its output a pipe whose reader had left, an interrupted seal exited 120 rather than 130; it now exits 130. SIGABRT is held as well,
   since an abort ends the process whatever is held, leaving SIGKILL, SIGSTOP and six fault signals unheld. The texts
   say that only an interrupt reports which outcome it found, and only where its output can be written.
 - Validation: arms for the mask's breadth both ways and for the start recorded before the first write; five
@@ -55,7 +66,7 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `ARCHOGEN-PROGRAM-0546` (leaf `PROGRAM.69`), `2026-10-10`.
 
 - An interrupt that came while sealing's own report could not be written said nothing had been written, though the
-  seal was made and kept; it now says the outcome could not be said. The texts name the signals sealing leaves
+  seal was made and kept; with the report's pipe broken it now says the outcome could not be said. The texts name the signals sealing leaves
   unheld — SIGKILL, SIGSTOP and seven fault signals — rather than claiming every signal.
 - Validation: arms for the mask in force at the first write, a lost report, a plain file at the index's temporary
   path and the error path's own breach line; six deliberate breaks, each caught by an untracked runner, so not

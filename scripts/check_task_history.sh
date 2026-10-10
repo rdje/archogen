@@ -55,7 +55,7 @@
 # file, is the tree as it stood, byte for byte, no entry already takes a sealed file's path, and no link lies on a path
 # it writes, nor any entry at a rewritten file's temporary path (R14 D3); and it rolls everything back if the gate then
 # refuses the result, or an error stops it. A stop — any signal but SIGKILL, SIGSTOP and the six fault signals — is
-# held from before the first write until the seal is done (R13 to R16). Each file it rewrites is written whole or
+# held from before the first write until the seal is done (R13 to R17); an abort ends it whatever the mask. Each file it rewrites is written whole or
 # not at all (R9-1), each write noted before it is made (R10 D1); it says "rolled back" only of a rollback that undid
 # everything (R12 D3).
 #
@@ -271,6 +271,27 @@ UNHELD = ("SIGKILL", "SIGSTOP", "SIGSEGV", "SIGBUS", "SIGFPE", "SIGILL", "SIGTRA
 HELD = signal.valid_signals() - {getattr(signal, s) for s in UNHELD if hasattr(signal, s)}
 STARTED = []  # one entry once a seal holds its stops and is about to write (review R15 D1)
 SAID = []  # one entry once a seal under way has said its outcome — kept, refused, or stopped by an error
+
+def say(text, stream):
+    """Write a seal's outcome to `stream` and record it said — only where the stream exists: a descriptor closed at the
+    start leaves it None and takes nothing, and a broken one raises before the record (reviews R15 D1, R17 D2)."""
+    if stream is not None:
+        print(text, file=stream, flush=True)
+        SAID.append(text)
+
+def quiet_exit(code):
+    """Exit with `code` whatever became of the outputs: one closed or broken is pointed at nothing first, so the exit's
+    own flush cannot make the code 120 (reviews R16 D6, R17 D1, D3)."""
+    for stream, fd in ((sys.stdout, 1), (sys.stderr, 2)):
+        try:
+            if stream is not None:
+                stream.flush()
+        except (OSError, ValueError):
+            try:
+                os.dup2(os.open(os.devnull, os.O_WRONLY), fd)
+            except OSError:
+                pass
+    sys.exit(code)
 
 def temporary(target):
     return os.path.join(os.path.dirname(target), ".%s.seal-%d" % (os.path.basename(target), os.getpid()))
@@ -630,8 +651,9 @@ def seal(tree_name):
     # the seal is done — proven and kept, refused and rolled back, or stopped by an error and rolled back — its outcome
     # said where the output can be written, so the seal is whole either way, with no moment between a write and its
     # record for a stop to fall in (reviews R13, R14 D2, R16 D2). A signal ignored on entry stays ignored. The git the
-    # proof runs inherits the mask: a stop does not end a git that hangs. ⚠️ What the mask leaves out — SIGKILL and the
-    # six fault signals whoever sends them — and the machine stopping leave the writes, which the next gate run proves
+    # proof runs inherits the mask: a stop does not end a git that hangs. ⚠️ What the mask leaves out — SIGKILL,
+    # SIGSTOP's pause aside, the six fault signals whoever sends them, an abort the process raises on itself, and on Linux
+    # the C library's two own signals — and the machine stopping leave the writes, which the next gate run proves
     # as any seal not yet committed (review R8-2); and a failure that defeats the rollback's own writes too, a full disk,
     # leaves what it names.
     previous = signal.pthread_sigmask(signal.SIG_BLOCK, HELD)
@@ -658,21 +680,18 @@ def seal(tree_name):
         except BaseException as e:
             whole = rollback()
             # Said, and flushed, before the mask lets a held stop end the process, which would leave it unsaid (R14 D1).
-            print("task-history: the seal of %s stopped on %s: %s, %s" % (path, type(e).__name__, e, "so it was rolled back"
-                  if whole else "and its rollback left what it named above"), file=sys.stderr, flush=True)
-            SAID.append(path)
+            say("task-history: the seal of %s stopped on %s: %s, %s" % (path, type(e).__name__, e, "so it was rolled back"
+                if whole else "and its rollback left what it named above"), sys.stderr)
             raise
         if fails:
             whole = rollback()
             # Said, and flushed, before the mask lets a held stop end the process (review R13).
-            print("task-history: the gate refused the seal of %s, %s:\n  "
-                  % (path, "so it was rolled back" if whole else "and its rollback left what it named above")
-                  + "\n  ".join(fails), file=sys.stderr, flush=True)
-            SAID.append(path)
+            say("task-history: the gate refused the seal of %s, %s:\n  "
+                % (path, "so it was rolled back" if whole else "and its rollback left what it named above")
+                + "\n  ".join(fails), sys.stderr)
             sys.exit(1)
-        print("task-history: %s — sealed %d subtree(s), %d leaves: %s; the reconstruction is byte for byte"
-              % (path, len(sealable), len(seal_of), " ".join(order)), flush=True)
-        SAID.append(path)
+        say("task-history: %s — sealed %d subtree(s), %d leaves: %s; the reconstruction is byte for byte"
+            % (path, len(sealable), len(seal_of), " ".join(order)), sys.stdout)
     finally:
         signal.pthread_sigmask(signal.SIG_SETMASK, previous)
 
@@ -688,17 +707,18 @@ try:
             seal(tree)
         except KeyboardInterrupt:
             # A stop is held from before the first write, so it comes before any write or once the seal is done — its
-            # outcome said, or, when the saying failed (a closed output), unsaid (reviews R14 D1, R15 D1).
-            print("task-history: interrupted %s" % (
+            # outcome said, or, when the saying failed (a closed or broken output), unsaid; said itself where the error
+            # output can be written, and the exit 130 either way (reviews R14 D1, R15 D1, R17 D1, D3).
+            message = "task-history: interrupted %s" % (
                 "before the seal wrote anything" if not STARTED else
                 "once the seal was done; its outcome is said above" if SAID else
-                "once the seal was done; its outcome could not be said — the next gate run proves what is there"),
-                file=sys.stderr)
-            try:
-                sys.stdout.flush()
-            except OSError:  # a closed output: the exit's own flush would turn 130 into 120 (review R16 D6)
-                os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
-            sys.exit(128 + signal.SIGINT)
+                "once the seal was done; its outcome could not be said — the next gate run proves what is there")
+            if sys.stderr is not None:
+                try:
+                    print(message, file=sys.stderr, flush=True)
+                except OSError:
+                    pass
+            quiet_exit(128 + signal.SIGINT)
         fails.clear()
     checked, nstubs = gate()
 except (Unreadable, OSError) as e:
@@ -1540,6 +1560,53 @@ HOOK
     printf '%s\n' "$out" | tail -3 | sed 's/^/    /' >&2
   fi
   restore
+  # The outputs closed or broken: the interrupt still exits 130, says what it can, and never claims an outcome said that
+  # went nowhere (reviews R17 D1, D2, D3).
+  arms=$((arms + 1))
+  out="$(cd "$work" && SEAL_HOOK=tree PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1 >&-)"; rc=$?
+  if [ "$rc" -eq 130 ] && printf '%s' "$out" | grep -qF "once the seal was done; its outcome could not be said" &&
+     ! printf '%s' "$out" | grep -q 'Traceback' && proven; then
+    ok=$((ok + 1)); echo "  ✅ an interrupt with the output closed exits 130 and says its outcome went unsaid"
+  else
+    echo "SELF-TEST: an interrupt with the output closed — rc $rc:" >&2; printf '%s\n' "$out" | tail -3 | sed 's/^/    /' >&2
+  fi
+  restore
+  arms=$((arms + 1))
+  out="$(cd "$work" && SEAL_HOOK=tree PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&-)"; rc=$?
+  if [ "$rc" -eq 130 ] && printf '%s' "$out" | grep -qE '^task-history: [^ ]+ — sealed ' && proven; then
+    ok=$((ok + 1)); echo "  ✅ an interrupt with the error output closed exits 130, the seal kept"
+  else
+    echo "SELF-TEST: an interrupt with the error output closed — rc $rc" >&2
+  fi
+  restore
+  arms=$((arms + 1))
+  (cd "$work" && SEAL_HOOK=tree PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1 | true; echo "${PIPESTATUS[0]}" > "$SCRATCH/rc")
+  if [ "$(cat "$SCRATCH/rc")" = 130 ] && proven; then
+    ok=$((ok + 1)); echo "  ✅ an interrupt with both outputs a pipe nobody reads exits 130, the seal kept"
+  else
+    echo "SELF-TEST: an interrupt with both outputs broken — rc $(cat "$SCRATCH/rc")" >&2
+  fi
+  rm -f "$SCRATCH/rc"; restore
+  arms=$((arms + 1))
+  out="$(cd "$work" && SEAL_HOOK=early PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1 >&-)"; rc=$?
+  if [ "$rc" -eq 130 ] && printf '%s' "$out" | grep -qF "before the seal wrote anything" && ! printf '%s' "$out" | grep -q 'Traceback' && clean; then
+    ok=$((ok + 1)); echo "  ✅ an interrupt before any write, the output closed, exits 130"
+  else
+    echo "SELF-TEST: an interrupt before any write with the output closed — rc $rc" >&2
+  fi
+  restore; rm -rf "$work/docs/task-history/Q"
+  # The git the proof runs inherits the mask (review R17 AG1): a git that reads its own mask finds the interrupt held.
+  fake="$SCRATCH/fakegit"; rm -rf "$fake"; mkdir -p "$fake"
+  printf '#!/usr/bin/env python3\nimport os, signal, sys\nwith open(os.environ["SEAL_GITMASK"], "a") as out:\n    out.write("held\\n" if signal.SIGINT in signal.pthread_sigmask(signal.SIG_BLOCK, []) else "open\\n")\nos.execv(%s, ["git"] + sys.argv[1:])\n' "\"$(command -v git)\"" > "$fake/git"
+  chmod +x "$fake/git"; : > "$SCRATCH/gitmask"
+  arms=$((arms + 1))
+  out="$(cd "$work" && SEAL_GITMASK="$SCRATCH/gitmask" PATH="$fake:$PATH" bash "$SELF" --seal Q 2>&1)"; rc=$?
+  if [ "$rc" -eq 0 ] && grep -qx held "$SCRATCH/gitmask" && proven; then
+    ok=$((ok + 1)); echo "  ✅ the git the proof runs inherits the mask"
+  else
+    echo "SELF-TEST: the git the proof runs — rc $rc, $(sort "$SCRATCH/gitmask" | uniq -c | tr '\n' ' ')" >&2
+  fi
+  rm -rf "$fake" "$SCRATCH/gitmask"; restore
   # A hang-up ignored on entry, as under nohup, stays ignored: the seal runs to its end and the run passes (review R12).
   arms=$((arms + 1))
   out="$(cd "$work" && trap '' HUP && SEAL_HOOK=hup PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?

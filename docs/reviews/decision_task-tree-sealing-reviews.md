@@ -361,6 +361,27 @@ Verdict: 6 defects of this change and 2 arm gaps.
 | R16-R4 | remark | the lost report's arm races only toward a false failure | kept |
 | R16-R5 | remark | a changelog line of about 165 columns | rewrapped |
 
+**Round 17**, `2026-10-10`, a fifteenth confirmation, in a clone of `4105124`, by a read-only context new to the
+change and fenced from the sealed evaluation set. It reproduced the gate, every self-test, the census, round 16's
+figures and the seal; measured the signals on macOS (a fault raised on itself while blocked hangs, an abort ends the
+process, a child inherits the mask); fuzzed 200 trees, 540 units, 192 late leaves and 99 partial hand seals, every one
+as its oracle predicts; and ran nine mutations of round 16's rules, all killed — its runners untracked, so not
+durable. Verdict: 5 defects of this change and 1 arm gap.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R17-D1 | defect | with the output closed at the start Python's `sys.stdout` is None, and round 16's flush crashed, exit 1 | one exit, `quiet_exit`, flushing what exists and pointing a broken output at nothing; arms with the output closed, before any write and after the seal |
+| R17-D2 | defect | an outcome printed to a closed output went nowhere and was recorded said | `say` records an outcome said only where its stream exists; the closed-output arm requires "could not be said" |
+| R17-D3 | defect | with the error output broken the interrupt's own line failed and the exit was 120 | the line said where it can be written, the exit 130 whatever became of the outputs; arms with the error output closed and with both outputs a pipe nobody reads |
+| R17-D4 | defect | an abort the process raises on itself leaves the writes, and the texts left it out once SIGABRT was held | named, in the record, the script and the book |
+| R17-D5 | defect | the reviews index's round count read 15 | 17 |
+| R17-AG1 | arm gap | "a git the proof runs inherits the mask" held by no arm | a git that reads its own mask, run as the proof's git, finds the interrupt held |
+| R17-R1 | remark | an interrupt and a terminate both held end in the terminate's code, no interrupt line | the record says "an interrupt held alone" |
+| R17-R2 | remark | pre-existing: an interrupt in the gate's own run after the seal ends in a traceback | not a held stop; `PROGRAM.73`'s kind |
+| R17-R3 | remark | on Linux the C library's two own signals cannot be masked | said in the record and the script |
+| R17-R4 | remark | the script's comment left SIGSTOP out of what the mask leaves | named |
+| R17-R5 | remark | `M3` holds one closed subtree below an open one, not yet sealed | `M3`'s to seal, not this change's |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.

@@ -64,11 +64,13 @@ any entry at a rewritten file's temporary path refused before the first write* �
 SIGKILL, SIGSTOP and the six fault signals (SIGSEGV, SIGBUS, SIGFPE, SIGILL, SIGTRAP, SIGSYS), whoever sends them —
 is held by the signal mask from before the first write through the proof and any rollback, taking effect once the
 seal is done: proven and kept, refused and rolled back, or stopped by an error, said, and rolled back, its outcome
-said where its output can be written; an interrupt then says which — before any write, after an outcome said, or after
-one that could not be said — and exits 130; so the seal is whole either way, a signal ignored on entry staying ignored,
-and a git the proof runs, which inherits the mask, not ended by a stop; and only a rollback that undid everything is
-said to have rolled the seal back (reviews R11 D1, R12 D3, R13: a stop recorded and answered later left moments
-between a write and its record, which holding closes; R14 D1, D2; R15 D1, D2; R16 D1, D5, D6).*
+said where its output can be written; an interrupt held alone then says which — before any write, after an outcome
+said, or after one that could not be said — where its error output can be written, and exits 130 whatever became of
+its outputs; so the seal is whole either way, a signal ignored on entry staying ignored, and a git the proof runs,
+which inherits the mask, not ended by a stop; an abort the process raises on itself ends it whatever the mask, and on
+Linux the C library's two own signals cannot be masked; and only a rollback that undid everything is said to have
+rolled the seal back (reviews R11 D1, R12 D3, R13: a stop recorded and answered later left moments between a write and
+its record, which holding closes; R14 D1, D2; R15 D1, D2; R16 D1, D5, D6; R17 D1 to D4).*
 `--census <COMMIT>` measures, at a commit, the bytes of `done` leaves under open top-level subtrees and of those a seal
 would take (`PROGRAM.69`).
 
@@ -150,7 +152,7 @@ would take (`PROGRAM.69`).
   - after a subtree closes, run `bash scripts/check_task_history.sh --seal <TREE>` and commit its result;
   - the sealing commit may also close the leaf that ran it, as the first one did. Every sealed leaf is proven
     against its tree as it stood just before that commit (leg 5), so other edits in the same commit do not weaken
-    the proof. *Amended `2026-10-10`:* any exception that stops a seal rolls it back first; a signal that kills the process, SIGTERM among them, leaves its writes, which the next gate run proves as any uncommitted seal (review R8-2) — *amended by R13 to R16: every signal but SIGKILL, SIGSTOP and the six fault signals is held until the seal is done, so what leaves the writes is SIGKILL, a fault signal whoever sends it, or the machine stopping* —; a failure that defeats the rollback's own writes too, a full disk, leaves what the rollback names (R9-1). The seal reads the working tree and leg 5 the tree as committed, so an
+    the proof. *Amended `2026-10-10`:* any exception that stops a seal rolls it back first; a signal that kills the process, SIGTERM among them, leaves its writes, which the next gate run proves as any uncommitted seal (review R8-2) — *amended by R13 to R17: every signal but SIGKILL, SIGSTOP and the six fault signals is held until the seal is done, so what leaves the writes is SIGKILL, a fault signal whoever sends it, an abort the process raises on itself, or the machine stopping* —; a failure that defeats the rollback's own writes too, a full disk, leaves what the rollback names (R9-1). The seal reads the working tree and leg 5 the tree as committed, so an
     uncommitted edit that changes which subtrees are closed — a new open leaf under a closed one — makes the seal
     refuse itself and roll back; commit such an edit first;
   - a leaf in a sealed file is never edited. A correction is a new entry in the tree's changelog.
@@ -193,3 +195,4 @@ another tree is sealed. The amendment of `2026-10-10` and its seal were reviewed
 | 14 | 11 | 4, and 2 arm gaps (the interrupt's message said whatever happened; SIGQUIT and the other maskable signals not held; a link at the temporary path found after the first write; R13's change credited to R12) | the gate, every self-test, the census and the seal reproduced, 300 fuzzed trees and 1 662 hand seals matching its oracle, 445 late live leaves refused (runner untracked, not durable); answered: every signal a mask can hold held from before the first write, the outcome recorded and the message by it, an error said before it goes on, the temporary paths refused first |
 | 15 | 9 | 2, and 4 arm gaps (the stop's message when the seal's report could not be written; "every signal a mask can hold" where seven fault signals are left out whoever sends them) | the gate, every self-test, the census and the seal reproduced, 330 fuzzed trees and 1 354 hand seals matching its oracle, 235 late live leaves refused (runner untracked, not durable); answered: the message by whether the seal started and said its outcome; the nine signals left unheld named; arms for the mask at the first write, the index's temporary path, the error path's breach and its rollback's wording |
 | 16 | 13 | 6, and 2 arm gaps ("the stop saying so" of every stop where the interrupt alone does; the script's comment; two changelog entries; SIGABRT's reason; a lost report's exit 120) | the gate, every self-test, the census and the seal reproduced, the first seal's 28 files rebuilt from `72bd446` by an oracle, 160 fuzzed trees and 632 hand seals matching it (runner untracked, not durable); answered: the interrupt alone says which outcome, exiting 130 with its output closed; SIGABRT held, six fault signals left out; arms for the mask's eight and for the start before the first write |
+| 17 | 11 | 5, and 1 arm gap (a crash with the output closed at the start, `sys.stdout` None; an outcome to a closed output recorded said; the interrupt's exit with its error output broken; an abort left out of what leaves the writes; the index's round count) | the gate, every self-test, the census and the seal reproduced, 200 fuzzed trees, 540 units, 192 late leaves and 99 partial hand seals as its oracle predicts (runner untracked, not durable); answered: an outcome said only to a stream that exists, one exit for every state of the outputs, an abort and the C library's own signals named; an arm for the git that inherits the mask |
