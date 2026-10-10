@@ -468,7 +468,7 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.52.md`](../task-history/PROGRAM/PROGRAM.52.md); commit `ARCHOGEN-PROGRAM-0429`
 
 - ID: `PROGRAM.53`
-  Status: `pending`
+  Status: `done` — started and closed `2026-10-10`
   Goal: a ticked NO REGRESSION box that cites a test run is backed by a run made on the tree it is committed with —
   measured, not remembered.
   Reproduce / issue: found `2026-10-05` by `M3.6.2.1`. `M3.6.2`'s box read `make focused` → `tier focused: passed — 3
@@ -479,6 +479,31 @@ mdBook that is the director's window into the project.
   working tree's own tree id, through a temporary index) and its verdict; `TASK-ACCEPTANCE` refuses a ticked box that
   cites `make focused` when the staged tree has no passing stamp. Open: how unstaged changes beside the staged ones are
   handled, and a stamp's relation to a tier other than `focused`.
+  Decided: unstaged changes beside the staged ones make the stamped tree another than the staged one, so the commit is
+  refused until they are stashed and the tier run again — the rule this project's own notes already keep by hand; a
+  stamp is written for any tier that passes, and the gate asks for the focused tier's alone, the one boxes cite. The
+  leg joins `UNTRACKED-CODE`, whose doctrine is that no commit records a tree nobody ran; `TASK-ACCEPTANCE` is the
+  scaffold's, not this project's to change.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — the new arms beside `76d8775`'s gate, `bash scripts/check_untracked_code.sh --self-test`
+    → *"9 pass / 2 fail (11 arms)"*: a staged leaf citing a focused run with no stamp, and one with another tree's stamp,
+    both passed by the gate as it stood.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: `git grep -n 'git ls-files --others' -- scripts/check_untracked_code.sh` →
+    the gate's one leg, untracked files; `git grep -c verify-stamps 76d8775 -- xtask/src` → nothing: no run left a
+    record of the tree it ran on. WHY: every check reads the working tree, and a box's citation is a sentence.
+  - [x] **FIX** — `xtask/src/main.rs`: `working_tree_id`, through a temporary index; `stamp`, written after a tier
+    passes when the tree did not move during the run. `scripts/check_untracked_code.sh`: the second leg and four arms.
+    The doctrine's row, its registry line, the book's *A commit holds what was run*.
+  - [x] **ADDRESSED (verified)** — `bash scripts/check_untracked_code.sh --self-test` → *"11 pass / 0 fail (11 arms)"*;
+    this commit's own box below is held by the leg, its `make focused` run on the staged tree the stamp it shows.
+  - [x] **NO REGRESSION** — `cargo test -p xtask` → `165 passed; 0 failed`; `cargo clippy -p xtask --all-targets -- -D
+    warnings` → clean; `bash scripts/run_self_tests.sh` → *"OK — 48 self-test(s) passed"*; `make focused` → `passed —
+    3 passed, 0 failed`, stamped; the doctrine gate at commit.
+  - [x] **LOCKSTEP** — `DOCTRINE_ENFORCEMENT.md`'s row and the registry's line; the book's annex; this leaf and both
+    logs; `docs/TASK_TREE.md`; `CHANGELOG.md`.
+  Verification: `2026-10-10` — the Verification Log's row
+  Commit: `ARCHOGEN-PROGRAM-0534 (leaf PROGRAM.53)`
 
 - ID: `PROGRAM.54`
   Status: `done` — started and closed `2026-10-10`: the project's second sample; the scaffold's census itself is
@@ -920,7 +945,7 @@ roadmap item X live?".
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The second row waits on the director's yes. The pending leaves beside them —
-`PROGRAM.53`, `.71`, `.72`, `.73` and `.75` — are filed and owned. Every closed
+`PROGRAM.71`, `.72`, `.73` and `.75` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and its full record is sealed under `docs/task-history/PROGRAM/`.
 
 ## Decisions
@@ -1073,6 +1098,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `2026-10-10` | `PROGRAM.67` | the module's tests; two catalogued mutations; a temporary hanging entry under a 30 s limit; the crate's tests, clippy, fmt; focused | 8 passed; each killed; reported as a hang in 30.1 s, the file restored, untracked and not durable; 165 passed, clean, clean; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.69` (round 11) | the new arms beside `b87adbc`'s core; the self-test; six mutations of round 11's rules; the gate over 172 files; every self-test; the doctrines | 82 pass / 9 fail, the working tree's and not durable; 90 / 0; each killed by an untracked runner, not durable; OK; 47 passed; all green |
 | `2026-10-10` | `PROGRAM.54` | the scaffold's census with a helper alive and gone; the wrapper's self-test; a copy without the second sample; every self-test; focused | exit 1 then not named; 2 / 0; 1 / 1, untracked; 48 passed; `passed — 3 passed, 0 failed` |
+| `2026-10-10` | `PROGRAM.53` | the gate's arms on the old gate and the new; the crate's tests, clippy; every self-test; focused on the staged tree | 9 / 2, then 11 / 0; 165 passed, clean; 48 passed; `passed — 3 passed, 0 failed`, stamped |
 
 ## Commit Log
 
@@ -1223,6 +1249,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.67` | `ARCHOGEN-PROGRAM-0530 (leaf PROGRAM.67)` | **a mutation that makes a test hang is reported, not waited on**: each entry's tests under a limit in a process group of their own, killed whole past it |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0531 (leaf PROGRAM.69)` | **review round 11 answered**: a stop — SIGINT, SIGTERM, SIGHUP — recorded and answered by a rollback that runs to its end, only what no handler sees leaving writes; a linked history folder refused; arms for a linked index and another writer's file; 90 arms |
 | `PROGRAM.54` | `ARCHOGEN-PROGRAM-0533 (leaf PROGRAM.54)` | **the handoff census sampled twice**: a process counts only when a second sample still holds it; `PROGRAM.75` filed to propose it upstream |
+| `PROGRAM.53` | `ARCHOGEN-PROGRAM-0534 (leaf PROGRAM.53)` | **a cited focused run backs the tree committed**: the tier stamps the tree it passed on; `UNTRACKED-CODE` refuses a staged leaf citing it without that stamp |
 
 ## Changelog
 
@@ -1253,3 +1280,4 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 - `2026-10-10`: `PROGRAM.60` done — the third reader's record held to every description by the tests.
 - `2026-10-10`: `PROGRAM.67` done — the mutation harness bounds each entry's tests and kills a hang's whole process group.
 - `2026-10-10`: `PROGRAM.54` done — the handoff census sampled twice; `PROGRAM.75` filed, the proposal to the scaffold's owner.
+- `2026-10-10`: `PROGRAM.53` done — a cited focused run backs the tree committed, by a stamp the gate reads.

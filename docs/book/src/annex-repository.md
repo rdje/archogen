@@ -69,7 +69,10 @@ Every check before a commit reads the working tree, and a commit records the ind
 in the first and not the second, so a commit can record a tree nobody ran: one did, a module declared and its file
 not committed, so the committed tree did not build. `UNTRACKED-CODE` refuses a commit while a file in a code path —
 what `.doctrine/code_paths.txt` says is code — is untracked; an ignored file, or a note outside every code path,
-passes.
+passes. A leaf's evidence can be stale the same way: a box that cites a passing `make focused` run, made before the
+last file changed. So the focused tier, when it passes on a tree that did not move during the run, writes a stamp
+naming that tree, and the same check refuses a staged leaf that cites the run unless the staged tree has its stamp
+(`PROGRAM.53`).
 
 ```console
 $ bash scripts/check_untracked_code.sh              # the gate

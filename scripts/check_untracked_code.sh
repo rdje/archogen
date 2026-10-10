@@ -15,6 +15,13 @@
 # draft, is not this gate's. A repository with no `.doctrine/code_paths.txt` cannot tell code from anything else,
 # which is a breach, not a pass. In CI a fresh checkout holds no untracked file, so the gate passes there.
 #
+# THE SECOND LEG (leaf `PROGRAM.53`): a staged task-tree line that cites `make focused` — a ticked box's evidence —
+# comes with that tier's passing stamp of the staged tree, `target/verify-stamps/focused/<tree id>`, which `cargo xtask
+# verify --tier focused` writes when it passes on a tree that did not move during the run. Found by `M3.6.2.1`: a box
+# read *"tier focused: passed"* from a run made before the file that broke a test was written. So a commit whose leaf
+# cites the focused tier records the tree that tier passed on, or is refused; one beside unstaged work must stash it
+# and run again. A line that cites no run needs no stamp, and in CI nothing is staged.
+#
 # CONTRACT: exit code is the verdict; explains on stderr; read-only. `--self-test` runs the RED arms in scratch
 # repositories under `target/doctrine_scratch/`.
 set -uo pipefail
@@ -38,6 +45,13 @@ run() {
       note "\`$path\` is in a code path and untracked — stage it with the commit (\`git add\`), or delete it, or ignore it in .gitignore"
     fi
   done < <(git ls-files --others --exclude-standard -z)
+  # Leg 2: a cited focused run stamped the staged tree (PROGRAM.53).
+  if git diff --cached -U0 -- docs/tasks | grep -qE '^\+.*`make focused` →'; then
+    local staged
+    staged="$(git write-tree 2>/dev/null)" || { note "the staged tree could not be written to judge its stamp"; return; }
+    [ -f "target/verify-stamps/focused/$staged" ] ||
+      note "a staged leaf cites \`make focused\`, and no passing run of the focused tier stamped it: the staged tree is $staged — run \`make focused\` on exactly the tree to be committed, stashing what is not staged"
+  fi
 }
 
 self_test() {
@@ -75,6 +89,17 @@ self_test() {
   arm "an ignored file is not untracked" 0 ""
   fresh; git -C "$work" rm -q --cached .doctrine/code_paths.txt; rm "$work/.doctrine/code_paths.txt"
   arm "no statement of what is code is a breach, not a pass" 1 "no .doctrine/code_paths.txt"
+  # Leg 2: a staged task-tree line citing `make focused` comes with the focused tier's stamp of the staged tree.
+  cite() { mkdir -p "$work/docs/tasks"; printf -- '- ID: `T.1`\n  - [x] **NO REGRESSION** — `make focused` → `passed`\n' > "$work/docs/tasks/T.md"; git -C "$work" add -A; }
+  stamp() { mkdir -p "$work/target/verify-stamps/focused"; printf 'passed\n' > "$work/target/verify-stamps/focused/$1"; }
+  fresh; cite
+  arm "a staged leaf citing a focused run, with no stamp of the staged tree, is refused" 1 "no passing run of the focused tier stamped it"
+  fresh; cite; stamp "$(git -C "$work" write-tree)"
+  arm "a stamp of the staged tree passes" 0 ""
+  fresh; cite; stamp "$(git -C "$work" write-tree)"; printf 'fn main() { let _ = 1; }\n' > "$work/src/main.rs"; git -C "$work" add -A
+  arm "a stamp of another tree than the staged one is refused" 1 "no passing run of the focused tier stamped it"
+  fresh; mkdir -p "$work/docs/tasks"; printf -- '- ID: `T.1`\n  Status: `pending`\n' > "$work/docs/tasks/T.md"; git -C "$work" add -A
+  arm "a staged leaf citing no focused run needs no stamp" 0 ""
   rm -rf "$work"
   echo "untracked-code self-test: $ok pass / $((arms - ok)) fail ($arms arms)"
   [ "$ok" -eq "$arms" ]
@@ -86,8 +111,8 @@ fi
 
 run
 if [ "$fail" -ne 0 ]; then
-  echo "UNTRACKED-CODE: $fail breach(es) — no commit is made while a file in a code path is untracked" >&2
+  echo "UNTRACKED-CODE: $fail breach(es) — no commit records a tree nobody ran" >&2
   exit 1
 fi
-echo "untracked-code: OK (no untracked file in a code path)"
+echo "untracked-code: OK (no untracked file in a code path; every cited focused run stamped the staged tree)"
 exit 0

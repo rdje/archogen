@@ -47,7 +47,7 @@ PROJECT_DOCTRINES=(
   "COMMIT-LOG-ROWS|every work-unit commit — HEAD's history and the pending one — has a row in a task tree's Commit Log, beyond a measured backlog that may only shrink|scripts/check_commit_log_rows.sh"
   "RUST-FORMAT|every Rust source a commit stages is in canonical format — its staged bytes through rustfmt, byte for byte; with nothing staged, every tracked file|scripts/check_rust_format.sh"
   "HANDOFF-LEDGER|every hand-off a design record makes is quoted word for word by the leaf it names — one sentence in a machine-read ledger, checked in both places|scripts/check_handoff_ledger.sh"
-  "UNTRACKED-CODE|no commit is made while a file in a code path is untracked — a commit made beside one records a tree nobody ran|scripts/check_untracked_code.sh"
+  "UNTRACKED-CODE|no commit records a tree nobody ran — no file in a code path untracked beside it, and a cited focused run stamped the staged tree|scripts/check_untracked_code.sh"
 )
 
 for entry in "${PROJECT_DOCTRINES[@]}"; do

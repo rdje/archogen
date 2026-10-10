@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a cited test run backs the very tree committed
+
+`ARCHOGEN-PROGRAM-0534` (leaf `PROGRAM.53`), `2026-10-10`.
+
+- A leaf's evidence that the focused tests passed could come from a run made before the last file changed. The
+  focused tier now records the exact tree it passed on, and a commit whose leaf cites that run is refused unless the
+  tree it commits is that tree.
+- Validation: the gate's four new arms, two failing on the old gate; the crate's tests; every self-test; the focused
+  tier on the staged tree, stamped.
+
 ## archogen — the handoff check no longer depends on the instant
 
 `ARCHOGEN-PROGRAM-0533` (leaf `PROGRAM.54`), `2026-10-10`.

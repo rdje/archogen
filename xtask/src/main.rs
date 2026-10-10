@@ -761,6 +761,55 @@ fn print_tail(output: &std::process::Output) {
     }
 }
 
+/// The working tree's own tree id — every file `git add -A` would stage, through a temporary index — or `None` when
+/// git cannot say. A tier's stamp names it, so a commit can show it records the tree a tier passed on (`PROGRAM.53`).
+fn working_tree_id(root: &Path) -> Option<String> {
+    let dir = root.join("target/verify-stamps");
+    std::fs::create_dir_all(&dir).ok()?;
+    let index = dir.join(format!("index.{}", std::process::id()));
+    let real = Command::new("git")
+        .args(["rev-parse", "--git-path", "index"])
+        .current_dir(root)
+        .output()
+        .ok()?;
+    let real = root.join(String::from_utf8_lossy(&real.stdout).trim());
+    let _ = std::fs::copy(&real, &index); // a start, so `git add -A` hashes only what changed
+    let git = |args: &[&str]| {
+        Command::new("git")
+            .args(args)
+            .env("GIT_INDEX_FILE", &index)
+            .current_dir(root)
+            .output()
+            .ok()
+            .filter(|o| o.status.success())
+    };
+    let tree = git(&["add", "-A"])
+        .and_then(|_| git(&["write-tree"]))
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_owned());
+    let _ = std::fs::remove_file(&index);
+    tree.filter(|t| !t.is_empty())
+}
+
+/// After a tier passes, its stamp: `target/verify-stamps/<tier>/<tree id>`, written only when the tree the run began
+/// on is the tree it ended on — a tree that moved during the run is no tree the tier passed on (`PROGRAM.53`).
+fn stamp(root: &Path, tier: &str, before: Option<&str>) {
+    let after = working_tree_id(root);
+    match (before, after.as_deref()) {
+        (Some(b), Some(a)) if a == b => {
+            let dir = root.join("target/verify-stamps").join(tier);
+            if std::fs::create_dir_all(&dir).is_ok()
+                && std::fs::write(dir.join(b), format!("tier {tier}: passed on tree {b}\n")).is_ok()
+            {
+                println!("  stamp: target/verify-stamps/{tier}/{b} — the tree this tier passed on");
+            }
+        }
+        (Some(_), Some(_)) => {
+            println!("  ⚠  the working tree moved during the run, so no stamp: run the tier again on a still tree");
+        }
+        _ => println!("  ⚠  git could not name the working tree, so no stamp"),
+    }
+}
+
 fn verify(name: &str, provisioned: bool) -> i32 {
     let Some(tier) = tier(name) else {
         eprintln!("xtask: unknown tier `{name}`");
@@ -772,6 +821,7 @@ fn verify(name: &str, provisioned: bool) -> i32 {
     if provisioned {
         println!("  (provisioned: a missing tool is a failure, not an absence)");
     }
+    let before = working_tree_id(&root);
     let outcomes: Vec<Outcome> = tier
         .steps
         .iter()
@@ -790,6 +840,9 @@ fn verify(name: &str, provisioned: bool) -> i32 {
         count(Outcome::NotBuilt),
         count(Outcome::Quarantined)
     );
+    if verdict == Verdict::Passed {
+        stamp(&root, tier.name, before.as_deref());
+    }
     if verdict == Verdict::Incomplete {
         println!(
             "  ⚠  incomplete is NOT a pass. §14.3: \"a required tool skipped or unavailable is \
