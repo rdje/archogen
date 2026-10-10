@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the leaf for the parent's tests derives its axes instead of listing them
+
+`ARCHOGEN-M3-0578` (leaf `M3.6.6.4`), `2026-10-10`.
+
+- Three rounds in a row found the list of axes in the leaf filed for the parent's own tests leaving one out. Its goal
+  now derives them: a census of every loop in the code that a refusal or a judgment sits in gives each rule its
+  axes. The note on the leaf's log names its one exception — its first changelog entry, sealed in a segment after two
+  early rounds edited it.
+- Validation: the sealed entry against its commit; sixteen route tests; the crate's 183 tests; the book's gates; the
+  focused tier on the staged tree.
+
 ## archogen — a review round's count is checked against its findings, and a seal's rollback names what it leaves
 
 `ARCHOGEN-PROGRAM-0576` (leaf `PROGRAM.69`), `2026-10-10`.

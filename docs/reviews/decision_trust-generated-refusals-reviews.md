@@ -272,6 +272,26 @@ history and §6 carry what holds now.
 | R16-R2 | remark | `M3.6.9`'s list said rounds 9 to 15 and named no round-15 axis | the clause (round 15) and how a reader reads (round 16) named |
 | R16-R3 | remark | no test refuses another role's generator for a reader handed the file as data | how a reader reads, in `M3.6.9`'s axes |
 
+**Round 17**, `2026-10-10`, of `c3c55dc`, by a read-only context that had not written the record, fenced from the
+sealed evaluation set. Its clone refused by the harness, it read paths outside the sealed directory from the object
+store and ran a history-free copy, so the doctrine gate's six history legs went unchecked. It found every row and
+round block round 16 restored identical to its commit's text, every rule §6 calls the parent's decided there and
+tested outside `route_tests`, and the crate's tests passing (183), and mutated the gate — untracked, so not durable.
+Verdict: 3 defects and 5 remarks. Round 16's "every changelog entry" missed the first, sealed in a segment with rounds
+1 and 2's edits; and `M3.6.9`'s list of axes, rewritten by rounds 15 and 16, left out two more. The answer changes
+method for `M3.6.9`: its goal derives the axes from a census of the code's loops instead of listing them.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R17-D1 | defect | "every changelog entry … back to its own commit's text": the first, sealed in segment `0020`, holds rounds 1 and 2's edits | the note names it, standing as sealed; the leaf's round-16 sentence says so |
+| R17-D2 | defect | `M3.6.9` dropped form order for a lone `.rs` and the role judgment, and entry position for a file in both clauses | the axes derived by a census of every loop a refusal or judgment sits in, no list kept |
+| R17-D3 | defect | `M3.6.9` said the clause axis passed every test; `route_tests` held it | its list says some were held by `route_tests` alone |
+| R17-R1 | remark | the note named rounds 13, 15 and 16; round 14 also found one | "rounds 13 to 16" |
+| R17-R2 | remark | rows 13 to 15 state ledger narrowings round 16 undid | row 17 says so; this history carries the narrowing |
+| R17-R3 | remark | Why's "as its instrument's tests hold them" unqualified | "at the instances they build", as §6 says |
+| R17-R4 | remark | how a reader reads also decides which forms are live, an axis of the chain, the blob rule and a lone `.rs` too | in the census `M3.6.9` derives |
+| R17-R5 | remark | round 16's Verification Log row cited its runners without saying they are untracked | round 17's row says so; the note covers the leaf's Verification Log rows as written |
+
 ## Why
 
 The record closes on a round that finds no defect, as every design here does; each round, its findings and their

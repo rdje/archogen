@@ -163,9 +163,9 @@ reader:
   of the parent's review rounds showed that deciding these shapes without one only opens cases. A reason that holds
   without an instance closes the question, and the routes, where they exist, keep the needs open to one step.
 - **The routes keep the parent's guarantees.** Each route ends in files of the commit named on a form, so the parent's
-  §4 and §5 apply to them whole, as its record decides them and its instrument's tests hold them: its generator files
-  judged against their readers, its inputs hashed and shared. What has no route is refused, or, for a tool and a
-  vendored generator a script runs, believed and named in every report.
+  §4 and §5 apply to them whole, as its record decides them and its instrument's tests hold them at the instances they
+  build: its generator files judged against their readers, its inputs hashed and shared. What has no route is refused,
+  or, for a tool and a vendored generator a script runs, believed and named in every report.
 
 ## How to apply
 
@@ -208,3 +208,4 @@ finding answered here. The history is
 | 14 | `2026-10-10` | 5, and 3 remarks | answered by method: the gate's rules the routes rest on said to be the parent's, held by its tests, their breadth across forms, entries and readers filed as `M3.6.9`; §6's opening exact; the round-11 changelog entry and the round-12 leaf text narrowed to what they held |
 | 15 | `2026-10-10` | 1, and 4 remarks | answered: every Commit Log row a later round narrowed annotated with its narrowing; `M3.6.9` and §6's opening name each clause, a file named in both clauses and a lone `.rs`; two phrasings |
 | 16 | `2026-10-10` | 5, and 3 remarks | answered by method: the leaf's ledger entries each as its own commit wrote it, one note saying so, §6 the claim that holds now; round 14's paragraph restored; `M3.6.9`'s axes per rule, with how a reader reads |
+| 17 | `2026-10-10` | 3, and 5 remarks | answered by method: `M3.6.9`'s axes derived by a census of the code's loops, no longer listed; the note above the leaf's Commit Log names its sealed first entry; the ledger narrowings rows 13 to 15 state were undone by round 16, the history carrying them; Why qualified as §6 is |
