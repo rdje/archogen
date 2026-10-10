@@ -159,6 +159,17 @@ judgments held in one direction only. Verdict: 2 defects and 3 remarks.
 | R9-R2 | remark | no changelog entry for rounds 7 and 8 | one entry for rounds 7 to 9 |
 | R9-R3 | remark | the marked pin held by equivalence | as written |
 
+**Round 10**, `2026-10-10`, of `d05f333`, by a read-only context that had not written the record, fenced from the
+sealed evaluation set. It ran the doctrine gate and the crate's tests (180 passed), rebuilt round 9's seven mutations,
+each failing a test, and mutated the gate further — untracked, so not durable. Verdict: 2 defects and 2 remarks.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R10-D1 | defect | the chain, the blob rule and the both-clauses rule held only where the refused entry stood alone or at one position | one sweep, `route_tests_refusals_hold_at_every_position_of_a_form_s_entries`: eight refused entries, each alone, first, in the middle and last; the class closed rather than case by case |
+| R10-D2 | defect | "directly or through another" held only directly | a package depending on the table's through another, refused, in the dependency test |
+| R10-R1 | remark | stale test comments | rounds 5 to 10; the judgment test's lead comment |
+| R10-R2 | remark | an input "under" a gitlink held only for a generator | in the sweep: an input under a gitlink at every position |
+
 ## Why
 
 The record closes on a round that finds no defect, as every design here does; each round, its findings and their

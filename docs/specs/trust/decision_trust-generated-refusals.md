@@ -133,12 +133,13 @@ their module:
 | `route_a_chain_judges_every_step_s_generator` | §2: every step's generator judged by the parent's §5 — another role's step named last and named first, refused both ways |
 | `route_a_generator_is_judged_against_every_reader` | §2, §3: a script judged against every program that reads the result — refused for `chk` from `gen`'s package, for `gen` from `chk`'s |
 | `route_a_program_target_generator_is_judged_against_every_reader` | §2, §3: a program-target generator judged against every reader — refused for `chk` from `gen`'s second role package, for `gen` from `chk`'s |
+| `route_tests_refusals_hold_at_every_position_of_a_form_s_entries` | §2, §3: a declared, a marked, a gitlinked generator or input and a file named in both clauses, each refused alone, first, in the middle and last among plain entries |
 | `no_route_for_a_marked_crate_root_but_the_parent_s_belief_in_a_script` | §2: a marked crate root refused; a script remaking it written — the parent's §8 limit |
 | `route_a_program_target_step_reads_the_intermediate_at_run_time` | §2: a program-target step reading the intermediate at run time, written |
 | `route_a_program_that_generates_its_own_source` | §2: refused; a second executable of its package, no library holding the file, written |
 | `route_a_table_its_package_s_library_holds_is_made_by_another_package` | §2: the package's own executables refused; one of a package not depending on it, written |
 | `route_a_vendored_file_copied` | §3: a copied input, script and executable written; a lone `.rs` refused; a program target written |
-| `route_a_table_a_dependency_s_library_holds_is_made_by_a_package_not_depending_on_it` | §2: a dependency's library holding the file: the package's executables refused; one of a package not depending on it, written |
+| `route_a_table_a_dependency_s_library_holds_is_made_by_a_package_not_depending_on_it` | §2: a dependency's library holding the file: the package's executables refused, and a package depending on it through another; one of a package not depending on it, written |
 | `route_an_intermediate_a_program_reads_is_remade_by_the_later_step` | §2: an intermediate a program reads, committed and declared: read by the later step, refused; remade by it, written |
 | `route_a_file_one_step_runs_and_another_reads_is_named_once` | §2: named in both clauses, refused; once, as a generator, written |
 | `a_vendored_executable_a_script_runs_uncopied_is_believed` | §3, §4: written, the gitlinked tool in no provenance; named on the form, refused |
@@ -191,3 +192,4 @@ finding answered here. The history is
 | 7 | `2026-10-10` | 2, and 3 remarks | every finding answered: a declared script named as a generator, refused, held by a test; "the role rules" wherever a copy is refused; the self-generating route judged by §5 as every generator is |
 | 8 | `2026-10-10` | 1, and 4 remarks | answered: the parent's §5 judgment of every step's generator against every reader held by two tests; the marked pin's row; a Rust copy built offline, as every program; the catalogue's mutations filed as `M3.6.8` |
 | 9 | `2026-10-10` | 2, and 3 remarks | answered: each judgment held both ways — every step's generator named first and last, every reader of a script and of a program-target generator from either role; a later step's own committed input reached; `M3.6.8` widened |
+| 10 | `2026-10-10` | 2, and 2 remarks | answered: every refusal of an entry held at every position of its clause, the class closed by one sweep; a package depending on the table's through another refused; `M3.6.8` widened |
