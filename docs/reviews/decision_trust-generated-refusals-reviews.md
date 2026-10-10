@@ -220,7 +220,7 @@ written; R12-R1's answer, "step 1 and step 3's", is its correction.
 **Round 14**, `2026-10-10`, of `0797cf5`, by a read-only context that had not written the record, fenced from the
 sealed evaluation set. It ran the doctrine gate and the crate's tests (181 passed), and mutated the gate — untracked,
 so not durable: the rules held in the last live form only, and the harness unjudged against a program target. Verdict:
-5 defects and 3 remarks. Rounds 9 to 14 found, round after round, another axis or kind — entry position, reader order, the third reader,
+5 defects and 3 remarks. Rounds 9 to 14 each found one more axis — entry position, reader order, the third reader,
 form order, the harness — on which a rule the record restated from the parent was held one way; the answer changes
 method: the record says those rules are the parent's, held by its instrument's tests, and their breadth across every
 axis is a leaf of its own, `M3.6.9`, where one generated sweep can hold every axis at once.
@@ -250,6 +250,27 @@ and 4 remarks.
 | R15-R2 | remark | a file named in both clauses and a lone `.rs`, the parent's rules, named neither in §6's opening nor in `M3.6.9` | named in both |
 | R15-R3 | remark | "rounds 9 to 14 each found one more axis" overstated | "round after round, another axis or kind", in the changelog, round 14's paragraph and `M3.6.9` |
 | R15-R4 | remark | §6's opening readable as the parent's tests holding every form, position and reader; an appositive without its antecedent | "held, at the instances they build"; "(its rule, held by its instrument's tests)" |
+
+**Round 16**, `2026-10-10`, of `13520b7`, by a read-only context that had not written the record, fenced from the
+sealed evaluation set — it read nothing under the sealed directory and ran no recursive search. It ran the doctrine
+gate and the crate's tests (183 passed) and the inventory at HEAD, found every rule §6 calls the parent's in the
+parent's record with a test outside `route_tests`, and every route and no-route case built by a §6 row, and mutated
+the gate — untracked, so not durable. Verdict: 5 defects and 3 remarks. Round 15's answer to R15-D1 annotated the rows
+it named and stopped short, as the answers to rounds 13 and 14 had; and that answer rewrote a line of round 14's
+paragraph above, which this round's answer restores — its "each found one more axis" stands as written, R15-R3 its correction. The answer changes
+method: the leaf's ledger entries are each as its own commit wrote it, a note above its Commit Log says so, and this
+history and §6 carry what holds now.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R16-D1 | defect | R15-D1's answer: annotations stopping short, rows narrowed but not annotated, and "every row … annotated" false | every row back to its own commit's text, checked against each commit; one note says what the rows are; the leaf's round-15 sentence corrected |
+| R16-D2 | defect | the changelog's entries of rounds 6 and 9 kept claims later rounds narrowed | every entry of this leaf back to its own commit's text, under the same note |
+| R16-D3 | defect | round 14's paragraph here, and the changelog's round-14 entry, rewritten in place | both restored; R15-R3's correction stands in round 15's row and here |
+| R16-D4 | defect | `M3.6.9` and §6's opening put axes on rules that lack them: clauses on a lone `.rs`, live forms and clauses on a file named in both | each rule's own axes: a lone `.rs` among generators, a file in both clauses in every form, live or not; the sweep only over those cells |
+| R16-D5 | defect | `MEMORY.md`'s next action still "push to restore CI" after the push | the next action rewritten by `4b26641` and `313f6d4` |
+| R16-R1 | remark | the frontier's "`.8` and `.9`, the instrument's tests' breadth" | `.8` the mutation catalogue's, `.9` the parent's tests' |
+| R16-R2 | remark | `M3.6.9`'s list said rounds 9 to 15 and named no round-15 axis | the clause (round 15) and how a reader reads (round 16) named |
+| R16-R3 | remark | no test refuses another role's generator for a reader handed the file as data | how a reader reads, in `M3.6.9`'s axes |
 
 ## Why
 
