@@ -58,7 +58,8 @@ human is working. Follow it exactly.
   older than `6d61f65` to disk (a checkout, restore, reset, archive, clone or worktree at it, a revert of `2f6f331`),
   and never hand a sealed blob to a reader or a tool (`git show`/`blame` of a case, a diff or grep forced to text, an
   external diff driver or `difftool`, a viewer that diffs blobs itself, git on a bare clone or with `--git-dir`);
-  fence every delegated search away from it (`docs/evaluation/README.md`). A case read is recorded.
+  fence every delegated search away from it, and every web search or fetch of this repository until the published
+  `main` is past `6d61f65` (`docs/evaluation/README.md`). A case read is recorded.
 
 > One rule above all: **information that exists only in the live conversation is not yet
 > saved — route it to a layer and commit it before the turn ends.**

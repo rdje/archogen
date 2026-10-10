@@ -39,22 +39,28 @@
 #   paths; never a manifest line's text nor a case's line: a field's value is checked inside its
 #   pipeline before any variable holds it, a bad line is named by its number, a blob is hashed
 #   through a pipe, a quote is found by the name of the file that holds it, and the scratch holds
-#   no manifest line of another form; every arm that runs the check on synthetic cases requires no
+#   no manifest line of another form, beside git's warnings; `--restore` prints the count it restored;
+#   every arm that runs the check on synthetic cases requires no
 #   case's text in its output, one in nine places with tracing forced on.
 #
 # ⚠️ HONEST LIMIT, stated rather than hidden: the text stays in the published history, which is not
-# rewritten. Two kinds of act put a case in front of a reader: one that writes a commit older than
-# `6d61f65` to disk — a checkout, a restore or a reset to it, an archive of it, a clone or a
-# worktree at it, a revert of `2f6f331` — or finds it there, in another clone not yet past it; and
-# one that hands a sealed blob to a reader or a tool — `git show` or `git blame` of it, a diff or a
-# grep forced to text (`-a`), an external diff driver or `git difftool`, a viewer that diffs blobs
-# itself (an editor's or a web history view), git run on the repository without this working tree;
-# `git grep <commit>` and `git log -S` tell which file or commit holds a term. Ignored files — build
-# output under `target/`, a folder an untracked `.gitignore` ignores — are not scanned, nor anything
-# outside the repository a link points to, nor a registered submodule, another repository
-# (REPOSITORY-BOUNDARY refuses what is created at a vendored checkout's first level). A quote
-# shorter than a long line, or reworded, is not found. It sees what is staged and on disk. The check
-# cannot prove nobody read a case; a human who reads one and says nothing defeats it.
+# rewritten. Two kinds of act put a case in front of a reader: one that writes to disk a commit that
+# holds the set and is older than `6d61f65` — a checkout, a restore or a reset to it, an archive of
+# it, a clone or a worktree at it, a revert of `2f6f331` — or finds it there, in another clone not
+# yet past it; and one that hands a sealed blob to a reader or a tool — `git show` or `git blame` of
+# it, a diff or a grep forced to text (`-a`), an external diff driver or `git difftool`, a viewer
+# that diffs blobs itself (an editor's or a web history view), git run on the repository without
+# this working tree; `git grep <commit>` and `git log -S` tell which file or commit holds a term.
+# Ignored files — build output under `target/`, a folder an untracked `.gitignore` ignores — are not
+# scanned, nor anything outside the repository a link points to, nor a registered submodule, another
+# repository (REPOSITORY-BOUNDARY refuses what is created at a vendored checkout's first level). A
+# quote shorter than a long line, or reworded, is not found. It sees what is staged and on disk. The
+# check cannot prove nobody read a case; a human who reads one and says nothing defeats it. Until
+# the published default branch is past `6d61f65` — `origin/main` stood at `7ac8b8b` when this was
+# written — a clone of it, its web view, its code search and a web search that indexes it reach a
+# case too, with no act at all; a web search or fetch of this repository is fenced until then. A
+# harness transcript or an editor's history made before custody moved holds whatever was shown then;
+# what to do with them is the director's.
 #
 # UNSEALING. At the leaf named in the manifest's `unseals-at:` line, set `seal: unsealed`,
 # add `unsealed-on:` / `unsealed-by:`, then run `--restore`, which writes each case back from
@@ -172,9 +178,18 @@ self_test() {
       name) manifest "0000000000000000000000000000000000000000000000000000000000000000  $LONG" ;;
     esac
     sed '/^set +x/d' "$SELF" > "$work/../traced.sh"
-    out="$(cd "$work" && bash -x "$work/../traced.sh" 2>&1; cd "$work" && bash -x "$work/../traced.sh" --restore 2>&1)"
+    normal="$(cd "$work" && bash -x "$work/../traced.sh" 2>&1)"
+    out="$normal$(cd "$work" && bash -x "$work/../traced.sh" --restore 2>&1)"
     printf '%s' "$out" | grep -q 'ARM-CASE-TEXT' && leaked="$leaked $place"
-    printf '%s' "$out" | grep -q 'FROZEN-EVALUATION: ' || leaked="$leaked $place(ran-nothing)"
+    case "$place" in  # each place's own refusal, in the normal run alone (review R6 D2)
+      quote) want="quotes a line of a sealed case" ;;
+      seal) want="has no '# seal: sealed|unsealed' line" ;;
+      sealed-in) want="has no '# sealed-in: <commit>' line" ;;
+      exposed) want="'# exposed:' line" ;;
+      custody|comment) want="MANIFEST.txt' quotes a line of a sealed case" ;;
+      *) want="is not '<sha256>  <file>'" ;;
+    esac
+    printf '%s' "$normal" | grep -qF -- "$want" || leaked="$leaked $place(no-refusal)"
     rm -f "$work/../traced.sh"
   done
   if [ -z "$leaked" ]; then ok=$((ok + 1)); echo "  ✅ a run with tracing forced on prints no case's line (9 places)"
@@ -227,6 +242,11 @@ self_test() {
   arm "a gitlink registered by a .gitmodules on disk alone is refused — a commit records the staged one" 1 "'docs/notes/nested' is a repository staged as a gitlink"
   g add -A
   arm "a gitlink .gitmodules registers passes — another repository, named in the honest limit" 0 ""
+  # Paths printed as their files are named, in every leg (review R6 D1).
+  fresh sealed; printf 'we discussed zz-01-arm-alpha today\n' > "$work/docs/notes/café.md"; g add -A
+  arm "a non-ASCII path naming a case is printed as named" 1 "    docs/notes/café.md"
+  fresh sealed; printf 'x\n' > "$d/naïve.md"; g add -A
+  arm "a non-ASCII file tracked in the set is printed as named" 1 "'docs/evaluation/frozen/naïve.md' is tracked"
   # A registered path with a space is read whole (review R5 R2).
   fresh sealed; git -C "$work/docs/notes" init -q "my nested"; printf 'x\n' > "$work/docs/notes/my nested/x.md"
   git -C "$work/docs/notes/my nested" add -A
@@ -242,9 +262,10 @@ self_test() {
   # (review R5 D3).
   fresh sealed; manifest "$LONG"
   sed "s/trap 'rm -rf \"\$tmp\"' EXIT/trap : EXIT/" "$SELF" > "$work/../kept.sh"
-  (cd "$work" && bash "$work/../kept.sh" >/dev/null 2>&1)
+  kept_out="$(cd "$work" && bash "$work/../kept.sh" 2>&1)"
   arms=$((arms + 1))
-  if [ -n "$(find "$work/target/doctrine_scratch" -name 'frozen_evaluation.*' -type d 2>/dev/null)" ] &&
+  if ! printf '%s' "$kept_out" | grep -q 'ARM-CASE-TEXT' &&
+     [ -n "$(find "$work/target/doctrine_scratch" -name 'frozen_evaluation.*' -type d 2>/dev/null)" ] &&
      ! grep -rq 'ARM-CASE-TEXT' "$work/target/doctrine_scratch" 2>/dev/null; then
     ok=$((ok + 1)); echo "  ✅ the check's scratch holds no manifest line of another form"
   else echo "SELF-TEST: the check's scratch was not kept, or held a case's line" >&2; fi
@@ -462,9 +483,9 @@ if [ "$seal" = "sealed" ]; then
       [ "$(git check-attr --cached diff -- "$path" 2>/dev/null | sed 's/.*: diff: //')" = "unset" ] \
       || note "'$name' is not marked -diff in .gitattributes, staged and on disk — a diff or a log patch of a commit that holds the set would print its text"
   done < "$tmp/entries.txt"
-  while IFS= read -r tracked; do
+  while IFS= read -r -d '' tracked; do
     [ "$tracked" = "$MANIFEST" ] || note "'$tracked' is tracked while the set is sealed — a case's text stays in the sealing commit"
-  done < <(git ls-files -- "$DIR")
+  done < <(git ls-files -z -- "$DIR")
   if [ -s "$tmp/blobs.txt" ]; then
     # A case's whole text at any other path: in the index, by its blob id; in the working tree, untracked or
     # modified, by the blob id of what is there, each file hashed on its own and one that cannot be read named, so the
@@ -566,9 +587,9 @@ if [ "$seal" = "sealed" ] && [ -s "$tmp/listed.txt" ]; then
   # a slug as an example cannot silently switch the check off.
   while IFS= read -r slug; do
     [ -n "$slug" ] || continue
-    hits="$(git grep -l --fixed-strings -- "$slug" \
+    hits="$(git grep -z -l --fixed-strings -- "$slug" \
               -- . ":(exclude)$DIR" ":(exclude)scripts/check_frozen_evaluation.sh" \
-            2>/dev/null || true)"
+            2>/dev/null | tr '\0' '\n' || true)"  # paths as their files are named (review R6 D1)
     if [ -n "$hits" ]; then
       note "sealed case '$slug' is named outside $DIR — the set is no longer unseen"
       printf '%s\n' "$hits" | sed 's/^/    /' >&2

@@ -13,8 +13,8 @@ of them.
 
 > **Do not read a case before leaf `M6.5`.** Not because the content is secret — this
 > repository is public — but because the measurement is worthless once the engine has been
-> shaped, even unconsciously, by what those cases need. Two kinds of act are never done: writing a
-> commit older than `6d61f65` — the first that hides the set's diffs — to disk (a checkout, a
+> shaped, even unconsciously, by what those cases need. Two kinds of act are never done: writing to
+> disk a commit that holds the set and is older than `6d61f65` — the first that hides the set's diffs — (a checkout, a
 > restore or a reset to it, an archive of it, a clone or a worktree at it, a revert of `2f6f331`),
 > and handing a sealed blob to a reader or a tool (`git show` or `git blame` of a case, a diff or a
 > grep over `frozen/` forced to text with `-a`, an external diff driver or `git difftool`, a viewer
@@ -65,7 +65,7 @@ require that of every run of the check there, one in nine places with tracing fo
 
 ⚠️ **The honest limit**, stated rather than hidden: the text stays in the published history,
 which is not rewritten. Either kind of act the box above names puts a case in front of a reader,
-and so does another clone not yet past `6d61f65`. `git grep <commit>` and `git log -S` over history
+and so does another clone not yet past `6d61f65`. Until the published default branch is past `6d61f65` — `origin/main` stood at `7ac8b8b` when this was written — a clone of it, its web view, its code search and a web search that indexes it reach a case too, with no act at all; a web search or fetch of this repository is fenced until then. A harness transcript or an editor's history made before custody moved holds whatever was shown then; what to do with them is the director's. `git grep <commit>` and `git log -S` over history
 tell which file or commit holds a term, not its line. Ignored files, the build output under
 `target/`, or a folder an untracked `.gitignore` ignores, are not scanned, nor anything outside the repository a link
 points to, nor a registered submodule, another repository (`REPOSITORY-BOUNDARY` refuses what is created at a vendored
