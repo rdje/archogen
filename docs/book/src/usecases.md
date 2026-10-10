@@ -96,5 +96,9 @@ limit is stated too: the text stays in the published history, and in copies made
 branch before it moved, so a deliberate read, or a look at such a copy, still reaches it and the
 check cannot prove nobody read one. A model trained on the branch in the four days it held the set
 may know a case with no act at all, so the measurement records the models used and when their
-training ended. By the project's rule a case read early is recorded and counted apart. See
+training ended. The text reader compares case-sensitive words after removing leading prose/comment markers and
+word-edge punctuation; whitespace, adjacent string quotes and continuation backslashes do not break a match.
+Its quote patterns are complete long source lines. A partial quote across two source lines can go unfound even when
+it is longer than either line; encodings that change word boundaries and rewordings also lie outside the check.
+By the project's rule a case read early is recorded and counted apart. See
 `docs/evaluation/README.md`.

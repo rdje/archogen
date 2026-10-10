@@ -16,10 +16,10 @@
 - **Active tree:** `M3` → frontier `M3.6`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s is `PROGRAM.69`'s review, round 29 next; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** launch `M3.6.9`'s review round 2 and `PROGRAM.69`'s round 29 (prompts `target/m369/r2prompt.txt`,
-  `target/p69r17/r29prompt.txt`); answer `PROGRAM.76`'s round 13 (its leaf);
+- **Next action:** receive `PROGRAM.76`'s round 14 review; then answer `PROGRAM.69`'s round 29 and
+  `M3.6.9`'s round 2 (reports under `target/review-p69-r29/` and `target/review-m369-r2/`, pending durable answers),
   then `M3.3`. `M3.6.3.2.1`'s baseline is committed, its "unchanged" the next cadence push's run to show. `M2`'s open
-  leaves all wait on the director: `M2.7.4.5` and `M2.7.6`'s review and hosting half. This project uses no branches.
+  leaves wait on the director: `M2.7.4.5` and `M2.7.6`'s review and hosting half. This project uses no branches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4` and `M2.7.6.4` — findings §11, `main`'s protection and a reviewer;
   `TEMPLATE-REFS` — postponed. **The 17 template files archogen has not changed are never edited** (findings §10,

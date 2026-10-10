@@ -5,6 +5,22 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the sealed-set guard recognizes comment and string wraps, with an explicit quote boundary
+
+`ARCHOGEN-PROGRAM-0604` (leaf `PROGRAM.76`), `2026-10-11`.
+
+- Whole cases and complete long source lines are matched as case-sensitive words after prose markers and word-edge
+  punctuation are removed. Doc comments, Lisp comments, no-space quote markers, continued strings and adjacent
+  string literals no longer hide those patterns, on disk or in the index.
+- A partial quote across source lines can remain unfound even when longer than either line; encodings that change
+  word boundaries and rewordings are also stated limits. The draft's arbitrary word windows are not adopted: an
+  overlap alone cannot establish which document quoted which. No case text was displayed or exposure inferred.
+- The error paths have separate arms for the disk and index searches; recursion arms put a synthetic case's name
+  inside an active registered submodule. The top-level `.git` case distinction has a conditional arm, explicitly
+  skipped on a case-insensitive filesystem.
+- Validation: new arms on the previous reader, 127 passed / 10 failed; revised reader, 137 passed / 0 failed; real-tree
+  check; shell syntax; book anchors and glossary; review counts; doctrine gate. No Rust source changed.
+
 ## archogen — the sealed cases' guard: a review's findings and the answer's direction, recorded at a hand-off
 
 `ARCHOGEN-PROGRAM-0603` (leaf `PROGRAM.76`), `2026-10-11`.

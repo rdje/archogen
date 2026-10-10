@@ -27,8 +27,9 @@
 #                     registered submodules (named by the staged `.gitmodules` and held as gitlinks),
 #                     links and its own `.git`, every file read raw, whatever git says of it; no
 #                     file, the manifest included, staged or in what it walks, holds a case's whole text
-#                     or a long line of one, read as prose — line endings, indents and every leading
-#                     list, quote, heading, table or comment marker aside, white space collapsed; no unregistered repository nested outside
+#                     or a complete long source line of one, compared as case-sensitive words after prose markers
+#                     and token-edge punctuation are removed; whitespace, string quotes and continuations do not
+#                     interrupt a match (the reader below defines normalization); no unregistered repository nested outside
 #                     ignored folders, staged or not, no entry named `.git` in any case but the top
 #                     level's, nothing the check cannot read or search, no walk that cannot finish;
 #                     its path is marked `-diff` — as this working tree's diffs obey, staged and on
@@ -66,7 +67,8 @@
 # term. Ignored files — build output under `target/`, a folder an untracked `.gitignore` ignores —
 # are not scanned, nor anything outside the repository a link points to, nor a registered submodule,
 # another repository (REPOSITORY-BOUNDARY refuses what is created at a vendored checkout's first
-# level). A quote shorter than a long line, or reworded, is not found. It sees what is staged and on
+# level). A quote holding no complete long source line — shorter than one or across source lines — or reworded,
+# or encoded with different word boundaries, is not found. It sees what is staged and on
 # disk. The check cannot prove nobody read a case; a human who reads one and says nothing defeats
 # it. The published default branch has been past `6d61f65` since `a543d10`, pushed `2026-10-10`; a
 # copy made of it before then — a fork, a mirror, a search engine's cache, an archive — may still
@@ -94,7 +96,8 @@ SELF="$0"
 case "$SELF" in /*) ;; *) SELF="$PWD/$SELF" ;; esac
 ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
 # The settings that would change what git gives this check, forced for every git it runs: submodule recursion off,
-# with which `git grep` stops (review R11 D1); no template for the empty repository it makes (R10 D5); git's default
+# so a tracked-name search never enters an exempt submodule (reviews R11 D1, R13 AG4); no template for the empty
+# repository it makes (R10 D5); git's default
 # path quoting. A caller's `git -c` would win over them, so it is dropped. What is on disk or staged the check reads
 # itself, and what is ignored is what the `.gitignore` files in the tree ignore, matched as spelled (below).
 unset GIT_CONFIG_PARAMETERS
@@ -243,7 +246,6 @@ git config --get core.quotePath")" = true
   GIT_CONFIG_GLOBAL="$work/../gconfig" arm "a quote on disk with submodule recursion on is refused (custody, R11 D1)" 1 "'docs/notes/draft.md' quotes a line of a sealed case"
   fresh sealed; printf '%s\n' "$LONG" >> "$work/docs/notes/plan.md"
   GIT_CONFIG_GLOBAL="$work/../gconfig" arm "an unstaged quote in a tracked file with submodule recursion on is refused (custody, R11 D1)" 1 "'docs/notes/plan.md' quotes a line of a sealed case"
-  fresh sealed; g show "$sealed_in:docs/evaluation/frozen/zz-02-arm-beta.md" > "$work/docs/notes/copy.md"; printf '%s\n' "$LONG" >> "$work/docs/notes/plan.md"; g add -A
   fresh sealed; printf 'see zz-01-arm-alpha\n' >> "$work/docs/notes/plan.md"; g add -A
   mkdir -p "$work/../gitshim"; printf '#!/bin/sh\ncase "$*" in *--fixed-strings*) exit 2 ;; esac\nexec %s "$@"\n' "$(command -v git)" > "$work/../gitshim/git"; chmod +x "$work/../gitshim/git"
   PATH="$work/../gitshim:$PATH" arm "a search for a case's name that cannot run refuses (non-contamination, R11 D1, R12 AG1)" 1 "git grep could not search for a case's name"
@@ -280,6 +282,52 @@ git config --get core.quotePath")" = true
   arm "a file ignored only by a case-blind match is read (custody, R12 D3)" 1 "a sealed case's text is in the working tree at 'docs/notes/session.LOG'"
   fresh sealed; printf '# note: %s\n' "$LONG" >> "$d/MANIFEST.txt"; g add -A; g show :docs/evaluation/frozen/MANIFEST.txt | sed '$d' > "$d/MANIFEST.txt"
   arm "a long line staged in a file marked -diff, the disk clean, is refused (custody, R12 AG2)" 1 "MANIFEST.txt' quotes a line of a sealed case"
+  # Round 13: the same complete source line remains recognizable through ordinary prose/code wrappers, on disk
+  # and in the index independently. Partial quotes across source lines remain outside the long-line contract.
+  local marker
+  for marker in '//! ' '/// ' '// ' '> ' '>' ';; ' '/* ' '# '; do
+    fresh sealed
+    printf '%s\n' "$LONG" | sed 's/ two / two\n/' | sed "s|^|$marker|" > "$work/docs/notes/draft.md"
+    arm "a line wrapped under '$marker' is refused on disk (R13 D1, AG1)" 1 "'docs/notes/draft.md' quotes a line of a sealed case"
+    mv "$work/docs/notes/draft.md" "$work/docs/notes/plan.md"; g add -A; g show HEAD:docs/notes/plan.md > "$work/docs/notes/plan.md"
+    arm "a line wrapped under '$marker' is refused in the index (R13 D1, AG1)" 1 "'docs/notes/plan.md' quotes a line of a sealed case"
+  done
+  fresh sealed
+  printf 'const MSG: &str = "%s \\\n    %s";\n' "${LONG% two *} two" "${LONG#* two }" > "$work/docs/notes/draft.md"
+  arm "a complete long line in a continued string is refused on disk (R13 D1)" 1 "'docs/notes/draft.md' quotes a line of a sealed case"
+  mv "$work/docs/notes/draft.md" "$work/docs/notes/plan.md"; g add -A; g show HEAD:docs/notes/plan.md > "$work/docs/notes/plan.md"
+  arm "a complete long line in a continued string is refused in the index (R13 D1)" 1 "'docs/notes/plan.md' quotes a line of a sealed case"
+  fresh sealed
+  printf 'message = ("%s "\n    "%s")\n' "${LONG% two *} two" "${LONG#* two }" > "$work/docs/notes/draft.md"
+  arm "a complete long line in adjacent string literals is refused on disk (R13 D1)" 1 "'docs/notes/draft.md' quotes a line of a sealed case"
+  mv "$work/docs/notes/draft.md" "$work/docs/notes/plan.md"; g add -A; g show HEAD:docs/notes/plan.md > "$work/docs/notes/plan.md"
+  arm "a complete long line in adjacent string literals is refused in the index (R13 D1)" 1 "'docs/notes/plan.md' quotes a line of a sealed case"
+  fresh sealed; printf '//! ARM-CASE-TEXT beta\n' > "$work/docs/notes/copy.md"
+  arm "a whole short case under a doc-comment marker is refused (R13 D1)" 1 "a sealed case's text is in the working tree at 'docs/notes/copy.md'"
+  fresh sealed; printf '%s\n' "${LONG#* comparator } ${BULLET% apart,*}" > "$work/docs/notes/draft.md"
+  arm "a partial quote across two source lines is outside the long-line contract (R13 D2)" 0 ""
+  # A case-only filesystem distinction is not available on every host; exercise it wherever the filesystem can.
+  fresh sealed; mkdir -p "$work/.GIT"
+  if [ ! -d "$work/.git" ] || [ ! "$work/.GIT" -ef "$work/.git" ]; then
+    printf 'safe\n' > "$work/.GIT/safe.md"
+    arm "only the top-level .git as spelled is exempt (R13 AG2)" 1 "'.GIT' is an entry named .git"
+  else
+    printf '%s\n' '  SKIP: top-level .GIT distinction requires a case-sensitive filesystem (R13 AG2)'
+  fi
+  fresh sealed
+  for side in disk index; do
+    mkdir -p "$work/../gitshim"
+    cat > "$work/../gitshim/git" <<SHIM
+#!/usr/bin/env bash
+if [[ "\$*" == *--fixed-strings* ]]; then
+  if { [ "$side" = index ] && [[ "\$*" == *--cached* ]]; } ||
+     { [ "$side" = disk ] && [[ "\$*" != *--cached* ]]; }; then exit 2; fi
+fi
+exec $(command -v git) "\$@"
+SHIM
+    chmod +x "$work/../gitshim/git"
+    PATH="$work/../gitshim:$PATH" arm "only the $side name search failing refuses (R13 AG3)" 1 "git grep could not search for a case's name"
+  done
   rm -rf "$work/../gconfig" "$work/../gitshim" "$work/../xdg-ignore" "$work/../excludes"
   fresh sealed; printf '# note: %s\n' "$LONG" >> "$d/MANIFEST.txt"
   arm "a case's line quoted in a comment of the manifest is refused (custody)" 1 "MANIFEST.txt' quotes a line of a sealed case"
@@ -372,7 +420,7 @@ git config --get core.quotePath")" = true
   arm "a gitlink .gitmodules registers passes — another repository, named in the honest limit" 0 ""
   # The submodule active, as one cloned with its superproject is, so a recursion has somewhere to go.
   g config submodule.nested.url ./docs/notes/nested
-  printf '%s\n' "$LONG" > "$work/docs/notes/nested/q.md"; git -C "$work/docs/notes/nested" add -A
+  printf 'see zz-01-arm-alpha\n' > "$work/docs/notes/nested/q.md"; git -C "$work/docs/notes/nested" add -A
   git -C "$work/docs/notes/nested" -c user.name=arm -c user.email=arm@example.invalid -c commit.gpgsign=false commit -q -m q; g add -A
   GIT_CONFIG_PARAMETERS="'submodule.recurse'='true'" arm "a caller's git -c cannot widen the index's search into a registered submodule (R11 D1)" 0 ""
   printf '[submodule]\n\trecurse = true\n' > "$work/../gconfig-recurse"
@@ -550,9 +598,9 @@ seal="$(field seal | grep -xE 'sealed|unsealed')"
 
 # Scratch on this repository's own volume, never `$TMPDIR` (leaf `PROGRAM.29`, `SCRATCH-LOCALITY`). It holds well-
 # formed entries, names, blob ids, sizes and paths, never a manifest line of another form nor a case's text (R5 D3) —
-# and an empty repository holding copies of the staged and the on-disk `.gitattributes`, which hold a case's line only
-# if the staged or the on-disk `.gitattributes` quotes a long line of one, which the check refuses; a shorter one is
-# the limit's (reviews R10 D7, R11 D7, R12 D5).
+# and an empty repository holding copies of the staged and the on-disk `.gitattributes`. These copies can hold a
+# quote their source holds: a complete long source line is refused; a partial quote is the limit's
+# (reviews R10 D7, R11 D7, R12 D5, R13 R3).
 mkdir -p "$ROOT/target/doctrine_scratch"
 tmp="$(mktemp -d "$ROOT/target/doctrine_scratch/frozen_evaluation.XXXXXX")"; trap 'rm -rf "$tmp"' EXIT
 scratch="${tmp#"$ROOT"/}"  # as git names paths, relative to the top level
@@ -668,8 +716,8 @@ if [ "$seal" = "sealed" ]; then
     [ "$tracked" = "$MANIFEST" ] || note "'$tracked' is tracked while the set is sealed — a case's text stays in the sealing commit"
   done < <(git ls-files -z -- "$DIR")
   if [ -s "$tmp/blobs.txt" ]; then
-    # A case's whole text at any other path: in the index, by its blob id; in the working tree, untracked or
-    # modified, by the blob id of what is there, each file hashed on its own and one that cannot be read named, so the
+    # A case's whole text at any other path: in the index by its blob id and as prose; every file the working-tree
+    # walk reads, modified or not, by the blob id of its raw bytes and as prose. An unreadable file is named, so the
     # leg fails closed. Paths are read NUL-separated, never quoted. Ignored files are not scanned; a repository nested
     # outside ignored folders is refused, since its files are none the index or `--others` lists (review R2 D4).
     tab="$(printf '\t')"
@@ -714,9 +762,9 @@ if [ "$seal" = "sealed" ]; then
     # `.gitignore` files ignore, a registered submodule — a path the staged `.gitmodules` names that the index holds as
     # a gitlink — and the check's own scratch, every other file read raw (reviews R9 D3, R10 D3, D4, R11 D1); in the
     # index, every staged blob but a case's own, the manifest included. Each is refused that holds a case: its bytes a
-    # case's blob; a case's whole text, read as prose — line endings, indents and leading markers aside, white space
-    # collapsed, so a copy with its newline dropped, in other line endings or inside a larger file is found (R12 R1); or
-    # a long line of one, read so, so a quote wrapped across lines is found too (R12 D1). And on disk: an entry named
+    # case's blob; a case's whole text or a complete long source line, normalized as words below, including the
+    # comment and string wrappers of R13 D1. A partial quote across source lines is outside that contract (R13 D2).
+    # And on disk: an entry named
     # `.git` in any case but the top level's own (R9 D2, R12 R4); a file it cannot read or a folder it cannot search.
     # The patterns come from the sealing commit's blobs and stay in the reader. A reader that cannot finish refuses
     # (R10 D6). Links are not followed; python runs isolated, importing nothing from the tree (R11 R3).
@@ -736,19 +784,32 @@ def emit(kind, path):
     out.write(kind + b"\0" + path + b"\0")
 # Text compared as prose is read: line endings made one, each line stripped of its indent and of a leading list, quote,
 # heading, table or comment marker, as many as it has, and the lines joined by one space, every run of white space one.
-MARK = re.compile(rb"^[ \t]*(?:(?:[-*+>#|]+|[0-9]+[.)]|//+|/\*+|\*/|\*)[ \t]+)*")
+MARK = re.compile(rb"^[ \t]*(?:(?:[-*+#|]+|[0-9]+[.)])[ \t]+|(?:>+|//[/!]*|/\*[*!]*|\*/|;+)[ \t]*)*")
 def norm(data):
     lines = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n").split(b"\n")
     return re.sub(rb"\s+", b" ", b" ".join(MARK.sub(b"", l) for l in lines)).strip()
+# Match complete words, not the syntax wrapping them: punctuation at a token's edges, standalone comment/list
+# markers and a continuation backslash are not words; escaped whitespace separates words. Preserve case and
+# internal punctuation. This deliberately does not decode a source language or invent arbitrary partial-quote
+# windows from the case; eligibility remains the complete source line's original normalized length and word count.
+EDGE = re.compile(r"^\W+|\W+$")
+def words(data):
+    tokens = re.sub(rb"\\[nrt]", b" ", norm(data)).decode("utf-8", "replace").split()
+    kept = []
+    for token in tokens:
+        word = EDGE.sub("", token)
+        if any(ch.isalnum() for ch in word):
+            kept.append(word)
+    return " ".join(kept)
 # The patterns, from the sealing commit's blobs, never written down: each case's whole text, and each of its lines of
 # 60 characters or more and 8 words or more once read so.
 cases = []
 for i in ids:
     blob = subprocess.run(["git", "cat-file", "blob", i], capture_output=True, check=True).stdout
     cases.append(blob)
-whole = [norm(c) for c in cases if norm(c)]
+whole = [" " + words(c) + " " for c in cases if words(c)]
 lines = {norm(l) for c in cases for l in c.split(b"\n")}
-long = [l for l in lines if len(l.decode("utf-8", "replace")) >= 60 and len(l.split()) >= 8]
+long = [" " + words(l) + " " for l in lines if len(l.decode("utf-8", "replace")) >= 60 and len(l.split()) >= 8 and words(l)]
 if len(whole) != len(ids):
     sys.exit("a sealed case read as no text")
 idset = set(ids)
@@ -756,7 +817,7 @@ sizes = {len(c) for c in cases}
 def judge(data, path, copy, quote):
     if len(data) in sizes and hashlib.new(algo, b"blob %d\0" % len(data) + data).hexdigest() in idset:
         emit(copy, path); return
-    text = norm(data)
+    text = " " + words(data) + " "
     if any(w in text for w in whole):
         emit(copy, path)
     elif any(q in text for q in long):

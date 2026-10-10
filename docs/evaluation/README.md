@@ -40,7 +40,7 @@ exclusion. So the text left the tree (leaf `PROGRAM.76`): while the check passes
 but for what its `.gitignore` files ignore, files and folders, registered submodules, links out of it and its own
 `.git` — holds a case's whole text or a long line of one, so no search of those files finds either, and, in a working
 tree carrying the mark, no diff of a commit that holds one shows it. Reading one takes an act the box above names, or
-one of the copies the honest limit names — a copy in what the check does not walk; a short or reworded quote in what it
+one of the copies the honest limit names — a copy in what the check does not walk; a quote holding no complete long source line, or reworded, in what it
 walks; another clone not yet past `6d61f65`; the published branch's made before it moved; a transcript,
 scrollback, editor history or a harness's memory made before `6d61f65` or in a working tree without the mark; a model
 or an index made from the branch while it held the set; an old commit's diff holding a short quote.
@@ -53,21 +53,28 @@ project doctrine slot. It enforces five properties:
 | Property | What it refuses |
 | --- | --- |
 | **Integrity** | manifest entries that are not the sealing commit's own, a sealing commit that is no ancestor of `HEAD`, a digest the case's blob there does not hash to, or, once unsealed, a restored case that differs from it — the set cannot be rewritten, grown or shrunk to match what the engine turned out to do |
-| **Custody** | while sealed, a case at its path, a link there included, or in the index; a file whose content is a case's text, byte for byte, in the index or anywhere the check walks — the working tree but for what its `.gitignore` files ignore, files and folders, a registered submodule (a path the staged `.gitmodules` names and the index holds as a gitlink), links out of it and its own `.git` — each file read raw by the check itself, whatever git says of it, modified or not, flagged, filtered or watched; a file, the manifest included, staged or in what the check walks, tracked or not, that quotes a long line of one, trimmed and stripped of a list, quote, heading or table marker; an unregistered repository nested outside ignored folders, staged as a gitlink or not, an entry named `.git` in any case but the top level's, a file the check cannot read or a folder it cannot search, or a walk that cannot finish, since none can be ruled out; a sealed path not marked `-diff` — as this working tree's diffs obey, staged and on disk, and by the staged and the on-disk `.gitattributes` itself, a mark from `.git/info/attributes`, a template or a per-user attributes file being no commit's |
+| **Custody** | while sealed, a case at its path, a link there included, or in the index; a case's whole text, compared as words below, in the index or anywhere the check walks — the working tree but for what its `.gitignore` files ignore, files and folders, a registered submodule (a path the staged `.gitmodules` names and the index holds as a gitlink), links out of it and its own `.git` — each file read raw by the check itself, whatever git says of it, modified or not, flagged, filtered or watched; a file, the manifest included, staged or in what the check walks, tracked or not, that quotes a complete long source line of one, compared as words below; an unregistered repository nested outside ignored folders, staged as a gitlink or not, an entry named `.git` in any case but the top level's, a file the check cannot read or a folder it cannot search, or a walk that cannot finish, since none can be ruled out; a sealed path not marked `-diff` — as this working tree's diffs obey, staged and on disk, and by the staged and the on-disk `.gitattributes` itself, a mark from `.git/info/attributes`, a template or a per-user attributes file being no commit's |
 | **Completeness** | anything in `frozen/` but the manifest and, once unsealed, the listed cases — at any depth, hidden or linked; once unsealed, a listed case missing |
 | **Non-contamination** | any tracked file **outside** `frozen/`, staged or on disk — a file git is told not to look at read from the disk — the check's own script included, whose content or path names a sealed case — a case written about in a task tree, decision record or design note is no longer unseen |
 | **Exposure** | an `# exposed:` line naming no listed case — recording an exposure is this project's rule; no check can see a read |
 
-What it holds against, and what not: it reads the files it walks and the blobs the index stages itself, as prose —
-line endings, indents and leading markers aside, white space collapsed — takes as ignored only what the `.gitignore`
-files in the tree ignore, matched as spelled, never case-blind — no per-user or local exclude file — and runs git with
-submodule recursion off and no template, a caller's `git -c` dropped, so no setting of a user's or of the repository's
-own narrows what it reads. It refuses a case's whole text — in any line endings, its newline dropped or inside a larger
-file — and a long line of one, wrapped or not, in the files it walks or stages, and a case's name in a tracked file,
-staged or on disk: the copies, quotes and names ordinary work leaves. It does not reach what it does not read — an
-ignored file or folder, a target behind a link, a registered submodule — nor a short or reworded quote, nor a name in
-an untracked file, whether left there by accident or on purpose; a hook or a tool that rewrites what is on disk can
-defeat it. The project's rule, not the check, answers those: a case read is recorded.
+What it holds against, and what not: it reads the files it walks and the blobs the index stages itself. Its prose
+reader makes line endings and white space uniform, removes leading list, quote, heading, table and comment markers,
+then compares case-sensitive words: whitespace-separated tokens, their non-word edge punctuation removed, tokens
+holding no letter or digit dropped, and written `\n`, `\r` and `\t` made spaces. Thus ordinary comment markers,
+quotes around adjacent string literals and a string's continuation backslash do not interrupt a match. A long source
+line has at least 60 characters and 8 words after the first prose normalization; the pattern is that **complete source
+line**, not every fragment of that length. Whole cases are compared the same way, regardless of line endings or a
+final newline, including inside a larger file. This is a text matcher, not a source-language string decoder.
+
+Only what the tree's `.gitignore` files ignore is ignored, matched as spelled, never case-blind — no per-user or local
+exclude file — and git runs with submodule recursion off and no template, a caller's `git -c` dropped. The copies,
+quotes and tracked names ordinary work leaves are checked on disk and in the index independently. The reader does not
+reach what it does not read — an ignored file or folder, a target behind a link, a registered submodule — nor a quote
+holding no complete long source line, even if a partial quote across source lines is longer than one, nor a reworded
+quote, an encoding that changes word boundaries, or a name in an untracked file. A hook or tool rewriting the disk
+can defeat it. A matching fragment alone does not establish who quoted whom. The project's rule, not the check,
+answers an actual read: a case read is recorded.
 
 It prints paths, as their files are named, and line numbers, entry names and a commit id of the right form — tokens
 with no space — and git's warnings while listing untracked files, which name paths; never a manifest line's text nor
@@ -94,7 +101,7 @@ folder before the quote search existed (`6d61f65`) would show in that commit's d
 `git grep <commit>` and `git log -S` over history tell which file or commit holds a term, not its line. Ignored files,
 the build output under `target/`, or a folder an untracked `.gitignore` ignores, are not scanned, nor anything outside
 the repository a link points to, nor the repository's own `.git`, nor a registered submodule, another repository
-(`REPOSITORY-BOUNDARY` refuses what is created at a vendored checkout's first level); a quote shorter than a long line,
+(`REPOSITORY-BOUNDARY` refuses what is created at a vendored checkout's first level); a quote holding no complete long source line — shorter than one or running across source lines —
 or reworded, is not found; the check sees what is staged and on disk, and CI what is pushed. The check cannot prove
 nobody read a case; a human who reads one and stays quiet defeats it, so an exposure is recorded, never kept quiet.
 

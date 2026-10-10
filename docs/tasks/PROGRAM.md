@@ -978,16 +978,9 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0537 (leaf PROGRAM.75)`
 
 - ID: `PROGRAM.76`
-  Status: `active` — filed and started `2026-10-10`, on the director's word: *"Digests stay, text leaves"*, end to
-  end, without them, *"sota, signoff and production-grade"*; the change committed (`ARCHOGEN-PROGRAM-0542`), its
-  review open, round 12's findings answered by method (`ARCHOGEN-PROGRAM-0596`); round 13, `2026-10-11`, found 2
-  defects, 4 arm gaps and 8 remarks (`target/p76/r13report.txt`, untracked) — wraps the prose reader misses (`//!`,
-  a string's continuation, adjacent literals) and a quote across two of a case's lines. Its answer, by method, is in
-  progress: the reader matching words, every run of 8 words and 60 characters or more of a case, however wrapped or
-  marked (draft `target/p76/check_frozen_evaluation.r13-draft.sh`, untracked). The draft's first run on the tree
-  refused three tracked files as holding such a run of a case — `ROADMAP.md`,
-  `docs/decisions/decision_eadl-engine-boundary.md`, `docs/book/src/boundary.md` — no case read: whether a case
-  quotes them or they quote a case, and what window holds, is the answer's to settle without reading one
+  Status: `active` — the custody change committed `2026-10-10`; its review open. Round 13 answered
+  `2026-10-11`: whole cases and complete long source lines compared as case-sensitive words, the partial-quote
+  limitation explicit, and the error/recursion arms separated. Round 14 under independent review.
   Goal: the sealed evaluation set guarded against being read, not only against being edited or named, so no search
   of the working tree made for other work can reach a case before `M6.5`, nor, in a working tree that carries the
   mark, a diff of a commit that holds one show it.
@@ -998,29 +991,40 @@ mdBook that is the director's window into the project.
   `b05fadb`, which holds each case as a blob; the manifest its commitment; `--restore` the reveal, refused while
   sealed; the exposure recorded in the manifest, the one place a case may be named, and counted apart at `M6.5`.
 
-  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
-  - [x] **REPRODUCE / ISSUE** — `git ls-files docs/evaluation/frozen` at `4caef04` → six files, five of them the
-    cases' text, readable by any search of the tree; the old check passed on it, exit 0.
-  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: `scripts/check_frozen_evaluation.sh` guarded writes (integrity,
-    completeness) and naming (non-contamination), never reads; the only read barrier was a prose line in
-    `docs/evaluation/README.md`, which no bootstrap file reached — `git grep -n -i 'evaluation/frozen\|sealed set\|evaluation set' 4caef04 -- README.md CLAUDE.md MEMORY.md MEMORY_ARCHITECTURE.md` → nothing.
-    WHY: the cases are written in the vocabulary the engine work searches, so a search under any term can land in
-    one; excluding terms cannot work, and excluding the folder holds only for tools that honour an exclusion.
-  - [x] **FIX** — the five cases' text out of the tree (`git rm`), the manifest's `# sealed-in:`, `# custody:` and
-    `# exposed:` lines; the check's custody leg, its integrity against the sealing commit's blobs, hidden files seen,
-    the exposure leg, and `--restore`, refused while sealed, verifying each digest and overwriting nothing; no run
-    ever printing a case's text. The contract, `docs/evaluation/README.md`: why the text left, the five legs, the
-    honest limit, *Exposures*, unsealing. The book's *The sealed set*; `docs/usecases/README.md`; `TOOLBOX.md`;
-    `DOCTRINE_ENFORCEMENT.md`; `M6.5`'s unsealing steps.
-  - [x] **ADDRESSED (verified)** — `bash scripts/check_frozen_evaluation.sh` → exit 0, every digest matching its
-    blob in `b05fadb`; `--self-test` → *"26 pass / 0 fail (26 arms)"*; the arms beside the old check's core,
-    `target/p76/hybrid.sh` → *"9 pass / 17 fail (26 arms)"*; `python3 target/p76/mutate.py` → *"9 of 9 killed"*, a
-    break of each rule — both runners untracked, so not durable. `git ls-files docs/evaluation/frozen` → the
-    manifest alone.
-  - [x] **NO REGRESSION** — `bash scripts/run_self_tests.sh` → *"OK — 48 self-test(s) passed"*; `make focused` →
-    `passed — 3 passed, 0 failed`, on the staged tree; the doctrine gate at commit.
-  - [x] **LOCKSTEP** — the check, the manifest, the contract; the book, `docs/usecases/README.md`, `TOOLBOX.md`,
-    `DOCTRINE_ENFORCEMENT.md`; `M6.5`; this leaf and both logs; `CHANGELOG.md`.
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`), round 13 answer:**
+  - [x] **REPRODUCE / ISSUE** — the new synthetic arms on the prior reader, `bash scripts/check_frozen_evaluation.sh
+    --self-test` → `127 pass / 10 fail (137 arms)` (`target/p76/r13-before.log`): doc comments, no-space quotes,
+    Lisp comments, continued strings and adjacent string literals, on disk and in the index separately.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `scripts/check_frozen_evaluation.sh`'s `MARK` omitted `//!`, `;;` and `>`
+    without a following space; `norm` retained string delimiters and continuation backslashes inside a wrapped
+    quote. The ten named failures of `target/p76/r13-before.log` isolate the mismatch to those wrappers. The draft's
+    arbitrary word windows flag three canonical documents; restricting the same reader to complete source lines,
+    `bash target/p76/check_frozen_evaluation.r13-long-lines-probe.sh` → exit 0, with no case's text displayed. Overlap
+    alone establishes no exposure; the broader draft is not adopted.
+  - [x] **FIX** — source-line eligibility stays at 60 normalized characters and 8 words; whole cases and each
+    eligible complete source line are matched as case-sensitive words, word-edge punctuation and standalone
+    markers dropped, escaped whitespace separated. The four arm gaps are addressed: wrappers on both sides,
+    a case-sensitive filesystem arm (explicitly skipped on this host), each name search failing alone, a synthetic
+    case's name inside an active registered submodule. The limit names partial quotes across source lines and
+    encodings changing word boundaries; no source-language decoder or arbitrary fragment match is claimed.
+  - [x] **ADDRESSED (verified)** — `bash scripts/check_frozen_evaluation.sh --self-test` → `137 pass / 0 fail
+    (137 arms)` (`target/p76/r13-after.log`), the ten former failures all passing; the real-tree check → exit 0.
+    The synthetic arms are tracked and rerun by `scripts/run_self_tests.sh`; the two probe scripts are untracked,
+    so their measurements are not durable.
+  - [x] **NO REGRESSION** — `bash -n scripts/check_frozen_evaluation.sh` → exit 0; the real-tree check → exit 0;
+    `bash scripts/check_review_counts.sh` → `OK (2 review(s) listed; 29 round(s) judged, every one)`;
+    `bash scripts/check_book_anchors.sh`, `bash scripts/check_book_glossary.sh` → `OK`;
+    `bash scripts/check_doctrines.sh` → `=== all doctrines green ===` before staging, repeated by the commit hook.
+    No Rust source changed; the focused checks here are the guard's complete synthetic suite and these doctrine/doc
+    checks, as `COMMIT.md` step 2 requires the focused tier when Rust changes.
+  - [x] **LOCKSTEP** — the checker and its contract, the book's sealed-set passage, this leaf and its logs,
+    `CHANGELOG.md`, and the resume/frontier snapshots. README, development notes and product progress unchanged.
+  Round 13's findings (2 defects, 4 arm gaps, 8 remarks) survive in `target/p76/r13report.txt` (untracked) and the
+  answer here. D1 fixed by word comparison and widened markers; D2 by accurately bounding the quote patterns,
+  instead of adopting arbitrary word windows. AG1 has disk/index wrapper arms; AG2 has a filesystem-conditional
+  arm, its skip named; AG3 has each search fail alone; AG4 has a name in the submodule the search must not enter.
+  R1–R4's stale comments and setup removed; R5's altered word boundaries and R6's encoded copies are stated limits;
+  R7's custody row agrees with the reader; R8's resume pointer was already corrected at this answer's start.
   Review round 1, `2026-10-10`, of `2f6f331`, by a read-only context fenced from the cases' text: 5 defects, 2 arm
   gaps. The change's own diff showed the cases' text as deleted lines, and the check sought a case at its own path
   alone; answered by mechanism — the sealed paths marked `-diff`, so no diff, log patch or `git grep` of a commit that
@@ -1170,7 +1174,8 @@ mdBook that is the director's window into the project.
   `ARCHOGEN-PROGRAM-0572 (leaf PROGRAM.76)`, round 8; `ARCHOGEN-PROGRAM-0579 (leaf PROGRAM.76)`, round 9;
   `ARCHOGEN-PROGRAM-0584 (leaf PROGRAM.76)`, round 10;
   `ARCHOGEN-PROGRAM-0588 (leaf PROGRAM.76)`, round 11;
-  `ARCHOGEN-PROGRAM-0596 (leaf PROGRAM.76)`, round 12
+  `ARCHOGEN-PROGRAM-0596 (leaf PROGRAM.76)`, round 12;
+  `ARCHOGEN-PROGRAM-0604 (leaf PROGRAM.76)`, round 13
 
 - ID: `PROGRAM.77`
   Status: `done` — filed, started and closed `2026-10-10`, on CI's red: the push `a543d10` failed the `rust` workflow;
@@ -1307,7 +1312,7 @@ roadmap item X live?".
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
 | 1 | `PROGRAM.69` | `active` | its review open: round 29 next, on the committed tool, its seal already in place |
-| 2 | `PROGRAM.76` | `active` | its review open: round 13 to answer, its draft refusing three tracked files, of the sealed set's custody |
+| 2 | `PROGRAM.76` | `active` | its review open: round 14 under independent review, round 13 answered with complete-line word matching and an explicit partial-quote limit |
 | 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The third row waits on the director's yes. The pending leaves beside them —
@@ -1502,6 +1507,8 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-11` | `PROGRAM.69` (round 28) | `REVIEW-COUNTS` and its self-test; thirteen mutants, `target/p69r17/mutate28.py`, and round 27's eleven re-anchored, `mutate27b.py`, untracked; the sealing self-test; every self-test; focused on the staged tree | OK, 2 reviews listed, 28 rounds judged, every one; 51 pass / 0 fail; 13 of 13 and 11 of 11 killed, not durable; 121 pass / 0 fail; 49 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-11` | `PROGRAM.76` (round 13, hand-off) | the draft reader on the tree; the committed check restored; the no-background check; focused on the staged tree | three tracked files refused, exit 1, the draft untracked; exit 0; `handoff: OK`; `passed — 3 passed, 0 failed` |
 
+| `2026-10-11` | `PROGRAM.76` (round 13) | the new arms on the prior reader, then the revised reader; the real-tree check; syntax; book anchors/glossary; review counts; doctrines | 127 pass / 10 fail, then 137 pass / 0 fail; exit 0; all named checks green; case-sensitive filesystem arm skipped explicitly |
+
 ## Commit Log
 
 | Leaf | Commit subject or reference | Notes |
@@ -1688,6 +1695,8 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.79` | `ARCHOGEN-PROGRAM-0600 (leaf PROGRAM.79)` | **`docs/specs/` raised to 524 288 bytes**, measured: three trust designs moved in since the last raise, and the adequacy design's review is open |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0602 (leaf PROGRAM.69)` | **review round 28 answered**: `REVIEW-COUNTS` reads every index row by its cells and links; the list's rule a record keeping a table of its rounds; a listed review's row open; the findings table first and whole; every stated count judged in either shape |
 | `PROGRAM.76` | `ARCHOGEN-PROGRAM-0603 (leaf PROGRAM.76)` | **review round 13 recorded at a hand-off**: its findings, the answer's method and its draft's first run on the tree, three tracked files refused; the code unchanged |
+
+| `PROGRAM.76` | `ARCHOGEN-PROGRAM-0604 (leaf PROGRAM.76)` | **review round 13 answered**: whole cases and complete long source lines compared as case-sensitive words; ordinary comment/string wraps found; partial cross-line quotes and encoded boundaries stated as limits; each error arm independent, submodule recursion held by a name |
 
 ## Changelog
 
