@@ -364,7 +364,9 @@ followed directly by `[` has none. So archogen's reader had been more permissive
 neither of the two existing opinions could see it. Since leaf `M1.37` the reader refuses it with
 `read-missing-delimiter`, a conformance probe holds both of them to that, and all three readers agree on
 every tracked description. The record
-(`docs/semantics/third-opinion.txt`) fails the script the moment any document's agreement changes.
+(`docs/semantics/third-opinion.txt`) fails the script the moment any document's agreement changes. The script needs
+LinkedSpec built, so it runs by hand; but a description the record does not name fails the tests on every run, so a
+new one cannot go unrecorded (`PROGRAM.60`).
 
 ### The product runs nothing
 

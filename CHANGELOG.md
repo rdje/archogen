@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the third reader's record cannot fall behind
+
+`ARCHOGEN-PROGRAM-0529` (leaf `PROGRAM.60`), `2026-10-10`.
+
+- The record of what an independent reader thinks of every description could fall behind, because the check needs a
+  vendor build and so ran only by hand. A test now refuses any description the record does not name, on every run,
+  with no build needed; only the reader's verdict on a new description still waits for that build.
+- Validation: the test failing on the record as it stood on `2026-09-30`, six descriptions named, and on one naming a
+  file that is gone; the focused tier (`passed — 3 passed, 0 failed`).
+
 ## archogen — what "unchanged" means for the trust gate, exactly
 
 `ARCHOGEN-M3-0528` (leaf `M3.6.7`), `2026-10-10`.

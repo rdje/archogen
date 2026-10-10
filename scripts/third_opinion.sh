@@ -20,7 +20,9 @@
 #
 # THE RATCHET is `docs/semantics/third-opinion.txt`, one `<class> <path>` per document. A document recorded as
 # `agree` that no longer agrees fails; so does any class that moves, a document missing from the record, and a
-# recorded document that is gone — deletion never passes. `--bless` rewrites the record, an explicit act.
+# recorded document that is gone — deletion never passes. `--bless` rewrites the record, an explicit act. This needs
+# the recognizer, so it runs by hand; the census half — the record names exactly the descriptions — needs none, and
+# `crates/archogen-cli/tests/verdicts.rs` holds it on every run of the tests (leaf `PROGRAM.60`).
 #
 # The population is derived: every tracked `*.eadl` outside `vendor/`.
 #

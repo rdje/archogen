@@ -513,7 +513,7 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.59.md`](../task-history/PROGRAM/PROGRAM.59.md); commit in the tree's Commit Log
 
 - ID: `PROGRAM.60`
-  Status: `pending` — filed `2026-10-06` by `M3.1.2.1`
+  Status: `done` — filed `2026-10-06` by `M3.1.2.1`; started and closed `2026-10-10`
   Goal: the third reader's record, `docs/semantics/third-opinion.txt`, cannot fall behind the tracked descriptions
   unseen.
   Reproduce / issue: `bash scripts/third_opinion.sh` on `2026-10-06` → `125 document(s) — 125 agree`, then exit 1:
@@ -528,6 +528,27 @@ mdBook that is the director's window into the project.
   Direction, to be designed here: the frozen verdict table (`verdicts.txt`) and the record share one population, so
   a check needing no vendor build can refuse a tracked description that the record lacks. The reader's verdict on a
   new file then still needs the build, but its absence from the record becomes visible at commit time.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — the new test run against the record as `947cdc2` left it (`git show
+    947cdc2:docs/semantics/third-opinion.txt`) → *"6 difference(s) …"*: the four this leaf names and two more since,
+    `docs/semantics/kinds/deffact.eadl` and `docs/semantics/vocabulary/vocabulary.eadl`; against today's record, `bash
+    scripts/third_opinion.sh` → *"127 document(s) — 127 agree … OK"*, `M3.1.2.1`'s bless having caught up by hand.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — WHERE: `git grep -n third_opinion -- scripts xtask Makefile .github .githooks
+    crates ':!scripts/third_opinion.sh'` at `3d9a70c` → one match, `crates/eadl-front/examples/reader_shape.rs:1`, a
+    comment naming the script whose shape that example prints: no tier, hook, test or workflow ran the census. WHY:
+    the script checks the census and the classification together, and the classification needs LinkedSpec's build.
+  - [x] **FIX** — `crates/archogen-cli/tests/verdicts.rs`: `the_third_reader_s_record_names_every_description`, the
+    record's paths against the verdict table's own population, every description and only those, with no vendor
+    build; the two populations one, as the direction asks. The script's header and the book's *A third reader*.
+  - [x] **ADDRESSED (verified)** — `cargo test -p archogen-cli --test verdicts the_third_reader` → `1 passed` on the
+    tree; against `947cdc2`'s record → `1 failed`, six descriptions named; against a record naming `docs/nowhere.eadl`
+    → `1 failed`, it named — `target/p60/falsify.py`, untracked and so not durable, the record restored byte for byte.
+  - [x] **NO REGRESSION** — `make focused` → `passed — 3 passed, 0 failed`; the doctrine gate at commit.
+  - [x] **LOCKSTEP** — the script's header; the book's *A third reader*; this leaf and both logs; `docs/TASK_TREE.md`;
+    `CHANGELOG.md`.
+  Verification: `2026-10-10` — the Verification Log's row
+  Commit: `ARCHOGEN-PROGRAM-0529 (leaf PROGRAM.60)`
 
 - ID: `PROGRAM.61`
   Status: `done` — sealed in [`PROGRAM/PROGRAM.61.md`](../task-history/PROGRAM/PROGRAM.61.md); commit in the tree's Commit Log
@@ -837,7 +858,7 @@ roadmap item X live?".
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The second row waits on the director's yes. The pending leaves beside them —
-`PROGRAM.53`, `.54`, `.60`, `.67`, `.71`, `.72` and `.73` — are filed and owned. Every closed
+`PROGRAM.53`, `.54`, `.67`, `.71`, `.72` and `.73` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and its full record is sealed under `docs/task-history/PROGRAM/`.
 
 ## Decisions
@@ -986,6 +1007,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `2026-10-10` | `PROGRAM.69` (round 9) | the self-test, the new arms failing first on `7ad8e6b`'s tool; nine mutations of round 9's rules; the gate over 172 files; the doctrines | 74 pass / 2 fail — the working tree's first new arms beside `7ad8e6b`'s core, not durable — then 77 / 0; each killed by an untracked runner, not durable; OK; all green |
 | `2026-10-10` | `PROGRAM.70.2` | the routes self-test, its stub arm failing first; seven mutations of the rule; the real routes; every self-test; focused | 22 / 1, then 28 / 0; each killed; OK, 4 files of 16; 47 passed; `passed — 3 passed, 0 failed` |
 | `2026-10-10` | `PROGRAM.69` (round 10) | the self-test, the new arms failing first beside `0a7ec7f`'s core; eleven mutations of round 10's rules; the gate over 172 files; every self-test; the doctrines | 79 pass / 5 fail, the working tree's and not durable, then 85 / 0; each killed by an untracked runner, not durable; OK; 47 passed; all green |
+| `2026-10-10` | `PROGRAM.60` | the census test on the tree, on `947cdc2`'s record, on a record naming a path that is gone; focused | 1 passed; 1 failed, six named; 1 failed, it named; `passed — 3 passed, 0 failed` |
 
 ## Commit Log
 
@@ -1132,6 +1154,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.70.2` | `ARCHOGEN-PROGRAM-0524 (leaf PROGRAM.70.2)` | **an archive stub is no file of its folder's count**, `PROGRAM.70` closed: `README-ROUTES` counts the histories in `docs/reviews/`, 4 of 16, its 12 stubs aside; seven look-alike and stub arms |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0525 (leaf PROGRAM.69)` | **review round 10 answered**: each write noted before it is made, so an interrupt just after one is undone; any entry at a sealed file's path refused; a linked tree or index refused; every rollback step armed; the book's claim and round 9's counts corrected; 85 arms |
 | `PROGRAM.74` | `ARCHOGEN-PROGRAM-0526 (leaf PROGRAM.74)` | **the book's total raised to 589 824 bytes**, by `decision_book-in-layers.md`'s dated paragraph: 458 750 of 458 752 measured, 63 361 bytes in a week over 38 commits |
+| `PROGRAM.60` | `ARCHOGEN-PROGRAM-0529 (leaf PROGRAM.60)` | **the third reader's record cannot fall behind unseen**: a test holds it to every description, needing no vendor build |
 
 ## Changelog
 
@@ -1159,3 +1182,4 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 - `2026-10-10`: `PROGRAM.70` done — every closed review history archived and the stubs out of the count; `M3.6.6.4`'s review has room.
 - `2026-10-10`: `PROGRAM.74` filed by `PROGRAM.70.2` — the book at its total ceiling, 235 bytes left.
 - `2026-10-10`: `PROGRAM.74` done — the book's total raised to 589 824 bytes, measured.
+- `2026-10-10`: `PROGRAM.60` done — the third reader's record held to every description by the tests.

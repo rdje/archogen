@@ -156,3 +156,36 @@ fn every_description_keeps_its_frozen_verdict() {
         problems.join("\n  ")
     );
 }
+
+/// The third reader's record, `docs/semantics/third-opinion.txt`, names exactly the descriptions this table does
+/// (leaf `PROGRAM.60`). `scripts/third_opinion.sh` classifies each against LinkedSpec's recognizer, which needs a
+/// vendor build and so runs by hand; this needs none, so a description added without its third opinion is refused
+/// here, on every run of the tests, and only its classification waits for the script's `--bless`.
+#[test]
+fn the_third_reader_s_record_names_every_description() {
+    const RECORD: &str = "docs/semantics/third-opinion.txt";
+    let root = repo_root();
+    let found: std::collections::BTreeSet<String> = descriptions(&root).into_iter().collect();
+    let recorded: std::collections::BTreeSet<String> = fs::read_to_string(root.join(RECORD))
+        .expect("the record")
+        .lines()
+        .filter(|l| !l.starts_with('#') && !l.trim().is_empty())
+        .filter_map(|l| l.split_once(' ').map(|(_, path)| path.to_owned()))
+        .collect();
+    let mut problems: Vec<String> = found
+        .difference(&recorded)
+        .map(|p| format!("a description {RECORD} does not name: {p}"))
+        .collect();
+    problems.extend(
+        recorded
+            .difference(&found)
+            .map(|p| format!("{RECORD} names what is no description: {p}")),
+    );
+    assert!(
+        problems.is_empty(),
+        "{} difference(s) between the descriptions and {RECORD}:\n  {}\n\nRecord a new description's third opinion: \
+         bash scripts/third_opinion.sh --bless, with LinkedSpec's recognizer built.",
+        problems.len(),
+        problems.join("\n  ")
+    );
+}
