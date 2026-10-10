@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the sealed cases' guard reads every file as prose, staged or on disk
+
+`ARCHOGEN-PROGRAM-0596` (leaf `PROGRAM.76`), `2026-10-10`.
+
+- A review found a quoted line of a case missed when the quote was re-wrapped across two lines — as every document
+  here is wrapped — and a case missed inside a larger file, or with its line endings changed. The guard now reads
+  every file it walks and every staged one itself, as prose: line breaks, indents and list or comment markers set
+  aside. It finds a case's whole text, and a long line of one, however wrapped. On macOS it no longer takes a file
+  as ignored by a case-blind match that Linux would not make.
+- Validation: the self-test's arms; five deliberate breaks, each caught by its own arms, by an untracked runner, so
+  not durable; the check on the tree in about two seconds; every self-test; the focused tier on the staged tree.
+
 ## archogen — the generated-sources rules' one-way defects are in the mutation catalogue
 
 `ARCHOGEN-M3-0594` (leaf `M3.6.8`), `2026-10-10`.
@@ -46,7 +58,7 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
   word, and personal ignore files hid paths from it. The guard's own walk of the files now finds a case's long line
   as well as a whole copy, so no setting can switch that off; what is ignored is decided by the project's own ignore
   files alone; and any search that fails stops the commit. Its documents now say exactly what it finds — a whole copy,
-  a long line, a name — in exactly which files.
+  a long line, a name — in exactly which files (narrowed by review round 12: a name only in a tracked file).
 - Validation: the self-test's arms; nine deliberate breaks, one per hole, each caught by its own arms, by an untracked
   runner, so not durable; the check on the tree in under two seconds; every self-test; the focused tier on the staged
   tree.

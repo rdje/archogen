@@ -58,13 +58,16 @@ project doctrine slot. It enforces five properties:
 | **Non-contamination** | any tracked file **outside** `frozen/`, staged or on disk — a file git is told not to look at read from the disk — the check's own script included, whose content or path names a sealed case — a case written about in a task tree, decision record or design note is no longer unseen |
 | **Exposure** | an `# exposed:` line naming no listed case — recording an exposure is this project's rule; no check can see a read |
 
-What it holds against, and what not: it reads the files it walks itself, takes as ignored only what the `.gitignore`
-files in the tree ignore — no per-user or local exclude file — and runs git with submodule recursion off and no
-template, a caller's `git -c` dropped, so no setting of a user's or of the repository's own narrows what it reads. It
-holds against accident: a whole copy, a long line quoted or a name that ordinary work leaves in the files it walks or
-stages. It does not hold against concealment on purpose — a copy put in an ignored file or folder or behind a link, a
-short or reworded quote, a hook or a tool that rewrites what is on disk; whoever sets out to hide a case can, and the
-project's rule, not the check, answers that: a case read is recorded.
+What it holds against, and what not: it reads the files it walks and the blobs the index stages itself, as prose —
+line endings, indents and leading markers aside, white space collapsed — takes as ignored only what the `.gitignore`
+files in the tree ignore, matched as spelled, never case-blind — no per-user or local exclude file — and runs git with
+submodule recursion off and no template, a caller's `git -c` dropped, so no setting of a user's or of the repository's
+own narrows what it reads. It refuses a case's whole text — in any line endings, its newline dropped or inside a larger
+file — and a long line of one, wrapped or not, in the files it walks or stages, and a case's name in a tracked file,
+staged or on disk: the copies, quotes and names ordinary work leaves. It does not reach what it does not read — an
+ignored file or folder, a target behind a link, a registered submodule — nor a short or reworded quote, nor a name in
+an untracked file, whether left there by accident or on purpose; a hook or a tool that rewrites what is on disk can
+defeat it. The project's rule, not the check, answers those: a case read is recorded.
 
 It prints paths, as their files are named, and line numbers, entry names and a commit id of the right form — tokens
 with no space — and git's warnings while listing untracked files, which name paths; never a manifest line's text nor

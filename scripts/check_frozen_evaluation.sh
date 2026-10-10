@@ -26,8 +26,9 @@
 #                     working tree but for what its `.gitignore` files ignore, files and folders,
 #                     registered submodules (named by the staged `.gitmodules` and held as gitlinks),
 #                     links and its own `.git`, every file read raw, whatever git says of it; no
-#                     file, the manifest included, staged or in what it walks, quotes a long line of
-#                     one, trimmed and stripped of a list or heading marker; no unregistered repository nested outside
+#                     file, the manifest included, staged or in what it walks, holds a case's whole text
+#                     or a long line of one, read as prose — line endings, indents and every leading
+#                     list, quote, heading, table or comment marker aside, white space collapsed; no unregistered repository nested outside
 #                     ignored folders, staged or not, no entry named `.git` in any case but the top
 #                     level's, nothing the check cannot read or search, no walk that cannot finish;
 #                     its path is marked `-diff` — as this working tree's diffs obey, staged and on
@@ -40,8 +41,8 @@
 #                     its content or its path: a case discussed in a task tree, a decision record or
 #                     a design note is no longer unseen (reviews R9 D5, D6, R10 D2, R3).
 #   It runs git with submodule recursion off and no template, a caller's `git -c` dropped, reads
-#   the files it walks itself, and takes as ignored only what the `.gitignore` files in the tree
-#   ignore; it holds against accident, not against concealment on purpose — see the README
+#   the files it walks and the blobs the index stages itself, and takes as ignored only what the
+#   `.gitignore` files in the tree ignore, matched as spelled; it holds against accident, not against concealment on purpose — see the README
 #   (reviews R10, R11).
 #   5. EXPOSURE     — each `# exposed:` line names a listed case. Recording an exposure is the
 #                     project's rule (docs/evaluation/README.md); the check cannot see a read.
@@ -94,8 +95,8 @@ case "$SELF" in /*) ;; *) SELF="$PWD/$SELF" ;; esac
 ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
 # The settings that would change what git gives this check, forced for every git it runs: submodule recursion off,
 # with which `git grep` stops (review R11 D1); no template for the empty repository it makes (R10 D5); git's default
-# path quoting. A caller's `git -c` would win over them, so it is dropped. What is on disk the check reads itself, and
-# what is ignored is what the repository's own `.gitignore` files ignore (below), so no other setting changes either.
+# path quoting. A caller's `git -c` would win over them, so it is dropped. What is on disk or staged the check reads
+# itself, and what is ignored is what the `.gitignore` files in the tree ignore, matched as spelled (below).
 unset GIT_CONFIG_PARAMETERS
 export GIT_CONFIG_COUNT=3 GIT_CONFIG_KEY_0=submodule.recurse GIT_CONFIG_VALUE_0=false \
   GIT_CONFIG_KEY_1=init.templateDir GIT_CONFIG_VALUE_1= GIT_CONFIG_KEY_2=core.quotePath GIT_CONFIG_VALUE_2=true
@@ -243,8 +244,9 @@ git config --get core.quotePath")" = true
   fresh sealed; printf '%s\n' "$LONG" >> "$work/docs/notes/plan.md"
   GIT_CONFIG_GLOBAL="$work/../gconfig" arm "an unstaged quote in a tracked file with submodule recursion on is refused (custody, R11 D1)" 1 "'docs/notes/plan.md' quotes a line of a sealed case"
   fresh sealed; g show "$sealed_in:docs/evaluation/frozen/zz-02-arm-beta.md" > "$work/docs/notes/copy.md"; printf '%s\n' "$LONG" >> "$work/docs/notes/plan.md"; g add -A
-  mkdir -p "$work/../gitshim"; printf '#!/bin/sh\ncase "$1" in grep) exit 2 ;; esac\nexec %s "$@"\n' "$(command -v git)" > "$work/../gitshim/git"; chmod +x "$work/../gitshim/git"
-  PATH="$work/../gitshim:$PATH" arm "a git grep that cannot run refuses (custody, R11 D1)" 1 "git grep could not search the index"
+  fresh sealed; printf 'see zz-01-arm-alpha\n' >> "$work/docs/notes/plan.md"; g add -A
+  mkdir -p "$work/../gitshim"; printf '#!/bin/sh\ncase "$*" in *--fixed-strings*) exit 2 ;; esac\nexec %s "$@"\n' "$(command -v git)" > "$work/../gitshim/git"; chmod +x "$work/../gitshim/git"
+  PATH="$work/../gitshim:$PATH" arm "a search for a case's name that cannot run refuses (non-contamination, R11 D1, R12 AG1)" 1 "git grep could not search for a case's name"
   fresh sealed; mkdir -p "$work/../xdg-ignore"; printf '*.bak\n' > "$work/../xdg-ignore/ignore"; printf '[core]\n\texcludesFile = %s\n' "$work/../xdg-ignore/ignore" > "$work/../xdg-ignore/config"
   g show "$sealed_in:docs/evaluation/frozen/zz-02-arm-beta.md" > "$work/docs/notes/plan.md.bak"
   GIT_CONFIG_GLOBAL="$work/../xdg-ignore/config" arm "a per-user ignore file hides nothing (custody, R11 D2)" 1 "a sealed case's text is in the working tree at 'docs/notes/plan.md.bak'"
@@ -260,6 +262,24 @@ git config --get core.quotePath")" = true
   arm "a bullet's line quoted without its marker is refused staged (custody, R11 R2)" 1 "'docs/notes/plan.md' quotes a line of a sealed case"
   fresh sealed; printf 'raise SystemExit(7)\n' > "$work/hashlib.py"; printf 'raise SystemExit(7)\n' > "$work/stat.py"
   arm "the walk imports nothing from the tree (custody, R11 R3)" 0 ""
+  # Round 12: a case read as prose — a quote wrapped across lines, a case's whole text inside a larger file, its
+  # newline dropped or its line endings changed; ignored only as spelled; the index read raw, a -diff file included.
+  fresh sealed; printf 'notes: we keep %s\n' "$(printf '%s' "$LONG" | sed 's/ two / two\n  /')" > "$work/docs/notes/draft.md"
+  arm "a long line quoted wrapped across two lines is refused on disk (custody, R12 D1)" 1 "'docs/notes/draft.md' quotes a line of a sealed case"
+  fresh sealed; printf 'notes: we keep %s\n' "$(printf '%s' "$LONG" | sed 's/ two / two\n  /')" >> "$work/docs/notes/plan.md"; g add -A; g show HEAD:docs/notes/plan.md > "$work/docs/notes/plan.md"
+  arm "a long line quoted wrapped across two lines is refused staged (custody, R12 D1)" 1 "'docs/notes/plan.md' quotes a line of a sealed case"
+  fresh sealed; { printf 'before\n'; g show "$sealed_in:docs/evaluation/frozen/zz-02-arm-beta.md"; printf 'after\n'; } > "$work/docs/notes/notes.md"
+  arm "a case's whole text inside a larger file is refused on disk (custody, R12 R1)" 1 "a sealed case's text is in the working tree at 'docs/notes/notes.md'"
+  fresh sealed; { printf 'before\n'; g show "$sealed_in:docs/evaluation/frozen/zz-02-arm-beta.md"; printf 'after\n'; } >> "$work/docs/notes/plan.md"; g add -A; g show HEAD:docs/notes/plan.md > "$work/docs/notes/plan.md"
+  arm "a case's whole text inside a larger file is refused staged (custody, R12 R1)" 1 "a sealed case's text is staged at 'docs/notes/plan.md'"
+  fresh sealed; g show "$sealed_in:docs/evaluation/frozen/zz-02-arm-beta.md" | tr -d '\n' > "$work/docs/notes/copy.md"
+  arm "a case's text with its final newline dropped is refused (custody, R12 R1)" 1 "a sealed case's text is in the working tree at 'docs/notes/copy.md'"
+  fresh sealed; g show "$sealed_in:docs/evaluation/frozen/zz-02-arm-beta.md" | sed 's/$/\r/' > "$work/docs/notes/copy.md"
+  arm "a case's text in other line endings is refused (custody, R12 R1)" 1 "a sealed case's text is in the working tree at 'docs/notes/copy.md'"
+  fresh sealed; g config core.ignoreCase true; printf '*.log\n' > "$work/.gitignore"; g add .gitignore; g show "$sealed_in:docs/evaluation/frozen/zz-02-arm-beta.md" > "$work/docs/notes/session.LOG"
+  arm "a file ignored only by a case-blind match is read (custody, R12 D3)" 1 "a sealed case's text is in the working tree at 'docs/notes/session.LOG'"
+  fresh sealed; printf '# note: %s\n' "$LONG" >> "$d/MANIFEST.txt"; g add -A; g show :docs/evaluation/frozen/MANIFEST.txt | sed '$d' > "$d/MANIFEST.txt"
+  arm "a long line staged in a file marked -diff, the disk clean, is refused (custody, R12 AG2)" 1 "MANIFEST.txt' quotes a line of a sealed case"
   rm -rf "$work/../gconfig" "$work/../gitshim" "$work/../xdg-ignore" "$work/../excludes"
   fresh sealed; printf '# note: %s\n' "$LONG" >> "$d/MANIFEST.txt"
   arm "a case's line quoted in a comment of the manifest is refused (custody)" 1 "MANIFEST.txt' quotes a line of a sealed case"
@@ -531,7 +551,8 @@ seal="$(field seal | grep -xE 'sealed|unsealed')"
 # Scratch on this repository's own volume, never `$TMPDIR` (leaf `PROGRAM.29`, `SCRATCH-LOCALITY`). It holds well-
 # formed entries, names, blob ids, sizes and paths, never a manifest line of another form nor a case's text (R5 D3) —
 # and an empty repository holding copies of the staged and the on-disk `.gitattributes`, which hold a case's line only
-# if the staged or the on-disk `.gitattributes` quotes one, which the check refuses (reviews R10 D7, R11 D7).
+# if the staged or the on-disk `.gitattributes` quotes a long line of one, which the check refuses; a shorter one is
+# the limit's (reviews R10 D7, R11 D7, R12 D5).
 mkdir -p "$ROOT/target/doctrine_scratch"
 tmp="$(mktemp -d "$ROOT/target/doctrine_scratch/frozen_evaluation.XXXXXX")"; trap 'rm -rf "$tmp"' EXIT
 scratch="${tmp#"$ROOT"/}"  # as git names paths, relative to the top level
@@ -671,13 +692,14 @@ if [ "$seal" = "sealed" ]; then
         grep -qxF "$id" "$tmp/blobs.txt" && note "a sealed case's text is tracked at '${rec#*"$tab"}'"
       done < <(git ls-files -s -z)
     fi
-    # What is ignored is what the repository's own `.gitignore` files ignore, files and folders, listed once: no
-    # per-user or local exclude file, which no commit carries, widens it (review R11 D2, D3).
-    git ls-files -z --others --ignored --directory --exclude-per-directory=.gitignore > "$tmp/ignored" 2>/dev/null ||
+    # What is ignored is what the `.gitignore` files in the tree ignore, files and folders, listed once, matched as
+    # spelled: no per-user or local exclude file widens it, nor a case-blind match (reviews R11 D2, D3, R12 D3).
+    git -c core.ignoreCase=false ls-files -z --others --ignored --directory --exclude-per-directory=.gitignore \
+      > "$tmp/ignored" 2>/dev/null ||
       note "git could not list what the repository's .gitignore files ignore — a case's copy cannot be ruled out"
     # What git cannot list fails closed: a folder it cannot open is named by its own warning (review R3 D2); a
     # repository nested outside ignored folders is refused, since its files are none git lists (R2 D4).
-    git ls-files -z --others --exclude-per-directory=.gitignore 2> "$tmp/loose.err" > "$tmp/loose"
+    git -c core.ignoreCase=false ls-files -z --others --exclude-per-directory=.gitignore 2> "$tmp/loose.err" > "$tmp/loose"
     while IFS= read -r warning; do
       note "git could not list every file: ${warning#warning: } — a case's copy there cannot be ruled out"
     done < "$tmp/loose.err"
@@ -687,37 +709,59 @@ if [ "$seal" = "sealed" ]; then
         */) note "'$at' is a repository nested outside ignored folders — its files cannot be checked for a case; ignore it or move it" ;;
       esac
     done < "$tmp/loose"
-    # A long line of a case: each line of its text, trimmed and stripped of a list, quote, heading or table marker, of
-    # 60 characters or more and 8 words or more (review R11 R2), read from the blobs through a pipe, never written down,
-    # never in a command's arguments (review R2 D2, D3).
-    quotes() { while IFS= read -r id; do git cat-file blob "$id"; done < "$tmp/blobs.txt" |
-                 awk '{ gsub(/^[[:space:]]+|[[:space:]]+$/, ""); sub(/^([-*+>#|]+|[0-9]+[.)])[[:space:]]+/, "") }
-                      length($0) >= 60 && NF >= 8'; }
-    # The working tree read by the check itself, never through git's view of what changed: one walk from the top,
-    # pruning only what the repository's `.gitignore` files ignore, a registered submodule — a path the staged
-    # `.gitmodules` names that the index holds as a gitlink — and the check's own scratch, every other file read raw. It
-    # refuses a file whose bytes are a case's, hashed as git hashes a blob, and one that holds a long line of a case,
-    # whatever git says of it — modified or not, flagged, filtered or watched (reviews R9 D3, R10 D3, D4, R11 D1); an
-    # entry named `.git` in any case but the top level's (R9 D2); a file it cannot read or a folder it cannot search. A
-    # walk that cannot finish refuses (R10 D6). Links are not followed; python runs isolated, importing nothing from the
-    # tree (R11 R3).
+    # The files read by the check itself, never through git's view of what changed, nor through `git grep` — one
+    # reader for the disk and the index (review R12 D1, AG2). On disk, one walk from the top, pruning only what the
+    # `.gitignore` files ignore, a registered submodule — a path the staged `.gitmodules` names that the index holds as
+    # a gitlink — and the check's own scratch, every other file read raw (reviews R9 D3, R10 D3, D4, R11 D1); in the
+    # index, every staged blob but a case's own, the manifest included. Each is refused that holds a case: its bytes a
+    # case's blob; a case's whole text, read as prose — line endings, indents and leading markers aside, white space
+    # collapsed, so a copy with its newline dropped, in other line endings or inside a larger file is found (R12 R1); or
+    # a long line of one, read so, so a quote wrapped across lines is found too (R12 D1). And on disk: an entry named
+    # `.git` in any case but the top level's own (R9 D2, R12 R4); a file it cannot read or a folder it cannot search.
+    # The patterns come from the sealing commit's blobs and stay in the reader. A reader that cannot finish refuses
+    # (R10 D6). Links are not followed; python runs isolated, importing nothing from the tree (R11 R3).
     tab="$(printf '\t')"
     git ls-files -s -z | while IFS= read -r -d '' rec; do
       case "$rec" in "160000 "*) printf '%s\n' "${rec#*"$tab"}" ;; esac
     done > "$tmp/gitlinks"
     { grep -xF -f "$tmp/gitlinks" "$tmp/registered" 2>/dev/null; printf '%s\n' "$scratch"; } > "$tmp/prune"  # (R10 D1)
-    while IFS= read -r id; do git cat-file -s "$id"; done < "$tmp/blobs.txt" > "$tmp/sizes"
-    walk="$(cat <<'PY'
-import hashlib, os, stat, sys
+    reader="$(cat <<'PY'
+import hashlib, os, re, stat, subprocess, sys
 prune = {os.fsencode(l.rstrip("\n")) for l in open(sys.argv[1], encoding="utf-8", errors="surrogateescape") if l.strip()}
-ids = {l.strip() for l in open(sys.argv[2]) if l.strip()}
-sizes = {int(l) for l in open(sys.argv[3]) if l.strip()}
-algo = sys.argv[4]
-ignored = {x for x in open(sys.argv[5], "rb").read().split(b"\0") if x}
-quotes = [l.rstrip(b"\n") for l in sys.stdin.buffer if l.strip()]
+ids = [l.strip() for l in open(sys.argv[2]) if l.strip()]
+algo = sys.argv[3]
+ignored = {x for x in open(sys.argv[4], "rb").read().split(b"\0") if x}
 out = sys.stdout.buffer
 def emit(kind, path):
     out.write(kind + b"\0" + path + b"\0")
+# Text compared as prose is read: line endings made one, each line stripped of its indent and of a leading list, quote,
+# heading, table or comment marker, as many as it has, and the lines joined by one space, every run of white space one.
+MARK = re.compile(rb"^[ \t]*(?:(?:[-*+>#|]+|[0-9]+[.)]|//+|/\*+|\*/|\*)[ \t]+)*")
+def norm(data):
+    lines = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n").split(b"\n")
+    return re.sub(rb"\s+", b" ", b" ".join(MARK.sub(b"", l) for l in lines)).strip()
+# The patterns, from the sealing commit's blobs, never written down: each case's whole text, and each of its lines of
+# 60 characters or more and 8 words or more once read so.
+cases = []
+for i in ids:
+    blob = subprocess.run(["git", "cat-file", "blob", i], capture_output=True, check=True).stdout
+    cases.append(blob)
+whole = [norm(c) for c in cases if norm(c)]
+lines = {norm(l) for c in cases for l in c.split(b"\n")}
+long = [l for l in lines if len(l.decode("utf-8", "replace")) >= 60 and len(l.split()) >= 8]
+if len(whole) != len(ids):
+    sys.exit("a sealed case read as no text")
+idset = set(ids)
+sizes = {len(c) for c in cases}
+def judge(data, path, copy, quote):
+    if len(data) in sizes and hashlib.new(algo, b"blob %d\0" % len(data) + data).hexdigest() in idset:
+        emit(copy, path); return
+    text = norm(data)
+    if any(w in text for w in whole):
+        emit(copy, path)
+    elif any(q in text for q in long):
+        emit(quote, path)
+# The working tree, walked from the top.
 level = [b""]
 while level:
     dirs = []
@@ -729,9 +773,10 @@ while level:
             continue
         for n in names:
             p = d + b"/" + n if d else n
+            if not d and n == b".git":
+                continue
             if n.lower() == b".git":
-                if d:
-                    emit(b"gitname", p)
+                emit(b"gitname", p)
                 continue
             st = os.lstat(p)
             if stat.S_ISDIR(st.st_mode):
@@ -744,35 +789,44 @@ while level:
                 except OSError:
                     emit(b"unreadable", p)
                     continue
-                if len(data) in sizes and hashlib.new(algo, b"blob %d\0" % len(data) + data).hexdigest() in ids:
-                    emit(b"copy", p)
-                elif any(q in data for q in quotes):
-                    emit(b"quote", p)
+                judge(data, p, b"copy", b"quote")
     level = dirs
+# The index, which a commit records: every staged blob but a case's own, read raw.
+listing = subprocess.run(["git", "ls-files", "-s", "-z"], capture_output=True, check=True).stdout
+staged = []
+for rec in listing.split(b"\0"):
+    if not rec:
+        continue
+    meta, path = rec.split(b"\t", 1)
+    mode, blob = meta.split(b" ")[:2]
+    if mode != b"160000" and blob.decode() not in idset:
+        staged.append((blob, path))
+if staged:
+    batch = subprocess.run(["git", "cat-file", "--batch"], input=b"\n".join(b for b, _ in staged) + b"\n",
+                           capture_output=True, check=True).stdout
+    at = 0
+    for blob, path in staged:
+        head_end = batch.index(b"\n", at)
+        size = int(batch[at:head_end].split(b" ")[2])
+        data = batch[head_end + 1:head_end + 1 + size]
+        at = head_end + 1 + size + 1
+        judge(data, path, b"staged-copy", b"staged-quote")
 PY
 )"
-    quotes | env -u GIT_DIR -u GIT_WORK_TREE python3 -I -c "$walk" "$tmp/prune" "$tmp/blobs.txt" "$tmp/sizes" \
+    env -u GIT_DIR -u GIT_WORK_TREE python3 -I -c "$reader" "$tmp/prune" "$tmp/blobs.txt" \
       "$(git rev-parse --show-object-format 2>/dev/null || echo sha1)" "$tmp/ignored" > "$tmp/walk" 2>/dev/null
-    walked=${PIPESTATUS[1]}
+    walked=$?
     [ "$walked" -eq 0 ] || note "the working tree could not be walked (exit $walked) — a case's copy cannot be ruled out"
     while IFS= read -r -d '' kind && IFS= read -r -d '' at; do
       case "$kind" in
         copy) note "a sealed case's text is in the working tree at '$at'" ;;
-        quote) note "'$at' quotes a line of a sealed case — the set is no longer unseen" ;;
+        quote|staged-quote) note "'$at' quotes a line of a sealed case — the set is no longer unseen" ;;
+        staged-copy) note "a sealed case's text is staged at '$at'" ;;
         gitname) note "'$at' is an entry named .git — git lists and searches nothing in it, so a case's copy there cannot be ruled out; rename or remove it" ;;
         unreadable) note "'$at' cannot be read, so a case's copy there cannot be ruled out" ;;
         unsearchable) note "'$at' cannot be searched, so a case's copy there cannot be ruled out" ;;
       esac
     done < "$tmp/walk"
-    # The index, which a commit records: a long line of a case in any staged file, the manifest included, found by the
-    # name of the file that holds it; a search that cannot run refuses (review R11 D1).
-    if quotes | grep -q .; then
-      git grep -z -l --cached -F -f <(quotes) > "$tmp/staged-quotes" 2>/dev/null; searched=$?
-      [ "$searched" -le 1 ] || note "git grep could not search the index for a case's line (exit $searched) — a quote cannot be ruled out"
-      while IFS= read -r -d '' at; do
-        note "'$at' quotes a line of a sealed case — the set is no longer unseen"
-      done < "$tmp/staged-quotes"
-    fi
   fi
 fi
 
