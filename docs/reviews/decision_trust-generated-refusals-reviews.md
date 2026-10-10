@@ -328,6 +328,25 @@ design must meet, and designs and reviews its criterion itself.
 | R19-R2 | remark | "a list of axes … rounds 15 to 18" misdescribed round 18 | a list (15, 16), a census (17), the sweep (18, 19) |
 | R19-R3 | remark | `MEMORY.md`'s frontier line on `PROGRAM.76` stale | rewritten |
 
+**Round 20**, `2026-10-10`, of `be9b6ee`, by a read-only context that had not written the record, fenced from the
+sealed evaluation set, in clones the harness allowed. It ran the doctrine gate whole, its history legs among it, and
+the crate's tests (183 passed), read every route test against its row, and reproduced R19-R1. Verdict: 4 defects and 3
+remarks, all but two in `M3.6.9`'s restatement of the evidence. Round 19's paragraph above stands as written; this round
+corrects it: the sweep mutates the line R18-R2's survivor sits on, `own_roles`, but makes none of the survivors'
+mutations — none drops an operand inside a closure — and its `cond` and `int` operators can narrow a `while` loop; the
+list of axes was found short by rounds 15 to 17, the census by round 18, the sweep by round 19. The answer changes
+method: `M3.6.9`'s goal points to this history and restates none of it.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R20-D1 | defect | "the survivors sit on lines the sweep does not mutate" false: it mutates `own_roles`' line, never the survivor's mutation | `M3.6.9` restates no evidence; corrected here and in the leaf's round-19 sentence |
+| R20-D2 | defect | "the sweep's operators never narrow an iteration" false: `while false`, `i += 2` | as above |
+| R20-D3 | defect | `M3.6.9`'s rounds wrong: the list found short by 15 to 17, the census by 18, the sweep by 19 | as above; R19-R2's answer corrected here |
+| R20-D4 | defect | "rounds 9 to 19 each found a rule held one way only" false for 19 | `M3.6.9` points to the history, which records each round's finding |
+| R20-R1 | remark | §6's "which designs" attached to round 14 | "— a leaf filed by this record's round 14 —" |
+| R20-R2 | remark | row 19 claimed a correction it did not state | row 20 states it |
+| R20-R3 | remark | `MEMORY.md` and the trees disagreed on two rounds reported and not yet answered | `MEMORY.md` says each reported round's answer is under way |
+
 ## Why
 
 The record closes on a round that finds no defect, as every design here does; each round, its findings and their

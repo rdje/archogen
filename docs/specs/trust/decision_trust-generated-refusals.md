@@ -127,11 +127,11 @@ What this record decides — the routes above, and the cases with none — is cl
 gate writes or refuses the inventory. The gate's rules the routes rest on — the chain, the blob rule, a file named in
 both clauses, a lone `.rs` file, and the role judgment of each generator against each reader — are the parent's, decided
 by its record and held, at the instances they build, by its instrument's tests; holding each wherever its code judges it
-is `M3.6.9`'s, filed by this record's round 14, which designs the criterion that shows it. This section is the claim
-that holds now: the leaf's Commit Log rows and `CHANGELOG.md`'s entries state each commit's claim as it was written, and
-the review history narrows them. The tests are `route_tests` in `xtask/src/trust_generated.rs`, written when review
-rounds had probed the routes in untracked tests and found some the record named fail, and four of the parent's tests,
-named with their module — three no-route cases, and the harness as a reader:
+is `M3.6.9`'s — a leaf filed by this record's round 14 — which designs the criterion that shows it. This section is the
+claim that holds now: the leaf's Commit Log rows and `CHANGELOG.md`'s entries state each commit's claim as it was
+written, and the review history narrows them. The tests are `route_tests` in `xtask/src/trust_generated.rs`, written
+when review rounds had probed the routes in untracked tests and found some the record named fail, and four of the
+parent's tests, named with their module — three no-route cases, and the harness as a reader:
 
 | Test | Holds |
 | --- | --- |
@@ -210,3 +210,4 @@ finding answered here. The history is
 | 17 | `2026-10-10` | 3, and 5 remarks | answered by method: `M3.6.9`'s axes derived by a census of the code's loops, no longer listed; the note above the leaf's Commit Log names its sealed first entry; the ledger narrowings rows 13 to 15 state were undone by round 16, the history carrying them; Why qualified as §6 is |
 | 18 | `2026-10-10` | 2, and 5 remarks | answered by method: `M3.6.9`'s criterion a mutation sweep of the judgment code, every survivor killed or listed as equivalent, no axis named — the census of round 17 itself left axes out; §6 names none either |
 | 19 | `2026-10-10` | 2, and 3 remarks | answered by method: `M3.6.9`'s criterion its own to design and review — round 18's sweep mutates none of the lines the survivors sit on, and its copy cannot run the trust tests; §6 states no criterion; round 18's answers to its remarks, "the sweep's to kill", corrected here |
+| 20 | `2026-10-10` | 4, and 3 remarks | answered by method: `M3.6.9`'s goal points to the evidence in this history and restates none; round 19's "the survivors sit on lines the sweep does not mutate" and "never narrow an iteration" corrected — it makes none of the survivors' mutations; round 18's answers to its remarks, as row 19 says, are `M3.6.9`'s to hold by the criterion it designs; §6's antecedent |

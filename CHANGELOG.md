@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the leaf for the parent's tests points to its evidence instead of restating it
+
+`ARCHOGEN-M3-0583` (leaf `M3.6.6.4`), `2026-10-10`.
+
+- Each round found a detail wrong in the leaf's summary of what earlier criteria missed. The leaf now restates none
+  of it: it points to the review history, where each finding and its evidence already stand, and designs its
+  criterion to meet them.
+- Validation: sixteen route tests; the crate's 183 tests; the book's gates; the focused tier on the staged tree.
+
 ## archogen — the review-count check reads the reviews index too, and says what it does not read
 
 `ARCHOGEN-PROGRAM-0582` (leaf `PROGRAM.69`), `2026-10-10`.
