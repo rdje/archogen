@@ -668,7 +668,7 @@ mdBook that is the director's window into the project.
   `REVIEW-HISTORY` proves exact on every commit — so `README-ROUTES` counts the histories a reader may open (`.2`).
 
 - ID: `PROGRAM.70.1`
-  Status: `active` — started `2026-10-10`
+  Status: `done` — started and closed `2026-10-10`, in two commits
   Goal: every closed review history archived out of `docs/reviews/`, byte for byte, behind its stub.
   Acceptance: `bash scripts/check_review_history.sh --seal <FILE>` for each history whose row reads closed; the gate
   and `README-ROUTES` pass; the folder's bytes measured before and after.
@@ -678,9 +678,14 @@ mdBook that is the director's window into the project.
   refused and kept live — *"08a707bbbd3b changed … while its review's row already read closed"*: `ARCHOGEN-M2-0344`,
   already on `origin/main`, reopened its review in the commit that appended the round, and pushed history is not
   rewritten (the archive's own limit). No link anchors into an archived history (`git grep` → none).
+  Step 2 (`ARCHOGEN-PROGRAM-0523`): the three, their rows closed at `HEAD`, archived, each *"read back byte for byte"*.
+  Verification: `2026-10-10` — `git ls-files docs/reviews | xargs cat | wc -c` → `391513` at `0a7ec7f`, `262852`
+  after step 1, `78575` after step 2, 16 files throughout; `bash scripts/check_review_history.sh` and
+  `bash scripts/check_readme_routes.sh` at each commit, in the doctrine gate → green.
+  Commit: `ARCHOGEN-PROGRAM-0523 (leaf PROGRAM.70.1)`, with step 1's `ARCHOGEN-PROGRAM-0522`
 
 - ID: `PROGRAM.70.2`
-  Status: `pending` — after `.1`
+  Status: `pending` — next, `.1` closed `2026-10-10`
   Goal: `README-ROUTES` counts the histories in `docs/reviews/`, not the stubs `REVIEW-HISTORY` proves.
   Acceptance: an exact archive stub is left out of a directory's file count and of nothing else, and a file that only
   looks like one is counted; an arm for each, failing first; the decision record's dated paragraph, `README_POLICY.md`'s
@@ -1075,6 +1080,7 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0517 (leaf PROGRAM.69)` | **review round 8 answered**: the rollback's claim narrowed to what it catches, a kill signal a stated limit; no seal refused yet reported sealed; the separator and an empty table checked; a directory for the unreadable-file arm; `PROGRAM.72` filed; 71 arms |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0521 (leaf PROGRAM.69)` | **review round 9 answered**: the tree and the index written whole or not at all; the rollback undoing what was written alone, each step on its own, naming what it could not undo; a taken path refused before any write; arms for a full disk, an interrupt, undecodable git output, a first seal's folder and a table's blank line; `PROGRAM.73` filed; 77 arms |
 | `PROGRAM.70.1` | `ARCHOGEN-PROGRAM-0522 (leaf PROGRAM.70.1)` | **seven closed review histories archived** behind their stubs; three closed rows put in the archive's form; the runtime variant's history kept live, edited by a pushed commit while its row read closed; `docs/reviews/` 391 513 → 262 852 bytes |
+| `PROGRAM.70.1` | `ARCHOGEN-PROGRAM-0523 (leaf PROGRAM.70.1)` | **the three closed rows' histories archived**, `.1` closed: every closed review history archived but the one a pushed commit edited while closed; `docs/reviews/` 262 852 → 78 575 bytes, 16 files |
 
 ## Changelog
 
@@ -1098,3 +1104,4 @@ leaf's outcome is its row in the Commit Log below, and its full record is sealed
 - `2026-10-10`: `PROGRAM.69`'s tool and seal committed — a closed subtree below an open one sealed too — its review open after rounds 2 to 6 and a mutation sweep; `PROGRAM.70` filed for `docs/reviews/`' file ceiling.
 - `2026-10-10`: `PROGRAM.71` filed by `PROGRAM.69`'s review round 7 — the index's order; `PROGRAM.72` by round 8 — tree files in sub-folders. Both pre-existing, owned.
 - `2026-10-10`: `PROGRAM.73` filed by `PROGRAM.69`'s review round 9 — the history gate's traceback on an unforeseen exception. Pre-existing, owned.
+- `2026-10-10`: `PROGRAM.70.1` done — ten closed review histories archived; `docs/reviews/` 391 513 → 78 575 bytes.

@@ -20,3 +20,6 @@ To prove a file, compare `sha256sum docs/review-history/<FILE>` with its row.
 | `decision_catalog-records-port-statement-reviews.md` | 255 | 31550 | `ab2d8a6ede55bc579d2516ffa528c74b2d19f29badc9c7989301b655396497cf` | `2026-10-10` |
 | `decision_runtime-composite-inputs-reviews.md` | 297 | 34860 | `81443a606b74fe913f7528c103b83ec680d4d5bac14bacc264c0d075e510f0a6` | `2026-10-10` |
 | `rt-static-up-v1-faults-observation-reviews.md` | 195 | 21087 | `16a11c4162bc141d65c97de6bfbb87fee66b6c9c53fa75e04761983ca579a53f` | `2026-10-10` |
+| `decision_substitutability-relation-reviews.md` | 674 | 91093 | `bfdba54dfcaaa28ac9a9ed39cf3ea21260d85ef12cbdb39096ca2a94e25b40a2` | `2026-10-10` |
+| `decision_trust-inventory-reviews.md` | 311 | 38300 | `23b043196156b3db33ed0a726a5646343926f7c0a3152257b47a62ccf8f0e764` | `2026-10-10` |
+| `decision_trust-generated-sources-reviews.md` | 438 | 55702 | `047051cb5759a5fc084e6fd70704909e2c75e98745ff8549720ddfa9b598716e` | `2026-10-10` |
