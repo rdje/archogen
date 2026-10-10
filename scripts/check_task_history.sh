@@ -647,8 +647,9 @@ def seal(tree_name):
     # which the run's own handler then names as a breach, or any other — rolls the seal back first and is said before it
     # goes on (reviews R5-2, R6-2, R7-4, R9-2, R14 D1). The tree and the index are written whole or not at all, and the
     # rollback undoes what was written alone, each step on its own, naming what it could not undo (R9-1). Every signal
-    # but SIGKILL, SIGSTOP, the six fault signals and, on Linux, the C library's own (`HELD`) is held for the whole of it, from before the first write: a stop that comes takes effect once
-    # the seal is done — proven and kept, refused and rolled back, or stopped by an error and rolled back — its outcome
+    # but SIGKILL, SIGSTOP, the six fault signals and, on Linux, the C library's own (`HELD`) is held for the whole of
+    # it, from before the first write: a stop that comes takes effect once the seal is done — proven and kept, refused
+    # and rolled back, or stopped by an error and rolled back — its outcome
     # said where the output can be written, so the seal is whole either way, with no moment between a write and its
     # record for a stop to fall in (reviews R13, R14 D2, R16 D2). A signal ignored on entry stays ignored. The git the
     # proof runs inherits the mask: a stop does not end a git that hangs. ⚠️ What the mask leaves out — SIGKILL,
@@ -1339,7 +1340,7 @@ if WHEN:
         if WHEN == "maskcheck" and os.path.abspath(str(name)).endswith("/task-history/Q"):
             left = {getattr(signal, s) for s in ("SIGKILL", "SIGSTOP", "SIGSEGV", "SIGBUS", "SIGFPE", "SIGILL", "SIGTRAP",
                                                  "SIGSYS") if hasattr(signal, s)}
-            libc = set(range(32, signal.SIGRTMIN)) if hasattr(signal, "SIGRTMIN") else set()  # glibc's own, never maskable
+            libc = set(range(32, signal.SIGRTMIN)) if hasattr(signal, "SIGRTMIN") else set()  # the C library's own
             mask = set(real_mask(signal.SIG_BLOCK, []))
             missing, held = signal.valid_signals() - left - libc - mask, left & mask
             with real_open(os.environ["SEAL_MASKCHECK"], "w") as out:
@@ -1515,8 +1516,7 @@ HOOK
   fi
   rm -f "$work/docs/task-history/.INDEX.md.seal-4242"; restore
   # The mask in force at the first write holds every signal but SIGKILL, SIGSTOP, the six fault signals and the C
-  # library's own, and none of
-  # those (reviews R15 AG1, R16 AG1).
+  # library's own, and none of the eight others (reviews R15 AG1, R16 AG1).
   arms=$((arms + 1))
   out="$(cd "$work" && SEAL_HOOK=maskcheck SEAL_MASKCHECK="$SCRATCH/maskcheck" PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?
   if [ "$rc" -eq 0 ] && [ "$(cat "$SCRATCH/maskcheck" 2>/dev/null)" = "ok" ] && proven; then

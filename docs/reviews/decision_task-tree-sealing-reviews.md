@@ -401,6 +401,25 @@ its runners untracked, so not durable. Verdict: 1 defect of this change, no arm 
 | R18-R6 | remark | long lines in the changelog, the book and the script | rewrapped |
 | R18-R7 | remark | closed units still unsealed elsewhere | not this change's; the trees' next seal |
 
+**Round 19**, `2026-10-10`, a seventeenth confirmation, in a clone of `a845d4f`, by a read-only context new to the
+change and fenced from the sealed evaluation set. It reproduced the gate, every self-test, the census and the seal's
+figures; checked by an oracle of its own that all 172 sealed files are the outermost closed unit, whole, at their
+sealing commit's parent; fuzzed 48 trees, 258 hand seals and 92 late leaves, every one as its oracle predicts; and ran
+fourteen mutations of claimed rules, all killed — its runners untracked, so not durable. Verdict: 2 defects of this
+change, no arm gap.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R19-D1 | defect | the record's row 18 counted 7 findings; the history's round 18 has 8 | 8 |
+| R19-D2 | defect | two maintained changelog lists of what sealing leaves unheld still lacked the C library's own | added to both |
+| R19-R1 | remark | a 187-column comment line and ragged wraps in the script and the record | rewrapped |
+| R19-R2 | remark | How to apply named an outside C library signal without "may" | "which may" |
+| R19-R3 | remark | the record's Linux fact did not say Linux was not measured | said |
+| R19-R4 | remark | the self-test's comments said "glibc's own" and named more than the arm checks | corrected |
+| R19-R5 | remark | rounds 14 and 15's leaf texts leave the C library's own out | they stand as written; later rows their correction |
+| R19-R6 | remark | no "After round 18" sentence in the leaf | the log rows hold it; round 19's sentence added |
+| R19-R7 | remark | closed units unsealed elsewhere | not this change's |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.

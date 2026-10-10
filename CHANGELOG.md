@@ -103,7 +103,8 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 
 - An interrupt that came while sealing's own report could not be written said nothing had been written, though the
   seal was made and kept; with the report's pipe broken it now says the outcome could not be said. The texts name the
-  signals sealing leaves unheld — SIGKILL, SIGSTOP and seven fault signals — rather than claiming every signal.
+  signals sealing leaves unheld — SIGKILL, SIGSTOP, seven fault signals and, on Linux, the C library's own — rather than
+  claiming every signal.
 - Validation: arms for the mask in force at the first write, a lost report, a plain file at the index's temporary path
   and the error path's own breach line; six deliberate breaks, each caught by an untracked runner, so not durable (109
   arms).
@@ -124,7 +125,8 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 
 `ARCHOGEN-PROGRAM-0543` (leaf `PROGRAM.69`), `2026-10-10`.
 
-- Sealing now holds every signal but SIGKILL, SIGSTOP and seven fault signals — not only Ctrl-C, a terminate and a
+- Sealing now holds every signal but SIGKILL, SIGSTOP, seven fault signals and, on Linux, the C library's own — not
+  only Ctrl-C, a terminate and a
   hang-up — until it is done, and an interrupt then reports what happened: before anything was written, or after the
   seal said its outcome. An error that stops a seal is reported before the stop takes effect. A stray file at a
   temporary path is refused before anything is written.
