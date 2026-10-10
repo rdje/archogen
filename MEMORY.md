@@ -16,7 +16,7 @@
 - **Active tree:** `M3` → frontier `M3.6`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s is `PROGRAM.69`'s review, round 26 next; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M3.6.6.4`'s round 22, `PROGRAM.76`'s round 11 and `PROGRAM.69`'s round 26 running;
+- **Next action:** `M3.6.6.4`'s round 23, `PROGRAM.76`'s round 11 and `PROGRAM.69`'s round 26 running;
   then `M3.3`. `M3.6.3.2.1`'s baseline is committed, its "unchanged" the next cadence push's run to show. `M2`'s open
   leaves all wait on the director: `M2.7.4.5` and `M2.7.6`'s review and hosting half. This project uses no branches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of

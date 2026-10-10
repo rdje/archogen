@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — one correction in the generated-sources review history set right
+
+`ARCHOGEN-M3-0587` (leaf `M3.6.6.4`), `2026-10-10`.
+
+- The review history's answer to a remark of round 21 misattributed which rounds had found what; round 22's entry
+  corrects it, round 21's standing as written. One sentence of the record now carries the qualifier the rest of it
+  uses: the parent's tests hold its rules at the instances they build.
+- Validation: sixteen route tests; the crate's 183 tests; the book's gates; the focused tier on the staged tree.
+
 ## archogen — the review-count check holds exactly what it says, and names what it skips
 
 `ARCHOGEN-PROGRAM-0586` (leaf `PROGRAM.69`), `2026-10-10`.

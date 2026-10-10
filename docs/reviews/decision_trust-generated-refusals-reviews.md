@@ -366,6 +366,23 @@ earlier rounds found the list, the census and the sweep themselves short.
 | R21-R4 | remark | `M3.6.9`'s status named round 20 without its findings | "round 20 (D1–D4)" |
 | R21-R5 | remark | the round-20 changelog entry's "each round found a detail wrong" — rounds 19 and 20 did | corrected here; the entry stands as written, under the note |
 
+**Round 22**, `2026-10-10`, of `8359c5f`, by a read-only context that had not written the record, fenced from the
+sealed evaluation set. It ran the doctrine gate whole in its clone and the crate's tests in round 18's export, its code
+paths identical (183 passed), found every ledger entry the note covers identical to its commit's text, every rule §6
+calls the parent's decided and tested there, and every route built by its row. Verdict: 1 defect and 3 remarks. Round
+21's paragraph above stands as written; this round corrects its answer to R21-R5: rounds 15, 16 and 17 also found
+`M3.6.9`'s restatement of the evidence wrong (R15-R3, R16-R2, R17-D3) — rounds 15 to 17, 19 and 20 in all — and the
+sweep was found short by round 19 alone, the list by rounds 15 to 17, the census by round 18. And R21-R2's answer: the
+measurement stands in the leaf's Verification Log row of round 19 and in this history, and the changelog's round-19
+entry says it too.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R22-D1 | defect | round 21's answer to R21-R5: "only rounds 19 and 20 found the summary wrong", "the earlier rounds found … the sweep short" | corrected here, round 21's paragraph standing as written |
+| R22-R1 | remark | "The route"'s "(its rule, held by its instrument's tests)" unqualified | "at the instances they build" |
+| R22-R2 | remark | "round 19's row … alone" ambiguous, and passing over the changelog | corrected here: the leaf's Verification Log row of round 19, and the changelog's round-19 entry |
+| R22-R3 | remark | the changelog's rollover, due at the next entry, would move three of this leaf's entries out of the note's reach | the note names segment `0021`, updated in the rollover's own commit, `e7fedd7` |
+
 ## Why
 
 The record closes on a round that finds no defect, as every design here does; each round, its findings and their

@@ -48,11 +48,11 @@ one through a file no form declares and no header marks is the parent's §8 limi
 
 **The route.** A file made from another generator's output is declared as the last step of one generation: its form
 names every committed generator file of every step — each judged as the parent's §5 judges a generator file against the
-programs that read the result (its rule, held by its instrument's tests) — and every committed file any step reads, and
-the intermediate file is the generation's own product, never committed. A marked input, or a marked script a form would
-name as a generator — a vendored copy among them (§3) — is such an intermediate: the generation remakes it from
-committed files, its own generator and inputs, or copies of them for a vendored one, never committing it; one it cannot
-remake so has no route (§5). A marked crate root has none: a
+programs that read the result (its rule, held by its instrument's tests at the instances they build) — and every
+committed file any step reads, and the intermediate file is the generation's own product, never committed. A marked
+input, or a marked script a form would name as a generator — a vendored copy among them (§3) — is such an intermediate:
+the generation remakes it from committed files, its own generator and inputs, or copies of them for a vendored one,
+never committing it; one it cannot remake so has no route (§5). A marked crate root has none: a
 program built from it compiles a generated file, a build the gate does not compute. A script that remakes and builds it
 is a generator the gate takes, but the program it builds is the script's own dependency, believed with whatever its
 build compiles, another role's package among them — the parent's §8 limit, not a route. A program-target generator whose
@@ -212,3 +212,4 @@ finding answered here. The history is
 | 19 | `2026-10-10` | 2, and 3 remarks | answered by method: `M3.6.9`'s criterion its own to design and review — round 18's sweep mutates none of the lines the survivors sit on, and its copy cannot run the trust tests; §6 states no criterion; round 18's answers to its remarks, "the sweep's to kill", corrected here |
 | 20 | `2026-10-10` | 4, and 3 remarks | answered by method: `M3.6.9`'s goal points to the evidence in this history and restates none; round 19's "the survivors sit on lines the sweep does not mutate" and "never narrow an iteration" corrected — it makes none of the survivors' mutations; round 18's answers to its remarks, as row 19 says, are `M3.6.9`'s to hold by the criterion it designs; §6's antecedent |
 | 21 | `2026-10-10` | 2, and 5 remarks | answered: `M3.6.9`'s Reproduce restates nothing — the history records each finding as its round states it; row 20's "as row 19 says" is R19-D1's answer in the history; round 20's "all but two" was the four defects; two antecedents |
+| 22 | `2026-10-10` | 1, and 3 remarks | answered: round 21's answer to R21-R5 corrected in the history — rounds 15 to 17, 19 and 20 found `M3.6.9`'s restatement wrong, the sweep found short by round 19 alone; "The route"'s generator judgment qualified "at the instances they build"; the note above the Commit Log names the changelog segment `0021`, in the rollover's own commit |
