@@ -156,9 +156,12 @@ a change that leaves it stale, so it is never edited by hand.
 ## G
 
 - **GB** — [definition](glossary.md), [Modules and composition](modules.md), [The engine API](engine-api.md)
+- **generated source** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md)
+- Generated sources — [Checks that must not share a mistake: the trust gate](trust.md#generated-sources)
 - github-actions — [What this project relies on from outside](ledger.md#github-actions)
 - github-actions-syntax — [What this project relies on from outside](ledger.md#github-actions-syntax)
-- **GNU** — [definition](glossary.md), [Verifying the toolchain](verification.md)
+- **GNU** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md), [Verifying the
+  toolchain](verification.md)
 - **GPG** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 
 ## H
@@ -308,6 +311,9 @@ a change that leaves it stale, so it is never edited by hand.
   command line](cli.md), [The engine API](engine-api.md), [What this project relies on from outside](ledger.md), [What
   is versioned, and what changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md),
   [Annex B: The checks that keep the repository honest](annex-repository.md)
+- **provenance** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [What a report may
+  claim](evidence.md), [Checks that must not share a mistake: the trust gate](trust.md), [The S0 early generation
+  path](s0.md), [What is versioned, and what changing it costs](versions.md)
 - provenance-format — [What is versioned, and what changing it costs](versions.md#provenance-format)
 - **provider** — [definition](glossary.md), [Introduction](introduction.md), [The boundary: functionality versus
   implementation](boundary.md), [Presence, absence, and relevance](presence.md), [Matching an offer to a
@@ -369,8 +375,10 @@ a change that leaves it stale, so it is never edited by hand.
 - semulith — [What this project relies on from outside](ledger.md#semulith)
 - Sets: what a part accepts — [Matching an offer to a requirement](matching.md#sets-what-a-part-accepts)
 - **SHA-256** — [definition](glossary.md), [What a report may claim](evidence.md)
+- **shared item** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md)
 - **SI** — [definition](glossary.md), [Quantities and units](quantities.md)
 - Silence is not admission — [The supported profile](profile.md#silence-is-not-admission)
+- **SQL** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md)
 - **SSI** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - States and priorities — [The runtime: decisions, not actions](runtime.md#states-and-priorities)
 - Status is derived, never written — [Where the engine's knowledge comes from: the
@@ -460,6 +468,7 @@ a change that leaves it stale, so it is never edited by hand.
 
 - **UART** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Where generated systems
   run](targets.md)
+- **UTF-8** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md)
 
 ## V
 
@@ -538,12 +547,13 @@ a change that leaves it stale, so it is never edited by hand.
 
 ## X
 
+- **XML** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md)
 - **xRET** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 
 ## Y
 
-- **YAML** — [definition](glossary.md), [Verifying the toolchain](verification.md), [What this project relies on from
-  outside](ledger.md)
+- **YAML** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md), [Verifying the
+  toolchain](verification.md), [What this project relies on from outside](ledger.md)
 
 ## Numbers and symbols
 

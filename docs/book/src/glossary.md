@@ -109,12 +109,20 @@ as `F26`, task-tree leaves — are names, not words, and are not listed.
 - **SHA-256** — Secure Hash Algorithm with a 256-bit result: a fingerprint of a file, which changes if one byte
   does. See [What a report may claim](evidence.md).
 - **SI** — the International System of Units (Système international). See [Quantities and units](quantities.md).
+- **SQL** — Structured Query Language: the language of relational databases, met here as a kind of file whose `--`
+  comments the generated-file recogniser reads and whose `/* */` comments it does not. See [Checks that must not share a
+  mistake: the trust gate](trust.md).
 - **TL16C550C** — a serial-port chip of the 16550 family, the kind QEMU's machine emulates: a part number, not an
   acronym. See [What this project relies on from outside](ledger.md).
 - **UART** — Universal Asynchronous Receiver-Transmitter: a serial port, the simplest way a small board talks. See
   [Where generated systems run](targets.md).
+- **UTF-8** — the common way of writing Unicode text as bytes, a character taking one byte or several; the
+  generated-file recogniser reads each invalid sequence in a file as the replacement character, `U+FFFD`. See [Checks
+  that must not share a mistake: the trust gate](trust.md).
 - **WCET** — Worst-Case Execution Time: the longest a piece of code can take, the number every timing promise rests
   on. See [Describing a workload](workload.md).
+- **XML** — Extensible Markup Language: a text format of nested tags, whose files may open with a declaration of
+  their version, `<?xml …?>`. See [Checks that must not share a mistake: the trust gate](trust.md).
 - **xRET** — RISC-V's return-from-trap instructions, `MRET` and `SRET`, the `x` standing for the mode. See [What this
   project relies on from outside](ledger.md).
 - **YAML** — "YAML Ain't Markup Language": the text format CI workflows are written in. See [Verifying the
@@ -137,6 +145,9 @@ as `F26`, task-tree leaves — are names, not words, and are not listed.
 - **description** — a text in eADL saying what a system must do, never how. See [Reading a description](reading.md).
 - **fault** — something gone wrong that the runtime must answer: an overrun, a stack overflow, an unexpected trap or
   a failed check. See [The runtime](runtime.md).
+- **generated source** — a file committed as a program's or a script's output, such as a table written from a data
+  file; the trust gate asks that it be declared, with what wrote it and from what. See [Checks that must not share a
+  mistake: the trust gate](trust.md).
 - **halt** — stopping the whole system on a fault it cannot contain, keeping a record of the first one. See [The
   runtime](runtime.md).
 - **interrupt** — a signal from a device or the timer that makes the processor drop what it is doing and run other
@@ -151,11 +162,17 @@ as `F26`, task-tree leaves — are names, not words, and are not listed.
 - **priority** — how urgent a task is; `1` is the most urgent. See [Describing a workload](workload.md).
 - **profile** — the set of features and limits a description is checked against, such as `rt-static-up-v1`. See [The
   supported profile](profile.md).
+- **provenance** — what a generated source was made from: the generator that wrote it and the inputs it read. Two
+  checks whose generated sources share a provenance can share its mistakes. See [Checks that must not share a
+  mistake: the trust gate](trust.md).
 - **provider** — a block or a platform of a description, whose offers a requirement may be met by. See [Matching an
   offer to a requirement](matching.md).
 - **release** — the moment a task's next round of work becomes due. See [Describing a workload](workload.md).
 - **runtime** — the code inside every generated system that decides which task runs next and what to do when
   something goes wrong. See [The runtime](runtime.md).
+- **shared item** — anything two checked programs both use — a package, a file, a generated source's provenance —
+  which the trust gate lists until a person has reviewed it. See [Checks that must not share a mistake: the trust
+  gate](trust.md).
 - **task** — one piece of work a system does over and over, such as reading a sensor every 10 ms. See [Describing a
   workload](workload.md).
 - **trap** — the processor stopping its current code to run the system's own, because of an interrupt or an

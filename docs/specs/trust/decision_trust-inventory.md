@@ -376,6 +376,10 @@ committed generated sources add to this one, and each passage its §7 lists read
 
 Its sentence that `Cargo.lock` is recorded and is not part of the build configuration stands, unamended.
 
+*Completed `2026-10-10`, by `M3.6.6.3`, its review's round 1, D2:* §4's comparison-harness item gains the harness's
+provenance as an aspect, as its files are, and §6's `trust-shared-changed` one whose provenance moves — passages the
+record's §7 list omitted, corrected there the same day.
+
 **Case 4 is judged where an inventory is consumed** (R1 A8). The gate builds its own inventory and cannot find it
 stale. `cargo xtask trust-verify <package>` refuses a package whose inventory is missing, whose build identity is not
 the package's commit and toolchain, or whose artifact differs from the inventory's; one whose report names another

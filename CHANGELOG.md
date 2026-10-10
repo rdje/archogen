@@ -5,6 +5,22 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — generated sources in the trust chapter
+
+`ARCHOGEN-M3-0518` (leaf `M3.6.6.3`), `2026-10-10`.
+
+- The book's trust chapter now gives the whole account of committed generated sources: what a declaration says and
+  that it is believed, how an undeclared one is recognised and what the recogniser cannot see, what stays refused until
+  chains and vendored inputs are decided, what two checks share through a generator, what a generator may be, and every
+  limit the gate's report states. The glossary gains the words it needs.
+- The chapter's list of markers and its table of comment syntax are checked against the recogniser's code by the same
+  tests that check the design record's, so the book cannot drift from what the tool does.
+- Independent review rounds read the chapter against the record and the code; the defects they found were fixed, one
+  of them at its root in the two design records.
+- Validation: the tests failing before the chapter held its tables, then passing, and failing again for each break
+  made in the chapter's copy; the real tree's inventory and gate; the crate's tests, the book's checks and build, and
+  the focused tier (`passed — 3 passed, 0 failed`).
+
 ## archogen — the generated-sources gate is whole
 
 `ARCHOGEN-M3-0516` (leaf `M3.6.6.2.5`, closing `M3.6.6.2`), `2026-10-10`.

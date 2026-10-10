@@ -349,6 +349,18 @@ file and every unit a live form's generator build compiles".
 
 Its sentence that `Cargo.lock` is recorded and is not part of the build configuration stands, unamended.
 
+*Corrected `2026-10-10`, by `M3.6.6.3`, its review's rounds 1 to 5, reading the code beside this text:* the list
+above omitted the new aspect of §4's comparison-harness item, the harness's provenance (§5), and with it
+`trust-shared-changed`'s new trigger, a comparison harness whose provenance moves; the parent's clarification is
+completed so. And this section's first two sentences say more than this record decides, and in places the opposite of
+what the code does. The first reads: this record widens the sets the parent's case 5 is measured outside of by every
+provenance file and unit a live form's generator build compiles, and claims of a change outside them
+no more than the parent's case 5 does — whose own sentences are too wide for files the gate reads to build or admit the
+tree, filed as `M3.6.7`. The second reads as one rule: a change inside those sets is judged by §2–§6 and the parent's
+rules, as any change is, and reports "unchanged" only when the gate's change part names nothing — an edit can move the
+harness's item by its content or its provenance, make or re-form a copy, change a generator's build, or, removing,
+linking or marking a file, be refused or leave the gate unable to judge. No behaviour moves.
+
 ### 8. What stays outside, stated in the report
 
 The gate's report states what the inventory does not see — the parent's list (§3), which no report states today, and

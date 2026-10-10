@@ -851,7 +851,7 @@ pub const UNSEEN: &[&str] = &[
     "a generator's own dependencies — a script's interpreter, the modules its executable's build compiles beside its \
      crate root — which are no provenance files: an edit to them changes no item until the output is regenerated (§8)",
     "what a program reads on another host: a file read only under another target's `cfg` is stale on the baseline's \
-     host and, marked and undeclared, refused off it (§8)",
+     host and, marked and undeclared, refused off it; the admissions meet the same limit (§8)",
 ];
 
 /// A file of a commit's tree, or none when the tree does not hold it.

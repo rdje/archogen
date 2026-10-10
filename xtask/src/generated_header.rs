@@ -48,7 +48,8 @@ pub enum Syntax {
 }
 
 /// The extensions and the file names each syntax is read for: the whole of the recogniser's reach. §3 of the
-/// generated-sources record holds the same table, machine-read, and a test holds the two equal.
+/// generated-sources record and the book's trust chapter hold the same table, machine-read, and a test holds each
+/// equal to this one.
 pub const TABLE: &[(Syntax, &[&str], &[&str])] = &[
     (
         Syntax::Slash { nests: true },
@@ -290,7 +291,8 @@ pub fn marked(path: &str, bytes: &[u8]) -> bool {
 #[cfg(test)]
 mod tests {
     //! The corpus: every case the record's review rounds raised, each with the outcome the rule gives it; and the
-    //! record's machine-read table of comment syntax, held equal to [`super::TABLE`].
+    //! machine-read markers and table of comment syntax of the record and of the book's trust chapter, held equal to
+    //! [`super::MARKERS`] and [`super::TABLE`].
 
     use super::marked;
 
@@ -949,17 +951,28 @@ mod tests {
         }
     }
 
-    /// A machine-read block of the record: the lines after `<!-- machine-read: NAME -->` up to the first blank one.
-    fn record_block(name: &str) -> Vec<String> {
-        let record = std::fs::read_to_string(
+    /// The record, then the book's trust chapter, which states the markers and the table of comment syntax again
+    /// (`M3.6.6.3`): each copy is held equal to the code, so neither drifts from it.
+    const DOCUMENTS: [&str; 2] = [
+        "docs/specs/trust/decision_trust-generated-sources.md",
+        "docs/book/src/trust.md",
+    ];
+
+    fn document(path: &str) -> String {
+        std::fs::read_to_string(
             std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-                .join("../docs/specs/trust/decision_trust-generated-sources.md"),
+                .join("..")
+                .join(path),
         )
-        .expect("the record");
-        record
+        .unwrap_or_else(|e| panic!("{path}: {e}"))
+    }
+
+    /// A machine-read block of a document: the lines after `<!-- machine-read: NAME -->` up to the first blank one.
+    fn block(path: &str, name: &str) -> Vec<String> {
+        document(path)
             .split(&format!("<!-- machine-read: {name} -->"))
             .nth(1)
-            .unwrap_or_else(|| panic!("the record's machine-read `{name}`"))
+            .unwrap_or_else(|| panic!("{path}'s machine-read `{name}`"))
             .lines()
             .skip(1)
             .take_while(|l| !l.trim().is_empty())
@@ -967,23 +980,28 @@ mod tests {
             .collect()
     }
 
+    fn record_block(name: &str) -> Vec<String> {
+        block(DOCUMENTS[0], name)
+    }
+
     #[test]
     fn the_record_s_markers_are_the_code_s() {
-        let block = record_block("markers");
-        let mut listed: Vec<String> = block
-            .join(" ")
-            .split('`')
-            .skip(1)
-            .step_by(2)
-            .map(str::to_owned)
-            .collect();
-        listed.sort();
         let mut code: Vec<String> = super::MARKERS.iter().map(|m| (*m).to_owned()).collect();
         code.sort();
-        assert_eq!(
-            listed, code,
-            "the record's §3 markers and generated_header::MARKERS"
-        );
+        for doc in DOCUMENTS {
+            let mut listed: Vec<String> = block(doc, "markers")
+                .join(" ")
+                .split('`')
+                .skip(1)
+                .step_by(2)
+                .map(str::to_owned)
+                .collect();
+            listed.sort();
+            assert_eq!(
+                listed, code,
+                "{doc}'s markers and generated_header::MARKERS"
+            );
+        }
     }
 
     #[test]
@@ -1025,16 +1043,18 @@ mod tests {
 
     #[test]
     fn the_record_s_table_of_comment_syntax_is_the_code_s() {
+        for doc in DOCUMENTS {
+            table_is_the_code_s(doc);
+        }
+    }
+
+    fn table_is_the_code_s(doc: &str) {
         use super::{Syntax, TABLE};
-        let record = std::fs::read_to_string(
-            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-                .join("../docs/specs/trust/decision_trust-generated-sources.md"),
-        )
-        .expect("the record");
-        let table = record
+        let text = document(doc);
+        let table = text
             .split("<!-- machine-read: comment-syntax -->")
             .nth(1)
-            .expect("the record's machine-read table");
+            .unwrap_or_else(|| panic!("{doc}'s machine-read table"));
         let words = |cell: &str| -> Vec<String> {
             let mut w: Vec<String> = cell
                 .split('`')
@@ -1074,9 +1094,6 @@ mod tests {
                 (*syn, sorted(exts), sorted(names))
             })
             .collect();
-        assert_eq!(
-            rows, code,
-            "the record's §3 table and generated_header::TABLE"
-        );
+        assert_eq!(rows, code, "{doc}'s table and generated_header::TABLE");
     }
 }
