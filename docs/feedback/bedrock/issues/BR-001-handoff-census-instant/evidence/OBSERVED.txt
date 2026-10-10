@@ -1,0 +1,7 @@
+# repro.sh /path/to/bedrock, bedrock 835547e, 2026-10-10, exit 0
+== BR-001 observations ==
+  a helper naming the checkout, alive 4 s, pid 83981
+  census while it lived ......... exit 1, names it: yes
+  census once it had exited ..... exit 0, names it: no
+
+  REPRODUCED — the census refused a handoff for a process that exited within 4 s

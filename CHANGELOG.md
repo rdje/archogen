@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a report to the template this project came from
+
+`ARCHOGEN-PROGRAM-0537` (leaf `PROGRAM.75`), `2026-10-10`.
+
+- The template's handoff check judges one instant, so a terminal helper living a few seconds can make it fail and
+  then pass. archogen works around it with its own second sample, and now reports it to the template's owner as an
+  outbound issue with a reproducer measured on the template's current revision, proposing the same second sample.
+- Validation: the reproducer, reproducing; the feedback registers' checks.
+
 ## archogen — sealing claims only what it does
 
 `ARCHOGEN-PROGRAM-0535` (leaf `PROGRAM.69`), `2026-10-10`.

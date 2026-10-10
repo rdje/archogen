@@ -11,6 +11,7 @@ state and history in the issue — so a report stays live instead of becoming a 
 
 | Vendor | Tracker | Component | Bugs | Open | Blockers |
 | --- | --- | --- | --- | --- | --- |
+| bedrock | [`bedrock/`](bedrock/INDEX.md) | the portable spine's handoff census | 1 | 1 | 0 |
 | LinkedSpec | [`linkedspec/`](linkedspec/INDEX.md) | Rust backend + shipped Lispish grammar | 8 | 1 | 0 |
 
 **Open** counts the bugs not yet resolved from archogen's side: `open`, `acknowledged` or

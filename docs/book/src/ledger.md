@@ -122,7 +122,7 @@ the day a chapter or a decision relies on it, as Miri did.
 | Pinned at | `file:DOCTRINE_VERSION` |
 | Retrieved | `2026-09-30`, read-only, at upstream revision `5af0c1c5b9cc2a65f51ecda1c0937fbc234c84da` |
 | Hash | not captured as a digest. The revision above is the identity: `scripts/update_scaffold.sh` is that revision's file plus one recorded hunk, and `VISIBILITY.md` and `DOCTRINE_VERSION` are its bytes (`docs/decisions/decision_scaffold-updater-adopted.md`) |
-| Scope | the files named in `scripts/update_scaffold.sh`'s `NEUTRAL` and `SEED_ONCE` arrays |
+| Scope | the files named in `scripts/update_scaffold.sh`'s `NEUTRAL` and `SEED_ONCE` arrays, and the outbound register `docs/feedback/bedrock/` |
 | Known limitations | seven neutral files carry project content and differ from upstream by design; a sync sets the template's copies aside in `.bedrock-incoming/` and never overwrites. Four scratch sites in scaffold-owned files write off this volume (`docs/decisions/decision_scratch-on-the-repository-volume.md`) |
 | Revalidation trigger | `DOCTRINE_VERSION` changing; an upstream release |
 | Named as | `bedrock` |
