@@ -47,6 +47,8 @@ a change that leaves it stale, so it is never edited by hand.
 ## B
 
 - bedrock — [What this project relies on from outside](ledger.md#bedrock)
+- Before handing the workspace over — [Annex B: The checks that keep the repository
+  honest](annex-repository.md#before-handing-the-workspace-over)
 - Bounds remember where they came from — [What a report may claim](evidence.md#bounds-remember-where-they-came-from)
 - **BSD** — [definition](glossary.md), [Verifying the toolchain](verification.md)
 - Building one — [The S0 early generation path](s0.md#building-one)
@@ -208,7 +210,7 @@ a change that leaves it stale, so it is never edited by hand.
   scheduling checker establishes](analysis.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [The
   runtime: decisions, not actions](runtime.md), [Where generated systems run](targets.md), [Verifying the
   toolchain](verification.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
-  detail](annex-runtime.md)
+  detail](annex-runtime.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
 - **JSON** — [definition](glossary.md), [The engine API](engine-api.md), [What is versioned, and what changing it
   costs](versions.md)
 
@@ -263,7 +265,7 @@ a change that leaves it stale, so it is never edited by hand.
   requirement](matching.md#one-outcome-per-fact-then-a-verdict)
 - One outcome vocabulary — [The engine API](engine-api.md#one-outcome-vocabulary)
 - **OS** — [definition](glossary.md), [The boundary: functionality versus implementation](boundary.md), [What this
-  project relies on from outside](ledger.md)
+  project relies on from outside](ledger.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
 - **OSEK** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [What this project relies on
   from outside](ledger.md)
 - osek-os — [What this project relies on from outside](ledger.md#osek-os)

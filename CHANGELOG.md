@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — handoff refuses failed or missing OS census reads
+
+`ARCHOGEN-PROGRAM-0607` (leaf `PROGRAM.80`), `2026-10-11`.
+
+- The project handoff wrapper observes the native census's actual process snapshot and open-handle reads, in each
+  sample. Denied, failed or missing reads, and an empty process snapshot, exit 2 with an unknown outcome and no
+  OK verdict. A process that exits during an ancestry lookup is allowed; persistent-job detection is preserved.
+- The native scaffold file is unchanged. The bootstrap, toolbox and book use the guarded wrapper; the book states
+  the sampling limits. Private receipts stay on the repository volume and are removed on exit.
+- Validation: six regression arms failed against the old core; all nine arms pass after repair. A real restricted
+  run refuses, a real OS-access run passes; zero receipt directories remain; syntax and book gates pass. No Rust
+  source changed. The next review answer, PROGRAM.69 round 31, is owned in the task tree.
+
 ## archogen — escaped summary-cell pipes cannot hide later counts
 
 `ARCHOGEN-PROGRAM-0606` (leaf `PROGRAM.69`), `2026-10-11`.

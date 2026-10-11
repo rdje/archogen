@@ -2,9 +2,10 @@
 
 [Verifying the toolchain](verification.md) explains how archogen's code is tested. This annex is about the
 repository itself — its book, its records, its task trees — and the checks that stop them drifting from the code or
-from the truth. Each is a script under `scripts/`, run before every commit by the doctrine enforcer
-(`scripts/check_doctrines.sh`) and again in CI, and each has its own RED arms proving it can refuse; the full
-register is `DOCTRINE_ENFORCEMENT.md`. The sections below are each check's account, moved here from the chapter so
+from the truth. The doctrine checks run before every commit by the doctrine enforcer
+(`scripts/check_doctrines.sh`) and again in CI; the handoff census runs before handing the workspace over. Each is
+a script under `scripts/` with RED arms proving it can refuse; the full doctrine register is
+`DOCTRINE_ENFORCEMENT.md`. The doctrine accounts below moved here from the chapter so
 that the chapter can stay readable; the move changed nothing in them but two links to the
 [ledger](ledger.md) the source-ledger gate asked for.
 
@@ -62,6 +63,24 @@ the repository's own data store is a git-ignored `.archogen-data/`
 $ bash scripts/check_scratch_locality.sh              # the gate
 $ bash scripts/check_scratch_locality.sh --self-test  # its RED arms, on scratch repositories
 ```
+
+## Before handing the workspace over
+
+```console
+$ bash scripts/handoff_census.sh             # the project handoff command
+$ bash scripts/handoff_census.sh --self-test # synthetic failures and real process controls
+```
+
+The command checks for project work still running. A process named by the native census counts when a second
+sample still holds its process number and command line, eight seconds later by default. A short-lived terminal helper can
+drop out; a persistent job prevents handoff. Each sample must complete its actual OS process snapshot and
+open-handle read. If either fails, is denied or is missing, the wrapper exits **2**, says the outcome is unknown,
+and withholds a `handoff: OK` verdict. A process that exits during an ancestry lookup does not invalidate the full snapshot.
+The native scaffold file stays unchanged; the wrapper is the project command (`PROGRAM.80`).
+
+Exit **0** means no project job persisted across the samples; exit **1** names one that did. The check is a snapshot:
+a job starting after the first sample is not counted unless another run finds it, and a job whose process number and command
+line both change can escape the comparison. Run it after the work and its background checks finish.
 
 ## A commit holds what was run
 

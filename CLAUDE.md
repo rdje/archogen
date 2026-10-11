@@ -40,9 +40,10 @@ human is working. Follow it exactly.
 - **Keep the roadmap, the code, and the docs (README + mdBook) aligned** — locked
   together, no drift, for past, present, and future changes.
 - **No background job at a handoff point.** Before you end a session (`/exit`, a pause, a
-  handover), run `bash scripts/check_no_background_jobs.sh` and make it print `handoff: OK`:
+  handover), run `bash scripts/handoff_census.sh` and make it print `handoff: OK`:
   a job that outlives its session rewrites tracked files under the next one, with its log
-  gone. Kill stragglers AND their children — a parent's death does not propagate.
+  gone. The wrapper checks that the native census's required OS reads actually succeeded; exit 2 means unknown,
+  never safe to clear. Kill stragglers AND their children — a parent's death does not propagate.
 - **A commit message ends with its own last line** — no agent/tool attribution trailers
   (`COMMIT.md`); the `commit-msg` hook refuses them.
 - **Every other git repository is read-only — in both directions.** *Outbound:* never create a
