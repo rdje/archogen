@@ -513,8 +513,20 @@ On `2026-10-11`, the five actual non-progress mutations each produce finishing n
 all captured original/copied inputs restore.
 On `2026-10-11`, the complete exact catalogue run again kills all 32 entries and retains every previous killing-name set.
 All production prefixes are byte-identical to the pre-repair commit.
-The child-protocol controls and focused format/lint/whole-suite gate pass. These are repair regressions; the complete
-production sweep must still be retried. Each survivor requires a behavioral repair or a justified per-file equivalence.
+The child-protocol controls and focused format/lint/whole-suite gate pass. These are repair regressions, separate
+from the complete production measurement that follows.
+
+Measured `2026-10-11` at source 36154d6: the complete `trust.rs` retry attempts all 1,420 production candidates with every operator, the original 103-name parent population and no equivalents file. Its native baseline passes in 17s. Results are 802 finishing named kills, 540 survivors and 78 compiler refusals, with no timeout or unjudged result. The native strict exit is 1: this is a complete measurement, not an adequacy pass (`M3.6.9.6.3.2.1.3`).
+
+```bash
+bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask \
+  --timeout 600 --timeouts-fail --filter=trust:: \
+  --filter=trust_generated:: --filter=trust_gate:: --filter=--skip --filter=route_tests
+```
+
+Measured `2026-10-11`: complete identity, actual replacement, original-parent killing-name and terminal per-operator counts agree; independent Python and system hashes verify all 988 original and restored copied inputs. Altered identities, names, replacements, order, exits and counts refuse. The first attempt's complete results are retained, except that its five non-finishing cases now finish with named kills. Compiler refusals establish no coverage. Each of the 540 survivors has an individual assessment owner in `docs/tasks/M3.md`; the count is an obligation to assess behavior, not a count of confirmed defects or accepted equivalences.
+
+Each survivor requires a behavioral repair or a justified per-file equivalence before the final strict sweep.
 Timeout and unjudged results remain failures. Full adequacy and independent review stay open.
 Recorded native killing names remain accessible through the original `docs/tasks/M3.md` leaf stubs, which now
 route completed evidence to sealed task-history records. The stubs retain commit identities; the archive index

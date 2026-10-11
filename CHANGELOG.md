@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — complete initial trust production measurement
+
+`ARCHOGEN-M3-0660` (leaf `M3.6.9.6.3.2.1.3`), `2026-10-11`.
+
+- Attempt all 1,420 production candidates with every operator and the unchanged parent filters: 802 finishing
+  named kills, 540 survivors, 78 compiler refusals, no timeout/unjudged. Native strict exit 1; complete measurement,
+  not an adequacy pass. Preserve the first refusal and all earlier complete outcomes except five recovered kills.
+- Audit every identity/replacement/name and terminal per-operator count; eight falsifications refuse. All 988
+  originals and restored copies agree under Python/system hashes; every compiler refusal has a Rust source error.
+  No project job remains. Native producer and complete-result auditor tracked; supplemental audits ignored.
+- Individually own every survivor before classification, document the measurement and strict distinction in the
+  book, and advance live pointers to an unverified pipe-lifetime diagnostic before survivor assessment. No Rust,
+  test, operator or production edit. Documentation, navigation and history gates plus the pinned book pass.
+
 ## archogen — completed trust history sealed before the full retry
 
 `ARCHOGEN-M3-0659` (leaf `M3.6.9.6.3.2.1.4`), `2026-10-11`.
