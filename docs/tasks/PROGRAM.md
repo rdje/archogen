@@ -659,7 +659,10 @@ mdBook that is the director's window into the project.
   escaped-pipe reader as index and findings cells, so later counts remain visible. Round 31 answered: an unlisted
   row names its record by the first link; secondary explanations do not change its counting obligation. Round 32
   answered: failed staged reads require a successful index census and exact path comparison before any disk
-  fallback; a present unreadable entry or failed proof refuses. Ten new controls, all 91 arms pass; round 33 next.
+  fallback; a present unreadable entry or failed proof refuses. Ten new controls, all 91 arms pass. Round 33 reported
+  one P2 defect: angle-destination/title primary links can be skipped for a later link or no record. Owned here,
+  scheduled immediately after `M3.6.9`'s round-2 documentation answer; report `target/review-p69-r33/report.txt`
+  (untracked), the parent reproduction and durable regression repair next. The staged-read repair passed its probes.
   Goal: a closed subtree below an open top-level subtree is sealed too, so a tree whose top-level subtree stays open
   for long — on a blocked leaf, or a long feature — does not keep its finished leaves live.
   Reproduce / issue: `M3.6.6.2.1`'s commit was refused by `README-ROUTES`, *"docs/tasks/: 823457 bytes in total, over
@@ -1516,7 +1519,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.69` | `active` | its review open: round 33 in flight, on the staged-read repair |
+| 1 | `PROGRAM.69` | `active` | round 33 reported one primary-link syntax defect; repair next after the current M3 design-doc slice |
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The second row waits on the director's yes. The pending leaves beside them —

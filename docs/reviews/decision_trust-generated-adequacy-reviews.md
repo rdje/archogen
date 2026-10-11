@@ -38,7 +38,24 @@ seam admits the configuration of the repository the sweep's copy was made from.
 | R1-R7 | remark | judgment kinds no operator mutates: `if let`, `let … else`, `match` arms, `.values().any`, `max_by_key`, conditions over several lines | named as outside the operators; a defect of one held by its entry |
 | R1-R8 | remark | the leaf omits R23-R2 and cites the history's stub under `docs/reviews/` | both corrected |
 
-Round 2, by a context that did not write the record, is next.
+**Round 2**, `2026-10-11`, of `d16e7ec`, by a context that did not write the record, fenced from the sealed set.
+Verdict: 2 defects and 4 remarks. Its report and scoped static/standalone probes are under
+`target/review-m369-r2/`, untracked and not durable regression coverage; it ran no full production mutation builds.
+This answer corrects round 1's D1 answer and the then-current summaries: the 23 entries plus three omissions were
+not exhaustive, and named helper functions did not include their publication/comparison callers. The old review
+row and `ARCHOGEN-M3-0601`'s changelog and Commit Log entries stand as records of that answer, corrected here and by
+`ARCHOGEN-M3-0614`; neither the closed refusal review history nor sealed ledger bytes are rewritten.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R2-D1 | defect | four more recorded families lack exact entries: last live form, harness pair's second role, handed-data readers, and every generator of a build-read file; the exhaustive claim reaches six publication surfaces | the design's explicit census retains 23 and adds nine, including those four and the previous three, plus transitive build reads and middle-generator provenance found by reading the complete history; 32 specified pairs, deduplicated source findings; the catalogue table test will hold population, files and twin parity; summaries corrected through this answer |
+| R2-D2 | defect | selective helpers exclude marked-file census, program/pair provenance publication, form changes, item aspects and comparisons | sweep the complete production ranges of all three files, including callers; remove planned function filtering/extraction; existing operators list 932 candidates, planning only; imported facilities and constant/type declarations remain outside the stated sweep |
+| R2-R1 | remark | any enclosing source ancestor admits an intermediate target configuration through the seam | bind canonical source to its own Git top-level and the exact source/target/mutation-sweep/tree relation; malformed/intermediate/unrelated values refuse; the sweep replaces inherited source values; retain configuration-content rules and production single-root behavior |
+| R2-R2 | remark | a desired survive/kill pair can select a different defect on the same lines; one exact entry is already killed and new routes lack controls | add route controls first; record every candidate's actual outcomes and semantic relationship to the exact entry, including already-killed and unviable cases; never infer a witness from verdicts alone |
+| R2-R3 | remark | direct first/last comparison fails to compile for BTreeSet of borrowed strings | add copied-element variants alongside direct comparisons; eight narrowing assertions plus two membership controls independently pass for the recorded vector/set shapes; unviable variants are reported and count as no coverage |
+| R2-R4 | remark | strict sweep timeout handling leaves catalogue hangs counted as kills | add opt-in --timeouts-fail to the catalogue too and use it for both exact populations; ordinary catalogue mode unchanged; strict-mode controls must distinguish finishing kills, survivors, hangs and unviable entries |
+
+Round 3, by a context that did not write the record, is next. No implementation of this design has begun.
 
 ## Why
 

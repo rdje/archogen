@@ -430,6 +430,9 @@ marks, and every program's provenance is empty. A chain of generators and a gene
 stay refused, and a tool a script runs believed and named in every report, each for a reason and, where one exists, with
 a route within one step (`M3.6.6.4`, reviewed by a context that did not write it, its review closed `2026-10-10`). Whether the instrument's tests hold the generated-sources rules — what a program reads, the chain, the blob rule,
 each generator's role against each reader — wherever the code judges them, not only at the instances they build, is to
-be shown under a design in review (`M3.6.9`): each one-way defect a review recorded caught by those tests, and every
-mutant the project's sweep makes of the judgment code caught or shown harmless. The package the verifier
+be shown under a design in review (`M3.6.9`): a source-linked census of 32 proposed route/parent mutation pairs and
+sweeps of the complete production ranges in `xtask/src/trust.rs`, `xtask/src/trust_generated.rs` and
+`xtask/src/trust_gate.rs`. Each exact parent mutation must be killed by finishing parent tests; every sweep survivor
+needs an equivalence reason, and timeouts fail both strict modes. The design records actual operator reach and binds
+the test copy to its source repository; implementation waits for review closure. The package the verifier
 reads is fixed provisionally until `M4.7` writes real ones.

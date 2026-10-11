@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — parent-test criterion gains a source-linked census and complete production scope
+
+`ARCHOGEN-M3-0614` (leaf `M3.6.9`), `2026-10-11`.
+
+- Round 2's two defects and four remarks answered in the design: 32 specified route/parent pairs (23 existing plus
+  nine additions), whole production ranges including callers, a bound source/configuration seam, actual operator
+  outcomes and semantic witnesses, borrowed membership variants, and strict timeout modes in both harnesses.
+  Implementation still waits for a zero-defect review. The earlier `ARCHOGEN-M3-0601` entry's exhaustive claim was
+  too wide; it and that Commit Log row stand as historical statements, corrected by this answer.
+- Validation: the census matches all 23 existing IDs/files and resolves every finding reference; current operators
+  list 932 planning candidates (656 / 98 / 178); standalone membership probes pass eight narrowing assertions and
+  two controls, untracked evidence. Book gates and final staged counts/doctrines run before commit. Two stale parent
+  review-status index rows corrected. PROGRAM.69's newly reported primary-link defect is owned and scheduled next.
+
 ## archogen — sealed-evaluation custody review closes at zero defects
 
 `ARCHOGEN-PROGRAM-0613` (leaf `PROGRAM.76`), `2026-10-11`.
