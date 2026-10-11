@@ -221,8 +221,8 @@ pinned book build, bare-metal and browser builds, browser binding, emulator chec
 The integration stamp identifies that committed tree; later checkpoint documentation is recorded separately.
 
 This is local integration evidence. Complete current-source mutation adequacy and runner-baseline compatibility
-remain open. Supplemental restoration counts at this checkpoint used an ignored one-off helper; the task tree
-owns its maintained replacement and a fresh native replay before further survivor assessments.
+remain open. Supplemental restoration counts at this checkpoint used an ignored one-off helper. The maintained
+replacement and subsequent native replay are recorded below; historical helper limitations remain explicit.
 
 ## Checking restored inputs
 
@@ -267,6 +267,30 @@ production adequacy: retain the native command's actual finishing verdict separa
 
 Earlier supplemental restoration counts used ignored one-off helpers, as their task records qualify. This
 maintained producer supports fresh measurements; it does not retroactively make those historical helpers durable.
+
+The native replay on `2026-10-12` used committed code, catalogue and producer `d33a6e0`. Each entry below
+produced its named finishing kill with strict success, and the committed census verified complete input restoration
+after each entry, including unchanged gitlink metadata. The task record binds the snapshot, producer, source and
+catalogue hashes and retains per-case native exits and restoration receipts.
+
+| Native entry | Regression exercised |
+| --- | --- |
+| `json-number-grammar-unrestricted` | Incomplete numeric grammar admitted |
+| `json-raw-string-controls-admitted` | Unescaped controls admitted in strings |
+| `json-surrogate-low-half-unchecked` | A high surrogate joined to an invalid low half |
+| `json-unicode-escape-plus-admitted` | A leading plus accepted as a hexadecimal digit |
+| `trust-verifier-lossy-inventory-text` | Malformed inventory bytes accepted through lossy decoding |
+
+For example, run the numeric reversal between snapshot and restoration checks with repository-local stores:
+
+```sh
+CARGO_HOME="$PWD/target/cargo-home" TMPDIR="$PWD/target/tmp" \
+  XDG_CACHE_HOME="$PWD/target/cache" ARCHOGEN_MUTATE_TIMEOUT=600 \
+  cargo xtask mutate --timeouts-fail --only json-number-grammar-unrestricted
+```
+
+This closes the scoped restoration durability repair. Complete current-source mutation adequacy remains open;
+these native boundary regressions do not close additional rows of the initial `trust.rs` survivor census.
 
 ## Historical effects and current self-tests
 

@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — current JSON and inventory reversals replay with durable restoration evidence
+
+`ARCHOGEN-M3-0682` (leaf `M3.6.9.6.3.2.2.9.7.2`), `2026-10-12`.
+
+- Replay number grammar, raw string controls, surrogate joins, hexadecimal digits and lossy inventory decoding
+  against committed code/catalogue/producer d33a6e0. Every native entry yields a named finishing kill, strict 0.
+- The maintained census verifies all 1003 captured regular inputs after each entry, with independent Python/
+  system hashes and unchanged gitlink metadata. Retain exact snapshot/producer/source/catalogue identities and
+  per-case native exits/restoration receipts. Historical one-off helper limits remain explicitly qualified.
+- Environment/JSON/durability group closes after the consumed local integration checkpoint. Book/live frontier
+  advances to split_command assessment; no extra initial survivor closure or full current mutation-adequacy claim.
+
 ## archogen — maintained input snapshots verify native restoration
 
 `ARCHOGEN-M3-0681` (leaf `M3.6.9.6.3.2.2.9.7.1`), `2026-10-12`.
