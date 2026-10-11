@@ -1547,6 +1547,34 @@ mdBook that is the director's window into the project.
   Verification: `2026-10-11` — the Verification Log's row
   Commit: `ARCHOGEN-PROGRAM-0611 (leaf PROGRAM.82)`
 
+- ID: `PROGRAM.83`
+  Status: `active`
+  Goal: archive the newly closed PROGRAM/M3 task records and completed design-review histories without changing
+  their bytes, retaining all original citations through proven stubs.
+  Children: `PROGRAM.83.1`, `PROGRAM.83.2`
+
+- ID: `PROGRAM.83.1`
+  Status: `done` — closed-row grammar and archival ownership prepared
+  Goal: prepare the archival activity and normalize the adequacy review's closed-row grammar to the archive tool's
+  published contract, then commit that state before any archive is written.
+  Scope: task ownership, closed-row metadata, resume/frontier pointers and trailing whitespace in that index;
+  no frozen review body, sealed task body or implementation changes.
+  Reproduce / impact: the review archive tool refuses the adequacy history because its row begins `closed ` rather
+  than `closed: `; exit code 1 explicitly reports nothing written. The source history stays untouched.
+  Fix: normalize only its status prefix and trim a trailing blank index line. Prior closure date/result retained.
+  Verification: `2026-10-11` — published refusal reproduces; metadata prefix, unchanged source SHA-256, real staged
+  review/count and book gates pass before commit. No Rust source changed.
+  Commit: `ARCHOGEN-PROGRAM-0625 (leaf PROGRAM.83.1)`
+
+- ID: `PROGRAM.83.2`
+  Status: `pending`
+  Goal: use the published task/review seal commands for PROGRAM and M3 closed subtrees and the task-tree-sealing
+  and generated-adequacy review histories; verify byte/provenance gates and commit the archival result.
+  Scope: preserve the committed source bodies, count/hash/copy verification and exact retained stubs; an open
+  archival leaf stays live while the tool seals the older committed units. No rewriting of archive evidence.
+  Verification: `pending`
+  Commit: `pending`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1611,11 +1639,11 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.71` | `pending` | next program-spine repair: task-history index row order |
+| 1 | `PROGRAM.83.2` | `pending` | archive committed closed task/review records before resuming implementation |
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The second row waits on the director's yes. The pending leaves beside them —
-`PROGRAM.72`, `.73` and `.78` — are filed and owned. Every closed
+`PROGRAM.71`, `.72`, `.73` and `.78` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and a sealed leaf's full record is under `docs/task-history/PROGRAM/`.
 
 ## Decisions
@@ -1831,6 +1859,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-11` | `PROGRAM.69` (round 35) | new census and summary-boundary controls before/after repair; both full self-tests, syntax, book and final staged gates | history 129/3 of 132 and counts 140/10 of 150 before; repaired 132/0 and 150/0; finite selected-read failures never print a final aggregate, empty counterparts pass; staged counts 1 review / 35 rounds, history 175 files / 335 stubs; book 30/4, 67/25, 316, syntax and final doctrine gates |
 | `2026-10-11` | `PROGRAM.69` (round 36) | EOF/path/diagnostic controls before repair, then both complete self-tests; syntax, book and staged gates | history 133/13 of 146 and counts 153/3 of 156 before; repaired 146/0 and 156/0; literal byte and unusual-path counterparts, named no-traceback row refusals; independent round 37 next |
 | `2026-10-11` | `PROGRAM.69` (round 37 closure) | independent pinned review; root recount/authentication; staged count/history and book gates | zero defects/actionable arm gaps/remarks; 347 expected checker outcomes, separate 4 096 unit comparisons; retained results recount and 17 source identities pass, exit code 0; scope/limits retained; all 37 summary rows judged before removal from counted list |
+| `2026-10-11` | `PROGRAM.83.1` | published review archive refusal; closed-row prefix and source identity | old status prefix exits 1, nothing written; only index metadata corrected; history SHA-256 unchanged; staged count/history, book and doctrine gates before commit |
 
 ## Commit Log
 
@@ -2045,6 +2074,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0620 (leaf PROGRAM.69)` | **round 35 answered**: selected census reads refuse on failure rather than report successful zero/partial totals; every recognized summary header requires its next separator at all boundaries; eight census and twelve summary controls fail first, then complete suites pass 132/0 and 150/0; independent round 36 next |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0622 (leaf PROGRAM.69)` | **round 36 answered**: exact source-byte boundaries at EOF, NUL-delimited UTF-8 tree paths and named empty-row diagnostics; fourteen census and six count controls fail first; complete suites pass 146/0 and 156/0; independent round 37 next |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0624 (leaf PROGRAM.69)` | **review closes at round 37**: zero new defects, actionable arm gaps or remarks; bounded 347-invocation synthetic review and separate 4 096-case unit oracle; no broader native/history assurance claimed; all 37 round counts checked before closure |
+| `PROGRAM.83.1` | `ARCHOGEN-PROGRAM-0625 (leaf PROGRAM.83.1)` | prepare archival ownership and the adequacy review's exact closed-status prefix; history untouched, original closure date/result retained |
 
 ## Changelog
 

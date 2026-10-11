@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — completed-history archival is prepared
+
+`ARCHOGEN-PROGRAM-0625` (leaf `PROGRAM.83.1`), `2026-10-11`.
+
+- Own the committed closed PROGRAM/M3 task units and two completed review histories under PROGRAM.83.2. The
+  adequacy index status now uses the published archive contract's exact `closed: ` prefix; closure date/result
+  retained, frozen source history untouched. Trim the reviews index's trailing blank line.
+- Validation: the archive command first refuses with exit 1 and explicitly writes nothing; corrected prefix and
+  source identity checked, staged review/count, book and doctrine gates before commit. No implementation changes.
+
 ## archogen — task-tree sealing review closes at round 37
 
 `ARCHOGEN-PROGRAM-0624` (leaf `PROGRAM.69`), `2026-10-11`.
