@@ -555,6 +555,34 @@ claim, and an inverted equality assertion, each compile but fail their trace ass
 controls' sensitivity. It is not an exhaustive semantic prover. All exact parent expected-killed entries
 remain required, including those without operator witnesses, before the final complete production sweeps.
 
+## Promised narrowing spellings
+
+Verified `2026-10-11`, `M3.6.9.5.4.3`: every selected iterator and guard family has distinct first,
+last and two-ends spellings, each viable in both initial native populations. The 13 iterator families contribute
+39 candidates; the eight guard families contribute 24. This accounts for 126 native attempts, with no compilation
+refusal, timeout or unjudged result among those spellings. It does not turn their survivors into successful kills.
+
+| Source | Iterator families | Guard families | Viable spellings per population |
+| --- | --- | --- | --- |
+| `xtask/src/trust.rs` | 7 | 4 | 33 |
+| `xtask/src/trust_generated.rs` | 6 | 4 | 30 |
+
+The tracked audit independently enumerates the plain one-line for headers inside the reviewed exact-entry
+spans and matches all of them to the selected iterator families. It checks the actual position gates and all
+paired native outcomes; full source/plan/log binding runs first. Its controls refuse a missing position or
+entire iterator family, duplicate position, missing population, unviable spelling, timeout and unjudged outcome.
+This header census is specific to these reviewed source spans; the sweep's general lexical controls remain separate.
+
+```bash
+python3 scripts/trust_witness_effects.py --spellings \
+  --evidence target/trust-adequacy/witness-evidence.json \
+  --output target/trust-adequacy/narrowing-spellings.json
+```
+
+No spelling repair is needed in this cohort. The semantic table's absent role predicates, multiline and
+if-let shapes, and two-ends chain variant remain explicit limits rather than missing promised loop spellings.
+The initial-measurement stage is complete; all parent expected-killed repairs and full production sweeps remain.
+
 ## Remaining measurements
 
 Use the same manifest for the two populations; each invocation re-derives the full plan and refuses stale
@@ -577,8 +605,8 @@ of this diagnostic reports whether measurement and audit completed; the JSON's `
 criterion status. A completed measurement with survivors remains an unmet adequacy criterion.
 
 Operator reach remains incomplete. All initial source/provenance and trust.rs populations are measured above;
-semantic witnesses and scoped absences are recorded above, before adding parent semantic tests. The remaining
-pre-strengthening obligation verifies promised narrowing spellings and repeats affected measurements if a repair is needed.
+semantic witnesses, scoped absences and promised-spelling viability are recorded above. No operator repair was
+needed before parent strengthening; these initial results do not satisfy the final adequacy criterion.
 
 The final stage strengthens parent tests and runs complete production sweeps of `trust.rs`, `trust_generated.rs`
 and `trust_gate.rs`, plus the shared operators' compatibility sweep of `generated_header.rs`. Every exact parent

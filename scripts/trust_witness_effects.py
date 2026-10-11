@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Retain reviewed span-cohort classifications and compiler-backed selection contrasts (M3.6.9.5.4.2)."""
 import argparse
+import copy
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 
@@ -204,15 +206,92 @@ def compile_control(root, manifest, name, **kwargs):
                 stdout=result.stdout, stderr=result.stderr)
 
 
+def spelling_audit(root, data):
+    """Check every selected first/last/ends spelling; census only the actual plain headers in these source spans."""
+    groups = {}
+    for filename, file_data in data["files"].items():
+        intervals = [row["span"] for row in data["rows"] if row["file"] == filename]
+        source = (root / filename).read_text().split("\n")
+        # This independent census is intentionally scoped to the reviewed plain, one-line source headers.
+        # It is not a replacement for the sweep's general Rust lexical support.
+        headers = {i for i, line in enumerate(source) if any(lo <= i < hi for lo, hi in intervals)
+                   and re.fullmatch(r"\s*for .+ in .+ \{\s*", line)}
+        iterator_headers = set()
+        for candidate in file_data["candidates"]:
+            operator = candidate["operator"]
+            if operator not in ("iter", "guard"):
+                continue
+            lo, hi = candidate["span"]
+            if operator == "iter":
+                iterator_headers.add(lo)
+                gate = candidate["replacement"].rsplit("; if !", 1)[-1].split("{ continue; }", 1)[0].strip()
+            else:
+                gate = candidate["replacement"].splitlines()[-1].rsplit(" && ", 1)[-1].rsplit("{", 1)[0].strip()
+            gate = re.sub(r"__archogen_sweep_\w+_(first|last)\b", r"\1", gate)
+            if gate not in ("first", "last", "(first || last)"):
+                raise ValueError("unrecognized narrowing spelling: " + candidate["id"])
+            key = (filename, operator, lo, hi)
+            group = groups.setdefault(key, {})
+            if gate in group:
+                raise ValueError("duplicate narrowing position")
+            if set(candidate["outcomes"]) != set(adequacy.POPULATIONS) or any(
+                    outcome["outcome"] not in ("killed", "survived") for outcome in candidate["outcomes"].values()):
+                raise ValueError("promised narrowing lacks viable native spelling: " + candidate["id"])
+            group[gate] = dict(id=candidate["id"], outcomes=candidate["outcomes"])
+        if iterator_headers != headers:
+            raise ValueError("selected iterator families differ from in-span source-header census")
+    if not groups or any(set(group) != {"first", "last", "(first || last)"} for group in groups.values()):
+        raise ValueError("missing promised first/last/ends spelling")
+    result = [dict(file=filename, operator=operator, span=[lo, hi], positions=positions)
+              for (filename, operator, lo, hi), positions in groups.items()]
+    counts = {operator: sum(group["operator"] == operator for group in result) for operator in ("iter", "guard")}
+    return dict(schema="archogen-trust-narrowing-spellings/1", scope="initial measured census-span cohort only",
+                groups=result, family_counts=counts, unique_candidates=sum(len(group) for group in groups.values()),
+                native_attempts=sum(len(group) * len(adequacy.POPULATIONS) for group in groups.values()),
+                repair_required=False)
+
+
+def spelling_controls(root, manifest):
+    data = copy.deepcopy(manifest)
+    for file_data in data["files"].values():
+        for candidate in file_data["candidates"]:
+            candidate["outcomes"] = {population: dict(outcome="survived") for population in adequacy.POPULATIONS}
+    spelling_audit(root, data)
+    filename = next(iter(data["files"]))
+    candidates = data["files"][filename]["candidates"]
+    first = next(i for i, c in enumerate(candidates) if c["operator"] == "iter")
+    for arm in ("missing", "family", "duplicate", "unviable", "timeout", "unjudged", "population"):
+        changed = copy.deepcopy(data)
+        selected = changed["files"][filename]["candidates"]
+        if arm == "missing":
+            del selected[first]
+        elif arm == "family":
+            lo = selected[first]["span"][0]
+            selected[:] = [c for c in selected if c["operator"] != "iter" or c["span"][0] != lo]
+        elif arm == "duplicate":
+            selected.append(copy.deepcopy(selected[first]))
+        elif arm == "population":
+            del selected[first]["outcomes"]["parent"]
+        else:
+            selected[first]["outcomes"]["parent"]["outcome"] = arm
+        try:
+            spelling_audit(root, changed)
+        except ValueError:
+            continue
+        raise ValueError("spelling refusal control accepted: " + arm)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--self-test", action="store_true")
     parser.add_argument("--evidence")
     parser.add_argument("--output")
+    parser.add_argument("--spellings", action="store_true", help="audit all selected narrowing variants and native viability")
     args = parser.parse_args()
     root = Path(__file__).resolve().parent.parent
     if args.self_test:
         manifest = adequacy.plan(root)
+        spelling_controls(root, manifest)
         result = compile_control(root, manifest, "positive")
         if result["exit_code"] != 0 or "contrasting controls passed" not in result["stdout"]:
             raise ValueError("positive selection controls failed: " + str(result))
@@ -220,7 +299,7 @@ def main():
             result = compile_control(root, manifest, name, **{name: True})
             if result["exit_code"] != 101 or "assertion `left" not in result["stderr"]:
                 raise ValueError("seeded false semantic claim was not refused: " + str(result))
-        print("trust-effects: OK — compiled selection controls; wrong selection and inverted trace assertions refused")
+        print("trust-effects: OK — compiled selection controls; wrong traces and seven spelling breaches refused")
         return 0
     if not args.evidence or not args.output:
         parser.error("--evidence and --output required")
@@ -234,6 +313,15 @@ def main():
     protected += [root / m[k] for m in data["measurements"] for k in ("measurement", "log")]
     if output.resolve() in {p.resolve() for p in protected}:
         raise ValueError("output must not overwrite evidence inputs")
+    if args.spellings:
+        result = spelling_audit(root, data)
+        result.update(evidence=args.evidence, evidence_sha256=adequacy.digest(original.read_bytes()),
+                      producer_sha256=adequacy.digest(Path(__file__).read_bytes()))
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps(result, indent=2) + "\n")
+        print("trust-effects: %d iterator / %d guard families; %d viable candidates in both populations; no spelling repair"
+              % (result["family_counts"]["iter"], result["family_counts"]["guard"], result["unique_candidates"]))
+        return 0
     rows, candidates = selections(data)
     controls = compile_control(root, data, "measured")
     if controls["exit_code"] != 0:

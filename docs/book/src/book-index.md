@@ -324,6 +324,7 @@ a change that leaves it stale, so it is never edited by hand.
   command line](cli.md), [The engine API](engine-api.md), [What this project relies on from outside](ledger.md), [What
   is versioned, and what changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md),
   [Annex B: The checks that keep the repository honest](annex-repository.md)
+- Promised narrowing spellings — [Generated-sources test adequacy](trust-adequacy.md#promised-narrowing-spellings)
 - **provenance** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [What a report may
   claim](evidence.md), [Checks that must not share a mistake: the trust gate](trust.md), [Generated-sources test
   adequacy](trust-adequacy.md), [The S0 early generation path](s0.md), [What is versioned, and what changing it
