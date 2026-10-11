@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — syntax errors refuse recovered roots
+
+`ARCHOGEN-M3-0662` (leaf `M3.6.9.6.3.2.2.1`), `2026-10-11`.
+
+- Resolve actual survivor L185.cond.2: suppressing reader errors survives before the new bounded parent regression
+  and finishes with its named kill afterward, selected strict exit 0. Hold a valid-root control and recovered forms
+  with unexpected closing parentheses before/after the root or a missing final closing parenthesis.
+- All 988 original/copied tracked inputs restore under Python/system hashes; production and every old test body
+  remain byte-identical. Missing-name, replacement and strict-exit falsifications refuse. Focused tier passes after
+  formatting and rerunning the selected native proof; exact staged stamp required. Sync the book/live pointers.
+  This repairs one test-adequacy obligation; remaining assessments and final full-file measurement stay open.
+
 ## archogen — deadline retained after the command's leader exits
 
 `ARCHOGEN-M3-0661` (leaf `M3.6.9.6.3.2.1.5`), `2026-10-11`.

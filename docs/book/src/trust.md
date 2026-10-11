@@ -179,7 +179,10 @@ refusal the rules below make before or in those builds. A step that refuses ends
 even one an earlier run wrote, which would read as this commit's. A step in which a build fails still runs to its end,
 every build in it made, and then ends unable to judge (exit 2), the refusals it found printed beside the failure. A
 form of `trust/roots.eadl` other than a `defgenerated` one that departs from its shape also leaves the gate unable to
-judge, the `defgenerated` refusals read before it printed beside it. The third step judges every form a program
+judge, the `defgenerated` refusals read before it printed beside it. Syntax errors also leave the gate unable to judge:
+the eADL reader can recover valid forms, but its diagnostics refuse the whole roots input before those forms are used.
+For example, a valid root followed by an extra `)` reports `read-unexpected-close`; a root missing its final `)` reports
+`read-unclosed-list`. Neither recovered root starts a build or produces an inventory. The third step judges every form a program
 reads: a generator or input that is a symbolic link or no blob of the commit is refused, and so is one a form declares
 or whose header marks it generated, a chain; a form no program reads is held to its
 text alone. The fourth judges each such form's generator files against each program that reads it: a program
@@ -539,6 +542,8 @@ bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask \
 Measured `2026-10-11`: complete identity, actual replacement, original-parent killing-name and terminal per-operator counts agree; independent Python and system hashes verify all 988 original and restored copied inputs. Altered identities, names, replacements, order, exits and counts refuse. The first attempt's complete results are retained, except that its five non-finishing cases now finish with named kills. Compiler refusals establish no coverage. Each of the 540 survivors has an individual assessment owner in `docs/tasks/M3.md`; the count is an obligation to assess behavior, not a count of confirmed defects or accepted equivalences.
 
 Each survivor requires a behavioral repair or a justified per-file equivalence before the final strict sweep.
+Measured `2026-10-11`, `M3.6.9.6.3.2.2.1`: selected mutation `L185.cond.2`, which suppresses reader errors, survives before the new parent regression (strict exit 1) and is killed by `trust::tests::reader_errors_are_refused_even_when_a_root_form_recovers` afterward (strict exit 0). The regression retains a valid-root control and checks recovered forms with an extra closing parenthesis before/after the root and a missing final closing parenthesis. Reproduce with the full command above plus `--only L185.cond.2`; this is one selected obligation, not a replacement full-file measurement.
+Measured `2026-10-11`: both selected runs restore all 988 original/copied tracked inputs under Python and system hashes; production and all earlier test bodies remain byte-identical. Missing killing names, altered replacements and the wrong strict exit refuse. Native producer and result auditor remain tracked; supplemental orchestration/audits under `target/m369-reader-diagnostics/` are ignored evidence, while the regression and task leaf are committed.
 Timeout and unjudged results remain failures. Full adequacy and independent review stay open.
 Recorded native killing names remain accessible through the original `docs/tasks/M3.md` leaf stubs, which now
 route completed evidence to sealed task-history records. The stubs retain commit identities; the archive index

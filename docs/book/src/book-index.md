@@ -120,10 +120,10 @@ a change that leaves it stale, so it is never edited by hand.
   board](tour.md), [The boundary: functionality versus implementation](boundary.md), [The use cases](usecases.md),
   [Reading a description](reading.md), [Kinds and schemas](kinds.md), [Quantities and units](quantities.md), [Modules
   and composition](modules.md), [Refinement](refinement.md), [Describing a workload](workload.md), [What a report may
-  claim](evidence.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [The runtime: decisions, not
-  actions](runtime.md), [The S0 early generation path](s0.md), [Where generated systems run](targets.md), [Verifying the
-  toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
-  changing it costs](versions.md)
+  claim](evidence.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [Checks that must not share a
+  mistake: the trust gate](trust.md), [The runtime: decisions, not actions](runtime.md), [The S0 early generation
+  path](s0.md), [Where generated systems run](targets.md), [Verifying the toolchain](verification.md), [What this
+  project relies on from outside](ledger.md), [What is versioned, and what changing it costs](versions.md)
 - **EBNF** — [definition](glossary.md), [Verifying the toolchain](verification.md)
 - Effects and remaining scope — [Generated-sources test adequacy](trust-adequacy.md#effects-and-remaining-scope)
 - **EIP** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
@@ -420,10 +420,10 @@ a change that leaves it stale, so it is never edited by hand.
   profile](profile.md), [The use cases](usecases.md), [Reading a description](reading.md), [Kinds and
   schemas](kinds.md), [Quantities and units](quantities.md), [Describing a workload](workload.md), [Checking a
   description](checking.md), [What the scheduling checker establishes](analysis.md), [Where the engine's knowledge comes
-  from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [The S0 early generation
-  path](s0.md), [Verifying the toolchain](verification.md), [What this project relies on from outside](ledger.md),
-  [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that keep the repository
-  honest](annex-repository.md)
+  from: the catalog](catalog.md), [Checks that must not share a mistake: the trust gate](trust.md), [The runtime:
+  decisions, not actions](runtime.md), [The S0 early generation path](s0.md), [Verifying the
+  toolchain](verification.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
+  detail](annex-runtime.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
 - The admitted task model, enforced — [Describing a workload](workload.md#the-admitted-task-model-enforced)
 - The baseline and its forms — [Checks that must not share a mistake: the trust
   gate](trust.md#the-baseline-and-its-forms)

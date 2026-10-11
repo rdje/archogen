@@ -4034,6 +4034,36 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn reader_errors_are_refused_even_when_a_root_form_recovers() {
+        crate::trust_test_process::bounded!(
+            reader_errors_are_refused_even_when_a_root_form_recovers
+        );
+        let root = "(defroot gen (role generator) (package \"crates/a\") (target bin a))";
+        let valid = read_roots(root).expect("the complete root is valid");
+        assert_eq!(valid.programs.len(), 1);
+        assert_eq!(valid.programs[0].name, "gen");
+
+        for (text, code) in [
+            (format!(")\n{root}"), "read-unexpected-close"),
+            (format!("{root}\n)"), "read-unexpected-close"),
+            (root[..root.len() - 1].to_owned(), "read-unclosed-list"),
+        ] {
+            // Recovery retains a usable root; accepting that partial document would hide the syntax error.
+            let mut sources = eadl_front::SourceMap::new();
+            let id = sources.add(super::ROOTS, &text).expect("source fits");
+            let (document, diagnostics) = eadl_front::read(&sources, id);
+            assert!(diagnostics.has_errors(), "{text}");
+            assert_eq!(document.forms.len(), 1, "{text}");
+            assert_eq!(document.forms[0].head(), Some("defroot"), "{text}");
+
+            let error =
+                read_roots(&text).expect_err("syntax errors must refuse the recovered root");
+            assert!(error.contains(code), "{text}: {error}");
+            assert!(error.contains(super::ROOTS), "{text}: {error}");
+        }
+    }
+
+    #[test]
     fn the_roots_file_is_read_strictly() {
         crate::trust_test_process::bounded!(the_roots_file_is_read_strictly);
         // R8 11: a name twice, a pair naming no root, a misspelt clause, a form no reader knows yet.
