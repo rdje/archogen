@@ -4034,6 +4034,64 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn unknown_root_clauses_are_refused_at_every_position() {
+        crate::trust_test_process::bounded!(unknown_root_clauses_are_refused_at_every_position);
+        let clauses = [
+            "(role generator)",
+            "(package \"crates/a\")",
+            "(target bin a)",
+            "(role-packages \"crates/a\")",
+            "(data \"data/one.txt\")",
+        ];
+        let valid = read_roots(&format!("(defroot gen {})", clauses.join(" ")))
+            .expect("each declared clause is valid");
+        assert_eq!(valid.programs.len(), 1);
+        assert_eq!(valid.programs[0].data, ["data/one.txt"]);
+
+        for position in [0, clauses.len() / 2, clauses.len()] {
+            let mut invalid = clauses.to_vec();
+            invalid.insert(position, "(role-pakages \"crates/other\")");
+            let text = format!("(defroot gen {})", invalid.join(" "));
+            let error =
+                read_roots(&text).expect_err("an unknown clause must refuse in every position");
+            assert!(
+                error.contains("`gen` holds a clause `role-pakages` its form does not take"),
+                "position {position}: {error}"
+            );
+        }
+    }
+
+    #[test]
+    fn duplicate_root_clauses_are_refused_at_early_middle_and_final_positions() {
+        crate::trust_test_process::bounded!(
+            duplicate_root_clauses_are_refused_at_early_middle_and_final_positions
+        );
+        let clauses = [
+            "(data \"data/one.txt\")",
+            "(role generator)",
+            "(package \"crates/a\")",
+            "(target bin a)",
+            "(role-packages \"crates/a\")",
+        ];
+        let valid = read_roots(&format!("(defroot gen {})", clauses.join(" ")))
+            .expect("one data clause is valid");
+        assert_eq!(valid.programs.len(), 1);
+        assert_eq!(valid.programs[0].data, ["data/one.txt"]);
+
+        for position in [1, clauses.len() / 2, clauses.len()] {
+            let mut invalid = clauses.to_vec();
+            invalid.insert(position, "(data \"data/two.txt\")");
+            let text = format!("(defroot gen {})", invalid.join(" "));
+            let error =
+                read_roots(&text).expect_err("a second data clause must refuse in every position");
+            assert!(
+                error.contains("`gen` holds `data` twice"),
+                "position {position}: {error}"
+            );
+        }
+    }
+
+    #[test]
     fn reader_errors_are_refused_even_when_a_root_form_recovers() {
         crate::trust_test_process::bounded!(
             reader_errors_are_refused_even_when_a_root_form_recovers

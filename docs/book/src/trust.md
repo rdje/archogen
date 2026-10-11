@@ -45,6 +45,11 @@ target, the **role packages** holding its role's own logic, and any fixed data i
   (role-packages "crates/archogen-cli" "crates/archogen-api" "crates/archogen-s0"))
 ```
 
+Clauses may appear in any order, but each clause is allowed only once and only if the form takes it.
+A misspelling such as `(role-pakages "crates/other")` refuses at the beginning, middle or end of a root.
+Two `(data …)` clauses also refuse wherever the second occurs: put several paths in one clause,
+for example `(data "data/one.txt" "data/two.txt")`. A valid clause after a departure does not hide it.
+
 A program that would run two roles is refused: one program cannot be independent of itself. Every other program the
 workspace can build — an example, a diagnostic tool, the browser module — is classified as not a root, with a reason
 and the role packages it compiles, so no one can add a second checker beside the generator unseen.
@@ -542,8 +547,8 @@ bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask \
 Measured `2026-10-11`: complete identity, actual replacement, original-parent killing-name and terminal per-operator counts agree; independent Python and system hashes verify all 988 original and restored copied inputs. Altered identities, names, replacements, order, exits and counts refuse. The first attempt's complete results are retained, except that its five non-finishing cases now finish with named kills. Compiler refusals establish no coverage. Each of the 540 survivors has an individual assessment owner in `docs/tasks/M3.md`; the count is an obligation to assess behavior, not a count of confirmed defects or accepted equivalences.
 
 Each survivor requires a behavioral repair or a justified per-file equivalence before the final strict sweep.
-Measured `2026-10-11`, `M3.6.9.6.3.2.2.1`: selected mutation `L185.cond.2`, which suppresses reader errors, survives before the new parent regression (strict exit 1) and is killed by `trust::tests::reader_errors_are_refused_even_when_a_root_form_recovers` afterward (strict exit 0). The regression retains a valid-root control and checks recovered forms with an extra closing parenthesis before/after the root and a missing final closing parenthesis. Reproduce with the full command above plus `--only L185.cond.2`; this is one selected obligation, not a replacement full-file measurement.
-Measured `2026-10-11`: both selected runs restore all 988 original/copied tracked inputs under Python and system hashes; production and all earlier test bodies remain byte-identical. Missing killing names, altered replacements and the wrong strict exit refuse. Native producer and result auditor remain tracked; supplemental orchestration/audits under `target/m369-reader-diagnostics/` are ignored evidence, while the regression and task leaf are committed.
+Measured `2026-10-11`: `M3.6.9.6.3.2.2.1` covers reader-error suppression (`L185.cond.2`); `.3.2.2.2` covers incomplete clause validation (`L235.iter.25`, `L235.iter.26`, `L235.guard.28` through `.32`). Each selected group survives before its new bounded parent regressions (strict exit 1) and finishes with named kills afterward (strict exit 0). Controls retain valid counterparts and move syntax errors, unknown clauses and repeated clauses among early, middle and final positions. The task leaves record exact killing names. Reproduce with the full command above plus each desired `--only ID`; these eight initial obligations are selected repairs, not a replacement full-file measurement.
+Measured `2026-10-11`: every selected before/after run restores all 988 original/copied tracked inputs under Python and system hashes; production and all earlier test bodies remain byte-identical. Missing killing names, altered replacements and the wrong strict exit refuse. Native producer and result auditor remain tracked; supplemental orchestration/audits under `target/m369-reader-diagnostics/` and `target/m369-clause-positions/` are ignored evidence, while regressions and task leaves are committed.
 Timeout and unjudged results remain failures. Full adequacy and independent review stay open.
 Recorded native killing names remain accessible through the original `docs/tasks/M3.md` leaf stubs, which now
 route completed evidence to sealed task-history records. The stubs retain commit identities; the archive index

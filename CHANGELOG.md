@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — roots clauses are validated at interior positions
+
+`ARCHOGEN-M3-0663` (leaf `M3.6.9.6.3.2.2.2`), `2026-10-11`.
+
+- Resolve seven actual clause-walk/guard survivors: every selected case survives before the new parents,
+  then finishes with named kills, strict exit 0. Two bounded public controls retain valid roots and move
+  unknown clauses and second data clauses among early, middle and final positions.
+- Native commands/candidate plans are identical before/after; all 988 original/copied tracked inputs restore
+  under Python/system hashes. Production and old test bodies remain unchanged; missing-name, replacement and
+  strict-exit falsifications refuse. Focused tier passes; exact staged stamp required before commit; sync book/live
+  pointers and preserve every initial survivor identity. Full-file adequacy/review remain open.
+
 ## archogen — syntax errors refuse recovered roots
 
 `ARCHOGEN-M3-0662` (leaf `M3.6.9.6.3.2.2.1`), `2026-10-11`.
