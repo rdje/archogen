@@ -661,10 +661,26 @@ mdBook that is the director's window into the project.
   answered: failed staged reads require a successful index census and exact path comparison before any disk
   fallback; a present unreadable entry or failed proof refuses. Round 33 answered: the first unescaped bracketed
   label retains file authority with bare/angle destinations and optional titles; unsupported first syntax refuses
-  before any secondary link can substitute. Thirty regressions failed first; all 126 arms pass. Round 34 reports zero production defects and two arm gaps:
-  unconditional file-cell validation and parentheses in angle destinations. Owned here; add tracked controls after
-  the current `M3.6.9.1` slice is committed, before any further M3 implementation. Report
-  `target/review-p69-r34/report.txt` (untracked), read in full; no parser change requested.
+  before any secondary link can substitute. Round 34 answered: unconditional file-cell grammar and parentheses
+  inside angle destinations are held by tracked controls. Both established mutants passed all 126 previous arms;
+  they now fail three and eight arms respectively. All 138 arms pass; production reader unchanged. Round 35 next.
+  **Acceptance checklist, round 34:**
+  - [x] **REPRODUCE / ISSUE** — removing unconditional validation and rejecting parentheses in angle destinations
+    each give `126 pass / 0 fail (126 arms)` under native Git. The independent report
+    `target/review-p69-r34/report.txt` found zero production defects and these two arm gaps; read in full.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `scripts/check_review_counts.sh`, self-test: all unsupported-record controls
+    were open/unlisted, so the later completeness path still parsed them without global validation; no angle matrix
+    path contained parentheses. Both valid mutations survive `126 pass / 0 fail (126 arms)` before these controls.
+  - [x] **FIX** — listed/closed record and empty-list closed-history refusals; an all-closed passing control;
+    parenthesized angle destinations across both primary states and all four title spellings. Production core unchanged.
+  - [x] **ADDRESSED (verified)** — deleting validation now gives `135 pass / 3 fail (138 arms)`; restrictive angle
+    syntax gives `130 pass / 8 fail (138 arms)`. Each embedded mutant parses before running, and its log has no
+    syntax error or traceback. Producers in `target/p69r34/` are untracked; all distinguishing arms are tracked.
+  - [x] **NO REGRESSION** — `bash scripts/check_review_counts.sh --self-test` → `138 pass / 0 fail (138 arms)`;
+    shell syntax clean; book anchors 30/4, glossary 67/25, index 316 OK. Staged counts 1 review / 34 rounds, history
+    175 files / 335 stubs; stated-order, task-acceptance and figure-register OK; final doctrines in the commit hook.
+    No Rust changed; the prior M3 focused claim is not restated.
+  - [x] **LOCKSTEP** — controls, review/record summary, book, task evidence and current resume pointers.
   **Acceptance checklist, round 33:**
   - [x] **REPRODUCE / ISSUE** — the 35 new tracked controls beside the committed reader give
     `96 pass / 30 fail (126 arms)`; the independent report is `target/review-p69-r33/report.txt` (untracked).
@@ -909,7 +925,7 @@ mdBook that is the director's window into the project.
     2 reviews / 32 rounds before appending this answer; final staged count → OK, 2 reviews / 33 rounds; history gate
     → OK, 175 files; book anchors/glossary/index → OK. Final doctrines run in the commit hook. Checker contract, record/history/index, book annex, this leaf and logs,
     changelog and resume/frontier snapshots agree. No Rust changed; no full-suite or final-tree Rust claim is made.
-  Verification: `2026-10-11` — the Verification Log's round-29 to round-32 rows
+  Verification: `2026-10-11` — the Verification Log's round-29 to round-34 rows
   Commit: `ARCHOGEN-PROGRAM-0510 (leaf PROGRAM.69)`, the review reopened; `ARCHOGEN-PROGRAM-0511 (leaf PROGRAM.69)`;
   `ARCHOGEN-PROGRAM-0514 (leaf PROGRAM.69)`, round 7 answered; `ARCHOGEN-PROGRAM-0517 (leaf PROGRAM.69)`, round 8;
   `ARCHOGEN-PROGRAM-0521 (leaf PROGRAM.69)`, round 9; `ARCHOGEN-PROGRAM-0525 (leaf PROGRAM.69)`, round 10;
@@ -926,7 +942,7 @@ mdBook that is the director's window into the project.
   `ARCHOGEN-PROGRAM-0598 (leaf PROGRAM.69)`, round 27; `ARCHOGEN-PROGRAM-0599 (leaf PROGRAM.69)`, the list in the index;
   `ARCHOGEN-PROGRAM-0602 (leaf PROGRAM.69)`, round 28; `ARCHOGEN-PROGRAM-0605 (leaf PROGRAM.69)`, round 29;
   `ARCHOGEN-PROGRAM-0606 (leaf PROGRAM.69)`, round 30; `ARCHOGEN-PROGRAM-0608 (leaf PROGRAM.69)`, round 31;
-  `ARCHOGEN-PROGRAM-0612 (leaf PROGRAM.69)`, round 32; `ARCHOGEN-PROGRAM-0615 (leaf PROGRAM.69)`, round 33
+  `ARCHOGEN-PROGRAM-0612 (leaf PROGRAM.69)`, round 32; `ARCHOGEN-PROGRAM-0615 (leaf PROGRAM.69)`, round 33; `ARCHOGEN-PROGRAM-0618 (leaf PROGRAM.69)`, round 34
 
 - ID: `PROGRAM.70`
   Status: `done` — started `2026-10-10`, decomposed into `.1`, the bytes, and `.2`, the count, closed the same day with `.2`
@@ -1540,7 +1556,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.69` | `active` | round 34 reports two arm gaps; add tracked controls after the current M3.6.9.1 slice |
+| 1 | `PROGRAM.69` | `active` | round 34 answered; independent round 35 next |
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The second row waits on the director's yes. The pending leaves beside them —
@@ -1756,6 +1772,8 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 
 | `2026-10-11` | `PROGRAM.69` (round 33) | 35 primary-link controls before repair, then repaired suite; original shell reproducer; two valid selection/refusal mutations; syntax, final staged count/history, book and doctrine gates | 96 pass / 30 fail, then 126 pass / 0 fail; original five shell cases refuse the primary table; selection mutation 93/33, refusal mutation 120/6; initial syntax-error mutant excluded; staged counts 2 reviews / 35 rounds, history 175 files / 335 stubs; book anchors 30/4, glossary 67/25, index 316; syntax and stated-order OK; task-acceptance evidence completed after its first refusal; final doctrines in commit hook |
 
+| `2026-10-11` | `PROGRAM.69` (round 34) | native old/new mutation replays, full count self-test, syntax, book and final staged gates | both mutants 126/0 before; validation removal 135/3 and angle restriction 130/8 of 138 after; unchanged production reader 138/0; book anchors 30/4, glossary 67/25, index 316; staged counts 1 review / 34 rounds, history 175 files / 335 stubs; acceptance/order/figure gates OK, final doctrines in hook |
+
 ## Commit Log
 
 | Leaf | Commit subject or reference | Notes |
@@ -1964,6 +1982,8 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.76` | `ARCHOGEN-PROGRAM-0613 (leaf PROGRAM.76)` | **closed after independent round 15**: zero defects or actionable arm gaps; 151 repaired-reader checks plus six prior-reader controls, untracked evidence; retained limits and filesystem skip explicit; checker unchanged |
 
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0615 (leaf PROGRAM.69)` | **review round 33 answered**: first unescaped label preserves authority across bare/angle destinations and titles; unsupported first syntax refuses; 35 tracked controls, 30 failed first; all 126 pass; invalid mutation run excluded |
+
+| `PROGRAM.69` | `ARCHOGEN-PROGRAM-0618 (leaf PROGRAM.69)` | **review round 34 arm gaps answered**: unconditional listed/closed file-cell grammar and parenthesized angle destinations held; both mutants survived 126 old arms, now fail three/eight of 138; production core unchanged |
 
 ## Changelog
 

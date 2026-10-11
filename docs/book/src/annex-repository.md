@@ -281,10 +281,12 @@ decides whether it must be listed; later explanatory links do not change that ob
 first unescaped bracketed label must be a supported inline link. Labels may contain balanced brackets; destinations
 may be bare without spaces, parentheses or angle brackets, or enclosed in angle brackets with spaces/parentheses.
 An optional title uses double quotes, single quotes or non-nesting parentheses, separated by whitespace. For example,
-`[record](../decisions/a.md "title")` and `[record](<../decisions/a space.md>)` name their primary files. Paths are
+`[record](../decisions/a.md "title")`, `[record](<../decisions/a space.md>)` and
+`[record](<../decisions/a(example).md>)` name their primary files. Paths are
 literal: Markdown escapes, entities and percent escapes are not decoded. Unsupported first syntax, including
 reference and shortcut links, refuses before any secondary link can substitute. A cell with no unescaped opening
-bracket names no file. This is the index's explicit metadata grammar. Files are read from the
+bracket names no file. This grammar applies to both file cells in every row, including listed and closed rows;
+an empty counted list does not switch it off. Files are read from the
 index. A failed staged read permits a disk fallback only after a successful index listing proves the exact path
 absent. Complete path bytes are compared directly, so inherited Git pathspec settings or filename wildcards cannot
 change that comparison. An unreadable present entry or failed proof refuses; disk cannot silently replace staged evidence.

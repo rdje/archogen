@@ -700,6 +700,26 @@ producers are untracked; the arms they falsify are tracked.
 | R33-D1 | defect | the bare-destination regex skipped an ordinary first link with an angle destination or title, silently passing its unlisted round table or selecting a secondary explanation | locate the first unescaped bracketed label, support the explicit inline destination/title grammar in both file cells, and refuse unsupported first syntax before later links; paths remain literal and counted pairs authoritative |
 | — | found while verifying | the first secondary-selection mutation had a Python syntax error and failed every arm without exercising the selection rule | excluded as invalid evidence; the corrected producer parses its embedded Python before execution and fails 33 of 126 arms; the repaired reader's final rerun passes all 126 |
 
+**Round 34**, `2026-10-11`, of committed `02005c8`, an independent read-only context new to the answer. Zero
+production defects established; two regression arm gaps. Both valid mutants survive all 126 existing controls under
+its synthetic index shim. Its separate probes match 275 expected checker results (267 pinned-reader and eight
+mutant witnesses; 255 core / 20 shell), 65 536 task-unit/oracle comparisons and five historical-read controls.
+Those are distinct from three 126-arm replays. No real sealed body, native Git repository, compiler or shared suite
+was used. Report/producers under `target/review-p69-r34/` are untracked, not durable enforcement; native Git/index
+formats and full sealing transactions are not newly proved. Draft fixture/setup mistakes are explicitly excluded
+in the report. All reviewer jobs completed; two authorized OS process snapshots found no review jobs.
+
+The answer reproduces both survivors natively: 126 pass / 0 fail each before the new controls. With the 12 new
+tracked arms, deleting unconditional validation gives 135 pass / 3 fail (138 arms), and rejecting angle-destination
+parentheses gives 130 pass / 8 fail. The unmodified production reader passes all 138. Mutant Python cores parse
+before execution; independent success/failure-line recounts agree with every summary. Throwaway producers/logs
+under `target/p69r34/` are untracked; the regression arms are tracked.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R34-AG1 | arm gap | deleting unconditional validation survives all controls because unsupported records are open/unlisted and history lookup incidentally parses closed histories only while the counted list is nonempty | listed-record and closed-record shortcut refusals; an empty-list closed-history shortcut refusal; a valid all-closed/empty-list control; deleting validation fails the three refusing arms |
+| R34-AG2 | arm gap | rejecting parentheses inside angle destinations survives the simple/spaced destination matrix despite the explicit contract permitting them | add a parenthesized angle path across four title states and both primary states, with opposite secondary obligations; the restrictive mutant fails all eight new combinations |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.

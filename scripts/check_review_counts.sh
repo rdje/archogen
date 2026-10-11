@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # scripts/check_review_counts.sh — REVIEW-COUNTS: for each design review the reviews index lists as counted, the
 # record's count of what each round found, and the index's count of rounds, are its review history's (leaf `PROGRAM.69`,
-# review rounds 23 to 33).
+# review rounds 23 to 34).
 #
 # ⭐ WHY. A design record keeps one summary row per review round, with the count of what the round found, and the
 # round's own table in its review history lists each finding. The count was copied by hand, and the task-tree sealing
@@ -540,8 +540,10 @@ s = s.replace('| [`c-reviews.md`](c-reviews.md) | [`c.md`](../decisions/c.md) |'
 p.write_text(s)
 PY_CELL
   }
-  local destination title primary
-  for destination in '../decisions/c.md' '<../decisions/c.md>' '<../decisions/c space.md>'; do
+  local destination title primary finding
+  for destination in '../decisions/c.md' '<../decisions/c.md>' '<../decisions/c space.md>' '<../decisions/c(foo).md>'; do
+    finding='R33 D1'
+    if [ "$destination" = '<../decisions/c(foo).md>' ]; then finding='R34 AG2'; fi
     for title in '' ' "primary title"' " 'primary title'" ' (primary title)'; do
       for primary in table plain; do
         world "$GOOD_A" "$GOOD_B"; open_c
@@ -552,12 +554,13 @@ PY_CELL
           printf '# C, no round table\n' > "$work/docs/decisions/c.md"
         fi
         cp "$work/docs/decisions/c.md" "$work/docs/decisions/c space.md"
+        cp "$work/docs/decisions/c.md" "$work/docs/decisions/c(foo).md"
         c_cell "[c]($destination$title); see [explanation](../decisions/explanation.md)"
         git -C "$work" add -A
         if [ "$primary" = table ]; then
-          arm "the first $destination$title table requires counting before plain secondary prose (R33 D1)" 1 "c-reviews.md: an open review whose record keeps a round table"
+          arm "the first $destination$title table requires counting before plain secondary prose ($finding)" 1 "c-reviews.md: an open review whose record keeps a round table"
         else
-          arm "the first $destination$title plain record ignores a secondary table (R33 D1)" 0 "3 round(s) judged"
+          arm "the first $destination$title plain record ignores a secondary table ($finding)" 0 "3 round(s) judged"
         fi
       done
     done
@@ -591,6 +594,36 @@ PY_HISTORY
   world "$GOOD_A" "$GOOD_B"; open_c
   c_cell 'a record described without a link'; git -C "$work" add -A
   arm "a bracket-free record cell still names no file (R33 D1)" 0 "3 round(s) judged"
+  # Round 34: grammar validation is unconditional, including record cells the counting paths never consult.
+  world "$GOOD_A" "$GOOD_B"
+  python3 - "$work/docs/reviews/INDEX.md" <<'PY_LISTED'
+import pathlib, sys
+p = pathlib.Path(sys.argv[1]); s = p.read_text()
+old = '| [`a.md`](../decisions/a.md) |'
+assert s.count(old) == 1
+p.write_text(s.replace(old, '| [a] |'))
+PY_LISTED
+  git -C "$work" add -A
+  arm "a listed record's unsupported shortcut refuses despite its authoritative counted pair (R34 AG1)" 1 "unsupported first file-link syntax"
+  world "$GOOD_A" "$GOOD_B"; c_cell '[closed]'; git -C "$work" add -A
+  arm "a closed record's unsupported shortcut still refuses (R34 AG1)" 1 "unsupported first file-link syntax"
+  world "$GOOD_A" "$GOOD_B"
+  python3 - "$work/docs/reviews/INDEX.md" <<'PY_CLOSED'
+import pathlib, sys
+p = pathlib.Path(sys.argv[1]); s = p.read_text().replace('| open |', '| closed |')
+p.write_text('\n'.join(l for l in s.split('\n') if not l.startswith('- `')))
+PY_CLOSED
+  git -C "$work" add -A
+  arm "valid all-closed rows permit an empty counted list (R34 AG1)" 0 "0 review(s) listed; 0 round(s) judged"
+  python3 - "$work/docs/reviews/INDEX.md" <<'PY_CLOSED_HISTORY'
+import pathlib, sys
+p = pathlib.Path(sys.argv[1]); s = p.read_text()
+old = '[`c-reviews.md`](c-reviews.md)'
+assert s.count(old) == 1
+p.write_text(s.replace(old, '[closed]'))
+PY_CLOSED_HISTORY
+  git -C "$work" add -A
+  arm "a closed history's unsupported shortcut refuses with no counted row to visit it (R34 AG1)" 1 "unsupported first file-link syntax"
   # Round 32: a failed staged read is no proof that a path is absent from the index.
   local bin="$work/fault-bin" real_git
   real_git="$(type -P git)"; mkdir -p "$bin"

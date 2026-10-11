@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — unconditional review-link grammar and parenthesized destinations gain controls
+
+`ARCHOGEN-PROGRAM-0618` (leaf `PROGRAM.69`), `2026-10-11`.
+
+- Round 34 found no production defect and two arm gaps: removing unconditional file-cell validation and rejecting
+  permitted parentheses inside angle destinations both survived all 126 controls. Twelve new arms hold listed and
+  closed cells, the empty-counted-list boundary, and parenthesized angle paths across titles/primary obligations.
+  The production reader is unchanged; book examples and review/task/resume summaries agree.
+- Validation: both mutants reproduce 126/0 natively before the new controls, then fail three and eight respectively
+  out of 138. All 138 real-reader arms pass; syntax, book and final staged count/history/doctrine gates. Mutation
+  producers are untracked evidence; their distinguishing regression arms are tracked. Independent round 35 next.
+
 ## archogen — mutation kills require finishing test evidence, with opt-in strict timeouts
 
 `ARCHOGEN-M3-0617` (leaf `M3.6.9.1`), `2026-10-11`.
