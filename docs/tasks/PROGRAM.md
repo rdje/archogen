@@ -656,9 +656,8 @@ mdBook that is the director's window into the project.
   Status: `active` — the tool, its gate and the seal committed `2026-10-10` (`ARCHOGEN-PROGRAM-0511`); its review open,
   round 29 answered: the index table parsed whole, every stated count judged, a historical index read failure
   refused unless its path is proved absent, and this Status current. Round 30 answered: summary cells use the same
-  escaped-pipe reader as index and findings cells, so later counts remain visible. Round 31 found one defect,
-  owned here and next after `PROGRAM.80`: the unlisted record cell traverses secondary links despite its declared
-  first-link grammar (`target/review-p69-r31/report.txt`, pending a durable answer).
+  escaped-pipe reader as index and findings cells, so later counts remain visible. Round 31 answered: an unlisted
+  row names its record by the first link; secondary explanations do not change its counting obligation. Round 32 next.
   Goal: a closed subtree below an open top-level subtree is sealed too, so a tree whose top-level subtree stays open
   for long — on a blocked leaf, or a long feature — does not keep its finished leaves live.
   Reproduce / issue: `M3.6.6.2.1`'s commit was refused by `README-ROUTES`, *"docs/tasks/: 823457 bytes in total, over
@@ -845,7 +844,19 @@ mdBook that is the director's window into the project.
     OS access, 2/2 handoff arms and 39/39 spine arms, in the same runner's CI-like Git environment. These are two
     runs covering all 49 suites, before the round-30 parser repair; the parser's focused 78-arm run is current.
     The sandbox failure also exposed a real handoff false-green, filed and owned as `PROGRAM.80`, next.
-  Verification: `2026-10-11` — the Verification Log's round-29 and round-30 rows
+  **Round 31 acceptance:**
+  - [x] **REPRODUCE / ISSUE** — three tracked first-link arms on the previous core → `79 pass / 2 fail (81 arms)`:
+    a secondary round table and a missing secondary link both falsely refused; the primary-table control passed.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — the unlisted-row rule iterated `LINK.findall(c[1])`, while the declared
+    grammar selects the first link. The independent probe changed only that traversal and reversed the result
+    (`target/review-p69-r31/report.txt`, untracked). Counted pairs remain their own declared authority.
+  - [x] **FIX / ADDRESSED** — the rule uses the existing `linked` helper, just as the history cell does;
+    `bash scripts/check_review_counts.sh --self-test` → `81 pass / 0 fail (81 arms)`, the first record's table
+    still requiring listing. The review's 42 core evaluations and seven parity checks found no escaped-pipe
+    regression; those probe measurements are untracked, not durable.
+  - [x] **NO REGRESSION / LOCKSTEP** — shell syntax, real staged count/history gates, book gates and doctrines;
+    record, history, index, book annex, this leaf and logs, changelog and resume snapshots. No Rust changed.
+  Verification: `2026-10-11` — the Verification Log's round-29 to round-31 rows
   Commit: `ARCHOGEN-PROGRAM-0510 (leaf PROGRAM.69)`, the review reopened; `ARCHOGEN-PROGRAM-0511 (leaf PROGRAM.69)`;
   `ARCHOGEN-PROGRAM-0514 (leaf PROGRAM.69)`, round 7 answered; `ARCHOGEN-PROGRAM-0517 (leaf PROGRAM.69)`, round 8;
   `ARCHOGEN-PROGRAM-0521 (leaf PROGRAM.69)`, round 9; `ARCHOGEN-PROGRAM-0525 (leaf PROGRAM.69)`, round 10;
@@ -861,7 +872,7 @@ mdBook that is the director's window into the project.
   `ARCHOGEN-PROGRAM-0567 (leaf PROGRAM.69)`, round 22; `ARCHOGEN-PROGRAM-0576 (leaf PROGRAM.69)`, round 23; `ARCHOGEN-PROGRAM-0582 (leaf PROGRAM.69)`, round 24; `ARCHOGEN-PROGRAM-0586 (leaf PROGRAM.69)`, round 25; `ARCHOGEN-PROGRAM-0590 (leaf PROGRAM.69)`, round 26;
   `ARCHOGEN-PROGRAM-0598 (leaf PROGRAM.69)`, round 27; `ARCHOGEN-PROGRAM-0599 (leaf PROGRAM.69)`, the list in the index;
   `ARCHOGEN-PROGRAM-0602 (leaf PROGRAM.69)`, round 28; `ARCHOGEN-PROGRAM-0605 (leaf PROGRAM.69)`, round 29;
-  `ARCHOGEN-PROGRAM-0606 (leaf PROGRAM.69)`, round 30
+  `ARCHOGEN-PROGRAM-0606 (leaf PROGRAM.69)`, round 30; `ARCHOGEN-PROGRAM-0608 (leaf PROGRAM.69)`, round 31
 
 - ID: `PROGRAM.70`
   Status: `done` — started `2026-10-10`, decomposed into `.1`, the bytes, and `.2`, the count, closed the same day with `.2`
@@ -1017,7 +1028,8 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM.76`
   Status: `active` — the custody change committed `2026-10-10`; its review open. Round 13 answered
   `2026-10-11`: whole cases and complete long source lines compared as case-sensitive words, the partial-quote
-  limitation explicit, and the error/recursion arms separated. Round 14 under independent review.
+  limitation explicit, and the error/recursion arms separated. Round 14 received: one source-newline defect,
+  owned here, the answer next (`target/review-p76-r14/report.txt`, pending durable details).
   Goal: the sealed evaluation set guarded against being read, not only against being edited or named, so no search
   of the working tree made for other work can reach a case before `M6.5`, nor, in a working tree that carries the
   mark, a diff of a commit that holds one show it.
@@ -1392,7 +1404,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.69` | `active` | its review open: round 31 to answer, one first-link-contract defect; report under target/review-p69-r31/ |
+| 1 | `PROGRAM.69` | `active` | its review open: round 32 next, on the committed tool |
 | 2 | `PROGRAM.76` | `active` | its review open: round 14 to answer, report under target/review-p76-r14/, round 13 committed |
 | 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
@@ -1595,6 +1607,8 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 
 | `2026-10-11` | `PROGRAM.80` | nine arms on the old core, then the guarded wrapper with OS access; actual restricted and OS-access runs; syntax; native-file diff; book gates; scratch census | 3 pass / 6 fail, then 9 pass / 0 fail; exit 2 without OK, then exit 0 with handoff OK; syntax clean, native file unchanged; anchors/glossary/index OK (316 index entries); zero receipt directories remain |
 
+| `2026-10-11` | `PROGRAM.69` (round 31) | first-link regression arms before repair, then the count self-test; syntax, staged real count/history gates, book gates, doctrines | 79 pass / 2 fail, then 81 pass / 0 fail; staged count gate OK (2 reviews / 32 rounds); history gate OK (175 files); book anchors/glossary/index OK; doctrines all green |
+
 ## Commit Log
 
 | Leaf | Commit subject or reference | Notes |
@@ -1789,6 +1803,8 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0606 (leaf PROGRAM.69)` | **review round 30 answered**: a shared cell reader keeps escaped pipes inside summary cells, so every later count is judged; 78 arms; round 29's confirmatory result recorded; handoff false-green filed as `PROGRAM.80`, high priority next |
 
 | `PROGRAM.80` | `ARCHOGEN-PROGRAM-0607 (leaf PROGRAM.80)` | **handoff false-green repaired**: actual required OS process and open-handle reads must complete in each sample; nine controls; project bootstrap and book use the guarded wrapper, the native file unchanged |
+
+| `PROGRAM.69` | `ARCHOGEN-PROGRAM-0608 (leaf PROGRAM.69)` | **review round 31 answered**: an unlisted index row names its record by the first link; secondary explanations neither force counting nor cause missing-record refusals; 81 arms |
 
 ## Changelog
 

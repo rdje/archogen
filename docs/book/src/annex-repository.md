@@ -269,7 +269,8 @@ edge pipes; an escaped pipe stays inside its cell. A malformed row, a missing se
 header is refused. Every stated count is judged, including repeated statements of the same kind: a correct first
 count cannot hide an incorrect second one. The same cell reader serves index, summary and findings tables: an
 escaped pipe inside a summary cell cannot hide a later count. The counted history/record pair names the record
-whose counts are held.
+whose counts are held. For an unlisted row, its first Design record link selects the record whose round table
+decides whether it must be listed; later explanatory links do not change that obligation.
 
 ```console
 $ bash scripts/check_review_counts.sh                      # the gate

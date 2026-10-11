@@ -13,15 +13,14 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M3` → frontier `M3.6`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s is `PROGRAM.69`'s review, round 31 to answer; `API` is
+- **Active tree:** `M3` → frontier `M3.6`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s is `PROGRAM.69`'s review, round 32 next; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** answer `PROGRAM.69`'s round 31, the index record cell's first-link contract
-  (`target/review-p69-r31/report.txt`); then `PROGRAM.76`'s round 14 (`target/review-p76-r14/report.txt`) and
-  `M3.6.9`'s round 2 (`target/review-m369-r2/report.txt`), all awaiting durable answers. Then `M3.3`.
-  The handoff command is `bash scripts/handoff_census.sh`; failed OS reads refuse. `M3.6.3.2.1`'s baseline is
-  committed, its "unchanged" the next cadence push's run to show. `M2`'s open leaves wait on the director:
-  `M2.7.4.5` and `M2.7.6`'s review and hosting half. No branches.
+- **Next action:** answer `PROGRAM.76`'s round 14 (`target/review-p76-r14/report.txt`) and `M3.6.9`'s round 2
+  (`target/review-m369-r2/report.txt`), both awaiting durable answers; request `PROGRAM.69`'s round 32 on the
+  committed tool. Then `M3.3`. The handoff command is `bash scripts/handoff_census.sh`; failed OS reads refuse.
+  `M3.6.3.2.1`'s baseline is committed, its "unchanged" the next cadence push's run to show. `M2`'s open leaves
+  wait on the director: `M2.7.4.5` and `M2.7.6`'s review and hosting half. No branches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4` and `M2.7.6.4` — findings §11, `main`'s protection and a reviewer;
   `TEMPLATE-REFS` — postponed. **The 17 template files archogen has not changed are never edited** (findings §10,

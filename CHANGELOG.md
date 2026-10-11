@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — an unlisted review names its design record by the first link
+
+`ARCHOGEN-PROGRAM-0608` (leaf `PROGRAM.69`), `2026-10-11`.
+
+- The open-review list rule now uses the same first-link helper for the Design record cell as for the history
+  cell. Secondary explanatory links no longer falsely require counting or produce missing-record refusals. The
+  primary record's round table still requires listing; counted pairs remain their own declared authority.
+- Validation: two new regression arms failed first, then all 81 count-check arms passed; shell syntax, staged real
+  gates, book checks and doctrines. The prior first-link claim is marked; book and resume pointers agree.
+
 ## archogen — handoff refuses failed or missing OS census reads
 
 `ARCHOGEN-PROGRAM-0607` (leaf `PROGRAM.80`), `2026-10-11`.

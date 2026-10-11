@@ -611,7 +611,7 @@ record that keeps a table of its rounds, of any shape.
 
 | # | Kind | Finding | Answer |
 | --- | --- | --- | --- |
-| R28-D1 | defect | the list's rule dropped an open index row whose history cell was not exactly a backticked link | every row of the table read by its cells, a file by its first link, backticks or none; a row whose history cell links no file refused; an arm each |
+| R28-D1 | defect | the list's rule dropped an open index row whose history cell was not exactly a backticked link | every row of the table read by its cells, a file by its first link, backticks or none (not so for the record cell until round 31: secondary links were traversed too); a row whose history cell links no file refused; an arm each |
 | R28-D2 | defect | the list's rule stated without its condition on the record: an open review with no record file, or with a third shape of round table, unlisted | the rule is a record keeping a round table, of any shape, which each text now states; the record's row 27, the leaf's Commit Log row and the changelog marked |
 | R28-D3 | defect | "of kind exactly `pre-existing arm gap`" while the tally matched a prefix | compared exactly; an arm with a kind that only begins so |
 | R28-D4 | defect | round 25's Verification Log row, "every row judged or named", unmarked | marked |
@@ -653,6 +653,16 @@ It found one defect. The tracked answer adds eight false-count arms and a correc
 | --- | --- | --- | --- |
 | R30-D1 | defect | a Markdown-escaped pipe in a summary's defects cell truncated the cell and hid later counts, in both shapes | the shared `cells_of` reader now serves summary, index and findings tables; every count after an escaped pipe remains visible; false-count arms for all four kinds in both shapes, and a correct-count control |
 | — | found while verifying | the broader runner's two process-dependent suites failed where OS process access was denied | 47 of 49 passed restricted; both remaining suites passed with OS access through the same runner, 2/2 and 39/39 arms; the native handoff census's false-green on denied process reads is owned as high-priority `PROGRAM.80`, next |
+
+**Round 31**, `2026-10-11`, of committed `c153604`, an independent read-only context new to the answer. It used
+synthetic inputs only: 42 count-core evaluations, seven cell-boundary checks, 243 task-history unit/oracle
+comparisons and five historical-read branch controls. The probes in `target/review-p69-r31/` are untracked, so these
+measurements are not durable regression evidence. It found one defect; the escaped-pipe repair passed its probes.
+The tracked answer's three new arms first gave 79 pass / 2 fail, then 81 pass / 0 fail.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R31-D1 | defect | an unlisted open row's Design record cell traversed every link despite the first-link grammar, falsely requiring counting for an explanatory table or refusing a missing secondary link | use `linked` for that cell too; both false-refusal arms and a primary-table control; counted pairs remain their own authority |
 
 ## Why
 

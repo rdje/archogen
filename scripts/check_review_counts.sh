@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # scripts/check_review_counts.sh — REVIEW-COUNTS: for each design review the reviews index lists as counted, the
 # record's count of what each round found, and the index's count of rounds, are its review history's (leaf `PROGRAM.69`,
-# review rounds 23 to 30).
+# review rounds 23 to 31).
 #
 # ⭐ WHY. A design record keeps one summary row per review round, with the count of what the round found, and the
 # round's own table in its review history lists each finding. The count was copied by hand, and the task-tree sealing
@@ -247,22 +247,23 @@ for c in rows_of_index:
         bad.append("docs/reviews/INDEX.md: an open row whose history cell links no file: %r" % c[0][:60]); continue
     if hist in listed:
         continue
-    for target in LINK.findall(c[1]):
-        rec = os.path.normpath(os.path.join("docs/reviews", target))
-        r = read(rec)
-        if r is None:
-            bad.append("docs/reviews/INDEX.md: %s's row links a record that is missing: %s" % (hist, rec)); continue
-        rl = r.split("\n")
-        heads_at = [i for i, l in enumerate(rl) if l.startswith("| Round |")]
-        if not heads_at:
-            continue
-        h = read(hist)
-        if h is None:
-            bad.append("%s: an open review whose record keeps a round table, and its history is missing" % hist)
-        elif any(i + 2 < len(rl) and rl[i + 2].startswith("|") for i in heads_at) or \
-                re.search(r"(?m)^\*\*Round [0-9]+\*\*", h):
-            bad.append("%s: an open review whose record keeps a round table (`| Round |`), past its first round, and its"
-                       " history is not listed" % hist)
+    rec = linked(c[1])
+    if rec is None:
+        continue
+    r = read(rec)
+    if r is None:
+        bad.append("docs/reviews/INDEX.md: %s's row links a record that is missing: %s" % (hist, rec)); continue
+    rl = r.split("\n")
+    heads_at = [i for i, l in enumerate(rl) if l.startswith("| Round |")]
+    if not heads_at:
+        continue
+    h = read(hist)
+    if h is None:
+        bad.append("%s: an open review whose record keeps a round table, and its history is missing" % hist)
+    elif any(i + 2 < len(rl) and rl[i + 2].startswith("|") for i in heads_at) or \
+            re.search(r"(?m)^\*\*Round [0-9]+\*\*", h):
+        bad.append("%s: an open review whose record keeps a round table (`| Round |`), past its first round, and its"
+                   " history is not listed" % hist)
 for x in bad:
     print("REVIEW-COUNTS: " + x, file=sys.stderr)
 if bad:
@@ -465,6 +466,19 @@ self_test() {
   world '| 2 | 6 | 1, and 2 arm gaps (x\|y), and 1 pre-existing arm gap, and 1 remark | v |' \
     '| 1 | 2026-10-11 | 2, and 1 remark (x\|y), and 0 pre-existing arm gaps | o |'
   arm "correct counts beyond escaped pipes in both shapes pass (R30 D1)" 0 "3 round(s) judged"
+  # Round 31: an unlisted row names its record by the first link; explanatory secondary links name no record.
+  world "$GOOD_A" "$GOOD_B"; open_c
+  printf '# C, no round table\n' > "$work/docs/decisions/c.md"
+  cp "$work/docs/decisions/b.md" "$work/docs/decisions/explanation.md"
+  sed -i.bak 's@](../decisions/c.md)@](../decisions/c.md); see [explanation](../decisions/explanation.md)@' "$work/docs/reviews/INDEX.md"
+  rm -f "$work/docs/reviews/INDEX.md.bak"; git -C "$work" add -A
+  arm "a secondary explanatory table does not make the primary record counted (R31 D1)" 0 "3 round(s) judged"
+  rm "$work/docs/decisions/explanation.md"; git -C "$work" add -A
+  arm "a secondary missing link is not an unreadable primary record (R31 D1)" 0 "3 round(s) judged"
+  # The first record's round table still requires listing, even when the secondary record has none.
+  cp "$work/docs/decisions/b.md" "$work/docs/decisions/c.md"
+  printf '# Explanation, no round table\n' > "$work/docs/decisions/explanation.md"; git -C "$work" add -A
+  arm "the primary record's table is judged before secondary prose (R31 D1)" 1 "c-reviews.md: an open review whose record keeps a round table"
   rm -rf "${work:?}"
   echo "review-counts self-test: $ok pass / $((arms - ok)) fail ($arms arms)"
   [ "$ok" -eq "$arms" ]
