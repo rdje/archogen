@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — sealed source lines recognize LF, CRLF and CR before eligibility
+
+`ARCHOGEN-PROGRAM-0609` (leaf `PROGRAM.76`), `2026-10-11`.
+
+- The shared reader now splits source cases at LF, CRLF or CR before measuring each complete line. A CR-only
+  case formerly became one case-sized pattern, missing a quote of a single eligible line on disk and in the index.
+  The original line thresholds, case-sensitive word comparison and partial-quote limits remain unchanged.
+- Validation: six new source-ending controls; the two CR-only regressions failed first (141/2 of 143 arms).
+  All 143 repaired arms pass; the filesystem case-distinction arm is explicitly skipped on this host. The real
+  sealed-tree guard, syntax, review counts, book checks and doctrines pass.
+
 ## archogen — an unlisted review names its design record by the first link
 
 `ARCHOGEN-PROGRAM-0608` (leaf `PROGRAM.69`), `2026-10-11`.

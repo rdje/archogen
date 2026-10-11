@@ -127,9 +127,10 @@ self_test() {
   # attribute, then the manifest in one of three states: `sealed` (the cases out of the tree),
   # `unsealed` (restored), `unsealed-out` (the seal lifted, the cases not yet restored).
   fresh() {
+    local newline="${2:-$'\n'}"
     rm -rf "$work"; mkdir -p "$d" "$work/docs/notes"
     git -C "$work" init -q
-    printf 'ARM-CASE-TEXT alpha\n%s\n- %s\n' "$LONG" "$BULLET" > "$d/zz-01-arm-alpha.md"
+    printf 'ARM-CASE-TEXT alpha%s%s%s- %s%s' "$newline" "$LONG" "$newline" "$BULLET" "$newline" > "$d/zz-01-arm-alpha.md"
     printf 'ARM-CASE-TEXT beta\n' > "$d/zz-02-arm-beta.md"
     printf 'docs/evaluation/frozen/** -diff\n' > "$work/.gitattributes"
     printf 'nothing about the set here\n' > "$work/docs/notes/plan.md"
@@ -306,6 +307,15 @@ git config --get core.quotePath")" = true
   arm "a whole short case under a doc-comment marker is refused (R13 D1)" 1 "a sealed case's text is in the working tree at 'docs/notes/copy.md'"
   fresh sealed; printf '%s\n' "${LONG#* comparator } ${BULLET% apart,*}" > "$work/docs/notes/draft.md"
   arm "a partial quote across two source lines is outside the long-line contract (R13 D2)" 0 ""
+  # Round 14: source line endings decide physical lines before eligibility, independently of the copy's endings.
+  local ending newline
+  for ending in LF CRLF CR; do
+    case "$ending" in LF) newline=$'\n' ;; CRLF) newline=$'\r\n' ;; CR) newline=$'\r' ;; esac
+    fresh sealed "$newline"; printf '%s\n' "$LONG" > "$work/docs/notes/draft.md"
+    arm "a complete line from a $ending source is refused on disk (R14 D1)" 1 "'docs/notes/draft.md' quotes a line of a sealed case"
+    mv "$work/docs/notes/draft.md" "$work/docs/notes/plan.md"; g add -A; g show HEAD:docs/notes/plan.md > "$work/docs/notes/plan.md"
+    arm "a complete line from a $ending source is refused in the index (R14 D1)" 1 "'docs/notes/plan.md' quotes a line of a sealed case"
+  done
   # A case-only filesystem distinction is not available on every host; exercise it wherever the filesystem can.
   fresh sealed; mkdir -p "$work/.GIT"
   if [ ! -d "$work/.git" ] || [ ! "$work/.GIT" -ef "$work/.git" ]; then
@@ -785,9 +795,10 @@ def emit(kind, path):
 # Text compared as prose is read: line endings made one, each line stripped of its indent and of a leading list, quote,
 # heading, table or comment marker, as many as it has, and the lines joined by one space, every run of white space one.
 MARK = re.compile(rb"^[ \t]*(?:(?:[-*+#|]+|[0-9]+[.)])[ \t]+|(?:>+|//[/!]*|/\*[*!]*|\*/|;+)[ \t]*)*")
+def physical_lines(data):
+    return data.replace(b"\r\n", b"\n").replace(b"\r", b"\n").split(b"\n")
 def norm(data):
-    lines = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n").split(b"\n")
-    return re.sub(rb"\s+", b" ", b" ".join(MARK.sub(b"", l) for l in lines)).strip()
+    return re.sub(rb"\s+", b" ", b" ".join(MARK.sub(b"", l) for l in physical_lines(data))).strip()
 # Match complete words, not the syntax wrapping them: punctuation at a token's edges, standalone comment/list
 # markers and a continuation backslash are not words; escaped whitespace separates words. Preserve case and
 # internal punctuation. This deliberately does not decode a source language or invent arbitrary partial-quote
@@ -808,7 +819,7 @@ for i in ids:
     blob = subprocess.run(["git", "cat-file", "blob", i], capture_output=True, check=True).stdout
     cases.append(blob)
 whole = [" " + words(c) + " " for c in cases if words(c)]
-lines = {norm(l) for c in cases for l in c.split(b"\n")}
+lines = {norm(l) for c in cases for l in physical_lines(c)}
 long = [" " + words(l) + " " for l in lines if len(l.decode("utf-8", "replace")) >= 60 and len(l.split()) >= 8 and words(l)]
 if len(whole) != len(ids):
     sys.exit("a sealed case read as no text")

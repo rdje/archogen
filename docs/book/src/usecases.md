@@ -98,7 +98,9 @@ check cannot prove nobody read one. A model trained on the branch in the four da
 may know a case with no act at all, so the measurement records the models used and when their
 training ended. The text reader compares case-sensitive words after removing leading prose/comment markers and
 word-edge punctuation; whitespace, adjacent string quotes and continuation backslashes do not break a match.
-Its quote patterns are complete long source lines. A partial quote across two source lines can go unfound even when
+Its quote patterns are complete long source lines, split at line feed, carriage return followed by line feed, or
+carriage return before length and word-count eligibility.
+A partial quote across two source lines can go unfound even when
 it is longer than either line; encodings that change word boundaries and rewordings also lie outside the check.
 By the project's rule a case read early is recorded and counted apart. See
 `docs/evaluation/README.md`.

@@ -1028,8 +1028,9 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM.76`
   Status: `active` — the custody change committed `2026-10-10`; its review open. Round 13 answered
   `2026-10-11`: whole cases and complete long source lines compared as case-sensitive words, the partial-quote
-  limitation explicit, and the error/recursion arms separated. Round 14 received: one source-newline defect,
-  owned here, the answer next (`target/review-p76-r14/report.txt`, pending durable details).
+  limitation explicit, and the error/recursion arms separated. Round 14 answered
+  `2026-10-11`: source lines split at LF, CRLF and CR before eligibility; six disk/index controls, the two CR-only
+  regressions failed first, then all 143 arms pass. Round 15 next, on the committed repair.
   Goal: the sealed evaluation set guarded against being read, not only against being edited or named, so no search
   of the working tree made for other work can reach a case before `M6.5`, nor, in a working tree that carries the
   mark, a diff of a commit that holds one show it.
@@ -1040,34 +1041,33 @@ mdBook that is the director's window into the project.
   `b05fadb`, which holds each case as a blob; the manifest its commitment; `--restore` the reveal, refused while
   sealed; the exposure recorded in the manifest, the one place a case may be named, and counted apart at `M6.5`.
 
-  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`), round 13 answer:**
-  - [x] **REPRODUCE / ISSUE** — the new synthetic arms on the prior reader, `bash scripts/check_frozen_evaluation.sh
-    --self-test` → `127 pass / 10 fail (137 arms)` (`target/p76/r13-before.log`): doc comments, no-space quotes,
-    Lisp comments, continued strings and adjacent string literals, on disk and in the index separately.
-  - [x] **ROOT CAUSE (WHY + WHERE)** — `scripts/check_frozen_evaluation.sh`'s `MARK` omitted `//!`, `;;` and `>`
-    without a following space; `norm` retained string delimiters and continuation backslashes inside a wrapped
-    quote. The ten named failures of `target/p76/r13-before.log` isolate the mismatch to those wrappers. The draft's
-    arbitrary word windows flag three canonical documents; restricting the same reader to complete source lines,
-    `bash target/p76/check_frozen_evaluation.r13-long-lines-probe.sh` → exit 0, with no case's text displayed. Overlap
-    alone establishes no exposure; the broader draft is not adopted.
-  - [x] **FIX** — source-line eligibility stays at 60 normalized characters and 8 words; whole cases and each
-    eligible complete source line are matched as case-sensitive words, word-edge punctuation and standalone
-    markers dropped, escaped whitespace separated. The four arm gaps are addressed: wrappers on both sides,
-    a case-sensitive filesystem arm (explicitly skipped on this host), each name search failing alone, a synthetic
-    case's name inside an active registered submodule. The limit names partial quotes across source lines and
-    encodings changing word boundaries; no source-language decoder or arbitrary fragment match is claimed.
-  - [x] **ADDRESSED (verified)** — `bash scripts/check_frozen_evaluation.sh --self-test` → `137 pass / 0 fail
-    (137 arms)` (`target/p76/r13-after.log`), the ten former failures all passing; the real-tree check → exit 0.
-    The synthetic arms are tracked and rerun by `scripts/run_self_tests.sh`; the two probe scripts are untracked,
-    so their measurements are not durable.
-  - [x] **NO REGRESSION** — `bash -n scripts/check_frozen_evaluation.sh` → exit 0; the real-tree check → exit 0;
-    `bash scripts/check_review_counts.sh` → `OK (2 review(s) listed; 29 round(s) judged, every one)`;
-    `bash scripts/check_book_anchors.sh`, `bash scripts/check_book_glossary.sh` → `OK`;
-    `bash scripts/check_doctrines.sh` → `=== all doctrines green ===` before staging, repeated by the commit hook.
-    No Rust source changed; the focused checks here are the guard's complete synthetic suite and these doctrine/doc
-    checks, as `COMMIT.md` step 2 requires the focused tier when Rust changes.
-  - [x] **LOCKSTEP** — the checker and its contract, the book's sealed-set passage, this leaf and its logs,
-    `CHANGELOG.md`, and the resume/frontier snapshots. README, development notes and product progress unchanged.
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`), round 14 answer:**
+  - [x] **REPRODUCE / ISSUE** — six new source-ending controls on the prior reader, `bash
+    scripts/check_frozen_evaluation.sh --self-test` → `141 pass / 2 fail (143 arms)`
+    (`target/p76/r14-before.log`): LF and CRLF controls pass; a complete line from a CR-only source is missed on
+    disk and in the index independently. The reviewer separately reproduced the same source-side distinction.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `scripts/check_frozen_evaluation.sh` derived eligible patterns with
+    `c.split(b"\n")`, then called `norm`, which already recognized CR. CR-only physical lines were joined before
+    eligibility, so the purported single-line pattern became the whole case. The two named failures isolate that
+    source-side split; the copied line and its word boundaries are unchanged. `bash
+    scripts/check_frozen_evaluation.sh --self-test` → `141 pass / 2 fail (143 arms)` on the prior reader.
+  - [x] **FIX** — `physical_lines` recognizes LF, CRLF and CR and is shared by prose normalization and source
+    pattern extraction. Per-line normalization, the 60-character/8-word thresholds, whole-case comparison and
+    case-sensitive word matching are unchanged. The six tracked arms separately own disk/index consumers.
+  - [x] **ADDRESSED (verified)** — `bash scripts/check_frozen_evaluation.sh --self-test` → `143 pass / 0 fail
+    (143 arms)` (`target/p76/r14-after.log`), the two former omissions now refused. The filesystem-conditional
+    case-distinction arm remains explicitly skipped on this host; the suite does not claim that branch ran here.
+  - [x] **NO REGRESSION** — `bash -n scripts/check_frozen_evaluation.sh`, the real-tree guard → exit 0; review
+    counts → OK, 2 reviews / 32 rounds; book anchors, glossary and index → OK; doctrines → all green
+    (`target/p76/r14-doctrines-prestage.log`), repeated on the final staged tree by the commit hook. The first
+    pre-stage pass refused undefined book abbreviations; the passage now spells out the three line endings.
+    The first staged hook required the reproduction output inside this root-cause bullet; it is now included.
+    No Rust source changes; `COMMIT.md` step 2 requires the focused tier when Rust changes.
+  - [x] **LOCKSTEP** — the checker, evaluation contract, book, leaf and logs, changelog and resume/frontier
+    snapshots. README, development notes and product milestone states unchanged.
+  Round 14, `2026-10-11`, of `c4c6120`: 1 defect, the pre-existing source-side CR split. Its read-only report is
+  `target/review-p76-r14/report.txt` (untracked); the reproduction and repair above are durable tracked arms. No
+  actual sealed case text was displayed. Round 13's wrapper repair and explicit partial-quote limits still apply.
   Round 13's findings (2 defects, 4 arm gaps, 8 remarks) survive in `target/p76/r13report.txt` (untracked) and the
   answer here. D1 fixed by word comparison and widened markers; D2 by accurately bounding the quote patterns,
   instead of adopting arbitrary word windows. AG1 has disk/index wrapper arms; AG2 has a filesystem-conditional
@@ -1224,7 +1224,8 @@ mdBook that is the director's window into the project.
   `ARCHOGEN-PROGRAM-0584 (leaf PROGRAM.76)`, round 10;
   `ARCHOGEN-PROGRAM-0588 (leaf PROGRAM.76)`, round 11;
   `ARCHOGEN-PROGRAM-0596 (leaf PROGRAM.76)`, round 12;
-  `ARCHOGEN-PROGRAM-0604 (leaf PROGRAM.76)`, round 13
+  `ARCHOGEN-PROGRAM-0604 (leaf PROGRAM.76)`, round 13;
+  `ARCHOGEN-PROGRAM-0609 (leaf PROGRAM.76)`, round 14
 
 - ID: `PROGRAM.77`
   Status: `done` — filed, started and closed `2026-10-10`, on CI's red: the push `a543d10` failed the `rust` workflow;
@@ -1405,7 +1406,7 @@ roadmap item X live?".
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
 | 1 | `PROGRAM.69` | `active` | its review open: round 32 next, on the committed tool |
-| 2 | `PROGRAM.76` | `active` | its review open: round 14 to answer, report under target/review-p76-r14/, round 13 committed |
+| 2 | `PROGRAM.76` | `active` | its review open: round 15 next, on the source-line-ending repair |
 | 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The third row waits on the director's yes. The pending leaves beside them —
@@ -1609,6 +1610,8 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 
 | `2026-10-11` | `PROGRAM.69` (round 31) | first-link regression arms before repair, then the count self-test; syntax, staged real count/history gates, book gates, doctrines | 79 pass / 2 fail, then 81 pass / 0 fail; staged count gate OK (2 reviews / 32 rounds); history gate OK (175 files); book anchors/glossary/index OK; doctrines all green |
 
+| `2026-10-11` | `PROGRAM.76` (round 14) | six source-line-ending controls before repair, then the complete guard suite; real sealed-tree guard, syntax, review counts, book gates and doctrines | 141 pass / 2 fail, then 143 pass / 0 fail; real guard exit 0, syntax clean; review counts OK (2 reviews / 32 rounds); book gates OK, doctrines all green; filesystem case-distinction arm explicitly skipped |
+
 ## Commit Log
 
 | Leaf | Commit subject or reference | Notes |
@@ -1805,6 +1808,8 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.80` | `ARCHOGEN-PROGRAM-0607 (leaf PROGRAM.80)` | **handoff false-green repaired**: actual required OS process and open-handle reads must complete in each sample; nine controls; project bootstrap and book use the guarded wrapper, the native file unchanged |
 
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0608 (leaf PROGRAM.69)` | **review round 31 answered**: an unlisted index row names its record by the first link; secondary explanations neither force counting nor cause missing-record refusals; 81 arms |
+
+| `PROGRAM.76` | `ARCHOGEN-PROGRAM-0609 (leaf PROGRAM.76)` | **review round 14 answered**: source cases split at LF, CRLF and CR before line eligibility; six disk/index controls, the CR-only omissions failed first; quote thresholds and explicit partial-quote limits unchanged |
 
 ## Changelog
 

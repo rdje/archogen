@@ -62,8 +62,9 @@ What it holds against, and what not: it reads the files it walks and the blobs t
 reader makes line endings and white space uniform, removes leading list, quote, heading, table and comment markers,
 then compares case-sensitive words: whitespace-separated tokens, their non-word edge punctuation removed, tokens
 holding no letter or digit dropped, and written `\n`, `\r` and `\t` made spaces. Thus ordinary comment markers,
-quotes around adjacent string literals and a string's continuation backslash do not interrupt a match. A long source
-line has at least 60 characters and 8 words after the first prose normalization; the pattern is that **complete source
+quotes around adjacent string literals and a string's continuation backslash do not interrupt a match. Source cases
+are split into physical lines at LF, CRLF or CR before eligibility is measured. A long source line has at least
+60 characters and 8 words after the first prose normalization; the pattern is that **complete source
 line**, not every fragment of that length. Whole cases are compared the same way, regardless of line endings or a
 final newline, including inside a larger file. This is a text matcher, not a source-language string decoder.
 
