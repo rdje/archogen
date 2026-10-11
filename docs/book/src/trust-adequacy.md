@@ -33,24 +33,17 @@ A passing contract establishes catalogue consistency. The actual mutated program
 ## Exact-entry measurements
 
 Measured `2026-10-11`, `M3.6.9.4.2.2.1`, native `aarch64-apple-darwin`, Rust `1.95.0`:
-all 32 exact route entries have named finishing kills in one strict
-native run, exit 0. No entry times out, fails compilation or is unjudged. The complete result identities match
-the reviewed census; independent malformed-result checks reject missing, duplicate, foreign and unnamed results.
-All three source files restore to their original bytes and match committed source at `2b49ed5`; a separate system
-SHA-256 tool agrees. Parent semantic tests were unchanged for these initial measurements.
-The initial parent results below record the remaining repair obligations, not a passing adequacy criterion.
+all 32 exact route entries have named finishing kills, strict exit 0. Measured `2026-10-11`,
+`M3.6.9.4.2.2.2`, on the same host/toolchain: the exact unmutated parent command passes 91 tests;
+its 32 exact mutations give 2 named kills and 30 survivors. Raw strict exit 1 means
+30 entries do not meet their expected killed verdict. Every candidate compiles and finishes;
+none times out or is unjudged. Complete identities match the reviewed census, and independent
+falsifications reject missing, duplicate, foreign or unnamed results. All three source digests agree across
+original/restored/committed/system values: route source `2b49ed5`, matching parent source `7206818`.
 
-Measured `2026-10-11`, `M3.6.9.4.2.2.2`, on the same native host/toolchain: the exact unmutated parent
-command passes 91 tests. Of its 32 exact mutations, 2 have named finishing kills and 30 survive. The raw strict
-exit is 1: 30 entries do not meet their expected killed verdict. Every entry compiles and finishes; none times out
-or is unjudged. Complete identities, independent result falsifications and source-restoration checks pass.
-Original/restored/committed/system source digests match the route measurement and committed `7206818` source.
-All 30 survivors have priority P1 and are owned for repair in `M3.6.9.6`, after `.9.5` measures operator reach.
-Expected parent verdicts stay killed; calibration does not weaken them.
-
-The suffix below selects `route-<suffix>` or `parent-<suffix>`. Each exact entry retains the final expected-killed
-criterion. Initial parent survivors, if measured, remain repair obligations of `M3.6.9.6` after operator
-measurements in `.9.5`; their expected verdict is never weakened to make calibration pass.
+These initial measurements precede parent strengthening. Every survivor has priority P1 and an owner in
+`M3.6.9.6`, after `.9.5`'s operator measurement; calibration never weakens the expected killed verdict.
+The suffix selects `route-<suffix>` or `parent-<suffix>`; the following table retains every initial outcome.
 
 | Suffix | Route | Initial parent |
 | --- | --- | --- |
@@ -137,17 +130,13 @@ python3 scripts/trust_adequacy.py --self-test
 python3 scripts/trust_adequacy.py --output target/trust-adequacy/plan.json
 ```
 
-The diagnostic reads the reviewed census and exact catalogue twins, and loads the actual sweep's discovery
-functions. It compares all raw candidate identities and text with the complete real `--list` output, without
-an operator filter. This preserves the global identities that later `--only` commands select. Input hashes
-bind the manifest to the source, census, catalogue and sweep. Its boundary and malformed-input controls refuse
-population, twin, identity, replacement, ordering and span drift.
+The diagnostic binds reviewed census/catalogue twins and source hashes to candidates loaded from the actual
+sweep functions. Complete real `--list` output must agree in raw identities, text and order. No operator filter
+changes the global identities later selected by `--only`; controls refuse population/twin/span/replacement drift.
 
-Each census block selects the source lines touched by its original characters, including unchanged anchor
-context. A terminal newline does not add the next untouched line; an inline fragment selects its enclosing
-line. A candidate is selected when its half-open line interval overlaps that span. Execution is deduplicated
-by file/candidate identity while every census-row membership remains in the manifest. Such overlap can affect
-another judgment on the same lines; it is not a semantic witness.
+Each original character span selects its enclosing half-open source lines, including unchanged anchors.
+A terminal newline does not select the next untouched line. Overlapping candidate intervals are deduplicated
+by file/identity for execution; every row membership remains. Overlap can change another judgment and is not a witness.
 
 Measured `2026-10-11`, `M3.6.9.5.1`: the complete listings contain 1,420 candidates for `trust.rs` and 314 for
 `trust_generated.rs`. Span selection yields 58 and 61 respectively, 119 unique file/candidates, with 269 row
@@ -156,28 +145,23 @@ counts only: no production compilation, mutation verdict or semantic reach is es
 
 ## Initial source/provenance operator outcomes
 
-Measured `2026-10-11`, `M3.6.9.5.2.1`, native `aarch64-apple-darwin`, Rust `1.95.0`, production source
-identical to committed `5663aa9` and the source digests above: all selected `trust_generated.rs` candidates run
-against the route population. The unmutated copy passes. Outcomes: 36 named kills, 17 survivors and 8 unviable
-candidates; no timeout or unjudged outcome, raw strict sweep exit 1. This is a completed initial measurement,
-not completed adequacy. The copied source restores exactly; all three population source digests independently
-match their original, committed and system-tool values. Seven altered actual-result sets are refused: missing,
-duplicate, foreign, changed replacement, unnamed kill, wrong terminal count and wrong raw exit.
+All four initial operator runs below use native `aarch64-apple-darwin`, Rust `1.95.0`, and unchanged parent
+semantic tests. Each unmutated copy passes; all selected IDs/replacements and finishing names/terminal counts
+are audited. Each run rejects seven altered actual-result sets: missing, duplicate, foreign, changed replacement,
+unnamed kill, wrong count and wrong raw exit. Every source/copy restores exactly; all three population source
+hashes agree across original, committed and independent system values. Paired populations share the manifest,
+input digests and candidate identities. No run has a timeout or unjudged result; each raw strict exit is 1.
+These completed initial measurements do not establish final adequacy or accepted equivalences.
 
-Measured `2026-10-11`, `M3.6.9.5.2.2`, with the same native host/toolchain and production source identical
-to committed `5e78044`: the exact unmutated parent command passes 91 tests. All the same selected candidates
-then run against that parent population: 20 named kills, 33 survivors and 8 unviable, raw strict sweep exit 1;
-no timeout or unjudged result. Route/parent identity sets, manifest hash and all input digests agree. Original,
-restored, committed and independent system digests agree for all three population source files; the copied
-source restores exactly. Seven altered actual parent result sets are refused. Parent semantic tests were unchanged for this run. These survivors were carried to semantic examination
-and repair, never accepted as equivalences.
+Measured `2026-10-11`, `M3.6.9.5.2.1`, production source `5663aa9`: all selected `trust_generated.rs`
+route candidates give 36 named kills, 17 survivors and 8 unviable. Measured `2026-10-11`, `M3.6.9.5.2.2`,
+matching production source `5e78044`: the exact parent baseline passes 91 tests; the same candidates give
+20 named kills, 33 survivors and 8 unviable. The latter run's producer matches its committed bytes.
+All unviable spellings report `error[E0277]`, `String: Copy`, from copied-element membership comparisons;
+compilation refusal proves no coverage. Actual paired outcomes and killing-test keys follow.
 
-The tracked runner's seven control methods are also discovered through `scripts/trust_adequacy.sh` by the
-integration self-test runner. The selected discovery check passes; a full integration run is still pending.
-Semantic relationships are classified below; every behavioral gap remains owned by `M3.6.9.6`.
-Both columns now contain actual results for the same candidate identities and manifest. No desired pair of
-verdicts establishes a witness. Every unviable candidate below reports `error[E0277]`: `String: Copy` is not
-satisfied for the copied-element membership spelling. An unviable attempt proves no semantic coverage.
+The runner's seven control methods are discovered through `scripts/trust_adequacy.sh`; selected discovery
+passes, full integration remains pending. Semantic classifications are below; behavioral repairs belong to `.9.6`.
 
 | Operator | Route attempted | Route unviable | Parent attempted | Parent unviable |
 | --- | --- | --- | --- | --- |
@@ -314,27 +298,16 @@ rows it overlaps. Exact span overlap alone does not classify its semantic effect
 
 ## Initial role and build operator outcomes
 
-Measured `2026-10-11`, `M3.6.9.5.3.1`, native `aarch64-apple-darwin`, Rust `1.95.0`, production source
-identical to committed `5942b3d` and the source digests above: all selected `trust.rs` candidates run against
-the route population. The unmutated copy passes. Outcomes: 36 named kills, 18 survivors and 4 unviable;
-no timeout or unjudged result, raw strict sweep exit 1. Every selected identity and replacement text is
-accounted for. Seven altered actual-result sets refuse. All three population source digests agree across
-original/restored/committed/system values, the native producer matches committed bytes and the copy restores.
+Measured `2026-10-11`, `M3.6.9.5.3.1`, production source `5942b3d`: all selected `trust.rs` route
+candidates give 36 named kills, 18 survivors and 4 unviable. Measured `2026-10-11`, `M3.6.9.5.3.2`,
+matching production source `c9ea429`: the exact parent baseline passes 91 tests; the same candidates give
+18 named kills, 36 survivors and 4 unviable. Both producers match committed bytes; the shared audits above
+hold for each. These span-cohort results precede parent strengthening and the complete production sweeps.
 
-Measured `2026-10-11`, `M3.6.9.5.3.2`, on the same native host/toolchain and production source identical
-to committed `c9ea429`: the exact unmutated parent command passes 91 tests. The same selected candidates
-then give 18 named kills, 36 survivors and 4 unviable, raw strict sweep exit 1; no timeout or unjudged result.
-Complete route/parent identities, manifest hash and input digests agree. All three population source digests
-agree across original/restored/route/committed/system values; the copied source restores and the producer
-matches committed bytes. Seven altered actual parent-result sets refuse. All initial dual-population runs
-completed before any parent semantic strengthening; their semantic classification is recorded below.
-
-Two copied-String membership spellings report `error[E0277]` (`String: Copy`); two direct borrowed-package
-comparisons report `error[E0308]` (mismatched types). The original package set contains borrowed strings,
-so its direct endpoint comparison has a different reference depth; the copied-element variants compile.
-These unviable attempts prove no coverage. Semantic examination of survivors belongs to `.9.5.4`, with parent
-behavioral repairs in `.9.6`. Both populations now have actual results; no witness is inferred from a desired verdict pair.
-This census-span selection is distinct from the later complete production-range sweep.
+Two copied-String spellings report `error[E0277]` (`String: Copy`); two direct borrowed-package comparisons
+report `error[E0308]` (mismatched types). The package set contains borrowed strings, so direct endpoints have
+an extra reference depth; copied-element variants compile. Unviable attempts and desired verdict pairs prove
+no semantic witness. Both populations' actual outcomes and killing names follow.
 
 | Operator | Route attempted | Route unviable | Parent attempted | Parent unviable |
 | --- | --- | --- | --- | --- |
@@ -432,10 +405,9 @@ Four entries have a candidate with identical formatted full-source bytes:
 | `the-last-live-form-alone` | `L253.chain.244` | killed / killed |
 | `a-harness-judged-by-its-first-role-alone` | `L1838.clogic.1411` | killed / survived |
 
-These are syntax matches, not the completed semantic witness table. In particular, a loop rewritten with
-position flags can have the same judgment effect without the same formatted syntax. Conversely, changing
-another judgment inside an overlapping interval does not make a witness. Every row still needs the explicit
-effect comparison; a missing syntax match alone establishes no absence of a semantic witness.
+Syntax identity alone does not complete the semantic relation. Position-flag loops may have the same effect
+with different syntax; overlapping edits may change another judgment. A missing syntax match proves no semantic
+absence. The explicit effect comparisons are in the next section.
 
 Reproduce after the four preceding native measurements, with their original production sources restored:
 

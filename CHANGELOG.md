@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — bounded mutation measurements and parent repair groups
+
+`ARCHOGEN-M3-0652` (leaf `M3.6.9.6.2.1`), `2026-10-11`.
+
+- Consolidate repeated native audit methods and scope explanations in the measurement chapter, reducing it
+  from 48,960 to 46,187 bytes before recording further repairs. Every table and reproduction command remains
+  byte-identical; headings, candidate/test identities, dates, source commits, outcomes and limitations remain.
+- Compare all table/fence/identity sets against ba3c8e3 and read the complete prose diff. Pinned book builds,
+  index remains 330 entries. No Rust, operator, fixture, dataset or production change; no full integration claim.
+- Own the remaining 22 trust parent gaps in bounded children: nine generator/entry-kind/target-position,
+  ten reader/role/held/harness/data and three build-read cases. Update individual repair owners and current
+  next-action snapshots before code; generator controls next.
+
 ## archogen — source and provenance parent gaps repaired
 
 `ARCHOGEN-M3-0651` (leaf `M3.6.9.6.1`), `2026-10-11`.
