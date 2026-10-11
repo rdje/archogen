@@ -53,6 +53,35 @@ ABSENCES = {
 }
 
 
+INITIAL_FIXTURE = "scripts/fixtures/trust_witness_effects_initial.json"
+INITIAL_FIXTURE_SHA256 = "1f1723aea1c0f4613998ca3f484caf1ba7496a4004fe88617c6e01d6023e03b4"
+
+
+def reviewed_fixture(raw):
+    """The reviewed initial traces, independent of today's source-bound mutation identities."""
+    if adequacy.digest(raw) != INITIAL_FIXTURE_SHA256:
+        raise ValueError("reviewed semantic fixture digest differs")
+    data = json.loads(raw)
+    if data.get("schema") != "archogen-trust-effects-initial-fixture/1" or data.get("source_commit") != (
+            "4a556364165d54c7640592272e5d9d20e419f09b"):
+        raise ValueError("unrecognized reviewed semantic fixture")
+    return data["manifest"]
+
+
+def fixture_controls(root):
+    raw = (root / INITIAL_FIXTURE).read_bytes()
+    manifest = reviewed_fixture(raw)
+    for changed in (raw + b"\n", raw.replace(b"L1851.iter.740", b"L1851.iter.741", 1)):
+        if changed == raw:
+            raise ValueError("fixture refusal arm did not alter its input")
+        try:
+            reviewed_fixture(changed)
+        except ValueError:
+            continue
+        raise ValueError("altered reviewed semantic fixture was accepted")
+    return manifest
+
+
 def selections(manifest):
     rows = {row["suffix"]: row for row in manifest["rows"]}
     candidates = {(filename, candidate["id"]): candidate for filename, data in manifest["files"].items()
@@ -290,8 +319,8 @@ def main():
     args = parser.parse_args()
     root = Path(__file__).resolve().parent.parent
     if args.self_test:
-        manifest = adequacy.plan(root)
-        spelling_controls(root, manifest)
+        spelling_controls(root, adequacy.plan(root))
+        manifest = fixture_controls(root)
         result = compile_control(root, manifest, "positive")
         if result["exit_code"] != 0 or "contrasting controls passed" not in result["stdout"]:
             raise ValueError("positive selection controls failed: " + str(result))

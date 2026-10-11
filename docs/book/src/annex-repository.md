@@ -212,6 +212,25 @@ This closes the caller-byte assessment before `.9.4` integration. It establishes
 without demonstrating an artifact-hash bypass or authenticity. Encoding follows [RFC 8259](ledger.md#rfc-8259)
 §8.1's interchange context; these local checks are not a complete conformance claim.
 
+## Historical effects and current self-tests
+
+The effects diagnostic keeps the [initial semantic witness review](trust-adequacy.md#semantic-witnesses-in-the-initial-cohort)
+bound to its original source. Candidate IDs encode source positions and operator order; a current plan can have
+different IDs after a repair. Feeding it to the fixed initial witness table makes the self-test fail at cohort
+membership, before the semantic trace runs.
+
+The self-test now uses a compact tracked fixture, `scripts/fixtures/trust_witness_effects_initial.json`, for those
+historical compiler controls. It retains the actual replacement text needed by the controls, the original input
+hashes and the reviewed commit identity. The diagnostic pins the fixture's bytes and refuses altered fixture
+data. The positive trace and both seeded wrong claims generate the same Rust programs as the original manifest;
+their assertions and contrasted behavior are unchanged. The fixture holds selected compiler traces, without
+native outcomes or a complete cohort, and does not classify the current production source.
+
+Spelling controls still discover the current plan and check its source headers, first/last/ends forms and refusal
+arms. Historical semantic traces and live spelling checks therefore use their own inputs. Run both through
+`bash scripts/trust_witness_effects.sh --self-test`. A clean checkout needs no ignored initial evidence or old Git
+history for this self-test. Measurement mode retains its original source/native evidence checks.
+
 ## What is versioned is written down
 
 `VERSION-REGISTER` keeps [What is versioned, and what changing it costs](versions.md) true to the code.

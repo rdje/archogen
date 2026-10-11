@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — effects self-tests keep initial semantic traces source-bound
+
+`ARCHOGEN-M3-0679` (leaf `M3.6.9.6.3.2.2.9.4.1`), `2026-10-12`.
+
+- Full integration fails only the effects self-test: it applies reviewed initial witness IDs to a fresh plan
+  after production positions move. Keep current spelling checks and pin a tracked initial semantic fixture;
+  preserve reviewed assertions and every generated Rust control byte. No current semantic classification follows.
+- Direct self-test now passes. Reverting only its input path repeats the cohort refusal; removing only the
+  fixture pin triggers its altered-data refusal. Restored self-test and three native catalogue contracts pass;
+  public measurement mode unchanged. Book/provenance/tool/live pointers align; full integration rerun is next.
+- Own a separate evidence durability gap: supplemental restoration counts used ignored one-off helpers.
+  Permanent regressions/native catalog are tracked; .9.7 will maintain the census and replay current repairs,
+  with earlier auxiliary limitations stated. Complete current-source adequacy and runner compatibility remain open.
+
 ## archogen — package inventories require valid UTF-8 JSON
 
 `ARCHOGEN-M3-0678` (leaf `M3.6.9.6.3.2.2.9.6.4`), `2026-10-12`.

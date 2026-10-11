@@ -433,11 +433,11 @@ in their measured replacement-span cohorts. This is a bounded relation between t
 not a claim that another edit elsewhere could never express the defect. All initial candidate outcomes and
 killing-test names remain in the preceding tables, including different defects and type refusals.
 
-The classifications are explicit reviewed assertions in `scripts/trust_witness_effects.py`. The diagnostic
-re-audits the original source/syntax/native evidence, checks complete census membership, requires each witness
-to belong to its row's cohort and have viable outcomes in both populations, and retains those actual outcomes.
-It never selects a witness from a desired verdict pair. Its compiler controls use actual exact/operator
-replacement text in typed selection traces; these are bounded controls, separate from the native inventory runs.
+The initial classifications are reviewed assertions in `scripts/trust_witness_effects.py`. Measurement mode
+re-audits original source/syntax/native evidence, checks census membership and requires each witness in its
+cohort and viable in both populations, retaining actual outcomes. It never selects from desired verdict pairs.
+Typed compiler traces use actual exact/operator replacement text, separately from native runs. Self-tests
+[pin those initial traces](annex-repository.md#historical-effects-and-current-self-tests); spelling controls use the current plan.
 
 | Exact-entry suffix | Viable witness and initial route / parent, or scoped absence |
 | --- | --- |

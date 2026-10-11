@@ -1,0 +1,363 @@
+{
+  "schema": "archogen-trust-effects-initial-fixture/1",
+  "source_commit": "4a556364165d54c7640592272e5d9d20e419f09b",
+  "input_sha256": {
+    "docs/specs/trust/decision_trust-generated-adequacy.md": "f5206145f24da20e33073a99fc12c3118a4f98009fbb3b382484fe189ca3ac6e",
+    "xtask/mutations.txt": "a7325867a4091e6677f5ffdaf1f3a169ae9dc5741bb910dfb78968dc00079a7e",
+    "scripts/mutation_sweep.sh": "4a69aaf9039308a650e294c0f518a4d1d94809ca56ee3572432ffc6bccf6ab2a",
+    "xtask/src/trust.rs": "99ecb50451358f3654538b52f72ab959e0a2629849237779bc69a34bfaea9718",
+    "xtask/src/trust_generated.rs": "cf10f442e767ada6ae4ee4836a079e41779a16b026555bc42c12dfc185ac1cec"
+  },
+  "scope": "selected initial reviewed compiler traces only; not a complete cohort, native outcomes or current classification",
+  "manifest": {
+    "rows": [
+      {
+        "suffix": "the-first-generator-alone",
+        "file": "xtask/src/trust.rs",
+        "candidates": [
+          "L1851.iter.740",
+          "L1851.iter.741",
+          "L1851.iter.742"
+        ],
+        "exact_replacement": "        for file in g.generators.iter().take(1) {\n            // What another role holds"
+      },
+      {
+        "suffix": "the-last-generator-alone",
+        "file": "xtask/src/trust.rs",
+        "candidates": [
+          "L1851.iter.740",
+          "L1851.iter.741",
+          "L1851.iter.742"
+        ],
+        "exact_replacement": "        for file in g.generators.iter().rev().take(1) {\n            // What another role holds"
+      },
+      {
+        "suffix": "the-first-reader-alone",
+        "file": "xtask/src/trust.rs",
+        "candidates": [
+          "L1851.iter.740",
+          "L1851.iter.741",
+          "L1851.iter.742",
+          "L1849.chain.1219",
+          "L1849.chain.1220"
+        ],
+        "exact_replacement": "            .filter(|p| reads[&p.name].contains(&g.path))\n            .take(1)\n            .collect();\n        for file in &g.generators {"
+      },
+      {
+        "suffix": "the-last-reader-alone",
+        "file": "xtask/src/trust.rs",
+        "candidates": [
+          "L1851.iter.740",
+          "L1851.iter.741",
+          "L1851.iter.742",
+          "L1849.chain.1219",
+          "L1849.chain.1220"
+        ],
+        "exact_replacement": "            .filter(|p| reads[&p.name].contains(&g.path))\n            .collect::<Vec<_>>()\n            .into_iter()\n            .rev()\n            .take(1)\n            .collect();\n        for file in &g.generators {"
+      },
+      {
+        "suffix": "a-program-target-judged-for-its-first-reader-alone",
+        "file": "xtask/src/trust.rs",
+        "candidates": []
+      },
+      {
+        "suffix": "a-program-target-judged-for-its-last-reader-alone",
+        "file": "xtask/src/trust.rs",
+        "candidates": []
+      },
+      {
+        "suffix": "chain-and-blob-rules-on-each-clause-s-first-entry-alone",
+        "file": "xtask/src/trust_generated.rs",
+        "candidates": [
+          "L273.iter.106",
+          "L273.iter.107"
+        ],
+        "exact_replacement": "    for g in live {\n        for (role, files) in [(\"generator\", &g.generators), (\"input\", &g.inputs)] {\n            for f in files.iter().take(1) {"
+      },
+      {
+        "suffix": "chain-and-blob-rules-on-each-clause-s-last-entry-alone",
+        "file": "xtask/src/trust_generated.rs",
+        "candidates": [
+          "L273.iter.106",
+          "L273.iter.107"
+        ],
+        "exact_replacement": "    for g in live {\n        for (role, files) in [(\"generator\", &g.generators), (\"input\", &g.inputs)] {\n            for f in files.iter().rev().take(1) {"
+      },
+      {
+        "suffix": "both-clauses-the-first-input-alone",
+        "file": "xtask/src/trust_generated.rs",
+        "candidates": [
+          "L192.contains.224",
+          "L192.contains.226"
+        ],
+        "exact_replacement": ".filter(|g| f.inputs.first() == Some(*g))"
+      },
+      {
+        "suffix": "both-clauses-the-last-input-alone",
+        "file": "xtask/src/trust_generated.rs",
+        "candidates": [
+          "L192.contains.224",
+          "L192.contains.226"
+        ],
+        "exact_replacement": ".filter(|g| f.inputs.last() == Some(*g))"
+      },
+      {
+        "suffix": "both-clauses-the-last-generator-alone",
+        "file": "xtask/src/trust_generated.rs",
+        "candidates": [
+          "L191.chain.220",
+          "L192.contains.224",
+          "L192.contains.226"
+        ]
+      },
+      {
+        "suffix": "a-program-target-judged-when-first-alone",
+        "file": "xtask/src/trust.rs",
+        "candidates": []
+      },
+      {
+        "suffix": "a-program-target-judged-when-last-alone",
+        "file": "xtask/src/trust.rs",
+        "candidates": []
+      },
+      {
+        "suffix": "a-program-target-built-when-first-alone",
+        "file": "xtask/src/trust.rs",
+        "candidates": []
+      },
+      {
+        "suffix": "a-program-target-built-when-last-alone",
+        "file": "xtask/src/trust.rs",
+        "candidates": []
+      },
+      {
+        "suffix": "a-lone-rs-refused-when-first-alone",
+        "file": "xtask/src/trust.rs",
+        "candidates": []
+      },
+      {
+        "suffix": "a-lone-rs-refused-when-last-alone",
+        "file": "xtask/src/trust.rs",
+        "candidates": []
+      },
+      {
+        "suffix": "a-middle-script-never-judged",
+        "file": "xtask/src/trust.rs",
+        "candidates": [
+          "L1851.iter.740",
+          "L1851.iter.741",
+          "L1851.iter.742"
+        ],
+        "exact_replacement": "        for file in &g.generators {\n            if !file.ends_with(\".rs\") && g.generators.first() != Some(file) && g.generators.last() != Some(file) { continue; }\n            // What another role holds"
+      },
+      {
+        "suffix": "a-middle-reader-never-judged",
+        "file": "xtask/src/trust.rs",
+        "candidates": [
+          "L1851.iter.740",
+          "L1851.iter.741",
+          "L1851.iter.742",
+          "L1849.chain.1219",
+          "L1849.chain.1220"
+        ],
+        "exact_replacement": "            .filter(|p| reads[&p.name].contains(&g.path))\n            .collect::<Vec<_>>();\n        let readers: Vec<&Program> = readers.iter().enumerate().filter(|(i, _)| *i == 0 || *i + 1 == readers.len()).map(|(_, p)| *p).collect();\n        for file in &g.generators {"
+      },
+      {
+        "suffix": "a-middle-input-never-reached",
+        "file": "xtask/src/trust_generated.rs",
+        "candidates": [
+          "L341.iter.136",
+          "L341.iter.138"
+        ],
+        "exact_replacement": "    for g in live.iter().filter(|g| reads.contains(&g.path)) {\n        for (role, files) in [(\"generator\", &g.generators), (\"input\", &g.inputs)] {\n            for (k, f) in files.iter().enumerate() {\n                if role == \"input\" && k != 0 && k + 1 != files.len() { continue; }"
+      },
+      {
+        "suffix": "an-implementation-reader-never-judged",
+        "file": "xtask/src/trust.rs",
+        "candidates": []
+      },
+      {
+        "suffix": "a-marked-build-read-dropped-beside-other-generators",
+        "file": "xtask/src/trust.rs",
+        "candidates": []
+      },
+      {
+        "suffix": "only-a-form-s-first-input-reached",
+        "file": "xtask/src/trust_generated.rs",
+        "candidates": [
+          "L341.iter.136",
+          "L341.iter.138"
+        ],
+        "exact_replacement": "    for g in live.iter().filter(|g| reads.contains(&g.path)) {\n        for (role, files) in [(\"generator\", &g.generators), (\"input\", &g.inputs)] {\n            for f in files.iter().take(if role == \"input\" { 1 } else { usize::MAX }) {"
+      },
+      {
+        "suffix": "an-input-reached-through-a-link",
+        "file": "xtask/src/trust_generated.rs",
+        "candidates": []
+      },
+      {
+        "suffix": "held-judged-for-the-first-alone",
+        "file": "xtask/src/trust.rs",
+        "candidates": [
+          "L1857.iter.749"
+        ],
+        "exact_replacement": "                    for pkg in held.iter().take(1) {"
+      },
+      {
+        "suffix": "a-harness-never-judged-against-a-program-target",
+        "file": "xtask/src/trust.rs",
+        "candidates": []
+      },
+      {
+        "suffix": "the-last-live-form-alone",
+        "file": "xtask/src/trust_generated.rs",
+        "candidates": [
+          "L253.chain.244"
+        ]
+      },
+      {
+        "suffix": "a-harness-judged-by-its-first-role-alone",
+        "file": "xtask/src/trust.rs",
+        "candidates": [
+          "L1838.clogic.1411"
+        ]
+      },
+      {
+        "suffix": "a-data-reader-never-judged",
+        "file": "xtask/src/trust.rs",
+        "candidates": [
+          "L1849.chain.1219",
+          "L1849.chain.1220"
+        ]
+      },
+      {
+        "suffix": "a-build-read-naming-its-first-generator-alone",
+        "file": "xtask/src/trust.rs",
+        "candidates": [
+          "L2014.iter.829"
+        ],
+        "exact_replacement": "        for g in generators.iter().take(1) {"
+      },
+      {
+        "suffix": "a-middle-generator-never-reached",
+        "file": "xtask/src/trust_generated.rs",
+        "candidates": [
+          "L341.iter.136",
+          "L341.iter.138"
+        ],
+        "exact_replacement": "            for (index, f) in files.iter().enumerate() {\n                if role == \"generator\" && index != 0 && index != files.len() - 1 {\n                    continue;\n                }\n                let p = out.entry(f.clone()).or_default();"
+      },
+      {
+        "suffix": "a-transitive-generator-build-read-dropped",
+        "file": "xtask/src/trust.rs",
+        "candidates": [
+          "L1940.iter.803",
+          "L1940.iter.804",
+          "L1940.iter.805",
+          "L1941.iter.806",
+          "L1941.iter.807",
+          "L1941.iter.808"
+        ],
+        "exact_replacement": "                        Ok((units, _)) => {\n                            for u in &units {\n                                if u.package != *pkg && !graph.iter().any(|(from, to, _)| from == pkg && to == &u.package) {\n                                    continue;\n                                }\n                                for f in &u.files {"
+      }
+    ],
+    "files": {
+      "xtask/src/trust.rs": {
+        "candidates": [
+          {
+            "id": "L1851.iter.740",
+            "replacement": "        let mut __archogen_sweep_1851_it = (&g.generators).into_iter().peekable(); let mut __archogen_sweep_1851_k = 0usize; while let Some(file) = __archogen_sweep_1851_it.next() { let (__archogen_sweep_1851_first, __archogen_sweep_1851_last) = (__archogen_sweep_1851_k == 0, __archogen_sweep_1851_it.peek().is_none()); __archogen_sweep_1851_k += 1; if !__archogen_sweep_1851_first { continue; }"
+          },
+          {
+            "id": "L1851.iter.741",
+            "replacement": "        let mut __archogen_sweep_1851_it = (&g.generators).into_iter().peekable(); let mut __archogen_sweep_1851_k = 0usize; while let Some(file) = __archogen_sweep_1851_it.next() { let (__archogen_sweep_1851_first, __archogen_sweep_1851_last) = (__archogen_sweep_1851_k == 0, __archogen_sweep_1851_it.peek().is_none()); __archogen_sweep_1851_k += 1; if !__archogen_sweep_1851_last { continue; }"
+          },
+          {
+            "id": "L1851.iter.742",
+            "replacement": "        let mut __archogen_sweep_1851_it = (&g.generators).into_iter().peekable(); let mut __archogen_sweep_1851_k = 0usize; while let Some(file) = __archogen_sweep_1851_it.next() { let (__archogen_sweep_1851_first, __archogen_sweep_1851_last) = (__archogen_sweep_1851_k == 0, __archogen_sweep_1851_it.peek().is_none()); __archogen_sweep_1851_k += 1; if !(__archogen_sweep_1851_first || __archogen_sweep_1851_last) { continue; }"
+          },
+          {
+            "id": "L1857.iter.749",
+            "replacement": "                    let mut __archogen_sweep_1857_it = (held).into_iter().peekable(); let mut __archogen_sweep_1857_k = 0usize; while let Some(pkg) = __archogen_sweep_1857_it.next() { let (__archogen_sweep_1857_first, __archogen_sweep_1857_last) = (__archogen_sweep_1857_k == 0, __archogen_sweep_1857_it.peek().is_none()); __archogen_sweep_1857_k += 1; if !__archogen_sweep_1857_first { continue; }"
+          },
+          {
+            "id": "L1940.iter.803",
+            "replacement": "                            let mut __archogen_sweep_1940_it = (&units).into_iter().peekable(); let mut __archogen_sweep_1940_k = 0usize; while let Some(u) = __archogen_sweep_1940_it.next() { let (__archogen_sweep_1940_first, __archogen_sweep_1940_last) = (__archogen_sweep_1940_k == 0, __archogen_sweep_1940_it.peek().is_none()); __archogen_sweep_1940_k += 1; if !__archogen_sweep_1940_first { continue; }"
+          },
+          {
+            "id": "L1940.iter.804",
+            "replacement": "                            let mut __archogen_sweep_1940_it = (&units).into_iter().peekable(); let mut __archogen_sweep_1940_k = 0usize; while let Some(u) = __archogen_sweep_1940_it.next() { let (__archogen_sweep_1940_first, __archogen_sweep_1940_last) = (__archogen_sweep_1940_k == 0, __archogen_sweep_1940_it.peek().is_none()); __archogen_sweep_1940_k += 1; if !__archogen_sweep_1940_last { continue; }"
+          },
+          {
+            "id": "L1940.iter.805",
+            "replacement": "                            let mut __archogen_sweep_1940_it = (&units).into_iter().peekable(); let mut __archogen_sweep_1940_k = 0usize; while let Some(u) = __archogen_sweep_1940_it.next() { let (__archogen_sweep_1940_first, __archogen_sweep_1940_last) = (__archogen_sweep_1940_k == 0, __archogen_sweep_1940_it.peek().is_none()); __archogen_sweep_1940_k += 1; if !(__archogen_sweep_1940_first || __archogen_sweep_1940_last) { continue; }"
+          },
+          {
+            "id": "L1941.iter.806",
+            "replacement": "                                let mut __archogen_sweep_1941_it = (&u.files).into_iter().peekable(); let mut __archogen_sweep_1941_k = 0usize; while let Some(f) = __archogen_sweep_1941_it.next() { let (__archogen_sweep_1941_first, __archogen_sweep_1941_last) = (__archogen_sweep_1941_k == 0, __archogen_sweep_1941_it.peek().is_none()); __archogen_sweep_1941_k += 1; if !__archogen_sweep_1941_first { continue; }"
+          },
+          {
+            "id": "L1941.iter.807",
+            "replacement": "                                let mut __archogen_sweep_1941_it = (&u.files).into_iter().peekable(); let mut __archogen_sweep_1941_k = 0usize; while let Some(f) = __archogen_sweep_1941_it.next() { let (__archogen_sweep_1941_first, __archogen_sweep_1941_last) = (__archogen_sweep_1941_k == 0, __archogen_sweep_1941_it.peek().is_none()); __archogen_sweep_1941_k += 1; if !__archogen_sweep_1941_last { continue; }"
+          },
+          {
+            "id": "L1941.iter.808",
+            "replacement": "                                let mut __archogen_sweep_1941_it = (&u.files).into_iter().peekable(); let mut __archogen_sweep_1941_k = 0usize; while let Some(f) = __archogen_sweep_1941_it.next() { let (__archogen_sweep_1941_first, __archogen_sweep_1941_last) = (__archogen_sweep_1941_k == 0, __archogen_sweep_1941_it.peek().is_none()); __archogen_sweep_1941_k += 1; if !(__archogen_sweep_1941_first || __archogen_sweep_1941_last) { continue; }"
+          },
+          {
+            "id": "L2014.iter.829",
+            "replacement": "        let mut __archogen_sweep_2014_it = (generators).into_iter().peekable(); let mut __archogen_sweep_2014_k = 0usize; while let Some(g) = __archogen_sweep_2014_it.next() { let (__archogen_sweep_2014_first, __archogen_sweep_2014_last) = (__archogen_sweep_2014_k == 0, __archogen_sweep_2014_it.peek().is_none()); __archogen_sweep_2014_k += 1; if !__archogen_sweep_2014_first { continue; }"
+          },
+          {
+            "id": "L1849.chain.1219",
+            "replacement": "            .filter(|p| reads[&p.name].contains(&g.path)).take(1)"
+          },
+          {
+            "id": "L1849.chain.1220",
+            "replacement": "            .filter(|p| reads[&p.name].contains(&g.path)).rev().take(1)"
+          },
+          {
+            "id": "L1838.clogic.1411",
+            "replacement": "                .filter(|r| r.name == *x )"
+          }
+        ]
+      },
+      "xtask/src/trust_generated.rs": {
+        "candidates": [
+          {
+            "id": "L273.iter.106",
+            "replacement": "            let mut __archogen_sweep_273_it = (files).into_iter().peekable(); let mut __archogen_sweep_273_k = 0usize; while let Some(f) = __archogen_sweep_273_it.next() { let (__archogen_sweep_273_first, __archogen_sweep_273_last) = (__archogen_sweep_273_k == 0, __archogen_sweep_273_it.peek().is_none()); __archogen_sweep_273_k += 1; if !__archogen_sweep_273_first { continue; }"
+          },
+          {
+            "id": "L273.iter.107",
+            "replacement": "            let mut __archogen_sweep_273_it = (files).into_iter().peekable(); let mut __archogen_sweep_273_k = 0usize; while let Some(f) = __archogen_sweep_273_it.next() { let (__archogen_sweep_273_first, __archogen_sweep_273_last) = (__archogen_sweep_273_k == 0, __archogen_sweep_273_it.peek().is_none()); __archogen_sweep_273_k += 1; if !__archogen_sweep_273_last { continue; }"
+          },
+          {
+            "id": "L341.iter.136",
+            "replacement": "            let mut __archogen_sweep_341_it = (files).into_iter().peekable(); let mut __archogen_sweep_341_k = 0usize; while let Some(f) = __archogen_sweep_341_it.next() { let (__archogen_sweep_341_first, __archogen_sweep_341_last) = (__archogen_sweep_341_k == 0, __archogen_sweep_341_it.peek().is_none()); __archogen_sweep_341_k += 1; if !__archogen_sweep_341_first { continue; }"
+          },
+          {
+            "id": "L341.iter.138",
+            "replacement": "            let mut __archogen_sweep_341_it = (files).into_iter().peekable(); let mut __archogen_sweep_341_k = 0usize; while let Some(f) = __archogen_sweep_341_it.next() { let (__archogen_sweep_341_first, __archogen_sweep_341_last) = (__archogen_sweep_341_k == 0, __archogen_sweep_341_it.peek().is_none()); __archogen_sweep_341_k += 1; if !(__archogen_sweep_341_first || __archogen_sweep_341_last) { continue; }"
+          },
+          {
+            "id": "L191.chain.220",
+            "replacement": "            .iter().rev().take(1)"
+          },
+          {
+            "id": "L192.contains.224",
+            "replacement": "            .filter(|g| ((f.inputs).first() == Some(g)))"
+          },
+          {
+            "id": "L192.contains.226",
+            "replacement": "            .filter(|g| ((f.inputs).last() == Some(g)))"
+          },
+          {
+            "id": "L253.chain.244",
+            "replacement": "        .filter(|g| reads.values().any(|r| r.contains(&g.path))).rev().take(1)"
+          }
+        ]
+      }
+    }
+  }
+}

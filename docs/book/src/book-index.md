@@ -178,6 +178,8 @@ a change that leaves it stale, so it is never edited by hand.
   in detail](annex-runtime.md)
 - Hashes: what a review is a review of — [Where the engine's knowledge comes from: the
   catalog](catalog.md#hashes-what-a-review-is-a-review-of)
+- Historical effects and current self-tests — [Annex B: The checks that keep the repository
+  honest](annex-repository.md#historical-effects-and-current-self-tests)
 - Holding interrupts back — [The runtime: decisions, not actions](runtime.md#holding-interrupts-back)
 - How a format is held to its identifier — [What is versioned, and what changing it
   costs](versions.md#how-a-format-is-held-to-its-identifier)
