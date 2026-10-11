@@ -196,6 +196,8 @@ a change that leaves it stale, so it is never edited by hand.
 
 - **ID** — [definition](glossary.md), [The S0 early generation path](s0.md)
 - Initial parent killing tests — [Generated-sources test adequacy](trust-adequacy.md#initial-parent-killing-tests)
+- Initial role and build operator outcomes — [Generated-sources test
+  adequacy](trust-adequacy.md#initial-role-and-build-operator-outcomes)
 - Initial source/provenance operator outcomes — [Generated-sources test
   adequacy](trust-adequacy.md#initial-sourceprovenance-operator-outcomes)
 - **interrupt** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a

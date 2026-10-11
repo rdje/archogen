@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — initial role and build operator routes measured
+
+`ARCHOGEN-M3-0646` (leaf `M3.6.9.5.3.1`), `2026-10-11`.
+
+- Run all 58 selected trust.rs candidates against routes: 36 named kills, 18 survivors and four unviable,
+  raw strict exit 1; no timeout or unjudged result. Every selected iter/guard spelling compiles. Copied String
+  membership fails with E0277; direct borrowed-package endpoint comparisons fail with E0308. No coverage claim
+  follows from an unviable attempt or from interval overlap alone.
+- Audit every native identity/replacement/name/count; seven altered actual-result sets refuse. All three
+  population source digests match original/restored/committed/independent system values; native copy restores
+  and producer matches committed bytes. Unmutated copy passes; three catalogue contracts pass; pinned book builds.
+- Book retains every actual route outcome and killing-test key, compiler reasons and pending parent scope.
+  Commit this population before its matching parent run, then classify semantic witnesses and repair all
+  behavioral gaps. No source/operator or parent semantic changes, no full integration or completed adequacy claim.
+
 ## archogen — matching source/provenance operator parent outcomes
 
 `ARCHOGEN-M3-0645` (leaf `M3.6.9.5.2.2`), `2026-10-11`.
