@@ -321,86 +321,96 @@ no timeout or unjudged result, raw strict sweep exit 1. Every selected identity 
 accounted for. Seven altered actual-result sets refuse. All three population source digests agree across
 original/restored/committed/system values, the native producer matches committed bytes and the copy restores.
 
+Measured `2026-10-11`, `M3.6.9.5.3.2`, on the same native host/toolchain and production source identical
+to committed `c9ea429`: the exact unmutated parent command passes 91 tests. The same selected candidates
+then give 18 named kills, 36 survivors and 4 unviable, raw strict sweep exit 1; no timeout or unjudged result.
+Complete route/parent identities, manifest hash and input digests agree. All three population source digests
+agree across original/restored/route/committed/system values; the copied source restores and the producer
+matches committed bytes. Seven altered actual parent-result sets refuse. All initial dual-population runs
+are complete before any parent semantic strengthening; semantic witnesses and behavioral repairs remain open.
+
 Two copied-String membership spellings report `error[E0277]` (`String: Copy`); two direct borrowed-package
 comparisons report `error[E0308]` (mismatched types). The original package set contains borrowed strings,
 so its direct endpoint comparison has a different reference depth; the copied-element variants compile.
 These unviable attempts prove no coverage. Semantic examination of survivors belongs to `.9.5.4`, with parent
-behavioral repairs in `.9.6`. The matching parent run is pending; no witness is inferred from these route results.
+behavioral repairs in `.9.6`. Both populations now have actual results; no witness is inferred from a desired verdict pair.
 This census-span selection is distinct from the later complete production-range sweep.
 
-| Operator | Route attempted | Route unviable |
-| --- | --- | --- |
-| `chain` | 9 | 0 |
-| `clogic` | 2 | 0 |
-| `cond` | 2 | 0 |
-| `contains` | 8 | 4 |
-| `eq` | 3 | 0 |
-| `guard` | 12 | 0 |
-| `iter` | 21 | 0 |
-| `logic` | 1 | 0 |
+| Operator | Route attempted | Route unviable | Parent attempted | Parent unviable |
+| --- | --- | --- | --- | --- |
+| `chain` | 9 | 0 | 9 | 0 |
+| `clogic` | 2 | 0 | 2 | 0 |
+| `cond` | 2 | 0 | 2 | 0 |
+| `contains` | 8 | 4 | 8 | 4 |
+| `eq` | 3 | 0 | 3 | 0 |
+| `guard` | 12 | 0 | 12 | 0 |
+| `iter` | 21 | 0 | 21 | 0 |
+| `logic` | 1 | 0 | 1 | 0 |
 
-Killing-test labels reuse the earlier `gr` key. The identities come from the unfiltered complete listing. The parent column remains pending until actually measured.
+Killing-test labels reuse the earlier `gr` key. The identities come from the unfiltered complete listing. The parent column records the matching native measurement.
 
 | Candidate | Initial route | Initial parent |
 | --- | --- | --- |
-| `L1838.eq.734` | killed (gr8) | pending |
-| `L1838.eq.735` | killed (gr8) | pending |
-| `L1838.logic.736` | killed (gr8) | pending |
-| `L1851.iter.740` | killed (gr3, gr20, gr23) | pending |
-| `L1851.iter.741` | killed (gr3, gr20, gr23) | pending |
-| `L1851.iter.742` | killed (gr23) | pending |
-| `L1851.guard.743` | survived | pending |
-| `L1851.guard.744` | survived | pending |
-| `L1851.guard.745` | survived | pending |
-| `L1855.iter.746` | killed (gr7, gr11) | pending |
-| `L1855.iter.747` | killed (gr7, gr11) | pending |
-| `L1855.iter.748` | killed (gr7, gr11) | pending |
-| `L1857.iter.749` | killed (gr6) | pending |
-| `L1857.iter.750` | survived | pending |
-| `L1857.iter.751` | survived | pending |
-| `L1890.iter.769` | survived | pending |
-| `L1890.iter.770` | survived | pending |
-| `L1890.iter.771` | survived | pending |
-| `L1890.guard.772` | survived | pending |
-| `L1890.guard.773` | survived | pending |
-| `L1890.guard.774` | survived | pending |
-| `L1890.guard.775` | survived | pending |
-| `L1890.guard.776` | survived | pending |
-| `L1890.guard.777` | survived | pending |
-| `L1940.iter.803` | killed (gr15, gr16, gr20) | pending |
-| `L1940.iter.804` | killed (gr15, gr16, gr20) | pending |
-| `L1940.iter.805` | killed (gr15, gr20) | pending |
-| `L1941.iter.806` | killed (gr15, gr16) | pending |
-| `L1941.iter.807` | killed (gr23) | pending |
-| `L1941.iter.808` | survived | pending |
-| `L1954.eq.809` | killed (gr1, gr2, gr3, gr4, gr5, gr7, gr8, gr9, gr10, gr12, gr14, gr17, gr18, gr19, gr21, gr22, gr23) | pending |
-| `L2006.guard.823` | killed (gr20) | pending |
-| `L2006.guard.824` | killed (gr20, gr23) | pending |
-| `L2006.guard.825` | killed (gr20) | pending |
-| `L2009.cond.826` | killed (gr6, gr8, gr12, gr13, gr15, gr16, gr18, gr20) | pending |
-| `L2009.cond.827` | killed (gr20, gr23) | pending |
-| `L2014.iter.829` | killed (gr20) | pending |
-| `L2014.iter.830` | killed (gr20) | pending |
-| `L2014.iter.831` | survived | pending |
-| `L1838.chain.1214` | killed (gr8) | pending |
-| `L1838.chain.1215` | killed (gr8) | pending |
-| `L1838.chain.1216` | killed (gr8) | pending |
-| `L1849.chain.1219` | killed (gr7, gr11) | pending |
-| `L1849.chain.1220` | killed (gr7, gr11) | pending |
-| `L1849.chain.1221` | killed (gr6, gr8, gr13, gr15, gr23) | pending |
-| `L1849.contains.1222` | killed (gr7, gr8, gr11, gr14) | pending |
-| `L1849.contains.1223` | unviable (E0277) | pending |
-| `L1849.contains.1224` | killed (gr3, gr6, gr23) | pending |
-| `L1849.contains.1225` | unviable (E0277) | pending |
-| `L1877.chain.1236` | killed (gr6) | pending |
-| `L1877.chain.1237` | survived | pending |
-| `L1877.chain.1238` | survived | pending |
-| `L1877.contains.1239` | unviable (E0308) | pending |
-| `L1877.contains.1240` | killed (gr6, gr8, gr11, gr14) | pending |
-| `L1877.contains.1241` | unviable (E0308) | pending |
-| `L1877.contains.1242` | killed (gr11, gr23) | pending |
-| `L1838.clogic.1410` | killed (gr8) | pending |
-| `L1838.clogic.1411` | killed (gr8) | pending |
+| `L1838.eq.734` | killed (gr8) | killed (gp10) |
+| `L1838.eq.735` | killed (gr8) | killed (gp10) |
+| `L1838.logic.736` | killed (gr8) | killed (gp10) |
+| `L1851.iter.740` | killed (gr3, gr20, gr23) | survived |
+| `L1851.iter.741` | killed (gr3, gr20, gr23) | survived |
+| `L1851.iter.742` | killed (gr23) | survived |
+| `L1851.guard.743` | survived | survived |
+| `L1851.guard.744` | survived | survived |
+| `L1851.guard.745` | survived | survived |
+| `L1855.iter.746` | killed (gr7, gr11) | survived |
+| `L1855.iter.747` | killed (gr7, gr11) | survived |
+| `L1855.iter.748` | killed (gr7, gr11) | survived |
+| `L1857.iter.749` | killed (gr6) | survived |
+| `L1857.iter.750` | survived | survived |
+| `L1857.iter.751` | survived | survived |
+| `L1890.iter.769` | survived | survived |
+| `L1890.iter.770` | survived | survived |
+| `L1890.iter.771` | survived | survived |
+| `L1890.guard.772` | survived | survived |
+| `L1890.guard.773` | survived | survived |
+| `L1890.guard.774` | survived | survived |
+| `L1890.guard.775` | survived | survived |
+| `L1890.guard.776` | survived | survived |
+| `L1890.guard.777` | survived | survived |
+| `L1940.iter.803` | killed (gr15, gr16, gr20) | killed (gp13) |
+| `L1940.iter.804` | killed (gr15, gr16, gr20) | killed (gp8, gp13) |
+| `L1940.iter.805` | killed (gr15, gr20) | survived |
+| `L1941.iter.806` | killed (gr15, gr16) | survived |
+| `L1941.iter.807` | killed (gr23) | killed (gp13) |
+| `L1941.iter.808` | survived | survived |
+| `L1954.eq.809` | killed (gr1, gr2, gr3, gr4, gr5, gr7, gr8, gr9, gr10, gr12, gr14, gr17, gr18, gr19, gr21, gr22, gr23) | killed (gp1, gp2, gp3, gp6, gp9, gp10, gp11, gp13, gp14, gp15, gp16, gp17, gp18, gp19) |
+| `L2006.guard.823` | killed (gr20) | killed (gp13) |
+| `L2006.guard.824` | killed (gr20, gr23) | killed (gp13) |
+| `L2006.guard.825` | killed (gr20) | survived |
+| `L2009.cond.826` | killed (gr6, gr8, gr12, gr13, gr15, gr16, gr18, gr20) | killed (gp4, gp7, gp8) |
+| `L2009.cond.827` | killed (gr20, gr23) | killed (gp13) |
+| `L2014.iter.829` | killed (gr20) | survived |
+| `L2014.iter.830` | killed (gr20) | survived |
+| `L2014.iter.831` | survived | survived |
+| `L1838.chain.1214` | killed (gr8) | survived |
+| `L1838.chain.1215` | killed (gr8) | killed (gp10) |
+| `L1838.chain.1216` | killed (gr8) | killed (gp10) |
+| `L1849.chain.1219` | killed (gr7, gr11) | survived |
+| `L1849.chain.1220` | killed (gr7, gr11) | survived |
+| `L1849.chain.1221` | killed (gr6, gr8, gr13, gr15, gr23) | killed (gp7, gp10) |
+| `L1849.contains.1222` | killed (gr7, gr8, gr11, gr14) | killed (gp10) |
+| `L1849.contains.1223` | unviable (E0277) | unviable (E0277) |
+| `L1849.contains.1224` | killed (gr3, gr6, gr23) | killed (gp4, gp9, gp12) |
+| `L1849.contains.1225` | unviable (E0277) | unviable (E0277) |
+| `L1877.chain.1236` | killed (gr6) | survived |
+| `L1877.chain.1237` | survived | survived |
+| `L1877.chain.1238` | survived | survived |
+| `L1877.contains.1239` | unviable (E0308) | unviable (E0308) |
+| `L1877.contains.1240` | killed (gr6, gr8, gr11, gr14) | survived |
+| `L1877.contains.1241` | unviable (E0308) | unviable (E0308) |
+| `L1877.contains.1242` | killed (gr11, gr23) | killed (gp4, gp9, gp12) |
+| `L1838.clogic.1410` | killed (gr8) | killed (gp10) |
+| `L1838.clogic.1411` | killed (gr8) | survived |
+
+Parent killing-test labels reuse the earlier `gp` key.
 
 ## Remaining measurements
 
@@ -423,8 +433,8 @@ per-operator counts, preserves the raw strict sweep exit, and checks source/copy
 of this diagnostic reports whether measurement and audit completed; the JSON's `raw_exit_code` is the sweep's
 criterion status. A completed measurement with survivors remains an unmet adequacy criterion.
 
-Operator reach remains incomplete. Both source/provenance populations and the trust.rs route population are measured above; the trust.rs
-parent population and semantic witness classification remain pending, all before adding parent semantic tests. An actual viable semantic witness, or an explicit absence
+Operator reach remains incomplete. All initial source/provenance and trust.rs populations are measured above;
+semantic witness classification remains pending, before adding parent semantic tests. An actual viable semantic witness, or an explicit absence
 with its reason, is required; a desired verdict pair alone does not establish the same effect.
 
 The final stage strengthens parent tests and runs complete production sweeps of `trust.rs`, `trust_generated.rs`

@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — matching role and build operator parent outcomes
+
+`ARCHOGEN-M3-0647` (leaf `M3.6.9.5.3.2`), `2026-10-11`.
+
+- Exact native parent baseline passes 91 tests. Run all the same 58 trust candidates: 18 named kills,
+  36 survivors and four unviable, raw strict exit 1; no timeout or unjudged result. Book paired outcomes,
+  actual killing-test keys and per-operator refusal counts agree with the native result set.
+- Audit matching identities/manifest/input hashes, exact parent filters and committed producer. Seven altered
+  actual-result sets refuse; all three sources match original/restored/route/committed/system digests and the
+  copy restores. Three catalogue contracts pass; pinned book builds. No source/operator or parent semantic changes.
+- All initial dual-population measurements complete before strengthening parents. Own syntax/span evidence,
+  the full actual semantic witness/absence table and promised-spelling viability/repairs as bounded successors;
+  every behavioral gap remains owned for repair. No completed adequacy or full integration claim.
+
 ## archogen — initial role and build operator routes measured
 
 `ARCHOGEN-M3-0646` (leaf `M3.6.9.5.3.1`), `2026-10-11`.
