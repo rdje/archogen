@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — raw JSON string controls require escapes
+
+`ARCHOGEN-M3-0676` (leaf `M3.6.9.6.3.2.2.9.6.2`), `2026-10-11`.
+
+- Refuse only unescaped ASCII control bytes in the string decoder, retaining escaped controls and allowed
+  raw Unicode. The diagnostic uses a byte offset, including after multibyte text; numbers/escapes unchanged.
+- Actual public control fails before repair and passes afterward for root/array/object-value/object-key forms;
+  permitted boundaries, writer round trips and old JSON tests pass. Permanent native arm deletion gets the
+  named finishing kill, strict 0; all 1002 original inputs restore under Python/system hashes. Old bodies/
+  catalog preserved, wrong killing name refuses, focused passes; final exact staged stamp required.
+- Book gives escaped/raw examples and live pointers align. Unicode escapes and caller-byte assessment remain
+  owned before integration; final current-source adequacy remains open.
+
 ## archogen — JSON number grammar preserves spelling and precision
 
 `ARCHOGEN-M3-0675` (leaf `M3.6.9.6.3.2.2.9.6.1`), `2026-10-11`.

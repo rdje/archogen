@@ -266,7 +266,8 @@ a change that leaves it stale, so it is never edited by hand.
   honest](annex-repository.md#next-means-what-the-task-tree-says)
 - node — [What this project relies on from outside](ledger.md#node)
 - Not versioned yet — [What is versioned, and what changing it costs](versions.md#not-versioned-yet)
-- **NUL** — [definition](glossary.md), [Reading a description](reading.md)
+- **NUL** — [definition](glossary.md), [Reading a description](reading.md), [Annex B: The checks that keep the
+  repository honest](annex-repository.md)
 - Numbers are exact — there is no float anywhere — [Reading a
   description](reading.md#numbers-are-exact--there-is-no-float-anywhere)
 

@@ -5337,3 +5337,16 @@ to
             Ok(Json::Number(String::from_utf8_lossy(text).into_owned()))
         }
 end
+
+mutation json-raw-string-controls-admitted
+file xtask/src/json.rs
+test -p xtask json::tests::strings_require_escaped_controls_in_every_value_and_key_position -- --exact
+expect killed
+why M3.6.9.6.3.2.2.9.6.2: deleting only the raw-control arm restores the old decoder; root/array/object-value/object-key controls must kill acceptance of unescaped ASCII controls.
+from
+                    0x00..=0x1F => {
+                        return Err(format!("an unescaped control character at {}", self.at - 1));
+                    }
+
+to
+end

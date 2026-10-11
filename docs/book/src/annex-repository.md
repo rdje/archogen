@@ -156,13 +156,27 @@ refused. The reader keeps the complete original spelling as text, without floati
 | `[1e]`, `{"n":1e}` | refused in arrays/objects as at the document root |
 
 Permanent controls hold valid spellings and aggregate delimiters. The exact old number reader reversal is
-killed by the malformed-number control; original code/test bodies outside this repair remain unchanged
-(`M3.6.9.6.3.2.2.9.6.1`). Run the reader's checks with `cargo test -q -p xtask json::tests::`.
+killed by the malformed-number control; `.9.6.1` records the unchanged old code/test bodies outside its numeric
+block at that commit. Run the reader's checks with `cargo test -q -p xtask json::tests::`.
 
-Current known limits: raw string controls and an invalid surrogate-pair join are still admitted; `.9.6.2`
-and `.9.6.3` own repairs before integration. The reader's Rust scalar-string domain already refuses lone
-surrogates, a narrower policy than the RFC's §8.2 grammar; those domain checks are not a complete conformance
-claim. The demonstrated API defects do not establish a complete trust-gate bypass.
+Unescaped U+0000–U+001F string characters are refused, following §7. That applies at the document root,
+in arrays, in object values and in object keys. Escapes may still represent those characters:
+
+| String input | Behavior |
+| --- | --- |
+| `"a\nb"`, `"a\u000Ab"` | accepted; the decoded line feed is preserved |
+| `"a\u0000b"` | accepted; the decoded NUL is preserved |
+| A quoted string containing a literal line feed or NUL | refused; it needs an escape |
+| Raw space, U+007F, U+0085, `é` and `😀` | accepted |
+
+Offsets for unescaped-control errors count bytes in the UTF-8 input, including the opening quote. Permanent controls
+hold the entire forbidden range, valid escaped forms, object-key decoding and permitted raw boundaries;
+deleting only the guard gives the named finishing kill (`M3.6.9.6.3.2.2.9.6.2`).
+
+An invalid surrogate-pair join is still admitted; `.9.6.3` owns its repair, with caller-byte assessment
+`.9.6.4` before integration. The reader's Rust scalar-string domain already refuses lone surrogates,
+a narrower policy than the RFC's §8.2 grammar; those checks are not a complete conformance claim.
+The demonstrated API defects do not establish a complete trust-gate bypass.
 
 ## What is versioned is written down
 

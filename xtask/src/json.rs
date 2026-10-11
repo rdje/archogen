@@ -223,6 +223,9 @@ impl Parser<'_> {
             };
             self.at += 1;
             match b {
+                0x00..=0x1F => {
+                    return Err(format!("an unescaped control character at {}", self.at - 1));
+                }
                 b'"' => return Ok(out),
                 b'\\' => {
                     let Some(&escape) = self.bytes.get(self.at) else {
@@ -446,6 +449,54 @@ mod tests {
                 parse(invalid).is_err(),
                 "missing delimiter admitted: {invalid:?}"
             );
+        }
+    }
+
+    #[test]
+    fn strings_require_escaped_controls_in_every_value_and_key_position() {
+        for code in 0_u8..=0x1f {
+            let string = format!("\"a{}b\"", char::from(code));
+            for document in [
+                string.clone(),
+                format!("[{string}]"),
+                format!("{{\"n\":{string}}}"),
+                format!("{{{string}:null}}"),
+            ] {
+                assert!(
+                    parse(&document).is_err(),
+                    "unescaped control U+{code:04X} admitted: {document:?}"
+                );
+            }
+        }
+        let error = parse("\"é\n\"").unwrap_err();
+        assert!(
+            error.ends_with("at 3"),
+            "expected the UTF-8 byte offset: {error}"
+        );
+    }
+
+    #[test]
+    fn escaped_controls_and_permitted_raw_unicode_are_preserved() {
+        for code in 0_u8..=0x1f {
+            let value = format!("a{}b", char::from(code));
+            let encoded = format!("\"a\\u{code:04x}b\"");
+            let expected = Json::Str(value.clone());
+            assert_eq!(parse(&encoded).unwrap(), expected);
+            assert_eq!(parse(&super::write(&expected)).unwrap(), expected);
+            assert_eq!(
+                parse(&format!("{{{encoded}:null}}")).unwrap().get(&value),
+                Some(&Json::Null)
+            );
+        }
+        assert_eq!(
+            parse(r#""\b\f\n\r\t""#).unwrap(),
+            Json::Str("\u{8}\u{c}\n\r\t".into())
+        );
+        for character in [
+            ' ', '\u{7f}', '\u{80}', '\u{85}', '\u{9f}', '\u{2028}', '\u{2029}', 'é', '😀',
+        ] {
+            let value = format!("a{character}b");
+            assert_eq!(parse(&format!("\"{value}\"")).unwrap(), Json::Str(value));
         }
     }
 
