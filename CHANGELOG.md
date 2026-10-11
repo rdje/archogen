@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — matching source/provenance operator parent outcomes
+
+`ARCHOGEN-M3-0645` (leaf `M3.6.9.5.2.2`), `2026-10-11`.
+
+- Exact native parent baseline passes 91 tests. Run all the same 61 selected source/provenance candidates:
+  20 named kills, 33 survivors and eight unviable, raw strict exit 1; no timeout or unjudged result. Preserve
+  every actual outcome in the paired book table with actual parent killing-test names and per-operator counts.
+- Audit exact filters, complete route/parent identity sets, unchanged manifest/input hashes and committed
+  producer. Seven altered actual parent-result sets refuse; all three source digests match original/restored/
+  route/committed/system values and the copy restores. Three native catalogue contracts pass; pinned book builds.
+- Source/provenance initial measurement lane complete. Own trust route/parent measurements as separate next
+  leaves, then semantic witness classification and every behavioral repair. No source/operator or semantic
+  parent-test changes, no verdict weakening and no completed adequacy or integration claim.
+
 ## archogen — initial source/provenance operator routes measured
 
 `ARCHOGEN-M3-0644` (leaf `M3.6.9.5.2.1`), `2026-10-11`.

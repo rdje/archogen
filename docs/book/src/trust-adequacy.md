@@ -164,20 +164,28 @@ not completed adequacy. The copied source restores exactly; all three population
 match their original, committed and system-tool values. Seven altered actual-result sets are refused: missing,
 duplicate, foreign, changed replacement, unnamed kill, wrong terminal count and wrong raw exit.
 
+Measured `2026-10-11`, `M3.6.9.5.2.2`, with the same native host/toolchain and production source identical
+to committed `5e78044`: the exact unmutated parent command passes 91 tests. All the same selected candidates
+then run against that parent population: 20 named kills, 33 survivors and 8 unviable, raw strict sweep exit 1;
+no timeout or unjudged result. Route/parent identity sets, manifest hash and all input digests agree. Original,
+restored, committed and independent system digests agree for all three population source files; the copied
+source restores exactly. Seven altered actual parent result sets are refused. Parent semantic tests have not
+been strengthened. These survivors remain owned for semantic examination and repair, not accepted equivalences.
+
 The tracked runner's seven control methods are also discovered through `scripts/trust_adequacy.sh` by the
 integration self-test runner. The selected discovery check passes; a full integration run is still pending.
 All survivors are owned for semantic examination in `M3.6.9.5.4`; parent behavioral gaps then belong to `.9.6`.
-The parent column stays pending until the same candidates have their actual parent run. No desired pair of
+Both columns now contain actual results for the same candidate identities and manifest. No desired pair of
 verdicts establishes a witness. Every unviable candidate below reports `error[E0277]`: `String: Copy` is not
 satisfied for the copied-element membership spelling. An unviable attempt proves no semantic coverage.
 
-| Operator | Route attempted | Route unviable |
-| --- | --- | --- |
-| `chain` | 13 | 0 |
-| `cond` | 2 | 0 |
-| `contains` | 16 | 8 |
-| `guard` | 12 | 0 |
-| `iter` | 18 | 0 |
+| Operator | Route attempted | Route unviable | Parent attempted | Parent unviable |
+| --- | --- | --- | --- | --- |
+| `chain` | 13 | 0 | 13 | 0 |
+| `cond` | 2 | 0 | 2 | 0 |
+| `contains` | 16 | 8 | 16 | 8 |
+| `guard` | 12 | 0 | 12 | 0 |
+| `iter` | 18 | 0 | 18 | 0 |
 
 Killing-test labels name actual finishing tests in the key below. Identities refer to the unfiltered complete
 listing, not an operator-specific list. Each selected candidate appears once; the manifest retains all census
@@ -185,67 +193,67 @@ rows it overlaps. Exact span overlap alone does not classify its semantic effect
 
 | Candidate | Initial route | Initial parent |
 | --- | --- | --- |
-| `L172.guard.67` | survived | pending |
-| `L172.guard.68` | survived | pending |
-| `L172.guard.69` | survived | pending |
-| `L271.iter.100` | killed (gr19, gr23) | pending |
-| `L271.iter.101` | survived | pending |
-| `L271.iter.102` | survived | pending |
-| `L272.iter.103` | killed (gr4, gr9, gr10, gr17, gr19, gr23) | pending |
-| `L272.iter.104` | killed (gr1, gr2, gr4, gr10, gr23) | pending |
-| `L272.iter.105` | survived | pending |
-| `L273.iter.106` | killed (gr1, gr23) | pending |
-| `L273.iter.107` | killed (gr23) | pending |
-| `L273.iter.108` | killed (gr23) | pending |
-| `L273.guard.109` | survived | pending |
-| `L273.guard.110` | survived | pending |
-| `L273.guard.111` | survived | pending |
-| `L273.guard.112` | killed (gr23) | pending |
-| `L273.guard.113` | killed (gr23) | pending |
-| `L273.guard.114` | killed (gr23) | pending |
-| `L273.guard.115` | killed (gr23) | pending |
-| `L273.guard.116` | killed (gr23) | pending |
-| `L273.guard.117` | killed (gr23) | pending |
-| `L278.cond.118` | killed (gr1, gr2, gr3, gr4, gr5, gr6, gr7, gr8, gr9, gr10, gr11, gr12, gr13, gr14, gr15, gr16, gr17, gr18, gr19, gr20, gr21, gr22, gr23) | pending |
-| `L278.cond.119` | killed (gr9) | pending |
-| `L339.iter.130` | killed (gr19, gr21) | pending |
-| `L339.iter.131` | killed (gr21) | pending |
-| `L339.iter.132` | survived | pending |
-| `L340.iter.133` | killed (gr2, gr4, gr9, gr10, gr12, gr17, gr18, gr19, gr22) | pending |
-| `L340.iter.134` | killed (gr1, gr2, gr4, gr5, gr6, gr8, gr9, gr10, gr12, gr13, gr14, gr15, gr16, gr18, gr19, gr20, gr21, gr22) | pending |
-| `L340.iter.135` | survived | pending |
-| `L341.iter.136` | killed (gr4, gr5, gr10, gr12, gr18, gr19, gr20, gr22) | pending |
-| `L341.iter.137` | killed (gr4, gr5, gr10, gr12, gr18, gr20, gr22) | pending |
-| `L341.iter.138` | killed (gr4, gr18, gr22) | pending |
-| `L191.chain.219` | killed (gr5, gr23) | pending |
-| `L191.chain.220` | killed (gr23) | pending |
-| `L192.chain.221` | survived | pending |
-| `L192.chain.222` | survived | pending |
-| `L192.chain.223` | killed (gr1, gr2, gr3, gr4, gr5, gr6, gr7, gr8, gr9, gr10, gr11, gr12, gr13, gr14, gr15, gr16, gr17, gr18, gr19, gr20, gr21, gr22, gr23) | pending |
-| `L192.contains.224` | killed (gr23) | pending |
-| `L192.contains.225` | unviable (E0277) | pending |
-| `L192.contains.226` | killed (gr23) | pending |
-| `L192.contains.227` | unviable (E0277) | pending |
-| `L253.chain.243` | killed (gr19, gr21, gr23) | pending |
-| `L253.chain.244` | killed (gr21) | pending |
-| `L253.chain.245` | survived | pending |
-| `L253.contains.246` | killed (gr7, gr8, gr11, gr14, gr15, gr16, gr21) | pending |
-| `L253.contains.247` | unviable (E0277) | pending |
-| `L253.contains.248` | killed (gr1, gr2, gr3, gr4, gr5, gr6, gr9, gr10, gr12, gr13, gr17, gr18, gr19, gr20, gr21, gr22, gr23) | pending |
-| `L253.contains.249` | unviable (E0277) | pending |
-| `L278.contains.252` | survived | pending |
-| `L278.contains.253` | unviable (E0277) | pending |
-| `L278.contains.254` | survived | pending |
-| `L278.contains.255` | unviable (E0277) | pending |
-| `L339.chain.265` | killed (gr19, gr21) | pending |
-| `L339.chain.266` | killed (gr21) | pending |
-| `L339.chain.267` | killed (gr19, gr21) | pending |
-| `L339.chain.268` | killed (gr21) | pending |
-| `L339.chain.269` | survived | pending |
-| `L339.contains.270` | killed (gr8, gr14, gr15, gr16, gr21) | pending |
-| `L339.contains.271` | unviable (E0277) | pending |
-| `L339.contains.272` | killed (gr1, gr2, gr4, gr5, gr6, gr9, gr10, gr12, gr13, gr17, gr18, gr19, gr20, gr21, gr22) | pending |
-| `L339.contains.273` | unviable (E0277) | pending |
+| `L172.guard.67` | survived | survived |
+| `L172.guard.68` | survived | survived |
+| `L172.guard.69` | survived | survived |
+| `L271.iter.100` | killed (gr19, gr23) | killed (gp18) |
+| `L271.iter.101` | survived | survived |
+| `L271.iter.102` | survived | survived |
+| `L272.iter.103` | killed (gr4, gr9, gr10, gr17, gr19, gr23) | killed (gp7, gp12, gp18) |
+| `L272.iter.104` | killed (gr1, gr2, gr4, gr10, gr23) | killed (gp18) |
+| `L272.iter.105` | survived | survived |
+| `L273.iter.106` | killed (gr1, gr23) | survived |
+| `L273.iter.107` | killed (gr23) | survived |
+| `L273.iter.108` | killed (gr23) | survived |
+| `L273.guard.109` | survived | survived |
+| `L273.guard.110` | survived | survived |
+| `L273.guard.111` | survived | survived |
+| `L273.guard.112` | killed (gr23) | survived |
+| `L273.guard.113` | killed (gr23) | survived |
+| `L273.guard.114` | killed (gr23) | survived |
+| `L273.guard.115` | killed (gr23) | survived |
+| `L273.guard.116` | killed (gr23) | survived |
+| `L273.guard.117` | killed (gr23) | survived |
+| `L278.cond.118` | killed (gr1, gr2, gr3, gr4, gr5, gr6, gr7, gr8, gr9, gr10, gr11, gr12, gr13, gr14, gr15, gr16, gr17, gr18, gr19, gr20, gr21, gr22, gr23) | killed (gp1, gp2, gp3, gp4, gp5, gp6, gp7, gp8, gp9, gp10, gp11, gp12, gp13, gp14, gp15, gp16, gp17, gp18, gp19) |
+| `L278.cond.119` | killed (gr9) | killed (gp18) |
+| `L339.iter.130` | killed (gr19, gr21) | survived |
+| `L339.iter.131` | killed (gr21) | survived |
+| `L339.iter.132` | survived | survived |
+| `L340.iter.133` | killed (gr2, gr4, gr9, gr10, gr12, gr17, gr18, gr19, gr22) | killed (gp14, gp17) |
+| `L340.iter.134` | killed (gr1, gr2, gr4, gr5, gr6, gr8, gr9, gr10, gr12, gr13, gr14, gr15, gr16, gr18, gr19, gr20, gr21, gr22) | killed (gp3, gp15, gp16, gp17, gp19) |
+| `L340.iter.135` | survived | survived |
+| `L341.iter.136` | killed (gr4, gr5, gr10, gr12, gr18, gr19, gr20, gr22) | killed (gp14) |
+| `L341.iter.137` | killed (gr4, gr5, gr10, gr12, gr18, gr20, gr22) | killed (gp14) |
+| `L341.iter.138` | killed (gr4, gr18, gr22) | survived |
+| `L191.chain.219` | killed (gr5, gr23) | survived |
+| `L191.chain.220` | killed (gr23) | survived |
+| `L192.chain.221` | survived | survived |
+| `L192.chain.222` | survived | survived |
+| `L192.chain.223` | killed (gr1, gr2, gr3, gr4, gr5, gr6, gr7, gr8, gr9, gr10, gr11, gr12, gr13, gr14, gr15, gr16, gr17, gr18, gr19, gr20, gr21, gr22, gr23) | killed (gp1, gp2, gp3, gp4, gp5, gp6, gp7, gp8, gp9, gp10, gp11, gp12, gp13, gp14, gp15, gp16, gp17, gp18, gp19, gp20, gp21, gp22, gp23, gp24) |
+| `L192.contains.224` | killed (gr23) | survived |
+| `L192.contains.225` | unviable (E0277) | unviable (E0277) |
+| `L192.contains.226` | killed (gr23) | survived |
+| `L192.contains.227` | unviable (E0277) | unviable (E0277) |
+| `L253.chain.243` | killed (gr19, gr21, gr23) | killed (gp3, gp6, gp15, gp16, gp17, gp18, gp19) |
+| `L253.chain.244` | killed (gr21) | killed (gp3, gp6, gp13, gp15, gp16, gp17, gp19) |
+| `L253.chain.245` | survived | killed (gp6, gp11, gp18) |
+| `L253.contains.246` | killed (gr7, gr8, gr11, gr14, gr15, gr16, gr21) | killed (gp6, gp10, gp19) |
+| `L253.contains.247` | unviable (E0277) | unviable (E0277) |
+| `L253.contains.248` | killed (gr1, gr2, gr3, gr4, gr5, gr6, gr9, gr10, gr12, gr13, gr17, gr18, gr19, gr20, gr21, gr22, gr23) | killed (gp3, gp4, gp5, gp6, gp7, gp8, gp9, gp11, gp12, gp13, gp14, gp15, gp16, gp17, gp18, gp19) |
+| `L253.contains.249` | unviable (E0277) | unviable (E0277) |
+| `L278.contains.252` | survived | survived |
+| `L278.contains.253` | unviable (E0277) | unviable (E0277) |
+| `L278.contains.254` | survived | survived |
+| `L278.contains.255` | unviable (E0277) | unviable (E0277) |
+| `L339.chain.265` | killed (gr19, gr21) | killed (gp3, gp15, gp16, gp17, gp19) |
+| `L339.chain.266` | killed (gr21) | killed (gp3, gp15, gp16, gp17, gp19) |
+| `L339.chain.267` | killed (gr19, gr21) | survived |
+| `L339.chain.268` | killed (gr21) | survived |
+| `L339.chain.269` | survived | killed (gp14, gp15, gp16, gp17, gp19) |
+| `L339.contains.270` | killed (gr8, gr14, gr15, gr16, gr21) | killed (gp19) |
+| `L339.contains.271` | unviable (E0277) | unviable (E0277) |
+| `L339.contains.272` | killed (gr1, gr2, gr4, gr5, gr6, gr9, gr10, gr12, gr13, gr17, gr18, gr19, gr20, gr21, gr22) | killed (gp3, gp14, gp15, gp16, gp17, gp19) |
+| `L339.contains.273` | unviable (E0277) | unviable (E0277) |
 
 ### Source/provenance route killing tests
 
@@ -275,6 +283,35 @@ rows it overlaps. Exact span overlap alone does not classify its semantic effect
 | gr22 | `trust_generated::route_tests::route_middle_generators_and_inputs_remain_in_provenance` |
 | gr23 | `trust_generated::route_tests::route_tests_refusals_hold_at_every_position_of_a_form_s_entries` |
 
+### Source/provenance parent killing tests
+
+| Label | Actual finishing test |
+| --- | --- |
+| gp1 | `trust::tests::a_file_a_root_compiles_whose_header_marks_it_generated_is_refused_until_declared` |
+| gp2 | `trust_generated::gate_tests::a_defgenerated_form_added_changed_or_removed_is_in_the_change_part_and_every_one_is_standing` |
+| gp3 | `trust_generated::gate_tests::an_edit_to_a_declared_generator_is_reported_and_to_an_undeclared_script_is_unchanged` |
+| gp4 | `trust_generated::generator_tests::a_crate_root_of_two_targets_is_judged_by_the_union_of_their_role_packages` |
+| gp5 | `trust_generated::generator_tests::a_crate_root_that_is_not_rs_is_refused_before_its_build` |
+| gp6 | `trust_generated::generator_tests::a_generator_build_failing_leaves_step_4_unable_to_judge_with_its_refusals_beside_it` |
+| gp7 | `trust_generated::generator_tests::a_generator_that_is_a_root_is_its_own_build_and_one_a_live_form_s_refusal_names_is_never_built` |
+| gp8 | `trust_generated::generator_tests::an_allowed_generator_is_built_and_its_sites_judged_with_the_programs_a_shared_site_admitted_once` |
+| gp9 | `trust_generated::generator_tests::another_role_s_program_target_script_or_library_is_refused_as_a_generator` |
+| gp10 | `trust_generated::generator_tests::the_harness_may_use_its_pair_s_roles_and_no_other` |
+| gp11 | `trust_generated::order_tests::a_form_no_program_reads_is_stale_on_the_baseline_s_host_alone` |
+| gp12 | `trust_generated::order_tests::a_refusal_at_each_of_the_five_steps_ends_the_run_and_no_form_is_stale` |
+| gp13 | `trust_generated::order_tests::step_5_refuses_a_chain_through_a_generator_build_and_an_undeclared_marked_file_one_message_a_file` |
+| gp14 | `trust_generated::provenance_tests::a_data_file_one_side_reads_and_a_copy_of_an_input_are_shared_and_a_plain_copy_is_not` |
+| gp15 | `trust_generated::provenance_tests::a_generator_shared_over_two_inputs_or_with_none_is_shared` |
+| gp16 | `trust_generated::provenance_tests::a_third_program_reaching_the_same_provenance_makes_items_of_its_own_and_moves_none` |
+| gp17 | `trust_generated::provenance_tests::case_3_two_generated_sources_sharing_an_input_through_two_generators_share_it` |
+| gp18 | `trust_generated::provenance_tests::step_3_refuses_a_live_form_s_non_blob_and_its_chain_and_holds_a_form_no_program_reads_to_its_text` |
+| gp19 | `trust_generated::provenance_tests::the_harness_reaches_provenance_through_the_units_beside_its_pair_alone` |
+| gp20 | `trust_generated::tests::a_departure_found_once_the_file_is_read_has_every_refusal_beside_it` |
+| gp21 | `trust_generated::tests::a_refusal_of_the_forms_text_ends_the_run_before_anything_is_written_or_built` |
+| gp22 | `trust_generated::tests::a_well_formed_declaration_is_read_and_refuses_nothing` |
+| gp23 | `trust_generated::tests::every_text_only_construction_is_a_coded_refusal` |
+| gp24 | `trust_generated::tests::the_parent_s_reader_stops_at_another_form_with_the_refusals_before_it_beside_it` |
+
 ## Remaining measurements
 
 Use the same manifest for the two populations; each invocation re-derives the full plan and refuses stale
@@ -296,8 +333,8 @@ per-operator counts, preserves the raw strict sweep exit, and checks source/copy
 of this diagnostic reports whether measurement and audit completed; the JSON's `raw_exit_code` is the sweep's
 criterion status. A completed measurement with survivors remains an unmet adequacy criterion.
 
-Operator reach remains incomplete. The source/provenance route population is measured above; its parent
-population and both trust.rs populations remain pending, all before adding parent semantic tests. An actual viable semantic witness, or an explicit absence
+Operator reach remains incomplete. Both source/provenance populations are measured above; both trust.rs
+populations and semantic witness classification remain pending, all before adding parent semantic tests. An actual viable semantic witness, or an explicit absence
 with its reason, is required; a desired verdict pair alone does not establish the same effect.
 
 The final stage strengthens parent tests and runs complete production sweeps of `trust.rs`, `trust_generated.rs`

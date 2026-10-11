@@ -392,6 +392,8 @@ a change that leaves it stale, so it is never edited by hand.
 - **shared item** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md)
 - **SI** — [definition](glossary.md), [Quantities and units](quantities.md)
 - Silence is not admission — [The supported profile](profile.md#silence-is-not-admission)
+- Source/provenance parent killing tests — [Generated-sources test
+  adequacy](trust-adequacy.md#sourceprovenance-parent-killing-tests)
 - Source/provenance route killing tests — [Generated-sources test
   adequacy](trust-adequacy.md#sourceprovenance-route-killing-tests)
 - **SQL** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md)
