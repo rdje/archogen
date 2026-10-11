@@ -287,6 +287,8 @@ a change that leaves it stale, so it is never edited by hand.
 
 ## P
 
+- Parent source and provenance repairs — [Generated-sources test
+  adequacy](trust-adequacy.md#parent-source-and-provenance-repairs)
 - **PDF** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **period** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Reading a
   description](reading.md), [Kinds and schemas](kinds.md), [Quantities and units](quantities.md), [The S0 early

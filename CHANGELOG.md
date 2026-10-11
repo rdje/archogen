@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — source and provenance parent gaps repaired
+
+`ARCHOGEN-M3-0651` (leaf `M3.6.9.6.1`), `2026-10-11`.
+
+- Add three direct parent-rule tests: every generator/input overlap position, every missing/link/declared/marked
+  blob/chain reason at each clause position, and literal complete multi-form provenance with hashes, merged
+  roles/declarations and reached/unreached controls. No production judgment or route fixture changed.
+- All eight owned exact parent survivors now have named finishing kills in one strict native run, exit 0;
+  requested IDs/commands/names agree, no route names/timeout/unjudged/type refusal. All four source files restore
+  byte for byte and agree with independent system hashes. Three new tests and exact 94-test parent baseline pass.
+- Focused format, strict Clippy and full suite pass; sandbox cannot stamp Git, official final staged stamp required.
+  Update book repair scope/reproducer and historical measurement tense, repair register/live snapshots and stale
+  tree frontier. Role/reader/build parent repairs and final census/sweeps/review remain open.
+
 ## archogen — promised narrowing spellings verified before parent repairs
 
 `ARCHOGEN-M3-0650` (leaf `M3.6.9.5.4.3`), `2026-10-11`.

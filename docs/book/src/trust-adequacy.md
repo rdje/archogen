@@ -37,7 +37,7 @@ all 32 exact route entries have named finishing kills in one strict
 native run, exit 0. No entry times out, fails compilation or is unjudged. The complete result identities match
 the reviewed census; independent malformed-result checks reject missing, duplicate, foreign and unnamed results.
 All three source files restore to their original bytes and match committed source at `2b49ed5`; a separate system
-SHA-256 tool agrees. Parent semantic tests have not been strengthened.
+SHA-256 tool agrees. Parent semantic tests were unchanged for these initial measurements.
 The initial parent results below record the remaining repair obligations, not a passing adequacy criterion.
 
 Measured `2026-10-11`, `M3.6.9.4.2.2.2`, on the same native host/toolchain: the exact unmutated parent
@@ -126,7 +126,7 @@ establishes the result for the rest of the census.
 Two exact mutations deliberately hold diagnostics. The input-link mutation still refuses a linked input,
 changing its reason from symbolic link to no blob. Naming the first generator alone still refuses a chain,
 but loses another generator's attribution. Native original/exact-mutant comparisons establish these effects;
-they must not be described as changed acceptance in the later operator-witness table.
+their operator witnesses must retain those diagnostic effects.
 
 ## Planning the operator measurements
 
@@ -169,12 +169,12 @@ to committed `5e78044`: the exact unmutated parent command passes 91 tests. All 
 then run against that parent population: 20 named kills, 33 survivors and 8 unviable, raw strict sweep exit 1;
 no timeout or unjudged result. Route/parent identity sets, manifest hash and all input digests agree. Original,
 restored, committed and independent system digests agree for all three population source files; the copied
-source restores exactly. Seven altered actual parent result sets are refused. Parent semantic tests have not
-been strengthened. These survivors remain owned for semantic examination and repair, not accepted equivalences.
+source restores exactly. Seven altered actual parent result sets are refused. Parent semantic tests were unchanged for this run. These survivors were carried to semantic examination
+and repair, never accepted as equivalences.
 
 The tracked runner's seven control methods are also discovered through `scripts/trust_adequacy.sh` by the
 integration self-test runner. The selected discovery check passes; a full integration run is still pending.
-All survivors are owned for semantic examination in `M3.6.9.5.4`; parent behavioral gaps then belong to `.9.6`.
+Semantic relationships are classified below; every behavioral gap remains owned by `M3.6.9.6`.
 Both columns now contain actual results for the same candidate identities and manifest. No desired pair of
 verdicts establishes a witness. Every unviable candidate below reports `error[E0277]`: `String: Copy` is not
 satisfied for the copied-element membership spelling. An unviable attempt proves no semantic coverage.
@@ -327,7 +327,7 @@ then give 18 named kills, 36 survivors and 4 unviable, raw strict sweep exit 1; 
 Complete route/parent identities, manifest hash and input digests agree. All three population source digests
 agree across original/restored/route/committed/system values; the copied source restores and the producer
 matches committed bytes. Seven altered actual parent-result sets refuse. All initial dual-population runs
-are complete before any parent semantic strengthening; semantic witnesses and behavioral repairs remain open.
+completed before any parent semantic strengthening; their semantic classification is recorded below.
 
 Two copied-String membership spellings report `error[E0277]` (`String: Copy`); two direct borrowed-package
 comparisons report `error[E0308]` (mismatched types). The original package set contains borrowed strings,
@@ -583,6 +583,23 @@ No spelling repair is needed in this cohort. The semantic table's absent role pr
 if-let shapes, and two-ends chain variant remain explicit limits rather than missing promised loop spellings.
 The initial-measurement stage is complete; all parent expected-killed repairs and full production sweeps remain.
 
+## Parent source and provenance repairs
+
+Verified `2026-10-11`, `M3.6.9.6.1`: the eight owned source/blob/chain/provenance parent entries now have
+named finishing kills in one strict native run, exit 0. `xtask/src/trust_generated_adequacy_tests.rs` adds parent
+controls for overlap at every generator/input position; plain versus missing, linked, declared or marked entries
+in both clauses; and complete provenance paths, content hashes, merged roles and reached declaration hashes.
+A link is absent from the regular-file tree: the test requires its link diagnostic, while the no-blob fallback
+would still refuse it. Reached forms include other-program and dormant controls. All source bytes restore exactly.
+
+```bash
+cargo test -p xtask trust_generated::adequacy_tests
+cargo xtask mutate --timeouts-fail --only parent-a-middle-generator-never-reached
+```
+
+The initial tables remain historical measurements of the earlier parent population. Production judgments and
+route controls are unchanged. Role/reader/build repairs and the final exact census/full sweeps remain open.
+
 ## Remaining measurements
 
 Use the same manifest for the two populations; each invocation re-derives the full plan and refuses stale
@@ -608,7 +625,7 @@ Operator reach remains incomplete. All initial source/provenance and trust.rs po
 semantic witnesses, scoped absences and promised-spelling viability are recorded above. No operator repair was
 needed before parent strengthening; these initial results do not satisfy the final adequacy criterion.
 
-The final stage strengthens parent tests and runs complete production sweeps of `trust.rs`, `trust_generated.rs`
+Parent strengthening continues before complete production sweeps of `trust.rs`, `trust_generated.rs`
 and `trust_gate.rs`, plus the shared operators' compatibility sweep of `generated_header.rs`. Every exact parent
 entry must have a finishing kill; every sweep survivor needs a justified equivalence record. These stages and
 the independent implementation review remain open. No completed catalogue subset establishes full adequacy.

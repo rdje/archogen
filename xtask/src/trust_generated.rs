@@ -3263,3 +3263,7 @@ mod route_tests {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "trust_generated_adequacy_tests.rs"]
+mod adequacy_tests;
