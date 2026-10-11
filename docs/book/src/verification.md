@@ -213,6 +213,15 @@ itself, never by the `kill` program: Ubuntu's reads `kill -KILL -<group>` as an 
 the user may signal, its own source shows — the cause found for the CI runner lost with both jobs of one run
 (`PROGRAM.77`).
 
+A finishing kill requires both a failed libtest summary and a name in its failure list. A failed Cargo invocation,
+crashed process or incomplete test output without that evidence is **unjudged** (exit 2), never a kill. The catalogue
+and `scripts/mutation_sweep.sh` use this rule in every mode (`M3.6.9.1`). Compilation failures remain broken catalogue
+entries, or unviable sweep candidates, as each tool reports them. Every outcome restores the mutated file.
+
+Ordinary mode retains its reached-hang result. Use `--timeouts-fail` when the criterion requires tests to finish:
+a timeout then fails with exit 1, even for a catalogue entry expected to survive. The sweep's same option refuses a
+timeout regardless of its equivalents file; an unjudged run cannot be listed as an equivalent either.
+
 An entry can also break without anyone running it: the code it names moves, and its text is no longer there.
 One entry went that way when an import line gained a name, and the whole catalog then refused to run, unseen,
 until the next full run found it (leaf `PROGRAM.61`). So `cargo test` now applies every entry to its file in
@@ -227,6 +236,7 @@ catches it with the non-harmonic case added for exactly that reason.
 ```console
 $ cargo xtask mutate                        # the whole catalog
 $ cargo xtask mutate --only lcm-to-max      # one entry
+$ cargo xtask mutate --timeouts-fail --only lcm-to-max  # require a finishing test outcome
 ```
 
 ### What CI does with an `incomplete` tier

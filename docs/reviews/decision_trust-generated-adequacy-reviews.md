@@ -69,7 +69,7 @@ All review jobs completed; the parent owns the final repository-wide handoff cen
 | --- | --- | --- | --- |
 | R3-R1 | remark | the actual pinned sweep run helper returns killed with an empty test list for a synthetic Cargo manifest-load failure; the catalogue accepts the same branch, so an invocation error can satisfy a kill without test evidence | owned by M3.6.9.1: in both modes require a failed libtest summary and failure-list name for a finishing kill; invocation failure/crash/abort without that evidence is unjudged, never killed or equivalent; add synthetic classification/restoration controls before adequacy measurement |
 
-No implementation of this design has begun. The six implementation slices are owned in `docs/tasks/M3.md`.
+At this round's close no implementation of this design had begun. The six implementation slices are owned in `docs/tasks/M3.md`.
 
 ## Why
 

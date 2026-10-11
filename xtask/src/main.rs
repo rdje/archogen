@@ -1009,6 +1009,7 @@ fn help() {
         "    cargo xtask trust-gate [--repo <dir>] [--commit <rev>] [--base <rev>] [--out <dir>]"
     );
     println!("    cargo xtask trust-verify <package>");
+    println!("    cargo xtask mutate [--timeouts-fail] [--only <id> ...]");
     println!();
     println!("TIERS:");
     for tier in TIERS {
@@ -1045,17 +1046,13 @@ fn main() {
         ["dtb-summary", file] => dtb_summary(file),
         ["dtb-check", file, fixture] => dtb_check(file, fixture),
         ["target-agreement", env, dtb] => target_agreement(env, dtb),
-        ["mutate"] => mutation::run(&repo_root(), &[]),
+        ["mutate", rest @ ..] => mutation::run(&repo_root(), rest),
         ["pin-premises"] => premises::run(&repo_root()),
         ["catalog-check", rest @ ..] => catalog_check::run(&repo_root(), rest),
         ["trust-inventory", rest @ ..] => trust::run(&repo_root(), rest),
         ["trust-baseline", rest @ ..] => trust_gate::run(&repo_root(), rest),
         ["trust-gate", rest @ ..] => trust_gate::run_gate(&repo_root(), rest),
         ["trust-verify", rest @ ..] => trust_verify::run(rest),
-        ["mutate", "--only", ids @ ..] if !ids.is_empty() => mutation::run(
-            &repo_root(),
-            &ids.iter().map(|s| (*s).to_string()).collect::<Vec<_>>(),
-        ),
         other => {
             eprintln!("xtask: unrecognized arguments {other:?}");
             eprintln!("  hint: cargo xtask verify --tier <{}>", tier_names());

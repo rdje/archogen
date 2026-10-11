@@ -435,5 +435,7 @@ sweeps of the complete production ranges in `xtask/src/trust.rs`, `xtask/src/tru
 `xtask/src/trust_gate.rs`. Each exact parent mutation must be killed by finishing parent tests; every sweep survivor
 needs an equivalence reason, and timeouts fail both strict modes. The design records actual operator reach and binds
 the test copy to its source repository. Implementation begins with strict and attributed mutation outcomes: an
-invocation error without a failed test summary and failure-list name is unjudged, never a kill or equivalent. The package the verifier
+invocation error without a failed test summary and failure-list name is unjudged, never a kill or equivalent.
+Those modes are built in `M3.6.9.1`; the operators, bound seam, exact pairs and adequacy measurements remain pending.
+The package the verifier
 reads is fixed provisionally until `M4.7` writes real ones.

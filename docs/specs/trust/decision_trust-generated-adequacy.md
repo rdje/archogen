@@ -2,7 +2,7 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-10`
-- **Status:** `active` — written `2026-10-10` by leaf `M3.6.9`; its review closed `2026-10-11`, round 3: zero defects and one remark; implementation pending
+- **Status:** `active` — written `2026-10-10` by leaf `M3.6.9`; its review closed `2026-10-11`, round 3: zero defects and one remark; `.9.1` built strict and attributed outcomes, remaining implementation pending
   ([`decision_trust-generated-adequacy-reviews.md`](../../reviews/decision_trust-generated-adequacy-reviews.md))
 - **Owner / source:** leaf `M3.6.9` (`docs/tasks/M3.md`), filed by `M3.6.6.4`'s review, round 14. It holds the rules of
   [`decision_trust-generated-sources.md`](decision_trust-generated-sources.md), cited below as "the parent", to a

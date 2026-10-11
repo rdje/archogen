@@ -4240,3 +4240,85 @@ to
             for (role, files) in [("generator", &g.generators), ("input", &g.inputs)] {
                 for f in files.iter().take(if role == "input" { 1 } else { usize::MAX }) {
 end
+
+# M3.6.9.1 — finishing test evidence and strict timeout verdicts in both mutation tools.
+
+mutation mutate-an-invocation-error-counts-as-a-kill
+file xtask/src/mutation.rs
+test -p xtask mutation::tests::every_catalogue_outcome_restores_the_landed_mutation
+expect killed
+why M3.6.9.1: an invocation failure is unjudged, never an empty-name kill.
+from
+                Seen::Unjudged(
+                    stderr
+                        .lines()
+                        .find(|l| !l.trim().is_empty())
+                        .unwrap_or("nonzero exit without a finishing, named test failure")
+                        .to_string(),
+                )
+to
+                Seen::Killed(Vec::new())
+end
+
+mutation mutate-a-strict-timeout-is-a-kill
+file xtask/src/mutation.rs
+test -p xtask mutation::tests::a_strict_hang_satisfies_neither_catalogue_expectation
+expect killed
+why M3.6.9.1: a strict timeout satisfies neither expected verdict.
+from
+            Seen::Hung(_) => !timeouts_fail && expect == Expect::Killed,
+to
+            Seen::Hung(_) => expect == Expect::Killed,
+end
+
+mutation mutate-an-unfinished-test-is-a-kill
+file xtask/src/mutation.rs
+test -p xtask mutation::tests::every_catalogue_outcome_restores_the_landed_mutation
+expect killed
+why M3.6.9.1: a failure-list name alone is no finishing test failure.
+from
+            if !names.is_empty()
+                && stdout
+                    .lines()
+                    .any(|l| l.starts_with("test result: FAILED."))
+            {
+to
+            if !names.is_empty() {
+end
+
+mutation mutate-an-unnamed-failure-is-a-kill
+file xtask/src/mutation.rs
+test -p xtask mutation::tests::every_catalogue_outcome_restores_the_landed_mutation
+expect killed
+why M3.6.9.1: a failed summary alone names no killing test.
+from
+            if !names.is_empty()
+                && stdout
+                    .lines()
+                    .any(|l| l.starts_with("test result: FAILED."))
+            {
+to
+            if stdout.lines().any(|l| l.starts_with("test result: FAILED.")) {
+end
+
+mutation sweep-an-invocation-error-counts-as-a-kill
+file scripts/mutation_sweep.sh
+test -p xtask mutation::tests::the_sweep_requires_finishing_test_evidence_and_can_refuse_timeouts
+expect killed
+why M3.6.9.1: the sweep refuses an invocation failure after restoring the mutation.
+from
+        return "unjudged", [detail], time.time() - t0
+to
+        return "killed", [], time.time() - t0
+end
+
+mutation sweep-a-strict-timeout-is-accepted
+file scripts/mutation_sweep.sh
+test -p xtask mutation::tests::the_sweep_requires_finishing_test_evidence_and_can_refuse_timeouts
+expect killed
+why M3.6.9.1: a strict sweep timeout fails regardless of equivalents.
+from
+            if outcome == "survived" or (outcome == "timeout" and a.timeouts_fail):
+to
+            if outcome == "survived":
+end

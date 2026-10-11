@@ -27,7 +27,8 @@
 # and each mutation is written to the copy's file, tested with `cargo test -q -p <package> -- <filters>` under a
 # timeout that kills the whole process group, and restored, read back byte for byte. The unmutated copy must pass
 # first. An outcome is `killed` (a test failed — named), `timeout` (the tests did not finish: a hang the tests reach),
-# `unviable` (does not compile — no mutation), or `survived`.
+# `unviable` (does not compile — no mutation), `survived`, or `unjudged` (the command failed without a failed libtest
+# summary and a failure-list name). An invocation error or crash without that evidence is never a kill.
 #
 # THE EQUIVALENTS FILE (`--equivalents <path>`): one entry per survivor judged equivalent, three lines and a blank —
 #   from <the original line, trimmed>
@@ -37,11 +38,13 @@
 #
 # CONTRACT: exit 0 — every mutation killed, timed out, unviable or listed equivalent, and every listed equivalent
 # still made and still surviving; 1 — a survivor not listed, or a listed one stale; 2 — could not run (the unmutated
-# copy fails, a bad argument, a restore that did not read back). Writes only under `target/mutation-sweep/`.
+# copy fails, a bad argument, a restore that did not read back, or an unjudged run). With `--timeouts-fail`, a timeout
+# instead fails with exit 1, even if an equivalents entry names it. Ordinary timeout handling is unchanged.
+# Writes only under `target/mutation-sweep/`.
 # `--list` prints the mutations without running them.
 #
 # Usage: scripts/mutation_sweep.sh <file> --package <pkg> [--filter <test>]... [--equivalents <path>]
-#        [--timeout <seconds>] [--only <id>]... [--list]
+#        [--timeout <seconds>] [--timeouts-fail] [--only <id>]... [--list]
 set -uo pipefail
 ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
 exec python3 - "$@" <<'PY'
@@ -53,6 +56,7 @@ ap.add_argument("--package", required=True)
 ap.add_argument("--filter", action="append", default=[])
 ap.add_argument("--equivalents")
 ap.add_argument("--timeout", type=int, default=180)
+ap.add_argument("--timeouts-fail", action="store_true")
 ap.add_argument("--only", action="append", default=[])
 ap.add_argument("--list", action="store_true")
 ap.add_argument("--op", action="append", default=[])  # only these operators: a run to explore, never the claim
@@ -212,7 +216,10 @@ def run():
     if "could not compile" in se and "test result" not in so:
         return "unviable", [next((x for x in se.splitlines() if x.startswith("error")), "")], time.time() - t0
     failed = sorted(set(re.findall(r"^    ([\w:]+)$", so.split("failures:", 1)[-1], re.M))) if "failures:" in so else []
-    return "killed", failed, time.time() - t0
+    if failed and any(l.startswith("test result: FAILED.") for l in so.splitlines()):
+        return "killed", failed, time.time() - t0
+    detail = next((l for l in se.splitlines() if l.strip()), "nonzero exit without a finishing, named test failure")
+    return "unjudged", [detail], time.time() - t0
 
 base, _, secs = run()
 if base != "survived":
@@ -239,10 +246,14 @@ try:
         if outcome == "survived" and key in equiv:
             outcome = "equivalent"; seen_equiv.add(key)
         counts[outcome] = counts.get(outcome, 0) + 1
-        mark = {"killed": "✓", "timeout": "✓", "unviable": "·", "equivalent": "=", "survived": "✗"}[outcome]
+        mark = {"killed": "✓", "timeout": "✗" if a.timeouts_fail else "✓", "unviable": "·",
+                "equivalent": "=", "survived": "✗", "unjudged": "?"}[outcome]
         print("  %s %-18s %-10s %s ⟶ %s%s" % (mark, i, outcome, lines[n].strip(), new.strip(),
               (" — " + ", ".join(detail)) if detail else ""), flush=True)
-        if outcome == "survived":
+        if outcome == "unjudged":
+            print("mutation-sweep: %s unjudged; resolve the command failure and rerun" % i, file=sys.stderr)
+            sys.exit(2)
+        if outcome == "survived" or (outcome == "timeout" and a.timeouts_fail):
             unlisted.append((i, key))
 except KeyboardInterrupt:
     open(target_file, "wb").write(original); raise

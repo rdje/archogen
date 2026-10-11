@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — mutation kills require finishing test evidence, with opt-in strict timeouts
+
+`ARCHOGEN-M3-0617` (leaf `M3.6.9.1`), `2026-10-11`.
+
+- Both harnesses now report invocation/crash/incomplete output without a failed libtest summary and failure-list
+  name as unjudged, exit 2. `--timeouts-fail` refuses hangs in both tools, for either catalogue expectation and
+  regardless of sweep equivalents; ordinary reached-hang behavior stays unchanged. CLI help and parser included.
+- Validation: the old real-sweep control reproduces false kills; 14 mutation-tool tests pass, including 13 synthetic
+  sweep cases, eight catalogue command outcomes and failed spawn, with restoration. Six new durable catalogue
+  controls are killed by named tests; real lcm kill and harmonic survivor behave as expected. Focused tier passes
+  3/0 after correcting this session's PATH setup, which had bypassed fixture toolchain selection; final staged rerun
+  stamps the committed tree. Book/toolbox/task contracts agree. Throwaway logs remain untracked evidence.
+  PROGRAM.69 round 34 found two arm gaps, now owned for the next slice; no production defect found.
+
 ## archogen — the parent-test criterion's design review closes at zero defects
 
 `ARCHOGEN-M3-0616` (leaf `M3.6.9`), `2026-10-11`.

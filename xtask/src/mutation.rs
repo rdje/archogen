@@ -16,10 +16,13 @@
 //! - the tests run under a limit, `ARCHOGEN_MUTATE_TIMEOUT` seconds (600 unless set), in a process group of their
 //!   own: past it the whole group is killed — cargo, rustc and the test binaries — and the entry is reported as a
 //!   hang the tests reach, never waited on (leaf `PROGRAM.67`; a catalogue run once waited 1 507.5 s on one).
+//! - a finishing kill needs a failed libtest summary and a failure-list name; an invocation error or crash without
+//!   that evidence is unjudged, never a kill. `--timeouts-fail` also refuses hangs, whatever the expected verdict
+//!   (leaf `M3.6.9.1`). Ordinary mode retains the reached-hang kill.
 //!
 //! Exit 0: every entry did what the catalog expects. 1: a mutation survived that should have been killed, or
-//! the reverse. 2: the catalog itself is broken (unparsable, a text not found once, a mutation that does not
-//! compile) or an interrupted run is pending.
+//! the reverse, or a strict-mode hang. 2: the catalog itself is broken (unparsable, a text not found once, a mutation
+//! that does not compile), a run is unjudged, or an interrupted run is pending.
 
 use std::fs;
 use std::io::Read;
@@ -211,6 +214,7 @@ impl Drop for Restore {
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
 enum Seen {
     /// The names of the tests that failed, as cargo lists them.
     Killed(Vec<String>),
@@ -218,6 +222,41 @@ enum Seen {
     Hung(u64),
     Survived,
     DoesNotCompile(String),
+    /// The command failed without a finishing, named test failure.
+    Unjudged(String),
+}
+
+#[derive(Debug, PartialEq, Eq)]
+struct Options {
+    only: Vec<String>,
+    timeouts_fail: bool,
+}
+
+fn options(args: &[&str]) -> Result<Options, &'static str> {
+    let (timeouts_fail, rest) = match args {
+        ["--timeouts-fail", rest @ ..] => (true, rest),
+        rest => (false, rest),
+    };
+    let only = match rest {
+        [] => Vec::new(),
+        ["--only", ids @ ..] if !ids.is_empty() && ids.iter().all(|id| !id.starts_with('-')) => {
+            ids.iter().map(|id| (*id).to_string()).collect()
+        }
+        _ => return Err("usage: cargo xtask mutate [--timeouts-fail] [--only <id> ...]"),
+    };
+    Ok(Options {
+        only,
+        timeouts_fail,
+    })
+}
+
+fn as_expected(seen: &Seen, expect: Expect, timeouts_fail: bool) -> bool {
+    match seen {
+        Seen::Killed(_) => expect == Expect::Killed,
+        Seen::Hung(_) => !timeouts_fail && expect == Expect::Killed,
+        Seen::Survived => expect == Expect::Survives,
+        Seen::DoesNotCompile(_) | Seen::Unjudged(_) => false,
+    }
 }
 
 /// A command's run under a limit: its exit status, or none when it ran past the limit and its group was killed.
@@ -302,6 +341,27 @@ fn run_bounded(cmd: &mut Command, limit: Duration) -> std::io::Result<Bounded> {
 }
 
 fn run_one(root: &Path, m: &Mutation, scratch: &Path) -> Result<(Seen, f64), String> {
+    run_one_with(
+        root,
+        m,
+        scratch,
+        Command::new("cargo")
+            .arg("test")
+            .arg("-q")
+            .args(&m.test)
+            .current_dir(root),
+        limit(),
+    )
+}
+
+/// The command seam lets controls exercise landing, bounded execution and restoration without another Cargo build.
+fn run_one_with(
+    root: &Path,
+    m: &Mutation,
+    scratch: &Path,
+    command: &mut Command,
+    limit: Duration,
+) -> Result<(Seen, f64), String> {
     let path = root.join(&m.file);
     let original =
         fs::read(&path).map_err(|e| format!("`{}`: cannot read {}: {e}", m.id, m.file))?;
@@ -329,16 +389,8 @@ fn run_one(root: &Path, m: &Mutation, scratch: &Path) -> Result<(Seen, f64), Str
         ));
     }
     let started = Instant::now();
-    let limit = limit();
-    let output = run_bounded(
-        Command::new("cargo")
-            .arg("test")
-            .arg("-q")
-            .args(&m.test)
-            .current_dir(root),
-        limit,
-    )
-    .map_err(|e| format!("`{}`: cannot run cargo: {e}", m.id))?;
+    let output =
+        run_bounded(command, limit).map_err(|e| format!("`{}`: cannot run cargo: {e}", m.id))?;
     let elapsed = started.elapsed().as_secs_f64();
     drop(guard);
     let restored =
@@ -351,9 +403,16 @@ fn run_one(root: &Path, m: &Mutation, scratch: &Path) -> Result<(Seen, f64), Str
             scratch.join(format!("{}.orig", m.id)).display()
         ));
     }
+    let outcome = classify(&output, limit);
+    // The backup is evidence only until the restore is verified, which it now is.
+    let _ = fs::remove_file(scratch.join(format!("{}.orig", m.id)));
+    Ok((outcome, elapsed))
+}
+
+fn classify(output: &Bounded, limit: Duration) -> Seen {
     let stderr = String::from_utf8_lossy(&output.stderr);
     let stdout = String::from_utf8_lossy(&output.stdout);
-    let outcome = if output.status.is_none() {
+    if output.status.is_none() {
         Seen::Hung(limit.as_secs())
     } else if output.status.is_some_and(|s| s.success()) {
         Seen::Survived
@@ -365,11 +424,23 @@ fn run_one(root: &Path, m: &Mutation, scratch: &Path) -> Result<(Seen, f64), Str
             .to_string();
         Seen::DoesNotCompile(first)
     } else {
-        Seen::Killed(failed_tests(&stdout))
-    };
-    // The backup is evidence only until the restore is verified, which it now is.
-    let _ = fs::remove_file(scratch.join(format!("{}.orig", m.id)));
-    Ok((outcome, elapsed))
+        let names = failed_tests(&stdout);
+        if !names.is_empty()
+            && stdout
+                .lines()
+                .any(|l| l.starts_with("test result: FAILED."))
+        {
+            Seen::Killed(names)
+        } else {
+            Seen::Unjudged(
+                stderr
+                    .lines()
+                    .find(|l| !l.trim().is_empty())
+                    .unwrap_or("nonzero exit without a finishing, named test failure")
+                    .to_string(),
+            )
+        }
+    }
 }
 
 /// The tests cargo lists under `failures:` — the names that make a kill evidence rather than a claim.
@@ -396,9 +467,17 @@ fn failed_tests(stdout: &str) -> Vec<String> {
     names
 }
 
-/// Run the catalog, or the entries named in `only`. Returns the process exit code.
+/// Run the catalog, with optional strict timeout handling and entry selection. Returns the process exit code.
 #[must_use]
-pub fn run(root: &Path, only: &[String]) -> i32 {
+pub fn run(root: &Path, args: &[&str]) -> i32 {
+    let options = match options(args) {
+        Ok(options) => options,
+        Err(message) => {
+            eprintln!("xtask mutate: {message}");
+            return 2;
+        }
+    };
+    let only = &options.only;
     let scratch = root.join("target/doctrine_scratch/mutation");
     if let Ok(pending) = fs::read_to_string(scratch.join("ACTIVE")) {
         eprintln!(
@@ -430,7 +509,7 @@ pub fn run(root: &Path, only: &[String]) -> i32 {
         eprintln!("xtask mutate: no catalog entry named {unknown:?}");
         return 2;
     }
-    let (mut as_expected, mut wrong, mut broken) = (0, 0, 0);
+    let (mut passed, mut wrong, mut broken, mut unjudged) = (0, 0, 0, 0);
     for m in catalog
         .iter()
         .filter(|m| only.is_empty() || only.contains(&m.id))
@@ -440,9 +519,15 @@ pub fn run(root: &Path, only: &[String]) -> i32 {
                 broken += 1;
                 eprintln!("  ✗ {}: the mutation does not compile — a broken catalog entry, not a kill: {first}", m.id);
             }
+            Ok((Seen::Unjudged(detail), _)) => {
+                unjudged += 1;
+                eprintln!(
+                    "  ? {}: unjudged — no finishing, named test failure: {detail}",
+                    m.id
+                );
+            }
             Ok((outcome, secs)) => {
                 let (got, by) = match &outcome {
-                    Seen::Killed(names) if names.is_empty() => (Expect::Killed, String::new()),
                     Seen::Killed(names) => (Expect::Killed, format!(" by {}", names.join(", "))),
                     Seen::Hung(limit) => (
                         Expect::Killed,
@@ -455,8 +540,8 @@ pub fn run(root: &Path, only: &[String]) -> i32 {
                 } else {
                     "survived"
                 };
-                if got == m.expect {
-                    as_expected += 1;
+                if as_expected(&outcome, m.expect, options.timeouts_fail) {
+                    passed += 1;
                     println!(
                         "  ✓ {:<42} {verb}{by} ({secs:.1}s) — cargo test {}",
                         m.id,
@@ -464,6 +549,10 @@ pub fn run(root: &Path, only: &[String]) -> i32 {
                     );
                 } else {
                     wrong += 1;
+                    if matches!(outcome, Seen::Hung(_)) && options.timeouts_fail {
+                        eprintln!("  ✗ {}: strict timeout refusal{by} ({secs:.1}s) — a finishing test outcome is required", m.id);
+                        continue;
+                    }
                     eprintln!(
                         "  ✗ {}: {verb}{by}, expected {} ({secs:.1}s) — cargo test {}\n      {}",
                         m.id,
@@ -483,6 +572,12 @@ pub fn run(root: &Path, only: &[String]) -> i32 {
             }
         }
     }
+    if unjudged > 0 {
+        eprintln!(
+            "xtask mutate: {unjudged} unjudged entr(ies) — resolve the command failure and rerun"
+        );
+        return 2;
+    }
     if broken > 0 {
         eprintln!("xtask mutate: {broken} broken entr(ies) — fix the catalog");
         return 2;
@@ -490,11 +585,11 @@ pub fn run(root: &Path, only: &[String]) -> i32 {
     if wrong > 0 {
         eprintln!(
             "xtask mutate: {wrong} of {} did not do what the catalog expects",
-            as_expected + wrong
+            passed + wrong
         );
         return 1;
     }
-    println!("mutate: OK — {as_expected} mutation(s), each killed or surviving exactly as the catalog expects");
+    println!("mutate: OK — {passed} mutation(s), each killed or surviving exactly as the catalog expects");
     0
 }
 
@@ -662,6 +757,232 @@ end
         let stdout = "running 3 tests\n..F\nfailures:\n\n---- tests::b stdout ----\nboom\n\n\nfailures:\n    tests::b\n    tests::c\n\ntest result: FAILED. 1 passed; 2 failed\n";
         assert_eq!(super::failed_tests(stdout), ["tests::b", "tests::c"]);
         assert!(super::failed_tests("test result: ok. 3 passed\n").is_empty());
+    }
+
+    #[test]
+    fn mutation_options_keep_selection_and_make_strict_timeouts_explicit() {
+        assert_eq!(super::options(&[]).unwrap().only, Vec::<String>::new());
+        assert!(!super::options(&["--only", "a", "b"]).unwrap().timeouts_fail);
+        let strict = super::options(&["--timeouts-fail", "--only", "a", "b"]).unwrap();
+        assert!(strict.timeouts_fail);
+        assert_eq!(strict.only, ["a", "b"]);
+        assert!(super::options(&["--timeouts-fail"])
+            .unwrap()
+            .only
+            .is_empty());
+        for args in [
+            vec!["--only"],
+            vec!["--unknown"],
+            vec!["--timeouts-fail", "--timeouts-fail"],
+            vec!["--only", "a", "--timeouts-fail"],
+        ] {
+            assert!(super::options(&args).is_err(), "accepted {args:?}");
+        }
+    }
+
+    #[test]
+    fn a_strict_hang_satisfies_neither_catalogue_expectation() {
+        use super::{as_expected, Seen};
+        for expect in [Expect::Killed, Expect::Survives] {
+            assert!(!as_expected(&Seen::Hung(1), expect, true));
+            assert!(!as_expected(
+                &Seen::Unjudged("invocation".into()),
+                expect,
+                false
+            ));
+            assert!(!as_expected(
+                &Seen::Unjudged("invocation".into()),
+                expect,
+                true
+            ));
+            assert!(!as_expected(
+                &Seen::DoesNotCompile("compile".into()),
+                expect,
+                true
+            ));
+        }
+        assert!(as_expected(&Seen::Hung(1), Expect::Killed, false));
+        assert!(!as_expected(&Seen::Hung(1), Expect::Survives, false));
+        for strict in [false, true] {
+            assert!(as_expected(
+                &Seen::Killed(vec!["tests::caught".into()]),
+                Expect::Killed,
+                strict
+            ));
+            assert!(!as_expected(
+                &Seen::Killed(vec!["tests::caught".into()]),
+                Expect::Survives,
+                strict
+            ));
+            assert!(as_expected(&Seen::Survived, Expect::Survives, strict));
+            assert!(!as_expected(&Seen::Survived, Expect::Killed, strict));
+        }
+    }
+
+    #[test]
+    fn every_catalogue_outcome_restores_the_landed_mutation() {
+        use super::Seen;
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../target/doctrine_scratch/mutation-outcomes")
+            .join(std::process::id().to_string());
+        let scratch = dir.join("scratch");
+        std::fs::create_dir_all(&scratch).unwrap();
+        std::fs::create_dir_all(dir.join("src")).unwrap();
+        let m = &parse(ONE).unwrap()[0];
+        let original = b"// synthetic\r\nx = a < b;\n";
+        let named_failure = "printf 'failures:\\n    tests::caught\\n\\ntest result: FAILED. 0 passed; 1 failed\\n'; exit 101";
+        let cases = [
+            (named_failure, Seen::Killed(vec!["tests::caught".into()])),
+            ("exit 0", Seen::Survived),
+            (
+                "echo 'error: could not compile synthetic' >&2; exit 101",
+                Seen::DoesNotCompile("error: could not compile synthetic".into()),
+            ),
+            (
+                "echo 'error: failed to load manifest' >&2; exit 101",
+                Seen::Unjudged("error: failed to load manifest".into()),
+            ),
+            (
+                "printf 'failures:\\n    tests::caught\\n'; exit 101",
+                Seen::Unjudged("nonzero exit without a finishing, named test failure".into()),
+            ),
+            (
+                "echo 'test result: FAILED. 0 passed; 1 failed'; exit 101",
+                Seen::Unjudged("nonzero exit without a finishing, named test failure".into()),
+            ),
+            (
+                "echo 'error: process aborted' >&2; exit 134",
+                Seen::Unjudged("error: process aborted".into()),
+            ),
+            ("sleep 30", Seen::Hung(1)),
+        ];
+        for (script, expected) in cases {
+            std::fs::write(dir.join("src/x.rs"), original).unwrap();
+            let outcome = super::run_one_with(
+                &dir,
+                m,
+                &scratch,
+                Command::new("sh")
+                    .args([
+                        "-c",
+                        &format!("grep -q 'a > b' src/x.rs || exit 90; {script}"),
+                    ])
+                    .current_dir(&dir),
+                if matches!(expected, Seen::Hung(_)) {
+                    Duration::from_secs(1)
+                } else {
+                    Duration::from_secs(10)
+                },
+            )
+            .expect("synthetic command completes under the bound");
+            assert_eq!(outcome.0, expected, "{script}");
+            assert_eq!(std::fs::read(dir.join("src/x.rs")).unwrap(), original);
+            assert!(!scratch.join("ACTIVE").exists());
+            assert!(!scratch.join("flip.orig").exists());
+        }
+        let failed_spawn = super::run_one_with(
+            &dir,
+            m,
+            &scratch,
+            &mut Command::new(dir.join("nonexistent-command")),
+            Duration::from_secs(1),
+        );
+        assert!(failed_spawn.unwrap_err().contains("cannot run cargo"));
+        assert_eq!(std::fs::read(dir.join("src/x.rs")).unwrap(), original);
+        assert!(!scratch.join("ACTIVE").exists());
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn the_sweep_requires_finishing_test_evidence_and_can_refuse_timeouts() {
+        // Exercise the real CLI, copy, mutation and restore with synthetic command outputs. No fixture Git
+        // repository or Cargo build is needed, and each case owns its own scratch and environment.
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("repository root");
+        let probe = r#"
+import os, pathlib, shutil, subprocess, sys, tempfile
+root = pathlib.Path(sys.argv[1])
+scratch = root / 'target/doctrine_scratch'
+scratch.mkdir(parents=True, exist_ok=True)
+work = pathlib.Path(tempfile.mkdtemp(prefix='sweep-outcomes.', dir=scratch))
+failures = []
+git = '''#!/usr/bin/env python3
+import os, sys
+if sys.argv[1:] == ['rev-parse', '--show-toplevel']:
+    print(os.environ['PROBE_ROOT'])
+elif sys.argv[1:] == ['ls-files', '-s', '-z']:
+    sys.stdout.buffer.write(b'100644 ' + b'0' * 40 + b' 0\\tsample.rs\\0')
+else:
+    sys.exit(2)
+'''
+cargo = '''#!/usr/bin/env python3
+import os, pathlib, sys, time
+state = pathlib.Path(os.environ['PROBE_ROOT']) / 'invoked'
+text = pathlib.Path('sample.rs').read_text()
+if not state.exists():
+    assert '    true\\n' in text, 'baseline is not original'
+    state.touch()
+    sys.exit(0)
+assert '    false\\n' in text, 'mutation did not land'
+kind = os.environ['PROBE_OUTCOME']
+if kind == 'hang':
+    time.sleep(30)
+if kind in ('kill', 'incomplete'):
+    print('failures:\\n    tests::caught\\n')
+if kind in ('kill', 'no-names'):
+    print('test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out')
+if kind == 'unviable':
+    print('error: could not compile `synthetic`', file=sys.stderr)
+elif kind == 'invocation':
+    print('error: failed to load manifest for workspace member', file=sys.stderr)
+elif kind == 'crash':
+    print('error: test process terminated by signal 6, SIGABRT', file=sys.stderr)
+sys.exit(0 if kind == 'survive' else 101)
+'''
+cases = [('kill', False, 0), ('kill', True, 0), ('survive', False, 1), ('survive', True, 1),
+         ('unviable', False, 0), ('unviable', True, 0), ('invocation', False, 2),
+         ('invocation', True, 2), ('incomplete', False, 2), ('no-names', False, 2),
+         ('crash', False, 2), ('hang', False, 0), ('hang', True, 1)]
+try:
+    for number, (kind, strict, expected) in enumerate(cases):
+        fixture = work / str(number)
+        (fixture / 'bin').mkdir(parents=True)
+        original = b'fn sample() -> bool {\n    true\n}\n#[cfg(test)]\nmod tests {}\n'
+        (fixture / 'sample.rs').write_bytes(original)
+        for name, text in [('git', git), ('cargo', cargo)]:
+            path = fixture / 'bin' / name
+            path.write_text(text)
+            path.chmod(0o755)
+        env = dict(os.environ, PROBE_ROOT=str(fixture), PROBE_OUTCOME=kind,
+                   PATH=str(fixture / 'bin') + os.pathsep + os.environ['PATH'])
+        command = ['bash', str(root / 'scripts/mutation_sweep.sh'), 'sample.rs', '--package', 'synthetic',
+                   '--timeout', '1' if kind == 'hang' else '10'] + (['--timeouts-fail'] if strict else [])
+        run = subprocess.run(command, env=env, capture_output=True, text=True, timeout=30)
+        if run.returncode != expected:
+            failures.append(f'{kind}, strict={strict}: exit {run.returncode}, expected {expected}\n'
+                            + run.stdout + run.stderr)
+        copied = fixture / 'target/mutation-sweep/tree/sample.rs'
+        if not copied.is_file() or copied.read_bytes() != original:
+            failures.append(f'{kind}, strict={strict}: copied file not restored byte for byte')
+        if (fixture / 'sample.rs').read_bytes() != original:
+            failures.append(f'{kind}, strict={strict}: source fixture changed')
+    assert not failures, '\n'.join(failures)
+    print(f'sweep outcome controls: {len(cases)} passed; every mutation restored')
+finally:
+    shutil.rmtree(work)
+"#;
+        let output = Command::new("python3")
+            .args(["-I", "-c", probe])
+            .arg(root)
+            .output()
+            .expect("Python runs the synthetic sweep controls");
+        assert!(
+            output.status.success(),
+            "{}\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
     }
 
     #[test]

@@ -661,7 +661,10 @@ mdBook that is the director's window into the project.
   answered: failed staged reads require a successful index census and exact path comparison before any disk
   fallback; a present unreadable entry or failed proof refuses. Round 33 answered: the first unescaped bracketed
   label retains file authority with bare/angle destinations and optional titles; unsupported first syntax refuses
-  before any secondary link can substitute. Thirty regressions failed first; all 126 arms pass. Round 34 next.
+  before any secondary link can substitute. Thirty regressions failed first; all 126 arms pass. Round 34 reports zero production defects and two arm gaps:
+  unconditional file-cell validation and parentheses in angle destinations. Owned here; add tracked controls after
+  the current `M3.6.9.1` slice is committed, before any further M3 implementation. Report
+  `target/review-p69-r34/report.txt` (untracked), read in full; no parser change requested.
   **Acceptance checklist, round 33:**
   - [x] **REPRODUCE / ISSUE** — the 35 new tracked controls beside the committed reader give
     `96 pass / 30 fail (126 arms)`; the independent report is `target/review-p69-r33/report.txt` (untracked).
@@ -1537,7 +1540,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.69` | `active` | round 33 answered; independent round 34 next |
+| 1 | `PROGRAM.69` | `active` | round 34 reports two arm gaps; add tracked controls after the current M3.6.9.1 slice |
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The second row waits on the director's yes. The pending leaves beside them —
