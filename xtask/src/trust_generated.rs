@@ -754,7 +754,7 @@ mod tests {
             "#[no_mangle]\npub extern \"C\" fn f() {}\n",
             &[],
         );
-        let Err(err) = inventory_with(&f.repo, "HEAD", &f.base.join("out"), &real_root()) else {
+        let Err(err) = inventory_with(&f.repo, "HEAD", &f.base.join("out"), &[real_root()]) else {
             panic!("a build failed and the run judged");
         };
         assert!(
@@ -1521,7 +1521,7 @@ mod generator_tests {
             ],
         );
         let out = f.base.join("out");
-        let err = match inventory_with(&f.repo, "HEAD", &out, &real_root()) {
+        let err = match inventory_with(&f.repo, "HEAD", &out, &[real_root()]) {
             Err(e) => e,
             Ok(Outcome::Written(_)) => panic!("written"),
             Ok(Outcome::Refused(r)) => panic!("refused, where the gate could not judge: {r:#?}"),
@@ -1572,7 +1572,7 @@ mod order_tests {
     }
 
     fn outcome(f: &Fixture) -> Result<Outcome, String> {
-        inventory_with(&f.repo, "HEAD", &f.base.join("out"), &real_root())
+        inventory_with(&f.repo, "HEAD", &f.base.join("out"), &[real_root()])
     }
 
     #[test]
@@ -1746,14 +1746,14 @@ mod order_tests {
         // Off the baseline's host — no baseline yet — nothing is stale.
         let out = f.base.join("gate");
         let (j, _) =
-            crate::trust_gate::gate(&f.repo, "HEAD", None, &out, &real_root()).expect("judged");
+            crate::trust_gate::gate(&f.repo, "HEAD", None, &out, &[real_root()]).expect("judged");
         assert!(j.refused.is_empty(), "{:#?}", j.refused);
         // The proposed baseline committed, the gate is on its host: the unread form is stale, and it alone.
         let proposal =
             std::fs::read_to_string(out.join(crate::trust_gate::PROPOSAL)).expect("a proposal");
         f.commit(&[("trust/baseline.eadl", proposal)]);
         let (j, _) =
-            crate::trust_gate::gate(&f.repo, "HEAD", None, &out, &real_root()).expect("judged");
+            crate::trust_gate::gate(&f.repo, "HEAD", None, &out, &[real_root()]).expect("judged");
         assert_eq!(
             j.refused,
             ["trust-baseline-stale: trust/roots.eadl: `(defgenerated \"crates/a/src/never.rs\" …)` declares a file no program reads — remove it, so a generated source read again is reviewed again"]
@@ -1771,7 +1771,7 @@ mod gate_tests {
     use crate::trust_gate::{gate, Judgement, PROPOSAL};
 
     fn judge(f: &Fixture, out: &str) -> (Judgement, String) {
-        gate(&f.repo, "HEAD", None, &f.base.join(out), &real_root()).expect("judged")
+        gate(&f.repo, "HEAD", None, &f.base.join(out), &[real_root()]).expect("judged")
     }
 
     fn pair(name: &str, forms: &str) -> Fixture {

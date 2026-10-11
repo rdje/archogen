@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — explicit configuration roots retain innermost ownership and content rules
+
+`ARCHOGEN-M3-0634` (leaf `M3.6.9.3.1`), `2026-10-11`.
+
+- Reproduce the accepted design's blocker: an unmutated copied parent fixture refuses the original repository's
+  ancestor Cargo configuration. Add explicit outer-root lists to inventory/gate and choose the innermost owning
+  root independently of order. The catalog's single-root wrapper and production's sole repository root remain.
+- Validation: six root orderings admit four unchanged alias copies; eight independent refusal arms hold changed
+  bytes, tracking, symlinks, two tracked intermediate target locations, missing/empty roots and alias-only content.
+  Three strict named mutations are killed. Focused format/Clippy/all tests pass; initial sandboxed run cannot
+  stamp Git objects, so the final staged official run with Git access is required. Book/staged doctrines required.
+  Copied-source binding and sweep integration remain pending; no copied baseline pass or adequacy claim.
+- Correct the trust chapter's stale pending-operator paragraph. Accepted design, interfaces/callers, owning
+  slice/parent/logs, book and task/resume records agree; canonical source binding next.
+
 ## archogen — sweep compiler refusals are reported per attempted operator
 
 `ARCHOGEN-M3-0633` (leaf `M3.6.9.2.3.4`), `2026-10-11`.

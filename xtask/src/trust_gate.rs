@@ -14,7 +14,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use archogen_evidence::sha256::Digest;
 use eadl_front::{read, Form, SourceMap};
@@ -872,7 +872,7 @@ fn blob_at(
 }
 
 /// Run the gate on `commit` against `base` in the repository at `repo`, scratch and report under `out`, the cargo
-/// configurations on the build's path judged against `config_root`'s tracked copy (as [`crate::trust::inventory_with`]).
+/// configurations on the build's path judged against explicit `config_roots` (as [`crate::trust::inventory_with`]).
 /// Returns the judgement and the report written.
 ///
 /// # Errors
@@ -883,7 +883,7 @@ pub fn gate(
     commit: &str,
     base: Option<&str>,
     out: &Path,
-    config_root: &Path,
+    config_roots: &[PathBuf],
 ) -> Result<(Judgement, String), String> {
     let git = crate::catalog_check::Git::at(repo);
     let commit = git
@@ -943,7 +943,7 @@ pub fn gate(
         root_forms: base_root_forms,
     };
     fs::create_dir_all(out).map_err(|e| format!("{}: {e}", out.display()))?;
-    let (judgement, text) = match crate::trust::inventory_with(repo, &commit, out, config_root)? {
+    let (judgement, text) = match crate::trust::inventory_with(repo, &commit, out, config_roots)? {
         crate::trust::Outcome::Refused(refusals) => {
             let j = Judgement {
                 refused: refusals,
@@ -1002,7 +1002,7 @@ pub fn run_gate(repo: &Path, args: &[&str]) -> i32 {
     }
     let out = out.map_or_else(|| repo.join("target").join("trust"), |o| repo.join(o));
     let repo = repo.as_path();
-    match gate(repo, &commit, base.as_deref(), &out, repo) {
+    match gate(repo, &commit, base.as_deref(), &out, &[repo.to_path_buf()]) {
         Ok((j, _)) => {
             for r in &j.refused {
                 eprintln!("{r}");
@@ -1449,7 +1449,7 @@ mod tests {
 
     fn judge_head(f: &Fixture, out: &str) -> (super::Judgement, String) {
         let (j, text) =
-            gate(&f.repo, "HEAD", None, &f.base.join(out), &real_root()).expect("judged");
+            gate(&f.repo, "HEAD", None, &f.base.join(out), &[real_root()]).expect("judged");
         assert_eq!(
             std::fs::read_to_string(f.base.join(out).join(super::REPORT)).expect("written"),
             text

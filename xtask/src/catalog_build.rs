@@ -11,7 +11,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use archogen_catalog::grammar;
@@ -225,6 +225,22 @@ pub fn configurations_on_path(
     repo: &Path,
     tree: &Tree,
 ) -> Result<(), Failure> {
+    configurations_on_paths(cwd, root, &[repo.to_path_buf()], tree)
+}
+
+/// As [`configurations_on_path`], with explicitly supplied outer roots. A configuration outside the written tree
+/// belongs to the innermost root containing it, regardless of list order. Each copy must match the judged tree;
+/// intermediate `target/` configurations and configurations above every supplied root remain refused.
+///
+/// # Errors
+///
+/// As [`configurations_on_path`]. Callers are responsible for authorizing the roots they supply.
+pub fn configurations_on_paths(
+    cwd: &Path,
+    root: &Path,
+    config_roots: &[PathBuf],
+    tree: &Tree,
+) -> Result<(), Failure> {
     for dir in cwd.ancestors() {
         for name in ["config", "config.toml"] {
             let config = dir.join(".cargo").join(name);
@@ -250,7 +266,11 @@ pub fn configurations_on_path(
             let on_disk = fs::read(&config).map_err(|e| format!("{shown}: {e}"))?;
             let tracked = if let Some(rel) = relative(root) {
                 rel
-            } else if let Some(rel) = relative(repo) {
+            } else if let Some((_, rel)) = config_roots
+                .iter()
+                .filter_map(|repo| relative(repo).map(|rel| (repo.components().count(), rel)))
+                .max_by_key(|(depth, _)| *depth)
+            {
                 if rel.starts_with("target/") {
                     return Err(source(
                         &shown,
@@ -994,7 +1014,7 @@ mod tests {
     use archogen_catalog::hash::Catalog;
     use archogen_catalog::lock::{blessed, Lock, PATH};
 
-    use super::{check, configurations_on_path, judge_prerequisite};
+    use super::{check, configurations_on_path, configurations_on_paths, judge_prerequisite};
     use crate::catalog_check::Failure;
 
     fn real_root() -> PathBuf {
@@ -1265,6 +1285,84 @@ mod tests {
             Err(Failure::Refused(r)) => assert!(r.message.contains("above the repository"), "{r}"),
             other => panic!("{other:?}"),
         }
+    }
+
+    fn configuration_layout(name: &str) -> (Tree, PathBuf, Vec<PathBuf>) {
+        let source = scratch(name);
+        let copy = source.join("target/mutation-sweep/tree");
+        let written = copy.join("target/fixture/out/tree");
+        let bytes = std::fs::read(real_root().join(".cargo/config.toml")).unwrap();
+        for root in [&source, &copy, &written] {
+            std::fs::create_dir_all(root.join(".cargo")).unwrap();
+            std::fs::write(root.join(".cargo/config.toml"), &bytes).unwrap();
+        }
+        let tree = Tree::new([(".cargo/config.toml".to_owned(), bytes)]);
+        (tree, written, vec![source, copy, real_root()])
+    }
+
+    #[test]
+    fn outer_configuration_roots_are_innermost_regardless_of_list_order() {
+        let (tree, written, roots) = configuration_layout("configuration-root-order");
+        for order in [
+            [0, 1, 2],
+            [0, 2, 1],
+            [1, 0, 2],
+            [1, 2, 0],
+            [2, 0, 1],
+            [2, 1, 0],
+        ] {
+            let ordered: Vec<_> = order.into_iter().map(|i| roots[i].clone()).collect();
+            configurations_on_paths(&written, &written, &ordered, &tree)
+                .unwrap_or_else(|e| panic!("root order {order:?}: {e:?}"));
+        }
+        // The unchanged production rule supplies one root, so these extra configurations under its target refuse.
+        match configurations_on_path(&written, &written, &real_root(), &tree) {
+            Err(Failure::Refused(r)) => assert!(r.message.contains("under `target/`"), "{r}"),
+            other => panic!("{other:?}"),
+        }
+    }
+
+    #[test]
+    fn every_outer_configuration_copy_keeps_tracking_content_and_target_refusals() {
+        let (mut tree, written, roots) = configuration_layout("configuration-root-refusals");
+        let source = &roots[0];
+        let config = source.join(".cargo/config.toml");
+        let bytes = std::fs::read(&config).unwrap();
+        let refuses = |roots: &[PathBuf], tree: &Tree, expected: &str| match configurations_on_paths(
+            &written, &written, roots, tree,
+        ) {
+            Err(Failure::Refused(r)) => assert!(r.message.contains(expected), "{r}"),
+            other => panic!("expected {expected}: {other:?}"),
+        };
+        std::fs::write(&config, b"[alias]\nchanged = \"version\"\n").unwrap();
+        refuses(&roots, &tree, "bytes differ");
+        std::fs::write(&config, &bytes).unwrap();
+        let untracked = source.join(".cargo/config");
+        std::fs::write(&untracked, &bytes).unwrap();
+        refuses(&roots, &tree, "does not track");
+        std::fs::remove_file(&untracked).unwrap();
+        #[cfg(unix)]
+        {
+            tree.insert(".cargo/config", bytes.clone());
+            std::os::unix::fs::symlink("config.toml", &untracked).unwrap();
+            refuses(&roots, &tree, "symbolic link");
+            std::fs::remove_file(&untracked).unwrap();
+        }
+        for relative in ["target/.cargo", "target/mutation-sweep/.cargo"] {
+            let dir = source.join(relative);
+            std::fs::create_dir_all(&dir).unwrap();
+            std::fs::write(dir.join("config.toml"), &bytes).unwrap();
+            tree.insert(format!("{relative}/config.toml"), bytes.clone());
+            refuses(&roots, &tree, "under `target/`");
+            std::fs::remove_dir_all(&dir).unwrap();
+        }
+        refuses(&roots[..2], &tree, "above the repository");
+        refuses(&[], &tree, "above the repository");
+        // Matching bytes alone cannot admit an environment-changing configuration at any authorized root.
+        let forbidden = b"[env]\nARCHOGEN_CONFIG_CONTROL = \"value\"\n";
+        std::fs::write(&untracked, forbidden).unwrap();
+        tree.insert(".cargo/config", forbidden.to_vec());
+        refuses(&roots, &tree, "configuration other than an alias");
     }
 
     #[test]

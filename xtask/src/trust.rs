@@ -27,7 +27,7 @@ use archogen_evidence::sha256::Digest;
 use eadl_front::{read, Form, SourceMap};
 
 use crate::catalog_build::{
-    configurations_on_path, environment, toolchain_file, write_tree, ENV_ALLOWED,
+    configurations_on_paths, environment, toolchain_file, write_tree, ENV_ALLOWED,
 };
 use crate::catalog_check::{tree_entries, tree_of, Git};
 use crate::json::{self, Json};
@@ -1398,11 +1398,12 @@ impl Rules<'_> {
 ///
 /// A failure that is not a refusal: git, cargo or the file system did not answer.
 pub fn inventory(repo: &Path, commit: &str, out: &Path) -> Result<Outcome, String> {
-    inventory_with(repo, commit, out, repo)
+    inventory_with(repo, commit, out, &[repo.to_path_buf()])
 }
 
-/// [`inventory`], the cargo configurations on the build's path judged against `config_root`'s tracked copy: the
-/// repository itself, or, for a test's scratch repository nested under it, the outer one (as the catalog's tests do).
+/// [`inventory`], with cargo configurations on the build's path judged against explicitly supplied outer roots.
+/// The innermost containing root owns each configuration; its bytes/content still match the judged tree. Production
+/// supplies the repository alone; tests may supply their authorized containing repositories.
 ///
 /// # Errors
 ///
@@ -1411,7 +1412,7 @@ pub fn inventory_with(
     repo: &Path,
     commit: &str,
     out: &Path,
-    config_root: &Path,
+    config_roots: &[PathBuf],
 ) -> Result<Outcome, String> {
     let git = Git::at(repo);
     let commit = git
@@ -1473,7 +1474,7 @@ pub fn inventory_with(
     let pin = toolchain_file(&tree)?;
     // A cargo configuration on the build's path that §3 refuses is a refusal of the commit, never a run that could
     // not judge (`M3.6.3.4`, found running the gate built from a base).
-    match configurations_on_path(&tree_dir, &tree_dir, config_root, &tree) {
+    match configurations_on_paths(&tree_dir, &tree_dir, config_roots, &tree) {
         Ok(()) => {}
         Err(crate::catalog_check::Failure::Refused(r)) => {
             return Ok(refuse(vec![format!("trust-undeclared-input: {r}")]))
@@ -2608,7 +2609,7 @@ pub(crate) mod tests {
             git(&self.repo, &["commit", "-q", "-m", "change"]);
         }
         pub(crate) fn run_into(&self, out: &str) -> Outcome {
-            inventory_with(&self.repo, "HEAD", &self.base.join(out), &real_root()).unwrap()
+            inventory_with(&self.repo, "HEAD", &self.base.join(out), &[real_root()]).unwrap()
         }
         pub(crate) fn run(&self) -> Outcome {
             self.run_into("out")

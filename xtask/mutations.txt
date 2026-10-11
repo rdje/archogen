@@ -4588,3 +4588,36 @@ from
 to
             operator_counts[m[2]] = (sum(x[2] == m[2] for x in ms), unviable + (outcome == "unviable"))
 end
+
+mutation configuration-roots-outermost-selected
+file xtask/src/catalog_build.rs
+test -p xtask catalog_build::tests::outer_configuration_roots_are_innermost_regardless_of_list_order
+expect killed
+why M3.6.9.3.1: each configuration belongs to its innermost authorized root; all six nested-root orderings must admit unchanged tracked alias copies.
+from
+                    .max_by_key(|(depth, _)| *depth)
+to
+                    .min_by_key(|(depth, _)| *depth)
+end
+
+mutation configuration-roots-intermediate-target-admitted
+file xtask/src/catalog_build.rs
+test -p xtask catalog_build::tests::every_outer_configuration_copy_keeps_tracking_content_and_target_refusals
+expect killed
+why M3.6.9.3.1: even byte-identical tracked alias configurations at intermediate target ancestors are refused outside the written tree.
+from
+                    if rel.starts_with("target/") {
+to
+                    if false {
+end
+
+mutation configuration-roots-content-rules-skipped
+file xtask/src/catalog_build.rs
+test -p xtask catalog_build::tests::every_outer_configuration_copy_keeps_tracking_content_and_target_refusals
+expect killed
+why M3.6.9.3.1: matching tracked bytes cannot admit an outer env configuration; alias-only content rules apply independently to every authorized root.
+from
+                package::check_config(&tracked, &m).map_err(|why| source(&shown, "(config)", why))?;
+to
+                Ok::<(), Failure>(())?;
+end

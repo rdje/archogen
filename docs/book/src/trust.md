@@ -437,7 +437,11 @@ needs an equivalence reason, and timeouts fail both strict modes. The design rec
 the test copy to its source repository. Implementation begins with strict and attributed mutation outcomes: an
 invocation error without a failed test summary and failure-list name is unjudged, never a kill or equivalent.
 Those modes are built in `M3.6.9.1`; `M3.6.9.2.1` adds source-span replacements and validated multiline equivalents.
-`M3.6.9.2.2.1` builds the loop-position operator with compiled synthetic controls; guarded branches and the other
-operators, bound seam, exact pairs and production adequacy measurements remain pending.
+`M3.6.9.2` builds all five additional operators and actual per-operator compiler-refusal counts, with compiled
+semantic and CLI restoration controls described in `docs/book/src/verification.md`. `M3.6.9.3.1` adds explicit
+configuration-root lists: each outer configuration belongs to its innermost supplied root and must still match
+the judged tree's tracked bytes and alias-only content rules. Intermediate target configurations and ancestors
+above all supplied roots remain refused. The production gate supplies its repository alone. Canonical source
+binding and copied-sweep integration, exact mutation pairs and production adequacy measurements remain pending.
 The package the verifier
 reads is fixed provisionally until `M4.7` writes real ones.

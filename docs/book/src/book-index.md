@@ -75,8 +75,9 @@ a change that leaves it stale, so it is never edited by hand.
   relies on from outside](ledger.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
 - Claims cite what they read — [Where the engine's knowledge comes from: the
   catalog](catalog.md#claims-cite-what-they-read)
-- **CLI** — [definition](glossary.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying
-  the toolchain](verification.md), [What is versioned, and what changing it costs](versions.md)
+- **CLI** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md), [The archogen
+  command line](cli.md), [The engine API](engine-api.md), [Verifying the toolchain](verification.md), [What is
+  versioned, and what changing it costs](versions.md)
 - **CLINT** — [definition](glossary.md), [Where generated systems run](targets.md)
 - Codes — [Matching an offer to a requirement](matching.md#codes)
 - Comments survive — [Reading a description](reading.md#comments-survive)
