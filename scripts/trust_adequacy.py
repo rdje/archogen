@@ -194,9 +194,31 @@ def display(text):
     return json.dumps(text, ensure_ascii=False) if "\n" in text else text
 
 
+def selected_equivalents(file_plan):
+    """Bind explicit native-file snapshots to selected text; this does not prove their reasons true."""
+    records = file_plan.get("equivalents", [])
+    if not isinstance(records, list):
+        raise ValueError("equivalents must be a list of selected reason records")
+    selected = {(c["original"].strip(), c["replacement"].strip()) for c in file_plan["candidates"]}
+    result = {}
+    for record in records:
+        if not isinstance(record, dict) or set(record) != {"original", "replacement", "reason"}:
+            raise ValueError("equivalent requires exactly original/replacement/reason")
+        if any(not isinstance(value, str) or not value.strip() for value in record.values()):
+            raise ValueError("equivalent fields must be nonempty strings")
+        key = record["original"].strip(), record["replacement"].strip()
+        if "\n" in record["reason"] or "\r" in record["reason"]:
+            raise ValueError("equivalent reason must occupy one line")
+        if key not in selected or key in result:
+            raise ValueError("unmatched or duplicate selected equivalent")
+        result[key] = record["reason"].strip()
+    return result
+
+
 def audit_measurement(log, file_plan, filename, exit_code):
     """Require every selected actual replacement, named finishing kill and native terminal count."""
     candidates = {m["id"]: m for m in file_plan["candidates"]}
+    equivalents = selected_equivalents(file_plan)
     records = {}
     first, last = file_plan["production_range"]
     baseline = (r"mutation-sweep: the unmutated copy passes \([0-9]+s\); "
@@ -204,7 +226,7 @@ def audit_measurement(log, file_plan, filename, exit_code):
                 + r", lines " + str(first + 1) + " to " + str(last))
     if len(re.findall("^" + baseline + "$", log, re.MULTILINE)) != 1:
         raise ValueError("missing or wrong native baseline/scope")
-    marks = dict(killed="✓", survived="✗", unviable="·", timeout="✗", unjudged="?")
+    marks = dict(killed="✓", survived="✗", unviable="·", timeout="✗", unjudged="?", equivalent="=")
     for line in log.splitlines():
         match = re.match(r"^  ([✓✗·?=]) (\S+) +(\w+) +", line)
         if not match:
@@ -218,14 +240,22 @@ def audit_measurement(log, file_plan, filename, exit_code):
         if not line.startswith(expected):
             raise ValueError("native replacement text drift: " + identity)
         detail = line[len(expected):]
+        key = candidate["original"].strip(), candidate["replacement"].strip()
+        if key in equivalents and outcome != "equivalent":
+            raise ValueError("listed equivalent did not survive: " + identity)
         names = []
         if outcome == "killed":
             if not re.fullmatch(r" — [\w:]+(?:, [\w:]+)*", detail):
                 raise ValueError("native kill lacks finishing test names: " + identity)
             names = detail[3:].split(", ")
+        elif outcome == "equivalent":
+            if key not in equivalents or detail:
+                raise ValueError("unlisted or detailed native equivalent: " + identity)
         elif outcome in ("survived", "timeout") and detail:
             raise ValueError("unexpected native outcome detail: " + identity)
         records[identity] = dict(id=identity, outcome=outcome, names=names, detail=detail)
+        if outcome == "equivalent":
+            records[identity]["reason"] = equivalents[key]
     if records.keys() != candidates.keys():
         raise ValueError("native result identities incomplete")
     counts = Counter(r["outcome"] for r in records.values())
@@ -506,6 +536,56 @@ class Controls(unittest.TestCase):
             changed = baseline + entry.replace("✓", mark).replace("killed    ", "%-10s" % outcome).replace(" — tests::fails", detail)
             changed += footer.replace("1 killed", "1 " + outcome).replace("bool=0/1", "bool=%d/1" % (outcome == "unviable"))
             self.assertEqual(audit_measurement(changed, file_plan, "f.rs", code)["counts"], {outcome: 1})
+
+    def test_equivalent_results_require_selected_reason_records(self):
+        candidate = dict(id="L2.bool.0", span=[1, 2], operator="bool", original="    true", replacement="    false")
+        record = dict(original="true", replacement="false", reason="fixture metadata, not a semantic proof")
+        file_plan = dict(production_range=[0, 4], listed_count=1, candidates=[candidate], equivalents=[record])
+        baseline = "mutation-sweep: the unmutated copy passes (0s); 1 mutation(s) of f.rs, lines 1 to 4\n"
+        entry = "  = L2.bool.0          equivalent true ⟶ false\n"
+        footer = "mutation-sweep: 1 equivalent\nmutation-sweep: unviable by operator: bool=0/1 (unviable/attempted)\n"
+        log = baseline + entry + footer
+        result = audit_measurement(log, file_plan, "f.rs", 0)
+        self.assertEqual(result["counts"], {"equivalent": 1})
+        self.assertEqual(result["entries"][0]["names"], [])
+        self.assertEqual(result["entries"][0]["reason"], record["reason"])
+        # The native parser trims outer whitespace; duplicate detection must use that same key.
+        padded = {**record, "original": "  true  ", "replacement": " false ", "reason": " fixture reason "}
+        self.assertEqual(audit_measurement(log, {**file_plan, "equivalents": [padded]}, "f.rs", 0)
+                         ["entries"][0]["reason"], "fixture reason")
+        malformed = (None, "not records", record, [], [None], [{}], [{**record, "extra": "field"}],
+                     [{k: v for k, v in record.items() if k != "reason"}], [record, record], [record, padded])
+        for field in record:
+            malformed += tuple([{**record, field: value}] for value in (None, 1, "", "   "))
+        malformed += ([{**record, "reason": "first\nsecond"}], [{**record, "reason": "first\rsecond"}],
+                      [{**record, "reason": "\nfixture reason"}], [{**record, "reason": "fixture reason\r"}],
+                      [{**record, "original": "other"}], [{**record, "replacement": "other"}],
+                      [record, {**record, "original": "other"}])
+        for records in malformed:
+            with self.subTest(records=records), self.assertRaises(ValueError):
+                audit_measurement(log, {**file_plan, "equivalents": records}, "f.rs", 0)
+        for changed, code in ((log, 1), (log.replace("equivalent true", "equivalent other"), 0),
+                              (log.replace("⟶ false", "⟶ other"), 0), (log.replace("  =", "  ✓"), 0),
+                              (log.replace("⟶ false", "⟶ false — tests::not_a_kill"), 0),
+                              (log.replace("1 equivalent", "2 equivalent"), 0)):
+            with self.subTest(log=changed, code=code), self.assertRaises(ValueError):
+                audit_measurement(changed, file_plan, "f.rs", code)
+        with self.assertRaises(ValueError):
+            audit_measurement(log, {k: v for k, v in file_plan.items() if k != "equivalents"}, "f.rs", 0)
+
+    def test_equivalence_records_cannot_relabel_non_equivalent_outcomes(self):
+        candidate = dict(id="L2.bool.0", span=[1, 2], operator="bool", original="true", replacement="false")
+        file_plan = dict(production_range=[0, 4], listed_count=1, candidates=[candidate], equivalents=[
+            dict(original="true", replacement="false", reason="fixture metadata, not a semantic proof")])
+        baseline = "mutation-sweep: the unmutated copy passes (0s); 1 mutation(s) of f.rs, lines 1 to 4\n"
+        for outcome, mark, detail, code in (("killed", "✓", " — tests::fails", 0), ("survived", "✗", "", 1),
+                                           ("unviable", "·", " — error[E0308]", 0), ("timeout", "✗", "", 1),
+                                           ("unjudged", "?", " — incomplete", 2)):
+            log = baseline + "  %s %-18s %-10s true ⟶ false%s\n" % (mark, candidate["id"], outcome, detail)
+            log += "mutation-sweep: 1 %s\nmutation-sweep: unviable by operator: bool=%d/1 (unviable/attempted)\n" % (
+                outcome, outcome == "unviable")
+            with self.subTest(outcome=outcome), self.assertRaises(ValueError):
+                audit_measurement(log, file_plan, "f.rs", code)
 
     def test_complete_line_spans_and_half_open_boundaries(self):
         source = "const X: bool = true;\nfn f() {\n    a();\n    b();\n}\n"

@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — native equivalent outcomes require explicit selected reason records
+
+`ARCHOGEN-M3-0669` (leaf `M3.6.9.6.3.2.2.8.1`), `2026-10-11`.
+
+- Reproduce the result auditor rejecting a valid native equivalent from the previously reviewed recognizer
+  record. Validate optional selected text/reason snapshots; require actual equivalent outcomes and reject
+  malformed, stale, unlisted or relabelled claims. This binds review metadata and does not prove semantic truth.
+- New controls fail before repair; all eleven instrument controls pass afterward. Repeat the actual native E
+  command, strict exit 0, and restore all 988 original/copied inputs under Python/system hashes. Producer and
+  Rust inputs stay unchanged; historical full/pair log replays retain exact ordinary results and incomplete
+  evidence still refuses. Sync book/instrument routes and live pointers; correct stale retry/count prose.
+  Fixed-array semantic assessment next; no trust equivalence accepted and final full adequacy remains open.
+
 ## archogen — every harness pair is checked against distinct declared roots
 
 `ARCHOGEN-M3-0668` (leaf `M3.6.9.6.3.2.2.7`), `2026-10-11`.

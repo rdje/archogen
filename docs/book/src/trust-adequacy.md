@@ -160,7 +160,7 @@ matching production source `5e78044`: the exact parent baseline passes 91 tests;
 All unviable spellings report `error[E0277]`, `String: Copy`, from copied-element membership comparisons;
 compilation refusal proves no coverage. Actual paired outcomes and killing-test keys follow.
 
-The runner's seven control methods are discovered through `scripts/trust_adequacy.sh`; selected discovery
+The runner's controls are discovered through `scripts/trust_adequacy.sh`; selected discovery
 passes, full integration remains pending. Semantic classifications are below; behavioral repairs belong to `.9.6`.
 
 | Operator | Route attempted | Route unviable | Parent attempted | Parent unviable |
@@ -622,12 +622,13 @@ python3 scripts/trust_adequacy.py --plan target/trust-adequacy/plan.json \
   --output target/trust-adequacy/generated-parent.json
 ```
 
-Run them sequentially: both use the sweep's same copy and build directory. The runner stores the exact command,
-input/producer/manifest digests, source commit and raw log beside a structured result. It verifies every selected
-identity and actual replacement text, requires finishing test names for kills, compares terminal outcome and
-per-operator counts, preserves the raw strict sweep exit, and checks source/copy restoration. The process status
-of this diagnostic reports whether measurement and audit completed; the JSON's `raw_exit_code` is the sweep's
-criterion status. A completed measurement with survivors remains an unmet adequacy criterion.
+Run sequentially: both use the same copy/build directory. The runner stores commands, digests, commit and raw log;
+it checks every selected identity/replacement, finishing kill names, terminal/per-operator counts and restoration.
+Its `audit_measurement` API accepts optional file-plan `equivalents` records, each with `original`, `replacement`
+and `reason`. Exact selected text and a nonempty single-line reason must bind every equivalent; each listed record
+must finish equivalent. An unlisted label, malformed/stale record or other outcome refuses. Binding proves no
+semantic equivalence: that argument belongs to the reviewed record. Diagnostic process status says whether the
+audit completed; JSON `raw_exit_code` preserves the strict criterion status. Survivors leave the criterion unmet.
 
 Operator reach remains incomplete. All initial source/provenance and trust.rs populations are measured above;
 semantic witnesses, scoped absences and promised-spelling viability are recorded above. No operator repair was
@@ -637,4 +638,5 @@ Complete production sweeps of `trust.rs`, `trust_generated.rs` and `trust_gate.r
 compatibility sweep of `generated_header.rs`, follow the final exact census. Every sweep survivor needs a
 justified equivalence record. Full adequacy also requires these sweeps and the independent implementation review.
 The first trust.rs attempt stopped unjudged; [the trust chapter](trust.md) records its incomplete outcomes, the
-verified bounded-test repair and its regressions. The complete retry remains open; no full-file pass is claimed.
+verified bounded-test repair and its regressions. The initial complete retry still fails the criterion;
+final full-file measurements remain open.
