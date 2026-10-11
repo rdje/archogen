@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — sweep commands overwrite inherited source hints with their canonical root
+
+`ARCHOGEN-M3-0636` (leaf `M3.6.9.3.3`), `2026-10-11`.
+
+- Every baseline and mutant command receives the canonical own Git root as ARCHOGEN_SWEEP_SOURCE, replacing
+  inherited values. Test-only binding authorizes the exact physical copy; production still supplies one root,
+  configuration content/path rules remain, and scratch stays under target.
+- Validation: four CLI cases fail before repair, then eight baseline/mutant environment assertions and exact
+  restoration pass. Fifteen tool tests pass, wrapping 23 Python methods; one strict named control is killed.
+  One actual copied baseline with all three parent filters and route tests skipped passes despite an invalid
+  inherited hint. It explicitly attempts zero mutations; no adequacy/full-sweep claim. Syntax/book/staged gates required.
+- Root-list, canonical binding and copied-integration children complete. Accepted design, book/toolbox and
+  task/resume records align; exact catalogue pairs and production dual-population measurements are next.
+
 ## archogen — copied tests bind their configuration source to its own Git root
 
 `ARCHOGEN-M3-0635` (leaf `M3.6.9.3.2`), `2026-10-11`.

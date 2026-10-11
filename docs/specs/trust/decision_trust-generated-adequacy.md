@@ -139,7 +139,9 @@ sweep as it stands (round 19). This record decides a criterion, and states how f
    hold root-order independence and independent tracked-byte/content/symlink/target/ancestor refusals. Canonical
    source binding is built by `.9.3.2`: test wrappers validate canonical paths, the source's own Git top-level and
    the exact physical copy child before inventory. Explicit source hints now let a real copied parent fixture pass;
-   zero mutations were attempted in that probe. Automatic overwrite/injection remains `.9.3.3`, before measurements.
+   zero mutations were attempted in that probe. `.9.3.3` supplies the canonical own source root to every baseline
+   and mutant command, replacing inherited hints. Actual copied parent populations pass with an invalid inherited
+   hint and zero mutation attempts; production measurements remain separately owned.
 5. **The sweep takes each file's complete production range.** `trust.rs`, `trust_generated.rs` and `trust_gate.rs`
    each run from the first function or method to the first `#[cfg(test)]`, as the existing tool does. No function
    filter or extraction is needed. This includes the helpers and their callers: the reading order, read sets and

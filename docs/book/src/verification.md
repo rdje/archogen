@@ -362,6 +362,10 @@ reports those separately. The passing baseline and candidates excluded by `--onl
 No attempted candidates prints `none attempted`; `--list` prints no outcome totals and runs no compiler.
 An unviable candidate proves no coverage, and attempted counts alone establish no adequacy result.
 
+Each baseline/mutant command replaces inherited `ARCHOGEN_SWEEP_SOURCE` with the canonical own Git root.
+Tests bind it to `target/mutation-sweep/tree` before admitting its tracked, alias-only configuration (see
+`docs/book/src/trust.md`). Production keeps one root; a passing copied baseline proves integration, not adequacy.
+
 ```sh
 bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask --op contains --list
 ```

@@ -26,6 +26,7 @@ else:
 CARGO = '''#!/usr/bin/env python3
 import os, pathlib
 root = pathlib.Path(os.environ['PROBE_ROOT'])
+assert os.environ.get('ARCHOGEN_SWEEP_SOURCE') == str(root.resolve()), 'source hint is not the canonical own root'
 state = root / 'invoked'
 text = pathlib.Path('sample.rs').read_text()
 expected = os.environ['PROBE_MUTATED'] if state.exists() else os.environ['PROBE_ORIGINAL']
@@ -48,7 +49,7 @@ class SweepFixture(unittest.TestCase):
             path.write_text(text)
             path.chmod(0o755)
 
-    def run_sweep(self, record, *, original=ORIGINAL, mutated=None, candidate=None):
+    def run_sweep(self, record, *, original=ORIGINAL, mutated=None, candidate=None, source_hint=None):
         (self.base / "invoked").unlink(missing_ok=True)
         (self.base / "sample.rs").write_bytes(original.encode())
         (self.base / "equivalents").write_text(record)
@@ -64,6 +65,10 @@ class SweepFixture(unittest.TestCase):
         mutated = mutated if mutated is not None else original.replace("    true\n", "    false\n")
         env = dict(os.environ, PROBE_ROOT=str(self.base), PROBE_ORIGINAL=original,
                    PROBE_MUTATED=mutated, PATH=str(self.base / "bin") + os.pathsep + os.environ["PATH"])
+        if source_hint is None:
+            env.pop("ARCHOGEN_SWEEP_SOURCE", None)
+        else:
+            env["ARCHOGEN_SWEEP_SOURCE"] = source_hint
         result = subprocess.run(["bash", str(script), "sample.rs", "--package", "synthetic", "--op", "bool",
                                  "--equivalents", "equivalents"], env=env, capture_output=True, text=True, timeout=20)
         self.assertEqual((self.base / "sample.rs").read_bytes(), original.encode())
@@ -131,6 +136,15 @@ class SpanTests(SweepFixture):
                     self.assert_exit(result, 0 if equivalent else 1)
                     self.assertIn("1 equivalent" if equivalent else "1 survived", result.stdout)
                     self.assertEqual((self.base / "invoked").read_text(), "called\ncalled\n")
+
+
+class SourceHintTests(SweepFixture):
+    def test_own_canonical_root_replaces_missing_empty_relative_and_unrelated_hints(self):
+        for hint in [None, "", "not-a-repository", str(ROOT)]:
+            with self.subTest(inherited=hint):
+                result = self.run_sweep("from true\nto false\nwhy fixture\n", source_hint=hint)
+                self.assert_exit(result, 0)
+                self.assertEqual((self.base / "invoked").read_text(), "called\ncalled\n")
 
 
 class OperatorCountTests(SweepFixture):

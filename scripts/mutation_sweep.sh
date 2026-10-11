@@ -55,6 +55,8 @@
 # copy fails, a bad argument, a restore that did not read back, or an unjudged run). With `--timeouts-fail`, a timeout
 # instead fails with exit 1, even if an equivalents entry names it. Ordinary timeout handling is unchanged.
 # Writes only under `target/mutation-sweep/`.
+# Each test command receives ARCHOGEN_SWEEP_SOURCE as this sweep's canonical own Git root, replacing inherited
+# values. The tests alone bind that source to the exact target/mutation-sweep/tree copy before admitting its config.
 # `--list` prints the mutations without running them.
 # Completed runs also report per-operator `unviable/attempted` counts, including zero refusals. The baseline,
 # listed-only and filtered-out candidates are excluded; neither an attempted nor an unviable count is coverage.
@@ -78,7 +80,7 @@ ap.add_argument("--list", action="store_true")
 ap.add_argument("--op", action="append", default=[])  # only these operators: a run to explore, never the claim
 a = ap.parse_args()
 
-ROOT = os.getcwd()
+ROOT = os.path.realpath(os.getcwd())
 WORK = os.path.join(ROOT, "target", "mutation-sweep")
 TREE = os.path.join(WORK, "tree")
 TARGET = os.path.join(WORK, "target")
@@ -735,7 +737,7 @@ for p in paths:
         shutil.copy(p, os.path.join(TREE, p), follow_symlinks=False)
 target_file = os.path.join(TREE, a.file)
 original = open(target_file, "rb").read()
-env = dict(os.environ, CARGO_TARGET_DIR=TARGET)
+env = dict(os.environ, CARGO_TARGET_DIR=TARGET, ARCHOGEN_SWEEP_SOURCE=ROOT)
 cmd = ["cargo", "test", "-q", "-p", a.package, "--"] + a.filter
 
 def failed_tests(stdout):

@@ -445,7 +445,9 @@ above all supplied roots remain refused. The production gate supplies its reposi
 (`M3.6.9.3.2`) admits `ARCHOGEN_SWEEP_SOURCE` only after canonicalizing it and the test root, verifying that the
 source is its own Git top-level, and requiring the test root to be exactly its `target/mutation-sweep/tree` child.
 Canonical aliases are accepted; unrelated roots, enclosing ancestors, deeper copies and redirected physical
-locations refuse before inventory. The source hint cannot change production's root list. Automatic sweep injection,
-exact mutation pairs and production adequacy measurements remain pending.
+locations refuse before inventory. The source hint cannot change production's root list. The sweep now supplies
+its canonical own source root for every test command, replacing any inherited hint (`M3.6.9.3.3`). All three parent
+populations pass in the actual unmutated copy with an invalid inherited hint; that zero-attempt baseline establishes
+copy integration, not mutation adequacy. Exact mutation pairs and production adequacy measurements remain pending.
 The package the verifier
 reads is fixed provisionally until `M4.7` writes real ones.

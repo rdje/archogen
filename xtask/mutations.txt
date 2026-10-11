@@ -4665,3 +4665,14 @@ from
 to
                 None,
 end
+
+mutation sweep-source-inherited-hint-preserved
+file scripts/mutation_sweep.sh
+test -p xtask mutation::tests::the_sweep_holds_source_spans_and_equivalence_records
+expect killed
+why M3.6.9.3.3: every baseline and mutant command receives the sweep's canonical own root; empty, relative or unrelated inherited source hints must be replaced.
+from
+    env = dict(os.environ, CARGO_TARGET_DIR=TARGET, ARCHOGEN_SWEEP_SOURCE=ROOT)
+to
+    env = dict(os.environ, CARGO_TARGET_DIR=TARGET, ARCHOGEN_SWEEP_SOURCE=os.environ.get("ARCHOGEN_SWEEP_SOURCE", ROOT))
+end
