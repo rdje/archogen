@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — focused evidence requires the staged tree's passing stamp
+
+`ARCHOGEN-M3-0673` (leaf `M3.6.9.6.3.2.2.9.5`), `2026-10-11`.
+
+- Repair two reproduced guard bypasses: explicit successful-exit wording was unrecognized, and early grep
+  completion gave Git SIGPIPE on large staged diffs, skipping the stamp branch under pipefail. Consume the
+  full diff and hold same-line/wrapped success claims; preserve plans, nonzero exits and legacy behavior.
+- Permanent public self-tests fail before repair (20 pass/5 fail) and pass afterward (25/0). Exact old-matcher
+  reversal repeats all five failures; pipeline statuses, unchanged remaining run body and old controls are
+  audited, altered evidence refuses. Shell syntax and focused tier pass; final exact staged stamp required.
+- Book annex/trust notice and live pointers align. Existing stamp producer and trust production are unchanged;
+  API documentation placement .9.3 and integration .9.4 follow, final current-source adequacy remains open.
+
 ## archogen — structured unit keys preserve configuration boundaries
 
 `ARCHOGEN-M3-0672` (leaf `M3.6.9.6.3.2.2.9.2`), `2026-10-11`.

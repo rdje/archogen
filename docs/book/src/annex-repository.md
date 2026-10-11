@@ -98,7 +98,17 @@ what `.doctrine/code_paths.txt` says is code — is untracked; an ignored file, 
 passes. A leaf's evidence can be stale the same way: a box that cites a passing `make focused` run, made before the
 last file changed. So the focused tier, when it passes on a tree that did not move during the run, writes a stamp
 naming that tree, and the same check refuses a staged leaf that cites the run unless the staged tree has its stamp
-(`PROGRAM.53`).
+(`PROGRAM.53`). Successful evidence may use the legacy arrow, or an explicit successful exit:
+
+```text
+- [x] NO REGRESSION — `make focused`, exit code 0: all steps passed
+```
+
+The exit may continue on the immediately following added line. Plans and explicit failed or incomplete
+exit claims do not assert success. A continuation cannot borrow a result from another file or hunk.
+The matcher consumes the full staged diff: closing its pipe early could make Git fail under `pipefail`
+and skip the stamp check for a large diff. Permanent controls hold missing, wrong and matching stamps
+for both evidence styles and the large-diff case (`M3.6.9.6.3.2.2.9.5`).
 
 ```console
 $ bash scripts/check_untracked_code.sh              # the gate

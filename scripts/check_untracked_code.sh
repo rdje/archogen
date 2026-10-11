@@ -20,7 +20,9 @@
 # verify --tier focused` writes when it passes on a tree that did not move during the run. Found by `M3.6.2.1`: a box
 # read *"tier focused: passed"* from a run made before the file that broke a test was written. So a commit whose leaf
 # cites the focused tier records the tree that tier passed on, or is refused; one beside unstaged work must stash it
-# and run again. A line that cites no run needs no stamp, and in CI nothing is staged.
+# and run again. Recognized evidence is the legacy `make focused` arrow or `make focused`, exit code 0
+# (the exit may continue on the immediately following added line). Plans and nonzero exit claims do not count.
+# A line that cites no run needs no stamp, and in CI nothing is staged.
 #
 # CONTRACT: exit code is the verdict; explains on stderr; read-only. `--self-test` runs the RED arms in scratch
 # repositories under `target/doctrine_scratch/`.
@@ -46,7 +48,22 @@ run() {
     fi
   done < <(git ls-files --others --exclude-standard -z)
   # Leg 2: a cited focused run stamped the staged tree (PROGRAM.53).
-  if git diff --cached -U0 -- docs/tasks | grep -qE '^\+.*`make focused` →'; then
+  # Consume the whole diff: grep -q can close early, making git fail with SIGPIPE under pipefail and
+  # silently skip this branch for a large diff. Only adjacent added lines can form a wrapped claim.
+  if git diff --cached -U0 -- docs/tasks | awk '
+    /^\+\+\+/ { continued = 0; next }
+    /^\+/ {
+      line = substr($0, 2)
+      if (line ~ /`make focused` →/ ||
+          line ~ /`make focused`,[[:space:]]*exit code 0([^[:alnum:]_]|$)/ ||
+          (continued && line ~ /^[[:space:]]*exit code 0([^[:alnum:]_]|$)/))
+        found = 1
+      continued = (line ~ /`make focused`,[[:space:]]*$/)
+      next
+    }
+    { continued = 0 }
+    END { exit !found }
+  '; then
     local staged
     staged="$(git write-tree 2>/dev/null)" || { note "the staged tree could not be written to judge its stamp"; return; }
     [ -f "target/verify-stamps/focused/$staged" ] ||
@@ -90,7 +107,13 @@ self_test() {
   fresh; git -C "$work" rm -q --cached .doctrine/code_paths.txt; rm "$work/.doctrine/code_paths.txt"
   arm "no statement of what is code is a breach, not a pass" 1 "no .doctrine/code_paths.txt"
   # Leg 2: a staged task-tree line citing `make focused` comes with the focused tier's stamp of the staged tree.
-  cite() { mkdir -p "$work/docs/tasks"; printf -- '- ID: `T.1`\n  - [x] **NO REGRESSION** — `make focused` → `passed`\n' > "$work/docs/tasks/T.md"; git -C "$work" add -A; }
+  cite() {
+    local evidence='  - [x] **NO REGRESSION** — `make focused` → `passed`'
+    [ "$#" -eq 0 ] || evidence="$1"
+    mkdir -p "$work/docs/tasks"
+    printf -- '- ID: `T.1`\n%s\n' "$evidence" > "$work/docs/tasks/T.md"
+    git -C "$work" add -A
+  }
   stamp() { mkdir -p "$work/target/verify-stamps/focused"; printf 'passed\n' > "$work/target/verify-stamps/focused/$1"; }
   fresh; cite
   arm "a staged leaf citing a focused run, with no stamp of the staged tree, is refused" 1 "no passing run of the focused tier stamped it"
@@ -100,6 +123,42 @@ self_test() {
   arm "a stamp of another tree than the staged one is refused" 1 "no passing run of the focused tier stamped it"
   fresh; mkdir -p "$work/docs/tasks"; printf -- '- ID: `T.1`\n  Status: `pending`\n' > "$work/docs/tasks/T.md"; git -C "$work" add -A
   arm "a staged leaf citing no focused run needs no stamp" 0 ""
+  fresh; cite '  - [x] **NO REGRESSION** — `make focused`, exit code 0: all steps passed'
+  arm "an explicit successful exit with no staged-tree stamp is refused" 1 "no passing run of the focused tier stamped it"
+  fresh; cite '  - [x] **NO REGRESSION** — `make focused`, exit code 0: all steps passed'; stamp "$(git -C "$work" write-tree)"
+  arm "an explicit successful exit with the matching stamp passes" 0 ""
+  fresh; cite '  - [x] **NO REGRESSION** — `make focused`, exit code 0: all steps passed'; stamp "$(git -C "$work" write-tree)"
+  printf 'fn main() { let _ = 1; }\n' > "$work/src/main.rs"; git -C "$work" add -A
+  arm "an explicit successful exit with another tree's stamp is refused" 1 "no passing run of the focused tier stamped it"
+  fresh; cite $'  - [x] **NO REGRESSION** — `make focused`,\n    exit code 0: all steps passed'
+  arm "a wrapped successful claim with no stamp is refused" 1 "no passing run of the focused tier stamped it"
+  fresh; cite $'  - [x] **NO REGRESSION** — `make focused`,\n    exit code 0: all steps passed'; stamp "$(git -C "$work" write-tree)"
+  arm "a wrapped successful claim with the matching stamp passes" 0 ""
+  fresh; cite $'  - [x] **NO REGRESSION** — `make focused`,\n    exit code 0: all steps passed'; stamp "$(git -C "$work" write-tree)"
+  printf 'fn main() { let _ = 1; }\n' > "$work/src/main.rs"; git -C "$work" add -A
+  arm "a wrapped successful claim with another tree's stamp is refused" 1 "no passing run of the focused tier stamped it"
+  fresh; cite '  Plan: run `make focused` before committing.'
+  arm "a future focused plan does not claim a passing run" 0 ""
+  fresh; cite '  Evidence: `make focused`, exit code 20: unavailable step, incomplete.'
+  arm "an incomplete focused run does not claim a pass" 0 ""
+  fresh; cite '  Evidence: `make focused`, exit code 1: tests failed.'
+  arm "a failed focused run does not claim a pass" 0 ""
+  fresh; cite '  Evidence: `make focused`, exit code 01: tests failed.'
+  arm "a longer nonzero exit code is not a successful zero" 0 ""
+  fresh; cite
+  local line
+  for ((line=0; line<4096; line++)); do
+    printf '  Extra staged text line %s keeps the pipe open beyond its buffer.\n' "$line"
+  done >> "$work/docs/tasks/T.md"
+  git -C "$work" add -A
+  arm "a successful claim before a large diff still requires its stamp" 1 "no passing run of the focused tier stamped it"
+  stamp "$(git -C "$work" write-tree)"
+  arm "a successful claim before a large diff accepts its matching stamp" 0 ""
+  fresh; cite $'  Evidence: `make focused`,\n    exit code 20: incomplete.'
+  arm "a wrapped incomplete run does not claim a pass" 0 ""
+  fresh; cite '  Plan: run `make focused`,'
+  printf '  exit code 0: another command in another file.\n' > "$work/docs/tasks/U.md"; git -C "$work" add -A
+  arm "another file's exit cannot complete a focused claim" 0 ""
   rm -rf "$work"
   echo "untracked-code self-test: $ok pass / $((arms - ok)) fail ($arms arms)"
   [ "$ok" -eq "$arms" ]

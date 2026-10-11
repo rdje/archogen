@@ -350,8 +350,8 @@ a change that leaves it stale, so it is never edited by hand.
 - **RAM** — [definition](glossary.md), [Where generated systems run](targets.md)
 - **README** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md), [Verifying
   the toolchain](verification.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
-- **RED** — [definition](glossary.md), [Verifying the toolchain](verification.md), [Annex B: The checks that keep the
-  repository honest](annex-repository.md)
+- **RED** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md), [Verifying the
+  toolchain](verification.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
 - Refusal is a feature — [The supported profile](profile.md#refusal-is-a-feature)
 - Refused by name — [Checking a description](checking.md#refused-by-name)
 - **release** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a

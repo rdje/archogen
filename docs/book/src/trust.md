@@ -569,7 +569,7 @@ Measured `2026-10-11`, `.9.1`: four environment-configuration survivors gain nam
 
 Measured `2026-10-11`, `.9.2`: public inventory collapses a marker-bearing value with separate records before repair; the regression passes afterward. Comparison keys now contain deterministic JSON `[command_tokens, environment_records]`, e.g. `[["--crate-name","common"],["CARGO_PKG_DESCRIPTION=alpha env-dep:omega"]]`. Arrays/escaping preserve boundaries, order and empty values; per-program raw arrays retain their shapes. Native reversal of only the key body gains the named public kill and restores all 990 original inputs. Domain controls and focused gates pass. This changes configuration digests: Linux proposal compatibility is owned in `M3.6.3.2.1.1`, pending a runner whose base checker includes the repair and normal proposal review. The reproducer changes content too; it establishes a configuration-field defect, not a complete-gate bypass.
 
-The focused-stamp gate currently misses successful exit-code wording; `.9.5` owns its repair next. This commit independently matches the staged tree with its real passing stamp.
+The [focused-stamp guard](annex-repository.md#a-commit-holds-what-was-run) now holds explicit successful-exit claims and large diffs; `.9.5` records its RED controls and repair.
 
 Timeout and unjudged results remain failures. Full adequacy and independent review stay open.
 Recorded native killing names remain accessible through the original `docs/tasks/M3.md` leaf stubs, which now
