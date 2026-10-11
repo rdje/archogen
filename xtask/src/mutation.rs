@@ -30,6 +30,10 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, ExitStatus, Stdio};
 use std::time::{Duration, Instant};
 
+#[cfg(test)]
+#[path = "trust_adequacy_tests.rs"]
+mod adequacy_tests;
+
 /// One catalog entry.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Mutation {

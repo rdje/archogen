@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — exact parent twins are bound to the reviewed source census
+
+`ARCHOGEN-M3-0640` (leaf `M3.6.9.4.2.1`), `2026-10-11`.
+
+- Add all 32 expected-killed parent twins, preserving each route's file/from/to exactly and using only the three
+  parent filters with route tests skipped. A new test-only contract binds the reviewed identities, frozen finding
+  rows, population membership, exact commands/verdicts and twin source parity; it is outside both semantic populations.
+- Validation: positive native contract fails for the missing parent population before additions, then three
+  contracts pass. Independent falsifications reject census/source/population/verdict/command/parity drift for
+  the intended reason. A compiled parity-guard regression yields a named strict kill and restores bytes exactly.
+  Focused tier, final same-tree stamp and pinned book/index/staged gates required.
+- These results establish catalogue contracts; initial exact mutation outcomes remain the next slice, then
+  operator measurements and parent strengthening. Expected parent kills remain the final criterion. Accepted
+  design/book/toolbox, task/logs and current resume/frontier snapshots agree.
+
 ## archogen — shared transitive build reads retain every generator attribution
 
 `ARCHOGEN-M3-0639` (leaf `M3.6.9.4.1.3`), `2026-10-11`.

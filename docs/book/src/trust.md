@@ -460,7 +460,16 @@ mutations is killed by a named finishing route test. Build-read controls (`M3.6.
 reaching a shared dependency through another package: plain reads pass; marked and declared reads refuse with
 both generators named. Naming the first alone still refuses but loses attribution; dropping transitive units
 admits the marked dependency in the native fixture. Both exact mutations produce named finishing kills.
-All nine route additions are built. Parent twins, census/parity controls and production adequacy measurements
-remain pending; parent tests have not yet been strengthened.
+All nine route additions are built. `M3.6.9.4.2.1` adds the 32 exact parent twins, each retaining the expected
+killed criterion. The catalogue contract reads the design's census and frozen finding rows, holding exact
+population membership, commands/verdicts and each twin's file/from/to identity. Independent falsifications
+and a named compiled guard mutation hold those checks. Run the contract with:
+
+```bash
+cargo test -p xtask mutation::adequacy_tests
+```
+
+This verifies the catalogue, not semantic adequacy. Actual initial route/parent mutation outcomes and production
+operator measurements remain pending; parent semantic tests have not yet been strengthened.
 The package the verifier
 reads is fixed provisionally until `M4.7` writes real ones.

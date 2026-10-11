@@ -238,8 +238,12 @@ harness. New route controls are necessary for the previously unheld cases; their
 and the 23 pre-existing entries remain. Native controls also hold shared transitive build reads for two generators,
 plain versus marked/declared, retaining every attribution. The exact transitive-unit mutant admits the marked
 dependency in that fixture; the first-generator mutant still refuses it but loses the second attribution.
-The census/parity test, parent twins and operator measurements remain pending; parent fixtures have not been
-strengthened. The table distinguishes entries already present at design acceptance from those added in `.4.1`.
+`M3.6.9.4.2.1` builds all 32 expected-killed parent twins and the census/source-reference/population/parity
+contracts in `xtask/src/trust_adequacy_tests.rs`. Independent falsifications hold missing/extra/duplicate entries,
+source references/files, exact commands/verdicts and source-block parity; a compiled guard mutation is killed.
+This test-only module belongs to neither semantic population. Actual initial route/parent mutation outcomes
+remain `.4.2.2`; operator measurements remain `.9.5` and parent strengthening `.9.6`. The table distinguishes
+entries already present at design acceptance from those added in `.4.1`.
 
 ## Why
 

@@ -4794,3 +4794,464 @@ to
                                     }
                                     for f in &u.files {
 end
+
+mutation parent-the-first-generator-alone
+file xtask/src/trust.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-the-first-generator-alone; final criterion stays killed. M3.6.8: the first generator alone — found held one way by M3.6.6.4's review round 9; the route tests hold it.
+from
+            for file in &g.generators {
+                // What another role holds
+to
+            for file in g.generators.iter().take(1) {
+                // What another role holds
+end
+
+mutation parent-the-last-generator-alone
+file xtask/src/trust.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-the-last-generator-alone; final criterion stays killed. M3.6.8: the last generator alone — found held one way by M3.6.6.4's review round 9; the route tests hold it.
+from
+            for file in &g.generators {
+                // What another role holds
+to
+            for file in g.generators.iter().rev().take(1) {
+                // What another role holds
+end
+
+mutation parent-the-first-reader-alone
+file xtask/src/trust.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-the-first-reader-alone; final criterion stays killed. M3.6.8: the first reader alone — found held one way by M3.6.6.4's review round 9; the route tests hold it.
+from
+                .filter(|p| reads[&p.name].contains(&g.path))
+                .collect();
+            for file in &g.generators {
+to
+                .filter(|p| reads[&p.name].contains(&g.path))
+                .take(1)
+                .collect();
+            for file in &g.generators {
+end
+
+mutation parent-the-last-reader-alone
+file xtask/src/trust.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-the-last-reader-alone; final criterion stays killed. M3.6.8: the last reader alone — found held one way by M3.6.6.4's review round 9; the route tests hold it.
+from
+                .filter(|p| reads[&p.name].contains(&g.path))
+                .collect();
+            for file in &g.generators {
+to
+                .filter(|p| reads[&p.name].contains(&g.path))
+                .collect::<Vec<_>>()
+                .into_iter()
+                .rev()
+                .take(1)
+                .collect();
+            for file in &g.generators {
+end
+
+mutation parent-a-program-target-judged-for-its-first-reader-alone
+file xtask/src/trust.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-a-program-target-judged-for-its-first-reader-alone; final criterion stays killed. M3.6.8: a program target judged for its first reader alone — found held one way by M3.6.6.4's review round 9; the route tests hold it.
+from
+                    let refused_here = foreign(&held);
+to
+                    let refused_here: Vec<_> = foreign(&held).into_iter().take(1).filter(|(r, _, _)| Some(r) == readers.first().map(|p| &p.name)).collect();
+end
+
+mutation parent-a-program-target-judged-for-its-last-reader-alone
+file xtask/src/trust.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-a-program-target-judged-for-its-last-reader-alone; final criterion stays killed. M3.6.8: a program target judged for its last reader alone — found held one way by M3.6.6.4's review round 9; the route tests hold it.
+from
+                    let refused_here = foreign(&held);
+to
+                    let refused_here: Vec<_> = foreign(&held).into_iter().filter(|(r, _, _)| Some(r) == readers.last().map(|p| &p.name)).collect();
+end
+
+mutation parent-chain-and-blob-rules-on-each-clause-s-first-entry-alone
+file xtask/src/trust_generated.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-chain-and-blob-rules-on-each-clause-s-first-entry-alone; final criterion stays killed. M3.6.8: chain and blob rules on each clause's first entry alone — found held one way by M3.6.6.4's review round 10; the route tests hold it.
+from
+        for g in live {
+            for (role, files) in [("generator", &g.generators), ("input", &g.inputs)] {
+                for f in files {
+to
+        for g in live {
+            for (role, files) in [("generator", &g.generators), ("input", &g.inputs)] {
+                for f in files.iter().take(1) {
+end
+
+mutation parent-chain-and-blob-rules-on-each-clause-s-last-entry-alone
+file xtask/src/trust_generated.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-chain-and-blob-rules-on-each-clause-s-last-entry-alone; final criterion stays killed. M3.6.8: chain and blob rules on each clause's last entry alone — found held one way by M3.6.6.4's review round 10; the route tests hold it.
+from
+        for g in live {
+            for (role, files) in [("generator", &g.generators), ("input", &g.inputs)] {
+                for f in files {
+to
+        for g in live {
+            for (role, files) in [("generator", &g.generators), ("input", &g.inputs)] {
+                for f in files.iter().rev().take(1) {
+end
+
+mutation parent-both-clauses-the-first-input-alone
+file xtask/src/trust_generated.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-both-clauses-the-first-input-alone; final criterion stays killed. M3.6.8: both clauses: the first input alone — found held one way by M3.6.6.4's review round 10; the route tests hold it.
+from
+    .filter(|g| f.inputs.contains(g))
+to
+    .filter(|g| f.inputs.first() == Some(*g))
+end
+
+mutation parent-both-clauses-the-last-input-alone
+file xtask/src/trust_generated.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-both-clauses-the-last-input-alone; final criterion stays killed. M3.6.8: both clauses: the last input alone — found held one way by M3.6.6.4's review round 10; the route tests hold it.
+from
+    .filter(|g| f.inputs.contains(g))
+to
+    .filter(|g| f.inputs.last() == Some(*g))
+end
+
+mutation parent-both-clauses-the-last-generator-alone
+file xtask/src/trust_generated.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-both-clauses-the-last-generator-alone; final criterion stays killed. M3.6.8: both clauses: the last generator alone — found held one way by M3.6.6.4's review round 10; the route tests hold it.
+from
+                .generators
+                .iter()
+                .filter(|g| f.inputs.contains(g))
+to
+                .generators
+                .iter()
+                .rev()
+                .take(1)
+                .filter(|g| f.inputs.contains(g))
+end
+
+mutation parent-a-program-target-judged-when-first-alone
+file xtask/src/trust.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-a-program-target-judged-when-first-alone; final criterion stays killed. M3.6.8: a program target judged when first alone — found held one way by M3.6.6.4's review round 11; the route tests hold it.
+from
+                if let Some(owned) = program_roots.get(file) {
+
+to
+                if let Some(owned) = program_roots.get(file) {
+                    if g.generators.first() != Some(file) { continue; }
+
+end
+
+mutation parent-a-program-target-judged-when-last-alone
+file xtask/src/trust.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-a-program-target-judged-when-last-alone; final criterion stays killed. M3.6.8: a program target judged when last alone — found held one way by M3.6.6.4's review round 11; the route tests hold it.
+from
+                if let Some(owned) = program_roots.get(file) {
+
+to
+                if let Some(owned) = program_roots.get(file) {
+                    if g.generators.last() != Some(file) { continue; }
+
+end
+
+mutation parent-a-program-target-built-when-first-alone
+file xtask/src/trust.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-a-program-target-built-when-first-alone; final criterion stays killed. M3.6.8: a program target built when first alone — found held one way by M3.6.6.4's review round 11; the route tests hold it.
+from
+                    for (pkg, kind, name) in owned {
+
+to
+                    if g.generators.first() != Some(file) { continue; }
+                    for (pkg, kind, name) in owned {
+
+end
+
+mutation parent-a-program-target-built-when-last-alone
+file xtask/src/trust.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-a-program-target-built-when-last-alone; final criterion stays killed. M3.6.8: a program target built when last alone — found held one way by M3.6.6.4's review round 11; the route tests hold it.
+from
+                    for (pkg, kind, name) in owned {
+
+to
+                    if g.generators.last() != Some(file) { continue; }
+                    for (pkg, kind, name) in owned {
+
+end
+
+mutation parent-a-lone-rs-refused-when-first-alone
+file xtask/src/trust.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-a-lone-rs-refused-when-first-alone; final criterion stays killed. M3.6.8: a lone .rs refused when first alone — found held one way by M3.6.6.4's review round 11; the route tests hold it.
+from
+                } else if std::path::Path::new(file)
+                    .extension()
+                    .is_some_and(|e| e == "rs")
+                {
+to
+                } else if std::path::Path::new(file)
+                    .extension()
+                    .is_some_and(|e| e == "rs") && g.generators.first() == Some(file)
+                {
+end
+
+mutation parent-a-lone-rs-refused-when-last-alone
+file xtask/src/trust.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-a-lone-rs-refused-when-last-alone; final criterion stays killed. M3.6.8: a lone .rs refused when last alone — found held one way by M3.6.6.4's review round 11; the route tests hold it.
+from
+                } else if std::path::Path::new(file)
+                    .extension()
+                    .is_some_and(|e| e == "rs")
+                {
+to
+                } else if std::path::Path::new(file)
+                    .extension()
+                    .is_some_and(|e| e == "rs") && g.generators.last() == Some(file)
+                {
+end
+
+mutation parent-a-middle-script-never-judged
+file xtask/src/trust.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-a-middle-script-never-judged; final criterion stays killed. M3.6.8: a middle script never judged — found held one way by M3.6.6.4's review round 12; the route tests hold it.
+from
+            for file in &g.generators {
+                // What another role holds
+to
+            for file in &g.generators {
+                if !file.ends_with(".rs") && g.generators.first() != Some(file) && g.generators.last() != Some(file) { continue; }
+                // What another role holds
+end
+
+mutation parent-a-middle-reader-never-judged
+file xtask/src/trust.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-a-middle-reader-never-judged; final criterion stays killed. M3.6.8: a middle reader never judged — found held one way by M3.6.6.4's review round 12; the route tests hold it.
+from
+                .filter(|p| reads[&p.name].contains(&g.path))
+                .collect();
+            for file in &g.generators {
+to
+                .filter(|p| reads[&p.name].contains(&g.path))
+                .collect::<Vec<_>>();
+            let readers: Vec<&Program> = readers.iter().enumerate().filter(|(i, _)| *i == 0 || *i + 1 == readers.len()).map(|(_, p)| *p).collect();
+            for file in &g.generators {
+end
+
+mutation parent-a-middle-input-never-reached
+file xtask/src/trust_generated.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-a-middle-input-never-reached; final criterion stays killed. M3.6.8: a middle input never reached — found held one way by M3.6.6.4's review round 12; the route tests hold it.
+from
+        for g in live.iter().filter(|g| reads.contains(&g.path)) {
+            for (role, files) in [("generator", &g.generators), ("input", &g.inputs)] {
+                for f in files {
+to
+        for g in live.iter().filter(|g| reads.contains(&g.path)) {
+            for (role, files) in [("generator", &g.generators), ("input", &g.inputs)] {
+                for (k, f) in files.iter().enumerate() {
+                    if role == "input" && k != 0 && k + 1 != files.len() { continue; }
+end
+
+mutation parent-an-implementation-reader-never-judged
+file xtask/src/trust.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-an-implementation-reader-never-judged; final criterion stays killed. M3.6.8: an implementation reader never judged — found held one way by M3.6.6.4's review round 13; the route tests hold it.
+from
+                    for p in &readers {
+
+to
+                    for p in &readers {
+                        if p.role == "implementation" { continue; }
+
+end
+
+mutation parent-a-marked-build-read-dropped-beside-other-generators
+file xtask/src/trust.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-a-marked-build-read-dropped-beside-other-generators; final criterion stays killed. M3.6.8: a marked build-read dropped beside other generators — found held one way by M3.6.6.4's review round 13; the route tests hold it.
+from
+            } else if marked(f) {
+                "its header marks it generated"
+to
+            } else if marked(f) && generators.len() > 1 && false {
+                "its header marks it generated"
+            } else if marked(f) && !live.iter().any(|g| g.generators.len() > 1 && g.generators.iter().any(|x| generators.contains(x))) {
+                "its header marks it generated"
+end
+
+mutation parent-only-a-form-s-first-input-reached
+file xtask/src/trust_generated.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-only-a-form-s-first-input-reached; final criterion stays killed. M3.6.8: only a form's first input reached — found held one way by M3.6.6.4's review round 9; the route tests hold it.
+from
+        for g in live.iter().filter(|g| reads.contains(&g.path)) {
+            for (role, files) in [("generator", &g.generators), ("input", &g.inputs)] {
+                for f in files {
+to
+        for g in live.iter().filter(|g| reads.contains(&g.path)) {
+            for (role, files) in [("generator", &g.generators), ("input", &g.inputs)] {
+                for f in files.iter().take(if role == "input" { 1 } else { usize::MAX }) {
+end
+
+mutation parent-an-input-reached-through-a-link
+file xtask/src/trust_generated.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-an-input-reached-through-a-link; final criterion stays killed. M3.6.9.4.1.1: census R23-R2; a live input link keeps its specific symbolic-link refusal. Skipping this branch still refuses it as no blob, a diagnostic regression rather than changed acceptance.
+from
+                    if symlinks.contains(f) {
+to
+                    if role != "input" && symlinks.contains(f) {
+end
+
+mutation parent-held-judged-for-the-first-alone
+file xtask/src/trust.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-held-judged-for-the-first-alone; final criterion stays killed. M3.6.9.4.1.2: census R18-R1; a program-target generator is judged against every role package its build holds, including a foreign package after an allowed one.
+from
+                        for pkg in held {
+to
+                        for pkg in held.iter().take(1) {
+end
+
+mutation parent-a-harness-never-judged-against-a-program-target
+file xtask/src/trust.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-a-harness-never-judged-against-a-program-target; final criterion stays killed. M3.6.9.4.1.2: census R13-D2 and R14-D4; a harness reader must be judged against a program-target generator, while the script branch is unchanged.
+from
+                        .filter(|pkg| all_role_packages.contains(pkg))
+                        .collect();
+                    let refused_here = foreign(&held);
+to
+                        .filter(|pkg| all_role_packages.contains(pkg))
+                        .collect();
+                    let refused_here: Vec<_> = foreign(&held).into_iter().filter(|(reader, _, _)| !roots.programs.iter().any(|p| p.name == *reader && p.pair.is_some())).collect();
+end
+
+mutation parent-the-last-live-form-alone
+file xtask/src/trust_generated.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-the-last-live-form-alone; final criterion stays killed. M3.6.9.4.1.1: census R14-D3; every live form contributes provenance, not only the last form whose declared file a program reads.
+from
+            .filter(|g| reads.values().any(|r| r.contains(&g.path)))
+            .collect()
+to
+            .filter(|g| reads.values().any(|r| r.contains(&g.path)))
+            .rev().take(1)
+            .collect()
+end
+
+mutation parent-a-harness-judged-by-its-first-role-alone
+file xtask/src/trust.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-a-harness-judged-by-its-first-role-alone; final criterion stays killed. M3.6.9.4.1.2: census R18-R2; a harness may use either member of its pair's roles, including the second role.
+from
+                    .filter(|r| r.name == *x || r.name == *y)
+to
+                    .filter(|r| r.name == *x)
+end
+
+mutation parent-a-data-reader-never-judged
+file xtask/src/trust.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-a-data-reader-never-judged; final criterion stays killed. M3.6.9.4.1.2: census R16-R3 and R18-R3; handing a generated file to a reader as runtime data still requires judging its generators against that reader.
+from
+                .filter(|p| reads[&p.name].contains(&g.path))
+to
+                .filter(|p| reads[&p.name].contains(&g.path) && !p.data.contains(&g.path))
+end
+
+mutation parent-a-build-read-naming-its-first-generator-alone
+file xtask/src/trust.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-a-build-read-naming-its-first-generator-alone; final criterion stays killed. M3.6.9.4.1.3: census R18-R4; every generator whose build reads a generated file is named in its chain refusal. Naming only the first still refuses the chain but loses diagnostic attribution.
+from
+            for g in generators {
+to
+            for g in generators.iter().take(1) {
+end
+
+mutation parent-a-middle-generator-never-reached
+file xtask/src/trust_generated.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-a-middle-generator-never-reached; final criterion stays killed. M3.6.9.4.1.1: census R13-D4; a middle generator is retained in provenance just like both endpoints, while input iteration is unchanged.
+from
+                for f in files {
+                    let p = out.entry(f.clone()).or_default();
+to
+                for (index, f) in files.iter().enumerate() {
+                    if role == "generator" && index != 0 && index != files.len() - 1 {
+                        continue;
+                    }
+                    let p = out.entry(f.clone()).or_default();
+end
+
+mutation parent-a-transitive-generator-build-read-dropped
+file xtask/src/trust.rs
+test -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+expect killed
+why M3.6.9.4.2.1: parent-only twin of route-a-transitive-generator-build-read-dropped; final criterion stays killed. M3.6.9.4.1.3: census R6-D1 and R10-D2; the successful generator build retains units reached transitively, leaving own/direct reads and the root-reuse branch unchanged.
+from
+                            Ok((units, _)) => {
+                                for u in &units {
+                                    for f in &u.files {
+to
+                            Ok((units, _)) => {
+                                for u in &units {
+                                    if u.package != *pkg && !graph.iter().any(|(from, to, _)| from == pkg && to == &u.package) {
+                                        continue;
+                                    }
+                                    for f in &u.files {
+end
+
+mutation adequacy-twin-replacement-drift-ignored
+file xtask/src/trust_adequacy_tests.rs
+test -p xtask mutation::adequacy_tests
+expect killed
+why M3.6.9.4.2.1: the census guard must reject a parent's changed original or replacement even when its file and population are correct.
+from
+            if route.file != parent.file || route.from != parent.from || route.to != parent.to {
+to
+            if route.file != parent.file {
+end
