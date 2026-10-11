@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — reader and role route controls kill four previously surviving omissions
+
+`ARCHOGEN-M3-0638` (leaf `M3.6.9.4.1.2`), `2026-10-11`.
+
+- Add the exact held-first, harness-target-reader, harness-second-role and data-reader route entries. All four
+  initially survive. Three native fixtures hold an allowed first held package followed by a foreign package,
+  both harness pair roles and foreign script/executable generators, and generated runtime-data readers.
+- Validation: three new tests pass; all four exact compiled entries produce named strict kills and restore bytes
+  exactly. Initial no-change fixture commit and library-target choice corrected against native failure and §5's
+  executable-target contract. Census confirms 30 unique specified route entries of 32, with build-read additions
+  next. Focused tier, final same-tree stamp and pinned book/index/staged gates required.
+- Product rules and parent fixtures are unchanged; no parent/operator adequacy claim. Accepted design/book,
+  task/logs and current resume/frontier snapshots align.
+
 ## archogen — source and provenance route controls hold three exact catalogue entries
 
 `ARCHOGEN-M3-0637` (leaf `M3.6.9.4.1.1.1`), `2026-10-11`.

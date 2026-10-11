@@ -4717,3 +4717,51 @@ to
                     }
                     let p = out.entry(f.clone()).or_default();
 end
+
+mutation route-held-judged-for-the-first-alone
+file xtask/src/trust.rs
+test -p xtask route_tests
+expect killed
+why M3.6.9.4.1.2: census R18-R1; a program-target generator is judged against every role package its build holds, including a foreign package after an allowed one.
+from
+                        for pkg in held {
+to
+                        for pkg in held.iter().take(1) {
+end
+
+mutation route-a-harness-never-judged-against-a-program-target
+file xtask/src/trust.rs
+test -p xtask route_tests
+expect killed
+why M3.6.9.4.1.2: census R13-D2 and R14-D4; a harness reader must be judged against a program-target generator, while the script branch is unchanged.
+from
+                        .filter(|pkg| all_role_packages.contains(pkg))
+                        .collect();
+                    let refused_here = foreign(&held);
+to
+                        .filter(|pkg| all_role_packages.contains(pkg))
+                        .collect();
+                    let refused_here: Vec<_> = foreign(&held).into_iter().filter(|(reader, _, _)| !roots.programs.iter().any(|p| p.name == *reader && p.pair.is_some())).collect();
+end
+
+mutation route-a-harness-judged-by-its-first-role-alone
+file xtask/src/trust.rs
+test -p xtask route_tests
+expect killed
+why M3.6.9.4.1.2: census R18-R2; a harness may use either member of its pair's roles, including the second role.
+from
+                    .filter(|r| r.name == *x || r.name == *y)
+to
+                    .filter(|r| r.name == *x)
+end
+
+mutation route-a-data-reader-never-judged
+file xtask/src/trust.rs
+test -p xtask route_tests
+expect killed
+why M3.6.9.4.1.2: census R16-R3 and R18-R3; handing a generated file to a reader as runtime data still requires judging its generators against that reader.
+from
+                .filter(|p| reads[&p.name].contains(&g.path))
+to
+                .filter(|p| reads[&p.name].contains(&g.path) && !p.data.contains(&g.path))
+end

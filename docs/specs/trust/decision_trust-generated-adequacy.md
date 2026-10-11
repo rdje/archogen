@@ -230,6 +230,11 @@ unchanged context to select the named occurrence, and are checked against the co
 The catalogue table test checks the recorded source references and all existing/new suffixes, and refuses a missing,
 extra or unmatched twin. Exact entries still must compile, land once and restore byte for byte under the existing
 harness. New route controls are necessary for the previously unheld cases; their kills are measured, not presumed.
+`M3.6.9.4.1.1` builds the three source/provenance additions; `.4.1.2` builds the four reader/role additions.
+Their exact route mutations have named finishing kills. Native controls cover every held role package, both
+harness pair roles and foreign script/target generators, and readers handed generated runtime data. The two
+build-read additions, census/parity test, parent twins and operator measurements remain pending; parent fixtures
+have not been strengthened.
 
 ## Why
 

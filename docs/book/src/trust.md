@@ -453,7 +453,10 @@ link retains its specific refusal, every live form contributes provenance, and m
 beside their inputs. Each exact catalogue mutation compiles and is killed by a named finishing route test.
 The input-link mutation changes the diagnostic alone: the original refuses a symbolic link, while the mutant still
 refuses it as no blob because the regular-file tree excludes symlinks. It does not show changed link acceptance.
-Reader/build route controls, parent twins and production adequacy measurements remain pending; parent tests have
-not yet been strengthened.
+The reader/role controls (`M3.6.9.4.1.2`) hold every role package a generator target's build reaches, including a
+foreign package after an allowed one; a harness may use both pair roles but refuses a third role's script or
+program target; and a reader handed generated runtime data still judges its generators. Each of the four exact
+mutations is killed by a named finishing route test. Build-read controls, parent twins and production adequacy
+measurements remain pending; parent tests have not yet been strengthened.
 The package the verifier
 reads is fixed provisionally until `M4.7` writes real ones.
