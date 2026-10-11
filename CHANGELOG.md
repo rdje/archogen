@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — primary review links keep authority across destinations and titles
+
+`ARCHOGEN-PROGRAM-0615` (leaf `PROGRAM.69`), `2026-10-11`.
+
+- Round 33 found ordinary angle-destination/title links skipped for no record or a secondary explanation. The
+  reader now locates the first unescaped balanced label, supports explicit bare/angle destinations and optional
+  titles, and refuses unsupported first syntax in both file cells. Literal path treatment and the bracket-free
+  no-file boundary are explicit; counted pairs remain authoritative.
+- Validation: 35 tracked controls, 96 pass / 30 fail before repair, then 126 pass / 0 fail. The original five shell
+  cases now refuse the primary table; selecting a later link fails 33 arms and omitting unsupported-first refusal
+  fails six. An initial syntax-error mutant is excluded. Producers are untracked, not durable enforcement; the
+  regression arms are tracked. Shell syntax, final staged count/history/book/doctrine checks before commit.
+  Record, review history, book and resume pointers agree on round 33's answer and round 34 next.
+
 ## archogen — parent-test criterion gains a source-linked census and complete production scope
 
 `ARCHOGEN-M3-0614` (leaf `M3.6.9`), `2026-10-11`.

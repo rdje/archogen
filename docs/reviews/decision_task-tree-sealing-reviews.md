@@ -678,6 +678,28 @@ mutation replacing path-byte equality with glob matching gives 89 pass / 2 fail:
 | — | found while verifying | a present bracketed filename did not distinguish literal querying from Git's exact-spelling fallback | the mutation survived 89 arms; added an absent bracketed path beside a different staged glob match, so replacing the exact comparison with glob matching must fail that control |
 | — | found while verifying | `GIT_LITERAL_PATHSPECS=1` disabled the first draft's `:(literal)` magic and falsely proved a present path absent | the environment control failed first (90/1 of 91); list the index without a pathspec and compare complete path bytes |
 
+**Round 33**, `2026-10-11`, of committed `12e4336`, an independent read-only context new to the answer. One P2
+defect: angle-destination/title primary links were skipped, selecting no record or a secondary explanation and
+hiding an unlisted open review's round table. Four false greens and a refusing bare-link control reproduced through
+the pinned full shell and extracted helper. The staged-read repair passed 138 evaluations within the unambiguous
+bare-link contract; the runners made 155 checker invocations in total (100 shell, 55 core), plus five helper checks.
+Twelve broader-form evaluations include four false greens and eight refusals, which do not establish full Markdown
+support. The task-history core agreed with 16 384 synthetic unit/oracle comparisons and five historical-read branch
+controls. No real sealed case/history body, new repository, compiler or shared suite was used. The report and
+producers under `target/review-p69-r33/` are untracked, not durable regression enforcement.
+
+The answer's 35 new tracked arms gave 96 pass / 30 fail (126 arms) before repair, then 126 pass / 0 fail. They hold
+three destination spellings by four title spellings by two primary-table states, both history-link controls, six
+unsupported-first refusals and three label/no-link boundaries. The original five shell counterexamples now all
+refuse the unlisted primary table, without reading a secondary explanation. Valid mutations selecting the last
+recognized link and omitting unsupported-syntax refusal give 93/33 and 120/6 respectively. Those throwaway mutation
+producers are untracked; the arms they falsify are tracked.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R33-D1 | defect | the bare-destination regex skipped an ordinary first link with an angle destination or title, silently passing its unlisted round table or selecting a secondary explanation | locate the first unescaped bracketed label, support the explicit inline destination/title grammar in both file cells, and refuse unsupported first syntax before later links; paths remain literal and counted pairs authoritative |
+| — | found while verifying | the first secondary-selection mutation had a Python syntax error and failed every arm without exercising the selection rule | excluded as invalid evidence; the corrected producer parses its embedded Python before execution and fails 33 of 126 arms; the repaired reader's final rerun passes all 126 |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.

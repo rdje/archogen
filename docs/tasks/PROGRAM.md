@@ -659,10 +659,28 @@ mdBook that is the director's window into the project.
   escaped-pipe reader as index and findings cells, so later counts remain visible. Round 31 answered: an unlisted
   row names its record by the first link; secondary explanations do not change its counting obligation. Round 32
   answered: failed staged reads require a successful index census and exact path comparison before any disk
-  fallback; a present unreadable entry or failed proof refuses. Ten new controls, all 91 arms pass. Round 33 reported
-  one P2 defect: angle-destination/title primary links can be skipped for a later link or no record. Owned here,
-  scheduled immediately after `M3.6.9`'s round-2 documentation answer; report `target/review-p69-r33/report.txt`
-  (untracked), the parent reproduction and durable regression repair next. The staged-read repair passed its probes.
+  fallback; a present unreadable entry or failed proof refuses. Round 33 answered: the first unescaped bracketed
+  label retains file authority with bare/angle destinations and optional titles; unsupported first syntax refuses
+  before any secondary link can substitute. Thirty regressions failed first; all 126 arms pass. Round 34 next.
+  **Acceptance checklist, round 33:**
+  - [x] **REPRODUCE / ISSUE** — the 35 new tracked controls beside the committed reader give
+    `96 pass / 30 fail (126 arms)`; the independent report is `target/review-p69-r33/report.txt` (untracked).
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `scripts/check_review_counts.sh`, `LINK` and `linked`: the regex recognized
+    only a whitespace-free bare destination ending immediately at `)`, and `LINK.search` skipped a first link it
+    could not parse. The pre-repair suite gives `96 pass / 30 fail (126 arms)`; the pinned independent shell reads
+    no primary record for angle/title links, or reads only the secondary explanation, and falsely exits 0.
+  - [x] **FIX** — parse the first unescaped balanced label and its explicit inline destination/title grammar;
+    refuse unsupported first syntax, including reference/shortcut links; validate both file cells before counting.
+    Paths remain literal without decoding; a bracket-free cell names no file; counted pairs remain authoritative.
+  - [x] **ADDRESSED (verified)** — repaired suite `126 pass / 0 fail (126 arms)`; all five original shell cases
+    refuse the primary table and read no explanation. Selecting the last supported link gives `93 pass / 33 fail`;
+    omitting unsupported-first refusal gives `120 pass / 6 fail`, both of 126. The first selection mutant's syntax
+    error is invalid evidence, excluded; the corrected producer parses the Python core before running it.
+  - [x] **NO REGRESSION** — `bash scripts/check_review_counts.sh --self-test` → `126 pass / 0 fail (126 arms)`,
+    including all earlier 91 arms. Shell syntax clean; final staged counts OK (2 reviews / 35 rounds), history OK
+    (175 files / 335 stubs); book anchors 30 chapters / 4 normative documents, glossary 67 acronyms / 25 terms,
+    index 316 entries; stated-order OK. Task-acceptance and final doctrine checks run again in the commit hook.
+  - [x] **LOCKSTEP** — script contract, leaf, review history and summary, book, changelog and resume pointers.
   Goal: a closed subtree below an open top-level subtree is sealed too, so a tree whose top-level subtree stays open
   for long — on a blocked leaf, or a long feature — does not keep its finished leaves live.
   Reproduce / issue: `M3.6.6.2.1`'s commit was refused by `README-ROUTES`, *"docs/tasks/: 823457 bytes in total, over
@@ -905,7 +923,7 @@ mdBook that is the director's window into the project.
   `ARCHOGEN-PROGRAM-0598 (leaf PROGRAM.69)`, round 27; `ARCHOGEN-PROGRAM-0599 (leaf PROGRAM.69)`, the list in the index;
   `ARCHOGEN-PROGRAM-0602 (leaf PROGRAM.69)`, round 28; `ARCHOGEN-PROGRAM-0605 (leaf PROGRAM.69)`, round 29;
   `ARCHOGEN-PROGRAM-0606 (leaf PROGRAM.69)`, round 30; `ARCHOGEN-PROGRAM-0608 (leaf PROGRAM.69)`, round 31;
-  `ARCHOGEN-PROGRAM-0612 (leaf PROGRAM.69)`, round 32
+  `ARCHOGEN-PROGRAM-0612 (leaf PROGRAM.69)`, round 32; `ARCHOGEN-PROGRAM-0615 (leaf PROGRAM.69)`, round 33
 
 - ID: `PROGRAM.70`
   Status: `done` — started `2026-10-10`, decomposed into `.1`, the bytes, and `.2`, the count, closed the same day with `.2`
@@ -1519,7 +1537,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.69` | `active` | round 33 reported one primary-link syntax defect; repair next after the current M3 design-doc slice |
+| 1 | `PROGRAM.69` | `active` | round 33 answered; independent round 34 next |
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The second row waits on the director's yes. The pending leaves beside them —
@@ -1733,6 +1751,8 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 
 | `2026-10-11` | `PROGRAM.76` (round 15, closure) | independent pinned-reader review; real-tree guard; shell syntax; book anchors, glossary and index; final staged doctrine hook | zero defects or actionable arm gaps; 157 / 0 synthetic probes (151 repaired-reader checks plus six prior-reader controls), untracked evidence; real guard exit 0; syntax and book gates OK; checker unchanged |
 
+| `2026-10-11` | `PROGRAM.69` (round 33) | 35 primary-link controls before repair, then repaired suite; original shell reproducer; two valid selection/refusal mutations; syntax, final staged count/history, book and doctrine gates | 96 pass / 30 fail, then 126 pass / 0 fail; original five shell cases refuse the primary table; selection mutation 93/33, refusal mutation 120/6; initial syntax-error mutant excluded; staged counts 2 reviews / 35 rounds, history 175 files / 335 stubs; book anchors 30/4, glossary 67/25, index 316; syntax and stated-order OK; task-acceptance evidence completed after its first refusal; final doctrines in commit hook |
+
 ## Commit Log
 
 | Leaf | Commit subject or reference | Notes |
@@ -1939,6 +1959,8 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0612 (leaf PROGRAM.69)` | **review round 32 answered**: a failed staged read cannot substitute disk evidence unless independent index census and path-byte comparison prove absence; eight regressions failed first; ten new controls, including inherited Git settings and true absence beside a different glob match |
 
 | `PROGRAM.76` | `ARCHOGEN-PROGRAM-0613 (leaf PROGRAM.76)` | **closed after independent round 15**: zero defects or actionable arm gaps; 151 repaired-reader checks plus six prior-reader controls, untracked evidence; retained limits and filesystem skip explicit; checker unchanged |
+
+| `PROGRAM.69` | `ARCHOGEN-PROGRAM-0615 (leaf PROGRAM.69)` | **review round 33 answered**: first unescaped label preserves authority across bare/angle destinations and titles; unsupported first syntax refuses; 35 tracked controls, 30 failed first; all 126 pass; invalid mutation run excluded |
 
 ## Changelog
 

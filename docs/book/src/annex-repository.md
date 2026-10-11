@@ -277,7 +277,14 @@ header is refused. Every stated count is judged, including repeated statements o
 count cannot hide an incorrect second one. The same cell reader serves index, summary and findings tables: an
 escaped pipe inside a summary cell cannot hide a later count. The counted history/record pair names the record
 whose counts are held. For an unlisted row, its first Design record link selects the record whose round table
-decides whether it must be listed; later explanatory links do not change that obligation. Files are read from the
+decides whether it must be listed; later explanatory links do not change that obligation. In both file cells the
+first unescaped bracketed label must be a supported inline link. Labels may contain balanced brackets; destinations
+may be bare without spaces, parentheses or angle brackets, or enclosed in angle brackets with spaces/parentheses.
+An optional title uses double quotes, single quotes or non-nesting parentheses, separated by whitespace. For example,
+`[record](../decisions/a.md "title")` and `[record](<../decisions/a space.md>)` name their primary files. Paths are
+literal: Markdown escapes, entities and percent escapes are not decoded. Unsupported first syntax, including
+reference and shortcut links, refuses before any secondary link can substitute. A cell with no unescaped opening
+bracket names no file. This is the index's explicit metadata grammar. Files are read from the
 index. A failed staged read permits a disk fallback only after a successful index listing proves the exact path
 absent. Complete path bytes are compared directly, so inherited Git pathspec settings or filename wildcards cannot
 change that comparison. An unreadable present entry or failed proof refuses; disk cannot silently replace staged evidence.

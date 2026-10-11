@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # scripts/check_review_counts.sh — REVIEW-COUNTS: for each design review the reviews index lists as counted, the
 # record's count of what each round found, and the index's count of rounds, are its review history's (leaf `PROGRAM.69`,
-# review rounds 23 to 32).
+# review rounds 23 to 33).
 #
 # ⭐ WHY. A design record keeps one summary row per review round, with the count of what the round found, and the
 # round's own table in its review history lists each finding. The count was copied by hand, and the task-tree sealing
@@ -26,8 +26,12 @@
 # or an unreadable present staged entry refuses rather than substituting the disk copy (round 32):
 #   - in docs/reviews/INDEX.md, the counted list, and its four-column table headed Review history, Design record,
 #     Rounds, Status, through the first blank line; indentation and optional edge pipes accepted, escaped pipes kept
-#     inside a cell, every row required to have four cells, a cell's file named by its first link,
-#     `[…](<path>)`, backticks or none;
+#     inside a cell, every row required to have four cells. In each file cell the first unescaped bracketed label
+#     must be an inline file link: a balanced label (backticks permitted), a nonempty bare destination with no spaces,
+#     parentheses or angle brackets, or an angle-delimited destination (spaces/parentheses permitted), and an optional
+#     space-separated title in double quotes, single quotes or non-nesting parentheses. Paths are read literally,
+#     without Markdown/entity/percent decoding. Unsupported first bracketed syntax, including reference/shortcut
+#     links, refuses before a secondary link can substitute; a cell with no unescaped opening bracket names no file;
 #   - in a listed review's history, its ROUNDS — each line opening `**Round <n>**` — and each round's FINDINGS TABLE:
 #     the first table after its line and before the next round's, which must be headed exactly
 #     `| # | Kind | Finding | Answer |`, its next line a separator row of dashes, and its finding rows to the first line
@@ -153,7 +157,9 @@ def tally(kinds):
         "arm gap" if k.startswith("arm gap") else
         "remark" if k.startswith("remark") else k for k in kinds)
 index = read("docs/reviews/INDEX.md") or ""
-LINK = re.compile(r"\]\(([^)\s]+)\)")
+LINK = re.compile(
+    r"\]\([ \t]*(?:<(?P<angle>[^<>\r\n]+)>|(?P<bare>[^()\s<>]+))"
+    r"(?:[ \t]+(?:\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'|\((?:\\.|[^()\\])*\)))?[ \t]*\)")
 rows_of_index, table, after_head, seen_index = [], False, False, False
 for line in index.split("\n"):
     cells = cells_of(line)
@@ -180,9 +186,45 @@ if after_head:
     bad.append("docs/reviews/INDEX.md: its index table has no separator row under its header")
 if not seen_index:
     bad.append("docs/reviews/INDEX.md: no four-column index table header")
+link_cache = {}
 def linked(cell):
-    m = LINK.search(cell)
-    return os.path.normpath(os.path.join("docs/reviews", m.group(1))) if m else None
+    if cell in link_cache:
+        return link_cache[cell]
+    # Locate the first unescaped label, not the first destination spelling our grammar happens to recognize.
+    i = 0
+    while i < len(cell):
+        if cell[i] == "\\":
+            i += 2
+        elif cell[i] == "[":
+            break
+        else:
+            i += 1
+    if i >= len(cell):
+        link_cache[cell] = None
+        return None
+    depth, i = 1, i + 1
+    while i < len(cell) and depth:
+        if cell[i] == "\\":
+            i += 2
+            continue
+        if cell[i] == "[":
+            depth += 1
+        elif cell[i] == "]":
+            depth -= 1
+            if not depth:
+                break
+        i += 1
+    m = LINK.match(cell, i) if not depth else None
+    if m is None:
+        bad.append("docs/reviews/INDEX.md: unsupported first file-link syntax: %r" % cell[:60])
+        link_cache[cell] = None
+        return None
+    path = m.group("angle") or m.group("bare")
+    link_cache[cell] = os.path.normpath(os.path.join("docs/reviews", path))
+    return link_cache[cell]
+# Grammar applies to both file cells, including listed and closed rows; the counted pairs remain authoritative.
+for c in rows_of_index:
+    linked(c[0]); linked(c[1])
 LIST = "## Counted by `REVIEW-COUNTS`"
 pairs, inside = [], False
 for l in index.split("\n"):
@@ -486,6 +528,69 @@ self_test() {
   cp "$work/docs/decisions/b.md" "$work/docs/decisions/c.md"
   printf '# Explanation, no round table\n' > "$work/docs/decisions/explanation.md"; git -C "$work" add -A
   arm "the primary record's table is judged before secondary prose (R31 D1)" 1 "c-reviews.md: an open review whose record keeps a round table"
+  # Round 33: the first file link keeps authority across destination/title spellings. Unsupported first syntax
+  # refuses, never selecting a later explanatory link. Only synthetic fixture text is used.
+  c_cell() {
+    python3 - "$work/docs/reviews/INDEX.md" "$1" <<'PY_CELL'
+import pathlib, sys
+p = pathlib.Path(sys.argv[1])
+s = p.read_text()
+s = s.replace('| [`c-reviews.md`](c-reviews.md) | [`c.md`](../decisions/c.md) |',
+              '| [`c-reviews.md`](c-reviews.md) | ' + sys.argv[2] + ' |')
+p.write_text(s)
+PY_CELL
+  }
+  local destination title primary
+  for destination in '../decisions/c.md' '<../decisions/c.md>' '<../decisions/c space.md>'; do
+    for title in '' ' "primary title"' " 'primary title'" ' (primary title)'; do
+      for primary in table plain; do
+        world "$GOOD_A" "$GOOD_B"; open_c
+        if [ "$primary" = table ]; then
+          printf '# Explanation, no round table\n' > "$work/docs/decisions/explanation.md"
+        else
+          cp "$work/docs/decisions/c.md" "$work/docs/decisions/explanation.md"
+          printf '# C, no round table\n' > "$work/docs/decisions/c.md"
+        fi
+        cp "$work/docs/decisions/c.md" "$work/docs/decisions/c space.md"
+        c_cell "[c]($destination$title); see [explanation](../decisions/explanation.md)"
+        git -C "$work" add -A
+        if [ "$primary" = table ]; then
+          arm "the first $destination$title table requires counting before plain secondary prose (R33 D1)" 1 "c-reviews.md: an open review whose record keeps a round table"
+        else
+          arm "the first $destination$title plain record ignores a secondary table (R33 D1)" 0 "3 round(s) judged"
+        fi
+      done
+    done
+  done
+  world "$GOOD_A" "$GOOD_B" "${INDEX_A/](a-reviews.md)/](<a-reviews.md> \"primary title\")}"
+  arm "a listed history's angle destination and title identify its row (R33 D1)" 0 "3 round(s) judged"
+  world "$GOOD_A" "$GOOD_B"
+  mv "$work/docs/reviews/a-reviews.md" "$work/docs/reviews/a space-reviews.md"
+  python3 - "$work/docs/reviews/INDEX.md" <<'PY_HISTORY'
+import pathlib, sys
+p = pathlib.Path(sys.argv[1]); s = p.read_text()
+s = s.replace('](a-reviews.md)', '](<a space-reviews.md> "primary title")')
+s = s.replace('- `a-reviews.md` with ', '- `a space-reviews.md` with ')
+p.write_text(s)
+PY_HISTORY
+  git -C "$work" add -A
+  arm "a listed history's spaced angle destination agrees with the counted list (R33 D1)" 0 "3 round(s) judged"
+  for primary in '[c](../decisions/c(foo).md)' '[c](<../decisions/c.md)' \
+    '[c](../decisions/c.md unquoted-title)' '[c]()' '[c][primary]' '[c]'; do
+    world "$GOOD_A" "$GOOD_B"; open_c
+    printf '# Explanation, no round table\n' > "$work/docs/decisions/explanation.md"
+    c_cell "$primary; see [explanation](../decisions/explanation.md)"; git -C "$work" add -A
+    arm "unsupported first syntax $primary refuses instead of selecting the explanation (R33 D1)" 1 "unsupported first file-link syntax"
+  done
+  world "$GOOD_A" "$GOOD_B"; open_c
+  c_cell '[c [nested]](../decisions/c.md)'; git -C "$work" add -A
+  arm "a balanced nested label retains its primary destination (R33 D1)" 1 "c-reviews.md: an open review whose record keeps a round table"
+  world "$GOOD_A" "$GOOD_B"; open_c
+  c_cell '\[literal note] before [c](../decisions/c.md)'; git -C "$work" add -A
+  arm "an escaped opening bracket is prose before the first link (R33 D1)" 1 "c-reviews.md: an open review whose record keeps a round table"
+  world "$GOOD_A" "$GOOD_B"; open_c
+  c_cell 'a record described without a link'; git -C "$work" add -A
+  arm "a bracket-free record cell still names no file (R33 D1)" 0 "3 round(s) judged"
   # Round 32: a failed staged read is no proof that a path is absent from the index.
   local bin="$work/fault-bin" real_git
   real_git="$(type -P git)"; mkdir -p "$bin"
