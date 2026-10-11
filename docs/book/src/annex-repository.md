@@ -137,6 +137,33 @@ builds only with the pinned mdBook, because every `ledger.md#…` link depends o
 anchor. The day the Rust pin was set, `1.98.0` passed the same format check, lints and test suite, so a bump
 starts from evidence rather than from hope.
 
+## JSON used by the tooling
+
+The tooling's JSON reader serves Cargo metadata, build-message inventory inputs and the package verifier.
+`json::parse` returns a value tree or a diagnostic; unexpected-end and unterminated-string/escape errors
+omit a byte offset. `json::write` deterministically encodes that tree with ordered object keys and escaped
+strings. Their API documentation is attached to the corresponding functions (`.9.3`).
+
+Number reading follows [RFC 8259](ledger.md#rfc-8259) §6: an optional minus, an integer, then an optional
+fraction and exponent. Fractions and exponents require digits; leading zeros and missing delimiters are
+refused. The reader keeps the complete original spelling as text, without floating-point conversion:
+
+| Example input | Number behavior |
+| --- | --- |
+| `0`, `-0`, `12.50e+3` | accepted, spelling retained |
+| `1e400`, `123456789012345678901234567890.123456789` | accepted as text, without range/precision rounding |
+| `01`, `1.`, `1e+`, `1-2` | refused |
+| `[1e]`, `{"n":1e}` | refused in arrays/objects as at the document root |
+
+Permanent controls hold valid spellings and aggregate delimiters. The exact old number reader reversal is
+killed by the malformed-number control; original code/test bodies outside this repair remain unchanged
+(`M3.6.9.6.3.2.2.9.6.1`). Run the reader's checks with `cargo test -q -p xtask json::tests::`.
+
+Current known limits: raw string controls and an invalid surrogate-pair join are still admitted; `.9.6.2`
+and `.9.6.3` own repairs before integration. The reader's Rust scalar-string domain already refuses lone
+surrogates, a narrower policy than the RFC's §8.2 grammar; those domain checks are not a complete conformance
+claim. The demonstrated API defects do not establish a complete trust-gate bypass.
+
 ## What is versioned is written down
 
 `VERSION-REGISTER` keeps [What is versioned, and what changing it costs](versions.md) true to the code.

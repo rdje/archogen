@@ -36,7 +36,8 @@ a change that leaves it stale, so it is never edited by hand.
 - **API** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md),
   [Generated-sources test adequacy](trust-adequacy.md), [The runtime: decisions, not actions](runtime.md), [The archogen
   command line](cli.md), [The engine API](engine-api.md), [Verifying the toolchain](verification.md), [What is
-  versioned, and what changing it costs](versions.md)
+  versioned, and what changing it costs](versions.md), [Annex B: The checks that keep the repository
+  honest](annex-repository.md)
 - **assembly** — [definition](glossary.md), [Modules and composition](modules.md), [Where the engine's knowledge comes
   from: the catalog](catalog.md), [Checks that must not share a mistake: the trust gate](trust.md), [The runtime:
   decisions, not actions](runtime.md), [Verifying the toolchain](verification.md), [What this project relies on from
@@ -223,7 +224,10 @@ a change that leaves it stale, so it is never edited by hand.
   detail](annex-runtime.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
 - **JSON** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md),
   [Generated-sources test adequacy](trust-adequacy.md), [The engine API](engine-api.md), [Verifying the
-  toolchain](verification.md), [What is versioned, and what changing it costs](versions.md)
+  toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
+  changing it costs](versions.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
+- JSON used by the tooling — [Annex B: The checks that keep the repository
+  honest](annex-repository.md#json-used-by-the-tooling)
 
 ## K
 
@@ -367,6 +371,9 @@ a change that leaves it stale, so it is never edited by hand.
   relevance](presence.md#relevance-decides-whether-an-unknown-matters)
 - Remaining measurements — [Generated-sources test adequacy](trust-adequacy.md#remaining-measurements)
 - Requirements and sides — [Matching an offer to a requirement](matching.md#requirements-and-sides)
+- **RFC** — [definition](glossary.md), [What this project relies on from outside](ledger.md), [Annex B: The checks that
+  keep the repository honest](annex-repository.md)
+- rfc-8259 — [What this project relies on from outside](ledger.md#rfc-8259)
 - **RGX** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - rgx — [What this project relies on from outside](ledger.md#rgx)
 - **RISC-V** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Where generated systems

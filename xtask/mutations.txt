@@ -5274,3 +5274,66 @@ to
         }
         c
 end
+
+mutation json-number-grammar-unrestricted
+file xtask/src/json.rs
+test -p xtask json::tests::numbers_require_json_grammar_in_every_value_position -- --exact
+expect killed
+why M3.6.9.6.3.2.2.9.6.1: the old numeric-looking scan admits incomplete exponents and invalid integer/fraction spellings; actual root/array/object controls must kill its exact reversal.
+from
+        fn number(&mut self) -> Result<Json, String> {
+            let start = self.at;
+            if self.bytes.get(self.at) == Some(&b'-') {
+                self.at += 1;
+            }
+            match self.bytes.get(self.at) {
+                Some(b'0') => self.at += 1,
+                Some(b'1'..=b'9') => {
+                    self.digits();
+                }
+                _ => return Err(format!("a number at {start}")),
+            }
+            if self.bytes.get(self.at) == Some(&b'.') {
+                self.at += 1;
+                if !self.digits() {
+                    return Err(format!("fraction digits at {}", self.at));
+                }
+            }
+            if matches!(self.bytes.get(self.at), Some(b'e' | b'E')) {
+                self.at += 1;
+                if matches!(self.bytes.get(self.at), Some(b'+' | b'-')) {
+                    self.at += 1;
+                }
+                if !self.digits() {
+                    return Err(format!("exponent digits at {}", self.at));
+                }
+            }
+            Ok(Json::Number(
+                String::from_utf8_lossy(&self.bytes[start..self.at]).into_owned(),
+            ))
+        }
+
+        /// Consume ASCII decimal digits, reporting whether there was at least one.
+        fn digits(&mut self) -> bool {
+            let start = self.at;
+            while matches!(self.bytes.get(self.at), Some(b'0'..=b'9')) {
+                self.at += 1;
+            }
+            self.at != start
+        }
+to
+        fn number(&mut self) -> Result<Json, String> {
+            let start = self.at;
+            while matches!(
+                self.bytes.get(self.at),
+                Some(b'-' | b'+' | b'.' | b'e' | b'E' | b'0'..=b'9')
+            ) {
+                self.at += 1;
+            }
+            let text = &self.bytes[start..self.at];
+            if text.is_empty() || text == b"-" {
+                return Err(format!("a number at {start}"));
+            }
+            Ok(Json::Number(String::from_utf8_lossy(text).into_owned()))
+        }
+end

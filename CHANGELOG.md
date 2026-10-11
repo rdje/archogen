@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — JSON number grammar preserves spelling and precision
+
+`ARCHOGEN-M3-0675` (leaf `M3.6.9.6.3.2.2.9.6.1`), `2026-10-11`.
+
+- Replace unrestricted numeric-looking scanning with ordered integer/fraction/exponent grammar and required
+  digits. Preserve original textual numbers, negative zero, exponent case and precision; consumers unchanged.
+- Permanent malformed root/array/object control fails on old parser and passes after repair; valid spellings/
+  delimiters and old JSON tests pass. Exact native numeric-block reversal gets the named finishing kill, strict
+  0; all 1002 original inputs restore under Python/system hashes. Old code/tests/catalog prefix unchanged,
+  wrong killing name refuses, focused passes; final exact staged stamp required.
+- Adopt the primary grammar source with scoped limitations; book annex holds contracts/examples and trust/live
+  pointers align. Raw controls and Unicode repairs remain owned before integration; no full adequacy claim.
+
 ## archogen — JSON reader and writer have their own API documentation
 
 `ARCHOGEN-M3-0674` (leaf `M3.6.9.6.3.2.2.9.3`), `2026-10-11`.

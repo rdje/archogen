@@ -350,3 +350,17 @@ the day a chapter or a decision relies on it, as Miri did.
 | Known limitations | a precedent, not a requirement on this profile: AUTOSAR treats the return as an error it recovers from, where the fault contract's rule 4 makes the completion ordinary |
 | Revalidation trigger | a later AUTOSAR release renumbering or changing these requirements; a decision resting on more of AUTOSAR OS |
 | Named as | `AUTOSAR` |
+
+## `rfc-8259`
+
+| Field | Value |
+| --- | --- |
+| Source | [RFC 8259: The JavaScript Object Notation Data Interchange Format](https://www.rfc-editor.org/rfc/rfc8259.html), primary RFC Editor publication |
+| Version | RFC 8259, December 2017 |
+| Pinned at | not pinned — fixed document edition named here; no build fetches it |
+| Retrieved | `2026-10-11` |
+| Hash | not captured; the primary publication was read online without a retained byte artifact |
+| Scope | §6 number grammar, §7 string/escape grammar, §8.2 Unicode caveats and §9 parser limits; tooling JSON validation repairs in M3.6.9.6.3.2.2.9.6 |
+| Known limitations | grammar reference, not a conformance certificate. The tooling stores numbers as text and strings as Rust scalar strings; its existing lone-surrogate refusal is narrower than §8.2's grammar. §9 permits extensions, while this reader's contract is strict |
+| Revalidation trigger | parser/representation changes, relevant errata or adoption of a replacement edition |
+| Named as | `RFC 8259` |

@@ -93,6 +93,8 @@ as `F26`, task-tree leaves — are names, not words, and are not listed.
 - **README** — a repository's introductory file, meant to be read first. See [Verifying the toolchain](verification.md).
 - **RED** — in "RED arm": a deliberately broken case a check must refuse, proving the check can fail (red as in a
   failing test). See [Verifying the toolchain](verification.md).
+- **RFC** — Request for Comments: a numbered technical publication; the JSON format is described by RFC 8259.
+  See [its ledger entry](ledger.md#rfc-8259).
 - **RGX** — a regular-expression engine nested in LinkedSpec: a name, not an acronym. See [its ledger
   entry](ledger.md#rgx).
 - **RISC-V** — an open instruction set architecture, the fifth Reduced Instruction Set Computer design from

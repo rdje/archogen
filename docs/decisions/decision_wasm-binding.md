@@ -76,11 +76,11 @@ A request is length-framed, not JSON, so the module needs no parser for a format
 - It is `archogen_api::check_with(request, Limits::DEFAULT)`, with the modules as a `MemoryModules`.
 - **The instance sets the budget, never the page**, as [[decision_api-instance]] requires. A page cannot raise
   it. A request over it gets the API's own answer, `tool-failure`, naming the budget.
-- A module is named `<module>.eadl` in spans, as `MemoryModules` names it.
+- Spans name each module `<module>.eadl`, as `MemoryModules` does.
 
 ### 6. The response
 
-One JSON object (RFC 8259), in UTF-8, with its keys in this order:
+UTF-8 JSON object ([RFC 8259](docs/book/src/ledger.md#rfc-8259)), keys in order:
 
 ```text
 {"format":"archogen-wasm-response/1","api":"<major>.<minor>","engine":"<engine version>",

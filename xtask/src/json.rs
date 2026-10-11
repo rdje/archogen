@@ -175,17 +175,43 @@ impl Parser<'_> {
 
     fn number(&mut self) -> Result<Json, String> {
         let start = self.at;
-        while matches!(
-            self.bytes.get(self.at),
-            Some(b'-' | b'+' | b'.' | b'e' | b'E' | b'0'..=b'9')
-        ) {
+        if self.bytes.get(self.at) == Some(&b'-') {
             self.at += 1;
         }
-        let text = &self.bytes[start..self.at];
-        if text.is_empty() || text == b"-" {
-            return Err(format!("a number at {start}"));
+        match self.bytes.get(self.at) {
+            Some(b'0') => self.at += 1,
+            Some(b'1'..=b'9') => {
+                self.digits();
+            }
+            _ => return Err(format!("a number at {start}")),
         }
-        Ok(Json::Number(String::from_utf8_lossy(text).into_owned()))
+        if self.bytes.get(self.at) == Some(&b'.') {
+            self.at += 1;
+            if !self.digits() {
+                return Err(format!("fraction digits at {}", self.at));
+            }
+        }
+        if matches!(self.bytes.get(self.at), Some(b'e' | b'E')) {
+            self.at += 1;
+            if matches!(self.bytes.get(self.at), Some(b'+' | b'-')) {
+                self.at += 1;
+            }
+            if !self.digits() {
+                return Err(format!("exponent digits at {}", self.at));
+            }
+        }
+        Ok(Json::Number(
+            String::from_utf8_lossy(&self.bytes[start..self.at]).into_owned(),
+        ))
+    }
+
+    /// Consume ASCII decimal digits, reporting whether there was at least one.
+    fn digits(&mut self) -> bool {
+        let start = self.at;
+        while matches!(self.bytes.get(self.at), Some(b'0'..=b'9')) {
+            self.at += 1;
+        }
+        self.at != start
     }
 
     fn string(&mut self) -> Result<String, String> {
@@ -343,6 +369,84 @@ mod tests {
         assert_eq!(doc.get("n"), Some(&Json::Number("-1.5e3".into())));
         assert_eq!(doc.get("s").unwrap().as_str(), Some("q\"\\é😀"));
         assert_eq!(parse(" [ ] ").unwrap(), Json::Array(vec![]));
+    }
+
+    #[test]
+    fn numbers_require_json_grammar_in_every_value_position() {
+        for bad in [
+            "1e",
+            "1e+",
+            "1e-",
+            "1.",
+            "01",
+            "-01",
+            "--1",
+            "1+2",
+            "1-2",
+            "1..2",
+            "1e2e3",
+            "-",
+            "+1",
+            ".1",
+            "NaN",
+            "Infinity",
+            "-Infinity",
+            "1_e2",
+            "1e+ 2",
+            "1.e2",
+            "1E--2",
+        ] {
+            for document in [
+                bad.to_owned(),
+                format!("[{bad}]"),
+                format!("{{\"n\":{bad}}}"),
+            ] {
+                assert!(
+                    parse(&document).is_err(),
+                    "invalid number admitted: {document:?}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn valid_numbers_keep_their_spelling_precision_and_delimiters() {
+        for number in [
+            "0",
+            "-0",
+            "1",
+            "-1",
+            "10",
+            "-10",
+            "0.0",
+            "-0.1",
+            "1e0",
+            "1E+0",
+            "1e-1",
+            "1.0e+30",
+            "1e400",
+            "123456789012345678901234567890.123456789",
+            "-0E-999",
+        ] {
+            let expected = Json::Number(number.to_owned());
+            assert_eq!(parse(number).unwrap(), expected);
+            assert_eq!(parse(&format!(" \t{number}\r\n")).unwrap(), expected);
+            assert_eq!(
+                parse(&format!("[{number},0]")).unwrap(),
+                Json::Array(vec![expected.clone(), Json::Number("0".into())])
+            );
+            assert_eq!(
+                parse(&format!("{{\"n\":{number}}}")).unwrap().get("n"),
+                Some(&expected)
+            );
+            assert_eq!(super::write(&expected), number);
+        }
+        for invalid in ["1true", "[1true]", "{\"n\":1true}"] {
+            assert!(
+                parse(invalid).is_err(),
+                "missing delimiter admitted: {invalid:?}"
+            );
+        }
     }
 
     #[test]
