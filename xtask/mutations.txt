@@ -5381,3 +5381,20 @@ from
 
 to
 end
+
+mutation trust-verifier-lossy-inventory-text
+file xtask/src/trust_verify.rs
+test -p xtask trust_verify::tests::non_utf8_package_json_is_refused_and_encoded_replacement_characters_are_preserved -- --exact
+expect killed
+why M3.6.9.6.3.2.2.9.6.4: exact old lossy byte admission accepts malformed inventory text even with a matching raw-byte report digest; the public verifier control must fail while valid encoded replacement characters remain allowed.
+from
+        let Ok(inventory_text) = std::str::from_utf8(&inventory_bytes) else {
+            refuse(format!("`{inventory_path}` is not UTF-8"));
+            return Ok(refused);
+        };
+        let Ok(inventory) = json::parse(inventory_text) else {
+
+to
+        let Ok(inventory) = json::parse(&String::from_utf8_lossy(&inventory_bytes)) else {
+
+end

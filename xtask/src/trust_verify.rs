@@ -39,6 +39,7 @@ fn text<'a>(j: &'a Json, key: &str) -> &'a str {
 }
 
 /// Every refusal of the package at `dir`; empty when it is verified.
+/// Manifest and inventory JSON must be valid UTF-8; inventory hashes bind the original bytes.
 ///
 /// # Errors
 ///
@@ -70,7 +71,11 @@ pub fn verify(dir: &Path) -> Result<Vec<String>, String> {
         refuse(format!("the inventory is missing: no `{inventory_path}`"));
         return Ok(refused);
     };
-    let Ok(inventory) = json::parse(&String::from_utf8_lossy(&inventory_bytes)) else {
+    let Ok(inventory_text) = std::str::from_utf8(&inventory_bytes) else {
+        refuse(format!("`{inventory_path}` is not UTF-8"));
+        return Ok(refused);
+    };
+    let Ok(inventory) = json::parse(inventory_text) else {
         refuse(format!("`{inventory_path}` is not an inventory"));
         return Ok(refused);
     };
@@ -341,6 +346,64 @@ mod tests {
     fn a_package_whose_parts_are_one_build_s_is_verified() {
         let r = verify(&package("whole", |_| {})).expect("a directory");
         assert!(r.is_empty(), "{r:#?}");
+    }
+
+    #[test]
+    fn non_utf8_package_json_is_refused_and_encoded_replacement_characters_are_preserved() {
+        for (name, member) in [
+            ("inventory-utf8", "trust/trust-dependencies.json"),
+            ("manifest-utf8", "manifest.json"),
+        ] {
+            let dir = package(name, |p| p.commit = Some("c0\u{fffd}ffee".into()));
+            let inventory_path = dir.join("trust/trust-dependencies.json");
+            let inventory = std::fs::read_to_string(&inventory_path)
+                .unwrap()
+                .replace("c0ffee", "c0\u{fffd}ffee");
+            std::fs::write(&inventory_path, inventory.as_bytes()).unwrap();
+            let report = || {
+                let raw = std::fs::read(&inventory_path).unwrap();
+                std::fs::write(
+                    dir.join("trust/report.txt"),
+                    format!("trust-gate report\ninventory: sha256 {}\n", sha(&raw)),
+                )
+                .unwrap();
+            };
+            report();
+            let valid = verify(&dir).expect("a directory");
+            assert!(
+                valid.is_empty(),
+                "valid replacement character refused: {valid:#?}"
+            );
+
+            let path = dir.join(member);
+            let good = std::fs::read(&path).unwrap();
+            let at = good
+                .windows(3)
+                .position(|bytes| bytes == b"\xef\xbf\xbd")
+                .expect("the encoded replacement character");
+            for invalid in [
+                &b"\xff"[..],
+                &b"\x80"[..],
+                &b"\xc0\xaf"[..],
+                &b"\xed\xa0\x80"[..],
+                &b"\xf0\x9f"[..],
+            ] {
+                let mut bad = good[..at].to_vec();
+                bad.extend_from_slice(invalid);
+                bad.extend_from_slice(&good[at + 3..]);
+                assert!(std::str::from_utf8(&bad).is_err());
+                std::fs::write(&path, &bad).unwrap();
+                report();
+                refused(
+                    &dir,
+                    if member == "trust/trust-dependencies.json" {
+                        "is not UTF-8"
+                    } else {
+                        "no `manifest.json` the verifier can read"
+                    },
+                );
+            }
+        }
     }
 
     #[test]

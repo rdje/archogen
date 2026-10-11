@@ -194,8 +194,23 @@ trips; independently restoring the old surrogate join or deleting the hexadecima
 named finishing failure (`M3.6.9.6.3.2.2.9.6.3`). Lone-surrogate refusal is the reader's existing narrower policy:
 §8.2 permits unpaired surrogate spellings in the grammar. This is not a complete conformance claim.
 
-Caller-byte assessment `.9.6.4` remains before integration. The demonstrated API defects do not establish
-a complete trust-gate bypass.
+The package verifier requires valid UTF-8 for both `manifest.json` and `trust/trust-dependencies.json`.
+It refuses invalid inventory bytes before parsing them, with `trust-inventory-stale`; the manifest's existing
+strict decoding follows its unreadable-manifest route. An encoded replacement character is ordinary valid text:
+
+| Bytes within a quoted string | Package JSON behavior |
+| --- | --- |
+| `EF BF BD` | accepted as `U+FFFD`, when the remaining package checks agree |
+| `FF`, a lone `80`, an overlong sequence or an encoded surrogate | refused as invalid UTF-8 |
+| A truncated multibyte sequence | refused as invalid UTF-8 |
+
+The report still names the hash of the original inventory bytes. A matching hash does not make malformed text
+valid. The public verifier reproduction in `M3.6.9.6.3.2.2.9.6.4` admitted an invalid inventory before strict
+decoding and refuses it afterward, with report binding and shipped artifact bytes held correctly. The exact old
+lossy admission is killed by the permanent package control; valid encoded replacement characters remain accepted.
+This closes the caller-byte assessment before `.9.4` integration. It establishes malformed-input admission,
+without demonstrating an artifact-hash bypass or authenticity. Encoding follows [RFC 8259](ledger.md#rfc-8259)
+§8.1's interchange context; these local checks are not a complete conformance claim.
 
 ## What is versioned is written down
 

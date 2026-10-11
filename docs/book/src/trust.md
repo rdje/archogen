@@ -191,7 +191,7 @@ reads *unchanged*.
 A report that a property holds rests on results produced by particular programs. `cargo xtask trust-verify <package>`
 checks a package that carries the trust build's inventory, report and programs: that they are one commit's and one
 toolchain's, that each result was produced by the program its role names, and that every file handed to a program at
-run time was declared.
+run time was declared. Its manifest and inventory JSON require valid UTF-8.
 
 ## The precise rules
 
@@ -569,7 +569,7 @@ Measured `2026-10-11`, `.9.1`: four environment survivors gain named kills, stri
 
 Measured `2026-10-11`, `.9.2`: public inventory collapses a marker-bearing value with separate records before repair; the regression passes afterward. Comparison keys now contain deterministic JSON `[command_tokens, environment_records]`, e.g. `[["--crate-name","common"],["CARGO_PKG_DESCRIPTION=alpha env-dep:omega"]]`. Arrays/escaping preserve boundaries, order and empty values; per-program raw arrays retain their shapes. Native reversal of only the key body gains the named public kill and restores all 990 original inputs. Domain controls and focused gates pass. This changes configuration digests: Linux proposal compatibility is owned in `M3.6.3.2.1.1`, pending a runner whose base checker includes the repair and normal proposal review. The reproducer changes content too; it establishes a configuration-field defect, not a complete-gate bypass.
 
-The [tooling JSON contracts](annex-repository.md#json-used-by-the-tooling) separate encoding from reader diagnostics. Number grammar, raw controls and Unicode escapes are repaired; caller-byte assessment `.9.6.4` remains before integration. These API defects do not establish a complete-gate bypass.
+The [tooling JSON contracts](annex-repository.md#json-used-by-the-tooling) separate encoding from reader diagnostics. Number grammar, raw controls, Unicode escapes and inventory-byte admission are repaired; `.9.4` integration is next. These defects do not establish an artifact-hash bypass.
 
 The [focused-stamp guard](annex-repository.md#a-commit-holds-what-was-run) now holds explicit successful-exit claims and large diffs; `.9.5` records its RED controls and repair.
 

@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — package inventories require valid UTF-8 JSON
+
+`ARCHOGEN-M3-0678` (leaf `M3.6.9.6.3.2.2.9.6.4`), `2026-10-12`.
+
+- Public verifier admits malformed inventory bytes through lossy decoding before repair, despite a correctly
+  matching raw-byte report hash. Require strict UTF-8 before parsing; retain encoded U+FFFD, original-byte hashes,
+  manifest policy and the provisional format. This establishes input admission, without an artifact-hash bypass.
+- Permanent public verifier control fails before repair, passes after repair and kills the exact native lossy
+  reversal by name, strict 0. All 1002 original inputs restore under Python/system hashes; old verifier/parser/
+  catalog preserved and altered evidence refuses. Focused passes; final exact staged stamp required.
+- Canonical refusal/API contract, book byte examples, source-ledger scope and live pointers align. Local
+  integration is next; final current-source adequacy and runner baseline compatibility remain open.
+
 ## archogen — Unicode escapes validate digits and surrogate halves
 
 `ARCHOGEN-M3-0677` (leaf `M3.6.9.6.3.2.2.9.6.3`), `2026-10-12`.
