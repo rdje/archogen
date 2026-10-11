@@ -30,7 +30,7 @@ No bootstrap read includes this directory.
 | [`rt-static-up-v1-faults-reviews.md`](rt-static-up-v1-faults-reviews.md) | [`rt-static-up-v1-faults.md`](../profiles/rt-static-up-v1-faults.md), rounds R3–R15 (R1 and R2 stay in `decision_runtime-contract-gaps.md`) | 13 | closed: the fifteenth round found no defect, `2026-10-02`; moved here `2026-10-03` (`PROGRAM.50`) |
 | [`rt-static-up-v1-faults-observation-reviews.md`](rt-static-up-v1-faults-observation-reviews.md) | [`rt-static-up-v1-faults-observation.md`](../profiles/rt-static-up-v1-faults-observation.md), the fault paths' observation events | 7 | closed: round 7 found no defect (`M2.15`) |
 | [`decision_trust-generated-refusals-reviews.md`](decision_trust-generated-refusals-reviews.md) | [`decision_trust-generated-refusals.md`](../specs/trust/decision_trust-generated-refusals.md) | 23 | closed: `2026-10-10`, round 23 found no defect; rounds 1–22 answered, rounds 5, 14, 16 to 20 by method (`M3.6.6.4`) |
-| [`decision_trust-generated-adequacy-reviews.md`](decision_trust-generated-adequacy-reviews.md) | [`decision_trust-generated-adequacy.md`](../specs/trust/decision_trust-generated-adequacy.md) | 2 | open: round 2 found 2 defects, answered with a source-linked 32-pair census, complete production sweep ranges, bound test seam, actual semantic witnesses and strict timeouts in both harnesses; round 3 next; implementation waits |
+| [`decision_trust-generated-adequacy-reviews.md`](decision_trust-generated-adequacy-reviews.md) | [`decision_trust-generated-adequacy.md`](../specs/trust/decision_trust-generated-adequacy.md) | 3 | closed `2026-10-11`: round 3 found zero defects and one remark, existing invocation-error kills owned by M3.6.9.1; accepted design ready to implement |
 
 ## Counted by `REVIEW-COUNTS`
 
@@ -39,4 +39,3 @@ record keeps a summary table, from the commit that answers its first round; a re
 that closes it. Each line names the history, then the record, both from this folder.
 
 - `decision_task-tree-sealing-reviews.md` with `../decisions/decision_task-tree-sealing.md`
-- `decision_trust-generated-adequacy-reviews.md` with `../specs/trust/decision_trust-generated-adequacy.md`

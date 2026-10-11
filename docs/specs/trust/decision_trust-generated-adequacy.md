@@ -2,7 +2,7 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-10`
-- **Status:** `active` — written `2026-10-10` by leaf `M3.6.9`; its review open, rounds 1 and 2 answered `2026-10-11`
+- **Status:** `active` — written `2026-10-10` by leaf `M3.6.9`; its review closed `2026-10-11`, round 3: zero defects and one remark; implementation pending
   ([`decision_trust-generated-adequacy-reviews.md`](../../reviews/decision_trust-generated-adequacy-reviews.md))
 - **Owner / source:** leaf `M3.6.9` (`docs/tasks/M3.md`), filed by `M3.6.6.4`'s review, round 14. It holds the rules of
   [`decision_trust-generated-sources.md`](decision_trust-generated-sources.md), cited below as "the parent", to a
@@ -41,7 +41,10 @@ sweep as it stands (round 19). This record decides a criterion, and states how f
      Review round 1 ran the existing 23 against the parent's tests at `583cf07`: 22 survive, one is already killed
      (an untracked runner, not durable). The build records actual outcomes, then adds the parent's missing tests.
      Both route and parent commands gain `--timeouts-fail`: a hang fails the criterion, even though ordinary
-     catalogue mode continues to count a reached hang as killed. The strict mode changes no ordinary invocation.
+     catalogue mode continues to count a reached hang as killed. Strict timeout handling is opt-in. A finishing kill
+     requires a failed libtest summary and at least one failure-list name. In either mode an invocation failure,
+     crash or abort without that evidence is unjudged (exit 2), never a kill; round 3's existing false-green is owned
+     by `M3.6.9.1`. The sweep applies the same attribution rule and admits no unjudged equivalent.
    - **Beyond the evidence, the sweep.** Every mutant `scripts/mutation_sweep.sh` makes of the judgment code (point 5)
      is killed by the parent's tests or listed as equivalent with its reason, in one equivalents file per swept file.
      A mutant that times out fails: a hang a test reaches is no equivalent, and is killed by a test that finishes. The
@@ -210,7 +213,7 @@ harness. New route controls are necessary for the previously unheld cases; their
 
 ## How to apply
 
-Built with this record's review closed, in this order: strict timeout modes in the catalogue and sweep, and the
+Its design review closed at round 3; implementation is owned in order by `M3.6.9.1` through `.6`. Built in this order: strict timeout modes in the catalogue and sweep, and the
 operators; the bound test seam; the census/table test, nine new route entries and controls, and all 32 parent twins;
 the operators' table measured against both populations before adding parent tests; then the commands below, the
 parent's tests gaining what each survivor shows they lack, until every exact entry passes with finishing tests and
@@ -242,3 +245,4 @@ $ bash scripts/mutation_sweep.sh xtask/src/trust_gate.rs --package xtask \
 | --- | --- | --- | --- |
 | 1 | `2026-10-11` | 9, and 8 remarks | the 23 entries run against the parent's tests, 22 surviving, and the proposed operators' mutants, by an untracked runner; the placement reproduced; answered: each recorded one-way defect a `parent-…` entry the parent's tests must kill; `guard` and `contains` added, `chain` widened, their reach measured entry by entry; the parent's tests and the commands named; the copy under `target/` through the tests' seam, no exception taken |
 | 2 | `2026-10-11` | 2, and 4 remarks | answered: a 32-row census maps the existing 23 and nine additions to source findings; whole production ranges include publication and comparison callers; the seam bound to the source Git root and exact sweep path; actual operator verdicts and semantic witnesses recorded, borrowed membership spelled separately; both catalogue and sweep reject timeouts; round 3 next |
+| 3 | `2026-10-11` | 0, and 1 remark | independent 32-row/source-anchor/static-semantic/scope/seam review; 932 planning candidates reproduced, no implementation verdict claimed; accepted, review closed; existing unattributed invocation-error kills owned by M3.6.9.1 before measurements |

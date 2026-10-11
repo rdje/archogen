@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the parent-test criterion's design review closes at zero defects
+
+`ARCHOGEN-M3-0616` (leaf `M3.6.9`), `2026-10-11`.
+
+- Independent round 3 accepts the 32-pair census, unique planned anchors, complete scope, bound seam and actual-
+  witness method: zero defects and one remark. The existing harnesses count unattributed invocation failures as
+  kills; M3.6.9.1 owns their repair before measurement. A finishing kill will require a failed libtest summary and
+  failure-list name; other non-compilation failures are unjudged. Six implementation slices are tracked in order.
+- Validation: independent static/source parsing and 932 existing-operator planning candidates, with no proposed
+  compilation, viability or verdict claimed; the pinned helper reproduces killed/empty names for synthetic exit 101.
+  Report and producers are untracked; book, review-count and final staged doctrine gates before commit.
+  The design review is closed; implementation remains pending. The decisions index's stale M3.1.1 review status
+  now agrees with its canonical record and review index: closed `2026-10-05`, round 31.
+
 ## archogen — primary review links keep authority across destinations and titles
 
 `ARCHOGEN-PROGRAM-0615` (leaf `PROGRAM.69`), `2026-10-11`.

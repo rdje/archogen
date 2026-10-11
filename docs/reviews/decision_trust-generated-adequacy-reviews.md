@@ -55,7 +55,21 @@ row and `ARCHOGEN-M3-0601`'s changelog and Commit Log entries stand as records o
 | R2-R3 | remark | direct first/last comparison fails to compile for BTreeSet of borrowed strings | add copied-element variants alongside direct comparisons; eight narrowing assertions plus two membership controls independently pass for the recorded vector/set shapes; unviable variants are reported and count as no coverage |
 | R2-R4 | remark | strict sweep timeout handling leaves catalogue hangs counted as kills | add opt-in --timeouts-fail to the catalogue too and use it for both exact populations; ordinary catalogue mode unchanged; strict-mode controls must distinguish finishing kills, survivors, hangs and unviable entries |
 
-Round 3, by a context that did not write the record, is next. No implementation of this design has begun.
+**Round 3**, `2026-10-11`, of committed `4becba9`, by a context that did not write the record. Zero defects and one
+remark; the design accepted and this review closed. Independent parsing confirms the 32 distinct suffix rows,
+23-existing/nine-addition population, source references, exact existing anchors and no parent entries yet. Static
+models and nine unique proposed anchors hold the intended effects; they are not compilation or mutation verdicts.
+The pinned existing sweep's lists reproduce 656 / 98 / 178 candidates across the complete production ranges, 932
+planning candidates only. The bound seam, strict-mode truth table, witness method and publication boundaries agree.
+No proposed code was built, no Cargo/compiler/shared suite/new repository used, and no real sealed case/history
+body read. Report and producers in `target/review-m369-r3/` are untracked evidence, not durable regression arms.
+All review jobs completed; the parent owns the final repository-wide handoff census.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R3-R1 | remark | the actual pinned sweep run helper returns killed with an empty test list for a synthetic Cargo manifest-load failure; the catalogue accepts the same branch, so an invocation error can satisfy a kill without test evidence | owned by M3.6.9.1: in both modes require a failed libtest summary and failure-list name for a finishing kill; invocation failure/crash/abort without that evidence is unjudged, never killed or equivalent; add synthetic classification/restoration controls before adequacy measurement |
+
+No implementation of this design has begun. The six implementation slices are owned in `docs/tasks/M3.md`.
 
 ## Why
 
