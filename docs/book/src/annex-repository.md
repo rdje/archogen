@@ -238,6 +238,9 @@ measurement. A genuinely empty selected tree remains valid and contributes zero 
 NUL-delimited UTF-8 listing, so Unicode, tabs, backslashes and quotes cannot disappear through Git's display quoting;
 invalid encodings and missing terminators refuse. Leaf spans count only their actual source bytes, including real
 line-feed separators and preserving whether the end of the file has a final line feed (`PROGRAM.69`, review round 36).
+The amendment's independent review closed on round 37 with no new defect, actionable control gap or remark. Its
+synthetic reader and task-unit probes leave native sealing transactions, signals and real historical totals outside
+that round's evidence; the frozen review history records the exact scope.
 
 The decisions folder is kept the same way. A numbered section of a decision record that is settled, such as a
 finding the director has ruled on, moves byte for byte into `docs/decision-history/`. Its heading stays in the

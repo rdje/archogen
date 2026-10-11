@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — task-tree sealing review closes at round 37
+
+`ARCHOGEN-PROGRAM-0624` (leaf `PROGRAM.69`), `2026-10-11`.
+
+- Independent round 37 finds zero new defects, actionable regression-arm gaps or remarks. All prior findings are
+  answered; the review and owning leaf close. Pending index-order, subfolder, unforeseen-exception and interrupt-
+  timing repairs remain separately owned. Closed histories are ready for pure archival commits.
+- Validation: 347 synthetic checker invocations match expectations (260 core, 87 pinned shell); separately 4 096
+  finite unit/oracle comparisons agree. Root recount/authentication of 17 source snapshots exits 0. All 37 summary
+  rows checked before counted-list removal; staged history, book and doctrine gates before commit. No complete
+  native suite replay, native transaction/signal proof or particular real historical byte-total claim is added.
+- Lockstep: frozen review/history/index, design, book annex, leaf/logs and resume snapshots. Two older design-summary
+  verdicts compacted without altering its counts, key results or full historical round to retain the decisions cap.
+
 ## archogen — guard branch scope support precedes candidate rewriting
 
 `ARCHOGEN-M3-0623` (leaf `M3.6.9.2.2.2.1`), `2026-10-11`.

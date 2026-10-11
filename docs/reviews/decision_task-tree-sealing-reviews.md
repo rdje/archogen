@@ -777,6 +777,31 @@ under `target/p69r36/` are untracked; distinguishing regression producers/contro
 | R36-D2 | defect | non-z Git display quoting makes legitimate Unicode/control-character paths fail the suffix filter, yielding successful zero/partial totals | consume NUL-delimited raw paths and decode UTF-8 explicitly; four unusual-name families have single/partial counterparts; malformed encodings/terminators refuse |
 | R36-R1 | remark | an empty pipe row indexes a nonexistent first cell in findings or summaries, failing closed with a traceback | guard zero cells and emit the existing named malformed-row diagnostic; both summary shapes and an empty-first-cell counterpart held |
 
+**Round 37**, `2026-10-11`, an independent read-only context reviewing committed `2cef1a9`. Zero new production
+defects, additional actionable regression-arm gaps or remarks established. The round-36 EOF, raw-path and
+zero-cell repairs pass fresh probes, and the review closes under its zero-defect rule.
+
+The retained 347 checker invocations comprise 260 extracted-core and 87 full pinned-shell evaluations: census 205,
+review counts 137, historical-index gate five. Of these, 341 are pinned-reader outcomes (217 expected normal and
+124 expected named refusals); six valid local mutants give four successful wrong-census sensitivity witnesses and
+two fail-closed diagnostic-traceback witnesses. All match their explicit expectations, without unexpected commands
+or timeouts. A separate independent oracle compares all 4 096 absent/active/done/stub assignments across six named
+nodes, with zero disagreements. The nine tree-name spellings, physical EOF and internal LF/CRLF boundaries,
+malformed UTF-8/NUL framing, selected-read failures, zero-cell diagnostics, primary-link grammar and synthetic
+historical-read boundaries are enumerated in the report. Root reruns the retained-result recount and authentication
+of 17 local source snapshots successfully; it does not replay the probes or inherit earlier review measurements.
+
+Report/producers under `target/review-p69-r37/` are untracked evidence, not durable regression enforcement. No real
+sealed task body, evaluation case, broad history or vendor implementation is read; no native Git fixture, compiler
+or shared suite is run. Both review launchers finish; two authorized OS snapshots find no own probe job. The complete
+146/156-arm suites, native Git/path production, sealing transactions, signals, Linux behavior and particular real
+historical byte aggregates are not newly proved. No whole-suite survivor or arm gap is inferred from a local mutant.
+The separately owned index-order, subfolder, unforeseen-exception and timing-interrupt work stays PROGRAM.71/.72/.73/.78.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.

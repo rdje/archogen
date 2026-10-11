@@ -13,11 +13,10 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M3` → frontier `M3.6`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s is `PROGRAM.69`'s review, round 37 next; `API` is
+- **Active tree:** `M3` → frontier `M3.6`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s is `PROGRAM.71` next; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** read and answer `PROGRAM.69`'s independent round 37, then continue its review as required.
-  Continue `M3.6.9.2.2.2.2`'s guarded candidates, then `.2.3`, `.9.3` through `.9.6`, then `M3.3`.
+- **Next action:** seal the committed closed task/review histories, then continue `M3.6.9.2.2.2.2`'s guarded candidates, then `.2.3`, `.9.3` through `.9.6`, then `M3.3`.
   `M3.6.9.1` is done, strict/attributed outcomes; `PROGRAM.76` is closed.
   The handoff command is `bash scripts/handoff_census.sh`; failed OS reads refuse.
   `M3.6.3.2.1`'s baseline is committed, its "unchanged" the next cadence push's run to show. `M2`'s open leaves

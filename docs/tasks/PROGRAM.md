@@ -653,20 +653,21 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.68.md`](../task-history/PROGRAM/PROGRAM.68.md); commit `ARCHOGEN-PROGRAM-0508`
 
 - ID: `PROGRAM.69`
-  Status: `active` — the tool, its gate and the seal committed `2026-10-10` (`ARCHOGEN-PROGRAM-0511`); its review open,
-  round 29 answered: the index table parsed whole, every stated count judged, a historical index read failure
-  refused unless its path is proved absent, and this Status current. Round 30 answered: summary cells use the same
-  escaped-pipe reader as index and findings cells, so later counts remain visible. Round 31 answered: an unlisted
-  row names its record by the first link; secondary explanations do not change its counting obligation. Round 32
-  answered: failed staged reads require a successful index census and exact path comparison before any disk
-  fallback; a present unreadable entry or failed proof refuses. Round 33 answered: the first unescaped bracketed
-  label retains file authority with bare/angle destinations and optional titles; unsupported first syntax refuses
-  before any secondary link can substitute. Round 34 answered: unconditional file-cell grammar and parentheses
-  inside angle destinations are held by tracked controls. Both established mutants passed all 126 previous arms;
-  they now fail three and eight arms respectively. All 138 arms pass; production reader unchanged.
-  Round 36 answered, `2026-10-11`: report `target/review-p69-r36/report.txt` read in full, two P2 census defects,
-  no additional actionable arm gaps and one fail-closed diagnostic remark. Both census repairs and the diagnostic
-  are held by maintained controls; independent round 37 next. No particular real historical aggregate alleged wrong.
+  Status: `done` — independent round 37 closes the review at zero new defects, additional actionable arm gaps
+  or remarks, `2026-10-11`; tool, gate and earlier seal committed, all preceding findings answered.
+  **Closure, round 37:** report `target/review-p69-r37/report.txt` read in full, reviewing `2cef1a9`.
+  The retained 347 checker invocations comprise 260 core and 87 full pinned-shell evaluations: 341 pinned-reader
+  outcomes (217 expected normal, 124 named refusals) and six valid local-mutant sensitivity witnesses (four wrong
+  census totals, two fail-closed diagnostic tracebacks). Every outcome matches its expectation. Separately, 4 096
+  finite unit/oracle comparisons agree. Root independently recounts retained results and authenticates 17 source
+  snapshots with `python3 target/review-p69-r37/probes/verify_results.py` → exit code 0.
+  Before closure, staged `check_review_counts.sh` → OK, 1 listed review and all 37 rounds judged; the closed
+  review then leaves the counted list. Final gates judge the committed closure state.
+  This review does not replay the complete 146/156-arm suites or establish native path production, sealing
+  transactions, signals, Linux behavior or particular real historical byte aggregates. Reports/producers are
+  untracked evidence, not durable enforcement; R36's distinguishing controls remain maintained in both scripts.
+  No real task-history body or sealed evaluation case read, native Git fixture created, compiler/shared suite run,
+  external repository written or own review job left. PROGRAM.71/.72/.73/.78 retain their separately owned limits.
   **Acceptance checklist, round 36:**
   - [x] **REPRODUCE / ISSUE** — unchanged production readers with new controls give history `133 pass / 13 fail
     (146 arms)` and counts `153 pass / 3 fail (156 arms)`, retained in `target/p69r36/`. The independent review's
@@ -978,7 +979,7 @@ mdBook that is the director's window into the project.
     2 reviews / 32 rounds before appending this answer; final staged count → OK, 2 reviews / 33 rounds; history gate
     → OK, 175 files; book anchors/glossary/index → OK. Final doctrines run in the commit hook. Checker contract, record/history/index, book annex, this leaf and logs,
     changelog and resume/frontier snapshots agree. No Rust changed; no full-suite or final-tree Rust claim is made.
-  Verification: `2026-10-11` — the Verification Log's round-29 to round-36 rows
+  Verification: `2026-10-11` — the Verification Log's round-29 to round-37 rows
   Commit: `ARCHOGEN-PROGRAM-0510 (leaf PROGRAM.69)`, the review reopened; `ARCHOGEN-PROGRAM-0511 (leaf PROGRAM.69)`;
   `ARCHOGEN-PROGRAM-0514 (leaf PROGRAM.69)`, round 7 answered; `ARCHOGEN-PROGRAM-0517 (leaf PROGRAM.69)`, round 8;
   `ARCHOGEN-PROGRAM-0521 (leaf PROGRAM.69)`, round 9; `ARCHOGEN-PROGRAM-0525 (leaf PROGRAM.69)`, round 10;
@@ -996,7 +997,7 @@ mdBook that is the director's window into the project.
   `ARCHOGEN-PROGRAM-0602 (leaf PROGRAM.69)`, round 28; `ARCHOGEN-PROGRAM-0605 (leaf PROGRAM.69)`, round 29;
   `ARCHOGEN-PROGRAM-0606 (leaf PROGRAM.69)`, round 30; `ARCHOGEN-PROGRAM-0608 (leaf PROGRAM.69)`, round 31;
   `ARCHOGEN-PROGRAM-0612 (leaf PROGRAM.69)`, round 32; `ARCHOGEN-PROGRAM-0615 (leaf PROGRAM.69)`, round 33; `ARCHOGEN-PROGRAM-0618 (leaf PROGRAM.69)`, round 34;
-  `ARCHOGEN-PROGRAM-0620 (leaf PROGRAM.69)`, round 35; `ARCHOGEN-PROGRAM-0622 (leaf PROGRAM.69)`, round 36
+  `ARCHOGEN-PROGRAM-0620 (leaf PROGRAM.69)`, round 35; `ARCHOGEN-PROGRAM-0622 (leaf PROGRAM.69)`, round 36; `ARCHOGEN-PROGRAM-0624 (leaf PROGRAM.69)`, closed at round 37
 
 - ID: `PROGRAM.70`
   Status: `done` — started `2026-10-10`, decomposed into `.1`, the bytes, and `.2`, the count, closed the same day with `.2`
@@ -1610,11 +1611,11 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.69` | `active` | round 36 answered; independent round 37 next |
+| 1 | `PROGRAM.71` | `pending` | next program-spine repair: task-history index row order |
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The second row waits on the director's yes. The pending leaves beside them —
-`PROGRAM.71`, `.72`, `.73` and `.78` — are filed and owned. Every closed
+`PROGRAM.72`, `.73` and `.78` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and a sealed leaf's full record is under `docs/task-history/PROGRAM/`.
 
 ## Decisions
@@ -1829,6 +1830,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-11` | `PROGRAM.69` (round 34) | native old/new mutation replays, full count self-test, syntax, book and final staged gates | both mutants 126/0 before; validation removal 135/3 and angle restriction 130/8 of 138 after; unchanged production reader 138/0; book anchors 30/4, glossary 67/25, index 316; staged counts 1 review / 34 rounds, history 175 files / 335 stubs; acceptance/order/figure gates OK, final doctrines in hook |
 | `2026-10-11` | `PROGRAM.69` (round 35) | new census and summary-boundary controls before/after repair; both full self-tests, syntax, book and final staged gates | history 129/3 of 132 and counts 140/10 of 150 before; repaired 132/0 and 150/0; finite selected-read failures never print a final aggregate, empty counterparts pass; staged counts 1 review / 35 rounds, history 175 files / 335 stubs; book 30/4, 67/25, 316, syntax and final doctrine gates |
 | `2026-10-11` | `PROGRAM.69` (round 36) | EOF/path/diagnostic controls before repair, then both complete self-tests; syntax, book and staged gates | history 133/13 of 146 and counts 153/3 of 156 before; repaired 146/0 and 156/0; literal byte and unusual-path counterparts, named no-traceback row refusals; independent round 37 next |
+| `2026-10-11` | `PROGRAM.69` (round 37 closure) | independent pinned review; root recount/authentication; staged count/history and book gates | zero defects/actionable arm gaps/remarks; 347 expected checker outcomes, separate 4 096 unit comparisons; retained results recount and 17 source identities pass, exit code 0; scope/limits retained; all 37 summary rows judged before removal from counted list |
 
 ## Commit Log
 
@@ -2042,6 +2044,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0618 (leaf PROGRAM.69)` | **review round 34 arm gaps answered**: unconditional listed/closed file-cell grammar and parenthesized angle destinations held; both mutants survived 126 old arms, now fail three/eight of 138; production core unchanged |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0620 (leaf PROGRAM.69)` | **round 35 answered**: selected census reads refuse on failure rather than report successful zero/partial totals; every recognized summary header requires its next separator at all boundaries; eight census and twelve summary controls fail first, then complete suites pass 132/0 and 150/0; independent round 36 next |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0622 (leaf PROGRAM.69)` | **round 36 answered**: exact source-byte boundaries at EOF, NUL-delimited UTF-8 tree paths and named empty-row diagnostics; fourteen census and six count controls fail first; complete suites pass 146/0 and 156/0; independent round 37 next |
+| `PROGRAM.69` | `ARCHOGEN-PROGRAM-0624 (leaf PROGRAM.69)` | **review closes at round 37**: zero new defects, actionable arm gaps or remarks; bounded 347-invocation synthetic review and separate 4 096-case unit oracle; no broader native/history assurance claimed; all 37 round counts checked before closure |
 
 ## Changelog
 
