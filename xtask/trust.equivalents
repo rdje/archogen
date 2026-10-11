@@ -1,0 +1,7 @@
+# Equivalent mutations of xtask/src/trust.rs, matched by exact trimmed source/replacement text.
+# Each reason is scoped to the current production context and held by its owning leaf and permanent controls.
+# Native full sweeps refuse unlisted survivors, strict timeouts and entries no longer made or surviving.
+
+from-json "for x in [a, b] {"
+to-json "let mut __archogen_sweep_342_it = ([a, b]).into_iter().peekable(); let mut __archogen_sweep_342_k = 0usize; while let Some(x) = __archogen_sweep_342_it.next() { let (__archogen_sweep_342_first, __archogen_sweep_342_last) = (__archogen_sweep_342_k == 0, __archogen_sweep_342_it.peek().is_none()); __archogen_sweep_342_k += 1; if !(__archogen_sweep_342_first || __archogen_sweep_342_last) { continue; }"
+why check_pairs borrows a and b from Program.pair: Option<(String, String)> and visits the fixed [a, b] array. Both positions are ends, so the rewrite visits a then b and preserves early returns and duplicate/aliased references. The counter advances at most twice; peek moves only shared String references, with no user callback or destructor effect. The body and its outcome/diagnostics are unchanged. Compiled actual-candidate controls hold order and early returns, and refuse first/last-only and wider-array equivalence claims (leaf M3.6.9.6.3.2.2.8.2).

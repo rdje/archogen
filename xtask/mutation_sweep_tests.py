@@ -379,6 +379,76 @@ mod tests { fn fixture() { let _ = |x: i32| x > 0 && x < 10; } }
 
 
 class IteratorTests(DiscoveryFixture):
+    def test_the_actual_two_member_pair_loop_preserves_order_and_early_returns(self):
+        source = (ROOT / "xtask/src/trust.rs").read_text()
+        self.assertIn("pub pair: Option<(String, String)>", source)
+        self.assertIn("let Some((a, b)) = &h.pair else { continue };", source)
+        namespace, candidates = self.discovery(source)
+        header = "        for x in [a, b] {"
+        family = [m for m in candidates if "\n".join(namespace["lines"][m[0]:m[1]]) == header]
+        self.assertEqual(len(family), 3, "one actual fixed-pair loop with all position variants")
+
+        def traced(name, arguments, prefix):
+            return (f"fn {name}({arguments}, stop: Option<usize>) -> Vec<usize> {{\n"
+                    "    let mut out = Vec::new();\n" + prefix + "\n"
+                    "        let identity = x as *const String as usize;\n"
+                    "        out.push(identity);\n"
+                    "        if stop == Some(identity) { return out; }\n"
+                    "    }\n    out\n}\n")
+
+        names = ["pair_original", "pair_first", "pair_last", "pair_ends"]
+        prefixes = [header] + [m[3] for m in family]
+        functions = [traced(name, "a: &String, b: &String", prefix)
+                     for name, prefix in zip(names, prefixes)]
+        # A wider array is outside the argument: obtain its actual ends rewrite too.
+        triple = traced("sample", "a: &String, b: &String, c: &String", "    for x in [a, b, c] {")
+        triple += "#[cfg(test)]\nmod tests {}\n"
+        triple_namespace, triple_family = self.discovery(triple)
+        self.assertEqual(len(triple_family), 3)
+        functions += [triple.split("#[cfg(test)]", 1)[0].replace("fn sample", "fn triple_original", 1),
+                      triple_namespace["apply_mutant"](triple_family[2]).split("#[cfg(test)]", 1)[0]
+                      .replace("fn sample", "fn triple_ends", 1)]
+        main = r'''
+fn main() {
+    let (a, b, c) = (String::from("same"), String::from("same"), String::from("third"));
+    for (left, right) in [(&a, &b), (&b, &a), (&a, &a)] {
+        let left_id = left as *const String as usize;
+        let right_id = right as *const String as usize;
+        for stop in [None, Some(left_id), Some(right_id)] {
+            let expected = if stop == Some(left_id) { vec![left_id] } else { vec![left_id, right_id] };
+            assert_eq!(pair_original(left, right, stop), expected);
+            assert_eq!(pair_ends(left, right, stop), expected);
+            assert_eq!(pair_first(left, right, stop), vec![left_id]);
+            assert_eq!(pair_last(left, right, stop), vec![right_id]);
+        }
+    }
+    let aid = &a as *const String as usize;
+    let bid = &b as *const String as usize;
+    let cid = &c as *const String as usize;
+    assert_eq!(triple_original(&a, &b, &c, None), vec![aid, bid, cid]);
+    assert_eq!(triple_ends(&a, &b, &c, None), vec![aid, cid]);
+    assert_ne!(triple_original(&a, &b, &c, None), triple_ends(&a, &b, &c, None));
+    match std::env::args().nth(1).as_deref() {
+        Some("wrong-positive") => assert_eq!(pair_first(&a, &b, None), vec![aid, bid], "wrong positive oracle"),
+        Some("wrong-negative") => assert_ne!(pair_ends(&a, &b, None), pair_original(&a, &b, None), "wrong negative oracle"),
+        _ => {}
+    }
+    println!("pair-loop controls: reference order, aliases and early returns held; wider-array equivalence refused");
+}
+'''
+        program, binary = self.base / "pair-loop.rs", self.base / "pair-loop"
+        program.write_text("\n".join(functions) + main)
+        self.bounded(["rustc", "--edition=2021", str(program), "-o", str(binary)])
+        self.assertIn("reference order, aliases and early returns held", self.bounded([str(binary)]))
+        for argument, message in (("wrong-positive", "wrong positive oracle"),
+                                  ("wrong-negative", "wrong negative oracle")):
+            with self.assertRaisesRegex(AssertionError, message):
+                self.bounded([str(binary), argument])
+        record_path = ROOT / "xtask/trust.equivalents"
+        records = namespace["load_equivalents"](record_path) if record_path.exists() else {}
+        self.assertIn(namespace["mutation_key"](family[2]), records,
+                      "the two-member proof needs its per-file equivalence record")
+
     def test_owned_borrowed_patterns_labels_and_fresh_names_compile_and_select_positions(self):
         # Each input/output expectation is a semantic observation, independent of the replacement's spelling.
         forms = [

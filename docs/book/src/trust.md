@@ -537,7 +537,7 @@ are stopped and the command reports a timeout. The leader stays unreaped while i
 identity for group cleanup. A descendant that creates another group or session leaves this cleanup's scope and
 can retain a pipe; independently grouped parent workers must finish under their own limits.
 
-Measured `2026-10-11` (`M3.6.9.6.3.2.1.5`): finite commands holding stdout, stderr or both exposed a deadline bypass. Reverting only the completion guard returns ordinary statuses after about five seconds despite a one-second limit; reapplying it reports timeouts near one second. Commands whose pipes drain within the limit preserve their output and exit statuses. These controls exercise the actual runner:
+Exact guard reversal bypasses a one-second limit; reapplication times out near one second (`M3.6.9.6.3.2.1.5`, `2026-10-11`). Run the actual runner controls:
 
 ```bash
 cargo test -p xtask mutation::tests::an_exited_command -- --nocapture
@@ -569,14 +569,13 @@ bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask \
   --filter=trust_generated:: --filter=trust_gate:: --filter=--skip --filter=route_tests
 ```
 
-Measured `2026-10-11`: actual identities, replacements, parent killing names and per-operator counts agree; altered evidence refuses. Python/system hashes verify all 988 original/restored copied inputs. The first attempt's measured prefix is retained, except its five non-finishing cases now have named kills. Compiler refusals prove no coverage. All 540 survivors are owned in `docs/tasks/M3.md`: assessment obligations, not confirmed defects or accepted equivalences.
+Measured `2026-10-11`: actual identities, replacements, killing names and counts agree; altered evidence refuses. The first attempt's measured prefix is retained, except its five non-finishing cases now have named kills. Compiler refusals prove no coverage. All 540 initial survivors are owned in `docs/tasks/M3.md`; each needs a repair or justified per-file equivalence before the final strict sweep.
 
-Each survivor requires a behavioral repair or a justified per-file equivalence before the final strict sweep.
-Measured `2026-10-11`, `M3.6.9.6.3.2.2.1`–`.4`: thirteen initial survivors covering reader errors, clause positions, role-package sets and admission reasons gain named kills (strict 1 before, 0 after). Production and old tests stay unchanged within these test-only slices.
-Measured `2026-10-11`, `.3.2.2.5`: twelve malformed-name cases refuse after repair; eight valid names and an unnamed admission pass. Exact reversal fails (101), reapplication passes (0).
-Measured `2026-10-11`, `.3.2.2.6`: missing, empty and multiple-value placeholder leaves refuse after repair; a valid placeholder creates no program. Native deletion of the field check finishes with the new named kill (strict 0).
-Measured `2026-10-11`, `.3.2.2.7`: seven pair-validation survivors gain named kills (strict 1 before, 0 after). Bounded public controls hold distinctness, both members and root identity across multiple harness positions; production stays unchanged.
-Measured `2026-10-11`: selected native runs restore all 988 original/copied inputs (Python/system hashes); old bodies stay unchanged. Name/replacement/strict-exit falsifications refuse; focused gates pass. Exact IDs, names, hashes and commands live in the committed leaves; producer/auditor tracked, orchestration ignored. Fresh listing: 1,421 candidates, production lines 144–2499, no full outcomes. Reproduce historical IDs at their recorded source or rediscover actual replacements with `--list`. Final exact/full current-source measurements remain open.
+Measured `2026-10-11`, `M3.6.9.6.3.2.2.1`–`.4`: thirteen reader-error, clause-position, role-package and admission-reason survivors gain named kills (strict 1 before, 0 after); production and old tests stay unchanged within these test-only slices. `.5` repairs twelve malformed-name cases; eight valid names and an unnamed admission pass. Exact reversal fails (101), reapplication passes (0). `.6` refuses absent, empty and ambiguous placeholder leaves; a valid placeholder creates no program. Native field-check deletion gains a named kill. `.7` gains seven pair-validation kills; controls hold distinctness, both members and root identity across harness positions, production unchanged.
+
+Measured `2026-10-11`, `.8.2`: the actual pair-loop ends rewrite survives unclassified (strict 1), then finishes equivalent with `--equivalents xtask/trust.equivalents` (strict 0). The record applies only to `[a,b]`, two borrowed String references: both are ends, visited in order with identical early returns. Peeking moves references without user callbacks or destructor effects. Compiled actual-candidate controls hold aliases, equal-value distinct references and order; first/last-only and wider-array equivalence claims fail. Both wrong trace oracles fail as intended. Production stays unchanged; classification adds no killing test.
+
+Selected runs restore all 988 captured original/copied inputs under Python/system hashes; the new record is separately hashed. Old bodies stay unchanged; falsifications and focused gates pass. Exact IDs, hashes and commands live in committed leaves; producer/auditor tracked, orchestration ignored. Fresh listing: 1,421 candidates, production lines 144–2499, not full outcomes. Historical IDs require their recorded source or fresh `--list` discovery. Final exact/full current-source measurements remain open.
 Timeout and unjudged results remain failures. Full adequacy and independent review stay open.
 Recorded native killing names remain accessible through the original `docs/tasks/M3.md` leaf stubs, which now
 route completed evidence to sealed task-history records. The stubs retain commit identities; the archive index
