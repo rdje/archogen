@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — deadline retained after the command's leader exits
+
+`ARCHOGEN-M3-0661` (leaf `M3.6.9.6.3.2.1.5`), `2026-10-11`.
+
+- Reproduce an actual deadline bypass: a direct child exits while its descendant retains stdout, stderr or both;
+  the runner joins its readers beyond the requested bound and accepts the leader's ordinary status.
+- Require both pipe readers to finish before reaping and accepting the child. The deadline still stops descendants
+  in the same process group; preserve direct system-call cleanup and the separate-group/session limitation.
+- Permanent finite controls expose the old behavior on intentional reversion and pass after reapplication.
+  Short drains retain output and successful/nonzero statuses. Focused format, strict lint and whole-suite checks
+  pass; final staged stamp required. Sync book/live pointers, close the initial measurement group, and continue
+  to every owned survivor; the historical full sweep remains attributed to its original code, not adequacy.
+
 ## archogen — complete initial trust production measurement
 
 `ARCHOGEN-M3-0660` (leaf `M3.6.9.6.3.2.1.3`), `2026-10-11`.

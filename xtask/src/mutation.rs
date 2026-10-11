@@ -300,10 +300,10 @@ fn signal(pid: i32, sig: i32) -> bool {
     unsafe { kill(pid, sig) == 0 }
 }
 
-/// Run `cmd` in a process group of its own, its output read as it comes; past `limit`, kill the whole group — the
-/// command and descendants still in that group — and return no status. A descendant that creates its own group
-/// or session leaves it; while that descendant holds the output open, the run waits on it. Bounded parent-test
-/// workers have their own groups and limits, so an outer native limit must allow those workers to finish.
+/// Run `cmd` in a process group of its own, finishing only after its exit and both output pipes close. Past
+/// `limit`, kill the command and descendants still in that group and return no status. A descendant that creates
+/// its own group or session leaves it; while that descendant holds output open, the run waits on it. Bounded
+/// parent-test workers have their own groups and limits, so an outer native limit must let those workers finish.
 fn run_bounded(cmd: &mut Command, limit: Duration) -> std::io::Result<Bounded> {
     #[cfg(unix)]
     {
@@ -322,8 +322,12 @@ fn run_bounded(cmd: &mut Command, limit: Duration) -> std::io::Result<Bounded> {
     let err = reader(Box::new(child.stderr.take().expect("piped")));
     let started = Instant::now();
     let status = loop {
-        if let Some(status) = child.try_wait()? {
-            break Some(status);
+        // An exited leader does not end the deadline while a descendant holds either pipe. Keep it unreaped
+        // until the readers finish, reserving its pid/group identity for any deadline kill below.
+        if out.is_finished() && err.is_finished() {
+            if let Some(status) = child.try_wait()? {
+                break Some(status);
+            }
         }
         if started.elapsed() >= limit {
             // The group's id is the child's: a signal to its negation reaches every process in it.
@@ -726,6 +730,63 @@ mod tests {
         assert_eq!(run.status.and_then(|s| s.code()), Some(3));
         assert_eq!(String::from_utf8_lossy(&run.stdout), "out\n");
         assert_eq!(String::from_utf8_lossy(&run.stderr), "err\n");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn an_exited_command_keeps_its_limit_until_both_pipes_close() {
+        // The leader exits immediately. A finite descendant inherits its group and holds stdout, stderr,
+        // or both: none of those pipe lifetimes may bypass the command's deadline.
+        let mut failures = Vec::new();
+        for (pipes, script) in [
+            ("both", "sleep 5 & echo out; echo err >&2; exit 0"),
+            ("stdout", "sleep 5 2>&1 & echo out; echo err >&2; exit 7"),
+            ("stderr", "sleep 5 >&2 & echo out; echo err >&2; exit 0"),
+        ] {
+            let started = Instant::now();
+            let run = run_bounded(
+                Command::new("sh").args(["-c", script]),
+                Duration::from_secs(1),
+            )
+            .expect("the finite pipe-holder runs");
+            let elapsed = started.elapsed();
+            eprintln!(
+                "pipe-lifetime: {pipes}, status {:?}, elapsed {elapsed:?}",
+                run.status.and_then(|status| status.code())
+            );
+            assert_eq!(run.stdout, b"out\n");
+            assert_eq!(run.stderr, b"err\n");
+            if run.status.is_some() || elapsed >= Duration::from_secs(4) {
+                failures.push(format!(
+                    "{pipes}: status {:?}, elapsed {elapsed:?}",
+                    run.status
+                ));
+            }
+        }
+        assert!(failures.is_empty(), "{}", failures.join("\n"));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn an_exited_command_preserves_status_when_its_pipes_drain_in_time() {
+        for (pipes, script, code) in [
+            ("both", "sleep 1 & echo out; echo err >&2; exit 0", 0),
+            ("stdout", "sleep 1 2>&1 & echo out; echo err >&2; exit 7", 7),
+            ("stderr", "sleep 1 >&2 & echo out; echo err >&2; exit 3", 3),
+        ] {
+            let run = run_bounded(
+                Command::new("sh").args(["-c", script]),
+                Duration::from_secs(5),
+            )
+            .expect("the finite pipe-holder runs");
+            assert_eq!(
+                run.status.and_then(|status| status.code()),
+                Some(code),
+                "{pipes}"
+            );
+            assert_eq!(run.stdout, b"out\n", "{pipes}");
+            assert_eq!(run.stderr, b"err\n", "{pipes}");
+        }
     }
 
     const ONE: &str = "\

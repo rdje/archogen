@@ -224,7 +224,7 @@ timeout regardless of its equivalents file; an unjudged run cannot be listed as 
 Only names in the failure list immediately preceding a failed summary count. Diagnostic sections, including
 traceback markers and test output that resembles a name, and unfinished lists supply no attribution.
 
-For bounded parent tests that finish with named failures on reached hangs or child crashes, see [trust](trust.md).
+Limits cover child exit and both output pipes. [Trust](trust.md) shows bounded tests reporting named failures on hangs and crashes.
 
 The sweep replaces a source-line interval with replacement text, then restores the copy byte for byte. Existing
 single-line equivalents keep their literal `from`, `to` and `why` fields. For a multiline candidate, use JSON strings

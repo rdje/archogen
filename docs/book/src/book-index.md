@@ -94,9 +94,10 @@ a change that leaves it stale, so it is never edited by hand.
 - **deadline** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The boundary: functionality versus implementation](boundary.md), [Reading a
   description](reading.md), [Quantities and units](quantities.md), [Describing a workload](workload.md), [What a report
-  may claim](evidence.md), [What the scheduling checker establishes](analysis.md), [The runtime: decisions, not
-  actions](runtime.md), [The engine API](engine-api.md), [Verifying the toolchain](verification.md), [What is versioned,
-  and what changing it costs](versions.md)
+  may claim](evidence.md), [What the scheduling checker establishes](analysis.md), [Checks that must not share a
+  mistake: the trust gate](trust.md), [The runtime: decisions, not actions](runtime.md), [The engine
+  API](engine-api.md), [Verifying the toolchain](verification.md), [What is versioned, and what changing it
+  costs](versions.md)
 - **description** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The boundary: functionality versus implementation](boundary.md), [The supported
   profile](profile.md), [The use cases](usecases.md), [Reading a description](reading.md), [Kinds and

@@ -498,6 +498,18 @@ summary. Zero selected tests, assertions, abrupt exits and a child that exceeds 
 Child diagnostics are escaped so their failure lists cannot supply names to the outer native result. The test-only
 worker in `xtask/src/trust_test_process.rs` reuses the mutation runner's direct system-call group cleanup.
 
+The command's deadline stays active until its child exits and both captured output pipes close. An exited child
+whose descendant retains stdout or stderr cannot bypass the deadline: descendants still in its process group
+are stopped and the command reports a timeout. The leader stays unreaped while its pipes are open, retaining its
+identity for group cleanup. A descendant that creates another group or session leaves this cleanup's scope and
+can retain a pipe; independently grouped parent workers must finish under their own limits.
+
+Measured `2026-10-11` (`M3.6.9.6.3.2.1.5`): finite commands holding stdout, stderr or both exposed a deadline bypass. Reverting only the completion guard returns ordinary statuses after about five seconds despite a one-second limit; reapplying it reports timeouts near one second. Commands whose pipes drain within the limit preserve their output and exit statuses. These controls exercise the actual runner:
+
+```bash
+cargo test -p xtask mutation::tests::an_exited_command -- --nocapture
+```
+
 On `2026-10-11`, all 103 original parent names and bodies are retained apart from the guards; the baseline passes
 in 13.46s, with its longest child at 6.230s against a 30s limit. The workers have their own process groups and bounds;
 the outer native command must allow successive waves to finish. The selected native regression command used 600s
@@ -512,7 +524,7 @@ ARCHOGEN_PARENT_TEST_TIMINGS=1 cargo test -q -p xtask -- \
 On `2026-10-11`, the five actual non-progress mutations each produce finishing named parent kills, strict exit 0;
 all captured original/copied inputs restore.
 On `2026-10-11`, the complete exact catalogue run again kills all 32 entries and retains every previous killing-name set.
-All production prefixes are byte-identical to the pre-repair commit.
+The trust production prefixes are byte-identical to the pre-repair commit.
 The child-protocol controls and focused format/lint/whole-suite gate pass. These are repair regressions, separate
 from the complete production measurement that follows.
 
