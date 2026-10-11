@@ -244,8 +244,10 @@ source references/files, exact commands/verdicts and source-block parity; a comp
 This test-only module belongs to neither semantic population. `.4.2.2.1` measures all 32 exact route entries in
 one strict native run: named finishing kills, complete reviewed identity set and byte-exact restoration, with
 original/restored/committed/system source digests agreeing. Results and actual test names are published in
-`docs/book/src/trust-adequacy.md`. Initial parent outcomes remain `.4.2.2.2`; operator measurements remain `.9.5`
-and parent strengthening `.9.6`. The table distinguishes
+`docs/book/src/trust-adequacy.md`. `.4.2.2.2` records the initial parent population: 91 native baseline tests
+pass; 2 exact entries have named kills and 30 survive, raw strict exit 1, with complete identities and restored
+source. The 30 unmet expected kills are individually owned at priority P1 in `.9.6`; expected verdicts remain
+killed. Operator measurements remain `.9.5`, before parent strengthening `.9.6`. The table distinguishes
 entries already present at design acceptance from those added in `.4.1`.
 
 ## Why

@@ -471,7 +471,9 @@ cargo test -p xtask mutation::adequacy_tests
 
 This verifies the catalogue, not semantic adequacy. The full strict route run now has 32 named finishing kills
 and exact source restoration (`M3.6.9.4.2.2.1`); the [measurement chapter](trust-adequacy.md) records each actual
-killing test and the source hashes. Initial parent outcomes and production operator measurements remain pending;
-parent semantic tests have not yet been strengthened.
+killing test and the source hashes. The initial parent baseline passes 91 tests; 2 of the 32 exact mutations have
+named kills and 30 survive, raw strict exit 1 (`M3.6.9.4.2.2.2`). Each survivor has a P1 repair owner after the
+required operator measurements. Expected parent verdicts stay killed; parent semantic tests have not yet been
+strengthened, and full adequacy remains open.
 The package the verifier
 reads is fixed provisionally until `M4.7` writes real ones.

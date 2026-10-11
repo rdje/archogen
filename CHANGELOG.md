@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — initial parent outcomes expose 30 owned coverage gaps
+
+`ARCHOGEN-M3-0642` (leaf `M3.6.9.4.2.2.2`), `2026-10-11`.
+
+- Exact unmutated parent baseline passes 91 native tests. All 32 exact parent twins then compile/land/finish:
+  2 named kills and 30 survivors, raw strict exit 1. First-input provenance and last-live-form narrowing are
+  already killed; every expected verdict remains killed. No timeout/unjudged result or completed adequacy claim.
+- Independent result audit holds every reviewed identity and rejects missing, duplicate, foreign and unnamed
+  alterations. Original/restored/route/committed/system source digests agree; three catalogue contracts pass
+  after restoration. Actual initial outcomes and killing test names are durable in the book measurement chapter.
+- Own all 30 survivors individually at priority P1: eight source/blob/chain/provenance gaps and 22 generator/
+  reader/build-read gaps, scheduled after `.9.5`'s required pre-strengthening operator measurements. Product
+  rules and parent semantic tests remain unchanged. Pinned book/index/staged gates required.
+- Exact population lane complete; task/logs, accepted design/trust chapter and current resume/frontier align.
+
 ## archogen — every exact route entry has a measured finishing kill
 
 `ARCHOGEN-M3-0641` (leaf `M3.6.9.4.2.2.1`), `2026-10-11`.

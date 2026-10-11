@@ -195,6 +195,7 @@ a change that leaves it stale, so it is never edited by hand.
 ## I
 
 - **ID** — [definition](glossary.md), [The S0 early generation path](s0.md)
+- Initial parent killing tests — [Generated-sources test adequacy](trust-adequacy.md#initial-parent-killing-tests)
 - **interrupt** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The supported profile](profile.md), [What the scheduling checker establishes](analysis.md), [Where
   the engine's knowledge comes from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [Where
@@ -302,9 +303,10 @@ a change that leaves it stale, so it is never edited by hand.
   run](targets.md)
 - **priority** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The supported profile](profile.md), [The use cases](usecases.md), [Reading a
-  description](reading.md), [Describing a workload](workload.md), [Checking a description](checking.md), [The runtime:
-  decisions, not actions](runtime.md), [The S0 early generation path](s0.md), [What this project relies on from
-  outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
+  description](reading.md), [Describing a workload](workload.md), [Checking a description](checking.md),
+  [Generated-sources test adequacy](trust-adequacy.md), [The runtime: decisions, not actions](runtime.md), [The S0 early
+  generation path](s0.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
+  detail](annex-runtime.md)
 - profile — [What is versioned, and what changing it costs](versions.md#profile)
 - **profile** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The supported profile](profile.md), [The use cases](usecases.md), [Reading a
