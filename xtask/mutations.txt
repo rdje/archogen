@@ -5255,3 +5255,22 @@ from
 to
             if route.file != parent.file {
 end
+
+mutation trust-unit-configuration-records-concatenated
+file xtask/src/trust.rs
+test -p xtask trust::tests::a_separator_inside_an_environment_value_cannot_hide_a_configuration_change
+expect killed
+why M3.6.9.6.3.2.2.9.2: joining command tokens and environment records with unescaped spaces/markers collapses distinct configurations when a permitted value contains the marker. The public inventory must retain that distinction; this fixture does not claim the complete gate misses the accompanying source/manifest content change.
+from
+        crate::json::write(&Json::Array(vec![
+            strings(u.configuration.clone()),
+            strings(u.env.clone()),
+        ]))
+to
+        let mut c = u.configuration.join(" ");
+        for e in &u.env {
+            c.push_str(" env-dep:");
+            c.push_str(e);
+        }
+        c
+end

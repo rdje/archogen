@@ -5,6 +5,22 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — structured unit keys preserve configuration boundaries
+
+`ARCHOGEN-M3-0672` (leaf `M3.6.9.6.3.2.2.9.2`), `2026-10-11`.
+
+- Reproduce a permitted separator-bearing environment value collapsing with separate records in actual public
+  shared configuration. Encode private comparison keys as deterministic JSON of ordered command/environment
+  arrays; retain raw unit fields and consumers. The reproducer does not establish a complete-gate bypass.
+- Public regression fails before repair and passes after; permanent native body reversal gains its named kill,
+  strict 0, with all 990 original inputs restored under Python/system hashes. Domain round-trip/order/escape
+  controls and focused tier pass, exact staged stamp required; old test bodies and catalog prefix stay unchanged.
+  Fresh discovery lists 1416 candidates; old outcomes remain source-bound, final full adequacy still open.
+- Canonical spec/book and live pointers align. Changed configuration digests require runner compatibility/
+  proposal review, owned .3.2.1.1; Linux-host results are pending. Include the derived JSON index route.
+  Manual final tree checks found the focused-stamp gate misses successful exit-code wording; urgent .9.5 owns
+  its repair next. This commit independently matches the final staged tree to its real passing stamp.
+
 ## archogen — every compiled environment value and record boundary has a public control
 
 `ARCHOGEN-M3-0671` (leaf `M3.6.9.6.3.2.2.9.1`), `2026-10-11`.

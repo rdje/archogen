@@ -377,13 +377,12 @@ pub struct Unit {
 
 /// A unit's configuration as an item compares it: its normalised command line and every `# env-dep` line with its
 /// value, since a value compiled in through `env!` is configuration as much as a flag is (§3, R8 5).
+/// Separate ordered string arrays preserve token/record boundaries even when a value contains separator text.
 fn unit_configuration(u: &Unit) -> String {
-    let mut c = u.configuration.join(" ");
-    for e in &u.env {
-        c.push_str(" env-dep:");
-        c.push_str(e);
-    }
-    c
+    crate::json::write(&Json::Array(vec![
+        strings(u.configuration.clone()),
+        strings(u.env.clone()),
+    ]))
 }
 
 /// Split one `rustc` command line as cargo's `-v` prints it: on spaces outside single quotes.
@@ -4258,6 +4257,131 @@ pub(crate) mod tests {
             package_item(&items(&after), "crates/common").get("configuration"),
             "one value containing another name collapsed with two environment records"
         );
+    }
+
+    #[test]
+    fn a_separator_inside_an_environment_value_cannot_hide_a_configuration_change() {
+        crate::trust_test_process::bounded!(
+            a_separator_inside_an_environment_value_cannot_hide_a_configuration_change
+        );
+        let dep = "[dependencies]\ncommon = { path = \"../common\" }\n";
+        let f = two_roots(
+            "compiled-env-separator-value",
+            "fn main() { let _ = common::VALUES; }\n",
+            "pub fn f() { let _ = common::VALUES; }\n",
+            &[
+                (
+                    "crates/common/Cargo.toml",
+                    manifest(
+                        "common",
+                        "description = \"alpha env-dep:CARGO_PKG_HOMEPAGE=omega\"\n",
+                    ),
+                ),
+                (
+                    "crates/common/src/lib.rs",
+                    "pub const VALUES: [&str; 1] = [env!(\"CARGO_PKG_DESCRIPTION\")];\n".to_owned(),
+                ),
+                ("crates/a/Cargo.toml", manifest("a", dep)),
+                ("crates/b/Cargo.toml", manifest("b", dep)),
+            ],
+        );
+        let before = written(f.run());
+        f.commit(&[
+            (
+                "crates/common/Cargo.toml",
+                manifest("common", "description = \"alpha\"\nhomepage = \"omega\"\n"),
+            ),
+            (
+                "crates/common/src/lib.rs",
+                "pub const VALUES: [&str; 2] = [env!(\"CARGO_PKG_DESCRIPTION\"), env!(\"CARGO_PKG_HOMEPAGE\")];\n".to_owned(),
+            ),
+        ]);
+        let after = written(f.run());
+        for root in ["gen", "chk"] {
+            let unit = |inventory| {
+                program(inventory, root)
+                    .get("units")
+                    .unwrap()
+                    .elements()
+                    .iter()
+                    .find(|u| u.get("package").and_then(Json::as_str) == Some("crates/common"))
+                    .unwrap()
+            };
+            assert_eq!(
+                list(unit(&before), "env"),
+                ["CARGO_PKG_DESCRIPTION=alpha env-dep:CARGO_PKG_HOMEPAGE=omega"]
+            );
+            assert_eq!(
+                list(unit(&after), "env"),
+                ["CARGO_PKG_DESCRIPTION=alpha", "CARGO_PKG_HOMEPAGE=omega"]
+            );
+            assert_eq!(
+                unit(&before).get("configuration"),
+                unit(&after).get("configuration"),
+                "this control changes environment records alone"
+            );
+        }
+        assert_ne!(
+            package_item(&items(&before), "crates/common").get("configuration"),
+            package_item(&items(&after), "crates/common").get("configuration"),
+            "a separator inside one value collapsed with separate environment records"
+        );
+    }
+
+    #[test]
+    fn configuration_keys_preserve_tokens_records_and_escaped_values() {
+        use super::{unit_configuration, Unit};
+        use std::collections::{BTreeMap, BTreeSet};
+
+        crate::trust_test_process::bounded!(
+            configuration_keys_preserve_tokens_records_and_escaped_values
+        );
+        let cases: &[&[&str]] = &[
+            &[],
+            &[""],
+            &["alpha beta"],
+            &["alpha", "beta"],
+            &["beta", "alpha"],
+            &["alpha", "alpha"],
+            &[" env-dep:"],
+            &["CARGO_PKG_DESCRIPTION=alpha env-dep:CARGO_PKG_HOMEPAGE=omega"],
+            &["CARGO_PKG_DESCRIPTION=alpha", "CARGO_PKG_HOMEPAGE=omega"],
+            &["quote\"slash\\newline\nreturn\rtab\tcontrol\u{1}é"],
+        ];
+        let mut keys = BTreeMap::new();
+        for command in cases {
+            for environment in cases {
+                let u = Unit {
+                    crate_name: "common".to_owned(),
+                    package: "crates/common".to_owned(),
+                    configuration: command.iter().map(|s| (*s).to_owned()).collect(),
+                    files: BTreeSet::new(),
+                    env: environment.iter().map(|s| (*s).to_owned()).collect(),
+                };
+                let key = unit_configuration(&u);
+                assert_eq!(
+                    key,
+                    unit_configuration(&u),
+                    "the same unit needs the same key"
+                );
+                let decoded =
+                    crate::json::parse(&key).expect("a configuration key is structured JSON");
+                assert_eq!(decoded.elements().len(), 2);
+                for (part, expected) in decoded.elements().iter().zip([command, environment]) {
+                    assert_eq!(
+                        part.elements()
+                            .iter()
+                            .map(|v| v.as_str().expect("a configuration component is text"))
+                            .collect::<Vec<_>>(),
+                        *expected
+                    );
+                }
+                assert!(
+                    keys.insert(key, (command, environment)).is_none(),
+                    "distinct token/record vectors collapsed"
+                );
+            }
+        }
     }
 
     #[test]

@@ -258,9 +258,14 @@ For each pair of roots, a **shared item** is:
 - for every pair, the **build configuration** of §3: the toolchain's identity and the root manifest's tables that
   reach rustc (R4 7).
 
-An item's **content** is the sha256 of its manifest and of every file it contributes to each side; its
-**configuration**, each side's unit configuration for it, `# env-dep` lines and their values included, so a value
-compiled in through `env!` changes the item as a flag would (§3, R8 5); and its **edges**, the set of (root, dependent package,
+An item's **content** is the sha256 of its manifest and of every file it contributes to each side. Its
+**configuration** holds each side's unit configuration, `# env-dep` lines and their values included, so a value
+compiled in through `env!` changes the item as a flag would (§3, R8 5). Clarified `2026-10-11` by
+`M3.6.9.6.3.2.2.9.2`: each unit's comparison key is deterministic JSON of two ordered string arrays,
+`[command_tokens, environment_records]`. This preserves token/record boundaries, empty values, order and
+escaped characters even when a value contains the former separator. Per-program raw configuration/env arrays
+retain their shape. Changed key encodings change configuration digests; proposals are regenerated on their own
+host and remain subject to §5/§6's review. Its **edges** are the set of (root, dependent package,
 edge kind) for every edge into it, so a new consumer of a package already shared is a change though nothing in the
 package is (measured, R5 2); and each file of a package item's content carries its readers, the set of (root,
 reading package), so a package that is not shared starting to read a shared package's file is a change too

@@ -509,11 +509,7 @@ kills and 30 survived (`M3.6.9.4.2.2.2`). After the required initial operator me
 those gaps. On `2026-10-11`, the combined final exact run kills all 32 entries with finishing named parent tests, strict exit 0
 (`M3.6.9.6.3.1`). These historical measurements remain separate from full production-sweep adequacy.
 
-The first complete-range `trust.rs` attempt listed 1,420 candidates across production lines 144–2493, with every
-operator and the required parent filters. Its unmutated copy passed. The runner stopped after 150 candidates:
-78 named kills, 62 survivors, five compiler refusals, four strict timeouts and one unjudged result, raw exit 2.
-The complete-result auditor refused the incomplete identities; every captured copied and original tracked input
-was verified restored before subsequent edits. No full measurement or adequacy pass follows from this attempt.
+The first full-range `trust.rs` attempt lists 1,420 candidates, lines 144–2493. Its baseline passes; it stops after 150: 78 named kills, 62 survivors, five compiler refusals, four strict timeouts and one unjudged result, raw exit 2. The incomplete-result auditor refuses; all captured original/copied inputs restore. This is not a full measurement or adequacy pass.
 
 The five non-finishing candidates remove index progress in configuration normalization. A compiler-backed diagnostic
 uses each actual edit with a trace that stops before a fourth loop-body evaluation: the baseline visits index 1 once,
@@ -563,14 +559,17 @@ bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask \
 
 Measured `2026-10-11`: actual identities, replacements, killing names and counts agree; altered evidence refuses. The first attempt's measured prefix is retained, except its five non-finishing cases now have named kills. Compiler refusals prove no coverage. All 540 initial survivors are owned in `docs/tasks/M3.md`; each needs a repair or justified per-file equivalence before the final strict sweep.
 
-Initial assessments (`2026-10-11`, `M3.6.9.6.3.2.2`): `.1`–`.4` repair thirteen test gaps; `.5`–`.6` repair malformed names and placeholder leaves; `.7` repairs seven pair-validation gaps. Native coverage repairs finish with named kills, strict 0. Old bodies remain unchanged; production stays unchanged within test-only slices. Detailed before/after shapes and outcomes live in those committed leaves.
+Bounded initial assessments (`2026-10-11`, `M3.6.9.6.3.2.2.1`–`.7`) repair malformed names/placeholder leaves and reader/role/pair test gaps. Their committed records hold the actual named kills, exact reversals and source boundaries.
 
-Measured `2026-10-11`, `.8.2`: the actual pair-loop ends rewrite survives unclassified (strict 1), then finishes equivalent with `--equivalents xtask/trust.equivalents` (strict 0). The record applies only to `[a,b]`, two borrowed String references: both are ends, visited in order with identical early returns. Peeking moves references without user callbacks or destructor effects. Compiled actual-candidate controls hold aliases, equal-value distinct references and order; first/last-only and wider-array equivalence claims fail. Both wrong trace oracles fail as intended. Production stays unchanged; classification adds no killing test.
+Measured `2026-10-11`, `.8.2`: the pair-loop ends rewrite survives unclassified (strict 1), then finishes equivalent with `--equivalents xtask/trust.equivalents` (strict 0). Its two borrowed String references are both ends, visited in order with identical early returns; peeking has no user callback or destructor effect. Compiled alias/order, first/last, wider-array and wrong-oracle controls hold this narrow argument. Production stays unchanged; classification adds no killing test.
 
-Selected runs restore all 988 captured original/copied inputs under Python/system hashes; the new record is separately hashed. Old bodies stay unchanged; falsifications and focused gates pass. Exact IDs, hashes and commands live in committed leaves; producer/auditor tracked, orchestration ignored. Fresh listing: 1,421 candidates, production lines 144–2499, not full outcomes. Historical IDs require their recorded source or fresh `--list` discovery. Final exact/full current-source measurements remain open.
-Measured `2026-10-11`, `.9.1`: four environment-configuration survivors gain named kills, strict 0. Bounded public controls hold each of three compiled values and distinguish one `CARGO_PKG_DESCRIPTION` containing another variable's name from two records; changing `env!("CARGO_PKG_DESCRIPTION")` changes the shared configuration. Production/old bodies stay unchanged; all 990 captured inputs restore and focused gates pass.
+Historical selected runs restore all 988 captured original/copied inputs under Python/system hashes; the new E record is separately hashed. Exact IDs, hashes and commands live in committed leaves. Listing `2026-10-11`: 1,416 candidates, production lines 144–2498, not full outcomes. Historical IDs require their recorded source or fresh `--list` discovery. Final exact/full current-source measurements remain open.
 
-Measured `2026-10-11`: a compiled actual-helper diagnostic collapses a separator-bearing value with two records. Public-inventory reproduction and repair are owned next in `.9.2`; impact on the public path remains under assessment.
+Measured `2026-10-11`, `.9.1`: four environment-configuration survivors gain named kills, strict 0. Public controls hold each of three compiled values and record boundaries; production/old bodies stay unchanged, all 990 captured inputs restore and focused gates pass.
+
+Measured `2026-10-11`, `.9.2`: public inventory collapses a marker-bearing value with separate records before repair; the regression passes afterward. Comparison keys now contain deterministic JSON `[command_tokens, environment_records]`, e.g. `[["--crate-name","common"],["CARGO_PKG_DESCRIPTION=alpha env-dep:omega"]]`. Arrays/escaping preserve boundaries, order and empty values; per-program raw arrays retain their shapes. Native reversal of only the key body gains the named public kill and restores all 990 original inputs. Domain controls and focused gates pass. This changes configuration digests: Linux proposal compatibility is owned in `M3.6.3.2.1.1`, pending a runner whose base checker includes the repair and normal proposal review. The reproducer changes content too; it establishes a configuration-field defect, not a complete-gate bypass.
+
+The focused-stamp gate currently misses successful exit-code wording; `.9.5` owns its repair next. This commit independently matches the staged tree with its real passing stamp.
 
 Timeout and unjudged results remain failures. Full adequacy and independent review stay open.
 Recorded native killing names remain accessible through the original `docs/tasks/M3.md` leaf stubs, which now
