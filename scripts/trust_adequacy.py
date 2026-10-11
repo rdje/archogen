@@ -3,12 +3,16 @@
 import argparse
 import ast
 import bisect
+from collections import Counter
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
+import signal
 import subprocess
 import sys
+import time
 import unittest
 
 DECISION = "docs/specs/trust/decision_trust-generated-adequacy.md"
@@ -185,7 +189,185 @@ def plan(root):
                 rows=rows, files=files)
 
 
+def display(text):
+    return json.dumps(text, ensure_ascii=False) if "\n" in text else text
+
+
+def audit_measurement(log, file_plan, filename, exit_code):
+    """Require every selected actual replacement, named finishing kill and native terminal count."""
+    candidates = {m["id"]: m for m in file_plan["candidates"]}
+    records = {}
+    first, last = file_plan["production_range"]
+    baseline = (r"mutation-sweep: the unmutated copy passes \([0-9]+s\); "
+                + str(file_plan["listed_count"]) + r" mutation\(s\) of " + re.escape(filename)
+                + r", lines " + str(first + 1) + " to " + str(last))
+    if len(re.findall("^" + baseline + "$", log, re.MULTILINE)) != 1:
+        raise ValueError("missing or wrong native baseline/scope")
+    marks = dict(killed="✓", survived="✗", unviable="·", timeout="✗", unjudged="?")
+    for line in log.splitlines():
+        match = re.match(r"^  ([✓✗·?=]) (\S+) +(\w+) +", line)
+        if not match:
+            continue
+        mark, identity, outcome = match.groups()
+        if identity not in candidates or identity in records or outcome not in marks or mark != marks[outcome]:
+            raise ValueError("foreign, duplicate or invalid native result")
+        candidate = candidates[identity]
+        expected = "  %s %-18s %-10s %s ⟶ %s" % (
+            mark, identity, outcome, display(candidate["original"].strip()), display(candidate["replacement"].strip()))
+        if not line.startswith(expected):
+            raise ValueError("native replacement text drift: " + identity)
+        detail = line[len(expected):]
+        names = []
+        if outcome == "killed":
+            if not re.fullmatch(r" — [\w:]+(?:, [\w:]+)*", detail):
+                raise ValueError("native kill lacks finishing test names: " + identity)
+            names = detail[3:].split(", ")
+        elif outcome in ("survived", "timeout") and detail:
+            raise ValueError("unexpected native outcome detail: " + identity)
+        records[identity] = dict(id=identity, outcome=outcome, names=names, detail=detail)
+    if records.keys() != candidates.keys():
+        raise ValueError("native result identities incomplete")
+    counts = Counter(r["outcome"] for r in records.values())
+    if counts["unjudged"]:
+        raise ValueError("native run is unjudged")
+    summary = "mutation-sweep: " + ", ".join("%d %s" % (count, outcome) for outcome, count in sorted(counts.items()))
+    operators = {}
+    for identity, record in records.items():
+        op = candidates[identity]["operator"]
+        attempted, unviable = operators.get(op, (0, 0))
+        operators[op] = (attempted + 1, unviable + (record["outcome"] == "unviable"))
+    operator_summary = "mutation-sweep: unviable by operator: " + ", ".join(
+        "%s=%d/%d" % (op, unviable, attempted) for op, (attempted, unviable) in sorted(operators.items())) + " (unviable/attempted)"
+    for expected in (summary, operator_summary):
+        if log.splitlines().count(expected) != 1:
+            raise ValueError("native terminal counts disagree")
+    if exit_code != (1 if counts["survived"] or counts["timeout"] else 0):
+        raise ValueError("native exit disagrees with strict measured outcomes")
+    return dict(entries=list(records.values()), counts=dict(counts), operator_counts={
+        op: dict(attempted=a, unviable=u) for op, (a, u) in operators.items()}, complete_identities=True,
+        baseline_passed=True, raw_exit_code=exit_code)
+
+
+def local_output(root, path):
+    output = Path(path)
+    if output.is_absolute() or not (root / output).resolve().is_relative_to(root / "target"):
+        raise ValueError("output must remain under this repository's target/")
+    return root / output
+
+
+def validate_inputs(root, hashes):
+    expected_paths = {DECISION, CATALOGUE, SWEEP, "xtask/src/trust.rs", "xtask/src/trust_generated.rs"}
+    if not isinstance(hashes, dict) or set(hashes) != expected_paths:
+        raise ValueError("unrecognized plan input paths")
+    for path, expected in hashes.items():
+        if not isinstance(expected, str) or not re.fullmatch(r"[0-9a-f]{64}", expected):
+            raise ValueError("invalid plan input digest: " + path)
+        if digest((root / path).read_bytes()) != expected:
+            raise ValueError("stale plan input: " + path)
+
+
+def measure(root, plan_path, filename, population, output):
+    manifest = json.loads((root / plan_path).read_text())
+    if manifest.get("schema") != "archogen-trust-adequacy-plan/1" or manifest.get("populations") != POPULATIONS:
+        raise ValueError("unrecognized measurement plan/populations")
+    validate_inputs(root, manifest["input_sha256"])
+    if manifest != plan(root):
+        raise ValueError("measurement manifest differs from actual complete candidate plan")
+    file_plan = manifest["files"][filename]
+    command = ["bash", SWEEP, filename, "--package", "xtask", "--timeout", "180", "--timeouts-fail"]
+    filters = ["route_tests"] if population == "route" else POPULATIONS["parent"][3:]
+    command += ["--filter=" + item for item in filters]
+    for candidate in file_plan["candidates"]:
+        command += ["--only", candidate["id"]]
+    output.parent.mkdir(parents=True, exist_ok=True)
+    logfile = output.with_suffix(".log")
+    local_output(root, str(logfile.relative_to(root)))
+    if output.resolve() == (root / plan_path).resolve() or logfile.resolve() == (root / plan_path).resolve():
+        raise ValueError("result/log must not overwrite its plan")
+    result = dict(schema="archogen-trust-adequacy-measurement/1", status="running", file=filename,
+                  population=population, plan=plan_path, plan_sha256=digest((root / plan_path).read_bytes()),
+                  command=command, log=str(logfile.relative_to(root)), input_sha256=manifest["input_sha256"],
+                  producer_sha256=digest(Path(__file__).read_bytes()),
+                  source_commit=subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip())
+    def save():
+        output.write_text(json.dumps(result, indent=2) + "\n")
+    save()
+    original = (root / filename).read_bytes()
+    started = time.monotonic()
+    env = dict(os.environ, CARGO_HOME=str(root / "target/cargo-home"), TMPDIR=str(root / "target/tmp"))
+    with logfile.open("w") as log:
+        process = subprocess.Popen(command, cwd=root, env=env, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+        try:
+            exit_code = process.wait()
+        except BaseException:
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            process.wait()
+            copied = root / "target/mutation-sweep/tree" / filename
+            if copied.exists():
+                copied.write_bytes(original)
+            result.update(status="interrupted", elapsed_seconds=time.monotonic() - started)
+            save()
+            raise
+    result.update(raw_exit_code=exit_code, elapsed_seconds=time.monotonic() - started, status="audit-pending")
+    save()
+    try:
+        result.update(audit_measurement(logfile.read_text(), file_plan, filename, exit_code))
+        for path, expected in manifest["input_sha256"].items():
+            if digest((root / path).read_bytes()) != expected:
+                raise ValueError("measurement changed source input: " + path)
+        if (root / "target/mutation-sweep/tree" / filename).read_bytes() != original:
+            raise ValueError("native copy did not restore")
+        result.update(status="measured", restored=True, copied_sha256=digest(original))
+    except (OSError, ValueError) as error:
+        result.update(status="audit-failed", error=str(error))
+        save()
+        raise
+    save()
+    print("trust-adequacy: %s %s measured; %s; raw exit %d; complete identities and restored source" % (
+        filename, population, result["counts"], exit_code))
+
+
 class Controls(unittest.TestCase):
+    def test_manifest_paths_refuse_before_reading_any_unrecognized_input(self):
+        paths = {DECISION, CATALOGUE, SWEEP, "xtask/src/trust.rs", "xtask/src/trust_generated.rs"}
+        hashes = {path: "0" * 64 for path in paths}
+        for changed in (None, list(paths), {}, {**hashes, "../outside": "0" * 64},
+                        {**hashes, "/outside": "0" * 64}, {k: v for k, v in hashes.items() if k != SWEEP}):
+            # None cannot read a path: a mistaken acceptance would fail with TypeError, not the required refusal.
+            with self.assertRaisesRegex(ValueError, "unrecognized plan input paths"):
+                validate_inputs(None, changed)
+        root = Path(__file__).resolve().parent.parent
+        valid = {path: digest((root / path).read_bytes()) for path in paths}
+        validate_inputs(root, valid)
+        for value in ("wrong", 12, "0" * 64):
+            with self.assertRaises(ValueError):
+                validate_inputs(root, {**valid, SWEEP: value})
+
+    def test_result_audit_refuses_missing_duplicate_foreign_text_unnamed_counts_and_exit(self):
+        file_plan = dict(production_range=[0, 4], listed_count=1, candidates=[
+            dict(id="L2.bool.0", span=[1, 2], operator="bool", original="    true", replacement="    false")])
+        baseline = "mutation-sweep: the unmutated copy passes (0s); 1 mutation(s) of f.rs, lines 1 to 4\n"
+        entry = "  ✓ L2.bool.0          killed     true ⟶ false — tests::fails\n"
+        footer = "mutation-sweep: 1 killed\nmutation-sweep: unviable by operator: bool=0/1 (unviable/attempted)\n"
+        log = baseline + entry + footer
+        self.assertEqual(audit_measurement(log, file_plan, "f.rs", 0)["entries"][0]["names"], ["tests::fails"])
+        for changed in (baseline + footer, baseline + entry + entry + footer, log.replace("L2.bool.0", "L2.bool.9"),
+                        log.replace("⟶ false", "⟶ other"), log.replace(" — tests::fails", ""),
+                        log.replace("1 killed", "2 killed"), log.replace("bool=0/1", "bool=1/1"),
+                        log.replace("the unmutated copy passes", "baseline missing")):
+            with self.assertRaises(ValueError):
+                audit_measurement(changed, file_plan, "f.rs", 0)
+        with self.assertRaises(ValueError):
+            audit_measurement(log, file_plan, "f.rs", 1)
+        for outcome, mark, detail, code in (("survived", "✗", "", 1), ("timeout", "✗", "", 1),
+                                           ("unviable", "·", " — error[E0308]: mismatched types", 0)):
+            changed = baseline + entry.replace("✓", mark).replace("killed    ", "%-10s" % outcome).replace(" — tests::fails", detail)
+            changed += footer.replace("1 killed", "1 " + outcome).replace("bool=0/1", "bool=%d/1" % (outcome == "unviable"))
+            self.assertEqual(audit_measurement(changed, file_plan, "f.rs", code)["counts"], {outcome: 1})
+
     def test_complete_line_spans_and_half_open_boundaries(self):
         source = "const X: bool = true;\nfn f() {\n    a();\n    b();\n}\n"
         self.assertEqual(source_span(source, "    a();\n    b();"), [2, 4])
@@ -255,6 +437,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", help="repository-relative JSON file under target/")
     parser.add_argument("--self-test", action="store_true")
+    parser.add_argument("--measure", choices=["xtask/src/trust_generated.rs", "xtask/src/trust.rs"])
+    parser.add_argument("--population", choices=list(POPULATIONS))
+    parser.add_argument("--plan", help="repository-relative candidate manifest")
     args = parser.parse_args()
     if args.self_test:
         result = unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(Controls))
@@ -262,12 +447,18 @@ def main():
     if not args.output:
         parser.error("--output or --self-test required")
     root = Path(__file__).resolve().parent.parent
-    output = Path(args.output)
-    if output.is_absolute() or not (root / output).resolve().is_relative_to(root / "target"):
-        parser.error("output must remain under this repository's target/")
+    output = local_output(root, args.output)
+    if args.measure:
+        if not args.population or not args.plan:
+            parser.error("--measure requires --population and --plan")
+        local_output(root, args.plan)
+        measure(root, args.plan, args.measure, args.population, output)
+        return 0
+    if args.population or args.plan:
+        parser.error("--population/--plan require --measure")
     manifest = plan(root)
-    (root / output).parent.mkdir(parents=True, exist_ok=True)
-    (root / output).write_text(json.dumps(manifest, indent=2) + "\n")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(manifest, indent=2) + "\n")
     selected = sum(len(f["candidates"]) for f in manifest["files"].values())
     print("trust-adequacy: %d census rows; %d unique file/candidates selected; actual CLI listings agree; planning only"
           % (len(manifest["rows"]), selected))

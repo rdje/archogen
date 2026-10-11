@@ -196,6 +196,8 @@ a change that leaves it stale, so it is never edited by hand.
 
 - **ID** — [definition](glossary.md), [The S0 early generation path](s0.md)
 - Initial parent killing tests — [Generated-sources test adequacy](trust-adequacy.md#initial-parent-killing-tests)
+- Initial source/provenance operator outcomes — [Generated-sources test
+  adequacy](trust-adequacy.md#initial-sourceprovenance-operator-outcomes)
 - **interrupt** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The supported profile](profile.md), [What the scheduling checker establishes](analysis.md), [Where
   the engine's knowledge comes from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [Where
@@ -215,8 +217,9 @@ a change that leaves it stale, so it is never edited by hand.
   runtime: decisions, not actions](runtime.md), [Where generated systems run](targets.md), [Verifying the
   toolchain](verification.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
   detail](annex-runtime.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
-- **JSON** — [definition](glossary.md), [The engine API](engine-api.md), [Verifying the toolchain](verification.md),
-  [What is versioned, and what changing it costs](versions.md)
+- **JSON** — [definition](glossary.md), [Generated-sources test adequacy](trust-adequacy.md), [The engine
+  API](engine-api.md), [Verifying the toolchain](verification.md), [What is versioned, and what changing it
+  costs](versions.md)
 
 ## K
 
@@ -389,6 +392,8 @@ a change that leaves it stale, so it is never edited by hand.
 - **shared item** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md)
 - **SI** — [definition](glossary.md), [Quantities and units](quantities.md)
 - Silence is not admission — [The supported profile](profile.md#silence-is-not-admission)
+- Source/provenance route killing tests — [Generated-sources test
+  adequacy](trust-adequacy.md#sourceprovenance-route-killing-tests)
 - **SQL** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md)
 - **SSI** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - States and priorities — [The runtime: decisions, not actions](runtime.md#states-and-priorities)

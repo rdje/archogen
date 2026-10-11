@@ -5,6 +5,22 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — initial source/provenance operator routes measured
+
+`ARCHOGEN-M3-0644` (leaf `M3.6.9.5.2.1`), `2026-10-11`.
+
+- Run every selected trust_generated candidate against route tests: 61 attempted, 36 named kills, 17 survivors
+  and eight unviable copied-String membership spellings. Raw strict sweep exit 1, no timeout or unjudged result.
+  Unmutated copy passes; neither these outcomes nor interval overlap establishes semantic witnesses.
+- Extend the tracked diagnostic with native execution, whole-plan revalidation, raw logs/exit, source/producer/
+  manifest hashes and complete identity/replacement/name/count/restoration audits. Seven control methods pass;
+  a shell entrypoint makes them discoverable by integration's self-test census, verified by its selected run.
+- Seven alterations of the actual result set refuse; all three source digests match original/restored/committed/
+  independent system values. Native catalogue contracts pass; pinned book builds with every actual candidate
+  outcome and killing-test name. Source/product/operators and parent semantic tests unchanged.
+- Own survivor examination at `.5.4` and parent repairs at `.9.6`; commit this population before its matching
+  parent run. Full integration and completed adequacy remain pending.
+
 ## archogen — census spans bind a reproducible operator plan
 
 `ARCHOGEN-M3-0643` (leaf `M3.6.9.5.1`), `2026-10-11`.

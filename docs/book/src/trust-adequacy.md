@@ -154,10 +154,150 @@ Measured `2026-10-11`, `M3.6.9.5.1`: the complete listings contain 1,420 candida
 memberships across the census. Every census row has at least one overlapping candidate. These are planning
 counts only: no production compilation, mutation verdict or semantic reach is established here.
 
+## Initial source/provenance operator outcomes
+
+Measured `2026-10-11`, `M3.6.9.5.2.1`, native `aarch64-apple-darwin`, Rust `1.95.0`, production source
+identical to committed `5663aa9` and the source digests above: all selected `trust_generated.rs` candidates run
+against the route population. The unmutated copy passes. Outcomes: 36 named kills, 17 survivors and 8 unviable
+candidates; no timeout or unjudged outcome, raw strict sweep exit 1. This is a completed initial measurement,
+not completed adequacy. The copied source restores exactly; all three population source digests independently
+match their original, committed and system-tool values. Seven altered actual-result sets are refused: missing,
+duplicate, foreign, changed replacement, unnamed kill, wrong terminal count and wrong raw exit.
+
+The tracked runner's seven control methods are also discovered through `scripts/trust_adequacy.sh` by the
+integration self-test runner. The selected discovery check passes; a full integration run is still pending.
+All survivors are owned for semantic examination in `M3.6.9.5.4`; parent behavioral gaps then belong to `.9.6`.
+The parent column stays pending until the same candidates have their actual parent run. No desired pair of
+verdicts establishes a witness. Every unviable candidate below reports `error[E0277]`: `String: Copy` is not
+satisfied for the copied-element membership spelling. An unviable attempt proves no semantic coverage.
+
+| Operator | Route attempted | Route unviable |
+| --- | --- | --- |
+| `chain` | 13 | 0 |
+| `cond` | 2 | 0 |
+| `contains` | 16 | 8 |
+| `guard` | 12 | 0 |
+| `iter` | 18 | 0 |
+
+Killing-test labels name actual finishing tests in the key below. Identities refer to the unfiltered complete
+listing, not an operator-specific list. Each selected candidate appears once; the manifest retains all census
+rows it overlaps. Exact span overlap alone does not classify its semantic effect.
+
+| Candidate | Initial route | Initial parent |
+| --- | --- | --- |
+| `L172.guard.67` | survived | pending |
+| `L172.guard.68` | survived | pending |
+| `L172.guard.69` | survived | pending |
+| `L271.iter.100` | killed (gr19, gr23) | pending |
+| `L271.iter.101` | survived | pending |
+| `L271.iter.102` | survived | pending |
+| `L272.iter.103` | killed (gr4, gr9, gr10, gr17, gr19, gr23) | pending |
+| `L272.iter.104` | killed (gr1, gr2, gr4, gr10, gr23) | pending |
+| `L272.iter.105` | survived | pending |
+| `L273.iter.106` | killed (gr1, gr23) | pending |
+| `L273.iter.107` | killed (gr23) | pending |
+| `L273.iter.108` | killed (gr23) | pending |
+| `L273.guard.109` | survived | pending |
+| `L273.guard.110` | survived | pending |
+| `L273.guard.111` | survived | pending |
+| `L273.guard.112` | killed (gr23) | pending |
+| `L273.guard.113` | killed (gr23) | pending |
+| `L273.guard.114` | killed (gr23) | pending |
+| `L273.guard.115` | killed (gr23) | pending |
+| `L273.guard.116` | killed (gr23) | pending |
+| `L273.guard.117` | killed (gr23) | pending |
+| `L278.cond.118` | killed (gr1, gr2, gr3, gr4, gr5, gr6, gr7, gr8, gr9, gr10, gr11, gr12, gr13, gr14, gr15, gr16, gr17, gr18, gr19, gr20, gr21, gr22, gr23) | pending |
+| `L278.cond.119` | killed (gr9) | pending |
+| `L339.iter.130` | killed (gr19, gr21) | pending |
+| `L339.iter.131` | killed (gr21) | pending |
+| `L339.iter.132` | survived | pending |
+| `L340.iter.133` | killed (gr2, gr4, gr9, gr10, gr12, gr17, gr18, gr19, gr22) | pending |
+| `L340.iter.134` | killed (gr1, gr2, gr4, gr5, gr6, gr8, gr9, gr10, gr12, gr13, gr14, gr15, gr16, gr18, gr19, gr20, gr21, gr22) | pending |
+| `L340.iter.135` | survived | pending |
+| `L341.iter.136` | killed (gr4, gr5, gr10, gr12, gr18, gr19, gr20, gr22) | pending |
+| `L341.iter.137` | killed (gr4, gr5, gr10, gr12, gr18, gr20, gr22) | pending |
+| `L341.iter.138` | killed (gr4, gr18, gr22) | pending |
+| `L191.chain.219` | killed (gr5, gr23) | pending |
+| `L191.chain.220` | killed (gr23) | pending |
+| `L192.chain.221` | survived | pending |
+| `L192.chain.222` | survived | pending |
+| `L192.chain.223` | killed (gr1, gr2, gr3, gr4, gr5, gr6, gr7, gr8, gr9, gr10, gr11, gr12, gr13, gr14, gr15, gr16, gr17, gr18, gr19, gr20, gr21, gr22, gr23) | pending |
+| `L192.contains.224` | killed (gr23) | pending |
+| `L192.contains.225` | unviable (E0277) | pending |
+| `L192.contains.226` | killed (gr23) | pending |
+| `L192.contains.227` | unviable (E0277) | pending |
+| `L253.chain.243` | killed (gr19, gr21, gr23) | pending |
+| `L253.chain.244` | killed (gr21) | pending |
+| `L253.chain.245` | survived | pending |
+| `L253.contains.246` | killed (gr7, gr8, gr11, gr14, gr15, gr16, gr21) | pending |
+| `L253.contains.247` | unviable (E0277) | pending |
+| `L253.contains.248` | killed (gr1, gr2, gr3, gr4, gr5, gr6, gr9, gr10, gr12, gr13, gr17, gr18, gr19, gr20, gr21, gr22, gr23) | pending |
+| `L253.contains.249` | unviable (E0277) | pending |
+| `L278.contains.252` | survived | pending |
+| `L278.contains.253` | unviable (E0277) | pending |
+| `L278.contains.254` | survived | pending |
+| `L278.contains.255` | unviable (E0277) | pending |
+| `L339.chain.265` | killed (gr19, gr21) | pending |
+| `L339.chain.266` | killed (gr21) | pending |
+| `L339.chain.267` | killed (gr19, gr21) | pending |
+| `L339.chain.268` | killed (gr21) | pending |
+| `L339.chain.269` | survived | pending |
+| `L339.contains.270` | killed (gr8, gr14, gr15, gr16, gr21) | pending |
+| `L339.contains.271` | unviable (E0277) | pending |
+| `L339.contains.272` | killed (gr1, gr2, gr4, gr5, gr6, gr9, gr10, gr12, gr13, gr17, gr18, gr19, gr20, gr21, gr22) | pending |
+| `L339.contains.273` | unviable (E0277) | pending |
+
+### Source/provenance route killing tests
+
+| Label | Actual finishing test |
+| --- | --- |
+| gr1 | `trust_generated::route_tests::a_vendored_executable_a_script_runs_uncopied_is_believed` |
+| gr2 | `trust_generated::route_tests::no_route_for_a_marked_crate_root_but_the_parent_s_belief_in_a_script` |
+| gr3 | `trust_generated::route_tests::route_a_chain_judges_every_step_s_generator` |
+| gr4 | `trust_generated::route_tests::route_a_chain_made_in_one_generation` |
+| gr5 | `trust_generated::route_tests::route_a_file_one_step_runs_and_another_reads_is_named_once` |
+| gr6 | `trust_generated::route_tests::route_a_generator_build_is_judged_against_every_held_role_package` |
+| gr7 | `trust_generated::route_tests::route_a_generator_is_judged_against_every_reader` |
+| gr8 | `trust_generated::route_tests::route_a_harness_uses_both_pair_roles_and_judges_foreign_program_targets` |
+| gr9 | `trust_generated::route_tests::route_a_live_input_link_keeps_its_symbolic_link_refusal` |
+| gr10 | `trust_generated::route_tests::route_a_marked_input_or_script_remade_in_the_generation` |
+| gr11 | `trust_generated::route_tests::route_a_program_target_generator_is_judged_against_every_reader` |
+| gr12 | `trust_generated::route_tests::route_a_program_target_step_reads_the_intermediate_at_run_time` |
+| gr13 | `trust_generated::route_tests::route_a_program_that_generates_its_own_source` |
+| gr14 | `trust_generated::route_tests::route_a_runtime_data_reader_is_judged_for_scripts_and_program_targets` |
+| gr15 | `trust_generated::route_tests::route_a_table_a_dependency_s_library_holds_is_made_by_a_package_not_depending_on_it` |
+| gr16 | `trust_generated::route_tests::route_a_table_its_package_s_library_holds_is_made_by_another_package` |
+| gr17 | `trust_generated::route_tests::route_a_tool_pin` |
+| gr18 | `trust_generated::route_tests::route_a_vendored_file_copied` |
+| gr19 | `trust_generated::route_tests::route_an_intermediate_a_program_reads_is_remade_by_the_later_step` |
+| gr20 | `trust_generated::route_tests::route_every_generator_names_a_shared_transitive_build_read` |
+| gr21 | `trust_generated::route_tests::route_every_live_form_contributes_its_generator_provenance` |
+| gr22 | `trust_generated::route_tests::route_middle_generators_and_inputs_remain_in_provenance` |
+| gr23 | `trust_generated::route_tests::route_tests_refusals_hold_at_every_position_of_a_form_s_entries` |
+
 ## Remaining measurements
 
-Operator reach remains unmeasured. The next stage runs every candidate on every census replacement span against
-both populations before adding parent semantic tests. An actual viable semantic witness, or an explicit absence
+Use the same manifest for the two populations; each invocation re-derives the full plan and refuses stale
+inputs or a changed selection before executing the actual sweep. For example:
+
+```bash
+python3 scripts/trust_adequacy.py --plan target/trust-adequacy/plan.json \
+  --measure xtask/src/trust_generated.rs --population route \
+  --output target/trust-adequacy/generated-route.json
+python3 scripts/trust_adequacy.py --plan target/trust-adequacy/plan.json \
+  --measure xtask/src/trust_generated.rs --population parent \
+  --output target/trust-adequacy/generated-parent.json
+```
+
+Run them sequentially: both use the sweep's same copy and build directory. The runner stores the exact command,
+input/producer/manifest digests, source commit and raw log beside a structured result. It verifies every selected
+identity and actual replacement text, requires finishing test names for kills, compares terminal outcome and
+per-operator counts, preserves the raw strict sweep exit, and checks source/copy restoration. The process status
+of this diagnostic reports whether measurement and audit completed; the JSON's `raw_exit_code` is the sweep's
+criterion status. A completed measurement with survivors remains an unmet adequacy criterion.
+
+Operator reach remains incomplete. The source/provenance route population is measured above; its parent
+population and both trust.rs populations remain pending, all before adding parent semantic tests. An actual viable semantic witness, or an explicit absence
 with its reason, is required; a desired verdict pair alone does not establish the same effect.
 
 The final stage strengthens parent tests and runs complete production sweeps of `trust.rs`, `trust_generated.rs`
