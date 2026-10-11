@@ -4765,3 +4765,32 @@ from
 to
                 .filter(|p| reads[&p.name].contains(&g.path) && !p.data.contains(&g.path))
 end
+
+mutation route-a-build-read-naming-its-first-generator-alone
+file xtask/src/trust.rs
+test -p xtask route_tests
+expect killed
+why M3.6.9.4.1.3: census R18-R4; every generator whose build reads a generated file is named in its chain refusal. Naming only the first still refuses the chain but loses diagnostic attribution.
+from
+            for g in generators {
+to
+            for g in generators.iter().take(1) {
+end
+
+mutation route-a-transitive-generator-build-read-dropped
+file xtask/src/trust.rs
+test -p xtask route_tests
+expect killed
+why M3.6.9.4.1.3: census R6-D1 and R10-D2; the successful generator build retains units reached transitively, leaving own/direct reads and the root-reuse branch unchanged.
+from
+                            Ok((units, _)) => {
+                                for u in &units {
+                                    for f in &u.files {
+to
+                            Ok((units, _)) => {
+                                for u in &units {
+                                    if u.package != *pkg && !graph.iter().any(|(from, to, _)| from == pkg && to == &u.package) {
+                                        continue;
+                                    }
+                                    for f in &u.files {
+end

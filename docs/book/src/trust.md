@@ -456,7 +456,11 @@ refuses it as no blob because the regular-file tree excludes symlinks. It does n
 The reader/role controls (`M3.6.9.4.1.2`) hold every role package a generator target's build reaches, including a
 foreign package after an allowed one; a harness may use both pair roles but refuses a third role's script or
 program target; and a reader handed generated runtime data still judges its generators. Each of the four exact
-mutations is killed by a named finishing route test. Build-read controls, parent twins and production adequacy
-measurements remain pending; parent tests have not yet been strengthened.
+mutations is killed by a named finishing route test. Build-read controls (`M3.6.9.4.1.3`) hold two generators
+reaching a shared dependency through another package: plain reads pass; marked and declared reads refuse with
+both generators named. Naming the first alone still refuses but loses attribution; dropping transitive units
+admits the marked dependency in the native fixture. Both exact mutations produce named finishing kills.
+All nine route additions are built. Parent twins, census/parity controls and production adequacy measurements
+remain pending; parent tests have not yet been strengthened.
 The package the verifier
 reads is fixed provisionally until `M4.7` writes real ones.

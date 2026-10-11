@@ -5,6 +5,22 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — shared transitive build reads retain every generator attribution
+
+`ARCHOGEN-M3-0639` (leaf `M3.6.9.4.1.3`), `2026-10-11`.
+
+- Add the two exact build-read route entries and a native fixture with two generators reaching one dependency
+  through another package. Plain reads pass; marked and declared reads refuse with both generators named.
+  Initial first-generator entry survives; transitive-unit entry already has a valid named route kill.
+- Native original/exact-mutant comparisons prove different effects: naming the first alone still refuses but
+  loses attribution; dropping transitive units admits the marked dependency in the fixture. Copied bytes restore
+  exactly. Design/book/catalogue and future measurement instructions distinguish diagnostic loss from admission.
+- Validation: one fully qualified native fixture passes; both compiled exact entries produce named strict kills
+  and restore bytes exactly. Census confirms all 32 specified routes once; all nine additions are held across the
+  three route slices. Focused tier, final same-tree stamp and pinned book/index/staged gates required.
+- Route-addition lane complete; census/parity controls and exact parent twins next. Product rules and parent
+  fixtures remain unchanged; no parent/operator adequacy claim. Task/logs and current resume/frontier agree.
+
 ## archogen — reader and role route controls kill four previously surviving omissions
 
 `ARCHOGEN-M3-0638` (leaf `M3.6.9.4.1.2`), `2026-10-11`.

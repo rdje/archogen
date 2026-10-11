@@ -166,7 +166,7 @@ constrain the method and its scope above. R2's census adds the four families its
 history, the transitive dependency and middle-generator provenance cases; neither is silently left to operators.
 
 <!-- machine-read: parent-mutation-census -->
-| Suffix | Source findings | Catalogue state and file |
+| Suffix | Source findings | Catalogue origin and file |
 | --- | --- | --- |
 | `the-first-generator-alone` | R8-D1; R9-D1 | existing, `trust.rs` |
 | `the-last-generator-alone` | R9-D1 | existing, `trust.rs` |
@@ -191,15 +191,15 @@ history, the transitive dependency and middle-generator provenance cases; neithe
 | `an-implementation-reader-never-judged` | R13-D1 | existing, `trust.rs` |
 | `a-marked-build-read-dropped-beside-other-generators` | R13-D3 | existing, `trust.rs` |
 | `only-a-form-s-first-input-reached` | R1-D2; R9-D2 | existing, `trust_generated.rs` |
-| `an-input-reached-through-a-link` | R23-R2 | add, `trust_generated.rs` |
-| `held-judged-for-the-first-alone` | R18-R1 | add, `trust.rs` |
-| `a-harness-never-judged-against-a-program-target` | R13-D2; R14-D4 | add, `trust.rs` |
-| `the-last-live-form-alone` | R14-D3 | add, `trust_generated.rs` |
-| `a-harness-judged-by-its-first-role-alone` | R18-R2 | add, `trust.rs` |
-| `a-data-reader-never-judged` | R16-R3; R18-R3 | add, `trust.rs` |
-| `a-build-read-naming-its-first-generator-alone` | R18-R4 | add, `trust.rs` |
-| `a-middle-generator-never-reached` | R13-D4 | add, `trust_generated.rs` |
-| `a-transitive-generator-build-read-dropped` | R6-D1; R10-D2 | add, `trust.rs` |
+| `an-input-reached-through-a-link` | R23-R2 | added, `trust_generated.rs` |
+| `held-judged-for-the-first-alone` | R18-R1 | added, `trust.rs` |
+| `a-harness-never-judged-against-a-program-target` | R13-D2; R14-D4 | added, `trust.rs` |
+| `the-last-live-form-alone` | R14-D3 | added, `trust_generated.rs` |
+| `a-harness-judged-by-its-first-role-alone` | R18-R2 | added, `trust.rs` |
+| `a-data-reader-never-judged` | R16-R3; R18-R3 | added, `trust.rs` |
+| `a-build-read-naming-its-first-generator-alone` | R18-R4 | added, `trust.rs` |
+| `a-middle-generator-never-reached` | R13-D4 | added, `trust_generated.rs` |
+| `a-transitive-generator-build-read-dropped` | R6-D1; R10-D2 | added, `trust.rs` |
 
 The nine additions have these exact intended narrowings; the catalogue's unique replacement blocks include enough
 unchanged context to select the named occurrence, and are checked against the committed production source:
@@ -220,6 +220,9 @@ unchanged context to select the named occurrence, and are checked against the co
   read-set membership condition.
 - `a-build-read-naming-its-first-generator-alone`: in step 5's loop over `generator_reads`, replace `for g in
   generators` with `for g in generators.iter().take(1)`.
+  This is attribution coverage: the retained first generator still yields a chain refusal. Native exact-mutant
+  comparison in `M3.6.9.4.1.3` confirms one named generator instead of two for a shared marked build read;
+  the original also names both for the declared-file clause. Do not classify this row as changed admission.
 - `a-middle-generator-never-reached`: in `provenance`, enumerate the innermost `files` loop and skip an entry when its
   role is `generator` and its index is neither zero nor `files.len() - 1`, leaving input iteration unchanged.
 - `a-transitive-generator-build-read-dropped`: in the successful generator compilation branch, before recording a
@@ -230,11 +233,13 @@ unchanged context to select the named occurrence, and are checked against the co
 The catalogue table test checks the recorded source references and all existing/new suffixes, and refuses a missing,
 extra or unmatched twin. Exact entries still must compile, land once and restore byte for byte under the existing
 harness. New route controls are necessary for the previously unheld cases; their kills are measured, not presumed.
-`M3.6.9.4.1.1` builds the three source/provenance additions; `.4.1.2` builds the four reader/role additions.
-Their exact route mutations have named finishing kills. Native controls cover every held role package, both
-harness pair roles and foreign script/target generators, and readers handed generated runtime data. The two
-build-read additions, census/parity test, parent twins and operator measurements remain pending; parent fixtures
-have not been strengthened.
+`M3.6.9.4.1.1` builds the three source/provenance additions; `.4.1.2` builds the four reader/role additions;
+`.4.1.3` builds the two build-read additions. All nine added exact route mutations have named finishing kills,
+and the 23 pre-existing entries remain. Native controls also hold shared transitive build reads for two generators,
+plain versus marked/declared, retaining every attribution. The exact transitive-unit mutant admits the marked
+dependency in that fixture; the first-generator mutant still refuses it but loses the second attribution.
+The census/parity test, parent twins and operator measurements remain pending; parent fixtures have not been
+strengthened. The table distinguishes entries already present at design acceptance from those added in `.4.1`.
 
 ## Why
 
