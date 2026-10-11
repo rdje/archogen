@@ -289,6 +289,8 @@ a change that leaves it stale, so it is never edited by hand.
   costs](versions.md)
 - **PGEN** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - pgen — [What this project relies on from outside](ledger.md#pgen)
+- Planning the operator measurements — [Generated-sources test
+  adequacy](trust-adequacy.md#planning-the-operator-measurements)
 - **PLIC** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **port** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [Refinement](refinement.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [The
@@ -353,6 +355,7 @@ a change that leaves it stale, so it is never edited by hand.
   detail](annex-runtime.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
 - Relevance decides whether an unknown matters — [Presence, absence, and
   relevance](presence.md#relevance-decides-whether-an-unknown-matters)
+- Remaining measurements — [Generated-sources test adequacy](trust-adequacy.md#remaining-measurements)
 - Requirements and sides — [Matching an offer to a requirement](matching.md#requirements-and-sides)
 - **RGX** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - rgx — [What this project relies on from outside](ledger.md#rgx)

@@ -128,6 +128,34 @@ changing its reason from symbolic link to no blob. Naming the first generator al
 but loses another generator's attribution. Native original/exact-mutant comparisons establish these effects;
 they must not be described as changed acceptance in the later operator-witness table.
 
+## Planning the operator measurements
+
+Generate the candidate manifest with the tracked diagnostic:
+
+```bash
+python3 scripts/trust_adequacy.py --self-test
+python3 scripts/trust_adequacy.py --output target/trust-adequacy/plan.json
+```
+
+The diagnostic reads the reviewed census and exact catalogue twins, and loads the actual sweep's discovery
+functions. It compares all raw candidate identities and text with the complete real `--list` output, without
+an operator filter. This preserves the global identities that later `--only` commands select. Input hashes
+bind the manifest to the source, census, catalogue and sweep. Its boundary and malformed-input controls refuse
+population, twin, identity, replacement, ordering and span drift.
+
+Each census block selects the source lines touched by its original characters, including unchanged anchor
+context. A terminal newline does not add the next untouched line; an inline fragment selects its enclosing
+line. A candidate is selected when its half-open line interval overlaps that span. Execution is deduplicated
+by file/candidate identity while every census-row membership remains in the manifest. Such overlap can affect
+another judgment on the same lines; it is not a semantic witness.
+
+Measured `2026-10-11`, `M3.6.9.5.1`: the complete listings contain 1,420 candidates for `trust.rs` and 314 for
+`trust_generated.rs`. Span selection yields 58 and 61 respectively, 119 unique file/candidates, with 269 row
+memberships across the census. Every census row has at least one overlapping candidate. These are planning
+counts only: no production compilation, mutation verdict or semantic reach is established here.
+
+## Remaining measurements
+
 Operator reach remains unmeasured. The next stage runs every candidate on every census replacement span against
 both populations before adding parent semantic tests. An actual viable semantic witness, or an explicit absence
 with its reason, is required; a desired verdict pair alone does not establish the same effect.

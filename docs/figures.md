@@ -34,3 +34,4 @@ empty rather than with a false claim.
 | `docs/book/src/trust-adequacy.md` | 30 entries | record | measured `2026-10-11` by `M3.6.9.4.2.2.2`'s strict native exact parent run, raw exit 1; the dated paragraph and per-entry table retain these initial survivors as repair obligations |
 | `docs/book/src/trust.md` | 91 tests | record | the initial native parent baseline of `2026-10-11`, `M3.6.9.4.2.2.2`; the linked measurement chapter dates it and the leaf records its native output |
 | `docs/book/src/trust.md` | 2 of the 32 | record | the initial exact parent outcomes of `2026-10-11`, `M3.6.9.4.2.2.2`; the linked dated measurement chapter records each outcome and actual killing test, without claiming final adequacy |
+| `docs/book/src/trust-adequacy.md` | 269 row | record | measured `2026-10-11` by `M3.6.9.5.1`’s tracked operator planner, summing census-to-candidate memberships; the paragraph dates this overlap-planning count and disclaims semantic coverage |

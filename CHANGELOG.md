@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — census spans bind a reproducible operator plan
+
+`ARCHOGEN-M3-0643` (leaf `M3.6.9.5.1`), `2026-10-11`.
+
+- Add a tracked planner binding the accepted census and exact twins to the actual sweep discovery functions.
+  Complete real CLI listings agree on raw identities/text; source/census/catalogue/operator hashes are retained.
+- Select every candidate overlapping each original block, including unchanged anchors. Native catalogue
+  fragments and terminal newlines exposed the initial whole-line assumption; enclosing-line boundary controls
+  hold the correction. Deduplicate execution identities while retaining every row membership.
+- Planning measurement: 1,420 / 314 complete listed candidates, 58 / 61 selected, 119 unique file/candidates
+  and 269 row memberships. No viability, verdict or semantic-witness claim. Five diagnostic control methods,
+  native census contracts and existing operator controls checked; pinned book and staged gates required.
+- Split the remaining dual-population measurements and semantic classification into bounded owned lanes;
+  parent semantic tests remain unchanged.
+
 ## archogen — initial parent outcomes expose 30 owned coverage gaps
 
 `ARCHOGEN-M3-0642` (leaf `M3.6.9.4.2.2.2`), `2026-10-11`.
