@@ -21,6 +21,8 @@
 #   bash scripts/check_task_history.sh --self-test
 #   bash scripts/check_task_history.sh --census <COMMIT>  # bytes of `done` leaves under open top-level subtrees, and
 #                                                         # in the closed subtrees below them a seal would take (PROGRAM.69)
+# Census requires a successful listing and every selected tree blob; a failed read is not an empty tree. On a
+# failed selected read it names the commit/path and exits 1 without a final aggregate, even after per-tree rows.
 #
 # A LEAF is its `- ID: `…`` line and every line up to the next `- ID:` line or `## ` heading, TASK-ACCEPTANCE's own
 # slicing. Its BODY is that span without its trailing blank lines, which stay in the tree after the stub. Every line of
@@ -504,7 +506,10 @@ def census(commit):
         if not name.endswith(".md") or name == "TEMPLATE.md":
             continue
         tname = name[:-3]
-        lines, ls = leaves(at(commit, path) or "")
+        text = at(commit, path)
+        if text is None:
+            raise Unreadable("cannot read selected tree %s:%s" % (commit, path))
+        lines, ls = leaves(text)
         unit = units(lines, ls, tname)
         open_tops = {subtree(lid, tname) for lid, f, _ in ls if subtree(lid, tname) and status(lines, f) != "done"}
         live = [(lid, f, e) for lid, f, e in ls
@@ -925,6 +930,68 @@ PY
   git -C "$work" checkout -q -- . && git -C "$work" reset -q --hard HEAD~1
   arm "the census counts bytes of closed subtrees below an open one" 0 "census: HEAD — 1181 byte(s) of \`done\` leaves under open top-level subtrees, 1062 of them in 7 closed subtree(s) below the top level" --census HEAD
   arm "the census of a commit git does not know is refused" 1 "failed" --census no-such-commit
+  # R35 D1: finite Git responses distinguish absent evidence from an empty selected tree, including partial reads.
+  local census_work="$SCRATCH/census-fixture" census_mode census_want census_must census_bytes
+  rm -rf "$census_work"; mkdir -p "$census_work/bin"
+  python3 - "$census_work" <<'PY'
+from pathlib import Path
+import sys
+work = Path(sys.argv[1])
+child = '- ID: `T.1.1`\n  Status: `done`\n  Goal: café, a completed child\n  Commit: `ARCHOGEN-T-0001`\n\n'
+tree = '# T\n\n- ID: `T.1`\n  Status: `active`\n\n' + child + '## End\n'
+(work / 'T.md').write_text(tree, encoding='utf-8')
+(work / 'U.md').write_text(tree.replace('`T.', '`U.'), encoding='utf-8')
+(work / 'bytes').write_text(str(len(child.encode('utf-8'))))
+PY
+  cat > "$census_work/bin/git" <<'PY'
+#!/usr/bin/env python3
+import os, pathlib, sys
+root, mode = pathlib.Path(os.environ['CENSUS_FIXTURE']), os.environ['CENSUS_MODE']
+args = sys.argv[1:]
+if args == ['rev-parse', '--show-toplevel']:
+    print(root)
+elif args == ['ls-tree', '--name-only', 'SYNTH', 'docs/tasks/']:
+    if mode == 'listing-error':
+        sys.exit(128)
+    print('docs/tasks/T.md')
+    if mode in ('two', 'first-error', 'last-error'):
+        print('docs/tasks/U.md')
+elif args in [['show', 'SYNTH:docs/tasks/T.md'], ['show', 'SYNTH:docs/tasks/U.md']]:
+    name = args[1].rsplit('/', 1)[-1]
+    if (name == 'T.md' and mode in ('one-error', 'first-error')) or (name == 'U.md' and mode == 'last-error'):
+        sys.exit(128)
+    if mode == 'invalid-utf8':
+        sys.stdout.buffer.write(b'\xff')
+    elif mode != 'empty':
+        sys.stdout.buffer.write((root / name).read_bytes())
+else:
+    print('finite census shim: unexpected command', file=sys.stderr)
+    sys.exit(97)
+PY
+  chmod +x "$census_work/bin/git"; census_bytes="$(cat "$census_work/bytes")"
+  for census_mode in one two empty one-error first-error last-error listing-error invalid-utf8; do
+    census_want=1
+    case "$census_mode" in
+      one) census_want=0; census_must="census: SYNTH — $census_bytes byte(s)" ;;
+      two) census_want=0; census_must="census: SYNTH — $((census_bytes * 2)) byte(s)" ;;
+      empty) census_want=0; census_must="census: SYNTH — 0 byte(s)" ;;
+      one-error|first-error) census_must="cannot read selected tree SYNTH:docs/tasks/T.md" ;;
+      last-error) census_must="cannot read selected tree SYNTH:docs/tasks/U.md" ;;
+      listing-error) census_must='git ls-tree SYNTH docs/tasks/' ;;
+      invalid-utf8) census_must='SYNTH:docs/tasks/T.md is not UTF-8' ;;
+    esac
+    arms=$((arms + 1))
+    out="$(CENSUS_FIXTURE="$census_work" CENSUS_MODE="$census_mode" PATH="$census_work/bin:$PATH" bash "$SELF" --census SYNTH 2>&1)"; rc=$?
+    if [ "$rc" -eq "$census_want" ] && printf '%s' "$out" | grep -qF -- "$census_must" &&
+       ! printf '%s' "$out" | grep -qE 'Traceback|finite census shim:' &&
+       { [ "$census_want" -eq 0 ] || ! printf '%s' "$out" | grep -q '^census: SYNTH —'; }; then
+      ok=$((ok + 1)); echo "  ✅ selected-tree census $census_mode (R35 D1)"
+    else
+      echo "SELF-TEST: selected-tree census $census_mode — rc $rc:" >&2
+      printf '%s\n' "$out" | head -3 | sed 's/^/    /' >&2
+    fi
+  done
+  rm -rf "$census_work"
   arm "the seal of a tree that does not exist is refused" 1 "does not exist" --seal NOPE
   arm "the seal proves its reconstruction" 0 "the reconstruction is byte for byte" --seal T
   arm "the sealed tree passes the gate" 0 "10 sealed file(s)"

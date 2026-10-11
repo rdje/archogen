@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — failed census evidence and incomplete summary headers refuse
+
+`ARCHOGEN-PROGRAM-0620` (leaf `PROGRAM.69`), `2026-10-11`.
+
+- Round 35's selected-tree read defect is repaired: failed blobs name commit/path and refuse without a final
+  aggregate, rather than contributing zero to a successful partial measurement. Its grammar remark is also
+  addressed: every recognized summary header needs its next separator, at end of input and before non-rows/headers.
+- Validation: eight new finite-shim census and twelve summary-boundary controls; unchanged readers give 129/3 of
+  132 and 140/10 of 150, then repaired complete suites pass 132/0 and 150/0. Positive/empty/listing/UTF-8 counterparts
+  distinguish the evidence boundary. Review report/producers are untracked; maintained regressions are tracked.
+  Syntax, book, final staged count/history and doctrine checks before commit; independent round 36 next. No Rust
+  changed or new full Rust-suite result claimed. Book/record/history/task/resume contracts synchronized.
+
 ## archogen — mutation source spans and validated equivalence records
 
 `ARCHOGEN-M3-0619` (leaf `M3.6.9.2.1`), `2026-10-11`.

@@ -720,6 +720,33 @@ under `target/p69r34/` are untracked; the regression arms are tracked.
 | R34-AG1 | arm gap | deleting unconditional validation survives all controls because unsupported records are open/unlisted and history lookup incidentally parses closed histories only while the counted list is nonempty | listed-record and closed-record shortcut refusals; an empty-list closed-history shortcut refusal; a valid all-closed/empty-list control; deleting validation fails the three refusing arms |
 | R34-AG2 | arm gap | rejecting parentheses inside angle destinations survives the simple/spaced destination matrix despite the explicit contract permitting them | add a parenthesized angle path across four title states and both primary states, with opposite secondary obligations; the restrictive mutant fails all eight new combinations |
 
+**Round 35**, `2026-10-11`, of committed `cac7356`, an independent read-only context new to the answer. One P2
+production defect, no additional actionable arm gaps established, and one nonblocking grammar remark. A selected
+census blob's failed Git read becomes empty content: synthetic single-tree and partial two-tree runs exit 0 with
+zero or 83 bytes where independent literal spans give 83 or 166. Both pinned core and full shell reproduce it.
+The report does not challenge any particular real historical total; no real historical body or sealed case was read.
+
+The reviewer reconstructs the twelve round-34 controls: 12/12 expected pinned outcomes, validation-removal 9/12
+and angle-restriction 4/12. Thirty-six adjacent count probes pass; the summary-header exploratory probe exposes the
+remark. Ten census invocations (five states through core and full shell) give six expected results and four false
+successful results. These form 83 invocations (78 core, five shell); five further historical-index controls make
+88 total (83 core, five shell). Separately, 15 625 finite unit/oracle comparisons agree. Syntax compilation is not a
+checker invocation. The complete 138-arm suite and native Git/index/transaction behavior were not replayed. All
+subprocesses finished; authorized OS snapshots found no review jobs. Report and producers under
+`target/review-p69-r35/` are untracked evidence, not durable regression enforcement.
+
+The answer adds eight tracked finite-shim census cases and twelve native-fixture summary-boundary arms. On unchanged
+readers the complete suites give history 129/3 of 132 and counts 140/10 of 150; after repair they pass 132/0 and 150/0.
+The successful one/two-tree and genuine-empty counterparts distinguish failed evidence from valid empty content;
+first and last selected-read failures refuse without a final aggregate. Both recognized summary shapes require
+their next separator at end of input, newline, blank, prose, another header and a malformed row. Root logs under
+`target/p69r35/` are untracked; the distinguishing controls are in the maintained self-tests.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R35-D1 | defect | census uses a failed selected-tree read as empty content, reporting successful zero or partial aggregates | require every selected blob read, naming commit/path on failure; eight tracked successful/empty/first-error/last-error/listing/UTF-8 controls; no failed run prints a final aggregate |
+| R35-R1 | remark | a recognized summary header at end of input or a table-ending non-row bypasses its required separator; no lost count established | check pending headers before every next line and at end of input; twelve controls cover both shapes at six boundaries |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.

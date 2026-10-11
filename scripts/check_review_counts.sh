@@ -39,7 +39,8 @@
 #     finding of the answer's own, which is not the review's;
 #   - in a listed review's record, its summary table: the header `| Round | Findings | Defects | …` (THE FINDINGS SHAPE)
 #     or `| Round | Date | Defects | …` (THE DATE SHAPE), a separator row of dashes, and every row under it to the first
-#     line that is no table row.
+#     line that is no table row. Each recognized header requires its next separator, including at end of input,
+#     before blank/prose ends a table, or before another recognized header (round 35).
 #
 # All three tables split cells on unescaped pipes; a Markdown-escaped pipe is part of its cell, including in a
 # summary's defects cell, so it cannot hide a later count (round 30).
@@ -126,6 +127,11 @@ def summary(text, rec, quiet=False):
     out, shape, seen, after_head = {}, None, False, False
     note = (lambda m: None) if quiet else bad.append
     for l in text.split("\n"):
+        if after_head:
+            after_head = False
+            if SEPARATOR.match(l.strip()):
+                continue
+            note("%s: its summary table has no separator row under its header" % rec)
         if l.startswith("| Round | Findings | Defects |"):
             shape, seen, after_head = "findings", True, True; continue
         if l.startswith("| Round | Date | Defects |"):
@@ -134,11 +140,6 @@ def summary(text, rec, quiet=False):
             shape = None
         if not shape:
             continue
-        if after_head:
-            after_head = False
-            if SEPARATOR.match(l.strip()):
-                continue
-            note("%s: its summary table has no separator row under its header" % rec)
         cells = cells_of(l)
         if len(cells) < 3 or not NUMBER.fullmatch(cells[0]):
             note("%s: a row under its summary header names no round by a number: %r" % (rec, cells[0][:20]))
@@ -147,6 +148,8 @@ def summary(text, rec, quiet=False):
         if n in out:
             note("%s: round %d has two summary rows" % (rec, n))
         out[n] = (shape, cells[1], cells[2])
+    if after_head:
+        note("%s: its summary table has no separator row under its header" % rec)
     return out, seen
 def stated(cell, word):
     return [int(m.group(1)) for m in re.finditer(r"(?<![\w-])([0-9]+) " + word + r"\b", cell)]
@@ -350,6 +353,24 @@ self_test() {
   }
   GOOD_A='| 2 | 6 | 1, and 2 arm gaps (x), and 1 pre-existing arm gap (y) | v |'
   GOOD_B='| 1 | `2026-10-10` | 2, and 1 remark, and 0 pre-existing arm gaps | o |'
+  # R35 R1: every recognized header needs its next separator, even after an already complete summary.
+  local summary_head summary_tail
+  for summary_head in '| Round | Findings | Defects | Verdict |' '| Round | Date | Defects | Outcome |'; do
+    for summary_tail in eof newline blank prose header malformed; do
+      world "$GOOD_A" "$GOOD_B"
+      printf '\n%s' "$summary_head" >> "$work/docs/decisions/a.md"
+      case "$summary_tail" in
+        eof) ;;
+        newline) printf '\n' >> "$work/docs/decisions/a.md" ;;
+        blank) printf '\n\n' >> "$work/docs/decisions/a.md" ;;
+        prose) printf '\nprose ends the table\n' >> "$work/docs/decisions/a.md" ;;
+        header) printf '\n%s\n| --- | --- | --- | --- |\n' "$summary_head" >> "$work/docs/decisions/a.md" ;;
+        malformed) printf '\n| no separator |\n' >> "$work/docs/decisions/a.md" ;;
+      esac
+      git -C "$work" add -A
+      arm "a recognized summary header before $summary_tail requires its separator: $summary_head (R35 R1)" 1 "summary table has no separator row"
+    done
+  done
   world "$GOOD_A" "$GOOD_B"
   arm "counts that are the histories' pass: the first table only, to its end; an answer's own row and a row past the summary table not judged; a remark of any kind beginning so; a closed review's table not the list's" 0 "2 review(s) listed; 3 round(s) judged, every one"
   world '| 2 | 7 | 1, and 2 arm gaps (x), and 1 pre-existing arm gap (y) | v |' "$GOOD_B"

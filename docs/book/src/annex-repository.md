@@ -232,6 +232,10 @@ $ bash scripts/check_task_history.sh --census HEAD    # done leaves under open t
 $ bash scripts/check_task_history.sh --self-test      # its RED arms, on scratch repositories
 ```
 
+`--census` requires a successful tree listing and a readable blob for every selected tree. A failed selected read
+names its commit and path, exits 1 and produces no final aggregate; earlier per-tree rows do not make it a successful
+measurement. A genuinely empty selected tree remains valid and contributes zero bytes.
+
 The decisions folder is kept the same way. A numbered section of a decision record that is settled, such as a
 finding the director has ruled on, moves byte for byte into `docs/decision-history/`. Its heading stays in the
 record, above one line linking the sealed file, so a citation of the section by its number still finds it.
@@ -275,7 +279,8 @@ The four-column index table runs from its header through its first blank line. I
 edge pipes; an escaped pipe stays inside its cell. A malformed row, a missing separator or a missing or duplicate
 header is refused. Every stated count is judged, including repeated statements of the same kind: a correct first
 count cannot hide an incorrect second one. The same cell reader serves index, summary and findings tables: an
-escaped pipe inside a summary cell cannot hide a later count. The counted history/record pair names the record
+escaped pipe inside a summary cell cannot hide a later count. Each recognized summary header needs a separator on its
+next line, including a header at end of input or before a blank line, prose or another header. The counted history/record pair names the record
 whose counts are held. For an unlisted row, its first Design record link selects the record whose round table
 decides whether it must be listed; later explanatory links do not change that obligation. In both file cells the
 first unescaped bracketed label must be a supported inline link. Labels may contain balanced brackets; destinations

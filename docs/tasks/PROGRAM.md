@@ -663,7 +663,36 @@ mdBook that is the director's window into the project.
   label retains file authority with bare/angle destinations and optional titles; unsupported first syntax refuses
   before any secondary link can substitute. Round 34 answered: unconditional file-cell grammar and parentheses
   inside angle destinations are held by tracked controls. Both established mutants passed all 126 previous arms;
-  they now fail three and eight arms respectively. All 138 arms pass; production reader unchanged. Round 35 next.
+  they now fail three and eight arms respectively. All 138 arms pass; production reader unchanged.
+  Round 35 answered: one production defect, no additional actionable arm gaps and one remark; report read in full at
+  `target/review-p69-r35/report.txt` (untracked). Answer: census converts a failed selected-tree
+  blob read into an empty tree, so a successful zero/partial aggregate can omit completed work; a recognized summary
+  header at end of input or a table-ending non-row can bypass its required separator. Both repaired: failed selected
+  reads name commit/path and refuse without a final aggregate; each recognized summary header requires its next
+  separator. Eight census and twelve summary-boundary controls distinguish the repairs. Round 36 next.
+  **Acceptance checklist, round 35:**
+  - [x] **REPRODUCE / ISSUE** — new controls on unchanged readers: history `129 pass / 3 fail (132 arms)`;
+    counts `140 pass / 10 fail (150 arms)`. Failed selected reads and ten incomplete summary boundaries exit 0.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `census()` uses `leaves(at(commit, path) or "")`, conflating failed Git
+    evidence with a valid empty tree: `SELF-TEST: selected-tree census last-error — rc 0`. `summary()` clears shape
+    before judging a non-row and overwrites a pending header; it never checks EOF: `SELF-TEST: a recognized summary
+    header before eof requires its separator: | Round | Findings | Defects | Verdict | (R35 R1) — rc 0`.
+    Full before runs: `129 pass / 3 fail (132 arms)` and `140 pass / 10 fail (150 arms)`;
+    `target/p69r35/history-before.log` and `target/p69r35/count-before.log`.
+  - [x] **FIX** — refuse selected `None` reads with commit/path; judge pending separators before every later line
+    and after input ends. Both shapes held at EOF, newline, blank, prose, another header and malformed row.
+  - [x] **ADDRESSED (verified)** — `bash scripts/check_task_history.sh --self-test` →
+    `132 pass / 0 fail (132 arms)`; `bash scripts/check_review_counts.sh --self-test` → `150 pass / 0 fail (150 arms)`.
+    The eight finite census cases include successful one/two-tree totals, genuine empty content, first/last read
+    failures, listing failure and invalid blob UTF-8; failures cannot print a final successful aggregate.
+  - [x] **NO REGRESSION** — complete suites `132 pass / 0 fail (132 arms)` and `150 pass / 0 fail (150 arms)`;
+    `bash -n scripts/check_task_history.sh` and `bash -n scripts/check_review_counts.sh` → exit 0;
+    staged `REVIEW-COUNTS` → `OK (1 review(s) listed; 35 round(s) judged, every one)`; task history →
+    `OK (175 sealed file(s)` and 335 stubs; book anchors/glossary/index → OK (30/4, 67/25, 316). Real HEAD census
+    exits 0; final doctrines in hook. No Rust changed; no new Rust-suite claim. Logs in `target/p69r35/`, untracked.
+  - [x] **LOCKSTEP** — checker contracts, review history/record, book, task evidence and resume/frontier snapshots.
+    Commit gate found the decisions folder 261 bytes above its cap after this answer; compact three older review
+    summary cells, preserving counts and key results. Full historical detail stays in the unchanged review rounds.
   **Acceptance checklist, round 34:**
   - [x] **REPRODUCE / ISSUE** — removing unconditional validation and rejecting parentheses in angle destinations
     each give `126 pass / 0 fail (126 arms)` under native Git. The independent report
@@ -925,7 +954,7 @@ mdBook that is the director's window into the project.
     2 reviews / 32 rounds before appending this answer; final staged count → OK, 2 reviews / 33 rounds; history gate
     → OK, 175 files; book anchors/glossary/index → OK. Final doctrines run in the commit hook. Checker contract, record/history/index, book annex, this leaf and logs,
     changelog and resume/frontier snapshots agree. No Rust changed; no full-suite or final-tree Rust claim is made.
-  Verification: `2026-10-11` — the Verification Log's round-29 to round-34 rows
+  Verification: `2026-10-11` — the Verification Log's round-29 to round-35 rows
   Commit: `ARCHOGEN-PROGRAM-0510 (leaf PROGRAM.69)`, the review reopened; `ARCHOGEN-PROGRAM-0511 (leaf PROGRAM.69)`;
   `ARCHOGEN-PROGRAM-0514 (leaf PROGRAM.69)`, round 7 answered; `ARCHOGEN-PROGRAM-0517 (leaf PROGRAM.69)`, round 8;
   `ARCHOGEN-PROGRAM-0521 (leaf PROGRAM.69)`, round 9; `ARCHOGEN-PROGRAM-0525 (leaf PROGRAM.69)`, round 10;
@@ -942,7 +971,8 @@ mdBook that is the director's window into the project.
   `ARCHOGEN-PROGRAM-0598 (leaf PROGRAM.69)`, round 27; `ARCHOGEN-PROGRAM-0599 (leaf PROGRAM.69)`, the list in the index;
   `ARCHOGEN-PROGRAM-0602 (leaf PROGRAM.69)`, round 28; `ARCHOGEN-PROGRAM-0605 (leaf PROGRAM.69)`, round 29;
   `ARCHOGEN-PROGRAM-0606 (leaf PROGRAM.69)`, round 30; `ARCHOGEN-PROGRAM-0608 (leaf PROGRAM.69)`, round 31;
-  `ARCHOGEN-PROGRAM-0612 (leaf PROGRAM.69)`, round 32; `ARCHOGEN-PROGRAM-0615 (leaf PROGRAM.69)`, round 33; `ARCHOGEN-PROGRAM-0618 (leaf PROGRAM.69)`, round 34
+  `ARCHOGEN-PROGRAM-0612 (leaf PROGRAM.69)`, round 32; `ARCHOGEN-PROGRAM-0615 (leaf PROGRAM.69)`, round 33; `ARCHOGEN-PROGRAM-0618 (leaf PROGRAM.69)`, round 34;
+  `ARCHOGEN-PROGRAM-0620 (leaf PROGRAM.69)`, round 35
 
 - ID: `PROGRAM.70`
   Status: `done` — started `2026-10-10`, decomposed into `.1`, the bytes, and `.2`, the count, closed the same day with `.2`
@@ -1556,7 +1586,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.69` | `active` | round 34 answered; independent round 35 next |
+| 1 | `PROGRAM.69` | `active` | round 35 answered; independent round 36 next |
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The second row waits on the director's yes. The pending leaves beside them —
@@ -1773,6 +1803,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-11` | `PROGRAM.69` (round 33) | 35 primary-link controls before repair, then repaired suite; original shell reproducer; two valid selection/refusal mutations; syntax, final staged count/history, book and doctrine gates | 96 pass / 30 fail, then 126 pass / 0 fail; original five shell cases refuse the primary table; selection mutation 93/33, refusal mutation 120/6; initial syntax-error mutant excluded; staged counts 2 reviews / 35 rounds, history 175 files / 335 stubs; book anchors 30/4, glossary 67/25, index 316; syntax and stated-order OK; task-acceptance evidence completed after its first refusal; final doctrines in commit hook |
 
 | `2026-10-11` | `PROGRAM.69` (round 34) | native old/new mutation replays, full count self-test, syntax, book and final staged gates | both mutants 126/0 before; validation removal 135/3 and angle restriction 130/8 of 138 after; unchanged production reader 138/0; book anchors 30/4, glossary 67/25, index 316; staged counts 1 review / 34 rounds, history 175 files / 335 stubs; acceptance/order/figure gates OK, final doctrines in hook |
+| `2026-10-11` | `PROGRAM.69` (round 35) | new census and summary-boundary controls before/after repair; both full self-tests, syntax, book and final staged gates | history 129/3 of 132 and counts 140/10 of 150 before; repaired 132/0 and 150/0; finite selected-read failures never print a final aggregate, empty counterparts pass; staged counts 1 review / 35 rounds, history 175 files / 335 stubs; book 30/4, 67/25, 316, syntax and final doctrine gates |
 
 ## Commit Log
 
@@ -1984,6 +2015,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0615 (leaf PROGRAM.69)` | **review round 33 answered**: first unescaped label preserves authority across bare/angle destinations and titles; unsupported first syntax refuses; 35 tracked controls, 30 failed first; all 126 pass; invalid mutation run excluded |
 
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0618 (leaf PROGRAM.69)` | **review round 34 arm gaps answered**: unconditional listed/closed file-cell grammar and parenthesized angle destinations held; both mutants survived 126 old arms, now fail three/eight of 138; production core unchanged |
+| `PROGRAM.69` | `ARCHOGEN-PROGRAM-0620 (leaf PROGRAM.69)` | **round 35 answered**: selected census reads refuse on failure rather than report successful zero/partial totals; every recognized summary header requires its next separator at all boundaries; eight census and twelve summary controls fail first, then complete suites pass 132/0 and 150/0; independent round 36 next |
 
 ## Changelog
 
