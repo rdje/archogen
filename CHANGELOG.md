@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — guard branch scope support precedes candidate rewriting
+
+`ARCHOGEN-M3-0623` (leaf `M3.6.9.2.2.2.1`), `2026-10-11`.
+
+- Structural lexical scopes locate a loop's one-line condition spans outside nested loops and block/expression
+  closures, retaining ordinary nested if branches. Literal operand marks, raw identifiers, labels, multiline loop
+  heads, block/if/match operands, struct patterns and const generics are held by a compiled stable-Rust fixture.
+- Validation: old support errors first; 15 tool tests pass, including six Python methods. Two strict catalogue
+  controls killed by their named test after correcting one broken anchor's indentation. All four complete candidate
+  lists remain byte-identical; scope probes accept current production headers. Syntax/book/staged gates before
+  commit. No guard candidates or production adequacy result yet. Orphan M3 log rows rejoined without text changes.
+
 ## archogen — census spans and unusual paths are measured exactly
 
 `ARCHOGEN-PROGRAM-0622` (leaf `PROGRAM.69`), `2026-10-11`.

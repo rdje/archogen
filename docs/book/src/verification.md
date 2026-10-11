@@ -254,7 +254,8 @@ bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask --op iter --li
 This lists candidates for exploration. It proves neither viability nor adequacy. The rewrite peeks at the next
 element before running the body, so its lookahead is part of the mutation being judged. Compiled synthetic controls
 hold position selection for vectors, sets, arrays, borrowed forms, binding patterns and labelled continuation.
-The guarded-branch operator and the remaining operators, and actual production measurements, remain pending.
+Structural loop/closure scope support is built (`M3.6.9.2.2.2.1`); guarded candidates, the remaining operators
+and actual production measurements remain pending.
 
 An entry can also break without anyone running it: the code it names moves, and its text is no longer there.
 One entry went that way when an import line gained a name, and the whole catalog then refused to run, unseen,

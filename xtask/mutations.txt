@@ -4369,3 +4369,25 @@ from
 to
         masked = lines
 end
+
+mutation sweep-guard-nested-scopes-admitted
+file scripts/mutation_sweep.sh
+test -p xtask mutation::tests::the_sweep_holds_source_spans_and_equivalence_records
+expect killed
+why M3.6.9.2.2.2.1: a loop's branch targets exclude nested loops and closures while retaining plain nested if scopes.
+from
+                if not any(a <= position < b for a, b in excluded):
+to
+                if True:
+end
+
+mutation sweep-guard-literal-operands-erased
+file scripts/mutation_sweep.sh
+test -p xtask mutation::tests::the_sweep_holds_source_spans_and_equivalence_records
+expect killed
+why M3.6.9.2.2.2.1: lexical scope parsing needs literal operand positions to distinguish a nested loop's body from a following branch.
+from
+        masked = mask_rust(source, literal_marks=True)
+to
+        masked = mask_rust(source)
+end

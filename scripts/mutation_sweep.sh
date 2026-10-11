@@ -94,7 +94,7 @@ def operands(cond):
     spans.append((start, len(cond)))
     return spans if len(spans) > 1 else []
 
-def mask_rust(text):
+def mask_rust(text, literal_marks=False):
     """Hide comments/literals without changing offsets or newlines; lifetimes and loop labels remain code."""
     masked, i = list(text), 0
     raw_literal = re.compile(r'(?:br|cr|r)(#*)"')
@@ -105,6 +105,7 @@ def mask_rust(text):
                 masked[k] = " "
     while i < len(text):
         start = i
+        literal = False
         if text.startswith("//", i):
             end = text.find("\n", i)
             i = len(text) if end < 0 else end
@@ -121,9 +122,11 @@ def mask_rust(text):
             raw = raw_literal.match(text, i) if i == 0 or not (text[i - 1].isalnum() or text[i - 1] == "_") else None
             char = char_literal.match(text, i)
             if raw:
+                literal = True
                 end = text.find('"' + raw.group(1), raw.end())
                 i = len(text) if end < 0 else end + 1 + len(raw.group(1))
             elif text[i] == '"':
+                literal = True
                 i += 1
                 while i < len(text):
                     if text[i] == "\\":
@@ -134,12 +137,166 @@ def mask_rust(text):
                     else:
                         i += 1
             elif char:
+                literal = True
                 i = char.end()
             else:
                 i += 1
                 continue
         erase(start, i)
+        if literal and literal_marks:
+            masked[start] = "L"
     return "".join(masked)
+
+def guard_targets(n):
+    """One-line branch headers in this loop, outside nested loops/closures; source lines, never token spellings."""
+    source = "\n".join(lines)
+    masked = mask_rust(source, literal_marks=True)
+    starts = [0]
+    for line in lines[:-1]:
+        starts.append(starts[-1] + len(line) + 1)
+    tokens = list(re.finditer(r"r#\w+|'\w+|\w+|::|=>|\|\||&&|\.\.=|\.\.|==|!=|<=|>=|[^\s]", masked))
+    words = [token.group() for token in tokens]
+    pairs, stack = {}, []
+    for i, word in enumerate(words):
+        if word in ("(", "[", "{"):
+            stack.append(i)
+        elif word in (")", "]", "}"):
+            if not stack or words[stack[-1]] != {")": "(", "]": "[", "}": "{"}[word]:
+                raise ValueError("unbalanced Rust source groups")
+            pairs[stack.pop()] = i
+    if stack:
+        raise ValueError("unbalanced Rust source groups")
+    masked_lines = masked.split("\n")
+    if not loop_header(n, masked_lines[n]):
+        return []
+    opening = starts[n] + masked_lines[n].rfind("{")
+    outer = next(i for i, token in enumerate(tokens) if token.start() == opening)
+    stop = pairs[outer]
+
+    def angle_end(i):
+        depth = 0
+        while i < stop:
+            word = words[i]
+            if word in ("(", "[", "{"):
+                i = pairs[i] + 1
+                continue
+            if word == "<":
+                depth += 1
+            elif word == ">":
+                depth -= 1
+                if depth == 0:
+                    return i + 1
+            i += 1
+        raise ValueError("unterminated Rust generic arguments")
+
+    def loop_body(i):
+        if words[i] == "loop":
+            return i + 1 if words[i + 1] == "{" else None
+        j = i + 1
+        if words[i] == "for":
+            if words[j] == "<":  # a higher-ranked type bound, not an expression loop
+                return None
+            while j < stop and words[j] != "in":
+                j = pairs[j] + 1 if j in pairs else j + 1
+            j += 1
+        return header_body(j)
+
+    def if_end(i):
+        body = header_body(i + 1)
+        if body is None:
+            return stop
+        j = pairs[body] + 1
+        if j < stop and words[j] == "else":
+            j += 1
+            if words[j] == "if":
+                return if_end(j)
+            if words[j] == "{":
+                return pairs[j] + 1
+        return j
+
+    def header_body(j):
+        # Conditions/iterator operands can themselves be blocks, if/match/loop expressions or let chains.
+        # Only an opening brace after a completed operand starts the loop's body. Balanced groups are atomic.
+        operand = True
+        while j < stop:
+            word = words[j]
+            if word == "{" and not operand:
+                return j
+            if word in ("(", "[", "{"):
+                j, operand = pairs[j] + 1, False
+                continue
+            if word == "if" and operand:
+                j, operand = if_end(j), False
+                continue
+            if word in ("for", "while", "loop") and operand:
+                body = loop_body(j)
+                if body is not None:
+                    j, operand = pairs[body] + 1, False
+                    continue
+            if word == "match" and operand:
+                body = header_body(j + 1)
+                if body is not None:
+                    j, operand = pairs[body] + 1, False
+                    continue
+            if word == "let":
+                j += 1
+                while j < stop and words[j] != "=":
+                    j = pairs[j] + 1 if j in pairs else j + 1
+                operand = True
+            elif word == "<" and j > 0 and words[j - 1] == "::":
+                j, operand = angle_end(j), False
+                continue
+            elif word in ("unsafe", "async", "const", "try", "move", "return", "break") and operand:
+                pass
+            elif word in ("+", "-", "*", "/", "%", "&", "|", "^", "!", "=", "==", "!=", "<", ">",
+                          "<=", ">=", "&&", "||", "..", "..=", "as"):
+                operand = True
+            elif word not in (".", "::", "?", ","):
+                operand = False
+            j += 1
+        return None
+
+    def closure_end(i):
+        contexts = {"=", "(", "[", "{", ",", "=>", "return", "break", "move", "async", "const", "&", "*", "!"}
+        if words[i] not in ("|", "||") or (i and words[i - 1] not in contexts):
+            return None
+        j = i + 1
+        if words[i] == "|":
+            while j < stop and words[j] != "|":
+                if words[j] in (";", "}"):
+                    return None
+                j = pairs[j] + 1 if j in pairs else j + 1
+            j += 1
+        if words[j:j + 2] == ["-", ">"]:
+            j += 2
+            while j < stop and words[j] != "{":
+                j = angle_end(j) if words[j] == "<" else pairs[j] + 1 if j in pairs else j + 1
+            if j < stop:
+                return pairs[j] + 1
+        # An expression closure extends to its containing delimiter; balanced body groups do not terminate it.
+        while j < stop and words[j] not in (",", ";", ")", "]", "}"):
+            j = angle_end(j) if words[j] == "<" and words[j - 1] == "::" else pairs[j] + 1 if j in pairs else j + 1
+        return j
+
+    excluded = []
+    for i in range(outer + 1, stop):
+        if words[i] in ("for", "while", "loop"):
+            body = loop_body(i)
+            if body is not None:
+                excluded.append((tokens[i].start(), tokens[pairs[body]].end()))
+        end = closure_end(i)
+        if end is not None:
+            excluded.append((tokens[i].start(), tokens[end].start()))
+    targets = []
+    for line in range(n + 1, len(lines)):
+        if starts[line] >= tokens[stop].start():
+            break
+        match = re.match(r"^(\s*(?:\}\s*else\s+)?if\s+)(.+?)(\s*\{)\s*$", masked_lines[line])
+        if match and not match.group(2).startswith("let "):
+            position = starts[line] + len(match.group(1))
+            if not any(a <= position < b for a, b in excluded):
+                targets.append((line, match.span(2)))
+    return targets
 
 def loop_header(n, masked):
     match = re.match(r"^(?P<indent>[ \t]*)(?:(?P<label>'\w+:)\s+)?for\s+(?P<pattern>.+?)\s+in\s+(?P<expr>.+?)\s*\{\s*$", masked)

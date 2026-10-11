@@ -132,7 +132,7 @@ class SpanTests(SweepFixture):
                     self.assertEqual((self.base / "invoked").read_text(), "called\ncalled\n")
 
 
-class IteratorTests(SweepFixture):
+class DiscoveryFixture(SweepFixture):
     def discovery(self, source):
         # Load the actual discovery/replacement functions without invoking the CLI or copying its algorithm.
         python = SCRIPT.read_text().split("<<'PY'\n", 1)[1].rsplit("\nPY", 1)[0]
@@ -156,6 +156,8 @@ class IteratorTests(SweepFixture):
         self.assertEqual(process.returncode, 0, stdout + stderr)
         return stdout
 
+
+class IteratorTests(DiscoveryFixture):
     def test_owned_borrowed_patterns_labels_and_fresh_names_compile_and_select_positions(self):
         # Each input/output expectation is a semantic observation, independent of the replacement's spelling.
         forms = [
@@ -235,6 +237,132 @@ class IteratorTests(SweepFixture):
         program.write_text("#![allow(unused_variables)]\n" + "\n".join(programs)
                            + "\nfn main() { sample_0(&[2, 7]); sample_1(&[2, 7]); sample_2(&[2, 7]); }\n")
         binary = self.base / "literals"
+        self.bounded(["rustc", "--edition=2021", str(program), "-o", str(binary)])
+        self.bounded([str(binary)])
+
+
+class ScopeTests(DiscoveryFixture):
+    def test_branch_scopes_exclude_nested_loops_and_closures_but_keep_plain_if_scopes(self):
+        source = r'''fn copies<const N: usize>(x: i32) -> [i32; N] { [x; N] }
+fn sample(values: &[i32]) {
+    for &x in values { // outer
+        if x > 0 { // outer_if
+            if x > 1 { // plain_nested_if
+            }
+        } else if x < 0 { // outer_else_if
+        }
+        for y in { values } {
+            if *y > 0 { // inner_for_block_operand
+            }
+        }
+        for (left, right) in
+            values.iter().zip(values.iter())
+        {
+            if left == right { // inner_multiline_for
+            }
+        }
+        for y in copies::<{ 2 }>(x) {
+            if y > 0 { // inner_for_const_generic
+            }
+        }
+        'again: while x < 0 {
+            if x > 0 { // inner_while
+            }
+            break 'again;
+        }
+        while { x < 0 } {
+            if x > 0 { // inner_while_block_operand
+            }
+            break;
+        }
+        while if x < 0 { true } else { false } {
+            if x > 0 { // inner_while_if_operand
+            }
+            break;
+        }
+        while match x { 0 => false, _ => false } {
+            if x > 0 { // inner_while_match_operand
+            }
+            break;
+        }
+        struct Record { n: i32 }
+        while let Record { n: y } = (Record { n: x }) {
+            if y > 0 { // inner_while_struct_pattern
+            }
+            break;
+        }
+        while 'a' == 'b' {
+            if x > 0 { // inner_while_char_operands
+            }
+            break;
+        }
+        if x > 0 { // after_char_loop
+        }
+        while "a" == "b" {
+            if x > 0 { // inner_while_string_operands
+            }
+            break;
+        }
+        if x > 0 { // after_string_loop
+        }
+        loop {
+            if x > 0 { // inner_loop
+            }
+            break;
+        }
+        let _block = |value: i32| {
+            if value > 0 { // block_closure
+            }
+        };
+        let _expr = |value: i32|
+            if value > 0 { // expression_closure
+                true
+            } else { false };
+        let _typed = || -> Result<i32, &'static str> {
+            if x > 0 { // typed_closure
+            }
+            Ok(x)
+        };
+        let _async = async || {
+            if x > 0 { // async_closure
+            }
+        };
+        let _mapped: Vec<_> = values.iter().map(|value|
+            if *value > 0 { // argument_expression_closure
+                true
+            } else { false }).collect();
+        let bits = (x | 1) | 2;
+        let r#loop = bits;
+        if r#loop > 0 { // after_scopes_and_bitwise
+        }
+        if x > 0 || bits > 0 { // boolean_or
+        }
+        if let Some(y) = values.first() { // if_let_is_outside_the_operator
+            let _ = y;
+        }
+    }
+}
+#[cfg(test)]
+mod tests {}
+'''
+        namespace, _ = self.discovery(source)
+        lines = source.split("\n")
+        outer = next(i for i, line in enumerate(lines) if "// outer" in line)
+        targets = namespace["guard_targets"](outer)
+        actual = {lines[n].split("// ", 1)[1] for n, _ in targets}
+        self.assertEqual(actual, {"outer_if", "plain_nested_if", "outer_else_if",
+                                  "after_char_loop", "after_string_loop", "after_scopes_and_bitwise", "boolean_or"})
+        for n, (first, last) in targets:
+            condition = lines[n][first:last]
+            self.assertTrue(condition.startswith(("x ", "r#loop ")), condition)
+        inner = next(i for i, line in enumerate(lines) if "for y in { values }" in line)
+        self.assertEqual({lines[n].split("// ", 1)[1] for n, _ in namespace["guard_targets"](inner)},
+                         {"inner_for_block_operand"})
+        # The source is real stable Rust, not just a token-shaped fixture. Empty input makes runtime finite.
+        program = self.base / "scopes.rs"
+        program.write_text("#![allow(unused_variables, unused_braces, irrefutable_let_patterns)]\n"
+                           + source.split("#[cfg(test)]", 1)[0] + "\nfn main() { sample(&[]); }\n")
+        binary = self.base / "scopes"
         self.bounded(["rustc", "--edition=2021", str(program), "-o", str(binary)])
         self.bounded([str(binary)])
 
