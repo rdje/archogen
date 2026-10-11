@@ -5,7 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
-## archogen — review counts judge repeated statements, and history reads must prove absence
+## archogen — escaped summary-cell pipes cannot hide later counts
+
+`ARCHOGEN-PROGRAM-0606` (leaf `PROGRAM.69`), `2026-10-11`.
+
+- One cell reader now serves index, summary and findings tables. An escaped pipe stays inside a summary's defects
+  cell, so every later stated count remains visible. Eight false-count arms failed first; all 78 arms now pass.
+- The previous commit's confirmatory runner is complete: 47 of 49 suites passed restricted; the two process suites
+  passed with OS access through the same runner (2/2 handoff and 39/39 spine arms). Those two runs cover all 49
+  suites before this parser repair; the parser's focused 78-arm run is current. No Rust source changed.
+- The denied OS reads exposed a separate pre-existing defect: the native handoff census and its wrapper say OK
+  without a process snapshot. Owned as high-priority `PROGRAM.80`, the wrapper repair next, the held native file
+  untouched. Earlier repeated-count claims are marked; the book and resume pointers agree.
+
+## archogen — review counts judge repeated statements, and history reads must prove absence (narrowed by round 30)
 
 `ARCHOGEN-PROGRAM-0605` (leaf `PROGRAM.69`), `2026-10-11`.
 
@@ -15,8 +28,10 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 - A historical task-history index blob that cannot be read is refused unless a separate successful Git tree read
   proves that path absent at the commit. A real historical deletion remains valid. The leaf's stale Status is current.
 - Validation: new regressions first failed (13 count-check arms, two history-check arms), then all 69 and 124 arms
-  passed; syntax, real gates, census, book gates and doctrines green. The broader self-test runner is pending at
-  commit. The earlier claims are marked, and the book describes the exact table scope.
+  passed; syntax, real gates, census, book gates and doctrines green. The broader self-test runner was pending at
+  commit; its result is recorded by `ARCHOGEN-PROGRAM-0606`. The earlier claims are marked in the book and records.
+- Correction by round 30: an escaped pipe in a summary cell still hid later stated counts; the shared cell reader
+  in `ARCHOGEN-PROGRAM-0606` repairs that case.
 
 ## archogen — the sealed-set guard recognizes comment and string wraps, with an explicit quote boundary
 

@@ -248,7 +248,9 @@ which it cannot judge; a review leaves the list when it closes, which the check 
 The four-column index table runs from its header through its first blank line. Its rows may be indented and omit
 edge pipes; an escaped pipe stays inside its cell. A malformed row, a missing separator or a missing or duplicate
 header is refused. Every stated count is judged, including repeated statements of the same kind: a correct first
-count cannot hide an incorrect second one. The counted history/record pair names the record whose counts are held.
+count cannot hide an incorrect second one. The same cell reader serves index, summary and findings tables: an
+escaped pipe inside a summary cell cannot hide a later count. The counted history/record pair names the record
+whose counts are held.
 
 ```console
 $ bash scripts/check_review_counts.sh                      # the gate

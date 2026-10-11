@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # scripts/check_review_counts.sh — REVIEW-COUNTS: for each design review the reviews index lists as counted, the
 # record's count of what each round found, and the index's count of rounds, are its review history's (leaf `PROGRAM.69`,
-# review rounds 23 to 29).
+# review rounds 23 to 30).
 #
 # ⭐ WHY. A design record keeps one summary row per review round, with the count of what the round found, and the
 # round's own table in its review history lists each finding. The count was copied by hand, and the task-tree sealing
@@ -35,6 +35,9 @@
 #     or `| Round | Date | Defects | …` (THE DATE SHAPE), a separator row of dashes, and every row under it to the first
 #     line that is no table row.
 #
+# All three tables split cells on unescaped pipes; a Markdown-escaped pipe is part of its cell, including in a
+# summary's defects cell, so it cannot hide a later count (round 30).
+#
 # THE RULE: every round of a listed review has one line, one well-formed findings table and one summary row; every row
 # under a summary header names a round by a number, of the digits 0 to 9; a summary row for a round with no line is
 # refused. For each round, in either shape:
@@ -64,7 +67,21 @@ def read(path):
     return open(path, encoding="utf-8").read() if os.path.isfile(path) else None
 bad = []
 def cells_of(line):
-    return [c.strip() for c in line.strip().strip("|").split("|")]
+    """Markdown table cells: edge pipes optional, a pipe escaped by an odd run of backslashes kept."""
+    line = line.strip()
+    cells, chars, escaped = [], [], False
+    for ch in line:
+        if ch == "|" and not escaped:
+            cells.append("".join(chars).strip()); chars = []
+        else:
+            chars.append(ch)
+        escaped = ch == "\\" and not escaped
+    cells.append("".join(chars).strip())
+    if line.startswith("|"):
+        cells.pop(0)
+    if line.endswith("|") and cells[-1] == "":
+        cells.pop()
+    return cells
 def rounds(text, hist):
     """Each round with a line: its findings' kinds, or None where it has no well-formed findings table."""
     out = {}
@@ -111,7 +128,7 @@ def summary(text, rec, quiet=False):
             if SEPARATOR.match(l.strip()):
                 continue
             note("%s: its summary table has no separator row under its header" % rec)
-        cells = [c.strip() for c in l.strip().strip("|").split("|")]
+        cells = cells_of(l)
         if len(cells) < 3 or not NUMBER.fullmatch(cells[0]):
             note("%s: a row under its summary header names no round by a number: %r" % (rec, cells[0][:20]))
             continue
@@ -130,25 +147,9 @@ def tally(kinds):
         "remark" if k.startswith("remark") else k for k in kinds)
 index = read("docs/reviews/INDEX.md") or ""
 LINK = re.compile(r"\]\(([^)\s]+)\)")
-def index_cells(line):
-    """Markdown table cells: edge pipes optional, a pipe escaped by an odd run of backslashes kept."""
-    line = line.strip()
-    cells, chars, escaped = [], [], False
-    for ch in line:
-        if ch == "|" and not escaped:
-            cells.append("".join(chars).strip()); chars = []
-        else:
-            chars.append(ch)
-        escaped = ch == "\\" and not escaped
-    cells.append("".join(chars).strip())
-    if line.startswith("|"):
-        cells.pop(0)
-    if line.endswith("|") and cells[-1] == "":
-        cells.pop()
-    return cells
 rows_of_index, table, after_head, seen_index = [], False, False, False
 for line in index.split("\n"):
-    cells = index_cells(line)
+    cells = cells_of(line)
     if cells == ["Review history", "Design record", "Rounds", "Status"]:
         if seen_index:
             bad.append("docs/reviews/INDEX.md: two index table headers")
@@ -447,6 +448,23 @@ self_test() {
   done
   world '| 2 | 6 | 1, and 2 arm gaps, and 2 arm gaps, and 1 pre-existing arm gap, and 1 pre-existing arm gap, and 1 remark, and 1 remark, and 1 defect, and 1 defect | v |' "$GOOD_B"
   arm "repeated correct counts are all judged and pass (R29 D2)" 0 "3 round(s) judged"
+  # Round 30: a Markdown-escaped pipe is part of a summary cell, not its end. A false count after it still refuses.
+  for shape in findings date; do
+    for kind in 'arm gaps' 'pre-existing arm gaps' remarks defects; do
+      if [ "$shape" = findings ]; then
+        case "$kind" in 'arm gaps') count=2 ;; *) count=1 ;; esac
+        world "| 2 | 6 | 1, and $count $kind (x\|y), and 9 $kind | v |" "$GOOD_B"
+        arm "a false $kind count after an escaped pipe in a findings row refuses (R30 D1)" 1 "round 2 says 9"
+      else
+        case "$kind" in remarks) count=1 ;; defects) count=2 ;; *) count=0 ;; esac
+        world "$GOOD_A" "| 1 | 2026-10-11 | 2, and $count $kind (x\|y), and 9 $kind | o |"
+        arm "a false $kind count after an escaped pipe in a date row refuses (R30 D1)" 1 "round 1 says 9"
+      fi
+    done
+  done
+  world '| 2 | 6 | 1, and 2 arm gaps (x\|y), and 1 pre-existing arm gap, and 1 remark | v |' \
+    '| 1 | 2026-10-11 | 2, and 1 remark (x\|y), and 0 pre-existing arm gaps | o |'
+  arm "correct counts beyond escaped pipes in both shapes pass (R30 D1)" 0 "3 round(s) judged"
   rm -rf "${work:?}"
   echo "review-counts self-test: $ok pass / $((arms - ok)) fail ($arms arms)"
   [ "$ok" -eq "$arms" ]

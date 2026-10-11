@@ -655,7 +655,8 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM.69`
   Status: `active` — the tool, its gate and the seal committed `2026-10-10` (`ARCHOGEN-PROGRAM-0511`); its review open,
   round 29 answered: the index table parsed whole, every stated count judged, a historical index read failure
-  refused unless its path is proved absent, and this Status current. Round 30 next, on the committed tool.
+  refused unless its path is proved absent, and this Status current. Round 30 answered: summary cells use the same
+  escaped-pipe reader as index and findings cells, so later counts remain visible. Round 31 next.
   Goal: a closed subtree below an open top-level subtree is sealed too, so a tree whose top-level subtree stays open
   for long — on a blocked leaf, or a long feature — does not keep its finished leaves live.
   Reproduce / issue: `M3.6.6.2.1`'s commit was refused by `README-ROUTES`, *"docs/tasks/: 823457 bytes in total, over
@@ -819,14 +820,30 @@ mdBook that is the director's window into the project.
     rows and used `re.search` for each stated count; `check_task_history.sh` treated any failed historical index
     `git show` as a path deletion. Those shortcuts hid obligations instead of refusing unreadable evidence.
   - [x] **FIX / ADDRESSED** — an explicit four-column index table parser accepts indentation, optional edge pipes
-    and escaped pipes; malformed rows and headers refuse. Every stated count is judged in both summary shapes.
+    and escaped pipes; malformed rows and headers refuse. Every stated count is judged in both summary shapes
+    (not so, round 30 found: an escaped summary-cell pipe hid later counts).
     Historical absence requires a successful independent `git ls-tree` read. The stale Status is overwritten.
     The tracked arms pass: 69 / 0 and 124 / 0 respectively, including three additional table-grammar arms and
     a real historical deletion. The duplicate-row fixture now puts its row inside the actual table.
   - [x] **LOCKSTEP** — record, review history and index; book annex; leaf, frontier, both logs, changelog and resume
     snapshots. No Rust source changed; shell syntax, real gates, census and book gates pass. The broader self-test
-    runner is confirmatory and still in flight at the commit; its result must be received before hand-off.
-  Verification: `2026-10-11` — the Verification Log's round-29 row
+    runner was confirmatory and still in flight at that commit; its final result is recorded below.
+  **Round 30 acceptance:**
+  - [x] **REPRODUCE / ISSUE** — eight tracked synthetic arms put a false second count after a Markdown-escaped
+    pipe, four counted kinds in each summary shape: `--self-test` → `70 pass / 8 fail (78 arms)` before repair.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `summary` split on every pipe instead of calling the index's escaped-pipe
+    parser; the independent report's plain/escaped counterparts isolate that split (`target/review-p69-r30/`,
+    untracked). The rest of the cell disappeared before `stated` could judge it.
+  - [x] **FIX / ADDRESSED** — one `cells_of` parser now serves all three tables; summary cells keep escaped pipes.
+    `bash scripts/check_review_counts.sh --self-test` → `78 pass / 0 fail (78 arms)`, both shapes covered by a
+    correct-count control too. No separate parser can drift between these tables.
+  - [x] **NO REGRESSION / LOCKSTEP** — shell syntax, staged real count gate, history gate, book gates and doctrine
+    checks; review record/history/index, book annex, this tree's logs, changelog and snapshots. Round 29's broader
+    runner finished: 47 suites passed in the restricted environment; the two process-dependent suites passed with
+    OS access, 2/2 handoff arms and 39/39 spine arms, in the same runner's CI-like Git environment. These are two
+    runs covering all 49 suites, before the round-30 parser repair; the parser's focused 78-arm run is current.
+    The sandbox failure also exposed a real handoff false-green, filed and owned as `PROGRAM.80`, next.
+  Verification: `2026-10-11` — the Verification Log's round-29 and round-30 rows
   Commit: `ARCHOGEN-PROGRAM-0510 (leaf PROGRAM.69)`, the review reopened; `ARCHOGEN-PROGRAM-0511 (leaf PROGRAM.69)`;
   `ARCHOGEN-PROGRAM-0514 (leaf PROGRAM.69)`, round 7 answered; `ARCHOGEN-PROGRAM-0517 (leaf PROGRAM.69)`, round 8;
   `ARCHOGEN-PROGRAM-0521 (leaf PROGRAM.69)`, round 9; `ARCHOGEN-PROGRAM-0525 (leaf PROGRAM.69)`, round 10;
@@ -841,7 +858,8 @@ mdBook that is the director's window into the project.
   `ARCHOGEN-PROGRAM-0564 (leaf PROGRAM.69)`, round 21;
   `ARCHOGEN-PROGRAM-0567 (leaf PROGRAM.69)`, round 22; `ARCHOGEN-PROGRAM-0576 (leaf PROGRAM.69)`, round 23; `ARCHOGEN-PROGRAM-0582 (leaf PROGRAM.69)`, round 24; `ARCHOGEN-PROGRAM-0586 (leaf PROGRAM.69)`, round 25; `ARCHOGEN-PROGRAM-0590 (leaf PROGRAM.69)`, round 26;
   `ARCHOGEN-PROGRAM-0598 (leaf PROGRAM.69)`, round 27; `ARCHOGEN-PROGRAM-0599 (leaf PROGRAM.69)`, the list in the index;
-  `ARCHOGEN-PROGRAM-0602 (leaf PROGRAM.69)`, round 28; `ARCHOGEN-PROGRAM-0605 (leaf PROGRAM.69)`, round 29
+  `ARCHOGEN-PROGRAM-0602 (leaf PROGRAM.69)`, round 28; `ARCHOGEN-PROGRAM-0605 (leaf PROGRAM.69)`, round 29;
+  `ARCHOGEN-PROGRAM-0606 (leaf PROGRAM.69)`, round 30
 
 - ID: `PROGRAM.70`
   Status: `done` — started `2026-10-10`, decomposed into `.1`, the bytes, and `.2`, the count, closed the same day with `.2`
@@ -1264,6 +1282,26 @@ mdBook that is the director's window into the project.
   self-test → *"28 pass / 0 fail"*, the policy's cell and its decision's maximum agreeing; the doctrine gate at commit.
   Commit: `ARCHOGEN-PROGRAM-0600 (leaf PROGRAM.79)`
 
+- ID: `PROGRAM.80`
+  Status: `pending` — filed `2026-10-11` during `PROGRAM.69`'s confirmatory verification; high priority, next after
+  the current review-count repair and before another hand-off
+  Goal: the archogen handoff wrapper refuses when the required OS process census cannot run, rather than reporting
+  the workspace safe to clear. The scaffold's neutral `check_no_background_jobs.sh` stays untouched.
+  Reproduce / issue: in the restricted execution environment, `/bin/ps -p "$$" -o pid=` exits 126 (Operation not
+  permitted), `lsof -p "$$" -Fp` exits 0, and `bash scripts/handoff_census.sh` exits 0 with `handoff: OK`. The native
+  census suppresses `ps` errors and judges an empty snapshot, which the wrapper accepts. Probe output in
+  `target/p80/restricted-probe.log` is untracked. Two process-dependent self-test suites fail under that restriction
+  and pass with OS process access. This is a pre-existing false-green, independent of the review-count repair.
+  Direction: keep the native script read-only; make the archogen wrapper establish that its actual required census
+  commands succeeded, and refuse an unreadable sample. Add deterministic synthetic failures without OS denial;
+  preserve both sampling and normal process detection. Investigate transient ancestry reads separately from the
+  required process snapshot so a process that exits normally does not cause a false refusal.
+  Acceptance: failed required process or open-handle reads exit 2 with a reason and never print handoff OK;
+  ordinary empty, transient and persistent samples retain their documented outcomes; tracked synthetic arms and
+  OS-access controls verify the fix; the book and toolbox name the authoritative wrapper and its limits.
+  Verification: `pending`
+  Commit: `pending`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1328,12 +1366,13 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.69` | `active` | its review open: round 30 next, on the committed tool, its seal already in place |
-| 2 | `PROGRAM.76` | `active` | its review open: round 14 to answer, report under target/review-p76-r14/, round 13 committed |
-| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 1 | `PROGRAM.69` | `active` | its review open: round 31 next, on the committed tool, its seal already in place |
+| 2 | `PROGRAM.80` | `pending` | high priority: handoff wrapper falsely green when required OS process reads fail; before another hand-off |
+| 3 | `PROGRAM.76` | `active` | its review open: round 14 to answer, report under target/review-p76-r14/, round 13 committed |
+| 4 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
-The third row waits on the director's yes. The pending leaves beside them —
-`PROGRAM.71`, `.72`, `.73` and `.78` — are filed and owned. Every closed
+The fourth row waits on the director's yes. The pending leaves beside them —
+`PROGRAM.71`, `.72`, `.73`, `.78` and `.80` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and a sealed leaf's full record is under `docs/task-history/PROGRAM/`.
 
 ## Decisions
@@ -1525,7 +1564,9 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-11` | `PROGRAM.76` (round 13, hand-off) | the draft reader on the tree; the committed check restored; the no-background check; focused on the staged tree | three tracked files refused, exit 1, the draft untracked; exit 0; `handoff: OK`; `passed — 3 passed, 0 failed` |
 
 | `2026-10-11` | `PROGRAM.76` (round 13) | the new arms on the prior reader, then the revised reader; the real-tree check; syntax; book anchors/glossary; review counts; doctrines | 127 pass / 10 fail, then 137 pass / 0 fail; exit 0; all named checks green; case-sensitive filesystem arm skipped explicitly |
-| `2026-10-11` | `PROGRAM.69` (round 29) | new regressions before repair, then both self-tests; shell syntax; real history gate and census; final staged review-count gate; book gates; every self-test and doctrines | 53 pass / 13 fail (66 count arms), 122 pass / 2 fail (124 history arms), then 69 / 0 and 124 / 0; history OK, 175 sealed files; census 12 873 bytes, no closed subtree below an open top-level subtree; final staged review-count gate OK, 2 reviews / 30 rounds; book gates OK; doctrines all green; broader self-test runner pending |
+| `2026-10-11` | `PROGRAM.69` (round 29) | new regressions before repair, then both self-tests; shell syntax; real history gate and census; final staged review-count gate; book gates; every self-test and doctrines | 53 pass / 13 fail (66 count arms), 122 pass / 2 fail (124 history arms), then 69 / 0 and 124 / 0; history OK, 175 sealed files; census 12 873 bytes, no closed subtree below an open top-level subtree; final staged review-count gate OK, 2 reviews / 30 rounds; book gates OK; doctrines all green; broader self-test runner finished: 47/49 passed restricted, both process-dependent suites passed with OS access (2/2 and 39/39 arms); all 49 covered across two runs before round 30 |
+
+| `2026-10-11` | `PROGRAM.69` (round 30) | eight escaped-pipe regressions before repair, then the count self-test; syntax; final staged gate; history/book/doctrine checks | 70 pass / 8 fail, then 78 pass / 0 fail; final staged count gate OK, 2 reviews / 31 rounds; history OK, 175 files; book anchors/glossary/index OK; doctrines all green |
 
 ## Commit Log
 
@@ -1716,7 +1757,9 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 
 | `PROGRAM.76` | `ARCHOGEN-PROGRAM-0604 (leaf PROGRAM.76)` | **review round 13 answered**: whole cases and complete long source lines compared as case-sensitive words; ordinary comment/string wraps found; partial cross-line quotes and encoded boundaries stated as limits; each error arm independent, submodule recursion held by a name |
 
-| `PROGRAM.69` | `ARCHOGEN-PROGRAM-0605 (leaf PROGRAM.69)` | **review round 29 answered**: index table grammar explicit and malformed rows refused; all repeated counts judged; a failed historical index read refuses unless Git proves the path absent; stale Status current; 69 and 124 synthetic arms |
+| `PROGRAM.69` | `ARCHOGEN-PROGRAM-0605 (leaf PROGRAM.69)` | **review round 29 answered**: index table grammar explicit and malformed rows refused; all repeated counts judged (not so, round 30 found: an escaped summary-cell pipe hid later counts); a failed historical index read refuses unless Git proves the path absent; stale Status current; 69 and 124 synthetic arms |
+
+| `PROGRAM.69` | `ARCHOGEN-PROGRAM-0606 (leaf PROGRAM.69)` | **review round 30 answered**: a shared cell reader keeps escaped pipes inside summary cells, so every later count is judged; 78 arms; round 29's confirmatory result recorded; handoff false-green filed as `PROGRAM.80`, high priority next |
 
 ## Changelog
 
@@ -1755,3 +1798,5 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-10-10`: `PROGRAM.77` done — CI green on the runner again, the restoring push's `rust` run in 2 and 4 minutes.
 - `2026-10-10`: `PROGRAM.78` filed by `PROGRAM.69`'s review round 26 — the sealing self-test's interrupt arm timing-dependent under a parallel sweep. Pre-existing, owned; this line added by round 27's answer.
 - `2026-10-11`: `PROGRAM.79` filed and done — `docs/specs/` raised to 524 288 bytes, measured, as three trust designs moved in.
+
+- `2026-10-11`: `PROGRAM.80` filed by the confirmatory self-tests: the handoff census fails open when `ps` is denied; high priority, owned, the wrapper repair before another hand-off.

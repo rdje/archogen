@@ -635,13 +635,24 @@ two of 124. After repair and three table-grammar arms, they passed 69 of 69 and 
 | # | Kind | Finding | Answer |
 | --- | --- | --- | --- |
 | R29-D1 | defect | indented index rows were skipped; rows with too few cells escaped the open-review rule | the four-column table is read from its header through its first blank line, with indentation and optional edge pipes; escaped pipes stay in their cell; malformed rows, missing or duplicate headers and missing separators refused; arms for each |
-| R29-D2 | defect | only the first stated count of a kind was judged, so a false second count passed | every occurrence judged in either summary shape, including explicit defect counts; eight false-second-count arms and a repeated-correct control |
+| R29-D2 | defect | only the first stated count of a kind was judged, so a false second count passed | every occurrence judged in either summary shape, including explicit defect counts; eight false-second-count arms and a repeated-correct control (not so, round 30 found: an escaped summary-cell pipe still hid later counts) |
 | R29-D3 | defect | any failed historical index blob read was treated as absence, hiding an append-only breach | absence requires a successful `git ls-tree` proof that the path is absent; a failed proof or an unreadable present blob refuses; arms for both errors and a real historical deletion |
 | R29-D4 | defect | the leaf's Status still directed the next session to round 27 | overwritten with the current round and next action |
 | R29-R1 | remark | the round-28 verification row quotes 28 judged rounds; the reviewed tree has 29 | the earlier reported figure retained without claiming a final-tree measurement; the reviewed baseline's 29 and final round-29 tree's 30 recorded separately |
 | R29-R2 | remark | the counted pair can name a different record from the index's record cell | outside the stated contract: the counted pair is the authority; no equality rule added |
 | — | found while answering | the existing duplicate-row arm appended its row outside the table | the fixture now duplicates the row inside the table; its refusal remains required |
 | — | found while answering | round 28's claims that every index row was read and every stated count judged were false | the record, this leaf's evidence and Commit Log, and the changelog marked with this round's correction |
+
+**Round 30**, `2026-10-11`, of committed `03dfb90`, an independent read-only context new to the answer, fenced from
+sealed case text and real historical sealed blobs. It made 29 synthetic count evaluations and five historical-read
+branch evaluations, without shared tests or new repositories; those probes in `target/review-p69-r30/` are untracked.
+It found one defect. The tracked answer adds eight false-count arms and a correct control: before repair 70 pass /
+8 fail, after repair 78 pass / 0 fail.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R30-D1 | defect | a Markdown-escaped pipe in a summary's defects cell truncated the cell and hid later counts, in both shapes | the shared `cells_of` reader now serves summary, index and findings tables; every count after an escaped pipe remains visible; false-count arms for all four kinds in both shapes, and a correct-count control |
+| — | found while verifying | the broader runner's two process-dependent suites failed where OS process access was denied | 47 of 49 passed restricted; both remaining suites passed with OS access through the same runner, 2/2 and 39/39 arms; the native handoff census's false-green on denied process reads is owned as high-priority `PROGRAM.80`, next |
 
 ## Why
 
