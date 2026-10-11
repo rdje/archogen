@@ -446,19 +446,25 @@ fn classify(output: &Bounded, limit: Duration) -> Seen {
 /// The tests cargo lists under `failures:` — the names that make a kill evidence rather than a claim.
 fn failed_tests(stdout: &str) -> Vec<String> {
     let mut names = Vec::new();
-    let mut in_list = false;
+    let mut list = None;
     for line in stdout.lines() {
         if line == "failures:" {
-            in_list = true;
-            continue;
-        }
-        if in_list {
-            match line.strip_prefix("    ") {
-                Some(name) if !name.is_empty() && !name.contains(' ') => {
-                    names.push(name.to_string())
-                }
-                _ if names.is_empty() => {}
-                _ => in_list = false,
+            list = Some(Vec::new());
+        } else if line.starts_with("test result: FAILED.") {
+            if let Some(finished) = list.take() {
+                names.extend(finished);
+            }
+        } else if !line.trim().is_empty() {
+            let name = line.strip_prefix("    ").filter(|name| {
+                !name.is_empty()
+                    && name
+                        .chars()
+                        .all(|c| c.is_alphanumeric() || c == '_' || c == ':')
+            });
+            if let (Some(list), Some(name)) = (&mut list, name) {
+                list.push(name.to_string());
+            } else {
+                list = None;
             }
         }
     }
@@ -757,6 +763,14 @@ end
         let stdout = "running 3 tests\n..F\nfailures:\n\n---- tests::b stdout ----\nboom\n\n\nfailures:\n    tests::b\n    tests::c\n\ntest result: FAILED. 1 passed; 2 failed\n";
         assert_eq!(super::failed_tests(stdout), ["tests::b", "tests::c"]);
         assert!(super::failed_tests("test result: ok. 3 passed\n").is_empty());
+        let diagnostic = "failures:\n\n---- tests::b stdout ----\n    ~~~~~^^^\n    tests::not_a_list\n\ntest result: FAILED. 0 passed; 1 failed\n";
+        assert!(super::failed_tests(diagnostic).is_empty());
+        let with_list = diagnostic.replace(
+            "test result: FAILED.",
+            "failures:\n    tests::b\n\ntest result: FAILED.",
+        );
+        assert_eq!(super::failed_tests(&with_list), ["tests::b"]);
+        assert!(super::failed_tests("failures:\n    tests::unfinished\n").is_empty());
     }
 
     #[test]
@@ -928,9 +942,11 @@ assert '    false\\n' in text, 'mutation did not land'
 kind = os.environ['PROBE_OUTCOME']
 if kind == 'hang':
     time.sleep(30)
-if kind in ('kill', 'incomplete'):
+if kind in ('diagnostic', 'diagnostic-with-list'):
+    print('failures:\\n\\n---- tests::caught stdout ----\\n    ~~~~^^^\\n    tests::not_a_list\\n')
+if kind in ('kill', 'incomplete', 'diagnostic-with-list'):
     print('failures:\\n    tests::caught\\n')
-if kind in ('kill', 'no-names'):
+if kind in ('kill', 'no-names', 'diagnostic', 'diagnostic-with-list'):
     print('test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out')
 if kind == 'unviable':
     print('error: could not compile `synthetic`', file=sys.stderr)
@@ -943,7 +959,8 @@ sys.exit(0 if kind == 'survive' else 101)
 cases = [('kill', False, 0), ('kill', True, 0), ('survive', False, 1), ('survive', True, 1),
          ('unviable', False, 0), ('unviable', True, 0), ('invocation', False, 2),
          ('invocation', True, 2), ('incomplete', False, 2), ('no-names', False, 2),
-         ('crash', False, 2), ('hang', False, 0), ('hang', True, 1)]
+         ('crash', False, 2), ('diagnostic', False, 2), ('diagnostic-with-list', False, 0),
+         ('hang', False, 0), ('hang', True, 1)]
 try:
     for number, (kind, strict, expected) in enumerate(cases):
         fixture = work / str(number)
@@ -962,6 +979,8 @@ try:
         if run.returncode != expected:
             failures.append(f'{kind}, strict={strict}: exit {run.returncode}, expected {expected}\n'
                             + run.stdout + run.stderr)
+        if 'tests::not_a_list' in run.stdout or '~~~~^^^' in run.stdout:
+            failures.append(f'{kind}: diagnostic output was reported as a failing-test name')
         copied = fixture / 'target/mutation-sweep/tree/sample.rs'
         if not copied.is_file() or copied.read_bytes() != original:
             failures.append(f'{kind}, strict={strict}: copied file not restored byte for byte')
@@ -977,6 +996,25 @@ finally:
             .arg(root)
             .output()
             .expect("Python runs the synthetic sweep controls");
+        assert!(
+            output.status.success(),
+            "{}\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
+    #[test]
+    fn the_sweep_holds_source_spans_and_equivalence_records() {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("repository root");
+        let output = Command::new("python3")
+            .arg("-I")
+            .arg(root.join("xtask/mutation_sweep_tests.py"))
+            .arg(root)
+            .output()
+            .expect("Python runs the synthetic sweep span and equivalence controls");
         assert!(
             output.status.success(),
             "{}\n{}",

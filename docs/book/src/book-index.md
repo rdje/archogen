@@ -211,8 +211,8 @@ a change that leaves it stale, so it is never edited by hand.
   runtime: decisions, not actions](runtime.md), [Where generated systems run](targets.md), [Verifying the
   toolchain](verification.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
   detail](annex-runtime.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
-- **JSON** — [definition](glossary.md), [The engine API](engine-api.md), [What is versioned, and what changing it
-  costs](versions.md)
+- **JSON** — [definition](glossary.md), [The engine API](engine-api.md), [Verifying the toolchain](verification.md),
+  [What is versioned, and what changing it costs](versions.md)
 
 ## K
 

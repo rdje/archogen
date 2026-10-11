@@ -436,6 +436,7 @@ sweeps of the complete production ranges in `xtask/src/trust.rs`, `xtask/src/tru
 needs an equivalence reason, and timeouts fail both strict modes. The design records actual operator reach and binds
 the test copy to its source repository. Implementation begins with strict and attributed mutation outcomes: an
 invocation error without a failed test summary and failure-list name is unjudged, never a kill or equivalent.
-Those modes are built in `M3.6.9.1`; the operators, bound seam, exact pairs and adequacy measurements remain pending.
+Those modes are built in `M3.6.9.1`; `M3.6.9.2.1` adds source-span replacements and validated multiline equivalents.
+The five operators, bound seam, exact pairs and adequacy measurements remain pending.
 The package the verifier
 reads is fixed provisionally until `M4.7` writes real ones.

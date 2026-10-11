@@ -34,7 +34,11 @@
 #   from <the original line, trimmed>
 #   to <the mutated line, trimmed>
 #   why <one line: why the change alters nothing the file promises>
-# matched by text, not line number, so an edit elsewhere keeps them.
+# For a multiline source span or replacement, use `from-json <JSON string>` / `to-json <JSON string>` instead.
+# Raw fields keep backslashes literal. JSON fields decode escapes; only the whole span's outer whitespace is trimmed.
+# Each entry requires exactly one source, one replacement and a nonempty reason. Unknown/duplicate/missing/empty
+# fields and duplicate entries refuse, including the last entry without a trailing blank line.
+# Matched by text, not line number, so an edit elsewhere keeps them.
 #
 # CONTRACT: exit 0 — every mutation killed, timed out, unviable or listed equivalent, and every listed equivalent
 # still made and still surviving; 1 — a survivor not listed, or a listed one stale; 2 — could not run (the unmutated
@@ -48,7 +52,7 @@
 set -uo pipefail
 ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
 exec python3 - "$@" <<'PY'
-import argparse, os, re, shutil, signal, subprocess, sys, time
+import argparse, json, os, re, shutil, signal, subprocess, sys, time
 
 ap = argparse.ArgumentParser(prog="mutation_sweep.sh")
 ap.add_argument("file")
@@ -88,13 +92,66 @@ def operands(cond):
     spans.append((start, len(cond)))
     return spans if len(spans) > 1 else []
 
+def apply_mutant(m):
+    n, stop, _, new = m
+    mutated = lines[:]
+    mutated[n:stop] = new.split("\n")
+    return "\n".join(mutated)
+
+def mutation_key(m):
+    n, stop, _, new = m
+    return "\n".join(lines[n:stop]).strip(), new.strip()
+
+def display(text):
+    # Keep each result on one line while preserving multiline text unambiguously.
+    return json.dumps(text, ensure_ascii=False) if "\n" in text else text
+
+def load_equivalents(path):
+    result, cur = {}, {}
+    def finish():
+        if not cur:
+            return
+        if set(cur) != {"from", "to", "why"}:
+            raise ValueError("an entry requires exactly from/to/why")
+        key = cur["from"], cur["to"]
+        if key in result:
+            raise ValueError("a duplicate equivalence entry")
+        result[key] = cur["why"]
+        cur.clear()
+    with open(path, encoding="utf-8") as source:
+        for number, raw in enumerate(source.read().split("\n"), 1):
+            if raw.startswith("#"):
+                continue
+            if not raw.strip():
+                finish()
+                continue
+            field, separator, value = raw.partition(" ")
+            if not separator or field not in {"from", "to", "why", "from-json", "to-json"}:
+                raise ValueError("line %d: unknown or malformed field" % number)
+            key = field.removesuffix("-json")
+            if key in cur:
+                raise ValueError("line %d: duplicate %s field" % (number, key))
+            if field.endswith("-json"):
+                value = json.loads(value)
+                if not isinstance(value, str):
+                    raise ValueError("line %d: %s must be a JSON string" % (number, field))
+            value = value.strip()
+            if not value:
+                raise ValueError("line %d: empty %s field" % (number, key))
+            cur[key] = value
+    finish()
+    return result
+
 def mutants():
     out = []
     seen = set()
-    def add(n, op, new):
-        if new != lines[n] and (n, new) not in seen:
-            seen.add((n, new))
-            out.append((n, op, new))
+    def add(n, op, new, stop=None):
+        stop = n + 1 if stop is None else stop
+        if not first <= n < stop <= last:
+            raise ValueError("mutation interval is outside the production range")
+        if new != "\n".join(lines[n:stop]) and (n, stop, new) not in seen:
+            seen.add((n, stop, new))
+            out.append((n, stop, op, new))
     for n in range(first, last):
         l = lines[n]
         t = l.strip()
@@ -161,30 +218,22 @@ def mutants():
                     add(n, "alt", new + l[len(code):])
     return out
 
-ms = [m for m in mutants() if not a.op or m[1] in a.op]
-ids = ["L%d.%s.%d" % (n + 1, op, k) for k, (n, op, _) in enumerate(ms)]
+ms = [m for m in mutants() if not a.op or m[2] in a.op]
+ids = ["L%d.%s.%d" % (n + 1, op, k) for k, (n, _, op, _) in enumerate(ms)]
 if a.list:
-    for i, (n, op, new) in zip(ids, ms):
-        print("%-18s %s\n%18s ⟶ %s" % (i, lines[n].strip(), "", new.strip()))
+    for i, m in zip(ids, ms):
+        before, after = mutation_key(m)
+        print("%-18s %s\n%18s ⟶ %s" % (i, display(before), "", display(after)))
     print("mutation-sweep: %d mutation(s) of %s, lines %d to %d" % (len(ms), a.file, first + 1, last))
     sys.exit(0)
 
 equiv = {}
 if a.equivalents:
-    cur = {}
-    for raw in open(a.equivalents, encoding="utf-8").read().split("\n"):
-        if raw.startswith("#"):
-            continue
-        if not raw.strip():
-            if cur:
-                if set(cur) != {"from", "to", "why"}:
-                    print("mutation-sweep: an entry of %s lacks from/to/why: %s" % (a.equivalents, cur), file=sys.stderr); sys.exit(2)
-                equiv[(cur["from"], cur["to"])] = cur["why"]; cur = {}
-            continue
-        k, _, v = raw.partition(" ")
-        cur[k] = v.strip()
-    if cur:
-        equiv[(cur["from"], cur["to"])] = cur.get("why", "")
+    try:
+        equiv = load_equivalents(a.equivalents)
+    except (OSError, ValueError) as error:
+        print("mutation-sweep: cannot read equivalents %s: %s" % (a.equivalents, error), file=sys.stderr)
+        sys.exit(2)
 
 # A fresh copy of the tracked tree as the working tree holds it; the target directory is kept between runs.
 if os.path.isdir(TREE):
@@ -202,6 +251,23 @@ original = open(target_file, "rb").read()
 env = dict(os.environ, CARGO_TARGET_DIR=TARGET)
 cmd = ["cargo", "test", "-q", "-p", a.package, "--"] + a.filter
 
+def failed_tests(stdout):
+    names, pending = set(), None
+    for line in stdout.splitlines():
+        if line == "failures:":
+            pending = []
+        elif line.startswith("test result: FAILED."):
+            if pending is not None:
+                names.update(pending)
+            pending = None
+        elif line.strip():
+            match = re.fullmatch(r"    ([\w:]+)", line)
+            if pending is not None and match:
+                pending.append(match.group(1))
+            else:
+                pending = None
+    return sorted(names)
+
 def run():
     t0 = time.time()
     p = subprocess.Popen(cmd, cwd=TREE, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, start_new_session=True)
@@ -215,7 +281,7 @@ def run():
         return "survived", [], time.time() - t0
     if "could not compile" in se and "test result" not in so:
         return "unviable", [next((x for x in se.splitlines() if x.startswith("error")), "")], time.time() - t0
-    failed = sorted(set(re.findall(r"^    ([\w:]+)$", so.split("failures:", 1)[-1], re.M))) if "failures:" in so else []
+    failed = failed_tests(so)
     if failed and any(l.startswith("test result: FAILED.") for l in so.splitlines()):
         return "killed", failed, time.time() - t0
     detail = next((l for l in se.splitlines() if l.strip()), "nonzero exit without a finishing, named test failure")
@@ -229,12 +295,12 @@ print("mutation-sweep: the unmutated copy passes (%.0fs); %d mutation(s) of %s, 
 
 counts, unlisted, seen_equiv = {}, [], set()
 try:
-    for i, (n, op, new) in zip(ids, ms):
+    for i, m in zip(ids, ms):
         if a.only and i not in a.only:
             continue
-        mutated = lines[:]; mutated[n] = new
-        open(target_file, "w", encoding="utf-8").write("\n".join(mutated))
-        if open(target_file, encoding="utf-8").read() != "\n".join(mutated):
+        mutated = apply_mutant(m)
+        open(target_file, "w", encoding="utf-8").write(mutated)
+        if open(target_file, encoding="utf-8").read() != mutated:
             print("mutation-sweep: %s did not land in %s" % (i, target_file), file=sys.stderr); sys.exit(2)
         try:
             outcome, detail, secs = run()
@@ -242,13 +308,13 @@ try:
             open(target_file, "wb").write(original)
             if open(target_file, "rb").read() != original:
                 print("mutation-sweep: %s did not read back after %s" % (target_file, i), file=sys.stderr); sys.exit(2)
-        key = (lines[n].strip(), new.strip())
+        key = mutation_key(m)
         if outcome == "survived" and key in equiv:
             outcome = "equivalent"; seen_equiv.add(key)
         counts[outcome] = counts.get(outcome, 0) + 1
         mark = {"killed": "✓", "timeout": "✗" if a.timeouts_fail else "✓", "unviable": "·",
                 "equivalent": "=", "survived": "✗", "unjudged": "?"}[outcome]
-        print("  %s %-18s %-10s %s ⟶ %s%s" % (mark, i, outcome, lines[n].strip(), new.strip(),
+        print("  %s %-18s %-10s %s ⟶ %s%s" % (mark, i, outcome, display(key[0]), display(key[1]),
               (" — " + ", ".join(detail)) if detail else ""), flush=True)
         if outcome == "unjudged":
             print("mutation-sweep: %s unjudged; resolve the command failure and rerun" % i, file=sys.stderr)
@@ -260,8 +326,8 @@ except KeyboardInterrupt:
 stale = [k for k in equiv if k not in seen_equiv] if not a.only else []
 print("mutation-sweep: " + ", ".join("%d %s" % (v, k) for k, v in sorted(counts.items())))
 for i, (f, t) in unlisted:
-    print("  survivor %s: %s ⟶ %s" % (i, f, t), file=sys.stderr)
+    print("  survivor %s: %s ⟶ %s" % (i, display(f), display(t)), file=sys.stderr)
 for f, t in stale:
-    print("  a listed equivalent no longer made or no longer surviving: %s ⟶ %s" % (f, t), file=sys.stderr)
+    print("  a listed equivalent no longer made or no longer surviving: %s ⟶ %s" % (display(f), display(t)), file=sys.stderr)
 sys.exit(1 if unlisted or stale else 0)
 PY

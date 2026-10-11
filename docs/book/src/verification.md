@@ -221,6 +221,25 @@ entries, or unviable sweep candidates, as each tool reports them. Every outcome 
 Ordinary mode retains its reached-hang result. Use `--timeouts-fail` when the criterion requires tests to finish:
 a timeout then fails with exit 1, even for a catalogue entry expected to survive. The sweep's same option refuses a
 timeout regardless of its equivalents file; an unjudged run cannot be listed as an equivalent either.
+Only names in the failure list immediately preceding a failed summary count. Diagnostic sections, including
+traceback markers and test output that resembles a name, and unfinished lists supply no attribution.
+
+The sweep replaces a source-line interval with replacement text, then restores the copy byte for byte. Existing
+single-line equivalents keep their literal `from`, `to` and `why` fields. For a multiline candidate, use JSON strings
+so embedded newlines remain inside one field:
+
+```text
+from-json "if ready {\n    consume();\n}"
+to consume();
+why this fixture guarantees ready before this branch
+```
+
+`from-json` and `to-json` decode JSON escapes; raw `from` and `to` keep backslashes literal. Matching trims only the
+outer whitespace of the whole source/replacement span, retaining internal indentation and newlines. An entry must
+have one source field, one replacement field and a nonempty reason. Unknown, duplicate, missing or empty fields,
+invalid/non-string JSON and duplicate entries refuse with exit 2 before test commands run. End of input validates the last
+entry exactly as a blank separator does. A listed equivalent still must be made and survive; these fields do not
+waive either requirement. The new loop and guard operators that need spans remain pending in `M3.6.9.2`.
 
 An entry can also break without anyone running it: the code it names moves, and its text is no longer there.
 One entry went that way when an import line gained a name, and the whole catalog then refused to run, unseen,

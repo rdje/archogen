@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — mutation source spans and validated equivalence records
+
+`ARCHOGEN-M3-0619` (leaf `M3.6.9.2.1`), `2026-10-11`.
+
+- Sweep candidates can replace source-line intervals; existing one-line lists and IDs are byte-identical. Explicit
+  `from-json` / `to-json` fields support multiline equivalents while raw backslashes remain literal. All entries,
+  including EOF, require one source, one replacement and a nonempty reason; malformed and duplicate records refuse
+  before commands. Encountered failed-name defect repaired in both harnesses: diagnostic output is not a failure list.
+- Validation: old record/name controls fail first; three Python methods cover 28 synthetic CLI cases and restoration;
+  15 mutation-tool tests pass, including 15 outcome controls. Two strict catalogue controls killed by the named test.
+  Three old production lists compare byte for byte (932 candidates, planning only); syntax, book and final focused/
+  doctrine gates before commit. No new operator production viability or adequacy result claimed; loops/guards next.
+
 ## archogen — unconditional review-link grammar and parenthesized destinations gain controls
 
 `ARCHOGEN-PROGRAM-0618` (leaf `PROGRAM.69`), `2026-10-11`.

@@ -4322,3 +4322,28 @@ from
 to
             if outcome == "survived":
 end
+
+mutation sweep-final-equivalent-bypasses-validation
+file scripts/mutation_sweep.sh
+test -p xtask mutation::tests::the_sweep_holds_source_spans_and_equivalence_records
+expect killed
+why M3.6.9.2.1: EOF must validate the final equivalence record, including its nonempty reason, exactly as a separator does.
+from
+        finish()
+        return result
+to
+        if cur:
+            result[(cur.get("from", ""), cur.get("to", ""))] = cur.get("why", "")
+        return result
+end
+
+mutation sweep-a-span-written-as-one-line
+file scripts/mutation_sweep.sh
+test -p xtask mutation::tests::the_sweep_holds_source_spans_and_equivalence_records
+expect killed
+why M3.6.9.2.1: a multi-line source interval must be replaced whole, expanding or contracting without retaining or duplicating its old lines.
+from
+        mutated[n:stop] = new.split("\n")
+to
+        mutated[n] = new
+end
