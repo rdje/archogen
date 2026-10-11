@@ -2998,6 +2998,30 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn an_admission_requires_exactly_one_textual_reason_value() {
+        crate::trust_test_process::bounded!(an_admission_requires_exactly_one_textual_reason_value);
+        let hash = Digest::of(b"pub const T: &str = include_str!(\"table.txt\");").hex();
+        let admission = |reason: &str| {
+            format!(
+                "(defadmit (file \"crates/a/src/lib.rs\") (rule \"include_str\") (sha256 \"{hash}\") {reason})"
+            )
+        };
+        let valid = read_roots(&admission("(reason \"the reviewed template\")"))
+            .expect("one textual reason is valid");
+        assert_eq!(valid.admissions.len(), 1);
+        assert_eq!(valid.admissions.values().copied().collect::<Vec<_>>(), [1]);
+
+        for reason in ["", "(reason)", "(reason \"first\" \"second\")"] {
+            let error = read_roots(&admission(reason))
+                .expect_err("an admission needs exactly one textual reason value");
+            assert!(
+                error.contains("`an admission` needs exactly one `(reason …)`"),
+                "{reason:?}: {error}"
+            );
+        }
+    }
+
+    #[test]
     fn a_root_retains_all_declared_role_packages_and_its_own_package() {
         crate::trust_test_process::bounded!(
             a_root_retains_all_declared_role_packages_and_its_own_package

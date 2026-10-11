@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — admission reason cardinality is held by a parent control
+
+`ARCHOGEN-M3-0665` (leaf `M3.6.9.6.3.2.2.4`), `2026-10-11`.
+
+- Resolve actual survivor L317.stmt.47: removing the required admission reason check survives before the new
+  bounded parent control and finishes with its named kill afterward, selected strict exit 0. Retain a valid
+  single-reason admission and refuse absent, empty-clause and multiple-textual-value counterparts.
+- Before/after commands and candidate plans match; all 988 original/copied tracked inputs restore under Python
+  and system hashes, production/old test bodies unchanged. Missing-name/replacement/strict-exit falsifications
+  refuse. Focused tier passes; exact staged stamp required before commit; clarify existing reader behavior in the book,
+  sync live pointers and keep remaining assessments, final full sweeps and independent review open.
+
 ## archogen — complete role-package sets are held by parent controls
 
 `ARCHOGEN-M3-0664` (leaf `M3.6.9.6.3.2.2.3`), `2026-10-11`.
