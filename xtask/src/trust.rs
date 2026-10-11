@@ -3004,6 +3004,100 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn every_harness_pair_names_two_distinct_roots() {
+        crate::trust_test_process::bounded!(every_harness_pair_names_two_distinct_roots);
+        let forms = |pairs: [(&str, &str); 3]| {
+            let harnesses: String = pairs
+                .iter()
+                .enumerate()
+                .map(|(i, (a, b))| {
+                    format!(
+                        "(defharness h{i} (pair {a} {b}) (package \"crates/tests\") (test d{i}))\n"
+                    )
+                })
+                .collect();
+            format!("{ROOTS}{harnesses}")
+        };
+        let valid = read_roots(&forms([("gen", "chk"); 3]))
+            .expect("every harness compares two declared roots");
+        assert_eq!(valid.programs.len(), 5);
+        for harness in &valid.programs[2..] {
+            assert_eq!(harness.pair, Some(("gen".to_owned(), "chk".to_owned())));
+        }
+
+        for position in 0..3 {
+            for root in ["gen", "chk"] {
+                let mut pairs = [("gen", "chk"); 3];
+                pairs[position] = (root, root);
+                let error = read_roots(&forms(pairs))
+                    .expect_err("every harness must compare distinct roots");
+                assert!(
+                    error.contains(&format!("`h{position}`'s pair names `{root}` twice")),
+                    "{position}: {error}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn every_harness_pair_member_names_a_root() {
+        crate::trust_test_process::bounded!(every_harness_pair_member_names_a_root);
+        let forms = |pairs: [(&str, &str); 3]| {
+            let harnesses: String = pairs
+                .iter()
+                .enumerate()
+                .map(|(i, (a, b))| {
+                    format!(
+                        "(defharness h{i} (pair {a} {b}) (package \"crates/tests\") (test d{i}))\n"
+                    )
+                })
+                .collect();
+            format!("{ROOTS}{harnesses}")
+        };
+        let valid = read_roots(&forms([("gen", "chk"); 3]))
+            .expect("both members of every pair name declared roots");
+        assert_eq!(valid.programs.len(), 5);
+
+        for position in 0..3 {
+            for missing_pair in [("missing", "chk"), ("gen", "missing")] {
+                let mut pairs = [("gen", "chk"); 3];
+                pairs[position] = missing_pair;
+                let error = read_roots(&forms(pairs))
+                    .expect_err("every member of every harness pair must name a root");
+                assert!(
+                    error.contains(&format!(
+                        "`h{position}`'s pair names `missing`, which names no root"
+                    )),
+                    "{position}: {error}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn a_harness_pair_cannot_name_another_harness() {
+        crate::trust_test_process::bounded!(a_harness_pair_cannot_name_another_harness);
+        let forms = |a: &str, b: &str| {
+            format!(
+                "{ROOTS}(defharness other (pair gen chk) (package \"crates/tests\") (test other))\n\
+                 (defharness candidate (pair {a} {b}) (package \"crates/tests\") (test candidate))\n"
+            )
+        };
+        let valid = read_roots(&forms("gen", "chk"))
+            .expect("several harnesses may compare the declared roots");
+        assert_eq!(valid.programs.len(), 4);
+
+        for (a, b) in [("other", "gen"), ("gen", "other")] {
+            let error =
+                read_roots(&forms(a, b)).expect_err("a declared harness is not a declared root");
+            assert!(
+                error.contains("`candidate`'s pair names `other`, which names no root"),
+                "{a}, {b}: {error}"
+            );
+        }
+    }
+
+    #[test]
     fn an_unrooted_role_names_exactly_one_future_leaf() {
         crate::trust_test_process::bounded!(an_unrooted_role_names_exactly_one_future_leaf);
         let placeholder = |leaf: &str| format!("(defrole configuration-checker {leaf})");

@@ -59,6 +59,16 @@ A misspelling such as `(role-pakages "crates/other")` refuses at the beginning, 
 Two `(data …)` clauses also refuse wherever the second occurs: put several paths in one clause,
 for example `(data "data/one.txt" "data/two.txt")`. A valid clause after a departure does not hide it.
 
+The comparison harness in `trust/roots.eadl` declares:
+
+```text
+(defharness differential (pair reference-model implementation)
+  (package "crates/rt-core") (test differential))
+```
+
+Every harness must name distinct declared roots. Unknown names or another harness in either slot refuse,
+including in a harness between valid ones.
+
 A program that would run two roles is refused: one program cannot be independent of itself. Every other program the
 workspace can build — an example, a diagnostic tool, the browser module — is classified as not a root, with a reason
 and the role packages it compiles, so no one can add a second checker beside the generator unseen.
@@ -547,7 +557,7 @@ ARCHOGEN_PARENT_TEST_TIMINGS=1 cargo test -q -p xtask -- \
 On `2026-10-11`, the five actual non-progress mutations each produce finishing named parent kills, strict exit 0;
 all captured original/copied inputs restore.
 On `2026-10-11`, the complete exact catalogue run again kills all 32 entries and retains every previous killing-name set.
-The trust production prefixes are byte-identical to the pre-repair commit.
+That exact run's trust production prefixes are byte-identical to the pre-repair commit.
 The child-protocol controls and focused format/lint/whole-suite gate pass. These are repair regressions, separate
 from the complete production measurement that follows.
 
@@ -559,12 +569,14 @@ bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask \
   --filter=trust_generated:: --filter=trust_gate:: --filter=--skip --filter=route_tests
 ```
 
-Measured `2026-10-11`: complete identity, actual replacement, original-parent killing-name and terminal per-operator counts agree; independent Python and system hashes verify all 988 original and restored copied inputs. Altered identities, names, replacements, order, exits and counts refuse. The first attempt's complete results are retained, except that its five non-finishing cases now finish with named kills. Compiler refusals establish no coverage. Each of the 540 survivors has an individual assessment owner in `docs/tasks/M3.md`; the count is an obligation to assess behavior, not a count of confirmed defects or accepted equivalences.
+Measured `2026-10-11`: actual identities, replacements, parent killing names and per-operator counts agree; altered evidence refuses. Python/system hashes verify all 988 original/restored copied inputs. The first attempt's measured prefix is retained, except its five non-finishing cases now have named kills. Compiler refusals prove no coverage. All 540 survivors are owned in `docs/tasks/M3.md`: assessment obligations, not confirmed defects or accepted equivalences.
 
 Each survivor requires a behavioral repair or a justified per-file equivalence before the final strict sweep.
-Measured `2026-10-11`: `M3.6.9.6.3.2.2.1`–`.4` repair thirteen initial obligations: reader errors, seven clause-position cases, four role-package collections and admission reason cardinality. Each selected group survives before its new bounded parent controls (strict exit 1) and finishes with named kills afterward (strict exit 0). Every run restores all 988 original/copied tracked inputs under Python/system hashes; production and prior tests stay byte-identical within these four test-only slices. Missing-name/replacement/strict-exit evidence alterations refuse. Exact IDs, names, source hashes and reproduction commands live in the committed leaves; native producer/auditor are tracked, supplemental orchestration/audits ignored.
-Measured `2026-10-11`, `.3.2.2.5`: twelve missing/nontext-name cases are accepted before repair and refused afterward; eight valid symbol/string counterparts and an unnamed admission pass. Exact repair reversal fails (101), reapplication passes (0).
-Measured `2026-10-11`, `.3.2.2.6`: missing, empty and multiple-value placeholder leaves are accepted before repair and refused afterward. A valid placeholder still creates no program. Native deletion of the field check finishes with the new named kill (strict 0); all 988 original/copied inputs restore. Old test bodies are unchanged, evidence falsifications refuse and focused gates pass. Fresh discovery lists 1,421 candidates, production lines 144–2499; it establishes no full mutation outcomes. Historical IDs remain source-bound: reproduce at their recorded source or rediscover actual replacements with `--list`. Final exact/full measurements on current source remain open.
+Measured `2026-10-11`, `M3.6.9.6.3.2.2.1`–`.4`: thirteen initial survivors covering reader errors, clause positions, role-package sets and admission reasons gain named kills (strict 1 before, 0 after). Production and old tests stay unchanged within these test-only slices.
+Measured `2026-10-11`, `.3.2.2.5`: twelve malformed-name cases refuse after repair; eight valid names and an unnamed admission pass. Exact reversal fails (101), reapplication passes (0).
+Measured `2026-10-11`, `.3.2.2.6`: missing, empty and multiple-value placeholder leaves refuse after repair; a valid placeholder creates no program. Native deletion of the field check finishes with the new named kill (strict 0).
+Measured `2026-10-11`, `.3.2.2.7`: seven pair-validation survivors gain named kills (strict 1 before, 0 after). Bounded public controls hold distinctness, both members and root identity across multiple harness positions; production stays unchanged.
+Measured `2026-10-11`: selected native runs restore all 988 original/copied inputs (Python/system hashes); old bodies stay unchanged. Name/replacement/strict-exit falsifications refuse; focused gates pass. Exact IDs, names, hashes and commands live in the committed leaves; producer/auditor tracked, orchestration ignored. Fresh listing: 1,421 candidates, production lines 144–2499, no full outcomes. Reproduce historical IDs at their recorded source or rediscover actual replacements with `--list`. Final exact/full current-source measurements remain open.
 Timeout and unjudged results remain failures. Full adequacy and independent review stay open.
 Recorded native killing names remain accessible through the original `docs/tasks/M3.md` leaf stubs, which now
 route completed evidence to sealed task-history records. The stubs retain commit identities; the archive index

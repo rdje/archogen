@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — every harness pair is checked against distinct declared roots
+
+`ARCHOGEN-M3-0668` (leaf `M3.6.9.6.3.2.2.7`), `2026-10-11`.
+
+- Resolve seven initial behavioral survivors using freshly discovered current-source identities: outer pair
+  walks, distinctness guards and root/harness membership. Each survives before the new bounded public
+  controls and finishes with its named kill afterward, strict exit 0. Retain valid multiple-harness files;
+  exercise repeated roots, either missing member and another harness named as a root at the relevant positions.
+- Production and every old test body remain unchanged; both runs restore all 988 original/copied inputs under
+  Python/system hashes. Missing-name/replacement/strict-exit falsifications and focused tier pass; exact staged
+  stamp required. Book contract/example and live pointers align; clarify that the first incomplete run's retained
+  evidence is a measured prefix. Fixed-array assessment next; final exact/full adequacy and review remain open.
+
 ## archogen — unrooted roles require their future leaf
 
 `ARCHOGEN-M3-0667` (leaf `M3.6.9.6.3.2.2.6`), `2026-10-11`.
