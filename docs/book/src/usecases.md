@@ -100,6 +100,8 @@ training ended. The text reader compares case-sensitive words after removing lea
 word-edge punctuation; whitespace, adjacent string quotes and continuation backslashes do not break a match.
 Its quote patterns are complete long source lines, split at line feed, carriage return followed by line feed, or
 carriage return before length and word-count eligibility.
+The source and its copy may use different line endings or omit a final newline. Disk and staged text are judged
+independently: clean text on disk does not excuse a quotation already staged.
 A partial quote across two source lines can go unfound even when
 it is longer than either line; encodings that change word boundaries and rewordings also lie outside the check.
 By the project's rule a case read early is recorded and counted apart. See

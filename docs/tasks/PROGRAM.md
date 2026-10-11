@@ -1056,11 +1056,8 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0537 (leaf PROGRAM.75)`
 
 - ID: `PROGRAM.76`
-  Status: `active` — the custody change committed `2026-10-10`; its review open. Round 13 answered
-  `2026-10-11`: whole cases and complete long source lines compared as case-sensitive words, the partial-quote
-  limitation explicit, and the error/recursion arms separated. Round 14 answered
-  `2026-10-11`: source lines split at LF, CRLF and CR before eligibility; six disk/index controls, the two CR-only
-  regressions failed first, then all 143 arms pass. Round 15 next, on the committed repair.
+  Status: `done` — closed `2026-10-11` after independent round 15 found zero defects or actionable arm gaps at
+  `0b3a056`. The custody change and all fourteen repair rounds are committed; the checker is unchanged at closure.
   Goal: the sealed evaluation set guarded against being read, not only against being edited or named, so no search
   of the working tree made for other work can reach a case before `M6.5`, nor, in a working tree that carries the
   mark, a diff of a commit that holds one show it.
@@ -1098,6 +1095,16 @@ mdBook that is the director's window into the project.
   Round 14, `2026-10-11`, of `c4c6120`: 1 defect, the pre-existing source-side CR split. Its read-only report is
   `target/review-p76-r14/report.txt` (untracked); the reproduction and repair above are durable tracked arms. No
   actual sealed case text was displayed. Round 13's wrapper repair and explicit partial-quote limits still apply.
+  Round 15, `2026-10-11`, of `0b3a056`: zero defects or actionable arm gaps; seven remarks affirm the repair,
+  retained limits, tracked controls, evidence and review boundaries. The report is
+  `target/review-p76-r15/report.txt`; its synthetic runner, fixtures and outputs are untracked, not durable coverage.
+  `python3 target/review-p76-r15/probes.py` → `157 pass / 0 fail`: 151 repaired-reader checks plus six controls
+  expecting the prior CR-only miss, not 157 repaired-reader successes. The independent matrix covers source/copy
+  line endings, final-newline presence, disk/index consumers, original eligibility thresholds and retained wrappers.
+  The reviewer recounted the parent logs (`141 / 2` then `143 / 0`) and verified pinned/current checker identity;
+  the filesystem case-distinction skip remains explicit. No actual sealed case text was read. All review jobs ended.
+  Closure verification: real-tree guard, shell syntax and book gates pass; the final staged doctrine hook is required.
+  No Rust or checker change, so no redundant broad suite or focused build is claimed for this documentation slice.
   Round 13's findings (2 defects, 4 arm gaps, 8 remarks) survive in `target/p76/r13report.txt` (untracked) and the
   answer here. D1 fixed by word comparison and widened markers; D2 by accurately bounding the quote patterns,
   instead of adopting arbitrary word windows. AG1 has disk/index wrapper arms; AG2 has a filesystem-conditional
@@ -1255,7 +1262,8 @@ mdBook that is the director's window into the project.
   `ARCHOGEN-PROGRAM-0588 (leaf PROGRAM.76)`, round 11;
   `ARCHOGEN-PROGRAM-0596 (leaf PROGRAM.76)`, round 12;
   `ARCHOGEN-PROGRAM-0604 (leaf PROGRAM.76)`, round 13;
-  `ARCHOGEN-PROGRAM-0609 (leaf PROGRAM.76)`, round 14
+  `ARCHOGEN-PROGRAM-0609 (leaf PROGRAM.76)`, round 14;
+  `ARCHOGEN-PROGRAM-0613 (leaf PROGRAM.76)`, round 15 and closure
 
 - ID: `PROGRAM.77`
   Status: `done` — filed, started and closed `2026-10-10`, on CI's red: the push `a543d10` failed the `rust` workflow;
@@ -1508,11 +1516,10 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.69` | `active` | its review open: round 33 next, on the staged-read repair |
-| 2 | `PROGRAM.76` | `active` | round 15 found zero defects; durable closure next |
-| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 1 | `PROGRAM.69` | `active` | its review open: round 33 in flight, on the staged-read repair |
+| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
-The third row waits on the director's yes. The pending leaves beside them —
+The second row waits on the director's yes. The pending leaves beside them —
 `PROGRAM.71`, `.72`, `.73` and `.78` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and a sealed leaf's full record is under `docs/task-history/PROGRAM/`.
 
@@ -1721,6 +1728,8 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 
 | `2026-10-11` | `PROGRAM.69` (round 32) | ten staged-read controls on the prior reader, then repaired suite; exact-path comparison mutation; syntax, final staged real count/history gates, book gates and doctrines | 83 pass / 8 fail, then 91 pass / 0 fail; glob-comparison mutation 89 pass / 2 fail; final staged count OK (2 reviews / 33 rounds), history OK (175 files); book gates, stated-order and task-acceptance OK; final doctrines in the commit hook |
 
+| `2026-10-11` | `PROGRAM.76` (round 15, closure) | independent pinned-reader review; real-tree guard; shell syntax; book anchors, glossary and index; final staged doctrine hook | zero defects or actionable arm gaps; 157 / 0 synthetic probes (151 repaired-reader checks plus six prior-reader controls), untracked evidence; real guard exit 0; syntax and book gates OK; checker unchanged |
+
 ## Commit Log
 
 | Leaf | Commit subject or reference | Notes |
@@ -1926,7 +1935,11 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0612 (leaf PROGRAM.69)` | **review round 32 answered**: a failed staged read cannot substitute disk evidence unless independent index census and path-byte comparison prove absence; eight regressions failed first; ten new controls, including inherited Git settings and true absence beside a different glob match |
 
+| `PROGRAM.76` | `ARCHOGEN-PROGRAM-0613 (leaf PROGRAM.76)` | **closed after independent round 15**: zero defects or actionable arm gaps; 151 repaired-reader checks plus six prior-reader controls, untracked evidence; retained limits and filesystem skip explicit; checker unchanged |
+
 ## Changelog
+
+- `2026-10-11`: `PROGRAM.76` closed after independent round 15 found zero defects or actionable arm gaps.
 
 - `2026-09-13`: Created task tree; seeded the milestone trees from `ROADMAP.md` revision 2.0.
 - `2026-09-30`: `PROGRAM.35` filed and decomposed into `.35.1` and `.35.2`: the README policy the standing instruction names had never been adopted at its revision, and the caps never fitted.

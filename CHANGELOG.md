@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — sealed-evaluation custody review closes at zero defects
+
+`ARCHOGEN-PROGRAM-0613` (leaf `PROGRAM.76`), `2026-10-11`.
+
+- Independent round 15 finds zero defects or actionable arm gaps on the committed reader. Its 157 synthetic probes
+  comprise 151 repaired-reader checks and six old-reader controls; the runner and report are untracked evidence.
+  The tracked suite remains 143 passing arms, with the filesystem-specific skip explicit.
+- Validation: the real-tree guard, shell syntax and book gates pass; the final staged hook runs doctrines. No reader
+  or Rust changes. The book clarifies independent source/copy endings and disk/index judgments; the task records
+  closure and the live pointers remove this leaf from active work.
+
 ## archogen — a staged read failure cannot silently substitute disk evidence
 
 `ARCHOGEN-PROGRAM-0612` (leaf `PROGRAM.69`), `2026-10-11`.
