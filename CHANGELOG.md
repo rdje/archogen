@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — every reader and held role judged by parent controls
+
+`ARCHOGEN-M3-0654` (leaf `M3.6.9.6.2.3`), `2026-10-11`.
+
+- Add complete refusal controls for three compiled readers and both generator kinds, a later foreign held
+  package after an allowed one, both harness pair roles versus a third role, and runtime-only data readers.
+  Positive generation passes and foreign targets remain unbuilt; complete diagnostics hold attribution.
+- All ten owned exact parent regressions now have named finishing kills, strict exit 0. Four controls pass;
+  exact parent baseline 102 / 0 failed. Complete ID/command/name and five original/restored/system SHA-256
+  audits pass, with unchanged production prefixes. Expected verdicts and route tests remain unchanged.
+- Focused tier (format, strict Clippy, whole suite) and pinned book pass; final staged stamp required.
+  Update the separate book repair stage and live pointers to the final build-read parent group.
+  Initial measurement tables remain historical.
+
 ## archogen — every generator position held by parent controls
 
 `ARCHOGEN-M3-0653` (leaf `M3.6.9.6.2.2`), `2026-10-11`.

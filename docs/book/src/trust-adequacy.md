@@ -581,8 +581,15 @@ cargo test -p xtask trust::adequacy_tests
 cargo xtask mutate --timeouts-fail --only parent-a-program-target-built-when-first-alone
 ```
 
+Verified `2026-10-11`, `M3.6.9.6.2.3`: all ten reader/role entries now have named finishing parent kills,
+strict exit 0. The same parent test module requires every compiled reader's script/target refusals, including
+implementation and middle readers; a later foreign held package after an allowed one; both harness pair roles
+allowed and both third-role generator kinds refused; and runtime-only data readers judged for both kinds.
+Complete diagnostic sets hold attribution even when another refusal remains. The parent baseline passes
+102 / 0 failed, all source hashes restore and production judgments stay unchanged.
+
 The initial tables remain historical measurements of the earlier parent population. Production judgments and
-route controls are unchanged. Reader/role/build repairs and the final exact census/full sweeps remain open.
+route controls are unchanged. Build-read repairs and the final exact census/full sweeps remain open.
 
 ## Remaining measurements
 
