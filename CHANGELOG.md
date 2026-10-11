@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — named trust forms refuse missing and nontext names
+
+`ARCHOGEN-M3-0666` (leaf `M3.6.9.6.3.2.2.5`), `2026-10-11`.
+
+- Confirm a production parser defect through the public interface: four named form types accept missing, integer
+  or list names; roots/harnesses/classifications acquire empty identities. Require a textual name at its position.
+  Bounded controls retain valid symbol/string names and deliberately unnamed admissions; no new content policy.
+- Revert only the repair: the regression fails; reapply it: it passes. Source/system hashes agree and all old
+  bodies remain unchanged. Focused tier passes; final exact staged stamp required. Fresh discovery still lists
+  1,420 candidates, 1,396 IDs moved. Bind historical evidence to its sources and require fresh final exact/full
+  measurements. Book/live pointers align; placeholder shape assessment and pair/harness validation remain owned.
+
 ## archogen — admission reason cardinality is held by a parent control
 
 `ARCHOGEN-M3-0665` (leaf `M3.6.9.6.3.2.2.4`), `2026-10-11`.

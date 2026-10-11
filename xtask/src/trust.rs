@@ -224,7 +224,10 @@ fn read_form(form: &Form, roots: &mut Roots, names: &mut BTreeSet<String>) -> Re
     // An admission has no name; every other form names itself first.
     let named = head != "defadmit";
     let name = if named {
-        form.items().get(1).and_then(word).unwrap_or_default()
+        form.items()
+            .get(1)
+            .and_then(word)
+            .ok_or_else(|| format!("{ROOTS}: `{head}` needs a textual name before its clauses"))?
     } else {
         "an admission".to_owned()
     };
@@ -2995,6 +2998,60 @@ pub(crate) mod tests {
             "crates/c example e".to_owned(),
             "classified demo".to_owned()
         )));
+    }
+
+    #[test]
+    fn named_trust_forms_require_a_textual_name_before_their_clauses() {
+        crate::trust_test_process::bounded!(
+            named_trust_forms_require_a_textual_name_before_their_clauses
+        );
+        let forms = [
+            (
+                "defroot",
+                "extra",
+                "(role implementation) (package \"crates/extra\") (target lib)",
+            ),
+            (
+                "defharness",
+                "comparison",
+                "(pair gen chk) (package \"crates/tests\") (test compare)",
+            ),
+            (
+                "defprogram",
+                "tool",
+                "(package \"crates/tools\") (target bin tool) (reason \"a tool\")",
+            ),
+            ("defrole", "configuration-checker", "(leaf \"M3.5\")"),
+        ];
+        let mut accepted = Vec::new();
+        for (head, name, clauses) in forms {
+            for valid_name in [name.to_owned(), format!("\"{name}\"")] {
+                read_roots(&format!("{ROOTS}({head} {valid_name} {clauses})"))
+                    .expect("a symbol or string name is valid");
+            }
+            for invalid_name in ["", "7", "(not-a-name)"] {
+                let text = format!("{ROOTS}({head} {invalid_name} {clauses})");
+                match read_roots(&text) {
+                    Ok(roots) => accepted.push(format!(
+                        "{head} {invalid_name:?}: program names {:?}; classification names {:?}",
+                        roots.programs.iter().map(|p| &p.name).collect::<Vec<_>>(),
+                        roots.classified.iter().map(|p| &p.name).collect::<Vec<_>>()
+                    )),
+                    Err(error) => assert!(
+                        error
+                            .contains(&format!("`{head}` needs a textual name before its clauses")),
+                        "{head} {invalid_name:?}: {error}"
+                    ),
+                }
+            }
+        }
+        let unnamed = read_roots(&admit("crates/a/src/lib.rs", "include_str", "the template"))
+            .expect("an admission deliberately has no name");
+        assert_eq!(unnamed.admissions.len(), 1);
+        assert!(
+            accepted.is_empty(),
+            "accepted without a textual name: {accepted:#?}"
+        );
     }
 
     #[test]

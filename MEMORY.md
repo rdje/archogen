@@ -16,8 +16,9 @@
 - **Active tree:** `M3` → frontier `M3.6`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s is `PROGRAM.71` next; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M3.6.9.6.3.2.2` continue bounded trust.rs survivor assessments, next pair/harness validation;
-  initial `.9.5` complete; then `.9.6` full sweeps/review and `M3.3`.
+- **Next action:** `M3.6.9.6.3.2.2.6` assess placeholder leaf shape; then `.3.2.2.7` pair/harness validation.
+  Rediscover current mutation IDs after the named-form production repair; initial IDs remain source-bound.
+  Initial `.9.5` complete; remaining `.9.6` full sweeps/review precede `M3.3`.
   `M3.6.9.1` is done, strict/attributed outcomes; `PROGRAM.76` is closed.
   The handoff command is `bash scripts/handoff_census.sh`; failed OS reads refuse.
   `M3.6.3.2.1`'s baseline is committed, its "unchanged" the next cadence push's run to show. `M2`'s open leaves
