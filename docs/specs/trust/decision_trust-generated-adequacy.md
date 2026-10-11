@@ -241,8 +241,11 @@ dependency in that fixture; the first-generator mutant still refuses it but lose
 `M3.6.9.4.2.1` builds all 32 expected-killed parent twins and the census/source-reference/population/parity
 contracts in `xtask/src/trust_adequacy_tests.rs`. Independent falsifications hold missing/extra/duplicate entries,
 source references/files, exact commands/verdicts and source-block parity; a compiled guard mutation is killed.
-This test-only module belongs to neither semantic population. Actual initial route/parent mutation outcomes
-remain `.4.2.2`; operator measurements remain `.9.5` and parent strengthening `.9.6`. The table distinguishes
+This test-only module belongs to neither semantic population. `.4.2.2.1` measures all 32 exact route entries in
+one strict native run: named finishing kills, complete reviewed identity set and byte-exact restoration, with
+original/restored/committed/system source digests agreeing. Results and actual test names are published in
+`docs/book/src/trust-adequacy.md`. Initial parent outcomes remain `.4.2.2.2`; operator measurements remain `.9.5`
+and parent strengthening `.9.6`. The table distinguishes
 entries already present at design acceptance from those added in `.4.1`.
 
 ## Why

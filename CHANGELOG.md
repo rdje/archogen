@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — every exact route entry has a measured finishing kill
+
+`ARCHOGEN-M3-0641` (leaf `M3.6.9.4.2.2.1`), `2026-10-11`.
+
+- Execute all 32 reviewed route identities in one strict native catalogue run: every candidate compiles,
+  lands once, finishes with named killing tests and restores exactly; exit 0, no timeout/unjudged result.
+- Independent audit holds the complete reviewed identity set and rejects missing, duplicate, foreign and
+  unnamed result alterations. Original/restored source hashes match committed `2b49ed5` bytes and a separate
+  system SHA-256 calculation. Three native catalogue contracts pass after restoration.
+- Publish actual killing test names, source hashes, scope and reproducible commands in the new book measurement
+  chapter, with navigation/index and the trust/design summary synchronized. Parent cells remain pending;
+  parent semantic tests are unchanged and operator reach is unmeasured. Pinned book/index/staged gates required.
+- Task/logs and current resume/frontier snapshots align; commit the route measurement before starting parents.
+
 ## archogen — exact parent twins are bound to the reviewed source census
 
 `ARCHOGEN-M3-0640` (leaf `M3.6.9.4.2.1`), `2026-10-11`.

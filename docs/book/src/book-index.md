@@ -124,6 +124,7 @@ a change that leaves it stale, so it is never edited by hand.
   toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
   changing it costs](versions.md)
 - **EBNF** — [definition](glossary.md), [Verifying the toolchain](verification.md)
+- Effects and remaining scope — [Generated-sources test adequacy](trust-adequacy.md#effects-and-remaining-scope)
 - **EIP** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - Elaboration produces instances, not modules — [Modules and
   composition](modules.md#elaboration-produces-instances-not-modules)
@@ -135,6 +136,7 @@ a change that leaves it stale, so it is never edited by hand.
 - Every diagnostic shown in this book is a real run — [Annex B: The checks that keep the repository
   honest](annex-repository.md#every-diagnostic-shown-in-this-book-is-a-real-run)
 - Exact, always — [Quantities and units](quantities.md#exact-always)
+- Exact-entry measurements — [Generated-sources test adequacy](trust-adequacy.md#exact-entry-measurements)
 - Exactly one primitive is trusted — [Kinds and schemas](kinds.md#exactly-one-primitive-is-trusted)
 - Exit codes — [Checking a description](checking.md#exit-codes)
 - Exit codes — [The archogen command line](cli.md#exit-codes)
@@ -314,8 +316,9 @@ a change that leaves it stale, so it is never edited by hand.
   is versioned, and what changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md),
   [Annex B: The checks that keep the repository honest](annex-repository.md)
 - **provenance** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [What a report may
-  claim](evidence.md), [Checks that must not share a mistake: the trust gate](trust.md), [The S0 early generation
-  path](s0.md), [What is versioned, and what changing it costs](versions.md)
+  claim](evidence.md), [Checks that must not share a mistake: the trust gate](trust.md), [Generated-sources test
+  adequacy](trust-adequacy.md), [The S0 early generation path](s0.md), [What is versioned, and what changing it
+  costs](versions.md)
 - provenance-format — [What is versioned, and what changing it costs](versions.md#provenance-format)
 - **provider** — [definition](glossary.md), [Introduction](introduction.md), [The boundary: functionality versus
   implementation](boundary.md), [Presence, absence, and relevance](presence.md), [Matching an offer to a
@@ -376,7 +379,8 @@ a change that leaves it stale, so it is never edited by hand.
 - **SEI** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - semulith — [What this project relies on from outside](ledger.md#semulith)
 - Sets: what a part accepts — [Matching an offer to a requirement](matching.md#sets-what-a-part-accepts)
-- **SHA-256** — [definition](glossary.md), [What a report may claim](evidence.md)
+- **SHA-256** — [definition](glossary.md), [What a report may claim](evidence.md), [Generated-sources test
+  adequacy](trust-adequacy.md)
 - **shared item** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md)
 - **SI** — [definition](glossary.md), [Quantities and units](quantities.md)
 - Silence is not admission — [The supported profile](profile.md#silence-is-not-admission)
@@ -409,6 +413,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The commands — [The archogen command line](cli.md#the-commands)
 - The controlling boundary — [Introduction](introduction.md#the-controlling-boundary)
 - The corpus — [The S0 early generation path](s0.md#the-corpus)
+- The criterion and populations — [Generated-sources test adequacy](trust-adequacy.md#the-criterion-and-populations)
 - The emulator is pinned — [Where generated systems run](targets.md#the-emulator-is-pinned)
 - The engine compiles for the browser — [Verifying the toolchain](verification.md#the-engine-compiles-for-the-browser)
 - The examples — [Describing a workload](workload.md#the-examples)

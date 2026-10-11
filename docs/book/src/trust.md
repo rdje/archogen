@@ -469,7 +469,9 @@ and a named compiled guard mutation hold those checks. Run the contract with:
 cargo test -p xtask mutation::adequacy_tests
 ```
 
-This verifies the catalogue, not semantic adequacy. Actual initial route/parent mutation outcomes and production
-operator measurements remain pending; parent semantic tests have not yet been strengthened.
+This verifies the catalogue, not semantic adequacy. The full strict route run now has 32 named finishing kills
+and exact source restoration (`M3.6.9.4.2.2.1`); the [measurement chapter](trust-adequacy.md) records each actual
+killing test and the source hashes. Initial parent outcomes and production operator measurements remain pending;
+parent semantic tests have not yet been strengthened.
 The package the verifier
 reads is fixed provisionally until `M4.7` writes real ones.
