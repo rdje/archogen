@@ -516,5 +516,8 @@ All production prefixes are byte-identical to the pre-repair commit.
 The child-protocol controls and focused format/lint/whole-suite gate pass. These are repair regressions; the complete
 production sweep must still be retried. Each survivor requires a behavioral repair or a justified per-file equivalence.
 Timeout and unjudged results remain failures. Full adequacy and independent review stay open.
+Recorded native killing names remain accessible through the original `docs/tasks/M3.md` leaf stubs, which now
+route completed evidence to sealed task-history records. The stubs retain commit identities; the archive index
+holds content digests, and the task-history gate proves reconstruction and provenance.
 The package the verifier
 reads is fixed provisionally until `M4.7` writes real ones.

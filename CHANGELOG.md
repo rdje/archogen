@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — completed trust history sealed before the full retry
+
+`ARCHOGEN-M3-0659` (leaf `M3.6.9.6.3.2.1.4`), `2026-10-11`.
+
+- Seal nine committed closed M3 subtrees, 49 leaves, with the published tool. Every body and complete predecessor
+  tree reconstruct byte for byte; independent comparison agrees with 10ebccb, and original leaf stubs remain.
+- Reduce the live tree from about 300 KB to 160 KB before the full sweep freezes tracked inputs. Distinguish census
+  spans from archived-file bytes with an exact newline-boundary proof; no history rewritten or body discarded.
+- Task-history provenance/index, size/navigation, stated order and pinned book checks pass. Explain the archive
+  navigation in the book. Rust/tests and live frontier/status/next action remain unchanged; complete retry next.
+
 ## archogen — bounded parent tests finish on reached non-progress
 
 `ARCHOGEN-M3-0658` (leaf `M3.6.9.6.3.2.1.2`), `2026-10-11`.
