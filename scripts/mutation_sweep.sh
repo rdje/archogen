@@ -384,7 +384,7 @@ def receiver_start(masked, offset):
                 if j in pairs:
                     j = pairs[j] - 1
                     continue
-                if words[j] == ">":
+                if words[j] == ">" and (j == 0 or words[j - 1] != "-"):
                     depth += 1
                 elif words[j] == "<":
                     depth -= 1

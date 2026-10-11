@@ -602,6 +602,31 @@ mod tests { fn fixture() { let _: Vec<_> = [7].iter().collect(); } }
 
 
 class ContainsTests(DiscoveryFixture):
+    def test_function_type_arrows_keep_the_complete_generic_receiver_viable(self):
+        source = ("fn one() -> i32 { 1 }\nfn two() -> i32 { 2 }\nfn three() -> i32 { 3 }\n"
+                  "fn four() -> i32 { 4 }\n"
+                  "fn sample(values: Vec<fn() -> i32>, needle: fn() -> i32) -> bool {\n"
+                  "    std::convert::identity::<Vec<fn() -> i32>>(values).contains(&needle)\n"
+                  "}\n#[cfg(test)]\nmod tests {}\n")
+        namespace, candidates = self.discovery(source, "contains")
+        self.assertEqual(len(candidates), 4)
+        for number, mutant in enumerate([None] + candidates):
+            viable = number in (0, 1, 3)
+            text = source if mutant is None else namespace["apply_mutant"](mutant)
+            assertions = []
+            for values in [[], ["one"], ["one", "two", "three"]]:
+                selected = values if number == 0 else values[:1] if number in (1, 2) else values[-1:]
+                for needle in ["one", "two", "three", "four"]:
+                    expected = str(needle in selected).lower()
+                    assertions.append(f"assert_eq!(sample(vec![{', '.join(values)}], {needle}), {expected});")
+            program = self.base / f"function_membership_{number}.rs"
+            program.write_text(text.split("#[cfg(test)]", 1)[0] + "\nfn main() {\n"
+                               + "\n".join(assertions) + "\n}\n")
+            binary = self.base / f"function_membership_{number}"
+            self.bounded(["rustc", "--edition=2021", str(program), "-o", str(binary)], expect_type_error=not viable)
+            if viable:
+                self.bounded([str(binary)])
+
     def compile_membership_case(self, source, argument, cases, *, copied, negate=False):
         namespace, candidates = self.discovery(source, "contains")
         self.assertEqual(len(candidates), 4)

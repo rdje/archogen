@@ -318,6 +318,9 @@ borrowed-string-set form need not compile. The tested owned-String set has no vi
 no coverage. Empty collections compare false; an element found only in the middle is missed by both end variants.
 The emitted comparison is parenthesized so surrounding negation still applies to a boolean. Receiver spans retain
 fields, indices, grouped values, calls and generics; multiline arguments preserve their original comments/newlines.
+Function-type return arrows inside generic arguments remain part of the type, retaining the full receiver, as in
+`std::convert::identity::<Vec<fn() -> i32>>(values).contains(&needle)`. Compiled direct variants hold this boundary;
+a candidate count alone would not establish that any spelling is viable.
 Compiler controls distinguish these type outcomes, and real CLI controls hold multiline landing and restoration.
 Closure logic, per-operator unviable counts and actual production measurements remain pending.
 

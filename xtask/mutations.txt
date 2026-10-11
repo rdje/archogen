@@ -4505,3 +4505,14 @@ from
 to
                             source[receiver:begin], endpoint, copied, source[opening + 1:end - 1].strip())
 end
+
+mutation sweep-membership-function-arrow-closes-generics
+file scripts/mutation_sweep.sh
+test -p xtask mutation::tests::the_sweep_holds_source_spans_and_equivalence_records
+expect killed
+why M3.6.9.2.3.3.1: function-type arrows cannot terminate receiver generics; actual direct function-pointer membership candidates must retain the whole callee and compile.
+from
+                    if words[j] == ">" and (j == 0 or words[j - 1] != "-"):
+to
+                    if words[j] == ">":
+end
