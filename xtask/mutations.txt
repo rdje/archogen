@@ -4424,3 +4424,40 @@ from
 to
                         rewritten_condition = "%s && (%s)" % (position, condition)
 end
+
+mutation sweep-chain-first-last-swapped
+file scripts/mutation_sweep.sh
+test -p xtask mutation::tests::the_sweep_holds_source_spans_and_equivalence_records
+expect killed
+why M3.6.9.2.3.1: actual owned and borrowed chain candidates select the declared end, including before and after filtering.
+from
+            replacements = [call + ".take(1)", call + ".rev().take(1)"] if method != "chain" else []
+to
+            replacements = [call + ".rev().take(1)", call + ".take(1)"] if method != "chain" else []
+end
+
+mutation sweep-chain-empty-drop-equivalence
+file scripts/mutation_sweep.sh
+test -p xtask mutation::tests::the_sweep_holds_source_spans_and_equivalence_records
+expect killed
+why M3.6.9.2.3.1: a standalone multiline dropped call stays representable by strict nonempty equivalence fields and lands/restores through the real CLI.
+from
+                replacements.append("/* %s dropped */" % method)
+to
+                replacements.append("")
+end
+
+mutation sweep-chain-literal-calls-admitted
+file scripts/mutation_sweep.sh
+test -p xtask mutation::tests::the_sweep_holds_source_spans_and_equivalence_records
+expect killed
+why M3.6.9.2.3.1: method discovery ignores literal and nested-comment call spellings and balances only actual Rust call parentheses.
+from
+    def method_calls(names):
+        """Dot-method spans through their closing parenthesis, excluding comments and literal contents."""
+        masked = mask_rust("\n".join(lines))
+to
+    def method_calls(names):
+        """Dot-method spans through their closing parenthesis, excluding comments and literal contents."""
+        masked = "\n".join(lines)
+end

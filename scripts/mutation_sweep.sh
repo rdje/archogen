@@ -25,6 +25,8 @@
 #            a lexical mask excludes headers inside comments and Rust literals, preserving bindings and labels
 #   guard    the same loop rewrite without skipping elements; one `if C {` or `} else if C {` in its body,
 #            outside nested loops/closures, becomes `(C) && first`, last or ends; C is still evaluated first
+#   chain    `.iter()`/`.into_iter()` and `.filter(...)` followed by `.take(1)` or `.rev().take(1)`;
+#            a filter or chain call dropped, with balanced multiline arguments and lexical exclusions
 #
 # HOW IT RUNS, so the working tree is never touched: the tracked files as they stand in the working tree are copied to
 # `target/mutation-sweep/tree/` (no gitlink), built there with `target/mutation-sweep/target/` as the target directory,
@@ -56,7 +58,7 @@
 set -uo pipefail
 ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
 exec python3 - "$@" <<'PY'
-import argparse, json, os, re, shutil, signal, subprocess, sys, time
+import argparse, bisect, json, os, re, shutil, signal, subprocess, sys, time
 
 ap = argparse.ArgumentParser(prog="mutation_sweep.sh")
 ap.add_argument("file")
@@ -321,6 +323,24 @@ def loop_header(n, masked):
     tail = line[masked.rfind("{") + 1:]
     return header, tail, (first_flag, last_flag, "(%s || %s)" % (first_flag, last_flag))
 
+def method_calls(names):
+    """Dot-method spans through their closing parenthesis, excluding comments and literal contents."""
+    masked = mask_rust("\n".join(lines))
+    pairs, stack = {}, []
+    for offset, char in enumerate(masked):
+        if char == "(":
+            stack.append(offset)
+        elif char == ")":
+            if not stack:
+                raise ValueError("unbalanced Rust call parentheses")
+            pairs[stack.pop()] = offset
+    if stack:
+        raise ValueError("unbalanced Rust call parentheses")
+    for match in re.finditer(r"\.\s*(?:r#)?(\w+)\s*\(", masked):
+        if match.group(1) in names:
+            opening = match.end() - 1
+            yield match.group(1), match.start(), opening, pairs[opening] + 1
+
 def apply_mutant(m):
     n, stop, _, new = m
     mutated = lines[:]
@@ -374,6 +394,8 @@ def load_equivalents(path):
 def mutants():
     out = []
     seen = set()
+    source = "\n".join(lines)
+    starts = [0] + [match.end() for match in re.finditer("\n", source)]
     masked = mask_rust("\n".join(lines)).split("\n")
     def add(n, op, new, stop=None):
         stop = n + 1 if stop is None else stop
@@ -458,6 +480,21 @@ def mutants():
                     branch = lines[target][:begin] + rewritten_condition + lines[target][end:]
                     replacement = [rewritten + tail] + lines[n + 1:target] + [branch]
                     add(n, "guard", "\n".join(replacement), stop=target + 1)
+    masked_source = "\n".join(masked)
+    for method, begin, opening, end in method_calls({"iter", "into_iter", "filter", "chain"}):
+        n = bisect.bisect_right(starts, begin) - 1
+        final = bisect.bisect_right(starts, end - 1) - 1
+        if not first <= n <= final < last:
+            continue
+        if method in {"iter", "into_iter"} and masked_source[opening + 1:end - 1].strip():
+            continue
+        call = source[begin:end]
+        replacements = [call + ".take(1)", call + ".rev().take(1)"] if method != "chain" else []
+        if method in {"filter", "chain"}:
+            replacements.append("/* %s dropped */" % method)
+        for replacement in replacements:
+            text = lines[n][:begin - starts[n]] + replacement + lines[final][end - starts[final]:]
+            add(n, "chain", text, stop=final + 1)
     return out
 
 ms = [m for m in mutants() if not a.op or m[2] in a.op]

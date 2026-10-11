@@ -277,7 +277,29 @@ bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask --op guard --l
 
 Compiled synthetic controls check actual guard candidates over owned and borrowed vectors, sets and arrays,
 patterns, labels, literals and condition side effects; real CLI controls check multiline landing and restoration.
-The remaining chain, membership and closure operators and actual production measurements remain pending.
+The `chain` operator (`M3.6.9.2.3.1`) adds `.take(1)` and `.rev().take(1)` immediately after an empty-argument
+`.iter()`/`.into_iter()` call or after a `.filter(...)` call. It also drops one filter or chain call. These are
+separate candidates: narrowing before a filter may yield no kept element, while narrowing after it picks the first
+or last kept element. For example, each line below is a separate mutation of the same chain:
+
+```rust
+items.into_iter().take(1).filter(|x| keep(x)).chain(extra)
+items.into_iter().filter(|x| keep(x)).rev().take(1).chain(extra)
+items.into_iter()/* filter dropped */.chain(extra)
+items.into_iter().filter(|x| keep(x))/* chain dropped */
+```
+
+Arguments may span lines and contain nested calls or closure bodies; literal/comment call spellings are ignored.
+An inert comment marks a dropped call so a standalone multiline removal still has nonempty replacement text for
+strict equivalence records. Empty-argument detection ignores comments, and raw method identifiers are supported.
+Each candidate must compile for its concrete iterator type; reverse narrowing requires a reversible iterator.
+Compiled synthetic controls hold ordering and filtering over owned/borrowed vectors, slices, arrays and sets, and
+real CLI controls hold multiline equivalents and restoration. Membership, closure operators, per-operator unviable
+counts and actual production measurements remain pending.
+
+```sh
+bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask --op chain --list
+```
 
 An entry can also break without anyone running it: the code it names moves, and its text is no longer there.
 One entry went that way when an import line gained a name, and the whole catalog then refused to run, unseen,

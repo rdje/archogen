@@ -1,5 +1,6 @@
-"""Real sweep CLI probes and compiled iterator/guard candidates; no fixture Git/Cargo build."""
+"""Real sweep CLI probes and compiled candidates; no fixture Git/Cargo build."""
 import ast
+import bisect
 import json
 import os
 from pathlib import Path
@@ -138,7 +139,7 @@ class DiscoveryFixture(SweepFixture):
         python = SCRIPT.read_text().split("<<'PY'\n", 1)[1].rsplit("\nPY", 1)[0]
         functions = [node for node in ast.parse(python).body if isinstance(node, ast.FunctionDef)]
         lines = source.split("\n")
-        namespace = dict(re=re, json=json, lines=lines, first=0, last=lines.index("#[cfg(test)]"))
+        namespace = dict(re=re, json=json, bisect=bisect, lines=lines, first=0, last=lines.index("#[cfg(test)]"))
         exec(compile(ast.Module(body=functions, type_ignores=[]), str(SCRIPT), "exec"), namespace)
         candidates = [m for m in namespace["mutants"]() if m[2] == operator]
         return namespace, candidates
@@ -496,6 +497,105 @@ class GuardTests(DiscoveryFixture):
                                             mutated=namespace["apply_mutant"](mutant), candidate=mutant)
                     self.assert_exit(result, 0 if equivalent else 1)
                     self.assertEqual((self.base / "invoked").read_text(), "called\ncalled\n")
+
+
+class ChainTests(DiscoveryFixture):
+    def test_actual_owned_borrowed_chain_variants_compile_and_preserve_order(self):
+        forms = ["vec", "vec_ref", "slice", "array", "array_ref", "set", "set_ref"]
+        programs, assertions = [], []
+        for name in forms:
+            borrowed = name.endswith("_ref") or name == "slice"
+            if name.startswith("array"):
+                signature = "fn sample<const N: usize>(values: " + ("&" if borrowed else "") + "[i32; N])"
+            elif name == "slice":
+                signature = "fn sample(values: &[i32])"
+            else:
+                signature = "fn sample(values: " + ("&" if name == "vec_ref" else "") + "Vec<i32>)"
+            setup = "    let values = std::collections::BTreeSet::from_iter(values);\n" if name.startswith("set") else ""
+            iteration = "iter" if borrowed else "into_iter"
+            value = "**x" if borrowed else "*x"
+            suffix = ".copied()" if borrowed else ""
+            tail = "[&17, &19]" if borrowed else "[17, 19]"
+            source = (signature + " -> Vec<i32> {\n" + setup + "    values\n"
+                      f"        .{iteration}() // iter site\n"
+                      "        .filter(|x| { // filter site\n"
+                      f"            ({value} != 7) && Some({value}).is_some()\n"
+                      "        }) // filter end\n"
+                      f"        .chain({tail}){suffix} // chain site\n"
+                      "        .collect()\n}\n#[cfg(test)]\nmod tests {}\n")
+            namespace, candidates = self.discovery(source, "chain")
+            self.assertEqual(len(candidates), 6, name)
+            original_lines = source.split("\n")
+            groups = {site: [m for m in candidates if "// " + site + " site" in original_lines[m[0]]]
+                      for site in ("iter", "filter", "chain")}
+            self.assertEqual([len(groups[site]) for site in groups], [2, 3, 1])
+            for number, mutant in enumerate([None] + candidates):
+                function = f"chain_{name}_{number}"
+                text = source if mutant is None else namespace["apply_mutant"](mutant)
+                programs.append(text.split("#[cfg(test)]", 1)[0].replace("fn sample", "fn " + function, 1))
+                for supplied in [[], [7], [2, 7, 9, 13], [7, 2, 9, 7]]:
+                    values = sorted(set(supplied)) if name.startswith("set") else supplied[:]
+                    site = next((site for site in groups if mutant in groups[site]), None)
+                    variant = groups[site].index(mutant) if site else None
+                    if site == "iter":
+                        values = values[:1] if variant == 0 else values[-1:]
+                    values = values if site == "filter" and variant == 2 else [x for x in values if x != 7]
+                    if site == "filter" and variant in (0, 1):
+                        values = values[:1] if variant == 0 else values[-1:]
+                    expected = values if site == "chain" else values + [17, 19]
+                    argument = str(supplied) if name.startswith("array") or name == "slice" else "vec!" + str(supplied)
+                    if borrowed and name not in ("set_ref",):
+                        argument = "&" + argument
+                    assertions.append(f'assert_eq!({function}({argument}), vec!{expected}, "{function}");')
+        program = self.base / "chains.rs"
+        program.write_text("#![allow(unused_parens)]\n" + "\n".join(programs)
+                           + "\nfn main() {\n" + "\n".join(assertions)
+                           + f'\nprintln!("chain probes: {len(assertions)} observations");\n}}\n')
+        binary = self.base / "chains"
+        self.bounded(["rustc", "--edition=2021", str(program), "-o", str(binary)])
+        self.assertEqual(self.bounded([str(binary)]).strip(), "chain probes: 196 observations")
+
+    def test_lexical_calls_exclude_literals_comments_and_nonempty_iter_arguments(self):
+        source = '''struct Widget;
+impl Widget { fn iter(&self, _argument: i32) {} }
+fn sample() {
+    let _ghost = r#".iter().filter(|x| (x)).chain([1])("#;
+    /* outer .into_iter() /* .filter([1]) */ .chain([2]) */
+    Widget.iter(42);
+    let values = [1, 2];
+    let _: Vec<_> = values.r#iter(/* no arguments */).collect();
+}
+#[cfg(test)]
+mod tests { fn fixture() { let _: Vec<_> = [7].iter().collect(); } }
+'''
+        namespace, candidates = self.discovery(source, "chain")
+        self.assertEqual(len(candidates), 2)
+        self.assertTrue(all("no arguments" in source.split("\n")[m[0]] for m in candidates))
+        programs = [source.split("#[cfg(test)]", 1)[0].replace("fn sample", "fn baseline", 1)]
+        for number, mutant in enumerate(candidates):
+            # Reuse the item definitions once; only the sample function differs in these compiled candidates.
+            text = namespace["apply_mutant"](mutant).split("fn sample", 1)[1].split("#[cfg(test)]", 1)[0]
+            programs.append("fn candidate_" + str(number) + text)
+        program = self.base / "lexical_chains.rs"
+        program.write_text("\n".join(programs) + "\nfn main() { baseline(); candidate_0(); candidate_1(); }\n")
+        binary = self.base / "lexical_chains"
+        self.bounded(["rustc", "--edition=2021", str(program), "-o", str(binary)])
+        self.bounded([str(binary)])
+
+    def test_multiline_filter_candidates_land_and_restore_copied_source(self):
+        source = ("fn sample(values: Vec<i32>) -> Vec<i32> {\n    values.into_iter()\n"
+                  "        .filter(|x| {\n            Some(*x).is_some() && *x != 7\n        })\n"
+                  "        .collect()\n}\n#[cfg(test)]\nmod tests {}\n")
+        namespace, candidates = self.discovery(source, "chain")
+        candidates = [m for m in candidates if m[0] == 2]
+        self.assertEqual(len(candidates), 3)
+        for mutant in candidates:
+            self.assertEqual(mutant[1], 5)
+            before, after = namespace["mutation_key"](mutant)
+            record = "from-json " + json.dumps(before) + "\nto-json " + json.dumps(after) + "\nwhy fixture\n"
+            result = self.run_sweep(record, original=source, mutated=namespace["apply_mutant"](mutant), candidate=mutant)
+            self.assert_exit(result, 0)
+            self.assertEqual((self.base / "invoked").read_text(), "called\ncalled\n")
 
 
 if __name__ == "__main__":

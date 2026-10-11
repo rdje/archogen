@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — iterator-chain candidates preserve multiline call structure and ordering
+
+`ARCHOGEN-M3-0628` (leaf `M3.6.9.2.3.1`), `2026-10-11`.
+
+- Chain candidates narrow empty-argument iter/into_iter or filter calls to first/last, or drop a filter/chain call,
+  using lexical balanced multiline call spans. Comments/literals and nonempty iter arguments are excluded. Dropped
+  calls retain an inert comment: a discovered standalone-removal edge otherwise violates strict nonempty equivalents.
+- Validation: three methods fail first; initial emission exposes the real CLI empty-field refusal. Repaired twelve
+  Python methods pass, with 44 emitted chain candidates plus eight baselines compiled, 196 order/filter observations
+  and three multiline CLI landing/restoration cases. Three strict named mutation kills; 15 tool tests pass. All
+  earlier-operator projections, including iter/guard, remain byte-identical across four files; new lists are planning.
+  Syntax, book and final staged doctrines before commit. No production viability or adequacy claim; remaining
+  membership, closure and per-operator count slices owned separately.
+
 ## archogen — actual guarded-branch candidates preserve complete conditions and body work
 
 `ARCHOGEN-M3-0627` (leaf `M3.6.9.2.2.2.2`), `2026-10-11`.
