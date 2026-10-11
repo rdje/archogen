@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the doctrine registry's explanatory header stays literal
+
+`ARCHOGEN-PROGRAM-0611` (leaf `PROGRAM.82`), `2026-10-11`.
+
+- Replaced backticks and table pipes in the REVIEW-COUNTS description with words. Bash formerly tried to execute the
+  header while initializing the registry, emitting a syntax error and dropping the example; parse-only validation
+  passed. Check commands and verdict rules are unchanged, as are the held doctrine driver and hook.
+- Validation: the exact array's initialization before/after gives diagnostics then empty stderr; all 29 entries retain
+  three fields and the repaired description is complete. Shell syntax and the held-file diff pass; final doctrines
+  run in the commit hook. Book, task logs and resume/frontier pointers agree.
+
 ## archogen — seventh daily artifact cleanup, with cold-cache verification
 
 `ARCHOGEN-PROGRAM-0610` (leaf `PROGRAM.81`), `2026-10-11`.

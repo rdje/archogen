@@ -19,6 +19,7 @@ fail=0
 # --- archogen's own doctrines -----------------------------------------------------------------
 # Each entry: "ID|what it proves|script". Keep each cheap and deterministic; anything heavier
 # than a few seconds belongs in a CI tier (ROADMAP.md §14.3), not in the pre-commit path.
+# Descriptions are literal text: no shell substitutions or embedded field delimiters.
 PROJECT_DOCTRINES=(
   "FROZEN-EVALUATION|the sealed evaluation set is unmodified, complete, out of the tree while sealed, and unnamed outside its directory|scripts/check_frozen_evaluation.sh"
   "S0-RETIREMENT|every hard-coded S0 assumption is marked in the source, listed with an owning leaf, and the prototype has acquired no new consumers|scripts/check_s0_retirement.sh"
@@ -41,7 +42,7 @@ PROJECT_DOCTRINES=(
   "TASK-HISTORY|closed subtrees sealed out of the task trees stay sealed — every sealed file unchanged against its index row, the index complete and append-only, and every sealed leaf with exactly one two-line stub in its tree that links it|scripts/check_task_history.sh"
   "DECISION-HISTORY|settled sections sealed out of decision records stay sealed — every sealed file unchanged against its index row and against its record before the seal, the index complete and append-only across history, and every sealed section with exactly one stub under its own heading|scripts/check_decision_history.sh"
   "REVIEW-HISTORY|closed review histories archived out of docs/reviews stay archived — every archived file unchanged against its index row and against its history before archiving, the index complete and append-only across history, every one with its stub and its review closed|scripts/check_review_history.sh"
-  "REVIEW-COUNTS|for each review the reviews index lists as counted, the record's count of what each round found and the reviews index's count of rounds agree with its review history, every round judged; a listed review it cannot judge whole or whose row is closed, and an open review whose record keeps a round table (a `| Round |` header), past its first round, left off the list, refused|scripts/check_review_counts.sh"
+  "REVIEW-COUNTS|for each review the reviews index lists as counted, the record's count of what each round found and the reviews index's count of rounds agree with its review history, every round judged; a listed review it cannot judge whole or whose row is closed, and an open review whose record keeps a round table (a header naming its rounds), past its first round, left off the list, refused|scripts/check_review_counts.sh"
   "BOOK-INDEX|the book's index is the one scripts/check_book_index.sh writes from the chapters and the glossary — never stale, never hand-edited|scripts/check_book_index.sh"
   "BOOK-GLOSSARY|the book's glossary is live — every acronym a chapter uses is defined there, every entry is still used, each section in order|scripts/check_book_glossary.sh"
   "WORKFLOW-TOKENS|every workflow holds a read-only token and keeps no credentials — top-level permissions granting no write scope, none granted by a job, every checkout with persist-credentials false, no trigger that runs with the base repository's token, and YAML it cannot read refused|scripts/check_workflow_tokens.sh"

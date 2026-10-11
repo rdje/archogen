@@ -4,7 +4,8 @@
 repository itself — its book, its records, its task trees — and the checks that stop them drifting from the code or
 from the truth. The doctrine checks run before every commit by the doctrine enforcer
 (`scripts/check_doctrines.sh`) and again in CI; the handoff census runs before handing the workspace over. Each is
-a script under `scripts/` with RED arms proving it can refuse; the full doctrine register is
+a script under `scripts/` with RED arms proving it can refuse. Registry entries carry a check identifier, a literal
+text description and its script path; the descriptions execute no shell commands. The full doctrine register is
 `DOCTRINE_ENFORCEMENT.md`. The doctrine accounts below moved here from the chapter so
 that the chapter can stay readable; the move changed nothing in them but two links to the
 [ledger](ledger.md) the source-ledger gate asked for.
