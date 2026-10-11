@@ -322,7 +322,7 @@ Function-type return arrows inside generic arguments remain part of the type, re
 `std::convert::identity::<Vec<fn() -> i32>>(values).contains(&needle)`. Compiled direct variants hold this boundary;
 a candidate count alone would not establish that any spelling is viable.
 Compiler controls distinguish these type outcomes, and real CLI controls hold multiline landing and restoration.
-Closure logic, per-operator unviable counts and actual production measurements remain pending.
+Per-operator unviable counts and actual production measurements remain pending.
 
 The existing `logic` operator also drops top-level operands from one-line `if`/`while` conditions. A deletion
 removes exactly one separator: the following separator for the first operand, or the preceding one for any later
@@ -330,6 +330,29 @@ operand. For example, the three deletions of `a && b || c` are `b || c`, `a || c
 mutation rule, with Rust retaining its normal operator precedence. Middle deletions retain a single connective;
 compiled controls hold all eight input truth assignments for homogeneous and mixed three-operand conditions.
 These controls repaired previously malformed middle candidates; they establish no production adequacy result.
+
+The `clogic` operator (`M3.6.9.2.3.3.2.2`) applies that operand-deletion rule to a closure's boolean expression.
+The complete closure must occupy one source line. Expression bodies, a block's final expression or explicit return,
+typed returns and transparent parentheses are supported. For example, these are separate candidates:
+
+```rust
+items.filter(|x| *x > 0 && *x < 10 || *x != 7) // original
+items.filter(|x| *x < 10 || *x != 7)           // first operand dropped
+items.filter(|x| *x > 0 || *x != 7)            // middle operand dropped
+items.filter(|x| *x > 0 && *x < 10)            // last operand dropped
+```
+
+Only top-level connectives belong to the current condition. Balanced calls, groups and generic type arguments
+are atomic; an inner closure gets its own candidates. Generic function-type arrows and reference types retain
+their delimiters, and complete literal source text remains intact. Literal/comment closure spellings, bitwise
+pipes, multiline closures and test-only code produce no closure candidates. This lexical recognizer does not
+claim to parse every Rust expression. Actual emitted candidates are held by native compiler/value-selection
+controls, including nested/empty/move closures, block locals, mixed operators, quoted final operands and generics;
+real CLI controls hold landing and exact restoration. Production reach remains a separate measurement.
+
+```sh
+bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask --op clogic --list
+```
 
 ```sh
 bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask --op contains --list

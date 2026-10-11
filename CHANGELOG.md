@@ -5,6 +5,23 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — one-line closure operand candidates preserve their lexical scope
+
+`ARCHOGEN-M3-0632` (leaf `M3.6.9.2.3.3.2.2`), `2026-10-11`.
+
+- Emit top-level operand deletions for one-line closure boolean expressions, including final/returned block
+  expressions, typed returns and transparent parentheses. Nested closures own their own operands; balanced
+  calls/generics, function-type arrows and complete literals retain their boundaries. Multiline/comment/literal
+  closure spellings and test-only code are excluded. Shared deletion removes one adjacent separator.
+- Validation: all three methods fail first; repaired 37 actual candidates and 16 baselines compile with 159
+  value-selection observations. Separate compiled scope fixture/two candidates and five actual CLI restorations
+  pass. Anchor census catches old-anchor duplication and new multiline indentation; both repaired. Fifteen tool
+  tests with 21 Python methods pass; three new and one narrowed existing strict named controls are killed.
+  Earlier operator projections remain byte-identical across four production files; closure lists give 29/2/2/4
+  planning candidates. Syntax/book/staged doctrines required; no production viability or adequacy claim.
+- Operator children, accepted design, book examples/toolbox and task/resume records agree. Per-operator unviable
+  counts next; production dual-population measurements and full strict sweeps remain separately owned.
+
 ## archogen — middle boolean operand deletions retain one connective
 
 `ARCHOGEN-M3-0631` (leaf `M3.6.9.2.3.3.2.1`), `2026-10-11`.

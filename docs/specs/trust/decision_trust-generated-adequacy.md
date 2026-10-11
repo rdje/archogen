@@ -89,6 +89,9 @@ sweep as it stands (round 19). This record decides a criterion, and states how f
    first operand with its following separator, or a later operand with its preceding separator. Native compiler
    truth tables and real CLI restoration hold homogeneous/mixed conditions; changed old logic candidates are
    attributed explicitly rather than claimed byte-identical.
+   `.2.3.3.2.2` builds the one-line closure operator: expression/final/returned boolean spans, typed returns and
+   transparent parentheses; nested closures own their own top-level connectives. Balanced calls/generics and
+   complete literal text are retained, with native compiler/value-selection and real CLI restoration controls.
    Production reach remains unmeasured.
    A mutant that does not compile is unviable, as every other, and the sweep reports each operator's count of them.
    The operators are held by measurement, not by `--list`: after the new route controls and before the parent gains

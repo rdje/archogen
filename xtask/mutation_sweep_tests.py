@@ -213,6 +213,97 @@ class LogicTests(DiscoveryFixture):
             self.assertEqual((self.base / "invoked").read_text(), "called\ncalled\n")
 
 
+class ClosureTests(DiscoveryFixture):
+    def test_actual_closure_candidates_compile_and_select_the_expected_values(self):
+        p = lambda x: x > 0
+        q = lambda x: x < 10
+        r = lambda x: x != 7
+        both = lambda x: p(x) and q(x)
+        either = lambda x: p(x) or q(x)
+        cases = [
+            ("|x| *x > 0 && *x < 10", both, [q, p]),
+            ("|x| *x > 0 || *x < 10", either, [q, p]),
+            ("|x| *x > 0 && *x < 10 || *x != 7", lambda x: both(x) or r(x),
+             [lambda x: q(x) or r(x), lambda x: p(x) or r(x), both]),
+            ("|x| ((*x > 0 && *x < 10))", both, [q, p]),
+            ("|x| { *x > 0 && *x < 10 }", both, [q, p]),
+            ("|x| { return *x > 0 && *x < 10; }", both, [q, p]),
+            ("|x: &i32| -> bool { *x > 0 && *x < 10 }", both, [q, p]),
+            ("move |x|*x>0&&*x<10", both, [q, p]),
+            ("|x| (|| *x > 0 && *x < 10)()", both, [q, p]),
+            ("|x| std::convert::identity::<fn(i32) -> bool,>(positive)(*x) && *x < 10", both, [q, p]),
+            ('|x| *x > 0 && "x&&y" == "x&&y" && *x < 10', both, [q, both, p]),
+            ("|x| (0..2).any(|_| *x > 0 && *x < 10) && *x != 7", lambda x: both(x) and r(x),
+             [r, both, lambda x: q(x) and r(x), lambda x: p(x) and r(x)]),
+            ("|x| { let y = *x; y > 0 && y < 10 }", both, [q, p]),
+            ("|x| **std::convert::identity::<&&i32>(&x) > 0 && *x < 10", both, [q, p]),
+            ("|x| *x > 0 || *x < 10 && *x != 7", lambda x: p(x) or q(x) and r(x),
+             [lambda x: q(x) and r(x), lambda x: p(x) and r(x), either]),
+            ('|x| *x > 0 && "x||y" == "x||y"', p, [lambda x: True, p]),
+        ]
+        programs, assertions, total = ["fn positive(x: i32) -> bool { x > 0 }"], [], 0
+        for case, (closure, baseline, expected) in enumerate(cases):
+            source = ("fn sample(values: Vec<i32>) -> Vec<i32> {\n"
+                      f"    values.into_iter().filter({closure}).collect()\n}}\n#[cfg(test)]\nmod tests {{}}\n")
+            namespace, candidates = self.discovery(source, "clogic")
+            self.assertEqual(len(candidates), len(expected), closure)
+            total += len(candidates)
+            for number, (mutant, oracle) in enumerate(zip([None] + candidates, [baseline] + expected)):
+                name = f"closure_{case}_{number}"
+                text = source if mutant is None else namespace["apply_mutant"](mutant)
+                programs.append(text.split("#[cfg(test)]", 1)[0].replace("fn sample", "fn " + name, 1))
+                for values in [[], [7], [-1, 2, 7, 13, 20]]:
+                    selected = [x for x in values if oracle(x)]
+                    assertions.append(f'assert_eq!({name}(vec!{values}), vec!{selected}, "{name}");')
+        self.assertEqual((total, len(assertions)), (37, 159))
+        program = self.base / "closures.rs"
+        program.write_text("#![allow(unused_variables, unused_parens)]\n" + "\n".join(programs)
+                           + "\nfn main() {\n" + "\n".join(assertions) + "\n}\n")
+        binary = self.base / "closures"
+        self.bounded(["rustc", "--edition=2021", str(program), "-o", str(binary)])
+        self.bounded([str(binary)])
+        print("closure probes: 37 actual candidates and 16 baselines compile; 159 value-selection observations")
+
+    def test_literal_comment_multiline_and_test_scopes_are_excluded(self):
+        source = r'''fn sample<'a>(values: &'a [i32], a: bool, b: bool) {
+    let _ghost = r#"|x| *x > 0 && *x < 10"#;
+    /* outer /* nested |x| a && b */ || a || b */
+    let _bitwise = 1 | 2;
+    let _logical = a || b;
+    let _simple = || a;
+    let _multiline = |x: i32|
+        x > 0 && x < 10;
+    let _ = values.iter().filter(|x| "a && b" == "a && b" && **x > 0).count();
+}
+#[cfg(test)]
+mod tests { fn fixture() { let _ = |x: i32| x > 0 && x < 10; } }
+'''
+        namespace, candidates = self.discovery(source, "clogic")
+        self.assertEqual(len(candidates), 2)
+        self.assertTrue(all(m[:3] == (8, 9, "clogic") for m in candidates))
+        for number, mutant in enumerate([None] + candidates):
+            text = source if mutant is None else namespace["apply_mutant"](mutant)
+            program = self.base / f"closure_scope_{number}.rs"
+            program.write_text(text.split("#[cfg(test)]", 1)[0] + "\nfn main() { sample(&[2, 7], true, false); }\n")
+            binary = self.base / f"closure_scope_{number}"
+            self.bounded(["rustc", "--edition=2021", str(program), "-o", str(binary)])
+            self.bounded([str(binary)])
+
+    def test_closure_spans_land_and_restore_through_real_cli(self):
+        for closure in ["|x| *x > 0 && *x < 10 || *x != 7",
+                        "|x: &i32| -> bool { *x > 0 && *x < 10 }"]:
+            source = ("fn sample(values: Vec<i32>) -> Vec<i32> {\n"
+                      f"    values.into_iter().filter({closure}).collect()\n}}\n#[cfg(test)]\nmod tests {{}}\n")
+            namespace, candidates = self.discovery(source, "clogic")
+            self.assertEqual(len(candidates), 3 if "||" in closure else 2)
+            for mutant in candidates:
+                before, after = namespace["mutation_key"](mutant)
+                record = "from-json " + json.dumps(before) + "\nto-json " + json.dumps(after) + "\nwhy fixture\n"
+                result = self.run_sweep(record, original=source, mutated=namespace["apply_mutant"](mutant), candidate=mutant)
+                self.assert_exit(result, 0)
+                self.assertEqual((self.base / "invoked").read_text(), "called\ncalled\n")
+
+
 class IteratorTests(DiscoveryFixture):
     def test_owned_borrowed_patterns_labels_and_fresh_names_compile_and_select_positions(self):
         # Each input/output expectation is a semantic observation, independent of the replacement's spelling.

@@ -29,6 +29,8 @@
 #            a filter or chain call dropped, with balanced multiline arguments and lexical exclusions
 #   contains `X.contains(Y)` narrowed to a first/last comparison with `Some(Y)`, direct and copied-element forms;
 #            grouped postfix receivers and multiline arguments retained; compilation decides type viability
+#   clogic   each top-level `&&`/`||` operand of a one-line closure condition dropped with one separator;
+#            balanced groups/generics and lexical exclusions retain nested scopes and complete literals
 #
 # HOW IT RUNS, so the working tree is never touched: the tracked files as they stand in the working tree are copied to
 # `target/mutation-sweep/tree/` (no gitlink), built there with `target/mutation-sweep/target/` as the target directory,
@@ -160,6 +162,107 @@ def mask_rust(text, literal_marks=False):
         if literal and literal_marks:
             masked[start] = "L"
     return "".join(masked)
+
+def closure_conditions(source):
+    """One-line closure boolean spans, with top-level connective operands; not a complete Rust parser."""
+    masked = mask_rust(source, literal_marks=True)
+    tokens = list(re.finditer(r"r#\w+|'\w+|\w+|::|=>|\|\||&&|==|!=|<=|>=|[^\s]", masked))
+    words = [token.group() for token in tokens]
+    pairs, stack = {}, []
+    for i, word in enumerate(words):
+        if word in ("(", "[", "{"):
+            stack.append(i)
+        elif word in (")", "]", "}"):
+            if not stack or words[stack[-1]] != {")": "(", "]": "[", "}": "{"}[word]:
+                raise ValueError("unbalanced Rust source groups")
+            pairs[stack.pop()] = i
+    if stack:
+        raise ValueError("unbalanced Rust source groups")
+
+    def angle_end(i):
+        depth = 0
+        while i < len(words):
+            if i in pairs:
+                i = pairs[i] + 1
+                continue
+            if words[i] == "<":
+                depth += 1
+            elif words[i] == ">" and words[i - 1] != "-":
+                depth -= 1
+                if depth == 0:
+                    return i + 1
+            i += 1
+        raise ValueError("unterminated Rust generic arguments")
+
+    def advance(i):
+        if i in pairs:
+            return pairs[i] + 1
+        if words[i] == "<" and i and words[i - 1] == "::":
+            return angle_end(i)
+        return i + 1
+
+    contexts = {"=", "(", "[", "{", ",", "=>", "return", "break", "move", "async", "const", "&", "*", "!"}
+    parameter_ends = set()
+    for opening, word in enumerate(words):
+        if word not in ("|", "||") or (opening and words[opening - 1] not in contexts
+                                           and opening - 1 not in parameter_ends):
+            continue
+        body = opening + 1
+        if word == "|":
+            while body < len(words) and words[body] != "|":
+                if words[body] in (";", "}"):
+                    break
+                body = angle_end(body) if words[body] == "<" else advance(body)
+            if body == len(words) or words[body] != "|":
+                continue
+            parameter_ends.add(body)
+            body += 1
+        else:
+            parameter_ends.add(opening)
+        if words[body:body + 2] == ["-", ">"]:
+            body += 2
+            while body < len(words) and words[body] != "{":
+                body = angle_end(body) if words[body] == "<" else advance(body)
+        if body >= len(words):
+            continue
+        end = body
+        if words[body] == "{":
+            end = pairs[body] + 1
+            raw_end = tokens[end - 1].end()
+        else:
+            while end < len(words) and words[end] not in (",", ";", ")", "]", "}"):
+                end = advance(end)
+            raw_end = tokens[end].start() if end < len(words) else len(source)
+        if "\n" in source[tokens[opening].start():raw_end]:
+            continue
+        begin, stop = body, end
+        if words[body] == "{":
+            begin, stop = body + 1, pairs[body]
+            i = begin
+            while i < stop:
+                if words[i] == ";":
+                    if i == stop - 1 and words[begin] == "return":
+                        stop = i
+                        break
+                    begin = i + 1
+                i = advance(i)
+        if begin < stop and words[begin] == "return":
+            begin += 1
+        while begin < stop and words[begin] == "(" and pairs[begin] == stop - 1:
+            begin, stop = begin + 1, stop - 1
+        if begin >= stop or words[begin] in ("|", "||", "move", "async", "let", "if", "match", "for", "while", "loop"):
+            continue
+        start = tokens[begin].start()
+        finish = tokens[stop].start() if stop < len(tokens) else len(source)
+        spans, operand, i = [], 0, begin
+        while i < stop:
+            if words[i] in ("&&", "||"):
+                spans.append((operand, tokens[i].start() - start))
+                operand = tokens[i].end() - start
+            i = advance(i)
+        if spans:
+            spans.append((operand, finish - start))
+            yield start, finish, spans
 
 def guard_targets(n):
     """One-line branch headers in this loop, outside nested loops/closures; source lines, never token spellings."""
@@ -591,6 +694,13 @@ def mutants():
         for replacement in replacements:
             text = lines[n][:begin - starts[n]] + replacement + lines[final][end - starts[final]:]
             add(n, "chain", text, stop=final + 1)
+    for begin, end, spans in closure_conditions(source):
+        n = bisect.bisect_right(starts, begin) - 1
+        if not first <= n < last:
+            continue
+        for replacement in operand_deletions(source[begin:end], spans):
+            text = lines[n][:begin - starts[n]] + replacement + lines[n][end - starts[n]:]
+            add(n, "clogic", text)
     return out
 
 ms = [m for m in mutants() if not a.op or m[2] in a.op]

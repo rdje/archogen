@@ -4387,8 +4387,10 @@ test -p xtask mutation::tests::the_sweep_holds_source_spans_and_equivalence_reco
 expect killed
 why M3.6.9.2.2.2.1: lexical scope parsing needs literal operand positions to distinguish a nested loop's body from a following branch.
 from
+        source = "\n".join(lines)
         masked = mask_rust(source, literal_marks=True)
 to
+        source = "\n".join(lines)
         masked = mask_rust(source)
 end
 
@@ -4526,4 +4528,41 @@ from
             yield cond[:spans[index - 1][1]] + cond[end:]
 to
             yield cond[:start] + cond[end:]
+end
+
+mutation sweep-clogic-nested-groups-flattened
+file scripts/mutation_sweep.sh
+test -p xtask mutation::tests::the_sweep_holds_source_spans_and_equivalence_records
+expect killed
+why M3.6.9.2.3.3.2.2: each closure owns only its top-level operands; inner calls and nested closure conditions cannot become outer connective operands.
+from
+                    operand = tokens[i].end() - start
+                i = advance(i)
+            if spans:
+to
+                    operand = tokens[i].end() - start
+                i += 1
+            if spans:
+end
+
+mutation sweep-clogic-function-arrow-closes-generics
+file scripts/mutation_sweep.sh
+test -p xtask mutation::tests::the_sweep_holds_source_spans_and_equivalence_records
+expect killed
+why M3.6.9.2.3.3.2.2: a function-type arrow cannot end turbofish arguments early or expose their trailing comma as the closure body's delimiter.
+from
+                elif words[i] == ">" and words[i - 1] != "-":
+to
+                elif words[i] == ">":
+end
+
+mutation sweep-clogic-final-literal-truncated
+file scripts/mutation_sweep.sh
+test -p xtask mutation::tests::the_sweep_holds_source_spans_and_equivalence_records
+expect killed
+why M3.6.9.2.3.3.2.2: literal marks occupy only their initial character; the source condition ends at its actual delimiter so final quotes stay complete.
+from
+            finish = tokens[stop].start() if stop < len(tokens) else len(source)
+to
+            finish = tokens[stop - 1].end()
 end
